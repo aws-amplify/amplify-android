@@ -16,21 +16,24 @@
 package com.amplifyframework.datastore.syncengine;
 
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
 /**
  * A CountDownLatch with the ability to handle errors.  When {@link #abort(E)} is called, all waiting threads are
  * unblocked, and the error is thrown to them to be handled.
  * @param <E> the type of Throwable to be handled.
  */
-final class AbortableCountDownLatch<E extends Throwable> extends CountDownLatch {
+public abstract class AbortableCountDownLatch<E extends Throwable> extends CountDownLatch {
     private E error;
 
     AbortableCountDownLatch(int count) {
         super(count);
     }
 
-    public void abort(E error) {
+    /**
+     * abort is called to check if the latch was finished or not.
+     * @param error the type of Throwable to be handled.
+     */
+    public final void abort(E error) {
         if (getCount() == 0) {
             return;
         }
@@ -41,11 +44,21 @@ final class AbortableCountDownLatch<E extends Throwable> extends CountDownLatch 
         }
     }
 
-    public boolean abortableAwait(long timeout, TimeUnit unit) throws InterruptedException, E {
-        final boolean success = super.await(timeout, unit);
-        if (error != null) {
-            throw error;
-        }
-        return success;
+    /**
+     * Use getError to access E for {@link #abortableAwait()} as needed.
+     * E must be set via {@link #abort(E)}
+     * @return E the error
+     */
+    protected E getError() {
+        return error;
     }
+
+    /**
+     * Method is called when blocking a latch. You can choose how to enable the aborting
+     * or awaiting.
+     * @return true if the await was success
+     * @throws InterruptedException interrupted before timeout
+     * @throws E if interrupted by timeout
+     */
+    public abstract boolean abortableAwait() throws InterruptedException, E;
 }

@@ -178,7 +178,8 @@ public final class AWSDataStorePluginTest {
                 .start();
         ApiCategory mockApiCategory = mockApiCategoryWithGraphQlApi();
         JSONObject dataStorePluginJson = new JSONObject()
-            .put("syncIntervalInMinutes", 60);
+            .put("syncIntervalInMinutes", 60)
+            .put("outboxErrorRestartDelay", 0);
         AWSDataStorePlugin awsDataStorePlugin = AWSDataStorePlugin.builder()
                                                                   .modelProvider(modelProvider)
                                                                   .apiCategory(mockApiCategory)
@@ -215,7 +216,8 @@ public final class AWSDataStorePluginTest {
     public void configureAndInitializeInApiModeWithoutApi() throws JSONException, AmplifyException {
         ApiCategory mockApiCategory = mockApiPluginWithExceptions();
         JSONObject dataStorePluginJson = new JSONObject()
-            .put("syncIntervalInMinutes", 60);
+            .put("syncIntervalInMinutes", 60)
+            .put("outboxErrorRestartDelay", 0);
         AWSDataStorePlugin awsDataStorePlugin = AWSDataStorePlugin.builder()
                                                                   .modelProvider(modelProvider)
                                                                   .apiCategory(mockApiCategory)
@@ -247,7 +249,8 @@ public final class AWSDataStorePluginTest {
         ApiCategory mockApiCategory = mockApiCategoryWithGraphQlApi();
         ApiPlugin<?> mockApiPlugin = mockApiCategory.getPlugin(MOCK_API_PLUGIN_NAME);
         JSONObject dataStorePluginJson = new JSONObject()
-            .put("syncIntervalInMinutes", 60);
+            .put("syncIntervalInMinutes", 60)
+            .put("outboxErrorRestartDelay", 0);
         AWSDataStorePlugin awsDataStorePlugin = AWSDataStorePlugin.builder()
                                                                   .modelProvider(modelProvider)
                                                                   .apiCategory(mockApiCategory)
@@ -340,7 +343,8 @@ public final class AWSDataStorePluginTest {
         ApiCategory mockApiCategory = mockApiCategoryWithGraphQlApi();
         ApiPlugin<?> mockApiPlugin = mockApiCategory.getPlugin(MOCK_API_PLUGIN_NAME);
         JSONObject dataStorePluginJson = new JSONObject()
-                .put("syncIntervalInMinutes", 60);
+                .put("syncIntervalInMinutes", 60)
+                .put("outboxErrorRestartDelay", 0);
         AWSDataStorePlugin awsDataStorePlugin = AWSDataStorePlugin.builder()
                                                                   .modelProvider(modelProvider)
                                                                   .apiCategory(mockApiCategory)
@@ -565,7 +569,8 @@ public final class AWSDataStorePluginTest {
                 .modelProvider(modelProvider)
                 .build();
         JSONObject dataStorePluginJson = new JSONObject()
-                .put("syncIntervalInMinutes", 60);
+                .put("syncIntervalInMinutes", 60)
+                .put("outboxErrorRestartDelay", 0);
         awsDataStorePlugin.configure(dataStorePluginJson, context);
         awsDataStorePlugin.initialize(context);
         Amplify.Hub.publish(HubChannel.DATASTORE, HubEvent.create(InitializationStatus.SUCCEEDED));
@@ -608,7 +613,8 @@ public final class AWSDataStorePluginTest {
                 .modelProvider(modelProvider)
                 .build();
         JSONObject dataStorePluginJson = new JSONObject()
-                .put("syncIntervalInMinutes", 60);
+                .put("syncIntervalInMinutes", 60)
+                .put("outboxErrorRestartDelay", 0);
         awsDataStorePlugin.configure(dataStorePluginJson, context);
         awsDataStorePlugin.initialize(context);
         Amplify.Hub.publish(HubChannel.DATASTORE, HubEvent.create(InitializationStatus.SUCCEEDED));

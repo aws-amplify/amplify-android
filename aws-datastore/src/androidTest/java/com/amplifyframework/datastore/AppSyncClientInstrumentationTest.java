@@ -327,7 +327,7 @@ public final class AppSyncClientInstrumentationTest {
     private <T> T awaitResponseData(
             Await.ResultErrorEmitter<GraphQLResponse<T>, DataStoreException> resultErrorEmitter)
             throws DataStoreException {
-        final GraphQLResponse<T> response = Await.result(TimeUnit.SECONDS.toMillis(20), resultErrorEmitter);
+        final GraphQLResponse<T> response = Await.result(resultErrorEmitter);
         if (response.hasErrors()) {
             String firstErrorMessage = response.getErrors().get(0).getMessage();
             throw new DataStoreException("Response contained errors: " + firstErrorMessage, "Check request.");

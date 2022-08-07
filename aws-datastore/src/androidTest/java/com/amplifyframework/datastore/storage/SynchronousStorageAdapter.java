@@ -97,7 +97,6 @@ public final class SynchronousStorageAdapter {
     @SuppressWarnings("UnusedReturnValue")
     public List<ModelSchema> initialize(@NonNull Context context) throws DataStoreException {
         return Await.result(
-            operationTimeoutMs,
             (Consumer<List<ModelSchema>> onResult, Consumer<DataStoreException> onError) -> {
                 try {
                     asyncDelegate.initialize(context,
@@ -144,7 +143,6 @@ public final class SynchronousStorageAdapter {
     public <T extends Model> void save(@NonNull T model, @NonNull QueryPredicate predicate)
             throws DataStoreException {
         Await.result(
-            operationTimeoutMs,
             (Consumer<StorageItemChange<T>> onResult, Consumer<DataStoreException> onError) ->
                 asyncDelegate.save(
                     model,
@@ -177,7 +175,6 @@ public final class SynchronousStorageAdapter {
     public <T extends Model> DataStoreException saveExpectingError(
             @NonNull T model, @NonNull QueryPredicate predicate) {
         return Await.error(
-            operationTimeoutMs,
             (Consumer<StorageItemChange<T>> onResult, Consumer<DataStoreException> onError) ->
                 asyncDelegate.save(
                     model,
@@ -212,7 +209,6 @@ public final class SynchronousStorageAdapter {
     public <T extends Model> List<T> query(@NonNull Class<T> modelClass, @NonNull QueryOptions options)
             throws DataStoreException {
         Iterator<T> resultIterator = Await.result(
-            operationTimeoutMs,
             (Consumer<Iterator<T>> onResult, Consumer<DataStoreException> onError) ->
                 asyncDelegate.query(modelClass, options, onResult, onError)
         );
@@ -268,7 +264,6 @@ public final class SynchronousStorageAdapter {
     public <T extends Model> void delete(@NonNull T model, @NonNull QueryPredicate predicate)
             throws DataStoreException {
         Await.result(
-            operationTimeoutMs,
             (Consumer<StorageItemChange<T>> onResult, Consumer<DataStoreException> onError) ->
                 asyncDelegate.delete(
                     model,
@@ -290,7 +285,6 @@ public final class SynchronousStorageAdapter {
     public <T extends Model> void delete(@NonNull Class<T> modelType, @NonNull QueryPredicate predicate)
             throws DataStoreException {
         Await.result(
-            operationTimeoutMs,
             (Consumer<Object> onResult, Consumer<DataStoreException> onError) ->
                 asyncDelegate.delete(
                     modelType,
@@ -328,7 +322,6 @@ public final class SynchronousStorageAdapter {
     public <T extends Model> DataStoreException deleteExpectingError(
             @NonNull T model, @NonNull QueryPredicate predicate) {
         return Await.error(
-            operationTimeoutMs,
             (Consumer<StorageItemChange<T>> onResult, Consumer<DataStoreException> onError) ->
                 asyncDelegate.delete(
                     model,

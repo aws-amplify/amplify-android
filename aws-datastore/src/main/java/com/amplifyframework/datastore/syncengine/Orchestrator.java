@@ -38,7 +38,6 @@ import org.json.JSONObject;
 
 import java.util.Objects;
 import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import io.reactivex.rxjava3.core.Completable;
@@ -51,7 +50,6 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
  */
 public final class Orchestrator {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
-    private static final long LOCAL_OP_TIMEOUT_SECONDS = 7;
 
     private final SubscriptionProcessor subscriptionProcessor;
     private final SyncProcessor syncProcessor;
@@ -109,6 +107,7 @@ public final class Orchestrator {
             .mutationOutbox(mutationOutbox)
             .appSync(appSync)
             .conflictResolver(conflictResolver)
+            .dataStoreConfigurationProvider(dataStoreConfigurationProvider)
             .build();
         this.syncProcessor = SyncProcessor.builder()
             .modelProvider(modelProvider)
@@ -126,6 +125,7 @@ public final class Orchestrator {
                 .modelProvider(modelProvider)
                 .schemaRegistry(schemaRegistry)
                 .merger(merger)
+                .dataStoreConfigurationProvider(dataStoreConfigurationProvider)
                 .queryPredicateProvider(queryPredicateProvider)
                 .onFailure(this::onApiSyncFailure)
                 .build();
@@ -171,10 +171,7 @@ public final class Orchestrator {
         boolean permitAvailable = startStopSemaphore.availablePermits() > 0;
         LOG.debug("Attempting to acquire lock. Permits available = " + permitAvailable);
         try {
-            if (!startStopSemaphore.tryAcquire(LOCAL_OP_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
-                return Completable.error(new DataStoreException("Timed out acquiring orchestrator lock.",
-                        "Retry your request."));
-            }
+            startStopSemaphore.acquire();
         } catch (InterruptedException exception) {
             return Completable.error(new DataStoreException("Interrupted while acquiring orchestrator lock.",
                     "Retry your request."));

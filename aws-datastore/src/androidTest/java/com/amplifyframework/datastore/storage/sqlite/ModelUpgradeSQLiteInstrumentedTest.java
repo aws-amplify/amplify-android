@@ -106,7 +106,6 @@ public final class ModelUpgradeSQLiteInstrumentedTest {
         // Initialize StorageAdapter with models
         sqliteStorageAdapter = SQLiteStorageAdapter.forModels(schemaRegistry, modelProvider);
         List<ModelSchema> firstResults = Await.result(
-            SQLITE_OPERATION_TIMEOUT_MS,
             (Consumer<List<ModelSchema>> onResult, Consumer<DataStoreException> onError) -> {
                 try {
                     sqliteStorageAdapter.initialize(context, onResult, onError,
@@ -144,7 +143,6 @@ public final class ModelUpgradeSQLiteInstrumentedTest {
 
         // Now, initialize storage adapter with the new models
         List<ModelSchema> secondResults = Await.result(
-            SQLITE_OPERATION_TIMEOUT_MS,
             (Consumer<List<ModelSchema>> onResult, Consumer<DataStoreException> onError) -> {
                 try {
                     sqliteStorageAdapter.initialize(context, onResult, onError,

@@ -123,7 +123,7 @@ public final class AWSRestOperationTest {
         RestOperationRequest request =
             new RestOperationRequest(HttpMethod.GET, baseUrl.uri().getPath(), emptyMap(), emptyMap());
         assertTimedOut(() ->
-            Await.<RestResponse, ApiException>result(timeToWaitForResponse, (onResult, onError) -> {
+            Await.<RestResponse, ApiException>result((onResult, onError) -> {
                 AWSRestOperation operation =
                     new AWSRestOperation(request, baseUrl.url().toString(), client, onResult, onError);
                 operation.start();

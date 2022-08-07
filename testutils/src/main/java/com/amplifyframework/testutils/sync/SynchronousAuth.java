@@ -103,7 +103,7 @@ public final class SynchronousAuth {
             @NonNull String password,
             @NonNull AuthSignUpOptions options
     ) throws AuthException {
-        return Await.<AuthSignUpResult, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
+        return Await.<AuthSignUpResult, AuthException>result((onResult, onError) ->
                 asyncDelegate.signUp(username, password, options, onResult, onError)
         );
     }
@@ -122,7 +122,7 @@ public final class SynchronousAuth {
             @NonNull String confirmationCode,
             @NonNull AuthConfirmSignUpOptions options
     ) throws AuthException {
-        return Await.<AuthSignUpResult, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
+        return Await.<AuthSignUpResult, AuthException>result((onResult, onError) ->
                 asyncDelegate.confirmSignUp(username, confirmationCode, options, onResult, onError)
         );
     }
@@ -139,7 +139,7 @@ public final class SynchronousAuth {
             @NonNull String username,
             @NonNull String confirmationCode
     ) throws AuthException {
-        return Await.<AuthSignUpResult, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
+        return Await.<AuthSignUpResult, AuthException>result((onResult, onError) ->
                 asyncDelegate.confirmSignUp(username, confirmationCode, onResult, onError)
         );
     }
@@ -156,7 +156,7 @@ public final class SynchronousAuth {
             @NonNull String username,
             @NonNull AuthResendSignUpCodeOptions options
     ) throws AuthException {
-        return Await.<AuthSignUpResult, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
+        return Await.<AuthSignUpResult, AuthException>result((onResult, onError) ->
                 asyncDelegate.resendSignUpCode(username, options, onResult, onError)
         );
     }
@@ -171,7 +171,7 @@ public final class SynchronousAuth {
     public AuthSignUpResult resendSignUpCode(
             @NonNull String username
     ) throws AuthException {
-        return Await.<AuthSignUpResult, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
+        return Await.<AuthSignUpResult, AuthException>result((onResult, onError) ->
                 asyncDelegate.resendSignUpCode(username, onResult, onError)
         );
     }
@@ -190,7 +190,7 @@ public final class SynchronousAuth {
             @Nullable String password,
             @NonNull AuthSignInOptions options
     ) throws AuthException {
-        return Await.<AuthSignInResult, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
+        return Await.<AuthSignInResult, AuthException>result((onResult, onError) ->
                 asyncDelegate.signIn(username, password, options, onResult, onError)
         );
     }
@@ -207,7 +207,7 @@ public final class SynchronousAuth {
             @Nullable String username,
             @Nullable String password
     ) throws AuthException {
-        return Await.<AuthSignInResult, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
+        return Await.<AuthSignInResult, AuthException>result((onResult, onError) ->
                 asyncDelegate.signIn(username, password, onResult, onError)
         );
     }
@@ -224,7 +224,7 @@ public final class SynchronousAuth {
             @NonNull String confirmationCode,
             @NonNull AuthConfirmSignInOptions options
     ) throws AuthException {
-        return Await.<AuthSignInResult, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
+        return Await.<AuthSignInResult, AuthException>result((onResult, onError) ->
                 asyncDelegate.confirmSignIn(confirmationCode, options, onResult, onError)
         );
     }
@@ -239,7 +239,7 @@ public final class SynchronousAuth {
     public AuthSignInResult confirmSignIn(
             @NonNull String confirmationCode
     ) throws AuthException {
-        return Await.<AuthSignInResult, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
+        return Await.<AuthSignInResult, AuthException>result((onResult, onError) ->
                 asyncDelegate.confirmSignIn(confirmationCode, onResult, onError)
         );
     }
@@ -256,7 +256,7 @@ public final class SynchronousAuth {
             @NonNull AuthProvider provider,
             @NonNull Activity callingActivity
     ) throws AuthException {
-        return Await.<AuthSignInResult, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
+        return Await.<AuthSignInResult, AuthException>result((onResult, onError) ->
                 asyncDelegate.signInWithSocialWebUI(provider, callingActivity, onResult, onError)
         );
     }
@@ -273,7 +273,7 @@ public final class SynchronousAuth {
             @NonNull Activity callingActivity,
             @NonNull AuthWebUISignInOptions options
     ) throws AuthException {
-        return Await.<AuthSignInResult, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
+        return Await.<AuthSignInResult, AuthException>result((onResult, onError) ->
                 asyncDelegate.signInWithWebUI(callingActivity, options, onResult, onError)
         );
     }
@@ -290,7 +290,7 @@ public final class SynchronousAuth {
             @NonNull String username,
             @NonNull AuthResetPasswordOptions options
     ) throws AuthException {
-        return Await.<AuthResetPasswordResult, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
+        return Await.<AuthResetPasswordResult, AuthException>result((onResult, onError) ->
                 asyncDelegate.resetPassword(username, options, onResult, onError)
         );
     }
@@ -305,7 +305,7 @@ public final class SynchronousAuth {
     public AuthResetPasswordResult resetPassword(
             @NonNull String username
     ) throws AuthException {
-        return Await.<AuthResetPasswordResult, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
+        return Await.<AuthResetPasswordResult, AuthException>result((onResult, onError) ->
                 asyncDelegate.resetPassword(username, onResult, onError)
         );
     }
@@ -322,7 +322,7 @@ public final class SynchronousAuth {
             @NonNull String confirmationCode,
             @NonNull AuthConfirmResetPasswordOptions options
     ) throws AuthException {
-        Await.<Object, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
+        Await.<Object, AuthException>result((onResult, onError) ->
                 asyncDelegate.confirmResetPassword(
                     newPassword,
                     confirmationCode,
@@ -343,7 +343,7 @@ public final class SynchronousAuth {
             @NonNull String newPassword,
             @NonNull String confirmationCode
     ) throws AuthException {
-        Await.<Object, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
+        Await.<Object, AuthException>result((onResult, onError) ->
                 asyncDelegate.confirmResetPassword(
                     newPassword,
                     confirmationCode,
@@ -360,7 +360,7 @@ public final class SynchronousAuth {
      */
     @NonNull
     public AuthSession fetchAuthSession() throws AuthException {
-        return Await.result(AUTH_OPERATION_TIMEOUT_MS, asyncDelegate::fetchAuthSession);
+        return Await.result(asyncDelegate::fetchAuthSession);
     }
 
     /**
@@ -368,7 +368,7 @@ public final class SynchronousAuth {
      * @throws AuthException exception
      */
     public void rememberDevice() throws AuthException {
-        Await.<Object, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
+        Await.<Object, AuthException>result((onResult, onError) ->
                 asyncDelegate.rememberDevice(() -> onResult.accept(VoidResult.instance()), onError)
         );
     }
@@ -378,7 +378,7 @@ public final class SynchronousAuth {
      * @throws AuthException exception
      */
     public void forgetDevice() throws AuthException {
-        Await.<Object, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
+        Await.<Object, AuthException>result((onResult, onError) ->
                 asyncDelegate.forgetDevice(() -> onResult.accept(VoidResult.instance()), onError)
         );
     }
@@ -389,7 +389,7 @@ public final class SynchronousAuth {
      * @throws AuthException exception
      */
     public void forgetDevice(@NonNull AuthDevice device) throws AuthException {
-        Await.<Object, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
+        Await.<Object, AuthException>result((onResult, onError) ->
                 asyncDelegate.forgetDevice(device, () -> onResult.accept(VoidResult.instance()), onError)
         );
     }
@@ -400,7 +400,7 @@ public final class SynchronousAuth {
      * @throws AuthException exception
      */
     public List<AuthDevice> fetchDevices() throws AuthException {
-        return Await.result(AUTH_OPERATION_TIMEOUT_MS, asyncDelegate::fetchDevices);
+        return Await.result(asyncDelegate::fetchDevices);
     }
 
     /**
@@ -413,7 +413,7 @@ public final class SynchronousAuth {
             @NonNull String oldPassword,
             @NonNull String newPassword
     ) throws AuthException {
-        Await.<Object, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
+        Await.<Object, AuthException>result((onResult, onError) ->
                 asyncDelegate.updatePassword(oldPassword, newPassword,
                     () -> onResult.accept(VoidResult.instance()), onError)
         );
@@ -526,7 +526,7 @@ public final class SynchronousAuth {
      */
     public void confirmUserAttribute(@NonNull AuthUserAttributeKey attributeKey,
                                      @NonNull String confirmationCode) throws AuthException {
-        Await.<Object, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) -> {
+        Await.<Object, AuthException>result((onResult, onError) -> {
             asyncDelegate.confirmUserAttribute(
                     attributeKey, confirmationCode, () -> onResult.accept(VoidResult.instance()), onError
             );
@@ -538,7 +538,7 @@ public final class SynchronousAuth {
      * @throws AuthException exception
      */
     public void signOut() throws AuthException {
-        Await.<Object, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
+        Await.<Object, AuthException>result((onResult, onError) ->
                 asyncDelegate.signOut(
                     () -> onResult.accept(VoidResult.instance()),
                     onError
@@ -552,7 +552,7 @@ public final class SynchronousAuth {
      * @throws AuthException exception
      */
     public void signOut(AuthSignOutOptions options) throws AuthException {
-        Await.<Object, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
+        Await.<Object, AuthException>result((onResult, onError) ->
                 asyncDelegate.signOut(
                     options,
                     () -> onResult.accept(VoidResult.instance()),
@@ -566,7 +566,7 @@ public final class SynchronousAuth {
      * @throws AuthException exception
      */
     public void deleteUser() throws AuthException {
-        Await.<Object, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
+        Await.<Object, AuthException>result((onResult, onError) ->
                 asyncDelegate.deleteUser(() -> onResult.accept(VoidResult.instance()), onError)
         );
     }

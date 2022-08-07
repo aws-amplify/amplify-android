@@ -89,6 +89,24 @@ public interface ModelProvider {
     }
 
     /**
+     * A default helper method to return all the model names except those excluded.
+     * @param excluded models that should not be the result set
+     * @return a set of all model names.
+     */
+    default Set<String> modelNames(Set<Class<? extends Model>> excluded) {
+        final Set<String> modelNames = new HashSet<>();
+        if (models() == null) {
+            return modelNames;
+        }
+        for (Class<? extends Model> modelClass : models()) {
+            if (!excluded.contains(modelClass)) {
+                modelNames.add(modelClass.getSimpleName());
+            }
+        }
+        return modelNames;
+    }
+
+    /**
      * A default helper method to return all the custom type names.
      * This method returns an empty map for non-flutter use cases.
      * @return an empty map.

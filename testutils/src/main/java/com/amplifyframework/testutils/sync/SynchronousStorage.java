@@ -110,7 +110,7 @@ public final class SynchronousStorage {
             @NonNull StorageDownloadFileOptions options,
             long timeoutMs
     ) throws StorageException {
-        return Await.<StorageDownloadFileResult, StorageException>result(timeoutMs, (onResult, onError) ->
+        return Await.<StorageDownloadFileResult, StorageException>result((onResult, onError) ->
                 asyncDelegate.downloadFile(key, local, options, onResult, onError)
         );
     }
@@ -150,7 +150,7 @@ public final class SynchronousStorage {
             @NonNull StorageUploadFileOptions options,
             long timeoutMs
     ) throws StorageException {
-        return Await.<StorageUploadFileResult, StorageException>result(timeoutMs, (onResult, onError) ->
+        return Await.<StorageUploadFileResult, StorageException>result((onResult, onError) ->
                 asyncDelegate.uploadFile(key, local, options, onResult, onError)
         );
     }
@@ -190,7 +190,7 @@ public final class SynchronousStorage {
             @NonNull StorageUploadInputStreamOptions options,
             long timeoutMs
     ) throws StorageException {
-        return Await.<StorageUploadInputStreamResult, StorageException>result(timeoutMs, (onResult, onError) ->
+        return Await.<StorageUploadInputStreamResult, StorageException>result((onResult, onError) ->
                 asyncDelegate.uploadInputStream(key, local, options, onResult, onError)
         );
     }
@@ -226,7 +226,7 @@ public final class SynchronousStorage {
             @NonNull StorageRemoveOptions options,
             long timeoutMs
     ) throws StorageException {
-        return Await.<StorageRemoveResult, StorageException>result(timeoutMs, (onResult, onError) ->
+        return Await.<StorageRemoveResult, StorageException>result((onResult, onError) ->
                 asyncDelegate.remove(key, options, onResult, onError)
         );
     }
@@ -262,7 +262,7 @@ public final class SynchronousStorage {
             @NonNull StorageListOptions options,
             long timeoutMs
     ) throws StorageException {
-        return Await.<StorageListResult, StorageException>result(timeoutMs, (onResult, onError) ->
+        return Await.<StorageListResult, StorageException>result((onResult, onError) ->
                 asyncDelegate.list(path, options, onResult, onError)
         );
     }

@@ -21,56 +21,36 @@ import com.amplifyframework.core.Consumer;
 
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * A utility to await a value from an async function, in a synchronous way.
  */
 public final class Await {
-    private static final long DEFAULT_WAIT_TIME_MS = TimeUnit.SECONDS.toMillis(7);
 
     private Await() {}
-
-    /**
-     * Awaits emission of either a result of an error.
-     * Blocks the thread of execution until either the value is
-     * available, of a default timeout has elapsed.
-     * @param resultErrorEmitter A function which emits result or error
-     * @param <R> Type of result
-     * @param <E> type of error
-     * @return The result
-     * @throws E if error is emitted
-     * @throws RuntimeException In all other situations where there is not a non-null result
-     */
-    @NonNull
-    public static <R, E extends Throwable> R result(
-            @NonNull ResultErrorEmitter<R, E> resultErrorEmitter) throws E {
-        return result(DEFAULT_WAIT_TIME_MS, resultErrorEmitter);
-    }
 
     /**
      * Await emission of either a result or an error.
      * Blocks the thread of execution until either the value is available,
      * or the timeout is reached.
-     * @param timeMs Amount of time to wait
-     * @param resultErrorEmitter A function which emits result or error
      * @param <R> Type of result
      * @param <E> Type of error
+     * @param resultErrorEmitter A function which emits result or error
      * @return The result
      * @throws E if error is emitted
      * @throws RuntimeException In all other situations where there is not a non-null result
      */
     @NonNull
     public static <R, E extends Throwable> R result(
-            long timeMs, @NonNull ResultErrorEmitter<R, E> resultErrorEmitter) throws E {
+        @NonNull ResultErrorEmitter<R, E> resultErrorEmitter) throws E {
 
         Objects.requireNonNull(resultErrorEmitter);
 
         AtomicReference<R> resultContainer = new AtomicReference<>();
         AtomicReference<E> errorContainer = new AtomicReference<>();
 
-        await(timeMs, resultErrorEmitter, resultContainer, errorContainer);
+        await(resultErrorEmitter, resultContainer, errorContainer);
 
         R result = resultContainer.get();
         E error = errorContainer.get();
@@ -84,39 +64,24 @@ public final class Await {
     }
 
     /**
-     * Awaits receipt of an error or a callback.
-     * Blocks the thread of execution until it arrives, or until the wait times out.
-     * @param resultErrorEmitter An emitter of result of error
-     * @param <R> Type of result
-     * @param <E> Type of error
-     * @return The error that was emitted by the emitter
-     * @throws RuntimeException If no error was emitted by emitter
-     */
-    @NonNull
-    public static <R, E extends Throwable> E error(@NonNull ResultErrorEmitter<R, E> resultErrorEmitter) {
-        return error(DEFAULT_WAIT_TIME_MS, resultErrorEmitter);
-    }
-
-    /**
      * Awaits receipt of an error on an error callback.
      * Blocks the calling thread until it shows up, or until timeout elapses.
-     * @param timeMs Amount of time to wait
-     * @param resultErrorEmitter A function which emits result or error
      * @param <R> Type of result
      * @param <E> Type of error
+     * @param resultErrorEmitter A function which emits result or error
      * @return Error, if attained
      * @throws RuntimeException If no error is emitted by the emitter
      */
     @NonNull
     public static <R, E extends Throwable> E error(
-            long timeMs, @NonNull ResultErrorEmitter<R, E> resultErrorEmitter) {
+        @NonNull ResultErrorEmitter<R, E> resultErrorEmitter) {
 
         Objects.requireNonNull(resultErrorEmitter);
 
         AtomicReference<R> resultContainer = new AtomicReference<>();
         AtomicReference<E> errorContainer = new AtomicReference<>();
 
-        await(timeMs, resultErrorEmitter, resultContainer, errorContainer);
+        await(resultErrorEmitter, resultContainer, errorContainer);
 
         R result = resultContainer.get();
         E error = errorContainer.get();
@@ -130,10 +95,9 @@ public final class Await {
     }
 
     private static <R, E extends Throwable> void await(
-            long timeMs,
-            @NonNull ResultErrorEmitter<R, E> resultErrorEmitter,
-            @NonNull AtomicReference<R> resultContainer,
-            @NonNull AtomicReference<E> errorContainer) {
+        @NonNull ResultErrorEmitter<R, E> resultErrorEmitter,
+        @NonNull AtomicReference<R> resultContainer,
+        @NonNull AtomicReference<E> errorContainer) {
         final CountDownLatch latch = new CountDownLatch(1);
         final AtomicReference<Throwable> unexpectedErrorContainer = new AtomicReference<>();
         final Thread thread = new Thread(() -> {
@@ -161,7 +125,7 @@ public final class Await {
         thread.setDaemon(true);
         thread.start();
 
-        Latch.await(latch, timeMs);
+        Latch.await(latch);
 
         try {
             thread.join();

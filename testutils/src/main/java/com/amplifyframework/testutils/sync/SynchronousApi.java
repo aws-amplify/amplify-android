@@ -310,7 +310,7 @@ public final class SynchronousApi {
     @NonNull
     public <T extends Model> Observable<GraphQLResponse<T>> onCreate(@NonNull String apiName, @NonNull Class<T> clazz) {
         return Observable.create(emitter -> {
-            Await.<String, ApiException>result(OPERATION_TIMEOUT_MS,
+            Await.<String, ApiException>result(
                 (onSubscriptionStarted, onError) -> {
                     Cancelable cancelable = asyncDelegate.subscribe(
                             apiName,
@@ -340,7 +340,6 @@ public final class SynchronousApi {
             CompositeDisposable disposable = new CompositeDisposable();
             emitter.setDisposable(disposable);
             Await.<String, ApiException>result(
-                OPERATION_TIMEOUT_MS,
                 (onSubscriptionStarted, onError) -> {
                     Cancelable cancelable = asyncDelegate.subscribe(
                             apiName,
@@ -362,7 +361,7 @@ public final class SynchronousApi {
     private <T> T awaitResponseData(
             Await.ResultErrorEmitter<GraphQLResponse<T>, ApiException> resultErrorEmitter)
             throws ApiException {
-        final GraphQLResponse<T> response = Await.result(OPERATION_TIMEOUT_MS, resultErrorEmitter);
+        final GraphQLResponse<T> response = Await.result(resultErrorEmitter);
         if (response.hasErrors()) {
             String firstErrorMessage = response.getErrors().get(0).getMessage();
             throw new RuntimeException("Response has error:" + firstErrorMessage);
@@ -376,7 +375,7 @@ public final class SynchronousApi {
     private <T> List<GraphQLResponse.Error> awaitResponseErrors(
             Await.ResultErrorEmitter<GraphQLResponse<T>, ApiException> resultErrorEmitter)
             throws ApiException {
-        final GraphQLResponse<T> response = Await.result(OPERATION_TIMEOUT_MS, resultErrorEmitter);
+        final GraphQLResponse<T> response = Await.result(resultErrorEmitter);
         if (!response.hasErrors()) {
             throw new RuntimeException("No errors in response.");
         }
@@ -387,6 +386,6 @@ public final class SynchronousApi {
     private RestResponse awaitRestResponse(
             Await.ResultErrorEmitter<RestResponse, ApiException> resultErrorEmitter)
             throws ApiException {
-        return Await.result(OPERATION_TIMEOUT_MS, resultErrorEmitter);
+        return Await.result(resultErrorEmitter);
     }
 }

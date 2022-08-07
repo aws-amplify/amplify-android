@@ -91,7 +91,6 @@ public final class SynchronousPredictions {
             @NonNull TextToSpeechOptions options
     ) throws PredictionsException {
         return Await.<TextToSpeechResult, PredictionsException>result(
-            PREDICTIONS_OPERATION_TIMEOUT_MS,
             (onResult, onError) -> asyncDelegate.convertTextToSpeech(
                     text,
                     options,
@@ -130,7 +129,6 @@ public final class SynchronousPredictions {
             @NonNull TranslateTextOptions options
     ) throws PredictionsException {
         return Await.<TranslateTextResult, PredictionsException>result(
-            PREDICTIONS_OPERATION_TIMEOUT_MS,
             (onResult, onError) -> asyncDelegate.translateText(
                     text,
                     options,
@@ -177,7 +175,6 @@ public final class SynchronousPredictions {
             @NonNull TranslateTextOptions options
     ) throws PredictionsException {
         return Await.<TranslateTextResult, PredictionsException>result(
-            PREDICTIONS_OPERATION_TIMEOUT_MS,
             (onResult, onError) -> asyncDelegate.translateText(
                     text,
                     fromLanguage,
@@ -220,7 +217,6 @@ public final class SynchronousPredictions {
             @NonNull IdentifyOptions options
     ) throws PredictionsException {
         return Await.<IdentifyResult, PredictionsException>result(
-            PREDICTIONS_OPERATION_TIMEOUT_MS,
             (onResult, onError) -> asyncDelegate.identify(
                     actionType,
                     image,
@@ -260,7 +256,6 @@ public final class SynchronousPredictions {
             @NonNull InterpretOptions options
     ) throws PredictionsException {
         return Await.<InterpretResult, PredictionsException>result(
-            PREDICTIONS_OPERATION_TIMEOUT_MS,
             (onResult, onError) -> asyncDelegate.interpret(
                     text,
                     options,

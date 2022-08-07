@@ -47,7 +47,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Flowable;
@@ -100,11 +102,17 @@ final class SyncProcessor {
      * The task of hydrating the DataStore either succeeds (with no return value),
      * or it fails, with an explanation.
      * @return An Rx {@link Completable} which can be used to perform the operation.
+     * @throws DataStoreException if dataStoreConfigurationProvider.getConfiguration() fails
      */
-    Completable hydrate() {
+    Completable hydrate() throws DataStoreException {
         final List<Completable> hydrationTasks = new ArrayList<>();
         List<ModelSchema> modelSchemas = new ArrayList<>(modelProvider.modelSchemas().values());
-
+        Set<Class<? extends Model>> disabledSyncModels = dataStoreConfigurationProvider
+            .getConfiguration().getDisabledSyncs();
+        // Remove all schemas that we will not be syncing
+        modelSchemas = modelSchemas.stream()
+                .filter(schema -> !disabledSyncModels.contains(schema.getModelClass()))
+                .collect(Collectors.toList());
         // And sort them all, according to their model's topological order,
         // So that when we save them, the references will exist.
         TopologicalOrdering ordering =

@@ -46,6 +46,7 @@ import org.robolectric.RobolectricTestRunner;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
@@ -96,6 +97,7 @@ public final class SubscriptionProcessorTest {
                 .modelProvider(modelProvider)
                 .schemaRegistry(schemaRegistry)
                 .merger(merger)
+                .dataStoreConfigurationProvider(() -> dataStoreConfiguration)
                 .queryPredicateProvider(queryPredicateProvider)
                 .onFailure(throwable -> { })
                 .build();
@@ -136,7 +138,9 @@ public final class SubscriptionProcessorTest {
 
         // Act: start some subscriptions.
         try {
-            subscriptionProcessor.startSubscriptions();
+            subscriptionProcessor.startSubscriptions(
+                    new TimedAbortableCountDownLatch<DataStoreException>(this.modelSchemas.size(),
+                    OPERATION_TIMEOUT_MS, TimeUnit.MILLISECONDS), new HashSet<Class<? extends Model>>());
         } catch (DataStoreException exception) {
             // startSubscriptions throws this exception if it doesn't receive the start_ack messages after a time out.
             // This test doesn't mock those start_ack messages, so this expection is expected.  That's okay though -

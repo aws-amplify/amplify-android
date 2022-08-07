@@ -27,9 +27,11 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -47,6 +49,7 @@ public final class DataStoreConfiguration {
     static final boolean DEFAULT_DO_SYNC_RETRY = false;
     static final int MAX_RECORDS = 1000;
     static final long MAX_TIME_SEC = 2;
+    static final int DEFAULT_OUTBOX_ERROR_RESTART_DELAY = 30;
 
     private final DataStoreErrorHandler errorHandler;
     private final DataStoreConflictHandler conflictHandler;
@@ -54,9 +57,12 @@ public final class DataStoreConfiguration {
     private final Integer syncPageSize;
     private final boolean doSyncRetry;
     private final Map<String, DataStoreSyncExpression> syncExpressions;
+    private final Set<Class<? extends Model>> disabledSyncs;
+    private final Set<Class<? extends Model>> disabledSubscriptions;
     private final Long syncIntervalInMinutes;
     private final Long maxTimeLapseForObserveQuery;
     private final Integer observeQueryMaxRecords;
+    private final Integer outboxErrorRestartDelay;
 
     private DataStoreConfiguration(Builder builder) {
         this.errorHandler = builder.errorHandler;
@@ -65,9 +71,12 @@ public final class DataStoreConfiguration {
         this.syncPageSize = builder.syncPageSize;
         this.syncIntervalInMinutes = builder.syncIntervalInMinutes;
         this.syncExpressions = builder.syncExpressions;
+        this.disabledSyncs = builder.disabledSyncs;
+        this.disabledSubscriptions = builder.disabledSubscriptions;
         this.doSyncRetry = builder.doSyncRetry;
         this.maxTimeLapseForObserveQuery = builder.maxTimeLapseForObserveQuery;
         this.observeQueryMaxRecords = builder.observeQueryMaxRecords;
+        this.outboxErrorRestartDelay = builder.outboxErrorRestartDelay;
     }
 
     /**
@@ -124,6 +133,7 @@ public final class DataStoreConfiguration {
                 .doSyncRetry(DEFAULT_DO_SYNC_RETRY)
                 .observeQueryMaxTime(MAX_TIME_SEC)
                 .observeQueryMaxRecords(MAX_RECORDS)
+            .outboxErrorRestartDelay(DEFAULT_OUTBOX_ERROR_RESTART_DELAY)
             .build();
     }
 
@@ -206,6 +216,33 @@ public final class DataStoreConfiguration {
         return this.syncExpressions;
     }
 
+    /**
+     * Returns the Set of all models which have sync disabled.
+     * @return the Set of all disabled sync models.
+     */
+    @NonNull
+    public Set<Class<? extends Model>> getDisabledSyncs() {
+        return this.disabledSyncs;
+    }
+
+    /**
+     * Returns the Set of all models which have subscriptions disabled.
+     * @return the Set of all subscription disabled models.
+     */
+    @NonNull
+    public Set<Class<? extends Model>> getDisabledSubscriptions() {
+        return this.disabledSubscriptions;
+    }
+
+    /**
+     * Returns the interval in seconds to delay for outbox mutations.
+     * @return interval in seconds to wait before resuming outbox mutations.
+     */
+    @IntRange(from = 0)
+    public Integer getOutboxMutationErrorRestartDelay() {
+        return this.outboxErrorRestartDelay;
+    }
+
     @Override
     public boolean equals(@Nullable Object thatObject) {
         if (this == thatObject) {
@@ -233,6 +270,12 @@ public final class DataStoreConfiguration {
         if (!ObjectsCompat.equals(getSyncExpressions(), that.getSyncExpressions())) {
             return false;
         }
+        if (!ObjectsCompat.equals(getDisabledSyncs(), that.getDisabledSyncs())) {
+            return false;
+        }
+        if (!ObjectsCompat.equals(getDisabledSubscriptions(), that.getDisabledSubscriptions())) {
+            return false;
+        }
         if (!ObjectsCompat.equals(getDoSyncRetry(), that.getDoSyncRetry())) {
             return false;
         }
@@ -240,6 +283,9 @@ public final class DataStoreConfiguration {
             return false;
         }
         if (!ObjectsCompat.equals(getObserveQueryMaxRecords(), that.getObserveQueryMaxRecords())) {
+            return false;
+        }
+        if (!ObjectsCompat.equals(getOutboxMutationErrorRestartDelay(), that.getOutboxMutationErrorRestartDelay())) {
             return false;
         }
         return true;
@@ -253,9 +299,12 @@ public final class DataStoreConfiguration {
         result = 31 * result + (getSyncPageSize() != null ? getSyncPageSize().hashCode() : 0);
         result = 31 * result + (getSyncIntervalInMinutes() != null ? getSyncIntervalInMinutes().hashCode() : 0);
         result = 31 * result + (getSyncExpressions() != null ? getSyncExpressions().hashCode() : 0);
+        result = 31 * result + getDisabledSyncs().hashCode();
+        result = 31 * result + getDisabledSubscriptions().hashCode();
         result = 31 * result + getDoSyncRetry().hashCode();
         result = 31 * result + (getObserveQueryMaxRecords() != null ? getObserveQueryMaxRecords().hashCode() : 0);
         result = 31 * result + getMaxTimeLapseForObserveQuery().hashCode();
+        result = 31 * result + getOutboxMutationErrorRestartDelay().hashCode();
         return result;
     }
 
@@ -271,6 +320,9 @@ public final class DataStoreConfiguration {
                 ", doSyncRetry=" + doSyncRetry +
                 ", maxTimeRelapseForObserveQuery=" + maxTimeLapseForObserveQuery +
                 ", observeQueryMaxRecords=" + observeQueryMaxRecords +
+            ", disabledSyncs=" + disabledSyncs +
+            ", disabledSubscriptions=" + disabledSubscriptions +
+            ", outboxErrorRestartDelay=" + outboxErrorRestartDelay +
             '}';
     }
 
@@ -305,17 +357,22 @@ public final class DataStoreConfiguration {
         private Integer syncPageSize;
         private boolean doSyncRetry;
         private Map<String, DataStoreSyncExpression> syncExpressions;
+        private Set<Class<? extends Model>> disabledSyncs;
+        private Set<Class<? extends Model>> disabledSubscriptions;
         private boolean ensureDefaults;
         private JSONObject pluginJson;
         private DataStoreConfiguration userProvidedConfiguration;
         private Integer observeQueryMaxRecords;
         private long maxTimeLapseForObserveQuery;
+        private Integer outboxErrorRestartDelay;
 
         private Builder() {
             this.errorHandler = DefaultDataStoreErrorHandler.instance();
             this.conflictHandler = DataStoreConflictHandler.alwaysApplyRemote();
             this.syncExpressions = new HashMap<>();
             this.ensureDefaults = false;
+            this.disabledSyncs = new HashSet<>();
+            this.disabledSubscriptions = new HashSet<>();
         }
 
         private Builder(JSONObject pluginJson, DataStoreConfiguration userProvidedConfiguration) {
@@ -398,6 +455,17 @@ public final class DataStoreConfiguration {
         }
 
         /**
+         * Sets the delay for outbound record sync restart.
+         * @param outboxErrorRestartDelay maximum number of seconds to delay
+         * @return Current builder instance
+         */
+        @NonNull
+        public Builder outboxErrorRestartDelay(@IntRange(from = 0) Integer outboxErrorRestartDelay) {
+            this.outboxErrorRestartDelay = outboxErrorRestartDelay;
+            return Builder.this;
+        }
+
+        /**
          * Sets the retry enabled on datastore sync.
          * @param doSyncRetry Is retry enabled on datastore sync
          * @return Current builder instance
@@ -455,6 +523,28 @@ public final class DataStoreConfiguration {
             return Builder.this;
         }
 
+        /**
+         * Disables sync for a particular model.
+         * @param modelClass class for which sync is disabled.
+         * @return Current builder
+         */
+        @NonNull
+        public Builder disableSync(@NonNull Class<? extends Model> modelClass) {
+            this.disabledSyncs.add(Objects.requireNonNull(modelClass));
+            return Builder.this;
+        }
+
+        /**
+         * Disables subscriptions for a particular model.
+         * @param modelClass for which subscriptions are disabled.
+         * @return Current builder
+         */
+        @NonNull
+        public Builder disableSubscription(@NonNull Class<? extends Model> modelClass) {
+            this.disabledSubscriptions.add(Objects.requireNonNull(modelClass));
+            return Builder.this;
+        }
+
         private void populateSettingsFromJson() throws DataStoreException {
             if (pluginJson == null) {
                 return;
@@ -483,6 +573,10 @@ public final class DataStoreConfiguration {
                         case SYNC_PAGE_SIZE:
                             this.syncPageSize(pluginJson.getInt(ConfigKey.SYNC_PAGE_SIZE.toString()));
                             break;
+                        case OUTBOX_ERROR_RESTART_DELAY:
+                            this.outboxErrorRestartDelay(
+                                pluginJson.getInt(ConfigKey.OUTBOX_ERROR_RESTART_DELAY.toString()));
+                            break;
                         default:
                             throw new IllegalArgumentException("Unsupported config key = " + configKey.toString());
                     }
@@ -507,11 +601,15 @@ public final class DataStoreConfiguration {
             syncMaxRecords = getValueOrDefault(userProvidedConfiguration.getSyncMaxRecords(), syncMaxRecords);
             syncPageSize = getValueOrDefault(userProvidedConfiguration.getSyncPageSize(), syncPageSize);
             syncExpressions = userProvidedConfiguration.getSyncExpressions();
+            disabledSyncs = userProvidedConfiguration.getDisabledSyncs();
+            disabledSubscriptions = userProvidedConfiguration.getDisabledSubscriptions();
             doSyncRetry = getValueOrDefault(userProvidedConfiguration.getDoSyncRetry(), doSyncRetry);
             observeQueryMaxRecords = getValueOrDefault(userProvidedConfiguration.getObserveQueryMaxRecords(),
                     observeQueryMaxRecords);
             maxTimeLapseForObserveQuery = userProvidedConfiguration.getMaxTimeLapseForObserveQuery()
                     == 0 ? maxTimeLapseForObserveQuery : userProvidedConfiguration.getMaxTimeLapseForObserveQuery();
+            outboxErrorRestartDelay = getValueOrDefault(userProvidedConfiguration.getOutboxMutationErrorRestartDelay(),
+                outboxErrorRestartDelay);
         }
 
         private static <T> T getValueOrDefault(T value, T defaultValue) {
@@ -539,8 +637,11 @@ public final class DataStoreConfiguration {
                 syncMaxRecords = getValueOrDefault(syncMaxRecords, DEFAULT_SYNC_MAX_RECORDS);
                 syncPageSize = getValueOrDefault(syncPageSize, DEFAULT_SYNC_PAGE_SIZE);
                 observeQueryMaxRecords = getValueOrDefault(observeQueryMaxRecords, MAX_RECORDS);
+
                 maxTimeLapseForObserveQuery = maxTimeLapseForObserveQuery == 0 ? MAX_TIME_SEC :
                         maxTimeLapseForObserveQuery;
+                outboxErrorRestartDelay = getValueOrDefault(outboxErrorRestartDelay,
+                    DEFAULT_OUTBOX_ERROR_RESTART_DELAY);
             }
             return new DataStoreConfiguration(this);
         }
@@ -560,7 +661,11 @@ public final class DataStoreConfiguration {
          * Number of records that the client wants to process, while it is requesting
          * a base/delta sync operation from AppSync.
          */
-        SYNC_MAX_RECORDS("syncMaxRecords");
+        SYNC_MAX_RECORDS("syncMaxRecords"),
+        /**
+         * Number of seconds to delay restart of outbox in error.
+         */
+        OUTBOX_ERROR_RESTART_DELAY("outboxErrorRestartDelay");
 
         private final String key;
 

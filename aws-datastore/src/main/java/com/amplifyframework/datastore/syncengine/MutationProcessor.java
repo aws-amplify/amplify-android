@@ -24,6 +24,7 @@ import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.SchemaRegistry;
 import com.amplifyframework.core.model.SerializedModel;
+import com.amplifyframework.datastore.DataStoreConfigurationProvider;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.appsync.AppSyncConflictUnhandledError;
@@ -49,7 +50,6 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
  */
 final class MutationProcessor {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
-    private static final long ITEM_PROCESSING_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(10);
 
     private final Merger merger;
     private final VersionRepository versionRepository;
@@ -58,6 +58,8 @@ final class MutationProcessor {
     private final AppSync appSync;
     private final ConflictResolver conflictResolver;
     private final CompositeDisposable ongoingOperationsDisposable;
+    private final CompositeDisposable ongoingRestartDisposable;
+    private final DataStoreConfigurationProvider dataStoreConfigurationProvider;
 
     private MutationProcessor(Builder builder) {
         this.merger = Objects.requireNonNull(builder.merger);
@@ -67,6 +69,8 @@ final class MutationProcessor {
         this.appSync = Objects.requireNonNull(builder.appSync);
         this.conflictResolver = Objects.requireNonNull(builder.conflictResolver);
         this.ongoingOperationsDisposable = new CompositeDisposable();
+        this.ongoingRestartDisposable = new CompositeDisposable();
+        this.dataStoreConfigurationProvider = Objects.requireNonNull(builder.dataStoreConfigurationProvider);
     }
 
     /**
@@ -101,7 +105,17 @@ final class MutationProcessor {
             .flatMapCompletable(event -> drainMutationOutbox())
             .subscribe(
                 () -> LOG.warn("Observation of mutation outbox was completed."),
-                error -> LOG.warn("Error ended observation of mutation outbox: ", error)
+                error -> {
+                    LOG.warn("Error ended observation of mutation outbox, attempting restart.", error);
+                    ongoingRestartDisposable.add(Completable.timer(dataStoreConfigurationProvider
+                                .getConfiguration().getOutboxMutationErrorRestartDelay(),
+                            TimeUnit.SECONDS)
+                        .andThen(Completable.fromAction(this::startDrainingMutationOutbox))
+                        .subscribe(
+                            () -> LOG.warn("Restart of mutation outbox was completed."),
+                            re -> LOG.warn("Error ended restart of mutation outbox.", re)
+                        ));
+                }
             )
         );
     }
@@ -111,19 +125,17 @@ final class MutationProcessor {
         do {
             next = mutationOutbox.peek();
             if (next == null) {
-                return Completable.complete();
+                mutationOutbox.load().blockingAwait();
+                next = mutationOutbox.peek();
+                if (next == null) {
+                    return Completable.complete();
+                }
             }
             try {
-                boolean itemFailedToProcess = !processOutboxItem(next)
-                    .blockingAwait(ITEM_PROCESSING_TIMEOUT_MS, TimeUnit.MILLISECONDS);
-                if (itemFailedToProcess) {
-                    return Completable.error(new DataStoreException(
-                        "Timeout processing " + next, "Check your internet connection."
-                    ));
-                }
+                processOutboxItem(next).blockingAwait();
             } catch (RuntimeException error) {
                 return Completable.error(new DataStoreException(
-                        "Failed to process " + error, "Check your internet connection."
+                    "Failed to process " + next, error, "Check your internet connection."
                 ));
             }
         } while (true);
@@ -247,6 +259,7 @@ final class MutationProcessor {
     void stopDrainingMutationOutbox() {
         // Calling clear on ongoingOperationsDisposable triggers dispose method
         // to anything that was added to ongoingOperationsDisposable
+        ongoingRestartDisposable.clear();
         ongoingOperationsDisposable.clear();
     }
 
@@ -394,6 +407,7 @@ final class MutationProcessor {
             BuilderSteps.MutationOutboxStep,
             BuilderSteps.AppSyncStep,
             BuilderSteps.ConflictResolverStep,
+            BuilderSteps.DataStoreConfigurationProviderStep,
             BuilderSteps.BuildStep {
         private Merger merger;
         private VersionRepository versionRepository;
@@ -401,6 +415,7 @@ final class MutationProcessor {
         private MutationOutbox mutationOutbox;
         private AppSync appSync;
         private ConflictResolver conflictResolver;
+        private DataStoreConfigurationProvider dataStoreConfigurationProvider;
 
         @NonNull
         @Override
@@ -439,8 +454,17 @@ final class MutationProcessor {
 
         @NonNull
         @Override
-        public BuilderSteps.BuildStep conflictResolver(@NonNull ConflictResolver conflictResolver) {
+        public BuilderSteps.DataStoreConfigurationProviderStep conflictResolver(
+            @NonNull ConflictResolver conflictResolver) {
             this.conflictResolver = Objects.requireNonNull(conflictResolver);
+            return Builder.this;
+        }
+
+        @NonNull
+        @Override
+        public BuilderSteps.BuildStep dataStoreConfigurationProvider(
+            @NonNull DataStoreConfigurationProvider dataStoreConfigurationProvider) {
+            this.dataStoreConfigurationProvider = Objects.requireNonNull(dataStoreConfigurationProvider);
             return Builder.this;
         }
 
@@ -479,7 +503,13 @@ final class MutationProcessor {
 
         interface ConflictResolverStep {
             @NonNull
-            BuildStep conflictResolver(@NonNull ConflictResolver conflictResolver);
+            DataStoreConfigurationProviderStep conflictResolver(@NonNull ConflictResolver conflictResolver);
+        }
+
+        interface DataStoreConfigurationProviderStep {
+            @NonNull
+            BuildStep dataStoreConfigurationProvider(
+                DataStoreConfigurationProvider dataStoreConfiguration);
         }
 
         interface BuildStep {
