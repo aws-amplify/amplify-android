@@ -29,6 +29,7 @@ import com.amplifyframework.storage.StorageChannelEventName;
 import com.amplifyframework.storage.operation.StorageDownloadFileOperation;
 import com.amplifyframework.storage.options.StorageDownloadFileOptions;
 import com.amplifyframework.storage.options.StorageUploadFileOptions;
+import com.amplifyframework.storage.s3.helper.AmplifyTransferServiceTestHelper;
 import com.amplifyframework.storage.s3.test.R;
 import com.amplifyframework.testutils.FileAssert;
 import com.amplifyframework.testutils.random.RandomTempFile;
@@ -83,6 +84,8 @@ public final class AWSS3StorageDownloadTest {
     public static void setUpOnce() throws Exception {
         Context context = getApplicationContext();
 
+        AmplifyTransferServiceTestHelper.stopForegroundAndUnbind(getApplicationContext());
+
         // Init auth stuff
         SynchronousMobileClient.instance().initialize();
 
@@ -124,17 +127,21 @@ public final class AWSS3StorageDownloadTest {
 
         // Create a file to download to
         downloadFile = new RandomTempFile();
+
+        AmplifyTransferServiceTestHelper.stopForegroundAndUnbind(getApplicationContext());
     }
 
     /**
      * Unsubscribe from everything after each test.
      */
     @After
-    public void unsubscribe() {
+    public void tearDown() {
         // Unsubscribe from everything
         for (SubscriptionToken token : subscriptions) {
             Amplify.Hub.unsubscribe(token);
         }
+
+        AmplifyTransferServiceTestHelper.stopForegroundAndUnbind(getApplicationContext());
     }
 
     /**

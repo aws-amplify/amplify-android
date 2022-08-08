@@ -31,6 +31,7 @@ import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
 import androidx.annotation.RequiresApi
+import androidx.annotation.VisibleForTesting
 import androidx.core.app.NotificationCompat
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferNetworkLossHandler
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferStatusUpdaterAccessor
@@ -196,6 +197,7 @@ internal class AmplifyTransferService : Service() {
             }
         }
 
+        @JvmStatic
         fun stopForegroundAndUnbind(context: Context) {
             boundService?.stopForeground(true)
             boundServiceConnection?.let { context.unbindService(it) }
@@ -203,7 +205,8 @@ internal class AmplifyTransferService : Service() {
             notification = null
         }
 
-        private fun isNotificationShowing(): Boolean {
+        @VisibleForTesting
+        fun isNotificationShowing(): Boolean {
             return notification != null
         }
 
