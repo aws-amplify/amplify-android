@@ -28,6 +28,7 @@ import com.amplifyframework.storage.StorageCategory;
 import com.amplifyframework.storage.StorageChannelEventName;
 import com.amplifyframework.storage.operation.StorageUploadFileOperation;
 import com.amplifyframework.storage.options.StorageUploadFileOptions;
+import com.amplifyframework.storage.s3.helper.AmplifyTransferServiceTestHelper;
 import com.amplifyframework.storage.s3.test.R;
 import com.amplifyframework.testutils.random.RandomTempFile;
 import com.amplifyframework.testutils.sync.SynchronousMobileClient;
@@ -73,6 +74,8 @@ public final class AWSS3StorageUploadTest {
     public static void setUpOnce() throws Exception {
         Context context = getApplicationContext();
 
+        AmplifyTransferServiceTestHelper.stopForegroundAndUnbind(getApplicationContext());
+
         // Init auth stuff
         SynchronousMobileClient.instance().initialize();
 
@@ -93,17 +96,21 @@ public final class AWSS3StorageUploadTest {
 
         // Create a set to remember all the subscriptions
         subscriptions = new HashSet<>();
+
+        AmplifyTransferServiceTestHelper.stopForegroundAndUnbind(getApplicationContext());
     }
 
     /**
      * Unsubscribe from everything after each test.
      */
     @After
-    public void unsubscribe() {
+    public void tearDown() {
         // Unsubscribe from everything
         for (SubscriptionToken token : subscriptions) {
             Amplify.Hub.unsubscribe(token);
         }
+
+        AmplifyTransferServiceTestHelper.stopForegroundAndUnbind(getApplicationContext());
     }
 
     /**
