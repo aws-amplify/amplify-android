@@ -53,7 +53,7 @@ class AWSS3StorageTransferStressTest {
     fun setUp() {
         val context = getApplicationContext<Context>()
 
-        stopForegroundAndUnbind(getApplicationContext())
+        AmplifyTransferServiceTestHelper.stopForegroundAndUnbind(getApplicationContext())
 
         // Init auth stuff
         SynchronousMobileClient.instance().initialize()
