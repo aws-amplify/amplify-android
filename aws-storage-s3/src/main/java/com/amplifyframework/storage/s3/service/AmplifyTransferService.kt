@@ -140,7 +140,6 @@ internal class AmplifyTransferService : Service() {
                     transferNetworkLossHandler = null
                 }
             }
-
         } catch (iae: IllegalArgumentException) {
             /*
              * Ignore on purpose, just in case the service stops before
@@ -226,7 +225,7 @@ internal class AmplifyTransferService : Service() {
         @RequiresApi(api = Build.VERSION_CODES.O)
         private fun createChannel(context: Context) {
             val notificationManager = context.getSystemService(NOTIFICATION_SERVICE)
-                    as NotificationManager
+                as NotificationManager
             notificationManager.createNotificationChannel(
                 NotificationChannel(
                     context.getString(R.string.amplify_storage_notification_channel_id),
@@ -237,4 +236,3 @@ internal class AmplifyTransferService : Service() {
         }
     }
 }
-
