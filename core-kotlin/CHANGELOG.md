@@ -1,3 +1,13 @@
+## [Release 0.21.0](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.21.0)
+
+### Features
+- **datastore**: Implemented support for custom primary key (#1650)
+
+### Bug Fixes
+- **api:** allow post request with empty body (#1864)
+
+[See all changes between 0.20.5 and 0.21.0](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.20.5...release-kotlin_v0.21.0)
+
 ## [Release 0.20.5](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.20.5)
 
 ### Miscellaneous
