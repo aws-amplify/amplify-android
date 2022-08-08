@@ -33,6 +33,9 @@ dependencies {
     testImplementation dependency.mockk
     testImplementation dependency.mockito
     testImplementation dependency.robolectric
+    implementation dependency.androidx.test.core
+    testImplementation dependency.mockk
+    testImplementation dependency.kotlin.test.coroutines
 
     androidTestImplementation project(path: ':testutils')
     androidTestImplementation dependency.androidx.test.core

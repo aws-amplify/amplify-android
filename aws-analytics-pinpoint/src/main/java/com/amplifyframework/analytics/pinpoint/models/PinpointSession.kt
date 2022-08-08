@@ -14,12 +14,16 @@
  */
 package com.amplifyframework.analytics.pinpoint.models
 
+import kotlinx.serialization.Serializable
+
 /*
 * Internal representation of Pinpoint Session
 * */
+
+@Serializable
 internal class PinpointSession(
-    private val sessionId: String,
-    private val sessionStart: Long,
-    private val sessionEnd: Long? = null,
-    private val sessionDuration: Long? = null
+    val sessionId: String,
+    val sessionStart: Long,
+    val sessionEnd: Long? = null,
+    val sessionDuration: Long? = null
 )
