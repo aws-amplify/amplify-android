@@ -172,6 +172,7 @@ internal class AmplifyTransferService : Service() {
                         val binder = service as AmplifyTransferService.LocalBinder
                         boundService = binder.getService()
                         startForeground(context)
+                        boundService?.startUnbindCheck()
                     }
 
                     override fun onServiceDisconnected(name: ComponentName?) {
