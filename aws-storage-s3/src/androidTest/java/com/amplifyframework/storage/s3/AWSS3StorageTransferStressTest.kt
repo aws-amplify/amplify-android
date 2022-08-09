@@ -33,10 +33,10 @@ import com.amplifyframework.testutils.sync.SynchronousStorage
 import java.io.File
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
-import junit.framework.Assert.assertFalse
-import junit.framework.Assert.assertTrue
 import kotlin.random.Random
 import org.junit.After
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -111,7 +111,7 @@ class AWSS3StorageTransferStressTest {
                 {
                     Thread {
                         val fileName = "${FILE_PREFIX}$i"
-// random file size from 1-2MB
+                        // create random file with size from 1-2MB
                         val randomFile = RandomTempFile(fileName, 1024L * 1024 * Random.nextInt(1, 3))
                         synchronousStorage.uploadFile(fileName, randomFile, uploadOptions, STRESS_TEST_TIMEOUT)
                         transfersLatch.countDown()
