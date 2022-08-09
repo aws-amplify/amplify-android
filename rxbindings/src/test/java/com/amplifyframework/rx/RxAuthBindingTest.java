@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -597,21 +597,24 @@ public final class RxAuthBindingTest {
      */
     @Test
     public void testConfirmResetPasswordSucceeds() throws InterruptedException {
+        String username = RandomString.string();
         String newPassword = RandomString.string();
         String confirmationCode = RandomString.string();
 
         // Arrange completion callback to be invoked
         doAnswer(invocation -> {
-            // 0 = new pass, 1 = confirmation code, 2 = onComplete, 3 = onFailure
-            int positionOfCompletionAction = 2;
+            // 0 = username, 1 = new pass, 2 = confirmation code, 3 = onComplete, 4 = onFailure
+            int positionOfCompletionAction = 3;
             Action onComplete = invocation.getArgument(positionOfCompletionAction);
             onComplete.call();
             return null;
-        }).when(delegate).confirmResetPassword(eq(newPassword), eq(confirmationCode), anyAction(), anyConsumer());
+        }).when(delegate).confirmResetPassword(
+                eq(username), eq(newPassword), eq(confirmationCode), anyAction(), anyConsumer()
+        );
 
         // Act: call the binding
         TestObserver<Void> observer =
-            auth.confirmResetPassword(newPassword, confirmationCode).test();
+            auth.confirmResetPassword(username, newPassword, confirmationCode).test();
 
         // Assert: Completable was completed successfully
         observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
@@ -627,22 +630,25 @@ public final class RxAuthBindingTest {
      */
     @Test
     public void testConfirmResetPasswordFails() throws InterruptedException {
+        String username = RandomString.string();
         String newPassword = RandomString.string();
         String confirmationCode = RandomString.string();
 
         // Arrange delegate to furnish a failure
         AuthException failure = new AuthException("Confirm password reset ", " has failed.");
         doAnswer(invocation -> {
-            // 0 = new pass, 1 = confirmation code, 2 = onComplete, 3 = onFailure
-            int positionOfFailureConsumer = 3;
+            // 0 = username, 1 = new pass, 2 = confirmation code, 3 = onComplete, 4 = onFailure
+            int positionOfFailureConsumer = 4;
             Consumer<AuthException> onFailure = invocation.getArgument(positionOfFailureConsumer);
             onFailure.accept(failure);
             return null;
-        }).when(delegate).confirmResetPassword(eq(newPassword), eq(confirmationCode), anyAction(), anyConsumer());
+        }).when(delegate).confirmResetPassword(
+                eq(username), eq(newPassword), eq(confirmationCode), anyAction(), anyConsumer()
+        );
 
         // Act: call the binding
         TestObserver<Void> observer =
-            auth.confirmResetPassword(newPassword, confirmationCode).test();
+            auth.confirmResetPassword(username, newPassword, confirmationCode).test();
 
         // Assert: Completable terminated with failure
         observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);

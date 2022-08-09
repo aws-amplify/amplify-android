@@ -20,9 +20,6 @@ import com.amplifyframework.auth.cognito.actions.AuthenticationCognitoActions
 import com.amplifyframework.auth.cognito.actions.AuthorizationCognitoActions
 import com.amplifyframework.auth.cognito.actions.DeleteUserActions
 import com.amplifyframework.auth.cognito.actions.FetchAuthSessionCognitoActions
-import com.amplifyframework.auth.cognito.actions.FetchAwsCredentialsCognitoActions
-import com.amplifyframework.auth.cognito.actions.FetchIdentityCognitoActions
-import com.amplifyframework.auth.cognito.actions.FetchUserPoolTokensCognitoActions
 import com.amplifyframework.auth.cognito.actions.HostedUICognitoActions
 import com.amplifyframework.auth.cognito.actions.SRPCognitoActions
 import com.amplifyframework.auth.cognito.actions.SignInCognitoActions
@@ -36,9 +33,6 @@ import com.amplifyframework.statemachine.codegen.states.AuthenticationState
 import com.amplifyframework.statemachine.codegen.states.AuthorizationState
 import com.amplifyframework.statemachine.codegen.states.DeleteUserState
 import com.amplifyframework.statemachine.codegen.states.FetchAuthSessionState
-import com.amplifyframework.statemachine.codegen.states.FetchAwsCredentialsState
-import com.amplifyframework.statemachine.codegen.states.FetchIdentityState
-import com.amplifyframework.statemachine.codegen.states.FetchUserPoolTokensState
 import com.amplifyframework.statemachine.codegen.states.HostedUISignInState
 import com.amplifyframework.statemachine.codegen.states.SRPSignInState
 import com.amplifyframework.statemachine.codegen.states.SignInState
@@ -63,12 +57,7 @@ internal class AuthStateMachine(
                 AuthenticationCognitoActions,
             ),
             AuthorizationState.Resolver(
-                FetchAuthSessionState.Resolver(
-                    FetchAwsCredentialsState.Resolver(FetchAwsCredentialsCognitoActions),
-                    FetchIdentityState.Resolver(FetchIdentityCognitoActions),
-                    FetchUserPoolTokensState.Resolver(FetchUserPoolTokensCognitoActions),
-                    FetchAuthSessionCognitoActions
-                ),
+                FetchAuthSessionState.Resolver(FetchAuthSessionCognitoActions),
                 DeleteUserState.Resolver(DeleteUserActions),
                 AuthorizationCognitoActions
             ),
@@ -92,12 +81,7 @@ internal class AuthStateMachine(
                     AuthenticationCognitoActions,
                 ).logging(),
                 AuthorizationState.Resolver(
-                    FetchAuthSessionState.Resolver(
-                        FetchAwsCredentialsState.Resolver(FetchAwsCredentialsCognitoActions).logging(),
-                        FetchIdentityState.Resolver(FetchIdentityCognitoActions).logging(),
-                        FetchUserPoolTokensState.Resolver(FetchUserPoolTokensCognitoActions).logging(),
-                        FetchAuthSessionCognitoActions
-                    ).logging(),
+                    FetchAuthSessionState.Resolver(FetchAuthSessionCognitoActions).logging(),
                     DeleteUserState.Resolver(DeleteUserActions),
                     AuthorizationCognitoActions
                 ).logging(),

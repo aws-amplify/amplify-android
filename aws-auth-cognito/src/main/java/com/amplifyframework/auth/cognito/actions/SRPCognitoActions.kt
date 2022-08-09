@@ -109,7 +109,7 @@ object SRPCognitoActions : SRPActions {
                 logger?.verbose("$id Sending event ${finalizeEvent.type}")
                 dispatcher.send(finalizeEvent)
 
-                AuthenticationEvent(AuthenticationEvent.EventType.InitializedSignedIn(signedInData!!))
+                AuthenticationEvent(AuthenticationEvent.EventType.SignInCompleted(signedInData!!))
             } catch (e: Exception) {
                 val errorEvent = SRPEvent(SRPEvent.EventType.ThrowPasswordVerifierError(e))
                 logger?.verbose("$id Sending event ${errorEvent.type}")

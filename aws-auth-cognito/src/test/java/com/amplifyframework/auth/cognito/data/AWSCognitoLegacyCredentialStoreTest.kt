@@ -164,7 +164,7 @@ class AWSCognitoLegacyCredentialStoreTest {
     }
 
     private fun getCredential(): AmplifyCredential {
-        return AmplifyCredential(
+        return AmplifyCredential.UserAndIdentityPool(
             CognitoUserPoolTokens("idToken", "accessToken", "refreshToken", 123123),
             "identityPool",
             AWSCredentials("accessKeyId", "secretAccessKey", "sessionToken", 123123)
