@@ -19,7 +19,6 @@ import android.content.Context
 import aws.sdk.kotlin.services.pinpoint.model.ChannelType
 import com.amplifyframework.analytics.pinpoint.internal.core.idresolver.SharedPrefsUniqueIdService
 import com.amplifyframework.analytics.pinpoint.internal.core.util.DateUtil.isoDateFromMillis
-import com.amplifyframework.analytics.pinpoint.internal.core.util.clip
 import com.amplifyframework.analytics.pinpoint.models.AndroidAppDetails
 import com.amplifyframework.analytics.pinpoint.models.AndroidDeviceDetails
 import com.amplifyframework.analytics.pinpoint.targeting.notification.PinpointNotificationClient
@@ -72,10 +71,8 @@ internal class EndpointProfile(
     )
     var effectiveDate: Long = Date().time
     var user: EndpointProfileUser = EndpointProfileUser()
-    val applicationId: String
-        get() = appDetails.appId
-    val endpointId: String
-        get() = idService.getUniqueId()
+    val applicationId = appDetails.appId
+    val endpointId = idService.getUniqueId()
 
     /**
      * Channel Type of this endpoint, currently defaults to GCM
@@ -99,10 +96,7 @@ internal class EndpointProfile(
      * @param values An array of values of the custom attribute. The values will be truncated if
      * it exceeds 100 characters.
      */
-    fun addAttribute(name: String?, values: List<String>?) {
-        if (null == name) {
-            return
-        }
+    fun addAttribute(name: String, values: List<String>?) {
         if (null != values) {
             if (currentNumOfAttributesAndMetrics.get() < MAX_NUM_OF_METRICS_AND_ATTRIBUTES) {
                 val key = processAttributeMetricKey(name)
@@ -127,10 +121,8 @@ internal class EndpointProfile(
      * @return true if this [EndpointProfile] has a custom attribute with the
      * specified name, false otherwise
      */
-    fun hasAttribute(attributeName: String?): Boolean {
-        return if (attributeName == null) {
-            false
-        } else attributes.containsKey(attributeName)
+    fun hasAttribute(attributeName: String): Boolean {
+        return attributes.containsKey(attributeName)
     }
 
     /**
@@ -140,10 +132,8 @@ internal class EndpointProfile(
      * @return The array of custom attributes with the specified name, or null if attribute does
      * not exist
      */
-    fun getAttribute(name: String?): List<String>? {
-        return if (name == null) {
-            null
-        } else attributes[name]
+    fun getAttribute(name: String): List<String>? {
+        return attributes[name]
     }
 
     /**
@@ -159,7 +149,7 @@ internal class EndpointProfile(
      * @return The same [EndpointProfile] instance is returned to allow for
      * method chaining.
      */
-    fun withAttribute(name: String?, values: List<String>): EndpointProfile {
+    fun withAttribute(name: String, values: List<String>): EndpointProfile {
         addAttribute(name, values)
         return this
     }
@@ -183,10 +173,7 @@ internal class EndpointProfile(
      * exceeds 50 characters.
      * @param value The value of the metric.
      */
-    fun addMetric(name: String?, value: Double?) {
-        if (null == name) {
-            return
-        }
+    fun addMetric(name: String, value: Double?) {
         if (null != value) {
             if (currentNumOfAttributesAndMetrics.get() <
                 MAX_NUM_OF_METRICS_AND_ATTRIBUTES
@@ -217,10 +204,8 @@ internal class EndpointProfile(
      * @return true if this [EndpointProfile] has a metric with the
      * specified name, false otherwise
      */
-    fun hasMetric(metricName: String?): Boolean {
-        return if (metricName == null) {
-            false
-        } else metrics.containsKey(metricName)
+    fun hasMetric(metricName: String): Boolean {
+        return metrics.containsKey(metricName)
     }
 
     /**
@@ -230,10 +215,8 @@ internal class EndpointProfile(
      * @return The metric with the specified name, or null if metric does not
      * exist
      */
-    fun getMetric(name: String?): Double? {
-        return if (name == null) {
-            null
-        } else metrics[name]
+    fun getMetric(name: String): Double? {
+        return metrics[name]
     }
 
     /**
@@ -248,7 +231,7 @@ internal class EndpointProfile(
      * @return The same [EndpointProfile] instance is returned to allow for
      * method chaining.
      */
-    fun withMetric(name: String?, value: Double): EndpointProfile {
+    fun withMetric(name: String, value: Double): EndpointProfile {
         addMetric(name, value)
         return this
     }
@@ -324,7 +307,7 @@ internal class EndpointProfile(
         private val LOG = Amplify.Logging.forNamespace("amplify:aws-analytics-pinpoint")
         private const val JSON_INDENTATION = 4
         private fun processAttributeMetricKey(key: String): String {
-            val trimmedKey = key.clip(MAX_ENDPOINT_ATTRIBUTE_METRIC_KEY_LENGTH, false)
+            val trimmedKey = key.take(MAX_ENDPOINT_ATTRIBUTE_METRIC_KEY_LENGTH)
             if (trimmedKey.length < key.length) {
                 LOG.warn(
                     "The attribute key has been trimmed to a length of $MAX_ENDPOINT_ATTRIBUTE_METRIC_KEY_LENGTH " +
@@ -337,7 +320,7 @@ internal class EndpointProfile(
         private fun processAttributeValues(values: List<String>): List<String> {
             val trimmedValues: MutableList<String> = ArrayList()
             for ((valuesCount, value) in values.withIndex()) {
-                val trimmedValue = value.clip(MAX_ENDPOINT_ATTRIBUTE_VALUE_LENGTH, false)
+                val trimmedValue = value.take(MAX_ENDPOINT_ATTRIBUTE_VALUE_LENGTH)
                 if (trimmedValue.length < value.length) {
                     LOG.warn(
                         "The attribute value has been trimmed to a length of $MAX_ENDPOINT_ATTRIBUTE_VALUE_LENGTH " +

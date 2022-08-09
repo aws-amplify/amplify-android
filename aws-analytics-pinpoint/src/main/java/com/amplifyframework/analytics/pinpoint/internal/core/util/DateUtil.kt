@@ -54,18 +54,6 @@ object DateUtil {
         return dateFormat.format(date)
     }
 
-    /**
-     * Creates a DateFormat object using the specified format string that is
-     * independent of Locale
-     *
-     * @param dateFormatString The date format string to use when formatting a
-     * date
-     * @return A Locale Independent DateFormat object
-     */
-    fun createLocaleIndependentDateFormatter(dateFormatString: String?): DateFormat {
-        return SimpleDateFormat(dateFormatString, Locale.US)
-    }
-
     init {
         dateFormat.timeZone = TimeZone.getTimeZone("UTC")
     }

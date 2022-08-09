@@ -48,8 +48,8 @@ internal class TargetingClient(
     pinpointNotificationClient: PinpointNotificationClient,
     idService: SharedPrefsUniqueIdService,
     private val prefs: SharedPreferences,
-    private val appDetails: AndroidAppDetails,
-    private val deviceDetails: AndroidDeviceDetails,
+    appDetails: AndroidAppDetails,
+    deviceDetails: AndroidDeviceDetails,
     applicationContext: Context,
 ) {
     private val endpointProfile: EndpointProfile =
