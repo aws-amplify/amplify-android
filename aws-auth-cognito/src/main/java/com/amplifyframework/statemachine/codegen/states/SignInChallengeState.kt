@@ -20,21 +20,21 @@ import com.amplifyframework.statemachine.StateMachineEvent
 import com.amplifyframework.statemachine.StateMachineResolver
 import com.amplifyframework.statemachine.StateResolution
 import com.amplifyframework.statemachine.codegen.actions.SignInChallengeActions
+import com.amplifyframework.statemachine.codegen.data.AuthChallenge
 import com.amplifyframework.statemachine.codegen.events.SignInChallengeEvent
 
 sealed class SignInChallengeState : State {
     data class NotStarted(val id: String = "") : SignInChallengeState()
-    data class WaitingForAnswer(val id: String = "") : SignInChallengeState()
+
+    data class WaitingForAnswer(val challenge: AuthChallenge) : SignInChallengeState()
     data class Verifying(val id: String = "") : SignInChallengeState()
     data class Verified(val id: String = "") : SignInChallengeState()
-    data class Error(val error: Exception) : SignInChallengeState()
+    data class Error(val exception: Exception) : SignInChallengeState()
 
-    override val type = this.toString()
+    class Resolver(private val challengeActions: SignInChallengeActions) : StateMachineResolver<SignInChallengeState> {
+        override val defaultState: SignInChallengeState = NotStarted()
 
-    class Resolver(private val signinChallengeActions: SignInChallengeActions) : StateMachineResolver<SignInChallengeState> {
-        override val defaultState = NotStarted()
-
-        private fun asCustomSignInEvent(event: StateMachineEvent): SignInChallengeEvent.EventType? {
+        private fun asSignInChallengeEvent(event: StateMachineEvent): SignInChallengeEvent.EventType? {
             return (event as? SignInChallengeEvent)?.eventType
         }
 
@@ -43,30 +43,25 @@ sealed class SignInChallengeState : State {
             event: StateMachineEvent
         ): StateResolution<SignInChallengeState> {
             val defaultResolution = StateResolution(oldState)
-            val signInChallengeEvent = asCustomSignInEvent(event)
+            val challengeEvent = asSignInChallengeEvent(event)
             return when (oldState) {
-                is NotStarted -> {
-                    when (signInChallengeEvent) {
-                        is SignInChallengeEvent.EventType.WaitForAnswer -> {
-                            signinChallengeActions.initiateChallengeAuthAction(signInChallengeEvent)
-                            StateResolution(WaitingForAnswer())
-                        }
-                        else -> defaultResolution
-                    }
+                is NotStarted -> when (challengeEvent) {
+                    is SignInChallengeEvent.EventType.WaitForAnswer -> StateResolution(
+                        WaitingForAnswer(challengeEvent.challenge)
+                    )
+                    else -> defaultResolution
                 }
-                is WaitingForAnswer -> {
-                    when (signInChallengeEvent) {
-                        is SignInChallengeEvent.EventType.VerifyChallengeAnswer -> TODO()
-                        is SignInChallengeEvent.EventType.ThrowError -> StateResolution(Error(signInChallengeEvent.exception))
-                        else -> defaultResolution
+                is WaitingForAnswer -> when (challengeEvent) {
+                    is SignInChallengeEvent.EventType.VerifyChallengeAnswer -> {
+                        val action = challengeActions.verifyChallengeAuthAction(challengeEvent, oldState.challenge)
+                        StateResolution(Verifying(), listOf(action))
                     }
+                    else -> defaultResolution
                 }
-                is Verifying -> {
-                    when (signInChallengeEvent) {
-                        is SignInChallengeEvent.EventType.FinalizeSignIn -> TODO()
-                        is SignInChallengeEvent.EventType.ThrowError -> StateResolution(Error(signInChallengeEvent.exception))
-                        else -> defaultResolution
-                    }
+                is Verifying -> when (challengeEvent) {
+                    // finalize sign in
+                    is SignInChallengeEvent.EventType.Verified -> StateResolution(Verified())
+                    else -> defaultResolution
                 }
                 else -> defaultResolution
             }

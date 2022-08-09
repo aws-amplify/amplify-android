@@ -15,23 +15,16 @@
 
 package com.amplifyframework.statemachine.codegen.events
 
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
 import com.amplifyframework.statemachine.StateMachineEvent
+import com.amplifyframework.statemachine.codegen.data.AuthChallenge
 import java.util.Date
 
-class SignInChallengeEvent(
-    val eventType: EventType,
-    override val time: Date? = null,
-) : StateMachineEvent {
+class SignInChallengeEvent(val eventType: EventType, override val time: Date? = null) : StateMachineEvent {
     sealed class EventType {
-        data class WaitForAnswer(
-            var challengeName: ChallengeNameType? = null,
-            var challengeResponses: Map<String, String>? = null,
-            var session: String? = null
-        ) : EventType()
+        data class WaitForAnswer(val challenge: AuthChallenge) : EventType()
+        data class VerifyChallengeAnswer(val answer: String) : EventType()
         data class FinalizeSignIn(val accessToken: String) : EventType()
-        data class VerifyChallengeAnswer(val accessToken: String) : EventType()
-        data class ThrowError(val exception: Exception) : EventType()
+        data class Verified(val id: String = "") : EventType()
     }
 
     override val type: String = eventType.javaClass.simpleName
