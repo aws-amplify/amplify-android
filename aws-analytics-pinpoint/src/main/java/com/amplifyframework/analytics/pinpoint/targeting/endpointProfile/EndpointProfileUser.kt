@@ -17,12 +17,9 @@ package com.amplifyframework.analytics.pinpoint.targeting.endpointProfile
 
 import com.amplifyframework.core.Amplify
 import java.util.concurrent.ConcurrentHashMap
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
+import kotlinx.serialization.Serializable
 
+@Serializable
 class EndpointProfileUser {
     private var userId: String? = null
     private var userAttributes: MutableMap<String, List<String>>? = null
@@ -48,29 +45,6 @@ class EndpointProfileUser {
         }
         userAttributes!![key] = value
         return this
-    }
-
-    fun toJSONObject(): JsonObject {
-        return buildJsonObject {
-            put("UserId", userId)
-            if (getUserAttributes() != null) {
-                val attributesJson = buildJsonObject {
-                    for ((key, value) in getUserAttributes()!!) {
-                        try {
-                            put(key, value.map { JsonPrimitive(it) } as JsonElement)
-                        } catch (e: Exception) {
-                            // Do not log e due to potentially sensitive information
-                            LOG.warn("Error serializing user attributes.")
-                        }
-                    }
-                }
-
-                // If there are any attributes put then add the attributes to the structure
-                if (attributesJson.isNotEmpty()) {
-                    put("UserAttributes", attributesJson)
-                }
-            }
-        }
     }
 
     companion object {

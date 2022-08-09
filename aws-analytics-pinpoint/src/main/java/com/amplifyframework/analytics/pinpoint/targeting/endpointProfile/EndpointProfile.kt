@@ -26,10 +26,12 @@ import com.amplifyframework.analytics.pinpoint.targeting.notification.PinpointNo
 import com.amplifyframework.core.Amplify
 import java.util.Collections
 import java.util.Date
+import java.util.MissingResourceException
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.collections.ArrayList
-import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
@@ -39,7 +41,7 @@ internal class EndpointProfile(
     private val pinpointNotificationClient: PinpointNotificationClient,
     private val idService: SharedPrefsUniqueIdService,
     private val appDetails: AndroidAppDetails,
-    private val deviceDetails: AndroidDeviceDetails,
+    deviceDetails: AndroidDeviceDetails,
     applicationContext: Context
 ) {
     private val attributes: MutableMap<String, List<String>> = ConcurrentHashMap()
@@ -56,11 +58,17 @@ internal class EndpointProfile(
             pinpointNotificationClient.getDeviceToken().isNotBlank()
         ) "NONE" else "ALL"
 
-    var location: EndpointProfileLocation = EndpointProfileLocation(applicationContext)
+    private val country: String = try {
+        applicationContext.resources.configuration.locales[0].isO3Country
+    } catch (exception: MissingResourceException) {
+        LOG.debug("Locale getISO3Country failed, falling back to getCountry.")
+        applicationContext.resources.configuration.locales[0].country
+    }
+    var location: EndpointProfileLocation = EndpointProfileLocation(country)
     var demographic: EndpointProfileDemographic = EndpointProfileDemographic(
         appDetails,
         deviceDetails,
-        applicationContext
+        country
     )
     var effectiveDate: Long = Date().time
     var user: EndpointProfileUser = EndpointProfileUser()
@@ -264,8 +272,8 @@ internal class EndpointProfile(
             put("EndpointId", endpointId)
             put("ChannelType", channelType.value)
             put("Address", address)
-            put("Location", location.toJSONObject())
-            put("Demographic", demographic.toJSONObject())
+            put("Location", Json.encodeToString(EndpointProfileLocation.serializer(), location))
+            put("Demographic", Json.encodeToString(EndpointProfileDemographic.serializer(), demographic))
             put(
                 "EffectiveDate",
                 isoDateFromMillis(
@@ -276,7 +284,7 @@ internal class EndpointProfile(
             val attributesJson = buildJsonObject {
                 for ((key, value) in allAttributes) {
                     try {
-                        put(key, value.map { JsonPrimitive(it) } as JsonElement)
+                        put(key, JsonArray(value.map { JsonPrimitive(it) }))
                     } catch (e: Exception) {
                         // Do not log e due to potentially sensitive information
                         LOG.warn("Error serializing attributes.")
@@ -304,7 +312,7 @@ internal class EndpointProfile(
                 put("Metrics", metricsJson)
             }
 
-            put("User", user.toJSONObject())
+            put("User", Json.encodeToString(EndpointProfileUser.serializer(), user))
         }
     }
 
