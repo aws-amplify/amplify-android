@@ -6,10 +6,13 @@ import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.CustomSignInActions
+import com.amplifyframework.statemachine.codegen.data.AuthChallenge
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.CustomSignInEvent
+import com.amplifyframework.statemachine.codegen.events.SignInChallengeEvent
 
 class SignInCustomActions : CustomSignInActions {
+    //TODO: Look into potentially replacing the main sign in with this method
     override fun initiateCustomSignInAuthAction(event: CustomSignInEvent.EventType.InitiateCustomSignIn): Action =
         Action<AuthEnvironment>("InitSRPAuth") { id, dispatcher ->
             logger?.verbose("$id Starting execution")
@@ -34,11 +37,25 @@ class SignInCustomActions : CustomSignInActions {
                 }
 
                 when (initiateAuthResponse?.challengeName) {
-                    //TODO: Call the Challenge State machine which deals with the challenge and its parameters and once done call the finalize sign in
                     ChallengeNameType.CustomChallenge -> initiateAuthResponse.challengeParameters?.let {
-                        CustomSignInEvent(CustomSignInEvent.EventType.FinalizeSignIn("TODO"))
-                    } ?: throw Exception("Auth challenge parameters are empty.")
-                    else -> throw Exception("Not yet implemented.")
+                        SignInChallengeEvent(
+                            SignInChallengeEvent.EventType.WaitForAnswer(
+                                AuthChallenge(
+                                    challengeName = initiateAuthResponse.challengeName.toString(),
+                                    parameters = it,
+                                    session = initiateAuthResponse.session,
+                                    username = event.username
+                                )
+                            )
+                        )
+                    }
+                    ChallengeNameType.DevicePasswordVerifier -> TODO()
+                    ChallengeNameType.DeviceSrpAuth -> TODO()
+                    ChallengeNameType.MfaSetup -> TODO()
+                    ChallengeNameType.NewPasswordRequired -> TODO()
+                    ChallengeNameType.PasswordVerifier -> TODO()
+                    ChallengeNameType.SmsMfa -> TODO()
+                    else -> null
                 }
             } catch (e: Exception) {
                 val errorEvent = CustomSignInEvent(CustomSignInEvent.EventType.ThrowAuthError(e))
