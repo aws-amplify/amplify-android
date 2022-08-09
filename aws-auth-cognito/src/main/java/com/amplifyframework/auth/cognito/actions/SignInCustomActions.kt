@@ -2,6 +2,7 @@ package com.amplifyframework.auth.cognito.actions
 
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AuthFlowType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
+import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.statemachine.Action
@@ -12,7 +13,6 @@ import com.amplifyframework.statemachine.codegen.events.CustomSignInEvent
 import com.amplifyframework.statemachine.codegen.events.SignInChallengeEvent
 
 class SignInCustomActions : CustomSignInActions {
-    //TODO: Look into potentially replacing the main sign in with this method
     override fun initiateCustomSignInAuthAction(event: CustomSignInEvent.EventType.InitiateCustomSignIn): Action =
         Action<AuthEnvironment>("InitSRPAuth") { id, dispatcher ->
             logger?.verbose("$id Starting execution")
@@ -36,32 +36,34 @@ class SignInCustomActions : CustomSignInActions {
                     authParameters = authParams
                 }
 
-                when (initiateAuthResponse?.challengeName) {
-                    ChallengeNameType.CustomChallenge -> initiateAuthResponse.challengeParameters?.let {
-                        SignInChallengeEvent(
-                            SignInChallengeEvent.EventType.WaitForAnswer(
-                                AuthChallenge(
-                                    challengeName = initiateAuthResponse.challengeName.toString(),
-                                    parameters = it,
-                                    session = initiateAuthResponse.session,
-                                    username = event.username
-                                )
+                if (initiateAuthResponse?.challengeName == ChallengeNameType.CustomChallenge && initiateAuthResponse.challengeParameters != null) {
+                    SignInChallengeEvent(
+                        SignInChallengeEvent.EventType.WaitForAnswer(
+                            AuthChallenge(
+                                challengeName = initiateAuthResponse.challengeName.toString(),
+                                parameters = initiateAuthResponse.challengeParameters,
+                                session = initiateAuthResponse.session,
+                                username = event.username
                             )
                         )
-                    }
-                    ChallengeNameType.DevicePasswordVerifier -> TODO()
-                    ChallengeNameType.DeviceSrpAuth -> TODO()
-                    ChallengeNameType.MfaSetup -> TODO()
-                    ChallengeNameType.NewPasswordRequired -> TODO()
-                    ChallengeNameType.PasswordVerifier -> TODO()
-                    ChallengeNameType.SmsMfa -> TODO()
-                    else -> null
+                    )
+                } else {
+                    val errorEvent = CustomSignInEvent(
+                        CustomSignInEvent.EventType.ThrowAuthError(
+                            AuthException(
+                                "This sign in method is not supported",
+                                "Please consult our docs for supported sign in methods"
+                            )
+                        )
+                    )
+                    logger?.verbose("$id Sending event ${errorEvent.type}")
+                    dispatcher.send(errorEvent)
+                    AuthenticationEvent(AuthenticationEvent.EventType.CancelSignIn())
                 }
             } catch (e: Exception) {
                 val errorEvent = CustomSignInEvent(CustomSignInEvent.EventType.ThrowAuthError(e))
                 logger?.verbose("$id Sending event ${errorEvent.type}")
                 dispatcher.send(errorEvent)
-
                 AuthenticationEvent(AuthenticationEvent.EventType.CancelSignIn())
             }
             logger?.verbose("$id Sending event ${evt.type}")

@@ -34,6 +34,7 @@ import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.cognito.helpers.JWTParser
 import com.amplifyframework.auth.cognito.helpers.SignInChallengeHelper
+import com.amplifyframework.auth.cognito.options.AWSCognitoAuthConfirmSignInOptions
 import com.amplifyframework.auth.cognito.usecases.ResetPasswordUseCase
 import com.amplifyframework.auth.options.AWSCognitoAuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
@@ -82,13 +83,13 @@ import com.amplifyframework.statemachine.codegen.states.SignInChallengeState
 import com.amplifyframework.statemachine.codegen.states.SignInState
 import com.amplifyframework.statemachine.codegen.states.SignOutState
 import com.amplifyframework.statemachine.codegen.states.SignUpState
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
-import kotlin.coroutines.suspendCoroutine
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
 
 internal class RealAWSCognitoAuthPlugin(
     private val configuration: AuthConfiguration,
@@ -455,7 +456,8 @@ internal class RealAWSCognitoAuthPlugin(
                 }
             },
             {
-                val event = SignInChallengeEvent(SignInChallengeEvent.EventType.VerifyChallengeAnswer(confirmationCode))
+                val awsCognitoConfirmSignInOptions: AWSCognitoAuthConfirmSignInOptions = options as AWSCognitoAuthConfirmSignInOptions
+                val event = SignInChallengeEvent(SignInChallengeEvent.EventType.VerifyChallengeAnswer(confirmationCode, awsCognitoConfirmSignInOptions.metadata))
                 authStateMachine.send(event)
             }
         )

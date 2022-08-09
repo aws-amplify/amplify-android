@@ -17,7 +17,6 @@ package com.amplifyframework.auth.cognito.actions
 
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
 import com.amplifyframework.auth.cognito.AuthEnvironment
-import com.amplifyframework.auth.cognito.helpers.SRPHelper
 import com.amplifyframework.auth.cognito.helpers.SignInChallengeHelper
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.SignInChallengeActions
@@ -26,22 +25,27 @@ import com.amplifyframework.statemachine.codegen.events.SignInChallengeEvent
 import com.amplifyframework.statemachine.codegen.events.SignInEvent
 
 object SignInChallengeCognitoActions : SignInChallengeActions {
-    override fun verifySignInChallenge(
+    override fun verifyChallengeAuthAction(
         event: SignInChallengeEvent.EventType.VerifyChallengeAnswer,
         challenge: AuthChallenge
-    ) = Action<AuthEnvironment>("VerifySignInChallenge") { id, dispatcher ->
+    ): Action = Action<AuthEnvironment>("VerifySignInChallenge") { id, dispatcher ->
         logger?.verbose("$id Starting execution")
         val evt = try {
             val username = challenge.username
-            var challengeResponses = mapOf("USERNAME" to username)
+            var challengeResponses = mapOf<String, String>()
 
-            challenge.getChallengeResponseKey()?.also {
-                challengeResponses = challengeResponses.plus(it to event.answer)
+            if (!username.isNullOrEmpty()) {
+                challengeResponses = mapOf("USERNAME" to username)
             }
 
-            // TODO: add attributes data from event to challenge response map
+            challenge.getChallengeResponseKey()?.also { responseKey ->
+                challengeResponses.plus(responseKey to event.answer).also { challengeResponses = it }
+            }
+            event.options.forEach { (key, value) ->
+                challengeResponses.plus(key to value).also { challengeResponses = it }
+            }
 
-            val secretHash = SRPHelper.getSecretHash(
+            val secretHash = srpHelper.getSecretHash(
                 username,
                 configuration.userPool?.appClient,
                 configuration.userPool?.appClientSecret
@@ -55,7 +59,7 @@ object SignInChallengeCognitoActions : SignInChallengeActions {
                 session = challenge.session
             }
 
-            SignInChallengeHelper.evaluateNextStep("", username, response)
+            SignInChallengeHelper.evaluateNextStep("", username as String, response)
         } catch (e: Exception) {
             SignInEvent(SignInEvent.EventType.ThrowError(e))
         }
