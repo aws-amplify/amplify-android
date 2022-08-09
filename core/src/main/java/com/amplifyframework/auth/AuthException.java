@@ -609,6 +609,15 @@ public class AuthException extends AmplifyException {
         public UserCancelledException(String message, Throwable cause, String recoverySuggestion) {
             super(message, cause, recoverySuggestion);
         }
+
+        /**
+         * Constructs an {@link UserCancelledException}.
+         * @param message Describes why the error has occurred
+         * @param recoverySuggestion How to remedy the error, if possible
+         */
+        public UserCancelledException(String message, String recoverySuggestion) {
+            super(message, recoverySuggestion);
+        }
     }
 
     /**

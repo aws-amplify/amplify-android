@@ -21,6 +21,7 @@ typealias HostedUIJsonConfiguration = OauthConfiguration
 
 data class OauthConfiguration internal constructor(
     val appClient: String,
+    val appSecret: String?,
     val domain: String,
     val scopes: Set<String>,
     val signInRedirectURI: String,
@@ -31,6 +32,7 @@ data class OauthConfiguration internal constructor(
         fun fromJson(jsonObject: JSONObject?): OauthConfiguration? {
             return jsonObject?.run {
                 val appClient = optString("AppClientId").takeUnless { it.isNullOrEmpty() }
+                val appSecret = optString("AppClientSecret", null).takeUnless { it.isNullOrEmpty() }
                 val domain = optString("WebDomain").takeUnless { it.isNullOrEmpty() }
                 val scopes = optJSONArray("Scopes")?.let { scopesArray ->
                     val scopesSet = mutableSetOf<String>()
@@ -45,7 +47,7 @@ data class OauthConfiguration internal constructor(
                 return if (appClient != null && domain != null && scopes != null && signInRedirectURI != null &&
                     signOutRedirectURI != null
                 ) {
-                    OauthConfiguration(appClient, domain, scopes, signInRedirectURI, signOutRedirectURI)
+                    OauthConfiguration(appClient, appSecret, domain, scopes, signInRedirectURI, signOutRedirectURI)
                 } else {
                     return null
                 }

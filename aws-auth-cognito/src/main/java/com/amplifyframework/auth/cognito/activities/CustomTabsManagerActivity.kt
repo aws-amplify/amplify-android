@@ -20,6 +20,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
+import com.amplifyframework.core.Amplify
 
 /**
  * Handles Hosted UI sign in with custom tabs
@@ -84,6 +85,7 @@ class CustomTabsManagerActivity : Activity() {
     private fun handleAuthorizationCanceled() {
         Log.d(TAG, "Authorization flow canceled by user")
         setResult(RESULT_CANCELED)
+        Amplify.Auth.handleWebUISignInResponse(null)
     }
 
     private fun extractState(state: Bundle?) {

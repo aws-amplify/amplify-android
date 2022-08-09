@@ -31,8 +31,8 @@ import com.amplifyframework.auth.AuthSession
 import com.amplifyframework.auth.AuthUser
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
+import com.amplifyframework.auth.cognito.helpers.HostedUISignInOptionsHelper
 import com.amplifyframework.auth.cognito.helpers.JWTParser
-import com.amplifyframework.auth.cognito.options.HostedUISignInOptions
 import com.amplifyframework.auth.cognito.usecases.ResetPasswordUseCase
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions
@@ -72,6 +72,7 @@ import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
 import com.amplifyframework.statemachine.codegen.events.CredentialStoreEvent
 import com.amplifyframework.statemachine.codegen.events.DeleteUserEvent
+import com.amplifyframework.statemachine.codegen.events.HostedUIEvent
 import com.amplifyframework.statemachine.codegen.events.SignOutEvent
 import com.amplifyframework.statemachine.codegen.events.SignUpEvent
 import com.amplifyframework.statemachine.codegen.states.AuthenticationState
@@ -95,7 +96,6 @@ internal class RealAWSCognitoAuthPlugin(
     private val authEnvironment: AuthEnvironment,
     private val authStateMachine: AuthStateMachine,
     private val credentialStoreStateMachine: CredentialStoreStateMachine,
-    private val hostedUIClient: HostedUIClient?,
     private val logger: Logger
 ) : AuthCategoryBehavior {
 
@@ -500,7 +500,7 @@ internal class RealAWSCognitoAuthPlugin(
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
     ) {
-        if (configuration.oauth == null || hostedUIClient == null) {
+        if (configuration.oauth == null || authEnvironment.hostedUIClient == null) {
             onError.accept(
                 AuthException(
                     "Sign in failed.",
@@ -534,11 +534,11 @@ internal class RealAWSCognitoAuthPlugin(
                 }
             },
             {
-                val hostedUIOptions = HostedUISignInOptions.createWebSignInOptions(options, configuration.oauth)
+                val hostedUIOptions = HostedUISignInOptionsHelper.createWebSignInOptions(options, configuration.oauth)
                 authStateMachine.send(
                     AuthenticationEvent(
                         AuthenticationEvent.EventType.SignInRequested(
-                            SignInData.HostedUISignInData(callingActivity, hostedUIClient, hostedUIOptions)
+                            SignInData.HostedUISignInData(callingActivity, hostedUIOptions)
                         )
                     )
                 )
@@ -547,7 +547,20 @@ internal class RealAWSCognitoAuthPlugin(
     }
 
     override fun handleWebUISignInResponse(intent: Intent?) {
-        TODO("Not yet implemented")
+        val callbackUri = intent?.data
+        if (callbackUri == null) {
+            authStateMachine.send(
+                HostedUIEvent(HostedUIEvent.EventType.ThrowError(
+                    AuthException.UserCancelledException(
+                        "The user cancelled the sign-in attempt, so it did not complete.",
+                        "To recover: catch this error, and show the sign-in screen again."
+                    )
+                ))
+            )
+            authStateMachine.send(AuthenticationEvent(AuthenticationEvent.EventType.CancelSignIn()))
+            return
+        }
+        authStateMachine.send(HostedUIEvent(HostedUIEvent.EventType.FetchToken(callbackUri)))
     }
 
     override fun fetchAuthSession(

@@ -25,8 +25,11 @@ import androidx.browser.customtabs.CustomTabsServiceConnection
 import androidx.browser.customtabs.CustomTabsSession
 import com.amplifyframework.auth.cognito.activities.CustomTabsManagerActivity
 import com.amplifyframework.auth.cognito.helpers.BrowserHelper
+import com.amplifyframework.auth.cognito.helpers.HostedUIHttpHelper
 import com.amplifyframework.auth.cognito.helpers.PkceHelper
-import com.amplifyframework.auth.cognito.options.HostedUISignInOptions
+import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
+import com.amplifyframework.statemachine.codegen.data.HostedUISignInOptions
+import java.net.URL
 
 class HostedUIClient(context: Context) : CustomTabsServiceConnection() {
 
@@ -64,6 +67,48 @@ class HostedUIClient(context: Context) : CustomTabsServiceConnection() {
             CustomTabsManagerActivity.createStartIntent(activity, customTabsIntent.intent),
             CUSTOM_TABS_ACTIVITY_CODE
         )
+    }
+
+    fun fetchToken(uri: Uri, hostedUIOptions: HostedUISignInOptions): CognitoUserPoolTokens {
+        val errorState = uri.getQueryParameter("error")
+        val callbackState = uri.getQueryParameter("state")
+        val code = uri.getQueryParameter("code")
+
+        if (errorState != null) {
+            // on error
+            throw Exception()
+        } else if (callbackState == null || code == null) {
+            // on error
+            throw Exception()
+        }
+
+        val fetchUrl = URL(
+            Uri.Builder()
+            .scheme("https")
+            .authority(hostedUIOptions.domain)
+            .appendPath("oauth2")
+            .appendPath("token")
+            .build().toString()
+        )
+
+        val headers = mutableMapOf("Content-Type" to "application/x-www-form-urlencoded").apply {
+            if (hostedUIOptions.appSecret != null) {
+                put(
+                    "Authorization",
+                    PkceHelper.encodeBase64("${hostedUIOptions.appClient}:${hostedUIOptions.appSecret}")
+                )
+            }
+        }
+
+        val body = mapOf(
+            "grant_type" to "authorization_code",
+            "client_id" to hostedUIOptions.appClient,
+            "redirect_uri" to hostedUIOptions.signInRedirectURI,
+            "code_verifier" to proofKey,
+            "code" to code
+        )
+
+        return HostedUIHttpHelper.fetchTokens(fetchUrl, headers, body)
     }
 
     private fun createHostedUIUri(hostedUIOptions: HostedUISignInOptions): Uri {

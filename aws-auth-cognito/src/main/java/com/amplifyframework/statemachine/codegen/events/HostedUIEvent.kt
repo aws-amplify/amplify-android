@@ -15,6 +15,7 @@
 
 package com.amplifyframework.statemachine.codegen.events
 
+import android.net.Uri
 import com.amplifyframework.statemachine.StateMachineEvent
 import com.amplifyframework.statemachine.codegen.data.SignInData
 import java.lang.Exception
@@ -24,8 +25,8 @@ class HostedUIEvent(val eventType: EventType, override val time: Date? = null) :
 
     sealed class EventType {
         data class ShowHostedUI(val hostedUISignInData: SignInData.HostedUISignInData) : EventType()
-        data class FetchToken(val id: String = "") : EventType()
-        data class TokenFetched(val id: String = "") : EventType()
+        data class FetchToken(val uri: Uri) : EventType()
+        object TokenFetched : EventType()
         data class ThrowError(val exception: Exception) : EventType()
     }
 

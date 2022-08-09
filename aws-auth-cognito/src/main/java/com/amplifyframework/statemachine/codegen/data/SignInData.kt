@@ -16,8 +16,6 @@
 package com.amplifyframework.statemachine.codegen.data
 
 import android.app.Activity
-import com.amplifyframework.auth.cognito.HostedUIClient
-import com.amplifyframework.auth.cognito.options.HostedUISignInOptions
 import com.amplifyframework.auth.options.AuthSignInOptions
 
 sealed class SignInData {
@@ -30,7 +28,6 @@ sealed class SignInData {
 
     data class HostedUISignInData(
         val callingActivity: Activity,
-        val client: HostedUIClient,
         val options: HostedUISignInOptions
     ) : SignInData()
 }

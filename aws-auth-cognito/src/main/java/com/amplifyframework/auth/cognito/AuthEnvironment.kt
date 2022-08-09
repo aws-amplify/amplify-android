@@ -23,6 +23,7 @@ import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 class AuthEnvironment internal constructor(
     val configuration: AuthConfiguration,
     val cognitoAuthService: AWSCognitoAuthServiceBehavior,
+    val hostedUIClient: HostedUIClient?,
     val logger: Logger? = null
 ) : Environment {
     internal lateinit var srpHelper: SRPHelper

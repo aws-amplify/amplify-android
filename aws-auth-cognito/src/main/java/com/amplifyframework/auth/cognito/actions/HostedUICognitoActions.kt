@@ -16,10 +16,15 @@
 package com.amplifyframework.auth.cognito.actions
 
 import com.amplifyframework.auth.cognito.AuthEnvironment
+import com.amplifyframework.auth.cognito.helpers.JWTParser
+import com.amplifyframework.statemachine.codegen.data.HostedUISignInOptions
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.HostedUIActions
+import com.amplifyframework.statemachine.codegen.data.SignInMethod
+import com.amplifyframework.statemachine.codegen.data.SignedInData
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.HostedUIEvent
+import java.util.*
 
 object HostedUICognitoActions : HostedUIActions {
 
@@ -27,8 +32,9 @@ object HostedUICognitoActions : HostedUIActions {
         Action<AuthEnvironment>("InitHostedUIAuth") { id, dispatcher ->
             logger?.verbose("$id Starting execution")
             try {
-                val client = event.hostedUISignInData.client
-                client.launchCustomTabs(
+                if (hostedUIClient == null) throw Exception() // TODO: error messaging
+
+                hostedUIClient.launchCustomTabs(
                     event.hostedUISignInData.callingActivity,
                     event.hostedUISignInData.options
                 )
@@ -42,7 +48,41 @@ object HostedUICognitoActions : HostedUIActions {
             }
         }
 
-    override fun fetchHostedUISignInToken(event: HostedUIEvent.EventType.FetchToken): Action {
-        TODO("Not yet implemented")
-    }
+    override fun fetchHostedUISignInToken(event: HostedUIEvent.EventType.FetchToken, options: HostedUISignInOptions) =
+        Action<AuthEnvironment>("InitHostedUITokenFetch") { id, dispatcher ->
+            logger?.verbose("$id Starting execution")
+            val evt = try {
+                if (hostedUIClient == null) throw Exception() // TODO: error messaging
+
+                val token = hostedUIClient.fetchToken(event.uri, options)
+                val userId = token.accessToken?.let { JWTParser.getClaim(it, "sub") }
+                val username = token.accessToken?.let { JWTParser.getClaim(it, "username") }
+
+                if (userId == null || username == null) {
+                    throw Exception()
+                }
+
+                val signedInData = SignedInData(
+                    userId,
+                    username,
+                    Date(),
+                    SignInMethod.SOCIAL,
+                    token
+                )
+                val tokenFetchedEvent = HostedUIEvent(HostedUIEvent.EventType.TokenFetched)
+                logger?.verbose("$id Sending event ${tokenFetchedEvent.type}")
+                dispatcher.send(tokenFetchedEvent)
+
+                AuthenticationEvent(AuthenticationEvent.EventType.InitializedSignedIn(signedInData))
+            } catch (e: Exception) {
+                val errorEvent = HostedUIEvent(HostedUIEvent.EventType.ThrowError(e))
+                logger?.verbose("$id Sending event ${errorEvent.type}")
+                dispatcher.send(errorEvent)
+
+                AuthenticationEvent(AuthenticationEvent.EventType.CancelSignIn())
+            }
+            logger?.verbose("$id Sending event ${evt.type}")
+            dispatcher.send(evt)
+        }
+
 }

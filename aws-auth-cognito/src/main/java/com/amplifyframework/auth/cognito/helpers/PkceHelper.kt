@@ -65,10 +65,7 @@ object PkceHelper {
      * @param str Required: String to encode.
      * @return Base-64 encoded string.
      */
-    fun encodeBase64(str: String?): String? {
-        if (str == null) {
-            return null
-        }
+    fun encodeBase64(str: String): String {
         val data = str.toByteArray(Charset.forName("ISO-8859-1"))
         return Base64.encodeToString(data, Base64.NO_PADDING or Base64.NO_WRAP)
     }
