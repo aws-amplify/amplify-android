@@ -51,9 +51,9 @@ internal class AmplifyTransferService : Service() {
     private var transferNetworkLossHandler: TransferNetworkLossHandler? = null
 
     /**
-     * A flag indicates whether or not the receiver has is started the first time.
+     * A flag indicates whether or not the receiver has started the first time.
      */
-    private var isReceiverNotRegistered = true
+    private var isReceiverRegistered = false
 
     /**
      * Handler to post Runnable check to unbind service if all transfers are complete
@@ -74,14 +74,14 @@ internal class AmplifyTransferService : Service() {
         transferNetworkLossHandler = TransferNetworkLossHandler.getInstance(applicationContext)
 
         synchronized(this) {
-            if (isReceiverNotRegistered) {
+            if (!isReceiverRegistered) {
                 try {
                     log.info("Registering the network receiver")
                     this.registerReceiver(
                         transferNetworkLossHandler,
                         IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION)
                     )
-                    isReceiverNotRegistered = false
+                    isReceiverRegistered = true
                 } catch (iae: IllegalArgumentException) {
                     log.warn(
                         "Ignoring the exception trying to register the receiver for connectivity change."
@@ -109,7 +109,7 @@ internal class AmplifyTransferService : Service() {
                     log.error("Error in moving the service out of the foreground state: $e")
                 }
             } else {
-                log.verbose("Transfers info progress, rescheduling unbind check")
+                log.verbose("Transfers in progress, rescheduling unbind check")
                 unbindCheckRunnable?.let {
                     unbindCheckHandler?.postDelayed(it, SHUTDOWN_CHECK_INTERVAL_MILLIS)
                 }
@@ -135,9 +135,9 @@ internal class AmplifyTransferService : Service() {
             stopUnbindCheck()
             log.info("De-registering the network receiver.")
             synchronized(this) {
-                if (!isReceiverNotRegistered) {
+                if (isReceiverRegistered) {
                     unregisterReceiver(transferNetworkLossHandler)
-                    isReceiverNotRegistered = true
+                    isReceiverRegistered = false
                     transferNetworkLossHandler = null
                 }
             }
@@ -186,7 +186,7 @@ internal class AmplifyTransferService : Service() {
                 context.bindService(Intent(context, AmplifyTransferService::class.java), it, Context.BIND_AUTO_CREATE)
             }
 
-            // A new call to to bind will restart counter, removing potential to unbind service too early
+            // A new call to bind will restart counter, removing potential to unbind service too early
             boundService?.startUnbindCheck()
         }
 

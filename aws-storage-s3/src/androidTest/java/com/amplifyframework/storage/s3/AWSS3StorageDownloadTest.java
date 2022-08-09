@@ -40,6 +40,7 @@ import com.amazonaws.mobileconnectors.s3.transferutility.TransferState;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Test;
 
 import java.io.File;
 import java.util.HashSet;
@@ -149,6 +150,7 @@ public final class AWSS3StorageDownloadTest {
      *
      * @throws Exception if download fails
      */
+    @Test
     public void testDownloadSmallFile() throws Exception {
         synchronousStorage.downloadFile(SMALL_FILE_NAME, downloadFile, options);
         FileAssert.assertEquals(smallFile, downloadFile);
@@ -159,6 +161,7 @@ public final class AWSS3StorageDownloadTest {
      *
      * @throws Exception if download fails
      */
+    @Test
     public void testDownloadLargeFile() throws Exception {
         synchronousStorage.downloadFile(LARGE_FILE_NAME, downloadFile, options, EXTENDED_TIMEOUT_MS);
         FileAssert.assertEquals(largeFile, downloadFile);
@@ -172,6 +175,7 @@ public final class AWSS3StorageDownloadTest {
      *                   before timeout
      */
     @SuppressWarnings("unchecked")
+    @Test
     public void testDownloadFileIsCancelable() throws Exception {
         final CountDownLatch canceled = new CountDownLatch(1);
         final AtomicReference<Cancelable> opContainer = new AtomicReference<>();
@@ -217,6 +221,7 @@ public final class AWSS3StorageDownloadTest {
      *                   completed successfully before timeout
      */
     @SuppressWarnings("unchecked")
+    @Test
     public void testDownloadFileIsResumable() throws Exception {
         final CountDownLatch completed = new CountDownLatch(1);
         final CountDownLatch resumed = new CountDownLatch(1);

@@ -38,6 +38,7 @@ import com.amazonaws.mobileconnectors.s3.transferutility.TransferState;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Test;
 
 import java.io.File;
 import java.util.HashSet;
@@ -118,6 +119,7 @@ public final class AWSS3StorageUploadTest {
      *
      * @throws Exception if upload fails
      */
+    @Test
     public void testUploadSmallFile() throws Exception {
         File uploadFile = new RandomTempFile(SMALL_FILE_SIZE);
         String fileName = uploadFile.getName();
@@ -129,6 +131,7 @@ public final class AWSS3StorageUploadTest {
      *
      * @throws Exception if upload fails
      */
+    @Test
     public void testUploadLargeFile() throws Exception {
         File uploadFile = new RandomTempFile(LARGE_FILE_SIZE);
         String fileName = uploadFile.getName();
@@ -143,6 +146,7 @@ public final class AWSS3StorageUploadTest {
      *         before timeout
      */
     @SuppressWarnings("unchecked")
+    @Test
     public void testUploadFileIsCancelable() throws Exception {
         final CountDownLatch canceled = new CountDownLatch(1);
         final AtomicReference<Cancelable> opContainer = new AtomicReference<>();
@@ -191,6 +195,7 @@ public final class AWSS3StorageUploadTest {
      *         completed successfully before timeout
      */
     @SuppressWarnings("unchecked")
+    @Test
     public void testUploadFileIsResumable() throws Exception {
         final CountDownLatch completed = new CountDownLatch(1);
         final CountDownLatch resumed = new CountDownLatch(1);
