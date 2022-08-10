@@ -18,7 +18,6 @@ package com.amplifyframework.predictions.aws;
 import android.content.Context;
 import android.graphics.Bitmap;
 
-import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin;
 import com.amplifyframework.predictions.PredictionsCategory;
 import com.amplifyframework.predictions.aws.test.R;
 import com.amplifyframework.predictions.models.EmotionType;

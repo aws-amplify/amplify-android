@@ -24,7 +24,6 @@ import com.amplifyframework.api.aws.test.R;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.SimpleGraphQLRequest;
 import com.amplifyframework.auth.AuthException;
-import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.testutils.Assets;
 import com.amplifyframework.testutils.Resources;

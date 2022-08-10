@@ -17,7 +17,6 @@ package com.amplifyframework.predictions.aws;
 
 import android.content.Context;
 
-import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin;
 import com.amplifyframework.predictions.PredictionsCategory;
 import com.amplifyframework.predictions.PredictionsException;
 import com.amplifyframework.predictions.aws.test.R;

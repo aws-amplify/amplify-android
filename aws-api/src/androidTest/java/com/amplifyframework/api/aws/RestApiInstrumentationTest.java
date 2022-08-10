@@ -23,7 +23,6 @@ import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.aws.test.R;
 import com.amplifyframework.api.rest.RestOptions;
 import com.amplifyframework.api.rest.RestResponse;
-import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin;
 import com.amplifyframework.testutils.sync.SynchronousApi;
 import com.amplifyframework.testutils.sync.SynchronousAuth;
 

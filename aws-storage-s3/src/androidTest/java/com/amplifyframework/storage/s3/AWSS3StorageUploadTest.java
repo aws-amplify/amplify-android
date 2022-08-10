@@ -18,7 +18,6 @@ package com.amplifyframework.storage.s3;
 import android.content.Context;
 
 import com.amplifyframework.auth.AuthPlugin;
-import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.async.Resumable;

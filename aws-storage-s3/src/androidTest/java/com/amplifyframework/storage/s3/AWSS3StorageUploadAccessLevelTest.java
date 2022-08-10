@@ -19,7 +19,6 @@ import android.content.Context;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.auth.AuthPlugin;
-import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin;
 import com.amplifyframework.storage.StorageAccessLevel;
 import com.amplifyframework.storage.StorageCategory;
 import com.amplifyframework.storage.StorageException;

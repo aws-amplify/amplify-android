@@ -27,7 +27,6 @@ import com.amplifyframework.api.aws.AuthModeStrategyType;
 import com.amplifyframework.api.aws.AuthorizationType;
 import com.amplifyframework.api.aws.auth.CognitoJWTParser;
 import com.amplifyframework.api.aws.sigv4.DefaultCognitoUserPoolsAuthProvider;
-import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin;
 import com.amplifyframework.auth.options.AuthSignOutOptions;
 import com.amplifyframework.auth.result.AuthSignInResult;
 import com.amplifyframework.core.Amplify;
