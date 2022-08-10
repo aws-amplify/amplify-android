@@ -55,12 +55,8 @@ object HostedUICognitoActions : HostedUIActions {
                 if (hostedUIClient == null) throw Exception() // TODO: error messaging
 
                 val token = hostedUIClient.fetchToken(event.uri, options)
-                val userId = token.accessToken?.let { JWTParser.getClaim(it, "sub") }
-                val username = token.accessToken?.let { JWTParser.getClaim(it, "username") }
-
-                if (userId == null || username == null) {
-                    throw Exception()
-                }
+                val userId = token.accessToken?.let { JWTParser.getClaim(it, "sub") } ?: ""
+                val username = token.accessToken?.let { JWTParser.getClaim(it, "username") } ?: ""
 
                 val signedInData = SignedInData(
                     userId,
@@ -73,7 +69,7 @@ object HostedUICognitoActions : HostedUIActions {
                 logger?.verbose("$id Sending event ${tokenFetchedEvent.type}")
                 dispatcher.send(tokenFetchedEvent)
 
-                AuthenticationEvent(AuthenticationEvent.EventType.InitializedSignedIn(signedInData))
+                AuthenticationEvent(AuthenticationEvent.EventType.SignInCompleted(signedInData))
             } catch (e: Exception) {
                 val errorEvent = HostedUIEvent(HostedUIEvent.EventType.ThrowError(e))
                 logger?.verbose("$id Sending event ${errorEvent.type}")
