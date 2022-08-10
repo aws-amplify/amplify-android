@@ -40,6 +40,7 @@ import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.cognito.helpers.JWTParser
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttributesOptions
 import com.amplifyframework.auth.cognito.usecases.ResetPasswordUseCase
+import com.amplifyframework.auth.options.AWSCognitoAuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
@@ -53,7 +54,6 @@ import com.amplifyframework.auth.options.AuthUpdateUserAttributeOptions
 import com.amplifyframework.auth.options.AuthUpdateUserAttributesOptions
 import com.amplifyframework.auth.options.AuthWebUISignInOptions
 import com.amplifyframework.auth.result.AuthResetPasswordResult
-import com.amplifyframework.auth.result.AuthSessionResult
 import com.amplifyframework.auth.result.AuthSignInResult
 import com.amplifyframework.auth.result.AuthSignUpResult
 import com.amplifyframework.auth.result.AuthUpdateAttributeResult
@@ -72,22 +72,17 @@ import com.amplifyframework.logging.Logger
 import com.amplifyframework.statemachine.StateChangeListenerToken
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
-import com.amplifyframework.statemachine.codegen.data.SignedInData
-import com.amplifyframework.statemachine.codegen.data.SignedOutData
 import com.amplifyframework.statemachine.codegen.events.AuthEvent
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
 import com.amplifyframework.statemachine.codegen.events.CredentialStoreEvent
 import com.amplifyframework.statemachine.codegen.events.DeleteUserEvent
-import com.amplifyframework.statemachine.codegen.events.SignOutEvent
 import com.amplifyframework.statemachine.codegen.events.SignUpEvent
+import com.amplifyframework.statemachine.codegen.states.AuthState
 import com.amplifyframework.statemachine.codegen.states.AuthenticationState
 import com.amplifyframework.statemachine.codegen.states.AuthorizationState
 import com.amplifyframework.statemachine.codegen.states.CredentialStoreState
 import com.amplifyframework.statemachine.codegen.states.DeleteUserState
-import com.amplifyframework.statemachine.codegen.states.FetchAwsCredentialsState
-import com.amplifyframework.statemachine.codegen.states.FetchIdentityState
-import com.amplifyframework.statemachine.codegen.states.FetchUserPoolTokensState
 import com.amplifyframework.statemachine.codegen.states.SRPSignInState
 import com.amplifyframework.statemachine.codegen.states.SignOutState
 import com.amplifyframework.statemachine.codegen.states.SignUpState
@@ -196,6 +191,15 @@ internal class RealAWSCognitoAuthPlugin(
     override fun confirmSignUp(
         username: String,
         confirmationCode: String,
+        onSuccess: Consumer<AuthSignUpResult>,
+        onError: Consumer<AuthException>
+    ) {
+        confirmSignUp(username, confirmationCode, AuthConfirmSignUpOptions.defaults(), onSuccess, onError)
+    }
+
+    override fun confirmSignUp(
+        username: String,
+        confirmationCode: String,
         options: AuthConfirmSignUpOptions,
         onSuccess: Consumer<AuthSignUpResult>,
         onError: Consumer<AuthException>
@@ -215,15 +219,6 @@ internal class RealAWSCognitoAuthPlugin(
                 else -> onError.accept(AuthException.InvalidStateException())
             }
         }
-    }
-
-    override fun confirmSignUp(
-        username: String,
-        confirmationCode: String,
-        onSuccess: Consumer<AuthSignUpResult>,
-        onError: Consumer<AuthException>
-    ) {
-        confirmSignUp(username, confirmationCode, AuthConfirmSignUpOptions.defaults(), onSuccess, onError)
     }
 
     private fun _confirmSignUp(
@@ -267,6 +262,14 @@ internal class RealAWSCognitoAuthPlugin(
 
     override fun resendSignUpCode(
         username: String,
+        onSuccess: Consumer<AuthSignUpResult>,
+        onError: Consumer<AuthException>
+    ) {
+        resendSignUpCode(username, AuthResendSignUpCodeOptions.defaults(), onSuccess, onError)
+    }
+
+    override fun resendSignUpCode(
+        username: String,
         options: AuthResendSignUpCodeOptions,
         onSuccess: Consumer<AuthSignUpResult>,
         onError: Consumer<AuthException>
@@ -280,14 +283,6 @@ internal class RealAWSCognitoAuthPlugin(
                 else -> onError.accept(AuthException.InvalidStateException())
             }
         }
-    }
-
-    override fun resendSignUpCode(
-        username: String,
-        onSuccess: Consumer<AuthSignUpResult>,
-        onError: Consumer<AuthException>
-    ) {
-        resendSignUpCode(username, AuthResendSignUpCodeOptions.defaults(), onSuccess, onError)
     }
 
     private fun _resendSignUpCode(
@@ -321,6 +316,15 @@ internal class RealAWSCognitoAuthPlugin(
     override fun signIn(
         username: String?,
         password: String?,
+        onSuccess: Consumer<AuthSignInResult>,
+        onError: Consumer<AuthException>
+    ) {
+        signIn(username, password, AuthSignInOptions.defaults(), onSuccess, onError)
+    }
+
+    override fun signIn(
+        username: String?,
+        password: String?,
         options: AuthSignInOptions,
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
@@ -347,15 +351,6 @@ internal class RealAWSCognitoAuthPlugin(
         }
     }
 
-    override fun signIn(
-        username: String?,
-        password: String?,
-        onSuccess: Consumer<AuthSignInResult>,
-        onError: Consumer<AuthException>
-    ) {
-        signIn(username, password, AuthSignInOptions.defaults(), onSuccess, onError)
-    }
-
     private fun _signIn(
         username: String?,
         password: String?,
@@ -366,8 +361,10 @@ internal class RealAWSCognitoAuthPlugin(
         var token: StateChangeListenerToken? = null
         token = authStateMachine.listen(
             { authState ->
-                when (val authNState = authState.authNState) {
-                    is AuthenticationState.SigningIn -> {
+                val authNState = authState.authNState
+                val authZState = authState.authZState
+                when {
+                    authNState is AuthenticationState.SigningIn -> {
                         val srpSignInState = authNState.signInState?.srpSignInState
                         if (srpSignInState is SRPSignInState.Error) {
                             token?.let(authStateMachine::cancel)
@@ -376,10 +373,15 @@ internal class RealAWSCognitoAuthPlugin(
                             )
                         }
                     }
-                    is AuthenticationState.SignedIn -> {
+                    authNState is AuthenticationState.SignedIn
+                        && authZState is AuthorizationState.SessionEstablished -> {
                         token?.let(authStateMachine::cancel)
-                        // Store signed in data to credential store
-                        storeSignedInData(authNState.signedInData, onSuccess, onError)
+                        val authSignInResult = AuthSignInResult(
+                            true,
+                            AuthNextSignInStep(AuthSignInStep.DONE, mapOf(), null)
+                        )
+                        onSuccess.accept(authSignInResult)
+                        Amplify.Hub.publish(HubChannel.AUTH, HubEvent.create(AuthChannelEventName.SIGNED_IN))
                     }
                     else -> {
                         // no-op
@@ -391,46 +393,6 @@ internal class RealAWSCognitoAuthPlugin(
                     AuthenticationEvent.EventType.SignInRequested(username, password, options)
                 )
                 authStateMachine.send(event)
-            }
-        )
-    }
-
-    private fun storeSignedInData(
-        signedInData: SignedInData,
-        onSuccess: Consumer<AuthSignInResult>,
-        onError: Consumer<AuthException>
-    ) {
-        var token: StateChangeListenerToken? = null
-        token = credentialStoreStateMachine.listen(
-            {
-                when {
-                    it is CredentialStoreState.Success -> {
-                        token?.let(credentialStoreStateMachine::cancel)
-                        val authSignInResult = AuthSignInResult(
-                            true,
-                            AuthNextSignInStep(AuthSignInStep.DONE, mapOf(), null)
-                        )
-                        onSuccess.accept(authSignInResult)
-                        Amplify.Hub.publish(HubChannel.AUTH, HubEvent.create(AuthChannelEventName.SIGNED_IN))
-                    }
-                    it is CredentialStoreState.Error -> {
-                        token?.let(credentialStoreStateMachine::cancel)
-                        onError.accept(AuthException(it.error.message, "Try signing in again."))
-                    }
-                }
-            },
-            {
-                credentialStoreStateMachine.send(
-                    CredentialStoreEvent(
-                        CredentialStoreEvent.EventType.StoreCredentials(
-                            AmplifyCredential(
-                                signedInData.cognitoUserPoolTokens,
-                                null,
-                                null
-                            )
-                        )
-                    )
-                )
             }
         )
     }
@@ -492,106 +454,59 @@ internal class RealAWSCognitoAuthPlugin(
         TODO("Not yet implemented")
     }
 
+    private suspend fun getSession(): AWSCognitoAuthSession {
+        return suspendCoroutine { continuation ->
+            fetchAuthSession(
+                { continuation.resume(it as AWSCognitoAuthSession) },
+                { continuation.resumeWithException(it) }
+            )
+        }
+    }
+
     override fun fetchAuthSession(
         onSuccess: Consumer<AuthSession>,
         onError: Consumer<AuthException>
     ) {
-        var token: StateChangeListenerToken? = null
-        token = credentialStoreStateMachine.listen(
-            {
-                when (it) {
-                    is CredentialStoreState.Success -> {
-                        token?.let(credentialStoreStateMachine::cancel)
-                        _fetchAuthSession(it.storedCredentials, onSuccess, onError)
-                    }
-                    is CredentialStoreState.Error -> {
-                        token?.let(credentialStoreStateMachine::cancel)
-                        _fetchAuthSession(null, onSuccess, onError)
-                    }
-                    else -> {
-                        // no-op
-                    }
+        authStateMachine.getCurrentState { authState ->
+
+//            val (_,state) = (authState as AuthState.Configured)
+
+            when (val authZState = authState.authZState) {
+                is AuthorizationState.Configured -> _fetchAuthSession(onSuccess = onSuccess, onError = onError)
+                is AuthorizationState.SessionEstablished -> {
+                    val credential = authZState.amplifyCredential
+                    if (credential.isValid()) onSuccess.accept(credential.getCognitoSession())
+                    else _fetchAuthSession(true, credential, onSuccess = onSuccess, onError = onError)
                 }
-            },
-            {
-                credentialStoreStateMachine.send(
-                    CredentialStoreEvent(CredentialStoreEvent.EventType.LoadCredentialStore())
-                )
+                else -> {
+                    // no-op
+                }
             }
-        )
+        }
     }
 
     private fun _fetchAuthSession(
-        credentials: AmplifyCredential?,
+        refresh: Boolean = false,
+        amplifyCredential: AmplifyCredential = AmplifyCredential.Empty,
         onSuccess: Consumer<AuthSession>,
         onError: Consumer<AuthException>
     ) {
-        var userPoolTokensResult: AuthSessionResult<AWSCognitoUserPoolTokens>? = null
-        var identityIdResult: AuthSessionResult<String>? = null
-        var awsCredentialsResult: AuthSessionResult<Credentials>? = null
         var token: StateChangeListenerToken? = null
         token = authStateMachine.listen(
             { authState ->
                 when (val authZState = authState.authZState) {
                     is AuthorizationState.SessionEstablished -> {
+                        // TODO: fix immediate session success
                         token?.let(authStateMachine::cancel)
-                        val authSession = AWSCognitoAuthSession.fromAmplifyCredential(
-                            authZState.amplifyCredential,
-                            userPoolTokensResult,
-                            identityIdResult,
-                            awsCredentialsResult
-                        )
-                        authZState.amplifyCredential?.let { storeAuthSession(authSession, it, onSuccess, onError) }
-                            ?: onSuccess.accept(authSession)
-                    }
-                    is AuthorizationState.FetchingAuthSession -> {
-                        val fetchUserPoolTokensState = authZState.fetchAuthSessionState?.fetchUserPoolTokensState
-                        val fetchIdentityState = authZState.fetchAuthSessionState?.fetchIdentityState
-                        val fetchAwsCredentialsState = authZState.fetchAuthSessionState?.fetchAwsCredentialsState
-                        when {
-                            fetchUserPoolTokensState is FetchUserPoolTokensState.Error -> {
-                                // invalid account type or unknown error - Ref #AWSCognitoAuthSession.SignedOutOrUnknown
-                                // if no tokens found and no error -> signed out exception - Ref #AWSCognitoAuthSession.SignedOutOrUnknown
-                                userPoolTokensResult = AuthSessionResult.failure(
-                                    AuthException(
-                                        "Signed out or refresh token expired.",
-                                        fetchUserPoolTokensState.exception,
-                                        "Sign in and try again. See the attached exception for more details."
-                                    )
-                                )
-                            }
-                            fetchIdentityState is FetchIdentityState.Error -> {
-                                // if aws creds but no id -> should never happen - Ref #AWSCognitoAuthSession.UnreachableCase
-                                // if no tokens and no id but has aws creds -> should never happen - Ref #AWSCognitoAuthSession.UnreachableCase
-                                identityIdResult = when (configuration.identityPool) {
-                                    null -> AuthSessionResult.failure(AuthException.InvalidAccountTypeException())
-                                    else -> AuthSessionResult.failure(
-                                        AuthException(
-                                            "Failed to fetch identity.",
-                                            fetchIdentityState.exception,
-                                            "Sign in or enable guest access. See the attached exception for more" +
-                                                " details."
-                                        )
-                                    )
-                                }
-                            }
-                            fetchAwsCredentialsState is FetchAwsCredentialsState.Error -> {
-                                // invalid account type or unknown error
-                                // if cognito identity configured -> guest access possible - Ref #AWSCognitoAuthSession.GuestAccessPossible, else -> invalid account type - Ref #AWSCognitoAuthSession.NoAWSCredentials
-                                awsCredentialsResult = AuthSessionResult.failure(
-                                    AuthException(
-                                        "Failed to fetch AWS Credentials.",
-                                        fetchAwsCredentialsState.exception,
-                                        "Sign in or enable guest access. See the attached exception for more details."
-                                    )
-                                )
-                            }
-                        }
+                        onSuccess.accept(authZState.amplifyCredential.getCognitoSession())
                     }
                     is AuthorizationState.Error -> {
                         token?.let(authStateMachine::cancel)
                         onError.accept(
-                            CognitoAuthExceptionConverter.lookup(authZState.exception, "Fetch auth session failed.")
+                            CognitoAuthExceptionConverter.lookup(
+                                authZState.exception,
+                                "Fetch auth session failed."
+                            )
                         )
                     }
                     else -> {
@@ -600,40 +515,10 @@ internal class RealAWSCognitoAuthPlugin(
                 }
             },
             {
-                val event = AuthorizationEvent(AuthorizationEvent.EventType.FetchAuthSession(credentials))
-                authStateMachine.send(event)
-            }
-        )
-    }
-
-    private fun storeAuthSession(
-        session: AuthSession,
-        credentials: AmplifyCredential,
-        onSuccess: Consumer<AuthSession>,
-        onError: Consumer<AuthException>
-    ) {
-        var token: StateChangeListenerToken? = null
-        token = credentialStoreStateMachine.listen(
-            {
-                when (it) {
-                    is CredentialStoreState.Success -> {
-                        token?.let(credentialStoreStateMachine::cancel)
-
-                        onSuccess.accept(session)
-                    }
-                    is CredentialStoreState.Error -> {
-                        token?.let(credentialStoreStateMachine::cancel)
-                        onError.accept(AuthException.UnknownException(it.error))
-                    }
-                    else -> {
-                        // no-op
-                    }
-                }
-            },
-            {
-                credentialStoreStateMachine.send(
-                    CredentialStoreEvent(CredentialStoreEvent.EventType.StoreCredentials(credentials))
+                if (refresh) authStateMachine.send(
+                    AuthorizationEvent(AuthorizationEvent.EventType.RefreshAuthSession(amplifyCredential))
                 )
+                else authStateMachine.send(AuthorizationEvent(AuthorizationEvent.EventType.FetchAuthSession))
             }
         )
     }
@@ -642,38 +527,7 @@ internal class RealAWSCognitoAuthPlugin(
         authStateMachine.getCurrentState { authState ->
             when (authState.authNState) {
                 is AuthenticationState.SignedIn -> {
-                    var token: StateChangeListenerToken? = null
-                    token = credentialStoreStateMachine.listen(
-                        {
-                            when (it) {
-                                is CredentialStoreState.Success -> {
-                                    token?.let(credentialStoreStateMachine::cancel)
-                                    val storedCredentials = it.storedCredentials
-                                    storedCredentials?.cognitoUserPoolTokens?.accessToken?.let { accessToken ->
-                                        updateDevice(
-                                            accessToken,
-                                            null,
-                                            DeviceRememberedStatusType.Remembered,
-                                            onSuccess,
-                                            onError
-                                        )
-                                    } ?: onError.accept(AuthException.InvalidStateException())
-                                }
-                                is CredentialStoreState.Error -> {
-                                    token?.let(credentialStoreStateMachine::cancel)
-                                    onError.accept(AuthException.InvalidStateException())
-                                }
-                                else -> {
-                                    // no-op
-                                }
-                            }
-                        },
-                        {
-                            credentialStoreStateMachine.send(
-                                CredentialStoreEvent(CredentialStoreEvent.EventType.LoadCredentialStore())
-                            )
-                        }
-                    )
+                    updateDevice(null, DeviceRememberedStatusType.Remembered, onSuccess, onError)
                 }
                 else -> {
                     onError.accept(AuthException.SignedOutException())
@@ -687,7 +541,6 @@ internal class RealAWSCognitoAuthPlugin(
     }
 
     private fun updateDevice(
-        _accessToken: String,
         alternateDeviceId: String?,
         rememberedStatusType: DeviceRememberedStatusType,
         onSuccess: Action,
@@ -695,10 +548,11 @@ internal class RealAWSCognitoAuthPlugin(
     ) {
         GlobalScope.async {
             try {
+                val tokens = getSession().userPoolTokens
                 // TODO: Update the stubbed device key when device SRP auth is implemented with its own store.
                 authEnvironment.cognitoAuthService.cognitoIdentityProviderClient?.updateDeviceStatus(
                     UpdateDeviceStatusRequest.invoke {
-                        accessToken = _accessToken
+                        accessToken = tokens.value?.accessToken
                         deviceKey = alternateDeviceId ?: "STUB_DEVICE_KEY"
                         deviceRememberedStatus = rememberedStatusType
                     }
@@ -718,39 +572,8 @@ internal class RealAWSCognitoAuthPlugin(
         authStateMachine.getCurrentState { authState ->
             when (authState.authNState) {
                 is AuthenticationState.SignedIn -> {
-                    var token: StateChangeListenerToken? = null
-                    token = credentialStoreStateMachine.listen(
-                        {
-                            when (it) {
-                                is CredentialStoreState.Success -> {
-                                    token?.let(credentialStoreStateMachine::cancel)
-                                    val storedCredentials = it.storedCredentials
-                                    val deviceID = device.deviceId.ifEmpty { null }
-                                    storedCredentials?.cognitoUserPoolTokens?.accessToken?.let { accessToken ->
-                                        updateDevice(
-                                            accessToken,
-                                            deviceID,
-                                            DeviceRememberedStatusType.NotRemembered,
-                                            onSuccess,
-                                            onError
-                                        )
-                                    } ?: onError.accept(AuthException.InvalidStateException())
-                                }
-                                is CredentialStoreState.Error -> {
-                                    token?.let(credentialStoreStateMachine::cancel)
-                                    onError.accept(AuthException.InvalidStateException())
-                                }
-                                else -> {
-                                    // no-op
-                                }
-                            }
-                        },
-                        {
-                            credentialStoreStateMachine.send(
-                                CredentialStoreEvent(CredentialStoreEvent.EventType.LoadCredentialStore())
-                            )
-                        }
-                    )
+                    val deviceID = device.deviceId.ifEmpty { null }
+                    updateDevice(deviceID, DeviceRememberedStatusType.NotRemembered, onSuccess, onError)
                 }
                 else -> {
                     onError.accept(AuthException.SignedOutException())
@@ -766,38 +589,7 @@ internal class RealAWSCognitoAuthPlugin(
         authStateMachine.getCurrentState { authState ->
             when (authState.authNState) {
                 is AuthenticationState.SignedIn -> {
-                    var token: StateChangeListenerToken? = null
-                    token = credentialStoreStateMachine.listen(
-                        {
-                            when (it) {
-                                is CredentialStoreState.Success -> {
-                                    token?.let(credentialStoreStateMachine::cancel)
-                                    val accessToken = it.storedCredentials?.cognitoUserPoolTokens?.accessToken
-                                    if (!accessToken.isNullOrEmpty()) {
-                                        _fetchDevices(
-                                            accessToken,
-                                            onSuccess,
-                                            onError
-                                        )
-                                    } else {
-                                        onError.accept(AuthException.InvalidStateException())
-                                    }
-                                }
-                                is CredentialStoreState.Error -> {
-                                    token?.let(credentialStoreStateMachine::cancel)
-                                    onError.accept(AuthException.InvalidStateException())
-                                }
-                                else -> {
-                                    // no-op
-                                }
-                            }
-                        },
-                        {
-                            credentialStoreStateMachine.send(
-                                CredentialStoreEvent(CredentialStoreEvent.EventType.LoadCredentialStore())
-                            )
-                        }
-                    )
+                    _fetchDevices(onSuccess, onError)
                 }
                 else -> {
                     onError.accept(AuthException.SignedOutException())
@@ -806,17 +598,14 @@ internal class RealAWSCognitoAuthPlugin(
         }
     }
 
-    private fun _fetchDevices(
-        token: String,
-        onSuccess: Consumer<MutableList<AuthDevice>>,
-        onError: Consumer<AuthException>
-    ) {
+    private fun _fetchDevices(onSuccess: Consumer<MutableList<AuthDevice>>, onError: Consumer<AuthException>) {
         GlobalScope.async {
             try {
+                val tokens = getSession().userPoolTokens
                 val response =
                     authEnvironment.cognitoAuthService.cognitoIdentityProviderClient?.listDevices(
                         ListDevicesRequest.invoke {
-                            accessToken = token
+                            accessToken = tokens.value?.accessToken
                         }
                     )
                 val _devices = response?.devices
@@ -867,22 +656,56 @@ internal class RealAWSCognitoAuthPlugin(
     }
 
     override fun confirmResetPassword(
+        username: String,
         newPassword: String,
         confirmationCode: String,
         options: AuthConfirmResetPasswordOptions,
         onSuccess: Action,
         onError: Consumer<AuthException>
     ) {
-        TODO("Not yet implemented")
+        authStateMachine.getCurrentState { authState ->
+            if (authState.authNState is AuthenticationState.NotConfigured) {
+                onError.accept(
+                    AuthException(
+                        "Confirm Reset Password failed.",
+                        "Cognito User Pool not configured. Please check amplifyconfiguration.json file."
+                    )
+                )
+                return@getCurrentState
+            }
+
+            GlobalScope.launch {
+                try {
+                    authEnvironment.cognitoAuthService.cognitoIdentityProviderClient!!.confirmForgotPassword {
+                        this.username = username
+                        this.confirmationCode = confirmationCode
+                        password = newPassword
+                        clientMetadata =
+                            (options as? AWSCognitoAuthConfirmResetPasswordOptions)?.metadata ?: mapOf()
+                        clientId = configuration.userPool?.appClient
+                    }.let { onSuccess.call() }
+                } catch (ex: Exception) {
+                    onError.accept(CognitoAuthExceptionConverter.lookup(ex, AuthException.REPORT_BUG_TO_AWS_SUGGESTION))
+                }
+            }
+        }
     }
 
     override fun confirmResetPassword(
+        username: String,
         newPassword: String,
         confirmationCode: String,
         onSuccess: Action,
         onError: Consumer<AuthException>
     ) {
-        TODO("Not yet implemented")
+        confirmResetPassword(
+            username,
+            newPassword,
+            confirmationCode,
+            AuthConfirmResetPasswordOptions.defaults(),
+            onSuccess,
+            onError
+        )
     }
 
     override fun updatePassword(
@@ -895,53 +718,35 @@ internal class RealAWSCognitoAuthPlugin(
             when (authState.authNState) {
                 // Check if user signed in
                 is AuthenticationState.SignedIn -> {
-
-                    GlobalScope.launch {
-                        try {
-                            val accessToken = getAccessToken()
-                            if (accessToken != null) {
-                                GlobalScope.launch {
-                                    _updatePassword(
-                                        accessToken,
-                                        oldPassword,
-                                        newPassword,
-                                        onSuccess,
-                                        onError
-                                    )
-                                }
-                            } else {
-                                onError.accept(AuthException.InvalidStateException())
-                            }
-                        } catch (e: Exception) {
-                            onError.accept(CognitoAuthExceptionConverter.lookup(e, e.toString()))
-                        }
-                    }
+                    _updatePassword(oldPassword, newPassword, onSuccess, onError)
                 }
                 else -> onError.accept(AuthException.InvalidStateException())
             }
         }
     }
 
-    private suspend fun _updatePassword(
-        accessToken: String,
+    private fun _updatePassword(
         oldPassword: String,
         newPassword: String,
         onSuccess: Action,
         onError: Consumer<AuthException>
     ) {
-        val changePasswordRequest = ChangePasswordRequest.invoke {
-            previousPassword = oldPassword
-            proposedPassword = newPassword
-            this.accessToken = accessToken
-        }
-        try {
-            authEnvironment.cognitoAuthService
-                .cognitoIdentityProviderClient?.changePassword(
-                    changePasswordRequest
-                )
-            onSuccess.call()
-        } catch (e: Exception) {
-            onError.accept(CognitoAuthExceptionConverter.lookup(e, e.toString()))
+        GlobalScope.async {
+            val tokens = getSession().userPoolTokens
+            val changePasswordRequest = ChangePasswordRequest.invoke {
+                previousPassword = oldPassword
+                proposedPassword = newPassword
+                this.accessToken = tokens.value?.accessToken
+            }
+            try {
+                authEnvironment.cognitoAuthService
+                    .cognitoIdentityProviderClient?.changePassword(
+                        changePasswordRequest
+                    )
+                onSuccess.call()
+            } catch (e: Exception) {
+                onError.accept(CognitoAuthExceptionConverter.lookup(e, e.toString()))
+            }
         }
     }
 
@@ -956,7 +761,7 @@ internal class RealAWSCognitoAuthPlugin(
 
                     GlobalScope.launch {
                         try {
-                            val accessToken = getAccessToken()
+                            val accessToken = getSession().userPoolTokens.value?.accessToken
                             val getUserRequest = GetUserRequest.invoke {
                                 this.accessToken = accessToken
                             }
@@ -1175,31 +980,6 @@ internal class RealAWSCognitoAuthPlugin(
         TODO("Not yet implemented")
     }
 
-    private suspend fun getAccessToken(): String? {
-        return suspendCoroutine { continuation ->
-            var listenerToken: StateChangeListenerToken? = null
-            listenerToken = credentialStoreStateMachine.listen(
-                {
-                    when (it) {
-                        is CredentialStoreState.Success -> {
-                            listenerToken?.let(credentialStoreStateMachine::cancel)
-                            continuation.resume(it.storedCredentials?.cognitoUserPoolTokens?.accessToken)
-                        }
-                        is CredentialStoreState.Error -> {
-                            listenerToken?.let(credentialStoreStateMachine::cancel)
-                            continuation.resumeWithException(AuthException.UnknownException(it.error))
-                        }
-                    }
-                },
-                {
-                    credentialStoreStateMachine.send(
-                        CredentialStoreEvent(CredentialStoreEvent.EventType.LoadCredentialStore())
-                    )
-                }
-            )
-        }
-    }
-
     override fun getCurrentUser(
         onSuccess: Consumer<AuthUser>,
         onError: Consumer<AuthException>
@@ -1209,45 +989,15 @@ internal class RealAWSCognitoAuthPlugin(
                 onError.accept(AuthException.SignedOutException())
                 return@getCurrentState
             }
-            var token: StateChangeListenerToken? = null
-            token = credentialStoreStateMachine.listen(
-                {
-                    when (it) {
-                        is CredentialStoreState.Success -> {
-                            val accessToken = it.storedCredentials?.cognitoUserPoolTokens?.accessToken ?: ""
-                            if (accessToken.isEmpty()) {
-                                onError.accept(AuthException.InvalidUserPoolConfigurationException())
-                            }
-                            val userid = JWTParser.getClaim(accessToken, "sub")
-                            val username = JWTParser.getClaim(accessToken, "username")
 
-                            if (userid.isNullOrEmpty() || username.isNullOrEmpty()) {
-                                onError.accept(AuthException.InvalidUserPoolConfigurationException())
-                            } else {
-                                onSuccess.accept(
-                                    AuthUser(
-                                        userid,
-                                        username
-                                    )
-                                )
-                            }
-                            token?.let(credentialStoreStateMachine::cancel)
-                        }
-                        is CredentialStoreState.Error -> {
-                            token?.let(credentialStoreStateMachine::cancel)
-                            onError.accept(AuthException.InvalidStateException())
-                        }
-                        else -> {
-                            // no-op
-                        }
-                    }
-                },
-                {
-                    credentialStoreStateMachine.send(
-                        CredentialStoreEvent(CredentialStoreEvent.EventType.LoadCredentialStore())
-                    )
-                }
-            )
+            GlobalScope.async {
+                val accessToken = getSession().userPoolTokens.value?.accessToken
+                accessToken?.run {
+                    val userid = JWTParser.getClaim(accessToken, "sub") ?: ""
+                    val username = JWTParser.getClaim(accessToken, "username") ?: ""
+                    onSuccess.accept(AuthUser(userid, username))
+                } ?: onError.accept(AuthException.InvalidUserPoolConfigurationException())
+            }
         }
     }
 
@@ -1262,13 +1012,44 @@ internal class RealAWSCognitoAuthPlugin(
     ) {
         authStateMachine.getCurrentState { authState ->
             when (authState.authNState) {
-                is AuthenticationState.NotConfigured -> onSuccess.call() // TODO: clear store
-                // Continue sign out
+                is AuthenticationState.NotConfigured -> onSuccess.call()
+                // Continue sign out and clear auth or guest credentials
                 is AuthenticationState.SignedIn, is AuthenticationState.SignedOut ->
                     _signOut(options, onSuccess, onError)
                 else -> onError.accept(AuthException.InvalidStateException())
             }
         }
+    }
+
+    private fun _signOut(options: AuthSignOutOptions, onSuccess: Action, onError: Consumer<AuthException>) {
+        var token: StateChangeListenerToken? = null
+        token = authStateMachine.listen(
+            { authState ->
+                if (authState is AuthState.Configured) {
+                    val (authNState, authZState) = authState
+                    when {
+                        authNState is AuthenticationState.SignedOut && authZState is AuthorizationState.Configured -> {
+                            token?.let(authStateMachine::cancel)
+                            onSuccess.call()
+                            Amplify.Hub.publish(HubChannel.AUTH, HubEvent.create(AuthChannelEventName.SIGNED_OUT))
+                        }
+                        authNState is AuthenticationState.Error -> {
+                            token?.let(authStateMachine::cancel)
+                            onError.accept(
+                                CognitoAuthExceptionConverter.lookup(authNState.exception, "Sign out failed.")
+                            )
+                        }
+                        else -> {
+                            // no-op
+                        }
+                    }
+                }
+            },
+            {
+                val event = AuthenticationEvent(AuthenticationEvent.EventType.SignOutRequested(options.isGlobalSignOut))
+                authStateMachine.send(event)
+            }
+        )
     }
 
     override fun deleteUser(onSuccess: Action, onError: Consumer<AuthException>) {
@@ -1278,10 +1059,18 @@ internal class RealAWSCognitoAuthPlugin(
                 when (it) {
                     is CredentialStoreState.Success -> {
                         listenerToken?.let(credentialStoreStateMachine::cancel)
-                        if (it.storedCredentials?.cognitoUserPoolTokens?.accessToken != null) {
-                            _deleteUser(it.storedCredentials.cognitoUserPoolTokens.accessToken, onSuccess, onError)
-                        } else {
-                            onError.accept(AuthException.InvalidAccountTypeException())
+                        when (val credential = it.storedCredentials) {
+                            is AmplifyCredential.UserPool -> _deleteUser(
+                                credential.tokens.accessToken!!,
+                                onSuccess,
+                                onError
+                            )
+                            is AmplifyCredential.UserAndIdentityPool -> _deleteUser(
+                                credential.tokens.accessToken!!,
+                                onSuccess,
+                                onError
+                            )
+                            else -> onError.accept(AuthException.InvalidAccountTypeException())
                         }
                     }
                     is CredentialStoreState.Error -> {
@@ -1352,85 +1141,6 @@ internal class RealAWSCognitoAuthPlugin(
         )
     }
 
-    private fun _signOut(
-        options: AuthSignOutOptions,
-        onSuccess: Action,
-        onError: Consumer<AuthException>
-    ) {
-        var token: StateChangeListenerToken? = null
-        token = authStateMachine.listen(
-            { authState ->
-                when (val authNState = authState.authNState) {
-                    is AuthenticationState.SignedOut -> {
-                        token?.let(authStateMachine::cancel)
-                        onSuccess.call()
-                        Amplify.Hub.publish(HubChannel.AUTH, HubEvent.create(AuthChannelEventName.SIGNED_OUT))
-                    }
-                    is AuthenticationState.SigningOut -> {
-                        val signOutState = authNState.signOutState
-                        when (signOutState) {
-                            is SignOutState.SigningOutLocally -> {
-                                // Clear stored credentials
-                                waitForSignOut(signOutState.signedInData.username)
-                            }
-                            is SignOutState.Error -> {
-                                token?.let(authStateMachine::cancel)
-                                onError.accept(
-                                    CognitoAuthExceptionConverter.lookup(signOutState.exception, "Sign out failed.")
-                                )
-                            }
-                            else -> {
-                                // No-op
-                            }
-                        }
-                    }
-                    else -> {
-                        // no-op
-                    }
-                }
-            },
-            {
-                val event = AuthenticationEvent(AuthenticationEvent.EventType.SignOutRequested(options.isGlobalSignOut))
-                authStateMachine.send(event)
-            }
-        )
-    }
-
-    // TODO: Remove this function and use the #clearCredentialStore helper method
-    private fun waitForSignOut(username: String) {
-        var token: StateChangeListenerToken? = null
-        token = credentialStoreStateMachine.listen(
-            {
-                when (it) {
-                    is CredentialStoreState.Success -> {
-                        token?.let(credentialStoreStateMachine::cancel)
-                        authStateMachine.send(
-                            AuthenticationEvent(
-                                AuthenticationEvent.EventType.InitializedSignedOut(SignedOutData(username))
-                            )
-                        )
-                    }
-                    is CredentialStoreState.Error -> {
-                        token?.let(credentialStoreStateMachine::cancel)
-                        authStateMachine.send(
-                            SignOutEvent(
-                                SignOutEvent.EventType.SignedOutFailure(AuthException.UnknownException(it.error))
-                            )
-                        )
-                    }
-                    else -> {
-                        // No-op
-                    }
-                }
-            },
-            {
-                credentialStoreStateMachine.send(
-                    CredentialStoreEvent(CredentialStoreEvent.EventType.ClearCredentialStore())
-                )
-            }
-        )
-    }
-
     private fun clearCredentialStore(onSuccess: () -> Unit, onError: (error: CredentialStoreState.Error) -> Unit) {
         var token: StateChangeListenerToken? = null
         token = credentialStoreStateMachine.listen(
@@ -1457,10 +1167,41 @@ internal class RealAWSCognitoAuthPlugin(
         )
     }
 
-    private fun addAuthStateChangeListener(): StateChangeListenerToken {
-        return authStateMachine.listen(
+    private fun addAuthStateChangeListener() {
+        authStateMachine.listen(
             { authState ->
                 logger.verbose("Auth State Change: $authState")
+
+                // TODO: listen and dispatch hub events
+
+                when (authState) {
+                    is AuthState.WaitingForCachedCredentials -> credentialStoreStateMachine.send(
+                        CredentialStoreEvent(CredentialStoreEvent.EventType.LoadCredentialStore())
+                    )
+                    is AuthState.Configured -> when (val authZState = authState.authZState) {
+                        is AuthorizationState.WaitingToStore -> credentialStoreStateMachine.send(
+                            CredentialStoreEvent(
+                                CredentialStoreEvent.EventType.StoreCredentials(authZState.amplifyCredential)
+                            )
+                        )
+                    }
+                }
+            },
+            null
+        )
+
+        credentialStoreStateMachine.listen(
+            { storeState ->
+                logger.verbose("Credential Store State Change: $storeState")
+
+                when (storeState) {
+                    is CredentialStoreState.Success -> authStateMachine.send(
+                        AuthEvent(AuthEvent.EventType.ReceivedCachedCredentials(storeState.storedCredentials))
+                    )
+                    is CredentialStoreState.Error -> authStateMachine.send(
+                        AuthEvent(AuthEvent.EventType.CachedCredentialsFailed)
+                    )
+                }
             },
             null
         )
@@ -1468,25 +1209,17 @@ internal class RealAWSCognitoAuthPlugin(
 
     private fun configureAuthStates() {
         var token: StateChangeListenerToken? = null
-        token = credentialStoreStateMachine.listen(
-            {
-                when {
-                    it is CredentialStoreState.Error -> {
-                        authStateMachine.send(AuthEvent(AuthEvent.EventType.ConfigureAuth(configuration, null)))
+        token = authStateMachine.listen(
+            { authState ->
+                when (authState) {
+                    is AuthState.Configured -> {
                         token?.let(credentialStoreStateMachine::cancel)
                     }
-                    it is CredentialStoreState.Success -> {
-                        authStateMachine.send(
-                            AuthEvent(AuthEvent.EventType.ConfigureAuth(configuration, it.storedCredentials))
-                        )
-                        token?.let(credentialStoreStateMachine::cancel)
-                    }
+                    else -> {} // handle errors
                 }
             },
             {
-                credentialStoreStateMachine.send(
-                    CredentialStoreEvent(CredentialStoreEvent.EventType.MigrateLegacyCredentialStore())
-                )
+                authStateMachine.send(AuthEvent(AuthEvent.EventType.ConfigureAuth(configuration)))
             }
         )
     }

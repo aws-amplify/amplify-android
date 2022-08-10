@@ -60,37 +60,22 @@ class AWSCognitoLegacyCredentialStore(
 
     @Synchronized
     override fun saveCredential(credential: AmplifyCredential) {
-        val awsCredentials = credential.awsCredentials
-        saveAWSCredentials(awsCredentials)
-        idAndCredentialsKeyValue.put(namespace(ID_KEY), credential.identityId)
+        // no-op
     }
 
     @Synchronized
-    override fun retrieveCredential(): AmplifyCredential? {
+    override fun retrieveCredential(): AmplifyCredential {
         val cognitoUserPoolTokens = retrieveCognitoUserPoolTokens()
         val awsCredentials = retrieveAWSCredentials()
         val identityId = retrieveIdentityId()
-        if (cognitoUserPoolTokens == null && awsCredentials == null && identityId == null) {
-            return null
+        return when {
+            awsCredentials != null && identityId != null -> when (cognitoUserPoolTokens) {
+                null -> AmplifyCredential.IdentityPool(identityId, awsCredentials)
+                else -> AmplifyCredential.UserAndIdentityPool(cognitoUserPoolTokens, identityId, awsCredentials)
+            }
+            cognitoUserPoolTokens != null -> AmplifyCredential.UserPool(cognitoUserPoolTokens)
+            else -> AmplifyCredential.Empty
         }
-        return AmplifyCredential(cognitoUserPoolTokens, identityId, awsCredentials)
-    }
-
-    @Synchronized
-    override fun savePartialCredential(
-        cognitoUserPoolTokens: CognitoUserPoolTokens?,
-        identityId: String?,
-        awsCredentials: AWSCredentials?
-    ) {
-        val currentCredentials = retrieveCredential()
-
-        saveCredential(
-            AmplifyCredential(
-                cognitoUserPoolTokens ?: currentCredentials?.cognitoUserPoolTokens,
-                identityId ?: currentCredentials?.identityId,
-                awsCredentials ?: currentCredentials?.awsCredentials
-            )
-        )
     }
 
     override fun deleteCredential() {
@@ -118,15 +103,6 @@ class AWSCognitoLegacyCredentialStore(
             remove(namespace(SK_KEY))
             remove(namespace(ST_KEY))
             remove(namespace(EXP_KEY))
-        }
-    }
-
-    private fun saveAWSCredentials(awsCredentials: AWSCredentials?) {
-        idAndCredentialsKeyValue.apply {
-            put(namespace(AK_KEY), awsCredentials?.accessKeyId)
-            put(namespace(SK_KEY), awsCredentials?.secretAccessKey)
-            put(namespace(ST_KEY), awsCredentials?.sessionToken)
-            put(namespace(EXP_KEY), awsCredentials?.expiration.toString())
         }
     }
 
