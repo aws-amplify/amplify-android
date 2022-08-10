@@ -17,6 +17,7 @@ package com.amplifyframework.statemachine.codegen.events
 
 import com.amplifyframework.statemachine.StateMachineEvent
 import com.amplifyframework.statemachine.codegen.data.SignedInData
+import com.amplifyframework.statemachine.codegen.data.SignedOutData
 import java.util.Date
 
 class SignOutEvent(
@@ -25,13 +26,13 @@ class SignOutEvent(
 ) : StateMachineEvent {
     sealed class EventType {
         data class SignOutLocally(
-            val signedInData: SignedInData,
+            val signedInData: SignedInData?,
             val isGlobalSignOut: Boolean,
             val invalidateTokens: Boolean
         ) : EventType()
 
         data class SignOutGlobally(val signedInData: SignedInData) : EventType()
-        data class SignedOutSuccess(val signedInData: SignedInData) : EventType()
+        data class SignedOutSuccess(val signedOutData: SignedOutData) : EventType()
         data class SignedOutFailure(val exception: Exception) : EventType()
         data class RevokeToken(val signedInData: SignedInData) : EventType()
     }
