@@ -35,4 +35,5 @@ interface StateMachineEvent {
      * Timestamp of when the occurrence happened.
      */
     val time: Date?
+        get() = Date()
 }

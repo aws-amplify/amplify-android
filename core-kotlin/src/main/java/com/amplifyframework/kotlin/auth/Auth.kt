@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -225,6 +225,7 @@ interface Auth {
 
     /**
      * Complete password recovery process by inputting user's desired new password and confirmation code.
+     * @param username A login identifier e.g. `superdog22`; or an email/phone number, depending on configuration
      * @param newPassword The user's desired new password
      * @param confirmationCode The confirmation code the user received after starting the forgotPassword process
      * @param options Advanced options such as a map of auth information for custom auth,
@@ -232,6 +233,7 @@ interface Auth {
      */
     @Throws(AuthException::class)
     suspend fun confirmResetPassword(
+        username: String,
         newPassword: String,
         confirmationCode: String,
         options: AuthConfirmResetPasswordOptions = AuthConfirmResetPasswordOptions.defaults()

@@ -15,14 +15,74 @@
 
 package com.amplifyframework.statemachine.codegen.data
 
+import com.amplifyframework.auth.AuthProvider
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class AmplifyCredential(
-    val cognitoUserPoolTokens: CognitoUserPoolTokens?,
-    val identityId: String?,
-    val awsCredentials: AWSCredentials?
-)
+sealed class AmplifyCredential {
+    @Serializable
+    @SerialName("empty")
+    object Empty : AmplifyCredential()
+
+    @Serializable
+    @SerialName("userPool")
+    data class UserPool(val tokens: CognitoUserPoolTokens) : AmplifyCredential()
+
+    @Serializable
+    @SerialName("identityPool")
+    data class IdentityPool(val identityId: String, val credentials: AWSCredentials) : AmplifyCredential()
+
+    //    @Serializable
+//    @SerialName("identityPoolFederated")
+    data class IdentityPoolFederated(
+        val federatedToken: FederatedToken,
+        val identityId: String,
+        val credentials: AWSCredentials
+    ) : AmplifyCredential()
+
+    @Serializable
+    @SerialName("userAndIdentityPool")
+    data class UserAndIdentityPool(
+        val tokens: CognitoUserPoolTokens,
+        val identityId: String,
+        val credentials: AWSCredentials
+    ) : AmplifyCredential()
+
+    fun update(
+        cognitoUserPoolTokens: CognitoUserPoolTokens? = null,
+        identityId: String? = null,
+        awsCredentials: AWSCredentials? = null
+    ): AmplifyCredential {
+        return when {
+            identityId != null -> when (this) {
+                is UserAndIdentityPool -> copy(identityId = identityId)
+                is UserPool -> UserAndIdentityPool(tokens, identityId, AWSCredentials.empty)
+                is IdentityPool -> copy(identityId = identityId)
+                else -> IdentityPool(identityId = identityId, AWSCredentials.empty)
+            }
+            awsCredentials != null -> when (this) {
+                is UserAndIdentityPool -> copy(credentials = awsCredentials)
+                is IdentityPool -> copy(credentials = awsCredentials)
+                else -> Empty
+            }
+            else -> this
+        }
+    }
+}
+
+// TODO: token abstraction
+// sealed class Token{
+//    data class CognitoUserPoolTokens(
+//        val idToken: String?,
+//        val accessToken: String?,
+//        val refreshToken: String?,
+//        val expiration: Long?,
+//    )
+//    data class FederatedToken(val token: String, val provider: AuthProvider) : Token()
+// }
+
+data class FederatedToken(val token: String, val provider: AuthProvider)
 
 @Serializable
 data class CognitoUserPoolTokens(
@@ -62,6 +122,11 @@ data class AWSCredentials(
     val sessionToken: String?,
     val expiration: Long?,
 ) {
+
+    companion object {
+        val empty = AWSCredentials(null, null, null, 0)
+    }
+
     override fun toString(): String {
         return "AWSCredentials(" +
             "accessKeyId = ${accessKeyId?.substring(0..4)}***, " +

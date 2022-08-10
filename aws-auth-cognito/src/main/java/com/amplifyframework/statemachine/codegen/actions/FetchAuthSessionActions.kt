@@ -19,8 +19,7 @@ import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 
 interface FetchAuthSessionActions {
-    fun configureUserPoolTokensAction(amplifyCredential: AmplifyCredential?): Action
-    fun configureIdentityAction(amplifyCredential: AmplifyCredential?): Action
-    fun configureAWSCredentialsAction(amplifyCredential: AmplifyCredential?): Action
-    fun authorizationSessionEstablished(amplifyCredential: AmplifyCredential?): Action
+    fun fetchIdentityAction(amplifyCredential: AmplifyCredential): Action
+    fun fetchAWSCredentialsAction(amplifyCredential: AmplifyCredential): Action
+    fun notifySessionEstablishedAction(amplifyCredential: AmplifyCredential): Action
 }
