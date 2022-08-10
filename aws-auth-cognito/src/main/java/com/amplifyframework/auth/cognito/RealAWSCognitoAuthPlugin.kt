@@ -26,7 +26,6 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.ListDevicesRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.UpdateDeviceStatusRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.UpdateUserAttributesRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.UpdateUserAttributesResponse
-import aws.smithy.kotlin.runtime.auth.awscredentials.Credentials
 import com.amplifyframework.auth.AuthCategoryBehavior
 import com.amplifyframework.auth.AuthChannelEventName
 import com.amplifyframework.auth.AuthCodeDeliveryDetails
@@ -888,7 +887,7 @@ internal class RealAWSCognitoAuthPlugin(
         userAttributesOptions: AWSCognitoAuthUpdateUserAttributesOptions?
     ):
         MutableMap<AuthUserAttributeKey, AuthUpdateAttributeResult> {
-            val accessToken = getAccessToken()
+            val accessToken = getSession().userPoolTokens.value?.accessToken
             var userAttributes = attributes.map {
                 AttributeType.invoke {
                     name = it.key.keyString
