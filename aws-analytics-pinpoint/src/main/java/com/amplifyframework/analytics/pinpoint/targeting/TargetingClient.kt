@@ -25,14 +25,13 @@ import aws.sdk.kotlin.services.pinpoint.model.EndpointUser
 import aws.sdk.kotlin.services.pinpoint.model.PinpointException
 import aws.sdk.kotlin.services.pinpoint.model.UpdateEndpointRequest
 import com.amplifyframework.analytics.pinpoint.internal.core.idresolver.SharedPrefsUniqueIdService
-import com.amplifyframework.analytics.pinpoint.internal.core.util.DateUtil.formatISO8601Date
+import com.amplifyframework.analytics.pinpoint.internal.core.util.millisToIsoDate
 import com.amplifyframework.analytics.pinpoint.internal.core.util.putString
 import com.amplifyframework.analytics.pinpoint.models.AndroidAppDetails
 import com.amplifyframework.analytics.pinpoint.models.AndroidDeviceDetails
 import com.amplifyframework.analytics.pinpoint.targeting.endpointProfile.EndpointProfile
 import com.amplifyframework.analytics.pinpoint.targeting.notification.PinpointNotificationClient
 import com.amplifyframework.core.Amplify
-import java.util.Date
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.collections.ArrayList
 import kotlinx.coroutines.CoroutineDispatcher
@@ -145,9 +144,7 @@ internal class TargetingClient(
             this.address = endpointProfile.address
             this.location = location
             this.demographic = demographic
-            this.effectiveDate = formatISO8601Date(
-                Date(endpointProfile.effectiveDate)
-            )
+            this.effectiveDate = endpointProfile.effectiveDate.millisToIsoDate()
             this.optOut = endpointProfile.optOut
             this.attributes = endpointProfile.allAttributes
             this.metrics = endpointProfile.allMetrics

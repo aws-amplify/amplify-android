@@ -18,13 +18,12 @@ package com.amplifyframework.analytics.pinpoint.targeting.endpointProfile
 import android.content.Context
 import aws.sdk.kotlin.services.pinpoint.model.ChannelType
 import com.amplifyframework.analytics.pinpoint.internal.core.idresolver.SharedPrefsUniqueIdService
-import com.amplifyframework.analytics.pinpoint.internal.core.util.DateUtil.isoDateFromMillis
+import com.amplifyframework.analytics.pinpoint.internal.core.util.millisToIsoDate
 import com.amplifyframework.analytics.pinpoint.models.AndroidAppDetails
 import com.amplifyframework.analytics.pinpoint.models.AndroidDeviceDetails
 import com.amplifyframework.analytics.pinpoint.targeting.notification.PinpointNotificationClient
 import com.amplifyframework.core.Amplify
 import java.util.Collections
-import java.util.Date
 import java.util.MissingResourceException
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
@@ -69,7 +68,7 @@ internal class EndpointProfile(
         deviceDetails,
         country
     )
-    var effectiveDate: Long = Date().time
+    var effectiveDate: Long = System.currentTimeMillis()
     var user: EndpointProfileUser = EndpointProfileUser()
     val applicationId = appDetails.appId
     val endpointId = idService.getUniqueId()
@@ -257,12 +256,7 @@ internal class EndpointProfile(
             put("Address", address)
             put("Location", Json.encodeToString(EndpointProfileLocation.serializer(), location))
             put("Demographic", Json.encodeToString(EndpointProfileDemographic.serializer(), demographic))
-            put(
-                "EffectiveDate",
-                isoDateFromMillis(
-                    effectiveDate
-                )
-            )
+            put("EffectiveDate", effectiveDate.millisToIsoDate())
             put("OptOut", optOut)
             val attributesJson = buildJsonObject {
                 for ((key, value) in allAttributes) {
