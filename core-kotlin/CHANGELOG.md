@@ -1,3 +1,20 @@
+## [Release 0.21.1](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.21.1)
+
+### Miscellaneous
+- Moving TransferService responsibility to Amplify to track when to safely stop
+- Set AmplifyTransferService to internal
+- correct logic to stop transfer service
+- Ensure startForeground is always called after startForegroundService
+- Replace problematic startForegroundService with bind.
+- Removing ignore from tests
+- ktlint
+- Update storage tests and add stress test
+- fix import
+- start unbind check in onServiceConnected to ensure handler is started on first transfer
+- pr comments
+
+[See all changes between 0.21.0 and 0.21.1](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.21.0...release-kotlin_v0.21.1)
+
 ## [Release 0.21.0](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.21.0)
 
 ### Features
