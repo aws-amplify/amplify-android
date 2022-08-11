@@ -84,7 +84,8 @@ public class IamRequestDecorator implements RequestDecorator {
         RequestBody body = req.body();
         boolean isEmptyRequestBody = false;
         try {
-            if (body != null && body.contentLength() > 0) {
+            // DELETE request does not allow an empty request body with JSON_MEDIA_TYPE
+            if (body != null && (body.contentLength() > 0 || dr.getHttpMethod() != HttpMethodName.DELETE)) {
                 //write the body to a byte array.
                 final Buffer buffer = new Buffer();
                 body.writeTo(buffer);
