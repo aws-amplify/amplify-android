@@ -1,3 +1,13 @@
+## [Release 0.21.1](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.21.1)
+
+### Bug Fixes
+- **storage**: Remove startForegroundService in favor of binding service
+
+### Miscellaneous
+- Update AWS SDK for Android version
+
+[See all changes between 0.21.0 and 0.21.1](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.21.0...release-kotlin_v0.21.1)
+
 ## [Release 0.21.0](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.21.0)
 
 ### Features
