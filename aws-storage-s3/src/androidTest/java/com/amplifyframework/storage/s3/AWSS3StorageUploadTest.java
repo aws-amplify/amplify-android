@@ -28,6 +28,7 @@ import com.amplifyframework.storage.StorageCategory;
 import com.amplifyframework.storage.StorageChannelEventName;
 import com.amplifyframework.storage.operation.StorageUploadFileOperation;
 import com.amplifyframework.storage.options.StorageUploadFileOptions;
+import com.amplifyframework.storage.s3.helper.AmplifyTransferServiceTestHelper;
 import com.amplifyframework.storage.s3.test.R;
 import com.amplifyframework.testutils.random.RandomTempFile;
 import com.amplifyframework.testutils.sync.SynchronousMobileClient;
@@ -37,7 +38,7 @@ import com.amazonaws.mobileconnectors.s3.transferutility.TransferState;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
+import org.junit.Test;
 
 import java.io.File;
 import java.util.HashSet;
@@ -53,7 +54,6 @@ import static org.junit.Assert.assertTrue;
 /**
  * Instrumentation test for operational work on upload.
  */
-@Ignore("Contains test which either hang themselves, or hang the suite overall.")
 public final class AWSS3StorageUploadTest {
     private static final long EXTENDED_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(20);
 
@@ -75,6 +75,8 @@ public final class AWSS3StorageUploadTest {
     public static void setUpOnce() throws Exception {
         Context context = getApplicationContext();
 
+        AmplifyTransferServiceTestHelper.stopForegroundAndUnbind(getApplicationContext());
+
         // Init auth stuff
         SynchronousMobileClient.instance().initialize();
 
@@ -95,17 +97,21 @@ public final class AWSS3StorageUploadTest {
 
         // Create a set to remember all the subscriptions
         subscriptions = new HashSet<>();
+
+        AmplifyTransferServiceTestHelper.stopForegroundAndUnbind(getApplicationContext());
     }
 
     /**
      * Unsubscribe from everything after each test.
      */
     @After
-    public void unsubscribe() {
+    public void tearDown() {
         // Unsubscribe from everything
         for (SubscriptionToken token : subscriptions) {
             Amplify.Hub.unsubscribe(token);
         }
+
+        AmplifyTransferServiceTestHelper.stopForegroundAndUnbind(getApplicationContext());
     }
 
     /**
@@ -113,7 +119,7 @@ public final class AWSS3StorageUploadTest {
      *
      * @throws Exception if upload fails
      */
-    @Ignore("Contains test which either hang themselves, or hang the suite overall.")
+    @Test
     public void testUploadSmallFile() throws Exception {
         File uploadFile = new RandomTempFile(SMALL_FILE_SIZE);
         String fileName = uploadFile.getName();
@@ -125,7 +131,7 @@ public final class AWSS3StorageUploadTest {
      *
      * @throws Exception if upload fails
      */
-    @Ignore("Contains test which either hang themselves, or hang the suite overall.")
+    @Test
     public void testUploadLargeFile() throws Exception {
         File uploadFile = new RandomTempFile(LARGE_FILE_SIZE);
         String fileName = uploadFile.getName();
@@ -140,7 +146,7 @@ public final class AWSS3StorageUploadTest {
      *         before timeout
      */
     @SuppressWarnings("unchecked")
-    @Ignore("Contains test which either hang themselves, or hang the suite overall.")
+    @Test
     public void testUploadFileIsCancelable() throws Exception {
         final CountDownLatch canceled = new CountDownLatch(1);
         final AtomicReference<Cancelable> opContainer = new AtomicReference<>();
@@ -189,7 +195,7 @@ public final class AWSS3StorageUploadTest {
      *         completed successfully before timeout
      */
     @SuppressWarnings("unchecked")
-    @Ignore("Contains test which either hang themselves, or hang the suite overall.")
+    @Test
     public void testUploadFileIsResumable() throws Exception {
         final CountDownLatch completed = new CountDownLatch(1);
         final CountDownLatch resumed = new CountDownLatch(1);

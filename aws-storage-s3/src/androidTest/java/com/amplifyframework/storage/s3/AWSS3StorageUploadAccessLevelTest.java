@@ -22,12 +22,14 @@ import com.amplifyframework.storage.StorageCategory;
 import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.options.StorageUploadFileOptions;
 import com.amplifyframework.storage.s3.UserCredentials.Credential;
+import com.amplifyframework.storage.s3.helper.AmplifyTransferServiceTestHelper;
 import com.amplifyframework.storage.s3.test.R;
 import com.amplifyframework.testutils.random.RandomTempFile;
 import com.amplifyframework.testutils.sync.SynchronousMobileClient;
 import com.amplifyframework.testutils.sync.SynchronousMobileClient.MobileClientException;
 import com.amplifyframework.testutils.sync.SynchronousStorage;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -63,6 +65,8 @@ public final class AWSS3StorageUploadAccessLevelTest {
     public static void setUpOnce() throws MobileClientException {
         Context context = getApplicationContext();
 
+        AmplifyTransferServiceTestHelper.stopForegroundAndUnbind(getApplicationContext());
+
         // Initialize identity. Bundle username, password, Identity Id up into a UserCredentials.
         mobileClient = SynchronousMobileClient.instance();
         mobileClient.initialize();
@@ -93,6 +97,16 @@ public final class AWSS3StorageUploadAccessLevelTest {
 
         // Override this per test-case
         uploadOptions = StorageUploadFileOptions.defaultInstance();
+
+        AmplifyTransferServiceTestHelper.stopForegroundAndUnbind(getApplicationContext());
+    }
+
+    /**
+     * Remove AmplifyTransferService foreground notification.
+     */
+    @After
+    public void tearDown() {
+        AmplifyTransferServiceTestHelper.stopForegroundAndUnbind(getApplicationContext());
     }
 
     /**
