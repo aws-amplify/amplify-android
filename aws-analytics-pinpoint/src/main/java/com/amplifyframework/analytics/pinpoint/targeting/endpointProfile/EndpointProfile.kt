@@ -38,8 +38,8 @@ import kotlinx.serialization.json.put
 
 internal class EndpointProfile(
     private val pinpointNotificationClient: PinpointNotificationClient,
-    private val idService: SharedPrefsUniqueIdService,
-    private val appDetails: AndroidAppDetails,
+    idService: SharedPrefsUniqueIdService,
+    appDetails: AndroidAppDetails,
     deviceDetails: AndroidDeviceDetails,
     applicationContext: Context
 ) {
@@ -305,7 +305,6 @@ internal class EndpointProfile(
         private const val MAX_ENDPOINT_ATTRIBUTE_VALUE_LENGTH = 100
         private const val MAX_ENDPOINT_ATTRIBUTE_VALUES = 50
         private val LOG = Amplify.Logging.forNamespace("amplify:aws-analytics-pinpoint")
-        private const val JSON_INDENTATION = 4
         private fun processAttributeMetricKey(key: String): String {
             val trimmedKey = key.take(MAX_ENDPOINT_ATTRIBUTE_METRIC_KEY_LENGTH)
             if (trimmedKey.length < key.length) {

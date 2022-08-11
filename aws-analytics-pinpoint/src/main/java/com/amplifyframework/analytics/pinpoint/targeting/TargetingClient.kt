@@ -34,11 +34,10 @@ import com.amplifyframework.analytics.pinpoint.targeting.notification.PinpointNo
 import com.amplifyframework.core.Amplify
 import java.util.Date
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.Executors
 import kotlin.collections.ArrayList
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.launch
 import org.json.JSONException
 import org.json.JSONObject
@@ -51,11 +50,13 @@ internal class TargetingClient(
     appDetails: AndroidAppDetails,
     deviceDetails: AndroidDeviceDetails,
     applicationContext: Context,
+    coroutineDispatcher: CoroutineDispatcher = Dispatchers.Default,
 ) {
     private val endpointProfile: EndpointProfile =
         EndpointProfile(pinpointNotificationClient, idService, appDetails, deviceDetails, applicationContext)
     private val globalAttributes: MutableMap<String, List<String>>
     private val globalMetrics: MutableMap<String, Double>
+    private val coroutineScope = CoroutineScope(coroutineDispatcher)
 
     init {
         globalAttributes = loadAttributes()
@@ -98,7 +99,7 @@ internal class TargetingClient(
      * @param endpointProfile An instance of an EndpointProfile to be updated
      */
     fun updateEndpointProfile(endpointProfile: EndpointProfile) {
-        // Add global  attributes.
+        // Add global attributes.
         for ((key, value) in globalAttributes) {
             endpointProfile.addAttribute(key, value)
         }
@@ -159,15 +160,10 @@ internal class TargetingClient(
                 this.endpointRequest = endpointRequest
             }
 
-        val coroutineDispatcher = Dispatchers.Default
-        val coroutineScope = CoroutineScope(coroutineDispatcher)
-        val dispatcher = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
-        coroutineScope.launch(dispatcher) {
+        coroutineScope.launch {
             try {
                 LOG.info("Updating EndpointProfile.")
-                coroutineScope.launch {
-                    pinpointClient.updateEndpoint(updateEndpointRequest)
-                }
+                pinpointClient.updateEndpoint(updateEndpointRequest)
                 LOG.info("EndpointProfile updated successfully.")
             } catch (e: PinpointException) {
                 LOG.error("PinpointException occurred during endpoint update:", e)
@@ -305,7 +301,6 @@ internal class TargetingClient(
 
     companion object {
         private val LOG = Amplify.Logging.forNamespace("amplify:aws-analytics-pinpoint")
-        private const val MAX_EVENT_OPERATIONS = 1000
         private const val CUSTOM_ATTRIBUTES_KEY = "ENDPOINT_PROFILE_CUSTOM_ATTRIBUTES"
         private const val CUSTOM_METRICS_KEY = "ENDPOINT_PROFILE_CUSTOM_METRICS"
     }

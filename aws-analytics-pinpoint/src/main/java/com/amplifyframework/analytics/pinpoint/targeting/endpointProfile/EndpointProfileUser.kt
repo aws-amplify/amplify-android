@@ -15,7 +15,6 @@
  */
 package com.amplifyframework.analytics.pinpoint.targeting.endpointProfile
 
-import com.amplifyframework.core.Amplify
 import java.util.concurrent.ConcurrentHashMap
 import kotlinx.serialization.Serializable
 
@@ -45,9 +44,5 @@ class EndpointProfileUser {
         }
         userAttributes!![key] = value
         return this
-    }
-
-    companion object {
-        private val LOG = Amplify.Logging.forNamespace("amplify:aws-analytics-pinpoint")
     }
 }
