@@ -1,3 +1,13 @@
+## [Release 1.37.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.37.1)
+
+### Bug Fixes
+- **storage**: Remove startForegroundService in favor of binding service
+
+### Miscellaneous
+- Update AWS SDK for Android version
+
+[See all changes between 1.37.0 and 1.37.1](https://github.com/aws-amplify/amplify-android/compare/release_v1.37.0...release_v1.37.1)
+
 ## [Release 1.37.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.37.0)
 
 ### Features
