@@ -15,6 +15,7 @@
 
 package com.amplifyframework.statemachine.codegen.states
 
+import com.amplifyframework.auth.cognito.actions.SignInCustomActions
 import com.amplifyframework.statemachine.State
 import com.amplifyframework.statemachine.StateMachineEvent
 import com.amplifyframework.statemachine.StateMachineResolver
@@ -29,7 +30,7 @@ sealed class CustomSignInState : State {
 
     override val type = this.toString()
 
-    class Resolver() : StateMachineResolver<CustomSignInState> {
+    class Resolver(private val signInCustomActions: SignInCustomActions) : StateMachineResolver<CustomSignInState> {
         override val defaultState = NotStarted()
 
         private fun asCustomSignInEvent(event: StateMachineEvent): CustomSignInEvent.EventType? {
@@ -53,7 +54,10 @@ sealed class CustomSignInState : State {
                 }
                 is NotStarted -> {
                     when (customSignInEvent) {
-                        is CustomSignInEvent.EventType.InitiateCustomSignIn -> StateResolution(Initiating())
+                        is CustomSignInEvent.EventType.InitiateCustomSignIn -> {
+                            signInCustomActions.initiateCustomSignInAuthAction(customSignInEvent)
+                            StateResolution(Initiating())
+                        }
                         is CustomSignInEvent.EventType.ThrowAuthError -> StateResolution(Error(customSignInEvent.exception))
                         else -> defaultResolution
                     }

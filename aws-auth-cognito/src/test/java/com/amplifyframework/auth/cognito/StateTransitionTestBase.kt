@@ -16,6 +16,7 @@
 package com.amplifyframework.auth.cognito
 
 import com.amplifyframework.auth.cognito.actions.DeleteUserActions
+import com.amplifyframework.auth.cognito.actions.SignInCustomActions
 import com.amplifyframework.auth.cognito.data.AWSCognitoAuthCredentialStore
 import com.amplifyframework.auth.cognito.data.AWSCognitoLegacyCredentialStore
 import com.amplifyframework.statemachine.Action
@@ -39,6 +40,7 @@ import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
 import com.amplifyframework.statemachine.codegen.events.CredentialStoreEvent
 import com.amplifyframework.statemachine.codegen.events.FetchAuthSessionEvent
+import com.amplifyframework.statemachine.codegen.events.SRPEvent
 import com.amplifyframework.statemachine.codegen.events.SignOutEvent
 import com.amplifyframework.statemachine.codegen.events.SignUpEvent
 import org.mockito.Mock
@@ -97,6 +99,9 @@ open class StateTransitionTestBase {
 
     @Mock
     internal lateinit var mockSignInChallengeActions: SignInChallengeActions
+
+    @Mock
+    internal lateinit var mockSignInCustomeActions: SignInCustomActions
 
     @Mock
     internal lateinit var mockSignOutActions: SignOutActions
@@ -275,31 +280,30 @@ open class StateTransitionTestBase {
     }
 
     internal fun setupSignInActions() {
-//        Mockito.`when`(mockSignInActions.startSRPAuthAction(MockitoHelper.anyObject()))
-//            .thenReturn(
-//                Action { dispatcher, _ ->
-//                    dispatcher.send(SRPEvent(SRPEvent.EventType.InitiateSRP("username", "password")))
-//                }
-//            )
+        Mockito.`when`(mockSignInActions.startSRPAuthAction(MockitoHelper.anyObject()))
+            .thenReturn(
+                Action { dispatcher, _ ->
+                    dispatcher.send(SRPEvent(SRPEvent.EventType.InitiateSRP("username", "password")))
+                }
+            )
     }
 
     internal fun setupSRPActions() {
-//        Mockito.`when`(mockSRPActions.initiateSRPAuthAction(MockitoHelper.anyObject()))
-//            .thenReturn(
-//                Action { dispatcher, _ ->
-//                    dispatcher.send(SRPEvent(SRPEvent.EventType.RespondPasswordVerifier(mapOf())))
-//                }
-//            )
+        Mockito.`when`(mockSRPActions.initiateSRPAuthAction(MockitoHelper.anyObject()))
+            .thenReturn(
+                Action { dispatcher, _ ->
+                    dispatcher.send(SRPEvent(SRPEvent.EventType.RespondPasswordVerifier(mapOf())))
+                }
+            )
 
-//        Mockito.`when`(mockSRPActions.verifyPasswordSRPAction(MockitoHelper.anyObject()))
-//            .thenReturn(
-//                Action { dispatcher, _ ->
-//                    dispatcher.send(SRPEvent(SRPEvent.EventType.FinalizeSRPSignIn()))
-//                    dispatcher.send(
-//                        AuthenticationEvent(AuthenticationEvent.EventType.SignInCompleted(signedInData))
-//                    )
-//                }
-//            )
+        Mockito.`when`(mockSRPActions.verifyPasswordSRPAction(MockitoHelper.anyObject()))
+            .thenReturn(
+                Action { dispatcher, _ ->
+                    dispatcher.send(
+                        AuthenticationEvent(AuthenticationEvent.EventType.SignInCompleted(signedInData))
+                    )
+                }
+            )
     }
 
     internal fun setupSignOutActions() {

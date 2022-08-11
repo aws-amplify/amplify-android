@@ -15,7 +15,8 @@
 
 package com.amplifyframework.auth.cognito
 
-import com.amplifyframework.auth.options.AuthSignInOptions
+import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions
+import com.amplifyframework.auth.cognito.options.AuthFlowType
 import com.amplifyframework.auth.options.AuthSignUpOptions
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.StateChangeListenerToken
@@ -32,6 +33,7 @@ import com.amplifyframework.statemachine.codegen.states.AuthState
 import com.amplifyframework.statemachine.codegen.states.AuthenticationState
 import com.amplifyframework.statemachine.codegen.states.AuthorizationState
 import com.amplifyframework.statemachine.codegen.states.CredentialStoreState
+import com.amplifyframework.statemachine.codegen.states.CustomSignInState
 import com.amplifyframework.statemachine.codegen.states.DeleteUserState
 import com.amplifyframework.statemachine.codegen.states.FetchAuthSessionState
 import com.amplifyframework.statemachine.codegen.states.SRPSignInState
@@ -39,10 +41,6 @@ import com.amplifyframework.statemachine.codegen.states.SignInChallengeState
 import com.amplifyframework.statemachine.codegen.states.SignInState
 import com.amplifyframework.statemachine.codegen.states.SignOutState
 import com.amplifyframework.statemachine.codegen.states.SignUpState
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.newSingleThreadContext
 import kotlinx.coroutines.test.resetMain
@@ -54,6 +52,10 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito
 import org.mockito.junit.MockitoJUnitRunner
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 @RunWith(MockitoJUnitRunner::class)
 class StateTransitionTests : StateTransitionTestBase() {
@@ -61,7 +63,7 @@ class StateTransitionTests : StateTransitionTestBase() {
     private val mainThreadSurrogate = newSingleThreadContext("Main thread")
 
     internal lateinit var stateMachine: AuthStateMachine
-    internal lateinit var storeStateMachine: CredentialStoreStateMachine
+    private lateinit var storeStateMachine: CredentialStoreStateMachine
 
     @Before
     fun setUp() {
@@ -87,6 +89,7 @@ class StateTransitionTests : StateTransitionTestBase() {
                     SignUpState.Resolver(mockSignUpActions),
                     SignInState.Resolver(
                         SRPSignInState.Resolver(mockSRPActions),
+                        CustomSignInState.Resolver(mockSignInCustomeActions),
                         SignInChallengeState.Resolver(mockSignInChallengeActions),
                         mockSignInActions
                     ),
@@ -272,7 +275,6 @@ class StateTransitionTests : StateTransitionTestBase() {
     }
 
     @Test
-    @Ignore("Todo")
     fun testSignIn() {
         setupConfigureSignedOut()
 
@@ -301,14 +303,19 @@ class StateTransitionTests : StateTransitionTestBase() {
                             AuthenticationEvent.EventType.SignInRequested(
                                 "username",
                                 "password",
-                                AuthSignInOptions.defaults()
+                                AWSCognitoAuthSignInOptions.builder()
+                                    .metadata(mapOf())
+                                    .authFlowType(AuthFlowType.USER_SRP_AUTH)
+                                    .build()
                             )
                         )
                     )
                 }
 
                 val authNState =
-                    it.authNState.takeIf { itN -> itN is AuthenticationState.SignedIn }
+                    it.authNState.takeIf {
+                            itN -> itN is AuthenticationState.SignedIn
+                    }
                 authNState?.apply {
                     token?.let(stateMachine::cancel)
                     testLatch.countDown()
@@ -319,14 +326,14 @@ class StateTransitionTests : StateTransitionTestBase() {
             }
         )
 
-        assertTrue { subscribeLatch.await(5, TimeUnit.SECONDS) }
+        assertTrue { subscribeLatch.await(5, TimeUnit.MINUTES) }
 
         stateMachine.send(
             AuthEvent(AuthEvent.EventType.ConfigureAuth(configuration))
         )
 
-        assertTrue { testLatch.await(5, TimeUnit.SECONDS) }
-        assertTrue { configureLatch.await(5, TimeUnit.SECONDS) }
+        assertTrue { testLatch.await(5, TimeUnit.MINUTES) }
+        assertTrue { configureLatch.await(5, TimeUnit.MINUTES) }
     }
 
     @Test
@@ -686,6 +693,7 @@ class StateTransitionTests : StateTransitionTestBase() {
                 }
 
                 userDeletedSuccess?.run {
+                    token?.let(stateMachine::cancel)
                     testLatch.countDown()
                 }
             },

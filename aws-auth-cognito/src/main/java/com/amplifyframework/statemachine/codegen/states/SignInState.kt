@@ -26,7 +26,7 @@ sealed class SignInState : State {
     data class NotStarted(val id: String = "") : SignInState()
     data class SigningInWithSRP(override var srpSignInState: SRPSignInState?) : SignInState()
     data class SigningInWithHostedUI(val id: String = "") : SignInState()
-    data class SigningInWithCustom(val id: String = "") : SignInState()
+    data class SigningInWithCustom(override var customSignInState: CustomSignInState?) : SignInState()
     data class SigningInWithSRPCustom(val id: String = "") : SignInState()
     data class ResolvingChallenge(override var challengeState: SignInChallengeState?) : SignInState()
     data class Done(val id: String = "") : SignInState()
@@ -34,11 +34,14 @@ sealed class SignInState : State {
 
     open var srpSignInState: SRPSignInState? = SRPSignInState.NotStarted()
     open var challengeState: SignInChallengeState? = SignInChallengeState.NotStarted()
+    open var customSignInState: CustomSignInState? = CustomSignInState.NotStarted()
 
     class Resolver(
         private val srpSignInResolver: StateMachineResolver<SRPSignInState>,
+        private val customSignInResolver: StateMachineResolver<CustomSignInState>,
         private val challengeResolver: StateMachineResolver<SignInChallengeState>,
-        private val signInActions: SignInActions
+        private val signInActions: SignInActions,
+
     ) :
         StateMachineResolver<SignInState> {
         override val defaultState = NotStarted()
@@ -62,6 +65,11 @@ sealed class SignInState : State {
                 actions += it.actions
             }
 
+            oldState.customSignInState?.let { customSignInResolver.resolve(it, event) }?.let {
+                builder.customSignInState = it.newState
+                actions += it.actions
+            }
+
             return StateResolution(builder.build(), actions)
         }
 
@@ -79,7 +87,7 @@ sealed class SignInState : State {
                     )
                     else -> defaultResolution
                 }
-                is SigningInWithSRP -> when (signInEvent) {
+                is SigningInWithSRP, is SigningInWithCustom-> when (signInEvent) {
                     is SignInEvent.EventType.ReceivedChallenge -> {
                         val action = signInActions.initResolveChallenge(signInEvent)
                         StateResolution(ResolvingChallenge(SignInChallengeState.NotStarted()), listOf(action))
@@ -96,10 +104,11 @@ sealed class SignInState : State {
         com.amplifyframework.statemachine.Builder<SignInState> {
         var srpSignInState: SRPSignInState? = null
         var challengeState: SignInChallengeState? = null
-
+        var customSignInState: CustomSignInState? = null
         override fun build(): SignInState = when (signInState) {
             is SigningInWithSRP -> SigningInWithSRP(srpSignInState)
             is ResolvingChallenge -> ResolvingChallenge(challengeState)
+            is SigningInWithCustom -> SigningInWithCustom(customSignInState)
             else -> signInState
         }
     }

@@ -60,6 +60,7 @@ object AuthenticationCognitoActions : AuthenticationActions {
         Action<AuthEnvironment>("InitSRPSignIn") { id, dispatcher ->
             logger?.verbose("$id Starting execution")
             val signinOptions = event.options as AWSCognitoAuthSignInOptions
+
             when (signinOptions.authFlowType) {
                 AuthFlowType.USER_SRP_AUTH -> {
                     val evt = event.username?.run {

@@ -5,5 +5,4 @@ import com.amplifyframework.statemachine.codegen.events.CustomSignInEvent
 
 interface CustomSignInActions {
     fun initiateCustomSignInAuthAction(event: CustomSignInEvent.EventType.InitiateCustomSignIn): Action
-    fun respondToChallengeAction(event: CustomSignInEvent.EventType.FinalizeSignIn): Action
 }

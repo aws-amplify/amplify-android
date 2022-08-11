@@ -12,7 +12,7 @@ import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.CustomSignInEvent
 import com.amplifyframework.statemachine.codegen.events.SignInChallengeEvent
 
-class SignInCustomActions : CustomSignInActions {
+object SignInCustomActions : CustomSignInActions {
     override fun initiateCustomSignInAuthAction(event: CustomSignInEvent.EventType.InitiateCustomSignIn): Action =
         Action<AuthEnvironment>("InitSRPAuth") { id, dispatcher ->
             logger?.verbose("$id Starting execution")
@@ -69,8 +69,4 @@ class SignInCustomActions : CustomSignInActions {
             logger?.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
         }
-
-    override fun respondToChallengeAction(event: CustomSignInEvent.EventType.FinalizeSignIn): Action {
-        TODO("Not yet implemented")
-    }
 }

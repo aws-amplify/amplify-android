@@ -35,7 +35,7 @@ open class AWSCognitoAuthSignInOptions protected constructor(
      *
      * @return authFlowType to be sent to the signIn api
      */
-    var authFlowType: AuthFlowType
+    var authFlowType: AuthFlowType?
 ) : AuthSignInOptions() {
 
     override fun hashCode(): Int {

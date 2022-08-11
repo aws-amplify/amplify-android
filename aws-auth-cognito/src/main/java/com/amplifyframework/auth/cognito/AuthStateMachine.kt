@@ -23,6 +23,7 @@ import com.amplifyframework.auth.cognito.actions.FetchAuthSessionCognitoActions
 import com.amplifyframework.auth.cognito.actions.SRPCognitoActions
 import com.amplifyframework.auth.cognito.actions.SignInChallengeCognitoActions
 import com.amplifyframework.auth.cognito.actions.SignInCognitoActions
+import com.amplifyframework.auth.cognito.actions.SignInCustomActions
 import com.amplifyframework.auth.cognito.actions.SignOutCognitoActions
 import com.amplifyframework.auth.cognito.actions.SignUpCognitoActions
 import com.amplifyframework.statemachine.Environment
@@ -31,6 +32,7 @@ import com.amplifyframework.statemachine.StateMachineResolver
 import com.amplifyframework.statemachine.codegen.states.AuthState
 import com.amplifyframework.statemachine.codegen.states.AuthenticationState
 import com.amplifyframework.statemachine.codegen.states.AuthorizationState
+import com.amplifyframework.statemachine.codegen.states.CustomSignInState
 import com.amplifyframework.statemachine.codegen.states.DeleteUserState
 import com.amplifyframework.statemachine.codegen.states.FetchAuthSessionState
 import com.amplifyframework.statemachine.codegen.states.SRPSignInState
@@ -50,6 +52,7 @@ internal class AuthStateMachine(
                 SignUpState.Resolver(SignUpCognitoActions),
                 SignInState.Resolver(
                     SRPSignInState.Resolver(SRPCognitoActions),
+                    CustomSignInState.Resolver(SignInCustomActions),
                     SignInChallengeState.Resolver(SignInChallengeCognitoActions),
                     SignInCognitoActions
                 ),
@@ -73,6 +76,7 @@ internal class AuthStateMachine(
                     SignUpState.Resolver(SignUpCognitoActions).logging(),
                     SignInState.Resolver(
                         SRPSignInState.Resolver(SRPCognitoActions).logging(),
+                        CustomSignInState.Resolver(SignInCustomActions).logging(),
                         SignInChallengeState.Resolver(SignInChallengeCognitoActions).logging(),
                         SignInCognitoActions
                     ).logging(),
