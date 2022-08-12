@@ -15,19 +15,15 @@
  */
 package com.amplifyframework.analytics.pinpoint.targeting.endpointProfile
 
-import android.content.Context
-import com.amplifyframework.core.Amplify
-import java.util.MissingResourceException
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
+import kotlinx.serialization.Serializable
 
 /**
  * Stores the location associated with the endpoint
  *
  * @param context the Android context, which we use to get the locale
  */
-class EndpointProfileLocation(context: Context) {
+@Serializable
+data class EndpointProfileLocation internal constructor(internal var country: String) {
     internal var latitude: Double? = null
     fun getLatitude() = latitude
     fun setLatitude(latitude: Double) = latitude.also { this.latitude = it }
@@ -48,31 +44,6 @@ class EndpointProfileLocation(context: Context) {
     fun getRegion() = region
     fun setRegion(region: String) = region.also { this.region = it }
 
-    internal var country = ""
     fun getCountry() = country
     fun setCountry(country: String) = country.also { this.country = it }
-
-    fun toJSONObject(): JsonObject {
-        return buildJsonObject {
-            put("Latitude", latitude)
-            put("Longitude", longitude)
-            put("PostalCode", postalCode)
-            put("City", city)
-            put("Region", region)
-            put("Country", country)
-        }
-    }
-
-    companion object {
-        private val LOG = Amplify.Logging.forNamespace("amplify:aws-analytics-pinpoint")
-    }
-
-    init {
-        country = try {
-            context.resources.configuration.locales[0].isO3Country
-        } catch (exception: MissingResourceException) {
-            LOG.debug("Locale getISO3Country failed, falling back to getCountry.")
-            context.resources.configuration.locales[0].country
-        }
-    }
 }

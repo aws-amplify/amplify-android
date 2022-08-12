@@ -15,22 +15,27 @@
  */
 package com.amplifyframework.analytics.pinpoint.targeting.endpointProfile
 
-import android.content.Context
 import android.os.Build
 import com.amplifyframework.analytics.pinpoint.models.AndroidAppDetails
 import com.amplifyframework.analytics.pinpoint.models.AndroidDeviceDetails
-import java.util.Locale
 import java.util.TimeZone
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
+import kotlinx.serialization.Serializable
 
-class EndpointProfileDemographic internal constructor(
-    appDetails: AndroidAppDetails,
-    deviceDetails: AndroidDeviceDetails,
-    applicationContext: Context
-) {
-    internal var make = deviceDetails.manufacturer
+@Serializable
+class EndpointProfileDemographic {
+    internal constructor(versionName: String, make: String, locale: String) {
+        this.appVersion = versionName
+        this.make = make
+        this.locale = locale
+    }
+
+    internal constructor(
+        appDetails: AndroidAppDetails,
+        deviceDetails: AndroidDeviceDetails,
+        locale: String
+    ) : this(appDetails.versionName, deviceDetails.manufacturer, locale)
+
+    internal var make: String
     fun getMake() = make
     fun setMake(make: String) = make.also { this.make = it }
 
@@ -42,11 +47,11 @@ class EndpointProfileDemographic internal constructor(
     fun getTimezone() = timezone
     fun setTimezone(timezone: String) = timezone.also { this.timezone = it }
 
-    internal var locale: Locale = applicationContext.resources.configuration.locales[0]
+    internal var locale: String
     fun getLocale() = locale
-    fun setLocale(locale: Locale) = locale.also { this.locale = it }
+    fun setLocale(locale: String) = locale.also { this.locale = it }
 
-    internal var appVersion = appDetails.versionName
+    internal var appVersion: String
     fun getAppVersion() = appVersion
     fun setAppVersion(appVersion: String) = appVersion.also { this.appVersion = it }
 
@@ -57,18 +62,6 @@ class EndpointProfileDemographic internal constructor(
     internal var platformVersion: String = Build.VERSION.RELEASE
     fun getPlatformVersion() = platformVersion
     fun setPlatformVersion(platformVersion: String) = platformVersion.also { this.platformVersion = it }
-
-    fun toJSONObject(): JsonObject {
-        return buildJsonObject {
-            put("Make", make)
-            put("Model", model)
-            put("Timezone", timezone)
-            put("Locale", locale.isO3Country)
-            put("AppVersion", appVersion)
-            put("Platform", platform)
-            put("PlatformVersion", platformVersion)
-        }
-    }
 
     companion object {
         /**
