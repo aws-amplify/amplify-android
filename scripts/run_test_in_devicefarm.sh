@@ -49,7 +49,7 @@ minDevice=$(aws devicefarm list-devices \
                     {"attribute":"AVAILABILITY","operator":"EQUALS","values":["HIGHLY_AVAILABLE"]},
                     {"attribute":"PLATFORM","operator":"EQUALS","values":["ANDROID"]},
                     {"attribute":"OS_VERSION","operator":"GREATER_THAN_OR_EQUALS","values":["7"]},
-                    {"attribute":"OS_VERSION","operator":"LESS_THAN","values":["8"]},
+                    {"attribute":"OS_VERSION","operator":"LESS_THAN","values":["7.1"]},
                     {"attribute":"MANUFACTURER","operator":"IN","values":["Google", "Pixel", "Samsung"]}
                 ]' \
                 | jq -r '.devices[0].arn')
@@ -62,7 +62,7 @@ middleDevice=$(aws devicefarm list-devices \
                     {"attribute":"PLATFORM","operator":"EQUALS","values":["ANDROID"]},
                     {"attribute":"OS_VERSION","operator":"GREATER_THAN_OR_EQUALS","values":["10"]},
                     {"attribute":"OS_VERSION","operator":"LESS_THAN","values":["11"]},
-                    {"attribute":"MANUFACTURER","operator":"IN","values":["Google", "Samsung"]}
+                    {"attribute":"MANUFACTURER","operator":"IN","values":["Samsung"]}
                 ]' \
                 | jq -r '.devices[0].arn')
 
