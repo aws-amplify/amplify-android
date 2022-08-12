@@ -44,6 +44,7 @@ sleep 10
 
 # Get oldest device we can test against.
 minDevice=$(aws devicefarm list-devices \
+                --region="us-west-2" \
                 --filters '[
                     {"attribute":"AVAILABILITY","operator":"EQUALS","values":["HIGHLY_AVAILABLE"]},
                     {"attribute":"PLATFORM","operator":"EQUALS","values":["ANDROID"]},
@@ -55,6 +56,7 @@ minDevice=$(aws devicefarm list-devices \
 
 # Get middle device we can test against.
 middleDevice=$(aws devicefarm list-devices \
+                --region="us-west-2" \
                 --filters '[
                     {"attribute":"AVAILABILITY","operator":"EQUALS","values":["HIGHLY_AVAILABLE"]},
                     {"attribute":"PLATFORM","operator":"EQUALS","values":["ANDROID"]},
@@ -66,6 +68,7 @@ middleDevice=$(aws devicefarm list-devices \
 
 # Get latest device we can test against.
 latestDevice=$(aws devicefarm list-devices \
+                --region="us-west-2" \
                 --filters '[
                     {"attribute":"AVAILABILITY","operator":"EQUALS","values":["HIGHLY_AVAILABLE"]},
                     {"attribute":"PLATFORM","operator":"EQUALS","values":["ANDROID"]},
