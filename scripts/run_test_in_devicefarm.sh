@@ -1,16 +1,11 @@
 #!/bin/bash
 project_arn=$DEVICEFARM_PROJECT_ARN
-device_pool_arn=$DEVICEFARM_POOL_ARN
 module_name=$1
 file_name="$module_name-debug-androidTest.apk"
 full_path="$module_name/build/outputs/apk/androidTest/debug/$file_name"
 
 if [[ -z "${project_arn}" ]]; then
   echo "DEVICEFARM_PROJECT_ARN environment variable not set."
-  exit 1
-fi
-if [[ -z "${device_pool_arn}" ]]; then
-  echo "DEVICEFARM_POOL_ARN environment variable not set."
   exit 1
 fi
 
@@ -47,11 +42,54 @@ curl -H "Content-Type:application/octet-stream" -T $full_path $app_package_url
 echo "Waiting for uploads to complete"
 sleep 10
 
+# Get oldest device we can test against.
+minDevice=$(aws devicefarm list-devices \
+                --filters '[
+                    {"attribute":"AVAILABILITY","operator":"EQUALS","values":["HIGHLY_AVAILABLE"]},
+                    {"attribute":"PLATFORM","operator":"EQUALS","values":["ANDROID"]},
+                    {"attribute":"OS_VERSION","operator":"GREATER_THAN_OR_EQUALS","values":["7"]},
+                    {"attribute":"OS_VERSION","operator":"LESS_THAN","values":["8"]},
+                    {"attribute":"MANUFACTURER","operator":"IN","values":["Google", "Pixel", "Samsung"]}
+                ]' \
+                | jq -r '.devices[0].arn')
+
+# Get middle device we can test against.
+middleDevice=$(aws devicefarm list-devices \
+                --filters '[
+                    {"attribute":"AVAILABILITY","operator":"EQUALS","values":["HIGHLY_AVAILABLE"]},
+                    {"attribute":"PLATFORM","operator":"EQUALS","values":["ANDROID"]},
+                    {"attribute":"OS_VERSION","operator":"GREATER_THAN_OR_EQUALS","values":["10"]},
+                    {"attribute":"OS_VERSION","operator":"LESS_THAN","values":["11"]},
+                    {"attribute":"MANUFACTURER","operator":"IN","values":["Google", "Samsung"]}
+                ]' \
+                | jq -r '.devices[0].arn')
+
+# Get latest device we can test against.
+latestDevice=$(aws devicefarm list-devices \
+                --filters '[
+                    {"attribute":"AVAILABILITY","operator":"EQUALS","values":["HIGHLY_AVAILABLE"]},
+                    {"attribute":"PLATFORM","operator":"EQUALS","values":["ANDROID"]},
+                    {"attribute":"OS_VERSION","operator":"GREATER_THAN_OR_EQUALS","values":["12"]},
+                    {"attribute":"MANUFACTURER","operator":"IN","values":["Google", "Pixel"]}
+                ]' \
+                | jq -r '.devices[0].arn')
+
+# IF we fail to find our required test devices, fail.
+if [[ -z "${minDevice}" || -z "${middleDevice}" || -z "${latestDevice}" ]]; then
+    echo "Failed to grab 3 required devices for integration tests."
+    exit 1
+fi
+
 # Schedule the test run in device farm
 echo "Scheduling test run"
 run_arn=`aws devicefarm schedule-run --project-arn=$project_arn \
                             --app-arn="$app_package_upload_arn" \
-                            --device-pool-arn=$device_pool_arn \
+                            --device-selection-configuration='{
+                                "filters": [
+                                  {"attribute": "ARN", "operator":"IN", "values":["'$minDevice'", "'$middleDevice'", "'$latestDevice'"]}
+                                ],
+                                "maxDevices": 3
+                            }' \
                             --name="$file_name" \
                             --test="type=INSTRUMENTATION,testPackageArn=$test_package_upload_arn" \
                             --execution-configuration="jobTimeoutMinutes=30,videoCapture=false" \
