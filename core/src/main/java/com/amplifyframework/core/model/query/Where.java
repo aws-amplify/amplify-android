@@ -17,11 +17,17 @@ package com.amplifyframework.core.model.query;
 
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.AmplifyException;
+import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.ModelIdentifier;
+import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.PrimaryKey;
 import com.amplifyframework.core.model.query.predicate.QueryField;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 
+import java.io.Serializable;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 
@@ -51,16 +57,50 @@ public final class Where {
     }
 
     /**
+     * This method is @Deprecated please use {@link #identifier(Class, Serializable)}}
      * Factory method that builds the options with a predicate matching the model id and the
      * pagination set to the first result only.
-     *
+     * @deprecated This method is @Deprecated please use {@link #identifier(Class, Serializable)}}
      * @param modelId model identifier.
      * @return options with proper predicate and pagination to match a model by its id.
      */
+    @Deprecated
     public static QueryOptions id(@NonNull final String modelId) {
         final QueryField idField = QueryField.field(PrimaryKey.fieldName());
         return matches(idField.eq(Objects.requireNonNull(modelId)))
                 .paginated(Page.firstResult());
+    }
+
+    /**
+     * Factory method that builds the options with a predicate matching the primary key and the
+     * pagination set to the first result only.
+     *
+     * @param itemClass model class.
+     * @param modelPrimaryKey model identifier.
+     * @param <T> Extends Model.
+     * @return options with proper predicate and pagination to match a model by its id.
+     * @throws AmplifyException Throws AmplifyException.
+     */
+    public static <T extends Model> QueryOptions identifier(@NonNull Class<T> itemClass,
+                                                           @NonNull final Serializable modelPrimaryKey)
+            throws AmplifyException {
+        final ModelSchema schema = ModelSchema.fromModelClass(itemClass);
+        final List<String> primaryKeyList = schema.getPrimaryIndexFields();
+        QueryOptions queryOptions = null;
+        Iterator<String> pkField = primaryKeyList.listIterator();
+        final QueryField idField = QueryField.field(itemClass.getSimpleName(), pkField.next());
+        if (primaryKeyList.size() == 1 && !(modelPrimaryKey instanceof ModelIdentifier)) {
+            queryOptions = matches(idField.eq(Objects.requireNonNull(modelPrimaryKey.toString())));
+        } else {
+            ModelIdentifier<?> primaryKey = (ModelIdentifier<?>) modelPrimaryKey;
+            Iterator<?> sortKeyIterator = primaryKey.sortedKeys().listIterator();
+            queryOptions = matches(idField.eq(Objects.requireNonNull(primaryKey.key())));
+            while (sortKeyIterator.hasNext()) {
+                queryOptions.matches(QueryField.field(itemClass.getSimpleName(), pkField.next())
+                        .eq(Objects.requireNonNull(sortKeyIterator.next())));
+            }
+        }
+        return queryOptions.paginated(Page.firstResult());
     }
 
     /**

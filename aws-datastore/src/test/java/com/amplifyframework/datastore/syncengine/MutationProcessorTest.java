@@ -166,7 +166,7 @@ public final class MutationProcessorTest {
         assertEquals(1, accumulator.await().size());
 
         // And that it is no longer in the outbox.
-        assertFalse(mutationOutbox.hasPendingMutation(tony.getId()));
+        assertFalse(mutationOutbox.hasPendingMutation(tony.getPrimaryKeyString()));
 
         // And that it was passed to AppSync for publication.
         verify(appSync).create(eq(tony), any(), any(), any());
@@ -196,7 +196,8 @@ public final class MutationProcessorTest {
             .name("Exceptional Blogger")
             .build();
         ModelMetadata metadata =
-            new ModelMetadata(model.getModelName() + "|" + model.getId(), false, 1, Temporal.Timestamp.now());
+            new ModelMetadata(model.getModelName() + "|" + model.getPrimaryKeyString(), false, 1,
+                    Temporal.Timestamp.now(), model.getModelName());
         ModelSchema schema = schemaRegistry.getModelSchemaForModelClass(BlogOwner.class);
         LastSyncMetadata lastSyncMetadata = LastSyncMetadata.baseSyncedAt(schema.getName(), 1_000L);
         synchronousStorageAdapter.save(model, metadata, lastSyncMetadata);
@@ -247,7 +248,8 @@ public final class MutationProcessorTest {
                 .name("Average Joe")
                 .build();
         ModelMetadata metadata =
-                new ModelMetadata(model.getModelName() + "|" + model.getId(), false, 1, Temporal.Timestamp.now());
+                new ModelMetadata(model.getModelName() + "|" + model.getPrimaryKeyString(), false, 1,
+                        Temporal.Timestamp.now(), model.getModelName());
         ModelSchema schema = schemaRegistry.getModelSchemaForModelClass(BlogOwner.class);
         synchronousStorageAdapter.save(model, metadata);
 

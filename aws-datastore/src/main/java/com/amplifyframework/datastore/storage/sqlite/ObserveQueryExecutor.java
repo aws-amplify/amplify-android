@@ -142,7 +142,7 @@ public class ObserveQueryExecutor<T extends Model> implements Cancelable {
                 if (sqlQueryProcessor.modelExists(itemChanged.item(), options.getQueryPredicate())) {
                     updateCompleteItemMap(itemChanged);
                 } else if (itemChanged.type() == StorageItemChange.Type.UPDATE) {
-                    completeItemMap.remove(itemChanged.item().getId());
+                    completeItemMap.remove(itemChanged.item().getPrimaryKeyString());
                 }
                 collect(itemChanged, onQuerySnapshot, itemClass, options, onObservationError);
             } catch (DataStoreException exception) {
@@ -183,7 +183,7 @@ public class ObserveQueryExecutor<T extends Model> implements Cancelable {
         };
         callOnQuerySnapshot(onQuerySnapshot, itemClass, onQueryError, models);
         for (T model : models) {
-            completeItemMap.put(model.getId(), model);
+            completeItemMap.put(model.getPrimaryKeyString(), model);
         }
     }
 
@@ -283,9 +283,9 @@ public class ObserveQueryExecutor<T extends Model> implements Cancelable {
     private void updateCompleteItemMap(StorageItemChange<T> itemChanged) {
         T item = itemChanged.item();
         if (itemChanged.type() == StorageItemChange.Type.DELETE) {
-            completeItemMap.remove(item.getId());
+            completeItemMap.remove(item.getPrimaryKeyString());
         } else {
-            completeItemMap.put(item.getId(), item);
+            completeItemMap.put(item.getPrimaryKeyString(), item);
         }
     }
 

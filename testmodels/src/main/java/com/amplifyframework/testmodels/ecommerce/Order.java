@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.Objects;
 
+import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.model.Model;
@@ -27,6 +28,11 @@ public final class Order implements Model {
   private final @ModelField(targetType="String", isRequired = true) String customerEmail;
   private final @ModelField(targetType="String", isRequired = true) String createdAt;
   private final @ModelField(targetType="ID", isRequired = true) String orderId;
+  @NonNull
+  public String resolveIdentifier() {
+      return id;
+  }
+
   public String getId() {
       return id;
   }

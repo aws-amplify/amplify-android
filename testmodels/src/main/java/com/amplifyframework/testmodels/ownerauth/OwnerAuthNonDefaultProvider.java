@@ -1,6 +1,7 @@
 package com.amplifyframework.testmodels.ownerauth;
 
 
+import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.model.AuthStrategy;
@@ -32,6 +33,11 @@ public final class OwnerAuthNonDefaultProvider implements Model {
     public static final QueryField TITLE = field("title");
     private final @ModelField(targetType="ID", isRequired = true) String id;
     private final @ModelField(targetType="String", isRequired = true) String title;
+    @NonNull
+    public String resolveIdentifier() {
+        return id;
+    }
+
     public String getId() {
         return id;
     }
