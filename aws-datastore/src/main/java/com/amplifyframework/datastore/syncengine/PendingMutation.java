@@ -322,15 +322,6 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
             return this.id;
         }
 
-        /**
-         * Gets the Type of the Model.
-         * @return The Type of the model.
-         */
-        @NonNull
-        @Override
-        public Type getType() {
-            return Type.SYSTEM;
-        }
 
         /**
          * Gets the ID of the Model instance that is contained within the mutation data.
