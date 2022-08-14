@@ -7,8 +7,11 @@ full_path="$module_name/build/outputs/apk/androidTest/debug/$file_name"
 # List of modules to block testing
 blocklist=(aws-datastore)
 
-if [ "$CODEBUILD_WEBHOOK_BASE_REF" = "main" ]; then
-    echo "Skipping tests restricted in main branch, ignoring skip"
+#$CODEBUILD_WEBHOOK_BASE_REF will be /refs/heads/<base_branch>, using substring test for simplicity
+if [[ $CODEBUILD_WEBHOOK_BASE_REF != *"dev-preview"* ]];
+then
+    echo "CODEBUILD_WEBHOOK_BASE_REF name is $CODEBUILD_WEBHOOK_BASE_REF, \
+    which does not start with 'dev-preview', running tests for $module_name!"
 elif [ "$SKIP_PROJECTS" = "true" ] && [[ ${blocklist[*]} =~ ${module_name} ]]; then
     echo "Module $module_name in list of projects to skip, not running test"
     exit 0
