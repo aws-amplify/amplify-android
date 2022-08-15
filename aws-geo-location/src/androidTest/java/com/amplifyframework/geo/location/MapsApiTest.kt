@@ -17,7 +17,6 @@ package com.amplifyframework.geo.location
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
-import com.amplifyframework.auth.AuthCategory
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
 import com.amplifyframework.geo.GeoCategory
 import com.amplifyframework.geo.GeoException
@@ -29,7 +28,6 @@ import org.json.JSONObject
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 
 /**
@@ -45,12 +43,10 @@ class MapsApiTest {
     @Before
     fun setUp() {
         // Auth plugin uses default configuration
-        val authPlugin = AWSCognitoAuthPlugin()
-        val authCategory = TestCategory.forPlugin(authPlugin) as AuthCategory
-        auth = SynchronousAuth.delegatingToCognito(ApplicationProvider.getApplicationContext(), authPlugin)
+        auth = SynchronousAuth.delegatingToCognito(ApplicationProvider.getApplicationContext(), AWSCognitoAuthPlugin())
 
         // Geo plugin uses above auth category to authenticate users
-        val geoPlugin = AWSLocationGeoPlugin(authCategory = authCategory)
+        val geoPlugin = AWSLocationGeoPlugin()
         val geoCategory = TestCategory.forPlugin(geoPlugin) as GeoCategory
         geo = SynchronousGeo.delegatingTo(geoCategory)
     }
@@ -83,7 +79,6 @@ class MapsApiTest {
      *
      * @throws GeoException will be thrown due to service exception.
      */
-    @Ignore("Fails randomly in build server, needs investigation")
     @Test(expected = GeoException::class)
     fun cannotFetchStyleWithoutAuth() {
         signOutFromCognito()
