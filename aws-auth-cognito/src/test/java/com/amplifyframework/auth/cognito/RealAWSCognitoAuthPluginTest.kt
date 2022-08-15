@@ -581,7 +581,7 @@ class RealAWSCognitoAuthPluginTest {
             onError
         )
 
-        assertTrue { listenLatch.await(60, TimeUnit.SECONDS) }
+        assertTrue { listenLatch.await(5, TimeUnit.SECONDS) }
         coVerify(exactly = 1) { onSuccess.accept(any<MutableMap<AuthUserAttributeKey, AuthUpdateAttributeResult>>()) }
         coVerify(exactly = 0) { onError.accept(any()) }
     }
