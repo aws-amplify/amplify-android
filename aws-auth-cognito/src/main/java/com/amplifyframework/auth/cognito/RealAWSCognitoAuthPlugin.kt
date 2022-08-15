@@ -26,6 +26,7 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.ListDevicesRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.UpdateDeviceStatusRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.UpdateUserAttributesRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.UpdateUserAttributesResponse
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.VerifyUserAttributeRequest
 import com.amplifyframework.auth.AuthCategoryBehavior
 import com.amplifyframework.auth.AuthChannelEventName
 import com.amplifyframework.auth.AuthCodeDeliveryDetails
@@ -976,7 +977,31 @@ internal class RealAWSCognitoAuthPlugin(
         onSuccess: Action,
         onError: Consumer<AuthException>
     ) {
-        TODO("Not yet implemented")
+        authStateMachine.getCurrentState { authState ->
+            when (authState.authNState) {
+                // Check if user signed in
+                is AuthenticationState.SignedIn -> {
+                    GlobalScope.launch {
+                        try {
+                            val accessToken = getSession().userPoolTokens.value?.accessToken
+                            val verifyUserAttributeRequest = VerifyUserAttributeRequest.invoke {
+                                this.accessToken = accessToken
+                                this.attributeName = attributeKey.keyString
+                                this.code = confirmationCode
+                            }
+                            val verifyUserAttributeResponse = authEnvironment.cognitoAuthService
+                                .cognitoIdentityProviderClient?.verifyUserAttribute(
+                                    verifyUserAttributeRequest
+                                )
+                            onSuccess.call()
+                        } catch (e: Exception) {
+                            onError.accept(CognitoAuthExceptionConverter.lookup(e, e.toString()))
+                        }
+                    }
+                }
+                else -> onError.accept(AuthException.InvalidStateException())
+            }
+        }
     }
 
     override fun getCurrentUser(
