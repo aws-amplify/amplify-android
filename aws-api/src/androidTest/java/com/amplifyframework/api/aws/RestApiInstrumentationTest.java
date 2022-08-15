@@ -27,7 +27,6 @@ import com.amplifyframework.testutils.sync.SynchronousMobileClient;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.Collections;
@@ -128,7 +127,6 @@ public final class RestApiInstrumentationTest {
      * @throws ApiException On failure to obtain a valid response from API endpoint
      */
     @Test
-    @Ignore("Relies on an AWS account which is no longer active.  Resources need to be regenerated.")
     public void getRequestWithIAM() throws ApiException {
         final RestOptions options = RestOptions.builder()
             .addPath("/items")
@@ -140,11 +138,25 @@ public final class RestApiInstrumentationTest {
     }
 
     /**
+     * Test whether we can make POST request with empty body and IAM as auth type.
+     * @throws ApiException On failure to obtain a valid response from API endpoint
+     */
+    @Test
+    public void postRequestEmptyBodyWithIAM() throws ApiException {
+        final RestOptions options = RestOptions.builder()
+                .addPath("/items")
+                .addBody("".getBytes())
+                .build();
+        final RestResponse response = api.post("iamAuthApi", options);
+        assertNotNull("Should return non-null data", response.getData());
+        assertTrue("Response should be successful", response.getCode().isSuccessful());
+    }
+
+    /**
      * Test whether we can get failed response for access denied.
      * @throws ApiException On failure to obtain a valid response from API endpoint
      */
     @Test
-    @Ignore("Relies on an AWS account which is no longer active.  Resources need to be regenerated.")
     public void getRequestWithIAMFailedAccess() throws ApiException {
         final RestOptions options = RestOptions.builder()
             .addPath("/invalidPath")
@@ -152,22 +164,5 @@ public final class RestApiInstrumentationTest {
         final RestResponse response = api.get("iamAuthApi", options);
         assertNotNull("Should return non-null data", response.getData());
         assertFalse("Response should be unsuccessful", response.getCode().isSuccessful());
-    }
-
-    /**
-     * Test whether an exception that occurs when making a request and that is not
-     * an IOException can be caught in a try/catch.
-     * @throws Exception On failure to catch the exception that occurs when making a request.
-     */
-    @Test
-    public void getRequestNonIOExceptionCanBeCaught() throws Exception {
-        final RestOptions options = RestOptions.builder()
-                .addPath("/invalidPath")
-                .build();
-        try {
-            final RestResponse response = api.get("iamAuthApi", options);
-        } catch (ApiException apiException) {
-            // Expected to enter catch block
-        }
     }
 }
