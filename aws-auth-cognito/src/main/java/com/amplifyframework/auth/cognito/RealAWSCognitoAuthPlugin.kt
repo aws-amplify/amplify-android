@@ -1063,6 +1063,9 @@ internal class RealAWSCognitoAuthPlugin(
                     is CredentialStoreState.Error -> authStateMachine.send(
                         AuthEvent(AuthEvent.EventType.CachedCredentialsFailed)
                     )
+                    else -> {
+                        // no op
+                    }
                 }
             },
             null
