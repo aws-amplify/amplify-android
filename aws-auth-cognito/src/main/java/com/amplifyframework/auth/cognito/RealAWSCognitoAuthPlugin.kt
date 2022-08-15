@@ -17,6 +17,7 @@ package com.amplifyframework.auth.cognito
 
 import android.app.Activity
 import android.content.Intent
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.AttributeType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChangePasswordRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeviceRememberedStatusType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetUserRequest
@@ -33,10 +34,9 @@ import com.amplifyframework.auth.AuthUser
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.cognito.helpers.JWTParser
-import com.amplifyframework.auth.cognito.usecases.ConfirmSignUpUseCase
-import com.amplifyframework.auth.cognito.usecases.ResendSignUpCodeUseCase
+import com.amplifyframework.auth.cognito.helpers.SRPHelper
+import com.amplifyframework.auth.cognito.options.AWSCognitoAuthResendSignUpCodeOptions
 import com.amplifyframework.auth.cognito.usecases.ResetPasswordUseCase
-import com.amplifyframework.auth.cognito.usecases.SignUpUseCase
 import com.amplifyframework.auth.options.AWSCognitoAuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions
@@ -55,7 +55,9 @@ import com.amplifyframework.auth.result.AuthSignInResult
 import com.amplifyframework.auth.result.AuthSignUpResult
 import com.amplifyframework.auth.result.AuthUpdateAttributeResult
 import com.amplifyframework.auth.result.step.AuthNextSignInStep
+import com.amplifyframework.auth.result.step.AuthNextSignUpStep
 import com.amplifyframework.auth.result.step.AuthSignInStep
+import com.amplifyframework.auth.result.step.AuthSignUpStep
 import com.amplifyframework.core.Action
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
@@ -111,7 +113,7 @@ internal class RealAWSCognitoAuthPlugin(
         authStateMachine.getCurrentState { authState ->
             if (authState.authNState is AuthenticationState.Configured) {
                 GlobalScope.launch {
-                    SignUpUseCase(authEnvironment).execute(username, password, options, onSuccess, onError)
+                    _signUp(username, password, options, onSuccess, onError)
                 }
             } else {
                 onError.accept(
@@ -121,6 +123,64 @@ internal class RealAWSCognitoAuthPlugin(
                     )
                 )
             }
+        }
+    }
+
+    private suspend fun _signUp(
+        username: String,
+        password: String,
+        options: AuthSignUpOptions,
+        onSuccess: Consumer<AuthSignUpResult>,
+        onError: Consumer<AuthException>
+    ) {
+        logger.verbose("SignUp Starting execution")
+        try {
+            val userAttributes = options.userAttributes.map {
+                AttributeType {
+                    name = it.key.keyString
+                    value = it.value
+                }
+            }
+
+            val response = authEnvironment.cognitoAuthService.cognitoIdentityProviderClient?.signUp {
+                this.username = username
+                this.password = password
+                this.userAttributes = userAttributes
+                this.clientId = configuration.userPool?.appClient
+                this.secretHash = SRPHelper.getSecretHash(
+                    username,
+                    configuration.userPool?.appClient,
+                    configuration.userPool?.appClientSecret
+                )
+            }
+
+            val deliveryDetails = response?.codeDeliveryDetails?.let { details ->
+                mapOf(
+                    "DESTINATION" to details.destination,
+                    "MEDIUM" to details.deliveryMedium?.value,
+                    "ATTRIBUTE" to details.attributeName
+                )
+            }
+
+            val authSignUpResult = AuthSignUpResult(
+                false,
+                AuthNextSignUpStep(
+                    AuthSignUpStep.CONFIRM_SIGN_UP_STEP,
+                    mapOf(),
+                    AuthCodeDeliveryDetails(
+                        deliveryDetails?.getValue("DESTINATION") ?: "",
+                        AuthCodeDeliveryDetails.DeliveryMedium.fromString(
+                            deliveryDetails?.getValue("MEDIUM")
+                        ),
+                        deliveryDetails?.getValue("ATTRIBUTE")
+                    )
+                ),
+                AuthUser(response?.userSub ?: "", username)
+            )
+            onSuccess.accept(authSignUpResult)
+            logger.verbose("SignUp Execution complete")
+        } catch (exception: Exception) {
+            onError.accept(CognitoAuthExceptionConverter.lookup(exception, "Sign up failed."))
         }
     }
 
@@ -143,13 +203,7 @@ internal class RealAWSCognitoAuthPlugin(
         authStateMachine.getCurrentState { authState ->
             if (authState.authNState is AuthenticationState.Configured) {
                 GlobalScope.launch {
-                    ConfirmSignUpUseCase(authEnvironment).execute(
-                        username,
-                        confirmationCode,
-                        options,
-                        onSuccess,
-                        onError
-                    )
+                    _confirmSignUp(username, confirmationCode, options, onSuccess, onError)
                 }
             } else {
                 onError.accept(
@@ -159,6 +213,40 @@ internal class RealAWSCognitoAuthPlugin(
                     )
                 )
             }
+        }
+    }
+
+    private suspend fun _confirmSignUp(
+        username: String,
+        confirmationCode: String,
+        options: AuthConfirmSignUpOptions,
+        onSuccess: Consumer<AuthSignUpResult>,
+        onError: Consumer<AuthException>
+    ) {
+        logger.verbose("ConfirmSignUp Starting execution")
+        try {
+            authEnvironment.cognitoAuthService.cognitoIdentityProviderClient?.confirmSignUp {
+                this.username = username
+                this.confirmationCode = confirmationCode
+                this.clientId = configuration.userPool?.appClient
+                this.secretHash = SRPHelper.getSecretHash(
+                    username,
+                    configuration.userPool?.appClient,
+                    configuration.userPool?.appClientSecret
+                )
+            }
+
+            val authSignUpResult = AuthSignUpResult(
+                true,
+                AuthNextSignUpStep(AuthSignUpStep.DONE, mapOf(), null),
+                null
+            )
+            onSuccess.accept(authSignUpResult)
+            logger.verbose("ConfirmSignUp Execution complete")
+        } catch (exception: Exception) {
+            onError.accept(
+                CognitoAuthExceptionConverter.lookup(exception, "Confirm sign up failed.")
+            )
         }
     }
 
@@ -179,7 +267,7 @@ internal class RealAWSCognitoAuthPlugin(
         authStateMachine.getCurrentState { authState ->
             if (authState.authNState is AuthenticationState.Configured) {
                 GlobalScope.launch {
-                    ResendSignUpCodeUseCase(authEnvironment).execute(username, options, onSuccess, onError)
+                    _resendSignUpCode(username, options, onSuccess, onError)
                 }
             } else {
                 onError.accept(
@@ -189,6 +277,57 @@ internal class RealAWSCognitoAuthPlugin(
                     )
                 )
             }
+        }
+    }
+
+    private suspend fun _resendSignUpCode(
+        username: String,
+        options: AuthResendSignUpCodeOptions,
+        onSuccess: Consumer<AuthSignUpResult>,
+        onError: Consumer<AuthException>
+    ) {
+        logger.verbose("ResendSignUpCode Starting execution")
+        try {
+            val metadata = (options as? AWSCognitoAuthResendSignUpCodeOptions)?.metadata
+
+            val response = authEnvironment.cognitoAuthService.cognitoIdentityProviderClient?.resendConfirmationCode {
+                clientId = configuration.userPool?.appClient
+                this.username = username
+                secretHash = SRPHelper.getSecretHash(
+                    username,
+                    configuration.userPool?.appClient,
+                    configuration.userPool?.appClientSecret
+                )
+                clientMetadata = metadata
+            }
+
+            val deliveryDetails = response?.codeDeliveryDetails?.let { details ->
+                mapOf(
+                    "DESTINATION" to details.destination,
+                    "MEDIUM" to details.deliveryMedium?.value,
+                    "ATTRIBUTE" to details.attributeName
+                )
+            }
+
+            val authSignUpResult = AuthSignUpResult(
+                false,
+                AuthNextSignUpStep(
+                    AuthSignUpStep.CONFIRM_SIGN_UP_STEP,
+                    mapOf(),
+                    AuthCodeDeliveryDetails(
+                        deliveryDetails?.getValue("DESTINATION") ?: "",
+                        AuthCodeDeliveryDetails.DeliveryMedium.fromString(
+                            deliveryDetails?.getValue("MEDIUM")
+                        ),
+                        deliveryDetails?.getValue("ATTRIBUTE")
+                    )
+                ),
+                AuthUser("", username)
+            )
+            onSuccess.accept(authSignUpResult)
+            logger.verbose("ResendSignUpCode Execution complete")
+        } catch (exception: Exception) {
+            onError.accept(CognitoAuthExceptionConverter.lookup(exception, "Resend sign up code failed."))
         }
     }
 
