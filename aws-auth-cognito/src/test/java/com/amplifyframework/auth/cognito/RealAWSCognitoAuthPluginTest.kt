@@ -573,7 +573,7 @@ class RealAWSCognitoAuthPluginTest {
         // WHEN
         plugin.updateUserAttributes(
             mutableListOf(
-                AuthUserAttribute(AuthUserAttributeKey.email(), "banjijolly@gmail.com"),
+                AuthUserAttribute(AuthUserAttributeKey.email(), "test@test.com"),
                 AuthUserAttribute(AuthUserAttributeKey.nickname(), "test")
             ),
             AuthUpdateUserAttributesOptions.defaults(),
