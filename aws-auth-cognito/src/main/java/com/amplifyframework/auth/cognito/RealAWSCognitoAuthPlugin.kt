@@ -1044,6 +1044,9 @@ internal class RealAWSCognitoAuthPlugin(
                             )
                         )
                     }
+                    else -> {
+                        // no op
+                    }
                 }
             },
             null
