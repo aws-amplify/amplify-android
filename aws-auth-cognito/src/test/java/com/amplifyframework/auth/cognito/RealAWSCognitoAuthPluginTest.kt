@@ -24,6 +24,8 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.ConfirmForgotPasswo
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ConfirmForgotPasswordResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetUserRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetUserResponse
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.UpdateUserAttributesRequest
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.UpdateUserAttributesResponse
 import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
@@ -31,8 +33,10 @@ import com.amplifyframework.auth.cognito.usecases.ResetPasswordUseCase
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthResetPasswordOptions
 import com.amplifyframework.auth.options.AuthSignUpOptions
+import com.amplifyframework.auth.options.AuthUpdateUserAttributesOptions
 import com.amplifyframework.auth.result.AuthResetPasswordResult
 import com.amplifyframework.auth.result.AuthSignUpResult
+import com.amplifyframework.auth.result.AuthUpdateAttributeResult
 import com.amplifyframework.core.Action
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.logging.Logger
@@ -471,5 +475,112 @@ class RealAWSCognitoAuthPluginTest {
         verify { onError.accept(resultCaptor.captured) }
 
         assertEquals(expectedException, resultCaptor.captured.cause)
+    }
+
+    @Test
+    fun `update user attribute fails when not in SignedIn state`() {
+        // GIVEN
+        val onSuccess = mockk<Consumer<AuthUpdateAttributeResult>>(relaxed = true)
+        val onError = mockk<Consumer<AuthException>>(relaxed = true)
+        val listenLatch = CountDownLatch(1)
+
+        currentState = AuthenticationState.NotConfigured()
+
+        every {
+            onError.accept(AuthException.InvalidStateException())
+        } answers {
+            listenLatch.countDown()
+        }
+
+        // WHEN
+        plugin.updateUserAttribute(
+            AuthUserAttribute(AuthUserAttributeKey.email(), "test@test.com"),
+            onSuccess,
+            onError
+        )
+
+        assertTrue { listenLatch.await(5, TimeUnit.SECONDS) }
+        coVerify(exactly = 1) { onError.accept(AuthException.InvalidStateException()) }
+        verify(exactly = 0) { onSuccess.accept(any()) }
+    }
+
+    @Test
+    fun `update user attribute with success`() {
+        // GIVEN
+        val onSuccess = mockk<Consumer<AuthUpdateAttributeResult>>(relaxed = true)
+        val onError = mockk<Consumer<AuthException>>(relaxed = true)
+        val listenLatch = CountDownLatch(1)
+
+        val currentAuthState = mockk<AuthState> {
+            every { authNState } returns AuthenticationState.SignedIn(mockk())
+            every { authZState } returns AuthorizationState.SessionEstablished(credentials)
+        }
+        every { authStateMachine.getCurrentState(captureLambda()) } answers {
+            lambda<(AuthState) -> Unit>().invoke(currentAuthState)
+        }
+
+        coEvery {
+            authService.cognitoIdentityProviderClient?.updateUserAttributes(any<UpdateUserAttributesRequest>())
+        } returns UpdateUserAttributesResponse.invoke {
+        }
+
+        every {
+            onSuccess.accept(any<AuthUpdateAttributeResult>())
+        } answers {
+            listenLatch.countDown()
+        }
+
+        // WHEN
+        plugin.updateUserAttribute(
+            AuthUserAttribute(AuthUserAttributeKey.email(), "test@test.com"),
+            onSuccess,
+            onError
+        )
+
+        assertTrue { listenLatch.await(5, TimeUnit.SECONDS) }
+        coVerify(exactly = 1) { onSuccess.accept(any<AuthUpdateAttributeResult>()) }
+        coVerify(exactly = 0) { onError.accept(any()) }
+    }
+
+    @Test
+    fun `update user attributes with success`() {
+        // GIVEN
+        val onSuccess = mockk<Consumer<MutableMap<AuthUserAttributeKey, AuthUpdateAttributeResult>>>(relaxed = true)
+        val onError = mockk<Consumer<AuthException>>(relaxed = true)
+        val listenLatch = CountDownLatch(1)
+
+        val currentAuthState = mockk<AuthState> {
+            every { authNState } returns AuthenticationState.SignedIn(mockk())
+            every { authZState } returns AuthorizationState.SessionEstablished(credentials)
+        }
+        every { authStateMachine.getCurrentState(captureLambda()) } answers {
+            lambda<(AuthState) -> Unit>().invoke(currentAuthState)
+        }
+
+        coEvery {
+            authService.cognitoIdentityProviderClient?.updateUserAttributes(any<UpdateUserAttributesRequest>())
+        } returns UpdateUserAttributesResponse.invoke {
+        }
+
+        every {
+            onSuccess.accept(any<MutableMap<AuthUserAttributeKey, AuthUpdateAttributeResult>>())
+        } answers {
+            listenLatch.countDown()
+        }
+
+        // WHEN
+        plugin.updateUserAttributes(
+            mutableListOf(
+                AuthUserAttribute(AuthUserAttributeKey.email(), "banjijolly@gmail.com"),
+                AuthUserAttribute(AuthUserAttributeKey.nickname(), "test")
+            ),
+            AuthUpdateUserAttributesOptions.defaults(),
+            onSuccess,
+            onError
+        )
+
+        assertTrue { listenLatch.await(60, TimeUnit.SECONDS) }
+        coVerify(exactly = 1) { onSuccess.accept(any<MutableMap<AuthUserAttributeKey, AuthUpdateAttributeResult>>()) }
+        coVerify(exactly = 0) { onError.accept(any()) }
     }
 }
