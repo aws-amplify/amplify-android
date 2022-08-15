@@ -1,10 +1,3 @@
-package com.amplifyframework.auth.cognito.options
-
-import androidx.core.util.ObjectsCompat
-import com.amplifyframework.auth.options.AuthUpdateUserAttributesOptions
-import com.amplifyframework.util.Immutable
-import java.util.Objects.requireNonNull
-
 /*
  * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
@@ -19,6 +12,13 @@ import java.util.Objects.requireNonNull
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
+
+package com.amplifyframework.auth.cognito.options
+
+import androidx.core.util.ObjectsCompat
+import com.amplifyframework.auth.options.AuthUpdateUserAttributesOptions
+import com.amplifyframework.util.Immutable
+import java.util.Objects.requireNonNull
 /**
  * Cognito extension of update user attributes options to add the platform specific fields.
  */
