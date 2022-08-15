@@ -20,6 +20,7 @@ import com.amplifyframework.auth.cognito.options.AuthFlowType
 import com.amplifyframework.auth.options.AuthSignUpOptions
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.StateChangeListenerToken
+import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
 import com.amplifyframework.statemachine.codegen.data.SignedOutData
 import com.amplifyframework.statemachine.codegen.events.AuthEvent
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
@@ -278,15 +279,10 @@ class StateTransitionTests : StateTransitionTestBase() {
     fun testSignIn() {
         setupConfigureSignedOut()
 
-//        val creds = AmplifyCredential.UserAndIdentityPool(CognitoUserPoolTokens("","","",0), "", AWSCredentials.empty)
-
-//        val creds = mockk<AmplifyCredential> {
-//            every { this } returns AmplifyCredential.UserAndIdentityPool(CognitoUserPoolTokens("","","",0), "", AWSCredentials.empty)
-//        }
-//
-//        doReturn(obj1).doReturn(obj2).when(credentials)
-//
-//        Mockito.`when`((credentials as AmplifyCredential.UserAndIdentityPool).tokens).thenReturn(tokens)
+        Mockito.`when`(signedInData.cognitoUserPoolTokens)
+            .thenReturn(
+                CognitoUserPoolTokens("","","",0)
+            )
 
         val testLatch = CountDownLatch(1)
         val configureLatch = CountDownLatch(1)
