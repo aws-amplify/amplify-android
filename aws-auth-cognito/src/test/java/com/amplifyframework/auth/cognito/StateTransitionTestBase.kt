@@ -123,14 +123,14 @@ open class StateTransitionTestBase {
                 }
             )
 
-        Mockito.`when`(credentialStoreActions.clearCredentialStoreAction())
-            .thenReturn(
-                Action { dispatcher, _ ->
-                    dispatcher.send(
-                        CredentialStoreEvent(CredentialStoreEvent.EventType.CompletedOperation(credentials))
-                    )
-                }
-            )
+//        Mockito.`when`(credentialStoreActions.clearCredentialStoreAction())
+//            .thenReturn(
+//                Action { dispatcher, _ ->
+//                    dispatcher.send(
+//                        CredentialStoreEvent(CredentialStoreEvent.EventType.CompletedOperation(credentials))
+//                    )
+//                }
+//            )
 
         Mockito.`when`(credentialStoreActions.loadCredentialStoreAction())
             .thenReturn(
@@ -242,42 +242,42 @@ open class StateTransitionTestBase {
                 }
             )
 
-        Mockito.`when`(
-            mockAuthorizationActions.initializeFetchAuthSession(credentials)
-        )
-            .thenReturn(
-                Action { dispatcher, _ ->
-                    dispatcher.send(
-                        FetchAuthSessionEvent(
-                            FetchAuthSessionEvent.EventType.FetchIdentity(credentials)
-                        )
-                    )
-                }
-            )
+//        Mockito.`when`(
+//            mockAuthorizationActions.initializeFetchAuthSession(credentials)
+//        )
+//            .thenReturn(
+//                Action { dispatcher, _ ->
+//                    dispatcher.send(
+//                        FetchAuthSessionEvent(
+//                            FetchAuthSessionEvent.EventType.FetchIdentity(credentials)
+//                        )
+//                    )
+//                }
+//            )
 
-        Mockito.`when`(
-            mockAuthorizationActions.refreshAuthSessionAction(credentials)
-        )
-            .thenReturn(
-                Action { dispatcher, _ ->
-                    dispatcher.send(
-                        FetchAuthSessionEvent(
-                            FetchAuthSessionEvent.EventType.FetchIdentity(credentials)
-                        )
-                    )
-                }
-            )
+//        Mockito.`when`(
+//            mockAuthorizationActions.refreshAuthSessionAction(credentials)
+//        )
+//            .thenReturn(
+//                Action { dispatcher, _ ->
+//                    dispatcher.send(
+//                        FetchAuthSessionEvent(
+//                            FetchAuthSessionEvent.EventType.FetchIdentity(credentials)
+//                        )
+//                    )
+//                }
+//            )
 
-        Mockito.`when`(
-            mockAuthorizationActions.resetAuthorizationAction()
-        )
-            .thenReturn(
-                Action { dispatcher, _ ->
-                    dispatcher.send(
-                        AuthorizationEvent(AuthorizationEvent.EventType.Configure)
-                    )
-                }
-            )
+//        Mockito.`when`(
+//            mockAuthorizationActions.resetAuthorizationAction()
+//        )
+//            .thenReturn(
+//                Action { dispatcher, _ ->
+//                    dispatcher.send(
+//                        AuthorizationEvent(AuthorizationEvent.EventType.Configure)
+//                    )
+//                }
+//            )
     }
 
     internal fun setupSignInActions() {
