@@ -32,7 +32,7 @@ import aws.sdk.kotlin.services.pinpoint.model.Session
 import com.amplifyframework.analytics.AnalyticsEvent
 import com.amplifyframework.analytics.pinpoint.database.EventTable
 import com.amplifyframework.analytics.pinpoint.database.PinpointDatabase
-import com.amplifyframework.analytics.pinpoint.internal.core.util.DateUtil
+import com.amplifyframework.analytics.pinpoint.internal.core.util.millisToIsoDate
 import com.amplifyframework.analytics.pinpoint.models.PinpointEvent
 import com.amplifyframework.analytics.pinpoint.targeting.TargetingClient
 import com.amplifyframework.analytics.pinpoint.targeting.endpointProfile.EndpointProfile
@@ -194,9 +194,9 @@ internal class EventRecorder(
         events.values.forEach { pinpointEvent ->
             val pinpointSession = Session {
                 id = pinpointEvent.pinpointSession.sessionId
-                startTimestamp = DateUtil.isoDateFromMillis(pinpointEvent.pinpointSession.sessionStart)
+                startTimestamp = pinpointEvent.pinpointSession.sessionStart.millisToIsoDate()
                 stopTimestamp = pinpointEvent.pinpointSession.sessionEnd?.let {
-                    DateUtil.isoDateFromMillis(pinpointEvent.pinpointSession.sessionStart)
+                    pinpointEvent.pinpointSession.sessionStart.millisToIsoDate()
                 }
                 duration = pinpointEvent.pinpointSession.sessionDuration?.toInt()
             }
@@ -209,7 +209,7 @@ internal class EventRecorder(
                 eventType = pinpointEvent.eventType
                 sdkName = pinpointEvent.sdkInfo.name
                 session = pinpointSession
-                timestamp = DateUtil.isoDateFromMillis(pinpointEvent.eventTimestamp)
+                timestamp = pinpointEvent.eventTimestamp.millisToIsoDate()
             }
             result[pinpointEvent.eventId] = event
         }
@@ -243,7 +243,7 @@ internal class EventRecorder(
             channelType = endpointProfile.channelType
             location = endpointLocation
             demographic = endpointDemographic
-            effectiveDate = DateUtil.isoDateFromMillis(endpointProfile.effectiveDate)
+            effectiveDate = endpointProfile.effectiveDate.millisToIsoDate()
             optOut = endpointProfile.optOut
             attributes = endpointProfile.allAttributes
             metrics = endpointProfile.allMetrics

@@ -38,6 +38,7 @@ import org.robolectric.RobolectricTestRunner
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
+@OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
 class AnalyticsClientTest {
 
@@ -51,7 +52,6 @@ class AnalyticsClientTest {
     private val targetingClient = mockk<TargetingClient>()
     private lateinit var analyticsClient: AnalyticsClient
 
-    @OptIn(ExperimentalCoroutinesApi::class)
     @Before
     fun setup() = runTest {
         analyticsClient = AnalyticsClient(
