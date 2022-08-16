@@ -69,7 +69,7 @@ public final class AWSS3StorageUploadAccessLevelTest {
 
         WorkmanagerTestUtils.INSTANCE.initializeWorkmanagerTestUtil(context);
         synchronousAuth = SynchronousAuth.delegatingToCognito(context, (AuthPlugin) new AWSCognitoAuthPlugin());
-        IdentityIdSource identityIdSource = MobileClientIdentityIdSource.create(synchronousAuth);
+        IdentityIdSource identityIdSource = AuthIdentityIdSource.create(synchronousAuth);
         UserCredentials userCredentials = UserCredentials.create(context, identityIdSource);
         Iterator<Credential> iterator = userCredentials.iterator();
         userOne = iterator.next();
@@ -87,6 +87,8 @@ public final class AWSS3StorageUploadAccessLevelTest {
      */
     @Before
     public void setUp() throws Exception {
+        synchronousAuth.signOut();
+
         // Create a new file to upload
         uploadFile = new RandomTempFile(UPLOAD_SIZE);
         remoteKey = uploadFile.getName();
@@ -102,7 +104,6 @@ public final class AWSS3StorageUploadAccessLevelTest {
      */
     @Test
     public void testUploadUnauthenticatedPublicAccess() throws Exception {
-        synchronousAuth.signOut();
         uploadOptions = StorageUploadFileOptions.builder()
                 .accessLevel(StorageAccessLevel.PUBLIC)
                 .build();
@@ -120,7 +121,6 @@ public final class AWSS3StorageUploadAccessLevelTest {
      */
     @Test(expected = StorageException.class)
     public void testUploadUnauthenticatedProtectedAccess() throws Exception {
-        synchronousAuth.signOut();
         uploadOptions = StorageUploadFileOptions.builder()
                 .accessLevel(StorageAccessLevel.PROTECTED)
                 .targetIdentityId(userOne.getIdentityId())
@@ -139,7 +139,6 @@ public final class AWSS3StorageUploadAccessLevelTest {
      */
     @Test(expected = StorageException.class)
     public void testUploadUnauthenticatedPrivateAccess() throws Exception {
-        synchronousAuth.signOut();
         uploadOptions = StorageUploadFileOptions.builder()
                 .accessLevel(StorageAccessLevel.PRIVATE)
                 .targetIdentityId(userOne.getIdentityId())
@@ -154,7 +153,6 @@ public final class AWSS3StorageUploadAccessLevelTest {
      */
     @Test
     public void testUploadAuthenticatedProtectedAccess() throws Exception {
-        synchronousAuth.signOut();
         synchronousAuth.signIn(userOne.getUsername(), userOne.getPassword());
         uploadOptions = StorageUploadFileOptions.builder()
                 .accessLevel(StorageAccessLevel.PROTECTED)
@@ -170,7 +168,6 @@ public final class AWSS3StorageUploadAccessLevelTest {
      */
     @Test
     public void testUploadAuthenticatedPrivateAccess() throws Exception {
-        synchronousAuth.signOut();
         synchronousAuth.signIn(userOne.getUsername(), userOne.getPassword());
         uploadOptions = StorageUploadFileOptions.builder()
                 .accessLevel(StorageAccessLevel.PRIVATE)
@@ -190,7 +187,6 @@ public final class AWSS3StorageUploadAccessLevelTest {
      */
     @Test(expected = StorageException.class)
     public void testUploadDifferentUserProtectedAccess() throws Exception {
-        synchronousAuth.signOut();
         synchronousAuth.signIn(userOne.getUsername(), userOne.getPassword());
         uploadOptions = StorageUploadFileOptions.builder()
                 .accessLevel(StorageAccessLevel.PROTECTED)
@@ -210,7 +206,6 @@ public final class AWSS3StorageUploadAccessLevelTest {
      */
     @Test(expected = StorageException.class)
     public void testUploadDifferentUserPrivateAccess() throws Exception {
-        synchronousAuth.signOut();
         synchronousAuth.signIn(userOne.getUsername(), userOne.getPassword());
         uploadOptions = StorageUploadFileOptions.builder()
                 .accessLevel(StorageAccessLevel.PRIVATE)

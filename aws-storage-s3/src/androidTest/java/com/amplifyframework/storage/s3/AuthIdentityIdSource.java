@@ -26,27 +26,24 @@ import java.util.Objects;
 
 /**
  * An {@link IdentityIdSource} which looks up an identity ID for a user by asking
- * an instance of {@link SynchronousMobileClient} for it.
+ * an instance of {@link SynchronousAuth} for it.
  */
-final class MobileClientIdentityIdSource implements IdentityIdSource {
+final class AuthIdentityIdSource implements IdentityIdSource {
     private final SynchronousAuth synchronousAuth;
 
-    private MobileClientIdentityIdSource(SynchronousAuth synchronousAuth) {
+    private AuthIdentityIdSource(SynchronousAuth synchronousAuth) {
         this.synchronousAuth = synchronousAuth;
     }
 
-    static MobileClientIdentityIdSource create(@NonNull SynchronousAuth synchronousAuth) {
+    static AuthIdentityIdSource create(@NonNull SynchronousAuth synchronousAuth) {
         Objects.requireNonNull(synchronousAuth);
-        return new MobileClientIdentityIdSource(synchronousAuth);
+        return new AuthIdentityIdSource(synchronousAuth);
     }
 
     @NonNull
     @Override
     public String fetchIdentityId(@NonNull String username, @NonNull String password) throws IllegalArgumentException {
         try {
-            if (synchronousAuth.fetchAuthSession().isSignedIn()) {
-                synchronousAuth.signOut();
-            }
             synchronousAuth.signIn(username, password);
             String identityId = ((AWSCognitoAuthSession) synchronousAuth.fetchAuthSession()).getIdentityId().getValue();
             synchronousAuth.signOut();
