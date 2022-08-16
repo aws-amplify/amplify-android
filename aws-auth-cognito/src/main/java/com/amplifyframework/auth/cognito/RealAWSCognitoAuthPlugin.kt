@@ -340,7 +340,9 @@ internal class RealAWSCognitoAuthPlugin(
                 is AuthenticationState.SigningUp -> {
                     authStateMachine.send(AuthenticationEvent(AuthenticationEvent.EventType.ResetSignUp()))
                 }
-                is AuthenticationState.SignedIn -> onError.accept(AuthException.SignedInException())
+                is AuthenticationState.SignedIn -> onSuccess.accept(
+                    AuthSignInResult(true, AuthNextSignInStep(AuthSignInStep.DONE, mapOf(), null))
+                )
                 else -> onError.accept(AuthException.InvalidStateException())
             }
         }

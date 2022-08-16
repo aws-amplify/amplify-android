@@ -28,6 +28,7 @@ import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
 import com.amplifyframework.statemachine.codegen.events.CredentialStoreEvent
 import com.amplifyframework.statemachine.codegen.events.DeleteUserEvent
 import com.amplifyframework.statemachine.codegen.events.FetchAuthSessionEvent
+import com.amplifyframework.statemachine.codegen.events.SignInEvent
 import com.amplifyframework.statemachine.codegen.events.SignOutEvent
 import com.amplifyframework.statemachine.codegen.events.SignUpEvent
 import com.amplifyframework.statemachine.codegen.states.AuthState
@@ -276,12 +277,18 @@ class StateTransitionTests : StateTransitionTestBase() {
     }
 
     @Test
-    fun testSignInWithSRP() {
+    fun testSignInSRP() {
         setupConfigureSignedOut()
 
-        Mockito.`when`(signedInData.cognitoUserPoolTokens)
+        Mockito.`when`(mockAuthenticationActions.initiateSignInAction(MockitoHelper.anyObject()))
             .thenReturn(
-                CognitoUserPoolTokens("","","",0)
+                Action { dispatcher, _ ->
+                    dispatcher.send(
+                        SignInEvent(
+                            SignInEvent.EventType.InitiateSignInWithSRP("username", "password")
+                        )
+                    )
+                }
             )
 
         val testLatch = CountDownLatch(1)
@@ -307,9 +314,7 @@ class StateTransitionTests : StateTransitionTestBase() {
                         )
                     )
                 }
-
-                val authNState =
-                    it.authNState.takeIf {
+                val authNState = it.authNState.takeIf {
                             itN -> itN is AuthenticationState.SignedIn
                     }
                 authNState?.apply {
@@ -366,17 +371,21 @@ class StateTransitionTests : StateTransitionTestBase() {
                 }
 
                 val authNState =
-                    it.authNState.takeIf {
-                            itN -> itN is AuthenticationState.SignedIn
+                    it.authNState.takeIf { itN ->
+                        itN is AuthenticationState.SignedIn
                     }
                 authNState?.apply {
-                    token?.let(stateMachine::cancel)
-                    testLatch.countDown()
+                    val authNState = it.authNState
+                    val authZState = it.authZState
+                    if (authNState is AuthenticationState.SignedIn && authZState is AuthorizationState.SessionEstablished) {
+                        token?.let(stateMachine::cancel)
+                        testLatch.countDown()
+                    }
                 }
-            },
-            {
-                subscribeLatch.countDown()
-            }
+                },
+                {
+                    subscribeLatch.countDown()
+                }
         )
 
         assertTrue { subscribeLatch.await(5, TimeUnit.SECONDS) }

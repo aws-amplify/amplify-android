@@ -32,6 +32,7 @@ import com.amplifyframework.statemachine.codegen.actions.SignUpActions
 import com.amplifyframework.statemachine.codegen.actions.StoreActions
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
+import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
 import com.amplifyframework.statemachine.codegen.data.SignedInData
 import com.amplifyframework.statemachine.codegen.data.SignedOutData
 import com.amplifyframework.statemachine.codegen.data.SignedUpData
@@ -242,18 +243,18 @@ open class StateTransitionTestBase {
                 }
             )
 
-//        Mockito.`when`(
-//            mockAuthorizationActions.initializeFetchAuthSession(credentials)
-//        )
-//            .thenReturn(
-//                Action { dispatcher, _ ->
-//                    dispatcher.send(
-//                        FetchAuthSessionEvent(
-//                            FetchAuthSessionEvent.EventType.FetchIdentity(credentials)
-//                        )
-//                    )
-//                }
-//            )
+        Mockito.`when`(
+            mockAuthorizationActions.initializeFetchAuthSession(MockitoHelper.anyObject())
+        )
+            .thenReturn(
+                Action { dispatcher, _ ->
+                    dispatcher.send(
+                        FetchAuthSessionEvent(
+                            FetchAuthSessionEvent.EventType.FetchIdentity(credentials)
+                        )
+                    )
+                }
+            )
 
 //        Mockito.`when`(
 //            mockAuthorizationActions.refreshAuthSessionAction(credentials)
@@ -290,6 +291,16 @@ open class StateTransitionTestBase {
     }
 
     internal fun setupSRPActions() {
+
+        Mockito.`when`(mockSRPActions.initiateSRPAuthAction(MockitoHelper.anyObject()))
+            .thenReturn(
+                Action { dispatcher, _ ->
+                    dispatcher.send(SRPEvent(SRPEvent.EventType.RespondPasswordVerifier(mapOf())))
+                }
+            )
+
+        Mockito.`when`(signedInData.cognitoUserPoolTokens).thenReturn(CognitoUserPoolTokens("", "", "", 0))
+
         Mockito.`when`(mockSRPActions.initiateSRPAuthAction(MockitoHelper.anyObject()))
             .thenReturn(
                 Action { dispatcher, _ ->
