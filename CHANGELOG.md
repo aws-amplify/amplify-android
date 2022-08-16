@@ -1,3 +1,10 @@
+## [Release 1.37.2](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.37.2)
+
+### Bug Fixes
+- **datastore**: Fix for Flutter backtick (#1866)
+
+[See all changes between 1.37.1 and 1.37.2](https://github.com/aws-amplify/amplify-android/compare/release_v1.37.1...release_v1.37.2)
+
 ## [Release 1.37.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.37.1)
 
 ### Bug Fixes

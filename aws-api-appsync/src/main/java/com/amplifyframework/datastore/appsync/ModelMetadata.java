@@ -71,13 +71,6 @@ public final class ModelMetadata implements Model {
         return id;
     }
 
-    /** {@inheritDoc}. */
-    @NonNull
-    @Override
-    public Type getType() {
-        return Type.SYSTEM;
-    }
-
     /**
      * Gets the deleted status.
      * @return True if deleted, False otherwise
