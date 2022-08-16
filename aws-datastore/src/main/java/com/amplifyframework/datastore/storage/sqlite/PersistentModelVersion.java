@@ -109,12 +109,6 @@ public final class PersistentModelVersion implements Model {
         return this.id;
     }
 
-    /** {@inheritDoc}. */
-    @NonNull
-    @Override
-    public Type getType() {
-        return Type.SYSTEM;
-    }
 
     /**
      * Return the version of the models.
