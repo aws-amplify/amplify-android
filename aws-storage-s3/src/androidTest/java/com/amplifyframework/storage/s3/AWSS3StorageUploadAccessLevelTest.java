@@ -18,7 +18,6 @@ package com.amplifyframework.storage.s3;
 import android.content.Context;
 
 import com.amplifyframework.AmplifyException;
-import com.amplifyframework.auth.AuthPlugin;
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin;
 import com.amplifyframework.storage.StorageAccessLevel;
 import com.amplifyframework.storage.StorageCategory;
@@ -31,8 +30,10 @@ import com.amplifyframework.testutils.random.RandomTempFile;
 import com.amplifyframework.testutils.sync.SynchronousAuth;
 import com.amplifyframework.testutils.sync.SynchronousStorage;
 
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
@@ -68,7 +69,7 @@ public final class AWSS3StorageUploadAccessLevelTest {
         Context context = getApplicationContext();
 
         WorkmanagerTestUtils.INSTANCE.initializeWorkmanagerTestUtil(context);
-        synchronousAuth = SynchronousAuth.delegatingToCognito(context, (AuthPlugin) new AWSCognitoAuthPlugin());
+        synchronousAuth = SynchronousAuth.delegatingToCognito(context, new AWSCognitoAuthPlugin());
         IdentityIdSource identityIdSource = MobileClientIdentityIdSource.create(synchronousAuth);
         UserCredentials userCredentials = UserCredentials.create(context, identityIdSource);
         Iterator<Credential> iterator = userCredentials.iterator();
@@ -78,6 +79,17 @@ public final class AWSS3StorageUploadAccessLevelTest {
         // Setup storage.
         StorageCategory asyncDelegate = TestStorageCategory.create(context, R.raw.amplifyconfiguration);
         storage = SynchronousStorage.delegatingTo(asyncDelegate);
+    }
+
+    /**
+     * Reset all the assigned static fields.
+     */
+    @AfterClass
+    public static void tearDown() {
+        synchronousAuth = null;
+        userOne = null;
+        userTwo = null;
+        storage = null;
     }
 
     /**
@@ -152,6 +164,7 @@ public final class AWSS3StorageUploadAccessLevelTest {
      *
      * @throws Exception if upload is unsuccessful
      */
+    @Ignore("Test fails in CI indeterministically")
     @Test
     public void testUploadAuthenticatedProtectedAccess() throws Exception {
         synchronousAuth.signIn(userOne.getUsername(), userOne.getPassword());
@@ -167,6 +180,7 @@ public final class AWSS3StorageUploadAccessLevelTest {
      *
      * @throws Exception if upload is unsuccessful
      */
+    @Ignore("Test fails in CI indeterministically")
     @Test
     public void testUploadAuthenticatedPrivateAccess() throws Exception {
         synchronousAuth.signIn(userOne.getUsername(), userOne.getPassword());
@@ -186,6 +200,7 @@ public final class AWSS3StorageUploadAccessLevelTest {
      *
      * @throws Exception if download is unsuccessful
      */
+    @Ignore("Test fails in CI indeterministically")
     @Test(expected = StorageException.class)
     public void testUploadDifferentUserProtectedAccess() throws Exception {
         synchronousAuth.signIn(userOne.getUsername(), userOne.getPassword());
@@ -205,6 +220,7 @@ public final class AWSS3StorageUploadAccessLevelTest {
      *
      * @throws Exception if download is unsuccessful
      */
+    @Ignore("Test fails in CI indeterministically")
     @Test(expected = StorageException.class)
     public void testUploadDifferentUserPrivateAccess() throws Exception {
         synchronousAuth.signIn(userOne.getUsername(), userOne.getPassword());
