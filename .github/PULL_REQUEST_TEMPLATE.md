@@ -8,7 +8,7 @@
 (Please add a line here how the changes were tested)
 
 - [ ] Added Unit Tests
-- [ ] Tested on frontend (Add Screenshots)
+- [ ] Added Integration Tests
 - [ ] Successful logs (Attach them to the PR)
 
 *Documentation update required?*
