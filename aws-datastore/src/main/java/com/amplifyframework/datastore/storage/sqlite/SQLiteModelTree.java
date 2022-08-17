@@ -112,10 +112,10 @@ final class SQLiteModelTree {
 
                     HashMap<String, Serializable> hashMap = new HashMap<>();
                     if (schema.getPrimaryIndexFields().size() > 1) {
-                        Iterator<Map.Entry<String, String>> keyMapIterator = keyMap.entrySet().iterator();
                         Iterator<String> pkFieldIterator = schema.getPrimaryIndexFields().listIterator();
                         while (pkFieldIterator.hasNext()) {
-                            hashMap.put(pkFieldIterator.next(), keyMapIterator.next().getValue());
+                            String pkField = pkFieldIterator.next();
+                            hashMap.put(pkField, keyMap.get(pkField));
                         }
                         dummyJson = gson.toJson(hashMap);
                     } else {
