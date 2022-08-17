@@ -19,11 +19,11 @@ import android.content.Context
 
 internal class AndroidAppDetails {
 
-    private val appId: String
+    internal val appId: String
     private val appTitle: String
     private val packageName: String
     private val versionCode: String
-    private val versionName: String
+    internal val versionName: String
 
     constructor(
         appId: String,
