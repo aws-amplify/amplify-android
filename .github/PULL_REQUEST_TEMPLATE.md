@@ -9,7 +9,6 @@
 
 - [ ] Added Unit Tests
 - [ ] Added Integration Tests
-- [ ] Successful logs (Attach them to the PR)
 
 *Documentation update required?*
 - [ ] No
