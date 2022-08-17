@@ -22,12 +22,15 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChangePasswordRespo
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.CognitoIdentityProviderException
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ConfirmForgotPasswordRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ConfirmForgotPasswordResponse
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetUserAttributeVerificationCodeRequest
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetUserAttributeVerificationCodeResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetUserRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetUserResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.UpdateUserAttributesRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.UpdateUserAttributesResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.VerifyUserAttributeRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.VerifyUserAttributeResponse
+import com.amplifyframework.auth.AuthCodeDeliveryDetails
 import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
@@ -650,5 +653,69 @@ class RealAWSCognitoAuthPluginTest {
         assertTrue { listenLatch.await(60, TimeUnit.SECONDS) }
         coVerify(exactly = 1) { onSuccess.call() }
         coVerify(exactly = 0) { onError.accept(any()) }
+    }
+
+    @Test
+    fun `resend user attribute confirmation code fails when not in SignedIn state`() {
+        // GIVEN
+        val onSuccess = mockk<Consumer<AuthCodeDeliveryDetails>>(relaxed = true)
+        val onError = mockk<Consumer<AuthException>>(relaxed = true)
+        val listenLatch = CountDownLatch(1)
+
+        currentState = AuthenticationState.NotConfigured()
+
+        every {
+            onError.accept(AuthException.InvalidStateException())
+        } answers {
+            listenLatch.countDown()
+        }
+
+        // WHEN
+        plugin.resendUserAttributeConfirmationCode(
+            AuthUserAttributeKey.email(),
+            onSuccess,
+            onError
+        )
+
+        assertTrue { listenLatch.await(5, TimeUnit.SECONDS) }
+        coVerify(exactly = 1) { onError.accept(AuthException.InvalidStateException()) }
+        verify(exactly = 0) { onSuccess.accept(any()) }
+    }
+
+    @Test
+    fun `resend user attribute confirmation code with no code delivery details failure`() {
+        // GIVEN
+        val onSuccess = mockk<Consumer<AuthCodeDeliveryDetails>>(relaxed = true)
+        val onError = mockk<Consumer<AuthException>>(relaxed = true)
+        val listenLatch = CountDownLatch(1)
+
+        val currentAuthState = mockk<AuthState> {
+            every { authNState } returns AuthenticationState.SignedIn(mockk())
+            every { authZState } returns AuthorizationState.SessionEstablished(credentials)
+        }
+        every { authStateMachine.getCurrentState(captureLambda()) } answers {
+            lambda<(AuthState) -> Unit>().invoke(currentAuthState)
+        }
+
+        coEvery {
+            authService.cognitoIdentityProviderClient?.getUserAttributeVerificationCode(any<GetUserAttributeVerificationCodeRequest>())
+            } returns GetUserAttributeVerificationCodeResponse.invoke {
+        }
+
+        every {
+            onError.accept(AuthException.CodeDeliveryFailureException())
+        } answers {
+            listenLatch.countDown()
+        }
+
+        plugin.resendUserAttributeConfirmationCode(
+            AuthUserAttributeKey.email(),
+            onSuccess,
+            onError
+        )
+
+        assertTrue { listenLatch.await(30, TimeUnit.SECONDS) }
+        coVerify(exactly = 1) { onError.accept(AuthException.CodeDeliveryFailureException()) }
+        verify(exactly = 0) { onSuccess.accept(any()) }
     }
 }

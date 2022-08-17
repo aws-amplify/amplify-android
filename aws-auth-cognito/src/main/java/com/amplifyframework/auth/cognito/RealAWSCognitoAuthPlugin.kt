@@ -21,8 +21,10 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.AttributeType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChangePasswordRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeliveryMediumType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeviceRememberedStatusType
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetUserAttributeVerificationCodeRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetUserRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ListDevicesRequest
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.ResendConfirmationCodeRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.UpdateDeviceStatusRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.UpdateUserAttributesRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.UpdateUserAttributesResponse
@@ -960,7 +962,7 @@ internal class RealAWSCognitoAuthPlugin(
         onSuccess: Consumer<AuthCodeDeliveryDetails>,
         onError: Consumer<AuthException>
     ) {
-        TODO("Not yet implemented")
+        getUserAttributeConfirmationCode(attributeKey,options as? AWSCognitoAuthUpdateUserAttributesOptions,onSuccess,onError)
     }
 
     override fun resendUserAttributeConfirmationCode(
@@ -968,7 +970,59 @@ internal class RealAWSCognitoAuthPlugin(
         onSuccess: Consumer<AuthCodeDeliveryDetails>,
         onError: Consumer<AuthException>
     ) {
-        TODO("Not yet implemented")
+        getUserAttributeConfirmationCode(attributeKey,null,onSuccess,onError)
+    }
+
+    private fun getUserAttributeConfirmationCode(
+        attributeKey: AuthUserAttributeKey,
+        options: AWSCognitoAuthUpdateUserAttributesOptions?,
+        onSuccess: Consumer<AuthCodeDeliveryDetails>,
+        onError: Consumer<AuthException>) {
+
+        authStateMachine.getCurrentState { authState ->
+            when (authState.authNState) {
+                // Check if user signed in
+                is AuthenticationState.SignedIn -> {
+                    GlobalScope.launch {
+                        try {
+                            val accessToken = getSession().userPoolTokens.value?.accessToken
+                            val getUserAttributeVerificationCodeRequest = GetUserAttributeVerificationCodeRequest.invoke {
+                                this.accessToken = accessToken
+                                this.attributeName = attributeKey.keyString
+                                this.clientMetadata = options?.metadata
+                            }
+
+                            val getUserAttributeVerificationCodeResponse = authEnvironment.cognitoAuthService
+                                .cognitoIdentityProviderClient?.getUserAttributeVerificationCode(
+                                    getUserAttributeVerificationCodeRequest
+                                )
+
+                            getUserAttributeVerificationCodeResponse?.codeDeliveryDetails?.let {
+                                val codeDeliveryDetails = it
+                                codeDeliveryDetails.attributeName?.let {
+                                    var deliveryMedium = when (codeDeliveryDetails.deliveryMedium) {
+                                        DeliveryMediumType.Email -> AuthCodeDeliveryDetails.DeliveryMedium.EMAIL
+                                        DeliveryMediumType.Sms -> AuthCodeDeliveryDetails.DeliveryMedium.SMS
+                                        else -> AuthCodeDeliveryDetails.DeliveryMedium.UNKNOWN
+                                    }
+                                    val authCodeDeliveryDetails = AuthCodeDeliveryDetails(
+                                        codeDeliveryDetails.destination.toString(),
+                                        deliveryMedium,
+                                        codeDeliveryDetails.attributeName
+                                    )
+                                    onSuccess.accept(authCodeDeliveryDetails)
+                                } ?: {
+                                    onError.accept(AuthException.CodeDeliveryFailureException())
+                                }
+                            }
+                        } catch (e: Exception) {
+                            onError.accept(CognitoAuthExceptionConverter.lookup(e, e.toString()))
+                        }
+                    }
+                }
+                else -> onError.accept(AuthException.InvalidStateException())
+            }
+        }
     }
 
     override fun confirmUserAttribute(
