@@ -109,7 +109,7 @@ public final class AWSS3StorageUploadAccessLevelTest {
     }
 
     /**
-     * Sign out after each tests.
+     * Sign out after each test.
      * @throws AuthException if error encountered while signing out
      */
     @After
