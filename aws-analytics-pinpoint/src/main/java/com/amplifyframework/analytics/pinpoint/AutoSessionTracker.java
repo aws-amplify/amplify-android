@@ -20,9 +20,6 @@ import android.app.Application;
 import android.os.Bundle;
 import android.util.Log;
 
-import com.amazonaws.mobileconnectors.pinpoint.analytics.AnalyticsClient;
-import com.amazonaws.mobileconnectors.pinpoint.analytics.SessionClient;
-
 /**
  * Tracks when the host application enters or leaves foreground.
  * The constructor registers to receive activity lifecycle events.

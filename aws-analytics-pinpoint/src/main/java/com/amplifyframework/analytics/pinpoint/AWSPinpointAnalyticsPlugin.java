@@ -404,12 +404,12 @@ public final class AWSPinpointAnalyticsPlugin extends AnalyticsPlugin<Object> {
         this.targetingClient = pinpointManager.getTargetingClient();
 
         // Initiate the logic to automatically submit events periodically
-        autoEventSubmitter = new AutoEventSubmitter(analyticsClient,
-                pinpointAnalyticsPluginConfiguration.getAutoFlushEventsInterval());
+        /*autoEventSubmitter = new AutoEventSubmitter(analyticsClient,
+                pinpointAnalyticsPluginConfiguration.getAutoFlushEventsInterval());*/
         autoEventSubmitter.start();
 
         // Instantiate the logic to automatically track app session
-        autoSessionTracker = new AutoSessionTracker(this.analyticsClient, pinpointManager.getSessionClient());
+        //autoSessionTracker = new AutoSessionTracker(this.analyticsClient, pinpointManager.getSessionClient());
         autoSessionTracker.startSessionTracking(application);
     }
 

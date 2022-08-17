@@ -14,6 +14,8 @@
  */
 package com.amplifyframework.analytics.pinpoint
 
+import android.app.Application
+import android.content.Context
 import com.amplifyframework.analytics.AnalyticsBooleanProperty
 import com.amplifyframework.analytics.AnalyticsCategoryBehavior
 import com.amplifyframework.analytics.AnalyticsDoubleProperty
@@ -22,10 +24,12 @@ import com.amplifyframework.analytics.AnalyticsIntegerProperty
 import com.amplifyframework.analytics.AnalyticsProperties
 import com.amplifyframework.analytics.AnalyticsStringProperty
 import com.amplifyframework.analytics.UserProfile
-import java.lang.IllegalArgumentException
 
 internal class AWSPinpointAnalyticsPluginBehavior(
-    val analyticsClient: AnalyticsClient
+    private val context: Context,
+    val analyticsClient: AnalyticsClient,
+    private val autoEventSubmitter: AutoEventSubmitter,
+    private val autoSessionTracker: AutoSessionTracker
 ) : AnalyticsCategoryBehavior {
 
     override fun identifyUser(userId: String, profile: UserProfile?) {
@@ -33,11 +37,14 @@ internal class AWSPinpointAnalyticsPluginBehavior(
     }
 
     override fun disable() {
-        TODO("Not yet implemented")
+        autoEventSubmitter.stop()
+        autoSessionTracker.stopSessionTracking(context.applicationContext as Application)
     }
 
     override fun enable() {
-        TODO("Not yet implemented")
+        autoEventSubmitter.start()
+        // Start auto session tracking
+        autoSessionTracker.startSessionTracking(context.applicationContext as Application)
     }
 
     override fun recordEvent(eventName: String) {
@@ -50,19 +57,18 @@ internal class AWSPinpointAnalyticsPluginBehavior(
         val metrics = mutableMapOf<String, Double>()
         analyticsEvent.properties.forEach { property ->
             val key = property.key
-            val analyticsProperty = property.value
-            when (analyticsProperty.value) {
+            when (val analyticsProperty = property.value) {
                 is AnalyticsStringProperty -> {
-                    attributes[key] = (analyticsProperty.value as AnalyticsStringProperty).value
+                    attributes[key] = analyticsProperty.value
                 }
                 is AnalyticsBooleanProperty -> {
-                    attributes[key] = (analyticsProperty.value as AnalyticsBooleanProperty).value.toString()
+                    attributes[key] = analyticsProperty.value.toString()
                 }
                 is AnalyticsIntegerProperty -> {
-                    metrics[key] = (analyticsProperty.value as AnalyticsIntegerProperty).value.toDouble()
+                    metrics[key] = analyticsProperty.value.toDouble()
                 }
                 is AnalyticsDoubleProperty -> {
-                    metrics[key] = (analyticsProperty.value as AnalyticsDoubleProperty).value
+                    metrics[key] = analyticsProperty.value
                 }
                 else -> {
                     throw IllegalArgumentException("Invalid property type")
@@ -82,6 +88,6 @@ internal class AWSPinpointAnalyticsPluginBehavior(
     }
 
     override fun flushEvents() {
-        TODO("Not yet implemented")
+        analyticsClient.submitEvents()
     }
 }

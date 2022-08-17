@@ -14,10 +14,12 @@
  */
 package com.amplifyframework.analytics.pinpoint.models
 
-import junit.framework.TestCase
+import org.junit.Assert
+import org.junit.Test
 
-class PinpointEventTest : TestCase() {
+class PinpointEventTest {
 
+    @Test
     fun testToJsonObject() {
         val expectedOutput =
             "{\"eventId\":\"c175d759-3a90-44be-ab51-888ce43ed527\",\"eventType\":\"EVENT_TYPE\"," +
@@ -41,6 +43,6 @@ class PinpointEventTest : TestCase() {
             androidAppDetails = AndroidAppDetails("appId", "appTitle", "packageName", "versionCode", "versionName"),
             androidDeviceDetails = AndroidDeviceDetails()
         )
-        assertEquals(expectedOutput, pinpointEvent.toJsonString())
+        Assert.assertEquals(expectedOutput, pinpointEvent.toJsonString())
     }
 }
