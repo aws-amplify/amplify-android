@@ -808,15 +808,7 @@ internal class RealAWSCognitoAuthPlugin(
         onSuccess: Consumer<AuthUpdateAttributeResult>,
         onError: Consumer<AuthException>
     ) {
-        GlobalScope.launch {
-            try {
-                val attributes = listOf(attribute)
-                val results = updateUserAttributes(attributes?.toMutableList(), null)
-                onSuccess.accept(results?.entries?.first()?.value)
-            } catch (e: Exception) {
-                onError.accept(CognitoAuthExceptionConverter.lookup(e, e.toString()))
-            }
-        }
+        updateUserAttribute(attribute, AuthUpdateUserAttributeOptions.defaults(), onSuccess, onError)
     }
 
     override fun updateUserAttributes(
@@ -840,13 +832,7 @@ internal class RealAWSCognitoAuthPlugin(
         onSuccess: Consumer<MutableMap<AuthUserAttributeKey, AuthUpdateAttributeResult>>,
         onError: Consumer<AuthException>
     ) {
-        GlobalScope.launch {
-            try {
-                onSuccess.accept(updateUserAttributes(attributes, null))
-            } catch (e: Exception) {
-                onError.accept(CognitoAuthExceptionConverter.lookup(e, e.toString()))
-            }
-        }
+        updateUserAttributes(attributes, AuthUpdateUserAttributesOptions.defaults(), onSuccess, onError)
     }
 
     private suspend fun updateUserAttributes(
@@ -902,15 +888,8 @@ internal class RealAWSCognitoAuthPlugin(
             val codeDeliveryDetailsList = it
             for (item in codeDeliveryDetailsList) {
                 item.attributeName?.let {
-                    /*
-                    var deliveryMedium = when (item.deliveryMedium) {
-                        DeliveryMediumType.Email -> AuthCodeDeliveryDetails.DeliveryMedium.EMAIL
-                        DeliveryMediumType.Sms -> AuthCodeDeliveryDetails.DeliveryMedium.SMS
-                        else -> AuthCodeDeliveryDetails.DeliveryMedium.UNKNOWN
-                    }*/
 
                     val deliveryMedium = AuthCodeDeliveryDetails.DeliveryMedium.fromString(item.deliveryMedium?.value)
-
                     val authCodeDeliveryDetails = AuthCodeDeliveryDetails(
                         item.destination.toString(),
                         deliveryMedium,
