@@ -85,6 +85,10 @@ sealed class SignInState : State {
                         SigningInWithSRP(oldState.srpSignInState),
                         listOf(signInActions.startSRPAuthAction(signInEvent))
                     )
+                    is SignInEvent.EventType.InitiateSignInWithCustom -> StateResolution(
+                        SigningInWithCustom(oldState.customSignInState),
+                        listOf(signInActions.startCustomAuthAction(signInEvent))
+                    )
                     else -> defaultResolution
                 }
                 is SigningInWithSRP, is SigningInWithCustom-> when (signInEvent) {

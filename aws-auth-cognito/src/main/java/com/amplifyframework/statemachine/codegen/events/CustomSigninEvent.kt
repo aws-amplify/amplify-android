@@ -30,7 +30,7 @@ class CustomSignInEvent(
             val signInOptions: AWSCognitoAuthSignInOptions
         ) : EventType()
 
-        data class FinalizeSignIn(val accessToken: String) : EventType()
+        data class FinalizeSignIn(val id: String = "") : EventType()
         data class ThrowAuthError(val exception: Exception) : EventType()
     }
 

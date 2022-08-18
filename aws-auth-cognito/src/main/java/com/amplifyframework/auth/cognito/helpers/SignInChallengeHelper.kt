@@ -38,7 +38,8 @@ object SignInChallengeHelper {
     fun evaluateNextStep(
         userId: String = "",
         username: String,
-        response: RespondToAuthChallengeResponse?
+        response: RespondToAuthChallengeResponse?,
+        signInMethod: SignInMethod = SignInMethod.SRP
     ): StateMachineEvent {
         val authenticationResult = response?.authenticationResult
         val challengeNameType = response?.challengeName
@@ -47,7 +48,7 @@ object SignInChallengeHelper {
                 val signedInData = authenticationResult.let {
                     val expiresIn = Instant.now().plus(it.expiresIn.seconds).epochSeconds
                     val tokens = CognitoUserPoolTokens(it.idToken, it.accessToken, it.refreshToken, expiresIn)
-                    SignedInData(userId, username, Date(), SignInMethod.SRP, tokens)
+                    SignedInData(userId, username, Date(), signInMethod, tokens)
                 }
 
                 AuthenticationEvent(AuthenticationEvent.EventType.SignInCompleted(signedInData))

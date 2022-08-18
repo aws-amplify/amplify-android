@@ -44,7 +44,6 @@ sealed class CustomSignInState : State {
             val defaultResolution = StateResolution(oldState)
             val customSignInEvent = asCustomSignInEvent(event)
             return when (oldState) {
-                is Error -> TODO()
                 is Initiating -> {
                     when (customSignInEvent) {
                         is CustomSignInEvent.EventType.FinalizeSignIn -> StateResolution(SignedIn())
@@ -62,7 +61,7 @@ sealed class CustomSignInState : State {
                         else -> defaultResolution
                     }
                 }
-                is SignedIn -> TODO()
+                else -> defaultResolution
             }
         }
     }
