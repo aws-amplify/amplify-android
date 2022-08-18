@@ -49,12 +49,12 @@ def generate_junit_report(run_arn, output_path):
                 if test['result'] == 'ERROR':
                     tc.add_error_info(message=test['message'])
                 test_cases.append(tc)
-            ts = TestSuite(suite['name'] + "-" + job_no,test_cases=test_cases)
+            ts = TestSuite(suite['name'] + "-" + str(job_no),test_cases=test_cases)
             ts_output = TestSuite.to_xml_string([ts])
             LOGGER.info(f"Saving test suite {suite['name']} report.")
             if not os.path.exists(output_path):
                 os.makedirs(output_path)
-            f = open(output_path + suite['name'] + "-" + job_no + ".xml", "w")
+            f = open(output_path + suite['name'] + "-" + str(job_no) + ".xml", "w")
             f.write(ts_output)
             f.close()
 
