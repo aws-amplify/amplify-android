@@ -486,11 +486,8 @@ class RealAWSCognitoAuthPluginTest {
 
         currentState = AuthenticationState.NotConfigured()
 
-        every {
-            onError.accept(AuthException.InvalidStateException())
-        } answers {
-            listenLatch.countDown()
-        }
+        val resultCaptor = slot<AuthException.InvalidStateException>()
+        every { onError.accept(capture(resultCaptor)) } answers { listenLatch.countDown() }
 
         // WHEN
         plugin.updateUserAttribute(
@@ -500,7 +497,7 @@ class RealAWSCognitoAuthPluginTest {
         )
 
         assertTrue { listenLatch.await(5, TimeUnit.SECONDS) }
-        coVerify(exactly = 1) { onError.accept(AuthException.InvalidStateException()) }
+        verify { onError.accept(resultCaptor.captured) }
         verify(exactly = 0) { onSuccess.accept(any()) }
     }
 
