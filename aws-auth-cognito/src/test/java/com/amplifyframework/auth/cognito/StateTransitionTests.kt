@@ -16,7 +16,6 @@
 package com.amplifyframework.auth.cognito
 
 import com.amplifyframework.auth.options.AuthSignInOptions
-import com.amplifyframework.auth.options.AuthSignUpOptions
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.StateChangeListenerToken
 import com.amplifyframework.statemachine.codegen.data.SignedOutData
@@ -27,7 +26,6 @@ import com.amplifyframework.statemachine.codegen.events.CredentialStoreEvent
 import com.amplifyframework.statemachine.codegen.events.DeleteUserEvent
 import com.amplifyframework.statemachine.codegen.events.FetchAuthSessionEvent
 import com.amplifyframework.statemachine.codegen.events.SignOutEvent
-import com.amplifyframework.statemachine.codegen.events.SignUpEvent
 import com.amplifyframework.statemachine.codegen.states.AuthState
 import com.amplifyframework.statemachine.codegen.states.AuthenticationState
 import com.amplifyframework.statemachine.codegen.states.AuthorizationState
@@ -37,7 +35,6 @@ import com.amplifyframework.statemachine.codegen.states.FetchAuthSessionState
 import com.amplifyframework.statemachine.codegen.states.SRPSignInState
 import com.amplifyframework.statemachine.codegen.states.SignInState
 import com.amplifyframework.statemachine.codegen.states.SignOutState
-import com.amplifyframework.statemachine.codegen.states.SignUpState
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
@@ -71,7 +68,6 @@ class StateTransitionTests : StateTransitionTestBase() {
         setupSignInActions()
         setupSRPActions()
         setupSignOutActions()
-        setupSignUpActions()
         setupFetchAuthActions()
         setupDeleteAction()
         setupStateMachine()
@@ -83,7 +79,6 @@ class StateTransitionTests : StateTransitionTestBase() {
         stateMachine = AuthStateMachine(
             AuthState.Resolver(
                 AuthenticationState.Resolver(
-                    SignUpState.Resolver(mockSignUpActions),
                     SignInState.Resolver(SRPSignInState.Resolver(mockSRPActions), mockSignInActions),
                     SignOutState.Resolver(mockSignOutActions),
                     mockAuthenticationActions
@@ -413,95 +408,10 @@ class StateTransitionTests : StateTransitionTestBase() {
 
     @Test
     fun testSignUp() {
-        setupConfigureSignedOut()
-        val testLatch = CountDownLatch(1)
-        val configureLatch = CountDownLatch(1)
-        val subscribeLatch = CountDownLatch(1)
-        var token: StateChangeListenerToken? = null
-        token = stateMachine.listen(
-            {
-                val authState =
-                    it.takeIf { it is AuthState.Configured && it.authNState is AuthenticationState.SignedOut }
-                authState?.run {
-                    configureLatch.countDown()
-                    stateMachine.send(
-                        SignUpEvent(
-                            SignUpEvent.EventType.InitiateSignUp(
-                                "username",
-                                "password",
-                                AuthSignUpOptions.builder().build()
-                            )
-                        )
-                    )
-                }
-
-                val authNState =
-                    it.authNState.takeIf { itN ->
-                        itN is AuthenticationState.SigningUp &&
-                            itN.signUpState is SignUpState.SigningUpInitiated
-                    }
-
-                authNState?.apply {
-                    token?.let(stateMachine::cancel)
-                    testLatch.countDown()
-                }
-            },
-            {
-                subscribeLatch.countDown()
-            }
-        )
-
-        assertTrue { subscribeLatch.await(5, TimeUnit.SECONDS) }
-
-        stateMachine.send(
-            AuthEvent(AuthEvent.EventType.ConfigureAuth(configuration))
-        )
-
-        assertTrue { testLatch.await(5, TimeUnit.SECONDS) }
-        assertTrue { configureLatch.await(5, TimeUnit.SECONDS) }
     }
 
     @Test
     fun testConfirmSignUp() {
-        setupConfigureSignedOut()
-        val testLatch = CountDownLatch(1)
-        val configureLatch = CountDownLatch(1)
-        val subscribeLatch = CountDownLatch(1)
-        var token: StateChangeListenerToken? = null
-        token = stateMachine.listen(
-            {
-                val authState =
-                    it.takeIf { it is AuthState.Configured && it.authNState is AuthenticationState.SignedOut }
-                authState?.run {
-                    configureLatch.countDown()
-                    stateMachine.send(
-                        SignUpEvent(SignUpEvent.EventType.ConfirmSignUp("username", "code"))
-                    )
-                }
-
-                val authNState =
-                    it.authNState.takeIf { itN ->
-                        itN is AuthenticationState.SigningUp &&
-                            itN.signUpState is SignUpState.SignedUp
-                    }
-                authNState?.apply {
-                    token?.let(stateMachine::cancel)
-                    testLatch.countDown()
-                }
-            },
-            {
-                subscribeLatch.countDown()
-            }
-        )
-
-        assertTrue { subscribeLatch.await(5, TimeUnit.SECONDS) }
-
-        stateMachine.send(
-            AuthEvent(AuthEvent.EventType.ConfigureAuth(configuration))
-        )
-
-        assertTrue { testLatch.await(5, TimeUnit.SECONDS) }
-        assertTrue { configureLatch.await(5, TimeUnit.SECONDS) }
     }
 
     @Test
