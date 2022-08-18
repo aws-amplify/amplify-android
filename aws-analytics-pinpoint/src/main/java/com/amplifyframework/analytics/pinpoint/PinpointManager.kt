@@ -63,13 +63,13 @@ internal class PinpointManager constructor(
         )
         analyticsClient = AnalyticsClient(
             context,
-            pinpointClient = pinpointClient,
-            sessionClient = sessionClient,
-            pinpointDatabase = pinpointDatabase,
-            androidAppDetails = androidAppDetails,
-            androidDeviceDetails = androidDeviceDetails,
-            sdkInfo = SDKInfo(sdkName, BuildConfig.VERSION_NAME),
-            targetingClient = targetingClient
+            pinpointClient,
+            sessionClient,
+            targetingClient,
+            pinpointDatabase,
+            androidAppDetails,
+            androidDeviceDetails,
+            SDKInfo(sdkName, BuildConfig.VERSION_NAME)
         )
         sessionClient.setAnalyticsClient(analyticsClient)
         sessionClient.startSession()

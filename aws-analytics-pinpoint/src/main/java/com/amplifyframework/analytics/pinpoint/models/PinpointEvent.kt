@@ -15,6 +15,7 @@
 package com.amplifyframework.analytics.pinpoint.models
 
 import java.util.UUID
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
@@ -25,7 +26,7 @@ import kotlinx.serialization.json.Json
 * */
 
 @Serializable
-internal class PinpointEvent constructor(
+internal data class PinpointEvent constructor(
     val eventId: String = UUID.randomUUID().toString(),
     val eventType: String,
     val attributes: Map<String, String>,
@@ -44,12 +45,22 @@ internal class PinpointEvent constructor(
     }
 
     companion object {
+        @OptIn(ExperimentalSerializationApi::class)
         fun fromJsonString(jsonString: String): PinpointEvent {
-            return Json.decodeFromString<PinpointEvent>(jsonString)
+            val json = Json {
+                encodeDefaults = true
+                explicitNulls = false
+            }
+            return json.decodeFromString<PinpointEvent>(jsonString)
         }
     }
 
+    @OptIn(ExperimentalSerializationApi::class)
     fun toJsonString(): String {
-        return Json.encodeToString(this)
+        val json = Json {
+            encodeDefaults = true
+            explicitNulls = false
+        }
+        return json.encodeToString(this)
     }
 }

@@ -21,7 +21,7 @@ import kotlinx.serialization.Serializable
 * */
 
 @Serializable
-internal class PinpointSession(
+internal data class PinpointSession(
     val sessionId: String,
     val sessionStart: Long,
     val sessionEnd: Long? = null,
