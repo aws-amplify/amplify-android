@@ -33,6 +33,7 @@ def generate_junit_report(run_arn, output_path):
     jobs = get_test_jobs(run_arn)
     for job in jobs:
         LOGGER.debug(f"Retrieving test suites for job {job['arn']}")
+        device_no = job['arn'].split('/')[-1]
         suites = get_test_suites(job['arn'])
         for suite in suites:
             LOGGER.debug(f"Retrieving tests for suite {suite['arn']}")
@@ -49,12 +50,12 @@ def generate_junit_report(run_arn, output_path):
                 if test['result'] == 'ERROR':
                     tc.add_error_info(message=test['message'])
                 test_cases.append(tc)
-            ts = TestSuite(suite['name'],test_cases=test_cases)
+            ts = TestSuite(suite['name'] + "-" + device_no,test_cases=test_cases)
             ts_output = TestSuite.to_xml_string([ts])
             LOGGER.info(f"Saving test suite {suite['name']} report.")
             if not os.path.exists(output_path):
                 os.makedirs(output_path)
-            f = open(output_path + suite['name'] + ".xml", "w")
+            f = open(output_path + suite['name'] + "-" + device_no + ".xml", "w")
             f.write(ts_output)
             f.close()
 
