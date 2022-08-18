@@ -38,7 +38,7 @@ internal class AnalyticsClient(
     private val androidAppDetails: AndroidAppDetails,
     private val androidDeviceDetails: AndroidDeviceDetails,
     private val sdkInfo: SDKInfo,
-    private val coroutineDispatcher: CoroutineDispatcher = Dispatchers.Default,
+    coroutineDispatcher: CoroutineDispatcher = Dispatchers.Default,
     private val eventRecorder: EventRecorder = EventRecorder(
         context,
         pinpointClient,

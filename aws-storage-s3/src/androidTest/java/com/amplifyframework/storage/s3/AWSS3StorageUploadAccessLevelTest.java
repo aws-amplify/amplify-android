@@ -18,7 +18,8 @@ package com.amplifyframework.storage.s3;
 import android.content.Context;
 
 import com.amplifyframework.AmplifyException;
-import com.amplifyframework.auth.AuthPlugin;
+import com.amplifyframework.auth.AuthException;
+import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin;
 import com.amplifyframework.storage.StorageAccessLevel;
 import com.amplifyframework.storage.StorageCategory;
 import com.amplifyframework.storage.StorageException;
@@ -30,6 +31,8 @@ import com.amplifyframework.testutils.random.RandomTempFile;
 import com.amplifyframework.testutils.sync.SynchronousAuth;
 import com.amplifyframework.testutils.sync.SynchronousStorage;
 
+import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -67,7 +70,7 @@ public final class AWSS3StorageUploadAccessLevelTest {
         Context context = getApplicationContext();
 
         WorkmanagerTestUtils.INSTANCE.initializeWorkmanagerTestUtil(context);
-        synchronousAuth = SynchronousAuth.delegatingToCognito(context, (AuthPlugin) new AWSCognitoAuthPlugin());
+        synchronousAuth = SynchronousAuth.delegatingToCognito(context, new AWSCognitoAuthPlugin());
         IdentityIdSource identityIdSource = MobileClientIdentityIdSource.create(synchronousAuth);
         UserCredentials userCredentials = UserCredentials.create(context, identityIdSource);
         Iterator<Credential> iterator = userCredentials.iterator();
@@ -80,21 +83,38 @@ public final class AWSS3StorageUploadAccessLevelTest {
     }
 
     /**
+     * Reset all the assigned static fields.
+     */
+    @AfterClass
+    public static void tearDownSuite() {
+        synchronousAuth = null;
+        userOne = null;
+        userTwo = null;
+        storage = null;
+    }
+
+    /**
      * Signs out by default and sets up the file to test uploading.
      *
      * @throws Exception if an error is encountered while creating file
      */
     @Before
     public void setUp() throws Exception {
-        // Start as a GUEST user
-        synchronousAuth.signOut();
-
         // Create a new file to upload
         uploadFile = new RandomTempFile(UPLOAD_SIZE);
         remoteKey = uploadFile.getName();
 
         // Override this per test-case
         uploadOptions = StorageUploadFileOptions.defaultInstance();
+    }
+
+    /**
+     * Sign out after each test.
+     * @throws AuthException if error encountered while signing out
+     */
+    @After
+    public void tearDown() throws AuthException {
+        synchronousAuth.signOut();
     }
 
     /**
