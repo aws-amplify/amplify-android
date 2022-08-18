@@ -77,15 +77,6 @@ public interface Model {
     }
 
     /**
-     * Gets the Type of the Model.
-     * @return The Type of the model.
-     */
-    @NonNull
-    default Type getType() {
-        return Type.USER;
-    }
-
-    /**
      * This enum represents the types of Model.
      */
     enum Type {
