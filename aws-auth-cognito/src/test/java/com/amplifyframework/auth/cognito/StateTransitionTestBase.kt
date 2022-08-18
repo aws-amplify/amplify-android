@@ -27,14 +27,12 @@ import com.amplifyframework.statemachine.codegen.actions.SRPActions
 import com.amplifyframework.statemachine.codegen.actions.SignInActions
 import com.amplifyframework.statemachine.codegen.actions.SignInChallengeActions
 import com.amplifyframework.statemachine.codegen.actions.SignOutActions
-import com.amplifyframework.statemachine.codegen.actions.SignUpActions
 import com.amplifyframework.statemachine.codegen.actions.StoreActions
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
 import com.amplifyframework.statemachine.codegen.data.SignedInData
 import com.amplifyframework.statemachine.codegen.data.SignedOutData
-import com.amplifyframework.statemachine.codegen.data.SignedUpData
 import com.amplifyframework.statemachine.codegen.events.AuthEvent
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
@@ -42,7 +40,6 @@ import com.amplifyframework.statemachine.codegen.events.CredentialStoreEvent
 import com.amplifyframework.statemachine.codegen.events.FetchAuthSessionEvent
 import com.amplifyframework.statemachine.codegen.events.SRPEvent
 import com.amplifyframework.statemachine.codegen.events.SignOutEvent
-import com.amplifyframework.statemachine.codegen.events.SignUpEvent
 import org.mockito.Mock
 import org.mockito.Mockito
 
@@ -87,9 +84,6 @@ open class StateTransitionTestBase {
 
     @Mock
     internal lateinit var mockAuthorizationActions: AuthorizationActions
-
-    @Mock
-    internal lateinit var mockSignUpActions: SignUpActions
 
     @Mock
     internal lateinit var mockSignInActions: SignInActions
@@ -331,39 +325,6 @@ open class StateTransitionTestBase {
                                 invalidateTokens = false
                             )
                         )
-                    )
-                }
-            )
-    }
-
-    internal fun setupSignUpActions() {
-        Mockito.`when`(mockSignUpActions.startSignUpAction(MockitoHelper.anyObject()))
-            .thenReturn(
-                Action { dispatcher, _ ->
-                    dispatcher.send(
-                        SignUpEvent(
-                            SignUpEvent.EventType.InitiateSignUpSuccess(
-                                SignedUpData("", "", mapOf())
-                            )
-                        )
-                    )
-                }
-            )
-
-        Mockito.`when`(mockSignUpActions.confirmSignUpAction(MockitoHelper.anyObject()))
-            .thenReturn(
-                Action { dispatcher, _ ->
-                    dispatcher.send(
-                        SignUpEvent(SignUpEvent.EventType.ConfirmSignUpSuccess())
-                    )
-                }
-            )
-
-        Mockito.`when`(mockSignUpActions.resetSignUpAction())
-            .thenReturn(
-                Action { dispatcher, _ ->
-                    dispatcher.send(
-                        AuthenticationEvent(AuthenticationEvent.EventType.ResetSignUp())
                     )
                 }
             )
