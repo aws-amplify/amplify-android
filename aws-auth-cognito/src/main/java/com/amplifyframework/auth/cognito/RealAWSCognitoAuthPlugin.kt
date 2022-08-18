@@ -19,7 +19,6 @@ import android.app.Activity
 import android.content.Intent
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AttributeType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChangePasswordRequest
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeliveryMediumType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeviceRememberedStatusType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetUserRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ListDevicesRequest
@@ -792,22 +791,14 @@ internal class RealAWSCognitoAuthPlugin(
         onSuccess: Consumer<AuthUpdateAttributeResult>,
         onError: Consumer<AuthException>
     ) {
-        authStateMachine.getCurrentState { authState ->
-            when (authState.authNState) {
-                // Check if user signed in
-                is AuthenticationState.SignedIn -> {
-                    GlobalScope.launch {
-                        try {
-                            val attributes = listOf(attribute)
-                            val userAttributesOptions = options as? AWSCognitoAuthUpdateUserAttributesOptions
-                            val results = updateUserAttributes(attributes?.toMutableList(), userAttributesOptions)
-                            onSuccess.accept(results?.entries?.first()?.value)
-                        } catch (e: Exception) {
-                            onError.accept(CognitoAuthExceptionConverter.lookup(e, e.toString()))
-                        }
-                    }
-                }
-                else -> onError.accept(AuthException.InvalidStateException())
+        GlobalScope.launch {
+            try {
+                val attributes = listOf(attribute)
+                val userAttributesOptions = options as? AWSCognitoAuthUpdateUserAttributesOptions
+                val results = updateUserAttributes(attributes.toMutableList(), userAttributesOptions)
+                onSuccess.accept(results.entries.first().value)
+            } catch (e: Exception) {
+                onError.accept(CognitoAuthExceptionConverter.lookup(e, e.toString()))
             }
         }
     }
@@ -817,21 +808,13 @@ internal class RealAWSCognitoAuthPlugin(
         onSuccess: Consumer<AuthUpdateAttributeResult>,
         onError: Consumer<AuthException>
     ) {
-        authStateMachine.getCurrentState { authState ->
-            when (authState.authNState) {
-                // Check if user signed in
-                is AuthenticationState.SignedIn -> {
-                    GlobalScope.launch {
-                        try {
-                            val attributes = listOf(attribute)
-                            val results = updateUserAttributes(attributes?.toMutableList(), null)
-                            onSuccess.accept(results?.entries?.first()?.value)
-                        } catch (e: Exception) {
-                            onError.accept(CognitoAuthExceptionConverter.lookup(e, e.toString()))
-                        }
-                    }
-                }
-                else -> onError.accept(AuthException.InvalidStateException())
+        GlobalScope.launch {
+            try {
+                val attributes = listOf(attribute)
+                val results = updateUserAttributes(attributes?.toMutableList(), null)
+                onSuccess.accept(results?.entries?.first()?.value)
+            } catch (e: Exception) {
+                onError.accept(CognitoAuthExceptionConverter.lookup(e, e.toString()))
             }
         }
     }
@@ -842,20 +825,12 @@ internal class RealAWSCognitoAuthPlugin(
         onSuccess: Consumer<MutableMap<AuthUserAttributeKey, AuthUpdateAttributeResult>>,
         onError: Consumer<AuthException>
     ) {
-        authStateMachine.getCurrentState { authState ->
-            when (authState.authNState) {
-                // Check if user signed in
-                is AuthenticationState.SignedIn -> {
-                    GlobalScope.launch {
-                        try {
-                            val userAttributesOptions = options as? AWSCognitoAuthUpdateUserAttributesOptions
-                            onSuccess.accept(updateUserAttributes(attributes, userAttributesOptions))
-                        } catch (e: Exception) {
-                            onError.accept(CognitoAuthExceptionConverter.lookup(e, e.toString()))
-                        }
-                    }
-                }
-                else -> onError.accept(AuthException.InvalidStateException())
+        GlobalScope.launch {
+            try {
+                val userAttributesOptions = options as? AWSCognitoAuthUpdateUserAttributesOptions
+                onSuccess.accept(updateUserAttributes(attributes, userAttributesOptions))
+            } catch (e: Exception) {
+                onError.accept(CognitoAuthExceptionConverter.lookup(e, e.toString()))
             }
         }
     }
@@ -865,46 +840,56 @@ internal class RealAWSCognitoAuthPlugin(
         onSuccess: Consumer<MutableMap<AuthUserAttributeKey, AuthUpdateAttributeResult>>,
         onError: Consumer<AuthException>
     ) {
-        authStateMachine.getCurrentState { authState ->
-            when (authState.authNState) {
-                // Check if user signed in
-                is AuthenticationState.SignedIn -> {
-                    GlobalScope.launch {
-                        try {
-                            onSuccess.accept(updateUserAttributes(attributes, null))
-                        } catch (e: Exception) {
-                            onError.accept(CognitoAuthExceptionConverter.lookup(e, e.toString()))
-                        }
-                    }
-                }
-                else -> onError.accept(AuthException.InvalidStateException())
+        GlobalScope.launch {
+            try {
+                onSuccess.accept(updateUserAttributes(attributes, null))
+            } catch (e: Exception) {
+                onError.accept(CognitoAuthExceptionConverter.lookup(e, e.toString()))
             }
         }
     }
 
     private suspend fun updateUserAttributes(
         attributes: MutableList<AuthUserAttribute>,
-        userAttributesOptions: AWSCognitoAuthUpdateUserAttributesOptions?
-    ):
-        MutableMap<AuthUserAttributeKey, AuthUpdateAttributeResult> {
-            val accessToken = getSession().userPoolTokens.value?.accessToken
-            var userAttributes = attributes.map {
-                AttributeType.invoke {
-                    name = it.key.keyString
-                    value = it.value
+        userAttributesOptions: AWSCognitoAuthUpdateUserAttributesOptions?,
+    ): MutableMap<AuthUserAttributeKey, AuthUpdateAttributeResult> {
+
+        return suspendCoroutine { continuation ->
+
+            authStateMachine.getCurrentState { authState ->
+                when (authState.authNState) {
+                    // Check if user signed in
+                    is AuthenticationState.SignedIn -> {
+                        GlobalScope.launch {
+                            try {
+                                val accessToken = getSession().userPoolTokens.value?.accessToken
+                                var userAttributes = attributes.map {
+                                    AttributeType.invoke {
+                                        name = it.key.keyString
+                                        value = it.value
+                                    }
+                                }
+                                val userAttributesRequest = UpdateUserAttributesRequest.invoke {
+                                    this.accessToken = accessToken
+                                    this.userAttributes = userAttributes
+                                    this.clientMetadata = userAttributesOptions?.metadata
+                                }
+                                val userAttributeResponse = authEnvironment.cognitoAuthService
+                                    .cognitoIdentityProviderClient?.updateUserAttributes(
+                                        userAttributesRequest
+                                    )
+
+                                continuation.resume(getUpdateUserAttributeResult(userAttributeResponse, userAttributes))
+                            } catch (e: Exception) {
+                                continuation.resumeWithException(CognitoAuthExceptionConverter.lookup(e, e.toString()))
+                            }
+                        }
+                    }
+                    else -> continuation.resumeWithException(AuthException.InvalidStateException())
                 }
             }
-            val userAttributesRequest = UpdateUserAttributesRequest.invoke {
-                this.accessToken = accessToken
-                this.userAttributes = userAttributes
-                this.clientMetadata = userAttributesOptions?.metadata
-            }
-            val userAttributeResponse = authEnvironment.cognitoAuthService
-                .cognitoIdentityProviderClient?.updateUserAttributes(
-                    userAttributesRequest
-                )
-            return getUpdateUserAttributeResult(userAttributeResponse, userAttributes)
         }
+    }
 
     private fun getUpdateUserAttributeResult(
         response: UpdateUserAttributesResponse?,
@@ -917,11 +902,15 @@ internal class RealAWSCognitoAuthPlugin(
             val codeDeliveryDetailsList = it
             for (item in codeDeliveryDetailsList) {
                 item.attributeName?.let {
+                    /*
                     var deliveryMedium = when (item.deliveryMedium) {
                         DeliveryMediumType.Email -> AuthCodeDeliveryDetails.DeliveryMedium.EMAIL
                         DeliveryMediumType.Sms -> AuthCodeDeliveryDetails.DeliveryMedium.SMS
                         else -> AuthCodeDeliveryDetails.DeliveryMedium.UNKNOWN
-                    }
+                    }*/
+
+                    val deliveryMedium = AuthCodeDeliveryDetails.DeliveryMedium.fromString(item.deliveryMedium?.value)
+
                     val authCodeDeliveryDetails = AuthCodeDeliveryDetails(
                         item.destination.toString(),
                         deliveryMedium,
@@ -1184,6 +1173,9 @@ internal class RealAWSCognitoAuthPlugin(
                             )
                         )
                     }
+                    else -> {
+                        // no op
+                    }
                 }
             },
             null
@@ -1200,6 +1192,9 @@ internal class RealAWSCognitoAuthPlugin(
                     is CredentialStoreState.Error -> authStateMachine.send(
                         AuthEvent(AuthEvent.EventType.CachedCredentialsFailed)
                     )
+                    else -> {
+                        // no op
+                    }
                 }
             },
             null

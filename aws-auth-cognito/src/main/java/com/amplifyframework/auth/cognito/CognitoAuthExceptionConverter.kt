@@ -70,6 +70,7 @@ class CognitoAuthExceptionConverter {
                 is PasswordResetRequiredException -> AuthException.PasswordResetRequiredException(
                     error
                 )
+                is AuthException.InvalidStateException -> AuthException.InvalidStateException(error)
                 else -> AuthException(fallbackMessage, error, defaultRecoveryMessage)
             }
         }
