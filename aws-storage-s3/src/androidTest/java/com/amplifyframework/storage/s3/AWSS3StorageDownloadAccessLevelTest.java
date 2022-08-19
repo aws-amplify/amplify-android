@@ -25,6 +25,7 @@ import com.amplifyframework.storage.options.StorageDownloadFileOptions;
 import com.amplifyframework.storage.options.StorageUploadFileOptions;
 import com.amplifyframework.storage.s3.UserCredentials.Credential;
 import com.amplifyframework.storage.s3.UserCredentials.IdentityIdSource;
+import com.amplifyframework.storage.s3.helper.AmplifyTransferServiceTestHelper;
 import com.amplifyframework.storage.s3.test.R;
 import com.amplifyframework.storage.s3.util.WorkmanagerTestUtils;
 import com.amplifyframework.testutils.FileAssert;
@@ -32,6 +33,7 @@ import com.amplifyframework.testutils.random.RandomTempFile;
 import com.amplifyframework.testutils.sync.SynchronousAuth;
 import com.amplifyframework.testutils.sync.SynchronousStorage;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -98,6 +100,16 @@ public final class AWSS3StorageDownloadAccessLevelTest {
 
         // Override this per test-case
         downloadOptions = StorageDownloadFileOptions.defaultInstance();
+
+        AmplifyTransferServiceTestHelper.stopForegroundAndUnbind(getApplicationContext());
+    }
+
+    /**
+     * Remove AmplifyTransferService foreground notification.
+     */
+    @After
+    public void tearDown() {
+        AmplifyTransferServiceTestHelper.stopForegroundAndUnbind(getApplicationContext());
     }
 
     /**
