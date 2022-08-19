@@ -112,7 +112,7 @@ while true; do
   then
     break
   fi
-  sleep 5
+  sleep 30
 done
 echo "Status = $status Result = $result"
 
