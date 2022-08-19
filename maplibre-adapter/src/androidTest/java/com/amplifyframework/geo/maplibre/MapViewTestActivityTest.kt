@@ -70,7 +70,6 @@ class MapViewTestActivityTest {
                 activity.mapView.addOnDidFailLoadingMapListener { error ->
                     continuation.resumeWithException(RuntimeException(error))
                 }
-                signInWithCognito(activity.auth)
                 activity.mapView.setStyle { style ->
                     continuation.resume(style)
                 }
@@ -93,7 +92,6 @@ class MapViewTestActivityTest {
                 activity.mapView.addOnDidFailLoadingMapListener { error ->
                     continuation.resumeWithException(RuntimeException(error))
                 }
-                signInWithCognito(activity.auth)
                 activity.mapView.setClusterBehavior(true, clusteringOptions) {
                     activity.mapView.getStyle { _, style ->
                         continuation.resume(style)
@@ -117,7 +115,6 @@ class MapViewTestActivityTest {
                 activity.mapView.addOnDidFailLoadingMapListener { error ->
                     continuation.resumeWithException(RuntimeException(error))
                 }
-                signInWithCognito(activity.auth)
                 activity.mapView.setClusterBehavior(true, null) {
                     activity.mapView.getStyle { _, style ->
                         continuation.resume(style)
@@ -141,7 +138,6 @@ class MapViewTestActivityTest {
                 activity.mapView.addOnDidFailLoadingMapListener { error ->
                     continuation.resumeWithException(RuntimeException(error))
                 }
-                signInWithCognito(activity.auth)
                 activity.mapView.setClusterBehavior(false, null) {
                     activity.mapView.getStyle { _, style ->
                         continuation.resume(style)
@@ -154,11 +150,5 @@ class MapViewTestActivityTest {
             assertNull(mapStyle.getLayer(MapLibreView.CLUSTER_CIRCLE_LAYER_ID))
             assertNull(mapStyle.getLayer(MapLibreView.CLUSTER_NUMBER_LAYER_ID))
         }
-    }
-
-    private fun signInWithCognito(auth: SynchronousAuth?) {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val (username, password) = Credentials.load(context)
-        auth?.signIn(username, password)
     }
 }
