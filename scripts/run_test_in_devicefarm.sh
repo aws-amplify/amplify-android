@@ -84,6 +84,7 @@ if [[ -z "${minDevice}" || -z "${middleDevice}" || -z "${latestDevice}" ]]; then
 fi
 
 # Function to cancel duplicate runs for same code source in device farm
+# Function to cancel duplicate runs for same code source in device farm.
 function stopDuplicates {
   echo "Stopping duplicate runs"
   name="$file_name-$CODEBUILD_SOURCE_VERSION"
