@@ -18,6 +18,7 @@ package com.amplifyframework.storage.s3;
 import android.content.Context;
 
 import com.amplifyframework.auth.AuthPlugin;
+import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.async.Resumable;
@@ -30,7 +31,6 @@ import com.amplifyframework.storage.StorageChannelEventName;
 import com.amplifyframework.storage.operation.StorageDownloadFileOperation;
 import com.amplifyframework.storage.options.StorageDownloadFileOptions;
 import com.amplifyframework.storage.options.StorageUploadFileOptions;
-import com.amplifyframework.storage.s3.helper.AmplifyTransferServiceTestHelper;
 import com.amplifyframework.storage.s3.test.R;
 import com.amplifyframework.storage.s3.transfer.TransferState;
 import com.amplifyframework.storage.s3.util.WorkmanagerTestUtils;
@@ -127,8 +127,6 @@ public final class AWSS3StorageDownloadTest {
 
         // Create a file to download to
         downloadFile = new RandomTempFile();
-
-        AmplifyTransferServiceTestHelper.stopForegroundAndUnbind(getApplicationContext());
     }
 
     /**
@@ -140,8 +138,6 @@ public final class AWSS3StorageDownloadTest {
         for (SubscriptionToken token : subscriptions) {
             Amplify.Hub.unsubscribe(token);
         }
-
-        AmplifyTransferServiceTestHelper.stopForegroundAndUnbind(getApplicationContext());
     }
 
     /**

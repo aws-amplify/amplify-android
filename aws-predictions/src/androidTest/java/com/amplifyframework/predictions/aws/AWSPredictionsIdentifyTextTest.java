@@ -19,6 +19,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import androidx.core.util.Pair;
 
+import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin;
 import com.amplifyframework.predictions.PredictionsCategory;
 import com.amplifyframework.predictions.PredictionsException;
 import com.amplifyframework.predictions.aws.test.R;

@@ -24,6 +24,7 @@ import com.amplifyframework.api.ApiCategory;
 import com.amplifyframework.api.aws.AWSApiPlugin;
 import com.amplifyframework.api.aws.AuthModeStrategyType;
 import com.amplifyframework.api.aws.AuthorizationType;
+import com.amplifyframework.auth.cognito.helpers.JWTParser;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.AmplifyConfiguration;
 import com.amplifyframework.core.category.CategoryConfiguration;
@@ -46,7 +47,6 @@ import com.amplifyframework.testutils.Resources;
 import com.amplifyframework.testutils.random.RandomString;
 import com.amplifyframework.testutils.sync.SynchronousDataStore;
 
-import com.amazonaws.mobileconnectors.cognitoidentityprovider.util.CognitoJWTParser;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -234,7 +234,7 @@ public final class MultiAuthSyncEngineNoAuthInstrumentationTest {
         if (authHeaderValue.startsWith("AWS4-HMAC-SHA256")) {
             return AuthorizationType.AWS_IAM;
         }
-        String iss = CognitoJWTParser.getClaim(authHeaderValue, "iss");
+        String iss = JWTParser.INSTANCE.getClaim(authHeaderValue, "iss");
         if (iss == null) {
             throw new IllegalStateException("Could not find any valid auth headers");
         }

@@ -15,6 +15,7 @@
 
 package com.amplifyframework.datastore;
 
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.Model;
@@ -32,5 +33,5 @@ public interface DataStoreSyncExpression {
      * {@link DataStoreCategoryBehavior#start(Action, Consumer)}.
      * @return QueryPredicate to filter what is synced.
      */
-    QueryPredicate resolvePredicate();
+    QueryPredicate resolvePredicate() throws AmplifyException;
 }

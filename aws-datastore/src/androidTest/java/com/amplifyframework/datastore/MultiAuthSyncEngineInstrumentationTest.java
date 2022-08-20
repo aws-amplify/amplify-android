@@ -27,6 +27,7 @@ import com.amplifyframework.api.aws.AuthModeStrategyType;
 import com.amplifyframework.api.aws.AuthorizationType;
 import com.amplifyframework.api.aws.auth.CognitoJWTParser;
 import com.amplifyframework.api.aws.sigv4.DefaultCognitoUserPoolsAuthProvider;
+import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin;
 import com.amplifyframework.auth.options.AuthSignOutOptions;
 import com.amplifyframework.auth.result.AuthSignInResult;
 import com.amplifyframework.core.Amplify;
@@ -42,6 +43,7 @@ import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter;
 import com.amplifyframework.datastore.storage.sqlite.TestStorageAdapter;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.logging.Logger;
+import com.amplifyframework.testmodels.commentsblog.Author;
 import com.amplifyframework.testmodels.multiauth.GroupPrivatePublicUPIAMAPIPost;
 import com.amplifyframework.testmodels.multiauth.GroupPrivateUPIAMPost;
 import com.amplifyframework.testmodels.multiauth.GroupPublicUPAPIPost;
@@ -804,7 +806,7 @@ public final class MultiAuthSyncEngineInstrumentationTest {
                                                     "DataStore error handler received an error.",
                                                     exception))
                                                 .syncExpression(modelSchema.getName(),
-                                                    () -> Where.id("FAKE_ID").getQueryPredicate())
+                                                    () -> Where.identifier(modelSchema.getModelClass(), "FAKE_ID").getQueryPredicate())
                                                 .build();
         CategoryConfiguration dataStoreCategoryConfiguration =
             AmplifyConfiguration.fromConfigFile(context, configResourceId)
@@ -865,7 +867,7 @@ public final class MultiAuthSyncEngineInstrumentationTest {
         if (expectedAuthType != null) {
             expectedEventAccumulator =
                 HubAccumulator
-                    .create(HubChannel.DATASTORE, publicationOf(modelType.getSimpleName(), testRecord.getId()), 1)
+                    .create(HubChannel.DATASTORE, publicationOf(modelType.getSimpleName(), testRecord.getPrimaryKeyString()), 1)
                     .start();
         } else {
             expectedEventAccumulator = HubAccumulator
@@ -893,9 +895,9 @@ public final class MultiAuthSyncEngineInstrumentationTest {
             modelMap.put("id", modelId);
             modelMap.put("name", recordDetail);
             return SerializedModel.builder()
-                                   .serializedData(modelMap)
-                                   .modelSchema(ModelSchema.fromModelClass(modelType))
-                                   .build();
+                    .modelSchema(ModelSchema.fromModelClass(modelType))
+                    .serializedData(modelMap)
+                    .build();
         } catch (AmplifyException exception) {
             Log.e(modelType.getSimpleName(), "Unable to create an instance of model " + modelType.getSimpleName(),
                   exception);
