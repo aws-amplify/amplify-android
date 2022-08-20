@@ -20,8 +20,6 @@ import android.os.HandlerThread;
 
 import com.amplifyframework.core.Amplify;
 
-import java.util.Locale;
-
 /**
  * Submits all the recorded event periodically.
  */
