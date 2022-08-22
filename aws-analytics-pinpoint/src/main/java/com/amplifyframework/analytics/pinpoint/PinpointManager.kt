@@ -38,8 +38,8 @@ internal class PinpointManager constructor(
 
     val analyticsClient: AnalyticsClient
     val sessionClient: SessionClient
-    private val targetingClient: TargetingClient
-    private val sdkName = "" // TODO: confirm whether to use amplify-android or aws-sdk-android
+    val targetingClient: TargetingClient
+    private val sdkName = "amplify-android" // TODO: confirm whether to use amplify-android or aws-sdk-android
 
     init {
         val pinpointClient = PinpointClient {
@@ -47,26 +47,28 @@ internal class PinpointManager constructor(
             region = awsPinpointConfiguration.region
         }
         val pinpointDatabase = PinpointDatabase(context)
-        sessionClient = SessionClient(context, null)
         val sharedPrefs =
             context.getSharedPreferences(awsPinpointConfiguration.appId, Context.MODE_PRIVATE)
+        val sharedPrefsUniqueIdService = SharedPrefsUniqueIdService(sharedPrefs)
         val androidAppDetails = AndroidAppDetails(context, awsPinpointConfiguration.appId)
         val androidDeviceDetails = AndroidDeviceDetails(getCarrier(context))
         targetingClient = TargetingClient(
             pinpointClient,
             PinpointNotificationClient(),
-            SharedPrefsUniqueIdService(sharedPrefs),
+            sharedPrefsUniqueIdService,
             sharedPrefs,
             androidAppDetails,
             androidDeviceDetails,
             context
         )
+        sessionClient = SessionClient(context, null, targetingClient, sharedPrefs, sharedPrefsUniqueIdService)
         analyticsClient = AnalyticsClient(
             context,
             pinpointClient,
             sessionClient,
             targetingClient,
             pinpointDatabase,
+            sharedPrefsUniqueIdService,
             androidAppDetails,
             androidDeviceDetails,
             SDKInfo(sdkName, BuildConfig.VERSION_NAME)

@@ -16,11 +16,20 @@
 package com.amplifyframework.analytics.pinpoint
 
 import android.content.Context
+import android.content.SharedPreferences
+import com.amplifyframework.analytics.pinpoint.internal.core.idresolver.SharedPrefsUniqueIdService
+import com.amplifyframework.analytics.pinpoint.targeting.TargetingClient
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.json.Json
 
+@OptIn(ExperimentalSerializationApi::class)
 internal class SessionClient(
     private val context: Context,
-    var analyticsClient: AnalyticsClient?
-    // TODO: Pass shared-preferences
+    var analyticsClient: AnalyticsClient?,
+    var targetingClient: TargetingClient,
+    private var sharedPreferences: SharedPreferences,
+    private var sharedPrefsUniqueIdService: SharedPrefsUniqueIdService
 ) {
 
     var session: Session? = null
@@ -28,9 +37,17 @@ internal class SessionClient(
     private val sessionStartEvent = "_session.start"
     private val sessionPauseEvent = "_session.pause"
     private val sessionResumeEvent = "_session.resume"
+    private val sharedPrefsSessionKey = "AWSPinpoint.Session"
 
     init {
-        // TODO: Initialize session from shared prefs
+        val sessionString = sharedPreferences.getString(sharedPrefsSessionKey, null)
+        sessionString?.let {
+            val json = Json {
+                encodeDefaults = true
+                explicitNulls = false
+            }
+            session = json.decodeFromString<Session>(it)
+        }
     }
 
     @Synchronized
@@ -44,7 +61,7 @@ internal class SessionClient(
     }
 
     internal fun setAnalyticsClient(analyticsClient: AnalyticsClient) {
-        this@SessionClient.analyticsClient = analyticsClient
+        this.analyticsClient = analyticsClient
     }
 
     private fun executeStop() {
@@ -62,14 +79,13 @@ internal class SessionClient(
                 )
                 it.recordEvent(pinpointEvent)
             }
-            // TODO: Clear event srouce attributes:this.pinpointContext.getAnalyticsClient().clearEventSourceAttributes();
         }
         session = null
     }
 
     private fun executeStart() {
-        // TODO: Update endpoint profile:getTargetingClient().updateEndpointProfile();
-        val newSession = Session(context)
+        targetingClient.updateEndpointProfile()
+        val newSession = Session(context, sharedPrefsUniqueIdService.getUniqueId())
         session = newSession
         analyticsClient?.let {
             val pinpointEvent = it.createEvent(

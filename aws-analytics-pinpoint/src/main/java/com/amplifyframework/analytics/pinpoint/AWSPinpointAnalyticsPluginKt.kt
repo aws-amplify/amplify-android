@@ -100,6 +100,7 @@ class AWSPinpointAnalyticsPluginKt : AnalyticsPlugin<Any>() {
         awsPinpointAnalyticsPluginBehavior = AWSPinpointAnalyticsPluginBehavior(
             context,
             pinpointManager.analyticsClient,
+            pinpointManager.targetingClient,
             autoEventSubmitter,
             autoSessionTracker
         )

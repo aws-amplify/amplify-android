@@ -77,7 +77,6 @@ internal class EventRecorder(
         val syncedPinpointEvents = mutableListOf<PinpointEvent>()
         pinpointDatabase.queryAllEvents().use { cursor ->
             var currentSubmissions = 0
-            // TODO: fetch maxSubmissions from shared prefs
             val maxSubmissionsAllowed = defaultMaxSubmissionAllowed
             do {
                 if (!cursor.moveToFirst())
@@ -254,7 +253,6 @@ internal class EventRecorder(
     private fun getNextBatchOfEvents(cursor: Cursor): Map<Int, PinpointEvent> {
         val result = mutableMapOf<Int, PinpointEvent>()
         var currentRequestSize = 0
-        // TODO: fetch maxSubmissionSize from shared prefs
         val maxRequestSize = defaultMaxSubmissionSize
         cursor.use { it ->
             do {

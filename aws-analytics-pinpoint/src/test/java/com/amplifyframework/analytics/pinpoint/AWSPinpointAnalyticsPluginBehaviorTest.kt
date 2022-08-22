@@ -23,6 +23,7 @@ import com.amplifyframework.analytics.pinpoint.models.AndroidDeviceDetails
 import com.amplifyframework.analytics.pinpoint.models.PinpointEvent
 import com.amplifyframework.analytics.pinpoint.models.PinpointSession
 import com.amplifyframework.analytics.pinpoint.models.SDKInfo
+import com.amplifyframework.analytics.pinpoint.targeting.TargetingClient
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -36,6 +37,7 @@ import org.robolectric.RobolectricTestRunner
 class AWSPinpointAnalyticsPluginBehaviorTest {
 
     private val analyticsClientMock = mockk<AnalyticsClient>(relaxed = true)
+    private val targetingClientMock = mockk<TargetingClient>(relaxed = true)
     private val autoEventSubmitterMock = mockk<AutoEventSubmitter>(relaxed = true)
     private val autoSessionTrackerMock = mockk<AutoSessionTracker>(relaxed = true)
     private val context: Context = ApplicationProvider.getApplicationContext()
@@ -46,6 +48,7 @@ class AWSPinpointAnalyticsPluginBehaviorTest {
         awsPinpointAnalyticsPluginBehavior = AWSPinpointAnalyticsPluginBehavior(
             ApplicationProvider.getApplicationContext(),
             analyticsClientMock,
+            targetingClientMock,
             autoEventSubmitterMock,
             autoSessionTrackerMock
         )

@@ -24,16 +24,46 @@ import com.amplifyframework.analytics.AnalyticsIntegerProperty
 import com.amplifyframework.analytics.AnalyticsProperties
 import com.amplifyframework.analytics.AnalyticsStringProperty
 import com.amplifyframework.analytics.UserProfile
+import com.amplifyframework.analytics.pinpoint.models.AWSPinpointUserProfile
+import com.amplifyframework.analytics.pinpoint.targeting.TargetingClient
+import com.amplifyframework.analytics.pinpoint.targeting.endpointProfile.EndpointProfileUser
 
 internal class AWSPinpointAnalyticsPluginBehavior(
     private val context: Context,
     val analyticsClient: AnalyticsClient,
+    private val targetingClient: TargetingClient,
     private val autoEventSubmitter: AutoEventSubmitter,
     private val autoSessionTracker: AutoSessionTracker
 ) : AnalyticsCategoryBehavior {
 
+    private val userName = "name"
+    private val userPlan = "plan"
+    private val userEmail = "email"
+
     override fun identifyUser(userId: String, profile: UserProfile?) {
-        TODO("Not yet implemented")
+        val endpointProfile = targetingClient.currentEndpoint()
+        val endpointUser = EndpointProfileUser()
+        endpointUser.setUserId(userId)
+        if (profile is AWSPinpointUserProfile) {
+            profile.userAttributes?.let {
+                it.forEach { entry ->
+                    val key = entry.key
+                    when (val attribute = entry.value) {
+                        is AnalyticsStringProperty,
+                        is AnalyticsBooleanProperty,
+                        is AnalyticsDoubleProperty,
+                        is AnalyticsIntegerProperty -> {
+                            endpointUser.addUserAttribute(key, listOf(attribute.value.toString()))
+                        }
+                    }
+                }
+            }
+        }
+        endpointProfile.user = endpointUser
+        endpointProfile.addAttribute(userName, profile?.name?.let { listOf(it) } ?: listOf())
+        endpointProfile.addAttribute(userEmail, profile?.email?.let { listOf(it) } ?: listOf())
+        endpointProfile.addAttribute(userPlan, profile?.plan?.let { listOf(it) } ?: listOf())
+        targetingClient.updateEndpointProfile(endpointProfile)
     }
 
     override fun disable() {
@@ -43,7 +73,6 @@ internal class AWSPinpointAnalyticsPluginBehavior(
 
     override fun enable() {
         autoEventSubmitter.start()
-        // Start auto session tracking
         autoSessionTracker.startSessionTracking(context.applicationContext as Application)
     }
 
@@ -58,17 +87,11 @@ internal class AWSPinpointAnalyticsPluginBehavior(
         analyticsEvent.properties.forEach { property ->
             val key = property.key
             when (val analyticsProperty = property.value) {
-                is AnalyticsStringProperty -> {
-                    attributes[key] = analyticsProperty.value
-                }
-                is AnalyticsBooleanProperty -> {
+                is AnalyticsStringProperty, is AnalyticsBooleanProperty -> {
                     attributes[key] = analyticsProperty.value.toString()
                 }
-                is AnalyticsIntegerProperty -> {
-                    metrics[key] = analyticsProperty.value.toDouble()
-                }
-                is AnalyticsDoubleProperty -> {
-                    metrics[key] = analyticsProperty.value
+                is AnalyticsIntegerProperty, is AnalyticsDoubleProperty -> {
+                    metrics[key] = analyticsProperty.value.toString().toDouble()
                 }
                 else -> {
                     throw IllegalArgumentException("Invalid property type")
@@ -80,11 +103,26 @@ internal class AWSPinpointAnalyticsPluginBehavior(
     }
 
     override fun registerGlobalProperties(properties: AnalyticsProperties) {
-        TODO("Not yet implemented")
+        properties.forEach {
+            val key = it.key
+            when (val property = it.value) {
+                is AnalyticsStringProperty, is AnalyticsBooleanProperty -> {
+                    analyticsClient.addGlobalAttribute(key, property.value.toString())
+                }
+                is AnalyticsIntegerProperty, is AnalyticsDoubleProperty -> {
+                    analyticsClient.addGlobalMetric(key, property.value.toString().toDouble())
+                }
+            }
+        }
     }
 
     override fun unregisterGlobalProperties(vararg propertyNames: String?) {
-        TODO("Not yet implemented")
+        propertyNames.forEach { propertyName ->
+            propertyName?.let {
+                analyticsClient.removeGlobalAttribute(it)
+                analyticsClient.removeGlobalMetric(it)
+            }
+        }
     }
 
     override fun flushEvents() {
