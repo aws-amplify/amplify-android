@@ -37,10 +37,11 @@ import com.amplifyframework.statemachine.codegen.states.SignOutState
 
 internal class AuthStateMachine(
     resolver: StateMachineResolver<AuthState>,
-    environment: Environment
+    environment: Environment,
+    initialState: AuthState? = null
 ) :
-    StateMachine<AuthState, Environment>(resolver, environment) {
-    constructor(environment: Environment) : this(
+    StateMachine<AuthState, Environment>(resolver, environment, initialState = initialState) {
+    constructor(environment: Environment, initialState: AuthState? = null) : this(
         AuthState.Resolver(
             AuthenticationState.Resolver(
                 SignInState.Resolver(SRPSignInState.Resolver(SRPCognitoActions), SignInCognitoActions),
@@ -54,7 +55,8 @@ internal class AuthStateMachine(
             ),
             AuthCognitoActions
         ),
-        environment
+        environment,
+        initialState
     )
 
     companion object {

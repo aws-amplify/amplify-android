@@ -23,32 +23,50 @@ import com.amplifyframework.statemachine.StateResolution
 import com.amplifyframework.statemachine.codegen.actions.AuthActions
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 import com.amplifyframework.statemachine.codegen.events.AuthEvent
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 
+@Serializable
 sealed class AuthState : State {
+    @Serializable @SerialName("AuthState.NotConfigured")
     data class NotConfigured(val id: String = "") : AuthState()
+    @Serializable @SerialName("AuthState.ConfiguringAuth")
     data class ConfiguringAuth(val id: String = "") : AuthState()
 
+    // TODO: Annotate this as @Serializable once AuthConfigurations serializer is defined
     data class WaitingForCachedCredentials(val config: AuthConfiguration) : AuthState()
 
+    @Serializable @SerialName("AuthState.ValidatingCredentialsAndConfiguration")
     data class ValidatingCredentialsAndConfiguration(val id: String = "") : AuthState()
 
+    @Serializable @SerialName("AuthState.ConfiguringAuthentication")
     data class ConfiguringAuthentication(
+        @SerialName("AuthenticationState")
         override var authNState: AuthenticationState?
     ) : AuthState()
 
+    @Serializable @SerialName("AuthState.ConfiguringAuthorization")
     data class ConfiguringAuthorization(
+        @SerialName("AuthenticationState")
         override var authNState: AuthenticationState?,
+        @SerialName("AuthorizationState")
         override var authZState: AuthorizationState?
     ) : AuthState()
 
+    @Serializable @SerialName("AuthState.Configured")
     data class Configured(
+        @SerialName("AuthenticationState")
         override var authNState: AuthenticationState?,
+        @SerialName("AuthorizationState")
         override var authZState: AuthorizationState?
     ) : AuthState()
 
     data class Error(val exception: Exception) : AuthState()
 
+    @Transient
     open var authNState: AuthenticationState? = AuthenticationState.NotConfigured()
+    @Transient
     open var authZState: AuthorizationState? = AuthorizationState.NotConfigured()
 
     class Resolver(

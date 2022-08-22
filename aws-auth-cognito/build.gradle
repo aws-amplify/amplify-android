@@ -45,6 +45,7 @@ dependencies {
     testImplementation dependency.mockk
     testImplementation dependency.robolectric
     testImplementation dependency.androidx.test.core
+    testImplementation "org.jetbrains.kotlin:kotlin-reflect:1.7.0"
 
     androidTestImplementation dependency.androidx.test.runner
     androidTestImplementation dependency.androidx.test.junit

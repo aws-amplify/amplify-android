@@ -6,9 +6,13 @@ import com.amplifyframework.statemachine.StateMachineResolver
 import com.amplifyframework.statemachine.StateResolution
 import com.amplifyframework.statemachine.codegen.actions.SignInActions
 import com.amplifyframework.statemachine.codegen.events.SignInEvent
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 
+@Serializable
 sealed class SignInState : State {
     data class NotStarted(val id: String = "") : SignInState()
+    @Serializable
     data class SigningInWithSRP(override var srpSignInState: SRPSignInState?) : SignInState()
     data class SigningInWithHostedUI(val id: String = "") : SignInState()
     data class SigningInWithCustom(val id: String = "") : SignInState()
@@ -18,6 +22,7 @@ sealed class SignInState : State {
     data class Done(val id: String = "") : SignInState()
     data class Error(val exception: Exception) : SignInState()
 
+    @Transient
     open var srpSignInState: SRPSignInState? = SRPSignInState.NotStarted()
 
     class Resolver(

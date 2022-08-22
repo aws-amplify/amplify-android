@@ -15,4 +15,7 @@
 
 package com.amplifyframework.statemachine.codegen.data
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class SignedOutData(var lastKnownUsername: String? = null)

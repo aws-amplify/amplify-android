@@ -31,21 +31,36 @@ import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
 import com.amplifyframework.statemachine.codegen.events.DeleteUserEvent
 import com.amplifyframework.statemachine.codegen.events.SignOutEvent
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 
+@Serializable @SerialName("AuthorizationState")
 sealed class AuthorizationState : State {
+    @Serializable @SerialName("AuthorizationState.NotConfigured")
     data class NotConfigured(val id: String = "") : AuthorizationState()
+    @Serializable @SerialName("AuthorizationState.Configured")
     data class Configured(val id: String = "") : AuthorizationState()
+    @Serializable @SerialName("AuthorizationState.SigningOut")
     data class SigningIn(val id: String = "") : AuthorizationState()
+    @Serializable @SerialName("AuthorizationState.SigningIn")
     data class SigningOut(val id: String = "") : AuthorizationState()
+    @Serializable @SerialName("AuthorizationState.FetchingAuthSession")
     data class FetchingAuthSession(override var fetchAuthSessionState: FetchAuthSessionState?) : AuthorizationState()
+    @Serializable @SerialName("AuthorizationState.DeletingUser")
     data class DeletingUser(override var deleteUserState: DeleteUserState?) : AuthorizationState()
+    @Serializable @SerialName("AuthorizationState.WaitingToStore")
     data class WaitingToStore(var amplifyCredential: AmplifyCredential) : AuthorizationState()
+    @Serializable @SerialName("AuthorizationState.SessionEstablished")
     data class SessionEstablished(val amplifyCredential: AmplifyCredential) : AuthorizationState()
     data class Error(val exception: Exception) : AuthorizationState()
 
+    @Transient
     open var fetchAuthSessionState: FetchAuthSessionState? = FetchAuthSessionState.NotStarted()
+    @Transient
     open var deleteUserState: DeleteUserState? = DeleteUserState.NotStarted()
 
+    @Transient
     override val type = this.toString()
 
     class Resolver(

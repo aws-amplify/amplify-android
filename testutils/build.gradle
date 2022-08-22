@@ -13,6 +13,10 @@
  * permissions and limitations under the License.
  */
 
+plugins {
+    id "org.jetbrains.kotlin.plugin.serialization" version "1.6.10"
+}
+
 apply plugin: 'com.android.library'
 apply from: rootProject.file("configuration/checkstyle.gradle")
 apply plugin: 'kotlin-android'
@@ -24,6 +28,8 @@ dependencies {
     implementation dependency.mockito
     implementation dependency.androidx.test.core
     implementation dependency.rxjava
+
+    implementation dependency.kotlin.serializationJson
 
     // dependency on Model/GraphQL integration classes
     // remove when modules are re-organized to provide better isolation

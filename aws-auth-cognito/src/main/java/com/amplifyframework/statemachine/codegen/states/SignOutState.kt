@@ -26,7 +26,9 @@ import com.amplifyframework.statemachine.codegen.data.SignedInData
 import com.amplifyframework.statemachine.codegen.data.SignedOutData
 import com.amplifyframework.statemachine.codegen.events.AuthEvent
 import com.amplifyframework.statemachine.codegen.events.SignOutEvent
+import kotlinx.serialization.Serializable
 
+@Serializable
 sealed class SignOutState : State {
     data class NotStarted(val id: String = "") : SignOutState()
     data class SigningOutLocally(val signedInData: SignedInData?) : SignOutState()
