@@ -166,19 +166,19 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
 
     override fun confirmSignIn(
         confirmationCode: String,
+        onSuccess: Consumer<AuthSignInResult>,
+        onError: Consumer<AuthException>
+    ) {
+        realPlugin.confirmSignIn(confirmationCode, onSuccess, onError)
+    }
+
+    override fun confirmSignIn(
+        confirmationCode: String,
         options: AuthConfirmSignInOptions,
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
     ) {
         realPlugin.confirmSignIn(confirmationCode, options, onSuccess, onError)
-    }
-
-    override fun confirmSignIn(
-        confirmationCode: String,
-        onSuccess: Consumer<AuthSignInResult>,
-        onError: Consumer<AuthException>
-    ) {
-        realPlugin.confirmSignIn(confirmationCode, onSuccess, onError)
     }
 
     override fun signInWithSocialWebUI(
