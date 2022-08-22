@@ -64,7 +64,7 @@ class TestCaseJsonGenerator {
         val feature = FeatureSpecification(
             description = "Test that Cognito is called with given payload and returns successful data",
             preConditions = PreConditions(
-                "amplifyconfiguration.json",
+                "authconfiguration.json",
                 "AuthenticationState_SignedIn.json",
                 mockedResponses = listOf(
                     MockResponse(
@@ -101,7 +101,7 @@ class TestCaseJsonGenerator {
         val feature = FeatureSpecification(
             description = "Test that signup invokes proper cognito request and returns success",
             preConditions = PreConditions(
-                "amplifyconfiguration.json",
+                "authconfiguration.json",
                 "AuthenticationState_Configured.json",
                 mockedResponses = listOf(
                     MockResponse(

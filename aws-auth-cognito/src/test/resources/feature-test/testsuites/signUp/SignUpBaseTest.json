@@ -1,7 +1,7 @@
 {
   "description": "Test that signup invokes proper cognito request and returns success",
   "preConditions": {
-    "amplify-configuration": "amplifyconfiguration.json",
+    "amplify-configuration": "authconfiguration.json",
     "state": "AuthenticationState_Configured.json",
     "mockedResponses": [
       {
