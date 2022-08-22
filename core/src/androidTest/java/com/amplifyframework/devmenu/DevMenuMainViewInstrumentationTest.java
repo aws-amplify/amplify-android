@@ -27,7 +27,7 @@ import androidx.test.espresso.matcher.ViewMatchers;
 import com.amplifyframework.core.R;
 
 import org.junit.Before;
-import org.junit.Ignore;
+import org.junit.Test;
 
 import static androidx.test.espresso.Espresso.onView;
 import static org.junit.Assert.assertEquals;
