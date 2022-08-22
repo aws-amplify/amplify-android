@@ -34,6 +34,7 @@ import com.amplifyframework.analytics.AnalyticsStringProperty;
 import com.amplifyframework.analytics.UserProfile;
 import com.amplifyframework.analytics.pinpoint.models.AWSPinpointUserProfile;
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.core.BuildConfig;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.logging.Logger;
@@ -81,9 +82,9 @@ public final class AWSPinpointAnalyticsPlugin extends AnalyticsPlugin<Object> {
     private static final String AUTH_DEPENDENCY_PLUGIN_KEY = "awsCognitoAuthPlugin";
 
     private final Application application;
-    private AutoEventSubmitter autoEventSubmitter;
+    private AutoEventSubmitterOld autoEventSubmitter;
     private AnalyticsClient analyticsClient;
-    private AutoSessionTracker autoSessionTracker;
+    private AutoSessionTrackerOld autoSessionTracker;
     private TargetingClient targetingClient;
     private AWSCredentialsProvider credentialsProviderOverride; // Currently used for integration testing purposes
 
@@ -419,11 +420,12 @@ public final class AWSPinpointAnalyticsPlugin extends AnalyticsPlugin<Object> {
         this.targetingClient = pinpointManager.getTargetingClient();
 
         // Initiate the logic to automatically submit events periodically
-        autoEventSubmitter = new AutoEventSubmitter(pinpointAnalyticsPluginConfiguration.getAutoFlushEventsInterval());
+        autoEventSubmitter = new AutoEventSubmitterOld(
+                pinpointAnalyticsPluginConfiguration.getAutoFlushEventsInterval());
         autoEventSubmitter.start();
 
         // Instantiate the logic to automatically track app session
-        autoSessionTracker = new AutoSessionTracker(this.analyticsClient, pinpointManager.getSessionClient());
+        autoSessionTracker = new AutoSessionTrackerOld(this.analyticsClient, pinpointManager.getSessionClient());
         autoSessionTracker.startSessionTracking(application);
     }
 

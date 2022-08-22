@@ -19,29 +19,22 @@ import android.os.Handler;
 import android.os.HandlerThread;
 
 import com.amplifyframework.core.Amplify;
-import com.amplifyframework.logging.Logger;
-
-import java.util.Locale;
 
 /**
  * Submits all the recorded event periodically.
  */
-final class AutoEventSubmitter {
+final class AutoEventSubmitterOld {
 
     private final Handler handler;
     private Runnable submitRunnable;
     private final long autoFlushInterval;
 
-    AutoEventSubmitter(final long autoFlushInterval) {
+    AutoEventSubmitterOld(final long autoFlushInterval) {
         HandlerThread handlerThread = new HandlerThread("AutoEventSubmitter");
         handlerThread.start();
         this.handler = new Handler(handlerThread.getLooper());
         this.autoFlushInterval = autoFlushInterval;
         this.submitRunnable = () -> {
-            AWSPinpointAnalyticsPlugin.LOG.debug(
-                String.format(Locale.US, "Auto submitting events after %d seconds",
-                    autoFlushInterval)
-            );
             Amplify.Analytics.flushEvents();
             handler.postDelayed(this.submitRunnable, autoFlushInterval);
         };
