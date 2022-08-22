@@ -23,7 +23,6 @@ import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteQueryBuilder
 import android.net.Uri
 import com.amplifyframework.analytics.pinpoint.models.PinpointEvent
-import java.lang.IllegalArgumentException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -56,12 +55,26 @@ internal class PinpointDatabase(
     }
 
     suspend fun saveEvent(event: PinpointEvent): Uri {
-        return insert(getContentUri(), generateContentValuesFromEvent(event))
+        return withContext(coroutineDispatcher) {
+            insert(getContentUri(), generateContentValuesFromEvent(event))
+        }
     }
 
     suspend fun queryAllEvents(): Cursor {
         return withContext(coroutineDispatcher) {
             query(contentUri, null, null, null, null, null)
+        }
+    }
+
+    suspend fun deleteEventById(eventColumnId: Int): Int {
+        return withContext(coroutineDispatcher) {
+            val uri = contentUri
+            val whereClause = "${EventTable.COLUMN_ID}=$eventColumnId"
+            database.delete(
+                EventTable.TABLE_EVENT,
+                whereClause,
+                null
+            )
         }
     }
 
@@ -81,7 +94,8 @@ internal class PinpointDatabase(
         when (uriType) {
             events -> {
                 id = database.insertOrThrow(EventTable.TABLE_EVENT, null, values)
-            } else -> {
+            }
+            else -> {
                 throw IllegalArgumentException("Unknown Uri: $uri")
             }
         }
@@ -106,7 +120,8 @@ internal class PinpointDatabase(
         val queryBuilder = SQLiteQueryBuilder()
         queryBuilder.tables = EventTable.TABLE_EVENT
         when (uriMatcher.match(uri)) {
-            events -> {}
+            events -> {
+            }
             eventsId -> {
                 queryBuilder.appendWhere("$EventTable.COLUMN_ID=${uri.lastPathSegment}")
             }

@@ -14,9 +14,12 @@
  */
 package com.amplifyframework.analytics.pinpoint.models
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 internal data class SDKInfo(
-    private val name: String,
-    private val version: String
+    val name: String,
+    val version: String
 ) {
     override fun toString(): String {
         return "$name-$version"

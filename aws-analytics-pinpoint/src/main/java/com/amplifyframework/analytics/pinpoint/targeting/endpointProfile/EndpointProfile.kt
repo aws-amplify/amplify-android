@@ -27,7 +27,6 @@ import java.util.Collections
 import java.util.MissingResourceException
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
-import kotlin.collections.ArrayList
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
@@ -36,7 +35,7 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
 internal class EndpointProfile(
-    private val pinpointNotificationClient: PinpointNotificationClient,
+    private val pinpointNotificationClient: PinpointNotificationClient, // TODO: remove notification client dependency
     idService: SharedPrefsUniqueIdService,
     appDetails: AndroidAppDetails,
     deviceDetails: AndroidDeviceDetails,
