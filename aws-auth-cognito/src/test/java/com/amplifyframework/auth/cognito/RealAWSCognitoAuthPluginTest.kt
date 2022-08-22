@@ -23,7 +23,6 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.CodeDeliveryDetails
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.CognitoIdentityProviderException
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ConfirmForgotPasswordRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ConfirmForgotPasswordResponse
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeliveryMediumType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ConfirmSignUpRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ConfirmSignUpResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeliveryMediumType
@@ -33,16 +32,16 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.ResendConfirmationC
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ResendConfirmationCodeResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.SignUpRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.SignUpResponse
-import com.amplifyframework.auth.AuthCodeDeliveryDetails
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.UpdateUserAttributesRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.UpdateUserAttributesResponse
+import com.amplifyframework.auth.AuthCodeDeliveryDetails
 import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.AuthUser
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
+import com.amplifyframework.auth.cognito.helpers.SRPHelper
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttributeOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttributesOptions
-import com.amplifyframework.auth.cognito.helpers.SRPHelper
 import com.amplifyframework.auth.cognito.usecases.ResetPasswordUseCase
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
@@ -53,9 +52,9 @@ import com.amplifyframework.auth.options.AuthUpdateUserAttributesOptions
 import com.amplifyframework.auth.result.AuthResetPasswordResult
 import com.amplifyframework.auth.result.AuthSignUpResult
 import com.amplifyframework.auth.result.AuthUpdateAttributeResult
-import com.amplifyframework.auth.result.step.AuthUpdateAttributeStep
 import com.amplifyframework.auth.result.step.AuthNextSignUpStep
 import com.amplifyframework.auth.result.step.AuthSignUpStep
+import com.amplifyframework.auth.result.step.AuthUpdateAttributeStep
 import com.amplifyframework.core.Action
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.logging.Logger
