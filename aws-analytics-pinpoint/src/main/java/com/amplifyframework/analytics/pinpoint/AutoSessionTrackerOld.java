@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -20,12 +20,15 @@ import android.app.Application;
 import android.os.Bundle;
 import android.util.Log;
 
+import com.amazonaws.mobileconnectors.pinpoint.analytics.AnalyticsClient;
+import com.amazonaws.mobileconnectors.pinpoint.analytics.SessionClient;
+
 /**
  * Tracks when the host application enters or leaves foreground.
  * The constructor registers to receive activity lifecycle events.
  **/
-final class AutoSessionTracker implements Application.ActivityLifecycleCallbacks {
-    private static final String LOG_TAG = AutoSessionTracker.class.getSimpleName();
+final class AutoSessionTrackerOld implements Application.ActivityLifecycleCallbacks {
+    private static final String LOG_TAG = AutoSessionTrackerOld.class.getSimpleName();
     private final SessionClient sessionClient;
     private final AnalyticsClient analyticsClient;
     private boolean inForeground;
@@ -36,8 +39,8 @@ final class AutoSessionTracker implements Application.ActivityLifecycleCallbacks
      * @param analyticsClient Amazon pinpoint analytics client
      * @param sessionClient Amazon pinpoint session client
      */
-    AutoSessionTracker(final AnalyticsClient analyticsClient,
-                              final SessionClient sessionClient) {
+    AutoSessionTrackerOld(final AnalyticsClient analyticsClient,
+                          final SessionClient sessionClient) {
         this.analyticsClient = analyticsClient;
         this.sessionClient = sessionClient;
         inForeground = false;
