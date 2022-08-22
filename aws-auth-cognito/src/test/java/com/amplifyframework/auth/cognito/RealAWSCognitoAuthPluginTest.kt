@@ -19,9 +19,11 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.CognitoIdentityProviderCl
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AttributeType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChangePasswordRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChangePasswordResponse
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.CodeDeliveryDetailsType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.CognitoIdentityProviderException
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ConfirmForgotPasswordRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ConfirmForgotPasswordResponse
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeliveryMediumType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetUserRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetUserResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.UpdateUserAttributesRequest
@@ -29,6 +31,8 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.UpdateUserAttribute
 import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
+import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttributeOptions
+import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttributesOptions
 import com.amplifyframework.auth.cognito.usecases.ResetPasswordUseCase
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthResetPasswordOptions
@@ -37,6 +41,7 @@ import com.amplifyframework.auth.options.AuthUpdateUserAttributesOptions
 import com.amplifyframework.auth.result.AuthResetPasswordResult
 import com.amplifyframework.auth.result.AuthSignUpResult
 import com.amplifyframework.auth.result.AuthUpdateAttributeResult
+import com.amplifyframework.auth.result.step.AuthUpdateAttributeStep
 import com.amplifyframework.core.Action
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.logging.Logger
@@ -61,6 +66,9 @@ import io.mockk.verify
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import org.junit.Before
 import org.junit.Ignore
@@ -497,12 +505,40 @@ class RealAWSCognitoAuthPluginTest {
         )
 
         assertTrue { listenLatch.await(5, TimeUnit.SECONDS) }
-        verify { onError.accept(resultCaptor.captured) }
+        verify(exactly = 1) { onError.accept(resultCaptor.captured) }
         verify(exactly = 0) { onSuccess.accept(any()) }
     }
 
     @Test
-    fun `update user attribute with success`() {
+    fun `update user attributes fails when not in SignedIn state`() {
+        // GIVEN
+        val onSuccess = mockk<Consumer<MutableMap<AuthUserAttributeKey, AuthUpdateAttributeResult>>>(relaxed = true)
+        val onError = mockk<Consumer<AuthException>>(relaxed = true)
+        val listenLatch = CountDownLatch(1)
+
+        currentState = AuthenticationState.NotConfigured()
+
+        val resultCaptor = slot<AuthException.InvalidStateException>()
+        every { onError.accept(capture(resultCaptor)) } answers { listenLatch.countDown() }
+
+        // WHEN
+        plugin.updateUserAttributes(
+            mutableListOf(
+                AuthUserAttribute(AuthUserAttributeKey.email(), "test@test.com"),
+                AuthUserAttribute(AuthUserAttributeKey.nickname(), "test")
+            ),
+            AuthUpdateUserAttributesOptions.defaults(),
+            onSuccess,
+            onError
+        )
+
+        assertTrue { listenLatch.await(5, TimeUnit.SECONDS) }
+        verify(exactly = 1) { onError.accept(resultCaptor.captured) }
+        verify(exactly = 0) { onSuccess.accept(any()) }
+    }
+
+    @Test
+    fun `update single user attribute with no attribute options and delivery code success`() {
         // GIVEN
         val onSuccess = mockk<Consumer<AuthUpdateAttributeResult>>(relaxed = true)
         val onError = mockk<Consumer<AuthException>>(relaxed = true)
@@ -521,8 +557,10 @@ class RealAWSCognitoAuthPluginTest {
         } returns UpdateUserAttributesResponse.invoke {
         }
 
+        val slot = slot<AuthUpdateAttributeResult>()
+
         every {
-            onSuccess.accept(any<AuthUpdateAttributeResult>())
+            onSuccess.accept(capture(slot))
         } answers {
             listenLatch.countDown()
         }
@@ -535,14 +573,22 @@ class RealAWSCognitoAuthPluginTest {
         )
 
         assertTrue { listenLatch.await(5, TimeUnit.SECONDS) }
-        coVerify(exactly = 1) { onSuccess.accept(any<AuthUpdateAttributeResult>()) }
+        coVerify(exactly = 1) { onSuccess.accept(slot.captured) }
+        assertTrue(slot.captured.isUpdated, "attribute should be successfully updated")
+        assertNotNull(slot.captured.nextStep, "next step should not be null")
+        assertNull(slot.captured.nextStep.codeDeliveryDetails, "code delivery details should be null")
+        assertEquals(
+            slot.captured.nextStep.updateAttributeStep,
+            AuthUpdateAttributeStep.DONE,
+            "next step should be done"
+        )
         coVerify(exactly = 0) { onError.accept(any()) }
     }
 
     @Test
-    fun `update user attributes with success`() {
+    fun `update single user attribute with attribute options and no delivery code success`() {
         // GIVEN
-        val onSuccess = mockk<Consumer<MutableMap<AuthUserAttributeKey, AuthUpdateAttributeResult>>>(relaxed = true)
+        val onSuccess = mockk<Consumer<AuthUpdateAttributeResult>>(relaxed = true)
         val onError = mockk<Consumer<AuthException>>(relaxed = true)
         val listenLatch = CountDownLatch(1)
 
@@ -559,11 +605,75 @@ class RealAWSCognitoAuthPluginTest {
         } returns UpdateUserAttributesResponse.invoke {
         }
 
+        val slot = slot<AuthUpdateAttributeResult>()
+
         every {
-            onSuccess.accept(any<MutableMap<AuthUserAttributeKey, AuthUpdateAttributeResult>>())
+            onSuccess.accept(capture(slot))
         } answers {
             listenLatch.countDown()
         }
+
+        val builder = AWSCognitoAuthUpdateUserAttributeOptions.builder().metadata(
+            mapOf("x" to "x", "y" to "y", "z" to "z")
+        )
+        // WHEN
+        plugin.updateUserAttribute(
+            AuthUserAttribute(AuthUserAttributeKey.email(), "test@test.com"),
+            builder.build(),
+            onSuccess,
+            onError
+        )
+
+        assertTrue { listenLatch.await(50, TimeUnit.SECONDS) }
+        coVerify(exactly = 1) { onSuccess.accept(slot.captured) }
+        assertTrue(slot.captured.isUpdated, "attribute should be successfully updated")
+        assertNotNull(slot.captured.nextStep, "next step should not be null")
+        assertNull(slot.captured.nextStep.codeDeliveryDetails, "code delivery details should be null")
+        assertEquals(
+            slot.captured.nextStep.updateAttributeStep,
+            AuthUpdateAttributeStep.DONE,
+            "next step should be done"
+        )
+        coVerify(exactly = 0) { onError.accept(any()) }
+    }
+
+    @Test
+    fun `update user attributes with delivery code success`() {
+        // GIVEN
+        val onSuccess = mockk<Consumer<MutableMap<AuthUserAttributeKey, AuthUpdateAttributeResult>>>(relaxed = true)
+        val onError = mockk<Consumer<AuthException>>(relaxed = true)
+        val listenLatch = CountDownLatch(1)
+
+        val currentAuthState = mockk<AuthState> {
+            every { authNState } returns AuthenticationState.SignedIn(mockk())
+            every { authZState } returns AuthorizationState.SessionEstablished(credentials)
+        }
+        every { authStateMachine.getCurrentState(captureLambda()) } answers {
+            lambda<(AuthState) -> Unit>().invoke(currentAuthState)
+        }
+
+        coEvery {
+            authService.cognitoIdentityProviderClient?.updateUserAttributes(any<UpdateUserAttributesRequest>())
+        } returns UpdateUserAttributesResponse.invoke {
+            codeDeliveryDetailsList = listOf(
+                CodeDeliveryDetailsType.invoke {
+                    attributeName = "email"
+                    deliveryMedium = DeliveryMediumType.Email
+                }
+            )
+        }
+
+        val slot = slot<MutableMap<AuthUserAttributeKey, AuthUpdateAttributeResult>>()
+
+        every {
+            onSuccess.accept(capture(slot))
+        } answers {
+            listenLatch.countDown()
+        }
+
+        val builder = AWSCognitoAuthUpdateUserAttributesOptions.builder().metadata(
+            mapOf("x" to "x", "y" to "y", "z" to "z")
+        )
 
         // WHEN
         plugin.updateUserAttributes(
@@ -571,13 +681,58 @@ class RealAWSCognitoAuthPluginTest {
                 AuthUserAttribute(AuthUserAttributeKey.email(), "test@test.com"),
                 AuthUserAttribute(AuthUserAttributeKey.nickname(), "test")
             ),
-            AuthUpdateUserAttributesOptions.defaults(),
+            builder.build(),
             onSuccess,
             onError
         )
 
-        assertTrue { listenLatch.await(5, TimeUnit.SECONDS) }
-        coVerify(exactly = 1) { onSuccess.accept(any<MutableMap<AuthUserAttributeKey, AuthUpdateAttributeResult>>()) }
+        assertTrue { listenLatch.await(50, TimeUnit.SECONDS) }
+        coVerify(exactly = 1) { onSuccess.accept(slot.captured) }
+        assertEquals(slot.captured.size, 2)
+        // nickname
+        assertNotNull(slot.captured[AuthUserAttributeKey.nickname()], "nick name should be in result")
+        assertTrue(
+            slot.captured[AuthUserAttributeKey.nickname()]?.isUpdated ?: false,
+            "nickname attribute should be successfully updated"
+        )
+        assertNotNull(
+            slot.captured[AuthUserAttributeKey.nickname()]?.nextStep,
+            "next step should not be null for nickname attribute"
+        )
+        assertNull(
+            slot.captured[AuthUserAttributeKey.nickname()]?.nextStep?.codeDeliveryDetails,
+            "code delivery details should be null for nickname attribute"
+        )
+        assertEquals(
+            slot.captured[AuthUserAttributeKey.nickname()]?.nextStep?.updateAttributeStep,
+            AuthUpdateAttributeStep.DONE,
+            "next step for nickname attribute should be done"
+        )
+
+        // email
+        assertNotNull(slot.captured[AuthUserAttributeKey.email()], "email should be in result")
+        assertFalse(
+            slot.captured[AuthUserAttributeKey.email()]?.isUpdated ?: false,
+            "email attribute should not be successfully updated"
+        )
+        assertNotNull(
+            slot.captured[AuthUserAttributeKey.email()]?.nextStep,
+            "next step should not be null for email attribute"
+        )
+        assertNotNull(
+            slot.captured[AuthUserAttributeKey.email()]?.nextStep?.codeDeliveryDetails,
+            "code delivery details should not be null for email attribute"
+        )
+        assertEquals(
+            slot.captured[AuthUserAttributeKey.email()]?.nextStep?.codeDeliveryDetails?.attributeName,
+            "email",
+            "email attribute should not be successfully updated"
+        )
+        assertEquals(
+            slot.captured[AuthUserAttributeKey.email()]?.nextStep?.updateAttributeStep,
+            AuthUpdateAttributeStep.CONFIRM_ATTRIBUTE_WITH_CODE,
+            "next step for email attribute should be confirm_attribute_with_code"
+        )
         coVerify(exactly = 0) { onError.accept(any()) }
     }
 }

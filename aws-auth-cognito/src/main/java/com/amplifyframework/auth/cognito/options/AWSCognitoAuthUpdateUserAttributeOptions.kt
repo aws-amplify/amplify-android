@@ -15,20 +15,20 @@
 
 package com.amplifyframework.auth.cognito.options
 
-import com.amplifyframework.auth.options.AuthUpdateUserAttributesOptions
+import com.amplifyframework.auth.options.AuthUpdateUserAttributeOptions
 import com.amplifyframework.util.Immutable
 
 /**
  * Cognito extension of update user attributes options to add the platform specific fields.
  */
-data class AWSCognitoAuthUpdateUserAttributesOptions
+data class AWSCognitoAuthUpdateUserAttributeOptions
 /**
  * Advanced options for update user attributes.
  * @param metadata Additional custom attributes to be sent to the service such as information about the client
  */
 internal constructor(
     val metadata: Map<String, String>
-) : AuthUpdateUserAttributesOptions() {
+) : AuthUpdateUserAttributeOptions() {
 
     /**
      * The builder for this class.
@@ -59,8 +59,8 @@ internal constructor(
          * Construct and return the object with the values set in the builder.
          * @return a new instance of AWSCognitoAuthUpdateUserAttributesOptions with the values specified in the builder.
          */
-        override fun build(): AuthUpdateUserAttributesOptions {
-            return AWSCognitoAuthUpdateUserAttributesOptions(
+        override fun build(): AuthUpdateUserAttributeOptions {
+            return AWSCognitoAuthUpdateUserAttributeOptions(
                 Immutable.of(metadata)
             )
         }
