@@ -36,6 +36,7 @@ import com.amplifyframework.auth.AuthUser
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.cognito.helpers.JWTParser
+import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttributeOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttributesOptions
 import com.amplifyframework.auth.cognito.usecases.ResetPasswordUseCase
 import com.amplifyframework.auth.options.AWSCognitoAuthConfirmResetPasswordOptions
@@ -794,8 +795,8 @@ internal class RealAWSCognitoAuthPlugin(
         GlobalScope.launch {
             try {
                 val attributes = listOf(attribute)
-                val userAttributesOptions = options as? AWSCognitoAuthUpdateUserAttributesOptions
-                val results = updateUserAttributes(attributes.toMutableList(), userAttributesOptions)
+                val userAttributeOptions = options as? AWSCognitoAuthUpdateUserAttributeOptions
+                val results = updateUserAttributes(attributes.toMutableList(), userAttributeOptions?.metadata)
                 onSuccess.accept(results.entries.first().value)
             } catch (e: Exception) {
                 onError.accept(CognitoAuthExceptionConverter.lookup(e, e.toString()))
@@ -820,7 +821,7 @@ internal class RealAWSCognitoAuthPlugin(
         GlobalScope.launch {
             try {
                 val userAttributesOptions = options as? AWSCognitoAuthUpdateUserAttributesOptions
-                onSuccess.accept(updateUserAttributes(attributes, userAttributesOptions))
+                onSuccess.accept(updateUserAttributes(attributes, userAttributesOptions?.metadata))
             } catch (e: Exception) {
                 onError.accept(CognitoAuthExceptionConverter.lookup(e, e.toString()))
             }
@@ -837,7 +838,7 @@ internal class RealAWSCognitoAuthPlugin(
 
     private suspend fun updateUserAttributes(
         attributes: MutableList<AuthUserAttribute>,
-        userAttributesOptions: AWSCognitoAuthUpdateUserAttributesOptions?,
+        userAttributesOptionsMetadata: Map<String, String>?,
     ): MutableMap<AuthUserAttributeKey, AuthUpdateAttributeResult> {
 
         return suspendCoroutine { continuation ->
@@ -858,7 +859,7 @@ internal class RealAWSCognitoAuthPlugin(
                                 val userAttributesRequest = UpdateUserAttributesRequest.invoke {
                                     this.accessToken = accessToken
                                     this.userAttributes = userAttributes
-                                    this.clientMetadata = userAttributesOptions?.metadata
+                                    this.clientMetadata = userAttributesOptionsMetadata
                                 }
                                 val userAttributeResponse = authEnvironment.cognitoAuthService
                                     .cognitoIdentityProviderClient?.updateUserAttributes(
