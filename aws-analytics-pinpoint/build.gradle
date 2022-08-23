@@ -13,6 +13,9 @@
  * permissions and limitations under the License.
  */
 
+plugins {
+    id "org.jetbrains.kotlin.plugin.serialization" version "1.6.10"
+}
 apply plugin: 'com.android.library'
 apply from: rootProject.file("configuration/checkstyle.gradle")
 apply from: rootProject.file("configuration/publishing.gradle")
@@ -24,10 +27,15 @@ dependencies {
     implementation dependency.aws.pinpoint
     implementation dependency.aws.mobileclient
     implementation dependency.aws.pinpointKotlin
+    implementation dependency.kotlin.serializationJson
 
     testImplementation dependency.junit
+    testImplementation dependency.mockk
     testImplementation dependency.mockito
+    testImplementation dependency.mockitoinline
     testImplementation dependency.robolectric
+    implementation dependency.androidx.test.core
+    testImplementation dependency.kotlin.test.coroutines
 
     androidTestImplementation project(path: ':testutils')
     androidTestImplementation dependency.androidx.test.core

@@ -25,7 +25,6 @@ import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
 import com.amplifyframework.statemachine.codegen.events.DeleteUserEvent
 import com.amplifyframework.statemachine.codegen.events.SignOutEvent
-import com.amplifyframework.statemachine.codegen.events.SignUpEvent
 
 class AuthEnvironment internal constructor(
     val configuration: AuthConfiguration,
@@ -50,10 +49,6 @@ fun StateMachineEvent.isAuthorizationEvent(): AuthorizationEvent.EventType? {
 
 fun StateMachineEvent.isSignOutEvent(): SignOutEvent.EventType? {
     return (this as? SignOutEvent)?.eventType
-}
-
-fun StateMachineEvent.isSignUpEvent(): SignUpEvent.EventType? {
-    return (this as? SignUpEvent)?.eventType
 }
 
 fun StateMachineEvent.isDeleteUserEvent(): DeleteUserEvent.EventType? {
