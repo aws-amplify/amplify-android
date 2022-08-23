@@ -96,14 +96,14 @@ class SRPHelperTests {
 
     @Before
     fun setUp() {
-        helper = SRPHelper("username", "Password123")
+        helper = SRPHelper("Password123")
         helper.setAValues(privateA, publicA)
         helper.setUserPoolParams("username", "us-east-2_KO6fcefgd")
     }
 
     @Test
     fun testValidPublicA() {
-        val testHelper = SRPHelper("", "")
+        val testHelper = SRPHelper("")
         val bigA = BigInteger(testHelper.getPublicA(), 16)
         assertNotEquals(BigInteger.ZERO, testHelper.modN(bigA))
     }

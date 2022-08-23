@@ -28,11 +28,20 @@ import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.SRPEvent
 
 object SRPCognitoActions : SRPActions {
+    private const val KEY_SECRET_HASH = "SECRET_HASH"
+    private const val KEY_USERNAME = "USERNAME"
+    private const val KEY_PASSWORD_CLAIM_SECRET_BLOCK = "PASSWORD_CLAIM_SECRET_BLOCK"
+    private const val KEY_PASSWORD_CLAIM_SIGNATURE = "PASSWORD_CLAIM_SIGNATURE"
+    private const val KEY_TIMESTAMP = "TIMESTAMP"
+    private const val KEY_SALT = "SALT"
+    private const val KEY_SECRET_BLOCK = "SECRET_BLOCK"
+    private const val KEY_SRP_B = "SRP_B"
+    private const val KEY_USER_ID_FOR_SRP = "USER_ID_FOR_SRP"
     override fun initiateSRPAuthAction(event: SRPEvent.EventType.InitiateSRP) =
         Action<AuthEnvironment>("InitSRPAuth") { id, dispatcher ->
             logger?.verbose("$id Starting execution")
             val evt = try {
-                srpHelper = SRPHelper(event.username, event.password)
+                srpHelper = SRPHelper(event.password)
 
                 val secretHash = AuthHelper.getSecretHash(
                     event.username,
@@ -40,8 +49,8 @@ object SRPCognitoActions : SRPActions {
                     configuration.userPool?.appClientSecret
                 )
 
-                var authParams = mapOf("USERNAME" to event.username, "SRP_A" to srpHelper.getPublicA())
-                secretHash?.also { authParams = authParams.plus("SECRET_HASH" to secretHash) }
+                var authParams = mapOf(KEY_USERNAME to event.username, "SRP_A" to srpHelper.getPublicA())
+                secretHash?.also { authParams = authParams.plus(KEY_SECRET_HASH to secretHash) }
                 val initiateAuthResponse = cognitoAuthService.cognitoIdentityProviderClient?.initiateAuth {
                     authFlow = AuthFlowType.UserSrpAuth
                     clientId = configuration.userPool?.appClient
@@ -70,11 +79,11 @@ object SRPCognitoActions : SRPActions {
             logger?.verbose("$id Starting execution")
             val evt = try {
                 val params = event.challengeParameters
-                val salt = params.getValue("SALT")
-                val secretBlock = params.getValue("SECRET_BLOCK")
-                val srpB = params.getValue("SRP_B")
-                val username = params.getValue("USERNAME")
-                val userId = params.getValue("USER_ID_FOR_SRP")
+                val salt = params.getValue(KEY_SALT)
+                val secretBlock = params.getValue(KEY_SECRET_BLOCK)
+                val srpB = params.getValue(KEY_SRP_B)
+                val username = params.getValue(KEY_USERNAME)
+                val userId = params.getValue(KEY_USER_ID_FOR_SRP)
 
                 srpHelper.setUserPoolParams(userId, configuration.userPool?.poolId!!)
                 val m1Signature = srpHelper.getSignature(salt, srpB, secretBlock)
@@ -85,12 +94,12 @@ object SRPCognitoActions : SRPActions {
                 )
 
                 var challengeParams = mapOf(
-                    "USERNAME" to username,
-                    "PASSWORD_CLAIM_SECRET_BLOCK" to secretBlock,
-                    "PASSWORD_CLAIM_SIGNATURE" to m1Signature,
-                    "TIMESTAMP" to srpHelper.dateString,
+                    KEY_USERNAME to username,
+                    KEY_PASSWORD_CLAIM_SECRET_BLOCK to secretBlock,
+                    KEY_PASSWORD_CLAIM_SIGNATURE to m1Signature,
+                    KEY_TIMESTAMP to srpHelper.dateString,
                 )
-                secretHash?.also { challengeParams = challengeParams.plus("SECRET_HASH" to secretHash) }
+                secretHash?.also { challengeParams = challengeParams.plus(KEY_SECRET_HASH to secretHash) }
                 val response = cognitoAuthService.cognitoIdentityProviderClient?.respondToAuthChallenge {
                     challengeName = ChallengeNameType.PasswordVerifier
                     clientId = configuration.userPool.appClient

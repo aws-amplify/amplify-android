@@ -27,6 +27,9 @@ import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.CustomSignInEvent
 
 object SignInCustomActions : CustomSignInActions {
+    private const val KEY_SECRET_HASH = "SECRET_HASH"
+    private const val KEY_USERNAME = "USERNAME"
+
     override fun initiateCustomSignInAuthAction(event: CustomSignInEvent.EventType.InitiateCustomSignIn): Action =
         Action<AuthEnvironment>("InitCustomAuth") { id, dispatcher ->
             logger?.verbose("$id Starting execution")
@@ -41,8 +44,8 @@ object SignInCustomActions : CustomSignInActions {
                     null
                 }
 
-                var authParams = mapOf("USERNAME" to event.username)
-                secretHash?.also { authParams = authParams.plus("SECRET_HASH" to secretHash) }
+                var authParams = mapOf(KEY_USERNAME to event.username)
+                secretHash?.also { authParams = authParams.plus(KEY_SECRET_HASH to secretHash) }
 
                 val initiateAuthResponse = cognitoAuthService.cognitoIdentityProviderClient?.initiateAuth {
                     authFlow = AuthFlowType.CustomAuth

@@ -26,6 +26,11 @@ import com.amplifyframework.statemachine.codegen.events.SignInChallengeEvent
 import com.amplifyframework.statemachine.codegen.events.SignInEvent
 
 object SignInChallengeCognitoActions : SignInChallengeActions {
+    private const val KEY_SECRET_HASH = "SECRET_HASH"
+    private const val KEY_USERNAME = "USERNAME"
+    private const val VALUE_SMS_MFA = "SMS_MFA_CODE"
+    private const val VALUE_NEW_PASSWORD = "NEW_PASSWORD"
+    private const val VALUE_ANSWER= "ANSWER"
     override fun verifyChallengeAuthAction(
         event: SignInChallengeEvent.EventType.VerifyChallengeAnswer,
         challenge: AuthChallenge
@@ -36,7 +41,7 @@ object SignInChallengeCognitoActions : SignInChallengeActions {
             var challengeResponses = mapOf<String, String>()
 
             if (!username.isNullOrEmpty()) {
-                challengeResponses = mapOf("USERNAME" to username)
+                challengeResponses = mapOf(KEY_USERNAME to username)
             }
 
             challenge.getChallengeResponseKey()?.also { responseKey ->
@@ -51,7 +56,7 @@ object SignInChallengeCognitoActions : SignInChallengeActions {
                 configuration.userPool?.appClient,
                 configuration.userPool?.appClientSecret
             )
-            secretHash?.also { challengeResponses = challengeResponses.plus("SECRET_HASH" to secretHash) }
+            secretHash?.also { challengeResponses = challengeResponses.plus(KEY_SECRET_HASH to secretHash) }
 
             SignInChallengeHelper.evaluateNextStep(
                 userId = "",
@@ -69,9 +74,9 @@ object SignInChallengeCognitoActions : SignInChallengeActions {
     }
 
     fun AuthChallenge.getChallengeResponseKey() = when (ChallengeNameType.fromValue(challengeName)) {
-        is ChallengeNameType.SmsMfa -> "SMS_MFA_CODE"
-        is ChallengeNameType.NewPasswordRequired -> "NEW_PASSWORD"
-        is ChallengeNameType.CustomChallenge -> "ANSWER"
+        is ChallengeNameType.SmsMfa -> VALUE_SMS_MFA
+        is ChallengeNameType.NewPasswordRequired -> VALUE_NEW_PASSWORD
+        is ChallengeNameType.CustomChallenge -> VALUE_ANSWER
         else -> null
     }
 }
