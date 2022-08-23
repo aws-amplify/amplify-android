@@ -78,7 +78,6 @@ import static org.junit.Assert.fail;
  * Tests a set of possible combinations of models, auth modes and login status to
  * verify behavior when in multi-auth mode.
  */
-@Ignore("fix in dev-preview")
 public final class MultiAuthSyncEngineNoAuthInstrumentationTest {
     private static final Logger LOG = Amplify.Logging.forNamespace("MultiAuthSyncEngineInstrumentationTest");
     private static final int TIMEOUT_SECONDS = 20;
@@ -96,6 +95,7 @@ public final class MultiAuthSyncEngineNoAuthInstrumentationTest {
      * @throws IOException Not expected.
      */
     @Test
+    @Ignore("fix in dev-preview")
     public void testAuthorAnonymous() throws IOException, AmplifyException {
         verifyScenario();
     }
