@@ -91,10 +91,10 @@ sealed class SignInState : State {
                     )
                     else -> defaultResolution
                 }
-                is SigningInWithSRP, is SigningInWithCustom-> when (signInEvent) {
+                is SigningInWithSRP, is SigningInWithCustom -> when (signInEvent) {
                     is SignInEvent.EventType.ReceivedChallenge -> {
                         val action = signInActions.initResolveChallenge(signInEvent)
-                        StateResolution(ResolvingChallenge(SignInChallengeState.NotStarted()), listOf(action))
+                        StateResolution(ResolvingChallenge(oldState.challengeState), listOf(action))
                     }
                     is SignInEvent.EventType.ThrowError -> StateResolution(Error(signInEvent.exception), listOf())
                     else -> defaultResolution

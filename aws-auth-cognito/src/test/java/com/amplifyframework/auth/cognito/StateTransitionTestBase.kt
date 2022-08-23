@@ -15,8 +15,8 @@
 
 package com.amplifyframework.auth.cognito
 
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
 import com.amplifyframework.auth.cognito.actions.DeleteUserActions
-import com.amplifyframework.auth.cognito.actions.SignInCustomActions
 import com.amplifyframework.auth.cognito.data.AWSCognitoAuthCredentialStore
 import com.amplifyframework.auth.cognito.data.AWSCognitoLegacyCredentialStore
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions
@@ -25,6 +25,7 @@ import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.AuthActions
 import com.amplifyframework.statemachine.codegen.actions.AuthenticationActions
 import com.amplifyframework.statemachine.codegen.actions.AuthorizationActions
+import com.amplifyframework.statemachine.codegen.actions.CustomSignInActions
 import com.amplifyframework.statemachine.codegen.actions.FetchAuthSessionActions
 import com.amplifyframework.statemachine.codegen.actions.SRPActions
 import com.amplifyframework.statemachine.codegen.actions.SignInActions
@@ -108,7 +109,7 @@ open class StateTransitionTestBase {
     internal lateinit var mockSignInChallengeActions: SignInChallengeActions
 
     @Mock
-    internal lateinit var mockSignInCustomActions: SignInCustomActions
+    internal lateinit var mockSignInCustomActions: CustomSignInActions
 
     @Mock
     internal lateinit var mockSignOutActions: SignOutActions
@@ -314,17 +315,37 @@ open class StateTransitionTestBase {
                     )
                 }
             )
-    }
-
-    internal fun setupCustomAuthActions() {
-        val authChallenge = AuthChallenge("", "", "", mapOf())
-        Mockito.`when`(mockSignInCustomActions.initiateCustomSignInAuthAction(MockitoHelper.anyObject()))
+        Mockito.`when`(mockSignInActions.initResolveChallenge(MockitoHelper.anyObject()))
             .thenReturn(
                 Action { dispatcher, _ ->
                     dispatcher.send(
                         SignInChallengeEvent(
-                            SignInChallengeEvent.EventType.WaitForAnswer(authChallenge)
+                            SignInChallengeEvent.EventType.WaitForAnswer(
+                                AuthChallenge(
+                                    ChallengeNameType.CustomChallenge.toString(),
+                                    "Test",
+                                    "session_mock_value",
+                                    mapOf()
+                                )
+                            )
                         )
+                    )
+                }
+            )
+    }
+
+    fun setupCustomAuthActions() {
+        Mockito.`when`(mockSignInCustomActions.initiateCustomSignInAuthAction(MockitoHelper.anyObject()))
+            .thenReturn(
+                Action { dispatcher, _ ->
+                    val authChallenge = AuthChallenge(
+                        ChallengeNameType.CustomChallenge.toString(),
+                        "Test",
+                        "session_mock_value",
+                        mapOf()
+                    )
+                    dispatcher.send(
+                        SignInEvent(SignInEvent.EventType.ReceivedChallenge(authChallenge))
                     )
                 }
             )
@@ -357,13 +378,6 @@ open class StateTransitionTestBase {
             )
 
         Mockito.`when`(signedInData.cognitoUserPoolTokens).thenReturn(CognitoUserPoolTokens("", "", "", 0))
-
-        Mockito.`when`(mockSRPActions.initiateSRPAuthAction(MockitoHelper.anyObject()))
-            .thenReturn(
-                Action { dispatcher, _ ->
-                    dispatcher.send(SRPEvent(SRPEvent.EventType.RespondPasswordVerifier(mapOf())))
-                }
-            )
 
         Mockito.`when`(mockSRPActions.verifyPasswordSRPAction(MockitoHelper.anyObject()))
             .thenReturn(

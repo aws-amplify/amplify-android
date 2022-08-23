@@ -17,6 +17,7 @@ package com.amplifyframework.auth.cognito.actions
 
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AuthFlowType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
+import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.auth.cognito.helpers.SRPHelper
 import com.amplifyframework.auth.cognito.helpers.SignInChallengeHelper
@@ -94,8 +95,28 @@ object SRPCognitoActions : SRPActions {
                     clientId = configuration.userPool.appClient
                     challengeResponses = challengeParams
                 }
-
-                SignInChallengeHelper.evaluateNextStep(userId, username, response)
+                if (response != null) {
+                    SignInChallengeHelper.evaluateNextStep(
+                        userId,
+                        username,
+                        response.challengeName,
+                        response.session,
+                        response.challengeParameters,
+                        response.authenticationResult
+                    )
+                } else {
+                    val errorEvent = SRPEvent(
+                        SRPEvent.EventType.ThrowPasswordVerifierError(
+                            AuthException(
+                                "Sign in failed",
+                                AuthException.TODO_RECOVERY_SUGGESTION
+                            )
+                        )
+                    )
+                    logger?.verbose("$id Sending event ${errorEvent.type}")
+                    dispatcher.send(errorEvent)
+                    AuthenticationEvent(AuthenticationEvent.EventType.CancelSignIn())
+                }
             } catch (e: Exception) {
                 val errorEvent = SRPEvent(SRPEvent.EventType.ThrowPasswordVerifierError(e))
                 logger?.verbose("$id Sending event ${errorEvent.type}")

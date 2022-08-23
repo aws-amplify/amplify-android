@@ -20,5 +20,8 @@ import com.amplifyframework.statemachine.codegen.data.AuthChallenge
 import com.amplifyframework.statemachine.codegen.events.SignInChallengeEvent
 
 interface SignInChallengeActions {
-    fun verifyChallengeAuthAction(event: SignInChallengeEvent.EventType.VerifyChallengeAnswer, challenge: AuthChallenge): Action
+    fun verifyChallengeAuthAction(
+        event: SignInChallengeEvent.EventType.VerifyChallengeAnswer,
+        challenge: AuthChallenge
+    ): Action
 }

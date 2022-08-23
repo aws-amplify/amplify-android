@@ -57,8 +57,8 @@ open class AWSCognitoAuthSignInOptions protected constructor(
 
     override fun toString(): String {
         return "AWSCognitoAuthSignInOptions{" +
-                "metadata=" + metadata +
-                '}'
+            "metadata=" + metadata +
+            '}'
     }
 
     /**

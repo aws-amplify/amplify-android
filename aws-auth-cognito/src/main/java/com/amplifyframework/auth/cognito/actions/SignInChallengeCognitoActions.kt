@@ -21,8 +21,6 @@ import com.amplifyframework.auth.cognito.helpers.SignInChallengeHelper
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.SignInChallengeActions
 import com.amplifyframework.statemachine.codegen.data.AuthChallenge
-import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
-import com.amplifyframework.statemachine.codegen.events.CustomSignInEvent
 import com.amplifyframework.statemachine.codegen.events.SignInChallengeEvent
 import com.amplifyframework.statemachine.codegen.events.SignInEvent
 
@@ -61,14 +59,16 @@ object SignInChallengeCognitoActions : SignInChallengeActions {
                 session = challenge.session
             }
 
-            SignInChallengeHelper.evaluateNextStep("", username as String, response)
+            SignInChallengeHelper.evaluateNextStep(
+                userId = "",
+                username = username ?: "",
+                ChallengeNameType.fromValue(challenge.challengeName),
+                session = challenge.session,
+                challengeParameters = challengeResponses,
+                authenticationResult = null
+            )
         } catch (e: Exception) {
             SignInEvent(SignInEvent.EventType.ThrowError(e))
-        }
-        if(evt is AuthenticationEvent)
-        {
-            dispatcher.send(SignInChallengeEvent(SignInChallengeEvent.EventType.Verified()))
-            dispatcher.send(CustomSignInEvent(CustomSignInEvent.EventType.FinalizeSignIn()))
         }
         logger?.verbose("$id Sending event ${evt.type}")
         dispatcher.send(evt)

@@ -1,3 +1,18 @@
+/*
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
 package com.amplifyframework.auth.cognito.actions
 
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AuthFlowType
@@ -5,16 +20,15 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
 import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
+import com.amplifyframework.auth.cognito.helpers.SignInChallengeHelper
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.CustomSignInActions
-import com.amplifyframework.statemachine.codegen.data.AuthChallenge
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.CustomSignInEvent
-import com.amplifyframework.statemachine.codegen.events.SignInChallengeEvent
 
 object SignInCustomActions : CustomSignInActions {
     override fun initiateCustomSignInAuthAction(event: CustomSignInEvent.EventType.InitiateCustomSignIn): Action =
-        Action<AuthEnvironment>("InitSRPAuth") { id, dispatcher ->
+        Action<AuthEnvironment>("InitCustomAuth") { id, dispatcher ->
             logger?.verbose("$id Starting execution")
             val evt = try {
                 val secretHash = try {
@@ -36,16 +50,16 @@ object SignInCustomActions : CustomSignInActions {
                     authParameters = authParams
                 }
 
-                if (initiateAuthResponse?.challengeName == ChallengeNameType.CustomChallenge && initiateAuthResponse.challengeParameters != null) {
-                    SignInChallengeEvent(
-                        SignInChallengeEvent.EventType.WaitForAnswer(
-                            AuthChallenge(
-                                challengeName = initiateAuthResponse.challengeName.toString(),
-                                parameters = initiateAuthResponse.challengeParameters,
-                                session = initiateAuthResponse.session,
-                                username = event.username
-                            )
-                        )
+                if (initiateAuthResponse?.challengeName == ChallengeNameType.CustomChallenge &&
+                    initiateAuthResponse.challengeParameters != null
+                ) {
+                    SignInChallengeHelper.evaluateNextStep(
+                        userId = "",
+                        username = event.username,
+                        challengeNameType = initiateAuthResponse.challengeName,
+                        session = initiateAuthResponse.session,
+                        challengeParameters = initiateAuthResponse.challengeParameters,
+                        authenticationResult = initiateAuthResponse.authenticationResult
                     )
                 } else {
                     val errorEvent = CustomSignInEvent(

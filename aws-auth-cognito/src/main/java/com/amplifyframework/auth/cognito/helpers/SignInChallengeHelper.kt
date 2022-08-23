@@ -15,8 +15,8 @@
 
 package com.amplifyframework.auth.cognito.helpers
 
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.AuthenticationResultType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.RespondToAuthChallengeResponse
 import aws.smithy.kotlin.runtime.time.Instant
 import com.amplifyframework.auth.AuthCodeDeliveryDetails
 import com.amplifyframework.auth.AuthException
@@ -38,11 +38,12 @@ object SignInChallengeHelper {
     fun evaluateNextStep(
         userId: String = "",
         username: String,
-        response: RespondToAuthChallengeResponse?,
+        challengeNameType: ChallengeNameType?,
+        session: String?,
+        challengeParameters: Map<String, String>?,
+        authenticationResult: AuthenticationResultType?,
         signInMethod: SignInMethod = SignInMethod.SRP
     ): StateMachineEvent {
-        val authenticationResult = response?.authenticationResult
-        val challengeNameType = response?.challengeName
         return when {
             authenticationResult != null -> {
                 val signedInData = authenticationResult.let {
@@ -57,7 +58,7 @@ object SignInChallengeHelper {
                 challengeNameType is ChallengeNameType.CustomChallenge
                 || challengeNameType is ChallengeNameType.NewPasswordRequired -> {
                 val challenge =
-                    AuthChallenge(challengeNameType.value, username, response.session, response.challengeParameters)
+                    AuthChallenge(challengeNameType.value, username, session, challengeParameters)
                 SignInEvent(SignInEvent.EventType.ReceivedChallenge(challenge))
             }
             else -> SignInEvent(SignInEvent.EventType.ThrowError(Exception("Response did not contain sign in info.")))

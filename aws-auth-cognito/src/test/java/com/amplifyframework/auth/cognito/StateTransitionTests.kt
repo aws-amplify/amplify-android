@@ -28,6 +28,7 @@ import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
 import com.amplifyframework.statemachine.codegen.events.CredentialStoreEvent
 import com.amplifyframework.statemachine.codegen.events.DeleteUserEvent
 import com.amplifyframework.statemachine.codegen.events.FetchAuthSessionEvent
+import com.amplifyframework.statemachine.codegen.events.SignInChallengeEvent
 import com.amplifyframework.statemachine.codegen.events.SignInEvent
 import com.amplifyframework.statemachine.codegen.events.SignOutEvent
 import com.amplifyframework.statemachine.codegen.events.SignUpEvent
@@ -343,6 +344,23 @@ class StateTransitionTests : StateTransitionTestBase() {
         setupSignInActionWithCustomAuth()
         setupCustomAuthActions()
 
+        Mockito.`when`(mockAuthenticationActions.initiateSignInAction(MockitoHelper.anyObject()))
+            .thenReturn(
+                Action { dispatcher, _ ->
+                    dispatcher.send(
+                        SignInEvent(
+                            SignInEvent.EventType.InitiateSignInWithCustom(
+                                "username",
+                                "password",
+                                AWSCognitoAuthSignInOptions.builder().authFlowType(AuthFlowType.CUSTOM_AUTH).metadata(
+                                    mapOf()
+                                ).build()
+                            )
+                        )
+                    )
+                }
+            )
+
         Mockito.`when`(signedInData.cognitoUserPoolTokens)
             .thenReturn(
                 CognitoUserPoolTokens("", "", "", 0)
@@ -372,17 +390,25 @@ class StateTransitionTests : StateTransitionTestBase() {
                     )
                 }
 
+                val challengeState = it.authNState?.signInState?.challengeState.takeIf {
+                    signInChallengeState ->
+                    signInChallengeState is SignInChallengeState.WaitingForAnswer
+                }
+                challengeState?.apply {
+                    stateMachine.send(
+                        SignInChallengeEvent(
+                            SignInChallengeEvent.EventType.VerifyChallengeAnswer("test", mapOf())
+                        )
+                    )
+                }
+
                 val authNState =
                     it.authNState.takeIf { itN ->
                         itN is AuthenticationState.SignedIn
                     }
                 authNState?.apply {
-                    val authNState = it.authNState
-                    val authZState = it.authZState
-                    if (authNState is AuthenticationState.SignedIn && authZState is AuthorizationState.SessionEstablished) {
-                        token?.let(stateMachine::cancel)
-                        testLatch.countDown()
-                    }
+                    token?.let(stateMachine::cancel)
+                    testLatch.countDown()
                 }
             },
             {
@@ -390,14 +416,14 @@ class StateTransitionTests : StateTransitionTestBase() {
             }
         )
 
-        assertTrue { subscribeLatch.await(5, TimeUnit.MINUTES) }
+        assertTrue { subscribeLatch.await(5, TimeUnit.SECONDS) }
 
         stateMachine.send(
             AuthEvent(AuthEvent.EventType.ConfigureAuth(configuration))
         )
 
-        assertTrue { testLatch.await(5, TimeUnit.MINUTES) }
-        assertTrue { configureLatch.await(5, TimeUnit.MINUTES) }
+        assertTrue { testLatch.await(5, TimeUnit.SECONDS) }
+        assertTrue { configureLatch.await(5, TimeUnit.SECONDS) }
     }
 
     @Test
@@ -514,7 +540,7 @@ class StateTransitionTests : StateTransitionTestBase() {
                 val authNState =
                     it.authNState.takeIf { itN ->
                         itN is AuthenticationState.SigningUp &&
-                                itN.signUpState is SignUpState.SigningUpInitiated
+                            itN.signUpState is SignUpState.SigningUpInitiated
                     }
 
                 authNState?.apply {
@@ -558,7 +584,7 @@ class StateTransitionTests : StateTransitionTestBase() {
                 val authNState =
                     it.authNState.takeIf { itN ->
                         itN is AuthenticationState.SigningUp &&
-                                itN.signUpState is SignUpState.SignedUp
+                            itN.signUpState is SignUpState.SignedUp
                     }
                 authNState?.apply {
                     token?.let(stateMachine::cancel)
@@ -594,7 +620,7 @@ class StateTransitionTests : StateTransitionTestBase() {
                 val authState =
                     it.takeIf {
                         it is AuthState.Configured && it.authNState is AuthenticationState.SignedIn &&
-                                it.authZState is AuthorizationState.Configured
+                            it.authZState is AuthorizationState.Configured
                     }
                 authState?.run {
                     configureLatch.countDown()
@@ -650,7 +676,7 @@ class StateTransitionTests : StateTransitionTestBase() {
                 val authState =
                     it.takeIf {
                         it is AuthState.Configured && it.authNState is AuthenticationState.SignedOut &&
-                                it.authZState is AuthorizationState.Configured
+                            it.authZState is AuthorizationState.Configured
                     }
                 authState?.run {
                     configureLatch.countDown()

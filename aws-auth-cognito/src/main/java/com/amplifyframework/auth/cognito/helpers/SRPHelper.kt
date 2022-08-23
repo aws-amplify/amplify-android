@@ -16,7 +16,6 @@
 package com.amplifyframework.auth.cognito.helpers
 
 import androidx.annotation.VisibleForTesting
-import org.jetbrains.annotations.TestOnly
 import java.math.BigInteger
 import java.security.MessageDigest
 import java.security.SecureRandom
@@ -26,6 +25,7 @@ import java.util.Locale
 import java.util.TimeZone
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
+import org.jetbrains.annotations.TestOnly
 
 /**
  * Kotlin implementation of SRP crypto calculations.
@@ -34,7 +34,7 @@ import javax.crypto.spec.SecretKeySpec
  * https://github.com/aws-amplify/aws-sdk-android/blob/main/aws-android-sdk-cognitoidentityprovider/src/main/java/com/amazonaws/mobileconnectors/cognitoidentityprovider/CognitoUser.java#L3587
  * SRP requires Kotlin version 1.5+, and minSDK version 24.
  */
-class SRPHelper(private val username: String, private val password: String): AuthHelper() {
+class SRPHelper(private val username: String, private val password: String) : AuthHelper() {
 
     companion object {
         private val EPHEMERAL_KEY_LENGTH = 1024

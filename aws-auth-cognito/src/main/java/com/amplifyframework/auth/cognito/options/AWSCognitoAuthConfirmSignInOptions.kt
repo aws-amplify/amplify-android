@@ -21,7 +21,6 @@ import com.amplifyframework.auth.options.AuthConfirmSignInOptions
 import com.amplifyframework.util.Immutable
 import java.util.Objects
 
-
 /**
  * Cognito extension of confirm sign in options to add the platform specific fields.
  */
@@ -53,15 +52,15 @@ open class AWSCognitoAuthConfirmSignInOptions protected constructor(
         } else {
             val authConfirmSignInOptions = obj as AWSCognitoAuthConfirmSignInOptions
             ObjectsCompat.equals(metadata, authConfirmSignInOptions.metadata) &&
-                    ObjectsCompat.equals(userAttributes, authConfirmSignInOptions.userAttributes)
+                ObjectsCompat.equals(userAttributes, authConfirmSignInOptions.userAttributes)
         }
     }
 
     override fun toString(): String {
         return "AWSCognitoAuthConfirmSignInOptions{" +
-                "userAttributes=" + userAttributes +
-                ", metadata=" + metadata +
-                '}'
+            "userAttributes=" + userAttributes +
+            ", metadata=" + metadata +
+            '}'
     }
 
     /**

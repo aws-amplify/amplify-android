@@ -103,9 +103,10 @@ sealed class AuthenticationState : State {
                     else -> defaultResolution
                 }
                 is SigningIn -> when (authenticationEvent) {
-                    is AuthenticationEvent.EventType.SignInCompleted -> StateResolution(
-                        SignedIn(authenticationEvent.signedInData)
-                    )
+                    is AuthenticationEvent.EventType.SignInCompleted ->
+                        StateResolution(
+                            SignedIn(authenticationEvent.signedInData)
+                        )
                     is AuthenticationEvent.EventType.CancelSignIn -> StateResolution(SignedOut(SignedOutData()))
                     else -> defaultResolution
                 }

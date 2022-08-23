@@ -46,9 +46,9 @@ sealed class SignInChallengeState : State {
             val challengeEvent = asSignInChallengeEvent(event)
             return when (oldState) {
                 is NotStarted -> when (challengeEvent) {
-                    is SignInChallengeEvent.EventType.WaitForAnswer -> StateResolution(
-                        WaitingForAnswer(challengeEvent.challenge)
-                    )
+                    is SignInChallengeEvent.EventType.WaitForAnswer -> {
+                        StateResolution(WaitingForAnswer(challengeEvent.challenge))
+                    }
                     else -> defaultResolution
                 }
                 is WaitingForAnswer -> when (challengeEvent) {

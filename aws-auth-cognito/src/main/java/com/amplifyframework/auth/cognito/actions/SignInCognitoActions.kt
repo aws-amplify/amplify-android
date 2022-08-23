@@ -35,7 +35,9 @@ object SignInCognitoActions : SignInActions {
     override fun startCustomAuthAction(event: SignInEvent.EventType.InitiateSignInWithCustom) =
         Action<AuthEnvironment>("StartCustomAuth") { id, dispatcher ->
             logger?.verbose("$id Starting execution")
-            val evt = CustomSignInEvent(CustomSignInEvent.EventType.InitiateCustomSignIn(event.username, event.password, event.signInOptions))
+            val evt = CustomSignInEvent(
+                CustomSignInEvent.EventType.InitiateCustomSignIn(event.username, event.password, event.signInOptions)
+            )
             logger?.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
         }
@@ -44,7 +46,6 @@ object SignInCognitoActions : SignInActions {
         Action<AuthEnvironment>("InitResolveChallenge") { id, dispatcher ->
             logger?.verbose("$id Starting execution")
             val evt = SignInChallengeEvent(SignInChallengeEvent.EventType.WaitForAnswer(event.challenge))
-
             logger?.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
         }

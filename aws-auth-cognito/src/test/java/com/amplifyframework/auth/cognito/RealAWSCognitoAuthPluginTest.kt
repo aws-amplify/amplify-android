@@ -60,13 +60,13 @@ import io.mockk.mockkConstructor
 import io.mockk.mockkStatic
 import io.mockk.slot
 import io.mockk.verify
-import org.junit.Before
-import org.junit.Ignore
-import org.junit.Test
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import org.junit.Before
+import org.junit.Ignore
+import org.junit.Test
 
 class RealAWSCognitoAuthPluginTest {
 
@@ -169,8 +169,13 @@ class RealAWSCognitoAuthPluginTest {
         }
 
         // WHEN
-        plugin.signIn("user", "pass", AWSCognitoAuthSignInOptions.builder().authFlowType(AuthFlowType.USER_SRP_AUTH).build()
-                ,onSuccess, onError)
+        plugin.signIn(
+            "user",
+            "pass",
+            AWSCognitoAuthSignInOptions.builder().authFlowType(AuthFlowType.USER_SRP_AUTH).build(),
+            onSuccess,
+            onError
+        )
 
         assertTrue { latch.await(5, TimeUnit.MINUTES) }
 

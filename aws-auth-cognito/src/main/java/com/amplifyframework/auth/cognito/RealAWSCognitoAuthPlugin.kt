@@ -83,13 +83,13 @@ import com.amplifyframework.statemachine.codegen.states.SignInChallengeState
 import com.amplifyframework.statemachine.codegen.states.SignInState
 import com.amplifyframework.statemachine.codegen.states.SignOutState
 import com.amplifyframework.statemachine.codegen.states.SignUpState
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
-import kotlin.coroutines.suspendCoroutine
 
 internal class RealAWSCognitoAuthPlugin(
     private val configuration: AuthConfiguration,
@@ -458,8 +458,13 @@ internal class RealAWSCognitoAuthPlugin(
                 }
             },
             {
-                val awsCognitoConfirmSignInOptions: AWSCognitoAuthConfirmSignInOptions = options as AWSCognitoAuthConfirmSignInOptions
-                val event = SignInChallengeEvent(SignInChallengeEvent.EventType.VerifyChallengeAnswer(confirmationCode, awsCognitoConfirmSignInOptions.metadata))
+                val awsCognitoConfirmSignInOptions = options as AWSCognitoAuthConfirmSignInOptions
+                val event = SignInChallengeEvent(
+                    SignInChallengeEvent.EventType.VerifyChallengeAnswer(
+                        confirmationCode,
+                        awsCognitoConfirmSignInOptions.metadata
+                    )
+                )
                 authStateMachine.send(event)
             }
         )

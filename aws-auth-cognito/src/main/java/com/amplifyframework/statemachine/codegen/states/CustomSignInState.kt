@@ -15,11 +15,11 @@
 
 package com.amplifyframework.statemachine.codegen.states
 
-import com.amplifyframework.auth.cognito.actions.SignInCustomActions
 import com.amplifyframework.statemachine.State
 import com.amplifyframework.statemachine.StateMachineEvent
 import com.amplifyframework.statemachine.StateMachineResolver
 import com.amplifyframework.statemachine.StateResolution
+import com.amplifyframework.statemachine.codegen.actions.CustomSignInActions
 import com.amplifyframework.statemachine.codegen.events.CustomSignInEvent
 
 sealed class CustomSignInState : State {
@@ -30,7 +30,7 @@ sealed class CustomSignInState : State {
 
     override val type = this.toString()
 
-    class Resolver(private val signInCustomActions: SignInCustomActions) : StateMachineResolver<CustomSignInState> {
+    class Resolver(private val signInCustomActions: CustomSignInActions) : StateMachineResolver<CustomSignInState> {
         override val defaultState = NotStarted()
 
         private fun asCustomSignInEvent(event: StateMachineEvent): CustomSignInEvent.EventType? {
@@ -47,17 +47,23 @@ sealed class CustomSignInState : State {
                 is Initiating -> {
                     when (customSignInEvent) {
                         is CustomSignInEvent.EventType.FinalizeSignIn -> StateResolution(SignedIn())
-                        is CustomSignInEvent.EventType.ThrowAuthError -> StateResolution(Error(customSignInEvent.exception))
+                        is CustomSignInEvent.EventType.ThrowAuthError -> StateResolution(
+                            Error(customSignInEvent.exception)
+                        )
                         else -> defaultResolution
                     }
                 }
                 is NotStarted -> {
                     when (customSignInEvent) {
                         is CustomSignInEvent.EventType.InitiateCustomSignIn -> {
-                            signInCustomActions.initiateCustomSignInAuthAction(customSignInEvent)
-                            StateResolution(Initiating())
+                            StateResolution(
+                                Initiating(),
+                                listOf(signInCustomActions.initiateCustomSignInAuthAction(customSignInEvent))
+                            )
                         }
-                        is CustomSignInEvent.EventType.ThrowAuthError -> StateResolution(Error(customSignInEvent.exception))
+                        is CustomSignInEvent.EventType.ThrowAuthError -> StateResolution(
+                            Error(customSignInEvent.exception)
+                        )
                         else -> defaultResolution
                     }
                 }
