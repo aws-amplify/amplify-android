@@ -85,11 +85,11 @@ internal class HostedUIClient private constructor(context: Context, val configur
 
         val fetchUrl = URL(
             Uri.Builder()
-            .scheme("https")
-            .authority(configuration.domain)
-            .appendPath("oauth2")
-            .appendPath("token")
-            .build().toString()
+                .scheme("https")
+                .authority(configuration.domain)
+                .appendPath("oauth2")
+                .appendPath("token")
+                .build().toString()
         )
 
         val headers = mutableMapOf("Content-Type" to "application/x-www-form-urlencoded").apply {

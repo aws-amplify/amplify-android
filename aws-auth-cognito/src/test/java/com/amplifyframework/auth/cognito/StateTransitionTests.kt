@@ -101,7 +101,7 @@ class StateTransitionTests : StateTransitionTestBase() {
                 ),
                 mockAuthActions
             ),
-            AuthEnvironment(configuration, cognitoAuthService)
+            AuthEnvironment(configuration, cognitoAuthService, null)
         )
 
         storeStateMachine = CredentialStoreStateMachine(
@@ -277,7 +277,7 @@ class StateTransitionTests : StateTransitionTestBase() {
     fun testSignInSRP() {
         setupConfigureSignedOut()
 
-        Mockito.`when`(mockAuthenticationActions.initiateSRPSignInAction(MockitoHelper.anyObject()))
+        Mockito.`when`(mockAuthenticationActions.initiateSignInAction(MockitoHelper.anyObject()))
             .thenReturn(
                 Action { dispatcher, _ ->
                     dispatcher.send(

@@ -23,7 +23,7 @@ import com.amplifyframework.statemachine.codegen.data.SignInMethod
 import com.amplifyframework.statemachine.codegen.data.SignedInData
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.HostedUIEvent
-import java.util.*
+import java.util.Date
 
 object HostedUICognitoActions : HostedUIActions {
 
@@ -75,5 +75,4 @@ object HostedUICognitoActions : HostedUIActions {
             logger?.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
         }
-
 }

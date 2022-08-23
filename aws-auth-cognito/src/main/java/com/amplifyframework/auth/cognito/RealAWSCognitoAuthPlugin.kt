@@ -69,7 +69,6 @@ import com.amplifyframework.logging.Logger
 import com.amplifyframework.statemachine.StateChangeListenerToken
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
-import com.amplifyframework.statemachine.codegen.data.OauthConfiguration
 import com.amplifyframework.statemachine.codegen.data.SignInData
 import com.amplifyframework.statemachine.codegen.events.AuthEvent
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
@@ -577,7 +576,6 @@ internal class RealAWSCognitoAuthPlugin(
         }
     }
 
-
     private fun _signInWithHostedUI(
         callingActivity: Activity,
         options: AuthWebUISignInOptions,
@@ -601,7 +599,7 @@ internal class RealAWSCognitoAuthPlugin(
                         }
                     }
                     authNState is AuthenticationState.SignedIn
-                            && authZState is AuthorizationState.SessionEstablished-> {
+                        && authZState is AuthorizationState.SessionEstablished -> {
                         token?.let(authStateMachine::cancel)
                         val authSignInResult =
                             AuthSignInResult(
@@ -632,12 +630,14 @@ internal class RealAWSCognitoAuthPlugin(
         val callbackUri = intent?.data
         if (callbackUri == null) {
             authStateMachine.send(
-                HostedUIEvent(HostedUIEvent.EventType.ThrowError(
-                    AuthException.UserCancelledException(
-                        "The user cancelled the sign-in attempt, so it did not complete.",
-                        "To recover: catch this error, and show the sign-in screen again."
+                HostedUIEvent(
+                    HostedUIEvent.EventType.ThrowError(
+                        AuthException.UserCancelledException(
+                            "The user cancelled the sign-in attempt, so it did not complete.",
+                            "To recover: catch this error, and show the sign-in screen again."
+                        )
                     )
-                ))
+                )
             )
             authStateMachine.send(AuthenticationEvent(AuthenticationEvent.EventType.CancelSignIn()))
             return
