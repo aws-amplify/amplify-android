@@ -27,7 +27,7 @@ import androidx.test.espresso.matcher.ViewMatchers;
 import com.amplifyframework.core.R;
 
 import org.junit.Before;
-import org.junit.Ignore;
+import org.junit.Test;
 
 import static androidx.test.espresso.Espresso.onView;
 import static org.junit.Assert.assertEquals;
@@ -36,7 +36,6 @@ import static org.junit.Assert.assertNotNull;
 /**
  * Tests the navigation behavior for {@link DevMenuMainFragment}.
  */
-@Ignore("All of these tests timeout frequently with an error about the root of the view hierarchy never taking focus")
 public final class DevMenuMainViewInstrumentationTest {
     // A navigation host controller for testing.
     private TestNavHostController navHostController;
@@ -59,8 +58,7 @@ public final class DevMenuMainViewInstrumentationTest {
      * Tests that the app is navigated to the environment information
      * screen when the view environment information button is pressed.
      */
-    @Ignore(
-        "All of these tests timeout frequently with an error about the root of the view hierarchy never taking focus.")
+    @Test
     public void testNavigationToEnvInfoScreen() {
         testNavigationOnButtonPress(R.id.env_button, R.id.environment_fragment);
     }
@@ -69,8 +67,7 @@ public final class DevMenuMainViewInstrumentationTest {
      * Tests that the app is navigated to the device information
      * screen when the view device information button is pressed.
      */
-    @Ignore(
-        "All of these tests timeout frequently with an error about the root of the view hierarchy never taking focus.")
+    @Test
     public void testNavigationToDeviceInfoScreen() {
         testNavigationOnButtonPress(R.id.device_button, R.id.device_fragment);
     }
@@ -79,8 +76,7 @@ public final class DevMenuMainViewInstrumentationTest {
      * Tests that the app is navigated to the logs screen when
      * the view logs button is pressed.
      */
-    @Ignore(
-        "All of these tests timeout frequently with an error about the root of the view hierarchy never taking focus.")
+    @Test
     public void testNavigationToLogsScreen() {
         testNavigationOnButtonPress(R.id.logs_button, R.id.logs_fragment);
     }
@@ -89,8 +85,7 @@ public final class DevMenuMainViewInstrumentationTest {
      * Tests that the app is navigated to the file issue screen
      * when the file issue button is pressed.
      */
-    @Ignore(
-        "All of these tests timeout frequently with an error about the root of the view hierarchy never taking focus.")
+    @Test
     public void testNavigationToFileIssueScreen() {
         testNavigationOnButtonPress(R.id.file_issue_button, R.id.file_issue_fragment);
     }
