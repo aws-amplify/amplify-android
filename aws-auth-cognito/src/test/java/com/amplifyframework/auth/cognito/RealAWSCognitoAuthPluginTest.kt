@@ -28,26 +28,21 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.ConfirmSignUpRespon
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeliveryMediumType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetUserRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetUserResponse
-<<<<<<< HEAD
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.InitiateAuthRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.InitiateAuthResponse
-=======
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ResendConfirmationCodeRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ResendConfirmationCodeResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.SignUpRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.SignUpResponse
 import com.amplifyframework.auth.AuthCodeDeliveryDetails
->>>>>>> dev-preview-confirm-signin
 import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.AuthUser
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
-<<<<<<< HEAD
+import com.amplifyframework.auth.cognito.helpers.AuthHelper
+import com.amplifyframework.auth.cognito.helpers.SRPHelper
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions
 import com.amplifyframework.auth.cognito.options.AuthFlowType
-=======
-import com.amplifyframework.auth.cognito.helpers.SRPHelper
->>>>>>> dev-preview-confirm-signin
 import com.amplifyframework.auth.cognito.usecases.ResetPasswordUseCase
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
@@ -153,7 +148,7 @@ class RealAWSCognitoAuthPluginTest {
 
         // set up SRP helper
         mockkObject(SRPHelper)
-        coEvery { SRPHelper.getSecretHash(any(), any(), any()) } returns "dummy Hash"
+        coEvery { AuthHelper().getSecretHash(any(), any(), any()) } returns "dummy Hash"
     }
 
     @Test
