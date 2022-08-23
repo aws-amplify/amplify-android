@@ -121,6 +121,9 @@ class StateTransitionTests : StateTransitionTestBase() {
                             )
                         )
                     }
+                    else -> {
+                        // no-op
+                    }
                 }
             },
             null
@@ -597,6 +600,7 @@ class StateTransitionTests : StateTransitionTestBase() {
                 }
 
                 userDeletedSuccess?.run {
+                    token?.let(stateMachine::cancel)
                     testLatch.countDown()
                 }
             },
