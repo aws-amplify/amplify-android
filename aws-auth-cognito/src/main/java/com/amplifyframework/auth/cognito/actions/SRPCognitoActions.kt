@@ -19,6 +19,7 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.AuthFlowType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
 import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.cognito.AuthEnvironment
+import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.auth.cognito.helpers.SRPHelper
 import com.amplifyframework.auth.cognito.helpers.SignInChallengeHelper
 import com.amplifyframework.statemachine.Action
@@ -33,7 +34,7 @@ object SRPCognitoActions : SRPActions {
             val evt = try {
                 srpHelper = SRPHelper(event.username, event.password)
 
-                val secretHash = srpHelper.getSecretHash(
+                val secretHash = AuthHelper.getSecretHash(
                     event.username,
                     configuration.userPool?.appClient,
                     configuration.userPool?.appClientSecret
@@ -77,7 +78,7 @@ object SRPCognitoActions : SRPActions {
 
                 srpHelper.setUserPoolParams(userId, configuration.userPool?.poolId!!)
                 val m1Signature = srpHelper.getSignature(salt, srpB, secretBlock)
-                val secretHash = srpHelper.getSecretHash(
+                val secretHash = AuthHelper.getSecretHash(
                     username,
                     configuration.userPool.appClient,
                     configuration.userPool.appClientSecret

@@ -17,6 +17,7 @@ package com.amplifyframework.auth.cognito.actions
 
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
 import com.amplifyframework.auth.cognito.AuthEnvironment
+import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.auth.cognito.helpers.SignInChallengeHelper
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.SignInChallengeActions
@@ -45,19 +46,12 @@ object SignInChallengeCognitoActions : SignInChallengeActions {
                 challengeResponses.plus(key to value).also { challengeResponses = it }
             }
 
-            val secretHash = srpHelper.getSecretHash(
+            val secretHash = AuthHelper.getSecretHash(
                 username,
                 configuration.userPool?.appClient,
                 configuration.userPool?.appClientSecret
             )
             secretHash?.also { challengeResponses = challengeResponses.plus("SECRET_HASH" to secretHash) }
-
-            val response = cognitoAuthService.cognitoIdentityProviderClient?.respondToAuthChallenge {
-                clientId = configuration.userPool?.appClient
-                challengeName = ChallengeNameType.fromValue(challenge.challengeName)
-                this.challengeResponses = challengeResponses
-                session = challenge.session
-            }
 
             SignInChallengeHelper.evaluateNextStep(
                 userId = "",

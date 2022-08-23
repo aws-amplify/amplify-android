@@ -32,7 +32,7 @@ object SignInCustomActions : CustomSignInActions {
             logger?.verbose("$id Starting execution")
             val evt = try {
                 val secretHash = try {
-                    AuthHelper().getSecretHash(
+                    AuthHelper.getSecretHash(
                         event.username,
                         configuration.userPool?.appClient,
                         configuration.userPool?.appClientSecret

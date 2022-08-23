@@ -21,32 +21,34 @@ import javax.crypto.spec.SecretKeySpec
 
 open class AuthHelper {
 
-    val HMAC_SHA_256 = "HmacSHA256"
+    companion object {
+        val HMAC_SHA_256 = "HmacSHA256"
 
-    /**
-     * Generates secret hash. Uses HMAC SHA256.
-     *
-     * @param userId User ID
-     * @param clientId Client ID
-     * @param clientSecret Client secret
-     * @return secret hash as a `String`, `null ` if `clientSecret` is `null`
-     */
-    fun getSecretHash(userId: String?, clientId: String?, clientSecret: String?): String? {
-        return when {
-            userId == null -> throw AuthException.InvalidParameterException(Exception("user ID cannot be null"))
-            clientId == null -> throw AuthException.InvalidParameterException(Exception("client ID cannot be null"))
-            clientSecret.isNullOrEmpty() -> null
-            else ->
-                try {
-                    val mac = Mac.getInstance(HMAC_SHA_256)
-                    val keySpec = SecretKeySpec(clientSecret.toByteArray(), HMAC_SHA_256)
-                    mac.init(keySpec)
-                    mac.update(userId.toByteArray())
-                    val raw = mac.doFinal(clientId.toByteArray())
-                    String(android.util.Base64.encode(raw, android.util.Base64.NO_WRAP))
-                } catch (e: Exception) {
-                    throw AuthException.UnknownException(Exception("errors in HMAC calculation"))
-                }
+        /**
+         * Generates secret hash. Uses HMAC SHA256.
+         *
+         * @param userId User ID
+         * @param clientId Client ID
+         * @param clientSecret Client secret
+         * @return secret hash as a `String`, `null ` if `clientSecret` is `null`
+         */
+        fun getSecretHash(userId: String?, clientId: String?, clientSecret: String?): String? {
+            return when {
+                userId == null -> throw AuthException.InvalidParameterException(Exception("user ID cannot be null"))
+                clientId == null -> throw AuthException.InvalidParameterException(Exception("client ID cannot be null"))
+                clientSecret.isNullOrEmpty() -> null
+                else ->
+                    try {
+                        val mac = Mac.getInstance(HMAC_SHA_256)
+                        val keySpec = SecretKeySpec(clientSecret.toByteArray(), HMAC_SHA_256)
+                        mac.init(keySpec)
+                        mac.update(userId.toByteArray())
+                        val raw = mac.doFinal(clientId.toByteArray())
+                        String(android.util.Base64.encode(raw, android.util.Base64.NO_WRAP))
+                    } catch (e: Exception) {
+                        throw AuthException.UnknownException(Exception("errors in HMAC calculation"))
+                    }
+            }
         }
     }
 }

@@ -17,7 +17,6 @@ package com.amplifyframework.auth.cognito
 
 import aws.sdk.kotlin.services.cognitoidentityprovider.CognitoIdentityProviderClient
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AttributeType
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChangePasswordRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChangePasswordResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.CognitoIdentityProviderException
@@ -28,8 +27,6 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.ConfirmSignUpRespon
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeliveryMediumType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetUserRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetUserResponse
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.InitiateAuthRequest
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.InitiateAuthResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ResendConfirmationCodeRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ResendConfirmationCodeResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.SignUpRequest
@@ -40,9 +37,6 @@ import com.amplifyframework.auth.AuthUser
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
-import com.amplifyframework.auth.cognito.helpers.SRPHelper
-import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions
-import com.amplifyframework.auth.cognito.options.AuthFlowType
 import com.amplifyframework.auth.cognito.usecases.ResetPasswordUseCase
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
@@ -76,13 +70,13 @@ import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.slot
 import io.mockk.verify
+import org.junit.Before
+import org.junit.Ignore
+import org.junit.Test
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
-import org.junit.Before
-import org.junit.Ignore
-import org.junit.Test
 
 class RealAWSCognitoAuthPluginTest {
 
@@ -147,8 +141,8 @@ class RealAWSCognitoAuthPluginTest {
         }
 
         // set up SRP helper
-        mockkObject(SRPHelper)
-        coEvery { AuthHelper().getSecretHash(any(), any(), any()) } returns "dummy Hash"
+        mockkObject(AuthHelper)
+        coEvery { AuthHelper.getSecretHash(any(), any(), any()) } returns "dummy Hash"
     }
 
     @Test
@@ -168,45 +162,6 @@ class RealAWSCognitoAuthPluginTest {
         // THEN
         verify(exactly = 0) { onSuccess.accept(any()) }
         verify { onError.accept(expectedAuthError) }
-    }
-
-    @Test
-    @Ignore("Ignored as this will require a REAL state machine to listen on events. TBD")
-    fun testSignIn() {
-        // GIVEN
-        val latch = CountDownLatch(1)
-        val onSuccess = mockk<Consumer<AuthSignInResult>> {
-            every { accept(any()) } answers { latch.countDown() }
-        }
-        val onError = mockk<Consumer<AuthException>>(relaxed = true)
-
-        val currentAuthState = mockk<AuthState> {
-            every { authNState } returns AuthenticationState.SignedOut(mockk())
-        }
-        every { authStateMachine.getCurrentState(captureLambda()) } answers {
-            lambda<(AuthState) -> Unit>().invoke(currentAuthState)
-        }
-
-        coEvery {
-            authService.cognitoIdentityProviderClient?.initiateAuth(any<InitiateAuthRequest>())
-        } returns InitiateAuthResponse.invoke {
-            challengeName = ChallengeNameType.PasswordVerifier
-            challengeParameters = mapOf()
-        }
-
-        // WHEN
-        plugin.signIn(
-            "user",
-            "pass",
-            AWSCognitoAuthSignInOptions.builder().authFlowType(AuthFlowType.USER_SRP_AUTH).build(),
-            onSuccess,
-            onError
-        )
-
-        assertTrue { latch.await(5, TimeUnit.MINUTES) }
-
-        verify { onSuccess.accept(any()) }
-        coVerify(exactly = 0) { onError.accept(any()) }
     }
 
     @Test
