@@ -819,6 +819,8 @@ internal class RealAWSCognitoAuthPlugin(
                 val userAttributeOptions = options as? AWSCognitoAuthUpdateUserAttributeOptions
                 val results = updateUserAttributes(attributes.toMutableList(), userAttributeOptions?.metadata)
                 onSuccess.accept(results.entries.first().value)
+            } catch (e: AuthException) {
+                onError.accept(e)
             } catch (e: Exception) {
                 onError.accept(CognitoAuthExceptionConverter.lookup(e, e.toString()))
             }
@@ -843,6 +845,8 @@ internal class RealAWSCognitoAuthPlugin(
             try {
                 val userAttributesOptions = options as? AWSCognitoAuthUpdateUserAttributesOptions
                 onSuccess.accept(updateUserAttributes(attributes, userAttributesOptions?.metadata))
+            } catch (e: AuthException) {
+                onError.accept(e)
             } catch (e: Exception) {
                 onError.accept(CognitoAuthExceptionConverter.lookup(e, e.toString()))
             }
