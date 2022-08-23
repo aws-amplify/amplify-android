@@ -27,7 +27,8 @@ class PinpointEventTest : TestCase() {
                 "\"sessionStart\":1657035956917},\"eventTimestamp\":1657035956917,\"uniqueId\":\"UNIQUE_ID\"," +
                 "\"androidAppDetails\":{\"appId\":\"appId\",\"appTitle\":\"appTitle\"," +
                 "\"packageName\":\"packageName\",\"versionCode\":\"versionCode\",\"versionName\":\"versionName\"}," +
-                "\"androidDeviceDetails\":{\"platform\":\"ANDROID\",\"locale\":\"en_US\"}}"
+                "\"androidDeviceDetails\":{\"platformVersion\":\"TEST VERSION\",\"platform\":\"ANDROID\"," +
+                "\"manufacturer\":\"TEST MANUFACTURER\",\"model\":\"TEST MODEL\",\"locale\":\"en_US\"}}"
         val pinpointEvent = PinpointEvent(
             eventId = "c175d759-3a90-44be-ab51-888ce43ed527",
             eventType = "EVENT_TYPE",
