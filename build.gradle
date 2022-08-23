@@ -58,7 +58,7 @@ ext {
     targetSdkVersion = 30
 
     awsSdkVersion = '2.51.0'
-    awsKotlinSdkVersion = '0.16.3-beta'
+    awsKotlinSdkVersion = '0.17.5-beta'
     fragmentVersion = '1.3.1'
     navigationVersion = '2.3.4'
     dependency = [
