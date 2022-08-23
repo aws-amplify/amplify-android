@@ -32,7 +32,7 @@ import com.amplifyframework.auth.AuthSession
 import com.amplifyframework.auth.AuthUser
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
-import com.amplifyframework.auth.cognito.helpers.HostedUISignInOptionsHelper
+import com.amplifyframework.auth.cognito.helpers.HostedUIHelper
 import com.amplifyframework.auth.cognito.helpers.JWTParser
 import com.amplifyframework.auth.cognito.usecases.ResetPasswordUseCase
 import com.amplifyframework.auth.options.AWSCognitoAuthConfirmResetPasswordOptions
@@ -65,6 +65,7 @@ import com.amplifyframework.logging.Logger
 import com.amplifyframework.statemachine.StateChangeListenerToken
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
+import com.amplifyframework.statemachine.codegen.data.OauthConfiguration
 import com.amplifyframework.statemachine.codegen.data.SignInData
 import com.amplifyframework.statemachine.codegen.events.AuthEvent
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
@@ -473,20 +474,25 @@ internal class RealAWSCognitoAuthPlugin(
                 )
                 // Continue sign in
                 is AuthenticationState.SignedOut -> {
+                    if (configuration.oauth == null) {
+                        onError.accept(
+                            AuthException(
+                                "Sign in failed.",
+                                "HostedUI not configured or unable to parse from amplifyconfiguration.json file."
+                            )
+                        )
+                        return@getCurrentState
+                    }
+
                     _signInWithHostedUI(
-                        provider = provider,
                         callingActivity = callingActivity,
                         options = options,
                         onSuccess = onSuccess,
-                        onError = onError
+                        onError = onError,
+                        provider = provider
                     )
                 }
-                is AuthenticationState.SignedIn -> onError.accept(
-                    AuthException(
-                        "Sign in failed.",
-                        "User currently signed in. Please sign out before attempting sign in."
-                    )
-                )
+                is AuthenticationState.SignedIn -> onError.accept(AuthException.SignedInException())
                 else -> onError.accept(AuthException.InvalidStateException())
             }
         }
@@ -494,22 +500,12 @@ internal class RealAWSCognitoAuthPlugin(
 
 
     private fun _signInWithHostedUI(
-        provider: AuthProvider? = null,
         callingActivity: Activity,
         options: AuthWebUISignInOptions,
         onSuccess: Consumer<AuthSignInResult>,
-        onError: Consumer<AuthException>
+        onError: Consumer<AuthException>,
+        provider: AuthProvider? = null
     ) {
-        if (configuration.oauth == null || authEnvironment.hostedUIClient == null) {
-            onError.accept(
-                AuthException(
-                    "Sign in failed.",
-                    "showSignIn called without HostedUI options in awsconfiguration.json"
-                )
-            )
-            return
-        }
-
         var token: StateChangeListenerToken? = null
         token = authStateMachine.listen(
             { authState ->
@@ -525,7 +521,8 @@ internal class RealAWSCognitoAuthPlugin(
                             )
                         }
                     }
-                    authNState is AuthenticationState.SignedIn && authZState is AuthorizationState.SessionEstablished-> {
+                    authNState is AuthenticationState.SignedIn
+                            && authZState is AuthorizationState.SessionEstablished-> {
                         token?.let(authStateMachine::cancel)
                         val authSignInResult =
                             AuthSignInResult(
@@ -535,21 +532,16 @@ internal class RealAWSCognitoAuthPlugin(
                         Amplify.Hub.publish(HubChannel.AUTH, HubEvent.create(AuthChannelEventName.SIGNED_IN))
                         onSuccess.accept(authSignInResult)
                     }
-                    else -> {
-                        // no-op
-                    }
+                    else -> Unit
                 }
             },
             {
-                val hostedUIOptions = if (provider != null) {
-                    HostedUISignInOptionsHelper.createSocialWebSignInOptions(options, configuration.oauth, provider)
-                } else {
-                    HostedUISignInOptionsHelper.createWebSignInOptions(options, configuration.oauth)
-                }
+                val hostedUIOptions =
+                    HostedUIHelper.createHostedUIOptions(callingActivity, provider, options)
                 authStateMachine.send(
                     AuthenticationEvent(
                         AuthenticationEvent.EventType.SignInRequested(
-                            SignInData.HostedUISignInData(callingActivity, hostedUIOptions)
+                            SignInData.HostedUISignInData(hostedUIOptions)
                         )
                     )
                 )

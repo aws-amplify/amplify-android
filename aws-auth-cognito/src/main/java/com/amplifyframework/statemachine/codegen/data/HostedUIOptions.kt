@@ -15,6 +15,11 @@
 
 package com.amplifyframework.statemachine.codegen.data
 
-enum class SignInMethod {
-    SRP, CUSTOM, HOSTED
-}
+import android.app.Activity
+
+data class HostedUIOptions(
+    val callingActivity: Activity,
+    val scopes: List<String>?,
+    val providerInfo: HostedUIProviderInfo,
+    val browserPackage: String?
+)

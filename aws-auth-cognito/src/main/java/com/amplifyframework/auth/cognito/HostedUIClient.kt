@@ -15,7 +15,6 @@
 
 package com.amplifyframework.auth.cognito
 
-import android.app.Activity
 import android.content.ComponentName
 import android.content.Context
 import android.net.Uri
@@ -27,19 +26,20 @@ import com.amplifyframework.auth.cognito.activities.CustomTabsManagerActivity
 import com.amplifyframework.auth.cognito.helpers.BrowserHelper
 import com.amplifyframework.auth.cognito.helpers.HostedUIHttpHelper
 import com.amplifyframework.auth.cognito.helpers.PkceHelper
+import com.amplifyframework.auth.cognito.helpers.userPoolProviderName
 import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
-import com.amplifyframework.statemachine.codegen.data.HostedUISignInOptions
+import com.amplifyframework.statemachine.codegen.data.HostedUIOptions
+import com.amplifyframework.statemachine.codegen.data.OauthConfiguration
 import java.net.URL
 
-class HostedUIClient(context: Context) : CustomTabsServiceConnection() {
+internal class HostedUIClient private constructor(context: Context, val configuration: OauthConfiguration) :
+    CustomTabsServiceConnection() {
 
-    val proofKey = PkceHelper.generateRandom()
-    val proofKeyHash = PkceHelper.generateHash(proofKey)
-    val state = PkceHelper.generateRandom()
-
-    var client: CustomTabsClient? = null
-    var session: CustomTabsSession? = null
-
+    private val proofKey = PkceHelper.generateRandom()
+    private val proofKeyHash = PkceHelper.generateHash(proofKey)
+    private val state = PkceHelper.generateRandom()
+    private var client: CustomTabsClient? = null
+    private var session: CustomTabsSession? = null
     private val defaultCustomTabsPackage: String?
 
     init {
@@ -49,7 +49,8 @@ class HostedUIClient(context: Context) : CustomTabsServiceConnection() {
     }
 
     @Throws(RuntimeException::class)
-    fun launchCustomTabs(activity: Activity, hostedUIOptions: HostedUISignInOptions) {
+    fun launchCustomTabs(hostedUIOptions: HostedUIOptions) {
+        val activity = hostedUIOptions.callingActivity
         if (!BrowserHelper.isBrowserInstalled(activity)) {
             throw RuntimeException("No browsers installed")
         }
@@ -69,41 +70,41 @@ class HostedUIClient(context: Context) : CustomTabsServiceConnection() {
         )
     }
 
-    fun fetchToken(uri: Uri, hostedUIOptions: HostedUISignInOptions): CognitoUserPoolTokens {
+    fun fetchToken(uri: Uri): CognitoUserPoolTokens {
         val errorState = uri.getQueryParameter("error")
         val callbackState = uri.getQueryParameter("state")
         val code = uri.getQueryParameter("code")
 
         if (errorState != null) {
-            // on error
+            // TODO: More detailed exception
             throw Exception()
         } else if (callbackState == null || code == null) {
-            // on error
+            // TODO: More detailed exception
             throw Exception()
         }
 
         val fetchUrl = URL(
             Uri.Builder()
             .scheme("https")
-            .authority(hostedUIOptions.domain)
+            .authority(configuration.domain)
             .appendPath("oauth2")
             .appendPath("token")
             .build().toString()
         )
 
         val headers = mutableMapOf("Content-Type" to "application/x-www-form-urlencoded").apply {
-            if (hostedUIOptions.appSecret != null) {
+            if (configuration.appSecret != null) {
                 put(
                     "Authorization",
-                    PkceHelper.encodeBase64("${hostedUIOptions.appClient}:${hostedUIOptions.appSecret}")
+                    PkceHelper.encodeBase64("${configuration.appClient}:${configuration.appSecret}")
                 )
             }
         }
 
         val body = mapOf(
             "grant_type" to "authorization_code",
-            "client_id" to hostedUIOptions.appClient,
-            "redirect_uri" to hostedUIOptions.signInRedirectURI,
+            "client_id" to configuration.appClient,
+            "redirect_uri" to configuration.signInRedirectURI,
             "code_verifier" to proofKey,
             "code" to code
         )
@@ -111,33 +112,37 @@ class HostedUIClient(context: Context) : CustomTabsServiceConnection() {
         return HostedUIHttpHelper.fetchTokens(fetchUrl, headers, body)
     }
 
-    private fun createHostedUIUri(hostedUIOptions: HostedUISignInOptions): Uri {
+    private fun createHostedUIUri(hostedUIOptions: HostedUIOptions): Uri {
         // Build the complete web domain to launch the login screen
         val builder = Uri.Builder()
             .scheme("https")
-            .authority(hostedUIOptions.domain)
+            .authority(configuration.domain)
             .appendPath("oauth2")
             .appendPath("authorize")
-            .appendQueryParameter("client_id", hostedUIOptions.appClient)
-            .appendQueryParameter("redirect_uri", hostedUIOptions.signInRedirectURI)
+            .appendQueryParameter("client_id", configuration.appClient)
+            .appendQueryParameter("redirect_uri", configuration.signInRedirectURI)
             .appendQueryParameter("response_type", "code")
             .appendQueryParameter("code_challenge", proofKeyHash)
             .appendQueryParameter("code_challenge_method", "S256")
             .appendQueryParameter("state", state)
 
         // check if identity provider set as param.
-        (hostedUIOptions as? HostedUISignInOptions.SocialWebSignInOptions)
-            ?.identityProvider?.takeIf { it.isNotEmpty() }?.let {
-                builder.appendQueryParameter("identity_provider", it)
-            }
+        hostedUIOptions.providerInfo.authProvider?.userPoolProviderName?.takeIf { it.isNotEmpty() }?.let {
+            builder.appendQueryParameter("identity_provider", it)
+        }
 
         // check if idp identifier set as param.
-        hostedUIOptions.idpIdentifier?.takeIf { it.isNotEmpty() }?.let {
+        hostedUIOptions.providerInfo.idpIdentifier?.takeIf { it.isNotEmpty() }?.let {
             builder.appendQueryParameter("idp_identifier", it)
         }
 
+        // use scopes passed in options or fallback to configuration scopes
+        val scopes = hostedUIOptions.scopes?.ifEmpty {
+            configuration.scopes.toList()
+        }
+
         // Convert scopes into a string of space separated values.
-        hostedUIOptions.scopes?.joinToString(" ")?.let {
+        scopes?.joinToString(" ")?.let {
             builder.appendQueryParameter("scope", it)
         }
 
@@ -167,5 +172,12 @@ class HostedUIClient(context: Context) : CustomTabsServiceConnection() {
 
     companion object {
         const val CUSTOM_TABS_ACTIVITY_CODE = 49281
+
+        fun create(context: Context, configuration: OauthConfiguration?) =
+            if (configuration != null) {
+                HostedUIClient(context, configuration)
+            } else {
+                null
+            }
     }
 }

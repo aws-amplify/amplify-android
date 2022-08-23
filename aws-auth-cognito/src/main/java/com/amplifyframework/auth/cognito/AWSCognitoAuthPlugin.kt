@@ -75,11 +75,10 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
     override fun configure(pluginConfiguration: JSONObject, context: Context) {
         try {
             val configuration = AuthConfiguration.fromJson(pluginConfiguration)
-            val hostedUIClient = if (configuration.oauth != null) { HostedUIClient(context) } else null
             val authEnvironment = AuthEnvironment(
                 configuration,
                 AWSCognitoAuthServiceBehavior.fromConfiguration(configuration),
-                hostedUIClient,
+                HostedUIClient.create(context, configuration.oauth),
                 logger
             )
             val authStateMachine = AuthStateMachine(authEnvironment)

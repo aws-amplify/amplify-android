@@ -15,14 +15,10 @@
 
 package com.amplifyframework.statemachine.codegen.actions
 
-import com.amplifyframework.statemachine.codegen.data.HostedUISignInOptions
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.events.HostedUIEvent
 
 interface HostedUIActions {
     fun showHostedUI(event: HostedUIEvent.EventType.ShowHostedUI): Action
-    fun fetchHostedUISignInToken(
-        event: HostedUIEvent.EventType.FetchToken,
-        options: HostedUISignInOptions
-    ): Action
+    fun fetchHostedUISignInToken(event: HostedUIEvent.EventType.FetchToken): Action
 }
