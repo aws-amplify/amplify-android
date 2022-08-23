@@ -25,14 +25,10 @@ import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.SimpleGraphQLRequest;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.testutils.Assets;
-import com.amplifyframework.testutils.Resources;
 import com.amplifyframework.testutils.sync.SynchronousApi;
 import com.amplifyframework.testutils.sync.SynchronousMobileClient;
 
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.Collections;
@@ -42,7 +38,6 @@ import java.util.UUID;
 
 import io.reactivex.rxjava3.observers.TestObserver;
 
-import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -96,41 +91,6 @@ public final class GraphQLInstrumentationTest {
     @Test
     public void subscriptionReceivesMutationOverApiKey() throws ApiException {
         currentApiName = API_WITH_API_KEY;
-        subscriptionReceivesMutation();
-    }
-
-    /**
-     * Test that subscription is authorized properly when using AWS IAM as
-     * authorization provider.
-     * @throws ApiException On failure to reach the endpoint or receive
-     *          expected response from the endpoint
-     */
-    @Test
-    @Ignore("Relies on an AWS account which is no longer active.  Resources need to be regenerated.")
-    public void subscriptionReceivesMutationOverAwsIam() throws ApiException {
-        currentApiName = API_WITH_AWS_IAM;
-        subscriptionReceivesMutation();
-    }
-
-    /**
-     * Test that subscription is authorized properly when using Cognito
-     * User Pools as authorization provider.
-     * @throws ApiException On failure to reach the endpoint or receive
-     *          expected response from the endpoint
-     * @throws JSONException On failure to obtain credentials from test
-     *          resources
-     * @throws SynchronousMobileClient.MobileClientException On failure
-     *          to sign in as a valid user
-     */
-    @Test
-    @Ignore("Relies on an AWS account which is no longer active.  Resources need to be regenerated.")
-    public void subscriptionReceivesMutationOverCognitoUserPools() throws
-            ApiException, JSONException, SynchronousMobileClient.MobileClientException {
-        currentApiName = API_WITH_COGNITO_USER_POOLS;
-        JSONObject credentials = Resources.readAsJson(getApplicationContext(), R.raw.credentials);
-        String username = credentials.getString("username");
-        String password = credentials.getString("password");
-        mobileClient.signIn(username, password);
         subscriptionReceivesMutation();
     }
 
