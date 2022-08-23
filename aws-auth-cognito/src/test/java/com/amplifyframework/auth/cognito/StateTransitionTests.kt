@@ -25,6 +25,7 @@ import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
 import com.amplifyframework.statemachine.codegen.events.CredentialStoreEvent
 import com.amplifyframework.statemachine.codegen.events.DeleteUserEvent
 import com.amplifyframework.statemachine.codegen.events.FetchAuthSessionEvent
+import com.amplifyframework.statemachine.codegen.events.SignInEvent
 import com.amplifyframework.statemachine.codegen.events.SignOutEvent
 import com.amplifyframework.statemachine.codegen.states.AuthState
 import com.amplifyframework.statemachine.codegen.states.AuthenticationState
@@ -33,6 +34,7 @@ import com.amplifyframework.statemachine.codegen.states.CredentialStoreState
 import com.amplifyframework.statemachine.codegen.states.DeleteUserState
 import com.amplifyframework.statemachine.codegen.states.FetchAuthSessionState
 import com.amplifyframework.statemachine.codegen.states.SRPSignInState
+import com.amplifyframework.statemachine.codegen.states.SignInChallengeState
 import com.amplifyframework.statemachine.codegen.states.SignInState
 import com.amplifyframework.statemachine.codegen.states.SignOutState
 import java.util.concurrent.CountDownLatch
@@ -79,7 +81,11 @@ class StateTransitionTests : StateTransitionTestBase() {
         stateMachine = AuthStateMachine(
             AuthState.Resolver(
                 AuthenticationState.Resolver(
-                    SignInState.Resolver(SRPSignInState.Resolver(mockSRPActions), mockSignInActions),
+                    SignInState.Resolver(
+                        SRPSignInState.Resolver(mockSRPActions),
+                        SignInChallengeState.Resolver(mockSignInChallengeActions),
+                        mockSignInActions
+                    ),
                     SignOutState.Resolver(mockSignOutActions),
                     mockAuthenticationActions
                 ),
@@ -114,6 +120,9 @@ class StateTransitionTests : StateTransitionTestBase() {
                                 CredentialStoreEvent.EventType.StoreCredentials(authZState.amplifyCredential)
                             )
                         )
+                    }
+                    else -> {
+                        // no-op
                     }
                 }
             },
@@ -262,19 +271,19 @@ class StateTransitionTests : StateTransitionTestBase() {
     }
 
     @Test
-    @Ignore("Todo")
-    fun testSignIn() {
+    fun testSignInSRP() {
         setupConfigureSignedOut()
 
-//        val creds = AmplifyCredential.UserAndIdentityPool(CognitoUserPoolTokens("","","",0), "", AWSCredentials.empty)
-
-//        val creds = mockk<AmplifyCredential> {
-//            every { this } returns AmplifyCredential.UserAndIdentityPool(CognitoUserPoolTokens("","","",0), "", AWSCredentials.empty)
-//        }
-//
-//        doReturn(obj1).doReturn(obj2).when(credentials)
-//
-//        Mockito.`when`((credentials as AmplifyCredential.UserAndIdentityPool).tokens).thenReturn(tokens)
+        Mockito.`when`(mockAuthenticationActions.initiateSRPSignInAction(MockitoHelper.anyObject()))
+            .thenReturn(
+                Action { dispatcher, _ ->
+                    dispatcher.send(
+                        SignInEvent(
+                            SignInEvent.EventType.InitiateSignInWithSRP("username", "password")
+                        )
+                    )
+                }
+            )
 
         val testLatch = CountDownLatch(1)
         val configureLatch = CountDownLatch(1)
@@ -297,9 +306,9 @@ class StateTransitionTests : StateTransitionTestBase() {
                     )
                 }
 
-                val authNState =
-                    it.authNState.takeIf { itN -> itN is AuthenticationState.SignedIn }
-                authNState?.apply {
+                val authNState = it.authNState
+                val authZState = it.authZState
+                if (authNState is AuthenticationState.SignedIn && authZState is AuthorizationState.SessionEstablished) {
                     token?.let(stateMachine::cancel)
                     testLatch.countDown()
                 }
@@ -591,6 +600,7 @@ class StateTransitionTests : StateTransitionTestBase() {
                 }
 
                 userDeletedSuccess?.run {
+                    token?.let(stateMachine::cancel)
                     testLatch.countDown()
                 }
             },
