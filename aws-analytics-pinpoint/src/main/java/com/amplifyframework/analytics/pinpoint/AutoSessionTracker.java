@@ -20,6 +20,8 @@ import android.app.Application;
 import android.os.Bundle;
 import android.util.Log;
 
+import com.amplifyframework.core.Amplify;
+
 /**
  * Tracks when the host application enters or leaves foreground.
  * The constructor registers to receive activity lifecycle events.
@@ -115,7 +117,7 @@ final class AutoSessionTracker implements Application.ActivityLifecycleCallbacks
     void applicationEnteredBackground() {
         Log.d(LOG_TAG, "Application entered the background.");
         sessionClient.stopSession();
-        analyticsClient.submitEvents();
+        Amplify.Analytics.flushEvents();
     }
 
     /**
