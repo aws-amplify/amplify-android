@@ -14,27 +14,60 @@
  */
 package com.amplifyframework.predictions.aws.service
 
-import aws.smithy.kotlin.runtime.auth.awscredentials.Credentials
+import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider
 
+/**
+ * Stores options to use when presigning a URL for a synthesize speech request.
+ */
 class PresignedSynthesizeSpeechUrlOptions private constructor(
-    val credentials: Credentials?,
+    val credentialsProvider: CredentialsProvider?,
     val expires: Int
 ){
     companion object {
+        /**
+         * Returns a new builder instance for constructing PresignedSynthesizeSpeechUrlOptions.
+         * @return a new builder instance.
+         */
         @JvmStatic fun builder() = Builder()
+
+        /**
+         * Returns a new PresignedSynthesizeSpeechUrlOptions instance with default values.
+         * @return a default instance.
+         */
         @JvmStatic fun defaults() = builder().build()
+        
         // Default expiration time is 15 minutes (900 seconds)
         private const val DEFAULT_EXPIRATION_SECONDS = 900
     }
-    
+
+    /**
+     * Builder class for constructing a PresignedSynthesizeSpeechUrlOptions instance.
+     */
     class Builder {
-        // By default, the credentials provided by the CredentialsProvider in the predictions plugin are used
-        var credentials: Credentials? = null
+        // Default is to use the same CredentialsProvider used in the predictions plugin
+        var credentialsProvider: CredentialsProvider? = null
             private set
         var expires: Int = DEFAULT_EXPIRATION_SECONDS
             private set
-        fun credentials(credentials: Credentials) = apply { this.credentials = credentials }
+
+        /**
+         * Sets the credentials provider and returns itself.
+         * @param credentialsProvider the credentials provider that will provide credentials for signing the URL.
+         * @return this builder instance.
+         */
+        fun credentialsProvider(credentialsProvider: CredentialsProvider) = apply { this.credentialsProvider = credentialsProvider }
+
+        /**
+         * Sets the expiration of the URL and returns itself.
+         * @param expires number of seconds before the presigned URL expires.
+         * @return this builder instance.
+         */
         fun expires(expires: Int) = apply { this.expires = expires }
-        fun build() = PresignedSynthesizeSpeechUrlOptions(credentials, expires)
+
+        /**
+         * Constructs a new instance of PresignedSynthesizeSpeechUrlOptions using this builder.
+         * @return a PresignedSynthesizeSpeechUrlOptions instance with the properties of this builder.
+         */
+        fun build() = PresignedSynthesizeSpeechUrlOptions(credentialsProvider, expires)
     }
 }

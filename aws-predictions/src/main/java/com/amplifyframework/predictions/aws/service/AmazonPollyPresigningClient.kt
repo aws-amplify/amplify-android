@@ -14,7 +14,6 @@
  */
 package com.amplifyframework.predictions.aws.service
 
-import aws.sdk.kotlin.runtime.auth.credentials.StaticCredentialsProvider
 import aws.sdk.kotlin.services.polly.PollyClient
 import aws.sdk.kotlin.services.polly.model.SynthesizeSpeechRequest
 import aws.sdk.kotlin.services.polly.presigners.PollyPresignConfig
@@ -23,22 +22,30 @@ import kotlinx.coroutines.runBlocking
 import java.net.URL
 import kotlin.time.Duration.Companion.seconds
 
+/**
+ * Client for accessing Amazon Polly and generating a presigned URL of an
+ * Amazon Polly SynthesizeSpeech request.
+ */
 class AmazonPollyPresigningClient(pollyClient: PollyClient): PollyClient by pollyClient {
-    
+
+    /**
+     * Creates a presigned URL for a SynthesizeSpeech request.
+     * @param synthesizeSpeechRequest The request to create a presigned URL of.
+     * @return a presigned URL for a SynthesizeSpeech request.
+     */
     fun getPresignedSynthesizeSpeechUrl(synthesizeSpeechRequest: SynthesizeSpeechRequest): URL {
         return getPresignedSynthesizeSpeechUrl(synthesizeSpeechRequest, PresignedSynthesizeSpeechUrlOptions.defaults())
     }
-    
+
+    /**
+     * Creates a presigned URL for a SynthesizeSpeech request with the given options.
+     * @param synthesizeSpeechRequest The request to create a presigned URL of.
+     * @param options The options for creating the presigned URL.
+     * @return a presigned URL for a SynthesizeSpeech request.
+     */
     fun getPresignedSynthesizeSpeechUrl(synthesizeSpeechRequest: SynthesizeSpeechRequest,
                                         options: PresignedSynthesizeSpeechUrlOptions): URL {
-        val presignCredentialsProvider = if (options.credentials != null) {
-            StaticCredentialsProvider {
-                accessKeyId = options.credentials.accessKeyId
-                secretAccessKey = options.credentials.secretAccessKey
-            }
-        } else {
-            this.config.credentialsProvider
-        }
+        val presignCredentialsProvider = options.credentialsProvider ?: this.config.credentialsProvider
         val presignConfig = PollyPresignConfig {
             region = this@AmazonPollyPresigningClient.config.region
             credentialsProvider = presignCredentialsProvider
