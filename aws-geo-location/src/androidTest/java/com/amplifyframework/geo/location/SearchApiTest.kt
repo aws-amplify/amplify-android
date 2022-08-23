@@ -129,7 +129,7 @@ class SearchApiTest {
 
         // First entry is on top of originally queried coordinates (within 1km)
         val queried = result.places[0].geometry as Coordinates
-        assertTrue(coordinates.centralAngle(queried) < 0.00001)
+        assertTrue(coordinates.centralAngle(queried) < 0.0002)
     }
 
     private fun signInWithCognito() {
