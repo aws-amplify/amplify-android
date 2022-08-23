@@ -95,10 +95,7 @@ class AWSPinpointAnalyticsPluginKt : AnalyticsPlugin<Any>() {
             awsAnalyticsConfig,
             null // TODO: Provide valid credential provider
         )
-        val autoEventSubmitter = AutoEventSubmitter(
-            pinpointManager.analyticsClient,
-            awsAnalyticsConfig.autoFlushEventsInterval
-        )
+        val autoEventSubmitter = AutoEventSubmitter(awsAnalyticsConfig.autoFlushEventsInterval)
         val autoSessionTracker = AutoSessionTracker(pinpointManager.analyticsClient, pinpointManager.sessionClient)
         awsPinpointAnalyticsPluginBehavior = AWSPinpointAnalyticsPluginBehavior(
             context,

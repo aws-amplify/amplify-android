@@ -19,7 +19,6 @@ import android.os.Handler;
 import android.os.HandlerThread;
 
 import com.amplifyframework.core.Amplify;
-import com.amplifyframework.logging.Logger;
 
 import java.util.Locale;
 

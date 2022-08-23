@@ -51,6 +51,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.AfterClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -77,6 +78,7 @@ import static org.junit.Assert.fail;
  * Tests a set of possible combinations of models, auth modes and login status to
  * verify behavior when in multi-auth mode.
  */
+@Ignore("fix in dev-preview")
 public final class MultiAuthSyncEngineNoAuthInstrumentationTest {
     private static final Logger LOG = Amplify.Logging.forNamespace("MultiAuthSyncEngineInstrumentationTest");
     private static final int TIMEOUT_SECONDS = 20;
