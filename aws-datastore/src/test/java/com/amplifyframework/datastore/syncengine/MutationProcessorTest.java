@@ -29,7 +29,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.amplifyframework.AmplifyException;
-import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLLocation;
 import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLPathSegment;
@@ -328,10 +327,10 @@ public final class MutationProcessorTest {
 
 
     /**
-     * If the AppSync response to the mutation contains a retryable
-     * error in the GraphQLResponse error list, then the request is retried until successful
+     * If the AppSync response to the mutation contains a retry able
+     * error in the GraphQLResponse error list, then the request is retried until successful.
      *
-     * @throws DataStoreException On failure to obtain configuration from the provider
+     * @throws InterruptedException Latch
      * @throws AmplifyException   On failure to build {@link ModelSchema}
      */
     @Test
@@ -366,7 +365,9 @@ public final class MutationProcessorTest {
             onResponse.accept(new GraphQLResponse<>(modelWithMetadata, Collections.emptyList()));
             // latch makes sure success response is returned.
             return mock(GraphQLOperation.class);
-        }).when(appSync).update(ArgumentMatchers.<BlogOwner>any(),any(ModelSchema.class), anyInt(),
+        }).when(appSync).update(ArgumentMatchers.<BlogOwner>any(),
+                any(ModelSchema.class),
+                anyInt(),
                 any(QueryPredicate.class),
                 ArgumentMatchers.<Consumer<GraphQLResponse<ModelWithMetadata<BlogOwner>>>>any(),
                 ArgumentMatchers.<Consumer<DataStoreException>>any());
@@ -386,7 +387,5 @@ public final class MutationProcessorTest {
         // Wait for the retry handler to be called.
         assertTrue(retryHandlerInvocationCount.await(300, TimeUnit.SECONDS));
         mutationProcessor.stopDrainingMutationOutbox();
-
     }
-
 }
