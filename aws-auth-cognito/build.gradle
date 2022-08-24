@@ -46,6 +46,7 @@ dependencies {
     testImplementation dependency.robolectric
     testImplementation dependency.androidx.test.core
     testImplementation "org.jetbrains.kotlin:kotlin-reflect:1.7.0"
+    testImplementation project(path: ':aws-auth-cognito')
 
     androidTestImplementation dependency.androidx.test.runner
     androidTestImplementation dependency.androidx.test.junit

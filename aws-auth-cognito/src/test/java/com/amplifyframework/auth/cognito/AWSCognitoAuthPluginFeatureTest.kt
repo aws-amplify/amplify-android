@@ -6,22 +6,15 @@ import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 import com.amplifyframework.statemachine.codegen.states.AuthState
 import com.amplifyframework.testutils.featuretest.API
 import com.amplifyframework.testutils.featuretest.ExpectationShapes
-import com.amplifyframework.testutils.featuretest.FeatureSpecification
+import com.amplifyframework.testutils.featuretest.FeatureTestCase
+import com.amplifyframework.testutils.featuretest.ResponseType.Success
 import com.google.gson.Gson
-import featureTest.json.generators.TestCaseJsonGenerator
 import featureTest.utilities.APICaptorFactory
 import featureTest.utilities.AuthOptionsFactory
 import featureTest.utilities.CognitoMockFactory
 import featureTest.utilities.CognitoRequestFactory.getExpectedRequestFor
 import io.mockk.every
 import io.mockk.mockk
-import java.io.File
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
-import kotlin.reflect.KParameter
-import kotlin.reflect.full.memberFunctions
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.newSingleThreadContext
 import kotlinx.coroutines.runBlocking
@@ -37,11 +30,18 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
+import java.io.File
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+import kotlin.reflect.KParameter
+import kotlin.reflect.full.memberFunctions
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 
 @RunWith(Parameterized::class)
 class AWSCognitoAuthPluginFeatureTest(private val fileName: String) {
 
-    lateinit var feature: FeatureSpecification
+    lateinit var feature: FeatureTestCase
     lateinit var latch: CountDownLatch
 
     val sut = AWSCognitoAuthPlugin()
@@ -62,6 +62,7 @@ class AWSCognitoAuthPluginFeatureTest(private val fileName: String) {
     companion object {
         private const val testSuiteBasePath = "/feature-test/testsuites"
         private const val statesFilesBasePath = "/feature-test/states"
+        private const val configurationFilesBasePath = "/feature-test/configuration"
 
         @JvmStatic
         @Parameterized.Parameters(name = "test file : {0}")
@@ -97,14 +98,14 @@ class AWSCognitoAuthPluginFeatureTest(private val fileName: String) {
         feature.validations.forEach(this::verify)
     }
 
-    private fun readTestFeature(fileName: String): FeatureSpecification {
-        val testCaseFile = this::class.java.getResource(TestCaseJsonGenerator.basePath + "/" + fileName)
+    private fun readTestFeature(fileName: String): FeatureTestCase {
+        val testCaseFile = this::class.java.getResource("$testSuiteBasePath/$fileName")
         feature = Json.decodeFromString(File(testCaseFile!!.toURI()).readText())
         return feature
     }
 
     private fun readconfiguration(configuration: String): RealAWSCognitoAuthPlugin {
-        val configFileUrl = this::class.java.getResource("/feature-test/configuration/$configuration")
+        val configFileUrl = this::class.java.getResource("$configurationFilesBasePath/$configuration")
         val configJSONObject =
             JSONObject(File(configFileUrl!!.file).readText())
                 .getJSONObject("auth")
@@ -151,9 +152,17 @@ class AWSCognitoAuthPluginFeatureTest(private val fileName: String) {
                 assertEquals(getExpectedRequestFor(validation), actualResult)
             }
             is ExpectationShapes.Amplify -> {
-                val actualResult = APICaptorFactory.captors[validation.apiName]?.captured
+                val expectedResponse: Any
+                val actualResult = if (validation.responseType == Success) {
+                    APICaptorFactory.successCaptors[validation.apiName]?.captured.apply {
+                        expectedResponse = Gson().fromJson(validation.response.toString(), this?.javaClass)
+                    }
+                } else {
+                    APICaptorFactory.errorCaptor.captured.cause?.message.apply {
+                        expectedResponse = ((validation.response as JsonObject)["message"] as JsonPrimitive).content
+                    }
+                }
 
-                val expectedResponse = Gson().fromJson(validation.response.toString(), actualResult?.javaClass)
                 assertNotNull(actualResult)
                 assertEquals(expectedResponse, actualResult)
             }

@@ -2,6 +2,7 @@ package featureTest.utilities
 
 import aws.sdk.kotlin.services.cognitoidentityprovider.CognitoIdentityProviderClient
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.CodeDeliveryDetailsType
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.CognitoIdentityProviderException
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeliveryMediumType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ForgotPasswordRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ForgotPasswordResponse
@@ -9,6 +10,7 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.SignUpRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.SignUpResponse
 import com.amplifyframework.auth.cognito.helpers.SRPHelper
 import com.amplifyframework.testutils.featuretest.MockResponse
+import com.amplifyframework.testutils.featuretest.ResponseType
 import io.mockk.CapturingSlot
 import io.mockk.coEvery
 import io.mockk.mockkObject
@@ -22,33 +24,45 @@ import kotlinx.serialization.json.JsonPrimitive
 class CognitoMockFactory(private val mockCognitoIPClient: CognitoIdentityProviderClient) {
     private val captures: MutableMap<String, CapturingSlot<*>> = mutableMapOf()
 
-    fun mock(mockResponse: MockResponse) = when (mockResponse.apiName) {
-        "forgotPassword" -> {
-            val requestBuilderCaptor = slot<ForgotPasswordRequest.Builder.() -> Unit>()
+    fun mock(mockResponse: MockResponse) {
+        val responseObject = mockResponse.response as JsonObject
+        fun expectedException(responseObject: JsonObject) =
+            CognitoIdentityProviderException((responseObject["message"] as JsonPrimitive).content)
 
-            coEvery { mockCognitoIPClient.forgotPassword(capture(requestBuilderCaptor)) } coAnswers {
-                ForgotPasswordResponse.invoke {
-                    this.codeDeliveryDetails = parseCodeDeliveryDetails(mockResponse.response as JsonObject)
+        return when (mockResponse.apiName) {
+            "forgotPassword" -> {
+                val requestBuilderCaptor = slot<ForgotPasswordRequest.Builder.() -> Unit>()
+
+                coEvery { mockCognitoIPClient.forgotPassword(capture(requestBuilderCaptor)) } coAnswers {
+                    if (mockResponse.responseType == ResponseType.Failure) {
+                        throw expectedException(responseObject)
+                    }
+                    ForgotPasswordResponse.invoke {
+                        this.codeDeliveryDetails = parseCodeDeliveryDetails(responseObject)
+                    }
                 }
+
+                captures[mockResponse.apiName] = requestBuilderCaptor
+            }
+            "signUp" -> {
+                mockkObject(SRPHelper)
+                coEvery { SRPHelper.getSecretHash(any(), any(), any()) } returns "a hash"
+
+                val requestCaptor = slot<SignUpRequest.Builder.() -> Unit>()
+
+                coEvery { mockCognitoIPClient.signUp(capture(requestCaptor)) } coAnswers {
+                    if (mockResponse.responseType == ResponseType.Failure) {
+                        throw expectedException(responseObject)
+                    }
+                    SignUpResponse.invoke {
+                        this.codeDeliveryDetails = parseCodeDeliveryDetails(responseObject)
+                    }
+                }
+                captures[mockResponse.apiName] = requestCaptor
             }
 
-            captures[mockResponse.apiName] = requestBuilderCaptor
+            else -> throw Error("mock for ${mockResponse.apiName} not defined!")
         }
-        "signUp" -> {
-            mockkObject(SRPHelper)
-            coEvery { SRPHelper.getSecretHash(any(), any(), any()) } returns "a hash"
-
-            val requestCaptor = slot<SignUpRequest.Builder.() -> Unit>()
-
-            coEvery { mockCognitoIPClient.signUp(capture(requestCaptor)) } coAnswers {
-                SignUpResponse.invoke {
-                    this.codeDeliveryDetails = parseCodeDeliveryDetails(mockResponse.response as JsonObject)
-                }
-            }
-            captures[mockResponse.apiName] = requestCaptor
-        }
-
-        else -> throw Error("mock for ${mockResponse.apiName} not defined!")
     }
 
     private fun parseCodeDeliveryDetails(response: JsonObject): CodeDeliveryDetailsType {

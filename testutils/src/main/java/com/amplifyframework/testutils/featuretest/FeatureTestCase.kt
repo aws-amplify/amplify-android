@@ -10,7 +10,7 @@ import kotlinx.serialization.json.JsonElement
  * To generate schema: see [https://github.com/Ricky12Awesome/json-schema-serialization]
  */
 @Serializable
-data class FeatureSpecification(
+data class FeatureTestCase(
     val description: String,
     val preConditions: PreConditions,
     val api: API,

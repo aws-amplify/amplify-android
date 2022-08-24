@@ -38,6 +38,7 @@ sealed class SignInState : State {
 
     @Transient
     open var srpSignInState: SRPSignInState? = SRPSignInState.NotStarted()
+    @Transient
     open var challengeState: SignInChallengeState? = SignInChallengeState.NotStarted()
 
     class Resolver(

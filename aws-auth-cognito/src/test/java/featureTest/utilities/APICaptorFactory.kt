@@ -27,12 +27,13 @@ class APICaptorFactory(
             resetPassword to mockk<Consumer<AuthResetPasswordResult>>(),
             signUp to mockk<Consumer<AuthSignUpResult>>()
         )
-        val onError = Consumer<Any> {}
-        val captors: MutableMap<AuthAPI, CapturingSlot<*>> = mutableMapOf()
+        val onError = mockk<Consumer<AuthException>>()
+        val successCaptors: MutableMap<AuthAPI, CapturingSlot<*>> = mutableMapOf()
+        val errorCaptor = slot<AuthException>()
     }
 
     init {
-        captors.clear()
+        successCaptors.clear()
         if (authApi.responseType == ResponseType.Success) setupOnSuccess()
         else setupOnError()
     }
@@ -43,21 +44,19 @@ class APICaptorFactory(
                 val resultCaptor = slot<AuthResetPasswordResult>()
                 val consumer = onSuccess[apiName] as Consumer<AuthResetPasswordResult>
                 every { consumer.accept(capture(resultCaptor)) } answers { latch.countDown() }
-                captors[apiName] = resultCaptor
+                successCaptors[apiName] = resultCaptor
             }
             signUp -> {
                 val resultCaptor = slot<AuthSignUpResult>()
                 val consumer = onSuccess[apiName] as Consumer<AuthSignUpResult>
                 every { consumer.accept(capture(resultCaptor)) } answers { latch.countDown() }
-                captors[apiName] = resultCaptor
+                successCaptors[apiName] = resultCaptor
             }
             else -> throw Error("onSuccess for $authApi is not defined!")
         }
     }
 
     private fun setupOnError() {
-        val resultCaptor = slot<AuthException>()
-        every { onError.accept(capture(resultCaptor)) } answers { latch.countDown() }
-        captors[authApi.apiName] = resultCaptor
+        every { onError.accept(capture(errorCaptor)) } answers { latch.countDown() }
     }
 }

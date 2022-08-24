@@ -1,4 +1,4 @@
-package featureTest.json.generators
+package com.amplifyframework.testutils.featuretest.auth.generators.authstategenerators
 
 import com.amplifyframework.statemachine.codegen.data.AWSCredentials
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
@@ -10,19 +10,18 @@ import com.amplifyframework.statemachine.codegen.states.AuthenticationState
 import com.amplifyframework.statemachine.codegen.states.AuthorizationState
 import com.amplifyframework.statemachine.codegen.states.SRPSignInState
 import com.amplifyframework.statemachine.codegen.states.SignInState
-import java.time.Instant
-import java.util.Date
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import org.junit.Test
+import java.time.Instant
+import java.util.*
 
 /**
- * Generates Json for given serializable class
+ * Generates Json for given serializable class, this might be moved back to cognito auth due to added dependency on auth
+ *
  */
 class AuthStateJsonGenerator {
     private val encoder = Json { prettyPrint = true }
 
-    @Test
     fun generateAuthenticationStateSignedIn() {
         val state: AuthState = AuthState.Configured(
             AuthenticationState.SignedIn(
@@ -61,7 +60,6 @@ class AuthStateJsonGenerator {
         print("Example :\n ${encoder.encodeToString(state)} \n")
     }
 
-    @Test
     fun generateSRPSignedIn() {
         val state: AuthState = AuthState.Configured(
             AuthenticationState.SigningIn(
@@ -91,7 +89,6 @@ class AuthStateJsonGenerator {
         print("Example :\n ${encoder.encodeToString(state)} \n")
     }
 
-    @Test
     fun generateAuthStateConfigured() {
         val state: AuthState = AuthState.Configured(AuthenticationState.Configured(), null).printJson()
     }
