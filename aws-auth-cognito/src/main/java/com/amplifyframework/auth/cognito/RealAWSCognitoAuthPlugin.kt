@@ -1037,7 +1037,7 @@ internal class RealAWSCognitoAuthPlugin(
                                 this.attributeName = attributeKey.keyString
                                 this.code = confirmationCode
                             }
-                            val verifyUserAttributeResponse = authEnvironment.cognitoAuthService
+                            authEnvironment.cognitoAuthService
                                 .cognitoIdentityProviderClient?.verifyUserAttribute(
                                     verifyUserAttributeRequest
                                 )
