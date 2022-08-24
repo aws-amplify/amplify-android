@@ -6,6 +6,27 @@ package com.amplifyframework.testutils.featuretest.auth
  * something like `resetPassword` instead of `RESET_PASSWORD`
  */
 enum class AuthAPI {
+    confirmResetPassword,
+    confirmSignIn,
+    confirmSignUp,
+    confirmUserAttribute,
+    deleteUser,
+    fetchAuthSession,
+    fetchDevices,
+    fetchUserAttributes,
+    forgetDevice,
+    getCurrentUser,
+    handleWebUISignInResponse,
+    rememberDevice,
+    resendSignUpCode,
+    resendUserAttributeConfirmationCode,
     resetPassword,
-    signUp;
+    signIn,
+    signInWithSocialWebUI,
+    signInWithWebUI,
+    signOut,
+    signUp,
+    updatePassword,
+    updateUserAttribute,
+    updateUserAttributes
 }
