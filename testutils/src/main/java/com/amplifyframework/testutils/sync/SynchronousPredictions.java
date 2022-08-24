@@ -42,7 +42,7 @@ import java.util.concurrent.TimeUnit;
  * performing various operations.
  */
 public final class SynchronousPredictions {
-    private static final long PREDICTIONS_OPERATION_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(10);
+    private static final long PREDICTIONS_OPERATION_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(15);
     private final PredictionsCategoryBehavior asyncDelegate;
 
     private SynchronousPredictions(PredictionsCategoryBehavior predictions) {
