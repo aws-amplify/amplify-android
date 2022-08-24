@@ -23,6 +23,8 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeviceRememberedSta
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetUserRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ListDevicesRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.UpdateDeviceStatusRequest
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.UpdateUserAttributesRequest
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.UpdateUserAttributesResponse
 import com.amplifyframework.auth.AuthCategoryBehavior
 import com.amplifyframework.auth.AuthChannelEventName
 import com.amplifyframework.auth.AuthCodeDeliveryDetails
@@ -37,6 +39,8 @@ import com.amplifyframework.auth.cognito.helpers.JWTParser
 import com.amplifyframework.auth.cognito.helpers.SRPHelper
 import com.amplifyframework.auth.cognito.helpers.SignInChallengeHelper
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthResendSignUpCodeOptions
+import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttributeOptions
+import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttributesOptions
 import com.amplifyframework.auth.cognito.usecases.ResetPasswordUseCase
 import com.amplifyframework.auth.options.AWSCognitoAuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
@@ -57,8 +61,10 @@ import com.amplifyframework.auth.result.AuthSignUpResult
 import com.amplifyframework.auth.result.AuthUpdateAttributeResult
 import com.amplifyframework.auth.result.step.AuthNextSignInStep
 import com.amplifyframework.auth.result.step.AuthNextSignUpStep
+import com.amplifyframework.auth.result.step.AuthNextUpdateAttributeStep
 import com.amplifyframework.auth.result.step.AuthSignInStep
 import com.amplifyframework.auth.result.step.AuthSignUpStep
+import com.amplifyframework.auth.result.step.AuthUpdateAttributeStep
 import com.amplifyframework.core.Action
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
@@ -861,7 +867,18 @@ internal class RealAWSCognitoAuthPlugin(
         onSuccess: Consumer<AuthUpdateAttributeResult>,
         onError: Consumer<AuthException>
     ) {
-        TODO("Not yet implemented")
+        GlobalScope.launch {
+            try {
+                val attributes = listOf(attribute)
+                val userAttributeOptions = options as? AWSCognitoAuthUpdateUserAttributeOptions
+                val results = updateUserAttributes(attributes.toMutableList(), userAttributeOptions?.metadata)
+                onSuccess.accept(results.entries.first().value)
+            } catch (e: AuthException) {
+                onError.accept(e)
+            } catch (e: Exception) {
+                onError.accept(CognitoAuthExceptionConverter.lookup(e, e.toString()))
+            }
+        }
     }
 
     override fun updateUserAttribute(
@@ -869,7 +886,7 @@ internal class RealAWSCognitoAuthPlugin(
         onSuccess: Consumer<AuthUpdateAttributeResult>,
         onError: Consumer<AuthException>
     ) {
-        TODO("Not yet implemented")
+        updateUserAttribute(attribute, AuthUpdateUserAttributeOptions.defaults(), onSuccess, onError)
     }
 
     override fun updateUserAttributes(
@@ -878,7 +895,16 @@ internal class RealAWSCognitoAuthPlugin(
         onSuccess: Consumer<MutableMap<AuthUserAttributeKey, AuthUpdateAttributeResult>>,
         onError: Consumer<AuthException>
     ) {
-        TODO("Not yet implemented")
+        GlobalScope.launch {
+            try {
+                val userAttributesOptions = options as? AWSCognitoAuthUpdateUserAttributesOptions
+                onSuccess.accept(updateUserAttributes(attributes, userAttributesOptions?.metadata))
+            } catch (e: AuthException) {
+                onError.accept(e)
+            } catch (e: Exception) {
+                onError.accept(CognitoAuthExceptionConverter.lookup(e, e.toString()))
+            }
+        }
     }
 
     override fun updateUserAttributes(
@@ -886,7 +912,93 @@ internal class RealAWSCognitoAuthPlugin(
         onSuccess: Consumer<MutableMap<AuthUserAttributeKey, AuthUpdateAttributeResult>>,
         onError: Consumer<AuthException>
     ) {
-        TODO("Not yet implemented")
+        updateUserAttributes(attributes, AuthUpdateUserAttributesOptions.defaults(), onSuccess, onError)
+    }
+
+    private suspend fun updateUserAttributes(
+        attributes: MutableList<AuthUserAttribute>,
+        userAttributesOptionsMetadata: Map<String, String>?,
+    ): MutableMap<AuthUserAttributeKey, AuthUpdateAttributeResult> {
+
+        return suspendCoroutine { continuation ->
+
+            authStateMachine.getCurrentState { authState ->
+                when (authState.authNState) {
+                    // Check if user signed in
+                    is AuthenticationState.SignedIn -> {
+                        GlobalScope.launch {
+                            try {
+                                val accessToken = getSession().userPoolTokens.value?.accessToken
+                                var userAttributes = attributes.map {
+                                    AttributeType.invoke {
+                                        name = it.key.keyString
+                                        value = it.value
+                                    }
+                                }
+                                val userAttributesRequest = UpdateUserAttributesRequest.invoke {
+                                    this.accessToken = accessToken
+                                    this.userAttributes = userAttributes
+                                    this.clientMetadata = userAttributesOptionsMetadata
+                                }
+                                val userAttributeResponse = authEnvironment.cognitoAuthService
+                                    .cognitoIdentityProviderClient?.updateUserAttributes(
+                                        userAttributesRequest
+                                    )
+
+                                continuation.resume(getUpdateUserAttributeResult(userAttributeResponse, userAttributes))
+                            } catch (e: Exception) {
+                                continuation.resumeWithException(CognitoAuthExceptionConverter.lookup(e, e.toString()))
+                            }
+                        }
+                    }
+                    else -> continuation.resumeWithException(AuthException.InvalidStateException())
+                }
+            }
+        }
+    }
+
+    private fun getUpdateUserAttributeResult(
+        response: UpdateUserAttributesResponse?,
+        userAttributeList: List<AttributeType>
+    ): MutableMap<AuthUserAttributeKey, AuthUpdateAttributeResult> {
+
+        val finalResult = HashMap<AuthUserAttributeKey, AuthUpdateAttributeResult>()
+
+        response?.codeDeliveryDetailsList?.let {
+            val codeDeliveryDetailsList = it
+            for (item in codeDeliveryDetailsList) {
+                item.attributeName?.let {
+
+                    val deliveryMedium = AuthCodeDeliveryDetails.DeliveryMedium.fromString(item.deliveryMedium?.value)
+                    val authCodeDeliveryDetails = AuthCodeDeliveryDetails(
+                        item.destination.toString(),
+                        deliveryMedium,
+                        item.attributeName
+                    )
+                    val nextStep = AuthNextUpdateAttributeStep(
+                        AuthUpdateAttributeStep.CONFIRM_ATTRIBUTE_WITH_CODE,
+                        HashMap(),
+                        authCodeDeliveryDetails
+                    )
+                    val updateAttributeResult = AuthUpdateAttributeResult(false, nextStep)
+                    finalResult[AuthUserAttributeKey.custom(item.attributeName)] = updateAttributeResult
+                }
+            }
+        }
+
+        // Check if all items are added to the dictionary
+        for (item in userAttributeList) {
+            if (!finalResult.containsKey(AuthUserAttributeKey.custom(item.name))) {
+                val completeStep = AuthNextUpdateAttributeStep(
+                    AuthUpdateAttributeStep.DONE,
+                    HashMap(),
+                    null
+                )
+                val updateAttributeResult = AuthUpdateAttributeResult(true, completeStep)
+                finalResult[AuthUserAttributeKey.custom(item.name)] = updateAttributeResult
+            }
+        }
+        return finalResult
     }
 
     override fun resendUserAttributeConfirmationCode(
