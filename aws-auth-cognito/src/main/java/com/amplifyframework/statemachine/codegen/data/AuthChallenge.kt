@@ -13,12 +13,11 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.statemachine.codegen.actions
+package com.amplifyframework.statemachine.codegen.data
 
-import com.amplifyframework.statemachine.Action
-import com.amplifyframework.statemachine.codegen.events.SignInEvent
-
-interface SignInActions {
-    fun startSRPAuthAction(event: SignInEvent.EventType.InitiateSignInWithSRP): Action
-    fun initResolveChallenge(event: SignInEvent.EventType.ReceivedChallenge): Action
-}
+data class AuthChallenge(
+    val challengeName: String,
+    val username: String,
+    val session: String?,
+    val parameters: Map<String, String>?
+)
