@@ -15,6 +15,8 @@
 
 package com.amplifyframework.datastore;
 
+import android.content.Context;
+
 import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -28,8 +30,6 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import android.content.Context;
-
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiCategory;
 import com.amplifyframework.api.ApiCategoryConfiguration;
@@ -37,9 +37,7 @@ import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.ApiPlugin;
 import com.amplifyframework.api.events.ApiChannelEventName;
 import com.amplifyframework.api.events.ApiEndpointStatusChangeEvent;
-import com.amplifyframework.api.graphql.GraphQLLocation;
 import com.amplifyframework.api.graphql.GraphQLOperation;
-import com.amplifyframework.api.graphql.GraphQLPathSegment;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.PaginatedResult;
