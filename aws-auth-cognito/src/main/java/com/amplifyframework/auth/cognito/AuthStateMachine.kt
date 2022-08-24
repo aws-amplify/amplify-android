@@ -21,9 +21,9 @@ import com.amplifyframework.auth.cognito.actions.AuthorizationCognitoActions
 import com.amplifyframework.auth.cognito.actions.DeleteUserActions
 import com.amplifyframework.auth.cognito.actions.FetchAuthSessionCognitoActions
 import com.amplifyframework.auth.cognito.actions.SRPCognitoActions
+import com.amplifyframework.auth.cognito.actions.SignInChallengeCognitoActions
 import com.amplifyframework.auth.cognito.actions.SignInCognitoActions
 import com.amplifyframework.auth.cognito.actions.SignOutCognitoActions
-import com.amplifyframework.auth.cognito.actions.SignUpCognitoActions
 import com.amplifyframework.statemachine.Environment
 import com.amplifyframework.statemachine.StateMachine
 import com.amplifyframework.statemachine.StateMachineResolver
@@ -33,9 +33,9 @@ import com.amplifyframework.statemachine.codegen.states.AuthorizationState
 import com.amplifyframework.statemachine.codegen.states.DeleteUserState
 import com.amplifyframework.statemachine.codegen.states.FetchAuthSessionState
 import com.amplifyframework.statemachine.codegen.states.SRPSignInState
+import com.amplifyframework.statemachine.codegen.states.SignInChallengeState
 import com.amplifyframework.statemachine.codegen.states.SignInState
 import com.amplifyframework.statemachine.codegen.states.SignOutState
-import com.amplifyframework.statemachine.codegen.states.SignUpState
 
 internal class AuthStateMachine(
     resolver: StateMachineResolver<AuthState>,
@@ -45,8 +45,11 @@ internal class AuthStateMachine(
     constructor(environment: Environment) : this(
         AuthState.Resolver(
             AuthenticationState.Resolver(
-                SignUpState.Resolver(SignUpCognitoActions),
-                SignInState.Resolver(SRPSignInState.Resolver(SRPCognitoActions), SignInCognitoActions),
+                SignInState.Resolver(
+                    SRPSignInState.Resolver(SRPCognitoActions),
+                    SignInChallengeState.Resolver(SignInChallengeCognitoActions),
+                    SignInCognitoActions
+                ),
                 SignOutState.Resolver(SignOutCognitoActions),
                 AuthenticationCognitoActions,
             ),
@@ -64,9 +67,11 @@ internal class AuthStateMachine(
         fun logging(environment: Environment) = AuthStateMachine(
             AuthState.Resolver(
                 AuthenticationState.Resolver(
-                    SignUpState.Resolver(SignUpCognitoActions).logging(),
-                    SignInState.Resolver(SRPSignInState.Resolver(SRPCognitoActions).logging(), SignInCognitoActions)
-                        .logging(),
+                    SignInState.Resolver(
+                        SRPSignInState.Resolver(SRPCognitoActions).logging(),
+                        SignInChallengeState.Resolver(SignInChallengeCognitoActions).logging(),
+                        SignInCognitoActions
+                    ).logging(),
                     SignOutState.Resolver(SignOutCognitoActions).logging(),
                     AuthenticationCognitoActions,
                 ).logging(),
