@@ -507,7 +507,7 @@ class RealAWSCognitoAuthPluginTest {
         plugin.confirmResetPassword(user, pass, code, AuthConfirmResetPasswordOptions.defaults(), onSuccess, onError)
 
         // THEN
-        assertTrue { latch.await(50, TimeUnit.SECONDS) }
+        assertTrue { latch.await(5, TimeUnit.SECONDS) }
         verify(exactly = 0) { onSuccess.call() }
         verify { onError.accept(resultCaptor.captured) }
 
