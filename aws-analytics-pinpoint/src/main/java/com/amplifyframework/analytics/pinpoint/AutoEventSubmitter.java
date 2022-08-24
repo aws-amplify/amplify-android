@@ -21,8 +21,6 @@ import android.os.HandlerThread;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.logging.Logger;
 
-import com.amazonaws.mobileconnectors.pinpoint.analytics.AnalyticsClient;
-
 import java.util.Locale;
 
 /**
