@@ -16,19 +16,15 @@
 package com.amplifyframework.analytics.pinpoint
 
 import android.content.Context
-import android.content.SharedPreferences
 import com.amplifyframework.analytics.pinpoint.internal.core.idresolver.SharedPrefsUniqueIdService
 import com.amplifyframework.analytics.pinpoint.targeting.TargetingClient
 import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.json.Json
 
 @OptIn(ExperimentalSerializationApi::class)
 internal class SessionClient(
     private val context: Context,
     var analyticsClient: AnalyticsClient?,
     var targetingClient: TargetingClient,
-    private var sharedPreferences: SharedPreferences,
     private var sharedPrefsUniqueIdService: SharedPrefsUniqueIdService
 ) {
 
@@ -38,17 +34,6 @@ internal class SessionClient(
     private val sessionPauseEvent = "_session.pause"
     private val sessionResumeEvent = "_session.resume"
     private val sharedPrefsSessionKey = "AWSPinpoint.Session"
-
-    init {
-        val sessionString = sharedPreferences.getString(sharedPrefsSessionKey, null)
-        sessionString?.let {
-            val json = Json {
-                encodeDefaults = true
-                explicitNulls = false
-            }
-            session = json.decodeFromString<Session>(it)
-        }
-    }
 
     @Synchronized
     fun startSession() {

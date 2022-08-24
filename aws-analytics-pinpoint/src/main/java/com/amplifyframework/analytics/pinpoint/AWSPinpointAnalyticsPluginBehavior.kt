@@ -22,6 +22,7 @@ import com.amplifyframework.analytics.AnalyticsDoubleProperty
 import com.amplifyframework.analytics.AnalyticsEventBehavior
 import com.amplifyframework.analytics.AnalyticsIntegerProperty
 import com.amplifyframework.analytics.AnalyticsProperties
+import com.amplifyframework.analytics.AnalyticsPropertyBehavior
 import com.amplifyframework.analytics.AnalyticsStringProperty
 import com.amplifyframework.analytics.UserProfile
 import com.amplifyframework.analytics.pinpoint.models.AWSPinpointUserProfile
@@ -49,10 +50,7 @@ internal class AWSPinpointAnalyticsPluginBehavior(
                 it.forEach { entry ->
                     val key = entry.key
                     when (val attribute = entry.value) {
-                        is AnalyticsStringProperty,
-                        is AnalyticsBooleanProperty,
-                        is AnalyticsDoubleProperty,
-                        is AnalyticsIntegerProperty -> {
+                        is AnalyticsPropertyBehavior -> {
                             endpointUser.addUserAttribute(key, listOf(attribute.value.toString()))
                         }
                     }

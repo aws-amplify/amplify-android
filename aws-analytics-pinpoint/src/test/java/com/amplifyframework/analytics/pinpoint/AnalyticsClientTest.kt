@@ -129,4 +129,27 @@ class AnalyticsClientTest {
         analyticsClient.recordEvent(pinpointEvent)
         coVerify(exactly = 1) { eventRecorder.recordEvent(pinpointEvent) }
     }
+
+    @Test
+    fun `test submitEvents`() {
+        coEvery { eventRecorder.submitEvents() } returns listOf()
+        analyticsClient.submitEvents()
+        coVerify(exactly = 1) { eventRecorder.submitEvents() }
+    }
+
+    @Test
+    fun `test addGlobalAttributes`() {
+        val attributeName = "attributeName"
+        val attributeValue = "attributeValue"
+        analyticsClient.addGlobalAttribute(attributeName, attributeValue)
+        assertEquals(analyticsClient.getGlobalAttributes()[attributeName], "attributeValue")
+    }
+
+    @Test
+    fun `test addGlobalMetrics`() {
+        val metricName = "attributeName"
+        val metricValue = 1.0
+        analyticsClient.addGlobalMetric(metricName, metricValue)
+        assertEquals(analyticsClient.getGlobalMetrics()[metricName], 1.0)
+    }
 }

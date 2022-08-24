@@ -39,7 +39,7 @@ internal class CognitoCredentialsProvider : AuthCredentialsProvider {
                     } ?: continuation.resumeWithException(
                         Exception(
                             "Failed to get identity ID. " +
-                                    "Check if you are signed in and configured identity pools correctly."
+                                "Check if you are signed in and configured identity pools correctly."
                         )
                     )
                 },
@@ -62,7 +62,7 @@ internal class CognitoCredentialsProvider : AuthCredentialsProvider {
                     } ?: continuation.resumeWithException(
                         Exception(
                             "Failed to get credentials. " +
-                                    "Check if you are signed in and configured identity pools correctly."
+                                "Check if you are signed in and configured identity pools correctly."
                         )
                     )
                 },

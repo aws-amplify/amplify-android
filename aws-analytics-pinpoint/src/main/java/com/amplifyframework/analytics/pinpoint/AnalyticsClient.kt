@@ -134,4 +134,14 @@ internal class AnalyticsClient(
     fun removeGlobalMetric(metricName: String) {
         globalMetrics.remove(metricName)
     }
+
+    /*
+    * adding for testing
+    * */
+    internal fun getGlobalAttributes() = globalAttributes
+
+    /*
+    * adding for testing
+    * */
+    internal fun getGlobalMetrics() = globalMetrics
 }

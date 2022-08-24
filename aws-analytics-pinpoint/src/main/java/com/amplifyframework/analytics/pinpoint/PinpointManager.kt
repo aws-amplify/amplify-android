@@ -61,7 +61,7 @@ internal class PinpointManager constructor(
             androidDeviceDetails,
             context
         )
-        sessionClient = SessionClient(context, null, targetingClient, sharedPrefs, sharedPrefsUniqueIdService)
+        sessionClient = SessionClient(context, null, targetingClient, sharedPrefsUniqueIdService)
         analyticsClient = AnalyticsClient(
             context,
             pinpointClient,

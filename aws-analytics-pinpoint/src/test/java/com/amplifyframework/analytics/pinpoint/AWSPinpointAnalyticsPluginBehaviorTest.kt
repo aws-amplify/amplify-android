@@ -18,16 +18,23 @@ import android.app.Application
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.amplifyframework.analytics.AnalyticsEvent
+import com.amplifyframework.analytics.AnalyticsProperties
+import com.amplifyframework.analytics.pinpoint.internal.core.idresolver.SharedPrefsUniqueIdService
+import com.amplifyframework.analytics.pinpoint.models.AWSPinpointUserProfile
 import com.amplifyframework.analytics.pinpoint.models.AndroidAppDetails
 import com.amplifyframework.analytics.pinpoint.models.AndroidDeviceDetails
 import com.amplifyframework.analytics.pinpoint.models.PinpointEvent
 import com.amplifyframework.analytics.pinpoint.models.PinpointSession
 import com.amplifyframework.analytics.pinpoint.models.SDKInfo
 import com.amplifyframework.analytics.pinpoint.targeting.TargetingClient
+import com.amplifyframework.analytics.pinpoint.targeting.endpointProfile.EndpointProfile
+import com.amplifyframework.analytics.pinpoint.targeting.notification.PinpointNotificationClient
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import io.mockk.verify
 import java.util.UUID
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -42,6 +49,10 @@ class AWSPinpointAnalyticsPluginBehaviorTest {
     private val autoSessionTrackerMock = mockk<AutoSessionTracker>(relaxed = true)
     private val context: Context = ApplicationProvider.getApplicationContext()
     private lateinit var awsPinpointAnalyticsPluginBehavior: AWSPinpointAnalyticsPluginBehavior
+    private val pinpointNotificationClient = mockk<PinpointNotificationClient>()
+    private val sharedPrefsUniqueIdService = mockk<SharedPrefsUniqueIdService>()
+    private val androidAppDetails = AndroidAppDetails("com.test.app", "TestApp", "com.test.app", "1.0", "test")
+    private val androidDeviceDetails = AndroidDeviceDetails("test")
 
     @Before
     fun setup() {
@@ -136,5 +147,70 @@ class AWSPinpointAnalyticsPluginBehaviorTest {
         awsPinpointAnalyticsPluginBehavior.disable()
         verify(exactly = 1) { autoEventSubmitterMock.stop() }
         verify(exactly = 1) { autoSessionTrackerMock.stopSessionTracking(context.applicationContext as Application) }
+    }
+
+    @Test
+    fun `test identify user`() {
+        every { sharedPrefsUniqueIdService.getUniqueId() }.answers { "UNIQUE_ID" }
+        every { targetingClientMock.currentEndpoint() }.answers {
+            EndpointProfile(
+                pinpointNotificationClient,
+                sharedPrefsUniqueIdService,
+                androidAppDetails,
+                androidDeviceDetails,
+                ApplicationProvider.getApplicationContext()
+            )
+        }
+        val actualEndpoint = slot<EndpointProfile>()
+        every { targetingClientMock.updateEndpointProfile(capture(actualEndpoint)) } returns Unit
+
+        val properties =
+            AnalyticsProperties.builder()
+                .add("key1", "String1")
+                .add("key2", 1.0)
+                .add("key3", true)
+                .add("key4", 1)
+                .build()
+        val userProfile = AWSPinpointUserProfile.builder()
+            .email("test@test.com")
+            .name("test")
+            .userAttributes(properties)
+            .build()
+        awsPinpointAnalyticsPluginBehavior.identifyUser(
+            "USER_ID",
+            userProfile
+        )
+
+        verify(exactly = 1) { targetingClientMock.updateEndpointProfile(any()) }
+        val expectedUserAttributes =
+            mapOf("key1" to listOf("String1"), "key2" to listOf("1.0"), "key3" to listOf("true"), "key4" to listOf("1"))
+        val expectedEndpointAttributes =
+            mapOf("email" to listOf("test@test.com"), "name" to listOf("test"), "plan" to listOf())
+        assertEquals(actualEndpoint.captured.user.getUserAttributes(), expectedUserAttributes)
+        assertEquals(actualEndpoint.captured.allAttributes, expectedEndpointAttributes)
+        assertEquals(actualEndpoint.captured.user.getUserId(), "USER_ID")
+    }
+
+    @Test
+    fun `test registerGlobalProperties`() {
+        val properties = AnalyticsProperties.builder()
+            .add("key1", "String")
+            .add("key2", true)
+            .add("key3", 1.0)
+            .add("key4", 1)
+            .build()
+        awsPinpointAnalyticsPluginBehavior.registerGlobalProperties(properties)
+        verify(exactly = 1) { analyticsClientMock.addGlobalAttribute("key1", "String") }
+        verify(exactly = 1) { analyticsClientMock.addGlobalAttribute("key2", "true") }
+        verify(exactly = 1) { analyticsClientMock.addGlobalMetric("key3", 1.0) }
+        verify(exactly = 1) { analyticsClientMock.addGlobalMetric("key4", "1".toDouble()) }
+    }
+
+    @Test
+    fun `test unregisterGlobalProperties`() {
+        val propertyName = "key"
+        awsPinpointAnalyticsPluginBehavior.unregisterGlobalProperties(propertyName)
+        verify(exactly = 1) { analyticsClientMock.removeGlobalAttribute("key") }
+        verify(exactly = 1) { analyticsClientMock.removeGlobalMetric("key") }
     }
 }
