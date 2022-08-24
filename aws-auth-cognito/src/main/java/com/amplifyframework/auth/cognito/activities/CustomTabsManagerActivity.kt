@@ -25,7 +25,7 @@ import com.amplifyframework.core.Amplify
 /**
  * Handles Hosted UI sign in with custom tabs
  */
-class CustomTabsManagerActivity : Activity() {
+internal class CustomTabsManagerActivity : Activity() {
     private var customTabsLaunched = false
     private var customTabsIntent: Intent? = null
     override fun onCreate(savedInstanceState: Bundle?) {

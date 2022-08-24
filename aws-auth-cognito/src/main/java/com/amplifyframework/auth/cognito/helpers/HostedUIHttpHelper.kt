@@ -15,7 +15,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 
-object HostedUIHttpHelper {
+internal object HostedUIHttpHelper {
 
     private val json = Json { ignoreUnknownKeys = true }
 
@@ -55,7 +55,8 @@ object HostedUIHttpHelper {
     private fun parseTokenResponse(responseString: String): CognitoUserPoolTokens {
 
         if (responseString.isEmpty()) {
-            // throw
+            // TODO: Better error message
+            throw Exception()
         }
 
         try {

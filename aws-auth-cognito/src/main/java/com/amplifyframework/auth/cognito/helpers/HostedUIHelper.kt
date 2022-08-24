@@ -7,7 +7,7 @@ import com.amplifyframework.auth.options.AuthWebUISignInOptions
 import com.amplifyframework.statemachine.codegen.data.HostedUIOptions
 import com.amplifyframework.statemachine.codegen.data.HostedUIProviderInfo
 
-object HostedUIHelper {
+internal object HostedUIHelper {
 
     fun createHostedUIOptions(
         callingActivity: Activity,

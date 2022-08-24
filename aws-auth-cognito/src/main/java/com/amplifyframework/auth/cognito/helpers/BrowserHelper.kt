@@ -22,7 +22,7 @@ import android.net.Uri
 import androidx.browser.customtabs.CustomTabsClient
 import androidx.browser.customtabs.CustomTabsService
 
-object BrowserHelper {
+internal object BrowserHelper {
 
     /***
      * Check if a browser is installed on the device to launch HostedUI.

@@ -32,7 +32,7 @@ import com.amplifyframework.statemachine.codegen.data.HostedUIOptions
 import com.amplifyframework.statemachine.codegen.data.OauthConfiguration
 import java.net.URL
 
-internal class HostedUIClient private constructor(context: Context, val configuration: OauthConfiguration) :
+internal class HostedUIClient private constructor(context: Context, private val configuration: OauthConfiguration) :
     CustomTabsServiceConnection() {
 
     private val proofKey = PkceHelper.generateRandom()

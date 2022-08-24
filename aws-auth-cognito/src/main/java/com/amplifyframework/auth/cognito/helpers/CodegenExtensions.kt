@@ -2,7 +2,7 @@ package com.amplifyframework.auth.cognito.helpers
 
 import com.amplifyframework.auth.AuthProvider
 
-val AuthProvider.userPoolProviderName: String
+internal val AuthProvider.userPoolProviderName: String
     get() {
         return when (this) {
             AuthProvider.amazon() -> "LoginWithAmazon"

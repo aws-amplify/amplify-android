@@ -23,7 +23,7 @@ import com.amplifyframework.core.Amplify
 /**
  * Handles auth redirect for sign-in and sign-out.
  */
-class HostedUIRedirectActivity : Activity() {
+internal class HostedUIRedirectActivity : Activity() {
 
     override fun onCreate(savedInstanceBundle: Bundle?) {
         super.onCreate(savedInstanceBundle)

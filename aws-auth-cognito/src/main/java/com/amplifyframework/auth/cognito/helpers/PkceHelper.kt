@@ -24,7 +24,7 @@ import kotlin.Throws
 /**
  * Utility class to generate random string, hash, and encoding.
  */
-object PkceHelper {
+internal object PkceHelper {
 
     /**
      * Generates a unique string.
