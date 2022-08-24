@@ -31,9 +31,6 @@ internal class SessionClient(
     var session: Session? = null
     private val sessionStopEvent = "_session.stop"
     private val sessionStartEvent = "_session.start"
-    private val sessionPauseEvent = "_session.pause"
-    private val sessionResumeEvent = "_session.resume"
-    private val sharedPrefsSessionKey = "AWSPinpoint.Session"
 
     @Synchronized
     fun startSession() {
