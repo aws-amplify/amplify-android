@@ -1127,6 +1127,9 @@ internal class RealAWSCognitoAuthPlugin(
                             )
                         )
                     }
+                    else -> {
+                        // No-op
+                    }
                 }
             },
             null
