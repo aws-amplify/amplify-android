@@ -947,9 +947,12 @@ internal class RealAWSCognitoAuthPlugin(
                                             userAttributesRequest
                                         )
 
-                                    continuation.resume(getUpdateUserAttributeResult(userAttributeResponse, userAttributes))
-                                } ?: continuation.resumeWithException(AuthException.InvalidUserPoolConfigurationException())
-
+                                    continuation.resume(
+                                        getUpdateUserAttributeResult(userAttributeResponse, userAttributes)
+                                    )
+                                } ?: continuation.resumeWithException(
+                                    AuthException.InvalidUserPoolConfigurationException()
+                                )
                             } catch (e: Exception) {
                                 continuation.resumeWithException(CognitoAuthExceptionConverter.lookup(e, e.toString()))
                             }

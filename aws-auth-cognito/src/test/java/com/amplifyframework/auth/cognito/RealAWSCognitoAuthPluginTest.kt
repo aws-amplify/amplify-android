@@ -1137,7 +1137,9 @@ class RealAWSCognitoAuthPluginTest {
         }
 
         val expectedException = CognitoIdentityProviderException("Some Cognito Message")
-        coEvery { authService.cognitoIdentityProviderClient?.verifyUserAttribute(any<VerifyUserAttributeRequest>()) } answers  {
+        coEvery {
+            authService.cognitoIdentityProviderClient?.verifyUserAttribute(any<VerifyUserAttributeRequest>())
+        } answers {
             throw expectedException
         }
 
@@ -1164,7 +1166,6 @@ class RealAWSCognitoAuthPluginTest {
         val onError = mockk<Consumer<AuthException>>(relaxed = true)
         val listenLatch = CountDownLatch(1)
 
-
         val currentAuthState = mockk<AuthState> {
             every { authNState } returns AuthenticationState.SignedIn(mockk())
             every { authZState } returns AuthorizationState.SessionEstablished(credentials)
@@ -1177,7 +1178,6 @@ class RealAWSCognitoAuthPluginTest {
             authService.cognitoIdentityProviderClient?.verifyUserAttribute(any<VerifyUserAttributeRequest>())
         } returns VerifyUserAttributeResponse.invoke {
         }
-
         every {
             onSuccess.call()
         } answers {
@@ -1191,7 +1191,7 @@ class RealAWSCognitoAuthPluginTest {
             onError
         )
 
-        assertTrue { listenLatch.await(60, TimeUnit.SECONDS) }
+        assertTrue { listenLatch.await(5, TimeUnit.SECONDS) }
         coVerify(exactly = 1) { onSuccess.call() }
         coVerify(exactly = 0) { onError.accept(any()) }
     }
