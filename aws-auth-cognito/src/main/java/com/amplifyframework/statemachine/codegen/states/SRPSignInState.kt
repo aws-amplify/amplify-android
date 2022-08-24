@@ -31,7 +31,6 @@ sealed class SRPSignInState : State {
     data class RespondingPasswordVerifier(val id: String = "") : SRPSignInState()
     @Serializable
     data class SignedIn(val id: String = "") : SRPSignInState()
-    data class NextAuthChallenge(val id: String = "") : SRPSignInState()
     data class Cancelling(val id: String = "") : SRPSignInState()
     data class Error(val exception: Exception) : SRPSignInState()
 
@@ -63,9 +62,7 @@ sealed class SRPSignInState : State {
                     else -> defaultResolution
                 }
                 is RespondingPasswordVerifier -> when (srpEvent) {
-                    is SRPEvent.EventType.RespondNextAuthChallenge -> StateResolution(NextAuthChallenge())
                     is SRPEvent.EventType.ThrowPasswordVerifierError -> StateResolution(Error(srpEvent.exception))
-                    is SRPEvent.EventType.FinalizeSRPSignIn -> StateResolution(SignedIn())
                     is SRPEvent.EventType.CancelSRPSignIn -> StateResolution(Cancelling())
                     else -> defaultResolution
                 }
