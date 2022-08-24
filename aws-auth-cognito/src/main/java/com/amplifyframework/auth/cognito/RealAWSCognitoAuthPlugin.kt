@@ -930,23 +930,26 @@ internal class RealAWSCognitoAuthPlugin(
                         GlobalScope.launch {
                             try {
                                 val accessToken = getSession().userPoolTokens.value?.accessToken
-                                var userAttributes = attributes.map {
-                                    AttributeType.invoke {
-                                        name = it.key.keyString
-                                        value = it.value
+                                accessToken?.let {
+                                    var userAttributes = attributes.map {
+                                        AttributeType.invoke {
+                                            name = it.key.keyString
+                                            value = it.value
+                                        }
                                     }
-                                }
-                                val userAttributesRequest = UpdateUserAttributesRequest.invoke {
-                                    this.accessToken = accessToken
-                                    this.userAttributes = userAttributes
-                                    this.clientMetadata = userAttributesOptionsMetadata
-                                }
-                                val userAttributeResponse = authEnvironment.cognitoAuthService
-                                    .cognitoIdentityProviderClient?.updateUserAttributes(
-                                        userAttributesRequest
-                                    )
+                                    val userAttributesRequest = UpdateUserAttributesRequest.invoke {
+                                        this.accessToken = accessToken
+                                        this.userAttributes = userAttributes
+                                        this.clientMetadata = userAttributesOptionsMetadata
+                                    }
+                                    val userAttributeResponse = authEnvironment.cognitoAuthService
+                                        .cognitoIdentityProviderClient?.updateUserAttributes(
+                                            userAttributesRequest
+                                        )
 
-                                continuation.resume(getUpdateUserAttributeResult(userAttributeResponse, userAttributes))
+                                    continuation.resume(getUpdateUserAttributeResult(userAttributeResponse, userAttributes))
+                                } ?: continuation.resumeWithException(AuthException.InvalidUserPoolConfigurationException())
+
                             } catch (e: Exception) {
                                 continuation.resumeWithException(CognitoAuthExceptionConverter.lookup(e, e.toString()))
                             }
@@ -1032,16 +1035,18 @@ internal class RealAWSCognitoAuthPlugin(
                     GlobalScope.launch {
                         try {
                             val accessToken = getSession().userPoolTokens.value?.accessToken
-                            val verifyUserAttributeRequest = VerifyUserAttributeRequest.invoke {
-                                this.accessToken = accessToken
-                                this.attributeName = attributeKey.keyString
-                                this.code = confirmationCode
-                            }
-                            authEnvironment.cognitoAuthService
-                                .cognitoIdentityProviderClient?.verifyUserAttribute(
-                                    verifyUserAttributeRequest
-                                )
-                            onSuccess.call()
+                            accessToken?.let {
+                                val verifyUserAttributeRequest = VerifyUserAttributeRequest.invoke {
+                                    this.accessToken = accessToken
+                                    this.attributeName = attributeKey.keyString
+                                    this.code = confirmationCode
+                                }
+                                authEnvironment.cognitoAuthService
+                                    .cognitoIdentityProviderClient?.verifyUserAttribute(
+                                        verifyUserAttributeRequest
+                                    )
+                                onSuccess.call()
+                            } ?: onError.accept(AuthException.InvalidUserPoolConfigurationException())
                         } catch (e: Exception) {
                             onError.accept(CognitoAuthExceptionConverter.lookup(e, e.toString()))
                         }
