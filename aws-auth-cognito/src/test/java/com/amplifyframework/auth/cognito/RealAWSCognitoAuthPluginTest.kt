@@ -943,7 +943,7 @@ class RealAWSCognitoAuthPluginTest {
             onError
         )
 
-        assertTrue { listenLatch.await(50, TimeUnit.SECONDS) }
+        assertTrue { listenLatch.await(5, TimeUnit.SECONDS) }
         coVerify(exactly = 1) { onSuccess.accept(slot.captured) }
         assertTrue(slot.captured.isUpdated, "attribute should be successfully updated")
         assertNotNull(slot.captured.nextStep, "next step should not be null")
@@ -1005,7 +1005,7 @@ class RealAWSCognitoAuthPluginTest {
             onError
         )
 
-        assertTrue { listenLatch.await(50, TimeUnit.SECONDS) }
+        assertTrue { listenLatch.await(5, TimeUnit.SECONDS) }
         coVerify(exactly = 1) { onSuccess.accept(slot.captured) }
         assertEquals(slot.captured.size, 2)
         // nickname
