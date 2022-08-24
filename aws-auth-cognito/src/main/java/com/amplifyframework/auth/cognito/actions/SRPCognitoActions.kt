@@ -18,6 +18,16 @@ package com.amplifyframework.auth.cognito.actions
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AuthFlowType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
 import com.amplifyframework.auth.AuthException
+import com.amplifyframework.auth.cognito.AuthConstants.KEY_PASSWORD_CLAIM_SECRET_BLOCK
+import com.amplifyframework.auth.cognito.AuthConstants.KEY_PASSWORD_CLAIM_SIGNATURE
+import com.amplifyframework.auth.cognito.AuthConstants.KEY_SALT
+import com.amplifyframework.auth.cognito.AuthConstants.KEY_SECRET_BLOCK
+import com.amplifyframework.auth.cognito.AuthConstants.KEY_SECRET_HASH
+import com.amplifyframework.auth.cognito.AuthConstants.KEY_SRP_A
+import com.amplifyframework.auth.cognito.AuthConstants.KEY_SRP_B
+import com.amplifyframework.auth.cognito.AuthConstants.KEY_TIMESTAMP
+import com.amplifyframework.auth.cognito.AuthConstants.KEY_USERNAME
+import com.amplifyframework.auth.cognito.AuthConstants.KEY_USER_ID_FOR_SRP
 import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.auth.cognito.helpers.SRPHelper
@@ -28,15 +38,6 @@ import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.SRPEvent
 
 object SRPCognitoActions : SRPActions {
-    private const val KEY_SECRET_HASH = "SECRET_HASH"
-    private const val KEY_USERNAME = "USERNAME"
-    private const val KEY_PASSWORD_CLAIM_SECRET_BLOCK = "PASSWORD_CLAIM_SECRET_BLOCK"
-    private const val KEY_PASSWORD_CLAIM_SIGNATURE = "PASSWORD_CLAIM_SIGNATURE"
-    private const val KEY_TIMESTAMP = "TIMESTAMP"
-    private const val KEY_SALT = "SALT"
-    private const val KEY_SECRET_BLOCK = "SECRET_BLOCK"
-    private const val KEY_SRP_B = "SRP_B"
-    private const val KEY_USER_ID_FOR_SRP = "USER_ID_FOR_SRP"
     override fun initiateSRPAuthAction(event: SRPEvent.EventType.InitiateSRP) =
         Action<AuthEnvironment>("InitSRPAuth") { id, dispatcher ->
             logger?.verbose("$id Starting execution")
@@ -49,7 +50,7 @@ object SRPCognitoActions : SRPActions {
                     configuration.userPool?.appClientSecret
                 )
 
-                var authParams = mapOf(KEY_USERNAME to event.username, "SRP_A" to srpHelper.getPublicA())
+                var authParams = mapOf(KEY_USERNAME to event.username, KEY_SRP_A to srpHelper.getPublicA())
                 secretHash?.also { authParams = authParams.plus(KEY_SECRET_HASH to secretHash) }
                 val initiateAuthResponse = cognitoAuthService.cognitoIdentityProviderClient?.initiateAuth {
                     authFlow = AuthFlowType.UserSrpAuth

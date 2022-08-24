@@ -18,6 +18,8 @@ package com.amplifyframework.auth.cognito.actions
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AuthFlowType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
 import com.amplifyframework.auth.AuthException
+import com.amplifyframework.auth.cognito.AuthConstants.KEY_SECRET_HASH
+import com.amplifyframework.auth.cognito.AuthConstants.KEY_USERNAME
 import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.auth.cognito.helpers.SignInChallengeHelper
@@ -27,8 +29,6 @@ import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.CustomSignInEvent
 
 object SignInCustomActions : CustomSignInActions {
-    private const val KEY_SECRET_HASH = "SECRET_HASH"
-    private const val KEY_USERNAME = "USERNAME"
 
     override fun initiateCustomSignInAuthAction(event: CustomSignInEvent.EventType.InitiateCustomSignIn): Action =
         Action<AuthEnvironment>("InitCustomAuth") { id, dispatcher ->
