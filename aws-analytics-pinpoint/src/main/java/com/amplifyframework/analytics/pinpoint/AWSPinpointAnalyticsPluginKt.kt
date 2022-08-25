@@ -96,7 +96,7 @@ class AWSPinpointAnalyticsPluginKt : AnalyticsPlugin<Any>() {
             awsAnalyticsConfig,
             CognitoCredentialsProvider()
         )
-        val autoEventSubmitter = AutoEventSubmitter(awsAnalyticsConfig.autoFlushEventsInterval)
+        val autoEventSubmitter = AutoEventSubmitter(pinpointManager.analyticsClient, awsAnalyticsConfig.autoFlushEventsInterval)
         val autoSessionTracker = AutoSessionTracker(pinpointManager.analyticsClient, pinpointManager.sessionClient)
         awsPinpointAnalyticsPluginBehavior = AWSPinpointAnalyticsPluginBehavior(
             context,
