@@ -24,13 +24,14 @@ import static com.amplifyframework.core.model.query.predicate.QueryField.field;
 public final class Blog implements Model {
   public static final QueryField ID = field("Blog", "id");
   public static final QueryField NAME = field("Blog", "name");
-  public static final QueryField OWNER = field("Blog", "blogOwnerId");
+  public static final QueryField OWNER = field("Blog", "blogOwnerBlogId");
   public static final QueryField CREATED_AT = field("Blog", "createdAt");
   private final @ModelField(targetType="ID", isRequired = true) String id;
   private final @ModelField(targetType="String", isRequired = true) String name;
   private final @ModelField(targetType="Post") @HasMany(associatedWith = "blog", type = Post.class) List<Post> posts = null;
-  private final @ModelField(targetType="BlogOwner", isRequired = true) @BelongsTo(targetName = "blogOwnerId", type = BlogOwner.class) BlogOwner owner;
+  private final @ModelField(targetType="BlogOwner") @BelongsTo(targetName = "blogOwnerBlogId", type = BlogOwner.class) BlogOwner owner;
   private final @ModelField(targetType="AWSDateTime") Temporal.DateTime createdAt;
+  private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime updatedAt;
   public String getId() {
       return id;
   }
@@ -51,6 +52,10 @@ public final class Blog implements Model {
       return createdAt;
   }
   
+  public Temporal.DateTime getUpdatedAt() {
+      return updatedAt;
+  }
+  
   private Blog(String id, String name, BlogOwner owner, Temporal.DateTime createdAt) {
     this.id = id;
     this.name = name;
@@ -69,7 +74,8 @@ public final class Blog implements Model {
       return ObjectsCompat.equals(getId(), blog.getId()) &&
               ObjectsCompat.equals(getName(), blog.getName()) &&
               ObjectsCompat.equals(getOwner(), blog.getOwner()) &&
-              ObjectsCompat.equals(getCreatedAt(), blog.getCreatedAt());
+              ObjectsCompat.equals(getCreatedAt(), blog.getCreatedAt()) &&
+              ObjectsCompat.equals(getUpdatedAt(), blog.getUpdatedAt());
       }
   }
   
@@ -80,6 +86,7 @@ public final class Blog implements Model {
       .append(getName())
       .append(getOwner())
       .append(getCreatedAt())
+      .append(getUpdatedAt())
       .toString()
       .hashCode();
   }
@@ -91,7 +98,8 @@ public final class Blog implements Model {
       .append("id=" + String.valueOf(getId()) + ", ")
       .append("name=" + String.valueOf(getName()) + ", ")
       .append("owner=" + String.valueOf(getOwner()) + ", ")
-      .append("createdAt=" + String.valueOf(getCreatedAt()))
+      .append("createdAt=" + String.valueOf(getCreatedAt()) + ", ")
+      .append("updatedAt=" + String.valueOf(getUpdatedAt()))
       .append("}")
       .toString();
   }
@@ -107,18 +115,8 @@ public final class Blog implements Model {
    * in a relationship.
    * @param id the id of the existing item this instance will represent
    * @return an instance of this model with only ID populated
-   * @throws IllegalArgumentException Checks that ID is in the proper format
    */
   public static Blog justId(String id) {
-    try {
-      UUID.fromString(id); // Check that ID is in the UUID format - if not an exception is thrown
-    } catch (Exception exception) {
-      throw new IllegalArgumentException(
-              "Model IDs must be unique in the format of UUID. This method is for creating instances " +
-              "of an existing object with only its ID field for sending as a mutation parameter. When " +
-              "creating a new object, use the standard builder method and leave the ID field blank."
-      );
-    }
     return new Blog(
       id,
       null,
@@ -134,23 +132,19 @@ public final class Blog implements Model {
       createdAt);
   }
   public interface NameStep {
-    OwnerStep name(String name);
-  }
-  
-
-  public interface OwnerStep {
-    BuildStep owner(BlogOwner owner);
+    BuildStep name(String name);
   }
   
 
   public interface BuildStep {
     Blog build();
-    BuildStep id(String id) throws IllegalArgumentException;
+    BuildStep id(String id);
+    BuildStep owner(BlogOwner owner);
     BuildStep createdAt(Temporal.DateTime createdAt);
   }
   
 
-  public static class Builder implements NameStep, OwnerStep, BuildStep {
+  public static class Builder implements NameStep, BuildStep {
     private String id;
     private String name;
     private BlogOwner owner;
@@ -167,7 +161,7 @@ public final class Blog implements Model {
     }
     
     @Override
-     public OwnerStep name(String name) {
+     public BuildStep name(String name) {
         Objects.requireNonNull(name);
         this.name = name;
         return this;
@@ -175,7 +169,6 @@ public final class Blog implements Model {
     
     @Override
      public BuildStep owner(BlogOwner owner) {
-        Objects.requireNonNull(owner);
         this.owner = owner;
         return this;
     }
@@ -187,22 +180,11 @@ public final class Blog implements Model {
     }
     
     /** 
-     * WARNING: Do not set ID when creating a new object. Leave this blank and one will be auto generated for you.
-     * This should only be set when referring to an already existing object.
      * @param id id
      * @return Current Builder instance, for fluent method chaining
-     * @throws IllegalArgumentException Checks that ID is in the proper format
      */
-    public BuildStep id(String id) throws IllegalArgumentException {
+    public BuildStep id(String id) {
         this.id = id;
-        
-        try {
-            UUID.fromString(id); // Check that ID is in the UUID format - if not an exception is thrown
-        } catch (Exception exception) {
-          throw new IllegalArgumentException("Model IDs must be unique in the format of UUID.",
-                    exception);
-        }
-        
         return this;
     }
   }

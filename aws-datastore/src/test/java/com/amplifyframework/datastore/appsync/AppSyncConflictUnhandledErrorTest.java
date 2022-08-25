@@ -124,7 +124,7 @@ public final class AppSyncConflictUnhandledErrorTest {
         assertEquals(
             new ModelWithMetadata<>(
                 new Note("KoolId22", "Resurecting the dataz"),
-                new ModelMetadata("KoolId22", true, 7, lastChangedAt)
+                new ModelMetadata("KoolId22", true, 7, lastChangedAt, "Note")
             ),
             conflictUnhandledError.getServerVersion()
         );
@@ -144,9 +144,13 @@ public final class AppSyncConflictUnhandledErrorTest {
             this.content = content;
         }
 
+        public String getId() {
+            return id;
+        }
+
         @NonNull
         @Override
-        public String getId() {
+        public String resolveIdentifier() {
             return id;
         }
 
@@ -166,7 +170,7 @@ public final class AppSyncConflictUnhandledErrorTest {
 
             Note note = (Note) thatObject;
 
-            if (!getId().equals(note.getId())) {
+            if (!resolveIdentifier().equals(note.resolveIdentifier())) {
                 return false;
             }
             return getContent().equals(note.getContent());
@@ -174,7 +178,7 @@ public final class AppSyncConflictUnhandledErrorTest {
 
         @Override
         public int hashCode() {
-            int result = getId().hashCode();
+            int result = resolveIdentifier().hashCode();
             result = 31 * result + getContent().hashCode();
             return result;
         }

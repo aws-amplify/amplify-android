@@ -27,6 +27,7 @@ import com.amplifyframework.core.model.query.ObserveQueryOptions;
 import com.amplifyframework.core.model.query.QueryOptions;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 
+import java.io.Serializable;
 import java.util.Iterator;
 
 /**
@@ -190,7 +191,7 @@ public final class DataStoreCategory
     @Override
     public <T extends Model> void observe(
             @NonNull Class<T> itemClass,
-            @NonNull String uniqueId,
+            @NonNull Serializable uniqueId,
             @NonNull Consumer<Cancelable> onObservationStarted,
             @NonNull Consumer<DataStoreItemChange<T>> onDataStoreItemChange,
             @NonNull Consumer<DataStoreException> onObservationFailure,
