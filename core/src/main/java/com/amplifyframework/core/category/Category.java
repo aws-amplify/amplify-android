@@ -107,7 +107,7 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
      */
     @NonNull
     @WorkerThread
-    public final synchronized CategoryInitializationResult initialize(@NonNull Context context) {
+    public synchronized CategoryInitializationResult initialize(@NonNull Context context) {
         final Map<String, InitializationResult> pluginInitializationResults = new HashMap<>();
         if (!State.CONFIGURED.equals(state.get())) {
             for (P plugin : getPlugins()) {

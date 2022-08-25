@@ -23,6 +23,7 @@ include ':aws-datastore'
 include ':aws-geo-location'
 include ':aws-predictions'
 include ':aws-predictions-tensorflow'
+include ':aws-push-notifications-pinpoint'
 include ':aws-storage-s3'
 
 // Test Utilities and assets
@@ -34,3 +35,4 @@ include ':core-kotlin'
 include ':rxbindings'
 include ':aws-api-appsync'
 include ':maplibre-adapter'
+include ':aws-push-notifications-pinpoint-utils'

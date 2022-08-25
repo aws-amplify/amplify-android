@@ -66,6 +66,12 @@ public enum CategoryType {
     LOGGING("logging"),
 
     /**
+     * Notifications holds sub-categories to push remote/local
+     * messages that can be displayed inside/outside of app's UI.
+     */
+    NOTIFICATIONS("notifications"),
+
+    /**
      * Predictions use machine learning to convert text and/or identify
      * images using both online and offline trained models.
      */

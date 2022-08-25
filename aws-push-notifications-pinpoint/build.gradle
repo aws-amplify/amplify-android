@@ -1,0 +1,23 @@
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+apply from: rootProject.file('configuration/checkstyle.gradle')
+apply from: rootProject.file('configuration/publishing.gradle')
+
+dependencies {
+    implementation project(':core')
+    implementation project(':aws-auth-cognito')
+    implementation project(':aws-push-notifications-pinpoint-utils')
+    implementation dependency.aws.pinpointKotlin
+
+    implementation dependency.androidx.core_ktx
+    implementation dependency.androidx.appcompat
+
+    testImplementation 'junit:junit:4.13.2'
+
+    androidTestImplementation 'androidx.test.ext:junit:1.1.3'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
+}
+
+afterEvaluate {
+    it.android.kotlinOptions.jvmTarget = JavaVersion.VERSION_1_8.toString()
+}

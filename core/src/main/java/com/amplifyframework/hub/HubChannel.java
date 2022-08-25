@@ -64,6 +64,11 @@ public enum HubChannel {
     PREDICTIONS(CategoryType.PREDICTIONS),
 
     /**
+     * Hub messages relating to Amplify Notifications.
+     */
+    NOTIFICATIONS(CategoryType.NOTIFICATIONS),
+
+    /**
      * Hub messages relating to Amplify Storage.
      */
     STORAGE(CategoryType.STORAGE);

@@ -31,6 +31,7 @@ import com.amplifyframework.datastore.DataStoreCategoryConfiguration;
 import com.amplifyframework.geo.GeoCategoryConfiguration;
 import com.amplifyframework.hub.HubCategoryConfiguration;
 import com.amplifyframework.logging.LoggingCategoryConfiguration;
+import com.amplifyframework.notifications.NotificationsCategoryConfiguration;
 import com.amplifyframework.predictions.PredictionsCategoryConfiguration;
 import com.amplifyframework.storage.StorageCategoryConfiguration;
 import com.amplifyframework.util.Immutable;
@@ -159,7 +160,8 @@ public final class AmplifyConfiguration {
                 new HubCategoryConfiguration(),
                 new LoggingCategoryConfiguration(),
                 new PredictionsCategoryConfiguration(),
-                new StorageCategoryConfiguration()
+                new StorageCategoryConfiguration(),
+                new NotificationsCategoryConfiguration()
         );
 
         final Map<String, CategoryConfiguration> actualConfigs = new HashMap<>();
