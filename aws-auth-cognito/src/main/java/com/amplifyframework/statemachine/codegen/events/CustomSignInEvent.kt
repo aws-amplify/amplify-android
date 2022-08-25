@@ -15,7 +15,6 @@
 
 package com.amplifyframework.statemachine.codegen.events
 
-import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions
 import com.amplifyframework.statemachine.StateMachineEvent
 import java.util.Date
 
@@ -26,8 +25,7 @@ class CustomSignInEvent(
     sealed class EventType {
         data class InitiateCustomSignIn(
             val username: String,
-            val password: String?,
-            val signInOptions: AWSCognitoAuthSignInOptions
+            val password: String?
         ) : EventType()
 
         data class FinalizeSignIn(val id: String = "") : EventType()

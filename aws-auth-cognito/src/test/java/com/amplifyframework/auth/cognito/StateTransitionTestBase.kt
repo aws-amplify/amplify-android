@@ -302,8 +302,7 @@ open class StateTransitionTestBase {
                         CustomSignInEvent(
                             CustomSignInEvent.EventType.InitiateCustomSignIn(
                                 "username",
-                                "password",
-                                AWSCognitoAuthSignInOptions.builder().authFlowType(AuthFlowType.CUSTOM_AUTH).build()
+                                "password"
                             )
                         )
                     )

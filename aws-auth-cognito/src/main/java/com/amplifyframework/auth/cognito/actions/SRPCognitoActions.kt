@@ -50,8 +50,8 @@ object SRPCognitoActions : SRPActions {
                     configuration.userPool?.appClientSecret
                 )
 
-                var authParams = mapOf(KEY_USERNAME to event.username, KEY_SRP_A to srpHelper.getPublicA())
-                secretHash?.also { authParams = authParams.plus(KEY_SECRET_HASH to secretHash) }
+                val authParams = mutableMapOf(KEY_USERNAME to event.username, KEY_SRP_A to srpHelper.getPublicA())
+                secretHash?.let { authParams[KEY_SECRET_HASH] = it }
                 val initiateAuthResponse = cognitoAuthService.cognitoIdentityProviderClient?.initiateAuth {
                     authFlow = AuthFlowType.UserSrpAuth
                     clientId = configuration.userPool?.appClient
@@ -94,13 +94,13 @@ object SRPCognitoActions : SRPActions {
                     configuration.userPool.appClientSecret
                 )
 
-                var challengeParams = mapOf(
+                val challengeParams = mutableMapOf(
                     KEY_USERNAME to username,
                     KEY_PASSWORD_CLAIM_SECRET_BLOCK to secretBlock,
                     KEY_PASSWORD_CLAIM_SIGNATURE to m1Signature,
                     KEY_TIMESTAMP to srpHelper.dateString,
                 )
-                secretHash?.also { challengeParams = challengeParams.plus(KEY_SECRET_HASH to secretHash) }
+                secretHash?.let { challengeParams[KEY_SECRET_HASH] = it }
                 val response = cognitoAuthService.cognitoIdentityProviderClient?.respondToAuthChallenge {
                     challengeName = ChallengeNameType.PasswordVerifier
                     clientId = configuration.userPool.appClient
@@ -116,17 +116,7 @@ object SRPCognitoActions : SRPActions {
                         response.authenticationResult
                     )
                 } else {
-                    val errorEvent = SRPEvent(
-                        SRPEvent.EventType.ThrowPasswordVerifierError(
-                            AuthException(
-                                "Sign in failed",
-                                AuthException.TODO_RECOVERY_SUGGESTION
-                            )
-                        )
-                    )
-                    logger?.verbose("$id Sending event ${errorEvent.type}")
-                    dispatcher.send(errorEvent)
-                    AuthenticationEvent(AuthenticationEvent.EventType.CancelSignIn())
+                    throw AuthException("Sign in failed", AuthException.TODO_RECOVERY_SUGGESTION)
                 }
             } catch (e: Exception) {
                 val errorEvent = SRPEvent(SRPEvent.EventType.ThrowPasswordVerifierError(e))

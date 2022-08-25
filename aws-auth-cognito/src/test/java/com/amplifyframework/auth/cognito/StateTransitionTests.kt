@@ -41,10 +41,6 @@ import com.amplifyframework.statemachine.codegen.states.SRPSignInState
 import com.amplifyframework.statemachine.codegen.states.SignInChallengeState
 import com.amplifyframework.statemachine.codegen.states.SignInState
 import com.amplifyframework.statemachine.codegen.states.SignOutState
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.newSingleThreadContext
 import kotlinx.coroutines.test.resetMain
@@ -56,6 +52,10 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito
 import org.mockito.junit.MockitoJUnitRunner
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 @RunWith(MockitoJUnitRunner::class)
 class StateTransitionTests : StateTransitionTestBase() {
@@ -317,7 +317,7 @@ class StateTransitionTests : StateTransitionTestBase() {
                     )
                 }
                 val authNState = it.authNState.takeIf { itN ->
-                    itN is AuthenticationState.SignedIn
+                    itN is AuthenticationState.SignedIn && it.authZState is AuthorizationState.SessionEstablished
                 }
                 authNState?.apply {
                     token?.let(stateMachine::cancel)
@@ -391,8 +391,7 @@ class StateTransitionTests : StateTransitionTestBase() {
                     )
                 }
 
-                val challengeState = it.authNState?.signInState?.challengeState.takeIf {
-                    signInChallengeState ->
+                val challengeState = it.authNState?.signInState?.challengeState.takeIf { signInChallengeState ->
                     signInChallengeState is SignInChallengeState.WaitingForAnswer
                 }
                 challengeState?.apply {
@@ -405,7 +404,7 @@ class StateTransitionTests : StateTransitionTestBase() {
 
                 val authNState =
                     it.authNState.takeIf { itN ->
-                        itN is AuthenticationState.SignedIn
+                        itN is AuthenticationState.SignedIn && it.authZState is AuthorizationState.SessionEstablished
                     }
                 authNState?.apply {
                     token?.let(stateMachine::cancel)

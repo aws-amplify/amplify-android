@@ -57,7 +57,7 @@ object AuthenticationCognitoActions : AuthenticationActions {
         }
 
     override fun initiateSignInAction(event: AuthenticationEvent.EventType.SignInRequested) =
-        Action<AuthEnvironment>("InitSRPSignIn") { id, dispatcher ->
+        Action<AuthEnvironment>("InitiateSignInAction") { id, dispatcher ->
             logger?.verbose("$id Starting execution")
             val signinOptions = event.options as AWSCognitoAuthSignInOptions
 

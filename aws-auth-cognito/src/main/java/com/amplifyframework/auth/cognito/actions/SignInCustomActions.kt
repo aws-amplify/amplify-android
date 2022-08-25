@@ -34,18 +34,14 @@ object SignInCustomActions : CustomSignInActions {
         Action<AuthEnvironment>("InitCustomAuth") { id, dispatcher ->
             logger?.verbose("$id Starting execution")
             val evt = try {
-                val secretHash = try {
-                    AuthHelper.getSecretHash(
-                        event.username,
-                        configuration.userPool?.appClient,
-                        configuration.userPool?.appClientSecret
-                    )
-                } catch (e: java.lang.Exception) {
-                    null
-                }
+                val secretHash = AuthHelper.getSecretHash(
+                    event.username,
+                    configuration.userPool?.appClient,
+                    configuration.userPool?.appClientSecret
+                )
 
-                var authParams = mapOf(KEY_USERNAME to event.username)
-                secretHash?.also { authParams = authParams.plus(KEY_SECRET_HASH to secretHash) }
+                val authParams = mutableMapOf(KEY_USERNAME to event.username)
+                secretHash?.let { authParams[KEY_SECRET_HASH] = it }
 
                 val initiateAuthResponse = cognitoAuthService.cognitoIdentityProviderClient?.initiateAuth {
                     authFlow = AuthFlowType.CustomAuth
@@ -65,17 +61,10 @@ object SignInCustomActions : CustomSignInActions {
                         authenticationResult = initiateAuthResponse.authenticationResult
                     )
                 } else {
-                    val errorEvent = CustomSignInEvent(
-                        CustomSignInEvent.EventType.ThrowAuthError(
-                            AuthException(
-                                "This sign in method is not supported",
-                                "Please consult our docs for supported sign in methods"
-                            )
-                        )
+                    throw AuthException(
+                        "This sign in method is not supported",
+                        "Please consult our docs for supported sign in methods"
                     )
-                    logger?.verbose("$id Sending event ${errorEvent.type}")
-                    dispatcher.send(errorEvent)
-                    AuthenticationEvent(AuthenticationEvent.EventType.CancelSignIn())
                 }
             } catch (e: Exception) {
                 val errorEvent = CustomSignInEvent(CustomSignInEvent.EventType.ThrowAuthError(e))

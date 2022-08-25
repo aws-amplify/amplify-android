@@ -44,15 +44,6 @@ sealed class CustomSignInState : State {
             val defaultResolution = StateResolution(oldState)
             val customSignInEvent = asCustomSignInEvent(event)
             return when (oldState) {
-                is Initiating -> {
-                    when (customSignInEvent) {
-                        is CustomSignInEvent.EventType.FinalizeSignIn -> StateResolution(SignedIn())
-                        is CustomSignInEvent.EventType.ThrowAuthError -> StateResolution(
-                            Error(customSignInEvent.exception)
-                        )
-                        else -> defaultResolution
-                    }
-                }
                 is NotStarted -> {
                     when (customSignInEvent) {
                         is CustomSignInEvent.EventType.InitiateCustomSignIn -> {
@@ -61,6 +52,15 @@ sealed class CustomSignInState : State {
                                 listOf(signInCustomActions.initiateCustomSignInAuthAction(customSignInEvent))
                             )
                         }
+                        is CustomSignInEvent.EventType.ThrowAuthError -> StateResolution(
+                            Error(customSignInEvent.exception)
+                        )
+                        else -> defaultResolution
+                    }
+                }
+                is Initiating -> {
+                    when (customSignInEvent) {
+                        is CustomSignInEvent.EventType.FinalizeSignIn -> StateResolution(SignedIn())
                         is CustomSignInEvent.EventType.ThrowAuthError -> StateResolution(
                             Error(customSignInEvent.exception)
                         )

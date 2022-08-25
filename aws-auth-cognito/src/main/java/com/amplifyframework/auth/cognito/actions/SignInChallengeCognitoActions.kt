@@ -16,17 +16,16 @@
 package com.amplifyframework.auth.cognito.actions
 
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
+import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.cognito.AuthConstants.KEY_SECRET_HASH
 import com.amplifyframework.auth.cognito.AuthConstants.KEY_USERNAME
-import com.amplifyframework.auth.cognito.AuthConstants.VALUE_ANSWER
-import com.amplifyframework.auth.cognito.AuthConstants.VALUE_NEW_PASSWORD
-import com.amplifyframework.auth.cognito.AuthConstants.VALUE_SMS_MFA
 import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.auth.cognito.helpers.SignInChallengeHelper
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.SignInChallengeActions
 import com.amplifyframework.statemachine.codegen.data.AuthChallenge
+import com.amplifyframework.statemachine.codegen.events.CustomSignInEvent
 import com.amplifyframework.statemachine.codegen.events.SignInChallengeEvent
 import com.amplifyframework.statemachine.codegen.events.SignInEvent
 
@@ -38,17 +37,17 @@ object SignInChallengeCognitoActions : SignInChallengeActions {
         logger?.verbose("$id Starting execution")
         val evt = try {
             val username = challenge.username
-            var challengeResponses = mapOf<String, String>()
+            val challengeResponses = mutableMapOf<String, String>()
 
             if (!username.isNullOrEmpty()) {
-                challengeResponses = mapOf(KEY_USERNAME to username)
+                challengeResponses[KEY_USERNAME] = username
             }
 
             challenge.getChallengeResponseKey()?.also { responseKey ->
-                challengeResponses.plus(responseKey to event.answer).also { challengeResponses = it }
+                challengeResponses[responseKey] = event.answer
             }
             event.options.forEach { (key, value) ->
-                challengeResponses.plus(key to value).also { challengeResponses = it }
+                challengeResponses[key] = value
             }
 
             val secretHash = AuthHelper.getSecretHash(
@@ -56,27 +55,35 @@ object SignInChallengeCognitoActions : SignInChallengeActions {
                 configuration.userPool?.appClient,
                 configuration.userPool?.appClientSecret
             )
-            secretHash?.also { challengeResponses = challengeResponses.plus(KEY_SECRET_HASH to secretHash) }
+            secretHash?.let { challengeResponses[KEY_SECRET_HASH] = it }
 
-            SignInChallengeHelper.evaluateNextStep(
-                userId = "",
-                username = username ?: "",
-                ChallengeNameType.fromValue(challenge.challengeName),
-                session = challenge.session,
-                challengeParameters = challengeResponses,
-                authenticationResult = null
+            val response = cognitoAuthService.cognitoIdentityProviderClient?.respondToAuthChallenge {
+                clientId = configuration.userPool?.appClient
+                challengeName = ChallengeNameType.fromValue(challenge.challengeName)
+                this.challengeResponses = challengeResponses
+                session = challenge.session
+            }
+            response?.let {
+                SignInChallengeHelper.evaluateNextStep(
+                    userId = "",
+                    username = username ?: "",
+                    challengeNameType = response.challengeName,
+                    session = response.session,
+                    challengeParameters = response.challengeParameters,
+                    authenticationResult = response.authenticationResult
+                )
+            } ?: CustomSignInEvent(
+                CustomSignInEvent.EventType.ThrowAuthError(
+                    AuthException(
+                        "Sign in failed",
+                        AuthException.TODO_RECOVERY_SUGGESTION
+                    )
+                )
             )
         } catch (e: Exception) {
             SignInEvent(SignInEvent.EventType.ThrowError(e))
         }
         logger?.verbose("$id Sending event ${evt.type}")
         dispatcher.send(evt)
-    }
-
-    fun AuthChallenge.getChallengeResponseKey() = when (ChallengeNameType.fromValue(challengeName)) {
-        is ChallengeNameType.SmsMfa -> VALUE_SMS_MFA
-        is ChallengeNameType.NewPasswordRequired -> VALUE_NEW_PASSWORD
-        is ChallengeNameType.CustomChallenge -> VALUE_ANSWER
-        else -> null
     }
 }
