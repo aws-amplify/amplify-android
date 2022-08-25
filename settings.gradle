@@ -34,6 +34,3 @@ include ':core-kotlin'
 include ':rxbindings'
 include ':aws-api-appsync'
 include ':maplibre-adapter'
-
-include ':sample'
-project(":sample").projectDir = new File(rootDir, "../StorageSample/app")
