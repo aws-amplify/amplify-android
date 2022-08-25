@@ -1,3 +1,90 @@
+## [Release 1.37.2](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.37.2)
+
+### Bug Fixes
+- **datastore**: Fix for Flutter backtick (#1866)
+
+[See all changes between 1.37.1 and 1.37.2](https://github.com/aws-amplify/amplify-android/compare/release_v1.37.1...release_v1.37.2)
+
+## [Release 1.37.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.37.1)
+
+### Bug Fixes
+- **storage**: Remove startForegroundService in favor of binding service
+
+### Miscellaneous
+- Update AWS SDK for Android version
+
+[See all changes between 1.37.0 and 1.37.1](https://github.com/aws-amplify/amplify-android/compare/release_v1.37.0...release_v1.37.1)
+
+## [Release 1.37.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.37.0)
+
+### Features
+- **datastore**: Implemented support for custom primary key (#1650)
+
+### Bug Fixes
+- **api:** allow post request with empty body (#1864)
+
+[See all changes between 1.36.5 and 1.37.0](https://github.com/aws-amplify/amplify-android/compare/release_v1.36.5...release_v1.37.0)
+
+## [Release 1.36.5](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.36.5)
+
+### Miscellaneous
+- Updating the version to 2.50.1 for AWS SDK (#1861)
+- Reduce the importance level of transfer channel for foreground service to prevent sound/vibrate (#1860)
+
+[See all changes between 1.36.4 and 1.36.5](https://github.com/aws-amplify/amplify-android/compare/release_v1.36.4...release_v1.36.5)
+
+## [Release 1.36.4](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.36.4)
+
+### Miscellaneous
+- Call to start TransferService regardless of if it has already been started
+- Update transfer message in notification
+- Update the Delete REST API to ensure it would work with and without a body (#1842)
+- Chore(Release): Updating mobile client to the latest (#1847)
+
+[See all changes between 1.36.3 and 1.36.4](https://github.com/aws-amplify/amplify-android/compare/release_v1.36.3...release_v1.36.4)
+
+## [Release 1.36.3](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.36.3)
+
+### Bug Fixes
+- **api:** catch all exceptions when making rest request (#1827)
+
+[See all changes between 1.36.2 and 1.36.3](https://github.com/aws-amplify/amplify-android/compare/release_v1.36.2...release_v1.36.3)
+
+## [Release 1.36.2](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.36.2)
+
+### Miscellaneous
+- Expand a catch clause to catch all (#1806)
+
+[See all changes between 1.36.1 and 1.36.2](https://github.com/aws-amplify/amplify-android/compare/release_v1.36.1...release_v1.36.2)
+
+## [Release 1.36.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.36.1)
+
+### Miscellaneous
+- fix orchestrator failing if emitter is disposed (#1755)
+- catch exceptions from processOutboxItem (#1743)
+- ci: added canary workflow (#1770)
+
+[See all changes between 1.36.0 and 1.36.1](https://github.com/aws-amplify/amplify-android/compare/release_v1.36.0...release_v1.36.1)
+
+## [Release 1.36.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.36.0)
+
+### Features
+- Add flushEvents HubEvent for analytics (#1792)
+
+### Miscellaneous
+- Update build.gradle
+
+[See all changes between 1.35.7 and 1.36.0](https://github.com/aws-amplify/amplify-android/compare/release_v1.35.7...release_v1.36.0)
+
+## [Release 1.35.7](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.35.7)
+
+### Miscellaneous
+- Fix for adding data back to the delete request if it contains data as that is allowed for the Delete api (#1735)
+- Fix/1485 : Fix for sending the session expired hub event when all credentials are expired (#1779)
+- Updating build.gradle to include the latest version of the aws sdk (#1783)
+
+[See all changes between 1.35.6 and 1.35.7](https://github.com/aws-amplify/amplify-android/compare/release_v1.35.6...release_v1.35.7)
+
 ## [Release 1.35.6](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.35.6)
 
 ### Bug Fixes
@@ -15,7 +102,6 @@
 ## [Release 1.36.5-dev-preview.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.36.5-dev-preview.0)
 
 ### Miscellaneous
-
 - Dev preview update and version bump (#1752)
 
 [See all changes between 1.35.5 and 1.36.5-dev-preview.0](https://github.com/aws-amplify/amplify-android/compare/release_v1.35.5...release_v1.36.5-dev-preview.0)
@@ -23,7 +109,6 @@
 ## [Release 1.35.5](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.35.5)
 
 ### Miscellaneous
-
 - chore: update gson version (#1744)
 - Update notify_comments.yml (#1746)
 - Update SDK version in build.gradle (#1747)
@@ -33,7 +118,6 @@
 ## [Release 1.35.4](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.35.4)
 
 ### Miscellaneous
-
 - Update SDK version in build.gradle (#1741)
 
 [See all changes between 1.35.3 and 1.35.4](https://github.com/aws-amplify/amplify-android/compare/release_v1.35.3...release_v1.35.4)
@@ -41,11 +125,9 @@
 ## [Release 1.35.3](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.35.3)
 
 ### Bug Fixes
-
 - When DateTimeParseException is not available for lower apis (#1701)
 
 ### Miscellaneous
-
 - Version bumps (#1721)
 
 [See all changes between 1.35.2 and 1.35.3](https://github.com/aws-amplify/amplify-android/compare/release_v1.35.2...release_v1.35.3)

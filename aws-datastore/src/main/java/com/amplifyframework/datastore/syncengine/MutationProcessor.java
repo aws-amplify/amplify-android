@@ -113,11 +113,17 @@ final class MutationProcessor {
             if (next == null) {
                 return Completable.complete();
             }
-            boolean itemFailedToProcess = !processOutboxItem(next)
-                .blockingAwait(ITEM_PROCESSING_TIMEOUT_MS, TimeUnit.MILLISECONDS);
-            if (itemFailedToProcess) {
+            try {
+                boolean itemFailedToProcess = !processOutboxItem(next)
+                    .blockingAwait(ITEM_PROCESSING_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+                if (itemFailedToProcess) {
+                    return Completable.error(new DataStoreException(
+                        "Timeout processing " + next, "Check your internet connection."
+                    ));
+                }
+            } catch (RuntimeException error) {
                 return Completable.error(new DataStoreException(
-                    "Failed to process " + next, "Check your internet connection."
+                        "Failed to process " + error, "Check your internet connection."
                 ));
             }
         } while (true);
@@ -136,15 +142,15 @@ final class MutationProcessor {
             .andThen(publishToNetwork(mutationOutboxItem)
                 .map(modelWithMetadata -> ensureModelHasSchema(mutationOutboxItem, modelWithMetadata))
                 .flatMapCompletable(modelWithMetadata ->
-                    // Once the server knows about it, it's safe to remove from the outbox.
-                    // This is done before merging, because the merger will refuse to merge
-                    // if there are outstanding mutations in the outbox.
-                    mutationOutbox.remove(mutationOutboxItem.getMutationId())
-                        .andThen(merger.merge(modelWithMetadata))
-                        .doOnComplete(() -> {
-                            String modelName = mutationOutboxItem.getModelSchema().getName();
-                            announceMutationProcessed(modelName, modelWithMetadata);
-                        })
+                            // Once the server knows about it, it's safe to remove from the outbox.
+                            // This is done before merging, because the merger will refuse to merge
+                            // if there are outstanding mutations in the outbox.
+                            mutationOutbox.remove(mutationOutboxItem.getMutationId())
+                                .andThen(merger.merge(modelWithMetadata))
+                                .doOnComplete(() -> {
+                                    String modelName = mutationOutboxItem.getModelSchema().getName();
+                                    announceMutationProcessed(modelName, modelWithMetadata);
+                                })
                 )
             )
             .doOnComplete(() -> {
@@ -187,12 +193,12 @@ final class MutationProcessor {
     ) {
         final SerializedModel originalModel = (SerializedModel) modelWithMetadata.getModel();
         final SerializedModel newModel = SerializedModel.builder()
-            .serializedData(SerializedModel.parseSerializedData(
-                    originalModel.getSerializedData(),
-                    modelSchema.getName(),
-                    schemaRegistry
-            ))
-            .modelSchema(modelSchema)
+                .modelSchema(modelSchema)
+                .serializedData(SerializedModel.parseSerializedData(
+                        originalModel.getSerializedData(),
+                        modelSchema.getName(),
+                        schemaRegistry
+                ))
             .build();
         return new ModelWithMetadata<>(newModel, modelWithMetadata.getSyncMetadata());
     }

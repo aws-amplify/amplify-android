@@ -50,8 +50,8 @@ final class TestHubEventFilters {
         if (!model.getClass().getSimpleName().equals(mutationEvent.getModelName())) {
             return false;
         }
-        String actualId = mutationEvent.getElement().getModel().getId();
-        return model.getId().equals(actualId);
+        String actualId = mutationEvent.getElement().getModel().getPrimaryKeyString();
+        return model.resolveIdentifier().equals(actualId);
     }
 
     static HubEventFilter isOutboxEmpty(boolean isEmpty) {

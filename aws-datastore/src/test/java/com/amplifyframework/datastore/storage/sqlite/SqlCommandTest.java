@@ -18,6 +18,7 @@ package com.amplifyframework.datastore.storage.sqlite;
 import android.os.Build;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelIndex;
 import com.amplifyframework.core.model.ModelSchema;
@@ -32,8 +33,10 @@ import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.syncengine.PendingMutation;
 import com.amplifyframework.testmodels.personcar.Person;
+import com.amplifyframework.testmodels.personcar.PersonWithCPK;
 import com.amplifyframework.testutils.random.RandomString;
 import com.amplifyframework.util.GsonFactory;
+import com.amplifyframework.util.UserAgent;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -41,13 +44,17 @@ import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -79,16 +86,76 @@ public class SqlCommandTest {
      * CREATE TABLE SQL command.
      */
     @Test
-    public void validModelSchemaReturnsExpectedSqlCommand() {
+    public void validModelSchemaReturnsExpectedSqlCommandWhenNoCustomPrimaryKeyIsDefined() {
         final ModelSchema personSchema = getPersonModelSchema();
 
         final SqlCommand sqlCommand = sqlCommandFactory.createTableFor(personSchema);
         assertEquals("Person", sqlCommand.tableName());
         assertEquals("CREATE TABLE IF NOT EXISTS `Person` (" +
-                "`id` TEXT PRIMARY KEY NOT NULL, " +
+                "`id` TEXT NOT NULL, " +
                 "`age` INTEGER, " +
                 "`firstName` TEXT NOT NULL, " +
-                "`lastName` TEXT NOT NULL);", sqlCommand.sqlStatement());
+                "`lastName` TEXT NOT NULL, " +
+                "PRIMARY KEY ( 'id'));", sqlCommand.sqlStatement());
+    }
+
+    /**
+     * Test if a valid {@link ModelSchema} returns an expected
+     * CREATE TABLE SQL command when custom primary key is defined.
+     */
+    @Test
+    public void validModelSchemaReturnsExpectedSqlCommandWhenCustomPrimaryKeyIsDefined() {
+        final ModelSchema personSchema = getPersonModelSchemaWithCompositePrimaryKeyWithMultipleFields();
+
+        final SqlCommand sqlCommand = sqlCommandFactory.createTableFor(personSchema);
+        assertEquals("Person", sqlCommand.tableName());
+        assertEquals("CREATE TABLE IF NOT EXISTS `Person` (" +
+                "`age` INTEGER, " +
+                "`firstName` TEXT NOT NULL, " +
+                "`hobbies` TEXT NOT NULL, " +
+                "`lastName` TEXT NOT NULL, " +
+                "PRIMARY KEY ( 'firstName'));", sqlCommand.sqlStatement());
+    }
+
+    /**
+     * Test if a valid {@link ModelSchema} returns an expected
+     * CREATE TABLE SQL command.
+     * @throws AmplifyException On unable to parse schema
+     */
+    @Test
+    public void validModelSchemaReturnsExpectedInsertSqlCommandWhenCustomPrimaryKeyIsDefined() throws AmplifyException {
+        SchemaRegistry schemaRegistry = SchemaRegistry.instance();
+        schemaRegistry.register(Collections.singleton(PersonWithCPK.class));
+        final ModelSchema personSchema = schemaRegistry.getModelSchemaForModelClass(PersonWithCPK.class);
+        final PersonWithCPK person = PersonWithCPK.builder()
+                .firstName("Test")
+                .lastName("Last")
+                .age(12)
+                .build();
+
+        final SqlCommand sqlCommand = sqlCommandFactory.insertFor(personSchema, person);
+        assertEquals("PersonWithCPK", sqlCommand.tableName());
+        assertEquals("INSERT INTO `PersonWithCPK` (" +
+                "`@@primaryKey`, `age`, `createdAt`, `dob`, `first_name`, `last_name`, `relationship`, `updatedAt`)" +
+                " VALUES (?, ?, ?, ?, ?, ?, ?, ?)", sqlCommand.sqlStatement());
+    }
+
+    /**
+     * Test if a valid {@link ModelSchema} returns an expected
+     * CREATE TABLE SQL command when custom primary key is defined.
+     */
+    @Test
+    public void validModelSchemaReturnsExpectedSqlCommandWhenCustomPrimaryKeyWithMultipleFieldsIsDefined() {
+        final ModelSchema personSchema = getPersonModelSchemaWithCompositePrimaryKey();
+
+        final SqlCommand sqlCommand = sqlCommandFactory.createTableFor(personSchema);
+        assertEquals("Person", sqlCommand.tableName());
+        assertEquals("CREATE TABLE IF NOT EXISTS `Person` (" +
+                "`@@primaryKey` TEXT NOT NULL, `age` INTEGER, " +
+                "`firstName` TEXT NOT NULL, " +
+                "`hobbies` TEXT NOT NULL, " +
+                "`lastName` TEXT NOT NULL, " +
+                "PRIMARY KEY ( '@@primaryKey'));", sqlCommand.sqlStatement());
     }
 
     /**
@@ -100,6 +167,7 @@ public class SqlCommandTest {
         final ModelSchema modelSchema = ModelSchema.builder()
                 .fields(Collections.emptyMap())
                 .name("Guitar")
+                .modelType(Model.Type.SYSTEM)
                 .build();
 
         final SqlCommand sqlCommand = sqlCommandFactory.createTableFor(modelSchema);
@@ -121,6 +189,7 @@ public class SqlCommandTest {
         final ModelSchema modelSchema = ModelSchema.builder()
                 .name("Person")
                 .indexes(Collections.singletonMap("idBasedIndex", index))
+                .modelType(Model.Type.SYSTEM)
                 .build();
 
         final Iterator<SqlCommand> sqlCommandIterator = sqlCommandFactory
@@ -131,6 +200,60 @@ public class SqlCommandTest {
         final SqlCommand createIndexSqlCommand = sqlCommandIterator.next();
         assertEquals("Person", createIndexSqlCommand.tableName());
         assertEquals("CREATE INDEX IF NOT EXISTS `idBasedIndex` ON `Person` (`id`);",
+                createIndexSqlCommand.sqlStatement());
+    }
+
+    /**
+     * Test if {@link ModelSchema} with index returns an expected
+     * CREATE INDEX SQL command. The Create Index command should only be generated if the Primary key is composite.
+     */
+    @Test
+    public void expectedCreateIndexCommandNotCreatedForSingleModelIdentifier() {
+        final ModelIndex index = ModelIndex.builder()
+                .indexName(SQLiteCommandFactory.UNDEFINED)
+                .indexFieldNames(Collections.singletonList("id"))
+                .build();
+
+        final ModelSchema modelSchema = ModelSchema.builder()
+                .name("Person")
+                .indexes(Collections.singletonMap(SQLiteCommandFactory.UNDEFINED, index))
+                .modelType(Model.Type.SYSTEM)
+                .build();
+
+        final Iterator<SqlCommand> sqlCommandIterator = sqlCommandFactory
+                .createIndexesFor(modelSchema)
+                .iterator();
+        assertFalse(sqlCommandIterator.hasNext());
+    }
+
+    /**
+     * Test if {@link ModelSchema} with index returns an expected
+     * CREATE INDEX SQL command.
+     */
+    @Test
+    public void expectedCreateIndexCommandForModelCompositePrimaryKey() {
+        List<String> keyList = new ArrayList<>();
+        keyList.add("name");
+        keyList.add("age");
+        final ModelIndex index = ModelIndex.builder()
+                .indexName(SQLiteCommandFactory.UNDEFINED)
+                .indexFieldNames(keyList)
+                .build();
+
+        final ModelSchema modelSchema = ModelSchema.builder()
+                .name("Person")
+                .indexes(Collections.singletonMap(SQLiteCommandFactory.UNDEFINED, index))
+                .modelType(Model.Type.SYSTEM)
+                .build();
+
+        final Iterator<SqlCommand> sqlCommandIterator = sqlCommandFactory
+                .createIndexesFor(modelSchema)
+                .iterator();
+        assertTrue(sqlCommandIterator.hasNext());
+
+        final SqlCommand createIndexSqlCommand = sqlCommandIterator.next();
+        assertEquals("Person", createIndexSqlCommand.tableName());
+        assertEquals("CREATE INDEX IF NOT EXISTS `undefined_name_age` ON `Person` (`name`, `age`);",
                 createIndexSqlCommand.sqlStatement());
     }
 
@@ -249,6 +372,28 @@ public class SqlCommandTest {
     }
 
     /**
+     * Validates that a query, with an order by clause is generated correctly.
+     * @throws AmplifyException From {@link SQLCommandFactory#queryFor(ModelSchema, QueryOptions)}
+     */
+    @Test
+    public void queryWithPredicateForFlutter() throws AmplifyException {
+        setUserAgent();
+        final ModelSchema personSchema = getPersonModelSchema();
+        final String testName = "name";
+        final SqlCommand sqlCommand = sqlCommandFactory.queryFor(
+                personSchema,
+                Where.matches(Person.FIRST_NAME.eq(testName))
+        );
+        assertNotNull(sqlCommand);
+        assertEquals(
+                PERSON_BASE_QUERY + " WHERE first_name = ?;",
+                sqlCommand.sqlStatement()
+        );
+        assertEquals(1, sqlCommand.getBindings().size());
+        assertTrue(sqlCommand.getBindings().contains(testName));
+    }
+
+    /**
      * Verify the SqlCommand generated to check if a model exists is as expected.
      * @throws DataStoreException From {@link SQLCommandFactory#existsFor(ModelSchema, QueryPredicate)}
      */
@@ -267,6 +412,7 @@ public class SqlCommandTest {
         return ModelSchema.builder()
                 .name("Person")
                 .fields(fields)
+                .modelType(Model.Type.SYSTEM)
                 .build();
     }
 
@@ -296,5 +442,65 @@ public class SqlCommandTest {
                 .javaClassForValue(Integer.class)
                 .build());
         return fields;
+    }
+
+    private static ModelSchema getPersonModelSchemaWithCompositePrimaryKey() {
+        final SortedMap<String, ModelField> fields = getFieldsMap();
+        fields.remove("id");
+        fields.put("hobbies", ModelField.builder()
+                .name("hobbies")
+                .isRequired(true)
+                .targetType("String")
+                .javaClassForValue(String.class)
+                .build());
+        final List<String> indexFieldNames = new ArrayList<>();
+        indexFieldNames.add("firstName");
+        indexFieldNames.add("lastName");
+        indexFieldNames.add("age");
+        final ModelIndex index = ModelIndex.builder()
+                .indexName("undefined")
+                .indexFieldNames(Collections.unmodifiableList(indexFieldNames))
+                .build();
+
+        return ModelSchema.builder()
+                .name("Person")
+                .fields(fields)
+                .indexes(Collections.singletonMap("undefined", index))
+                .modelType(Model.Type.USER)
+                .build();
+    }
+
+    private static ModelSchema getPersonModelSchemaWithCompositePrimaryKeyWithMultipleFields() {
+        final SortedMap<String, ModelField> fields = getFieldsMap();
+        fields.remove("id");
+        fields.put("hobbies", ModelField.builder()
+                .name("hobbies")
+                .isRequired(true)
+                .targetType("String")
+                .javaClassForValue(String.class)
+                .build());
+        final List<String> indexFieldNames = new ArrayList<>();
+        indexFieldNames.add("firstName");
+        final ModelIndex index = ModelIndex.builder()
+                .indexName("undefined")
+                .indexFieldNames(Collections.unmodifiableList(indexFieldNames))
+                .build();
+
+        return ModelSchema.builder()
+                .name("Person")
+                .fields(fields)
+                .indexes(Collections.singletonMap("undefined", index))
+                .modelType(Model.Type.USER)
+                .build();
+    }
+
+    /**
+     * Set user agent to Flutter.
+     * @throws AmplifyException not expected.
+     */
+    private void setUserAgent() throws AmplifyException {
+        Map<UserAgent.Platform, String> map = new HashMap<>();
+        map.put(UserAgent.Platform.FLUTTER, "1.0");
+        UserAgent.configure(map);
     }
 }
