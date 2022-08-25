@@ -37,7 +37,7 @@ public enum AnalyticsChannelEventName {
     INVALID_PROPERTY_TYPE("invalid_property_type"),
     /**
      * Event sent out on submitEventWithResults with the list of all the event
-     * successfully submitted
+     * successfully submitted.
      */
     FLUSH_EVENTS("flushEvents");
 
