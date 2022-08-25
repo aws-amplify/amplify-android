@@ -17,6 +17,7 @@ package com.amplifyframework.analytics.pinpoint
 
 import android.content.Context
 import aws.sdk.kotlin.services.pinpoint.PinpointClient
+import com.amplifyframework.analytics.AnalyticsChannelEventName
 import com.amplifyframework.analytics.pinpoint.database.PinpointDatabase
 import com.amplifyframework.analytics.pinpoint.internal.core.idresolver.SharedPrefsUniqueIdService
 import com.amplifyframework.analytics.pinpoint.models.AndroidAppDetails
@@ -25,6 +26,9 @@ import com.amplifyframework.analytics.pinpoint.models.PinpointEvent
 import com.amplifyframework.analytics.pinpoint.models.PinpointSession
 import com.amplifyframework.analytics.pinpoint.models.SDKInfo
 import com.amplifyframework.analytics.pinpoint.targeting.TargetingClient
+import com.amplifyframework.core.Amplify
+import com.amplifyframework.hub.HubChannel
+import com.amplifyframework.hub.HubEvent
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.CoroutineDispatcher
@@ -42,7 +46,7 @@ internal class AnalyticsClient(
     private val androidAppDetails: AndroidAppDetails,
     private val androidDeviceDetails: AndroidDeviceDetails,
     private val sdkInfo: SDKInfo,
-    coroutineDispatcher: CoroutineDispatcher = Dispatchers.Default,
+    private val coroutineDispatcher: CoroutineDispatcher = Dispatchers.Default,
     private val eventRecorder: EventRecorder = EventRecorder(
         context,
         pinpointClient,
@@ -113,9 +117,13 @@ internal class AnalyticsClient(
         }
     }
 
-    fun submitEvents() {
+    fun flushEvents() {
         coroutineScope.launch {
-            eventRecorder.submitEvents()
+            val syncedEvents = eventRecorder.submitEvents()
+            Amplify.Hub.publish(
+                HubChannel.ANALYTICS,
+                HubEvent.create(AnalyticsChannelEventName.FLUSH_EVENTS, syncedEvents)
+            )
         }
     }
 

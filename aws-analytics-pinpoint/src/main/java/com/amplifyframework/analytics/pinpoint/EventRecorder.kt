@@ -29,7 +29,6 @@ import aws.sdk.kotlin.services.pinpoint.model.EventsRequest
 import aws.sdk.kotlin.services.pinpoint.model.PublicEndpoint
 import aws.sdk.kotlin.services.pinpoint.model.PutEventsRequest
 import aws.sdk.kotlin.services.pinpoint.model.Session
-import com.amplifyframework.analytics.AnalyticsEvent
 import com.amplifyframework.analytics.pinpoint.database.EventTable
 import com.amplifyframework.analytics.pinpoint.database.PinpointDatabase
 import com.amplifyframework.analytics.pinpoint.internal.core.util.millisToIsoDate
@@ -62,14 +61,9 @@ internal class EventRecorder(
         }
     }
 
-    internal suspend fun submitEvents(): List<AnalyticsEvent> {
+    internal suspend fun submitEvents(): List<PinpointEvent> {
         return withContext(coroutineDispatcher) {
-            val syncedPinpointEvents = processEvents()
-            val syncedAnalyticsEvent = mutableListOf<AnalyticsEvent>()
-            syncedPinpointEvents.forEach {
-                syncedAnalyticsEvent.add(AnalyticsEvent.builder().name(it.eventType).build())
-            }
-            syncedAnalyticsEvent
+            processEvents()
         }
     }
 

@@ -124,6 +124,6 @@ internal class AWSPinpointAnalyticsPluginBehavior(
     }
 
     override fun flushEvents() {
-        analyticsClient.submitEvents()
+        analyticsClient.flushEvents()
     }
 }

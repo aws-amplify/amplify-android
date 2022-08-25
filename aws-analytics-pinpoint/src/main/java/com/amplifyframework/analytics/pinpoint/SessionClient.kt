@@ -24,8 +24,8 @@ import kotlinx.serialization.ExperimentalSerializationApi
 internal class SessionClient(
     private val context: Context,
     var analyticsClient: AnalyticsClient?,
-    var targetingClient: TargetingClient,
-    private var sharedPrefsUniqueIdService: SharedPrefsUniqueIdService
+    val targetingClient: TargetingClient,
+    private val sharedPrefsUniqueIdService: SharedPrefsUniqueIdService
 ) {
 
     var session: Session? = null

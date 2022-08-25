@@ -105,7 +105,7 @@ class AnalyticsClientTest {
     }
 
     @Test
-    fun `test record events`() {
+    fun `test record events`() = runTest {
         val testEventId = UUID.randomUUID().toString()
         val testEventType = "TestEvent"
         val eventTimestamp = System.currentTimeMillis()
@@ -131,9 +131,9 @@ class AnalyticsClientTest {
     }
 
     @Test
-    fun `test submitEvents`() {
+    fun `test submitEvents`() = runTest {
         coEvery { eventRecorder.submitEvents() } returns listOf()
-        analyticsClient.submitEvents()
+        analyticsClient.flushEvents()
         coVerify(exactly = 1) { eventRecorder.submitEvents() }
     }
 
