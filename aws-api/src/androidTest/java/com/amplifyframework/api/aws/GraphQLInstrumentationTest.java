@@ -283,7 +283,6 @@ public final class GraphQLInstrumentationTest {
         }
 
         @NonNull
-        @Override
         public String getId() {
             return id;
         }
@@ -335,7 +334,6 @@ public final class GraphQLInstrumentationTest {
         }
 
         @NonNull
-        @Override
         public String getId() {
             return id;
         }

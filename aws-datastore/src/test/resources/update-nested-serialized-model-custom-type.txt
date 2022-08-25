@@ -1,5 +1,6 @@
 {"query": "mutation UpdatePerson($input: UpdatePersonInput!) {
   updatePerson(input: $input) {
+    __typename
     _deleted
     _lastChangedAt
     _version

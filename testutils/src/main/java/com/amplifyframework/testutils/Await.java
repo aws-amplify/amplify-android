@@ -28,7 +28,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * A utility to await a value from an async function, in a synchronous way.
  */
 public final class Await {
-    private static final long DEFAULT_WAIT_TIME_MS = TimeUnit.SECONDS.toMillis(5);
+    private static final long DEFAULT_WAIT_TIME_MS = TimeUnit.SECONDS.toMillis(7);
 
     private Await() {}
 

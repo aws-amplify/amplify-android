@@ -221,7 +221,7 @@ public final class ModelProviderLocatorTest {
 
         @NonNull
         @Override
-        public String getId() {
+        public String resolveIdentifier() {
             return modelId;
         }
 

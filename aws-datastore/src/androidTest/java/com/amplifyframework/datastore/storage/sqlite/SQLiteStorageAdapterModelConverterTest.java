@@ -15,6 +15,7 @@
 
 package com.amplifyframework.datastore.storage.sqlite;
 
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.datastore.DataStoreException;
@@ -37,7 +38,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 /**
- * This is a basic test to ensure that an {@link Model} class can be saved and queried
+ * This is a basic test to ensure that an {@link com.amplifyframework.core.model.Model} class can be saved and queried
  * into the {@link SQLiteStorageAdapter}. This is one of the original tests that was written
  * for the {@link SQLiteStorageAdapter}, when this level of basic functionality was
  * in question. Now, the test may serve as a "smoke test."
@@ -82,13 +83,14 @@ public final class SQLiteStorageAdapterModelConverterTest {
      * Then after save succeeds, query it and compare the values against the original model.
      *
      * @throws DataStoreException On unexpected failure manipulating items in/out of DataStore
+     * @throws AmplifyException If schema cannot be found in the registry.
      */
     @Test
-    public void saveModelWithAllTypesThenQuery() throws DataStoreException {
+    public void saveModelWithAllTypesThenQuery() throws AmplifyException {
         final Todo todo = createTestTodoModel();
         this.adapter.save(todo);
 
-        final List<Todo> result = this.adapter.query(Todo.class, Where.id(todo.getId()));
+        final List<Todo> result = this.adapter.query(Todo.class, Where.identifier(Todo.class, todo.getId()));
         assertEquals(result.size(), 1);
 
         final Todo queriedTodo = result.get(0);

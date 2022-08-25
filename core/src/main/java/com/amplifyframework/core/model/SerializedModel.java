@@ -22,6 +22,7 @@ import androidx.core.util.ObjectsCompat;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.util.Immutable;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -35,12 +36,12 @@ import java.util.Set;
  * Needs to be paired with an {@link ModelSchema} to understand the structure.
  */
 public final class SerializedModel implements Model {
-    private final String modelId;
+    private final Serializable modelId;
     private final Map<String, Object> serializedData;
     private final ModelSchema modelSchema;
 
     private SerializedModel(
-            String modelId, Map<String, Object> serializedData, ModelSchema modelSchema) {
+            Serializable modelId, Map<String, Object> serializedData, ModelSchema modelSchema) {
         this.modelId = modelId;
         this.serializedData = serializedData;
         this.modelSchema = modelSchema;
@@ -57,8 +58,8 @@ public final class SerializedModel implements Model {
      */
     public static <T extends Model> SerializedModel create(T model, ModelSchema modelSchema) throws AmplifyException {
         return SerializedModel.builder()
-                .serializedData(ModelConverter.toMap(model, modelSchema))
                 .modelSchema(modelSchema)
+                .serializedData(ModelConverter.toMap(model, modelSchema))
                 .build();
     }
 
@@ -95,8 +96,8 @@ public final class SerializedModel implements Model {
             }
         }
         return SerializedModel.builder()
-                .serializedData(patchMap)
                 .modelSchema(modelSchema)
+                .serializedData(patchMap)
                 .build();
     }
 
@@ -116,8 +117,8 @@ public final class SerializedModel implements Model {
             }
         }
         return SerializedModel.builder()
-                .serializedData(mergedSerializedData)
                 .modelSchema(modelSchema)
+                .serializedData(mergedSerializedData)
                 .build();
     }
 
@@ -154,8 +155,9 @@ public final class SerializedModel implements Model {
                 Map<String, Object> fieldData = (Map<String, Object>) serializedData.get(key);
                 if (fieldData != null) {
                     result.put(key, SerializedModel.builder()
-                            .serializedData(fieldData)
+
                             .modelSchema(fieldModelSchema)
+                            .serializedData(fieldData)
                             .build());
                 }
             } else if (field.isCustomType()) {
@@ -200,13 +202,13 @@ public final class SerializedModel implements Model {
      * @return A serialized model builder
      */
     @NonNull
-    public static SerializedModel.BuilderSteps.SerializedDataStep builder() {
+    public static SerializedModel.BuilderSteps.ModelSchemaStep builder() {
         return new SerializedModel.Builder();
     }
 
     @NonNull
     @Override
-    public String getId() {
+    public Serializable resolveIdentifier() {
         return modelId;
     }
 
@@ -292,7 +294,7 @@ public final class SerializedModel implements Model {
              * @return The next builder step
              */
             @NonNull
-            ModelSchemaStep serializedData(@NonNull Map<String, Object> serializedData);
+            BuildStep serializedData(@NonNull Map<String, Object> serializedData);
         }
 
         /**
@@ -305,7 +307,7 @@ public final class SerializedModel implements Model {
              * @return The next builder step
              */
             @NonNull
-            BuildStep modelSchema(@Nullable ModelSchema modelSchema);
+            SerializedDataStep modelSchema(@Nullable ModelSchema modelSchema);
         }
 
         /**
@@ -333,15 +335,15 @@ public final class SerializedModel implements Model {
 
         @NonNull
         @Override
-        public BuilderSteps.ModelSchemaStep serializedData(@NonNull Map<String, Object> serializedData) {
+        public BuilderSteps.BuildStep serializedData(@NonNull Map<String, Object> serializedData) {
             this.serializedData.putAll(Objects.requireNonNull(serializedData));
-            this.id = Objects.requireNonNull((String) serializedData.get("id"));
+            this.id = ModelIdentifier.Helper.getUniqueKey(modelSchema, serializedData);
             return Builder.this;
         }
 
         @NonNull
         @Override
-        public BuilderSteps.BuildStep modelSchema(@Nullable ModelSchema modelSchema) {
+        public BuilderSteps.SerializedDataStep modelSchema(@Nullable ModelSchema modelSchema) {
             this.modelSchema = modelSchema;
             return Builder.this;
         }

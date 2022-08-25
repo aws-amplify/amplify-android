@@ -34,6 +34,7 @@ public final class SQLiteColumn {
     private final String fieldName;
     private final String tableName;
     private final String ownedType;
+    private final String ownedField;
     private final boolean isNonNull;
     private final SQLiteDataType dataType;
 
@@ -44,6 +45,7 @@ public final class SQLiteColumn {
         this.ownedType = builder.ownedType;
         this.isNonNull = builder.isNonNull;
         this.dataType = builder.dataType;
+        this.ownedField = builder.ownedField;
     }
 
     /**
@@ -92,6 +94,16 @@ public final class SQLiteColumn {
      */
     public String getQuotedColumnName() {
         return Wrap.inBackticks(tableName) + SQLITE_NAME_DELIMITER + Wrap.inBackticks(name);
+    }
+
+    /**
+     * Returns the name of model field that this column is foreign key to.
+     * Null if the column is not a foreign key.
+     * @return the name of model that this column is foreign key to
+     *         and null if this column is not a foreign key
+     */
+    public String getOwnedField() {
+        return ownedField;
     }
 
     /**
@@ -175,6 +187,7 @@ public final class SQLiteColumn {
      * of SQLite column.
      */
     public static final class Builder {
+        private String ownedField;
         private String name;
         private String fieldName;
         private String tableName;
@@ -220,6 +233,17 @@ public final class SQLiteColumn {
          */
         public Builder ownerOf(String ownedType) {
             this.ownedType = ownedType;
+            return this;
+        }
+
+        /**
+         * Sets the name of field that this foreign key refers to.
+         * This should be null if this is column is not a foreign key.
+         * @param ownedField the name of field that this foreign key refers to
+         * @return builder instance with given type
+         */
+        public Builder ownerField(String ownedField) {
+            this.ownedField = ownedField;
             return this;
         }
 
