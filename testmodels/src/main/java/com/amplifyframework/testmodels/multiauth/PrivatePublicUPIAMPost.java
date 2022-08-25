@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.Objects;
 
+import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.model.AuthStrategy;
@@ -107,7 +108,14 @@ public final class PrivatePublicUPIAMPost implements Model {
     return new CopyOfBuilder(id,
       name);
   }
-  public interface NameStep {
+
+    @NonNull
+    @Override
+    public String resolveIdentifier() {
+        return id;
+    }
+
+    public interface NameStep {
     BuildStep name(String name);
   }
   

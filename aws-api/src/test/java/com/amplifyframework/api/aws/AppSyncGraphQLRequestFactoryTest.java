@@ -15,8 +15,6 @@
 
 package com.amplifyframework.api.aws;
 
-import androidx.annotation.NonNull;
-
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.MutationType;
@@ -283,8 +281,6 @@ public final class AppSyncGraphQLRequestFactoryTest {
             this.owner = owner;
         }
 
-        @NonNull
-        @Override
         public String getId() {
             return "111";
         }

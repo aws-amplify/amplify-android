@@ -1,0 +1,11 @@
+mutation MyMutation {
+  createSchemaDrift(input: {enumValue: THREE}) {
+    _deleted
+    _lastChangedAt
+    _version
+    createdAt
+    enumValue
+    updatedAt
+    id
+  }
+}
