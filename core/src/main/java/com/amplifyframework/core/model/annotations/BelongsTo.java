@@ -48,5 +48,12 @@ public @interface BelongsTo {
      * This is the name that will be used to store foreign key.
      * @return the target name of foreign key.
      */
-    String targetName();
+    String targetName() default "";
+
+    /**
+     * Returns the target names of foreign key when there is a primary key and at least one sort key.
+     * These are the names that will be used to store foreign key.
+     * @return the target names of foreign key.
+     */
+    String[] targetNames() default {};
 }

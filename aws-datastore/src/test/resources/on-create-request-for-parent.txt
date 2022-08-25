@@ -1,6 +1,7 @@
 {
   "query": "subscription OnCreateParent {
   onCreateParent {
+    __typename
     _deleted
     _lastChangedAt
     _version

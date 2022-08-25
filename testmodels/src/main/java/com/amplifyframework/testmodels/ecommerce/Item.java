@@ -2,10 +2,10 @@ package com.amplifyframework.testmodels.ecommerce;
 
 import com.amplifyframework.core.model.temporal.Temporal;
 
-import java.util.List;
 import java.util.UUID;
 import java.util.Objects;
 
+import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.model.Model;
@@ -32,10 +32,15 @@ public final class Item implements Model {
   private final @ModelField(targetType="Status", isRequired = true) Status status;
   private final @ModelField(targetType="AWSDateTime", isRequired = true) Temporal.DateTime createdAt;
   private final @ModelField(targetType="String", isRequired = true) String name;
+  @NonNull
+  public String resolveIdentifier() {
+      return id;
+  }
+
   public String getId() {
       return id;
   }
-  
+
   public String getOrderId() {
       return orderId;
   }

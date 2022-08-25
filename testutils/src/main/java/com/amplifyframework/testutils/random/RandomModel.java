@@ -43,7 +43,7 @@ public final class RandomModel {
 
         @NonNull
         @Override
-        public String getId() {
+        public String resolveIdentifier() {
             return modelId;
         }
     }

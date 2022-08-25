@@ -92,14 +92,16 @@ public final class MergerTest {
             .name("Jameson")
             .build();
         ModelMetadata originalMetadata =
-            new ModelMetadata(blogOwner.getId(), false, 1, Temporal.Timestamp.now());
+            new ModelMetadata(blogOwner.getId(), false, 1, Temporal.Timestamp.now(),
+                    blogOwner.getModelName());
         storageAdapter.save(blogOwner, originalMetadata);
         // Just to be sure, our arrangement worked, and that thing is in there, right? Good.
         assertEquals(Collections.singletonList(blogOwner), storageAdapter.query(BlogOwner.class));
 
         // Act: merge a model deletion.
         ModelMetadata deletionMetadata =
-            new ModelMetadata(blogOwner.getId(), true, 2, Temporal.Timestamp.now());
+            new ModelMetadata(blogOwner.getId(), true, 2, Temporal.Timestamp.now(),
+                    blogOwner.getModelName());
         TestObserver<Void> observer =
             merger.merge(new ModelWithMetadata<>(blogOwner, deletionMetadata)).test();
         assertTrue(observer.await(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS));
@@ -128,7 +130,8 @@ public final class MergerTest {
 
         // Act: try to merge a deletion that refers to an item not in the store
         ModelMetadata deletionMetadata =
-            new ModelMetadata(blogOwner.getId(), true, 1, Temporal.Timestamp.now());
+            new ModelMetadata(blogOwner.getId(), true, 1, Temporal.Timestamp.now(),
+                    blogOwner.getModelName());
         TestObserver<Void> observer =
             merger.merge(new ModelWithMetadata<>(blogOwner, deletionMetadata)).test();
         assertTrue(observer.await(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS));
@@ -151,7 +154,8 @@ public final class MergerTest {
             .name("Jameson")
             .build();
         ModelMetadata metadata =
-            new ModelMetadata(blogOwner.getModelName() + "|" + blogOwner.getId(), false, 1, Temporal.Timestamp.now());
+            new ModelMetadata(blogOwner.getModelName() + "|" + blogOwner.getId(), false, 1,
+                    Temporal.Timestamp.now(), blogOwner.getModelName());
         // Note that storageAdapter.save(...) is NOT called!
         // storageAdapter.save(blogOwner, metadata);
 
@@ -183,8 +187,8 @@ public final class MergerTest {
                 originalModel.getModelName() + "|" + originalModel.getId(),
                 false,
                 1,
-                Temporal.Timestamp.now()
-            );
+                Temporal.Timestamp.now(),
+                originalModel.getModelName());
         storageAdapter.save(originalModel, originalMetadata);
 
         // Act: merge a save.
@@ -192,7 +196,8 @@ public final class MergerTest {
             .name("Jameson The New and Improved")
             .build();
         ModelMetadata updatedMetadata =
-            new ModelMetadata(originalMetadata.getId(), false, 2, Temporal.Timestamp.now());
+            new ModelMetadata(originalMetadata.resolveIdentifier(), false, 2, Temporal.Timestamp.now(),
+                    updatedModel.getModelName());
         TestObserver<Void> observer = merger.merge(new ModelWithMetadata<>(updatedModel, updatedMetadata)).test();
         assertTrue(observer.await(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS));
         observer.assertComplete().assertNoErrors();
@@ -220,7 +225,8 @@ public final class MergerTest {
             .id(knownId)
             .build();
         ModelMetadata localMetadata =
-            new ModelMetadata(blogOwner.getId(), false, 1, Temporal.Timestamp.now());
+            new ModelMetadata(blogOwner.getId(), false, 1, Temporal.Timestamp.now(),
+                    blogOwner.getModelName());
         storageAdapter.save(blogOwner, localMetadata);
 
         ModelSchema schema = ModelSchema.fromModelClass(BlogOwner.class);
@@ -234,7 +240,8 @@ public final class MergerTest {
         // Act: now, cloud sync happens, and the sync engine tries to apply an update
         // for the same model ID, into the store. According to the cloud, this same
         // item should be DELETED.
-        ModelMetadata cloudMetadata = new ModelMetadata(knownId, true, 2, Temporal.Timestamp.now());
+        ModelMetadata cloudMetadata = new ModelMetadata(knownId, true, 2, Temporal.Timestamp.now(),
+                blogOwner.getModelName());
         TestObserver<Void> mergeObserver = merger.merge(new ModelWithMetadata<>(blogOwner, cloudMetadata)).test();
         mergeObserver.await(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS);
         mergeObserver.assertNoErrors().assertComplete();
@@ -263,7 +270,8 @@ public final class MergerTest {
                 .id(knownId)
                 .build();
         ModelMetadata localMetadata =
-                new ModelMetadata(blogOwner.getId(), false, 1, Temporal.Timestamp.now());
+                new ModelMetadata(blogOwner.getId(), false, 1, Temporal.Timestamp.now(),
+                        blogOwner.getModelName());
         storageAdapter.save(blogOwner, localMetadata);
 
         ModelSchema schema = ModelSchema.fromModelClass(BlogOwner.class);
@@ -278,7 +286,8 @@ public final class MergerTest {
         // Act: now, cloud sync happens, and the sync engine tries to apply an update
         // for the same model ID, into the store. According to the cloud, this same
         // item should be DELETED.
-        ModelMetadata cloudMetadata = new ModelMetadata(knownId, true, 2, Temporal.Timestamp.now());
+        ModelMetadata cloudMetadata = new ModelMetadata(knownId, true, 2, Temporal.Timestamp.now(),
+                blogOwner.getModelName());
         TestObserver<Void> observer =
             mutationOutbox.remove(pendingMutation.getMutationId())
                 .andThen(merger.merge(new ModelWithMetadata<>(blogOwner, cloudMetadata)))
@@ -297,14 +306,16 @@ public final class MergerTest {
      * shall be rejected from the merger.
      * @throws DataStoreException On failure interacting with local store during test arrange/verify.
      * @throws InterruptedException If interrupted while awaiting terminal result in test observer
+     * @throws AmplifyException If schema cannot be found in the registry.
      */
     @Test
-    public void itemWithLowerVersionIsNotMerged() throws DataStoreException, InterruptedException {
+    public void itemWithLowerVersionIsNotMerged() throws AmplifyException, InterruptedException {
         // Arrange a model and metadata into storage.
         BlogOwner existingModel = BlogOwner.builder()
             .name("Cornelius Daniels")
             .build();
-        ModelMetadata existingMetadata = new ModelMetadata(existingModel.getId(), false, 55, Temporal.Timestamp.now());
+        ModelMetadata existingMetadata = new ModelMetadata(existingModel.getId(), false, 55,
+                Temporal.Timestamp.now(), existingModel.getModelName());
         storageAdapter.save(existingModel, existingMetadata);
 
         // Act: try to merge, but specify a LOWER version.
@@ -312,7 +323,8 @@ public final class MergerTest {
             .name("Cornelius Daniels, but woke af, now.")
             .build();
         ModelMetadata lowerVersionMetadata =
-            new ModelMetadata(incomingModel.getId(), false, 33, Temporal.Timestamp.now());
+            new ModelMetadata(incomingModel.getId(), false, 33, Temporal.Timestamp.now(),
+                    incomingModel.getModelName());
         ModelWithMetadata<BlogOwner> modelWithLowerVersionMetadata =
             new ModelWithMetadata<>(existingModel, lowerVersionMetadata);
         TestObserver<Void> mergeObserver = merger.merge(modelWithLowerVersionMetadata).test();
@@ -325,7 +337,8 @@ public final class MergerTest {
         // And his metadata is the still the same.
         assertEquals(
             Collections.singletonList(existingMetadata),
-            storageAdapter.query(ModelMetadata.class, Where.id(existingModel.getId()))
+            storageAdapter.query(ModelMetadata.class,
+                    Where.identifier(ModelMetadata.class, existingModel.getPrimaryKeyString()))
         );
     }
 
@@ -335,9 +348,10 @@ public final class MergerTest {
      * The version must be strictly HIGHER than the current version, in order for the merge to succeed.
      * @throws DataStoreException On failure to interact with storage during arrange/verify
      * @throws InterruptedException If interrupted while awaiting terminal result in test observer
+     * @throws AmplifyException If schema cannot be found in the registry.
      */
     @Test
-    public void itemWithSameVersionIsNotMerged() throws DataStoreException, InterruptedException {
+    public void itemWithSameVersionIsNotMerged() throws AmplifyException, InterruptedException {
         // Arrange a model and metadata into storage.
         BlogOwner existingModel = BlogOwner.builder()
             .name("Cornelius Daniels")
@@ -347,8 +361,8 @@ public final class MergerTest {
                 existingModel.getModelName() + "|" + existingModel.getId(),
                 false,
                 55,
-                Temporal.Timestamp.now()
-            );
+                Temporal.Timestamp.now(),
+                    existingModel.getModelName());
         storageAdapter.save(existingModel, existingMetadata);
 
         // Act: try to merge, but specify a LOWER version.
@@ -356,7 +370,8 @@ public final class MergerTest {
             .name("Cornelius Daniels, but woke af, now.")
             .build();
         ModelMetadata lowerVersionMetadata =
-            new ModelMetadata(incomingModel.getId(), false, 33, Temporal.Timestamp.now());
+            new ModelMetadata(incomingModel.getId(), false, 33, Temporal.Timestamp.now(),
+                    incomingModel.getModelName());
         ModelWithMetadata<BlogOwner> modelWithLowerVersionMetadata =
             new ModelWithMetadata<>(incomingModel, lowerVersionMetadata);
         TestObserver<Void> mergeObserver = merger.merge(modelWithLowerVersionMetadata).test();
@@ -372,7 +387,8 @@ public final class MergerTest {
         assertEquals(
             Collections.singletonList(existingMetadata),
             storageAdapter.query(ModelMetadata.class,
-                    Where.id(existingModel.getModelName() + "|" + existingModel.getId()))
+                    Where.identifier(ModelMetadata.class,
+                            existingModel.getModelName() + "|" + existingModel.getId()))
         );
     }
 
@@ -381,23 +397,26 @@ public final class MergerTest {
      * So, this test should always behave like {@link #itemWithLowerVersionIsNotMerged()}.
      * But, it the inputs to the system are technically different, so it is
      * a distinct test in terms of system input/output.
-     * @throws DataStoreException On failure to interact with storage during arrange/verification
-     * @throws InterruptedException If interrupted while awaiting terminal result in test observer
+     * @throws DataStoreException On failure to interact with storage during arrange/verification.
+     * @throws InterruptedException If interrupted while awaiting terminal result in test observer.
+     *@throws AmplifyException If schema cannot be found in the registry.
      */
     @Test
-    public void itemWithoutVersionIsNotMerged() throws DataStoreException, InterruptedException {
+    public void itemWithoutVersionIsNotMerged() throws AmplifyException, InterruptedException {
         // Arrange a model and metadata into storage.
         BlogOwner existingModel = BlogOwner.builder()
             .name("Cornelius Daniels")
             .build();
-        ModelMetadata existingMetadata = new ModelMetadata(existingModel.getId(), false, 1, Temporal.Timestamp.now());
+        ModelMetadata existingMetadata = new ModelMetadata(existingModel.getId(), false,
+                1, Temporal.Timestamp.now(), existingModel.getModelName());
         storageAdapter.save(existingModel, existingMetadata);
 
         // Act: try to merge, but don't specify a version in the metadata being used to merge.
         BlogOwner incomingModel = existingModel.copyOfBuilder()
             .name("Cornelius Daniels, but woke af, now.")
             .build();
-        ModelMetadata metadataWithoutVersion = new ModelMetadata(incomingModel.getId(), null, null, null);
+        ModelMetadata metadataWithoutVersion = new ModelMetadata(incomingModel.getId(), null, null,
+                null, incomingModel.getModelName());
         ModelWithMetadata<BlogOwner> incomingModelWithMetadata =
             new ModelWithMetadata<>(existingModel, metadataWithoutVersion);
         TestObserver<Void> mergeObserver = merger.merge(incomingModelWithMetadata).test();
@@ -410,7 +429,7 @@ public final class MergerTest {
         // And his metadata is the still the same.
         assertEquals(
             Collections.singletonList(existingMetadata),
-            storageAdapter.query(ModelMetadata.class, Where.id(existingModel.getId()))
+            storageAdapter.query(ModelMetadata.class, Where.identifier(ModelMetadata.class, existingModel.getId()))
         );
     }
 
@@ -432,7 +451,8 @@ public final class MergerTest {
                 .name("How Not To Save Blogs")
                 .owner(badOwner)
                 .build();
-        ModelMetadata metadata = new ModelMetadata(orphanedBlog.getId(), false, 1, Temporal.Timestamp.now());
+        ModelMetadata metadata = new ModelMetadata(orphanedBlog.getId(), false, 1,
+                Temporal.Timestamp.now(), orphanedBlog.getModelName());
 
         // Enforce foreign key constraint on in-memory storage adapter
         doThrow(SQLiteConstraintException.class)
