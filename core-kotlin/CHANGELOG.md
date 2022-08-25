@@ -1,3 +1,17 @@
+## [Release 0.21.3](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.21.3)
+
+### Miscellaneous
+- Run more devices in farm
+- Update region
+- change device filters
+- Fixing test failure because of list ordering.
+- namespace test report for multiple devices
+- Update generate_df_testrun_report
+- lower polling on device farm
+- Publish Javadocs (Amplify version) (#1897)
+
+[See all changes between 0.21.2 and 0.21.3](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.21.2...release-kotlin_v0.21.3)
+
 ## [Release 0.21.2](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.21.2)
 
 ### Bug Fixes
