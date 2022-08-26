@@ -43,6 +43,7 @@ import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter;
 import com.amplifyframework.datastore.storage.sqlite.TestStorageAdapter;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.logging.Logger;
+import com.amplifyframework.testmodels.commentsblog.Author;
 import com.amplifyframework.testmodels.multiauth.GroupPrivatePublicUPIAMAPIPost;
 import com.amplifyframework.testmodels.multiauth.GroupPrivateUPIAMPost;
 import com.amplifyframework.testmodels.multiauth.GroupPublicUPAPIPost;
