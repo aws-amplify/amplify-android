@@ -25,6 +25,7 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.ListDevicesRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.UpdateDeviceStatusRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.UpdateUserAttributesRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.UpdateUserAttributesResponse
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.VerifyUserAttributeRequest
 import com.amplifyframework.auth.AuthCategoryBehavior
 import com.amplifyframework.auth.AuthChannelEventName
 import com.amplifyframework.auth.AuthCodeDeliveryDetails
@@ -936,23 +937,29 @@ internal class RealAWSCognitoAuthPlugin(
                         GlobalScope.launch {
                             try {
                                 val accessToken = getSession().userPoolTokens.value?.accessToken
-                                var userAttributes = attributes.map {
-                                    AttributeType.invoke {
-                                        name = it.key.keyString
-                                        value = it.value
+                                accessToken?.let {
+                                    var userAttributes = attributes.map {
+                                        AttributeType.invoke {
+                                            name = it.key.keyString
+                                            value = it.value
+                                        }
                                     }
-                                }
-                                val userAttributesRequest = UpdateUserAttributesRequest.invoke {
-                                    this.accessToken = accessToken
-                                    this.userAttributes = userAttributes
-                                    this.clientMetadata = userAttributesOptionsMetadata
-                                }
-                                val userAttributeResponse = authEnvironment.cognitoAuthService
-                                    .cognitoIdentityProviderClient?.updateUserAttributes(
-                                        userAttributesRequest
-                                    )
+                                    val userAttributesRequest = UpdateUserAttributesRequest.invoke {
+                                        this.accessToken = accessToken
+                                        this.userAttributes = userAttributes
+                                        this.clientMetadata = userAttributesOptionsMetadata
+                                    }
+                                    val userAttributeResponse = authEnvironment.cognitoAuthService
+                                        .cognitoIdentityProviderClient?.updateUserAttributes(
+                                            userAttributesRequest
+                                        )
 
-                                continuation.resume(getUpdateUserAttributeResult(userAttributeResponse, userAttributes))
+                                    continuation.resume(
+                                        getUpdateUserAttributeResult(userAttributeResponse, userAttributes)
+                                    )
+                                } ?: continuation.resumeWithException(
+                                    AuthException.InvalidUserPoolConfigurationException()
+                                )
                             } catch (e: Exception) {
                                 continuation.resumeWithException(CognitoAuthExceptionConverter.lookup(e, e.toString()))
                             }
@@ -1031,7 +1038,33 @@ internal class RealAWSCognitoAuthPlugin(
         onSuccess: Action,
         onError: Consumer<AuthException>
     ) {
-        TODO("Not yet implemented")
+        authStateMachine.getCurrentState { authState ->
+            when (authState.authNState) {
+                // Check if user signed in
+                is AuthenticationState.SignedIn -> {
+                    GlobalScope.launch {
+                        try {
+                            val accessToken = getSession().userPoolTokens.value?.accessToken
+                            accessToken?.let {
+                                val verifyUserAttributeRequest = VerifyUserAttributeRequest.invoke {
+                                    this.accessToken = accessToken
+                                    this.attributeName = attributeKey.keyString
+                                    this.code = confirmationCode
+                                }
+                                authEnvironment.cognitoAuthService
+                                    .cognitoIdentityProviderClient?.verifyUserAttribute(
+                                        verifyUserAttributeRequest
+                                    )
+                                onSuccess.call()
+                            } ?: onError.accept(AuthException.InvalidUserPoolConfigurationException())
+                        } catch (e: Exception) {
+                            onError.accept(CognitoAuthExceptionConverter.lookup(e, e.toString()))
+                        }
+                    }
+                }
+                else -> onError.accept(AuthException.InvalidStateException())
+            }
+        }
     }
 
     override fun getCurrentUser(
