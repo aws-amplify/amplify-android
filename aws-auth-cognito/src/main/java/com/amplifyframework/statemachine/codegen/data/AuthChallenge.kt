@@ -16,7 +16,6 @@
 package com.amplifyframework.statemachine.codegen.data
 
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
-import com.amplifyframework.auth.cognito.AuthConstants
 
 data class AuthChallenge(
     val challengeName: String,
@@ -25,10 +24,13 @@ data class AuthChallenge(
     val parameters: Map<String, String>?
 ) {
     fun getChallengeResponseKey(): String? {
+        val VALUE_ANSWER = "ANSWER"
+        val VALUE_SMS_MFA = "SMS_MFA_CODE"
+        val VALUE_NEW_PASSWORD = "NEW_PASSWORD"
         return when (ChallengeNameType.fromValue(challengeName)) {
-            is ChallengeNameType.SmsMfa -> AuthConstants.VALUE_SMS_MFA
-            is ChallengeNameType.NewPasswordRequired -> AuthConstants.VALUE_NEW_PASSWORD
-            is ChallengeNameType.CustomChallenge -> AuthConstants.VALUE_ANSWER
+            is ChallengeNameType.SmsMfa -> VALUE_SMS_MFA
+            is ChallengeNameType.NewPasswordRequired -> VALUE_NEW_PASSWORD
+            is ChallengeNameType.CustomChallenge -> VALUE_ANSWER
             else -> null
         }
     }

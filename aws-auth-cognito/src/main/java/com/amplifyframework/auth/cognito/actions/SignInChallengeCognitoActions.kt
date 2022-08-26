@@ -17,8 +17,6 @@ package com.amplifyframework.auth.cognito.actions
 
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
 import com.amplifyframework.auth.AuthException
-import com.amplifyframework.auth.cognito.AuthConstants.KEY_SECRET_HASH
-import com.amplifyframework.auth.cognito.AuthConstants.KEY_USERNAME
 import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.auth.cognito.helpers.SignInChallengeHelper
@@ -30,6 +28,8 @@ import com.amplifyframework.statemachine.codegen.events.SignInChallengeEvent
 import com.amplifyframework.statemachine.codegen.events.SignInEvent
 
 object SignInChallengeCognitoActions : SignInChallengeActions {
+    private const val KEY_SECRET_HASH = "SECRET_HASH"
+    private const val KEY_USERNAME = "USERNAME"
     override fun verifyChallengeAuthAction(
         event: SignInChallengeEvent.EventType.VerifyChallengeAnswer,
         challenge: AuthChallenge
