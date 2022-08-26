@@ -13,10 +13,15 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.statemachine.codegen.data
+package com.amplifyframework.statemachine.codegen.actions
 
-data class SignedUpData(
-    var userId: String?,
-    var username: String,
-    var codeDeliveryDetails: Map<String, String?>?
-)
+import com.amplifyframework.statemachine.Action
+import com.amplifyframework.statemachine.codegen.data.AuthChallenge
+import com.amplifyframework.statemachine.codegen.events.SignInChallengeEvent
+
+interface SignInChallengeActions {
+    fun verifySignInChallenge(
+        event: SignInChallengeEvent.EventType.VerifyChallengeAnswer,
+        challenge: AuthChallenge
+    ): Action
+}

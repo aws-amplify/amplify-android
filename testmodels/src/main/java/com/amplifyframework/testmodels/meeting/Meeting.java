@@ -1,5 +1,6 @@
 package com.amplifyframework.testmodels.meeting;
 
+import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.model.Model;
@@ -29,6 +30,11 @@ public final class Meeting implements Model {
     private final @ModelField(targetType="AWSDateTime") Temporal.DateTime dateTime;
     private final @ModelField(targetType="AWSTime") Temporal.Time time;
     private final @ModelField(targetType="AWSTimestamp") Temporal.Timestamp timestamp;
+    @NonNull
+    public String resolveIdentifier() {
+        return id;
+    }
+
     public String getId() {
         return id;
     }

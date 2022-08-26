@@ -17,12 +17,15 @@ package com.amplifyframework.analytics.pinpoint.models
 
 import android.os.Build
 import java.util.Locale
+import kotlinx.serialization.Serializable
 
+@Serializable
 internal data class AndroidDeviceDetails(
     val carrier: String? = null,
-    val platformVersion: String? = Build.VERSION.RELEASE,
+    val platformVersion: String = Build.VERSION.RELEASE ?: "TEST VERSION",
     val platform: String = "ANDROID",
-    val manufacturer: String? = Build.MANUFACTURER,
-    val model: String? = Build.MODEL,
+    val manufacturer: String = Build.MANUFACTURER ?: "TEST MANUFACTURER",
+    val model: String = Build.MODEL ?: "TEST MODEL",
+    @Serializable(with = LocaleSerializer::class)
     val locale: Locale = Locale.getDefault()
 )

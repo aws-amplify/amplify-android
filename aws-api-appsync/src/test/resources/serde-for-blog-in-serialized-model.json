@@ -2,6 +2,7 @@
   "id": "3d128fdd-17a8-45ea-a166-44f6712b86f4",
   "modelSchema": {
     "name": "Blog",
+    "modelSchemaVersion": 0,
     "pluralName": "Blogs",
     "authRules": [],
     "fields": {
@@ -67,10 +68,13 @@
       }
     },
     "indexes": {},
-    "modelClass": "com.amplifyframework.core.model.SerializedModel"
+    "modelClass": "com.amplifyframework.core.model.SerializedModel",
+    "modelSchemaVersion": 0
   },
   "serializedData": {
-    "owner": "2cb080ce-bc93-44c6-aa77-f985af311afa",
+    "owner": {
+      "id": "2cb080ce-bc93-44c6-aa77-f985af311afa"
+    },
     "name": "A fine blog",
     "id": "3d128fdd-17a8-45ea-a166-44f6712b86f4"
   }

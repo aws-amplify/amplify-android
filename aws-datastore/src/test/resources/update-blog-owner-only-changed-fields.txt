@@ -1,10 +1,15 @@
 {"query": "mutation UpdateBlogOwner($input: UpdateBlogOwnerInput!) {
   updateBlogOwner(input: $input) {
+    __typename
     _deleted
     _lastChangedAt
     _version
     blog {
-      id
+      items {
+        id
+      }
+      nextToken
+      startedAt
     }
     createdAt
     id

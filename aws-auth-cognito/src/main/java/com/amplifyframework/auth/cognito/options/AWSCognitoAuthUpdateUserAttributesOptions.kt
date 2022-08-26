@@ -15,50 +15,26 @@
 
 package com.amplifyframework.auth.cognito.options
 
-import androidx.core.util.ObjectsCompat
 import com.amplifyframework.auth.options.AuthUpdateUserAttributesOptions
 import com.amplifyframework.util.Immutable
-import java.util.Objects.requireNonNull
+
 /**
  * Cognito extension of update user attributes options to add the platform specific fields.
  */
-class AWSCognitoAuthUpdateUserAttributesOptions
+data class AWSCognitoAuthUpdateUserAttributesOptions
 /**
  * Advanced options for update user attributes.
  * @param metadata Additional custom attributes to be sent to the service such as information about the client
  */
-protected constructor(
+internal constructor(
     val metadata: Map<String, String>
 ) : AuthUpdateUserAttributesOptions() {
-
-    override fun hashCode(): Int {
-        return ObjectsCompat.hash(
-            metadata
-        )
-    }
-
-    override fun equals(obj: Any?): Boolean {
-        return if (this === obj) {
-            true
-        } else if (obj == null || javaClass != obj.javaClass) {
-            false
-        } else {
-            val authUpdateUserAttributesOptions = obj as AWSCognitoAuthUpdateUserAttributesOptions
-            ObjectsCompat.equals(metadata, authUpdateUserAttributesOptions.metadata)
-        }
-    }
-
-    override fun toString(): String {
-        return "AWSCognitoAuthUpdateUserAttributesOptions{" +
-            "metadata=" + metadata +
-            '}'
-    }
 
     /**
      * The builder for this class.
      */
     class CognitoBuilder : Builder<CognitoBuilder>() {
-        private val metadata: MutableMap<String, String>
+        private val metadata: MutableMap<String, String> = HashMap()
 
         /**
          * Returns the type of builder this is to support proper flow with it being an extended class.
@@ -74,7 +50,6 @@ protected constructor(
          * @return The builder object to continue building.
          */
         fun metadata(metadata: Map<String, String>): CognitoBuilder {
-            requireNonNull(metadata)
             this.metadata.clear()
             this.metadata.putAll(metadata)
             return getThis()
@@ -88,13 +63,6 @@ protected constructor(
             return AWSCognitoAuthUpdateUserAttributesOptions(
                 Immutable.of(metadata)
             )
-        }
-
-        /**
-         * Constructor for the builder.
-         */
-        init {
-            metadata = HashMap()
         }
     }
 
