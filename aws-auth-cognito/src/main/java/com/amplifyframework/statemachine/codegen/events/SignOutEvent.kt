@@ -16,6 +16,7 @@
 package com.amplifyframework.statemachine.codegen.events
 
 import com.amplifyframework.statemachine.StateMachineEvent
+import com.amplifyframework.statemachine.codegen.data.SignOutData
 import com.amplifyframework.statemachine.codegen.data.SignedInData
 import com.amplifyframework.statemachine.codegen.data.SignedOutData
 import java.util.Date
@@ -31,6 +32,7 @@ class SignOutEvent(
             val invalidateTokens: Boolean
         ) : EventType()
 
+        data class InvokeHostedUISignOut(val signOutData: SignOutData, val signedInData: SignedInData) : EventType()
         data class SignOutGlobally(val signedInData: SignedInData) : EventType()
         data class SignedOutSuccess(val signedOutData: SignedOutData) : EventType()
         data class SignedOutFailure(val exception: Exception) : EventType()

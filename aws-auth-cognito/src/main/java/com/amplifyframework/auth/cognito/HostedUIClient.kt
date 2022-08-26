@@ -15,24 +15,36 @@
 
 package com.amplifyframework.auth.cognito
 
+import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.ComponentName
 import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
+import android.util.Log
 import androidx.browser.customtabs.CustomTabsClient
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.browser.customtabs.CustomTabsServiceConnection
 import androidx.browser.customtabs.CustomTabsSession
 import com.amplifyframework.auth.cognito.activities.CustomTabsManagerActivity
+import com.amplifyframework.auth.cognito.activities.HostedUIRedirectActivity
 import com.amplifyframework.auth.cognito.helpers.BrowserHelper
 import com.amplifyframework.auth.cognito.helpers.HostedUIHttpHelper
 import com.amplifyframework.auth.cognito.helpers.PkceHelper
 import com.amplifyframework.auth.cognito.helpers.userPoolProviderName
+import com.amplifyframework.logging.Logger
 import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
 import com.amplifyframework.statemachine.codegen.data.HostedUIOptions
 import com.amplifyframework.statemachine.codegen.data.OauthConfiguration
 import java.net.URL
 
-internal class HostedUIClient private constructor(context: Context, private val configuration: OauthConfiguration) :
+@SuppressLint("QueryPermissionsNeeded")
+internal class HostedUIClient private constructor(
+    private val context: Context,
+    private val configuration: OauthConfiguration,
+    private val logger: Logger
+    ) :
     CustomTabsServiceConnection() {
 
     private val proofKey = PkceHelper.generateRandom()
@@ -42,6 +54,26 @@ internal class HostedUIClient private constructor(context: Context, private val 
     private var session: CustomTabsSession? = null
     private val defaultCustomTabsPackage: String?
 
+    // Inspects context to determine whether HostedUIRedirectActivity is declared in
+    // customer's AndroidManifest.xml.
+    private val isRedirectActivityDeclared: Boolean by lazy {
+        val redirectActivityName = HostedUIRedirectActivity::class.simpleName ?: return@lazy false
+        try {
+            context.packageManager.getInstalledPackages(PackageManager.GET_ACTIVITIES).forEach { packageInfo ->
+                packageInfo.activities.forEach { activityInfo ->
+                    if (activityInfo.name.contains(redirectActivityName)) {
+                        return@lazy true
+                    }
+                }
+            }
+            logger.warn("${HostedUIRedirectActivity::class.simpleName ?: "Redirect activity"} " +
+                    "is not declared in AndroidManifest.")
+        } catch (error: Exception) {
+            logger.warn("Failed to inspect packages")
+        }
+        false
+    }
+
     init {
         defaultCustomTabsPackage = BrowserHelper.getDefaultCustomTabPackage(context)?.also {
             preWarmCustomTabs(context, it)
@@ -49,25 +81,42 @@ internal class HostedUIClient private constructor(context: Context, private val 
     }
 
     @Throws(RuntimeException::class)
-    fun launchCustomTabs(hostedUIOptions: HostedUIOptions) {
-        val activity = hostedUIOptions.callingActivity
-        if (!BrowserHelper.isBrowserInstalled(activity)) {
+    fun launchCustomTabsSignIn(hostedUIOptions: HostedUIOptions) {
+        launchCustomTabs(
+            uri = createAuthorizeUri(hostedUIOptions),
+            activity = hostedUIOptions.callingActivity,
+            customBrowserPackage = hostedUIOptions.browserPackage,
+        )
+    }
+
+    @Throws(RuntimeException::class)
+    fun launchCustomTabsSignOut(browserPackage: String?) {
+        launchCustomTabs(
+            uri = createSignOutUri(),
+            customBrowserPackage = browserPackage,
+        )
+    }
+
+    private fun launchCustomTabs(uri: Uri, activity: Activity? = null, customBrowserPackage: String?) {
+        if (!BrowserHelper.isBrowserInstalled(context)) {
             throw RuntimeException("No browsers installed")
         }
 
-        val uri = createHostedUIUri(hostedUIOptions)
-
-        val browserPackage = hostedUIOptions.browserPackage ?: defaultCustomTabsPackage
+        val browserPackage = customBrowserPackage ?: defaultCustomTabsPackage
 
         val customTabsIntent = CustomTabsIntent.Builder(session).build().apply {
             browserPackage?.let { intent.`package` = it }
             intent.data = uri
         }
 
-        activity.startActivityForResult(
-            CustomTabsManagerActivity.createStartIntent(activity, customTabsIntent.intent),
-            CUSTOM_TABS_ACTIVITY_CODE
-        )
+        val customTabIntent = CustomTabsManagerActivity.createStartIntent(context, customTabsIntent.intent)
+
+        if (activity != null) {
+            activity.startActivityForResult(customTabIntent, CUSTOM_TABS_ACTIVITY_CODE)
+        } else {
+            customTabIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_NO_HISTORY)
+            context.startActivity(customTabIntent)
+        }
     }
 
     fun fetchToken(uri: Uri): CognitoUserPoolTokens {
@@ -112,7 +161,7 @@ internal class HostedUIClient private constructor(context: Context, private val 
         return HostedUIHttpHelper.fetchTokens(fetchUrl, headers, body)
     }
 
-    private fun createHostedUIUri(hostedUIOptions: HostedUIOptions): Uri {
+    private fun createAuthorizeUri(hostedUIOptions: HostedUIOptions): Uri {
         // Build the complete web domain to launch the login screen
         val builder = Uri.Builder()
             .scheme("https")
@@ -149,6 +198,15 @@ internal class HostedUIClient private constructor(context: Context, private val 
         return builder.build()
     }
 
+    private fun createSignOutUri(): Uri {
+        return Uri.Builder()
+            .scheme("https")
+            .authority(configuration.domain).appendPath("logout")
+            .appendQueryParameter("client_id", configuration.appClient)
+            .appendQueryParameter("logout_uri", configuration.signOutRedirectURI)
+            .build()
+    }
+
     override fun onCustomTabsServiceConnected(name: ComponentName, client: CustomTabsClient) {
         this.client = client
         client.warmup(0L)
@@ -173,9 +231,9 @@ internal class HostedUIClient private constructor(context: Context, private val 
     companion object {
         const val CUSTOM_TABS_ACTIVITY_CODE = 49281
 
-        fun create(context: Context, configuration: OauthConfiguration?) =
+        fun create(context: Context, configuration: OauthConfiguration?, logger: Logger) =
             if (configuration != null) {
-                HostedUIClient(context, configuration)
+                HostedUIClient(context, configuration, logger)
             } else {
                 null
             }

@@ -49,4 +49,7 @@ dependencies {
 
     androidTestImplementation dependency.androidx.test.runner
     androidTestImplementation dependency.androidx.test.junit
+
+    testImplementation project(':aws-auth-cognito')
+    androidTestImplementation project(':aws-auth-cognito')
 }

@@ -32,7 +32,7 @@ object HostedUICognitoActions : HostedUIActions {
             logger?.verbose("$id Starting execution")
             try {
                 if (hostedUIClient == null) throw Exception() // TODO: More detailed exception
-                hostedUIClient.launchCustomTabs(event.hostedUISignInData.hostedUIOptions)
+                hostedUIClient.launchCustomTabsSignIn(event.hostedUISignInData.hostedUIOptions)
             } catch (e: Exception) {
                 val errorEvent = HostedUIEvent(HostedUIEvent.EventType.ThrowError(e))
                 logger?.verbose("$id Sending event ${errorEvent.type}")

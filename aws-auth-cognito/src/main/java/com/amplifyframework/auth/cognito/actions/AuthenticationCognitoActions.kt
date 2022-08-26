@@ -84,8 +84,13 @@ object AuthenticationCognitoActions : AuthenticationActions {
         signedInData: SignedInData?
     ) = Action<AuthEnvironment>("InitSignOut") { id, dispatcher ->
         logger?.verbose("$id Starting execution")
-        val evt = if (event.isGlobalSignOut && signedInData != null) {
+
+        val evt = if (signedInData != null && signedInData.signInMethod == SignInMethod.HOSTED) {
+            SignOutEvent(SignOutEvent.EventType.InvokeHostedUISignOut(event.signOutData, signedInData))
+        } else if (signedInData != null && event.signOutData.globalSignOut) {
             SignOutEvent(SignOutEvent.EventType.SignOutGlobally(signedInData))
+        } else if (signedInData != null){
+            SignOutEvent(SignOutEvent.EventType.RevokeToken(signedInData))
         } else {
             SignOutEvent(
                 SignOutEvent.EventType.SignOutLocally(signedInData, isGlobalSignOut = false, invalidateTokens = false)
@@ -94,4 +99,6 @@ object AuthenticationCognitoActions : AuthenticationActions {
         logger?.verbose("$id Sending event ${evt.type}")
         dispatcher.send(evt)
     }
+
+
 }

@@ -15,4 +15,7 @@
 
 package com.amplifyframework.statemachine.codegen.data
 
-data class SignOutOptions(val globalSignOut: Boolean = false, val invalidateTokens: Boolean = true)
+data class SignOutData(
+    val globalSignOut: Boolean = false,
+    val browserPackage: String? = null,
+)

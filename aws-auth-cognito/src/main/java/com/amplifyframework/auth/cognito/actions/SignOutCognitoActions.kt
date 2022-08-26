@@ -25,6 +25,18 @@ import com.amplifyframework.statemachine.codegen.data.SignedOutData
 import com.amplifyframework.statemachine.codegen.events.SignOutEvent
 
 object SignOutCognitoActions : SignOutActions {
+    override fun hostedUISignOutAction(event: SignOutEvent.EventType.InvokeHostedUISignOut) =
+        Action<AuthEnvironment>("HostedUISignOut") { id, dispatcher ->
+            logger?.verbose("$id Starting execution")
+            try {
+                if (hostedUIClient == null) throw Exception() // TODO: More detailed exception
+                hostedUIClient.launchCustomTabsSignOut(event.signOutData.browserPackage)
+            } catch (e: Exception) {
+
+            }
+        }
+
+
     override fun localSignOutAction(event: SignOutEvent.EventType.SignOutLocally) =
         Action<AuthEnvironment>("LocalSignOut") { id, dispatcher ->
             logger?.verbose("$id Starting execution")
