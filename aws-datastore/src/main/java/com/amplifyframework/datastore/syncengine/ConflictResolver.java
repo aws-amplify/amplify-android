@@ -137,8 +137,8 @@ final class ConflictResolver {
         if (serverModel instanceof SerializedModel) {
             SerializedModel serverSerializedModel = (SerializedModel) serverModel;
             return (T) SerializedModel.builder()
-                    .serializedData(serverSerializedModel.getSerializedData())
                     .modelSchema(((SerializedModel) local).getModelSchema())
+                    .serializedData(serverSerializedModel.getSerializedData())
                     .build();
         } else {
             return serverModel;

@@ -14,23 +14,29 @@
  */
 package com.amplifyframework.analytics.pinpoint.models
 
-import com.google.gson.Gson
 import java.util.UUID
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
 /*
 * Internal representation of Pinpoint Event
 * */
-internal class PinpointEvent constructor(
-    private val eventId: String = UUID.randomUUID().toString(),
-    private val eventType: String,
-    private val attributes: Map<String, String>,
-    private val metrics: Map<String, Double>,
-    private val sdkInfo: SDKInfo,
-    private val pinpointSession: PinpointSession,
-    private val eventTimestamp: Long,
-    private val uniqueId: String,
-    private val androidAppDetails: AndroidAppDetails,
-    private val androidDeviceDetails: AndroidDeviceDetails
+
+@Serializable
+internal data class PinpointEvent constructor(
+    val eventId: String = UUID.randomUUID().toString(),
+    val eventType: String,
+    val attributes: Map<String, String>,
+    val metrics: Map<String, Double>,
+    val sdkInfo: SDKInfo,
+    val pinpointSession: PinpointSession,
+    val eventTimestamp: Long,
+    val uniqueId: String,
+    val androidAppDetails: AndroidAppDetails,
+    val androidDeviceDetails: AndroidDeviceDetails
 ) {
 
     init {
@@ -38,8 +44,23 @@ internal class PinpointEvent constructor(
         require(eventType.length <= 50)
     }
 
+    companion object {
+        @OptIn(ExperimentalSerializationApi::class)
+        fun fromJsonString(jsonString: String): PinpointEvent {
+            val json = Json {
+                encodeDefaults = true
+                explicitNulls = false
+            }
+            return json.decodeFromString<PinpointEvent>(jsonString)
+        }
+    }
+
+    @OptIn(ExperimentalSerializationApi::class)
     fun toJsonString(): String {
-        val gson = Gson()
-        return gson.toJson(this)
+        val json = Json {
+            encodeDefaults = true
+            explicitNulls = false
+        }
+        return json.encodeToString(this)
     }
 }

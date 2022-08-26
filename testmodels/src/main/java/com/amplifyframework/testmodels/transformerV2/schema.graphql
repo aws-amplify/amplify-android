@@ -1,0 +1,40 @@
+# The schema is provisioned using Transformer V2 and CLI version 9.0.0
+# The amplify/cli.json file needs to have the following:
+#  - useexperimentalpipelinedtransformer": true
+#  - "transformerversion": 2
+# The build time API configuration were used:
+#  - Authorization modes: `API key (default, expiration time: 365 days from now)``
+#  - Conflict detection (required for DataStore): `Enabled`
+#  - Conflict resolution strategy: `Auto Merge`
+
+# The schema below will provision multiple sets of models, each numerated with a comment dividing
+# each set of models, and are exclusive of each other. This is so a single backend can be reused
+# across multiple test classes. The generated models and the ModelProvider is placed within its
+# directory, ie. `transformerV2.schemadrift/SchemaDriftModelProvider` as an artifact for test
+# classes to configure only the models to be tested with. This is especially useful when testing
+# DataStore and only wanting syncing down only necessary models.
+#
+# Having a shared backend also makes it easier to manage the integration tests in the pipeline,
+# since adding additional models will only require the existing backend to be updated. Adding
+# new models to the schema should consist of a use case that does not break the existing build
+# time configuration.
+
+# 1. Schema Drift
+# The SchemaDrift model involves using the following schema to set up the backend and local
+# modifications to mimic an out-of-date client. The local modifications for `EnumDrift` is to
+# remove the enum case THREE, replicating a scenario with which the backend is the updated schema
+# and frontend is the older client which has not upgraded to the latest code generated types.
+
+input AMPLIFY { globalAuthRule: AuthRule = { allow: public } } # FOR TESTING ONLY!
+
+type SchemaDrift @model {
+  id: ID!
+  createdAt: AWSDateTime!
+  enumValue: EnumDrift
+}
+
+enum EnumDrift {
+   ONE
+   TWO
+   THREE
+}

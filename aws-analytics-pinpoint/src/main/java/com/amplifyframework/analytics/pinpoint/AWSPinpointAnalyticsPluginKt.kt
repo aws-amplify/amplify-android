@@ -14,6 +14,7 @@
  */
 package com.amplifyframework.analytics.pinpoint
 
+import android.app.Application
 import android.content.Context
 import com.amplifyframework.analytics.AnalyticsEventBehavior
 import com.amplifyframework.analytics.AnalyticsPlugin
@@ -24,6 +25,8 @@ import org.json.JSONObject
 /**
  * The plugin implementation for Amazon Pinpoint in Analytics category.
  */
+internal const val AWS_PINPOINT_ANALYTICS_LOG_NAMESPACE = "amplify:aws-pinpoint-analytics:%s"
+
 class AWSPinpointAnalyticsPluginKt : AnalyticsPlugin<Any>() {
 
     private val pluginKey = "awsPinpointAnalyticsPlugin"
@@ -31,15 +34,15 @@ class AWSPinpointAnalyticsPluginKt : AnalyticsPlugin<Any>() {
     private lateinit var awsPinpointAnalyticsPluginBehavior: AWSPinpointAnalyticsPluginBehavior
 
     override fun identifyUser(userId: String, profile: UserProfile?) {
-        TODO("Not yet implemented")
+        awsPinpointAnalyticsPluginBehavior.identifyUser(userId, profile)
     }
 
     override fun disable() {
-        TODO("Not yet implemented")
+        awsPinpointAnalyticsPluginBehavior.disable()
     }
 
     override fun enable() {
-        TODO("Not yet implemented")
+        awsPinpointAnalyticsPluginBehavior.enable()
     }
 
     override fun recordEvent(eventName: String) {
@@ -51,15 +54,15 @@ class AWSPinpointAnalyticsPluginKt : AnalyticsPlugin<Any>() {
     }
 
     override fun registerGlobalProperties(properties: AnalyticsProperties) {
-        TODO("Not yet implemented")
+        awsPinpointAnalyticsPluginBehavior.registerGlobalProperties(properties)
     }
 
     override fun unregisterGlobalProperties(vararg propertyNames: String?) {
-        TODO("Not yet implemented")
+        awsPinpointAnalyticsPluginBehavior.unregisterGlobalProperties(*propertyNames)
     }
 
     override fun flushEvents() {
-        TODO("Not yet implemented")
+        awsPinpointAnalyticsPluginBehavior.flushEvents()
     }
 
     override fun getPluginKey(): String {
@@ -92,7 +95,16 @@ class AWSPinpointAnalyticsPluginKt : AnalyticsPlugin<Any>() {
             awsAnalyticsConfig,
             null // TODO: Provide valid credential provider
         )
-        awsPinpointAnalyticsPluginBehavior = AWSPinpointAnalyticsPluginBehavior(pinpointManager.analyticsClient)
+        val autoEventSubmitter = AutoEventSubmitter(awsAnalyticsConfig.autoFlushEventsInterval)
+        val autoSessionTracker = AutoSessionTracker(pinpointManager.analyticsClient, pinpointManager.sessionClient)
+        awsPinpointAnalyticsPluginBehavior = AWSPinpointAnalyticsPluginBehavior(
+            context,
+            pinpointManager.analyticsClient,
+            autoEventSubmitter,
+            autoSessionTracker
+        )
+        autoSessionTracker.startSessionTracking(context.applicationContext as Application)
+        autoEventSubmitter.start()
     }
 
     override fun getEscapeHatch(): Any? {

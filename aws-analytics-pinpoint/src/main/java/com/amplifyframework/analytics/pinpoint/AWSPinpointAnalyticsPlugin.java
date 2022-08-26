@@ -34,6 +34,10 @@ import com.amplifyframework.analytics.AnalyticsStringProperty;
 import com.amplifyframework.analytics.UserProfile;
 import com.amplifyframework.analytics.pinpoint.models.AWSPinpointUserProfile;
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.core.BuildConfig;
+import com.amplifyframework.hub.HubChannel;
+import com.amplifyframework.hub.HubEvent;
+import com.amplifyframework.logging.Logger;
 
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.mobile.client.AWSMobileClient;
@@ -57,6 +61,12 @@ import java.util.Objects;
  * The plugin implementation for Amazon Pinpoint in Analytics category.
  */
 public final class AWSPinpointAnalyticsPlugin extends AnalyticsPlugin<Object> {
+
+    /**
+     * logger for Analytics category.
+     */
+    protected static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-analytics");
+
     @Retention(RetentionPolicy.SOURCE)
     @StringDef({
             USER_NAME,
@@ -72,9 +82,9 @@ public final class AWSPinpointAnalyticsPlugin extends AnalyticsPlugin<Object> {
     private static final String AUTH_DEPENDENCY_PLUGIN_KEY = "awsCognitoAuthPlugin";
 
     private final Application application;
-    private AutoEventSubmitter autoEventSubmitter;
+    private AutoEventSubmitterOld autoEventSubmitter;
     private AnalyticsClient analyticsClient;
-    private AutoSessionTracker autoSessionTracker;
+    private AutoSessionTrackerOld autoSessionTracker;
     private TargetingClient targetingClient;
     private AWSCredentialsProvider credentialsProviderOverride; // Currently used for integration testing purposes
 
@@ -320,7 +330,13 @@ public final class AWSPinpointAnalyticsPlugin extends AnalyticsPlugin<Object> {
 
     @Override
     public void flushEvents() {
-        analyticsClient.submitEvents();
+        analyticsClient.submitEvents(analyticsEvents ->
+                Amplify.Hub.publish(HubChannel.ANALYTICS, HubEvent
+                    .create(AnalyticsChannelEventName.FLUSH_EVENTS, analyticsEvents)),
+            e -> {
+                LOG.error("Failed to flush events", e);
+            }
+        );
     }
 
     @NonNull
@@ -404,12 +420,12 @@ public final class AWSPinpointAnalyticsPlugin extends AnalyticsPlugin<Object> {
         this.targetingClient = pinpointManager.getTargetingClient();
 
         // Initiate the logic to automatically submit events periodically
-        autoEventSubmitter = new AutoEventSubmitter(analyticsClient,
+        autoEventSubmitter = new AutoEventSubmitterOld(
                 pinpointAnalyticsPluginConfiguration.getAutoFlushEventsInterval());
         autoEventSubmitter.start();
 
         // Instantiate the logic to automatically track app session
-        autoSessionTracker = new AutoSessionTracker(this.analyticsClient, pinpointManager.getSessionClient());
+        autoSessionTracker = new AutoSessionTrackerOld(this.analyticsClient, pinpointManager.getSessionClient());
         autoSessionTracker.startSessionTracking(application);
     }
 

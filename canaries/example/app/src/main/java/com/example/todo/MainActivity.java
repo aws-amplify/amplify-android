@@ -13,14 +13,19 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.statemachine.codegen.actions
+package com.example.todo;
 
-import com.amplifyframework.statemachine.Action
-import com.amplifyframework.statemachine.codegen.events.SignUpEvent
+import android.os.Bundle;
 
-interface SignUpActions {
-    fun startSignUpAction(event: SignUpEvent.EventType.InitiateSignUp): Action
-    fun confirmSignUpAction(event: SignUpEvent.EventType.ConfirmSignUp): Action
-    fun resendConfirmationCodeAction(event: SignUpEvent.EventType.ResendSignUpCode): Action
-    fun resetSignUpAction(): Action
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+
+public class MainActivity extends AppCompatActivity {
+    @Override
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_dev_menu);
+    }
+
+
 }
