@@ -198,7 +198,7 @@ public final class CodeGenerationInstrumentationTest {
         );
         assertTrue(errors.get(0).toString().contains("ConditionalCheckFailedException"));
 
-        api.delete(PERSON_API_NAME, Person.justId(person.getId()));
+        api.delete(PERSON_API_NAME, Person.justId(person.resolveIdentifier()));
     }
 
     /**

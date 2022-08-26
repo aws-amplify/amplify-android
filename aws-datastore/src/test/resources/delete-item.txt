@@ -1,5 +1,6 @@
 {
   "query": "mutation DeleteItem($input: DeleteItemInput!) {\n  deleteItem(input: $input) {
+    __typename
     _deleted
     _lastChangedAt
     _version

@@ -154,9 +154,9 @@ public final class HybridAssociationSyncInstrumentationTest {
         ownerData.put("id", owner.getId());
         ownerData.put("name", owner.getName());
         SerializedModel serializedOwner = SerializedModel.builder()
-            .serializedData(ownerData)
-            .modelSchema(ownerSchema)
-            .build();
+                .modelSchema(ownerSchema)
+                .serializedData(ownerData)
+                .build();
 
         // Setup an accumulator so we know when there has been a publication.
         HubAccumulator ownerAccumulator =
@@ -183,16 +183,16 @@ public final class HybridAssociationSyncInstrumentationTest {
         blogData.put("id", blog.getId());
         blogData.put("name", blog.getName());
         blogData.put("owner", SerializedModel.builder()
-            .serializedData(Collections.singletonMap("id", owner.getId()))
-            .modelSchema(null)
-            .build());
+                .modelSchema(null)
+                .serializedData(Collections.singletonMap("id", owner.getId()))
+                .build());
         String blogSchemaName = Blog.class.getSimpleName();
         ModelSchema blogSchema = schemaProvider.modelSchemas().get(blogSchemaName);
         assertNotNull(blogSchema);
         SerializedModel serializedBlog = SerializedModel.builder()
-            .serializedData(blogData)
-            .modelSchema(blogSchema)
-            .build();
+                .modelSchema(blogSchema)
+                .serializedData(blogData)
+                .build();
 
         // Save the blog
         HubAccumulator blogAccumulator =
@@ -242,9 +242,9 @@ public final class HybridAssociationSyncInstrumentationTest {
         expectedOwnerData.put("name", owner.getName());
         List<SerializedModel> actualSerializedOwners = hybridBehaviors.list(ownerSchema.getName());
         assertTrue(actualSerializedOwners.contains(SerializedModel.builder()
-            .serializedData(expectedOwnerData)
-            .modelSchema(ownerSchema)
-            .build()));
+                .modelSchema(ownerSchema)
+                .serializedData(expectedOwnerData)
+                .build()));
         assertTrue(normalBehaviors.list(BlogOwner.class).contains(owner));
 
         // Now, remotely save a model that has an association to the owner above.
@@ -266,15 +266,15 @@ public final class HybridAssociationSyncInstrumentationTest {
         expectedBlogData.put("id", blog.getId());
         expectedBlogData.put("name", blog.getName());
         expectedBlogData.put("owner", SerializedModel.builder()
-            .serializedData(Collections.singletonMap("id", owner.getId()))
-            .modelSchema(null)
-            .build()
+                .modelSchema(blogSchema)
+                .serializedData(Collections.singletonMap("id", owner.getId()))
+                .build()
         );
         List<SerializedModel> expectedSerializedBlogs = hybridBehaviors.list(blogSchema.getName());
         assertTrue(expectedSerializedBlogs.contains(SerializedModel.builder()
-            .serializedData(expectedBlogData)
-            .modelSchema(blogSchema)
-            .build()));
+                .modelSchema(blogSchema)
+                .serializedData(expectedBlogData)
+                .build()));
         assertTrue(normalBehaviors.list(Blog.class).contains(blog));
     }
 }

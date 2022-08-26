@@ -17,8 +17,8 @@ package com.amplifyframework.datastore.storage.sqlite;
 
 import androidx.annotation.NonNull;
 
-import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.ModelAssociation;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelIndex;
 import com.amplifyframework.core.model.ModelSchema;
@@ -36,14 +36,15 @@ import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLPredicate;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteColumn;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteTable;
-import com.amplifyframework.logging.Logger;
 import com.amplifyframework.util.Empty;
 import com.amplifyframework.util.Immutable;
+import com.amplifyframework.util.UserAgent;
 import com.amplifyframework.util.Wrap;
 
 import com.google.gson.Gson;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -57,7 +58,11 @@ import java.util.Set;
  * {@link Model} and {@link ModelSchema}.
  */
 final class SQLiteCommandFactory implements SQLCommandFactory {
-    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
+    /**
+     * Undefined is the name of the index annotation created by codegen for custom primary key based on the design for
+     * Custom primary key.
+     */
+    public static final String UNDEFINED = "undefined";
 
     private final SchemaRegistry schemaRegistry;
     private final Gson gson;
@@ -85,7 +90,10 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
             return new SqlCommand(table.getName(), stringBuilder.toString());
         }
 
-        stringBuilder.append("(").append(parseColumns(table));
+        stringBuilder.append("(").append(parseColumns(table))
+                .append(",")
+                .append(SqlKeyword.DELIMITER)
+                .append(createPrimaryKey(modelSchema).toString());
         if (!table.getForeignKeys().isEmpty()) {
             stringBuilder.append(",")
                     .append(SqlKeyword.DELIMITER)
@@ -102,32 +110,54 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
     public Set<SqlCommand> createIndexesFor(@NonNull ModelSchema modelSchema) {
         final SQLiteTable table = SQLiteTable.fromSchema(modelSchema);
         Set<SqlCommand> indexCommands = new HashSet<>();
-
         for (ModelIndex modelIndex : modelSchema.getIndexes().values()) {
-            final StringBuilder stringBuilder = new StringBuilder();
-            stringBuilder.append("CREATE INDEX IF NOT EXISTS")
-                    .append(SqlKeyword.DELIMITER)
-                    .append(Wrap.inBackticks(modelIndex.getIndexName()))
-                    .append(SqlKeyword.DELIMITER)
-                    .append(SqlKeyword.ON)
-                    .append(SqlKeyword.DELIMITER)
-                    .append(Wrap.inBackticks(table.getName()))
-                    .append(SqlKeyword.DELIMITER);
-
-            stringBuilder.append("(");
-            Iterator<String> iterator = modelIndex.getIndexFieldNames().iterator();
-            while (iterator.hasNext()) {
-                final String indexColumnName = iterator.next();
-                stringBuilder.append(Wrap.inBackticks(indexColumnName));
-                if (iterator.hasNext()) {
-                    stringBuilder.append(",").append(SqlKeyword.DELIMITER);
-                }
+            if (shouldCreateIndex(modelIndex, modelSchema.getAssociations())) {
+                indexCommands.add(createIndexCommand(table.getName(), modelIndex.getIndexName(),
+                        modelIndex.getIndexFieldNames()));
             }
-            stringBuilder.append(");");
-            indexCommands.add(new SqlCommand(table.getName(), stringBuilder.toString()));
         }
-
         return Immutable.of(indexCommands);
+    }
+
+    @NonNull
+    public Set<SqlCommand> createIndexesForForeignKeys(@NonNull ModelSchema modelSchema) {
+        final SQLiteTable table = SQLiteTable.fromSchema(modelSchema);
+        Set<SqlCommand> indexCommands = new HashSet<>();
+        for (SQLiteColumn foreignKey : table.getForeignKeys()) {
+            String connectedId = foreignKey.getName();
+            String fkIndexName = table.getName() + connectedId;
+            indexCommands.add(createIndexCommand(table.getName(),
+                    fkIndexName, Collections.singletonList(connectedId)));
+        }
+        return Immutable.of(indexCommands);
+    }
+
+    @NonNull
+    private SqlCommand createIndexCommand(String tableName,
+                                          String indexName,
+                                          List<String> indexFieldNames) {
+        final StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("CREATE INDEX IF NOT EXISTS")
+                .append(SqlKeyword.DELIMITER)
+                .append(Wrap.inBackticks(getIndexName(indexName,
+                        indexFieldNames)))
+                .append(SqlKeyword.DELIMITER)
+                .append(SqlKeyword.ON)
+                .append(SqlKeyword.DELIMITER)
+                .append(Wrap.inBackticks(tableName))
+                .append(SqlKeyword.DELIMITER);
+
+        stringBuilder.append("(");
+        Iterator<String> iterator = indexFieldNames.iterator();
+        while (iterator.hasNext()) {
+            final String indexColumnName = iterator.next();
+            stringBuilder.append(Wrap.inBackticks(indexColumnName));
+            if (iterator.hasNext()) {
+                stringBuilder.append(",").append(SqlKeyword.DELIMITER);
+            }
+        }
+        stringBuilder.append(");");
+        return new SqlCommand(tableName, stringBuilder.toString());
     }
 
     @NonNull
@@ -205,6 +235,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
             if (predicate instanceof QueryPredicateOperation) {
                 QueryPredicateOperation<?> predicateOperation = (QueryPredicateOperation<?>) predicate;
                 String predicateOperationField = predicateOperation.field();
+                sqlPredicateString = getFlutterString(sqlPredicateString, predicateOperation);
                 if (predicateOperationField.equals(PrimaryKey.fieldName()) && predicateOperation.modelName() == null
                         && predicateOperation.operator().type() == QueryOperator.Type.EQUAL) {
                     // The WHERE condition is Where.id("some-ID") but no model name is given.
@@ -262,6 +293,17 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
         rawQuery.append(";");
         final String queryString = rawQuery.toString();
         return new SqlCommand(table.getName(), queryString, bindings);
+    }
+
+    private String getFlutterString(String sqlPredicateString, QueryPredicateOperation<?> predicateOperation) {
+        String predicateOperationField = predicateOperation.field();
+        String updatedSqlPredicateString = sqlPredicateString;
+        if (UserAgent.isFlutter() && !Empty.check(predicateOperation.field())
+                && predicateOperationField.startsWith("@@") && predicateOperation.modelName() == null) {
+            updatedSqlPredicateString = updatedSqlPredicateString.replace(predicateOperationField,
+                    Wrap.inBackticks(predicateOperationField));
+        }
+        return updatedSqlPredicateString;
     }
 
     @NonNull
@@ -378,7 +420,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
         // Append WHERE statement
         final SQLiteTable sqliteTable = SQLiteTable.fromSchema(modelSchema);
         final String primaryKeyName = sqliteTable.getPrimaryKeyColumnName();
-        final QueryPredicate matchId = QueryField.field(primaryKeyName).eq(model.getId());
+        final QueryPredicate matchId = QueryField.field(primaryKeyName).eq(model.getPrimaryKeyString());
         SQLPredicate sqlPredicate = new SQLPredicate(matchId);
         stringBuilder.append(SqlKeyword.DELIMITER)
                 .append(SqlKeyword.WHERE)
@@ -416,6 +458,22 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
         );
     }
 
+    private String getIndexName(String indexName, List<String> indexFieldNames) {
+        if (indexName.equals(UNDEFINED)) {
+            StringBuilder indexNameBuilder = new StringBuilder();
+            indexNameBuilder.append(UNDEFINED + "_");
+            Iterator<String> indexFieldIterator = indexFieldNames.listIterator();
+            while (indexFieldIterator.hasNext()) {
+                indexNameBuilder.append(indexFieldIterator.next());
+                if (indexFieldIterator.hasNext()) {
+                    indexNameBuilder.append("_");
+                }
+            }
+            return indexNameBuilder.toString();
+        }
+        return indexName;
+    }
+
     // extract model field values to save in database
     private List<Object> extractFieldValues(@NonNull Model model) throws DataStoreException {
         final String modelName = model.getModelName();
@@ -425,9 +483,17 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
                 new SQLiteModelFieldTypeConverter(schema, schemaRegistry, gson);
         final Map<String, ModelField> modelFields = schema.getFields();
         final List<Object> bindings = new ArrayList<>();
+        Object fieldValue;
         for (SQLiteColumn column : table.getSortedColumns()) {
-            final ModelField modelField = Objects.requireNonNull(modelFields.get(column.getFieldName()));
-            final Object fieldValue = converter.convertValueFromTarget(model, modelField);
+            if (column.getName().equals(SQLiteTable.PRIMARY_KEY_FIELD_NAME)) {
+                fieldValue = model.getPrimaryKeyString();
+            } else if (column.isForeignKey()) {
+                final ModelField modelField = Objects.requireNonNull(modelFields.get(column.getOwnedField()));
+                fieldValue = converter.convertValueFromTarget(model, modelField);
+            } else {
+                final ModelField modelField = Objects.requireNonNull(modelFields.get(column.getFieldName()));
+                fieldValue = converter.convertValueFromTarget(model, modelField);
+            }
             bindings.add(fieldValue);
         }
         return bindings;
@@ -505,11 +571,6 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
             builder.append(Wrap.inBackticks(columnName))
                     .append(SqlKeyword.DELIMITER)
                     .append(column.getColumnType());
-
-            if (column.isPrimaryKey()) {
-                builder.append(SqlKeyword.DELIMITER).append("PRIMARY KEY");
-            }
-
             if (column.isNonNull()) {
                 builder.append(SqlKeyword.DELIMITER).append("NOT NULL");
             }
@@ -530,7 +591,9 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
             final SQLiteColumn foreignKey = foreignKeyIterator.next();
             String connectedName = foreignKey.getName();
             String connectedType = foreignKey.getOwnedType();
-            String connectedId = PrimaryKey.fieldName();
+            ModelSchema connectedSchema = schemaRegistry.getModelSchemaForModelClass(connectedType);
+            String connectedId = getIdField(connectedSchema.getPrimaryIndexFields(),
+                    connectedSchema.getModelType());
 
             builder.append("FOREIGN KEY")
                     .append(SqlKeyword.DELIMITER)
@@ -548,5 +611,49 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
             }
         }
         return builder;
+    }
+
+    private String getIdField(List<String> indexFields, Model.Type type) {
+        if (type == Model.Type.USER && indexFields.size() > 1) {
+            return SQLiteTable.PRIMARY_KEY_FIELD_NAME;
+        } else {
+            return indexFields.get(0);
+        }
+    }
+
+    // Utility method to create SQL for Primary key on table
+    private StringBuilder createPrimaryKey(@NonNull ModelSchema modelSchema) {
+        final StringBuilder builder = new StringBuilder();
+        final List<String> indexFields = modelSchema.getPrimaryIndexFields();
+        if (indexFields.size() > 0) {
+            builder.append("PRIMARY KEY")
+                    .append(SqlKeyword.DELIMITER)
+                    .append("(")
+                    .append(SqlKeyword.DELIMITER).append("'")
+                    .append(getIdField(indexFields, modelSchema.getModelType()))
+                    .append("'");
+        } else {
+            builder.append(SqlKeyword.DELIMITER).append("'")
+                    .append(indexFields.get(0))
+                    .append("'");
+        }
+        builder.append(")");
+        return builder;
+    }
+
+    private boolean shouldCreateIndex(ModelIndex modelIndex, Map<String, ModelAssociation> associationMap) {
+        if (modelIndex.getIndexName().equals(UNDEFINED) && modelIndex.getIndexFieldNames().size() == 1) {
+            return false;
+        }
+        for (Map.Entry<String, ModelAssociation> associationEntry : associationMap.entrySet()) {
+            if (associationEntry.getValue().isOwner()) {
+                for (String targetName : associationEntry.getValue().getTargetNames()) {
+                    if (modelIndex.getIndexFieldNames().contains(targetName)) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
     }
 }

@@ -57,7 +57,7 @@ public final class MutationQueue {
             return null;
         }
         while (head != dummyTail) {
-            if (head.mutation.getMutatedItem().getId().equals(modelId)) {
+            if (head.mutation.getMutatedItem().getPrimaryKeyString().equals(modelId)) {
                 return head.mutation;
             }
             head = head.next;

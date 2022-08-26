@@ -151,6 +151,22 @@ public final class RestApiInstrumentationTest {
     }
 
     /**
+     * Test whether we can make POST request with empty body and IAM as auth type.
+     * @throws ApiException On failure to obtain a valid response from API endpoint
+     */
+    @Test
+    @Ignore("fix in dev-preview")
+    public void postRequestEmptyBodyWithIAM() throws ApiException {
+        final RestOptions options = RestOptions.builder()
+                .addPath("/items")
+                .addBody("".getBytes())
+                .build();
+        final RestResponse response = api.post("iamAuthApi", options);
+        assertNotNull("Should return non-null data", response.getData());
+        assertTrue("Response should be successful", response.getCode().isSuccessful());
+    }
+
+    /**
      * Test whether we can get failed response for access denied.
      * @throws ApiException On failure to obtain a valid response from API endpoint
      */

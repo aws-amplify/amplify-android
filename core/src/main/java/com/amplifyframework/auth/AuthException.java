@@ -645,6 +645,96 @@ public class AuthException extends AmplifyException {
     }
 
     /**
+     * Could not perform the operation due to incorrect lambda configuration.
+     */
+    public static class UnexpectedLambdaException extends AuthException {
+        private static final long serialVersionUID = 1L;
+        private static final String MESSAGE = "Invalid lambda response error.";
+        private static final String RECOVERY_SUGGESTION =
+                "Make sure that the lambda configuration is correct.";
+
+        /**
+         * Default message/recovery suggestion with a cause.
+         * @param cause The original error.
+         */
+        public UnexpectedLambdaException(Throwable cause) {
+            super(MESSAGE, cause, RECOVERY_SUGGESTION);
+        }
+    }
+
+    /**
+     * Could not perform the operation due to incorrect lambda configuration.
+     */
+    public static class UserLambdaValidationException extends AuthException {
+        private static final long serialVersionUID = 1L;
+        private static final String MESSAGE = "Invalid lambda response error.";
+        private static final String RECOVERY_SUGGESTION =
+                "Make sure that the lambda configuration is correct.";
+
+        /**
+         * Default message/recovery suggestion with a cause.
+         * @param cause The original error.
+         */
+        public UserLambdaValidationException(Throwable cause) {
+            super(MESSAGE, cause, RECOVERY_SUGGESTION);
+        }
+    }
+
+    /**
+     * Could not perform the operation due to invalid sms role trust relationship.
+     */
+    public static class InvalidSmsRoleTrustRelationshipException extends AuthException {
+        private static final long serialVersionUID = 1L;
+        private static final String MESSAGE = "Invalid SMS Role Trust Relationship error.";
+        private static final String RECOVERY_SUGGESTION =
+                "Make sure that the parameters passed are valid.";
+
+        /**
+         * Default message/recovery suggestion with a cause.
+         * @param cause The original error.
+         */
+        public InvalidSmsRoleTrustRelationshipException(Throwable cause) {
+            super(MESSAGE, cause, RECOVERY_SUGGESTION);
+        }
+    }
+
+    /**
+     * Could not perform the operation due to invalid lambda configuration.
+     */
+    public static class InvalidLambdaResponseException extends AuthException {
+        private static final long serialVersionUID = 1L;
+        private static final String MESSAGE = "Invalid lambda response error.";
+        private static final String RECOVERY_SUGGESTION =
+                "Make sure that the lambda configuration is correct.";
+
+        /**
+         * Default message/recovery suggestion with a cause.
+         * @param cause The original error.
+         */
+        public InvalidLambdaResponseException(Throwable cause) {
+            super(MESSAGE, cause, RECOVERY_SUGGESTION);
+        }
+    }
+
+    /**
+     * Could not perform the operation due to invalid email role access policy.
+     */
+    public static class InvalidEmailRoleAccessPolicyException extends AuthException {
+        private static final long serialVersionUID = 1L;
+        private static final String MESSAGE = "Invalid email role access policy error.";
+        private static final String RECOVERY_SUGGESTION =
+                "Make sure that the parameters passed are valid.";
+
+        /**
+         * Default message/recovery suggestion with a cause.
+         * @param cause The original error.
+         */
+        public InvalidEmailRoleAccessPolicyException(Throwable cause) {
+            super(MESSAGE, cause, RECOVERY_SUGGESTION);
+        }
+    }
+
+    /**
      * Allows the user to specify whether guest access is enabled or not since this can affect which
      * recovery message should be included.
      */
