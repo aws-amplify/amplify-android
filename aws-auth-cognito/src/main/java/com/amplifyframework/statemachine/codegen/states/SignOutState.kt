@@ -29,7 +29,7 @@ import com.amplifyframework.statemachine.codegen.events.SignOutEvent
 
 sealed class SignOutState : State {
     data class NotStarted(val id: String = "") : SignOutState()
-    data class SigningOutLocally(val signedInData: SignedInData?) : SignOutState()
+    data class SigningOutLocally(val signedInData: SignedInData) : SignOutState()
     data class SigningOutGlobally(val id: String = "") : SignOutState()
     data class RevokingToken(val id: String = "") : SignOutState()
     data class SignedOut(val signedOutData: SignedOutData) : SignOutState()
@@ -60,7 +60,7 @@ sealed class SignOutState : State {
                 }
                 is SigningOutLocally -> when (event.isAuthEvent()) {
                     is AuthEvent.EventType.ReceivedCachedCredentials -> {
-                        val newState = SignedOut(SignedOutData(oldState.signedInData?.username))
+                        val newState = SignedOut(SignedOutData(oldState.signedInData.username))
                         StateResolution(newState)
                     }
                     is AuthEvent.EventType.CachedCredentialsFailed -> StateResolution(

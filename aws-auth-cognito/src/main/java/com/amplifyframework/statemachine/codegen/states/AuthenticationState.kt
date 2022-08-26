@@ -30,14 +30,14 @@ import com.amplifyframework.statemachine.codegen.events.SignOutEvent
 sealed class AuthenticationState : State {
     data class NotConfigured(val id: String = "") : AuthenticationState()
     data class Configured(val id: String = "") : AuthenticationState()
-    data class SigningIn(override var signInState: SignInState?) : AuthenticationState()
+    data class SigningIn(override var signInState: SignInState) : AuthenticationState()
     data class SignedIn(val signedInData: SignedInData) : AuthenticationState()
-    data class SigningOut(override var signOutState: SignOutState?) : AuthenticationState()
+    data class SigningOut(override var signOutState: SignOutState) : AuthenticationState()
     data class SignedOut(val signedOutData: SignedOutData) : AuthenticationState()
     data class Error(val exception: Exception) : AuthenticationState()
 
-    open var signInState: SignInState? = SignInState.NotStarted()
-    open var signOutState: SignOutState? = SignOutState.NotStarted()
+    open var signInState: SignInState = SignInState.NotStarted()
+    open var signOutState: SignOutState = SignOutState.NotStarted()
 
     class Resolver(
         private val signInResolver: StateMachineResolver<SignInState>,
@@ -55,13 +55,13 @@ sealed class AuthenticationState : State {
             val actions = resolution.actions.toMutableList()
             val builder = Builder(resolution.newState)
 
-            oldState.signInState?.let { signInResolver.resolve(it, event) }?.let {
-                builder.signInState = it.newState
+            oldState.signInState.let { signInResolver.resolve(it, event) }.let {
+                builder.updateSignInState(it.newState)
                 actions += it.actions
             }
 
-            oldState.signOutState?.let { signOutResolver.resolve(it, event) }?.let {
-                builder.signOutState = it.newState
+            oldState.signOutState.let { signOutResolver.resolve(it, event) }.let {
+                builder.updateSignOutState(it.newState)
                 actions += it.actions
             }
 
@@ -112,14 +112,10 @@ sealed class AuthenticationState : State {
                     )
                     else -> defaultResolution
                 }
-                is SignedOut -> when {
-                    authenticationEvent is AuthenticationEvent.EventType.SignInRequested -> {
+                is SignedOut -> when (authenticationEvent) {
+                    is AuthenticationEvent.EventType.SignInRequested -> {
                         val action = authenticationActions.initiateSRPSignInAction(authenticationEvent)
                         StateResolution(SigningIn(oldState.signInState), listOf(action))
-                    }
-                    authenticationEvent is AuthenticationEvent.EventType.SignOutRequested -> {
-                        val action = authenticationActions.initiateSignOutAction(authenticationEvent)
-                        StateResolution(SigningOut(oldState.signOutState), listOf(action))
                     }
                     else -> defaultResolution
                 }
@@ -130,8 +126,16 @@ sealed class AuthenticationState : State {
 
     class Builder(private val authNState: AuthenticationState) :
         com.amplifyframework.statemachine.Builder<AuthenticationState> {
-        var signInState: SignInState? = null
-        var signOutState: SignOutState? = null
+        private var signInState: SignInState = authNState.signInState
+        private var signOutState: SignOutState = authNState.signOutState
+
+        fun updateSignInState(signInState: SignInState) {
+            this.signInState = signInState
+        }
+
+        fun updateSignOutState(signOutState: SignOutState) {
+            this.signOutState = signOutState
+        }
 
         override fun build(): AuthenticationState = when (authNState) {
             is SignedIn -> SignedIn(authNState.signedInData)

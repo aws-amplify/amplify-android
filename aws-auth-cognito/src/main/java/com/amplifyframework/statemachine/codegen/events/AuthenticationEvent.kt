@@ -42,10 +42,7 @@ class AuthenticationEvent(val eventType: EventType, override val time: Date? = n
 
         data class SignInCompleted(val signedInData: SignedInData) : EventType()
 
-        data class SignOutRequested(
-            val isGlobalSignOut: Boolean = false,
-            val invalidateTokens: Boolean = true
-        ) : EventType()
+        data class SignOutRequested(val isGlobalSignOut: Boolean = false) : EventType()
 
         data class CancelSignIn(val id: String = "") : EventType()
         data class ResetSignUp(val id: String = "") : EventType()
