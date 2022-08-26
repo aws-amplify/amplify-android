@@ -15,19 +15,6 @@
 
 package com.amplifyframework.datastore.syncengine;
 
-import static com.amplifyframework.datastore.syncengine.TestHubEventFilters.isOutboxEmpty;
-import static com.amplifyframework.datastore.syncengine.TestHubEventFilters.isProcessed;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.graphql.GraphQLLocation;
 import com.amplifyframework.api.graphql.GraphQLOperation;
@@ -67,6 +54,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+
+import static com.amplifyframework.datastore.syncengine.TestHubEventFilters.isOutboxEmpty;
+import static com.amplifyframework.datastore.syncengine.TestHubEventFilters.isProcessed;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 
 /**
  * Tests the {@link MutationProcessor}.

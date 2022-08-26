@@ -17,19 +17,6 @@ package com.amplifyframework.datastore;
 
 import android.content.Context;
 
-import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.atLeast;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiCategory;
 import com.amplifyframework.api.ApiCategoryConfiguration;
@@ -71,6 +58,19 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.rxjava3.core.Completable;
+
+import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.atLeast;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @RunWith(RobolectricTestRunner.class)
 public final class MutationProcessorRetryTest {
