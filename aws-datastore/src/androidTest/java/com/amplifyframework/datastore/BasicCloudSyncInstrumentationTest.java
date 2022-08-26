@@ -53,7 +53,6 @@ import com.amplifyframework.testutils.sync.SynchronousDataStore;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -329,52 +328,6 @@ public final class BasicCloudSyncInstrumentationTest {
         // Verify that the updatedOwner is saved on the backend.
         BlogOwner remoteOwner = api.get(BlogOwner.class, anotherOwner.getId());
         ModelAssert.assertEqualsIgnoringTimestamps(updatedOwner, remoteOwner);
-    }
-
-    /**
-     * Verify that creating a new item, waiting for it to sync, and then updating 10 times consecutively succeeds.
-     * @throws DataStoreException On failure to save or query items from DataStore.
-     * @throws ApiException On failure to query the API.
-     */
-    @Test
-    @Ignore("There is a problem with the reliability of this test case and needs investigation.")
-    public void createWaitThenUpdateMultipleTimes() throws DataStoreException, ApiException {
-        // Setup
-        BlogOwner owner = BlogOwner.builder()
-                .name("Jean")
-                .build();
-        String modelName = BlogOwner.class.getSimpleName();
-        
-        HubAccumulator accumulator =
-                HubAccumulator.create(HubChannel.DATASTORE, publicationOf(modelName, owner.getId()), 1)
-                        .start();
-        // Create an item.
-        dataStore.save(owner);
-        // Wait for the sync.
-        accumulator.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
-
-        // Setup 10 updates
-        List<String> weas = Arrays.asList("pon", "lth", "ver", "kly", "ken", "sel", "ner", "rer", "ten", "ned");
-        HubAccumulator updateAccumulator =
-                HubAccumulator.create(HubChannel.DATASTORE, publicationOf(modelName, owner.getId()), 3).start();
-                
-        // Updating multiple times consecutively
-        // Accumulator crashes for more than 3 consecutive saves. Need to open ticket to investigate
-        for (int i = 0; i < 10; i++) {
-            BlogOwner updatedOwner = owner.copyOfBuilder()
-                    .wea(weas.get(i))
-                    .build();
-            dataStore.save(updatedOwner);
-        }
-        updateAccumulator.await(120, TimeUnit.SECONDS);
-        
-        // Verify that the updatedOwner is saved on the backend.
-        BlogOwner remoteOwner = api.get(BlogOwner.class, owner.getId());
-        Assert.assertEquals(weas.get(2), remoteOwner.getWea());
-        
-        // Verify that the last update is saved in the DataStore.
-        BlogOwner localOwner = dataStore.get(BlogOwner.class, owner.getId());
-        Assert.assertEquals(weas.get(2), localOwner.getWea());
     }
 
     /**

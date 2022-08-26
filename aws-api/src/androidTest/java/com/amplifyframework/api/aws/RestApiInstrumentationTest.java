@@ -31,7 +31,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.Collections;
@@ -139,7 +138,6 @@ public final class RestApiInstrumentationTest {
      * @throws ApiException On failure to obtain a valid response from API endpoint
      */
     @Test
-    @Ignore("Relies on an AWS account which is no longer active.  Resources need to be regenerated.")
     public void getRequestWithIAM() throws ApiException {
         final RestOptions options = RestOptions.builder()
             .addPath("/items")
@@ -171,7 +169,6 @@ public final class RestApiInstrumentationTest {
      * @throws ApiException On failure to obtain a valid response from API endpoint
      */
     @Test
-    @Ignore("Relies on an AWS account which is no longer active.  Resources need to be regenerated.")
     public void getRequestWithIAMFailedAccess() throws ApiException {
         final RestOptions options = RestOptions.builder()
             .addPath("/invalidPath")
