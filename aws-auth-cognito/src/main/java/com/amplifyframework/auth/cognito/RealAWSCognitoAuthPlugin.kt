@@ -642,12 +642,11 @@ internal class RealAWSCognitoAuthPlugin(
             val callbackUri = intent?.data
             when(val authNState = it.authNState) {
                 is AuthenticationState.SigningOut -> {
-                    if (callbackUri == null) {
-                        // Notify failed web sign out
-                    }
-                    val signOutHostedUI = (authNState.signOutState as? SignOutState.SigningOutHostedUI)
-
-                    signOutHostedUI?.let {  signOutState ->
+                    (authNState.signOutState as? SignOutState.SigningOutHostedUI)?.let { signOutState ->
+                        if (callbackUri == null) {
+                            // Notify failed web sign out
+                            logger.warn("Web UI Sign Out cancelled. Continuing sign out process.")
+                        }
                         if (signOutState.globalSignOut) {
                             authStateMachine.send(
                                 SignOutEvent(SignOutEvent.EventType.SignOutGlobally(signOutState.signedInData))
