@@ -89,7 +89,7 @@ object AuthenticationCognitoActions : AuthenticationActions {
             signedInData.signInMethod == SignInMethod.HOSTED -> {
                 SignOutEvent(SignOutEvent.EventType.InvokeHostedUISignOut(event.signOutData, signedInData))
             }
-            event.isGlobalSignOut -> {
+            event.signOutData.globalSignOut -> {
                 SignOutEvent(SignOutEvent.EventType.SignOutGlobally(signedInData))
             }
             else -> {
