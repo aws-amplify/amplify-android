@@ -180,7 +180,7 @@ class StateTransitionTests : StateTransitionTestBase() {
             )
     }
 
-    private fun setupLocalSignOut() {
+    private fun setupRevokeTokenSignOut() {
         Mockito.`when`(
             mockAuthenticationActions.initiateSignOutAction(
                 MockitoHelper.anyObject(),
@@ -190,7 +190,7 @@ class StateTransitionTests : StateTransitionTestBase() {
             Action { dispatcher, _ ->
                 dispatcher.send(
                     SignOutEvent(
-                        SignOutEvent.EventType.SignOutLocally(signedInData)
+                        SignOutEvent.EventType.RevokeToken(signedInData)
                     )
                 )
             }
@@ -325,9 +325,9 @@ class StateTransitionTests : StateTransitionTestBase() {
     }
 
     @Test
-    fun testLocalSignOut() {
+    fun testRevokeTokenSignOut() {
         setupConfigureSignedIn()
-        setupLocalSignOut()
+        setupRevokeTokenSignOut()
 
         val testLatch = CountDownLatch(1)
         val configureLatch = CountDownLatch(1)
