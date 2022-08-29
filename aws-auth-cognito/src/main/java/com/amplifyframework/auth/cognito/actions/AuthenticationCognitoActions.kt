@@ -59,9 +59,13 @@ object AuthenticationCognitoActions : AuthenticationActions {
     override fun initiateSignInAction(event: AuthenticationEvent.EventType.SignInRequested) =
         Action<AuthEnvironment>("InitiateSignInAction") { id, dispatcher ->
             logger?.verbose("$id Starting execution")
-            val signinOptions = event.options as AWSCognitoAuthSignInOptions
+            val signInOptions = if (event.options !is AWSCognitoAuthSignInOptions) {
+                AWSCognitoAuthSignInOptions.builder().authFlowType(AuthFlowType.USER_SRP_AUTH).build()
+            } else {
+                event.options
+            }
 
-            when (signinOptions.authFlowType) {
+            when (signInOptions.authFlowType) {
                 AuthFlowType.USER_SRP_AUTH -> {
                     val evt = event.username?.run {
                         event.password?.run {
@@ -87,7 +91,7 @@ object AuthenticationCognitoActions : AuthenticationActions {
                             SignInEvent.EventType.InitiateSignInWithCustom(
                                 event.username,
                                 event.password,
-                                event.options
+                                event.options as AWSCognitoAuthSignInOptions
                             )
                         )
                     } ?: AuthenticationEvent(
