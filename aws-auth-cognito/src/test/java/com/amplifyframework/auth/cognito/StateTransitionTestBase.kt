@@ -32,6 +32,7 @@ import com.amplifyframework.statemachine.codegen.actions.StoreActions
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
+import com.amplifyframework.statemachine.codegen.data.SignOutData
 import com.amplifyframework.statemachine.codegen.data.SignedInData
 import com.amplifyframework.statemachine.codegen.data.SignedOutData
 import com.amplifyframework.statemachine.codegen.events.AuthEvent
@@ -376,7 +377,9 @@ open class StateTransitionTestBase {
             .thenReturn(
                 Action { dispatcher, _ ->
                     dispatcher.send(
-                        AuthenticationEvent(AuthenticationEvent.EventType.SignOutRequested(true))
+                        AuthenticationEvent(
+                            AuthenticationEvent.EventType.SignOutRequested(SignOutData(true))
+                        )
                     )
                 }
             )

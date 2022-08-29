@@ -19,6 +19,7 @@ import com.amplifyframework.auth.options.AuthSignInOptions
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.StateChangeListenerToken
 import com.amplifyframework.statemachine.codegen.data.SignInData
+import com.amplifyframework.statemachine.codegen.data.SignOutData
 import com.amplifyframework.statemachine.codegen.data.SignedOutData
 import com.amplifyframework.statemachine.codegen.events.AuthEvent
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
@@ -346,7 +347,7 @@ class StateTransitionTests : StateTransitionTestBase() {
                     configureLatch.countDown()
                     stateMachine.send(
                         AuthenticationEvent(
-                            AuthenticationEvent.EventType.SignOutRequested()
+                            AuthenticationEvent.EventType.SignOutRequested(SignOutData())
                         )
                     )
                 }
@@ -389,7 +390,7 @@ class StateTransitionTests : StateTransitionTestBase() {
                     configureLatch.countDown()
                     stateMachine.send(
                         AuthenticationEvent(
-                            AuthenticationEvent.EventType.SignOutRequested()
+                            AuthenticationEvent.EventType.SignOutRequested(SignOutData())
                         )
                     )
                 }
