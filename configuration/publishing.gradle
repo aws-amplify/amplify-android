@@ -153,8 +153,15 @@ afterEvaluate { project ->
         }
 
         task androidJavadocs(type: Javadoc) {
+            failOnError false
             source = android.sourceSets.main.java.source
             classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+        }
+
+        afterEvaluate {
+            androidJavadocs.classpath += files(android.libraryVariants.collect { variant ->
+                variant.javaCompileProvider.get().classpath.files
+            })
         }
 
         task androidJavadocsJar(type: Jar, dependsOn: androidJavadocs) {
@@ -214,6 +221,7 @@ afterEvaluate { project ->
         if (project.getPlugins().hasPlugin('com.android.application') ||
             project.getPlugins().hasPlugin('com.android.library')) {
             archives androidSourcesJar
+            archives androidJavadocsJar
         } else {
             archives sourcesJar
         }
