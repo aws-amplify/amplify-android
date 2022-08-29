@@ -98,8 +98,8 @@ public final class AWSRestOperation extends RestOperation {
             }
 
             onFailure.accept(new ApiException(
-                    "OkHttp client failed to make a successful request.",
-                    error, AmplifyException.TODO_RECOVERY_SUGGESTION
+                "OkHttp client failed to make a successful request.",
+                error, AmplifyException.TODO_RECOVERY_SUGGESTION
             ));
         }
     }
@@ -148,8 +148,8 @@ public final class AWSRestOperation extends RestOperation {
             }
 
             onFailure.accept(new ApiException(
-                    "Received an IO exception while making the request.",
-                    ioe, "Retry the request."
+                "Received an IO exception while making the request.",
+                ioe, "Retry the request."
             ));
         }
     }
