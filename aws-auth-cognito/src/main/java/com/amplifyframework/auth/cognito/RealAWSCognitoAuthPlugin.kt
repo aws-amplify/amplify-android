@@ -41,6 +41,7 @@ import com.amplifyframework.auth.cognito.helpers.JWTParser
 import com.amplifyframework.auth.cognito.helpers.SRPHelper
 import com.amplifyframework.auth.cognito.helpers.SignInChallengeHelper
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthResendSignUpCodeOptions
+import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignOutOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttributeOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttributesOptions
 import com.amplifyframework.auth.cognito.usecases.ResetPasswordUseCase
@@ -77,6 +78,7 @@ import com.amplifyframework.statemachine.StateChangeListenerToken
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 import com.amplifyframework.statemachine.codegen.data.SignInData
+import com.amplifyframework.statemachine.codegen.data.SignOutData
 import com.amplifyframework.statemachine.codegen.events.AuthEvent
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
@@ -84,6 +86,7 @@ import com.amplifyframework.statemachine.codegen.events.CredentialStoreEvent
 import com.amplifyframework.statemachine.codegen.events.DeleteUserEvent
 import com.amplifyframework.statemachine.codegen.events.HostedUIEvent
 import com.amplifyframework.statemachine.codegen.events.SignInChallengeEvent
+import com.amplifyframework.statemachine.codegen.events.SignOutEvent
 import com.amplifyframework.statemachine.codegen.states.AuthState
 import com.amplifyframework.statemachine.codegen.states.AuthenticationState
 import com.amplifyframework.statemachine.codegen.states.AuthorizationState
@@ -603,6 +606,7 @@ internal class RealAWSCognitoAuthPlugin(
                             onError.accept(
                                 CognitoAuthExceptionConverter.lookup(hostedUISignInState.exception, "Sign in failed.")
                             )
+                            authStateMachine.send(AuthenticationEvent(AuthenticationEvent.EventType.CancelSignIn()))
                         }
                     }
                     authNState is AuthenticationState.SignedIn
@@ -634,23 +638,43 @@ internal class RealAWSCognitoAuthPlugin(
     }
 
     override fun handleWebUISignInResponse(intent: Intent?) {
-        val callbackUri = intent?.data
-        if (callbackUri == null) {
-            authStateMachine.send(
-                HostedUIEvent(
-                    HostedUIEvent.EventType.ThrowError(
-                        AuthException.UserCancelledException(
-                            "The user cancelled the sign-in attempt, so it did not complete.",
-                            "To recover: catch this error, and show the sign-in screen again."
+        authStateMachine.getCurrentState {
+            val callbackUri = intent?.data
+            when(val authNState = it.authNState) {
+                is AuthenticationState.SigningOut -> {
+                    (authNState.signOutState as? SignOutState.SigningOutHostedUI)?.let { signOutState ->
+                        if (callbackUri == null) {
+                            // Notify failed web sign out
+                            logger.warn("Web UI Sign Out cancelled. Continuing sign out process.")
+                        }
+                        if (signOutState.globalSignOut) {
+                            authStateMachine.send(
+                                SignOutEvent(SignOutEvent.EventType.SignOutGlobally(signOutState.signedInData))
+                            )
+                        } else {
+                            authStateMachine.send(
+                                SignOutEvent(SignOutEvent.EventType.RevokeToken(signOutState.signedInData))
+                            )
+                        }
+                    }
+                } else -> {
+                    if (callbackUri == null) {
+                        authStateMachine.send(
+                            HostedUIEvent(
+                                HostedUIEvent.EventType.ThrowError(
+                                    AuthException.UserCancelledException(
+                                        "The user cancelled the sign-in attempt, so it did not complete.",
+                                        "To recover: catch this error, and show the sign-in screen again."
+                                    )
+                                )
+                            )
                         )
-                    )
-                )
-            )
-            authStateMachine.send(AuthenticationEvent(AuthenticationEvent.EventType.CancelSignIn()))
-            return
+                    } else {
+                        authStateMachine.send(HostedUIEvent(HostedUIEvent.EventType.FetchToken(callbackUri)))
+                    }
+                }
+            }
         }
-
-        authStateMachine.send(HostedUIEvent(HostedUIEvent.EventType.FetchToken(callbackUri)))
     }
 
     private suspend fun getSession(): AWSCognitoAuthSession {
@@ -1247,7 +1271,14 @@ internal class RealAWSCognitoAuthPlugin(
                 }
             },
             {
-                val event = AuthenticationEvent(AuthenticationEvent.EventType.SignOutRequested(options.isGlobalSignOut))
+                val event = AuthenticationEvent(
+                    AuthenticationEvent.EventType.SignOutRequested(
+                        SignOutData(
+                            options.isGlobalSignOut,
+                            (options as? AWSCognitoAuthSignOutOptions)?.browserPackage
+                        )
+                    )
+                )
                 authStateMachine.send(event)
             }
         )

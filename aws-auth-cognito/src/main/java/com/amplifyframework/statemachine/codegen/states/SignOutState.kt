@@ -29,7 +29,8 @@ import com.amplifyframework.statemachine.codegen.events.SignOutEvent
 
 sealed class SignOutState : State {
     data class NotStarted(val id: String = "") : SignOutState()
-    data class SigningOutLocally(val signedInData: SignedInData?) : SignOutState()
+    data class SigningOutHostedUI(val signedInData: SignedInData, val globalSignOut: Boolean): SignOutState()
+    data class SigningOutLocally(val signedInData: SignedInData) : SignOutState()
     data class SigningOutGlobally(val id: String = "") : SignOutState()
     data class RevokingToken(val id: String = "") : SignOutState()
     data class SignedOut(val signedOutData: SignedOutData) : SignOutState()
@@ -44,10 +45,21 @@ sealed class SignOutState : State {
             val signOutEvent = event.isSignOutEvent()
             return when (oldState) {
                 is NotStarted -> when (signOutEvent) {
-                    is SignOutEvent.EventType.SignOutLocally -> {
-                        val action = signOutActions.localSignOutAction(signOutEvent)
-                        StateResolution(SigningOutLocally(signOutEvent.signedInData), listOf(action))
+                    is SignOutEvent.EventType.InvokeHostedUISignOut -> {
+                        val action = signOutActions.hostedUISignOutAction(signOutEvent)
+                        StateResolution(SigningOutHostedUI(signOutEvent.signedInData, signOutEvent.signOutData.globalSignOut), listOf(action))
                     }
+                    is SignOutEvent.EventType.SignOutGlobally -> {
+                        val action = signOutActions.globalSignOutAction(signOutEvent)
+                        StateResolution(SigningOutGlobally(), listOf(action))
+                    }
+                    is SignOutEvent.EventType.RevokeToken -> {
+                        val action = signOutActions.revokeTokenAction(signOutEvent)
+                        StateResolution(RevokingToken(), listOf(action))
+                    }
+                    else -> defaultResolution
+                }
+                is SigningOutHostedUI -> when (signOutEvent) {
                     is SignOutEvent.EventType.SignOutGlobally -> {
                         val action = signOutActions.globalSignOutAction(signOutEvent)
                         StateResolution(SigningOutGlobally(), listOf(action))
@@ -60,7 +72,7 @@ sealed class SignOutState : State {
                 }
                 is SigningOutLocally -> when (event.isAuthEvent()) {
                     is AuthEvent.EventType.ReceivedCachedCredentials -> {
-                        val newState = SignedOut(SignedOutData(oldState.signedInData?.username))
+                        val newState = SignedOut(SignedOutData(oldState.signedInData.username))
                         StateResolution(newState)
                     }
                     is AuthEvent.EventType.CachedCredentialsFailed -> StateResolution(
@@ -72,10 +84,6 @@ sealed class SignOutState : State {
                     is SignOutEvent.EventType.RevokeToken -> {
                         val action = signOutActions.revokeTokenAction(signOutEvent)
                         StateResolution(RevokingToken(), listOf(action))
-                    }
-                    is SignOutEvent.EventType.SignOutLocally -> {
-                        val action = signOutActions.localSignOutAction(signOutEvent)
-                        StateResolution(SigningOutLocally(signOutEvent.signedInData), listOf(action))
                     }
                     else -> defaultResolution
                 }

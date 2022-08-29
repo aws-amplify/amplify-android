@@ -78,7 +78,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
             val authEnvironment = AuthEnvironment(
                 configuration,
                 AWSCognitoAuthServiceBehavior.fromConfiguration(configuration),
-                HostedUIClient.create(context, configuration.oauth),
+                HostedUIClient.create(context, configuration.oauth, logger),
                 logger
             )
             val authStateMachine = AuthStateMachine(authEnvironment)
