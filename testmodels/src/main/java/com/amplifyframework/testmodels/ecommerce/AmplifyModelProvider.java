@@ -2,12 +2,6 @@ package com.amplifyframework.testmodels.ecommerce;
 
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
-import com.amplifyframework.testmodels.commentsblog.Author;
-import com.amplifyframework.testmodels.commentsblog.Blog;
-import com.amplifyframework.testmodels.commentsblog.BlogOwner;
-import com.amplifyframework.testmodels.commentsblog.Comment;
-import com.amplifyframework.testmodels.commentsblog.Post;
-import com.amplifyframework.testmodels.commentsblog.PostAuthorJoin;
 import com.amplifyframework.util.Immutable;
 
 import java.util.Arrays;

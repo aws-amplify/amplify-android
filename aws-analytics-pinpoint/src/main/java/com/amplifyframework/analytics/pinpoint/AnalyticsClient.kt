@@ -23,7 +23,8 @@ import com.amplifyframework.analytics.pinpoint.models.AndroidDeviceDetails
 import com.amplifyframework.analytics.pinpoint.models.PinpointEvent
 import com.amplifyframework.analytics.pinpoint.models.PinpointSession
 import com.amplifyframework.analytics.pinpoint.models.SDKInfo
-import java.lang.IllegalStateException
+import com.amplifyframework.analytics.pinpoint.targeting.TargetingClient
+import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -32,21 +33,22 @@ import kotlinx.coroutines.launch
 
 internal class AnalyticsClient(
     val context: Context,
-    private val pinpointClient: PinpointClient,
+    pinpointClient: PinpointClient,
     private val sessionClient: SessionClient,
-    private val pinpointDatabase: PinpointDatabase,
+    targetingClient: TargetingClient,
+    pinpointDatabase: PinpointDatabase,
     private val androidAppDetails: AndroidAppDetails,
     private val androidDeviceDetails: AndroidDeviceDetails,
     private val sdkInfo: SDKInfo,
-    private val coroutineDispatcher: CoroutineDispatcher = Dispatchers.Default,
+    coroutineDispatcher: CoroutineDispatcher = Dispatchers.Default,
     private val eventRecorder: EventRecorder = EventRecorder(
         context,
         pinpointClient,
         pinpointDatabase,
+        targetingClient,
         coroutineDispatcher
     )
 ) {
-
     private val coroutineScope = CoroutineScope(coroutineDispatcher)
     private val globalAttributes = ConcurrentHashMap<String, String>()
     private val globalMetrics = ConcurrentHashMap<String, Double>()
@@ -56,7 +58,9 @@ internal class AnalyticsClient(
     fun createEvent(
         eventType: String,
         attributes: MutableMap<String, String> = mutableMapOf(),
-        metrics: MutableMap<String, Double> = mutableMapOf()
+        metrics: MutableMap<String, Double> = mutableMapOf(),
+        eventTimestamp: Long = System.currentTimeMillis(),
+        eventId: String = UUID.randomUUID().toString()
     ): PinpointEvent {
         val session = sessionClient.session ?: throw IllegalStateException("session is null")
         return createEvent(
@@ -66,7 +70,9 @@ internal class AnalyticsClient(
             session.stopTime,
             session.sessionDuration,
             attributes,
-            metrics
+            metrics,
+            eventTimestamp,
+            eventId
         )
     }
 
@@ -77,7 +83,9 @@ internal class AnalyticsClient(
         sessionEnd: Long? = null,
         sessionDuration: Long = 0L,
         attributes: MutableMap<String, String> = mutableMapOf(),
-        metrics: MutableMap<String, Double> = mutableMapOf()
+        metrics: MutableMap<String, Double> = mutableMapOf(),
+        eventTimestamp: Long = System.currentTimeMillis(),
+        eventId: String = UUID.randomUUID().toString()
     ): PinpointEvent {
         globalAttributes.forEach { (key, value) ->
             attributes[key] = value
@@ -92,12 +100,13 @@ internal class AnalyticsClient(
             metrics[key] = value
         }
         return PinpointEvent(
+            eventId = eventId,
             eventType = eventType,
             attributes = attributes,
             metrics = metrics,
             sdkInfo = sdkInfo,
             pinpointSession = PinpointSession(sessionId, sessionStart, sessionEnd, sessionDuration),
-            eventTimestamp = System.currentTimeMillis(),
+            eventTimestamp = eventTimestamp,
             uniqueId = "", // TODO: Get Unique from shared preferences
             androidAppDetails = androidAppDetails,
             androidDeviceDetails = androidDeviceDetails

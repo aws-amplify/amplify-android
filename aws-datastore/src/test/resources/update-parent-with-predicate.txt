@@ -1,6 +1,7 @@
 {
   "query": "mutation UpdateParent($condition: ModelParentConditionInput, $input: UpdateParentInput!) {
   updateParent(condition: $condition, input: $input) {
+    __typename
     _deleted
     _lastChangedAt
     _version

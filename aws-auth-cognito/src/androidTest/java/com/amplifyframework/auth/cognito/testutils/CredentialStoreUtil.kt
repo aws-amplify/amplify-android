@@ -22,9 +22,8 @@ import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
 
 object CredentialStoreUtil {
-    private val credential = AmplifyCredential(
+    private val credential = AmplifyCredential.UserAndIdentityPool(
         CognitoUserPoolTokens("idToken", "accessToken", "refreshToken", 1212),
-
         "identityId",
         AWSCredentials("accessKeyId", "secretAccessKey", "sessionToken", 1212)
     )

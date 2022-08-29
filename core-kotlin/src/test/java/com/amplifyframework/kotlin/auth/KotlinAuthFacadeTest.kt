@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -371,6 +371,23 @@ class KotlinAuthFacadeTest {
     }
 
     /**
+     * When the fetchAuthSession() delegate emits an error, it should
+     * be surfaced by the coroutine API, too.
+     */
+    @Test(expected = AuthException.SessionExpiredException::class)
+    fun fetchAuthSessionThrowsSessionExpired(): Unit = runBlocking {
+        val error = AuthException.SessionExpiredException() as AuthException
+        every {
+            delegate.fetchAuthSession(any(), any())
+        } answers {
+            val indexOfErrorConsumer = 1
+            val onError = it.invocation.args[indexOfErrorConsumer] as Consumer<AuthException>
+            onError.accept(error)
+        }
+        auth.fetchAuthSession()
+    }
+
+    /**
      * When rememberDevice() coroutine is called, it should pass through to the
      * delegate. If the delegate succeeds, so should the coroutine.
      */
@@ -514,10 +531,12 @@ class KotlinAuthFacadeTest {
      */
     @Test
     fun confirmResetPasswordSucceeds(): Unit = runBlocking {
+        val username = "TonyDaniels6989"
         val newPassword = "VerySecurePassword=VSPBaby"
         val confirmationCode = "LegitConfirmation"
         every {
             delegate.confirmResetPassword(
+                eq(username),
                 eq(newPassword),
                 eq(confirmationCode),
                 any(),
@@ -525,13 +544,14 @@ class KotlinAuthFacadeTest {
                 any()
             )
         } answers {
-            val indexOfCompletionAction = 3
+            val indexOfCompletionAction = 4
             val onComplete = it.invocation.args[indexOfCompletionAction] as Action
             onComplete.call()
         }
-        auth.confirmResetPassword(newPassword, confirmationCode)
+        auth.confirmResetPassword(username, newPassword, confirmationCode)
         verify {
             delegate.confirmResetPassword(
+                eq(username),
                 eq(newPassword),
                 eq(confirmationCode),
                 any(),
@@ -546,11 +566,13 @@ class KotlinAuthFacadeTest {
      */
     @Test(expected = AuthException::class)
     fun confirmResetPasswordThrows(): Unit = runBlocking {
+        val username = "TonyDaniels6989"
         val newPassword = "SuperSecurePass911"
         val confirmationCode = "ConfirmationCode4u"
         val error = AuthException("uh", "oh")
         every {
             delegate.confirmResetPassword(
+                eq(username),
                 eq(newPassword),
                 eq(confirmationCode),
                 any(),
@@ -558,11 +580,11 @@ class KotlinAuthFacadeTest {
                 any()
             )
         } answers {
-            val indexOfErrorConsumer = 4
+            val indexOfErrorConsumer = 5
             val onError = it.invocation.args[indexOfErrorConsumer] as Consumer<AuthException>
             onError.accept(error)
         }
-        auth.confirmResetPassword(newPassword, confirmationCode)
+        auth.confirmResetPassword(username, newPassword, confirmationCode)
     }
 
     @Test

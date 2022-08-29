@@ -52,5 +52,6 @@
     "indexes": {},
     "modelClass": "com.amplifyframework.core.model.SerializedModel",
     "name": "BlogOwner",
-    "pluralName": "BlogOwners"
+    "pluralName": "BlogOwners",
+    "modelType": "USER"
 }

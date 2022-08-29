@@ -17,18 +17,13 @@ package com.amplifyframework.auth.cognito.actions
 
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AuthFlowType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
-import aws.smithy.kotlin.runtime.time.Instant
 import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.auth.cognito.helpers.SRPHelper
+import com.amplifyframework.auth.cognito.helpers.SignInChallengeHelper
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.SRPActions
-import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
-import com.amplifyframework.statemachine.codegen.data.SignInMethod
-import com.amplifyframework.statemachine.codegen.data.SignedInData
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.SRPEvent
-import java.util.Date
-import kotlin.time.Duration.Companion.seconds
 
 object SRPCognitoActions : SRPActions {
     override fun initiateSRPAuthAction(event: SRPEvent.EventType.InitiateSRP) =
@@ -100,16 +95,7 @@ object SRPCognitoActions : SRPActions {
                     challengeResponses = challengeParams
                 }
 
-                val signedInData = response?.authenticationResult?.let {
-                    val expiresIn = Instant.now().plus(it.expiresIn.seconds).epochSeconds
-                    val tokens = CognitoUserPoolTokens(it.idToken, it.accessToken, it.refreshToken, expiresIn)
-                    SignedInData(userId, username, Date(), SignInMethod.SRP, tokens)
-                }
-                val finalizeEvent = SRPEvent(SRPEvent.EventType.FinalizeSRPSignIn())
-                logger?.verbose("$id Sending event ${finalizeEvent.type}")
-                dispatcher.send(finalizeEvent)
-
-                AuthenticationEvent(AuthenticationEvent.EventType.InitializedSignedIn(signedInData!!))
+                SignInChallengeHelper.evaluateNextStep(userId, username, response)
             } catch (e: Exception) {
                 val errorEvent = SRPEvent(SRPEvent.EventType.ThrowPasswordVerifierError(e))
                 logger?.verbose("$id Sending event ${errorEvent.type}")

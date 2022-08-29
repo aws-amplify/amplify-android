@@ -16,14 +16,16 @@
 package com.amplifyframework.analytics.pinpoint.models
 
 import android.content.Context
+import kotlinx.serialization.Serializable
 
+@Serializable
 internal class AndroidAppDetails {
 
-    private val appId: String
-    private val appTitle: String
-    private val packageName: String
-    private val versionCode: String
-    private val versionName: String
+    val appId: String
+    val appTitle: String
+    val packageName: String
+    val versionCode: String
+    val versionName: String
 
     constructor(
         appId: String,
@@ -32,11 +34,11 @@ internal class AndroidAppDetails {
         versionCode: String,
         versionName: String
     ) {
-        this@AndroidAppDetails.appId = appId
-        this@AndroidAppDetails.appTitle = appTitle
-        this@AndroidAppDetails.packageName = packageName
-        this@AndroidAppDetails.versionCode = versionCode
-        this@AndroidAppDetails.versionName = versionName
+        this.appId = appId
+        this.appTitle = appTitle
+        this.packageName = packageName
+        this.versionCode = versionCode
+        this.versionName = versionName
     }
 
     constructor(context: Context, appId: String) {
@@ -44,10 +46,10 @@ internal class AndroidAppDetails {
         val packageManager = applicationContext.packageManager
         val packageInfo = packageManager.getPackageInfo(applicationContext.packageName, 0)
         val appInfo = packageManager.getApplicationInfo(applicationContext.packageName, 0)
-        this@AndroidAppDetails.appId = appId
-        this@AndroidAppDetails.appTitle = packageManager.getApplicationLabel(appInfo) as String
-        this@AndroidAppDetails.packageName = packageInfo.packageName
-        this@AndroidAppDetails.versionCode = packageInfo.versionCode.toString()
-        this@AndroidAppDetails.versionName = packageInfo.versionName
+        this.appId = appId
+        this.appTitle = packageManager.getApplicationLabel(appInfo) as String
+        this.packageName = packageInfo.packageName
+        this.versionCode = packageInfo.versionCode.toString()
+        this.versionName = packageInfo.versionName
     }
 }

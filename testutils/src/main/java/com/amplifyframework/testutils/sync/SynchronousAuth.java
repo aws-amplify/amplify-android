@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -20,10 +20,8 @@ import android.content.Context;
 import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.RawRes;
 
 import com.amplifyframework.AmplifyException;
-import com.amplifyframework.auth.AuthCategory;
 import com.amplifyframework.auth.AuthCategoryBehavior;
 import com.amplifyframework.auth.AuthCodeDeliveryDetails;
 import com.amplifyframework.auth.AuthDevice;
@@ -50,12 +48,8 @@ import com.amplifyframework.auth.result.AuthSignInResult;
 import com.amplifyframework.auth.result.AuthSignUpResult;
 import com.amplifyframework.auth.result.AuthUpdateAttributeResult;
 import com.amplifyframework.core.Amplify;
-import com.amplifyframework.core.AmplifyConfiguration;
-import com.amplifyframework.core.category.CategoryConfiguration;
-import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.plugin.Plugin;
 import com.amplifyframework.testutils.Await;
-import com.amplifyframework.testutils.Resources;
 import com.amplifyframework.testutils.VoidResult;
 
 import java.util.List;
@@ -111,12 +105,6 @@ public final class SynchronousAuth {
      */
     public static SynchronousAuth delegatingToCognito(Context context, Plugin<?> authPlugin)
         throws AmplifyException, InterruptedException {
-        @RawRes int configResourceId = Resources.getRawResourceId(context, "amplifyconfiguration");
-        AmplifyConfiguration amplifyConfiguration = AmplifyConfiguration.fromConfigFile(context, configResourceId);
-        CategoryConfiguration authCategoryConfiguration = amplifyConfiguration.forCategoryType(CategoryType.AUTH);
-        AuthCategory authCategory = new AuthCategory();
-        authCategory.addPlugin((AuthPlugin<?>) authPlugin);
-        authCategory.configure(authCategoryConfiguration, context);
         try {
             Amplify.Auth.addPlugin((AuthPlugin<?>) authPlugin);
             Amplify.configure(context);
@@ -125,7 +113,7 @@ public final class SynchronousAuth {
         }
         //TODO: make authCategory confiuration synchronous
         Thread.sleep(AUTH_OPERATION_TIMEOUT_MS);
-        return SynchronousAuth.delegatingTo(authCategory);
+        return SynchronousAuth.delegatingTo(Amplify.Auth);
     }
 
     /**
@@ -351,44 +339,50 @@ public final class SynchronousAuth {
 
     /**
      * Complete password recovery process by inputting user's desired new password and confirmation code.
+     * @param username A login identifier e.g. `superdog22`; or an email/phone number, depending on configuration
      * @param newPassword The user's desired new password
      * @param confirmationCode The confirmation code the user received after starting the forgotPassword process
      * @param options Advanced options such as a map of auth information for custom auth
      * @throws AuthException exception
      */
     public void confirmResetPassword(
+            @NonNull String username,
             @NonNull String newPassword,
             @NonNull String confirmationCode,
             @NonNull AuthConfirmResetPasswordOptions options
     ) throws AuthException {
         Await.<Object, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
-                asyncDelegate.confirmResetPassword(
-                    newPassword,
-                    confirmationCode,
-                    options,
-                    () -> onResult.accept(VoidResult.instance()),
-                    onError
-                )
+            asyncDelegate.confirmResetPassword(
+                username,
+                newPassword,
+                confirmationCode,
+                options,
+                () -> onResult.accept(VoidResult.instance()),
+                onError
+            )
         );
     }
 
     /**
      * Complete password recovery process by inputting user's desired new password and confirmation code.
+     * @param username A login identifier e.g. `superdog22`; or an email/phone number, depending on configuration
      * @param newPassword The user's desired new password
      * @param confirmationCode The confirmation code the user received after starting the forgotPassword process
      * @throws AuthException exception
      */
     public void confirmResetPassword(
+            @NonNull String username,
             @NonNull String newPassword,
             @NonNull String confirmationCode
     ) throws AuthException {
         Await.<Object, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
-                asyncDelegate.confirmResetPassword(
-                    newPassword,
-                    confirmationCode,
-                    () -> onResult.accept(VoidResult.instance()),
-                    onError
-                )
+            asyncDelegate.confirmResetPassword(
+                username,
+                newPassword,
+                confirmationCode,
+                () -> onResult.accept(VoidResult.instance()),
+                onError
+            )
         );
     }
 

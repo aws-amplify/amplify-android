@@ -1,3 +1,5 @@
+- [ ] PR title and description conform to [Pull Request](https://github.com/aws-amplify/amplify-android/blob/main/CONTRIBUTING.md#pull-request-guidelines) guidelines.
+
 *Issue #, if available:*
 
 *Description of changes:*
@@ -6,8 +8,7 @@
 (Please add a line here how the changes were tested)
 
 - [ ] Added Unit Tests
-- [ ] Tested on frontend (Add Screenshots)
-- [ ] Successful logs (Attach them to the PR)
+- [ ] Added Integration Tests
 
 *Documentation update required?*
 - [ ] No
