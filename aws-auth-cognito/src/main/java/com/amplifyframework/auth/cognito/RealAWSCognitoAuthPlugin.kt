@@ -640,7 +640,7 @@ internal class RealAWSCognitoAuthPlugin(
     override fun handleWebUISignInResponse(intent: Intent?) {
         authStateMachine.getCurrentState {
             val callbackUri = intent?.data
-            when(val authNState = it.authNState) {
+            when (val authNState = it.authNState) {
                 is AuthenticationState.SigningOut -> {
                     (authNState.signOutState as? SignOutState.SigningOutHostedUI)?.let { signOutState ->
                         if (callbackUri == null) {

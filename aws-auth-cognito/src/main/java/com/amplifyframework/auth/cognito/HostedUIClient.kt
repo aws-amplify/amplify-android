@@ -22,7 +22,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
-import android.util.Log
 import androidx.browser.customtabs.CustomTabsClient
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.browser.customtabs.CustomTabsServiceConnection
@@ -44,7 +43,7 @@ internal class HostedUIClient private constructor(
     private val context: Context,
     private val configuration: OauthConfiguration,
     private val logger: Logger
-    ) :
+) :
     CustomTabsServiceConnection() {
 
     private val proofKey = PkceHelper.generateRandom()
@@ -66,8 +65,10 @@ internal class HostedUIClient private constructor(
                     }
                 }
             }
-            logger.warn("${HostedUIRedirectActivity::class.simpleName ?: "Redirect activity"} " +
-                    "is not declared in AndroidManifest.")
+            logger.warn(
+                "${HostedUIRedirectActivity::class.simpleName ?: "Redirect activity"} " +
+                    "is not declared in AndroidManifest."
+            )
         } catch (error: Exception) {
             logger.warn("Failed to inspect packages")
         }

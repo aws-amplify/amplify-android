@@ -37,9 +37,11 @@ object DeleteUserActions : DeleteUserActions {
                 logger?.warn("Failed to delete user.", e)
                 if (e is UserNotFoundException) {
                     // The user could have been remotely deleted, clear local session
-                    AuthenticationEvent(AuthenticationEvent.EventType.SignOutRequested(
-                        SignOutData(globalSignOut = false)
-                    ))
+                    AuthenticationEvent(
+                        AuthenticationEvent.EventType.SignOutRequested(
+                            SignOutData(globalSignOut = false)
+                        )
+                    )
                 } else {
                     DeleteUserEvent(DeleteUserEvent.EventType.ThrowError(e))
                 }

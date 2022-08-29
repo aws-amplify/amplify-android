@@ -32,10 +32,16 @@ object SignOutCognitoActions : SignOutActions {
                 if (hostedUIClient == null) throw Exception() // TODO: More detailed exception
                 hostedUIClient.launchCustomTabsSignOut(event.signOutData.browserPackage)
             } catch (e: Exception) {
-
+                logger?.warn("Failed to sign out web ui.", e)
+                val evt = if (event.signOutData.globalSignOut) {
+                    SignOutEvent(SignOutEvent.EventType.SignOutGlobally(event.signedInData))
+                } else {
+                    SignOutEvent(SignOutEvent.EventType.RevokeToken(event.signedInData))
+                }
+                logger?.verbose("$id Sending event ${evt.type}")
+                dispatcher.send(evt)
             }
         }
-
 
     override fun localSignOutAction(event: SignOutEvent.EventType.SignOutLocally) =
         Action<AuthEnvironment>("LocalSignOut") { id, dispatcher ->
