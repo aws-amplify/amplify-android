@@ -43,6 +43,20 @@ public enum AuthSignInStep {
     CONFIRM_SIGN_IN_WITH_NEW_PASSWORD,
 
     /**
+     * Multifactor authentication is enabled on this account and requires you to call
+     * {@link com.amplifyframework.auth.AuthCategoryBehavior#confirmSignIn(String, Consumer, Consumer)}
+     * with the code sent via SMS text message to proceed with the sign in flow.
+     */
+    CONFIRM_SIGN_IN_WITH_DEVICE,
+
+    /**
+     * Multifactor authentication is enabled on this account and requires you to call
+     * {@link com.amplifyframework.auth.AuthCategoryBehavior#confirmSignIn(String, Consumer, Consumer)}
+     * with the code sent via SMS text message to proceed with the sign in flow.
+     */
+    CONFIRM_SIGN_IN_WITH_DEVICE_PASSWORD,
+
+    /**
      * The user account is required to reset its password to be able to login. Call
      * {@link com.amplifyframework.auth.AuthCategoryBehavior#resetPassword(String, Consumer, Consumer)}
      * and proceed with the reset password flow until complete and then attempt sign in again.

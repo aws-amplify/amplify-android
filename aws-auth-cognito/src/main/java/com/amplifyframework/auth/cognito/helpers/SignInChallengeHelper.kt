@@ -56,6 +56,8 @@ object SignInChallengeHelper {
             }
             challengeNameType is ChallengeNameType.SmsMfa ||
                 challengeNameType is ChallengeNameType.CustomChallenge
+                    || challengeNameType is ChallengeNameType.DevicePasswordVerifier
+                    || challengeNameType is ChallengeNameType.DeviceSrpAuth
                 || challengeNameType is ChallengeNameType.NewPasswordRequired -> {
                 val challenge =
                     AuthChallenge(challengeNameType.value, username, session, challengeParameters)
@@ -96,6 +98,20 @@ object SignInChallengeHelper {
                 val authSignInResult = AuthSignInResult(
                     false,
                     AuthNextSignInStep(AuthSignInStep.CONFIRM_SIGN_IN_WITH_CUSTOM_CHALLENGE, challengeParams, null)
+                )
+                onSuccess.accept(authSignInResult)
+            }
+            is ChallengeNameType.DeviceSrpAuth -> {
+                val authSignInResult = AuthSignInResult(
+                    false,
+                    AuthNextSignInStep(AuthSignInStep.CONFIRM_SIGN_IN_WITH_DEVICE, challengeParams, null)
+                )
+                onSuccess.accept(authSignInResult)
+            }
+            is ChallengeNameType.DevicePasswordVerifier -> {
+                val authSignInResult = AuthSignInResult(
+                    false,
+                    AuthNextSignInStep(AuthSignInStep.CONFIRM_SIGN_IN_WITH_DEVICE_PASSWORD, challengeParams, null)
                 )
                 onSuccess.accept(authSignInResult)
             }
