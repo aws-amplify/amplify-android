@@ -22,7 +22,7 @@ import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider
 class PresignedSynthesizeSpeechUrlOptions private constructor(
     val credentialsProvider: CredentialsProvider?,
     val expires: Int
-){
+) {
     companion object {
         /**
          * Returns a new builder instance for constructing PresignedSynthesizeSpeechUrlOptions.
@@ -35,7 +35,7 @@ class PresignedSynthesizeSpeechUrlOptions private constructor(
          * @return a default instance.
          */
         @JvmStatic fun defaults() = builder().build()
-        
+
         // Default expiration time is 15 minutes (900 seconds)
         private const val DEFAULT_EXPIRATION_SECONDS = 900
     }
@@ -55,7 +55,8 @@ class PresignedSynthesizeSpeechUrlOptions private constructor(
          * @param credentialsProvider the credentials provider that will provide credentials for signing the URL.
          * @return this builder instance.
          */
-        fun credentialsProvider(credentialsProvider: CredentialsProvider) = apply { this.credentialsProvider = credentialsProvider }
+        fun credentialsProvider(credentialsProvider: CredentialsProvider) =
+            apply { this.credentialsProvider = credentialsProvider }
 
         /**
          * Sets the expiration of the URL and returns itself.
