@@ -30,6 +30,7 @@ import com.amplifyframework.testutils.sync.TestCategory
 import java.util.UUID
 import kotlin.random.Random.Default.nextDouble
 import org.junit.Assert
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -124,7 +125,7 @@ class SearchApiTest {
 
         // First entry is on top of originally queried coordinates (within 1km)
         val queried = result.places[0].geometry as Coordinates
-        Assert.assertTrue(coordinates.centralAngle(queried) < 0.00001)
+        assertTrue(coordinates.centralAngle(queried) < 0.0002)
     }
 
     private fun signInWithCognito() {
