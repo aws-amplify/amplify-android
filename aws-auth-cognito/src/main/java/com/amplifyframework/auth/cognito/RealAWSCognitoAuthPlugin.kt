@@ -41,8 +41,10 @@ import com.amplifyframework.auth.cognito.helpers.JWTParser
 import com.amplifyframework.auth.cognito.helpers.SignInChallengeHelper
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthConfirmSignInOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthResendSignUpCodeOptions
+import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttributeOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttributesOptions
+import com.amplifyframework.auth.cognito.options.AuthFlowType
 import com.amplifyframework.auth.cognito.usecases.ResetPasswordUseCase
 import com.amplifyframework.auth.options.AWSCognitoAuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
@@ -422,8 +424,19 @@ internal class RealAWSCognitoAuthPlugin(
                 }
             },
             {
+                val signInOptions = if (options !is AWSCognitoAuthSignInOptions) {
+                    AWSCognitoAuthSignInOptions.builder().authFlowType(AuthFlowType.USER_SRP_AUTH).build()
+                } else {
+                    options
+                }
+
                 val event = AuthenticationEvent(
-                    AuthenticationEvent.EventType.SignInRequested(username, password, options)
+                    AuthenticationEvent.EventType.SignInRequested(
+                        username,
+                        password,
+                        signInOptions.authFlowType.toString(),
+                        signInOptions.metadata
+                    )
                 )
                 authStateMachine.send(event)
             }

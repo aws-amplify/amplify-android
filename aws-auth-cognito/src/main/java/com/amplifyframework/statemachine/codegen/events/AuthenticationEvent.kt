@@ -15,7 +15,6 @@
 
 package com.amplifyframework.statemachine.codegen.events
 
-import com.amplifyframework.auth.options.AuthSignInOptions
 import com.amplifyframework.statemachine.StateMachineEvent
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
@@ -37,7 +36,8 @@ class AuthenticationEvent(val eventType: EventType, override val time: Date? = n
         data class SignInRequested(
             val username: String?,
             val password: String?,
-            val options: AuthSignInOptions
+            val signInType: String,
+            val options: Map<String, String>
         ) : EventType()
 
         data class SignInCompleted(val signedInData: SignedInData) : EventType()
