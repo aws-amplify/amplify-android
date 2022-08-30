@@ -16,10 +16,11 @@
 package com.amplifyframework.predictions.aws
 
 import android.net.UrlQuerySanitizer
-import aws.sdk.kotlin.runtime.auth.credentials.StaticCredentialsProvider
 import aws.sdk.kotlin.services.polly.PollyClient
 import aws.sdk.kotlin.services.polly.model.LanguageCode
 import aws.sdk.kotlin.services.polly.model.SynthesizeSpeechRequest
+import aws.smithy.kotlin.runtime.auth.awscredentials.Credentials
+import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider
 import com.amplifyframework.predictions.aws.service.AmazonPollyPresigningClient
 import com.amplifyframework.predictions.aws.service.PresignedSynthesizeSpeechUrlOptions
 import io.mockk.coVerify
@@ -37,18 +38,8 @@ import org.junit.Test
  */
 class AmazonPollyPresigningClientTest {
     private lateinit var pollyPresigningClient: AmazonPollyPresigningClient
-    private val defaultCredentialsProvider = spyk(
-        StaticCredentialsProvider {
-            this.secretAccessKey = "testSecretKey"
-            this.accessKeyId = "testAccessKey"
-        }
-    )
-    private val otherCredentialsProvider = spyk(
-        StaticCredentialsProvider {
-            this.secretAccessKey = "testOtherSecretKey"
-            this.accessKeyId = "testOtherAccessKey"
-        }
-    )
+    private val defaultCredentialsProvider = spyk(TestCredentialsProvider())
+    private val otherCredentialsProvider = spyk(TestCredentialsProvider())
 
     companion object {
         private const val TEXT_KEY = "Text"
@@ -149,5 +140,11 @@ class AmazonPollyPresigningClientTest {
             }
         }
         assertTrue(parameterFound)
+    }
+
+    open class TestCredentialsProvider : CredentialsProvider {
+        override suspend fun getCredentials(): Credentials {
+            return Credentials("testAccessKey", "testSecretKey")
+        }
     }
 }
