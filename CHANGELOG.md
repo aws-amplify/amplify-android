@@ -1,18 +1,7 @@
 ## [Release 1.37.3](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.37.3)
 
 ### Bug Fixes
-- fix(datastore): pk field list ordering in cascade delete. (#1894)
 - fix(data): disable failing test (#1922)
-
-### Miscellaneous
-- chore: change pull request template (#1892)
-- chore: add device run suffix to test report generator (#1895)
-- chore: Add more devices to integration testing (#1882)
-- chore: Unignore tests (#1900)
-- chore: fix geo and predictions test failures (#1898)
-- chore: remove ignored tests (#1901)
-- chore: Publish Javadocs (Amplify version) (#1897)
-- chore: stop duplicate test runs for same source (#1896) 
 
 [See all changes between 1.37.2 and 1.37.3](https://github.com/aws-amplify/amplify-android/compare/release_v1.37.2...release_v1.37.3)
 
