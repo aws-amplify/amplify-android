@@ -150,6 +150,6 @@ class AnalyticsClientTest {
         val metricName = "attributeName"
         val metricValue = 1.0
         analyticsClient.addGlobalMetric(metricName, metricValue)
-        assertEquals(analyticsClient.getGlobalMetrics()[metricName], 1.0)
+        assertEquals(metricValue, analyticsClient.getGlobalMetrics()[metricName])
     }
 }

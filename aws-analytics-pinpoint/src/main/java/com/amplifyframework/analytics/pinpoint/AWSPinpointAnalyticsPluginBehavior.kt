@@ -37,30 +37,33 @@ internal class AWSPinpointAnalyticsPluginBehavior(
     private val autoSessionTracker: AutoSessionTracker
 ) : AnalyticsCategoryBehavior {
 
-    private val userName = "name"
-    private val userPlan = "plan"
-    private val userEmail = "email"
+    companion object {
+        private const val USER_NAME_KEY = "name"
+        private const val USER_PLAN_KEY = "plan"
+        private const val USER_EMAIL_KEY = "email"
+    }
 
     override fun identifyUser(userId: String, profile: UserProfile?) {
-        val endpointProfile = targetingClient.currentEndpoint()
-        val endpointUser = EndpointProfileUser()
-        endpointUser.setUserId(userId)
-        if (profile is AWSPinpointUserProfile) {
-            profile.userAttributes?.let {
-                it.forEach { entry ->
-                    val key = entry.key
-                    when (val attribute = entry.value) {
-                        is AnalyticsPropertyBehavior -> {
-                            endpointUser.addUserAttribute(key, listOf(attribute.value.toString()))
+        val endpointUser = EndpointProfileUser().apply {
+            setUserId(userId)
+            if (profile is AWSPinpointUserProfile) {
+                profile.userAttributes?.let {
+                    it.forEach { entry ->
+                        when (val attribute = entry.value) {
+                            is AnalyticsPropertyBehavior -> {
+                                addUserAttribute(entry.key, listOf(attribute.value.toString()))
+                            }
                         }
                     }
                 }
             }
         }
-        endpointProfile.user = endpointUser
-        endpointProfile.addAttribute(userName, profile?.name?.let { listOf(it) } ?: listOf())
-        endpointProfile.addAttribute(userEmail, profile?.email?.let { listOf(it) } ?: listOf())
-        endpointProfile.addAttribute(userPlan, profile?.plan?.let { listOf(it) } ?: listOf())
+        val endpointProfile = targetingClient.currentEndpoint().apply {
+            addAttribute(USER_NAME_KEY, profile?.name?.let { listOf(it) } ?: emptyList())
+            addAttribute(USER_EMAIL_KEY, profile?.email?.let { listOf(it) } ?: emptyList())
+            addAttribute(USER_PLAN_KEY, profile?.plan?.let { listOf(it) } ?: emptyList())
+            user = endpointUser
+        }
         targetingClient.updateEndpointProfile(endpointProfile)
     }
 

@@ -38,9 +38,9 @@ class SessionClientTest {
     fun setup() {
         sessionClient = SessionClient(
             ApplicationProvider.getApplicationContext(),
-            analyticsClientMock,
             targetingClientMock,
-            uniqueIdService
+            uniqueIdService,
+            analyticsClientMock
         )
         every { uniqueIdService.getUniqueId() }.answers { "UNIQUE_ID" }
     }

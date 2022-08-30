@@ -180,12 +180,13 @@ class AWSPinpointAnalyticsPluginBehaviorTest {
             "USER_ID",
             userProfile
         )
-
-        verify(exactly = 1) { targetingClientMock.updateEndpointProfile(any()) }
         val expectedUserAttributes =
             mapOf("key1" to listOf("String1"), "key2" to listOf("1.0"), "key3" to listOf("true"), "key4" to listOf("1"))
         val expectedEndpointAttributes =
             mapOf("email" to listOf("test@test.com"), "name" to listOf("test"), "plan" to listOf())
+
+        verify(exactly = 1) { targetingClientMock.updateEndpointProfile(any()) }
+
         assertEquals(actualEndpoint.captured.user.getUserAttributes(), expectedUserAttributes)
         assertEquals(actualEndpoint.captured.allAttributes, expectedEndpointAttributes)
         assertEquals(actualEndpoint.captured.user.getUserId(), "USER_ID")

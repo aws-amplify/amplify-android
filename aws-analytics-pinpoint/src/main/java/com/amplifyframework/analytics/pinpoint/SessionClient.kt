@@ -23,9 +23,9 @@ import kotlinx.serialization.ExperimentalSerializationApi
 @OptIn(ExperimentalSerializationApi::class)
 internal class SessionClient(
     private val context: Context,
-    var analyticsClient: AnalyticsClient?,
     val targetingClient: TargetingClient,
-    private val sharedPrefsUniqueIdService: SharedPrefsUniqueIdService
+    private val sharedPrefsUniqueIdService: SharedPrefsUniqueIdService,
+    var analyticsClient: AnalyticsClient? = null,
 ) {
 
     var session: Session? = null
