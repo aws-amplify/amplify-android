@@ -33,7 +33,6 @@ import com.amplifyframework.analytics.pinpoint.targeting.endpointProfile.Endpoin
 import com.amplifyframework.analytics.pinpoint.targeting.notification.PinpointNotificationClient
 import com.amplifyframework.core.Amplify
 import java.util.concurrent.ConcurrentHashMap
-import kotlin.collections.ArrayList
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -113,47 +112,47 @@ internal class TargetingClient(
             LOG.error("EndpointProfile is null, failed to update profile.")
             return
         }
-        val demographic = EndpointDemographic.invoke {
-            this.appVersion = endpointProfile.demographic.getAppVersion()
-            this.locale = endpointProfile.demographic.getLocale().toString()
-            this.timezone = endpointProfile.demographic.timezone
-            this.make = endpointProfile.demographic.getMake()
-            this.model = endpointProfile.demographic.model
-            this.platform = endpointProfile.demographic.platform
-            this.platformVersion = endpointProfile.demographic.platformVersion
+        val demographic = EndpointDemographic {
+            appVersion = endpointProfile.demographic.getAppVersion()
+            locale = endpointProfile.demographic.getLocale().toString()
+            timezone = endpointProfile.demographic.timezone
+            make = endpointProfile.demographic.getMake()
+            model = endpointProfile.demographic.model
+            platform = endpointProfile.demographic.platform
+            platformVersion = endpointProfile.demographic.platformVersion
         }
-        val location = EndpointLocation.invoke {
-            this.latitude = endpointProfile.location.latitude
-            this.longitude = endpointProfile.location.longitude
-            this.postalCode = endpointProfile.location.postalCode
-            this.city = endpointProfile.location.city
-            this.region = endpointProfile.location.region
-            this.country = endpointProfile.location.getCountry()
+        val location = EndpointLocation {
+            latitude = endpointProfile.location.latitude
+            longitude = endpointProfile.location.longitude
+            postalCode = endpointProfile.location.postalCode
+            city = endpointProfile.location.city
+            region = endpointProfile.location.region
+            country = endpointProfile.location.getCountry()
         }
         val user: EndpointUser?
         if (endpointProfile.user.getUserId() == null) {
             user = null
         } else {
-            user = EndpointUser.invoke {
-                this.userId = endpointProfile.user.getUserId()
-                this.userAttributes = endpointProfile.user.getUserAttributes()
+            user = EndpointUser {
+                userId = endpointProfile.user.getUserId()
+                userAttributes = endpointProfile.user.getUserAttributes()
             }
         }
-        val endpointRequest = EndpointRequest.invoke {
-            this.channelType = endpointProfile.channelType
-            this.address = endpointProfile.address
+        val endpointRequest = EndpointRequest {
+            channelType = endpointProfile.channelType
+            address = endpointProfile.address
             this.location = location
             this.demographic = demographic
-            this.effectiveDate = endpointProfile.effectiveDate.millisToIsoDate()
-            this.optOut = endpointProfile.optOut
-            this.attributes = endpointProfile.allAttributes
-            this.metrics = endpointProfile.allMetrics
+            effectiveDate = endpointProfile.effectiveDate.millisToIsoDate()
+            optOut = endpointProfile.optOut
+            attributes = endpointProfile.allAttributes
+            metrics = endpointProfile.allMetrics
             this.user = user
         }
         val updateEndpointRequest =
             UpdateEndpointRequest.invoke {
-                this.applicationId = endpointProfile.applicationId
-                this.endpointId = endpointProfile.endpointId
+                applicationId = endpointProfile.applicationId
+                endpointId = endpointProfile.endpointId
                 this.endpointRequest = endpointRequest
             }
 
