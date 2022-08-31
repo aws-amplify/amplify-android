@@ -93,13 +93,13 @@ import com.amplifyframework.statemachine.codegen.states.SRPSignInState
 import com.amplifyframework.statemachine.codegen.states.SignInChallengeState
 import com.amplifyframework.statemachine.codegen.states.SignInState
 import com.amplifyframework.statemachine.codegen.states.SignOutState
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
-import kotlin.coroutines.suspendCoroutine
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
 
 internal class RealAWSCognitoAuthPlugin(
     private val configuration: AuthConfiguration,
@@ -409,7 +409,7 @@ internal class RealAWSCognitoAuthPlugin(
                         }
                     }
                     authNState is AuthenticationState.SignedIn
-                        && authZState is AuthorizationState.SessionEstablished -> {
+                            && authZState is AuthorizationState.SessionEstablished -> {
                         token?.let(authStateMachine::cancel)
                         val authSignInResult = AuthSignInResult(
                             true,
@@ -460,8 +460,7 @@ internal class RealAWSCognitoAuthPlugin(
         authStateMachine.getCurrentState { authState ->
             val authNState = authState.authNState
             val signInState = (authNState as? AuthenticationState.SigningIn)?.signInState
-            val challengeState = (signInState as? SignInState.ResolvingChallenge)?.challengeState
-            when (challengeState) {
+            when ((signInState as? SignInState.ResolvingChallenge)?.challengeState) {
                 is SignInChallengeState.WaitingForAnswer -> {
                     _confirmSignIn(confirmationCode, options, onSuccess, onError)
                 }
@@ -500,11 +499,11 @@ internal class RealAWSCognitoAuthPlugin(
                 }
             },
             {
-                val awsCognitoConfirmSignInOptions = options as AWSCognitoAuthConfirmSignInOptions
+                val awsCognitoConfirmSignInOptions = options as? AWSCognitoAuthConfirmSignInOptions
                 val event = SignInChallengeEvent(
                     SignInChallengeEvent.EventType.VerifyChallengeAnswer(
                         confirmationCode,
-                        awsCognitoConfirmSignInOptions.metadata
+                        awsCognitoConfirmSignInOptions?.metadata ?: mapOf()
                     )
                 )
                 authStateMachine.send(event)

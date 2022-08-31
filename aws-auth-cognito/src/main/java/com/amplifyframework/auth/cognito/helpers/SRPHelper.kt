@@ -16,7 +16,7 @@
 package com.amplifyframework.auth.cognito.helpers
 
 import androidx.annotation.VisibleForTesting
-import com.amplifyframework.auth.cognito.helpers.AuthHelper.Companion.HMAC_SHA_256
+import org.jetbrains.annotations.TestOnly
 import java.math.BigInteger
 import java.security.MessageDigest
 import java.security.SecureRandom
@@ -26,7 +26,6 @@ import java.util.Locale
 import java.util.TimeZone
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
-import org.jetbrains.annotations.TestOnly
 
 /**
  * Kotlin implementation of SRP crypto calculations.
@@ -39,6 +38,7 @@ class SRPHelper(private val password: String) {
 
     companion object {
         private val EPHEMERAL_KEY_LENGTH = 1024
+        private val HMAC_SHA_256 = "HmacSHA256"
     }
 
     // Generator 'g' parameter.
