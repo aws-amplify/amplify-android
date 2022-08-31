@@ -23,7 +23,6 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeviceRememberedSta
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetUserAttributeVerificationCodeRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetUserRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ListDevicesRequest
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.ResendConfirmationCodeRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.UpdateDeviceStatusRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.UpdateUserAttributesRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.UpdateUserAttributesResponse
@@ -1026,11 +1025,12 @@ internal class RealAWSCognitoAuthPlugin(
                         try {
                             val accessToken = getSession().userPoolTokens.value?.accessToken
                             accessToken?.let {
-                                val getUserAttributeVerificationCodeRequest = GetUserAttributeVerificationCodeRequest.invoke {
-                                    this.accessToken = accessToken
-                                    this.attributeName = attributeKey.keyString
-                                    this.clientMetadata = metadataOptions?.metadata
-                                }
+                                val getUserAttributeVerificationCodeRequest =
+                                    GetUserAttributeVerificationCodeRequest.invoke {
+                                        this.accessToken = accessToken
+                                        this.attributeName = attributeKey.keyString
+                                        this.clientMetadata = metadataOptions?.metadata
+                                    }
 
                                 val getUserAttributeVerificationCodeResponse = authEnvironment.cognitoAuthService
                                     .cognitoIdentityProviderClient?.getUserAttributeVerificationCode(
@@ -1041,7 +1041,9 @@ internal class RealAWSCognitoAuthPlugin(
                                     val codeDeliveryDetails = it
                                     codeDeliveryDetails.attributeName?.let {
 
-                                        val deliveryMedium = AuthCodeDeliveryDetails.DeliveryMedium.fromString(codeDeliveryDetails.deliveryMedium?.value)
+                                        val deliveryMedium = AuthCodeDeliveryDetails.DeliveryMedium.fromString(
+                                            codeDeliveryDetails.deliveryMedium?.value
+                                        )
                                         val authCodeDeliveryDetails = AuthCodeDeliveryDetails(
                                             codeDeliveryDetails.destination.toString(),
                                             deliveryMedium,
@@ -1053,7 +1055,8 @@ internal class RealAWSCognitoAuthPlugin(
                                     }
                                 }
                             } ?: onError.accept(
-                                AuthException.InvalidUserPoolConfigurationException())
+                                AuthException.InvalidUserPoolConfigurationException()
+                            )
                         } catch (e: Exception) {
                             onError.accept(CognitoAuthExceptionConverter.lookup(e, e.toString()))
                         }
@@ -1069,7 +1072,12 @@ internal class RealAWSCognitoAuthPlugin(
         onSuccess: Consumer<AuthCodeDeliveryDetails>,
         onError: Consumer<AuthException>
     ) {
-        resendUserAttributeConfirmationCode(attributeKey,AuthResendUserAttributeConfirmationCodeOptions.defaults(),onSuccess,onError)
+        resendUserAttributeConfirmationCode(
+            attributeKey,
+            AuthResendUserAttributeConfirmationCodeOptions.defaults(),
+            onSuccess,
+            onError
+        )
     }
 
     override fun confirmUserAttribute(
