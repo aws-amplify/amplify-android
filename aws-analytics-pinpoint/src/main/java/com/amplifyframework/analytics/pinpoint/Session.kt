@@ -18,7 +18,9 @@ import android.content.Context
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.TimeZone
+import kotlinx.serialization.Serializable
 
+@Serializable
 internal class Session {
 
     private val maxSessionIdLength = 8
@@ -49,9 +51,10 @@ internal class Session {
     }
 
     constructor(
-        context: Context
+        context: Context,
+        uniqueId: String
     ) {
-        this@Session.sessionId = generateSessionId()
+        this@Session.sessionId = generateSessionId(uniqueId)
         this@Session.startTime = System.currentTimeMillis()
         this@Session.stopTime = null
     }
@@ -64,25 +67,22 @@ internal class Session {
         }
     }
 
-    private fun generateSessionId(): String {
+    private fun generateSessionId(uniqueId: String): String {
         val sessionIdTimeFormat = SimpleDateFormat("yyyyMMdd-HHmmssSSS", Locale.US)
         sessionIdTimeFormat.timeZone = TimeZone.getTimeZone("UTC")
-        val uniqueId = "" // TODO(": Get uniqueId from shared preferences.")
         val time = sessionIdTimeFormat.format(startTime)
-        return "${trimOrPad(uniqueId, maxSessionIdLength, sessionIdPaddingChar)}$sessionIdDelimiter$time"
+        return "${trimOrPad(uniqueId)}$sessionIdDelimiter$time"
     }
 
     private fun trimOrPad(
-        input: String,
-        outputLength: Int,
-        paddingCharacter: String
+        input: String
     ): String {
         val stringBuffer = StringBuffer()
-        if (input.length > outputLength - 1) {
-            stringBuffer.append(input.substring(input.length - outputLength))
+        if (input.length > maxSessionIdLength - 1) {
+            stringBuffer.append(input.substring(input.length - maxSessionIdLength))
         } else {
             for (i in 0 until (maxSessionIdLength.minus(input.length))) {
-                stringBuffer.append(paddingCharacter)
+                stringBuffer.append(sessionIdPaddingChar)
             }
             stringBuffer.append(input)
         }
