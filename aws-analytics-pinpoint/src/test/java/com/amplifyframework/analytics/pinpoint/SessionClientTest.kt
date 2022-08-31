@@ -49,7 +49,6 @@ class SessionClientTest {
     fun `test session start is recorded`() {
         sessionClient.startSession()
         Assert.assertNotNull(sessionClient.session)
-        Assert.assertTrue(sessionClient.session!!.sessionDuration > 0)
         Assert.assertTrue(!sessionClient.session!!.isPaused())
         verifyOrder {
             analyticsClientMock.createEvent("_session.start", any(), any(), any(), any(), any(), any(), any(), any())
