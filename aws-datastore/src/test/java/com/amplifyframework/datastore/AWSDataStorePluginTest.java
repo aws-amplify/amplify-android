@@ -242,10 +242,8 @@ public final class AWSDataStorePluginTest {
      * @throws JSONException on failure to arrange plugin config
      * @throws AmplifyException on failure to arrange API plugin via Amplify facade
      */
-    /** TODO: fix this test! It is believed that this test is flaky, as subsequent 
-     * reruns do not fail.
-     */
-    @Ignore("Ignoring this test to unblock the 8/30/22 release.")
+    @Ignore("Ignoring this test to unblock the 8/30/22 release.  TODO: fix this test! It is believed" +
+            "that this test is flaky, as subsequent reruns do not fail.")
     @Test
     public void clearStopsSyncAndDeletesDatabase() throws AmplifyException, JSONException {
         ApiCategory mockApiCategory = mockApiCategoryWithGraphQlApi();
