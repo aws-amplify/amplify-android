@@ -36,8 +36,8 @@ class AuthenticationEvent(val eventType: EventType, override val time: Date? = n
         data class SignInRequested(
             val username: String?,
             val password: String?,
-            val signInType: String,
-            val options: Map<String, String>
+            val signInType: String? = null,
+            val options: Map<String, String> = mapOf()
         ) : EventType()
 
         data class SignInCompleted(val signedInData: SignedInData) : EventType()

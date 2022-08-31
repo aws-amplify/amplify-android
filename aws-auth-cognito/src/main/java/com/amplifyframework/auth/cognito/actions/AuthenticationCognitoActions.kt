@@ -59,7 +59,9 @@ object AuthenticationCognitoActions : AuthenticationActions {
         Action<AuthEnvironment>("InitiateSignInAction") { id, dispatcher ->
             logger?.verbose("$id Starting execution")
 
-            when (AuthFlowType.valueOf(event.signInType)) {
+            val signInType = event.signInType ?: AuthFlowType.USER_SRP_AUTH.toString()
+
+            when (AuthFlowType.valueOf(signInType)) {
                 AuthFlowType.USER_SRP_AUTH -> {
                     val evt = event.username?.run {
                         event.password?.run {
