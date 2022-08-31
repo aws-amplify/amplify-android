@@ -17,13 +17,18 @@ package com.amplifyframework.analytics.pinpoint
 
 import android.content.Context
 import aws.sdk.kotlin.services.pinpoint.PinpointClient
+import com.amplifyframework.analytics.AnalyticsChannelEventName
 import com.amplifyframework.analytics.pinpoint.database.PinpointDatabase
+import com.amplifyframework.analytics.pinpoint.internal.core.idresolver.SharedPrefsUniqueIdService
 import com.amplifyframework.analytics.pinpoint.models.AndroidAppDetails
 import com.amplifyframework.analytics.pinpoint.models.AndroidDeviceDetails
 import com.amplifyframework.analytics.pinpoint.models.PinpointEvent
 import com.amplifyframework.analytics.pinpoint.models.PinpointSession
 import com.amplifyframework.analytics.pinpoint.models.SDKInfo
 import com.amplifyframework.analytics.pinpoint.targeting.TargetingClient
+import com.amplifyframework.core.Amplify
+import com.amplifyframework.hub.HubChannel
+import com.amplifyframework.hub.HubEvent
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.CoroutineDispatcher
@@ -37,10 +42,11 @@ internal class AnalyticsClient(
     private val sessionClient: SessionClient,
     targetingClient: TargetingClient,
     pinpointDatabase: PinpointDatabase,
+    private val sharedPrefsUniqueIdService: SharedPrefsUniqueIdService,
     private val androidAppDetails: AndroidAppDetails,
     private val androidDeviceDetails: AndroidDeviceDetails,
     private val sdkInfo: SDKInfo,
-    coroutineDispatcher: CoroutineDispatcher = Dispatchers.Default,
+    private val coroutineDispatcher: CoroutineDispatcher = Dispatchers.Default,
     private val eventRecorder: EventRecorder = EventRecorder(
         context,
         pinpointClient,
@@ -52,8 +58,6 @@ internal class AnalyticsClient(
     private val coroutineScope = CoroutineScope(coroutineDispatcher)
     private val globalAttributes = ConcurrentHashMap<String, String>()
     private val globalMetrics = ConcurrentHashMap<String, Double>()
-    private val eventTypeAttributes = ConcurrentHashMap<String, Map<String, String>>()
-    private val eventTypeMetrics = ConcurrentHashMap<String, Map<String, Double>>()
 
     fun createEvent(
         eventType: String,
@@ -90,13 +94,7 @@ internal class AnalyticsClient(
         globalAttributes.forEach { (key, value) ->
             attributes[key] = value
         }
-        eventTypeAttributes[eventType]?.forEach { (key, value) ->
-            attributes[key] = value
-        }
         globalMetrics.forEach { (key, value) ->
-            metrics[key] = value
-        }
-        eventTypeMetrics[eventType]?.forEach { (key, value) ->
             metrics[key] = value
         }
         return PinpointEvent(
@@ -107,7 +105,7 @@ internal class AnalyticsClient(
             sdkInfo = sdkInfo,
             pinpointSession = PinpointSession(sessionId, sessionStart, sessionEnd, sessionDuration),
             eventTimestamp = eventTimestamp,
-            uniqueId = "", // TODO: Get Unique from shared preferences
+            uniqueId = sharedPrefsUniqueIdService.getUniqueId(),
             androidAppDetails = androidAppDetails,
             androidDeviceDetails = androidDeviceDetails
         )
@@ -119,33 +117,39 @@ internal class AnalyticsClient(
         }
     }
 
-    fun submitEvents() {
+    fun flushEvents() {
         coroutineScope.launch {
-            eventRecorder.submitEvents()
+            val syncedEvents = eventRecorder.submitEvents()
+            Amplify.Hub.publish(
+                HubChannel.ANALYTICS,
+                HubEvent.create(AnalyticsChannelEventName.FLUSH_EVENTS, syncedEvents)
+            )
         }
     }
 
     fun addGlobalAttribute(attributeName: String, attributeValue: String) {
+        globalAttributes[attributeName] = attributeValue
     }
 
-    fun addGlobalAttribute(eventType: String, attributeName: String, attributeValue: String) {
-    }
-
-    fun addGlobalMetric(metricName: String, metricValue: String) {
-    }
-
-    fun addGlobalMetric(eventType: String, metricName: String, metricValue: String) {
+    fun addGlobalMetric(metricName: String, metricValue: Double) {
+        globalMetrics[metricName] = metricValue
     }
 
     fun removeGlobalAttribute(attributeName: String) {
-    }
-
-    fun removeGlobalAttribute(eventType: String, attributeName: String) {
+        globalAttributes.remove(attributeName)
     }
 
     fun removeGlobalMetric(metricName: String) {
+        globalMetrics.remove(metricName)
     }
 
-    fun removeGlobalMetric(eventType: String, metricName: String) {
-    }
+    /*
+    * adding for testing
+    * */
+    internal fun getGlobalAttributes() = globalAttributes
+
+    /*
+    * adding for testing
+    * */
+    internal fun getGlobalMetrics() = globalMetrics
 }
