@@ -83,6 +83,25 @@ if [[ -z "${minDevice}" || -z "${middleDevice}" || -z "${latestDevice}" ]]; then
     exit 1
 fi
 
+# Function to cancel duplicate runs for same code source in device farm.
+function stopDuplicates {
+  echo "Stopping duplicate runs"
+  name="$file_name-$CODEBUILD_SOURCE_VERSION"
+  read -a running_arns <<< $(aws devicefarm list-runs \
+                          --arn="$project_arn" \
+                          --query="runs[?(status == 'RUNNING' || status == 'PENDING')  && name == '${name}'].arn" \
+                          --region="us-west-2" \
+                          --max-items=5 \
+                          | jq -r '.[]')
+
+  for arn in "${running_arns[@]}"
+  do
+    ## Just consume the result and do nothing with it.
+    result=`aws devicefarm stop-run --arn $arn --region="us-west-2" --query="run.name"`
+  done
+}
+stopDuplicates
+
 # Schedule the test run in device farm
 echo "Scheduling test run"
 run_arn=`aws devicefarm schedule-run --project-arn=$project_arn \
@@ -93,7 +112,7 @@ run_arn=`aws devicefarm schedule-run --project-arn=$project_arn \
                                 ],
                                 "maxDevices": 3
                             }' \
-                            --name="$file_name" \
+                            --name="$file_name-$CODEBUILD_SOURCE_VERSION" \
                             --test="type=INSTRUMENTATION,testPackageArn=$test_package_upload_arn" \
                             --execution-configuration="jobTimeoutMinutes=30,videoCapture=false" \
                             --query="run.arn" \
@@ -117,10 +136,10 @@ done
 echo "Status = $status Result = $result"
 
 ./scripts/generate_df_testrun_report --run_arn="$run_arn" --module_name="$module_name" --pr="$CODEBUILD_SOURCE_VERSION" --output_path="build/allTests/$module_name/"
-# If the result is FAILED, then exit with a non-zero return
-if [ "$result" = "FAILED" ]
+# If the result is PASSED, then exit with a return code 0
+if [ "$result" = "PASSED" ]
 then
-  exit 1
+  exit 0
 fi
-# Otherwise, exit with a zero.
-exit 0
+# Otherwise, exit with a non-zero.
+exit 1
