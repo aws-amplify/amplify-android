@@ -44,14 +44,13 @@ import com.amplifyframework.auth.AuthUser
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.cognito.helpers.SRPHelper
+import com.amplifyframework.auth.cognito.options.AWSAuthResendUserAttributeConfirmationCodeOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttributeOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttributesOptions
 import com.amplifyframework.auth.cognito.usecases.ResetPasswordUseCase
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
 import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions
-import com.amplifyframework.auth.options.AuthResendUserAttributeConfirmationCodeOptions
-import com.amplifyframework.auth.cognito.options.AWSAuthResendUserAttributeConfirmationCodeOptions
 import com.amplifyframework.auth.options.AuthResetPasswordOptions
 import com.amplifyframework.auth.options.AuthSignUpOptions
 import com.amplifyframework.auth.options.AuthUpdateUserAttributesOptions
@@ -1281,7 +1280,9 @@ class RealAWSCognitoAuthPluginTest {
 
         val expectedException = CognitoIdentityProviderException("Some Cognito Message")
         coEvery {
-            authService.cognitoIdentityProviderClient?.getUserAttributeVerificationCode(any<GetUserAttributeVerificationCodeRequest>())
+            authService.cognitoIdentityProviderClient?.getUserAttributeVerificationCode(
+                any<GetUserAttributeVerificationCodeRequest>()
+            )
         } answers {
             throw expectedException
         }
@@ -1317,13 +1318,15 @@ class RealAWSCognitoAuthPluginTest {
         }
 
         coEvery {
-            authService.cognitoIdentityProviderClient?.getUserAttributeVerificationCode(any<GetUserAttributeVerificationCodeRequest>())
+            authService.cognitoIdentityProviderClient?.getUserAttributeVerificationCode(
+                any<GetUserAttributeVerificationCodeRequest>()
+            )
         } returns GetUserAttributeVerificationCodeResponse.invoke {
             codeDeliveryDetails = CodeDeliveryDetailsType.invoke {
-                    attributeName = "email"
-                    deliveryMedium = DeliveryMediumType.Email
-                    destination = "test"
-                }
+                attributeName = "email"
+                deliveryMedium = DeliveryMediumType.Email
+                destination = "test"
+            }
         }
 
         val slot = slot<AuthCodeDeliveryDetails>()
