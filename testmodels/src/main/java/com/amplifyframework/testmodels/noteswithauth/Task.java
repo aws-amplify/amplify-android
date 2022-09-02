@@ -4,6 +4,7 @@ package com.amplifyframework.testmodels.noteswithauth;
 import java.util.UUID;
 import java.util.Objects;
 
+import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.model.Model;
@@ -26,6 +27,11 @@ public final class Task implements Model {
   private final @ModelField(targetType="String") String description;
   private final @ModelField(targetType="String") String status;
   public String getId() {
+      return id;
+  }
+
+  @NonNull
+  public String resolveIdentifier() {
       return id;
   }
   

@@ -18,7 +18,7 @@ package com.amplifyframework.storage.s3;
 import android.content.Context;
 
 import com.amplifyframework.AmplifyException;
-import com.amplifyframework.auth.AuthPlugin;
+import com.amplifyframework.auth.AuthException;
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin;
 import com.amplifyframework.storage.StorageAccessLevel;
 import com.amplifyframework.storage.StorageCategory;
@@ -31,6 +31,8 @@ import com.amplifyframework.testutils.random.RandomTempFile;
 import com.amplifyframework.testutils.sync.SynchronousAuth;
 import com.amplifyframework.testutils.sync.SynchronousStorage;
 
+import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -68,7 +70,7 @@ public final class AWSS3StorageUploadAccessLevelTest {
         Context context = getApplicationContext();
 
         WorkmanagerTestUtils.INSTANCE.initializeWorkmanagerTestUtil(context);
-        synchronousAuth = SynchronousAuth.delegatingToCognito(context, (AuthPlugin) new AWSCognitoAuthPlugin());
+        synchronousAuth = SynchronousAuth.delegatingToCognito(context, new AWSCognitoAuthPlugin());
         IdentityIdSource identityIdSource = AuthIdentityIdSource.create(synchronousAuth);
         UserCredentials userCredentials = UserCredentials.create(context, identityIdSource);
         Iterator<Credential> iterator = userCredentials.iterator();
@@ -78,6 +80,17 @@ public final class AWSS3StorageUploadAccessLevelTest {
         // Setup storage.
         StorageCategory asyncDelegate = TestStorageCategory.create(context, R.raw.amplifyconfiguration);
         storage = SynchronousStorage.delegatingTo(asyncDelegate);
+    }
+
+    /**
+     * Reset all the assigned static fields.
+     */
+    @AfterClass
+    public static void tearDownSuite() {
+        synchronousAuth = null;
+        userOne = null;
+        userTwo = null;
+        storage = null;
     }
 
     /**
@@ -95,6 +108,15 @@ public final class AWSS3StorageUploadAccessLevelTest {
 
         // Override this per test-case
         uploadOptions = StorageUploadFileOptions.defaultInstance();
+    }
+
+    /**
+     * Sign out after each test.
+     * @throws AuthException if error encountered while signing out
+     */
+    @After
+    public void tearDown() throws AuthException {
+        synchronousAuth.signOut();
     }
 
     /**

@@ -15,6 +15,7 @@
 
 package com.amplifyframework.testmodels.ratingsblog;
 
+import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.model.Model;
@@ -42,6 +43,11 @@ public final class Post implements Model {
     private final @ModelField(targetType="Rating") @HasOne(associatedWith = "post", type = Rating.class) Rating rating = null;
     private final @ModelField(targetType="PostEditor") @HasMany(associatedWith = "post", type = PostEditor.class) List<PostEditor> editors = null;
     public String getId() {
+        return id;
+    }
+
+    @NonNull
+    public String resolveIdentifier() {
         return id;
     }
 

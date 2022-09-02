@@ -34,7 +34,12 @@ public enum AnalyticsChannelEventName {
      * An attempt was made to add a {@link AnalyticsPropertyBehavior} of type T that is not supported
      * by the plugin in use.
      */
-    INVALID_PROPERTY_TYPE("invalid_property_type");
+    INVALID_PROPERTY_TYPE("invalid_property_type"),
+    /**
+     * Event sent out on submitEventWithResults with the list of all the event
+     * successfully submitted.
+     */
+    FLUSH_EVENTS("flushEvents");
 
     private final String hubEventName;
 

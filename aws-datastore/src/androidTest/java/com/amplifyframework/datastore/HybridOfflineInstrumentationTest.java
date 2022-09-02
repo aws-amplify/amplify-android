@@ -104,14 +104,14 @@ public final class HybridOfflineInstrumentationTest {
         blogData.put("id", "39c3c0e6-8726-436e-8cdf-bff38e9a62da");
         blogData.put("name", "A cherished blog");
         blogData.put("owner", SerializedModel.builder()
+            .modelSchema(blogSchema)
             .serializedData(Collections.singletonMap("id", blogOwnerData.get("id")))
-            .modelSchema(null)
             .build()
         );
         hybridBehaviors.save(SerializedModel.builder()
-            .serializedData(blogOwnerData)
-            .modelSchema(blogOwnerSchema)
-            .build());
+                .modelSchema(blogOwnerSchema)
+                .serializedData(blogOwnerData)
+                .build());
 
         BlogOwner blogOwner = BlogOwner.builder()
             .name((String) blogOwnerData.get("name"))
@@ -120,9 +120,9 @@ public final class HybridOfflineInstrumentationTest {
         assertJavaValues(blogOwner);
 
         hybridBehaviors.save(SerializedModel.builder()
-            .serializedData(blogData)
-            .modelSchema(blogSchema)
-            .build());
+                .modelSchema(blogSchema)
+                .serializedData(blogData)
+                .build());
         assertJavaValues(Blog.builder()
             .name((String) blogData.get("name"))
             .owner(blogOwner)
@@ -155,26 +155,26 @@ public final class HybridOfflineInstrumentationTest {
         serializedBlogOwnerData.put("name", blogOwner.getName());
         assertEquals(
             Collections.singletonList(SerializedModel.builder()
-                .serializedData(serializedBlogOwnerData)
-                .modelSchema(blogOwnerSchema)
-                .build()),
-            hybridBehaviors.list("BlogOwner")
+                    .modelSchema(blogOwnerSchema)
+                    .serializedData(serializedBlogOwnerData)
+                    .build()),
+                    hybridBehaviors.list("BlogOwner")
         );
 
         Map<String, Object> serializedBlogData = new HashMap<>();
         serializedBlogData.put("id", blog.getId());
         serializedBlogData.put("name", blog.getName());
         serializedBlogData.put("owner", SerializedModel.builder()
-            .serializedData(serializedBlogOwnerData)
-            .modelSchema(blogOwnerSchema)
-            .build()
+                .modelSchema(blogOwnerSchema)
+                .serializedData(serializedBlogOwnerData)
+                .build()
         );
         assertEquals(
             Collections.singletonList(SerializedModel.builder()
-                .serializedData(serializedBlogData)
-                .modelSchema(blogSchema)
-                .build()),
-            hybridBehaviors.list("Blog")
+                    .modelSchema(blogSchema)
+                    .serializedData(serializedBlogData)
+                    .build()),
+                hybridBehaviors.list("Blog")
         );
     }
 

@@ -19,9 +19,12 @@ import android.telephony.TelephonyManager
 import aws.sdk.kotlin.services.pinpoint.PinpointClient
 import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider
 import com.amplifyframework.analytics.pinpoint.database.PinpointDatabase
+import com.amplifyframework.analytics.pinpoint.internal.core.idresolver.SharedPrefsUniqueIdService
 import com.amplifyframework.analytics.pinpoint.models.AndroidAppDetails
 import com.amplifyframework.analytics.pinpoint.models.AndroidDeviceDetails
 import com.amplifyframework.analytics.pinpoint.models.SDKInfo
+import com.amplifyframework.analytics.pinpoint.targeting.TargetingClient
+import com.amplifyframework.analytics.pinpoint.targeting.notification.PinpointNotificationClient
 import com.amplifyframework.core.BuildConfig
 
 /**
@@ -29,27 +32,49 @@ import com.amplifyframework.core.BuildConfig
  */
 internal class PinpointManager constructor(
     val context: Context,
-    private val awsPinpointAnalyticsPluginConfiguration: AWSPinpointAnalyticsPluginConfiguration,
+    private val awsPinpointConfiguration: AWSPinpointAnalyticsPluginConfiguration,
     private val credentialsProvider: CredentialsProvider?
 ) {
 
     val analyticsClient: AnalyticsClient
-    private val sdkName = "" // TODO: confirm whether to use amplify-android or aws-sdk-android
+    val sessionClient: SessionClient
+    val targetingClient: TargetingClient
+
+    companion object {
+        private const val SDK_NAME = "AMPLIFY-ANDROID"
+    }
+
     init {
         val pinpointClient = PinpointClient {
             credentialsProvider = this@PinpointManager.credentialsProvider
-            region = awsPinpointAnalyticsPluginConfiguration.region
+            region = awsPinpointConfiguration.region
         }
         val pinpointDatabase = PinpointDatabase(context)
-        val sessionClient = SessionClient(context, null)
+        val sharedPrefs =
+            context.getSharedPreferences(awsPinpointConfiguration.appId, Context.MODE_PRIVATE)
+        val sharedPrefsUniqueIdService = SharedPrefsUniqueIdService(sharedPrefs)
+        val androidAppDetails = AndroidAppDetails(context, awsPinpointConfiguration.appId)
+        val androidDeviceDetails = AndroidDeviceDetails(getCarrier(context))
+        targetingClient = TargetingClient(
+            pinpointClient,
+            PinpointNotificationClient(),
+            sharedPrefsUniqueIdService,
+            sharedPrefs,
+            androidAppDetails,
+            androidDeviceDetails,
+            context
+        )
+        sessionClient = SessionClient(context, targetingClient, sharedPrefsUniqueIdService, analyticsClient = null)
         analyticsClient = AnalyticsClient(
             context,
-            pinpointClient = pinpointClient,
-            sessionClient = sessionClient,
-            pinpointDatabase = pinpointDatabase,
-            androidAppDetails = AndroidAppDetails(context, awsPinpointAnalyticsPluginConfiguration.appId),
-            androidDeviceDetails = AndroidDeviceDetails(getCarrier(context)),
-            sdkInfo = SDKInfo(sdkName, BuildConfig.VERSION_NAME),
+            pinpointClient,
+            sessionClient,
+            targetingClient,
+            pinpointDatabase,
+            sharedPrefsUniqueIdService,
+            androidAppDetails,
+            androidDeviceDetails,
+            SDKInfo(SDK_NAME, BuildConfig.VERSION_NAME)
         )
         sessionClient.setAnalyticsClient(analyticsClient)
         sessionClient.startSession()

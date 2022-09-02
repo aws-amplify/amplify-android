@@ -19,6 +19,8 @@ import aws.smithy.kotlin.runtime.auth.awssigning.AwsSigningConfig
 import aws.smithy.kotlin.runtime.auth.awssigning.DefaultAwsSigner
 import aws.smithy.kotlin.runtime.http.Headers as AwsHeaders
 import aws.smithy.kotlin.runtime.http.HttpMethod
+import aws.smithy.kotlin.runtime.http.Protocol
+import aws.smithy.kotlin.runtime.http.QueryParameters
 import aws.smithy.kotlin.runtime.http.Url
 import aws.smithy.kotlin.runtime.http.content.ByteArrayContent
 import aws.smithy.kotlin.runtime.http.request.HttpRequest
@@ -89,21 +91,31 @@ internal class AWSRequestSignerInterceptor(
         val client = plugin.escapeHatch
         val signingConfig = AwsSigningConfig.invoke {
             region = client.config.region
-            service = client.serviceName
+            service = "geo"
             credentialsProvider = plugin.credentialsProvider
         }
 
-        // set the request body
+        val httpUrl = Url(
+            scheme = Protocol.parse(url.scheme),
+            host = url.host,
+            port = url.port,
+            path = url.encodedPath,
+            parameters = QueryParameters.invoke {
+                url.queryParameterNames.map { name ->
+                    url.queryParameter(name)?.let { append(name, it) }
+                }
+            },
+        )
+
         val bodyBytes: ByteArray = getBytes(request.body)
         val body2 = ByteArrayContent(bodyBytes)
         val method = HttpMethod.parse(request.method)
-        val awsRequest = HttpRequest(method, Url.parse(url.toString()), headers, body2)
+        val awsRequest = HttpRequest(method, httpUrl, headers, body2)
 
-        runBlocking {
+        return runBlocking {
             // sign request with AWS Signer for the underlying service
             DefaultAwsSigner.sign(awsRequest, signingConfig)
-        }
-        return awsRequest
+        }.output
     }
 
     private fun getBytes(body: RequestBody?): ByteArray {

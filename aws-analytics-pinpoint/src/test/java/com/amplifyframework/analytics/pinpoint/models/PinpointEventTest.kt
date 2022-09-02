@@ -14,10 +14,12 @@
  */
 package com.amplifyframework.analytics.pinpoint.models
 
-import junit.framework.TestCase
+import org.junit.Assert.assertEquals
+import org.junit.Test
 
-class PinpointEventTest : TestCase() {
+class PinpointEventTest {
 
+    @Test
     fun testToJsonObject() {
         val expectedOutput =
             "{\"eventId\":\"c175d759-3a90-44be-ab51-888ce43ed527\",\"eventType\":\"EVENT_TYPE\"," +
@@ -27,7 +29,8 @@ class PinpointEventTest : TestCase() {
                 "\"sessionStart\":1657035956917},\"eventTimestamp\":1657035956917,\"uniqueId\":\"UNIQUE_ID\"," +
                 "\"androidAppDetails\":{\"appId\":\"appId\",\"appTitle\":\"appTitle\"," +
                 "\"packageName\":\"packageName\",\"versionCode\":\"versionCode\",\"versionName\":\"versionName\"}," +
-                "\"androidDeviceDetails\":{\"platform\":\"ANDROID\",\"locale\":\"en_US\"}}"
+                "\"androidDeviceDetails\":{\"platformVersion\":\"TEST VERSION\",\"platform\":\"ANDROID\"," +
+                "\"manufacturer\":\"TEST MANUFACTURER\",\"model\":\"TEST MODEL\",\"locale\":\"en-US\"}}"
         val pinpointEvent = PinpointEvent(
             eventId = "c175d759-3a90-44be-ab51-888ce43ed527",
             eventType = "EVENT_TYPE",
@@ -41,5 +44,37 @@ class PinpointEventTest : TestCase() {
             androidDeviceDetails = AndroidDeviceDetails()
         )
         assertEquals(expectedOutput, pinpointEvent.toJsonString())
+    }
+
+    @Test
+    fun testFromJsonString() {
+        val expectedPinpointEvent = PinpointEvent(
+            eventId = "c175d759-3a90-44be-ab51-888ce43ed527",
+            eventType = "EVENT_TYPE",
+            attributes = mapOf("attribute1" to "value1", "attribute2" to "value2"),
+            metrics = mapOf("metric1" to 1.0, "metric2" to 2.0),
+            sdkInfo = SDKInfo("amplify-test", "1.0"),
+            pinpointSession = PinpointSession("SESSION_ID", 1657035956917L),
+            eventTimestamp = 1657035956917L,
+            uniqueId = "UNIQUE_ID",
+            androidAppDetails = AndroidAppDetails("appId", "appTitle", "packageName", "versionCode", "versionName"),
+            androidDeviceDetails = AndroidDeviceDetails()
+        )
+
+        val pinpointEventJson =
+            "{\"eventId\":\"c175d759-3a90-44be-ab51-888ce43ed527\",\"eventType\":\"EVENT_TYPE\"," +
+                "\"attributes\":{\"attribute1\":\"value1\",\"attribute2\":\"value2\"}," +
+                "\"metrics\":{\"metric1\":1.0,\"metric2\":2.0},\"sdkInfo\":{\"name\":\"amplify-test\"," +
+                "\"version\":\"1.0\"},\"pinpointSession\":{\"sessionId\":\"SESSION_ID\"," +
+                "\"sessionStart\":1657035956917},\"eventTimestamp\":1657035956917,\"uniqueId\":\"UNIQUE_ID\"," +
+                "\"androidAppDetails\":{\"appId\":\"appId\",\"appTitle\":\"appTitle\"," +
+                "\"packageName\":\"packageName\",\"versionCode\":\"versionCode\",\"versionName\":\"versionName\"}," +
+                "\"androidDeviceDetails\":{\"platformVersion\":\"TEST VERSION\",\"platform\":\"ANDROID\"," +
+                "\"manufacturer\":\"TEST MANUFACTURER\",\"model\":\"TEST MODEL\",\"locale\":\"en-US\"}}"
+
+        assertEquals(
+            expectedPinpointEvent.toJsonString(),
+            PinpointEvent.fromJsonString(pinpointEventJson).toJsonString()
+        )
     }
 }

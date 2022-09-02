@@ -27,16 +27,12 @@ import com.amplifyframework.auth.AuthException;
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.testutils.Assets;
-import com.amplifyframework.testutils.Resources;
 import com.amplifyframework.testutils.sync.SynchronousApi;
 import com.amplifyframework.testutils.sync.SynchronousAuth;
 
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.Collections;
@@ -117,41 +113,6 @@ public final class GraphQLInstrumentationTest {
     @Test
     public void subscriptionReceivesMutationOverApiKey() throws ApiException {
         currentApiName = API_WITH_API_KEY;
-        subscriptionReceivesMutation();
-    }
-
-    /**
-     * Test that subscription is authorized properly when using AWS IAM as
-     * authorization provider.
-     * @throws ApiException On failure to reach the endpoint or receive
-     *          expected response from the endpoint
-     */
-    @Test
-    @Ignore("Relies on an AWS account which is no longer active.  Resources need to be regenerated.")
-    public void subscriptionReceivesMutationOverAwsIam() throws ApiException {
-        currentApiName = API_WITH_AWS_IAM;
-        subscriptionReceivesMutation();
-    }
-
-    /**
-     * Test that subscription is authorized properly when using Cognito
-     * User Pools as authorization provider.
-     * @throws ApiException On failure to reach the endpoint or receive
-     *          expected response from the endpoint
-     * @throws JSONException On failure to obtain credentials from test
-     *          resources
-     * @throws AuthException On failure
-     *          to sign in as a valid user
-     */
-    @Test
-    @Ignore("Relies on an AWS account which is no longer active.  Resources need to be regenerated.")
-    public void subscriptionReceivesMutationOverCognitoUserPools() throws
-            ApiException, JSONException, AuthException {
-        currentApiName = API_WITH_COGNITO_USER_POOLS;
-        JSONObject credentials = Resources.readAsJson(getApplicationContext(), R.raw.credentials);
-        String username = credentials.getString("username");
-        String password = credentials.getString("password");
-        synchronousAuth.signIn(username, password);
         subscriptionReceivesMutation();
     }
 
@@ -283,7 +244,6 @@ public final class GraphQLInstrumentationTest {
         }
 
         @NonNull
-        @Override
         public String getId() {
             return id;
         }
@@ -335,7 +295,6 @@ public final class GraphQLInstrumentationTest {
         }
 
         @NonNull
-        @Override
         public String getId() {
             return id;
         }

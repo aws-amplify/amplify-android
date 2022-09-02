@@ -425,15 +425,24 @@ This last step will give you a URL to view a GitHub page in your browser.
 Copy-paste this, and complete the workflow in the UI. It will invite you to
 "create a PR" from your newly published branch.
 
-Your PR must be reviewed by at least one repository maintainer, in order
+### Pull Request Guidelines
+- The title of your PR must be descriptive to the specific change.
+- The title of your PR must be of below format since next release version is determined from PR titles in the commit history.
+	- For a bugfix: `fix(category): description of changes`
+	- For a feature: `feat(catgory): add awesome feature`
+	- Everything else: `chore: fix build script`
+	- Eg. `fix(auth): throw correct auth exception for code mismatch`. Refer https://github.com/aws-amplify/amplify-android/pull/1370
+- No period at the end of the title.
+- Pull Request message should indicate which issues are fixed: `fixes #<issue>` or `closes #<issue>`.
+- If not obvious (i.e. from unit tests), describe how you verified that your change works.
+- If this PR includes breaking changes, they must be listed at the top of the changelog as described above in the Pull Request Checklist.
+- PR must be reviewed by at least one repository maintainer, in order
 to be considered for inclusion.
-
-your PR must also pass the CircleCI workflow and LGTM validations. CircleCI
+- PR must also pass the CodeBuild workflow and LGTM validations. CodeBuild
 will run all build tasks (Checkstyle, Lint, unit tests).
-
-Currently, CircleCI **DOES NOT** run instrumentation tests for PRs that come
-from user forks. You should run these tests on your laptop before submitting
-the PR.
+- Usually all these are going to be **squashed** when you merge to main.
+- Make sure to update the PR title/description if things change.
+- Rebase with the `main` branch if it has commits ahead of your fork.
 
 ## Troubleshooting
 

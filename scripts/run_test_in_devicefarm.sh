@@ -1,16 +1,11 @@
 #!/bin/bash
 project_arn=$DEVICEFARM_PROJECT_ARN
-device_pool_arn=$DEVICEFARM_POOL_ARN
 module_name=$1
 file_name="$module_name-debug-androidTest.apk"
 full_path="$module_name/build/outputs/apk/androidTest/debug/$file_name"
 
 if [[ -z "${project_arn}" ]]; then
   echo "DEVICEFARM_PROJECT_ARN environment variable not set."
-  exit 1
-fi
-if [[ -z "${device_pool_arn}" ]]; then
-  echo "DEVICEFARM_POOL_ARN environment variable not set."
   exit 1
 fi
 
@@ -47,12 +42,85 @@ curl -H "Content-Type:application/octet-stream" -T $full_path $app_package_url
 echo "Waiting for uploads to complete"
 sleep 10
 
+# Get oldest device we can test against.
+minDevice=$(aws devicefarm list-devices \
+                --region="us-west-2" \
+                --filters '[
+                    {"attribute":"AVAILABILITY","operator":"EQUALS","values":["HIGHLY_AVAILABLE"]},
+                    {"attribute":"PLATFORM","operator":"EQUALS","values":["ANDROID"]},
+                    {"attribute":"OS_VERSION","operator":"GREATER_THAN_OR_EQUALS","values":["7"]},
+                    {"attribute":"OS_VERSION","operator":"LESS_THAN","values":["7.1"]},
+                    {"attribute":"MANUFACTURER","operator":"IN","values":["Google", "Pixel", "Samsung"]}
+                ]' \
+                | jq -r '.devices[0].arn')
+
+# Get middle device we can test against.
+middleDevice=$(aws devicefarm list-devices \
+                --region="us-west-2" \
+                --filters '[
+                    {"attribute":"AVAILABILITY","operator":"EQUALS","values":["HIGHLY_AVAILABLE"]},
+                    {"attribute":"PLATFORM","operator":"EQUALS","values":["ANDROID"]},
+                    {"attribute":"OS_VERSION","operator":"GREATER_THAN_OR_EQUALS","values":["10"]},
+                    {"attribute":"OS_VERSION","operator":"LESS_THAN","values":["11"]},
+                    {"attribute":"MANUFACTURER","operator":"IN","values":["Samsung"]}
+                ]' \
+                | jq -r '.devices[0].arn')
+
+# Get latest device we can test against.
+latestDevice=$(aws devicefarm list-devices \
+                --region="us-west-2" \
+                --filters '[
+                    {"attribute":"AVAILABILITY","operator":"EQUALS","values":["HIGHLY_AVAILABLE"]},
+                    {"attribute":"PLATFORM","operator":"EQUALS","values":["ANDROID"]},
+                    {"attribute":"OS_VERSION","operator":"GREATER_THAN_OR_EQUALS","values":["12"]},
+                    {"attribute":"MANUFACTURER","operator":"IN","values":["Google", "Pixel"]}
+                ]' \
+                | jq -r '.devices[0].arn')
+
+# IF we fail to find our required test devices, fail.
+if [[ -z "${minDevice}" || -z "${middleDevice}" || -z "${latestDevice}" ]]; then
+    echo "Failed to grab 3 required devices for integration tests."
+    exit 1
+fi
+
+# Function to cancel duplicate runs for same code source in device farm.
+function stopDuplicates {
+  echo "Stopping duplicate runs"
+  name="$file_name-$CODEBUILD_SOURCE_VERSION"
+  read -a running_arns <<< $(aws devicefarm list-runs \
+                          --arn="$project_arn" \
+                          --query="runs[?(status == 'RUNNING' || status == 'PENDING')  && name == '${name}'].arn" \
+                          --region="us-west-2" \
+                          --max-items=5 \
+                          | jq -r '.[]')
+
+  for arn in "${running_arns[@]}"
+  do
+    ## Just consume the result and do nothing with it.
+    result=`aws devicefarm stop-run --arn $arn --region="us-west-2" --query="run.name"`
+  done
+}
+stopDuplicates
+
+max_devices=3
+#$CODEBUILD_WEBHOOK_BASE_REF will be /refs/heads/<base_branch>, using substring test for simplicity
+if [[ $CODEBUILD_WEBHOOK_BASE_REF == *"dev-preview"* ]];
+then
+    echo "Detected Dev-Preview branch. Running single device test"
+    max_devices=1
+fi
+
 # Schedule the test run in device farm
 echo "Scheduling test run"
 run_arn=`aws devicefarm schedule-run --project-arn=$project_arn \
                             --app-arn="$app_package_upload_arn" \
-                            --device-pool-arn=$device_pool_arn \
-                            --name="$file_name" \
+                            --device-selection-configuration='{
+                                "filters": [
+                                  {"attribute": "ARN", "operator":"IN", "values":["'$minDevice'", "'$middleDevice'", "'$latestDevice'"]}
+                                ],
+                                "maxDevices": '$max_devices'
+                            }' \
+                            --name="$file_name-$CODEBUILD_SOURCE_VERSION" \
                             --test="type=INSTRUMENTATION,testPackageArn=$test_package_upload_arn" \
                             --execution-configuration="jobTimeoutMinutes=30,videoCapture=false" \
                             --query="run.arn" \
@@ -71,15 +139,15 @@ while true; do
   then
     break
   fi
-  sleep 5
+  sleep 30
 done
 echo "Status = $status Result = $result"
 
 ./scripts/generate_df_testrun_report --run_arn="$run_arn" --module_name="$module_name" --pr="$CODEBUILD_SOURCE_VERSION" --output_path="build/allTests/$module_name/"
-# If the result is FAILED, then exit with a non-zero return
-if [ "$result" = "FAILED" ]
+# If the result is PASSED, then exit with a return code 0
+if [ "$result" = "PASSED" ]
 then
-  exit 1
+  exit 0
 fi
-# Otherwise, exit with a zero.
-exit 0
+# Otherwise, exit with a non-zero.
+exit 1

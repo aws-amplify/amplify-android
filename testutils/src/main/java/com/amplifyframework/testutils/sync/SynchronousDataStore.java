@@ -103,7 +103,7 @@ public final class SynchronousDataStore {
     @NonNull
     public <T extends Model> T get(@NonNull Class<T> clazz, @NonNull String itemId) throws DataStoreException {
         for (T value : list(clazz)) {
-            if (value.getId().equals(itemId)) {
+            if (value.getPrimaryKeyString().equals(itemId)) {
                 return value;
             }
         }
