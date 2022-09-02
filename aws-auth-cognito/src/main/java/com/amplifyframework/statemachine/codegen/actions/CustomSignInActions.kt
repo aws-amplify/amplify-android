@@ -13,11 +13,11 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.statemachine.codegen.data
+package com.amplifyframework.statemachine.codegen.actions
 
-data class AuthChallenge(
-    val challengeName: String,
-    val username: String? = null,
-    val session: String?,
-    val parameters: Map<String, String>?
-)
+import com.amplifyframework.statemachine.Action
+import com.amplifyframework.statemachine.codegen.events.CustomSignInEvent
+
+interface CustomSignInActions {
+    fun initiateCustomSignInAuthAction(event: CustomSignInEvent.EventType.InitiateCustomSignIn): Action
+}
