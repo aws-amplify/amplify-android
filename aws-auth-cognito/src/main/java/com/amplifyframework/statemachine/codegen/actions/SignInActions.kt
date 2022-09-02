@@ -20,5 +20,6 @@ import com.amplifyframework.statemachine.codegen.events.SignInEvent
 
 interface SignInActions {
     fun startSRPAuthAction(event: SignInEvent.EventType.InitiateSignInWithSRP): Action
+    fun startCustomAuthAction(event: SignInEvent.EventType.InitiateSignInWithCustom): Action
     fun initResolveChallenge(event: SignInEvent.EventType.ReceivedChallenge): Action
 }
