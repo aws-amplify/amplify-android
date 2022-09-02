@@ -52,7 +52,6 @@ import com.amplifyframework.testutils.sync.SynchronousDataStore;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatcher;
@@ -196,42 +195,6 @@ public final class AWSDataStorePluginTest {
         networkStatusObserver.await();
 
         assertRemoteSubscriptionsStarted();
-    }
-
-    /**
-     * Simulate a situation where the user has added the API plugin, but it's
-     * either not pushed or exceptions occur while trying to start up the sync processes.
-     * The outcome is that the local store should still be available and the
-     * host app should not crash.
-     * @throws JSONException If an exception occurs while building the JSON configuration.
-     * @throws AmplifyException If an exception occurs setting up the mock API
-     */
-    @Ignore(
-        "By itself, this test passes! However, it pollutes the context of the test runner, " +
-        " and causes other unrelated tests to fail, as a result. Need to rework this to  " +
-        " ensure that it faithfully cleans up after itself, when done with assertions."
-    )
-    @Test
-    public void configureAndInitializeInApiModeWithoutApi() throws JSONException, AmplifyException {
-        ApiCategory mockApiCategory = mockApiPluginWithExceptions();
-        JSONObject dataStorePluginJson = new JSONObject()
-            .put("syncIntervalInMinutes", 60);
-        AWSDataStorePlugin awsDataStorePlugin = AWSDataStorePlugin.builder()
-                                                                  .modelProvider(modelProvider)
-                                                                  .apiCategory(mockApiCategory)
-                                                                  .build();
-        SynchronousDataStore synchronousDataStore = SynchronousDataStore.delegatingTo(awsDataStorePlugin);
-        awsDataStorePlugin.configure(dataStorePluginJson, context);
-        awsDataStorePlugin.initialize(context);
-
-        // Trick the DataStore since it's not getting initialized as part of the Amplify.initialize call chain
-        Amplify.Hub.publish(HubChannel.DATASTORE, HubEvent.create(InitializationStatus.SUCCEEDED));
-
-        Person person1 = createPerson("Test", "Dummy I");
-        synchronousDataStore.save(person1);
-        assertNotNull(person1.getId());
-        Person person1FromDb = synchronousDataStore.get(Person.class, person1.getId());
-        assertEquals(person1, person1FromDb);
     }
 
     /**
