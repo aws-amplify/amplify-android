@@ -87,6 +87,7 @@ class DeviceDataCollector : DataCollector {
     }
 
     private fun getCognitoDeviceAgent(context: Context): String {
+        // TODO: use credential store
         val sharedPreferences = context.getSharedPreferences(LOCAL_STORAGE_PATH, Context.MODE_PRIVATE)
         val storedId = sharedPreferences?.getString(LOCAL_STORAGE_DEVICE_ID_KEY, null)
         if (storedId != null) {

@@ -18,23 +18,29 @@ package com.amplifyframework.auth.cognito.asf
 import android.content.Context
 import android.util.Base64
 import android.util.Log
+import com.amplifyframework.statemachine.codegen.data.UserPoolConfiguration
 import org.json.JSONException
 import org.json.JSONObject
 
 /**
  * Provides the user context data that is sent to the server.
+ * @param context android application context
+ * @param configuration config containing cognito userPoolId for the application
+ * and secret key (for now, this would be application clientId) used while generating signature.
  */
-object UserContextDataProvider {
-    private val TAG = UserContextDataProvider::class.java.simpleName
-    private const val VERSION_VALUE = "ANDROID20171114"
+class UserContextDataProvider(private val context: Context, private val configuration: UserPoolConfiguration) {
+    companion object {
+        private val TAG = UserContextDataProvider::class.java.simpleName
+        private const val VERSION_VALUE = "ANDROID20171114"
 
-    private const val CONTEXT_DATA = "contextData"
-    private const val USERNAME = "username"
-    private const val USER_POOL_ID = "userPoolId"
-    private const val TIMESTAMP_MILLI_SEC = "timestamp"
-    private const val DATA_PAYLOAD = "payload"
-    private const val VERSION_KEY = "version"
-    private const val SIGNATURE = "signature"
+        private const val CONTEXT_DATA = "contextData"
+        private const val USERNAME = "username"
+        private const val USER_POOL_ID = "userPoolId"
+        private const val TIMESTAMP_MILLI_SEC = "timestamp"
+        private const val DATA_PAYLOAD = "payload"
+        private const val VERSION_KEY = "version"
+        private const val SIGNATURE = "signature"
+    }
 
     private val timestamp = System.currentTimeMillis().toString()
 
@@ -69,17 +75,14 @@ object UserContextDataProvider {
      * it in Base64 encoded form. Final data is JSON object with 'signature' and
      * 'payload'. Payload is a JSON object that contains 'username',
      * 'userPoolId', 'timestamp' and 'contextData'.
-     * @param context android application context
      * @param username username for the user
-     * @param userPoolId cognito userPoolId for the application
-     * @param secret secret key used while generating signature. For now, this would be application clientId.
      * @return base64 encoded userContextData.
      */
-    fun getEncodedContextData(context: Context, username: String, userPoolId: String, secret: String) = try {
+    fun getEncodedContextData(username: String) = try {
         val contextData = aggregator.getAggregatedData(context)
-        val payload = getJsonPayload(contextData, username, userPoolId)
+        val payload = getJsonPayload(contextData, username, configuration.poolId!!)
         val payloadString = payload.toString()
-        val signature = SignatureGenerator.getSignature(payloadString, secret, VERSION_VALUE)
+        val signature = SignatureGenerator.getSignature(payloadString, configuration.appClient!!, VERSION_VALUE)
         val jsonResponse = getJsonResponse(payloadString, signature)
         getEncodedResponse(jsonResponse)
     } catch (e: Exception) {
