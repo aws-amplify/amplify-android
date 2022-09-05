@@ -1,17 +1,16 @@
 package com.amplifyframework.testmodels.multiauth;
 
 
-import java.util.List;
 import java.util.UUID;
 import java.util.Objects;
 
+import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.model.AuthStrategy;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelOperation;
 import com.amplifyframework.core.model.annotations.AuthRule;
-import com.amplifyframework.core.model.annotations.Index;
 import com.amplifyframework.core.model.annotations.ModelConfig;
 import com.amplifyframework.core.model.annotations.ModelField;
 import com.amplifyframework.core.model.query.predicate.QueryField;
@@ -32,6 +31,11 @@ public final class OwnerPublicOIDAPIPost implements Model {
   public String getId() {
       return id;
   }
+
+  @NonNull
+  public String resolveIdentifier() {
+      return id;
+  }
   
   public String getName() {
       return name;
@@ -50,7 +54,7 @@ public final class OwnerPublicOIDAPIPost implements Model {
         return false;
       } else {
       OwnerPublicOIDAPIPost ownerPublicOidapiPost = (OwnerPublicOIDAPIPost) obj;
-      return ObjectsCompat.equals(getId(), ownerPublicOidapiPost.getId()) &&
+      return ObjectsCompat.equals(resolveIdentifier(), ownerPublicOidapiPost.resolveIdentifier()) &&
               ObjectsCompat.equals(getName(), ownerPublicOidapiPost.getName());
       }
   }
@@ -58,7 +62,7 @@ public final class OwnerPublicOIDAPIPost implements Model {
   @Override
    public int hashCode() {
     return new StringBuilder()
-      .append(getId())
+      .append(resolveIdentifier())
       .append(getName())
       .toString()
       .hashCode();
@@ -68,7 +72,7 @@ public final class OwnerPublicOIDAPIPost implements Model {
    public String toString() {
     return new StringBuilder()
       .append("OwnerPublicOIDAPIPost {")
-      .append("id=" + String.valueOf(getId()) + ", ")
+      .append("id=" + String.valueOf(resolveIdentifier()) + ", ")
       .append("name=" + String.valueOf(getName()))
       .append("}")
       .toString();

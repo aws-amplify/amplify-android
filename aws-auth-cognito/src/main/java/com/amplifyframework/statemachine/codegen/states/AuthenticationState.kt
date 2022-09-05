@@ -104,9 +104,10 @@ sealed class AuthenticationState : State {
                     else -> defaultResolution
                 }
                 is SigningIn -> when (authenticationEvent) {
-                    is AuthenticationEvent.EventType.SignInCompleted -> StateResolution(
-                        SignedIn(authenticationEvent.signedInData)
-                    )
+                    is AuthenticationEvent.EventType.SignInCompleted ->
+                        StateResolution(
+                            SignedIn(authenticationEvent.signedInData)
+                        )
                     is AuthenticationEvent.EventType.CancelSignIn -> StateResolution(SignedOut(SignedOutData()))
                     else -> defaultResolution
                 }
@@ -126,7 +127,7 @@ sealed class AuthenticationState : State {
                 }
                 is SignedOut -> when {
                     authenticationEvent is AuthenticationEvent.EventType.SignInRequested -> {
-                        val action = authenticationActions.initiateSRPSignInAction(authenticationEvent)
+                        val action = authenticationActions.initiateSignInAction(authenticationEvent)
                         StateResolution(SigningIn(oldState.signInState), listOf(action))
                     }
                     authenticationEvent is AuthenticationEvent.EventType.SignOutRequested -> {

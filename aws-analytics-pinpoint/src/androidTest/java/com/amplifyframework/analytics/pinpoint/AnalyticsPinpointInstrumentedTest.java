@@ -25,7 +25,10 @@ import com.amplifyframework.analytics.AnalyticsProperties;
 import com.amplifyframework.analytics.UserProfile;
 import com.amplifyframework.analytics.pinpoint.models.AWSPinpointUserProfile;
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.hub.HubChannel;
+import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.logging.Logger;
+import com.amplifyframework.testutils.HubAccumulator;
 import com.amplifyframework.testutils.Sleep;
 
 import com.amazonaws.mobile.client.AWSMobileClient;
@@ -54,10 +57,10 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-
 /**
  * Validates the functionality of the {@link AWSPinpointAnalyticsPlugin}.
  */
+
 public class AnalyticsPinpointInstrumentedTest {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-analytics");
 
@@ -161,16 +164,60 @@ public class AnalyticsPinpointInstrumentedTest {
     }
 
     /**
+     * Record a basic analytics event and test that events are flushed from local database by calling submitEvents.
+     *
+     */
+    @Test
+    public void testFlushEventHubEvent() {
+        HubAccumulator analyticsHubEventAccumulator =
+            HubAccumulator.create(HubChannel.ANALYTICS, AnalyticsChannelEventName.FLUSH_EVENTS, 1)
+                .start();
+        String eventName1 = "Amplify-event" + UUID.randomUUID().toString();
+        AnalyticsEvent event1 = AnalyticsEvent.builder()
+                .name(eventName1)
+                .addProperty("DemoProperty1", "DemoValue1")
+                .addProperty("DemoDoubleProperty2", 2.0)
+                .build();
+
+        Amplify.Analytics.recordEvent(event1);
+        assertEquals(1, analyticsClient.getAllEvents().size());
+
+        String eventName2 = "Amplify-event" + UUID.randomUUID().toString();
+
+        AnalyticsEvent event2 = AnalyticsEvent.builder()
+                .name(eventName2)
+                .addProperty("DemoProperty1", "DemoValue1")
+                .addProperty("DemoProperty2", 2.0)
+                .build();
+
+        Amplify.Analytics.recordEvent(event2);
+
+        assertEquals(2, analyticsClient.getAllEvents().size());
+        Amplify.Analytics.flushEvents();
+        waitForAutoFlush(analyticsClient);
+
+        HubEvent<?> hubEvent = analyticsHubEventAccumulator.awaitFirst();
+        List<?> hubEventData = (List<?>) hubEvent.getData();
+        assertEquals(AnalyticsChannelEventName.FLUSH_EVENTS.getEventName(), hubEvent.getName());
+        assertEquals(eventName1, ((com.amazonaws.mobileconnectors.pinpoint.analytics.AnalyticsEvent) hubEventData.
+            get(0)).
+            getEventType());
+        assertEquals(eventName2, ((com.amazonaws.mobileconnectors.pinpoint.analytics.AnalyticsEvent) hubEventData.
+            get(1)).
+            getEventType());
+    }
+
+    /**
      * Record a basic analytics event and test that events are flushed from local database periodically.
      *
      */
     @Test
     public void testAutoFlush() {
         AnalyticsEvent event1 = AnalyticsEvent.builder()
-                .name("Amplify-event" + UUID.randomUUID().toString())
-                .addProperty("DemoProperty1", "DemoValue1")
-                .addProperty("DemoDoubleProperty2", 2.0)
-                .build();
+            .name("Amplify-event" + UUID.randomUUID().toString())
+            .addProperty("DemoProperty1", "DemoValue1")
+            .addProperty("DemoDoubleProperty2", 2.0)
+            .build();
 
         Amplify.Analytics.recordEvent(event1);
 
@@ -179,15 +226,15 @@ public class AnalyticsPinpointInstrumentedTest {
         waitForAutoFlush(analyticsClient);
 
         LOG.debug("Events in database after calling submitEvents() after submitting: " +
-                analyticsClient.getAllEvents().size());
+            analyticsClient.getAllEvents().size());
 
         assertEquals(0, analyticsClient.getAllEvents().size());
 
         AnalyticsEvent event2 = AnalyticsEvent.builder()
-                .name("Amplify-event" + UUID.randomUUID().toString())
-                .addProperty("DemoProperty1", "DemoValue1")
-                .addProperty("DemoProperty2", 2.0)
-                .build();
+            .name("Amplify-event" + UUID.randomUUID().toString())
+            .addProperty("DemoProperty1", "DemoValue1")
+            .addProperty("DemoProperty2", 2.0)
+            .build();
 
         Amplify.Analytics.recordEvent(event2);
 
@@ -196,10 +243,11 @@ public class AnalyticsPinpointInstrumentedTest {
         waitForAutoFlush(analyticsClient);
 
         LOG.debug("Events in database after calling submitEvents() after submitting: " +
-                analyticsClient.getAllEvents().size());
+            analyticsClient.getAllEvents().size());
 
         assertEquals(0, analyticsClient.getAllEvents().size());
     }
+
 
     /**
      * Registers a global property and ensures that all recorded events have the global property.

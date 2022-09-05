@@ -52,7 +52,6 @@ import com.amplifyframework.testutils.sync.SynchronousDataStore;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatcher;
@@ -156,7 +155,7 @@ public final class AWSDataStorePluginTest {
         Person person1 = createPerson("Test", "Dummy I");
         synchronousDataStore.save(person1);
         assertNotNull(person1.getId());
-        Person person1FromDb = synchronousDataStore.get(Person.class, person1.getId());
+        Person person1FromDb = synchronousDataStore.get(Person.class, person1.getPrimaryKeyString());
         assertEquals(person1, person1FromDb);
     }
 
@@ -199,42 +198,6 @@ public final class AWSDataStorePluginTest {
     }
 
     /**
-     * Simulate a situation where the user has added the API plugin, but it's
-     * either not pushed or exceptions occur while trying to start up the sync processes.
-     * The outcome is that the local store should still be available and the
-     * host app should not crash.
-     * @throws JSONException If an exception occurs while building the JSON configuration.
-     * @throws AmplifyException If an exception occurs setting up the mock API
-     */
-    @Ignore(
-        "By itself, this test passes! However, it pollutes the context of the test runner, " +
-        " and causes other unrelated tests to fail, as a result. Need to rework this to  " +
-        " ensure that it faithfully cleans up after itself, when done with assertions."
-    )
-    @Test
-    public void configureAndInitializeInApiModeWithoutApi() throws JSONException, AmplifyException {
-        ApiCategory mockApiCategory = mockApiPluginWithExceptions();
-        JSONObject dataStorePluginJson = new JSONObject()
-            .put("syncIntervalInMinutes", 60);
-        AWSDataStorePlugin awsDataStorePlugin = AWSDataStorePlugin.builder()
-                                                                  .modelProvider(modelProvider)
-                                                                  .apiCategory(mockApiCategory)
-                                                                  .build();
-        SynchronousDataStore synchronousDataStore = SynchronousDataStore.delegatingTo(awsDataStorePlugin);
-        awsDataStorePlugin.configure(dataStorePluginJson, context);
-        awsDataStorePlugin.initialize(context);
-
-        // Trick the DataStore since it's not getting initialized as part of the Amplify.initialize call chain
-        Amplify.Hub.publish(HubChannel.DATASTORE, HubEvent.create(InitializationStatus.SUCCEEDED));
-
-        Person person1 = createPerson("Test", "Dummy I");
-        synchronousDataStore.save(person1);
-        assertNotNull(person1.getId());
-        Person person1FromDb = synchronousDataStore.get(Person.class, person1.getId());
-        assertEquals(person1, person1FromDb);
-    }
-
-    /**
      * Verify that when the clear method is called, the following happens
      * - All remote synchronization processes are stopped
      * - The database is deleted.
@@ -268,7 +231,8 @@ public final class AWSDataStorePluginTest {
             int indexOfResponseConsumer = 1;
             Consumer<GraphQLResponse<ModelWithMetadata<Person>>> onResponse =
                     invocation.getArgument(indexOfResponseConsumer);
-            ModelMetadata modelMetadata = new ModelMetadata(person1.getId(), false, 1, Temporal.Timestamp.now());
+            ModelMetadata modelMetadata = new ModelMetadata(person1.getId(), false, 1, Temporal.Timestamp.now(),
+                    "Person");
             ModelWithMetadata<Person> modelWithMetadata = new ModelWithMetadata<>(person1, modelMetadata);
             onResponse.accept(new GraphQLResponse<>(modelWithMetadata, Collections.emptyList()));
             return mock(GraphQLOperation.class);
@@ -280,7 +244,7 @@ public final class AWSDataStorePluginTest {
 
         // Save person 1
         synchronousDataStore.save(person1);
-        Person result1 = synchronousDataStore.get(Person.class, person1.getId());
+        Person result1 = synchronousDataStore.get(Person.class, person1.getPrimaryKeyString());
         assertEquals(person1, result1);
 
         apiInteractionObserver.await();
@@ -291,7 +255,8 @@ public final class AWSDataStorePluginTest {
             int indexOfResponseConsumer = 1;
             Consumer<GraphQLResponse<ModelWithMetadata<Person>>> onResponse =
                     invocation.getArgument(indexOfResponseConsumer);
-            ModelMetadata modelMetadata = new ModelMetadata(person2.getId(), false, 1, Temporal.Timestamp.now());
+            ModelMetadata modelMetadata = new ModelMetadata(person2.getId(), false, 1,
+                    Temporal.Timestamp.now(), "Person");
             ModelWithMetadata<Person> modelWithMetadata = new ModelWithMetadata<>(person2, modelMetadata);
             onResponse.accept(new GraphQLResponse<>(modelWithMetadata, Collections.emptyList()));
             return mock(GraphQLOperation.class);
@@ -319,7 +284,7 @@ public final class AWSDataStorePluginTest {
         orchestratorInitObserver.await();
         assertRemoteSubscriptionsStarted();
 
-        Person result2 = synchronousDataStore.get(Person.class, person2.getId());
+        Person result2 = synchronousDataStore.get(Person.class, person2.getPrimaryKeyString());
         assertEquals(person2, result2);
 
         verify(mockApiCategory, atLeastOnce())
@@ -359,7 +324,8 @@ public final class AWSDataStorePluginTest {
             int indexOfResponseConsumer = 1;
             Consumer<GraphQLResponse<ModelWithMetadata<Person>>> onResponse =
                     invocation.getArgument(indexOfResponseConsumer);
-            ModelMetadata modelMetadata = new ModelMetadata(person1.getId(), false, 1, Temporal.Timestamp.now());
+            ModelMetadata modelMetadata = new ModelMetadata(person1.getPrimaryKeyString(), false, 1,
+                    Temporal.Timestamp.now(), "Person");
             ModelWithMetadata<Person> modelWithMetadata = new ModelWithMetadata<>(person1, modelMetadata);
             onResponse.accept(new GraphQLResponse<>(modelWithMetadata, Collections.emptyList()));
             return mock(GraphQLOperation.class);
@@ -371,7 +337,7 @@ public final class AWSDataStorePluginTest {
 
         // Save person 1
         synchronousDataStore.save(person1);
-        Person result1 = synchronousDataStore.get(Person.class, person1.getId());
+        Person result1 = synchronousDataStore.get(Person.class, person1.getPrimaryKeyString());
         assertEquals(person1, result1);
 
         apiInteractionObserver.await();
@@ -382,7 +348,8 @@ public final class AWSDataStorePluginTest {
             int indexOfResponseConsumer = 1;
             Consumer<GraphQLResponse<ModelWithMetadata<Person>>> onResponse =
                     invocation.getArgument(indexOfResponseConsumer);
-            ModelMetadata modelMetadata = new ModelMetadata(person2.getId(), false, 1, Temporal.Timestamp.now());
+            ModelMetadata modelMetadata = new ModelMetadata(person2.getPrimaryKeyString(), false, 1,
+                    Temporal.Timestamp.now(), "Person");
             ModelWithMetadata<Person> modelWithMetadata = new ModelWithMetadata<>(person2, modelMetadata);
             onResponse.accept(new GraphQLResponse<>(modelWithMetadata, Collections.emptyList()));
             return mock(GraphQLOperation.class);
@@ -635,6 +602,7 @@ public final class AWSDataStorePluginTest {
         return Person.builder()
             .firstName(firstName)
             .lastName(lastName)
+            .age(41)
             .build();
     }
 

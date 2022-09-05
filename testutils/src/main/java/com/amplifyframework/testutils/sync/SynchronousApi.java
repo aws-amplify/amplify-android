@@ -118,6 +118,20 @@ public final class SynchronousApi {
     }
 
     /**
+     * Create an object at the remote endpoint using a raw request.
+     *
+     * @param request A GraphQL creation request
+     * @param <T>     Type of object being created
+     * @return The endpoint's understanding of the thing that was created
+     * @throws ApiException If unable to obtain response from endpoint
+     */
+    @NonNull
+    public <T> T create(@NonNull GraphQLRequest<T> request) throws ApiException {
+        return awaitResponseData((onResponse, onFailure) ->
+                asyncDelegate.mutate(request, onResponse, onFailure));
+    }
+
+    /**
      * Update a model.
      *
      * @param apiName   One of the configured API endpoints, that knows about the model type

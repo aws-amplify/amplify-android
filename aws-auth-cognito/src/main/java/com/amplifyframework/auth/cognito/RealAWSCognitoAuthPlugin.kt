@@ -25,6 +25,7 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.ListDevicesRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.UpdateDeviceStatusRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.UpdateUserAttributesRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.UpdateUserAttributesResponse
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.VerifyUserAttributeRequest
 import com.amplifyframework.auth.AuthCategoryBehavior
 import com.amplifyframework.auth.AuthChannelEventName
 import com.amplifyframework.auth.AuthCodeDeliveryDetails
@@ -35,12 +36,15 @@ import com.amplifyframework.auth.AuthSession
 import com.amplifyframework.auth.AuthUser
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
+import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.auth.cognito.helpers.JWTParser
-import com.amplifyframework.auth.cognito.helpers.SRPHelper
 import com.amplifyframework.auth.cognito.helpers.SignInChallengeHelper
+import com.amplifyframework.auth.cognito.options.AWSCognitoAuthConfirmSignInOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthResendSignUpCodeOptions
+import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttributeOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttributesOptions
+import com.amplifyframework.auth.cognito.options.AuthFlowType
 import com.amplifyframework.auth.cognito.usecases.ResetPasswordUseCase
 import com.amplifyframework.auth.options.AWSCognitoAuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
@@ -157,7 +161,7 @@ internal class RealAWSCognitoAuthPlugin(
                 this.password = password
                 this.userAttributes = userAttributes
                 this.clientId = configuration.userPool?.appClient
-                this.secretHash = SRPHelper.getSecretHash(
+                this.secretHash = AuthHelper.getSecretHash(
                     username,
                     configuration.userPool?.appClient,
                     configuration.userPool?.appClientSecret
@@ -239,7 +243,7 @@ internal class RealAWSCognitoAuthPlugin(
                 this.username = username
                 this.confirmationCode = confirmationCode
                 this.clientId = configuration.userPool?.appClient
-                this.secretHash = SRPHelper.getSecretHash(
+                this.secretHash = AuthHelper.getSecretHash(
                     username,
                     configuration.userPool?.appClient,
                     configuration.userPool?.appClientSecret
@@ -303,7 +307,7 @@ internal class RealAWSCognitoAuthPlugin(
             val response = authEnvironment.cognitoAuthService.cognitoIdentityProviderClient?.resendConfirmationCode {
                 clientId = configuration.userPool?.appClient
                 this.username = username
-                secretHash = SRPHelper.getSecretHash(
+                secretHash = AuthHelper.getSecretHash(
                     username,
                     configuration.userPool?.appClient,
                     configuration.userPool?.appClientSecret
@@ -420,9 +424,29 @@ internal class RealAWSCognitoAuthPlugin(
                 }
             },
             {
-                val event = AuthenticationEvent(
-                    AuthenticationEvent.EventType.SignInRequested(username, password, options)
-                )
+                val signInOptions = if (options !is AWSCognitoAuthSignInOptions) {
+                    AWSCognitoAuthSignInOptions.builder().authFlowType(AuthFlowType.USER_SRP_AUTH).build()
+                } else {
+                    options
+                }
+
+                val event = if (options !is AWSCognitoAuthSignInOptions) {
+                    AuthenticationEvent(
+                        AuthenticationEvent.EventType.SignInRequested(
+                            username,
+                            password,
+                        )
+                    )
+                } else {
+                    AuthenticationEvent(
+                        AuthenticationEvent.EventType.SignInRequested(
+                            username,
+                            password,
+                            signInOptions.authFlowType.toString(),
+                            signInOptions.metadata
+                        )
+                    )
+                }
                 authStateMachine.send(event)
             }
         )
@@ -445,8 +469,7 @@ internal class RealAWSCognitoAuthPlugin(
         authStateMachine.getCurrentState { authState ->
             val authNState = authState.authNState
             val signInState = (authNState as? AuthenticationState.SigningIn)?.signInState
-            val challengeState = (signInState as? SignInState.ResolvingChallenge)?.challengeState
-            when (challengeState) {
+            when ((signInState as? SignInState.ResolvingChallenge)?.challengeState) {
                 is SignInChallengeState.WaitingForAnswer -> {
                     _confirmSignIn(confirmationCode, options, onSuccess, onError)
                 }
@@ -485,7 +508,13 @@ internal class RealAWSCognitoAuthPlugin(
                 }
             },
             {
-                val event = SignInChallengeEvent(SignInChallengeEvent.EventType.VerifyChallengeAnswer(confirmationCode))
+                val awsCognitoConfirmSignInOptions = options as? AWSCognitoAuthConfirmSignInOptions
+                val event = SignInChallengeEvent(
+                    SignInChallengeEvent.EventType.VerifyChallengeAnswer(
+                        confirmationCode,
+                        awsCognitoConfirmSignInOptions?.metadata ?: mapOf()
+                    )
+                )
                 authStateMachine.send(event)
             }
         )
@@ -929,23 +958,29 @@ internal class RealAWSCognitoAuthPlugin(
                         GlobalScope.launch {
                             try {
                                 val accessToken = getSession().userPoolTokens.value?.accessToken
-                                var userAttributes = attributes.map {
-                                    AttributeType.invoke {
-                                        name = it.key.keyString
-                                        value = it.value
+                                accessToken?.let {
+                                    var userAttributes = attributes.map {
+                                        AttributeType.invoke {
+                                            name = it.key.keyString
+                                            value = it.value
+                                        }
                                     }
-                                }
-                                val userAttributesRequest = UpdateUserAttributesRequest.invoke {
-                                    this.accessToken = accessToken
-                                    this.userAttributes = userAttributes
-                                    this.clientMetadata = userAttributesOptionsMetadata
-                                }
-                                val userAttributeResponse = authEnvironment.cognitoAuthService
-                                    .cognitoIdentityProviderClient?.updateUserAttributes(
-                                        userAttributesRequest
-                                    )
+                                    val userAttributesRequest = UpdateUserAttributesRequest.invoke {
+                                        this.accessToken = accessToken
+                                        this.userAttributes = userAttributes
+                                        this.clientMetadata = userAttributesOptionsMetadata
+                                    }
+                                    val userAttributeResponse = authEnvironment.cognitoAuthService
+                                        .cognitoIdentityProviderClient?.updateUserAttributes(
+                                            userAttributesRequest
+                                        )
 
-                                continuation.resume(getUpdateUserAttributeResult(userAttributeResponse, userAttributes))
+                                    continuation.resume(
+                                        getUpdateUserAttributeResult(userAttributeResponse, userAttributes)
+                                    )
+                                } ?: continuation.resumeWithException(
+                                    AuthException.InvalidUserPoolConfigurationException()
+                                )
                             } catch (e: Exception) {
                                 continuation.resumeWithException(CognitoAuthExceptionConverter.lookup(e, e.toString()))
                             }
@@ -1024,7 +1059,33 @@ internal class RealAWSCognitoAuthPlugin(
         onSuccess: Action,
         onError: Consumer<AuthException>
     ) {
-        TODO("Not yet implemented")
+        authStateMachine.getCurrentState { authState ->
+            when (authState.authNState) {
+                // Check if user signed in
+                is AuthenticationState.SignedIn -> {
+                    GlobalScope.launch {
+                        try {
+                            val accessToken = getSession().userPoolTokens.value?.accessToken
+                            accessToken?.let {
+                                val verifyUserAttributeRequest = VerifyUserAttributeRequest.invoke {
+                                    this.accessToken = accessToken
+                                    this.attributeName = attributeKey.keyString
+                                    this.code = confirmationCode
+                                }
+                                authEnvironment.cognitoAuthService
+                                    .cognitoIdentityProviderClient?.verifyUserAttribute(
+                                        verifyUserAttributeRequest
+                                    )
+                                onSuccess.call()
+                            } ?: onError.accept(AuthException.InvalidUserPoolConfigurationException())
+                        } catch (e: Exception) {
+                            onError.accept(CognitoAuthExceptionConverter.lookup(e, e.toString()))
+                        }
+                    }
+                }
+                else -> onError.accept(AuthException.InvalidStateException())
+            }
+        }
     }
 
     override fun getCurrentUser(
@@ -1233,7 +1294,7 @@ internal class RealAWSCognitoAuthPlugin(
                         )
                     }
                     else -> {
-                        // no op
+                        // No-op
                     }
                 }
             },

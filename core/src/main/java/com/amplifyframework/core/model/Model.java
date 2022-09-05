@@ -17,6 +17,11 @@ package com.amplifyframework.core.model;
 
 import androidx.annotation.NonNull;
 
+import java.io.Serializable;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.Objects;
+
 /**
  * All models should conform to the Model
  * interface.
@@ -29,7 +34,20 @@ public interface Model {
      * @return the ID that is the primary key of a Model.
      */
     @NonNull
-    String getId();
+    default Serializable resolveIdentifier() {
+        String exceptionMessage = "Primary key field Id not found.";
+        try {
+            String defaultPrimaryKeyMethod = "getId";
+            Method method = this.getClass().getMethod(defaultPrimaryKeyMethod);
+            return (Serializable) Objects.requireNonNull(method.invoke(this));
+        } catch (IllegalAccessException exception) {
+            throw (new IllegalStateException(exceptionMessage, exception));
+        } catch (NoSuchMethodException exception) {
+            throw (new IllegalStateException(exceptionMessage, exception));
+        } catch (InvocationTargetException exception) {
+            throw (new IllegalStateException(exceptionMessage, exception));
+        }
+    }
 
     /**
      * Returns the name of this model as a String.
@@ -38,5 +56,31 @@ public interface Model {
     @NonNull
     default String getModelName() {
         return getClass().getSimpleName();
+    }
+
+    /**
+     * Gets concatenated partitionkey#sortKey.
+     * @return concatenated partitionkey#sortKey...
+     */
+    @NonNull
+    default String getPrimaryKeyString() {
+        try {
+            if (resolveIdentifier() instanceof ModelIdentifier) {
+                return ((ModelIdentifier<?>) resolveIdentifier()).getIdentifier();
+            } else {
+                return (String) resolveIdentifier();
+            }
+        } catch (Exception exception) {
+            throw (new IllegalStateException("Invalid Primary Key, " +
+                   "It should either be of type String or composite Primary Key." + exception));
+        }
+    }
+
+    /**
+     * This enum represents the types of Model.
+     */
+    enum Type {
+        USER,
+        SYSTEM
     }
 }

@@ -22,7 +22,6 @@ import com.amplifyframework.api.aws.test.R;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.model.annotations.BelongsTo;
 import com.amplifyframework.core.model.temporal.Temporal;
-import com.amplifyframework.testmodels.noteswithauth.PrivateNote;
 import com.amplifyframework.testmodels.personcar.MaritalStatus;
 import com.amplifyframework.testmodels.personcar.Person;
 import com.amplifyframework.testmodels.ratingsblog.Blog;
@@ -36,7 +35,6 @@ import com.amplifyframework.testutils.ModelAssert;
 import com.amplifyframework.testutils.sync.SynchronousApi;
 
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.text.ParseException;
@@ -117,17 +115,6 @@ public final class CodeGenerationInstrumentationTest {
     }
 
     /**
-     * Tests the code generation for LIST query without a predicate.
-     * @throws ApiException On failure to obtain valid response from endpoint
-     */
-    @Ignore("This test times out without delivering a result or error.")
-    @Test
-    public void queryListWithoutPredicate() throws ApiException {
-        final List<Person> queryResults = api.list(PERSON_API_NAME, Person.class);
-        assertTrue(queryResults.size() > 3);
-    }
-
-    /**
      * Tests that a subscription can receive an event when a create mutation takes place.
      * @throws ApiException On failure to obtain valid response from endpoint
      */
@@ -149,29 +136,6 @@ public final class CodeGenerationInstrumentationTest {
 
         // Cancel the subscription
         observer.dispose();
-    }
-
-    /**
-     * Tests that attempting to subscribe to an API which is protected by Cognito User Pool auth will fail if the user
-     * is unauthenticated.
-     */
-    @Ignore(
-        "Inside onCreate(), neither onStart nor onError in firing, and so " +
-        "as a result, the Await inside of onCreate() times out. This is not " +
-        "expected behavior. The onError callback should fire in response to a " +
-        "400 code being received back from the server, about bad auth."
-    )
-    @Test
-    public void subscribeFailsWithoutProperAuth() {
-        // Act: try to create a subscription
-        TestObserver<GraphQLResponse<PrivateNote>> observer = TestObserver.create();
-        api.onCreate(NOTES_WITH_AUTH_API_NAME, PrivateNote.class).subscribe(observer);
-        observer.assertError(error -> {
-            if (!(error instanceof ApiException) || error.getMessage() == null) {
-                return false;
-            }
-            return error.getMessage().contains("connection_error");
-        });
     }
 
     /**
@@ -198,7 +162,7 @@ public final class CodeGenerationInstrumentationTest {
         );
         assertTrue(errors.get(0).toString().contains("ConditionalCheckFailedException"));
 
-        api.delete(PERSON_API_NAME, Person.justId(person.getId()));
+        api.delete(PERSON_API_NAME, Person.justId(person.resolveIdentifier()));
     }
 
     /**

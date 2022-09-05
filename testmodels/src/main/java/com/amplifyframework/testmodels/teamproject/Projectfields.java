@@ -15,6 +15,7 @@
 
 package com.amplifyframework.testmodels.teamproject;
 
+import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.model.Model;
@@ -36,6 +37,11 @@ public final class Projectfields implements Model {
     private final @ModelField(targetType="String") String name;
     private final @ModelField(targetType="Team") @BelongsTo(targetName = "teamID", type = Team.class) Team team;
     public String getId() {
+        return id;
+    }
+
+    @NonNull
+    public String resolveIdentifier() {
         return id;
     }
 

@@ -20,6 +20,7 @@ import com.amplifyframework.analytics.AnalyticsEventBehavior
 import com.amplifyframework.analytics.AnalyticsPlugin
 import com.amplifyframework.analytics.AnalyticsProperties
 import com.amplifyframework.analytics.UserProfile
+import com.amplifyframework.analytics.pinpoint.credentails.CognitoCredentialsProvider
 import org.json.JSONObject
 
 /**
@@ -93,7 +94,7 @@ class AWSPinpointAnalyticsPluginKt : AnalyticsPlugin<Any>() {
         val pinpointManager = PinpointManager(
             context,
             awsAnalyticsConfig,
-            null // TODO: Provide valid credential provider
+            CognitoCredentialsProvider()
         )
         val autoEventSubmitter = AutoEventSubmitter(
             pinpointManager.analyticsClient,
@@ -103,6 +104,7 @@ class AWSPinpointAnalyticsPluginKt : AnalyticsPlugin<Any>() {
         awsPinpointAnalyticsPluginBehavior = AWSPinpointAnalyticsPluginBehavior(
             context,
             pinpointManager.analyticsClient,
+            pinpointManager.targetingClient,
             autoEventSubmitter,
             autoSessionTracker
         )
