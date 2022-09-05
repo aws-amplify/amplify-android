@@ -1,3 +1,18 @@
+/*
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
 package com.amplifyframework.testutils.featuretest.auth.generators.testcasegenerators
 
 import com.amplifyframework.testutils.featuretest.API
@@ -35,11 +50,11 @@ object ResetPasswordTestCaseGenerator {
         mapOf(
             "isPasswordReset" to false,
             "nextStep" to
-                    mapOf(
-                        "resetPasswordStep" to "CONFIRM_RESET_PASSWORD_WITH_CODE",
-                        "additionalInfo" to emptyMap<String, String>(),
-                        "codeDeliveryDetails" to codeDeliveryDetails
-                    )
+                mapOf(
+                    "resetPasswordStep" to "CONFIRM_RESET_PASSWORD_WITH_CODE",
+                    "additionalInfo" to emptyMap<String, String>(),
+                    "codeDeliveryDetails" to codeDeliveryDetails
+                )
         ).toJsonElement()
 
     private val cognitoValidation = ExpectationShapes.Cognito(
@@ -72,7 +87,6 @@ object ResetPasswordTestCaseGenerator {
         ),
         validations = listOf(cognitoValidation, apiReturnValidation)
     )
-
 
     fun AuthResetPasswordResult_object_is_returned_when_reset_password_succeeds() {
         baseCase.copy(
@@ -109,10 +123,8 @@ object ResetPasswordTestCaseGenerator {
             )
         ).exportJson()
     }
-
 }
 
 fun main() {
     ResetPasswordTestCaseGenerator.AuthResetPasswordResult_object_is_returned_when_reset_password_succeeds()
 }
-

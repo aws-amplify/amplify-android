@@ -1,3 +1,18 @@
+/*
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
 package featureTest.utilities
 
 import aws.sdk.kotlin.services.cognitoidentityprovider.CognitoIdentityProviderClient
@@ -8,7 +23,7 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.ForgotPasswordReque
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ForgotPasswordResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.SignUpRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.SignUpResponse
-import com.amplifyframework.auth.cognito.helpers.SRPHelper
+import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.testutils.featuretest.MockResponse
 import com.amplifyframework.testutils.featuretest.ResponseType
 import io.mockk.CapturingSlot
@@ -45,8 +60,8 @@ class CognitoMockFactory(private val mockCognitoIPClient: CognitoIdentityProvide
                 captures[mockResponse.apiName] = requestBuilderCaptor
             }
             "signUp" -> {
-                mockkObject(SRPHelper)
-                coEvery { SRPHelper.getSecretHash(any(), any(), any()) } returns "a hash"
+                mockkObject(AuthHelper)
+                coEvery { AuthHelper.getSecretHash(any(), any(), any()) } returns "a hash"
 
                 val requestCaptor = slot<SignUpRequest.Builder.() -> Unit>()
 
