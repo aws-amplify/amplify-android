@@ -43,6 +43,7 @@ import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.AuthUser
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
+import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.auth.cognito.helpers.SRPHelper
 import com.amplifyframework.auth.cognito.options.AWSAuthResendUserAttributeConfirmationCodeOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttributeOptions
@@ -157,7 +158,8 @@ class RealAWSCognitoAuthPluginTest {
 
         // set up SRP helper
         mockkObject(SRPHelper)
-        coEvery { SRPHelper.getSecretHash(any(), any(), any()) } returns "dummy Hash"
+        mockkObject(AuthHelper)
+        coEvery { AuthHelper.getSecretHash(any(), any(), any()) } returns "dummy Hash"
     }
 
     @Test
