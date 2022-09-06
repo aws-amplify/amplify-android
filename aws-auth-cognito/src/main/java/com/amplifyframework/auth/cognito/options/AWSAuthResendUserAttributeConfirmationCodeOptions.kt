@@ -19,7 +19,7 @@ import com.amplifyframework.auth.options.AuthResendUserAttributeConfirmationCode
 import com.amplifyframework.util.Immutable
 
 /**
- * Cognito extension of update user attributes options to add the platform specific fields.
+ * Cognito extension of resend user attributes confirmation code options to add the platform specific fields.
  */
 data class AWSAuthResendUserAttributeConfirmationCodeOptions
 /**
@@ -57,7 +57,7 @@ internal constructor(
 
         /**
          * Construct and return the object with the values set in the builder.
-         * @return a new instance of AWSCognitoAuthUpdateUserAttributesOptions with the values specified in the builder.
+         * @return a new instance of AWSAuthResendUserAttributeConfirmationCodeOptions with the values specified in the builder.
          */
         override fun build(): AuthResendUserAttributeConfirmationCodeOptions {
             return AWSAuthResendUserAttributeConfirmationCodeOptions(
