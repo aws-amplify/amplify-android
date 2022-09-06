@@ -18,12 +18,10 @@ package com.amplifyframework.auth.cognito.actions
 import aws.sdk.kotlin.services.cognitoidentityprovider.initiateAuth
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AuthFlowType
 import aws.smithy.kotlin.runtime.time.Instant
-import com.amplifyframework.auth.cognito.AWSCognitoAuthServiceBehavior
 import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.AuthorizationActions
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
-import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
 import com.amplifyframework.statemachine.codegen.events.AuthEvent
 import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
@@ -60,23 +58,15 @@ object AuthorizationCognitoActions : AuthorizationActions {
             val evt = try {
                 when (amplifyCredential) {
                     is AmplifyCredential.UserPool -> {
-                        val updatedCredential = refreshUserPoolTokens(
-                            configuration,
-                            amplifyCredential,
-                            cognitoAuthService
-                        )
+                        val updatedCredential = refreshUserPoolTokens(this, amplifyCredential)
                         if (configuration.identityPool != null) {
-                            FetchAuthSessionEvent(FetchAuthSessionEvent.EventType.FetchIdentity(amplifyCredential))
+                            FetchAuthSessionEvent(FetchAuthSessionEvent.EventType.FetchIdentity(updatedCredential))
                         } else {
                             AuthorizationEvent(AuthorizationEvent.EventType.Fetched(updatedCredential))
                         }
                     }
                     is AmplifyCredential.UserAndIdentityPool -> {
-                        val updatedCredential = refreshUserPoolTokens(
-                            configuration,
-                            amplifyCredential,
-                            cognitoAuthService
-                        )
+                        val updatedCredential = refreshUserPoolTokens(this, amplifyCredential)
                         FetchAuthSessionEvent(FetchAuthSessionEvent.EventType.FetchIdentity(updatedCredential))
                     }
                     is AmplifyCredential.IdentityPool -> {
@@ -92,33 +82,30 @@ object AuthorizationCognitoActions : AuthorizationActions {
         }
 
     private suspend fun refreshUserPoolTokens(
-        configuration: AuthConfiguration,
+        environment: AuthEnvironment,
         amplifyCredential: AmplifyCredential,
-        cognitoAuthService: AWSCognitoAuthServiceBehavior
     ): AmplifyCredential {
-        val authParameters = when (amplifyCredential) {
-            is AmplifyCredential.UserPool -> amplifyCredential.tokens.refreshToken?.let {
-                mapOf("REFRESH_TOKEN" to it)
-            }
-            is AmplifyCredential.UserAndIdentityPool -> amplifyCredential.tokens.refreshToken?.let {
-                mapOf("REFRESH_TOKEN" to it)
-            }
+        val refreshToken = when (amplifyCredential) {
+            is AmplifyCredential.UserPool -> amplifyCredential.tokens.refreshToken
+            is AmplifyCredential.UserAndIdentityPool -> amplifyCredential.tokens.refreshToken
             else -> null
         }
-        val refreshTokenResponse = cognitoAuthService.cognitoIdentityProviderClient?.initiateAuth {
+
+        val authParameters = refreshToken?.let { mapOf("REFRESH_TOKEN" to it) }
+        val response = environment.cognitoAuthService.cognitoIdentityProviderClient?.initiateAuth {
             authFlow = AuthFlowType.RefreshToken
-            clientId = configuration.userPool?.appClient
+            clientId = environment.configuration.userPool?.appClient
             this.authParameters = authParameters
         }
 
-        val expiresIn = refreshTokenResponse?.authenticationResult?.expiresIn?.toLong() ?: 0
-        val cognitoUserPoolTokens = CognitoUserPoolTokens(
-            idToken = refreshTokenResponse?.authenticationResult?.idToken,
-            accessToken = refreshTokenResponse?.authenticationResult?.accessToken,
-            refreshToken = refreshTokenResponse?.authenticationResult?.refreshToken,
-            expiration = Instant.now().plus(expiresIn.seconds).epochSeconds
+        val expiresIn = response?.authenticationResult?.expiresIn?.toLong() ?: 0
+        return AmplifyCredential.UserPool(
+            CognitoUserPoolTokens(
+                idToken = response?.authenticationResult?.idToken,
+                accessToken = response?.authenticationResult?.accessToken,
+                refreshToken = refreshToken,
+                expiration = Instant.now().plus(expiresIn.seconds).epochSeconds
+            )
         )
-
-        return AmplifyCredential.UserPool(cognitoUserPoolTokens)
     }
 }

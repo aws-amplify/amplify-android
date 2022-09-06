@@ -28,6 +28,7 @@ import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
+import com.amplifyframework.auth.options.AuthFetchSessionOptions
 import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions
 import com.amplifyframework.auth.options.AuthResendUserAttributeConfirmationCodeOptions
 import com.amplifyframework.auth.options.AuthResetPasswordOptions
@@ -279,6 +280,17 @@ class AWSCognitoAuthPluginTest {
         authPlugin.handleWebUISignInResponse(expectedIntent)
 
         verify { realPlugin.handleWebUISignInResponse(expectedIntent) }
+    }
+
+    @Test
+    fun verifyOverloadedFetchAuthSession() {
+        val expectedOptions = AuthFetchSessionOptions.defaults()
+        val expectedOnSuccess = Consumer<AuthSession> { }
+        val expectedOnError = Consumer<AuthException> { }
+
+        authPlugin.fetchAuthSession(expectedOptions, expectedOnSuccess, expectedOnError)
+
+        verify { realPlugin.fetchAuthSession(expectedOptions, expectedOnSuccess, expectedOnError) }
     }
 
     @Test

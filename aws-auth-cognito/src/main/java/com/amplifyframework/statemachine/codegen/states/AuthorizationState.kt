@@ -37,6 +37,7 @@ sealed class AuthorizationState : State {
     data class Configured(val id: String = "") : AuthorizationState()
     data class SigningIn(val id: String = "") : AuthorizationState()
     data class SigningOut(val id: String = "") : AuthorizationState()
+    data class RefreshingAuthSession(override var fetchAuthSessionState: FetchAuthSessionState?) : AuthorizationState()
     data class FetchingAuthSession(override var fetchAuthSessionState: FetchAuthSessionState?) : AuthorizationState()
     data class DeletingUser(override var deleteUserState: DeleteUserState?) : AuthorizationState()
     data class WaitingToStore(var amplifyCredential: AmplifyCredential) : AuthorizationState()
@@ -143,7 +144,7 @@ sealed class AuthorizationState : State {
                     is SignOutEvent.EventType.SignOutLocally -> StateResolution(WaitingToStore(AmplifyCredential.Empty))
                     else -> defaultResolution
                 }
-                is FetchingAuthSession ->
+                is FetchingAuthSession, is RefreshingAuthSession ->
                     when (authorizationEvent) {
                         is AuthorizationEvent.EventType.Fetched -> StateResolution(
                             WaitingToStore(authorizationEvent.amplifyCredential)
@@ -167,7 +168,7 @@ sealed class AuthorizationState : State {
                     authorizationEvent is AuthorizationEvent.EventType.RefreshAuthSession -> {
                         val action =
                             authorizationActions.refreshAuthSessionAction(authorizationEvent.amplifyCredential)
-                        val newState = FetchingAuthSession(oldState.fetchAuthSessionState)
+                        val newState = RefreshingAuthSession(oldState.fetchAuthSessionState)
                         StateResolution(newState, listOf(action))
                     }
                     else -> defaultResolution
@@ -183,6 +184,7 @@ sealed class AuthorizationState : State {
         var deleteUserState: DeleteUserState? = null
         override fun build(): AuthorizationState = when (authZState) {
             is FetchingAuthSession -> FetchingAuthSession(fetchAuthSessionState)
+            is RefreshingAuthSession -> RefreshingAuthSession(fetchAuthSessionState)
             is SessionEstablished -> SessionEstablished(authZState.amplifyCredential)
             is DeletingUser -> DeletingUser(deleteUserState)
             else -> authZState

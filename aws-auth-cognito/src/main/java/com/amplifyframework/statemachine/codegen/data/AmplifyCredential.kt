@@ -50,7 +50,6 @@ sealed class AmplifyCredential {
     ) : AmplifyCredential()
 
     fun update(
-        cognitoUserPoolTokens: CognitoUserPoolTokens? = null,
         identityId: String? = null,
         awsCredentials: AWSCredentials? = null
     ): AmplifyCredential {

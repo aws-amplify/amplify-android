@@ -54,6 +54,7 @@ import com.amplifyframework.auth.options.AWSCognitoAuthConfirmResetPasswordOptio
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
+import com.amplifyframework.auth.options.AuthFetchSessionOptions
 import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions
 import com.amplifyframework.auth.options.AuthResendUserAttributeConfirmationCodeOptions
 import com.amplifyframework.auth.options.AuthResetPasswordOptions
@@ -573,17 +574,30 @@ internal class RealAWSCognitoAuthPlugin(
         }
     }
 
+    override fun fetchAuthSession(onSuccess: Consumer<AuthSession>, onError: Consumer<AuthException>) {
+        fetchAuthSession(AuthFetchSessionOptions.defaults(), onSuccess, onError)
+    }
+
     override fun fetchAuthSession(
+        options: AuthFetchSessionOptions,
         onSuccess: Consumer<AuthSession>,
         onError: Consumer<AuthException>
     ) {
+        val forceRefresh = options.forceRefresh
         authStateMachine.getCurrentState { authState ->
             when (val authZState = authState.authZState) {
-                is AuthorizationState.Configured -> _fetchAuthSession(onSuccess = onSuccess, onError = onError)
+                is AuthorizationState.Configured -> {
+                    authStateMachine.send(AuthorizationEvent(AuthorizationEvent.EventType.FetchAuthSession))
+                    _fetchAuthSession(onSuccess, onError)
+                }
                 is AuthorizationState.SessionEstablished -> {
                     val credential = authZState.amplifyCredential
-                    if (credential.isValid()) onSuccess.accept(credential.getCognitoSession())
-                    else _fetchAuthSession(true, credential, onSuccess = onSuccess, onError = onError)
+                    if (!credential.isValid() || forceRefresh) {
+                        authStateMachine.send(
+                            AuthorizationEvent(AuthorizationEvent.EventType.RefreshAuthSession(credential))
+                        )
+                        _fetchAuthSession(onSuccess, onError)
+                    } else onSuccess.accept(credential.getCognitoSession())
                 }
                 else -> {
                     // no-op
@@ -593,8 +607,6 @@ internal class RealAWSCognitoAuthPlugin(
     }
 
     private fun _fetchAuthSession(
-        refresh: Boolean = false,
-        amplifyCredential: AmplifyCredential = AmplifyCredential.Empty,
         onSuccess: Consumer<AuthSession>,
         onError: Consumer<AuthException>
     ) {
@@ -603,7 +615,6 @@ internal class RealAWSCognitoAuthPlugin(
             { authState ->
                 when (val authZState = authState.authZState) {
                     is AuthorizationState.SessionEstablished -> {
-                        // TODO: fix immediate session success
                         token?.let(authStateMachine::cancel)
                         onSuccess.accept(authZState.amplifyCredential.getCognitoSession())
                     }
@@ -621,12 +632,7 @@ internal class RealAWSCognitoAuthPlugin(
                     }
                 }
             },
-            {
-                if (refresh) authStateMachine.send(
-                    AuthorizationEvent(AuthorizationEvent.EventType.RefreshAuthSession(amplifyCredential))
-                )
-                else authStateMachine.send(AuthorizationEvent(AuthorizationEvent.EventType.FetchAuthSession))
-            }
+            null
         )
     }
 

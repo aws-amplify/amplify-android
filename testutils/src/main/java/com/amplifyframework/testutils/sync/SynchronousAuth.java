@@ -393,7 +393,7 @@ public final class SynchronousAuth {
      */
     @NonNull
     public AuthSession fetchAuthSession() throws AuthException {
-        return Await.result(AUTH_OPERATION_TIMEOUT_MS, asyncDelegate::fetchAuthSession);
+        return Await.<AuthSession, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, asyncDelegate::fetchAuthSession);
     }
 
     /**

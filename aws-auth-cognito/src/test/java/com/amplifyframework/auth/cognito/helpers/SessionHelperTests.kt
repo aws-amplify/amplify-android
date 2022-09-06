@@ -15,6 +15,7 @@
 
 package com.amplifyframework.auth.cognito.helpers
 
+import com.amplifyframework.statemachine.codegen.data.AWSCredentials
 import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
 import java.time.Instant
 import kotlin.test.assertEquals
@@ -48,11 +49,16 @@ class SessionHelperTests {
 
     @Test
     fun testIsInvalid() {
-        assertFalse(SessionHelper.isValid(dummyUserPoolTokens))
+        assertFalse(SessionHelper.isValidTokens(dummyUserPoolTokens))
     }
 
     @Test
     fun testIsInvalidNullTokens() {
-        assertFalse(SessionHelper.isValid(CognitoUserPoolTokens(null, null, null, 0)))
+        assertFalse(SessionHelper.isValidTokens(CognitoUserPoolTokens(null, null, null, 0)))
+    }
+
+    @Test
+    fun testsIsInvalidSession() {
+        assertFalse(SessionHelper.isValidSession(AWSCredentials.empty))
     }
 }
