@@ -43,7 +43,7 @@ object SignInChallengeCognitoActions : SignInChallengeActions {
                 challengeResponses[KEY_USERNAME] = username
             }
 
-            challenge.getChallengeResponseKey()?.also { responseKey ->
+            getChallengeResponseKey(challenge.challengeName)?.also { responseKey ->
                 challengeResponses[responseKey] = event.answer
             }
             event.options.forEach { (key, value) ->
@@ -85,5 +85,17 @@ object SignInChallengeCognitoActions : SignInChallengeActions {
         }
         logger?.verbose("$id Sending event ${evt.type}")
         dispatcher.send(evt)
+    }
+
+    private fun getChallengeResponseKey(challengeName: String): String? {
+        val VALUE_ANSWER = "ANSWER"
+        val VALUE_SMS_MFA = "SMS_MFA_CODE"
+        val VALUE_NEW_PASSWORD = "NEW_PASSWORD"
+        return when (ChallengeNameType.fromValue(challengeName)) {
+            is ChallengeNameType.SmsMfa -> VALUE_SMS_MFA
+            is ChallengeNameType.NewPasswordRequired -> VALUE_NEW_PASSWORD
+            is ChallengeNameType.CustomChallenge -> VALUE_ANSWER
+            else -> null
+        }
     }
 }

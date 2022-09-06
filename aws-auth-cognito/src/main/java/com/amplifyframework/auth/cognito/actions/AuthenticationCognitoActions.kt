@@ -17,7 +17,6 @@ package com.amplifyframework.auth.cognito.actions
 
 import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.cognito.AuthEnvironment
-import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions
 import com.amplifyframework.auth.cognito.options.AuthFlowType
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.AuthenticationActions
@@ -59,9 +58,10 @@ object AuthenticationCognitoActions : AuthenticationActions {
     override fun initiateSignInAction(event: AuthenticationEvent.EventType.SignInRequested) =
         Action<AuthEnvironment>("InitiateSignInAction") { id, dispatcher ->
             logger?.verbose("$id Starting execution")
-            val signinOptions = event.options as AWSCognitoAuthSignInOptions
 
-            when (signinOptions.authFlowType) {
+            val signInType = event.signInType ?: AuthFlowType.USER_SRP_AUTH.toString()
+
+            when (AuthFlowType.valueOf(signInType)) {
                 AuthFlowType.USER_SRP_AUTH -> {
                     val evt = event.username?.run {
                         event.password?.run {

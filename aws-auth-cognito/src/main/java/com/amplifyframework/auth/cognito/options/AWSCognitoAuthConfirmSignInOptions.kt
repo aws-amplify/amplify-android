@@ -19,7 +19,6 @@ import androidx.core.util.ObjectsCompat
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions
 import com.amplifyframework.util.Immutable
-import java.util.Objects
 
 /**
  * Cognito extension of confirm sign in options to add the platform specific fields.
@@ -66,7 +65,7 @@ open class AWSCognitoAuthConfirmSignInOptions protected constructor(
     /**
      * The builder for this class.
      */
-    class CognitoBuilder : Builder<AWSCognitoAuthConfirmSignInOptions.CognitoBuilder?>() {
+    class CognitoBuilder : Builder<CognitoBuilder?>() {
         private val metadata: MutableMap<String, String>
         private val userAttributes: MutableList<AuthUserAttribute>
 
@@ -74,32 +73,30 @@ open class AWSCognitoAuthConfirmSignInOptions protected constructor(
          * Returns the type of builder this is to support proper flow with it being an extended class.
          * @return the type of builder this is to support proper flow with it being an extended class.
          */
-        override fun getThis(): AWSCognitoAuthConfirmSignInOptions.CognitoBuilder {
+        override fun getThis(): CognitoBuilder {
             return this
         }
 
         /**
          * Set the metadata field for the object being built.
-         * @param metadata Custom user metadata to be sent with the sign in request.
+         * @param _metadata Custom user metadata to be sent with the sign in request.
          * @return The builder object to continue building.
          */
-        fun metadata(metadata: Map<String, String>): AWSCognitoAuthConfirmSignInOptions.CognitoBuilder {
-            Objects.requireNonNull(metadata)
+        fun metadata(_metadata: Map<String, String>): CognitoBuilder {
             this.metadata.clear()
-            this.metadata.putAll(metadata)
+            this.metadata.putAll(_metadata)
             return getThis()
         }
 
         /**
          * Set the userAttributes field for the object being built.
-         * @param userAttributes A list of additional user attributes which should be
+         * @param _userAttributes A list of additional user attributes which should be
          * * associated with this user on confirmSignIn.
          * @return the instance of the builder.
          */
-        fun userAttributes(userAttributes: List<AuthUserAttribute>): AWSCognitoAuthConfirmSignInOptions.CognitoBuilder {
-            Objects.requireNonNull(userAttributes)
+        fun userAttributes(_userAttributes: List<AuthUserAttribute>): CognitoBuilder {
             this.userAttributes.clear()
-            this.userAttributes.addAll(userAttributes)
+            this.userAttributes.addAll(_userAttributes)
             return getThis()
         }
 

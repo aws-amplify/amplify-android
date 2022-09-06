@@ -15,7 +15,6 @@
 
 package com.amplifyframework.auth.cognito
 
-import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions
 import com.amplifyframework.auth.cognito.options.AuthFlowType
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.StateChangeListenerToken
@@ -308,10 +307,8 @@ class StateTransitionTests : StateTransitionTestBase() {
                             AuthenticationEvent.EventType.SignInRequested(
                                 "username",
                                 "password",
-                                AWSCognitoAuthSignInOptions.builder()
-                                    .metadata(mapOf())
-                                    .authFlowType(AuthFlowType.USER_SRP_AUTH)
-                                    .build()
+                                AuthFlowType.USER_SRP_AUTH.toString(),
+                                mapOf()
                             )
                         )
                     )
@@ -353,9 +350,7 @@ class StateTransitionTests : StateTransitionTestBase() {
                             SignInEvent.EventType.InitiateSignInWithCustom(
                                 "username",
                                 "password",
-                                AWSCognitoAuthSignInOptions.builder().authFlowType(AuthFlowType.CUSTOM_AUTH).metadata(
-                                    mapOf()
-                                ).build()
+                                mapOf()
                             )
                         )
                     )
@@ -382,10 +377,8 @@ class StateTransitionTests : StateTransitionTestBase() {
                             AuthenticationEvent.EventType.SignInRequested(
                                 "username",
                                 "password",
-                                AWSCognitoAuthSignInOptions.builder()
-                                    .metadata(mapOf())
-                                    .authFlowType(AuthFlowType.CUSTOM_AUTH)
-                                    .build()
+                                AuthFlowType.CUSTOM_AUTH.toString(),
+                                mapOf()
                             )
                         )
                     )
