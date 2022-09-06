@@ -19,6 +19,8 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.initiateAuth
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AuthFlowType
 import aws.smithy.kotlin.runtime.time.Instant
 import com.amplifyframework.auth.cognito.AuthEnvironment
+import com.amplifyframework.auth.cognito.helpers.AuthHelper
+import com.amplifyframework.auth.cognito.helpers.JWTParser
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.AuthorizationActions
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
@@ -29,6 +31,9 @@ import com.amplifyframework.statemachine.codegen.events.FetchAuthSessionEvent
 import kotlin.time.Duration.Companion.seconds
 
 object AuthorizationCognitoActions : AuthorizationActions {
+    private const val KEY_SECRET_HASH = "SECRET_HASH"
+    private const val KEY_REFRESH_TOKEN = "REFRESH_TOKEN"
+
     override fun resetAuthorizationAction() = Action<AuthEnvironment>("resetAuthZ") { id, dispatcher ->
         logger?.verbose("$id Starting execution")
         // TODO: recover from error
@@ -85,13 +90,21 @@ object AuthorizationCognitoActions : AuthorizationActions {
         environment: AuthEnvironment,
         amplifyCredential: AmplifyCredential,
     ): AmplifyCredential {
-        val refreshToken = when (amplifyCredential) {
-            is AmplifyCredential.UserPool -> amplifyCredential.tokens.refreshToken
-            is AmplifyCredential.UserAndIdentityPool -> amplifyCredential.tokens.refreshToken
+        val tokens = when (amplifyCredential) {
+            is AmplifyCredential.UserPool -> amplifyCredential.tokens
+            is AmplifyCredential.UserAndIdentityPool -> amplifyCredential.tokens
             else -> null
         }
 
-        val authParameters = refreshToken?.let { mapOf("REFRESH_TOKEN" to it) }
+        val authParameters = mutableMapOf<String, String>()
+        val secretHash = AuthHelper.getSecretHash(
+            tokens?.accessToken?.let { JWTParser.getClaim(it, "username") } ?: "",
+            environment.configuration.userPool?.appClient,
+            environment.configuration.userPool?.appClientSecret
+        )
+        tokens?.refreshToken?.let { authParameters[KEY_REFRESH_TOKEN] = it }
+        secretHash?.let { authParameters[KEY_SECRET_HASH] = it }
+
         val response = environment.cognitoAuthService.cognitoIdentityProviderClient?.initiateAuth {
             authFlow = AuthFlowType.RefreshToken
             clientId = environment.configuration.userPool?.appClient
@@ -103,7 +116,7 @@ object AuthorizationCognitoActions : AuthorizationActions {
             CognitoUserPoolTokens(
                 idToken = response?.authenticationResult?.idToken,
                 accessToken = response?.authenticationResult?.accessToken,
-                refreshToken = refreshToken,
+                refreshToken = tokens?.refreshToken,
                 expiration = Instant.now().plus(expiresIn.seconds).epochSeconds
             )
         )
