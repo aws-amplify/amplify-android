@@ -373,6 +373,13 @@ public class AuthException extends AmplifyException {
         private static final String RECOVERY_SUGGESTION = "Retry operation and send another confirmation code.";
 
         /**
+         * Default message/recovery suggestion without a cause.
+         */
+        public CodeDeliveryFailureException() {
+            super(MESSAGE, RECOVERY_SUGGESTION);
+        }
+
+        /**
          * Default message/recovery suggestion with a cause.
          * @param cause The original error.
          */
