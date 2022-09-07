@@ -17,6 +17,8 @@ package com.amplifyframework.auth.cognito
 
 import android.app.Activity
 import android.content.Intent
+import aws.sdk.kotlin.services.cognitoidentityprovider.confirmForgotPassword
+import aws.sdk.kotlin.services.cognitoidentityprovider.confirmSignUp
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AttributeType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChangePasswordRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeviceRememberedStatusType
@@ -27,6 +29,8 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.UpdateDeviceStatusR
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.UpdateUserAttributesRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.UpdateUserAttributesResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.VerifyUserAttributeRequest
+import aws.sdk.kotlin.services.cognitoidentityprovider.resendConfirmationCode
+import aws.sdk.kotlin.services.cognitoidentityprovider.signUp
 import com.amplifyframework.auth.AuthCategoryBehavior
 import com.amplifyframework.auth.AuthChannelEventName
 import com.amplifyframework.auth.AuthCodeDeliveryDetails
@@ -1344,12 +1348,15 @@ internal class RealAWSCognitoAuthPlugin(
                     is AuthState.WaitingForCachedCredentials -> credentialStoreStateMachine.send(
                         CredentialStoreEvent(CredentialStoreEvent.EventType.LoadCredentialStore())
                     )
-                    is AuthState.Configured -> when (val authZState = authState.authZState) {
-                        is AuthorizationState.WaitingToStore -> credentialStoreStateMachine.send(
-                            CredentialStoreEvent(
-                                CredentialStoreEvent.EventType.StoreCredentials(authZState.amplifyCredential)
+                    is AuthState.Configured -> {
+                        val authZState = authState.authZState
+                        if (authZState is AuthorizationState.WaitingToStore) {
+                            credentialStoreStateMachine.send(
+                                CredentialStoreEvent(
+                                    CredentialStoreEvent.EventType.StoreCredentials(authZState.amplifyCredential)
+                                )
                             )
-                        )
+                        }
                     }
                     else -> {
                         // No-op
