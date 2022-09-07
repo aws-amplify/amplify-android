@@ -127,7 +127,9 @@ internal class RealAWSCognitoAuthPlugin(
         onError: Consumer<AuthException>
     ) {
         authStateMachine.getCurrentState { authState ->
-            if (authState.authNState is AuthenticationState.Configured) {
+            if (authState.authNState is AuthenticationState.Configured ||
+                authState.authNState is AuthenticationState.SignedOut
+            ) {
                 GlobalScope.launch {
                     _signUp(username, password, options, onSuccess, onError)
                 }
@@ -217,7 +219,9 @@ internal class RealAWSCognitoAuthPlugin(
         onError: Consumer<AuthException>
     ) {
         authStateMachine.getCurrentState { authState ->
-            if (authState.authNState is AuthenticationState.Configured) {
+            if (authState.authNState is AuthenticationState.Configured ||
+                authState.authNState is AuthenticationState.SignedOut
+            ) {
                 GlobalScope.launch {
                     _confirmSignUp(username, confirmationCode, options, onSuccess, onError)
                 }
@@ -281,7 +285,9 @@ internal class RealAWSCognitoAuthPlugin(
         onError: Consumer<AuthException>
     ) {
         authStateMachine.getCurrentState { authState ->
-            if (authState.authNState is AuthenticationState.Configured) {
+            if (authState.authNState is AuthenticationState.Configured ||
+                authState.authNState is AuthenticationState.SignedOut
+            ) {
                 GlobalScope.launch {
                     _resendSignUpCode(username, options, onSuccess, onError)
                 }
@@ -372,7 +378,13 @@ internal class RealAWSCognitoAuthPlugin(
                     )
                 )
                 // Continue sign in
-                is AuthenticationState.SignedOut -> _signIn(username, password, options, onSuccess, onError)
+                is AuthenticationState.SignedOut, is AuthenticationState.Configured -> _signIn(
+                    username,
+                    password,
+                    options,
+                    onSuccess,
+                    onError
+                )
                 is AuthenticationState.SignedIn -> onSuccess.accept(
                     AuthSignInResult(true, AuthNextSignInStep(AuthSignInStep.DONE, mapOf(), null))
                 )
