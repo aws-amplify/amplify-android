@@ -133,6 +133,7 @@ ext {
 subprojects { project ->
     afterEvaluate {
         configureAndroidLibrary(project)
+        project.apply from: '../jacoco.gradle'
     }
 }
 
