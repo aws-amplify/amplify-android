@@ -118,12 +118,15 @@ class StateTransitionTests : StateTransitionTestBase() {
                     is AuthState.WaitingForCachedCredentials -> storeStateMachine.send(
                         CredentialStoreEvent(CredentialStoreEvent.EventType.LoadCredentialStore())
                     )
-                    is AuthState.Configured -> when (val authZState = authState.authZState) {
-                        is AuthorizationState.WaitingToStore -> storeStateMachine.send(
-                            CredentialStoreEvent(
-                                CredentialStoreEvent.EventType.StoreCredentials(authZState.amplifyCredential)
+                    is AuthState.Configured -> {
+                        val authZState = authState.authZState
+                        if (authZState is AuthorizationState.WaitingToStore) {
+                            storeStateMachine.send(
+                                CredentialStoreEvent(
+                                    CredentialStoreEvent.EventType.StoreCredentials(authZState.amplifyCredential)
+                                )
                             )
-                        )
+                        }
                     }
                     else -> {
                         // No-op
