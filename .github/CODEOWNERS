@@ -6,3 +6,4 @@
 /.github @aws-amplify/amplify-android @aws-amplify/amplify-data
 /.circleci @aws-amplify/amplify-android @aws-amplify/amplify-data
 /testmodels @aws-amplify/amplify-android @aws-amplify/amplify-data
+/testutils @aws-amplify/amplify-android @aws-amplify/amplify-data
