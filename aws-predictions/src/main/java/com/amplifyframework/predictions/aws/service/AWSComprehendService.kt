@@ -15,6 +15,11 @@
 package com.amplifyframework.predictions.aws.service
 
 import aws.sdk.kotlin.services.comprehend.ComprehendClient
+import aws.sdk.kotlin.services.comprehend.detectDominantLanguage
+import aws.sdk.kotlin.services.comprehend.detectEntities
+import aws.sdk.kotlin.services.comprehend.detectKeyPhrases
+import aws.sdk.kotlin.services.comprehend.detectSentiment
+import aws.sdk.kotlin.services.comprehend.detectSyntax
 import aws.sdk.kotlin.services.comprehend.model.DominantLanguage
 import aws.sdk.kotlin.services.comprehend.model.LanguageCode
 import aws.sdk.kotlin.services.comprehend.model.SyntaxLanguageCode
