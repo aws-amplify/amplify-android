@@ -216,7 +216,8 @@ class StateTransitionTests : StateTransitionTestBase() {
         ).thenReturn(
             Action { dispatcher, _ ->
                 dispatcher.send(
-                    SignOutEvent(SignOutEvent.EventType.SignOutLocally(signedInData)
+                    SignOutEvent(
+                        SignOutEvent.EventType.SignOutLocally(signedInData)
                     )
                 )
             }

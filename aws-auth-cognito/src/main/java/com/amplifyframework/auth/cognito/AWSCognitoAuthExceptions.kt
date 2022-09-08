@@ -40,7 +40,7 @@ sealed class AWSCognitoAuthExceptions(message: String, recoverySuggestion: Strin
         "Failed to revoke token",
         exception,
         "See attached exception for more details. RevokeToken can be retried using the CognitoIdentityProviderClient " +
-                "accessible from the escape hatch."
+            "accessible from the escape hatch."
     )
 
     /**
@@ -49,7 +49,7 @@ sealed class AWSCognitoAuthExceptions(message: String, recoverySuggestion: Strin
     class GlobalSignOutException(exception: Exception) : AuthException(
         "Failed to sign out globally",
         exception,
-        "See attached exception for more details. GlobalSignOut can be retried using the CognitoIdentityProviderClient " +
-                "accessible from the escape hatch."
+        "See attached exception for more details. GlobalSignOut can be retried using the " +
+            "CognitoIdentityProviderClient accessible from the escape hatch."
     )
 }
