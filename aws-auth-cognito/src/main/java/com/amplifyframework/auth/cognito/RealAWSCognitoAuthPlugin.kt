@@ -99,6 +99,7 @@ import com.amplifyframework.statemachine.codegen.states.SRPSignInState
 import com.amplifyframework.statemachine.codegen.states.SignInChallengeState
 import com.amplifyframework.statemachine.codegen.states.SignInState
 import com.amplifyframework.statemachine.codegen.states.SignOutState
+import java.util.concurrent.atomic.AtomicReference
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
@@ -114,6 +115,8 @@ internal class RealAWSCognitoAuthPlugin(
     private val credentialStoreStateMachine: CredentialStoreStateMachine,
     private val logger: Logger
 ) : AuthCategoryBehavior {
+
+    private val lastPublishedHubEventName = AtomicReference<AuthChannelEventName> ()
 
     init {
         addAuthStateChangeListener()
@@ -1351,7 +1354,7 @@ internal class RealAWSCognitoAuthPlugin(
             { authState ->
                 logger.verbose("Auth State Change: $authState")
 
-                // TODO: listen and dispatch hub events
+                dispatchHubEvent(authState)
 
                 when (authState) {
                     is AuthState.WaitingForCachedCredentials -> credentialStoreStateMachine.send(
@@ -1393,6 +1396,20 @@ internal class RealAWSCognitoAuthPlugin(
             },
             null
         )
+    }
+
+    private fun dispatchHubEvent(authState: AuthState) {
+        when {
+            authState.authNState is AuthenticationState.SignedIn -> AuthChannelEventName.SIGNED_IN
+            authState.authNState is AuthenticationState.SignedOut -> AuthChannelEventName.SIGNED_OUT
+            authState.authZState?.deleteUserState is DeleteUserState.UserDeleted -> AuthChannelEventName.USER_DELETED
+            else -> null
+        }?.takeUnless {
+            it != lastPublishedHubEventName.get()
+        }?.let { eventName ->
+            lastPublishedHubEventName.set(eventName)
+            Amplify.Hub.publish(HubChannel.AUTH, HubEvent.create(eventName))
+        }
     }
 
     private fun configureAuthStates() {
