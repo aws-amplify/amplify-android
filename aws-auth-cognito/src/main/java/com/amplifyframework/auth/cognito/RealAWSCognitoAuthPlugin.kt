@@ -135,17 +135,14 @@ internal class RealAWSCognitoAuthPlugin(
         onError: Consumer<AuthException>
     ) {
         authStateMachine.getCurrentState { authState ->
-            if (authState.authNState is AuthenticationState.Configured) {
-                GlobalScope.launch {
+            when (authState.authNState) {
+                is AuthenticationState.NotConfigured -> onError.accept(
+                    AWSCognitoAuthExceptions.NotConfiguredException()
+                )
+                is AuthenticationState.SignedIn, is AuthenticationState.SignedOut -> GlobalScope.launch {
                     _signUp(username, password, options, onSuccess, onError)
                 }
-            } else {
-                onError.accept(
-                    AuthException(
-                        "Sign up failed.",
-                        "Cognito User Pool not configured. Please check amplifyconfiguration.json file."
-                    )
-                )
+                else -> onError.accept(AuthException.InvalidStateException())
             }
         }
     }
@@ -225,17 +222,14 @@ internal class RealAWSCognitoAuthPlugin(
         onError: Consumer<AuthException>
     ) {
         authStateMachine.getCurrentState { authState ->
-            if (authState.authNState is AuthenticationState.Configured) {
-                GlobalScope.launch {
+            when (authState.authNState) {
+                is AuthenticationState.NotConfigured -> onError.accept(
+                    AWSCognitoAuthExceptions.NotConfiguredException()
+                )
+                is AuthenticationState.SignedIn, is AuthenticationState.SignedOut -> GlobalScope.launch {
                     _confirmSignUp(username, confirmationCode, options, onSuccess, onError)
                 }
-            } else {
-                onError.accept(
-                    AuthException(
-                        "Confirm sign up failed.",
-                        "Cognito User Pool not configured. Please check amplifyconfiguration.json file."
-                    )
-                )
+                else -> onError.accept(AuthException.InvalidStateException())
             }
         }
     }
@@ -289,17 +283,14 @@ internal class RealAWSCognitoAuthPlugin(
         onError: Consumer<AuthException>
     ) {
         authStateMachine.getCurrentState { authState ->
-            if (authState.authNState is AuthenticationState.Configured) {
-                GlobalScope.launch {
+            when (authState.authNState) {
+                is AuthenticationState.NotConfigured -> onError.accept(
+                    AWSCognitoAuthExceptions.NotConfiguredException()
+                )
+                is AuthenticationState.SignedIn, is AuthenticationState.SignedOut -> GlobalScope.launch {
                     _resendSignUpCode(username, options, onSuccess, onError)
                 }
-            } else {
-                onError.accept(
-                    AuthException(
-                        "Resend sign up code failed.",
-                        "Cognito User Pool not configured. Please check amplifyconfiguration.json file."
-                    )
-                )
+                else -> onError.accept(AuthException.InvalidStateException())
             }
         }
     }
@@ -380,7 +371,13 @@ internal class RealAWSCognitoAuthPlugin(
                     )
                 )
                 // Continue sign in
-                is AuthenticationState.SignedOut -> _signIn(username, password, options, onSuccess, onError)
+                is AuthenticationState.SignedOut, is AuthenticationState.Configured -> _signIn(
+                    username,
+                    password,
+                    options,
+                    onSuccess,
+                    onError
+                )
                 is AuthenticationState.SignedIn -> onSuccess.accept(
                     AuthSignInResult(true, AuthNextSignInStep(AuthSignInStep.DONE, mapOf(), null))
                 )
