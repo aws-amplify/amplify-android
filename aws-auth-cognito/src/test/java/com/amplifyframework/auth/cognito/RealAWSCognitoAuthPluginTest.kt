@@ -26,6 +26,8 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.ConfirmForgotPasswo
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ConfirmSignUpRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ConfirmSignUpResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeliveryMediumType
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetUserAttributeVerificationCodeRequest
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetUserAttributeVerificationCodeResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetUserRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetUserResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ResendConfirmationCodeRequest
@@ -43,6 +45,7 @@ import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.auth.cognito.helpers.SRPHelper
+import com.amplifyframework.auth.cognito.options.AWSAuthResendUserAttributeConfirmationCodeOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttributeOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttributesOptions
 import com.amplifyframework.auth.cognito.usecases.ResetPasswordUseCase
@@ -1195,6 +1198,185 @@ class RealAWSCognitoAuthPluginTest {
 
         assertTrue { listenLatch.await(5, TimeUnit.SECONDS) }
         coVerify(exactly = 1) { onSuccess.call() }
+        coVerify(exactly = 0) { onError.accept(any()) }
+    }
+
+    @Test
+    fun `resend user attribute confirmation code fails when not in SignedIn state`() {
+        // GIVEN
+        val onSuccess = mockk<Consumer<AuthCodeDeliveryDetails>>(relaxed = true)
+        val onError = mockk<Consumer<AuthException>>(relaxed = true)
+        val listenLatch = CountDownLatch(1)
+
+        currentState = AuthenticationState.NotConfigured()
+
+        every {
+            onError.accept(AuthException.InvalidStateException())
+        } answers {
+            listenLatch.countDown()
+        }
+
+        // WHEN
+        plugin.resendUserAttributeConfirmationCode(
+            AuthUserAttributeKey.email(),
+            onSuccess,
+            onError
+        )
+
+        assertTrue { listenLatch.await(5, TimeUnit.SECONDS) }
+        coVerify(exactly = 1) { onError.accept(AuthException.InvalidStateException()) }
+        verify(exactly = 0) { onSuccess.accept(any()) }
+    }
+
+    @Test
+    fun `resend user attribute confirmation code fails when access token is invalid`() {
+        // GIVEN
+        val onSuccess = mockk<Consumer<AuthCodeDeliveryDetails>>(relaxed = true)
+        val onError = mockk<Consumer<AuthException>>(relaxed = true)
+        val listenLatch = CountDownLatch(1)
+
+        val invalidCredentials = AmplifyCredential.UserPool(
+            CognitoUserPoolTokens(null, null, null, 120L)
+        )
+
+        val currentAuthState = mockk<AuthState> {
+            every { authNState } returns AuthenticationState.SignedIn(mockk())
+            every { authZState } returns AuthorizationState.SessionEstablished(invalidCredentials)
+        }
+        every { authStateMachine.getCurrentState(captureLambda()) } answers {
+            lambda<(AuthState) -> Unit>().invoke(currentAuthState)
+        }
+
+        every {
+            onError.accept(AuthException.InvalidUserPoolConfigurationException())
+        } answers {
+            listenLatch.countDown()
+        }
+
+        // WHEN
+        plugin.resendUserAttributeConfirmationCode(
+            AuthUserAttributeKey.email(),
+            onSuccess,
+            onError
+        )
+
+        assertTrue { listenLatch.await(5, TimeUnit.SECONDS) }
+        coVerify(exactly = 1) { onError.accept(AuthException.InvalidUserPoolConfigurationException()) }
+        verify(exactly = 0) { onSuccess.accept(any()) }
+    }
+
+    @Test
+    fun `resend user attribute confirmation code with cognito api call error`() {
+        // GIVEN
+        val onSuccess = mockk<Consumer<AuthCodeDeliveryDetails>>(relaxed = true)
+        val onError = mockk<Consumer<AuthException>>(relaxed = true)
+        val listenLatch = CountDownLatch(1)
+
+        val currentAuthState = mockk<AuthState> {
+            every { authNState } returns AuthenticationState.SignedIn(mockk())
+            every { authZState } returns AuthorizationState.SessionEstablished(credentials)
+        }
+        every { authStateMachine.getCurrentState(captureLambda()) } answers {
+            lambda<(AuthState) -> Unit>().invoke(currentAuthState)
+        }
+
+        val expectedException = CognitoIdentityProviderException("Some Cognito Message")
+        coEvery {
+            authService.cognitoIdentityProviderClient?.getUserAttributeVerificationCode(
+                any<GetUserAttributeVerificationCodeRequest>()
+            )
+        } answers {
+            throw expectedException
+        }
+
+        val resultCaptor = slot<AuthException>()
+        every { onError.accept(capture(resultCaptor)) } answers { listenLatch.countDown() }
+
+        plugin.resendUserAttributeConfirmationCode(
+            AuthUserAttributeKey.email(),
+            onSuccess,
+            onError
+        )
+
+        assertTrue { listenLatch.await(5, TimeUnit.SECONDS) }
+        assertEquals(expectedException, resultCaptor.captured.cause)
+        coVerify(exactly = 1) { onError.accept(resultCaptor.captured) }
+        coVerify(exactly = 0) { onSuccess.accept(any()) }
+    }
+
+    @Test
+    fun `resend user attribute confirmation code with delivery code success`() {
+        // GIVEN
+        val onSuccess = mockk<Consumer<AuthCodeDeliveryDetails>>(relaxed = true)
+        val onError = mockk<Consumer<AuthException>>(relaxed = true)
+        val listenLatch = CountDownLatch(1)
+
+        val currentAuthState = mockk<AuthState> {
+            every { authNState } returns AuthenticationState.SignedIn(mockk())
+            every { authZState } returns AuthorizationState.SessionEstablished(credentials)
+        }
+        every { authStateMachine.getCurrentState(captureLambda()) } answers {
+            lambda<(AuthState) -> Unit>().invoke(currentAuthState)
+        }
+
+        coEvery {
+            authService.cognitoIdentityProviderClient?.getUserAttributeVerificationCode(
+                any<GetUserAttributeVerificationCodeRequest>()
+            )
+        } returns GetUserAttributeVerificationCodeResponse.invoke {
+            codeDeliveryDetails = CodeDeliveryDetailsType.invoke {
+                attributeName = "email"
+                deliveryMedium = DeliveryMediumType.Email
+                destination = "test"
+            }
+        }
+
+        val slot = slot<AuthCodeDeliveryDetails>()
+
+        every {
+            onSuccess.accept(capture(slot))
+        } answers {
+            listenLatch.countDown()
+        }
+
+        val builder = AWSAuthResendUserAttributeConfirmationCodeOptions.builder().metadata(
+            mapOf("x" to "x", "y" to "y", "z" to "z")
+        )
+
+        // WHEN
+        plugin.resendUserAttributeConfirmationCode(
+            AuthUserAttributeKey.email(),
+            builder.build(),
+            onSuccess,
+            onError
+        )
+
+        assertTrue { listenLatch.await(5, TimeUnit.SECONDS) }
+        coVerify(exactly = 1) { onSuccess.accept(slot.captured) }
+        // nickname
+        assertNotNull(slot.captured, "code delivery details should not be null")
+        assertEquals(
+            slot.captured.attributeName,
+            "email",
+            "attribute name should be email"
+        )
+        assertEquals(
+            slot.captured.destination,
+            "test",
+            "destination for code delivery do not match expected"
+        )
+
+        assertNotNull(
+            slot.captured.deliveryMedium,
+            "Delivery medium should not be null"
+        )
+
+        assertEquals(
+            slot.captured.deliveryMedium,
+            AuthCodeDeliveryDetails.DeliveryMedium.EMAIL,
+            "Delivery medium did not match expected value"
+        )
+
         coVerify(exactly = 0) { onError.accept(any()) }
     }
 }

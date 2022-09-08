@@ -2,9 +2,9 @@ name: Prepare Next Release
 on:
   workflow_dispatch:
     inputs:
-      release_tag: 
+      release_tag:
         description: 'Release Tag'
-        required: false 
+        required: false
         type: string
 env:
   GIT_USER_NAME: amplify-android-dev+ghops
@@ -45,9 +45,10 @@ jobs:
     - name: Create PR for next release
       env:
         RELEASE_MANAGER_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        RELEASE_TAG: ${{ github.event.inputs.release_tag }}
       run: |
         cd scripts
-        bundle exec fastlane android create_next_release_pr release_tag:${{ github.event.inputs.release_tag }}
+        bundle exec fastlane android create_next_release_pr release_tag:"$RELEASE_TAG"
     - name: Check modified file content
       run: |
         cat gradle.properties

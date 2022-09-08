@@ -22,6 +22,7 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.confirmSignUp
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AttributeType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChangePasswordRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeviceRememberedStatusType
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetUserAttributeVerificationCodeRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetUserRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ListDevicesRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.UpdateDeviceStatusRequest
@@ -43,6 +44,7 @@ import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.auth.cognito.helpers.JWTParser
 import com.amplifyframework.auth.cognito.helpers.SignInChallengeHelper
+import com.amplifyframework.auth.cognito.options.AWSAuthResendUserAttributeConfirmationCodeOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthConfirmSignInOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthResendSignUpCodeOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions
@@ -1052,7 +1054,55 @@ internal class RealAWSCognitoAuthPlugin(
         onSuccess: Consumer<AuthCodeDeliveryDetails>,
         onError: Consumer<AuthException>
     ) {
-        TODO("Not yet implemented")
+        val metadataOptions = options as? AWSAuthResendUserAttributeConfirmationCodeOptions
+        authStateMachine.getCurrentState { authState ->
+            when (authState.authNState) {
+                // Check if user signed in
+                is AuthenticationState.SignedIn -> {
+                    GlobalScope.launch {
+                        try {
+                            val accessToken = getSession().userPoolTokens.value?.accessToken
+                            accessToken?.let {
+                                val getUserAttributeVerificationCodeRequest =
+                                    GetUserAttributeVerificationCodeRequest.invoke {
+                                        this.accessToken = accessToken
+                                        this.attributeName = attributeKey.keyString
+                                        this.clientMetadata = metadataOptions?.metadata
+                                    }
+
+                                val getUserAttributeVerificationCodeResponse = authEnvironment.cognitoAuthService
+                                    .cognitoIdentityProviderClient?.getUserAttributeVerificationCode(
+                                        getUserAttributeVerificationCodeRequest
+                                    )
+
+                                getUserAttributeVerificationCodeResponse?.codeDeliveryDetails?.let {
+                                    val codeDeliveryDetails = it
+                                    codeDeliveryDetails.attributeName?.let {
+
+                                        val deliveryMedium = AuthCodeDeliveryDetails.DeliveryMedium.fromString(
+                                            codeDeliveryDetails.deliveryMedium?.value
+                                        )
+                                        val authCodeDeliveryDetails = AuthCodeDeliveryDetails(
+                                            codeDeliveryDetails.destination.toString(),
+                                            deliveryMedium,
+                                            codeDeliveryDetails.attributeName
+                                        )
+                                        onSuccess.accept(authCodeDeliveryDetails)
+                                    } ?: {
+                                        onError.accept(AuthException.CodeDeliveryFailureException())
+                                    }
+                                }
+                            } ?: onError.accept(
+                                AuthException.InvalidUserPoolConfigurationException()
+                            )
+                        } catch (e: Exception) {
+                            onError.accept(CognitoAuthExceptionConverter.lookup(e, e.toString()))
+                        }
+                    }
+                }
+                else -> onError.accept(AuthException.InvalidStateException())
+            }
+        }
     }
 
     override fun resendUserAttributeConfirmationCode(
@@ -1060,7 +1110,12 @@ internal class RealAWSCognitoAuthPlugin(
         onSuccess: Consumer<AuthCodeDeliveryDetails>,
         onError: Consumer<AuthException>
     ) {
-        TODO("Not yet implemented")
+        resendUserAttributeConfirmationCode(
+            attributeKey,
+            AuthResendUserAttributeConfirmationCodeOptions.defaults(),
+            onSuccess,
+            onError
+        )
     }
 
     override fun confirmUserAttribute(
