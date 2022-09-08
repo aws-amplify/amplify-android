@@ -1177,10 +1177,7 @@ internal class RealAWSCognitoAuthPlugin(
         signOut(AuthSignOutOptions.builder().build(), onComplete)
     }
 
-    override fun signOut(
-        options: AuthSignOutOptions,
-        onComplete: Consumer<AuthSignOutResult>
-    ) {
+    override fun signOut(options: AuthSignOutOptions, onComplete: Consumer<AuthSignOutResult>) {
         authStateMachine.getCurrentState { authState ->
             when (authState.authNState) {
                 is AuthenticationState.NotConfigured ->
@@ -1195,10 +1192,7 @@ internal class RealAWSCognitoAuthPlugin(
         }
     }
 
-    private fun _signOut(
-        options: AuthSignOutOptions,
-        onComplete: Consumer<AuthSignOutResult>
-    ) {
+    private fun _signOut(options: AuthSignOutOptions, onComplete: Consumer<AuthSignOutResult>) {
         var token: StateChangeListenerToken? = null
         token = authStateMachine.listen(
             { authState ->

@@ -374,10 +374,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         realPlugin.signOut(onComplete)
     }
 
-    override fun signOut(
-        options: AuthSignOutOptions,
-        onComplete: Consumer<AuthSignOutResult>
-    ) {
+    override fun signOut(options: AuthSignOutOptions, onComplete: Consumer<AuthSignOutResult>) {
         realPlugin.signOut(options, onComplete)
     }
 
