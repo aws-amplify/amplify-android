@@ -302,13 +302,7 @@ class StateTransitionTests : StateTransitionTestBase() {
         token = stateMachine.listen(
             {
                 val authState =
-                    it.takeIf {
-                        it is AuthState.Configured &&
-                            (
-                                it.authNState is AuthenticationState.SignedOut ||
-                                    it.authNState is AuthenticationState.Configured
-                                )
-                    }
+                    it.takeIf { it is AuthState.Configured && it.authNState is AuthenticationState.SignedOut }
                 authState?.run {
                     configureLatch.countDown()
                     stateMachine.send(
@@ -378,13 +372,7 @@ class StateTransitionTests : StateTransitionTestBase() {
         token = stateMachine.listen(
             {
                 val authState =
-                    it.takeIf {
-                        it is AuthState.Configured &&
-                            (
-                                it.authNState is AuthenticationState.SignedOut ||
-                                    it.authNState is AuthenticationState.Configured
-                                )
-                    }
+                    it.takeIf { it is AuthState.Configured && it.authNState is AuthenticationState.SignedOut }
                 authState?.run {
                     configureLatch.countDown()
                     stateMachine.send(
