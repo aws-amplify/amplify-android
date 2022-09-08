@@ -21,8 +21,8 @@ import org.json.JSONObject
  * Configuration options for specifying cognito identity pool.
  */
 data class IdentityPoolConfiguration internal constructor(val builder: Builder) {
-    val region: String? = builder.region
-    val poolId: String? = builder.poolId
+    val region: String = builder.region
+    val poolId: String = builder.poolId
 
     companion object {
         private const val DEFAULT_REGION = "us-east-1"
@@ -53,13 +53,13 @@ data class IdentityPoolConfiguration internal constructor(val builder: Builder) 
     class Builder constructor(
         configJson: JSONObject? = null
     ) {
-        var region: String? = DEFAULT_REGION
-        var poolId: String? = null
+        var region: String = DEFAULT_REGION
+        lateinit var poolId: String
 
         init {
             configJson?.run {
-                region = optString(Config.REGION.key).takeUnless { it.isNullOrEmpty() }
-                poolId = optString(Config.POOL_ID.key).takeUnless { it.isNullOrEmpty() }
+                region = optString(Config.REGION.key)
+                poolId = optString(Config.POOL_ID.key)
             }
         }
 

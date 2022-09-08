@@ -16,10 +16,12 @@
 package com.amplifyframework.statemachine.codegen.actions
 
 import com.amplifyframework.statemachine.Action
+import com.amplifyframework.statemachine.codegen.data.AWSCredentials
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
+import com.amplifyframework.statemachine.codegen.data.LoginsMapProvider
 
 interface FetchAuthSessionActions {
-    fun fetchIdentityAction(amplifyCredential: AmplifyCredential): Action
-    fun fetchAWSCredentialsAction(amplifyCredential: AmplifyCredential): Action
-    fun notifySessionEstablishedAction(amplifyCredential: AmplifyCredential): Action
+    fun fetchIdentityAction(loginsMap: LoginsMapProvider): Action
+    fun fetchAWSCredentialsAction(identityId: String, loginsMap: LoginsMapProvider): Action
+    fun notifySessionEstablishedAction(identityId: String, awsCredentials: AWSCredentials): Action
 }

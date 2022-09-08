@@ -21,16 +21,10 @@ import org.json.JSONObject
  * Configuration options for specifying cognito user pool.
  */
 data class UserPoolConfiguration internal constructor(val builder: Builder) {
-    val region: String? = builder.region
-    val poolId: String? = builder.poolId
-    val appClient: String? = builder.appClientId
+    val region: String = builder.region
+    val poolId: String = builder.poolId
+    val appClient: String = builder.appClientId
     val appClientSecret: String? = builder.appClientSecret
-
-    /**
-     * Amazon Cognito user pool: cognito-idp.<region>.amazonaws.com/<YOUR_USER_POOL_ID>,
-     * for example, cognito-idp.us-east-1.amazonaws.com/us-east-1_123456789.
-     */
-    val identityProviderName = "cognito-idp.$region.amazonaws.com/$poolId"
 
     companion object {
         private const val DEFAULT_REGION = "us-east-1"
@@ -61,16 +55,16 @@ data class UserPoolConfiguration internal constructor(val builder: Builder) {
     class Builder constructor(
         configJson: JSONObject? = null
     ) {
-        var region: String? = DEFAULT_REGION
-        var poolId: String? = null
-        var appClientId: String? = null
+        var region: String = DEFAULT_REGION
+        lateinit var poolId: String
+        lateinit var appClientId: String
         var appClientSecret: String? = null
 
         init {
             configJson?.run {
-                region = optString(Config.REGION.key).takeUnless { it.isNullOrEmpty() }
-                poolId = optString(Config.POOL_ID.key).takeUnless { it.isNullOrEmpty() }
-                appClientId = optString(Config.APP_CLIENT_ID.key).takeUnless { it.isNullOrEmpty() }
+                region = optString(Config.REGION.key)
+                poolId = optString(Config.POOL_ID.key)
+                appClientId = optString(Config.APP_CLIENT_ID.key)
                 appClientSecret = optString(Config.APP_CLIENT_SECRET.key).takeUnless { it.isNullOrEmpty() }
             }
         }

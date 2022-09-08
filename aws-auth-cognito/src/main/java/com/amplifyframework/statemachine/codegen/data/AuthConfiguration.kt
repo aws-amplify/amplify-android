@@ -66,10 +66,9 @@ data class AuthConfiguration internal constructor(val builder: Builder) {
 
                 optJSONObject(Config.CREDENTIALS_PROVIDER.key)?.getJSONObject(
                     Config.COGNITO_IDENTITY.key
-                )
-                    ?.getJSONObject(configName)?.let {
-                        identityPool = IdentityPoolConfiguration.fromJson(it).build()
-                    }
+                )?.getJSONObject(configName)?.let {
+                    identityPool = IdentityPoolConfiguration.fromJson(it).build()
+                }
             }
         }
 

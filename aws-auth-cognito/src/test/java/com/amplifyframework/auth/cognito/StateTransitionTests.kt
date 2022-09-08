@@ -120,7 +120,7 @@ class StateTransitionTests : StateTransitionTestBase() {
                     )
                     is AuthState.Configured -> {
                         val authZState = authState.authZState
-                        if (authZState is AuthorizationState.WaitingToStore) {
+                        if (authZState is AuthorizationState.StoringCredentials) {
                             storeStateMachine.send(
                                 CredentialStoreEvent(
                                     CredentialStoreEvent.EventType.StoreCredentials(authZState.amplifyCredential)

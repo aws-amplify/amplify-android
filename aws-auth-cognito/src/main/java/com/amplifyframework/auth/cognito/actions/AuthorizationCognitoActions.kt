@@ -25,6 +25,8 @@ import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.AuthorizationActions
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
+import com.amplifyframework.statemachine.codegen.data.LoginsMapProvider
+import com.amplifyframework.statemachine.codegen.data.SignedInData
 import com.amplifyframework.statemachine.codegen.events.AuthEvent
 import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
 import com.amplifyframework.statemachine.codegen.events.FetchAuthSessionEvent
@@ -49,10 +51,27 @@ object AuthorizationCognitoActions : AuthorizationActions {
         dispatcher.send(evt)
     }
 
-    override fun initializeFetchAuthSession(amplifyCredential: AmplifyCredential) =
+    override fun initializeFetchUnAuthSession() =
         Action<AuthEnvironment>("InitFetchAuthSession") { id, dispatcher ->
             logger?.verbose("$id Starting execution")
-            val evt = FetchAuthSessionEvent(FetchAuthSessionEvent.EventType.FetchIdentity(amplifyCredential))
+            val evt = configuration.identityPool?.let {
+                FetchAuthSessionEvent(FetchAuthSessionEvent.EventType.FetchIdentity(LoginsMapProvider.UnAuthLogins()))
+            } ?: AuthorizationEvent(AuthorizationEvent.EventType.ThrowError(Exception("Identity Pool not configured.")))
+            logger?.verbose("$id Sending event ${evt.type}")
+            dispatcher.send(evt)
+        }
+
+    override fun initializeFetchAuthSession(signedInData: SignedInData) =
+        Action<AuthEnvironment>("InitFetchAuthSession") { id, dispatcher ->
+            logger?.verbose("$id Starting execution")
+            val evt = when {
+                configuration.userPool == null -> AuthorizationEvent(AuthorizationEvent.EventType.ThrowError(Exception("User Pool not configured.")))
+                configuration.identityPool == null -> AuthorizationEvent(AuthorizationEvent.EventType.ThrowError(Exception("Identity Pool not configured.")))
+                else -> {
+                    val logins = LoginsMapProvider.CognitoUserPoolLogins(configuration.userPool.region, configuration.userPool.poolId, signedInData.cognitoUserPoolTokens.idToken!! )
+                    FetchAuthSessionEvent(FetchAuthSessionEvent.EventType.FetchIdentity(logins))
+                }
+            }
             logger?.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
         }
