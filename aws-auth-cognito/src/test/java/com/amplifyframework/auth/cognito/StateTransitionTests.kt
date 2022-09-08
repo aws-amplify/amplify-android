@@ -207,6 +207,22 @@ class StateTransitionTests : StateTransitionTestBase() {
         )
     }
 
+    private fun setupLocalSignOut() {
+        Mockito.`when`(
+            mockAuthenticationActions.initiateSignOutAction(
+                MockitoHelper.anyObject(),
+                MockitoHelper.anyObject()
+            )
+        ).thenReturn(
+            Action { dispatcher, _ ->
+                dispatcher.send(
+                    SignOutEvent(SignOutEvent.EventType.SignOutLocally(signedInData)
+                    )
+                )
+            }
+        )
+    }
+
     @After
     fun tearDown() {
         // reset main dispatcher to the original Main dispatcher
@@ -398,6 +414,50 @@ class StateTransitionTests : StateTransitionTestBase() {
                     it.authNState.takeIf { itN ->
                         itN is AuthenticationState.SignedIn && it.authZState is AuthorizationState.SessionEstablished
                     }
+                authNState?.apply {
+                    token?.let(stateMachine::cancel)
+                    testLatch.countDown()
+                }
+            },
+            {
+                subscribeLatch.countDown()
+            }
+        )
+
+        assertTrue { subscribeLatch.await(5, TimeUnit.SECONDS) }
+
+        stateMachine.send(
+            AuthEvent(AuthEvent.EventType.ConfigureAuth(configuration))
+        )
+
+        assertTrue { testLatch.await(5, TimeUnit.SECONDS) }
+        assertTrue { configureLatch.await(5, TimeUnit.SECONDS) }
+    }
+
+    @Test
+    fun testLocalSignOut() {
+        setupConfigureSignedIn()
+        setupLocalSignOut()
+
+        val testLatch = CountDownLatch(1)
+        val configureLatch = CountDownLatch(1)
+        val subscribeLatch = CountDownLatch(1)
+        var token: StateChangeListenerToken? = null
+        token = stateMachine.listen(
+            {
+                val authState =
+                    it.takeIf { it is AuthState.Configured && it.authNState is AuthenticationState.SignedIn }
+                authState?.run {
+                    configureLatch.countDown()
+                    stateMachine.send(
+                        AuthenticationEvent(
+                            AuthenticationEvent.EventType.SignOutRequested()
+                        )
+                    )
+                }
+
+                val authNState =
+                    it.authNState.takeIf { itN -> itN is AuthenticationState.SignedOut }
                 authNState?.apply {
                     token?.let(stateMachine::cancel)
                     testLatch.countDown()
