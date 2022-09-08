@@ -117,6 +117,10 @@ sealed class AuthenticationState : State {
                         val action = authenticationActions.initiateSRPSignInAction(authenticationEvent)
                         StateResolution(SigningIn(oldState.signInState), listOf(action))
                     }
+                    is AuthenticationEvent.EventType.SignOutRequested -> {
+                        val action = authenticationActions.initiateSignOutAction(authenticationEvent, null)
+                        StateResolution(SigningOut(oldState.signOutState), listOf(action))
+                    }
                     else -> defaultResolution
                 }
                 else -> defaultResolution
