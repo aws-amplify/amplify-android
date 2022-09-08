@@ -91,11 +91,12 @@ data class AWSCognitoAuthSession(
 
         fun getCredentials(awsCredentials: AWSCredentials): AuthSessionResult<Credentials> {
             return if (awsCredentials.accessKeyId != null && awsCredentials.secretAccessKey != null) {
+                val expiresIn = awsCredentials.expiration ?: 0
                 val credentials = Credentials(
                     accessKeyId = awsCredentials.accessKeyId,
                     secretAccessKey = awsCredentials.secretAccessKey,
                     sessionToken = awsCredentials.sessionToken,
-                    expiration = awsCredentials.expiration?.let { Instant.fromEpochSeconds(it) }
+                    expiration = Instant.fromEpochSeconds(expiresIn)
                 )
                 AuthSessionResult.success(credentials)
             } else AuthSessionResult.failure(

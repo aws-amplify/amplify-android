@@ -33,7 +33,7 @@ import java.util.Date
 object AuthenticationCognitoActions : AuthenticationActions {
     override fun configureAuthenticationAction(event: AuthenticationEvent.EventType.Configure) =
         Action<AuthEnvironment>("ConfigureAuthN") { id, dispatcher ->
-            logger?.verbose("$id Starting execution")
+            logger.verbose("$id Starting execution")
             val evt = when (val credentials = event.storedCredentials) {
                 is AmplifyCredential.UserPool -> {
                     val signedInData = SignedInData("", "", Date(), SignInMethod.SRP, credentials.tokens)
@@ -45,19 +45,19 @@ object AuthenticationCognitoActions : AuthenticationActions {
                 }
                 else -> AuthenticationEvent(AuthenticationEvent.EventType.InitializedSignedOut(SignedOutData()))
             }
-            logger?.verbose("$id Sending event ${evt.type}")
+            logger.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
 
             val authEvent = AuthEvent(
                 AuthEvent.EventType.ConfiguredAuthentication(event.configuration, event.storedCredentials)
             )
-            logger?.verbose("$id Sending event ${authEvent.type}")
+            logger.verbose("$id Sending event ${authEvent.type}")
             dispatcher.send(authEvent)
         }
 
     override fun initiateSignInAction(event: AuthenticationEvent.EventType.SignInRequested) =
         Action<AuthEnvironment>("InitiateSignInAction") { id, dispatcher ->
-            logger?.verbose("$id Starting execution")
+            logger.verbose("$id Starting execution")
 
             val signInType = event.signInType ?: AuthFlowType.USER_SRP_AUTH.toString()
 
@@ -78,7 +78,7 @@ object AuthenticationCognitoActions : AuthenticationActions {
                         )
                     )
 
-                    logger?.verbose("$id Sending event ${evt.type}")
+                    logger.verbose("$id Sending event ${evt.type}")
                     dispatcher.send(evt)
                 }
                 AuthFlowType.CUSTOM_AUTH -> {
@@ -99,7 +99,7 @@ object AuthenticationCognitoActions : AuthenticationActions {
                         )
                     )
 
-                    logger?.verbose("$id Sending event ${evt.type}")
+                    logger.verbose("$id Sending event ${evt.type}")
                     dispatcher.send(evt)
                 }
                 AuthFlowType.USER_PASSWORD_AUTH -> TODO()
@@ -110,7 +110,7 @@ object AuthenticationCognitoActions : AuthenticationActions {
         event: AuthenticationEvent.EventType.SignOutRequested,
         signedInData: SignedInData?
     ) = Action<AuthEnvironment>("InitSignOut") { id, dispatcher ->
-        logger?.verbose("$id Starting execution")
+        logger.verbose("$id Starting execution")
         val evt = if (event.isGlobalSignOut && signedInData != null) {
             SignOutEvent(SignOutEvent.EventType.SignOutGlobally(signedInData))
         } else {
@@ -118,7 +118,7 @@ object AuthenticationCognitoActions : AuthenticationActions {
                 SignOutEvent.EventType.SignOutLocally(signedInData, isGlobalSignOut = false, invalidateTokens = false)
             )
         }
-        logger?.verbose("$id Sending event ${evt.type}")
+        logger.verbose("$id Sending event ${evt.type}")
         dispatcher.send(evt)
     }
 }

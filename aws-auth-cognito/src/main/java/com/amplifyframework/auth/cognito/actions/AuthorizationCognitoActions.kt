@@ -32,31 +32,31 @@ import kotlin.time.Duration.Companion.seconds
 
 object AuthorizationCognitoActions : AuthorizationActions {
     override fun resetAuthorizationAction() = Action<AuthEnvironment>("resetAuthZ") { id, dispatcher ->
-        logger?.verbose("$id Starting execution")
+        logger.verbose("$id Starting execution")
         // TODO: recover from error
 //        val evt = AuthorizationEvent(AuthorizationEvent.EventType.Configure(configuration))
-//        logger?.verbose("$id Sending event ${evt.type}")
+//        logger.verbose("$id Sending event ${evt.type}")
 //        dispatcher.send(evt)
     }
 
     override fun configureAuthorizationAction() = Action<AuthEnvironment>("ConfigureAuthZ") { id, dispatcher ->
-        logger?.verbose("$id Starting execution")
+        logger.verbose("$id Starting execution")
         val evt = AuthEvent(AuthEvent.EventType.ConfiguredAuthorization)
-        logger?.verbose("$id Sending event ${evt.type}")
+        logger.verbose("$id Sending event ${evt.type}")
         dispatcher.send(evt)
     }
 
     override fun initializeFetchAuthSession(amplifyCredential: AmplifyCredential) =
         Action<AuthEnvironment>("InitFetchAuthSession") { id, dispatcher ->
-            logger?.verbose("$id Starting execution")
+            logger.verbose("$id Starting execution")
             val evt = FetchAuthSessionEvent(FetchAuthSessionEvent.EventType.FetchIdentity(amplifyCredential))
-            logger?.verbose("$id Sending event ${evt.type}")
+            logger.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
         }
 
     override fun refreshAuthSessionAction(amplifyCredential: AmplifyCredential) =
         Action<AuthEnvironment>("RefreshUserPoolTokens") { id, dispatcher ->
-            logger?.verbose("$id Starting execution")
+            logger.verbose("$id Starting execution")
             val evt = try {
                 when (amplifyCredential) {
                     is AmplifyCredential.UserPool -> {
@@ -87,7 +87,7 @@ object AuthorizationCognitoActions : AuthorizationActions {
             } catch (e: Exception) {
                 AuthorizationEvent(AuthorizationEvent.EventType.ThrowError(e))
             }
-            logger?.verbose("$id Sending event ${evt.type}")
+            logger.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
         }
 

@@ -28,7 +28,7 @@ import com.amplifyframework.statemachine.codegen.events.FetchAuthSessionEvent
 object FetchAuthSessionCognitoActions : FetchAuthSessionActions {
     override fun fetchIdentityAction(amplifyCredential: AmplifyCredential): Action =
         Action<AuthEnvironment>("FetchIdentity") { id, dispatcher ->
-            logger?.verbose("$id Starting execution")
+            logger.verbose("$id Starting execution")
             val evt = try {
                 val idToken = when (amplifyCredential) {
                     is AmplifyCredential.UserPool -> amplifyCredential.tokens.idToken
@@ -53,13 +53,13 @@ object FetchAuthSessionCognitoActions : FetchAuthSessionActions {
             } catch (e: Exception) {
                 AuthorizationEvent(AuthorizationEvent.EventType.ThrowError(e))
             }
-            logger?.verbose("$id Sending event ${evt.type}")
+            logger.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
         }
 
     override fun fetchAWSCredentialsAction(amplifyCredential: AmplifyCredential): Action =
         Action<AuthEnvironment>("FetchAWSCredentials") { id, dispatcher ->
-            logger?.verbose("$id Starting execution")
+            logger.verbose("$id Starting execution")
             val evt = try {
                 val idToken = when (amplifyCredential) {
                     is AmplifyCredential.UserPool -> amplifyCredential.tokens.idToken
@@ -96,15 +96,15 @@ object FetchAuthSessionCognitoActions : FetchAuthSessionActions {
             } catch (e: Exception) {
                 AuthorizationEvent(AuthorizationEvent.EventType.ThrowError(e))
             }
-            logger?.verbose("$id Sending event ${evt.type}")
+            logger.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
         }
 
     override fun notifySessionEstablishedAction(amplifyCredential: AmplifyCredential): Action =
         Action<AuthEnvironment>("NotifySessionEstablished") { id, dispatcher ->
-            logger?.verbose("$id Starting execution")
+            logger.verbose("$id Starting execution")
             val evt = AuthorizationEvent(AuthorizationEvent.EventType.Fetched(amplifyCredential))
-            logger?.verbose("$id Sending event ${evt.type}")
+            logger.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
         }
 }

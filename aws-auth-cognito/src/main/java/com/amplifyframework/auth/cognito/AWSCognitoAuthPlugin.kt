@@ -61,7 +61,6 @@ import org.json.JSONObject
 class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
     companion object {
         const val AWS_COGNITO_AUTH_LOG_NAMESPACE = "amplify:aws-cognito-auth:%s"
-
         private const val AWS_COGNITO_AUTH_PLUGIN_KEY = "awsCognitoAuthPlugin"
     }
 
@@ -394,7 +393,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         val awsCognitoAuthCredentialStore = AWSCognitoAuthCredentialStore(context.applicationContext, configuration)
         val legacyCredentialStore = AWSCognitoLegacyCredentialStore(context.applicationContext, configuration)
         val credentialStoreEnvironment =
-            CredentialStoreEnvironment(awsCognitoAuthCredentialStore, legacyCredentialStore)
+            CredentialStoreEnvironment(awsCognitoAuthCredentialStore, legacyCredentialStore, logger)
         return CredentialStoreStateMachine(credentialStoreEnvironment)
     }
 }

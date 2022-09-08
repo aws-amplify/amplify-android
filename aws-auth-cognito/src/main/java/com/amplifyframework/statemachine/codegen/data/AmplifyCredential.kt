@@ -122,7 +122,6 @@ data class AWSCredentials(
     val sessionToken: String?,
     val expiration: Long?,
 ) {
-
     companion object {
         val empty = AWSCredentials(null, null, null, 0)
     }

@@ -50,13 +50,13 @@ class AWSCognitoLegacyCredentialStore(
         private const val TOKEN_EXPIRATION = "tokenExpiration"
     }
 
-    private val idAndCredentialsKeyValue: KeyValueRepository =
+    private val idAndCredentialsKeyValue: KeyValueRepository by lazy {
         keyValueRepoFactory.create(context, AWS_KEY_VALUE_STORE_NAMESPACE_IDENTIFIER)
+    }
 
-    private val tokensKeyValue: KeyValueRepository = keyValueRepoFactory.create(
-        context,
-        APP_LOCAL_CACHE
-    )
+    private val tokensKeyValue: KeyValueRepository by lazy {
+        keyValueRepoFactory.create(context, APP_LOCAL_CACHE)
+    }
 
     @Synchronized
     override fun saveCredential(credential: AmplifyCredential) {

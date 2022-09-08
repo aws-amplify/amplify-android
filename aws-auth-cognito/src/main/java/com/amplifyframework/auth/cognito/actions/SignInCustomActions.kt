@@ -32,7 +32,7 @@ object SignInCustomActions : CustomSignInActions {
     private const val KEY_USERNAME = "USERNAME"
     override fun initiateCustomSignInAuthAction(event: CustomSignInEvent.EventType.InitiateCustomSignIn): Action =
         Action<AuthEnvironment>("InitCustomAuth") { id, dispatcher ->
-            logger?.verbose("$id Starting execution")
+            logger.verbose("$id Starting execution")
             val evt = try {
                 val secretHash = AuthHelper.getSecretHash(
                     event.username,
@@ -68,11 +68,11 @@ object SignInCustomActions : CustomSignInActions {
                 }
             } catch (e: Exception) {
                 val errorEvent = CustomSignInEvent(CustomSignInEvent.EventType.ThrowAuthError(e))
-                logger?.verbose("$id Sending event ${errorEvent.type}")
+                logger.verbose("$id Sending event ${errorEvent.type}")
                 dispatcher.send(errorEvent)
                 AuthenticationEvent(AuthenticationEvent.EventType.CancelSignIn())
             }
-            logger?.verbose("$id Sending event ${evt.type}")
+            logger.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
         }
 }

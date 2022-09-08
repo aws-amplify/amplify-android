@@ -41,5 +41,5 @@ internal class CredentialStoreStateMachine(
 class CredentialStoreEnvironment(
     val credentialStore: AWSCognitoAuthCredentialStore,
     val legacyCredentialStore: AWSCognitoLegacyCredentialStore,
-    val logger: Logger? = null
+    val logger: Logger
 ) : Environment

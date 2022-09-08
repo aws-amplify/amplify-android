@@ -85,39 +85,30 @@ sealed class AuthorizationState : State {
             val deleteUserEvent = event.isDeleteUserEvent()
             val defaultResolution = StateResolution(oldState)
             return when (oldState) {
-                is NotConfigured -> {
-                    when (authorizationEvent) {
-                        is AuthorizationEvent.EventType.Configure -> {
-                            val action = authorizationActions.configureAuthorizationAction()
-                            StateResolution(Configured(), listOf(action))
-                        }
-                        is AuthorizationEvent.EventType.CachedCredentialsAvailable -> {
-                            val action = authorizationActions.configureAuthorizationAction()
-                            StateResolution(SessionEstablished(authorizationEvent.amplifyCredential), listOf(action))
-                        }
-                        is AuthorizationEvent.EventType.ThrowError -> {
-                            val action = authorizationActions.resetAuthorizationAction()
-                            StateResolution(Error(authorizationEvent.exception), listOf(action))
-                        }
-                        else -> defaultResolution
+                is NotConfigured -> when (authorizationEvent) {
+                    is AuthorizationEvent.EventType.Configure -> {
+                        val action = authorizationActions.configureAuthorizationAction()
+                        StateResolution(Configured(), listOf(action))
                     }
+                    is AuthorizationEvent.EventType.CachedCredentialsAvailable -> {
+                        val action = authorizationActions.configureAuthorizationAction()
+                        StateResolution(SessionEstablished(authorizationEvent.amplifyCredential), listOf(action))
+                    }
+                    is AuthorizationEvent.EventType.ThrowError -> {
+                        val action = authorizationActions.resetAuthorizationAction()
+                        StateResolution(Error(authorizationEvent.exception), listOf(action))
+                    }
+                    else -> defaultResolution
                 }
-                is Configured ->
-                    when {
-                        authorizationEvent is AuthorizationEvent.EventType.FetchAuthSession -> {
-                            val action =
-                                authorizationActions.initializeFetchAuthSession(AmplifyCredential.Empty)
-                            val newState = FetchingAuthSession(oldState.fetchAuthSessionState)
-                            StateResolution(newState, listOf(action))
-                        }
-                        deleteUserEvent is DeleteUserEvent.EventType.DeleteUser -> {
-                            StateResolution(DeletingUser(oldState.deleteUserState))
-                        }
-                        authenticationEvent is AuthenticationEvent.EventType.SignInRequested -> StateResolution(
-                            SigningIn()
-                        )
-                        else -> defaultResolution
+                is Configured -> when {
+                    authorizationEvent is AuthorizationEvent.EventType.FetchAuthSession -> {
+                        val action = authorizationActions.initializeFetchAuthSession(AmplifyCredential.Empty)
+                        val newState = FetchingAuthSession(oldState.fetchAuthSessionState)
+                        StateResolution(newState, listOf(action))
                     }
+                    authenticationEvent is AuthenticationEvent.EventType.SignInRequested -> StateResolution(SigningIn())
+                    else -> defaultResolution
+                }
                 is WaitingToStore -> when (authEvent) {
                     is AuthEvent.EventType.ReceivedCachedCredentials -> {
                         if (oldState.amplifyCredential is AmplifyCredential.Empty) StateResolution(Configured())
@@ -143,36 +134,37 @@ sealed class AuthorizationState : State {
                     is SignOutEvent.EventType.SignOutLocally -> StateResolution(WaitingToStore(AmplifyCredential.Empty))
                     else -> defaultResolution
                 }
-                is FetchingAuthSession ->
-                    when (authorizationEvent) {
-                        is AuthorizationEvent.EventType.Fetched -> StateResolution(
-                            WaitingToStore(authorizationEvent.amplifyCredential)
-                        )
-                        is AuthorizationEvent.EventType.ThrowError -> StateResolution(
-                            Error(authorizationEvent.exception)
-                        )
-                        else -> defaultResolution
-                    }
+                is FetchingAuthSession -> when (authorizationEvent) {
+                    is AuthorizationEvent.EventType.Fetched -> StateResolution(
+                        WaitingToStore(authorizationEvent.amplifyCredential)
+                    )
+                    is AuthorizationEvent.EventType.ThrowError -> StateResolution(Error(authorizationEvent.exception))
+                    else -> defaultResolution
+                }
+                is DeletingUser -> when (authenticationEvent) {
+                    is AuthenticationEvent.EventType.SignOutRequested -> StateResolution(SigningOut())
+                    else -> defaultResolution
+                }
                 is SessionEstablished, is Error -> when {
                     authenticationEvent is AuthenticationEvent.EventType.SignInRequested -> StateResolution(SigningIn())
                     authenticationEvent is AuthenticationEvent.EventType.SignOutRequested -> StateResolution(
                         SigningOut()
                     )
                     authorizationEvent is AuthorizationEvent.EventType.FetchAuthSession -> {
-                        val action =
-                            authorizationActions.initializeFetchAuthSession(AmplifyCredential.Empty)
+                        val action = authorizationActions.initializeFetchAuthSession(AmplifyCredential.Empty)
                         val newState = FetchingAuthSession(oldState.fetchAuthSessionState)
                         StateResolution(newState, listOf(action))
                     }
                     authorizationEvent is AuthorizationEvent.EventType.RefreshAuthSession -> {
-                        val action =
-                            authorizationActions.refreshAuthSessionAction(authorizationEvent.amplifyCredential)
+                        val action = authorizationActions.refreshAuthSessionAction(authorizationEvent.amplifyCredential)
                         val newState = FetchingAuthSession(oldState.fetchAuthSessionState)
                         StateResolution(newState, listOf(action))
                     }
+                    deleteUserEvent is DeleteUserEvent.EventType.DeleteUser -> {
+                        StateResolution(DeletingUser(oldState.deleteUserState))
+                    }
                     else -> defaultResolution
                 }
-                else -> defaultResolution
             }
         }
     }
