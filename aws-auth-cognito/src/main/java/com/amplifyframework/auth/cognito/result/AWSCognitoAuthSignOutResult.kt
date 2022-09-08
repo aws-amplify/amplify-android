@@ -16,8 +16,7 @@
 package com.amplifyframework.auth.cognito.result
 
 import com.amplifyframework.auth.AuthException
-import com.amplifyframework.auth.cognito.GlobalSignOutException
-import com.amplifyframework.auth.cognito.RevokeTokenException
+import com.amplifyframework.auth.cognito.AWSCognitoAuthExceptions
 import com.amplifyframework.auth.result.AuthSignOutResult
 import com.amplifyframework.statemachine.codegen.data.GlobalSignOutErrorData
 import com.amplifyframework.statemachine.codegen.data.HostedUIErrorData
@@ -49,10 +48,10 @@ class HostedUIError internal constructor(hostedUIErrorData: HostedUIErrorData) {
 
 class GlobalSignOutError internal constructor(globalSignOutErrorData: GlobalSignOutErrorData) {
     val accessToken = globalSignOutErrorData.accessToken
-    val error = GlobalSignOutException(globalSignOutErrorData.error)
+    val error = AWSCognitoAuthExceptions.GlobalSignOutException(globalSignOutErrorData.error)
 }
 
 class RevokeTokenError internal constructor(revokeTokenErrorData: RevokeTokenErrorData) {
     val refreshToken = revokeTokenErrorData.refreshToken
-    val error = RevokeTokenException(revokeTokenErrorData.error)
+    val error = AWSCognitoAuthExceptions.RevokeTokenException(revokeTokenErrorData.error)
 }
