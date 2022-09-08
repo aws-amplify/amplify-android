@@ -15,6 +15,7 @@
 package com.amplifyframework.predictions.aws.service
 
 import aws.sdk.kotlin.services.textract.TextractClient
+import aws.sdk.kotlin.services.textract.analyzeDocument
 import aws.sdk.kotlin.services.textract.model.Block
 import aws.sdk.kotlin.services.textract.model.BlockType
 import aws.sdk.kotlin.services.textract.model.Document

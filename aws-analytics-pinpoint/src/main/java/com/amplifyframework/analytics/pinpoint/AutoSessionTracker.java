@@ -115,7 +115,7 @@ final class AutoSessionTracker implements Application.ActivityLifecycleCallbacks
     void applicationEnteredBackground() {
         Log.d(LOG_TAG, "Application entered the background.");
         sessionClient.stopSession();
-        analyticsClient.submitEvents();
+        analyticsClient.flushEvents();
     }
 
     /**

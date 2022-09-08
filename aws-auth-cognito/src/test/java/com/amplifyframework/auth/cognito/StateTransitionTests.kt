@@ -15,9 +15,10 @@
 
 package com.amplifyframework.auth.cognito
 
-import com.amplifyframework.auth.options.AuthSignInOptions
+import com.amplifyframework.auth.cognito.options.AuthFlowType
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.StateChangeListenerToken
+import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
 import com.amplifyframework.statemachine.codegen.data.SignedOutData
 import com.amplifyframework.statemachine.codegen.events.AuthEvent
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
@@ -25,12 +26,14 @@ import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
 import com.amplifyframework.statemachine.codegen.events.CredentialStoreEvent
 import com.amplifyframework.statemachine.codegen.events.DeleteUserEvent
 import com.amplifyframework.statemachine.codegen.events.FetchAuthSessionEvent
+import com.amplifyframework.statemachine.codegen.events.SignInChallengeEvent
 import com.amplifyframework.statemachine.codegen.events.SignInEvent
 import com.amplifyframework.statemachine.codegen.events.SignOutEvent
 import com.amplifyframework.statemachine.codegen.states.AuthState
 import com.amplifyframework.statemachine.codegen.states.AuthenticationState
 import com.amplifyframework.statemachine.codegen.states.AuthorizationState
 import com.amplifyframework.statemachine.codegen.states.CredentialStoreState
+import com.amplifyframework.statemachine.codegen.states.CustomSignInState
 import com.amplifyframework.statemachine.codegen.states.DeleteUserState
 import com.amplifyframework.statemachine.codegen.states.FetchAuthSessionState
 import com.amplifyframework.statemachine.codegen.states.SRPSignInState
@@ -59,7 +62,7 @@ class StateTransitionTests : StateTransitionTestBase() {
     private val mainThreadSurrogate = newSingleThreadContext("Main thread")
 
     internal lateinit var stateMachine: AuthStateMachine
-    internal lateinit var storeStateMachine: CredentialStoreStateMachine
+    private lateinit var storeStateMachine: CredentialStoreStateMachine
 
     @Before
     fun setUp() {
@@ -83,6 +86,7 @@ class StateTransitionTests : StateTransitionTestBase() {
                 AuthenticationState.Resolver(
                     SignInState.Resolver(
                         SRPSignInState.Resolver(mockSRPActions),
+                        CustomSignInState.Resolver(mockSignInCustomActions),
                         SignInChallengeState.Resolver(mockSignInChallengeActions),
                         mockSignInActions
                     ),
@@ -114,15 +118,18 @@ class StateTransitionTests : StateTransitionTestBase() {
                     is AuthState.WaitingForCachedCredentials -> storeStateMachine.send(
                         CredentialStoreEvent(CredentialStoreEvent.EventType.LoadCredentialStore())
                     )
-                    is AuthState.Configured -> when (val authZState = authState.authZState) {
-                        is AuthorizationState.WaitingToStore -> storeStateMachine.send(
-                            CredentialStoreEvent(
-                                CredentialStoreEvent.EventType.StoreCredentials(authZState.amplifyCredential)
+                    is AuthState.Configured -> {
+                        val authZState = authState.authZState
+                        if (authZState is AuthorizationState.WaitingToStore) {
+                            storeStateMachine.send(
+                                CredentialStoreEvent(
+                                    CredentialStoreEvent.EventType.StoreCredentials(authZState.amplifyCredential)
+                                )
                             )
-                        )
+                        }
                     }
                     else -> {
-                        // no-op
+                        // No-op
                     }
                 }
             },
@@ -138,6 +145,9 @@ class StateTransitionTests : StateTransitionTestBase() {
                     is CredentialStoreState.Error -> stateMachine.send(
                         AuthEvent(AuthEvent.EventType.CachedCredentialsFailed)
                     )
+                    else -> {
+                        // No-op
+                    }
                 }
             },
             null
@@ -270,7 +280,7 @@ class StateTransitionTests : StateTransitionTestBase() {
     fun testSignInSRP() {
         setupConfigureSignedOut()
 
-        Mockito.`when`(mockAuthenticationActions.initiateSRPSignInAction(MockitoHelper.anyObject()))
+        Mockito.`when`(mockAuthenticationActions.initiateSignInAction(MockitoHelper.anyObject()))
             .thenReturn(
                 Action { dispatcher, _ ->
                     dispatcher.send(
@@ -296,15 +306,99 @@ class StateTransitionTests : StateTransitionTestBase() {
                             AuthenticationEvent.EventType.SignInRequested(
                                 "username",
                                 "password",
-                                AuthSignInOptions.defaults()
+                                AuthFlowType.USER_SRP_AUTH.toString(),
+                                mapOf()
+                            )
+                        )
+                    )
+                }
+                val authNState = it.authNState.takeIf { itN ->
+                    itN is AuthenticationState.SignedIn && it.authZState is AuthorizationState.SessionEstablished
+                }
+                authNState?.apply {
+                    token?.let(stateMachine::cancel)
+                    testLatch.countDown()
+                }
+            },
+            {
+                subscribeLatch.countDown()
+            }
+        )
+
+        assertTrue { subscribeLatch.await(5, TimeUnit.SECONDS) }
+
+        stateMachine.send(
+            AuthEvent(AuthEvent.EventType.ConfigureAuth(configuration))
+        )
+
+        assertTrue { testLatch.await(5, TimeUnit.SECONDS) }
+        assertTrue { configureLatch.await(5, TimeUnit.SECONDS) }
+    }
+
+    @Test
+    fun testSignInWithCustom() {
+        setupConfigureSignedOut()
+        setupSignInActionWithCustomAuth()
+        setupCustomAuthActions()
+
+        Mockito.`when`(mockAuthenticationActions.initiateSignInAction(MockitoHelper.anyObject()))
+            .thenReturn(
+                Action { dispatcher, _ ->
+                    dispatcher.send(
+                        SignInEvent(
+                            SignInEvent.EventType.InitiateSignInWithCustom(
+                                "username",
+                                "password",
+                                mapOf()
+                            )
+                        )
+                    )
+                }
+            )
+
+        Mockito.`when`(signedInData.cognitoUserPoolTokens)
+            .thenReturn(
+                CognitoUserPoolTokens("", "", "", 0)
+            )
+
+        val testLatch = CountDownLatch(1)
+        val configureLatch = CountDownLatch(1)
+        val subscribeLatch = CountDownLatch(1)
+        var token: StateChangeListenerToken? = null
+        token = stateMachine.listen(
+            {
+                val authState =
+                    it.takeIf { it is AuthState.Configured && it.authNState is AuthenticationState.SignedOut }
+                authState?.run {
+                    configureLatch.countDown()
+                    stateMachine.send(
+                        AuthenticationEvent(
+                            AuthenticationEvent.EventType.SignInRequested(
+                                "username",
+                                "password",
+                                AuthFlowType.CUSTOM_AUTH.toString(),
+                                mapOf()
                             )
                         )
                     )
                 }
 
-                val authNState = it.authNState
-                val authZState = it.authZState
-                if (authNState is AuthenticationState.SignedIn && authZState is AuthorizationState.SessionEstablished) {
+                val challengeState = it.authNState?.signInState?.challengeState.takeIf { signInChallengeState ->
+                    signInChallengeState is SignInChallengeState.WaitingForAnswer
+                }
+                challengeState?.apply {
+                    stateMachine.send(
+                        SignInChallengeEvent(
+                            SignInChallengeEvent.EventType.VerifyChallengeAnswer("test", mapOf())
+                        )
+                    )
+                }
+
+                val authNState =
+                    it.authNState.takeIf { itN ->
+                        itN is AuthenticationState.SignedIn && it.authZState is AuthorizationState.SessionEstablished
+                    }
+                authNState?.apply {
                     token?.let(stateMachine::cancel)
                     testLatch.countDown()
                 }

@@ -18,6 +18,7 @@ import android.content.Context
 import androidx.work.Data
 import androidx.work.WorkerParameters
 import aws.sdk.kotlin.services.s3.S3Client
+import aws.sdk.kotlin.services.s3.createMultipartUpload
 import com.amplifyframework.storage.s3.transfer.TransferDB
 import com.amplifyframework.storage.s3.transfer.TransferStatusUpdater
 
