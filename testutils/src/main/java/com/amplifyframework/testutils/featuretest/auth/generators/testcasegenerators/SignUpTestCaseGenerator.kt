@@ -26,7 +26,6 @@ import com.amplifyframework.testutils.featuretest.ResponseType
 import com.amplifyframework.testutils.featuretest.auth.AuthAPI
 import com.amplifyframework.testutils.featuretest.auth.generators.exportJson
 import com.amplifyframework.testutils.featuretest.auth.generators.toJsonElement
-import org.junit.Test
 
 object SignUpTestCaseGenerator {
     private val username = "user"

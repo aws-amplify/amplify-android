@@ -99,7 +99,7 @@ object ResetPasswordTestCaseGenerator {
     }
 
     fun AuthException_is_thrown_when_forgotPassword_API_call_fails() {
-        val errorResponse = NotAuthorizedException.invoke { message = "Cognito error message"}
+        val errorResponse = NotAuthorizedException.invoke { message = "Cognito error message" }
         baseCase.copy(
             description = "AuthException is thrown when forgotPassword API call fails",
             preConditions = baseCase.preConditions.copy(

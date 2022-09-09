@@ -94,5 +94,4 @@ class CognitoMockFactory(private val mockCognitoIPClient: CognitoIdentityProvide
 
     fun getActualResultFor(apiName: String): Any =
         captures[apiName]?.captured ?: throw Error("Actual result for $apiName is not defined")
-
 }
