@@ -34,6 +34,7 @@ import com.amplifyframework.auth.options.AuthUpdateUserAttributesOptions;
 import com.amplifyframework.auth.options.AuthWebUISignInOptions;
 import com.amplifyframework.auth.result.AuthResetPasswordResult;
 import com.amplifyframework.auth.result.AuthSignInResult;
+import com.amplifyframework.auth.result.AuthSignOutResult;
 import com.amplifyframework.auth.result.AuthSignUpResult;
 import com.amplifyframework.auth.result.AuthUpdateAttributeResult;
 import com.amplifyframework.core.Action;
@@ -366,16 +367,15 @@ public final class AuthCategory extends Category<AuthPlugin<?>> implements AuthC
     }
 
     @Override
-    public void signOut(@NonNull Action onSuccess, @NonNull Consumer<AuthException> onError) {
-        getSelectedPlugin().signOut(onSuccess, onError);
+    public void signOut(@NonNull Consumer<AuthSignOutResult> onComplete) {
+        getSelectedPlugin().signOut(onComplete);
     }
 
-    @Override
-    public void signOut(
+    @Override public void signOut(
             @NonNull AuthSignOutOptions options,
-            @NonNull Action onSuccess,
-            @NonNull Consumer<AuthException> onError) {
-        getSelectedPlugin().signOut(options, onSuccess, onError);
+            @NonNull Consumer<AuthSignOutResult> onComplete
+    ) {
+        getSelectedPlugin().signOut(options, onComplete);
     }
     
     @Override
