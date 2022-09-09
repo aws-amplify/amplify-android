@@ -15,7 +15,7 @@
 
 package com.amplifyframework.testutils.featuretest.auth.generators.testcasegenerators
 
-import aws.sdk.kotlin.services.cognitoidentity.model.NotAuthorizedException
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.NotAuthorizedException
 import com.amplifyframework.auth.AuthException
 import com.amplifyframework.testutils.featuretest.API
 import com.amplifyframework.testutils.featuretest.ExpectationShapes
@@ -79,7 +79,7 @@ object ResetPasswordTestCaseGenerator {
         description = "Test that Cognito is called with given payload and returns successful data",
         preConditions = PreConditions(
             "authconfiguration.json",
-            "AuthenticationState_SignedIn.json",
+            "SignedIn_SessionEstablished.json",
             mockedResponses = listOf()
         ),
         api = API(

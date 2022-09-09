@@ -43,7 +43,7 @@ object SignUpTestCaseGenerator {
         description = "Test that signup invokes proper cognito request and returns success",
         preConditions = PreConditions(
             "authconfiguration.json",
-            "AuthenticationState_Configured.json",
+            "SignedIn_SessionEstablished.json",
             mockedResponses = listOf(
                 MockResponse(
                     "cognito",

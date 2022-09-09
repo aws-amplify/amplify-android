@@ -18,9 +18,9 @@ package com.amplifyframework.testutils.featuretest.auth.generators
 import aws.sdk.kotlin.services.cognitoidentity.model.CognitoIdentityException
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.CognitoIdentityProviderException
 import com.amplifyframework.auth.AuthException
+import com.amplifyframework.statemachine.codegen.states.AuthState
 import com.amplifyframework.testutils.featuretest.FeatureTestCase
-import java.io.File
-import java.io.FileWriter
+import com.amplifyframework.testutils.featuretest.auth.definitions.serialize
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
@@ -28,6 +28,8 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import java.io.File
+import java.io.FileWriter
 
 const val basePath = ".temp/feature-test/testsuites"
 
@@ -55,6 +57,19 @@ internal fun FeatureTestCase.exportJson() {
     println("Json exported:\n $result")
 }
 
+internal fun AuthState.exportJson() {
+    val format = Json {
+        prettyPrint = true
+    }
+
+    val result = format.encodeToString(this)
+
+    val dirName = "states"
+    val fileName = "${authNState?.javaClass?.simpleName}_${authZState?.javaClass?.simpleName}.json"
+    writeFile(result, dirName, fileName)
+    println("Json exported:\n $result")
+}
+
 /**
  * Extension class to convert primitives and collections
  * from [https://github.com/Kotlin/kotlinx.serialization/issues/296#issuecomment-1132714147]
@@ -77,27 +92,19 @@ fun Any?.toJsonElement(): JsonElement {
         is Boolean -> JsonPrimitive(this)
         is Number -> JsonPrimitive(this)
         is String -> JsonPrimitive(this)
-        is CognitoIdentityException, is CognitoIdentityProviderException, is AuthException
-        -> toExceptionJsonElement(this)
+        is AuthException -> toJsonElement()
+        is CognitoIdentityProviderException-> serialize()
         else -> JsonPrimitive(toString())
     }
 }
 
-fun toExceptionJsonElement(exception: Any): JsonElement {
-    val message = when(exception) {
-        is CognitoIdentityProviderException -> exception.message
-        is CognitoIdentityException -> exception.message
-        is AuthException -> exception.message
-        else -> null
-    }
+fun AuthException.toJsonElement(): JsonElement {
     val responseMap = mutableMapOf<String, Any?>(
-        "errorType" to exception::class.simpleName,
-        "errorMessage" to message
+        "errorType" to this::class.simpleName,
+        "errorMessage" to message,
+        "recoverySuggestion" to recoverySuggestion,
+        "cause" to cause
     )
 
-    if (exception is AuthException) {
-        responseMap["recoverySuggestion"] = exception.recoverySuggestion
-        responseMap["cause"] = exception.cause
-    }
     return responseMap.toJsonElement()
 }

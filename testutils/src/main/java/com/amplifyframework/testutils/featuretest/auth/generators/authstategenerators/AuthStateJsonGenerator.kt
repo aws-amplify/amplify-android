@@ -25,6 +25,7 @@ import com.amplifyframework.statemachine.codegen.states.AuthenticationState
 import com.amplifyframework.statemachine.codegen.states.AuthorizationState
 import com.amplifyframework.statemachine.codegen.states.SRPSignInState
 import com.amplifyframework.statemachine.codegen.states.SignInState
+import com.amplifyframework.testutils.featuretest.auth.generators.exportJson
 import java.time.Instant
 import java.util.Date
 import kotlinx.serialization.encodeToString
@@ -34,7 +35,7 @@ import kotlinx.serialization.json.Json
  * Generates Json for given serializable class, this might be moved back to cognito auth due to added dependency on auth
  *
  */
-class AuthStateJsonGenerator {
+object AuthStateJsonGenerator {
     private val encoder = Json { prettyPrint = true }
 
     fun generateAuthenticationStateSignedIn() {
@@ -72,7 +73,7 @@ class AuthStateJsonGenerator {
             )
         )
 
-        print("Example :\n ${encoder.encodeToString(state)} \n")
+        state.exportJson()
     }
 
     fun generateSRPSignedIn() {
@@ -107,6 +108,10 @@ class AuthStateJsonGenerator {
     fun generateAuthStateConfigured() {
         val state: AuthState = AuthState.Configured(AuthenticationState.Configured(), null).printJson()
     }
+}
+
+fun main() {
+    AuthStateJsonGenerator.generateAuthenticationStateSignedIn()
 }
 
 private fun AuthState.printJson(): AuthState {
