@@ -15,4 +15,4 @@
 
 package com.amplifyframework.statemachine.codegen.data
 
-data class SignOutOptions(val globalSignOut: Boolean = false, val invalidateTokens: Boolean = true)
+data class RevokeTokenErrorData(val refreshToken: String?, val error: Exception)
