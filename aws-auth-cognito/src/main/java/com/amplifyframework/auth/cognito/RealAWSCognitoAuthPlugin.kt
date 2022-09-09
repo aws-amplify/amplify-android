@@ -99,6 +99,7 @@ import com.amplifyframework.statemachine.codegen.states.SRPSignInState
 import com.amplifyframework.statemachine.codegen.states.SignInChallengeState
 import com.amplifyframework.statemachine.codegen.states.SignInState
 import com.amplifyframework.statemachine.codegen.states.SignOutState
+import java.util.concurrent.atomic.AtomicReference
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
@@ -116,6 +117,8 @@ internal class RealAWSCognitoAuthPlugin(
 
 ) : AuthCategoryBehavior {
 
+    private val lastPublishedHubEventName = AtomicReference<AuthChannelEventName> ()
+
     init {
         addAuthStateChangeListener()
         configureAuthStates()
@@ -131,17 +134,14 @@ internal class RealAWSCognitoAuthPlugin(
         onError: Consumer<AuthException>
     ) {
         authStateMachine.getCurrentState { authState ->
-            if (authState.authNState is AuthenticationState.Configured) {
-                GlobalScope.launch {
+            when (authState.authNState) {
+                is AuthenticationState.NotConfigured -> onError.accept(
+                    AWSCognitoAuthExceptions.NotConfiguredException()
+                )
+                is AuthenticationState.SignedIn, is AuthenticationState.SignedOut -> GlobalScope.launch {
                     _signUp(username, password, options, onSuccess, onError)
                 }
-            } else {
-                onError.accept(
-                    AuthException(
-                        "Sign up failed.",
-                        "Cognito User Pool not configured. Please check amplifyconfiguration.json file."
-                    )
-                )
+                else -> onError.accept(AuthException.InvalidStateException())
             }
         }
     }
@@ -221,17 +221,14 @@ internal class RealAWSCognitoAuthPlugin(
         onError: Consumer<AuthException>
     ) {
         authStateMachine.getCurrentState { authState ->
-            if (authState.authNState is AuthenticationState.Configured) {
-                GlobalScope.launch {
+            when (authState.authNState) {
+                is AuthenticationState.NotConfigured -> onError.accept(
+                    AWSCognitoAuthExceptions.NotConfiguredException()
+                )
+                is AuthenticationState.SignedIn, is AuthenticationState.SignedOut -> GlobalScope.launch {
                     _confirmSignUp(username, confirmationCode, options, onSuccess, onError)
                 }
-            } else {
-                onError.accept(
-                    AuthException(
-                        "Confirm sign up failed.",
-                        "Cognito User Pool not configured. Please check amplifyconfiguration.json file."
-                    )
-                )
+                else -> onError.accept(AuthException.InvalidStateException())
             }
         }
     }
@@ -285,17 +282,14 @@ internal class RealAWSCognitoAuthPlugin(
         onError: Consumer<AuthException>
     ) {
         authStateMachine.getCurrentState { authState ->
-            if (authState.authNState is AuthenticationState.Configured) {
-                GlobalScope.launch {
+            when (authState.authNState) {
+                is AuthenticationState.NotConfigured -> onError.accept(
+                    AWSCognitoAuthExceptions.NotConfiguredException()
+                )
+                is AuthenticationState.SignedIn, is AuthenticationState.SignedOut -> GlobalScope.launch {
                     _resendSignUpCode(username, options, onSuccess, onError)
                 }
-            } else {
-                onError.accept(
-                    AuthException(
-                        "Resend sign up code failed.",
-                        "Cognito User Pool not configured. Please check amplifyconfiguration.json file."
-                    )
-                )
+                else -> onError.accept(AuthException.InvalidStateException())
             }
         }
     }
@@ -376,7 +370,13 @@ internal class RealAWSCognitoAuthPlugin(
                     )
                 )
                 // Continue sign in
-                is AuthenticationState.SignedOut -> _signIn(username, password, options, onSuccess, onError)
+                is AuthenticationState.SignedOut, is AuthenticationState.Configured -> _signIn(
+                    username,
+                    password,
+                    options,
+                    onSuccess,
+                    onError
+                )
                 is AuthenticationState.SignedIn -> onSuccess.accept(
                     AuthSignInResult(true, AuthNextSignInStep(AuthSignInStep.DONE, mapOf(), null))
                 )
@@ -1339,7 +1339,7 @@ internal class RealAWSCognitoAuthPlugin(
             { authState ->
                 logger.verbose("Auth State Change: $authState")
 
-                // TODO: listen and dispatch hub events
+                dispatchHubEvent(authState)
 
                 when (authState) {
                     is AuthState.WaitingForCachedCredentials -> credentialStoreStateMachine.send(
@@ -1381,6 +1381,20 @@ internal class RealAWSCognitoAuthPlugin(
             },
             null
         )
+    }
+
+    private fun dispatchHubEvent(authState: AuthState) {
+        when {
+            authState.authNState is AuthenticationState.SignedIn -> AuthChannelEventName.SIGNED_IN
+            authState.authNState is AuthenticationState.SignedOut -> AuthChannelEventName.SIGNED_OUT
+            authState.authZState?.deleteUserState is DeleteUserState.UserDeleted -> AuthChannelEventName.USER_DELETED
+            else -> null
+        }?.takeUnless {
+            it != lastPublishedHubEventName.get()
+        }?.let { eventName ->
+            lastPublishedHubEventName.set(eventName)
+            Amplify.Hub.publish(HubChannel.AUTH, HubEvent.create(eventName))
+        }
     }
 
     private fun configureAuthStates() {
