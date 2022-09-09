@@ -18,6 +18,7 @@ package com.amplifyframework.auth.cognito.actions
 import aws.sdk.kotlin.services.cognitoidentityprovider.initiateAuth
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AuthFlowType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.ConfirmDeviceRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.respondToAuthChallenge
 import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.cognito.AuthEnvironment
@@ -89,7 +90,6 @@ object SRPCognitoActions : SRPActions {
                 val userId = params.getValue(KEY_USER_ID_FOR_SRP)
 
                 srpHelper.setUserPoolParams(userId, configuration.userPool?.poolId!!)
-                val m1Signature = srpHelper.getSignature(salt, srpB, secretBlock)
                 val secretHash = AuthHelper.getSecretHash(
                     username,
                     configuration.userPool.appClient,
@@ -99,7 +99,7 @@ object SRPCognitoActions : SRPActions {
                 val challengeParams = mutableMapOf(
                     KEY_USERNAME to username,
                     KEY_PASSWORD_CLAIM_SECRET_BLOCK to secretBlock,
-                    KEY_PASSWORD_CLAIM_SIGNATURE to m1Signature,
+                    KEY_PASSWORD_CLAIM_SIGNATURE to srpHelper.getSignature(salt, srpB, secretBlock),
                     KEY_TIMESTAMP to srpHelper.dateString,
                 )
                 secretHash?.let { challengeParams[KEY_SECRET_HASH] = it }
@@ -108,18 +108,34 @@ object SRPCognitoActions : SRPActions {
                     clientId = configuration.userPool.appClient
                     challengeResponses = challengeParams
                 }
-                if (response != null) {
-                    SignInChallengeHelper.evaluateNextStep(
+                response?.let { _response ->
+                    _response.authenticationResult?.newDeviceMetadata?.let { deviceMetaData ->
+                        //TODO: Store device credentials in Keychain if the deviceMetadata is returned
+                        val confirmDeviceResponse = cognitoAuthService.cognitoIdentityProviderClient?.confirmDevice(
+                            ConfirmDeviceRequest.invoke {
+                                accessToken = _response.authenticationResult?.accessToken
+                                deviceKey = deviceMetaData.deviceKey
+                            }
+                        )
+                        confirmDeviceResponse?.let {
+                            SignInChallengeHelper.evaluateNextStep(
+                                userId,
+                                username,
+                                _response.challengeName,
+                                _response.session,
+                                _response.challengeParameters,
+                                _response.authenticationResult
+                            )
+                        } ?: throw AuthException("Sign in failed", AuthException.TODO_RECOVERY_SUGGESTION)
+                    } ?: SignInChallengeHelper.evaluateNextStep(
                         userId,
                         username,
-                        response.challengeName,
-                        response.session,
-                        response.challengeParameters,
-                        response.authenticationResult
+                        _response.challengeName,
+                        _response.session,
+                        _response.challengeParameters,
+                        _response.authenticationResult
                     )
-                } else {
-                    throw AuthException("Sign in failed", AuthException.TODO_RECOVERY_SUGGESTION)
-                }
+                } ?: throw AuthException("Sign in failed", AuthException.TODO_RECOVERY_SUGGESTION)
             } catch (e: Exception) {
                 val errorEvent = SRPEvent(SRPEvent.EventType.ThrowPasswordVerifierError(e))
                 logger?.verbose("$id Sending event ${errorEvent.type}")

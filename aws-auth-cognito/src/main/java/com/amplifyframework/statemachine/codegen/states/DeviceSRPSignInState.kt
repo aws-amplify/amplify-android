@@ -46,10 +46,11 @@ sealed class DeviceSRPSignInState : State {
                 is NotStarted -> {
                     when (deviceSRPEvent) {
                         is DeviceSRPSignInEvent.EventType.RespondDeviceSRPChallenge -> {
-                            StateResolution(oldState)
+                            val action = deviceSRPSignInActions.respondDeviceSRP(deviceSRPEvent)
+                            StateResolution(InitiatingDeviceSRP(), listOf(action))
                         }
                         is DeviceSRPSignInEvent.EventType.ThrowAuthError -> {
-                            StateResolution(oldState)
+                            StateResolution(Error(deviceSRPEvent.exception))
                         }
                         else -> StateResolution(oldState)
                     }
@@ -57,27 +58,31 @@ sealed class DeviceSRPSignInState : State {
                 is InitiatingDeviceSRP -> {
                     when (deviceSRPEvent) {
                         is DeviceSRPSignInEvent.EventType.RespondDevicePasswordVerifier -> {
-                            StateResolution(oldState)
+                            val action = deviceSRPSignInActions.respondDevicePasswordVerifier(deviceSRPEvent)
+                            StateResolution(RespondingDevicePasswordVerifier(), listOf(action))
                         }
                         is DeviceSRPSignInEvent.EventType.ThrowPasswordVerifiedError -> {
-                            StateResolution(oldState)
+                            StateResolution(Error(deviceSRPEvent.exception))
                         }
                         is DeviceSRPSignInEvent.EventType.ThrowAuthError -> {
-                            StateResolution(oldState)
+                            StateResolution(Error(deviceSRPEvent.exception))
                         }
                         is DeviceSRPSignInEvent.EventType.CancelSRPSignIn -> {
-                            StateResolution(oldState)
+                            StateResolution(
+                                Cancelling(),
+                                listOf(deviceSRPSignInActions.cancellingSignIn(deviceSRPEvent))
+                            )
                         }
                         else -> StateResolution(oldState)
                     }
                 }
                 is RespondingDevicePasswordVerifier -> {
                     when (deviceSRPEvent) {
-                        is DeviceSRPSignInEvent.EventType.FinalizeSignIn -> {
-                            StateResolution(oldState)
-                        }
                         is DeviceSRPSignInEvent.EventType.CancelSRPSignIn -> {
-                            StateResolution(oldState)
+                            StateResolution(
+                                Cancelling(),
+                                listOf(deviceSRPSignInActions.cancellingSignIn(deviceSRPEvent))
+                            )
                         }
                         else -> StateResolution(oldState)
                     }

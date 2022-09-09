@@ -19,6 +19,7 @@ import com.amplifyframework.auth.cognito.actions.AuthCognitoActions
 import com.amplifyframework.auth.cognito.actions.AuthenticationCognitoActions
 import com.amplifyframework.auth.cognito.actions.AuthorizationCognitoActions
 import com.amplifyframework.auth.cognito.actions.DeleteUserActions
+import com.amplifyframework.auth.cognito.actions.DeviceSRPCognitoSignInActions
 import com.amplifyframework.auth.cognito.actions.FetchAuthSessionCognitoActions
 import com.amplifyframework.auth.cognito.actions.SRPCognitoActions
 import com.amplifyframework.auth.cognito.actions.SignInChallengeCognitoActions
@@ -33,6 +34,7 @@ import com.amplifyframework.statemachine.codegen.states.AuthenticationState
 import com.amplifyframework.statemachine.codegen.states.AuthorizationState
 import com.amplifyframework.statemachine.codegen.states.CustomSignInState
 import com.amplifyframework.statemachine.codegen.states.DeleteUserState
+import com.amplifyframework.statemachine.codegen.states.DeviceSRPSignInState
 import com.amplifyframework.statemachine.codegen.states.FetchAuthSessionState
 import com.amplifyframework.statemachine.codegen.states.SRPSignInState
 import com.amplifyframework.statemachine.codegen.states.SignInChallengeState
@@ -51,6 +53,7 @@ internal class AuthStateMachine(
                     SRPSignInState.Resolver(SRPCognitoActions),
                     CustomSignInState.Resolver(SignInCustomActions),
                     SignInChallengeState.Resolver(SignInChallengeCognitoActions),
+                    DeviceSRPSignInState.Resolver(DeviceSRPCognitoSignInActions),
                     SignInCognitoActions
                 ),
                 SignOutState.Resolver(SignOutCognitoActions),
@@ -74,6 +77,7 @@ internal class AuthStateMachine(
                         SRPSignInState.Resolver(SRPCognitoActions).logging(),
                         CustomSignInState.Resolver(SignInCustomActions).logging(),
                         SignInChallengeState.Resolver(SignInChallengeCognitoActions).logging(),
+                        DeviceSRPSignInState.Resolver(DeviceSRPCognitoSignInActions).logging(),
                         SignInCognitoActions
                     ).logging(),
                     SignOutState.Resolver(SignOutCognitoActions).logging(),

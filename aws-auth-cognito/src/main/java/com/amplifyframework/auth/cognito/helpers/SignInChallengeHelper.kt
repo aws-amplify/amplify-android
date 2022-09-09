@@ -30,6 +30,7 @@ import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
 import com.amplifyframework.statemachine.codegen.data.SignInMethod
 import com.amplifyframework.statemachine.codegen.data.SignedInData
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
+import com.amplifyframework.statemachine.codegen.events.DeviceSRPSignInEvent
 import com.amplifyframework.statemachine.codegen.events.SignInEvent
 import java.util.Date
 import kotlin.time.Duration.Companion.seconds
@@ -42,7 +43,7 @@ object SignInChallengeHelper {
         session: String?,
         challengeParameters: Map<String, String>?,
         authenticationResult: AuthenticationResultType?,
-        signInMethod: SignInMethod = SignInMethod.SRP
+        signInMethod: SignInMethod = SignInMethod.SRP //TODO: remove once we are able to get this from the configuration
     ): StateMachineEvent {
         return when {
             authenticationResult != null -> {
@@ -51,17 +52,21 @@ object SignInChallengeHelper {
                     val tokens = CognitoUserPoolTokens(it.idToken, it.accessToken, it.refreshToken, expiresIn)
                     SignedInData(userId, username, Date(), signInMethod, tokens)
                 }
-
                 AuthenticationEvent(AuthenticationEvent.EventType.SignInCompleted(signedInData))
             }
             challengeNameType is ChallengeNameType.SmsMfa ||
-                challengeNameType is ChallengeNameType.CustomChallenge
-                    || challengeNameType is ChallengeNameType.DevicePasswordVerifier
-                    || challengeNameType is ChallengeNameType.DeviceSrpAuth
-                || challengeNameType is ChallengeNameType.NewPasswordRequired -> {
+                    challengeNameType is ChallengeNameType.CustomChallenge
+                    || challengeNameType is ChallengeNameType.NewPasswordRequired -> {
                 val challenge =
                     AuthChallenge(challengeNameType.value, username, session, challengeParameters)
                 SignInEvent(SignInEvent.EventType.ReceivedChallenge(challenge))
+            }
+
+            challengeNameType is ChallengeNameType.DevicePasswordVerifier -> {
+                DeviceSRPSignInEvent(DeviceSRPSignInEvent.EventType.RespondDeviceSRPChallenge(challengeParameters))
+            }
+            challengeNameType is ChallengeNameType.DeviceSrpAuth -> {
+                DeviceSRPSignInEvent(DeviceSRPSignInEvent.EventType.RespondDevicePasswordVerifier(challengeParameters))
             }
             else -> SignInEvent(SignInEvent.EventType.ThrowError(Exception("Response did not contain sign in info.")))
         }

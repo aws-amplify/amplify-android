@@ -15,5 +15,11 @@
 
 package com.amplifyframework.statemachine.codegen.actions
 
-class DeviceSRPSignInActions {
+import com.amplifyframework.statemachine.Action
+import com.amplifyframework.statemachine.codegen.events.DeviceSRPSignInEvent
+
+interface DeviceSRPSignInActions{
+    fun respondDeviceSRP(event: DeviceSRPSignInEvent.EventType.RespondDeviceSRPChallenge): Action
+    fun respondDevicePasswordVerifier(event: DeviceSRPSignInEvent.EventType.RespondDevicePasswordVerifier): Action
+    fun cancellingSignIn(event: DeviceSRPSignInEvent.EventType.CancelSRPSignIn): Action
 }
