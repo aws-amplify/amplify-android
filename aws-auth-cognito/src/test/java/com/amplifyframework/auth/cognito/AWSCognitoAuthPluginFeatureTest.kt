@@ -23,6 +23,7 @@ import com.amplifyframework.testutils.featuretest.API
 import com.amplifyframework.testutils.featuretest.ExpectationShapes
 import com.amplifyframework.testutils.featuretest.FeatureTestCase
 import com.amplifyframework.testutils.featuretest.ResponseType.Success
+import com.amplifyframework.testutils.featuretest.auth.generators.toJsonElement
 import com.google.gson.Gson
 import featureTest.utilities.APICaptorFactory
 import featureTest.utilities.AuthOptionsFactory
@@ -173,8 +174,8 @@ class AWSCognitoAuthPluginFeatureTest(private val fileName: String) {
                         expectedResponse = Gson().fromJson(validation.response.toString(), this?.javaClass)
                     }
                 } else {
-                    APICaptorFactory.errorCaptor.captured.cause?.message.apply {
-                        expectedResponse = ((validation.response as JsonObject)["message"] as JsonPrimitive).content
+                    APICaptorFactory.errorCaptor.captured.toJsonElement().apply {
+                        expectedResponse = validation.response as JsonObject
                     }
                 }
 

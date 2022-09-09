@@ -15,6 +15,8 @@
 
 package com.amplifyframework.testutils.featuretest.auth.generators.testcasegenerators
 
+import aws.sdk.kotlin.services.cognitoidentity.model.NotAuthorizedException
+import com.amplifyframework.auth.AuthException
 import com.amplifyframework.testutils.featuretest.API
 import com.amplifyframework.testutils.featuretest.ExpectationShapes
 import com.amplifyframework.testutils.featuretest.FeatureTestCase
@@ -97,6 +99,7 @@ object ResetPasswordTestCaseGenerator {
     }
 
     fun AuthException_is_thrown_when_forgotPassword_API_call_fails() {
+        val errorResponse = NotAuthorizedException.invoke { message = "Cognito error message"}
         baseCase.copy(
             description = "AuthException is thrown when forgotPassword API call fails",
             preConditions = baseCase.preConditions.copy(
@@ -105,10 +108,7 @@ object ResetPasswordTestCaseGenerator {
                         "cognito",
                         "forgotPassword",
                         ResponseType.Failure,
-                        mapOf(
-                            "message" to "Some cognito error message",
-                            "codeDeliveryDetails" to mapOf<String, String>()
-                        ).toJsonElement()
+                        errorResponse.toJsonElement()
                     )
                 )
             ),
@@ -116,8 +116,8 @@ object ResetPasswordTestCaseGenerator {
                 ExpectationShapes.Amplify(
                     AuthAPI.resetPassword,
                     ResponseType.Failure,
-                    mapOf(
-                        "message" to "Some cognito error message"
+                    AuthException.NotAuthorizedException(
+                        errorResponse
                     ).toJsonElement(),
                 )
             )
@@ -126,5 +126,6 @@ object ResetPasswordTestCaseGenerator {
 }
 
 fun main() {
+    ResetPasswordTestCaseGenerator.AuthException_is_thrown_when_forgotPassword_API_call_fails()
     ResetPasswordTestCaseGenerator.AuthResetPasswordResult_object_is_returned_when_reset_password_succeeds()
 }

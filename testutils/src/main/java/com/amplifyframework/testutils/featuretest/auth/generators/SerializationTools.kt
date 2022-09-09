@@ -15,6 +15,9 @@
 
 package com.amplifyframework.testutils.featuretest.auth.generators
 
+import aws.sdk.kotlin.services.cognitoidentity.model.CognitoIdentityException
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.CognitoIdentityProviderException
+import com.amplifyframework.auth.AuthException
 import com.amplifyframework.testutils.featuretest.FeatureTestCase
 import java.io.File
 import java.io.FileWriter
@@ -74,6 +77,27 @@ fun Any?.toJsonElement(): JsonElement {
         is Boolean -> JsonPrimitive(this)
         is Number -> JsonPrimitive(this)
         is String -> JsonPrimitive(this)
+        is CognitoIdentityException, is CognitoIdentityProviderException, is AuthException
+        -> toExceptionJsonElement(this)
         else -> JsonPrimitive(toString())
     }
+}
+
+fun toExceptionJsonElement(exception: Any): JsonElement {
+    val message = when(exception) {
+        is CognitoIdentityProviderException -> exception.message
+        is CognitoIdentityException -> exception.message
+        is AuthException -> exception.message
+        else -> null
+    }
+    val responseMap = mutableMapOf<String, Any?>(
+        "errorType" to exception::class.simpleName,
+        "errorMessage" to message
+    )
+
+    if (exception is AuthException) {
+        responseMap["recoverySuggestion"] = exception.recoverySuggestion
+        responseMap["cause"] = exception.cause
+    }
+    return responseMap.toJsonElement()
 }

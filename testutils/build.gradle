@@ -30,6 +30,8 @@ dependencies {
     implementation dependency.rxjava
 
     implementation dependency.kotlin.serializationJson
+    implementation dependency.aws.cognitoidentity
+    implementation dependency.aws.cognitoidentityprovider
 
     implementation project(path: ':aws-auth-cognito')
 

@@ -28,7 +28,7 @@ import com.amplifyframework.testutils.featuretest.auth.generators.exportJson
 import com.amplifyframework.testutils.featuretest.auth.generators.toJsonElement
 import org.junit.Test
 
-class SignUpTestCaseGenerator {
+object SignUpTestCaseGenerator {
     private val username = "user"
     private val password = "password"
     private val email = "user@domain.com"
@@ -39,7 +39,7 @@ class SignUpTestCaseGenerator {
         "attributeName" to "attributeName"
     )
 
-    private val baseCase = FeatureTestCase(
+    val baseCase = FeatureTestCase(
         description = "Test that signup invokes proper cognito request and returns success",
         preConditions = PreConditions(
             "authconfiguration.json",
@@ -96,9 +96,8 @@ class SignUpTestCaseGenerator {
             )
         )
     )
+}
 
-    @Test
-    fun generateBaseCase() {
-        baseCase.exportJson()
-    }
+fun main() {
+    SignUpTestCaseGenerator.baseCase.exportJson()
 }
