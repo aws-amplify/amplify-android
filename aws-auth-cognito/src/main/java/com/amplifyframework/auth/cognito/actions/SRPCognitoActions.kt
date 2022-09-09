@@ -110,7 +110,7 @@ object SRPCognitoActions : SRPActions {
                 }
                 response?.let { _response ->
                     _response.authenticationResult?.newDeviceMetadata?.let { deviceMetaData ->
-                        //TODO: Store device credentials in Keychain if the deviceMetadata is returned
+                        // TODO: Store device credentials in Keychain if the deviceMetadata is returned
                         val confirmDeviceResponse = cognitoAuthService.cognitoIdentityProviderClient?.confirmDevice(
                             ConfirmDeviceRequest.invoke {
                                 accessToken = _response.authenticationResult?.accessToken

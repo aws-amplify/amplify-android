@@ -43,7 +43,8 @@ object SignInChallengeHelper {
         session: String?,
         challengeParameters: Map<String, String>?,
         authenticationResult: AuthenticationResultType?,
-        signInMethod: SignInMethod = SignInMethod.SRP //TODO: remove once we are able to get this from the configuration
+        // TODO: remove once we are able to get this from the configuration
+        signInMethod: SignInMethod = SignInMethod.SRP
     ): StateMachineEvent {
         return when {
             authenticationResult != null -> {
@@ -55,8 +56,8 @@ object SignInChallengeHelper {
                 AuthenticationEvent(AuthenticationEvent.EventType.SignInCompleted(signedInData))
             }
             challengeNameType is ChallengeNameType.SmsMfa ||
-                    challengeNameType is ChallengeNameType.CustomChallenge
-                    || challengeNameType is ChallengeNameType.NewPasswordRequired -> {
+                challengeNameType is ChallengeNameType.CustomChallenge
+                || challengeNameType is ChallengeNameType.NewPasswordRequired -> {
                 val challenge =
                     AuthChallenge(challengeNameType.value, username, session, challengeParameters)
                 SignInEvent(SignInEvent.EventType.ReceivedChallenge(challenge))

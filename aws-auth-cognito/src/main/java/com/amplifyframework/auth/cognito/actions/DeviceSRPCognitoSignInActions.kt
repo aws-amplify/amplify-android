@@ -35,7 +35,7 @@ object DeviceSRPCognitoSignInActions : DeviceSRPSignInActions {
                                 clientId = configuration.userPool?.appClient
                                 mapOf(
                                     KEY_USERNAME to username,
-                                    KEY_DEVICE_KEY to "STUB", //TODO: get this from the device credential store
+                                    KEY_DEVICE_KEY to "STUB", // TODO: get this from the device credential store
                                     KEY_SRP_A to srpHelper.getPublicA()
                                 ).also { challengeResponses = it }
                             }
@@ -69,7 +69,9 @@ object DeviceSRPCognitoSignInActions : DeviceSRPSignInActions {
             dispatcher.send(evt)
         }
 
-    override fun respondDevicePasswordVerifier(event: DeviceSRPSignInEvent.EventType.RespondDevicePasswordVerifier): Action =
+    override fun respondDevicePasswordVerifier(
+        event: DeviceSRPSignInEvent.EventType.RespondDevicePasswordVerifier
+    ): Action =
         Action<AuthEnvironment>("RespondToDevicePasswordVerifier") { id, dispatcher ->
             logger?.verbose("$id Starting execution")
             val evt = try {
@@ -89,7 +91,7 @@ object DeviceSRPCognitoSignInActions : DeviceSRPSignInActions {
                                     KEY_PASSWORD_CLAIM_SECRET_BLOCK to secretBlock,
                                     KEY_TIMESTAMP to srpHelper.dateString,
                                     KEY_PASSWORD_CLAIM_SIGNATURE to srpHelper.getSignature(salt, srpB, secretBlock),
-                                    KEY_DEVICE_KEY to "STUB", //TODO: get this from the device credential store
+                                    KEY_DEVICE_KEY to "STUB", // TODO: get this from the device credential store
                                 ).also { challengeResponses = it }
                             }
                         )
@@ -127,7 +129,7 @@ object DeviceSRPCognitoSignInActions : DeviceSRPSignInActions {
     override fun cancellingSignIn(event: DeviceSRPSignInEvent.EventType.CancelSRPSignIn): Action =
         Action<AuthEnvironment>("CancelSignIn") { id, dispatcher ->
             logger?.verbose("$id Starting execution")
-            //TODO: Cleaning up Device Storage once implemented
+            // TODO: Cleaning up Device Storage once implemented
             val evt = DeviceSRPSignInEvent(DeviceSRPSignInEvent.EventType.RestoreToNotInitialized())
             dispatcher.send(evt)
         }

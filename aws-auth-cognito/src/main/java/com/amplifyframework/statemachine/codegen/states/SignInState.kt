@@ -28,7 +28,7 @@ sealed class SignInState : State {
     data class SigningInWithHostedUI(val id: String = "") : SignInState()
     data class SigningInWithCustom(override var customSignInState: CustomSignInState?) : SignInState()
     data class SigningInWithSRPCustom(val id: String = "") : SignInState()
-    data class ResolvingDeviceSrpa(override var deviceSRPSignInState: DeviceSRPSignInState?): SignInState()
+    data class ResolvingDeviceSrpa(override var deviceSRPSignInState: DeviceSRPSignInState?) : SignInState()
     data class ResolvingChallenge(override var challengeState: SignInChallengeState?) : SignInState()
     data class Done(val id: String = "") : SignInState()
     data class Error(val exception: Exception) : SignInState()
@@ -42,7 +42,7 @@ sealed class SignInState : State {
         private val srpSignInResolver: StateMachineResolver<SRPSignInState>,
         private val customSignInResolver: StateMachineResolver<CustomSignInState>,
         private val challengeResolver: StateMachineResolver<SignInChallengeState>,
-        private val deviceSRPSignInResolver:  StateMachineResolver<DeviceSRPSignInState>,
+        private val deviceSRPSignInResolver: StateMachineResolver<DeviceSRPSignInState>,
         private val signInActions: SignInActions,
     ) :
         StateMachineResolver<SignInState> {
