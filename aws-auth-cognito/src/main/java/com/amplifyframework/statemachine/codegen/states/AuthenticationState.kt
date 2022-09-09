@@ -37,19 +37,19 @@ sealed class AuthenticationState : State {
     @Serializable @SerialName("AuthenticationState.Configured")
     data class Configured(val id: String = "") : AuthenticationState()
     @Serializable @SerialName("AuthenticationState.SigningIn")
-    data class SigningIn(override var signInState: SignInState?) : AuthenticationState()
+    data class SigningIn(override var signInState: SignInState) : AuthenticationState()
     @Serializable @SerialName("AuthenticationState.SignedIn")
     data class SignedIn(val signedInData: SignedInData) : AuthenticationState()
     @Serializable @SerialName("AuthenticationState.SigningOut")
-    data class SigningOut(override var signOutState: SignOutState?) : AuthenticationState()
+    data class SigningOut(override var signOutState: SignOutState) : AuthenticationState()
     @Serializable @SerialName("AuthenticationState.SignedOut")
     data class SignedOut(val signedOutData: SignedOutData) : AuthenticationState()
     data class Error(val exception: Exception) : AuthenticationState()
 
     @Transient
-    open var signInState: SignInState? = SignInState.NotStarted()
+    open var signInState: SignInState = SignInState.NotStarted()
     @Transient
-    open var signOutState: SignOutState? = SignOutState.NotStarted()
+    open var signOutState: SignOutState = SignOutState.NotStarted()
 
     class Resolver(
         private val signInResolver: StateMachineResolver<SignInState>,
@@ -67,13 +67,13 @@ sealed class AuthenticationState : State {
             val actions = resolution.actions.toMutableList()
             val builder = Builder(resolution.newState)
 
-            oldState.signInState?.let { signInResolver.resolve(it, event) }?.let {
-                builder.signInState = it.newState
+            oldState.signInState.let { signInResolver.resolve(it, event) }.let {
+                builder.updateSignInState(it.newState)
                 actions += it.actions
             }
 
-            oldState.signOutState?.let { signOutResolver.resolve(it, event) }?.let {
-                builder.signOutState = it.newState
+            oldState.signOutState.let { signOutResolver.resolve(it, event) }.let {
+                builder.updateSignOutState(it.newState)
                 actions += it.actions
             }
 
@@ -125,13 +125,13 @@ sealed class AuthenticationState : State {
                     )
                     else -> defaultResolution
                 }
-                is SignedOut -> when {
-                    authenticationEvent is AuthenticationEvent.EventType.SignInRequested -> {
+                is SignedOut -> when (authenticationEvent) {
+                    is AuthenticationEvent.EventType.SignInRequested -> {
                         val action = authenticationActions.initiateSignInAction(authenticationEvent)
                         StateResolution(SigningIn(oldState.signInState), listOf(action))
                     }
-                    authenticationEvent is AuthenticationEvent.EventType.SignOutRequested -> {
-                        val action = authenticationActions.initiateSignOutAction(authenticationEvent)
+                    is AuthenticationEvent.EventType.SignOutRequested -> {
+                        val action = authenticationActions.initiateSignOutAction(authenticationEvent, null)
                         StateResolution(SigningOut(oldState.signOutState), listOf(action))
                     }
                     else -> defaultResolution
@@ -143,8 +143,16 @@ sealed class AuthenticationState : State {
 
     class Builder(private val authNState: AuthenticationState) :
         com.amplifyframework.statemachine.Builder<AuthenticationState> {
-        var signInState: SignInState? = null
-        var signOutState: SignOutState? = null
+        private var signInState: SignInState = authNState.signInState
+        private var signOutState: SignOutState = authNState.signOutState
+
+        fun updateSignInState(signInState: SignInState) {
+            this.signInState = signInState
+        }
+
+        fun updateSignOutState(signOutState: SignOutState) {
+            this.signOutState = signOutState
+        }
 
         override fun build(): AuthenticationState = when (authNState) {
             is SignedIn -> SignedIn(authNState.signedInData)

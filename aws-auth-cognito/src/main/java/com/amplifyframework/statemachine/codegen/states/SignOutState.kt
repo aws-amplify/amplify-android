@@ -31,9 +31,10 @@ import kotlinx.serialization.Serializable
 @Serializable
 sealed class SignOutState : State {
     data class NotStarted(val id: String = "") : SignOutState()
-    data class SigningOutLocally(val signedInData: SignedInData?) : SignOutState()
     data class SigningOutGlobally(val id: String = "") : SignOutState()
     data class RevokingToken(val id: String = "") : SignOutState()
+    data class BuildingRevokeTokenError(val id: String = "") : SignOutState()
+    data class SigningOutLocally(val signedInData: SignedInData?) : SignOutState()
     data class SignedOut(val signedOutData: SignedOutData) : SignOutState()
     data class Error(val exception: Exception) : SignOutState()
 
@@ -46,10 +47,6 @@ sealed class SignOutState : State {
             val signOutEvent = event.isSignOutEvent()
             return when (oldState) {
                 is NotStarted -> when (signOutEvent) {
-                    is SignOutEvent.EventType.SignOutLocally -> {
-                        val action = signOutActions.localSignOutAction(signOutEvent)
-                        StateResolution(SigningOutLocally(signOutEvent.signedInData), listOf(action))
-                    }
                     is SignOutEvent.EventType.SignOutGlobally -> {
                         val action = signOutActions.globalSignOutAction(signOutEvent)
                         StateResolution(SigningOutGlobally(), listOf(action))
@@ -57,6 +54,10 @@ sealed class SignOutState : State {
                     is SignOutEvent.EventType.RevokeToken -> {
                         val action = signOutActions.revokeTokenAction(signOutEvent)
                         StateResolution(RevokingToken(), listOf(action))
+                    }
+                    is SignOutEvent.EventType.SignOutLocally -> {
+                        val action = signOutActions.localSignOutAction(signOutEvent)
+                        StateResolution(SigningOutLocally(signOutEvent.signedInData), listOf(action))
                     }
                     else -> defaultResolution
                 }
@@ -75,16 +76,19 @@ sealed class SignOutState : State {
                         val action = signOutActions.revokeTokenAction(signOutEvent)
                         StateResolution(RevokingToken(), listOf(action))
                     }
-                    is SignOutEvent.EventType.SignOutLocally -> {
-                        val action = signOutActions.localSignOutAction(signOutEvent)
-                        StateResolution(SigningOutLocally(signOutEvent.signedInData), listOf(action))
+                    is SignOutEvent.EventType.SignOutGloballyError -> {
+                        val action = signOutActions.buildRevokeTokenErrorAction(signOutEvent)
+                        StateResolution(BuildingRevokeTokenError(), listOf(action))
                     }
                     else -> defaultResolution
                 }
-                is RevokingToken -> when (signOutEvent) {
+                is RevokingToken, is BuildingRevokeTokenError -> when (signOutEvent) {
                     is SignOutEvent.EventType.SignOutLocally -> {
                         val action = signOutActions.localSignOutAction(signOutEvent)
-                        StateResolution(SigningOutLocally(signOutEvent.signedInData), listOf(action))
+                        StateResolution(
+                            SigningOutLocally(signOutEvent.signedInData),
+                            listOf(action)
+                        )
                     }
                     else -> defaultResolution
                 }

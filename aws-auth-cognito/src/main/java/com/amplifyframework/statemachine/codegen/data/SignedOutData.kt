@@ -18,4 +18,11 @@ package com.amplifyframework.statemachine.codegen.data
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class SignedOutData(var lastKnownUsername: String? = null)
+data class SignedOutData(
+    val lastKnownUsername: String? = null,
+    val hostedUIErrorData: HostedUIErrorData? = null,
+    val globalSignOutErrorData: GlobalSignOutErrorData? = null,
+    val revokeTokenErrorData: RevokeTokenErrorData? = null
+) {
+    val hasError: Boolean = hostedUIErrorData != null || globalSignOutErrorData != null || revokeTokenErrorData != null
+}
