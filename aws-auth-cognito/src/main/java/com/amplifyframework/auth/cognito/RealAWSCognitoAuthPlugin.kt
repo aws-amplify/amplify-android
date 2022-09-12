@@ -51,6 +51,10 @@ import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttributeOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttributesOptions
 import com.amplifyframework.auth.cognito.options.AuthFlowType
+import com.amplifyframework.auth.cognito.result.AWSCognitoAuthSignOutResult
+import com.amplifyframework.auth.cognito.result.GlobalSignOutError
+import com.amplifyframework.auth.cognito.result.HostedUIError
+import com.amplifyframework.auth.cognito.result.RevokeTokenError
 import com.amplifyframework.auth.cognito.usecases.ResetPasswordUseCase
 import com.amplifyframework.auth.options.AWSCognitoAuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
@@ -67,6 +71,7 @@ import com.amplifyframework.auth.options.AuthUpdateUserAttributesOptions
 import com.amplifyframework.auth.options.AuthWebUISignInOptions
 import com.amplifyframework.auth.result.AuthResetPasswordResult
 import com.amplifyframework.auth.result.AuthSignInResult
+import com.amplifyframework.auth.result.AuthSignOutResult
 import com.amplifyframework.auth.result.AuthSignUpResult
 import com.amplifyframework.auth.result.AuthUpdateAttributeResult
 import com.amplifyframework.auth.result.step.AuthNextSignInStep
@@ -1180,27 +1185,26 @@ internal class RealAWSCognitoAuthPlugin(
         }
     }
 
-    override fun signOut(onSuccess: Action, onError: Consumer<AuthException>) {
-        signOut(AuthSignOutOptions.builder().build(), onSuccess, onError)
+    override fun signOut(onComplete: Consumer<AuthSignOutResult>) {
+        signOut(AuthSignOutOptions.builder().build(), onComplete)
     }
 
-    override fun signOut(
-        options: AuthSignOutOptions,
-        onSuccess: Action,
-        onError: Consumer<AuthException>
-    ) {
+    override fun signOut(options: AuthSignOutOptions, onComplete: Consumer<AuthSignOutResult>) {
         authStateMachine.getCurrentState { authState ->
             when (authState.authNState) {
-                is AuthenticationState.NotConfigured -> onSuccess.call()
+                is AuthenticationState.NotConfigured ->
+                    onComplete.accept(AWSCognitoAuthSignOutResult.CompleteSignOut)
                 // Continue sign out and clear auth or guest credentials
                 is AuthenticationState.SignedIn, is AuthenticationState.SignedOut ->
-                    _signOut(options, onSuccess, onError)
-                else -> onError.accept(AuthException.InvalidStateException())
+                    _signOut(options, onComplete)
+                else -> onComplete.accept(
+                    AWSCognitoAuthSignOutResult.FailedSignOut(AuthException.InvalidStateException())
+                )
             }
         }
     }
 
-    private fun _signOut(options: AuthSignOutOptions, onSuccess: Action, onError: Consumer<AuthException>) {
+    private fun _signOut(options: AuthSignOutOptions, onComplete: Consumer<AuthSignOutResult>) {
         var token: StateChangeListenerToken? = null
         token = authStateMachine.listen(
             { authState ->
@@ -1209,13 +1213,32 @@ internal class RealAWSCognitoAuthPlugin(
                     when {
                         authNState is AuthenticationState.SignedOut && authZState is AuthorizationState.Configured -> {
                             token?.let(authStateMachine::cancel)
-                            onSuccess.call()
+                            if (authNState.signedOutData.hasError) {
+                                val signedOutData = authNState.signedOutData
+                                onComplete.accept(
+                                    AWSCognitoAuthSignOutResult.PartialSignOut(
+                                        hostedUIError = signedOutData.hostedUIErrorData?.let { HostedUIError(it) },
+                                        globalSignOutError = signedOutData.globalSignOutErrorData?.let {
+                                            GlobalSignOutError(it)
+                                        },
+                                        revokeTokenError = signedOutData.revokeTokenErrorData?.let {
+                                            RevokeTokenError(
+                                                it
+                                            )
+                                        }
+                                    )
+                                )
+                            } else {
+                                onComplete.accept(AWSCognitoAuthSignOutResult.CompleteSignOut)
+                            }
                             Amplify.Hub.publish(HubChannel.AUTH, HubEvent.create(AuthChannelEventName.SIGNED_OUT))
                         }
                         authNState is AuthenticationState.Error -> {
                             token?.let(authStateMachine::cancel)
-                            onError.accept(
-                                CognitoAuthExceptionConverter.lookup(authNState.exception, "Sign out failed.")
+                            onComplete.accept(
+                                AWSCognitoAuthSignOutResult.FailedSignOut(
+                                    CognitoAuthExceptionConverter.lookup(authNState.exception, "Sign out failed.")
+                                )
                             )
                         }
                         else -> {

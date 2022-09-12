@@ -24,6 +24,6 @@ interface AuthenticationActions {
     fun initiateSignInAction(event: AuthenticationEvent.EventType.SignInRequested): Action
     fun initiateSignOutAction(
         event: AuthenticationEvent.EventType.SignOutRequested,
-        signedInData: SignedInData? = null
+        signedInData: SignedInData?
     ): Action
 }

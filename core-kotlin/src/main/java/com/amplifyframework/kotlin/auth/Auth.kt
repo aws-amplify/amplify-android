@@ -39,6 +39,7 @@ import com.amplifyframework.auth.options.AuthUpdateUserAttributesOptions
 import com.amplifyframework.auth.options.AuthWebUISignInOptions
 import com.amplifyframework.auth.result.AuthResetPasswordResult
 import com.amplifyframework.auth.result.AuthSignInResult
+import com.amplifyframework.auth.result.AuthSignOutResult
 import com.amplifyframework.auth.result.AuthSignUpResult
 import com.amplifyframework.auth.result.AuthUpdateAttributeResult
 
@@ -312,11 +313,11 @@ interface Auth {
 
     /**
      * Sign out with advanced options.
-     * @param options Advanced options for sign out (e.g. whether to sign out of all devices globally).
+     * @param options Advanced options for sign out (e.g. whether to sign out of all devices globally)
      *                If not provided, default options are used.
+     * @return A sign-out result; Check result types for next steps
      */
-    @Throws(AuthException::class)
-    suspend fun signOut(options: AuthSignOutOptions = AuthSignOutOptions.builder().build())
+    suspend fun signOut(options: AuthSignOutOptions = AuthSignOutOptions.builder().build()): AuthSignOutResult
 
     /**
      * Delete the account of the currently signed in user.
