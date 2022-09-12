@@ -19,6 +19,8 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.AuthFlowType
 import aws.smithy.kotlin.runtime.time.Instant
 import com.amplifyframework.auth.cognito.AWSCognitoAuthServiceBehavior
 import com.amplifyframework.auth.cognito.AuthEnvironment
+import com.amplifyframework.auth.cognito.getCognitoSession
+import com.amplifyframework.auth.cognito.helpers.SessionHelper
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.AuthorizationActions
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
@@ -104,10 +106,16 @@ object AuthorizationCognitoActions : AuthorizationActions {
             }
             else -> null
         }
+
+        val clientMetadata = mutableMapOf<String, String>()
+        amplifyCredential.getCognitoSession().userPoolTokens.value?.accessToken?.let(SessionHelper::getUsername)
+            ?.let { clientMetadata.put("username", it) }
+
         val refreshTokenResponse = cognitoAuthService.cognitoIdentityProviderClient?.initiateAuth {
             authFlow = AuthFlowType.RefreshToken
             clientId = configuration.userPool?.appClient
             this.authParameters = authParameters
+            this.clientMetadata = clientMetadata
         }
 
         val expiresIn = refreshTokenResponse?.authenticationResult?.expiresIn?.toLong() ?: 0
