@@ -119,7 +119,6 @@ internal class RealAWSCognitoAuthPlugin(
     private val authStateMachine: AuthStateMachine,
     private val credentialStoreStateMachine: CredentialStoreStateMachine,
     private val logger: Logger
-
 ) : AuthCategoryBehavior {
 
     private val lastPublishedHubEventName = AtomicReference<AuthChannelEventName> ()
@@ -167,6 +166,8 @@ internal class RealAWSCognitoAuthPlugin(
                 }
             }
 
+            val encodedContextData = authEnvironment.userContextDataProvider?.getEncodedContextData(username)
+
             val response = authEnvironment.cognitoAuthService.cognitoIdentityProviderClient?.signUp {
                 this.username = username
                 this.password = password
@@ -177,6 +178,7 @@ internal class RealAWSCognitoAuthPlugin(
                     configuration.userPool?.appClient,
                     configuration.userPool?.appClientSecret
                 )
+                encodedContextData?.let { this.userContextData { encodedData = it } }
             }
 
             val deliveryDetails = response?.codeDeliveryDetails?.let { details ->
@@ -247,6 +249,8 @@ internal class RealAWSCognitoAuthPlugin(
     ) {
         logger.verbose("ConfirmSignUp Starting execution")
         try {
+            val encodedContextData = authEnvironment.userContextDataProvider?.getEncodedContextData(username)
+
             authEnvironment.cognitoAuthService.cognitoIdentityProviderClient?.confirmSignUp {
                 this.username = username
                 this.confirmationCode = confirmationCode
@@ -256,6 +260,7 @@ internal class RealAWSCognitoAuthPlugin(
                     configuration.userPool?.appClient,
                     configuration.userPool?.appClientSecret
                 )
+                encodedContextData?.let { this.userContextData { encodedData = it } }
             }
 
             val authSignUpResult = AuthSignUpResult(
@@ -308,6 +313,7 @@ internal class RealAWSCognitoAuthPlugin(
         logger.verbose("ResendSignUpCode Starting execution")
         try {
             val metadata = (options as? AWSCognitoAuthResendSignUpCodeOptions)?.metadata
+            val encodedContextData = authEnvironment.userContextDataProvider?.getEncodedContextData(username)
 
             val response = authEnvironment.cognitoAuthService.cognitoIdentityProviderClient?.resendConfirmationCode {
                 clientId = configuration.userPool?.appClient
@@ -318,6 +324,7 @@ internal class RealAWSCognitoAuthPlugin(
                     configuration.userPool?.appClientSecret
                 )
                 clientMetadata = metadata
+                encodedContextData?.let { this.userContextData { encodedData = it } }
             }
 
             val deliveryDetails = response?.codeDeliveryDetails?.let { details ->
@@ -673,7 +680,7 @@ internal class RealAWSCognitoAuthPlugin(
                 )
                 onSuccess.call()
             } catch (e: Exception) {
-                onError.accept(AuthException(e.localizedMessage, e, AuthException.TODO_RECOVERY_SUGGESTION))
+                onError.accept(CognitoAuthExceptionConverter.lookup(e, "Update device ID failed."))
             }
         }
     }
@@ -729,7 +736,7 @@ internal class RealAWSCognitoAuthPlugin(
                 }
                 onSuccess.accept(authdeviceList)
             } catch (e: Exception) {
-                onError.accept(AuthException(e.localizedMessage, e, AuthException.TODO_RECOVERY_SUGGESTION))
+                onError.accept(CognitoAuthExceptionConverter.lookup(e, "Fetch devices failed."))
             }
         }
     }
@@ -747,11 +754,13 @@ internal class RealAWSCognitoAuthPlugin(
             )
 
             val appClient = requireNotNull(configuration.userPool?.appClient)
+            val encodedData = authEnvironment.userContextDataProvider?.getEncodedContextData(username)
 
             GlobalScope.launch {
                 ResetPasswordUseCase(cognitoIdentityProviderClient, appClient).execute(
                     username,
                     options,
+                    encodedData,
                     onSuccess,
                     onError
                 )
@@ -790,6 +799,8 @@ internal class RealAWSCognitoAuthPlugin(
 
             GlobalScope.launch {
                 try {
+                    val encodedContextData = authEnvironment.userContextDataProvider?.getEncodedContextData(username)
+
                     authEnvironment.cognitoAuthService.cognitoIdentityProviderClient!!.confirmForgotPassword {
                         this.username = username
                         this.confirmationCode = confirmationCode
@@ -797,6 +808,7 @@ internal class RealAWSCognitoAuthPlugin(
                         clientMetadata =
                             (options as? AWSCognitoAuthConfirmResetPasswordOptions)?.metadata ?: mapOf()
                         clientId = configuration.userPool?.appClient
+                        encodedContextData?.let { this.userContextData { encodedData = it } }
                     }.let { onSuccess.call() }
                 } catch (ex: Exception) {
                     onError.accept(CognitoAuthExceptionConverter.lookup(ex, AuthException.REPORT_BUG_TO_AWS_SUGGESTION))
