@@ -27,7 +27,7 @@ class SharedPreferencesUtilTest : TestCase() {
     @Test
     fun testPutString() {
         val sharedPreferences = constructSharedPreferences()
-        sharedPreferences.putString("key", "value");
+        sharedPreferences.putString("key", "value")
         assertEquals("value", sharedPreferences.getString("key", "not found"))
     }
 }

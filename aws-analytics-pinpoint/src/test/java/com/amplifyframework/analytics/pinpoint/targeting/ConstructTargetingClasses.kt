@@ -27,11 +27,13 @@ import com.amplifyframework.analytics.pinpoint.targeting.endpointProfile.Endpoin
 import com.amplifyframework.analytics.pinpoint.targeting.notification.PinpointNotificationClient
 import io.mockk.every
 import io.mockk.mockk
-import java.util.*
+import java.util.Locale
 
 internal fun constructSharedPreferences(): SharedPreferences {
-    return ApplicationProvider.getApplicationContext<Context>().getSharedPreferences("preferences",
-        Context.MODE_PRIVATE)
+    return ApplicationProvider.getApplicationContext<Context>().getSharedPreferences(
+        "preferences",
+        Context.MODE_PRIVATE
+    )
 }
 
 internal val uniqueID = "unique-id"
@@ -59,8 +61,13 @@ internal fun setup() {
 
 internal fun constructEndpointProfile(): EndpointProfile {
     setup()
-    val endpointProfile = EndpointProfile(pinpointNotificationClient,
-        idService, appDetails, deviceDetails, applicationContext)
+    val endpointProfile = EndpointProfile(
+        pinpointNotificationClient,
+        idService,
+        appDetails,
+        deviceDetails,
+        applicationContext
+    )
     endpointProfile.effectiveDate = effectiveDate
     return endpointProfile
 }
@@ -75,6 +82,12 @@ internal fun constructTargetingClient(): TargetingClient {
     setup()
     val prefs = constructSharedPreferences()
     return TargetingClient(
-        pinpointClient, pinpointNotificationClient, idService, prefs, appDetails, deviceDetails, applicationContext
+        pinpointClient,
+        pinpointNotificationClient,
+        idService,
+        prefs,
+        appDetails,
+        deviceDetails,
+        applicationContext
     )
 }

@@ -19,8 +19,10 @@ package com.amplifyframework.analytics.pinpoint.targeting
 import aws.sdk.kotlin.services.pinpoint.PinpointClient
 import aws.sdk.kotlin.services.pinpoint.model.UpdateEndpointRequest
 import aws.sdk.kotlin.services.pinpoint.model.UpdateEndpointResponse
-import com.amplifyframework.analytics.pinpoint.targeting.endpointProfile.EndpointProfile
-import io.mockk.*
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.every
+import io.mockk.mockkObject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -52,7 +54,7 @@ class TargetingClientTest {
 
     @Test
     fun testUpdateEndpointProfile() = runTest {
-        val updateEndpointResponse = UpdateEndpointResponse.invoke{}
+        val updateEndpointResponse = UpdateEndpointResponse.invoke {}
         coEvery { pinpointClient.updateEndpoint(ofType(UpdateEndpointRequest::class)) }.returns(updateEndpointResponse)
         val updateEndpointRequest =
             UpdateEndpointRequest.invoke {}
