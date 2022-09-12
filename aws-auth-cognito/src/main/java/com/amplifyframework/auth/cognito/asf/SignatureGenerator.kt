@@ -21,7 +21,7 @@ import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 
 /**
- * Create the signature for context data. It create HMAC_SHA256 for the
+ * Creates the signature for context data. It create HMAC_SHA256 for the
  * stringified JSON payload data and then encode it in Base64. Payload contains
  * username, userPoolId and timestamp so these are already factored in the
  * generated signature.
@@ -35,6 +35,7 @@ class SignatureGenerator {
          * Generates the signature for the JSON data payload.
          * @param data JSON payload for contextData.
          * @param secret secret key used for generating the signature.
+         * @param version version name of the data provider.
          * @return signature string for the payload.
          */
         @JvmStatic
