@@ -410,13 +410,7 @@ open class StateTransitionTestBase {
             .thenReturn(
                 Action { dispatcher, _ ->
                     dispatcher.send(
-                        SignOutEvent(
-                            SignOutEvent.EventType.SignOutLocally(
-                                signedInData,
-                                isGlobalSignOut = false,
-                                invalidateTokens = false
-                            )
-                        )
+                        SignOutEvent(SignOutEvent.EventType.SignOutLocally(signedInData))
                     )
                 }
             )

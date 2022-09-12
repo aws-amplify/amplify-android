@@ -44,6 +44,7 @@ import com.amplifyframework.auth.options.AuthUpdateUserAttributesOptions;
 import com.amplifyframework.auth.options.AuthWebUISignInOptions;
 import com.amplifyframework.auth.result.AuthResetPasswordResult;
 import com.amplifyframework.auth.result.AuthSignInResult;
+import com.amplifyframework.auth.result.AuthSignOutResult;
 import com.amplifyframework.auth.result.AuthSignUpResult;
 import com.amplifyframework.auth.result.AuthUpdateAttributeResult;
 import com.amplifyframework.core.Amplify;
@@ -292,14 +293,13 @@ final class RxAuthBinding implements RxAuthCategoryBehavior {
     }
 
     @Override
-    public Completable signOut() {
-        return toCompletable(delegate::signOut);
+    public Single<AuthSignOutResult> signOut() {
+        return toSingle((onComplete, onError) -> delegate.signOut(onComplete));
     }
 
     @Override
-    public Completable signOut(@NonNull AuthSignOutOptions options) {
-        return toCompletable((onComplete, onError) ->
-            delegate.signOut(options, onComplete, onError));
+    public Single<AuthSignOutResult> signOut(@NonNull AuthSignOutOptions options) {
+        return toSingle((onComplete, onError) -> delegate.signOut(options, onComplete));
     }
     
     @Override
