@@ -56,8 +56,9 @@ object AuthenticationCognitoActions : AuthenticationActions {
         }
 
     override fun initiateSignInAction(event: AuthenticationEvent.EventType.SignInRequested) =
-        Action<AuthEnvironment>("InitSignIn") { id, dispatcher ->
+        Action<AuthEnvironment>("InitiateSignInAction") { id, dispatcher ->
             logger?.verbose("$id Starting execution")
+
             val evt = when (val data = event.signInData) {
                 is SignInData.SRPSignInData -> {
                     if (data.username != null && data.password != null) {
@@ -66,6 +67,19 @@ object AuthenticationCognitoActions : AuthenticationActions {
                         AuthenticationEvent(
                             AuthenticationEvent.EventType.ThrowError(
                                 AuthException("Sign in failed.", "username or password empty")
+                            )
+                        )
+                    }
+                }
+                is SignInData.CustomAuthSignInData -> {
+                    if (data.username != null) {
+                        SignInEvent(
+                            SignInEvent.EventType.InitiateSignInWithCustom(data.username, data.password, data.options)
+                        )
+                    } else {
+                        AuthenticationEvent(
+                            AuthenticationEvent.EventType.ThrowError(
+                                AuthException("Sign in failed.", "username can not be empty")
                             )
                         )
                     }
@@ -81,20 +95,21 @@ object AuthenticationCognitoActions : AuthenticationActions {
 
     override fun initiateSignOutAction(
         event: AuthenticationEvent.EventType.SignOutRequested,
-        signedInData: SignedInData
+        signedInData: SignedInData?
     ) = Action<AuthEnvironment>("InitSignOut") { id, dispatcher ->
         logger?.verbose("$id Starting execution")
 
         val evt = when {
-            signedInData.signInMethod == SignInMethod.HOSTED -> {
+            signedInData != null && signedInData.signInMethod == SignInMethod.HOSTED -> {
                 SignOutEvent(SignOutEvent.EventType.InvokeHostedUISignOut(event.signOutData, signedInData))
             }
-            event.signOutData.globalSignOut -> {
+            signedInData != null && event.signOutData.globalSignOut -> {
                 SignOutEvent(SignOutEvent.EventType.SignOutGlobally(signedInData))
             }
-            else -> {
+            signedInData != null && !event.signOutData.globalSignOut -> {
                 SignOutEvent(SignOutEvent.EventType.RevokeToken(signedInData))
             }
+            else -> SignOutEvent(SignOutEvent.EventType.SignOutLocally(signedInData))
         }
         logger?.verbose("$id Sending event ${evt.type}")
         dispatcher.send(evt)

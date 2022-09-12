@@ -36,6 +36,7 @@ dependencies {
     androidTestImplementation project(path: ':testutils')
     androidTestImplementation dependency.androidx.test.core
     androidTestImplementation dependency.androidx.test.runner
+    androidTestImplementation dependency.mockkandroid
     androidTestImplementation dependency.rxjava
 }
 

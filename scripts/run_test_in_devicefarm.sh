@@ -102,6 +102,14 @@ function stopDuplicates {
 }
 stopDuplicates
 
+max_devices=3
+#$CODEBUILD_WEBHOOK_BASE_REF will be /refs/heads/<base_branch>, using substring test for simplicity
+if [[ $CODEBUILD_WEBHOOK_BASE_REF == *"dev-preview"* ]];
+then
+    echo "Detected Dev-Preview branch. Running single device test"
+    max_devices=1
+fi
+
 # Schedule the test run in device farm
 echo "Scheduling test run"
 run_arn=`aws devicefarm schedule-run --project-arn=$project_arn \
@@ -110,7 +118,7 @@ run_arn=`aws devicefarm schedule-run --project-arn=$project_arn \
                                 "filters": [
                                   {"attribute": "ARN", "operator":"IN", "values":["'$minDevice'", "'$middleDevice'", "'$latestDevice'"]}
                                 ],
-                                "maxDevices": 3
+                                "maxDevices": '$max_devices'
                             }' \
                             --name="$file_name-$CODEBUILD_SOURCE_VERSION" \
                             --test="type=INSTRUMENTATION,testPackageArn=$test_package_upload_arn" \

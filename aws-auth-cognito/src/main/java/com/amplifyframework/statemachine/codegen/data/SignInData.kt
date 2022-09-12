@@ -15,14 +15,18 @@
 
 package com.amplifyframework.statemachine.codegen.data
 
-import com.amplifyframework.auth.options.AuthSignInOptions
-
 sealed class SignInData {
 
     data class SRPSignInData(
         val username: String?,
         val password: String?,
-        val options: AuthSignInOptions
+        val options: Map<String, String>
+    ) : SignInData()
+
+    data class CustomAuthSignInData(
+        val username: String?,
+        val password: String?,
+        val options: Map<String, String>
     ) : SignInData()
 
     data class HostedUISignInData(

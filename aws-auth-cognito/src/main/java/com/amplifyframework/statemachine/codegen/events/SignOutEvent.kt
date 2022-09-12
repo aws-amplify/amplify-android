@@ -16,6 +16,9 @@
 package com.amplifyframework.statemachine.codegen.events
 
 import com.amplifyframework.statemachine.StateMachineEvent
+import com.amplifyframework.statemachine.codegen.data.GlobalSignOutErrorData
+import com.amplifyframework.statemachine.codegen.data.HostedUIErrorData
+import com.amplifyframework.statemachine.codegen.data.RevokeTokenErrorData
 import com.amplifyframework.statemachine.codegen.data.SignOutData
 import com.amplifyframework.statemachine.codegen.data.SignedInData
 import com.amplifyframework.statemachine.codegen.data.SignedOutData
@@ -27,10 +30,32 @@ class SignOutEvent(
 ) : StateMachineEvent {
     sealed class EventType {
         data class InvokeHostedUISignOut(val signOutData: SignOutData, val signedInData: SignedInData) : EventType()
-        data class SignOutLocally(val signedInData: SignedInData) : EventType()
-        data class SignOutGlobally(val signedInData: SignedInData) : EventType()
+
+        data class SignOutLocally(
+            val signedInData: SignedInData?,
+            val hostedUIErrorData: HostedUIErrorData? = null,
+            val globalSignOutErrorData: GlobalSignOutErrorData? = null,
+            val revokeTokenErrorData: RevokeTokenErrorData? = null
+        ) : EventType()
+
+        data class SignOutGlobally(
+            val signedInData: SignedInData,
+            val hostedUIErrorData: HostedUIErrorData? = null
+        ) : EventType()
+
+        data class RevokeToken(
+            val signedInData: SignedInData,
+            val hostedUIErrorData: HostedUIErrorData? = null,
+            val globalSignOutErrorData: GlobalSignOutErrorData? = null
+        ) : EventType()
+
+        data class SignOutGloballyError(
+            val signedInData: SignedInData,
+            val hostedUIErrorData: HostedUIErrorData? = null,
+            val globalSignOutErrorData: GlobalSignOutErrorData? = null
+        ) : EventType()
+
         data class SignedOutSuccess(val signedOutData: SignedOutData) : EventType()
-        data class RevokeToken(val signedInData: SignedInData) : EventType()
     }
 
     override val type: String = eventType.javaClass.simpleName

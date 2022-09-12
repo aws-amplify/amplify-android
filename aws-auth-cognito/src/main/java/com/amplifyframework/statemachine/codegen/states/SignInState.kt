@@ -26,7 +26,7 @@ sealed class SignInState : State {
     data class NotStarted(val id: String = "") : SignInState()
     data class SigningInWithSRP(override var srpSignInState: SRPSignInState?) : SignInState()
     data class SigningInWithHostedUI(override var hostedUISignInState: HostedUISignInState?) : SignInState()
-    data class SigningInWithCustom(val id: String = "") : SignInState()
+    data class SigningInWithCustom(override var customSignInState: CustomSignInState?) : SignInState()
     data class SigningInWithSRPCustom(val id: String = "") : SignInState()
     data class ResolvingChallenge(override var challengeState: SignInChallengeState?) : SignInState()
     data class Done(val id: String = "") : SignInState()
@@ -34,10 +34,12 @@ sealed class SignInState : State {
 
     open var srpSignInState: SRPSignInState? = SRPSignInState.NotStarted()
     open var challengeState: SignInChallengeState? = SignInChallengeState.NotStarted()
+    open var customSignInState: CustomSignInState? = CustomSignInState.NotStarted()
     open var hostedUISignInState: HostedUISignInState? = HostedUISignInState.NotStarted()
 
     class Resolver(
         private val srpSignInResolver: StateMachineResolver<SRPSignInState>,
+        private val customSignInResolver: StateMachineResolver<CustomSignInState>,
         private val challengeResolver: StateMachineResolver<SignInChallengeState>,
         private val hostedUISignInResolver: StateMachineResolver<HostedUISignInState>,
         private val signInActions: SignInActions
@@ -69,6 +71,11 @@ sealed class SignInState : State {
                 actions += it.actions
             }
 
+            oldState.customSignInState?.let { customSignInResolver.resolve(it, event) }?.let {
+                builder.customSignInState = it.newState
+                actions += it.actions
+            }
+
             return StateResolution(builder.build(), actions)
         }
 
@@ -84,16 +91,20 @@ sealed class SignInState : State {
                         SigningInWithSRP(oldState.srpSignInState),
                         listOf(signInActions.startSRPAuthAction(signInEvent))
                     )
+                    is SignInEvent.EventType.InitiateSignInWithCustom -> StateResolution(
+                        SigningInWithCustom(oldState.customSignInState),
+                        listOf(signInActions.startCustomAuthAction(signInEvent))
+                    )
                     is SignInEvent.EventType.InitiateHostedUISignIn -> StateResolution(
                         SigningInWithHostedUI(HostedUISignInState.NotStarted()),
                         listOf(signInActions.startHostedUIAuthAction(signInEvent))
                     )
                     else -> defaultResolution
                 }
-                is SigningInWithSRP -> when (signInEvent) {
+                is SigningInWithSRP, is SigningInWithCustom -> when (signInEvent) {
                     is SignInEvent.EventType.ReceivedChallenge -> {
                         val action = signInActions.initResolveChallenge(signInEvent)
-                        StateResolution(ResolvingChallenge(SignInChallengeState.NotStarted()), listOf(action))
+                        StateResolution(ResolvingChallenge(oldState.challengeState), listOf(action))
                     }
                     is SignInEvent.EventType.ThrowError -> StateResolution(Error(signInEvent.exception), listOf())
                     else -> defaultResolution
@@ -112,11 +123,12 @@ sealed class SignInState : State {
         com.amplifyframework.statemachine.Builder<SignInState> {
         var srpSignInState: SRPSignInState? = null
         var challengeState: SignInChallengeState? = null
+        var customSignInState: CustomSignInState? = null
         var hostedUISignInState: HostedUISignInState? = null
-
         override fun build(): SignInState = when (signInState) {
             is SigningInWithSRP -> SigningInWithSRP(srpSignInState)
             is ResolvingChallenge -> ResolvingChallenge(challengeState)
+            is SigningInWithCustom -> SigningInWithCustom(customSignInState)
             is SigningInWithHostedUI -> SigningInWithHostedUI(hostedUISignInState)
             else -> signInState
         }

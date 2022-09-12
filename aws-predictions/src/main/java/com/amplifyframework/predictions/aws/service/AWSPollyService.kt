@@ -38,11 +38,12 @@ internal class AWSPollyService(
     private val pluginConfiguration: AWSPredictionsPluginConfiguration,
     private val authCredentialsProvider: CredentialsProvider
 ) {
-    // TODO : replace PollyClient with PollyPresigningClient
-    val client: PollyClient = PollyClient {
-        this.region = pluginConfiguration.defaultRegion
-        this.credentialsProvider = authCredentialsProvider
-    }
+    val client: PollyClient = AmazonPollyPresigningClient(
+        PollyClient {
+            this.region = pluginConfiguration.defaultRegion
+            this.credentialsProvider = authCredentialsProvider
+        }
+    )
 
     private val executor = Executors.newCachedThreadPool()
 

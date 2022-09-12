@@ -24,8 +24,8 @@ buildscript {
 
     dependencies {
         classpath 'com.android.tools.build:gradle:4.0.2'
-        classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.6.10'
-        classpath "org.jetbrains.dokka:dokka-gradle-plugin:1.6.10"
+        classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.7.10'
+        classpath "org.jetbrains.dokka:dokka-gradle-plugin:1.7.10"
         classpath 'org.jlleitschuh.gradle:ktlint-gradle:9.4.1'
     }
 }
@@ -58,7 +58,7 @@ ext {
     targetSdkVersion = 30
 
     awsSdkVersion = '2.51.0'
-    awsKotlinSdkVersion = '0.16.3-beta'
+    awsKotlinSdkVersion = '0.17.5-beta'
     fragmentVersion = '1.3.1'
     navigationVersion = '2.3.4'
     dependency = [
@@ -115,9 +115,9 @@ ext {
             pinpointKotlin: "aws.sdk.kotlin:pinpoint:$awsKotlinSdkVersion"
         ],
         kotlin: [
-            stdlib: 'org.jetbrains.kotlin:kotlin-stdlib:1.6.10',
-            coroutines: 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2',
-            serializationJson: 'org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.2',
+            stdlib: 'org.jetbrains.kotlin:kotlin-stdlib:1.7.10',
+            coroutines: 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.3',
+            serializationJson: 'org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.3',
             ktlint: 'org.jlleitschuh.gradle:ktlint-gradle:7.1.0',
             futures: 'androidx.concurrent:concurrent-futures-ktx:1.1.0',
             test: [
@@ -127,7 +127,7 @@ ext {
         ],
 
         oauth2: 'com.google.auth:google-auth-library-oauth2-http:0.26.0',
-        okhttp: 'com.squareup.okhttp3:okhttp:4.9.1',
+        okhttp: 'com.squareup.okhttp3:okhttp:5.0.0-alpha.9',
         gson: 'com.google.code.gson:gson:2.8.9',
         maplibre: [
             sdk: 'org.maplibre.gl:android-sdk:9.5.2',
@@ -141,7 +141,8 @@ ext {
         junit: 'junit:junit:4.13.2',
         mockito: 'org.mockito:mockito-core:3.9.0',
         mockk: 'io.mockk:mockk:1.12.3',
-        mockwebserver: 'com.squareup.okhttp3:mockwebserver:4.9.1',
+        mockkandroid: 'io.mockk:mockk-android:1.12.3',
+        mockwebserver: 'com.squareup.okhttp3:mockwebserver:5.0.0-alpha.9',
         mockitoinline: 'org.mockito:mockito-inline:3.11.2',
         robolectric: 'org.robolectric:robolectric:4.5.1',
         jsonassert: 'org.skyscreamer:jsonassert:1.5.0'

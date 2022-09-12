@@ -31,6 +31,7 @@ import com.amplifyframework.auth.AuthUserAttributeKey;
 import com.amplifyframework.auth.options.AuthSignUpOptions;
 import com.amplifyframework.auth.result.AuthResetPasswordResult;
 import com.amplifyframework.auth.result.AuthSignInResult;
+import com.amplifyframework.auth.result.AuthSignOutResult;
 import com.amplifyframework.auth.result.AuthSignUpResult;
 import com.amplifyframework.auth.result.AuthUpdateAttributeResult;
 import com.amplifyframework.auth.result.step.AuthNextResetPasswordStep;
@@ -1021,44 +1022,18 @@ public final class RxAuthBindingTest {
         // Arrange an invocation of the success action
         doAnswer(invocation -> {
             // 0 = onComplete, 1 = onFailure
-            int positionOfCompletionAction = 0;
-            Action onComplete = invocation.getArgument(positionOfCompletionAction);
-            onComplete.call();
+            int positionOfCompletionConsumer = 0;
+            Consumer<AuthSignOutResult> onComplete = invocation.getArgument(positionOfCompletionConsumer);
+            onComplete.accept(new AuthSignOutResult());
             return null;
-        }).when(delegate).signOut(anyAction(), anyConsumer());
+        }).when(delegate).signOut(anyConsumer());
 
         // Act: call the binding
-        TestObserver<Void> observer = auth.signOut().test();
+        TestObserver<AuthSignOutResult> observer = auth.signOut().test();
 
         // Assert: Completable completes successfully
         observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
-        observer.assertNoErrors()
-                .assertComplete();
-    }
-
-    /**
-     * Validate that a sign-out failure is propagated up through the binding.
-     * @throws InterruptedException If test observer is interrupted while awaiting terminal event
-     */
-    @Test
-    public void testSignOutFails() throws InterruptedException {
-        // Arrange a callback on the failure consumer
-        AuthException failure = new AuthException("Sign out", "has failed");
-        doAnswer(invocation -> {
-            // 0 = onComplete, 1 = onFailure
-            int positionOfFailureConsumer = 1;
-            Consumer<AuthException> onFailure = invocation.getArgument(positionOfFailureConsumer);
-            onFailure.accept(failure);
-            return null;
-        }).when(delegate).signOut(anyAction(), anyConsumer());
-
-        // Act: call the binding
-        TestObserver<Void> observer = auth.signOut().test();
-
-        // Assert: failure is furnished via Rx Completable.
-        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
-        observer.assertNotComplete()
-                .assertError(failure);
+        observer.assertComplete();
     }
 
     /**

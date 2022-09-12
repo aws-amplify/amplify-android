@@ -29,6 +29,7 @@ import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.result.AuthResetPasswordResult
 import com.amplifyframework.auth.result.AuthSignInResult
+import com.amplifyframework.auth.result.AuthSignOutResult
 import com.amplifyframework.auth.result.AuthSignUpResult
 import com.amplifyframework.auth.result.AuthUpdateAttributeResult
 import com.amplifyframework.core.Action
@@ -38,6 +39,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Test
 
 /**
@@ -885,35 +887,21 @@ class KotlinAuthFacadeTest {
      */
     @Test
     fun signOutSucceeds() = runBlocking {
+        val expected = AuthSignOutResult()
+        var onCompleteConsumer: Consumer<AuthSignOutResult>? = null
         every {
-            delegate.signOut(any(), any(), any())
+            delegate.signOut(any(), any())
         } answers {
             val indexOfCompletionAction = 1
-            val onComplete = it.invocation.args[indexOfCompletionAction] as Action
-            onComplete.call()
+            onCompleteConsumer = it.invocation.args[indexOfCompletionAction] as Consumer<AuthSignOutResult>
+            onCompleteConsumer?.accept(expected)
         }
         auth.signOut()
         // Since nothing returned, just verify it called through.
+        assertNotNull(onCompleteConsumer)
         verify {
-            delegate.signOut(any(), any(), any())
+            delegate.signOut(any(), onCompleteConsumer!!)
         }
-    }
-
-    /**
-     * The signOut() call falls through to the delegate. If the delegate
-     * renders an error, it should be bubbled out through the coroutine API.
-     */
-    @Test(expected = AuthException::class)
-    fun signOutThrows(): Unit = runBlocking {
-        val expectedException = AuthException("uh", "oh")
-        every {
-            delegate.signOut(any(), any(), any())
-        } answers {
-            val indexOfErrorConsumer = 2
-            val onError = it.invocation.args[indexOfErrorConsumer] as Consumer<AuthException>
-            onError.accept(expectedException)
-        }
-        auth.signOut()
     }
 
     /**

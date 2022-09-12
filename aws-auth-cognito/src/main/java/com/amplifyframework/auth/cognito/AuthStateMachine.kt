@@ -24,6 +24,7 @@ import com.amplifyframework.auth.cognito.actions.HostedUICognitoActions
 import com.amplifyframework.auth.cognito.actions.SRPCognitoActions
 import com.amplifyframework.auth.cognito.actions.SignInChallengeCognitoActions
 import com.amplifyframework.auth.cognito.actions.SignInCognitoActions
+import com.amplifyframework.auth.cognito.actions.SignInCustomActions
 import com.amplifyframework.auth.cognito.actions.SignOutCognitoActions
 import com.amplifyframework.statemachine.Environment
 import com.amplifyframework.statemachine.StateMachine
@@ -31,6 +32,7 @@ import com.amplifyframework.statemachine.StateMachineResolver
 import com.amplifyframework.statemachine.codegen.states.AuthState
 import com.amplifyframework.statemachine.codegen.states.AuthenticationState
 import com.amplifyframework.statemachine.codegen.states.AuthorizationState
+import com.amplifyframework.statemachine.codegen.states.CustomSignInState
 import com.amplifyframework.statemachine.codegen.states.DeleteUserState
 import com.amplifyframework.statemachine.codegen.states.FetchAuthSessionState
 import com.amplifyframework.statemachine.codegen.states.HostedUISignInState
@@ -49,6 +51,7 @@ internal class AuthStateMachine(
             AuthenticationState.Resolver(
                 SignInState.Resolver(
                     SRPSignInState.Resolver(SRPCognitoActions),
+                    CustomSignInState.Resolver(SignInCustomActions),
                     SignInChallengeState.Resolver(SignInChallengeCognitoActions),
                     HostedUISignInState.Resolver(HostedUICognitoActions),
                     SignInCognitoActions
@@ -72,6 +75,7 @@ internal class AuthStateMachine(
                 AuthenticationState.Resolver(
                     SignInState.Resolver(
                         SRPSignInState.Resolver(SRPCognitoActions).logging(),
+                        CustomSignInState.Resolver(SignInCustomActions).logging(),
                         SignInChallengeState.Resolver(SignInChallengeCognitoActions).logging(),
                         HostedUISignInState.Resolver(HostedUICognitoActions).logging(),
                         SignInCognitoActions

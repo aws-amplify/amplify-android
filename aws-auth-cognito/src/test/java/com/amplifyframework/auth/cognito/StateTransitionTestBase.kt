@@ -15,6 +15,7 @@
 
 package com.amplifyframework.auth.cognito
 
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
 import com.amplifyframework.auth.cognito.actions.DeleteUserActions
 import com.amplifyframework.auth.cognito.data.AWSCognitoAuthCredentialStore
 import com.amplifyframework.auth.cognito.data.AWSCognitoLegacyCredentialStore
@@ -22,6 +23,7 @@ import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.AuthActions
 import com.amplifyframework.statemachine.codegen.actions.AuthenticationActions
 import com.amplifyframework.statemachine.codegen.actions.AuthorizationActions
+import com.amplifyframework.statemachine.codegen.actions.CustomSignInActions
 import com.amplifyframework.statemachine.codegen.actions.FetchAuthSessionActions
 import com.amplifyframework.statemachine.codegen.actions.HostedUIActions
 import com.amplifyframework.statemachine.codegen.actions.SRPActions
@@ -30,6 +32,7 @@ import com.amplifyframework.statemachine.codegen.actions.SignInChallengeActions
 import com.amplifyframework.statemachine.codegen.actions.SignOutActions
 import com.amplifyframework.statemachine.codegen.actions.StoreActions
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
+import com.amplifyframework.statemachine.codegen.data.AuthChallenge
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
 import com.amplifyframework.statemachine.codegen.data.SignOutData
@@ -39,8 +42,11 @@ import com.amplifyframework.statemachine.codegen.events.AuthEvent
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
 import com.amplifyframework.statemachine.codegen.events.CredentialStoreEvent
+import com.amplifyframework.statemachine.codegen.events.CustomSignInEvent
 import com.amplifyframework.statemachine.codegen.events.FetchAuthSessionEvent
 import com.amplifyframework.statemachine.codegen.events.SRPEvent
+import com.amplifyframework.statemachine.codegen.events.SignInChallengeEvent
+import com.amplifyframework.statemachine.codegen.events.SignInEvent
 import com.amplifyframework.statemachine.codegen.events.SignOutEvent
 import org.mockito.Mock
 import org.mockito.Mockito
@@ -95,6 +101,9 @@ open class StateTransitionTestBase {
 
     @Mock
     internal lateinit var mockSignInChallengeActions: SignInChallengeActions
+
+    @Mock
+    internal lateinit var mockSignInCustomActions: CustomSignInActions
 
     @Mock
     internal lateinit var mockHostedUIActions: HostedUIActions
@@ -218,6 +227,23 @@ open class StateTransitionTestBase {
         )
     }
 
+    internal fun setupSignInActionWithCustomAuth() {
+        Mockito.`when`(mockAuthenticationActions.initiateSignInAction(MockitoHelper.anyObject()))
+            .thenReturn(
+                Action { dispatcher, _ ->
+                    dispatcher.send(
+                        SignInEvent(
+                            SignInEvent.EventType.InitiateSignInWithCustom(
+                                "username",
+                                "password",
+                                mapOf()
+                            )
+                        )
+                    )
+                }
+            )
+    }
+
     internal fun setupAuthZActions() {
         Mockito.`when`(mockAuthorizationActions.configureAuthorizationAction())
             .thenReturn(
@@ -271,17 +297,83 @@ open class StateTransitionTestBase {
                     dispatcher.send(SRPEvent(SRPEvent.EventType.InitiateSRP("username", "password")))
                 }
             )
+
+        Mockito.`when`(mockSignInActions.startCustomAuthAction(MockitoHelper.anyObject()))
+            .thenReturn(
+                Action { dispatcher, _ ->
+                    dispatcher.send(
+                        CustomSignInEvent(
+                            CustomSignInEvent.EventType.InitiateCustomSignIn(
+                                "username",
+                                "password"
+                            )
+                        )
+                    )
+                }
+            )
+        Mockito.`when`(mockSignInActions.initResolveChallenge(MockitoHelper.anyObject()))
+            .thenReturn(
+                Action { dispatcher, _ ->
+                    dispatcher.send(
+                        SignInChallengeEvent(
+                            SignInChallengeEvent.EventType.WaitForAnswer(
+                                AuthChallenge(
+                                    ChallengeNameType.CustomChallenge.toString(),
+                                    "Test",
+                                    "session_mock_value",
+                                    mapOf()
+                                )
+                            )
+                        )
+                    )
+                }
+            )
+    }
+
+    fun setupCustomAuthActions() {
+        Mockito.`when`(mockSignInCustomActions.initiateCustomSignInAuthAction(MockitoHelper.anyObject()))
+            .thenReturn(
+                Action { dispatcher, _ ->
+                    val authChallenge = AuthChallenge(
+                        ChallengeNameType.CustomChallenge.toString(),
+                        "Test",
+                        "session_mock_value",
+                        mapOf()
+                    )
+                    dispatcher.send(
+                        SignInEvent(SignInEvent.EventType.ReceivedChallenge(authChallenge))
+                    )
+                }
+            )
+
+        Mockito.`when`(signedInData.cognitoUserPoolTokens).thenReturn(CognitoUserPoolTokens("", "", "", 0))
+
+        Mockito.`when`(
+            mockSignInChallengeActions.verifyChallengeAuthAction(
+                MockitoHelper.anyObject(),
+                MockitoHelper.anyObject()
+            )
+        )
+            .thenReturn(
+                Action { dispatcher, _ ->
+                    dispatcher.send(SignInChallengeEvent(SignInChallengeEvent.EventType.Verified()))
+                    dispatcher.send(CustomSignInEvent(CustomSignInEvent.EventType.FinalizeSignIn()))
+                    dispatcher.send(
+                        AuthenticationEvent(AuthenticationEvent.EventType.SignInCompleted(signedInData))
+                    )
+                }
+            )
     }
 
     internal fun setupSRPActions() {
-        Mockito.`when`(signedInData.cognitoUserPoolTokens).thenReturn(CognitoUserPoolTokens("", "", "", 0))
-
         Mockito.`when`(mockSRPActions.initiateSRPAuthAction(MockitoHelper.anyObject()))
             .thenReturn(
                 Action { dispatcher, _ ->
                     dispatcher.send(SRPEvent(SRPEvent.EventType.RespondPasswordVerifier(mapOf())))
                 }
             )
+
+        Mockito.`when`(signedInData.cognitoUserPoolTokens).thenReturn(CognitoUserPoolTokens("", "", "", 0))
 
         Mockito.`when`(mockSRPActions.verifyPasswordSRPAction(MockitoHelper.anyObject()))
             .thenReturn(

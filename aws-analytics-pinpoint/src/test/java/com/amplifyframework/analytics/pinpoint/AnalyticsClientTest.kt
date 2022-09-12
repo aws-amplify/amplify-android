@@ -4,6 +4,7 @@ import android.net.Uri
 import androidx.test.core.app.ApplicationProvider
 import aws.sdk.kotlin.services.pinpoint.PinpointClient
 import com.amplifyframework.analytics.pinpoint.database.PinpointDatabase
+import com.amplifyframework.analytics.pinpoint.internal.core.idresolver.SharedPrefsUniqueIdService
 import com.amplifyframework.analytics.pinpoint.models.AndroidAppDetails
 import com.amplifyframework.analytics.pinpoint.models.AndroidDeviceDetails
 import com.amplifyframework.analytics.pinpoint.models.PinpointEvent
@@ -44,6 +45,7 @@ class AnalyticsClientTest {
 
     private val pinpointClient = mockk<PinpointClient>()
     private val sessionClient = mockk<SessionClient>()
+    private val sharedPrefsUniqueIdService = mockk<SharedPrefsUniqueIdService>()
     private val androidAppDetails = AndroidAppDetails("com.test.app", "TestApp", "com.test.app", "1.0", "test")
     private val androidDeviceDetails = AndroidDeviceDetails("test")
     private val sdkInfo = SDKInfo("test", "1.0")
@@ -60,6 +62,7 @@ class AnalyticsClientTest {
             sessionClient,
             targetingClient,
             pinpointDatabase,
+            sharedPrefsUniqueIdService,
             androidAppDetails,
             androidDeviceDetails,
             sdkInfo,
@@ -69,6 +72,7 @@ class AnalyticsClientTest {
         val sessionId = UUID.randomUUID().toString()
         val startTime = System.currentTimeMillis()
         every { sessionClient.session } answers { Session(sessionId, startTime, startTime) }
+        every { sharedPrefsUniqueIdService.getUniqueId() } answers { "UNIQUE_ID" }
         coEvery { eventRecorder.recordEvent(any()) } answers { Uri.EMPTY }
     }
 
@@ -90,7 +94,7 @@ class AnalyticsClientTest {
                 0L
             ),
             eventTimestamp = eventTimestamp,
-            uniqueId = "",
+            uniqueId = "UNIQUE_ID",
             androidDeviceDetails = androidDeviceDetails,
             androidAppDetails = androidAppDetails
         )
@@ -101,7 +105,7 @@ class AnalyticsClientTest {
     }
 
     @Test
-    fun `test record events`() {
+    fun `test record events`() = runTest {
         val testEventId = UUID.randomUUID().toString()
         val testEventType = "TestEvent"
         val eventTimestamp = System.currentTimeMillis()
@@ -124,5 +128,28 @@ class AnalyticsClientTest {
         )
         analyticsClient.recordEvent(pinpointEvent)
         coVerify(exactly = 1) { eventRecorder.recordEvent(pinpointEvent) }
+    }
+
+    @Test
+    fun `test submitEvents`() = runTest {
+        coEvery { eventRecorder.submitEvents() } returns listOf()
+        analyticsClient.flushEvents()
+        coVerify(exactly = 1) { eventRecorder.submitEvents() }
+    }
+
+    @Test
+    fun `test addGlobalAttributes`() {
+        val attributeName = "attributeName"
+        val attributeValue = "attributeValue"
+        analyticsClient.addGlobalAttribute(attributeName, attributeValue)
+        assertEquals(analyticsClient.getGlobalAttributes()[attributeName], "attributeValue")
+    }
+
+    @Test
+    fun `test addGlobalMetrics`() {
+        val metricName = "attributeName"
+        val metricValue = 1.0
+        analyticsClient.addGlobalMetric(metricName, metricValue)
+        assertEquals(metricValue, analyticsClient.getGlobalMetrics()[metricName])
     }
 }

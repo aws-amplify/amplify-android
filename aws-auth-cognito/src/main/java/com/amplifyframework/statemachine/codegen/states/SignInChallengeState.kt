@@ -25,6 +25,7 @@ import com.amplifyframework.statemachine.codegen.events.SignInChallengeEvent
 
 sealed class SignInChallengeState : State {
     data class NotStarted(val id: String = "") : SignInChallengeState()
+
     data class WaitingForAnswer(val challenge: AuthChallenge) : SignInChallengeState()
     data class Verifying(val id: String = "") : SignInChallengeState()
     data class Verified(val id: String = "") : SignInChallengeState()
@@ -45,14 +46,14 @@ sealed class SignInChallengeState : State {
             val challengeEvent = asSignInChallengeEvent(event)
             return when (oldState) {
                 is NotStarted -> when (challengeEvent) {
-                    is SignInChallengeEvent.EventType.WaitForAnswer -> StateResolution(
-                        WaitingForAnswer(challengeEvent.challenge)
-                    )
+                    is SignInChallengeEvent.EventType.WaitForAnswer -> {
+                        StateResolution(WaitingForAnswer(challengeEvent.challenge))
+                    }
                     else -> defaultResolution
                 }
                 is WaitingForAnswer -> when (challengeEvent) {
                     is SignInChallengeEvent.EventType.VerifyChallengeAnswer -> {
-                        val action = challengeActions.verifySignInChallenge(challengeEvent, oldState.challenge)
+                        val action = challengeActions.verifyChallengeAuthAction(challengeEvent, oldState.challenge)
                         StateResolution(Verifying(), listOf(action))
                     }
                     else -> defaultResolution
