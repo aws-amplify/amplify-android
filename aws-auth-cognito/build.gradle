@@ -34,6 +34,7 @@ dependencies {
     implementation dependency.aws.cognitoidentityprovider
 
     testImplementation project(path: ':testutils')
+    testImplementation project(path: ':aws-auth-cognito')
     //noinspection GradleDependency
     testImplementation 'org.json:json:20180813'
     testImplementation 'org.jetbrains.kotlin:kotlin-test:1.6.21'
@@ -48,4 +49,5 @@ dependencies {
 
     androidTestImplementation dependency.androidx.test.runner
     androidTestImplementation dependency.androidx.test.junit
+    androidTestImplementation project(path: ':testutils')
 }

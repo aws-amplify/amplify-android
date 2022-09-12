@@ -16,9 +16,15 @@ package com.amplifyframework.predictions.aws.service
 
 import android.graphics.RectF
 import aws.sdk.kotlin.services.rekognition.RekognitionClient
+import aws.sdk.kotlin.services.rekognition.detectFaces
+import aws.sdk.kotlin.services.rekognition.detectLabels
+import aws.sdk.kotlin.services.rekognition.detectModerationLabels
+import aws.sdk.kotlin.services.rekognition.detectText
 import aws.sdk.kotlin.services.rekognition.model.Attribute
 import aws.sdk.kotlin.services.rekognition.model.Image
 import aws.sdk.kotlin.services.rekognition.model.TextTypes
+import aws.sdk.kotlin.services.rekognition.recognizeCelebrities
+import aws.sdk.kotlin.services.rekognition.searchFacesByImage
 import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.predictions.PredictionsException

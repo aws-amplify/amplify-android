@@ -15,8 +15,10 @@
 
 package com.amplifyframework.auth.cognito.actions
 
+import aws.sdk.kotlin.services.cognitoidentityprovider.initiateAuth
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AuthFlowType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
+import aws.sdk.kotlin.services.cognitoidentityprovider.respondToAuthChallenge
 import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.auth.cognito.helpers.AuthHelper

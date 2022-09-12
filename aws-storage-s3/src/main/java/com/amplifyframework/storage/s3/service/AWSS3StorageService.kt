@@ -2,6 +2,7 @@ package com.amplifyframework.storage.s3.service
 
 import android.content.Context
 import aws.sdk.kotlin.services.s3.S3Client
+import aws.sdk.kotlin.services.s3.deleteObject
 import aws.sdk.kotlin.services.s3.model.GetObjectRequest
 import aws.sdk.kotlin.services.s3.paginators.listObjectsV2Paginated
 import aws.sdk.kotlin.services.s3.presigners.presign

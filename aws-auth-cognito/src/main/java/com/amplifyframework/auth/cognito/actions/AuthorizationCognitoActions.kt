@@ -15,6 +15,7 @@
 
 package com.amplifyframework.auth.cognito.actions
 
+import aws.sdk.kotlin.services.cognitoidentityprovider.initiateAuth
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AuthFlowType
 import aws.smithy.kotlin.runtime.time.Instant
 import com.amplifyframework.auth.cognito.AWSCognitoAuthServiceBehavior
