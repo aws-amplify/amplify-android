@@ -680,7 +680,7 @@ internal class RealAWSCognitoAuthPlugin(
                 )
                 onSuccess.call()
             } catch (e: Exception) {
-                onError.accept(CognitoAuthExceptionConverter.lookup(e, "Update device Id failed."))
+                onError.accept(CognitoAuthExceptionConverter.lookup(e, "Update device ID failed."))
             }
         }
     }
