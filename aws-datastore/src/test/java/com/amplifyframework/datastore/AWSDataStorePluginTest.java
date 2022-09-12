@@ -52,7 +52,6 @@ import com.amplifyframework.testutils.sync.SynchronousDataStore;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatcher;
