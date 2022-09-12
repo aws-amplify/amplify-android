@@ -24,6 +24,15 @@ subprojects {
                     }
                 }
             }
+            task runTestsInDeviceFarmPool {
+                dependsOn(assembleAndroidTest)
+                doLast {
+                    exec {
+                        commandLine("$rootDir.path/scripts/run_tests_in_devicefarm_pool.sh")
+                        args([project.name])
+                    }
+                }
+            }
         }
     }
 }
