@@ -25,6 +25,7 @@ import com.amplifyframework.statemachine.codegen.actions.AuthenticationActions
 import com.amplifyframework.statemachine.codegen.actions.AuthorizationActions
 import com.amplifyframework.statemachine.codegen.actions.CustomSignInActions
 import com.amplifyframework.statemachine.codegen.actions.FetchAuthSessionActions
+import com.amplifyframework.statemachine.codegen.actions.HostedUIActions
 import com.amplifyframework.statemachine.codegen.actions.SRPActions
 import com.amplifyframework.statemachine.codegen.actions.SignInActions
 import com.amplifyframework.statemachine.codegen.actions.SignInChallengeActions
@@ -34,6 +35,7 @@ import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.AuthChallenge
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
+import com.amplifyframework.statemachine.codegen.data.SignOutData
 import com.amplifyframework.statemachine.codegen.data.SignedInData
 import com.amplifyframework.statemachine.codegen.data.SignedOutData
 import com.amplifyframework.statemachine.codegen.events.AuthEvent
@@ -102,6 +104,9 @@ open class StateTransitionTestBase {
 
     @Mock
     internal lateinit var mockSignInCustomActions: CustomSignInActions
+
+    @Mock
+    internal lateinit var mockHostedUIActions: HostedUIActions
 
     @Mock
     internal lateinit var mockSignOutActions: SignOutActions
@@ -464,7 +469,9 @@ open class StateTransitionTestBase {
             .thenReturn(
                 Action { dispatcher, _ ->
                     dispatcher.send(
-                        AuthenticationEvent(AuthenticationEvent.EventType.SignOutRequested(true))
+                        AuthenticationEvent(
+                            AuthenticationEvent.EventType.SignOutRequested(SignOutData(true))
+                        )
                     )
                 }
             )
