@@ -30,8 +30,10 @@ sealed class SignInState : State {
     data class SigningInWithSRPCustom(val id: String = "") : SignInState()
     data class ResolvingDeviceSrpa(override var deviceSRPSignInState: DeviceSRPSignInState?) : SignInState()
     data class ResolvingChallenge(override var challengeState: SignInChallengeState?) : SignInState()
+    data class ConfirmingDevice(val id: String = "") : SignInState()
     data class Done(val id: String = "") : SignInState()
     data class Error(val exception: Exception) : SignInState()
+    data class SignedIn(val id: String = "") : SignInState()
 
     open var srpSignInState: SRPSignInState? = SRPSignInState.NotStarted()
     open var challengeState: SignInChallengeState? = SignInChallengeState.NotStarted()
@@ -104,6 +106,27 @@ sealed class SignInState : State {
                         StateResolution(ResolvingChallenge(oldState.challengeState), listOf(action))
                     }
                     is SignInEvent.EventType.ThrowError -> StateResolution(Error(signInEvent.exception), listOf())
+                    else -> defaultResolution
+                }
+                is ResolvingDeviceSrpa -> when (signInEvent) {
+                    is SignInEvent.EventType.ReceivedChallenge -> {
+                        val action = signInActions.initResolveChallenge(signInEvent)
+                        StateResolution(ResolvingChallenge(oldState.challengeState), listOf(action))
+                    }
+
+                    is SignInEvent.EventType.ConfirmDevice -> {
+                        val action = signInActions.confirmDevice(signInEvent)
+                        StateResolution(ConfirmingDevice(), listOf(action))
+                    }
+                    is SignInEvent.EventType.ThrowError -> {
+                        StateResolution(Error(signInEvent.exception), listOf())
+                    }
+                    else -> defaultResolution
+                }
+                is ConfirmingDevice -> when (signInEvent) {
+                    is SignInEvent.EventType.FinalizeSignIn -> {
+                        StateResolution(SignedIn())
+                    }
                     else -> defaultResolution
                 }
                 else -> defaultResolution

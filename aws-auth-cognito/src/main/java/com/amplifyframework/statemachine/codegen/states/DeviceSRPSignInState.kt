@@ -84,6 +84,9 @@ sealed class DeviceSRPSignInState : State {
                                 listOf(deviceSRPSignInActions.cancellingSignIn(deviceSRPEvent))
                             )
                         }
+                        is DeviceSRPSignInEvent.EventType.FinalizeSignIn -> {
+                            StateResolution(SignedIn())
+                        }
                         else -> StateResolution(oldState)
                     }
                 }

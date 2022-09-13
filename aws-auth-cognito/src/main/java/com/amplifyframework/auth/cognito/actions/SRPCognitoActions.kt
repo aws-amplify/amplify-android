@@ -18,7 +18,6 @@ package com.amplifyframework.auth.cognito.actions
 import aws.sdk.kotlin.services.cognitoidentityprovider.initiateAuth
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AuthFlowType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.ConfirmDeviceRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.respondToAuthChallenge
 import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.cognito.AuthEnvironment
@@ -29,6 +28,7 @@ import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.SRPActions
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.SRPEvent
+import com.amplifyframework.statemachine.codegen.events.SignInEvent
 
 object SRPCognitoActions : SRPActions {
     private const val KEY_PASSWORD_CLAIM_SECRET_BLOCK = "PASSWORD_CLAIM_SECRET_BLOCK"
@@ -41,6 +41,13 @@ object SRPCognitoActions : SRPActions {
     private const val KEY_USER_ID_FOR_SRP = "USER_ID_FOR_SRP"
     private const val KEY_SECRET_HASH = "SECRET_HASH"
     private const val KEY_USERNAME = "USERNAME"
+
+    private const val KEY_ID_TOKEN = "ID_TOKEN"
+    private const val KEY_ACCESS_TOKEN = "ID_TOKEN"
+    private const val KEY_REFRESH_TOKEN = "REFRESH_TOKEN"
+    private const val KEY_DEVICE_GROUP_KEY = "DEVICE_GROUP_KEY"
+    private const val KEY_DEVICE_KEY = "DEVICE_KEY"
+
     override fun initiateSRPAuthAction(event: SRPEvent.EventType.InitiateSRP) =
         Action<AuthEnvironment>("InitSRPAuth") { id, dispatcher ->
             logger?.verbose("$id Starting execution")
@@ -114,32 +121,34 @@ object SRPCognitoActions : SRPActions {
                     challengeResponses = challengeParams
                     encodedContextData?.let { userContextData { encodedData = it } }
                 }
-                response?.let { _response ->
-                    _response.authenticationResult?.newDeviceMetadata?.let { deviceMetaData ->
-                        // TODO: Store device credentials in Keychain if the deviceMetadata is returned
-                        val confirmDeviceResponse = cognitoAuthService.cognitoIdentityProviderClient?.confirmDevice(
-                            ConfirmDeviceRequest.invoke {
-                                accessToken = _response.authenticationResult?.accessToken
-                                deviceKey = deviceMetaData.deviceKey
-                            }
+                response?.let { respondToAuthChallengeResponse ->
+                    respondToAuthChallengeResponse.authenticationResult?.newDeviceMetadata?.let { deviceMetaData ->
+                        val confirmDeviceParams = mapOf(
+                            KEY_ID_TOKEN to (respondToAuthChallengeResponse.authenticationResult?.idToken ?: ""),
+                            KEY_REFRESH_TOKEN to (respondToAuthChallengeResponse.authenticationResult?.idToken ?: ""),
+                            KEY_ACCESS_TOKEN to (
+                                respondToAuthChallengeResponse.authenticationResult?.accessToken
+                                    ?: ""
+                                ),
+                            KEY_DEVICE_KEY to (deviceMetaData.deviceKey ?: ""),
+                            KEY_USER_ID_FOR_SRP to userId,
+                            KEY_USERNAME to username,
+                            KEY_DEVICE_GROUP_KEY to (deviceMetaData.deviceGroupKey ?: ""),
+                            KEY_SALT to salt
                         )
-                        confirmDeviceResponse?.let {
-                            SignInChallengeHelper.evaluateNextStep(
-                                userId,
-                                username,
-                                _response.challengeName,
-                                _response.session,
-                                _response.challengeParameters,
-                                _response.authenticationResult
+                        SignInEvent(
+                            SignInEvent.EventType.ConfirmDevice(
+                                confirmDeviceParams = confirmDeviceParams,
+                                respondToAuthChallengeResponse.authenticationResult?.expiresIn ?: 0
                             )
-                        } ?: throw AuthException("Sign in failed", AuthException.TODO_RECOVERY_SUGGESTION)
+                        )
                     } ?: SignInChallengeHelper.evaluateNextStep(
                         userId,
                         username,
-                        _response.challengeName,
-                        _response.session,
-                        _response.challengeParameters,
-                        _response.authenticationResult
+                        respondToAuthChallengeResponse.challengeName,
+                        respondToAuthChallengeResponse.session,
+                        respondToAuthChallengeResponse.challengeParameters,
+                        respondToAuthChallengeResponse.authenticationResult
                     )
                 } ?: throw AuthException("Sign in failed", AuthException.TODO_RECOVERY_SUGGESTION)
             } catch (e: Exception) {

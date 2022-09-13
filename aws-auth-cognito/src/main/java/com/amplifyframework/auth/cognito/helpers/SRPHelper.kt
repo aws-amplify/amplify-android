@@ -130,6 +130,22 @@ class SRPHelper(private val password: String) {
         return BigInteger(1, digest.digest(userIdPasswordHash))
     }
 
+    internal fun computePasswordVerifier(username: String, deviceGroupKey: String, salt: String): BigInteger {
+        digest.reset()
+        digest.update(deviceGroupKey.toByteArray())
+        digest.update(username.toByteArray())
+        digest.update(":".toByteArray())
+        val fullPassword = digest.digest(
+            android.util.Base64.decode(
+                random.nextInt(40).toString(),
+                android.util.Base64.NO_WRAP
+            )
+        )
+        digest.reset()
+        digest.update(salt.toByteArray())
+        return g.modPow(BigInteger(1, digest.digest(fullPassword)), N)
+    }
+
     // s = ((B - k * (g ^ x) % N) ^ (a + u * x) % N) % N
     internal fun computeS(uValue: BigInteger, xValue: BigInteger, srpB: BigInteger): BigInteger {
         return (

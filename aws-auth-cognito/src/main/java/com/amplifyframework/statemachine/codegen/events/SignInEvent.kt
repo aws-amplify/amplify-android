@@ -28,6 +28,9 @@ class SignInEvent(val eventType: EventType, override val time: Date? = null) : S
             val signInOptions: Map<String, String>
         ) : EventType()
         data class SignedIn(val id: String = "") : EventType()
+        data class ConfirmDevice(val confirmDeviceParams: Map<String, String>, val expiresIn: Int) : EventType()
+        data class ConfirmingDevice(val id: String = "") : EventType()
+        data class FinalizeSignIn(val id: String = "") : EventType()
         data class ReceivedChallenge(val challenge: AuthChallenge) : EventType()
         data class ThrowError(val exception: Exception) : EventType()
     }

@@ -107,20 +107,6 @@ object SignInChallengeHelper {
                 )
                 onSuccess.accept(authSignInResult)
             }
-            is ChallengeNameType.DeviceSrpAuth -> {
-                val authSignInResult = AuthSignInResult(
-                    false,
-                    AuthNextSignInStep(AuthSignInStep.CONFIRM_SIGN_IN_WITH_DEVICE, challengeParams, null)
-                )
-                onSuccess.accept(authSignInResult)
-            }
-            is ChallengeNameType.DevicePasswordVerifier -> {
-                val authSignInResult = AuthSignInResult(
-                    false,
-                    AuthNextSignInStep(AuthSignInStep.CONFIRM_SIGN_IN_WITH_DEVICE_PASSWORD, challengeParams, null)
-                )
-                onSuccess.accept(authSignInResult)
-            }
             else -> onError.accept(AuthException.UnknownException(Exception("Challenge type not supported.")))
         }
     }
