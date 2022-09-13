@@ -17,7 +17,6 @@ package com.amplifyframework.geo.location
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
-import com.amplifyframework.auth.AuthCategory
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
 import com.amplifyframework.geo.GeoCategory
 import com.amplifyframework.geo.GeoException
@@ -31,6 +30,7 @@ import com.amplifyframework.testutils.sync.TestCategory
 import java.util.UUID
 import kotlin.random.Random.Default.nextDouble
 import org.junit.Assert
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -47,12 +47,10 @@ class SearchApiTest {
     @Before
     fun setUp() {
         // Auth plugin uses default configuration
-        val authPlugin = AWSCognitoAuthPlugin()
-        val authCategory = TestCategory.forPlugin(authPlugin) as AuthCategory
-        auth = SynchronousAuth.delegatingToCognito(ApplicationProvider.getApplicationContext(), authPlugin)
+        auth = SynchronousAuth.delegatingToCognito(ApplicationProvider.getApplicationContext(), AWSCognitoAuthPlugin())
 
         // Geo plugin uses above auth category to authenticate users
-        val geoPlugin = AWSLocationGeoPlugin(authCategory = authCategory)
+        val geoPlugin = AWSLocationGeoPlugin()
         val geoCategory = TestCategory.forPlugin(geoPlugin) as GeoCategory
         geo = SynchronousGeo.delegatingTo(geoCategory)
     }
@@ -127,7 +125,7 @@ class SearchApiTest {
 
         // First entry is on top of originally queried coordinates (within 1km)
         val queried = result.places[0].geometry as Coordinates
-        Assert.assertTrue(coordinates.centralAngle(queried) < 0.00001)
+        assertTrue(coordinates.centralAngle(queried) < 0.0002)
     }
 
     private fun signInWithCognito() {

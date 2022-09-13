@@ -15,6 +15,7 @@
 
 package com.amplifyframework.datastore.storage.sqlite;
 
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.model.query.Page;
 import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
@@ -502,10 +503,11 @@ public final class SQLiteStorageAdapterQueryTest {
 
     /**
      * Test querying with Where.Id predicate condition on connected model.
-     * @throws DataStoreException On unexpected failure manipulating items in/out of DataStore
+     * @throws DataStoreException On unexpected failure manipulating items in/out of DataStore.
+     * @throws AmplifyException If schema cannot be found in the registry.
      */
     @Test
-    public void querySavedDataWithIdPredicateOnForeignKey() throws DataStoreException {
+    public void querySavedDataWithIdPredicateOnForeignKey() throws AmplifyException {
         final BlogOwner blogOwner = BlogOwner.builder()
                 .name("Jane Doe")
                 .build();
@@ -519,7 +521,7 @@ public final class SQLiteStorageAdapterQueryTest {
 
         final List<Blog> blogsOwnedByJaneDoe = adapter.query(
                 Blog.class,
-                Where.id(blog.getId())
+                Where.identifier(Blog.class, blog.getId())
         );
         assertTrue(blogsOwnedByJaneDoe.contains(blog));
     }

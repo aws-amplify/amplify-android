@@ -26,6 +26,7 @@ import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
+import com.amplifyframework.testmodels.customprimarykey.Comment;
 import com.amplifyframework.util.GsonFactory;
 
 import com.google.gson.Gson;
@@ -39,6 +40,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -165,5 +167,38 @@ public class SQLCommandProcessorTest {
         QueryPredicate predicate = BlogOwner.ID.eq(abigailMcGregor.getId());
         SqlCommand existsCommand = sqlCommandFactory.existsFor(blogOwnerSchema, predicate);
         assertFalse(sqlCommandProcessor.executeExists(existsCommand));
+    }
+
+    /**
+     * Verify that index for fields included in belongs to is not created for Comments.
+     * @throws AmplifyException on failure to create ModelSchema from class.
+     */
+    @Test
+    public void testIndexNotCreatedWhenFieldsInBelongsTo() throws AmplifyException {
+        ModelSchema commentSchema = ModelSchema.fromModelClass(Comment.class);
+        sqlCommandFactory.createIndexesFor(commentSchema);
+        Set<SqlCommand> sqlCommands = sqlCommandFactory.createIndexesFor(commentSchema);
+        assertEquals(1, sqlCommands.size());
+        String sqlCommand = sqlCommands.iterator().next().sqlStatement();
+        assertTrue(sqlCommand.contains("CREATE INDEX IF NOT EXISTS" +
+                " `undefined_title_content_likes` ON `Comment` (`title`, `content`, `likes`);"));
+        assertFalse(sqlCommand.contains("`postCommentsId`, `content`"));
+    }
+
+
+    /**
+     * Verify that index for foreign key fields is included in the commands.
+     * @throws AmplifyException on failure to create ModelSchema from class.
+     */
+    @Test
+    public void testForeignKeyIndexCreated() throws AmplifyException {
+        ModelSchema commentSchema = ModelSchema.fromModelClass(Comment.class);
+        sqlCommandFactory.createIndexesFor(commentSchema);
+        Set<SqlCommand> sqlCommands = sqlCommandFactory.createIndexesForForeignKeys(commentSchema);
+        assertEquals(1, sqlCommands.size());
+        String sqlCommand = sqlCommands.iterator().next().sqlStatement();
+        assertTrue(sqlCommand.contains("CREATE INDEX IF NOT EXISTS `Comment@@postForeignKey` " +
+                "ON `Comment` (`@@postForeignKey`);"));
+
     }
 }

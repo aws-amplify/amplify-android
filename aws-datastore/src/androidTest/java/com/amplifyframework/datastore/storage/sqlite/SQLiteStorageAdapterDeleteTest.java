@@ -133,7 +133,7 @@ public final class SQLiteStorageAdapterDeleteTest {
         TestObserver<String> deleteObserver = adapter.observe()
                 .filter(change -> StorageItemChange.Type.DELETE.equals(change.type()))
                 .map(StorageItemChange::item)
-                .map(Model::getId)
+                .map(Model::getPrimaryKeyString)
                 .test();
 
         // Triggers a delete.
@@ -265,7 +265,7 @@ public final class SQLiteStorageAdapterDeleteTest {
         TestObserver<String> deleteObserver = adapter.observe()
                 .filter(change -> StorageItemChange.Type.DELETE.equals(change.type()))
                 .map(StorageItemChange::item)
-                .map(Model::getId)
+                .map(Model::getPrimaryKeyString)
                 .test();
 
         // Triggers a delete of all blogs.
@@ -330,7 +330,7 @@ public final class SQLiteStorageAdapterDeleteTest {
         TestObserver<String> deleteObserver = adapter.observe()
                 .filter(change -> StorageItemChange.Type.DELETE.equals(change.type()))
                 .map(StorageItemChange::item)
-                .map(Model::getId)
+                .map(Model::getPrimaryKeyString)
                 .test();
 
         // Delete parent model

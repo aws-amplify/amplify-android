@@ -16,7 +16,6 @@
 package com.amplifyframework.auth.cognito.helpers
 
 import androidx.annotation.VisibleForTesting
-import com.amplifyframework.auth.AuthException
 import java.math.BigInteger
 import java.security.MessageDigest
 import java.security.SecureRandom
@@ -35,38 +34,11 @@ import org.jetbrains.annotations.TestOnly
  * https://github.com/aws-amplify/aws-sdk-android/blob/main/aws-android-sdk-cognitoidentityprovider/src/main/java/com/amazonaws/mobileconnectors/cognitoidentityprovider/CognitoUser.java#L3587
  * SRP requires Kotlin version 1.5+, and minSDK version 24.
  */
-class SRPHelper(private val username: String, private val password: String) {
+class SRPHelper(private val password: String) {
 
     companion object {
-        private val HMAC_SHA_256 = "HmacSHA256"
         private val EPHEMERAL_KEY_LENGTH = 1024
-
-        /**
-         * Generates secret hash. Uses HMAC SHA256.
-         *
-         * @param userId User ID
-         * @param clientId Client ID
-         * @param clientSecret Client secret
-         * @return secret hash as a `String`, `null ` if `clientSecret` is `null`
-         */
-        fun getSecretHash(userId: String?, clientId: String?, clientSecret: String?): String? {
-            return when {
-                userId == null -> throw AuthException.InvalidParameterException(Exception("user ID cannot be null"))
-                clientId == null -> throw AuthException.InvalidParameterException(Exception("client ID cannot be null"))
-                clientSecret.isNullOrEmpty() -> null
-                else ->
-                    try {
-                        val mac = Mac.getInstance(HMAC_SHA_256)
-                        val keySpec = SecretKeySpec(clientSecret.toByteArray(), HMAC_SHA_256)
-                        mac.init(keySpec)
-                        mac.update(userId.toByteArray())
-                        val raw = mac.doFinal(clientId.toByteArray())
-                        String(android.util.Base64.encode(raw, android.util.Base64.NO_WRAP))
-                    } catch (e: Exception) {
-                        throw AuthException.UnknownException(Exception("errors in HMAC calculation"))
-                    }
-            }
-        }
+        private val HMAC_SHA_256 = "HmacSHA256"
     }
 
     // Generator 'g' parameter.

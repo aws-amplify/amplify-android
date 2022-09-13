@@ -21,8 +21,6 @@ import android.os.HandlerThread;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.logging.Logger;
 
-import com.amazonaws.mobileconnectors.pinpoint.analytics.AnalyticsClient;
-
 import java.util.Locale;
 
 /**
@@ -42,7 +40,7 @@ final class AutoEventSubmitter {
         this.autoFlushInterval = autoFlushInterval;
         this.submitRunnable = () -> {
             LOG.debug(String.format(Locale.US, "Auto submitting events after %d seconds", autoFlushInterval));
-            analyticsClient.submitEvents();
+            analyticsClient.flushEvents();
             handler.postDelayed(this.submitRunnable, autoFlushInterval);
         };
     }

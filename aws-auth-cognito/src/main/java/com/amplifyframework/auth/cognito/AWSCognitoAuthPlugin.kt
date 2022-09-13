@@ -29,6 +29,7 @@ import com.amplifyframework.auth.AuthSession
 import com.amplifyframework.auth.AuthUser
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
+import com.amplifyframework.auth.cognito.asf.UserContextDataProvider
 import com.amplifyframework.auth.cognito.data.AWSCognitoAuthCredentialStore
 import com.amplifyframework.auth.cognito.data.AWSCognitoLegacyCredentialStore
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
@@ -45,6 +46,7 @@ import com.amplifyframework.auth.options.AuthUpdateUserAttributesOptions
 import com.amplifyframework.auth.options.AuthWebUISignInOptions
 import com.amplifyframework.auth.result.AuthResetPasswordResult
 import com.amplifyframework.auth.result.AuthSignInResult
+import com.amplifyframework.auth.result.AuthSignOutResult
 import com.amplifyframework.auth.result.AuthSignUpResult
 import com.amplifyframework.auth.result.AuthUpdateAttributeResult
 import com.amplifyframework.core.Action
@@ -74,10 +76,12 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
     @Throws(AmplifyException::class)
     override fun configure(pluginConfiguration: JSONObject, context: Context) {
         try {
-            val configuration = AuthConfiguration.fromJson(pluginConfiguration).build()
+            val configuration = AuthConfiguration.fromJson(pluginConfiguration)
             val authEnvironment = AuthEnvironment(
                 configuration,
                 AWSCognitoAuthServiceBehavior.fromConfiguration(configuration),
+                configuration.userPool?.let { UserContextDataProvider(context, it) },
+                HostedUIClient.create(context, configuration.oauth, logger),
                 logger
             )
             val authStateMachine = AuthStateMachine(authEnvironment)
@@ -112,6 +116,15 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
     override fun confirmSignUp(
         username: String,
         confirmationCode: String,
+        onSuccess: Consumer<AuthSignUpResult>,
+        onError: Consumer<AuthException>
+    ) {
+        realPlugin.confirmSignUp(username, confirmationCode, onSuccess, onError)
+    }
+
+    override fun confirmSignUp(
+        username: String,
+        confirmationCode: String,
         options: AuthConfirmSignUpOptions,
         onSuccess: Consumer<AuthSignUpResult>,
         onError: Consumer<AuthException>
@@ -119,13 +132,12 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         realPlugin.confirmSignUp(username, confirmationCode, options, onSuccess, onError)
     }
 
-    override fun confirmSignUp(
+    override fun resendSignUpCode(
         username: String,
-        confirmationCode: String,
         onSuccess: Consumer<AuthSignUpResult>,
         onError: Consumer<AuthException>
     ) {
-        realPlugin.confirmSignUp(username, confirmationCode, onSuccess, onError)
+        realPlugin.resendSignUpCode(username, onSuccess, onError)
     }
 
     override fun resendSignUpCode(
@@ -137,12 +149,13 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         realPlugin.resendSignUpCode(username, options, onSuccess, onError)
     }
 
-    override fun resendSignUpCode(
-        username: String,
-        onSuccess: Consumer<AuthSignUpResult>,
+    override fun signIn(
+        username: String?,
+        password: String?,
+        onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
     ) {
-        realPlugin.resendSignUpCode(username, onSuccess, onError)
+        realPlugin.signIn(username, password, onSuccess, onError)
     }
 
     override fun signIn(
@@ -155,13 +168,12 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         realPlugin.signIn(username, password, options, onSuccess, onError)
     }
 
-    override fun signIn(
-        username: String?,
-        password: String?,
+    override fun confirmSignIn(
+        confirmationCode: String,
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
     ) {
-        realPlugin.signIn(username, password, onSuccess, onError)
+        realPlugin.confirmSignIn(confirmationCode, onSuccess, onError)
     }
 
     override fun confirmSignIn(
@@ -171,14 +183,6 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         onError: Consumer<AuthException>
     ) {
         realPlugin.confirmSignIn(confirmationCode, options, onSuccess, onError)
-    }
-
-    override fun confirmSignIn(
-        confirmationCode: String,
-        onSuccess: Consumer<AuthSignInResult>,
-        onError: Consumer<AuthException>
-    ) {
-        realPlugin.confirmSignIn(confirmationCode, onSuccess, onError)
     }
 
     override fun signInWithSocialWebUI(
@@ -221,10 +225,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         realPlugin.handleWebUISignInResponse(intent)
     }
 
-    override fun fetchAuthSession(
-        onSuccess: Consumer<AuthSession>,
-        onError: Consumer<AuthException>
-    ) {
+    override fun fetchAuthSession(onSuccess: Consumer<AuthSession>, onError: Consumer<AuthException>) {
         realPlugin.fetchAuthSession(onSuccess, onError)
     }
 
@@ -269,22 +270,24 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
     }
 
     override fun confirmResetPassword(
+        username: String,
         newPassword: String,
         confirmationCode: String,
         options: AuthConfirmResetPasswordOptions,
         onSuccess: Action,
         onError: Consumer<AuthException>
     ) {
-        realPlugin.confirmResetPassword(newPassword, confirmationCode, options, onSuccess, onError)
+        realPlugin.confirmResetPassword(username, newPassword, confirmationCode, options, onSuccess, onError)
     }
 
     override fun confirmResetPassword(
+        username: String,
         newPassword: String,
         confirmationCode: String,
         onSuccess: Action,
         onError: Consumer<AuthException>
     ) {
-        realPlugin.confirmResetPassword(newPassword, confirmationCode, onSuccess, onError)
+        realPlugin.confirmResetPassword(username, newPassword, confirmationCode, onSuccess, onError)
     }
 
     override fun updatePassword(
@@ -370,16 +373,12 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         realPlugin.getCurrentUser(onSuccess, onError)
     }
 
-    override fun signOut(onSuccess: Action, onError: Consumer<AuthException>) {
-        realPlugin.signOut(onSuccess, onError)
+    override fun signOut(onComplete: Consumer<AuthSignOutResult>) {
+        realPlugin.signOut(onComplete)
     }
 
-    override fun signOut(
-        options: AuthSignOutOptions,
-        onSuccess: Action,
-        onError: Consumer<AuthException>
-    ) {
-        realPlugin.signOut(options, onSuccess, onError)
+    override fun signOut(options: AuthSignOutOptions, onComplete: Consumer<AuthSignOutResult>) {
+        realPlugin.signOut(options, onComplete)
     }
 
     override fun deleteUser(onSuccess: Action, onError: Consumer<AuthException>) {

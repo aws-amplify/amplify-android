@@ -92,7 +92,7 @@ final class PersistentMutationOutbox implements MutationOutbox {
         return Completable.defer(() -> {
             // If there is no existing mutation for the model, then just apply the incoming
             // mutation, and be done with this.
-            String modelId = incomingMutation.getMutatedItem().getId();
+            String modelId = incomingMutation.getMutatedItem().getPrimaryKeyString();
             @SuppressWarnings("unchecked")
             PendingMutation<T> existingMutation = (PendingMutation<T>) mutationQueue.nextMutationForModelId(modelId);
             if (existingMutation == null || inFlightMutations.contains(existingMutation.getMutationId())) {
@@ -190,8 +190,8 @@ final class PersistentMutationOutbox implements MutationOutbox {
                         try {
                             PendingMutation.PersistentRecord persistentRecord = results.next();
                             mutationQueue.add(converter.fromRecord(persistentRecord));
-                        } catch (DataStoreException conversionFailure) {
-                            emitter.onError(conversionFailure);
+                        } catch (Throwable throwable) {
+                            emitter.onError(throwable);
                             return;
                         }
                     }

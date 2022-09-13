@@ -21,9 +21,9 @@ import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 
 interface AuthenticationActions {
     fun configureAuthenticationAction(event: AuthenticationEvent.EventType.Configure): Action
-    fun initiateSRPSignInAction(event: AuthenticationEvent.EventType.SignInRequested): Action
+    fun initiateSignInAction(event: AuthenticationEvent.EventType.SignInRequested): Action
     fun initiateSignOutAction(
         event: AuthenticationEvent.EventType.SignOutRequested,
-        signedInData: SignedInData
+        signedInData: SignedInData?
     ): Action
 }

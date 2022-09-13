@@ -1,7 +1,6 @@
 package com.amplifyframework.testmodels.ecommerce;
 
 
-import java.util.List;
 import java.util.UUID;
 import java.util.Objects;
 
@@ -26,10 +25,11 @@ public final class Customer implements Model {
   private final @ModelField(targetType="ID", isRequired = true) String id;
   private final @ModelField(targetType="String", isRequired = true) String email;
   private final @ModelField(targetType="String") String username;
+
   public String getId() {
       return id;
   }
-  
+
   public String getEmail() {
       return email;
   }
@@ -52,7 +52,7 @@ public final class Customer implements Model {
         return false;
       } else {
       Customer customer = (Customer) obj;
-      return ObjectsCompat.equals(getId(), customer.getId()) &&
+      return ObjectsCompat.equals(resolveIdentifier(), customer.resolveIdentifier()) &&
               ObjectsCompat.equals(getEmail(), customer.getEmail()) &&
               ObjectsCompat.equals(getUsername(), customer.getUsername());
       }
@@ -61,7 +61,7 @@ public final class Customer implements Model {
   @Override
    public int hashCode() {
     return new StringBuilder()
-      .append(getId())
+      .append(resolveIdentifier())
       .append(getEmail())
       .append(getUsername())
       .toString()
@@ -72,7 +72,7 @@ public final class Customer implements Model {
    public String toString() {
     return new StringBuilder()
       .append("Customer {")
-      .append("id=" + String.valueOf(getId()) + ", ")
+      .append("id=" + String.valueOf(resolveIdentifier()) + ", ")
       .append("email=" + String.valueOf(getEmail()) + ", ")
       .append("username=" + String.valueOf(getUsername()))
       .append("}")

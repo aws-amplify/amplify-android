@@ -21,13 +21,46 @@ import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.auth.cognito.helpers.JWTParser
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.SignOutActions
+import com.amplifyframework.statemachine.codegen.data.GlobalSignOutErrorData
+import com.amplifyframework.statemachine.codegen.data.HostedUIErrorData
+import com.amplifyframework.statemachine.codegen.data.RevokeTokenErrorData
+import com.amplifyframework.statemachine.codegen.data.SignedOutData
+import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.SignOutEvent
 
 object SignOutCognitoActions : SignOutActions {
+    override fun hostedUISignOutAction(event: SignOutEvent.EventType.InvokeHostedUISignOut) =
+        Action<AuthEnvironment>("HostedUISignOut") { id, dispatcher ->
+            logger?.verbose("$id Starting execution")
+            try {
+                if (hostedUIClient == null) throw Exception() // TODO: More detailed exception
+                hostedUIClient.launchCustomTabsSignOut(event.signOutData.browserPackage)
+            } catch (e: Exception) {
+                logger?.warn("Failed to sign out web ui.", e)
+                val hostedUIErrorData = HostedUIErrorData(e)
+                val evt = if (event.signOutData.globalSignOut) {
+                    SignOutEvent(SignOutEvent.EventType.SignOutGlobally(event.signedInData, hostedUIErrorData))
+                } else {
+                    SignOutEvent(SignOutEvent.EventType.RevokeToken(event.signedInData, hostedUIErrorData))
+                }
+                logger?.verbose("$id Sending event ${evt.type}")
+                dispatcher.send(evt)
+            }
+        }
+
     override fun localSignOutAction(event: SignOutEvent.EventType.SignOutLocally) =
         Action<AuthEnvironment>("LocalSignOut") { id, dispatcher ->
             logger?.verbose("$id Starting execution")
-            val evt = SignOutEvent(SignOutEvent.EventType.SignedOutSuccess(event.signedInData))
+            val evt = SignOutEvent(
+                SignOutEvent.EventType.SignedOutSuccess(
+                    SignedOutData(
+                        lastKnownUsername = event.signedInData?.username,
+                        hostedUIErrorData = event.hostedUIErrorData,
+                        globalSignOutErrorData = event.globalSignOutErrorData,
+                        revokeTokenErrorData = event.revokeTokenErrorData
+                    )
+                )
+            )
             logger?.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
         }
@@ -35,18 +68,25 @@ object SignOutCognitoActions : SignOutActions {
     override fun globalSignOutAction(event: SignOutEvent.EventType.SignOutGlobally) =
         Action<AuthEnvironment>("GlobalSignOut") { id, dispatcher ->
             logger?.verbose("$id Starting execution")
+            val accessToken = event.signedInData.cognitoUserPoolTokens.accessToken
             val evt = try {
                 cognitoAuthService.cognitoIdentityProviderClient?.globalSignOut(
-                    GlobalSignOutRequest { this.accessToken = event.signedInData.cognitoUserPoolTokens.accessToken }
+                    GlobalSignOutRequest { this.accessToken = accessToken }
                 )
-                SignOutEvent(SignOutEvent.EventType.RevokeToken(event.signedInData))
+                SignOutEvent(
+                    SignOutEvent.EventType.RevokeToken(event.signedInData, hostedUIErrorData = event.hostedUIErrorData)
+                )
             } catch (e: Exception) {
                 logger?.warn("Failed to sign out globally.", e)
+                val globalSignOutErrorData = GlobalSignOutErrorData(
+                    accessToken = accessToken,
+                    error = e
+                )
                 SignOutEvent(
-                    SignOutEvent.EventType.SignOutLocally(
-                        event.signedInData,
-                        isGlobalSignOut = false,
-                        invalidateTokens = false
+                    SignOutEvent.EventType.SignOutGloballyError(
+                        signedInData = event.signedInData,
+                        hostedUIErrorData = event.hostedUIErrorData,
+                        globalSignOutErrorData = globalSignOutErrorData
                     )
                 )
             }
@@ -57,30 +97,81 @@ object SignOutCognitoActions : SignOutActions {
     override fun revokeTokenAction(event: SignOutEvent.EventType.RevokeToken) =
         Action<AuthEnvironment>("RevokeTokens") { id, dispatcher ->
             logger?.verbose("$id Starting execution")
-            try {
+            val accessToken = event.signedInData.cognitoUserPoolTokens.accessToken
+            val refreshToken = event.signedInData.cognitoUserPoolTokens.refreshToken
+            val evt = try {
                 // Check for "origin_jti" claim in access token, else skip revoking
-                val accessToken = event.signedInData.cognitoUserPoolTokens.accessToken
                 if (accessToken?.let { JWTParser.hasClaim(it, "origin_jti") } == true) {
                     cognitoAuthService.cognitoIdentityProviderClient?.revokeToken(
                         RevokeTokenRequest {
                             clientId = configuration.userPool?.appClient
                             clientSecret = configuration.userPool?.appClientSecret
-                            token = event.signedInData.cognitoUserPoolTokens.refreshToken
+                            token = refreshToken
                         }
                     )
+                    SignOutEvent(SignOutEvent.EventType.SignOutLocally(event.signedInData, null))
                 } else {
                     logger?.debug("Access Token does not contain `origin_jti` claim. Skip revoking tokens.")
+                    val error = RevokeTokenErrorData(
+                        refreshToken = refreshToken,
+                        error = Exception("Access Token does not contain `origin_jti` claim. Skip revoking tokens."),
+                    )
+
+                    SignOutEvent(
+                        SignOutEvent.EventType.SignOutLocally(
+                            signedInData = event.signedInData,
+                            hostedUIErrorData = event.hostedUIErrorData,
+                            globalSignOutErrorData = event.globalSignOutErrorData,
+                            revokeTokenErrorData = error
+                        )
+                    )
                 }
             } catch (e: Exception) {
                 logger?.warn("Failed to revoke tokens.", e)
+                val error = RevokeTokenErrorData(
+                    refreshToken = refreshToken,
+                    error = e
+                )
+
+                SignOutEvent(
+                    SignOutEvent.EventType.SignOutLocally(
+                        signedInData = event.signedInData,
+                        hostedUIErrorData = event.hostedUIErrorData,
+                        globalSignOutErrorData = event.globalSignOutErrorData,
+                        revokeTokenErrorData = error
+                    )
+                )
             }
+            logger?.verbose("$id Sending event ${evt.type}")
+            dispatcher.send(evt)
+        }
+
+    override fun buildRevokeTokenErrorAction(event: SignOutEvent.EventType.SignOutGloballyError) =
+        Action<AuthEnvironment>("BuildRevokeTokenError") { id, dispatcher ->
+            logger?.verbose("$id Starting execution")
+
+            val error = RevokeTokenErrorData(
+                refreshToken = event.signedInData.cognitoUserPoolTokens.refreshToken,
+                error = Exception("RevokeToken not attempted because GlobalSignOut failed.")
+            )
+
             val evt = SignOutEvent(
                 SignOutEvent.EventType.SignOutLocally(
-                    event.signedInData,
-                    isGlobalSignOut = false,
-                    invalidateTokens = false
+                    signedInData = event.signedInData,
+                    hostedUIErrorData = event.hostedUIErrorData,
+                    globalSignOutErrorData = event.globalSignOutErrorData,
+                    revokeTokenErrorData = error
                 )
             )
+
+            logger?.verbose("$id Sending event ${evt.type}")
+            dispatcher.send(evt)
+        }
+
+    override fun userCancelledAction(event: SignOutEvent.EventType.UserCancelled) =
+        Action<AuthEnvironment>("UserCancelledSignOut") { id, dispatcher ->
+            logger?.verbose("$id Starting execution")
+            val evt = AuthenticationEvent(AuthenticationEvent.EventType.CancelSignOut(event.signedInData))
             logger?.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
         }

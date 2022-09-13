@@ -37,7 +37,6 @@ dependencies {
     testImplementation dependency.mockwebserver
     testImplementation dependency.rxjava
     testImplementation dependency.robolectric
-    testImplementation('software.amazon.awssdk.crt:aws-crt:0.15.21')
 
     androidTestImplementation project(path: ':testutils')
     androidTestImplementation project(path: ':testmodels')

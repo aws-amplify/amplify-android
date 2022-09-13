@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -34,6 +34,7 @@ import com.amplifyframework.auth.options.AuthUpdateUserAttributesOptions;
 import com.amplifyframework.auth.options.AuthWebUISignInOptions;
 import com.amplifyframework.auth.result.AuthResetPasswordResult;
 import com.amplifyframework.auth.result.AuthSignInResult;
+import com.amplifyframework.auth.result.AuthSignOutResult;
 import com.amplifyframework.auth.result.AuthSignUpResult;
 import com.amplifyframework.auth.result.AuthUpdateAttributeResult;
 import com.amplifyframework.core.Action;
@@ -315,6 +316,7 @@ public interface AuthCategoryBehavior {
 
     /**
      * Complete password recovery process by inputting user's desired new password and confirmation code.
+     * @param username A login identifier e.g. `superdog22`; or an email/phone number, depending on configuration
      * @param newPassword The user's desired new password
      * @param confirmationCode The confirmation code the user received after starting the forgotPassword process
      * @param options Advanced options such as a map of auth information for custom auth
@@ -322,6 +324,7 @@ public interface AuthCategoryBehavior {
      * @param onError Error callback
      */
     void confirmResetPassword(
+            @NonNull String username,
             @NonNull String newPassword,
             @NonNull String confirmationCode,
             @NonNull AuthConfirmResetPasswordOptions options,
@@ -330,12 +333,14 @@ public interface AuthCategoryBehavior {
 
     /**
      * Complete password recovery process by inputting user's desired new password and confirmation code.
+     * @param username A login identifier e.g. `superdog22`; or an email/phone number, depending on configuration
      * @param newPassword The user's desired new password
      * @param confirmationCode The confirmation code the user received after starting the forgotPassword process
      * @param onSuccess Success callback
      * @param onError Error callback
      */
     void confirmResetPassword(
+            @NonNull String username,
             @NonNull String newPassword,
             @NonNull String confirmationCode,
             @NonNull Action onSuccess,
@@ -470,23 +475,19 @@ public interface AuthCategoryBehavior {
 
     /**
      * Sign out of the current device.
-     * @param onSuccess Success callback
-     * @param onError Error callback
+     * @param onComplete Complete callback
      */
-    void signOut(
-            @NonNull Action onSuccess,
-            @NonNull Consumer<AuthException> onError);
+    void signOut(@NonNull Consumer<AuthSignOutResult> onComplete);
 
     /**
      * Sign out with advanced options.
      * @param options Advanced options for sign out (e.g. whether to sign out of all devices globally)
-     * @param onSuccess Success callback
-     * @param onError Error callback
+     * @param onComplete Complete callback
      */
     void signOut(
             @NonNull AuthSignOutOptions options,
-            @NonNull Action onSuccess,
-            @NonNull Consumer<AuthException> onError);
+            @NonNull Consumer<AuthSignOutResult> onComplete
+    );
 
     /**
      * Delete the account of the currently signed in user.

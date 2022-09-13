@@ -20,28 +20,26 @@ import com.amplifyframework.auth.cognito.actions.AuthenticationCognitoActions
 import com.amplifyframework.auth.cognito.actions.AuthorizationCognitoActions
 import com.amplifyframework.auth.cognito.actions.DeleteUserActions
 import com.amplifyframework.auth.cognito.actions.FetchAuthSessionCognitoActions
-import com.amplifyframework.auth.cognito.actions.FetchAwsCredentialsCognitoActions
-import com.amplifyframework.auth.cognito.actions.FetchIdentityCognitoActions
-import com.amplifyframework.auth.cognito.actions.FetchUserPoolTokensCognitoActions
+import com.amplifyframework.auth.cognito.actions.HostedUICognitoActions
 import com.amplifyframework.auth.cognito.actions.SRPCognitoActions
+import com.amplifyframework.auth.cognito.actions.SignInChallengeCognitoActions
 import com.amplifyframework.auth.cognito.actions.SignInCognitoActions
+import com.amplifyframework.auth.cognito.actions.SignInCustomActions
 import com.amplifyframework.auth.cognito.actions.SignOutCognitoActions
-import com.amplifyframework.auth.cognito.actions.SignUpCognitoActions
 import com.amplifyframework.statemachine.Environment
 import com.amplifyframework.statemachine.StateMachine
 import com.amplifyframework.statemachine.StateMachineResolver
 import com.amplifyframework.statemachine.codegen.states.AuthState
 import com.amplifyframework.statemachine.codegen.states.AuthenticationState
 import com.amplifyframework.statemachine.codegen.states.AuthorizationState
+import com.amplifyframework.statemachine.codegen.states.CustomSignInState
 import com.amplifyframework.statemachine.codegen.states.DeleteUserState
 import com.amplifyframework.statemachine.codegen.states.FetchAuthSessionState
-import com.amplifyframework.statemachine.codegen.states.FetchAwsCredentialsState
-import com.amplifyframework.statemachine.codegen.states.FetchIdentityState
-import com.amplifyframework.statemachine.codegen.states.FetchUserPoolTokensState
+import com.amplifyframework.statemachine.codegen.states.HostedUISignInState
 import com.amplifyframework.statemachine.codegen.states.SRPSignInState
+import com.amplifyframework.statemachine.codegen.states.SignInChallengeState
 import com.amplifyframework.statemachine.codegen.states.SignInState
 import com.amplifyframework.statemachine.codegen.states.SignOutState
-import com.amplifyframework.statemachine.codegen.states.SignUpState
 
 internal class AuthStateMachine(
     resolver: StateMachineResolver<AuthState>,
@@ -51,18 +49,18 @@ internal class AuthStateMachine(
     constructor(environment: Environment) : this(
         AuthState.Resolver(
             AuthenticationState.Resolver(
-                SignUpState.Resolver(SignUpCognitoActions),
-                SignInState.Resolver(SRPSignInState.Resolver(SRPCognitoActions), SignInCognitoActions),
+                SignInState.Resolver(
+                    SRPSignInState.Resolver(SRPCognitoActions),
+                    CustomSignInState.Resolver(SignInCustomActions),
+                    SignInChallengeState.Resolver(SignInChallengeCognitoActions),
+                    HostedUISignInState.Resolver(HostedUICognitoActions),
+                    SignInCognitoActions
+                ),
                 SignOutState.Resolver(SignOutCognitoActions),
                 AuthenticationCognitoActions,
             ),
             AuthorizationState.Resolver(
-                FetchAuthSessionState.Resolver(
-                    FetchAwsCredentialsState.Resolver(FetchAwsCredentialsCognitoActions),
-                    FetchIdentityState.Resolver(FetchIdentityCognitoActions),
-                    FetchUserPoolTokensState.Resolver(FetchUserPoolTokensCognitoActions),
-                    FetchAuthSessionCognitoActions
-                ),
+                FetchAuthSessionState.Resolver(FetchAuthSessionCognitoActions),
                 DeleteUserState.Resolver(DeleteUserActions),
                 AuthorizationCognitoActions
             ),
@@ -75,19 +73,18 @@ internal class AuthStateMachine(
         fun logging(environment: Environment) = AuthStateMachine(
             AuthState.Resolver(
                 AuthenticationState.Resolver(
-                    SignUpState.Resolver(SignUpCognitoActions).logging(),
-                    SignInState.Resolver(SRPSignInState.Resolver(SRPCognitoActions).logging(), SignInCognitoActions)
-                        .logging(),
+                    SignInState.Resolver(
+                        SRPSignInState.Resolver(SRPCognitoActions).logging(),
+                        CustomSignInState.Resolver(SignInCustomActions).logging(),
+                        SignInChallengeState.Resolver(SignInChallengeCognitoActions).logging(),
+                        HostedUISignInState.Resolver(HostedUICognitoActions).logging(),
+                        SignInCognitoActions
+                    ).logging(),
                     SignOutState.Resolver(SignOutCognitoActions).logging(),
                     AuthenticationCognitoActions,
                 ).logging(),
                 AuthorizationState.Resolver(
-                    FetchAuthSessionState.Resolver(
-                        FetchAwsCredentialsState.Resolver(FetchAwsCredentialsCognitoActions).logging(),
-                        FetchIdentityState.Resolver(FetchIdentityCognitoActions).logging(),
-                        FetchUserPoolTokensState.Resolver(FetchUserPoolTokensCognitoActions).logging(),
-                        FetchAuthSessionCognitoActions
-                    ).logging(),
+                    FetchAuthSessionState.Resolver(FetchAuthSessionCognitoActions).logging(),
                     DeleteUserState.Resolver(DeleteUserActions),
                     AuthorizationCognitoActions
                 ).logging(),

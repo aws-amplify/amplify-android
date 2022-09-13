@@ -15,6 +15,7 @@
 
 package com.amplifyframework.testmodels.personcar;
 
+import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.model.Model;
@@ -137,6 +138,11 @@ public final class Person implements Model {
      */
     public String getId() {
         return id;
+    }
+
+    @NonNull
+    public String resolveIdentifier() {
+        return  getId();
     }
 
     /**

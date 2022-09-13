@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -34,6 +34,7 @@ import com.amplifyframework.auth.options.AuthUpdateUserAttributesOptions;
 import com.amplifyframework.auth.options.AuthWebUISignInOptions;
 import com.amplifyframework.auth.result.AuthResetPasswordResult;
 import com.amplifyframework.auth.result.AuthSignInResult;
+import com.amplifyframework.auth.result.AuthSignOutResult;
 import com.amplifyframework.auth.result.AuthSignUpResult;
 import com.amplifyframework.auth.result.AuthUpdateAttributeResult;
 import com.amplifyframework.core.Action;
@@ -255,23 +256,24 @@ public final class AuthCategory extends Category<AuthPlugin<?>> implements AuthC
 
     @Override
     public void confirmResetPassword(
+            @NonNull String username,
             @NonNull String newPassword,
             @NonNull String confirmationCode,
             @NonNull AuthConfirmResetPasswordOptions options,
             @NonNull Action onSuccess,
             @NonNull Consumer<AuthException> onError
     ) {
-        getSelectedPlugin().confirmResetPassword(newPassword, confirmationCode, options, onSuccess, onError);
+        getSelectedPlugin().confirmResetPassword(username, newPassword, confirmationCode, options, onSuccess, onError);
     }
 
     @Override
     public void confirmResetPassword(
-            @NonNull String newPassword,
+            String username, @NonNull String newPassword,
             @NonNull String confirmationCode,
             @NonNull Action onSuccess,
             @NonNull Consumer<AuthException> onError
     ) {
-        getSelectedPlugin().confirmResetPassword(newPassword, confirmationCode, onSuccess, onError);
+        getSelectedPlugin().confirmResetPassword(username, newPassword, confirmationCode, onSuccess, onError);
     }
 
     @Override
@@ -365,16 +367,15 @@ public final class AuthCategory extends Category<AuthPlugin<?>> implements AuthC
     }
 
     @Override
-    public void signOut(@NonNull Action onSuccess, @NonNull Consumer<AuthException> onError) {
-        getSelectedPlugin().signOut(onSuccess, onError);
+    public void signOut(@NonNull Consumer<AuthSignOutResult> onComplete) {
+        getSelectedPlugin().signOut(onComplete);
     }
 
-    @Override
-    public void signOut(
+    @Override public void signOut(
             @NonNull AuthSignOutOptions options,
-            @NonNull Action onSuccess,
-            @NonNull Consumer<AuthException> onError) {
-        getSelectedPlugin().signOut(options, onSuccess, onError);
+            @NonNull Consumer<AuthSignOutResult> onComplete
+    ) {
+        getSelectedPlugin().signOut(options, onComplete);
     }
     
     @Override

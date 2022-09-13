@@ -15,6 +15,8 @@
 
 package com.amplifyframework.statemachine.codegen.states
 
+import com.amplifyframework.auth.cognito.isAuthenticationEvent
+import com.amplifyframework.auth.cognito.isSignOutEvent
 import com.amplifyframework.statemachine.State
 import com.amplifyframework.statemachine.StateMachineEvent
 import com.amplifyframework.statemachine.StateMachineResolver
@@ -23,40 +25,27 @@ import com.amplifyframework.statemachine.codegen.actions.AuthenticationActions
 import com.amplifyframework.statemachine.codegen.data.SignedInData
 import com.amplifyframework.statemachine.codegen.data.SignedOutData
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
-import com.amplifyframework.statemachine.codegen.events.DeleteUserEvent
-import com.amplifyframework.statemachine.codegen.events.SignUpEvent
+import com.amplifyframework.statemachine.codegen.events.SignOutEvent
 
 sealed class AuthenticationState : State {
     data class NotConfigured(val id: String = "") : AuthenticationState()
     data class Configured(val id: String = "") : AuthenticationState()
-    data class SigningIn(override var signInState: SignInState?) : AuthenticationState()
+    data class SigningIn(override var signInState: SignInState) : AuthenticationState()
     data class SignedIn(val signedInData: SignedInData) : AuthenticationState()
-    data class SigningOut(override var signOutState: SignOutState?) : AuthenticationState()
+    data class SigningOut(override var signOutState: SignOutState) : AuthenticationState()
     data class SignedOut(val signedOutData: SignedOutData) : AuthenticationState()
-    data class SigningUp(override var signUpState: SignUpState?) : AuthenticationState()
     data class Error(val exception: Exception) : AuthenticationState()
 
-    open var signInState: SignInState? = SignInState.NotStarted()
-    open var signUpState: SignUpState? = SignUpState.NotStarted()
-    open var signOutState: SignOutState? = SignOutState.NotStarted()
-    open var deleteUserState: DeleteUserState? = DeleteUserState.NotStarted()
+    open var signInState: SignInState = SignInState.NotStarted()
+    open var signOutState: SignOutState = SignOutState.NotStarted()
 
     class Resolver(
-        private val signUpResolver: StateMachineResolver<SignUpState>,
         private val signInResolver: StateMachineResolver<SignInState>,
         private val signOutResolver: StateMachineResolver<SignOutState>,
         private val authenticationActions: AuthenticationActions
     ) :
         StateMachineResolver<AuthenticationState> {
         override val defaultState = NotConfigured()
-
-        private fun asAuthenticationEvent(event: StateMachineEvent): AuthenticationEvent.EventType? {
-            return (event as? AuthenticationEvent)?.eventType
-        }
-
-        private fun asDeleteUserEvent(event: StateMachineEvent): DeleteUserEvent.EventType? {
-            return (event as? DeleteUserEvent)?.eventType
-        }
 
         override fun resolve(
             oldState: AuthenticationState,
@@ -66,18 +55,13 @@ sealed class AuthenticationState : State {
             val actions = resolution.actions.toMutableList()
             val builder = Builder(resolution.newState)
 
-            oldState.signUpState?.let { signUpResolver.resolve(it, event) }?.let {
-                builder.signUpState = it.newState
+            oldState.signInState.let { signInResolver.resolve(it, event) }.let {
+                builder.updateSignInState(it.newState)
                 actions += it.actions
             }
 
-            oldState.signInState?.let { signInResolver.resolve(it, event) }?.let {
-                builder.signInState = it.newState
-                actions += it.actions
-            }
-
-            oldState.signOutState?.let { signOutResolver.resolve(it, event) }?.let {
-                builder.signOutState = it.newState
+            oldState.signOutState.let { signOutResolver.resolve(it, event) }.let {
+                builder.updateSignOutState(it.newState)
                 actions += it.actions
             }
 
@@ -88,8 +72,7 @@ sealed class AuthenticationState : State {
             oldState: AuthenticationState,
             event: StateMachineEvent
         ): StateResolution<AuthenticationState> {
-            val authenticationEvent = asAuthenticationEvent(event)
-            val signUpEvent = (event as? SignUpEvent)?.eventType
+            val authenticationEvent = event.isAuthenticationEvent()
             val defaultResolution = StateResolution(oldState)
             return when (oldState) {
                 is NotConfigured -> when (authenticationEvent) {
@@ -109,42 +92,42 @@ sealed class AuthenticationState : State {
                     else -> defaultResolution
                 }
                 is SigningIn -> when (authenticationEvent) {
-                    is AuthenticationEvent.EventType.InitializedSignedIn -> StateResolution(
-                        SignedIn(authenticationEvent.signedInData)
-                    )
+                    is AuthenticationEvent.EventType.SignInCompleted ->
+                        StateResolution(
+                            SignedIn(authenticationEvent.signedInData)
+                        )
                     is AuthenticationEvent.EventType.CancelSignIn -> StateResolution(SignedOut(SignedOutData()))
                     else -> defaultResolution
                 }
-                is SigningUp -> when (authenticationEvent) {
-                    is AuthenticationEvent.EventType.ResetSignUp -> StateResolution(SignedOut(SignedOutData()))
-                    else -> defaultResolution
-                }
-                is SignedIn -> when {
-                    authenticationEvent is AuthenticationEvent.EventType.SignOutRequested -> {
+                is SignedIn -> when (authenticationEvent) {
+                    is AuthenticationEvent.EventType.SignOutRequested -> {
                         val action =
                             authenticationActions.initiateSignOutAction(authenticationEvent, oldState.signedInData)
                         StateResolution(SigningOut(oldState.signOutState), listOf(action))
                     }
                     else -> defaultResolution
                 }
-                is SigningOut -> when {
-                    authenticationEvent is AuthenticationEvent.EventType.InitializedSignedOut -> {
-                        StateResolution(
-                            SignedOut(authenticationEvent.signedOutData)
-                        )
+                is SigningOut -> {
+                    val signOutEvent = event.isSignOutEvent()
+                    when {
+                        signOutEvent is SignOutEvent.EventType.SignedOutSuccess -> {
+                            StateResolution(SignedOut(signOutEvent.signedOutData))
+                        }
+                        authenticationEvent is AuthenticationEvent.EventType.CancelSignOut -> {
+                            StateResolution(SignedIn(authenticationEvent.signedInData))
+                        }
+                        else -> defaultResolution
                     }
-                    else -> defaultResolution
                 }
-                is SignedOut -> when {
-                    authenticationEvent is AuthenticationEvent.EventType.SignInRequested -> {
-                        val action = authenticationActions.initiateSRPSignInAction(authenticationEvent)
+                is SignedOut -> when (authenticationEvent) {
+                    is AuthenticationEvent.EventType.SignInRequested -> {
+                        val action = authenticationActions.initiateSignInAction(authenticationEvent)
                         StateResolution(SigningIn(oldState.signInState), listOf(action))
                     }
-                    // TODO: find better way to handle other events
-                    signUpEvent is SignUpEvent.EventType.InitiateSignUp ||
-                        signUpEvent is SignUpEvent.EventType.ConfirmSignUp ||
-                        signUpEvent is SignUpEvent.EventType.ResendSignUpCode ->
-                        StateResolution(SigningUp(oldState.signUpState))
+                    is AuthenticationEvent.EventType.SignOutRequested -> {
+                        val action = authenticationActions.initiateSignOutAction(authenticationEvent, null)
+                        StateResolution(SigningOut(oldState.signOutState), listOf(action))
+                    }
                     else -> defaultResolution
                 }
                 else -> defaultResolution
@@ -154,16 +137,22 @@ sealed class AuthenticationState : State {
 
     class Builder(private val authNState: AuthenticationState) :
         com.amplifyframework.statemachine.Builder<AuthenticationState> {
-        var signInState: SignInState? = null
-        var signUpState: SignUpState? = null
-        var signOutState: SignOutState? = null
+        private var signInState: SignInState = authNState.signInState
+        private var signOutState: SignOutState = authNState.signOutState
+
+        fun updateSignInState(signInState: SignInState) {
+            this.signInState = signInState
+        }
+
+        fun updateSignOutState(signOutState: SignOutState) {
+            this.signOutState = signOutState
+        }
 
         override fun build(): AuthenticationState = when (authNState) {
             is SignedIn -> SignedIn(authNState.signedInData)
             is SignedOut -> SignedOut(authNState.signedOutData)
             is SigningIn -> SigningIn(signInState)
             is SigningOut -> SigningOut(signOutState)
-            is SigningUp -> SigningUp(signUpState)
             else -> authNState
         }
     }

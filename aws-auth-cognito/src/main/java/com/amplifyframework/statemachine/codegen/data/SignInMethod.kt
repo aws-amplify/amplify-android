@@ -16,5 +16,5 @@
 package com.amplifyframework.statemachine.codegen.data
 
 enum class SignInMethod {
-    SRP, CUSTOM, SOCIAL
+    SRP, CUSTOM, HOSTED
 }
