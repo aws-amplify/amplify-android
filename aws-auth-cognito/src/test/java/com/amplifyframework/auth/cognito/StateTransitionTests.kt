@@ -118,12 +118,15 @@ class StateTransitionTests : StateTransitionTestBase() {
                     is AuthState.WaitingForCachedCredentials -> storeStateMachine.send(
                         CredentialStoreEvent(CredentialStoreEvent.EventType.LoadCredentialStore())
                     )
-                    is AuthState.Configured -> when (val authZState = authState.authZState) {
-                        is AuthorizationState.WaitingToStore -> storeStateMachine.send(
-                            CredentialStoreEvent(
-                                CredentialStoreEvent.EventType.StoreCredentials(authZState.amplifyCredential)
+                    is AuthState.Configured -> {
+                        val authZState = authState.authZState
+                        if (authZState is AuthorizationState.WaitingToStore) {
+                            storeStateMachine.send(
+                                CredentialStoreEvent(
+                                    CredentialStoreEvent.EventType.StoreCredentials(authZState.amplifyCredential)
+                                )
                             )
-                        )
+                        }
                     }
                     else -> {
                         // No-op
@@ -187,6 +190,23 @@ class StateTransitionTests : StateTransitionTestBase() {
             )
     }
 
+    private fun setupRevokeTokenSignOut() {
+        Mockito.`when`(
+            mockAuthenticationActions.initiateSignOutAction(
+                MockitoHelper.anyObject(),
+                MockitoHelper.anyObject()
+            )
+        ).thenReturn(
+            Action { dispatcher, _ ->
+                dispatcher.send(
+                    SignOutEvent(
+                        SignOutEvent.EventType.RevokeToken(signedInData)
+                    )
+                )
+            }
+        )
+    }
+
     private fun setupLocalSignOut() {
         Mockito.`when`(
             mockAuthenticationActions.initiateSignOutAction(
@@ -197,11 +217,7 @@ class StateTransitionTests : StateTransitionTestBase() {
             Action { dispatcher, _ ->
                 dispatcher.send(
                     SignOutEvent(
-                        SignOutEvent.EventType.SignOutLocally(
-                            signedInData,
-                            isGlobalSignOut = false,
-                            invalidateTokens = false
-                        )
+                        SignOutEvent.EventType.SignOutLocally(signedInData)
                     )
                 )
             }
@@ -423,6 +439,50 @@ class StateTransitionTests : StateTransitionTestBase() {
     fun testLocalSignOut() {
         setupConfigureSignedIn()
         setupLocalSignOut()
+
+        val testLatch = CountDownLatch(1)
+        val configureLatch = CountDownLatch(1)
+        val subscribeLatch = CountDownLatch(1)
+        var token: StateChangeListenerToken? = null
+        token = stateMachine.listen(
+            {
+                val authState =
+                    it.takeIf { it is AuthState.Configured && it.authNState is AuthenticationState.SignedIn }
+                authState?.run {
+                    configureLatch.countDown()
+                    stateMachine.send(
+                        AuthenticationEvent(
+                            AuthenticationEvent.EventType.SignOutRequested()
+                        )
+                    )
+                }
+
+                val authNState =
+                    it.authNState.takeIf { itN -> itN is AuthenticationState.SignedOut }
+                authNState?.apply {
+                    token?.let(stateMachine::cancel)
+                    testLatch.countDown()
+                }
+            },
+            {
+                subscribeLatch.countDown()
+            }
+        )
+
+        assertTrue { subscribeLatch.await(5, TimeUnit.SECONDS) }
+
+        stateMachine.send(
+            AuthEvent(AuthEvent.EventType.ConfigureAuth(configuration))
+        )
+
+        assertTrue { testLatch.await(5, TimeUnit.SECONDS) }
+        assertTrue { configureLatch.await(5, TimeUnit.SECONDS) }
+    }
+
+    @Test
+    fun testRevokeTokenSignOut() {
+        setupConfigureSignedIn()
+        setupRevokeTokenSignOut()
 
         val testLatch = CountDownLatch(1)
         val configureLatch = CountDownLatch(1)

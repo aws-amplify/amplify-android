@@ -16,6 +16,7 @@
 package com.amplifyframework.auth.cognito.usecases
 
 import aws.sdk.kotlin.services.cognitoidentityprovider.CognitoIdentityProviderClient
+import aws.sdk.kotlin.services.cognitoidentityprovider.forgotPassword
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.CodeDeliveryDetailsType
 import com.amplifyframework.auth.AuthCodeDeliveryDetails
 import com.amplifyframework.auth.AuthException
@@ -39,6 +40,7 @@ internal class ResetPasswordUseCase(
     suspend fun execute(
         username: String,
         options: AuthResetPasswordOptions,
+        encodedContextData: String?,
         onSuccess: Consumer<AuthResetPasswordResult>,
         onError: Consumer<AuthException>
     ) {
@@ -48,6 +50,7 @@ internal class ResetPasswordUseCase(
                     this.username = username
                     this.clientMetadata = (options as? AWSCognitoAuthResetPasswordOptions)?.metadata ?: mapOf()
                     this.clientId = appClientId
+                    encodedContextData?.let { this.userContextData { encodedData = it } }
                 }
             }
 

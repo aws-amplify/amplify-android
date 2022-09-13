@@ -73,7 +73,7 @@ class ResetPasswordUseCaseTest {
     @Test
     fun `use case calls forgotPassword API with given arguments`() {
         // GIVEN
-        val requestBuilderCaptor = slot<ForgotPasswordRequest.Builder.() -> Unit>()
+        val requestBuilderCaptor = slot<ForgotPasswordRequest>()
         coJustRun { mockCognitoIPClient.forgotPassword(capture(requestBuilderCaptor)) }
 
         val expectedRequestBuilder: ForgotPasswordRequest.Builder.() -> Unit = {
@@ -84,13 +84,13 @@ class ResetPasswordUseCaseTest {
 
         // WHEN
         runBlocking {
-            resetPasswordUseCase.execute(dummyUserName, AuthResetPasswordOptions.defaults(), {}, {})
+            resetPasswordUseCase.execute(dummyUserName, AuthResetPasswordOptions.defaults(), null, {}, {})
         }
 
         // THEN
         assertEquals(
             ForgotPasswordRequest.invoke(expectedRequestBuilder),
-            ForgotPasswordRequest.invoke(requestBuilderCaptor.captured)
+            requestBuilderCaptor.captured
         )
     }
 
@@ -115,7 +115,7 @@ class ResetPasswordUseCaseTest {
             )
         )
 
-        coEvery { mockCognitoIPClient.forgotPassword(captureLambda()) } coAnswers {
+        coEvery { mockCognitoIPClient.forgotPassword(any()) } coAnswers {
             ForgotPasswordResponse.invoke { codeDeliveryDetails = dummyCodeDeliveryDetails }
         }
 
@@ -124,7 +124,7 @@ class ResetPasswordUseCaseTest {
 
         // WHEN
         runBlocking {
-            resetPasswordUseCase.execute(dummyUserName, AuthResetPasswordOptions.defaults(), onSuccess, onError)
+            resetPasswordUseCase.execute(dummyUserName, AuthResetPasswordOptions.defaults(), null, onSuccess, onError)
         }
 
         // THEN
@@ -141,7 +141,7 @@ class ResetPasswordUseCaseTest {
         val onError = mockk<Consumer<AuthException>>()
         val expectedException = CognitoIdentityProviderException("Some SDK Message")
 
-        coEvery { mockCognitoIPClient.forgotPassword(captureLambda()) } coAnswers {
+        coEvery { mockCognitoIPClient.forgotPassword(any()) } coAnswers {
             throw expectedException
         }
 
@@ -150,7 +150,7 @@ class ResetPasswordUseCaseTest {
 
         // WHEN
         runBlocking {
-            resetPasswordUseCase.execute(dummyUserName, AuthResetPasswordOptions.defaults(), onSuccess, onError)
+            resetPasswordUseCase.execute(dummyUserName, AuthResetPasswordOptions.defaults(), null, onSuccess, onError)
         }
 
         // THEN

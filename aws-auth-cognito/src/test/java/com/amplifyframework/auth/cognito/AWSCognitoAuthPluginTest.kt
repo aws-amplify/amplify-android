@@ -39,6 +39,7 @@ import com.amplifyframework.auth.options.AuthUpdateUserAttributesOptions
 import com.amplifyframework.auth.options.AuthWebUISignInOptions
 import com.amplifyframework.auth.result.AuthResetPasswordResult
 import com.amplifyframework.auth.result.AuthSignInResult
+import com.amplifyframework.auth.result.AuthSignOutResult
 import com.amplifyframework.auth.result.AuthSignUpResult
 import com.amplifyframework.auth.result.AuthUpdateAttributeResult
 import com.amplifyframework.core.Action
@@ -576,23 +577,21 @@ class AWSCognitoAuthPluginTest {
 
     @Test
     fun verifySignOut() {
-        val expectedOnSuccess = Action { }
-        val expectedOnError = Consumer<AuthException> { }
+        val expectedOnComplete = Consumer<AuthSignOutResult> { }
 
-        authPlugin.signOut(expectedOnSuccess, expectedOnError)
+        authPlugin.signOut(expectedOnComplete)
 
-        verify { realPlugin.signOut(expectedOnSuccess, expectedOnError) }
+        verify { realPlugin.signOut(expectedOnComplete) }
     }
 
     @Test
     fun verifyOverloadedSignOut() {
-        val expectedOnSuccess = Action { }
         val expectedOptions = AuthSignOutOptions.builder().build()
-        val expectedOnError = Consumer<AuthException> { }
+        val expectedOnComplete = Consumer<AuthSignOutResult> { }
 
-        authPlugin.signOut(expectedOptions, expectedOnSuccess, expectedOnError)
+        authPlugin.signOut(expectedOptions, expectedOnComplete)
 
-        verify { realPlugin.signOut(expectedOptions, expectedOnSuccess, expectedOnError) }
+        verify { realPlugin.signOut(expectedOptions, expectedOnComplete) }
     }
 
     @Test

@@ -60,8 +60,8 @@ public class AuthException extends AmplifyException {
      */
     public static class InvalidStateException extends AuthException {
         private static final long serialVersionUID = 1L;
-        private static final String MESSAGE = "Auth state reached an invalid state.";
-        private static final String RECOVERY_SUGGESTION = "Please reset auth plugin and reattempt the operation.";
+        private static final String MESSAGE = "Auth state is an invalid state, cannot process the request.";
+        private static final String RECOVERY_SUGGESTION = "Please reset auth plugin or reattempt the operation later.";
 
         /**
          * Default message/recovery suggestion without a cause.

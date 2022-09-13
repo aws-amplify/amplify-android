@@ -13,14 +13,6 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.statemachine.codegen.actions
+package com.amplifyframework.statemachine.codegen.data
 
-import com.amplifyframework.statemachine.Action
-import com.amplifyframework.statemachine.codegen.events.SignOutEvent
-
-interface SignOutActions {
-    fun localSignOutAction(event: SignOutEvent.EventType.SignOutLocally): Action
-    fun globalSignOutAction(event: SignOutEvent.EventType.SignOutGlobally): Action
-    fun revokeTokenAction(event: SignOutEvent.EventType.RevokeToken): Action
-    fun buildRevokeTokenErrorAction(event: SignOutEvent.EventType.SignOutGloballyError): Action
-}
+data class HostedUIErrorData(val error: Exception)

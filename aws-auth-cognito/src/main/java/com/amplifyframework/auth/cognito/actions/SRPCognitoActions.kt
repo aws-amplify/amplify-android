@@ -15,8 +15,10 @@
 
 package com.amplifyframework.auth.cognito.actions
 
+import aws.sdk.kotlin.services.cognitoidentityprovider.initiateAuth
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AuthFlowType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
+import aws.sdk.kotlin.services.cognitoidentityprovider.respondToAuthChallenge
 import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
@@ -52,10 +54,13 @@ object SRPCognitoActions : SRPActions {
 
                 val authParams = mutableMapOf(KEY_USERNAME to event.username, KEY_SRP_A to srpHelper.getPublicA())
                 secretHash?.let { authParams[KEY_SECRET_HASH] = it }
+                val encodedContextData = userContextDataProvider?.getEncodedContextData(event.username)
+
                 val initiateAuthResponse = cognitoAuthService.cognitoIdentityProviderClient?.initiateAuth {
                     authFlow = AuthFlowType.UserSrpAuth
                     clientId = configuration.userPool?.appClient
                     authParameters = authParams
+                    encodedContextData?.let { userContextData { encodedData = it } }
                 }
 
                 when (initiateAuthResponse?.challengeName) {
@@ -101,10 +106,13 @@ object SRPCognitoActions : SRPActions {
                     KEY_TIMESTAMP to srpHelper.dateString,
                 )
                 secretHash?.let { challengeParams[KEY_SECRET_HASH] = it }
+                val encodedContextData = userContextDataProvider?.getEncodedContextData(username)
+
                 val response = cognitoAuthService.cognitoIdentityProviderClient?.respondToAuthChallenge {
                     challengeName = ChallengeNameType.PasswordVerifier
                     clientId = configuration.userPool.appClient
                     challengeResponses = challengeParams
+                    encodedContextData?.let { userContextData { encodedData = it } }
                 }
                 if (response != null) {
                     SignInChallengeHelper.evaluateNextStep(
