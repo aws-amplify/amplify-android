@@ -1,6 +1,8 @@
 version: 0.2
 env:
   shell: /bin/sh
+  variables:
+    ORG_GRADLE_PROJECT_useAwsSdkReleaseBuild: true
   secrets-manager:
     ORG_GRADLE_PROJECT_SONATYPE_NEXUS_USERNAME: awsmobilesdk/android/sonatype:username
     ORG_GRADLE_PROJECT_SONATYPE_NEXUS_PASSWORD: awsmobilesdk/android/sonatype:password
