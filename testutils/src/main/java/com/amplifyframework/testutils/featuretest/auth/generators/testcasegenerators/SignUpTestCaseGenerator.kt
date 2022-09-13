@@ -24,10 +24,10 @@ import com.amplifyframework.testutils.featuretest.MockResponse
 import com.amplifyframework.testutils.featuretest.PreConditions
 import com.amplifyframework.testutils.featuretest.ResponseType
 import com.amplifyframework.testutils.featuretest.auth.AuthAPI
-import com.amplifyframework.testutils.featuretest.auth.generators.exportJson
+import com.amplifyframework.testutils.featuretest.auth.generators.SerializableProvider
 import com.amplifyframework.testutils.featuretest.auth.generators.toJsonElement
 
-object SignUpTestCaseGenerator {
+object SignUpTestCaseGenerator : SerializableProvider {
     private val username = "user"
     private val password = "password"
     private val email = "user@domain.com"
@@ -95,8 +95,6 @@ object SignUpTestCaseGenerator {
             )
         )
     )
-}
 
-fun main() {
-    SignUpTestCaseGenerator.baseCase.exportJson()
+    override val serializables: List<Any> = listOf(baseCase)
 }

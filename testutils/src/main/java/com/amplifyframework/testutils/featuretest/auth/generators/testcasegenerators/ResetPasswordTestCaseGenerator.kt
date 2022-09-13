@@ -24,11 +24,11 @@ import com.amplifyframework.testutils.featuretest.MockResponse
 import com.amplifyframework.testutils.featuretest.PreConditions
 import com.amplifyframework.testutils.featuretest.ResponseType
 import com.amplifyframework.testutils.featuretest.auth.AuthAPI
-import com.amplifyframework.testutils.featuretest.auth.generators.exportJson
+import com.amplifyframework.testutils.featuretest.auth.generators.SerializableProvider
 import com.amplifyframework.testutils.featuretest.auth.generators.toJsonElement
 import kotlinx.serialization.json.JsonObject
 
-object ResetPasswordTestCaseGenerator {
+object ResetPasswordTestCaseGenerator : SerializableProvider {
     private val mockCognitoResponse = MockResponse(
         "cognito",
         "forgotPassword",
@@ -90,42 +90,38 @@ object ResetPasswordTestCaseGenerator {
         validations = listOf(cognitoValidation, apiReturnValidation)
     )
 
-    fun AuthResetPasswordResult_object_is_returned_when_reset_password_succeeds() {
-        baseCase.copy(
-            description = "AuthResetPasswordResult object is returned when reset password succeeds",
-            preConditions = baseCase.preConditions.copy(mockedResponses = listOf(mockCognitoResponse)),
-            validations = baseCase.validations.plus(apiReturnValidation)
-        ).exportJson()
-    }
+    private val successCase: FeatureTestCase = baseCase.copy(
+        description = "AuthResetPasswordResult object is returned when reset password succeeds",
+        preConditions = baseCase.preConditions.copy(mockedResponses = listOf(mockCognitoResponse)),
+        validations = baseCase.validations.plus(apiReturnValidation)
+    )
 
-    fun AuthException_is_thrown_when_forgotPassword_API_call_fails() {
-        val errorResponse = NotAuthorizedException.invoke { message = "Cognito error message" }
-        baseCase.copy(
-            description = "AuthException is thrown when forgotPassword API call fails",
-            preConditions = baseCase.preConditions.copy(
-                mockedResponses = listOf(
-                    MockResponse(
-                        "cognito",
-                        "forgotPassword",
+    private val errorCase: FeatureTestCase
+        get() {
+            val errorResponse = NotAuthorizedException.invoke { message = "Cognito error message" }
+            return baseCase.copy(
+                description = "AuthException is thrown when forgotPassword API call fails",
+                preConditions = baseCase.preConditions.copy(
+                    mockedResponses = listOf(
+                        MockResponse(
+                            "cognito",
+                            "forgotPassword",
+                            ResponseType.Failure,
+                            errorResponse.toJsonElement()
+                        )
+                    )
+                ),
+                validations = listOf(
+                    ExpectationShapes.Amplify(
+                        AuthAPI.resetPassword,
                         ResponseType.Failure,
-                        errorResponse.toJsonElement()
+                        AuthException.NotAuthorizedException(
+                            errorResponse
+                        ).toJsonElement(),
                     )
                 )
-            ),
-            validations = listOf(
-                ExpectationShapes.Amplify(
-                    AuthAPI.resetPassword,
-                    ResponseType.Failure,
-                    AuthException.NotAuthorizedException(
-                        errorResponse
-                    ).toJsonElement(),
-                )
             )
-        ).exportJson()
-    }
-}
+        }
 
-fun main() {
-    ResetPasswordTestCaseGenerator.AuthException_is_thrown_when_forgotPassword_API_call_fails()
-    ResetPasswordTestCaseGenerator.AuthResetPasswordResult_object_is_returned_when_reset_password_succeeds()
+    override val serializables: List<Any> = listOf(baseCase, errorCase, successCase)
 }

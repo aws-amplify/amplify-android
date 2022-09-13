@@ -30,7 +30,7 @@ import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
-const val basePath = ".temp/feature-test/testsuites"
+const val basePath = ".temp/feature-test"
 
 fun writeFile(json: String, dirName: String, fileName: String) {
     val directory = File("$basePath/$dirName")
@@ -50,7 +50,7 @@ internal fun FeatureTestCase.exportJson() {
 
     val result = format.encodeToString(this)
 
-    val dirName = api.name.name
+    val dirName = "testsuites/" + api.name.name
     val fileName = description.replace(" ", "_").plus(".json")
     writeFile(result, dirName, fileName)
     println("Json exported:\n $result")
