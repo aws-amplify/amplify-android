@@ -157,6 +157,8 @@ class RealAWSCognitoAuthPluginTest {
             appClientSecret = "app Client Secret"
         }
 
+        coEvery { authEnvironment.userContextDataProvider?.getEncodedContextData(any()) } returns null
+
         // set up SRP helper
         mockkObject(SRPHelper)
         mockkObject(AuthHelper)
@@ -344,13 +346,13 @@ class RealAWSCognitoAuthPluginTest {
 
         every { authService.cognitoIdentityProviderClient } returns mockk()
         every { authConfiguration.userPool } returns UserPoolConfiguration.invoke { appClientId = "app Client Id" }
-        coJustRun { anyConstructed<ResetPasswordUseCase>().execute(username, options, onSuccess, onError) }
+        coJustRun { anyConstructed<ResetPasswordUseCase>().execute(username, options, any(), onSuccess, onError) }
 
         // WHEN
         plugin.resetPassword(username, options, onSuccess, onError)
 
         // THEN
-        coVerify { anyConstructed<ResetPasswordUseCase>().execute(username, options, onSuccess, onError) }
+        coVerify { anyConstructed<ResetPasswordUseCase>().execute(username, options, any(), onSuccess, onError) }
     }
 
     @Test
@@ -471,6 +473,7 @@ class RealAWSCognitoAuthPluginTest {
             confirmationCode = code
             clientMetadata = mapOf()
             clientId = appClientId
+            userContextData = null
         }
 
         // WHEN
@@ -485,9 +488,6 @@ class RealAWSCognitoAuthPluginTest {
 
         // THEN
         assertTrue { latch.await(5, TimeUnit.SECONDS) }
-
-        println(ConfirmForgotPasswordRequest.invoke(expectedRequestBuilder))
-        println(requestBuilderCaptor.captured)
         assertEquals(
             ConfirmForgotPasswordRequest.invoke(expectedRequestBuilder),
             requestBuilderCaptor.captured
@@ -587,6 +587,7 @@ class RealAWSCognitoAuthPluginTest {
                 }
             )
             secretHash = "dummy Hash"
+            userContextData = null
         }
 
         // WHEN
@@ -684,6 +685,7 @@ class RealAWSCognitoAuthPluginTest {
             this.username = username
             this.confirmationCode = confirmationCode
             secretHash = "dummy Hash"
+            userContextData = null
         }
 
         // WHEN
