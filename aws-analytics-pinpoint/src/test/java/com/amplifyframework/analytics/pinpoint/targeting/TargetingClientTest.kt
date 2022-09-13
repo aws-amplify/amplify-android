@@ -17,15 +17,16 @@
 package com.amplifyframework.analytics.pinpoint.targeting
 
 import aws.sdk.kotlin.services.pinpoint.PinpointClient
+import aws.sdk.kotlin.services.pinpoint.model.ChannelType
+import aws.sdk.kotlin.services.pinpoint.model.EndpointRequest
 import aws.sdk.kotlin.services.pinpoint.model.UpdateEndpointRequest
 import aws.sdk.kotlin.services.pinpoint.model.UpdateEndpointResponse
 import io.mockk.coEvery
 import io.mockk.coVerify
-import io.mockk.every
-import io.mockk.mockkObject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -54,13 +55,24 @@ class TargetingClientTest {
 
     @Test
     fun testUpdateEndpointProfile() = runTest {
+        targetingClient.addAttribute("attribute", listOf("a1", "a2"))
+        targetingClient.addMetric("metric", 1.0)
+
         val updateEndpointResponse = UpdateEndpointResponse.invoke {}
         coEvery { pinpointClient.updateEndpoint(ofType(UpdateEndpointRequest::class)) }.returns(updateEndpointResponse)
-        val updateEndpointRequest =
-            UpdateEndpointRequest.invoke {}
-        mockkObject(UpdateEndpointRequest.Companion)
-        every { UpdateEndpointRequest.Companion.invoke(any()) }.returns(updateEndpointRequest)
         targetingClient.updateEndpointProfile()
-        coVerify { pinpointClient.updateEndpoint(updateEndpointRequest) }
+
+        coVerify {
+            pinpointClient.updateEndpoint(
+                coWithArg<UpdateEndpointRequest> {
+                    assertNotNull(it.endpointRequest)
+                    val request: EndpointRequest = it.endpointRequest!!
+                    assertEquals("app id", it.applicationId)
+                    assertEquals(listOf("a1", "a2"), request.attributes?.get("attribute") ?: listOf("wrong"))
+                    assertEquals(1.0, request.metrics?.get("metric") ?: -1.0, 0.01)
+                    assertEquals(ChannelType.Gcm, request.channelType)
+                }
+            )
+        }
     }
 }
