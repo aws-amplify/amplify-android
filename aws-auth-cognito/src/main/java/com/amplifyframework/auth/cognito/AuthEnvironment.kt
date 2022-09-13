@@ -15,6 +15,7 @@
 
 package com.amplifyframework.auth.cognito
 
+import com.amplifyframework.auth.cognito.asf.UserContextDataProvider
 import com.amplifyframework.auth.cognito.helpers.SRPHelper
 import com.amplifyframework.logging.Logger
 import com.amplifyframework.statemachine.Environment
@@ -29,6 +30,7 @@ import com.amplifyframework.statemachine.codegen.events.SignOutEvent
 class AuthEnvironment internal constructor(
     val configuration: AuthConfiguration,
     val cognitoAuthService: AWSCognitoAuthServiceBehavior,
+    val userContextDataProvider: UserContextDataProvider? = null,
     val logger: Logger
 ) : Environment {
     internal lateinit var srpHelper: SRPHelper

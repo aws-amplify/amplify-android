@@ -29,6 +29,7 @@ import com.amplifyframework.auth.AuthSession
 import com.amplifyframework.auth.AuthUser
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
+import com.amplifyframework.auth.cognito.asf.UserContextDataProvider
 import com.amplifyframework.auth.cognito.data.AWSCognitoAuthCredentialStore
 import com.amplifyframework.auth.cognito.data.AWSCognitoLegacyCredentialStore
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
@@ -45,6 +46,7 @@ import com.amplifyframework.auth.options.AuthUpdateUserAttributesOptions
 import com.amplifyframework.auth.options.AuthWebUISignInOptions
 import com.amplifyframework.auth.result.AuthResetPasswordResult
 import com.amplifyframework.auth.result.AuthSignInResult
+import com.amplifyframework.auth.result.AuthSignOutResult
 import com.amplifyframework.auth.result.AuthSignUpResult
 import com.amplifyframework.auth.result.AuthUpdateAttributeResult
 import com.amplifyframework.core.Action
@@ -77,6 +79,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
             val authEnvironment = AuthEnvironment(
                 configuration,
                 AWSCognitoAuthServiceBehavior.fromConfiguration(configuration),
+                configuration.userPool?.let { UserContextDataProvider(context, it) },
                 logger
             )
             val authStateMachine = AuthStateMachine(authEnvironment)
@@ -368,12 +371,12 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         realPlugin.getCurrentUser(onSuccess, onError)
     }
 
-    override fun signOut(onSuccess: Action, onError: Consumer<AuthException>) {
-        realPlugin.signOut(onSuccess, onError)
+    override fun signOut(onComplete: Consumer<AuthSignOutResult>) {
+        realPlugin.signOut(onComplete)
     }
 
-    override fun signOut(options: AuthSignOutOptions, onSuccess: Action, onError: Consumer<AuthException>) {
-        realPlugin.signOut(options, onSuccess, onError)
+    override fun signOut(options: AuthSignOutOptions, onComplete: Consumer<AuthSignOutResult>) {
+        realPlugin.signOut(options, onComplete)
     }
 
     override fun deleteUser(onSuccess: Action, onError: Consumer<AuthException>) {

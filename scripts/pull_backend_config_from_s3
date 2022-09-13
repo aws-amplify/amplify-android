@@ -49,6 +49,11 @@ readonly config_files=(
     "maplibre-adapter/src/androidTest/res/raw/amplifyconfiguration.json"
     "maplibre-adapter/src/androidTest/res/raw/awsconfiguration.json"
     "maplibre-adapter/src/androidTest/res/raw/credentials.json"
+
+    # Auth, currently uses geo plugins resources, TODO: Create auths own resources
+    "aws-auth-cognito/src/androidTest/res/raw/amplifyconfiguration.json"
+    "aws-auth-cognito/src/androidTest/res/raw/awsconfiguration.json"
+    "aws-auth-cognito/src/androidTest/res/raw/credentials.json"
 )
 
 # Set up output path
