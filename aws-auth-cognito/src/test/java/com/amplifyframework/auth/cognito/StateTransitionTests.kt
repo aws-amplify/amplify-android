@@ -15,10 +15,11 @@
 
 package com.amplifyframework.auth.cognito
 
-import com.amplifyframework.auth.cognito.options.AuthFlowType
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.StateChangeListenerToken
 import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
+import com.amplifyframework.statemachine.codegen.data.SignInData
+import com.amplifyframework.statemachine.codegen.data.SignOutData
 import com.amplifyframework.statemachine.codegen.data.SignedOutData
 import com.amplifyframework.statemachine.codegen.events.AuthEvent
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
@@ -35,8 +36,8 @@ import com.amplifyframework.statemachine.codegen.states.AuthorizationState
 import com.amplifyframework.statemachine.codegen.states.CredentialStoreState
 import com.amplifyframework.statemachine.codegen.states.CustomSignInState
 import com.amplifyframework.statemachine.codegen.states.DeleteUserState
-import com.amplifyframework.statemachine.codegen.states.DeviceSRPSignInState
 import com.amplifyframework.statemachine.codegen.states.FetchAuthSessionState
+import com.amplifyframework.statemachine.codegen.states.HostedUISignInState
 import com.amplifyframework.statemachine.codegen.states.SRPSignInState
 import com.amplifyframework.statemachine.codegen.states.SignInChallengeState
 import com.amplifyframework.statemachine.codegen.states.SignInState
@@ -89,7 +90,7 @@ class StateTransitionTests : StateTransitionTestBase() {
                         SRPSignInState.Resolver(mockSRPActions),
                         CustomSignInState.Resolver(mockSignInCustomActions),
                         SignInChallengeState.Resolver(mockSignInChallengeActions),
-                        DeviceSRPSignInState.Resolver(mockDeviceSRPSignInActions),
+                        HostedUISignInState.Resolver(mockHostedUIActions),
                         mockSignInActions
                     ),
                     SignOutState.Resolver(mockSignOutActions),
@@ -104,7 +105,7 @@ class StateTransitionTests : StateTransitionTestBase() {
                 ),
                 mockAuthActions
             ),
-            AuthEnvironment(configuration, cognitoAuthService)
+            AuthEnvironment(configuration, cognitoAuthService, null, null)
         )
 
         storeStateMachine = CredentialStoreStateMachine(
@@ -323,69 +324,11 @@ class StateTransitionTests : StateTransitionTestBase() {
                     stateMachine.send(
                         AuthenticationEvent(
                             AuthenticationEvent.EventType.SignInRequested(
-                                "username",
-                                "password",
-                                AuthFlowType.USER_SRP_AUTH.toString(),
-                                mapOf()
-                            )
-                        )
-                    )
-                }
-                val authNState = it.authNState.takeIf { itN ->
-                    itN is AuthenticationState.SignedIn && it.authZState is AuthorizationState.SessionEstablished
-                }
-                authNState?.apply {
-                    token?.let(stateMachine::cancel)
-                    testLatch.countDown()
-                }
-            },
-            {
-                subscribeLatch.countDown()
-            }
-        )
-
-        assertTrue { subscribeLatch.await(5, TimeUnit.SECONDS) }
-
-        stateMachine.send(
-            AuthEvent(AuthEvent.EventType.ConfigureAuth(configuration))
-        )
-
-        assertTrue { testLatch.await(5, TimeUnit.SECONDS) }
-        assertTrue { configureLatch.await(5, TimeUnit.SECONDS) }
-    }
-
-    @Test
-    fun testSignInWithDeviceSRP() {
-        setupConfigureSignedOut()
-
-        Mockito.`when`(mockAuthenticationActions.initiateSignInAction(MockitoHelper.anyObject()))
-            .thenReturn(
-                Action { dispatcher, _ ->
-                    dispatcher.send(
-                        SignInEvent(
-                            SignInEvent.EventType.InitiateSignInWithSRP("username", "password")
-                        )
-                    )
-                }
-            )
-
-        val testLatch = CountDownLatch(1)
-        val configureLatch = CountDownLatch(1)
-        val subscribeLatch = CountDownLatch(1)
-        var token: StateChangeListenerToken? = null
-        token = stateMachine.listen(
-            {
-                val authState =
-                    it.takeIf { it is AuthState.Configured && it.authNState is AuthenticationState.SignedOut }
-                authState?.run {
-                    configureLatch.countDown()
-                    stateMachine.send(
-                        AuthenticationEvent(
-                            AuthenticationEvent.EventType.SignInRequested(
-                                "username",
-                                "password",
-                                AuthFlowType.USER_SRP_AUTH.toString(),
-                                mapOf()
+                                SignInData.SRPSignInData(
+                                    "username",
+                                    "password",
+                                    emptyMap()
+                                )
                             )
                         )
                     )
@@ -452,10 +395,11 @@ class StateTransitionTests : StateTransitionTestBase() {
                     stateMachine.send(
                         AuthenticationEvent(
                             AuthenticationEvent.EventType.SignInRequested(
-                                "username",
-                                "password",
-                                AuthFlowType.CUSTOM_AUTH.toString(),
-                                mapOf()
+                                SignInData.CustomAuthSignInData(
+                                    "username",
+                                    "password",
+                                    emptyMap()
+                                )
                             )
                         )
                     )
@@ -513,7 +457,7 @@ class StateTransitionTests : StateTransitionTestBase() {
                     configureLatch.countDown()
                     stateMachine.send(
                         AuthenticationEvent(
-                            AuthenticationEvent.EventType.SignOutRequested()
+                            AuthenticationEvent.EventType.SignOutRequested(SignOutData())
                         )
                     )
                 }
@@ -557,7 +501,7 @@ class StateTransitionTests : StateTransitionTestBase() {
                     configureLatch.countDown()
                     stateMachine.send(
                         AuthenticationEvent(
-                            AuthenticationEvent.EventType.SignOutRequested()
+                            AuthenticationEvent.EventType.SignOutRequested(SignOutData())
                         )
                     )
                 }
@@ -600,7 +544,7 @@ class StateTransitionTests : StateTransitionTestBase() {
                     configureLatch.countDown()
                     stateMachine.send(
                         AuthenticationEvent(
-                            AuthenticationEvent.EventType.SignOutRequested()
+                            AuthenticationEvent.EventType.SignOutRequested(SignOutData())
                         )
                     )
                 }

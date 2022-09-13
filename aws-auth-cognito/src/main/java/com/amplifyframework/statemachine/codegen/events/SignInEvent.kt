@@ -17,6 +17,7 @@ package com.amplifyframework.statemachine.codegen.events
 
 import com.amplifyframework.statemachine.StateMachineEvent
 import com.amplifyframework.statemachine.codegen.data.AuthChallenge
+import com.amplifyframework.statemachine.codegen.data.SignInData
 import java.util.Date
 
 class SignInEvent(val eventType: EventType, override val time: Date? = null) : StateMachineEvent {
@@ -25,8 +26,9 @@ class SignInEvent(val eventType: EventType, override val time: Date? = null) : S
         data class InitiateSignInWithCustom(
             val username: String,
             val password: String?,
-            val signInOptions: Map<String, String>
+            val metadata: Map<String, String>
         ) : EventType()
+        data class InitiateHostedUISignIn(val hostedUISignInData: SignInData.HostedUISignInData) : EventType()
         data class SignedIn(val id: String = "") : EventType()
         data class ConfirmDevice(val confirmDeviceParams: Map<String, String>, val expiresIn: Int) : EventType()
         data class ConfirmingDevice(val id: String = "") : EventType()
