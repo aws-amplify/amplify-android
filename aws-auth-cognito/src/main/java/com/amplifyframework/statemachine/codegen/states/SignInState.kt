@@ -46,7 +46,6 @@ sealed class SignInState : State {
         private val customSignInResolver: StateMachineResolver<CustomSignInState>,
         private val challengeResolver: StateMachineResolver<SignInChallengeState>,
         private val hostedUISignInResolver: StateMachineResolver<HostedUISignInState>,
-        private val signInActions: SignInActions
         private val deviceSRPSignInResolver: StateMachineResolver<DeviceSRPSignInState>,
         private val signInActions: SignInActions,
     ) :

@@ -80,8 +80,8 @@ internal class AuthStateMachine(
                         SRPSignInState.Resolver(SRPCognitoActions).logging(),
                         CustomSignInState.Resolver(SignInCustomActions).logging(),
                         SignInChallengeState.Resolver(SignInChallengeCognitoActions).logging(),
-                        DeviceSRPSignInState.Resolver(DeviceSRPCognitoSignInActions).logging(),
                         HostedUISignInState.Resolver(HostedUICognitoActions).logging(),
+                        DeviceSRPSignInState.Resolver(DeviceSRPCognitoSignInActions).logging(),
                         SignInCognitoActions
                     ).logging(),
                     SignOutState.Resolver(SignOutCognitoActions).logging(),
