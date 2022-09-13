@@ -129,7 +129,7 @@ internal class RealAWSCognitoAuthPlugin(
     private val logger: Logger
 ) : AuthCategoryBehavior {
 
-    private val lastPublishedHubEventName = AtomicReference<AuthChannelEventName> ()
+    private val lastPublishedHubEventName = AtomicReference<AuthChannelEventName>()
 
     init {
         addAuthStateChangeListener()
@@ -384,10 +384,7 @@ internal class RealAWSCognitoAuthPlugin(
         authStateMachine.getCurrentState { authState ->
             when (authState.authNState) {
                 is AuthenticationState.NotConfigured -> onError.accept(
-                    AuthException(
-                        "Sign in failed.",
-                        "Cognito User Pool not configured. Please check amplifyconfiguration.json file."
-                    )
+                    AWSCognitoAuthExceptions.NotConfiguredException()
                 )
                 // Continue sign in
                 is AuthenticationState.SignedOut, is AuthenticationState.Configured -> _signIn(
@@ -397,9 +394,24 @@ internal class RealAWSCognitoAuthPlugin(
                     onSuccess,
                     onError
                 )
-                is AuthenticationState.SignedIn -> onSuccess.accept(
-                    AuthSignInResult(true, AuthNextSignInStep(AuthSignInStep.DONE, mapOf(), null))
-                )
+                is AuthenticationState.SignedIn -> {
+                    if (username == (authState.authNState as AuthenticationState.SignedIn).signedInData.username) {
+                        onError.accept(
+                            AuthException(
+                                "There is already a user in signedIn state. " +
+                                    "SignOut the user first before calling signIn",
+                                AuthException.InvalidStateException.TODO_RECOVERY_SUGGESTION
+                            )
+                        )
+                    } else {
+                        onSuccess.accept(
+                            AuthSignInResult(
+                                true,
+                                AuthNextSignInStep(AuthSignInStep.DONE, mapOf(), null)
+                            )
+                        )
+                    }
+                }
                 else -> onError.accept(AuthException.InvalidStateException())
             }
         }
