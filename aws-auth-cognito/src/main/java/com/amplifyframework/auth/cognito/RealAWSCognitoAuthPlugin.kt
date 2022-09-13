@@ -657,7 +657,6 @@ internal class RealAWSCognitoAuthPlugin(
                                 true,
                                 AuthNextSignInStep(AuthSignInStep.DONE, mapOf(), null)
                             )
-                        Amplify.Hub.publish(HubChannel.AUTH, HubEvent.create(AuthChannelEventName.SIGNED_IN))
                         onSuccess.accept(authSignInResult)
                     }
                     else -> Unit
@@ -685,7 +684,9 @@ internal class RealAWSCognitoAuthPlugin(
                     (authNState.signOutState as? SignOutState.SigningOutHostedUI)?.let { signOutState ->
                         if (callbackUri == null) {
                             // Notify failed web sign out
-                            logger.warn("Web UI Sign Out cancelled. Continuing sign out process.")
+                            authStateMachine.send(
+                                SignOutEvent(SignOutEvent.EventType.UserCancelled(signOutState.signedInData))
+                            )
                         }
                         if (signOutState.globalSignOut) {
                             authStateMachine.send(
@@ -697,7 +698,8 @@ internal class RealAWSCognitoAuthPlugin(
                             )
                         }
                     }
-                } else -> {
+                }
+                is AuthenticationState.SigningIn -> {
                     if (callbackUri == null) {
                         authStateMachine.send(
                             HostedUIEvent(
@@ -713,6 +715,7 @@ internal class RealAWSCognitoAuthPlugin(
                         authStateMachine.send(HostedUIEvent(HostedUIEvent.EventType.FetchToken(callbackUri)))
                     }
                 }
+                else -> Unit
             }
         }
     }

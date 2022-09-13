@@ -20,14 +20,12 @@ import android.app.Activity
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.net.Uri
 import androidx.browser.customtabs.CustomTabsClient
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.browser.customtabs.CustomTabsServiceConnection
 import androidx.browser.customtabs.CustomTabsSession
 import com.amplifyframework.auth.cognito.activities.CustomTabsManagerActivity
-import com.amplifyframework.auth.cognito.activities.HostedUIRedirectActivity
 import com.amplifyframework.auth.cognito.helpers.BrowserHelper
 import com.amplifyframework.auth.cognito.helpers.HostedUIHttpHelper
 import com.amplifyframework.auth.cognito.helpers.PkceHelper
@@ -52,28 +50,6 @@ internal class HostedUIClient private constructor(
     private var client: CustomTabsClient? = null
     private var session: CustomTabsSession? = null
     private val defaultCustomTabsPackage: String?
-
-    // Inspects context to determine whether HostedUIRedirectActivity is declared in
-    // customer's AndroidManifest.xml.
-    private val isRedirectActivityDeclared: Boolean by lazy {
-        val redirectActivityName = HostedUIRedirectActivity::class.simpleName ?: return@lazy false
-        try {
-            context.packageManager.getInstalledPackages(PackageManager.GET_ACTIVITIES).forEach { packageInfo ->
-                packageInfo.activities.forEach { activityInfo ->
-                    if (activityInfo.name.contains(redirectActivityName)) {
-                        return@lazy true
-                    }
-                }
-            }
-            logger.warn(
-                "${HostedUIRedirectActivity::class.simpleName ?: "Redirect activity"} " +
-                    "is not declared in AndroidManifest."
-            )
-        } catch (error: Exception) {
-            logger.warn("Failed to inspect packages")
-        }
-        false
-    }
 
     init {
         defaultCustomTabsPackage = BrowserHelper.getDefaultCustomTabPackage(context)?.also {
@@ -115,7 +91,7 @@ internal class HostedUIClient private constructor(
         if (activity != null) {
             activity.startActivityForResult(customTabIntent, CUSTOM_TABS_ACTIVITY_CODE)
         } else {
-            customTabIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_NO_HISTORY)
+            customTabIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             context.startActivity(customTabIntent)
         }
     }

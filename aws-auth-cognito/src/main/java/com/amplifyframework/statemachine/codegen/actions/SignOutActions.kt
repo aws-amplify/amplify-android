@@ -24,4 +24,5 @@ interface SignOutActions {
     fun globalSignOutAction(event: SignOutEvent.EventType.SignOutGlobally): Action
     fun revokeTokenAction(event: SignOutEvent.EventType.RevokeToken): Action
     fun buildRevokeTokenErrorAction(event: SignOutEvent.EventType.SignOutGloballyError): Action
+    fun userCancelledAction(event: SignOutEvent.EventType.UserCancelled): Action
 }

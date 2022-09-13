@@ -56,6 +56,8 @@ class SignOutEvent(
         ) : EventType()
 
         data class SignedOutSuccess(val signedOutData: SignedOutData) : EventType()
+
+        data class UserCancelled(val signedInData: SignedInData) : EventType()
     }
 
     override val type: String = eventType.javaClass.simpleName

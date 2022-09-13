@@ -22,8 +22,10 @@ import com.amplifyframework.auth.cognito.helpers.JWTParser
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.SignOutActions
 import com.amplifyframework.statemachine.codegen.data.GlobalSignOutErrorData
+import com.amplifyframework.statemachine.codegen.data.HostedUIErrorData
 import com.amplifyframework.statemachine.codegen.data.RevokeTokenErrorData
 import com.amplifyframework.statemachine.codegen.data.SignedOutData
+import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.SignOutEvent
 
 object SignOutCognitoActions : SignOutActions {
@@ -35,11 +37,11 @@ object SignOutCognitoActions : SignOutActions {
                 hostedUIClient.launchCustomTabsSignOut(event.signOutData.browserPackage)
             } catch (e: Exception) {
                 logger?.warn("Failed to sign out web ui.", e)
-                // TODO: Pass hostedui error
+                val hostedUIErrorData = HostedUIErrorData(e)
                 val evt = if (event.signOutData.globalSignOut) {
-                    SignOutEvent(SignOutEvent.EventType.SignOutGlobally(event.signedInData))
+                    SignOutEvent(SignOutEvent.EventType.SignOutGlobally(event.signedInData, hostedUIErrorData))
                 } else {
-                    SignOutEvent(SignOutEvent.EventType.RevokeToken(event.signedInData))
+                    SignOutEvent(SignOutEvent.EventType.RevokeToken(event.signedInData, hostedUIErrorData))
                 }
                 logger?.verbose("$id Sending event ${evt.type}")
                 dispatcher.send(evt)
@@ -162,6 +164,14 @@ object SignOutCognitoActions : SignOutActions {
                 )
             )
 
+            logger?.verbose("$id Sending event ${evt.type}")
+            dispatcher.send(evt)
+        }
+
+    override fun userCancelledAction(event: SignOutEvent.EventType.UserCancelled) =
+        Action<AuthEnvironment>("UserCancelledSignOut") { id, dispatcher ->
+            logger?.verbose("$id Starting execution")
+            val evt = AuthenticationEvent(AuthenticationEvent.EventType.CancelSignOut(event.signedInData))
             logger?.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
         }

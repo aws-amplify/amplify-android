@@ -76,6 +76,10 @@ sealed class SignOutState : State {
                         val action = signOutActions.revokeTokenAction(signOutEvent)
                         StateResolution(RevokingToken(), listOf(action))
                     }
+                    is SignOutEvent.EventType.UserCancelled -> {
+                        val action = signOutActions.userCancelledAction(signOutEvent)
+                        StateResolution(Error(Exception("User Cancelled")), listOf(action))
+                    }
                     else -> defaultResolution
                 }
                 is SigningOutLocally -> when (event.isAuthEvent()) {
