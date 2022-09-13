@@ -90,6 +90,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import org.json.JSONObject
 import org.junit.Before
 import org.junit.Ignore
 import org.junit.Test
@@ -1397,5 +1398,76 @@ class RealAWSCognitoAuthPluginTest {
         )
 
         coVerify(exactly = 0) { onError.accept(any()) }
+    }
+
+    @Test
+    fun `custom endpoint with query fails`() {
+        val configJsonObject = JSONObject()
+        configJsonObject.put("PoolId", "TestUserPool")
+        configJsonObject.put("AppClientId", "0000000000")
+        configJsonObject.put("Region", "test-region")
+        val invalidEndpoint = "fsjjdh.com?q=id"
+        configJsonObject.put("Endpoint", invalidEndpoint)
+        val expectedErrorMessage = "Invalid endpoint value $invalidEndpoint"
+        var message = try {
+            UserPoolConfiguration.fromJson(configJsonObject).build()
+        } catch (ex: Exception) {
+            ex.message
+        }
+        assertEquals(message, expectedErrorMessage, "Error message do not match expected one")
+    }
+
+    @Test
+    fun `custom endpoint with path fails`() {
+        val configJsonObject = JSONObject()
+        configJsonObject.put("PoolId", "TestUserPool")
+        configJsonObject.put("AppClientId", "0000000000")
+        configJsonObject.put("Region", "test-region")
+        val invalidEndpoint = "fsjjdh.com/id"
+        configJsonObject.put("Endpoint", invalidEndpoint)
+        val expectedErrorMessage = "Invalid endpoint value $invalidEndpoint"
+        var message = try {
+            UserPoolConfiguration.fromJson(configJsonObject).build()
+        } catch (ex: Exception) {
+            ex.message
+        }
+        assertEquals(message, expectedErrorMessage, "Error message do not match expected one")
+    }
+
+    @Test
+    fun `custom endpoint with scheme fails`() {
+        val configJsonObject = JSONObject()
+        configJsonObject.put("PoolId", "TestUserPool")
+        configJsonObject.put("AppClientId", "0000000000")
+        configJsonObject.put("Region", "test-region")
+
+        val invalidEndpoint = "https://fsjjdh.com"
+        configJsonObject.put("Endpoint", invalidEndpoint)
+        val expectedErrorMessage = "Invalid endpoint value $invalidEndpoint"
+        var message = try {
+            UserPoolConfiguration.fromJson(configJsonObject).build()
+        } catch (ex: Exception) {
+            ex.message
+        }
+        assertEquals(message, expectedErrorMessage, "Error message do not match expected one")
+    }
+
+    @Test
+    fun `custom endpoint with no query,path, scheme success`() {
+        val configJsonObject = JSONObject()
+        val poolId = "TestUserPool"
+        val region = "test-region"
+        val appClientId = "0000000000"
+        val endpoint = "fsjjdh.com"
+        configJsonObject.put("PoolId", poolId)
+        configJsonObject.put("AppClientId", appClientId)
+        configJsonObject.put("Region", region)
+        configJsonObject.put("Endpoint", endpoint)
+
+        val userPool = UserPoolConfiguration.fromJson(configJsonObject).build()
+        assertTrue(userPool.region == region, "Regions do not match expected")
+        assertTrue(userPool.poolId == poolId, "Pool id do not match expected")
+        assertTrue(userPool.appClient == appClientId, "AppClientId do not match expected")
+        assertTrue(userPool.endpoint == endpoint, "Endpoint do not match expected")
     }
 }
