@@ -20,6 +20,7 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.UserNotFoundExcepti
 import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.DeleteUserActions
+import com.amplifyframework.statemachine.codegen.data.SignOutData
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.DeleteUserEvent
 
@@ -31,12 +32,16 @@ object DeleteUserActions : DeleteUserActions {
                 cognitoAuthService.cognitoIdentityProviderClient?.deleteUser(
                     DeleteUserRequest.invoke { this.accessToken = accessToken }
                 )
-                AuthenticationEvent(AuthenticationEvent.EventType.SignOutRequested(true))
+                AuthenticationEvent(AuthenticationEvent.EventType.SignOutRequested(SignOutData(globalSignOut = true)))
             } catch (e: Exception) {
                 logger?.warn("Failed to delete user.", e)
                 if (e is UserNotFoundException) {
                     // The user could have been remotely deleted, clear local session
-                    AuthenticationEvent(AuthenticationEvent.EventType.SignOutRequested(false))
+                    AuthenticationEvent(
+                        AuthenticationEvent.EventType.SignOutRequested(
+                            SignOutData(globalSignOut = false)
+                        )
+                    )
                 } else {
                     DeleteUserEvent(DeleteUserEvent.EventType.ThrowError(e))
                 }

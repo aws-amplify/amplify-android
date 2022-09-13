@@ -119,11 +119,17 @@ sealed class AuthenticationState : State {
                     }
                     else -> defaultResolution
                 }
-                is SigningOut -> when (val signOutEvent = event.isSignOutEvent()) {
-                    is SignOutEvent.EventType.SignedOutSuccess -> StateResolution(
-                        SignedOut(signOutEvent.signedOutData)
-                    )
-                    else -> defaultResolution
+                is SigningOut -> {
+                    val signOutEvent = event.isSignOutEvent()
+                    when {
+                        signOutEvent is SignOutEvent.EventType.SignedOutSuccess -> {
+                            StateResolution(SignedOut(signOutEvent.signedOutData))
+                        }
+                        authenticationEvent is AuthenticationEvent.EventType.CancelSignOut -> {
+                            StateResolution(SignedIn(authenticationEvent.signedInData))
+                        }
+                        else -> defaultResolution
+                    }
                 }
                 is SignedOut -> when (authenticationEvent) {
                     is AuthenticationEvent.EventType.SignInRequested -> {

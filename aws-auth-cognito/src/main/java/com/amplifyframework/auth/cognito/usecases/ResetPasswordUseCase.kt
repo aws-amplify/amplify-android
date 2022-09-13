@@ -40,6 +40,7 @@ internal class ResetPasswordUseCase(
     suspend fun execute(
         username: String,
         options: AuthResetPasswordOptions,
+        encodedContextData: String?,
         onSuccess: Consumer<AuthResetPasswordResult>,
         onError: Consumer<AuthException>
     ) {
@@ -49,6 +50,7 @@ internal class ResetPasswordUseCase(
                     this.username = username
                     this.clientMetadata = (options as? AWSCognitoAuthResetPasswordOptions)?.metadata ?: mapOf()
                     this.clientId = appClientId
+                    encodedContextData?.let { this.userContextData { encodedData = it } }
                 }
             }
 

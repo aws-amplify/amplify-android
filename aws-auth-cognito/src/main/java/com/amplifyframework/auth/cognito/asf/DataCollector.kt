@@ -13,8 +13,18 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.statemachine.codegen.data
+package com.amplifyframework.auth.cognito.asf
 
-enum class SignInMethod {
-    SRP, CUSTOM, HOSTED
+import android.content.Context
+
+/**
+ * Base class for the data collectors. Data collectors provide logic to collect context data.
+ */
+interface DataCollector {
+    /**
+     * Actual logic to collect a category of data from device.
+     * @param context android application context.
+     * @return return key-value pair of user-context data.
+     */
+    fun collect(context: Context): Map<String, String?>
 }
