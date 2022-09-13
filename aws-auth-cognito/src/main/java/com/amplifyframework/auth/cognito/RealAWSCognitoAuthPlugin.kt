@@ -42,14 +42,17 @@ import com.amplifyframework.auth.AuthUser
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
+import com.amplifyframework.auth.cognito.helpers.HostedUIHelper
 import com.amplifyframework.auth.cognito.helpers.JWTParser
 import com.amplifyframework.auth.cognito.helpers.SignInChallengeHelper
 import com.amplifyframework.auth.cognito.options.AWSAuthResendUserAttributeConfirmationCodeOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthConfirmSignInOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthResendSignUpCodeOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions
+import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignOutOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttributeOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttributesOptions
+import com.amplifyframework.auth.cognito.options.AWSCognitoAuthWebUISignInOptions
 import com.amplifyframework.auth.cognito.options.AuthFlowType
 import com.amplifyframework.auth.cognito.result.AWSCognitoAuthSignOutResult
 import com.amplifyframework.auth.cognito.result.GlobalSignOutError
@@ -89,17 +92,22 @@ import com.amplifyframework.logging.Logger
 import com.amplifyframework.statemachine.StateChangeListenerToken
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
+import com.amplifyframework.statemachine.codegen.data.SignInData
+import com.amplifyframework.statemachine.codegen.data.SignOutData
 import com.amplifyframework.statemachine.codegen.events.AuthEvent
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
 import com.amplifyframework.statemachine.codegen.events.CredentialStoreEvent
 import com.amplifyframework.statemachine.codegen.events.DeleteUserEvent
+import com.amplifyframework.statemachine.codegen.events.HostedUIEvent
 import com.amplifyframework.statemachine.codegen.events.SignInChallengeEvent
+import com.amplifyframework.statemachine.codegen.events.SignOutEvent
 import com.amplifyframework.statemachine.codegen.states.AuthState
 import com.amplifyframework.statemachine.codegen.states.AuthenticationState
 import com.amplifyframework.statemachine.codegen.states.AuthorizationState
 import com.amplifyframework.statemachine.codegen.states.CredentialStoreState
 import com.amplifyframework.statemachine.codegen.states.DeleteUserState
+import com.amplifyframework.statemachine.codegen.states.HostedUISignInState
 import com.amplifyframework.statemachine.codegen.states.SRPSignInState
 import com.amplifyframework.statemachine.codegen.states.SignInChallengeState
 import com.amplifyframework.statemachine.codegen.states.SignInState
@@ -442,29 +450,22 @@ internal class RealAWSCognitoAuthPlugin(
                 }
             },
             {
-                val signInOptions = if (options !is AWSCognitoAuthSignInOptions) {
-                    AWSCognitoAuthSignInOptions.builder().authFlowType(AuthFlowType.USER_SRP_AUTH).build()
-                } else {
-                    options
-                }
+                // assign SRP as default if no options provided
+                val signInOptions = options as? AWSCognitoAuthSignInOptions ?: AWSCognitoAuthSignInOptions
+                    .builder().authFlowType(AuthFlowType.USER_SRP_AUTH).build()
 
-                val event = if (options !is AWSCognitoAuthSignInOptions) {
-                    AuthenticationEvent(
-                        AuthenticationEvent.EventType.SignInRequested(
-                            username,
-                            password,
-                        )
-                    )
-                } else {
-                    AuthenticationEvent(
-                        AuthenticationEvent.EventType.SignInRequested(
-                            username,
-                            password,
-                            signInOptions.authFlowType.toString(),
-                            signInOptions.metadata
-                        )
-                    )
+                val signInData = when (signInOptions.authFlowType) {
+                    AuthFlowType.USER_SRP_AUTH -> {
+                        SignInData.SRPSignInData(username, password, signInOptions.metadata)
+                    }
+                    AuthFlowType.CUSTOM_AUTH -> {
+                        SignInData.CustomAuthSignInData(username, password, signInOptions.metadata)
+                    }
+                    AuthFlowType.USER_PASSWORD_AUTH -> {
+                        TODO()
+                    }
                 }
+                val event = AuthenticationEvent(AuthenticationEvent.EventType.SignInRequested(signInData))
                 authStateMachine.send(event)
             }
         )
@@ -544,7 +545,13 @@ internal class RealAWSCognitoAuthPlugin(
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
     ) {
-        TODO("Not yet implemented")
+        signInWithSocialWebUI(
+            provider,
+            callingActivity,
+            AWSCognitoAuthWebUISignInOptions.builder().build(),
+            onSuccess,
+            onError
+        )
     }
 
     override fun signInWithSocialWebUI(
@@ -554,7 +561,13 @@ internal class RealAWSCognitoAuthPlugin(
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
     ) {
-        TODO("Not yet implemented")
+        signInWithHostedUI(
+            provider = provider,
+            callingActivity = callingActivity,
+            options = options,
+            onSuccess = onSuccess,
+            onError = onError
+        )
     }
 
     override fun signInWithWebUI(
@@ -562,7 +575,7 @@ internal class RealAWSCognitoAuthPlugin(
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
     ) {
-        TODO("Not yet implemented")
+        signInWithWebUI(callingActivity, AuthWebUISignInOptions.builder().build(), onSuccess, onError)
     }
 
     override fun signInWithWebUI(
@@ -571,11 +584,147 @@ internal class RealAWSCognitoAuthPlugin(
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
     ) {
-        TODO("Not yet implemented")
+        signInWithHostedUI(
+            callingActivity = callingActivity,
+            options = options,
+            onSuccess = onSuccess,
+            onError = onError
+        )
+    }
+
+    private fun signInWithHostedUI(
+        provider: AuthProvider? = null,
+        callingActivity: Activity,
+        options: AuthWebUISignInOptions,
+        onSuccess: Consumer<AuthSignInResult>,
+        onError: Consumer<AuthException>
+    ) {
+        authStateMachine.getCurrentState { authState ->
+            when (authState.authNState) {
+                is AuthenticationState.NotConfigured -> onError.accept(
+                    AuthException(
+                        "Sign in failed.",
+                        "Cognito User Pool not configured. Please check amplifyconfiguration.json file."
+                    )
+                )
+                // Continue sign in
+                is AuthenticationState.SignedOut -> {
+                    if (configuration.oauth == null) {
+                        onError.accept(
+                            AuthException(
+                                "Sign in failed.",
+                                "HostedUI not configured or unable to parse from amplifyconfiguration.json file."
+                            )
+                        )
+                        return@getCurrentState
+                    }
+
+                    _signInWithHostedUI(
+                        callingActivity = callingActivity,
+                        options = options,
+                        onSuccess = onSuccess,
+                        onError = onError,
+                        provider = provider
+                    )
+                }
+                is AuthenticationState.SignedIn -> onError.accept(AuthException.SignedInException())
+                else -> onError.accept(AuthException.InvalidStateException())
+            }
+        }
+    }
+
+    private fun _signInWithHostedUI(
+        callingActivity: Activity,
+        options: AuthWebUISignInOptions,
+        onSuccess: Consumer<AuthSignInResult>,
+        onError: Consumer<AuthException>,
+        provider: AuthProvider? = null
+    ) {
+        var token: StateChangeListenerToken? = null
+        token = authStateMachine.listen(
+            { authState ->
+                val authNState = authState.authNState
+                val authZState = authState.authZState
+                when {
+                    authNState is AuthenticationState.SigningIn -> {
+                        val hostedUISignInState = authNState.signInState?.hostedUISignInState
+                        if (hostedUISignInState is HostedUISignInState.Error) {
+                            token?.let(authStateMachine::cancel)
+                            onError.accept(
+                                CognitoAuthExceptionConverter.lookup(hostedUISignInState.exception, "Sign in failed.")
+                            )
+                            authStateMachine.send(AuthenticationEvent(AuthenticationEvent.EventType.CancelSignIn()))
+                        }
+                    }
+                    authNState is AuthenticationState.SignedIn
+                        && authZState is AuthorizationState.SessionEstablished -> {
+                        token?.let(authStateMachine::cancel)
+                        val authSignInResult =
+                            AuthSignInResult(
+                                true,
+                                AuthNextSignInStep(AuthSignInStep.DONE, mapOf(), null)
+                            )
+                        onSuccess.accept(authSignInResult)
+                    }
+                    else -> Unit
+                }
+            },
+            {
+                val hostedUIOptions =
+                    HostedUIHelper.createHostedUIOptions(callingActivity, provider, options)
+                authStateMachine.send(
+                    AuthenticationEvent(
+                        AuthenticationEvent.EventType.SignInRequested(
+                            SignInData.HostedUISignInData(hostedUIOptions)
+                        )
+                    )
+                )
+            }
+        )
     }
 
     override fun handleWebUISignInResponse(intent: Intent?) {
-        TODO("Not yet implemented")
+        authStateMachine.getCurrentState {
+            val callbackUri = intent?.data
+            when (val authNState = it.authNState) {
+                is AuthenticationState.SigningOut -> {
+                    (authNState.signOutState as? SignOutState.SigningOutHostedUI)?.let { signOutState ->
+                        if (callbackUri == null) {
+                            // Notify failed web sign out
+                            authStateMachine.send(
+                                SignOutEvent(SignOutEvent.EventType.UserCancelled(signOutState.signedInData))
+                            )
+                        }
+                        if (signOutState.globalSignOut) {
+                            authStateMachine.send(
+                                SignOutEvent(SignOutEvent.EventType.SignOutGlobally(signOutState.signedInData))
+                            )
+                        } else {
+                            authStateMachine.send(
+                                SignOutEvent(SignOutEvent.EventType.RevokeToken(signOutState.signedInData))
+                            )
+                        }
+                    }
+                }
+                is AuthenticationState.SigningIn -> {
+                    if (callbackUri == null) {
+                        authStateMachine.send(
+                            HostedUIEvent(
+                                HostedUIEvent.EventType.ThrowError(
+                                    AuthException.UserCancelledException(
+                                        "The user cancelled the sign-in attempt, so it did not complete.",
+                                        "To recover: catch this error, and show the sign-in screen again."
+                                    )
+                                )
+                            )
+                        )
+                    } else {
+                        authStateMachine.send(HostedUIEvent(HostedUIEvent.EventType.FetchToken(callbackUri)))
+                    }
+                }
+                else -> Unit
+            }
+        }
     }
 
     private suspend fun getSession(): AWSCognitoAuthSession {
@@ -1248,7 +1397,14 @@ internal class RealAWSCognitoAuthPlugin(
                 }
             },
             {
-                val event = AuthenticationEvent(AuthenticationEvent.EventType.SignOutRequested(options.isGlobalSignOut))
+                val event = AuthenticationEvent(
+                    AuthenticationEvent.EventType.SignOutRequested(
+                        SignOutData(
+                            options.isGlobalSignOut,
+                            (options as? AWSCognitoAuthSignOutOptions)?.browserPackage
+                        )
+                    )
+                )
                 authStateMachine.send(event)
             }
         )

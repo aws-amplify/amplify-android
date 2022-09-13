@@ -15,6 +15,10 @@
 
 package com.amplifyframework.statemachine.codegen.data
 
-enum class SignInMethod {
-    SRP, CUSTOM, HOSTED
-}
+import com.amplifyframework.auth.AuthProvider
+
+data class HostedUIProviderInfo(
+    val authProvider: AuthProvider? = null,
+    val idpIdentifier: String? = null,
+    val federationProviderName: String? = null
+)
