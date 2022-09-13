@@ -121,7 +121,7 @@ internal class RealAWSCognitoAuthPlugin(
     private val logger: Logger
 ) : AuthCategoryBehavior {
 
-    private val lastPublishedHubEventName = AtomicReference<AuthChannelEventName> ()
+    private lateinit var lastPublishedHubEventName: AtomicReference<AuthChannelEventName>
 
     init {
         addAuthStateChangeListener()
@@ -598,10 +598,7 @@ internal class RealAWSCognitoAuthPlugin(
                     if (credential.isValid()) {
                         onSuccess.accept(credential.getCognitoSession())
                     } else {
-                        if (lastPublishedHubEventName.get() != AuthChannelEventName.SESSION_EXPIRED) {
-                            lastPublishedHubEventName.set(AuthChannelEventName.SESSION_EXPIRED)
-                            Amplify.Hub.publish(HubChannel.AUTH, HubEvent.create(AuthChannelEventName.SESSION_EXPIRED))
-                        }
+                        maybePublishHubEvent(AuthChannelEventName.SESSION_EXPIRED)
                         _fetchAuthSession(true, credential, onSuccess = onSuccess, onError = onError)
                     }
                 }
@@ -1379,20 +1376,31 @@ internal class RealAWSCognitoAuthPlugin(
             { authState ->
                 logger.verbose("Auth State Change: $authState")
 
-                maybeDispatchHubEvent(authState)
-
                 when (authState) {
                     is AuthState.WaitingForCachedCredentials -> credentialStoreStateMachine.send(
                         CredentialStoreEvent(CredentialStoreEvent.EventType.LoadCredentialStore())
                     )
                     is AuthState.Configured -> {
-                        val authZState = authState.authZState
-                        if (authZState is AuthorizationState.WaitingToStore) {
-                            credentialStoreStateMachine.send(
-                                CredentialStoreEvent(
-                                    CredentialStoreEvent.EventType.StoreCredentials(authZState.amplifyCredential)
+                        val (authNState, authZState) = authState
+                        when {
+                            authZState is AuthorizationState.WaitingToStore -> {
+                                credentialStoreStateMachine.send(
+                                    CredentialStoreEvent(
+                                        CredentialStoreEvent.EventType.StoreCredentials(authZState.amplifyCredential)
+                                    )
                                 )
-                            )
+                            }
+                            authNState is AuthenticationState.SignedOut
+                                && authZState is AuthorizationState.Configured -> {
+                                maybePublishHubEvent(AuthChannelEventName.SIGNED_OUT)
+                            }
+                            authNState is AuthenticationState.SignedIn
+                                && authZState is AuthorizationState.SessionEstablished -> {
+                                maybePublishHubEvent(AuthChannelEventName.SIGNED_IN)
+                            }
+                            authState.authZState?.deleteUserState is DeleteUserState.UserDeleted -> {
+                                maybePublishHubEvent(AuthChannelEventName.USER_DELETED)
+                            }
                         }
                     }
                     else -> {
@@ -1423,20 +1431,15 @@ internal class RealAWSCognitoAuthPlugin(
         )
     }
 
-    private fun maybeDispatchHubEvent(authState: AuthState) {
-        if (authState !is AuthState.Configured) return
-        val (authNState, authZState) = authState
-        when {
-            authNState is AuthenticationState.SignedOut && authZState is AuthorizationState.Configured -> {
-                Amplify.Hub.publish(HubChannel.AUTH, HubEvent.create(AuthChannelEventName.SIGNED_OUT))
-            }
-            authNState is AuthenticationState.SignedIn && authZState is AuthorizationState.SessionEstablished -> {
-                Amplify.Hub.publish(HubChannel.AUTH, HubEvent.create(AuthChannelEventName.SIGNED_IN))
-            }
-            authState.authZState?.deleteUserState is DeleteUserState.UserDeleted -> {
-                Amplify.Hub.publish(HubChannel.AUTH, HubEvent.create(AuthChannelEventName.USER_DELETED))
-            }
+    private fun maybePublishHubEvent(eventName: AuthChannelEventName) {
+        if (!this::lastPublishedHubEventName.isInitialized) {
+            lastPublishedHubEventName = AtomicReference(eventName)
+        } else if (lastPublishedHubEventName.get() == eventName) {
+            return
         }
+
+        lastPublishedHubEventName.set(eventName)
+        Amplify.Hub.publish(HubChannel.AUTH, HubEvent.create(eventName))
     }
 
     private fun configureAuthStates() {
