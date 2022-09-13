@@ -45,7 +45,7 @@ object AuthConfigurationProvider {
     internal fun getAuthConfiguration(): AuthConfiguration {
         return AuthConfiguration.fromJson(
             JSONObject(Gson().toJson(getAuthConfigurationObject()))
-        ).build()
+        )
     }
 }
 
