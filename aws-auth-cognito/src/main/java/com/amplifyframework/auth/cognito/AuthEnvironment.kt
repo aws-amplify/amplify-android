@@ -27,10 +27,11 @@ import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
 import com.amplifyframework.statemachine.codegen.events.DeleteUserEvent
 import com.amplifyframework.statemachine.codegen.events.SignOutEvent
 
-class AuthEnvironment internal constructor(
+internal class AuthEnvironment internal constructor(
     val configuration: AuthConfiguration,
     val cognitoAuthService: AWSCognitoAuthServiceBehavior,
     val userContextDataProvider: UserContextDataProvider? = null,
+    val hostedUIClient: HostedUIClient?,
     val logger: Logger? = null
 ) : Environment {
     internal lateinit var srpHelper: SRPHelper

@@ -53,7 +53,7 @@ class CredentialStoreStateMachineInstrumentationTest {
 
         val credentialStore = AWSCognitoAuthCredentialStore(
             context,
-            AuthConfiguration.fromJson(authConfigJson).build()
+            AuthConfiguration.fromJson(authConfigJson)
         )
         val creds = credentialStore.retrieveCredential()
 

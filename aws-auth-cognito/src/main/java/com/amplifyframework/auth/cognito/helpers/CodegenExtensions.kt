@@ -13,8 +13,17 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.statemachine.codegen.data
+package com.amplifyframework.auth.cognito.helpers
 
-enum class SignInMethod {
-    SRP, CUSTOM, HOSTED
-}
+import com.amplifyframework.auth.AuthProvider
+
+internal val AuthProvider.userPoolProviderName: String
+    get() {
+        return when (this) {
+            AuthProvider.amazon() -> "LoginWithAmazon"
+            AuthProvider.facebook() -> "Facebook"
+            AuthProvider.google() -> "Google"
+            AuthProvider.apple() -> "SignInWithApple"
+            else -> providerKey
+        }
+    }

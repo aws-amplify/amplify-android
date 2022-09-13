@@ -15,6 +15,7 @@
 
 package com.amplifyframework.statemachine.codegen.data
 
-enum class SignInMethod {
-    SRP, CUSTOM, HOSTED
-}
+data class SignOutData(
+    val globalSignOut: Boolean = false,
+    val browserPackage: String? = null,
+)
