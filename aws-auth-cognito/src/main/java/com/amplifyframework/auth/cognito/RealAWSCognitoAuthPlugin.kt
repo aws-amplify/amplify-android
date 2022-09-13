@@ -52,6 +52,7 @@ import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignOutOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttributeOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttributesOptions
+import com.amplifyframework.auth.cognito.options.AWSCognitoAuthWebUISignInOptions
 import com.amplifyframework.auth.cognito.options.AuthFlowType
 import com.amplifyframework.auth.cognito.result.AWSCognitoAuthSignOutResult
 import com.amplifyframework.auth.cognito.result.GlobalSignOutError
@@ -544,7 +545,13 @@ internal class RealAWSCognitoAuthPlugin(
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
     ) {
-        signInWithSocialWebUI(provider, callingActivity, onSuccess, onError)
+        signInWithSocialWebUI(
+            provider,
+            callingActivity,
+            AWSCognitoAuthWebUISignInOptions.builder().build(),
+            onSuccess,
+            onError
+        )
     }
 
     override fun signInWithSocialWebUI(
