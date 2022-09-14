@@ -16,6 +16,7 @@
 package com.amplifyframework.auth.cognito.helpers
 
 import androidx.annotation.VisibleForTesting
+import org.jetbrains.annotations.TestOnly
 import java.math.BigInteger
 import java.security.MessageDigest
 import java.security.SecureRandom
@@ -25,7 +26,6 @@ import java.util.Locale
 import java.util.TimeZone
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
-import org.jetbrains.annotations.TestOnly
 
 /**
  * Kotlin implementation of SRP crypto calculations.
@@ -128,22 +128,6 @@ class SRPHelper(private val password: String) {
         digest.reset()
         digest.update(salt.toByteArray())
         return BigInteger(1, digest.digest(userIdPasswordHash))
-    }
-
-    internal fun computePasswordVerifier(username: String, deviceGroupKey: String, salt: String): BigInteger {
-        digest.reset()
-        digest.update(deviceGroupKey.toByteArray())
-        digest.update(username.toByteArray())
-        digest.update(":".toByteArray())
-        val fullPassword = digest.digest(
-            android.util.Base64.decode(
-                random.nextInt(40).toString(),
-                android.util.Base64.NO_WRAP
-            )
-        )
-        digest.reset()
-        digest.update(salt.toByteArray())
-        return g.modPow(BigInteger(1, digest.digest(fullPassword)), N)
     }
 
     // s = ((B - k * (g ^ x) % N) ^ (a + u * x) % N) % N
