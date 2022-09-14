@@ -29,6 +29,7 @@ import com.amplifyframework.testutils.sync.SynchronousGeo
 import com.amplifyframework.testutils.sync.TestCategory
 import java.util.UUID
 import kotlin.random.Random.Default.nextDouble
+import org.junit.After
 import org.junit.Assert
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -53,6 +54,10 @@ class SearchApiTest {
         val geoPlugin = AWSLocationGeoPlugin()
         val geoCategory = TestCategory.forPlugin(geoPlugin) as GeoCategory
         geo = SynchronousGeo.delegatingTo(geoCategory)
+    }
+
+    @After
+    fun tearDown() {
         signOutFromCognito()
     }
 

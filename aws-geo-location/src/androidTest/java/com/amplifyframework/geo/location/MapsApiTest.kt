@@ -25,6 +25,7 @@ import com.amplifyframework.testutils.sync.SynchronousAuth
 import com.amplifyframework.testutils.sync.SynchronousGeo
 import com.amplifyframework.testutils.sync.TestCategory
 import org.json.JSONObject
+import org.junit.After
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -49,7 +50,10 @@ class MapsApiTest {
         val geoPlugin = AWSLocationGeoPlugin()
         val geoCategory = TestCategory.forPlugin(geoPlugin) as GeoCategory
         geo = SynchronousGeo.delegatingTo(geoCategory)
+    }
 
+    @After
+    fun tearDown() {
         signOutFromCognito()
     }
 

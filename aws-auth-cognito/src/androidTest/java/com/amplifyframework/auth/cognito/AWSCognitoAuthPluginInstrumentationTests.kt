@@ -37,7 +37,6 @@ class AWSCognitoAuthPluginInstrumentationTests {
     fun setUp() {
         // Auth plugin uses default configuration
         auth = SynchronousAuth.delegatingToCognito(ApplicationProvider.getApplicationContext(), AWSCognitoAuthPlugin())
-        signoutWithCognito()
     }
 
     @After
@@ -103,9 +102,5 @@ class AWSCognitoAuthPluginInstrumentationTests {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val (username, password) = Credentials.load(context)
         auth?.signIn(username, password)
-    }
-
-    private fun signoutWithCognito() {
-        auth?.signOut()
     }
 }
