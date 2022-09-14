@@ -23,12 +23,11 @@ import com.amplifyframework.auth.cognito.testutils.Credentials
 import com.amplifyframework.hub.HubChannel
 import com.amplifyframework.testutils.HubAccumulator
 import com.amplifyframework.testutils.sync.SynchronousAuth
-import java.lang.RuntimeException
-import java.util.concurrent.TimeUnit
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.util.concurrent.TimeUnit
 
 @RunWith(AndroidJUnit4::class)
 class AWSCognitoAuthPluginInstrumentationTests {
@@ -38,6 +37,7 @@ class AWSCognitoAuthPluginInstrumentationTests {
     fun setUp() {
         // Auth plugin uses default configuration
         auth = SynchronousAuth.delegatingToCognito(ApplicationProvider.getApplicationContext(), AWSCognitoAuthPlugin())
+        signoutWithCognito()
     }
 
     @After
@@ -103,5 +103,9 @@ class AWSCognitoAuthPluginInstrumentationTests {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val (username, password) = Credentials.load(context)
         auth?.signIn(username, password)
+    }
+
+    private fun signoutWithCognito(){
+        auth?.signOut()
     }
 }
