@@ -42,6 +42,7 @@ sealed class SignInState : State {
     open var challengeState: SignInChallengeState? = SignInChallengeState.NotStarted()
     @Transient
     open var customSignInState: CustomSignInState? = CustomSignInState.NotStarted()
+    @Transient
     open var hostedUISignInState: HostedUISignInState? = HostedUISignInState.NotStarted()
 
     class Resolver(

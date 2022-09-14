@@ -127,13 +127,13 @@ class AWSCognitoAuthPluginFeatureTest(private val fileName: String) {
                 .getJSONObject("auth")
                 .getJSONObject("plugins")
                 .getJSONObject("awsCognitoAuthPlugin")
-        val authConfiguration = AuthConfiguration.fromJson(configJSONObject).build()
+        val authConfiguration = AuthConfiguration.fromJson(configJSONObject)
 
         val authService = mockk<AWSCognitoAuthServiceBehavior> {
             every { cognitoIdentityProviderClient } returns mockCognitoIPClient
         }
 
-        val authEnvironment = AuthEnvironment(authConfiguration, authService)
+        val authEnvironment = AuthEnvironment(authConfiguration, authService, hostedUIClient = null)
 
         authStateMachine = AuthStateMachine(authEnvironment, getState(feature.preConditions.state))
 
