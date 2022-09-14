@@ -49,6 +49,8 @@ class MapsApiTest {
         val geoPlugin = AWSLocationGeoPlugin()
         val geoCategory = TestCategory.forPlugin(geoPlugin) as GeoCategory
         geo = SynchronousGeo.delegatingTo(geoCategory)
+
+        signOutFromCognito()
     }
 
     /**
