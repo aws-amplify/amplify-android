@@ -30,7 +30,6 @@ import com.amplifyframework.analytics.pinpoint.internal.core.util.putString
 import com.amplifyframework.analytics.pinpoint.models.AndroidAppDetails
 import com.amplifyframework.analytics.pinpoint.models.AndroidDeviceDetails
 import com.amplifyframework.analytics.pinpoint.targeting.endpointProfile.EndpointProfile
-import com.amplifyframework.analytics.pinpoint.targeting.notification.PinpointNotificationClient
 import com.amplifyframework.core.Amplify
 import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.CoroutineDispatcher
@@ -42,7 +41,6 @@ import org.json.JSONObject
 
 internal class TargetingClient(
     private val pinpointClient: PinpointClient,
-    pinpointNotificationClient: PinpointNotificationClient,
     idService: SharedPrefsUniqueIdService,
     private val prefs: SharedPreferences,
     appDetails: AndroidAppDetails,
@@ -51,7 +49,7 @@ internal class TargetingClient(
     coroutineDispatcher: CoroutineDispatcher = Dispatchers.Default,
 ) {
     private val endpointProfile: EndpointProfile =
-        EndpointProfile(pinpointNotificationClient, idService, appDetails, deviceDetails, applicationContext)
+        EndpointProfile(idService, appDetails, deviceDetails, applicationContext)
     private val globalAttributes: MutableMap<String, List<String>>
     private val globalMetrics: MutableMap<String, Double>
     private val coroutineScope = CoroutineScope(coroutineDispatcher)
@@ -139,12 +137,9 @@ internal class TargetingClient(
             }
         }
         val endpointRequest = EndpointRequest {
-            channelType = endpointProfile.channelType
-            address = endpointProfile.address
             this.location = location
             this.demographic = demographic
             effectiveDate = endpointProfile.effectiveDate.millisToIsoDate()
-            optOut = endpointProfile.optOut
             attributes = endpointProfile.allAttributes
             metrics = endpointProfile.allMetrics
             this.user = user
