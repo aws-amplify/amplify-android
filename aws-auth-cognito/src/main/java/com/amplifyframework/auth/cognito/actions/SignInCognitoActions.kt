@@ -19,6 +19,7 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.ConfirmDeviceReques
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeviceSecretVerifierConfigType
 import aws.smithy.kotlin.runtime.time.Instant
 import com.amplifyframework.auth.cognito.AuthEnvironment
+import com.amplifyframework.auth.cognito.helpers.CognitoDeviceHelper
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.SignInActions
 import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
@@ -34,16 +35,6 @@ import java.util.Date
 import kotlin.time.Duration.Companion.seconds
 
 object SignInCognitoActions : SignInActions {
-
-    private const val KEY_SALT = "SALT"
-    private const val KEY_USER_ID_FOR_SRP = "USER_ID_FOR_SRP"
-    private const val KEY_USERNAME = "USERNAME"
-
-    private const val KEY_ID_TOKEN = "ID_TOKEN"
-    private const val KEY_ACCESS_TOKEN = "ID_TOKEN"
-    private const val KEY_REFRESH_TOKEN = "REFRESH_TOKEN"
-    private const val KEY_DEVICE_GROUP_KEY = "DEVICE_GROUP_KEY"
-    private const val KEY_DEVICE_KEY = "DEVICE_KEY"
 
     override fun startSRPAuthAction(event: SignInEvent.EventType.InitiateSignInWithSRP) =
         Action<AuthEnvironment>("StartSRPAuth") { id, dispatcher ->
@@ -74,35 +65,32 @@ object SignInCognitoActions : SignInActions {
     override fun confirmDevice(event: SignInEvent.EventType.ConfirmDevice): Action =
         Action<AuthEnvironment>("InitResolveChallenge") { id, dispatcher ->
             logger?.verbose("$id Starting execution")
-            val _idToken = event.confirmDeviceParams[KEY_ID_TOKEN]
-            val _refreshToken = event.confirmDeviceParams[KEY_REFRESH_TOKEN]
-            val _accessToken = event.confirmDeviceParams[KEY_ACCESS_TOKEN]
-            val _deviceKey = event.confirmDeviceParams[KEY_DEVICE_KEY]
-            val _deviceGroupKey = event.confirmDeviceParams[KEY_DEVICE_GROUP_KEY]
-            val userId = event.confirmDeviceParams[KEY_USER_ID_FOR_SRP] ?: ""
-            val username = event.confirmDeviceParams[KEY_USERNAME] as String
-            val _salt = event.confirmDeviceParams[KEY_SALT]
+            val deviceMetadata = event.deviceMetaData
+            val idToken = deviceMetadata.idToken
+            val refreshToken = deviceMetadata.refreshToken
+            val accessToken = deviceMetadata.accessToken
+            val deviceKey = deviceMetadata.deviceKey
+            val deviceGroupKey = deviceMetadata.deviceGroupKey
+            val userId = deviceMetadata.userId
+            val username = deviceMetadata.username
+            val expiresIn = Instant.now().plus(deviceMetadata.expiresIn.seconds).epochSeconds
             try {
+                val deviceVerifierMap = CognitoDeviceHelper.generateVerificationParameters(
+                    deviceKey,
+                    deviceGroupKey
+                )
                 cognitoAuthService.cognitoIdentityProviderClient?.confirmDevice(
                     ConfirmDeviceRequest.invoke {
-                        accessToken = _accessToken
-                        deviceKey = _deviceKey
-                        deviceSecretVerifierConfig = DeviceSecretVerifierConfigType.invoke {
-                            if (_deviceGroupKey == null || _salt == null) {
-                                throw Exception("Device Information is empty. Please try again")
-                            }
-                            passwordVerifier = srpHelper.computePasswordVerifier(
-                                username,
-                                _deviceGroupKey,
-                                _salt
-                            ).toString()
-                            salt = _salt
+                        this.accessToken = accessToken
+                        this.deviceKey = deviceKey
+                        this.deviceSecretVerifierConfig = DeviceSecretVerifierConfigType.invoke {
+                            this.passwordVerifier = deviceVerifierMap["verifier"]
+                            this.salt = deviceVerifierMap["salt"]
                         }
                     }
                 )
                 val evt = SignInEvent(SignInEvent.EventType.FinalizeSignIn())
-                val expiresIn = Instant.now().plus(event.expiresIn.seconds).epochSeconds
-                val tokens = CognitoUserPoolTokens(_idToken, _accessToken, _refreshToken, expiresIn)
+                val tokens = CognitoUserPoolTokens(idToken, accessToken, refreshToken, expiresIn)
                 val signedInData = SignedInData(userId, username, Date(), SignInMethod.SRP, tokens)
 
                 AuthenticationEvent(AuthenticationEvent.EventType.SignInCompleted(signedInData))

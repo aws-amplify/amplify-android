@@ -26,6 +26,7 @@ import com.amplifyframework.auth.cognito.helpers.SRPHelper
 import com.amplifyframework.auth.cognito.helpers.SignInChallengeHelper
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.SRPActions
+import com.amplifyframework.statemachine.codegen.data.DeviceMetaData
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.SRPEvent
 import com.amplifyframework.statemachine.codegen.events.SignInEvent
@@ -123,25 +124,27 @@ object SRPCognitoActions : SRPActions {
                 }
                 response?.let { respondToAuthChallengeResponse ->
                     respondToAuthChallengeResponse.authenticationResult?.newDeviceMetadata?.let { deviceMetaData ->
-                        val confirmDeviceParams = mapOf(
-                            KEY_ID_TOKEN to (respondToAuthChallengeResponse.authenticationResult?.idToken ?: ""),
-                            KEY_REFRESH_TOKEN to (respondToAuthChallengeResponse.authenticationResult?.idToken ?: ""),
-                            KEY_ACCESS_TOKEN to (
-                                respondToAuthChallengeResponse.authenticationResult?.accessToken
-                                    ?: ""
-                                ),
-                            KEY_DEVICE_KEY to (deviceMetaData.deviceKey ?: ""),
-                            KEY_USER_ID_FOR_SRP to userId,
-                            KEY_USERNAME to username,
-                            KEY_DEVICE_GROUP_KEY to (deviceMetaData.deviceGroupKey ?: ""),
-                            KEY_SALT to salt
+                        val confirmDeviceParams = DeviceMetaData(
+                            idToken = respondToAuthChallengeResponse.authenticationResult?.idToken
+                                ?: throw AuthException("Sign in failed", AuthException.TODO_RECOVERY_SUGGESTION),
+                            refreshToken = respondToAuthChallengeResponse.authenticationResult?.refreshToken
+                                ?: throw AuthException("Sign in failed", AuthException.TODO_RECOVERY_SUGGESTION),
+                            accessToken = respondToAuthChallengeResponse.authenticationResult?.accessToken
+                                ?: throw AuthException("Sign in failed", AuthException.TODO_RECOVERY_SUGGESTION),
+                            deviceKey = deviceMetaData.deviceKey ?: throw AuthException(
+                                "Sign in failed",
+                                AuthException.TODO_RECOVERY_SUGGESTION
+                            ),
+                            userId = userId,
+                            username = username,
+                            deviceGroupKey = deviceMetaData.deviceGroupKey ?: throw AuthException(
+                                "Sign in failed",
+                                AuthException.TODO_RECOVERY_SUGGESTION
+                            ),
+                            expiresIn = respondToAuthChallengeResponse.authenticationResult?.expiresIn
+                                ?: throw AuthException("Sign in failed", AuthException.TODO_RECOVERY_SUGGESTION)
                         )
-                        SignInEvent(
-                            SignInEvent.EventType.ConfirmDevice(
-                                confirmDeviceParams = confirmDeviceParams,
-                                respondToAuthChallengeResponse.authenticationResult?.expiresIn ?: 0
-                            )
-                        )
+                        SignInEvent(SignInEvent.EventType.ConfirmDevice(confirmDeviceParams))
                     } ?: SignInChallengeHelper.evaluateNextStep(
                         userId,
                         username,
