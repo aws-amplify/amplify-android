@@ -23,11 +23,11 @@ import com.amplifyframework.auth.cognito.testutils.Credentials
 import com.amplifyframework.hub.HubChannel
 import com.amplifyframework.testutils.HubAccumulator
 import com.amplifyframework.testutils.sync.SynchronousAuth
+import java.util.concurrent.TimeUnit
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import java.util.concurrent.TimeUnit
 
 @RunWith(AndroidJUnit4::class)
 class AWSCognitoAuthPluginInstrumentationTests {
@@ -105,7 +105,7 @@ class AWSCognitoAuthPluginInstrumentationTests {
         auth?.signIn(username, password)
     }
 
-    private fun signoutWithCognito(){
+    private fun signoutWithCognito() {
         auth?.signOut()
     }
 }
