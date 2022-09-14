@@ -233,11 +233,9 @@ internal class EventRecorder(
         }
 
         return PublicEndpoint {
-            channelType = endpointProfile.channelType
             location = endpointLocation
             demographic = endpointDemographic
             effectiveDate = endpointProfile.effectiveDate.millisToIsoDate()
-            optOut = endpointProfile.optOut
             attributes = endpointProfile.allAttributes
             metrics = endpointProfile.allMetrics
             user = endpointUser
