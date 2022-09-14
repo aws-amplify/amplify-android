@@ -15,6 +15,21 @@
 
 package com.amplifyframework.statemachine.codegen.data
 
-enum class SignInMethod {
-    SRP, CUSTOM, HOSTED
+sealed class SignInData {
+
+    data class SRPSignInData(
+        val username: String?,
+        val password: String?,
+        val options: Map<String, String>
+    ) : SignInData()
+
+    data class CustomAuthSignInData(
+        val username: String?,
+        val password: String?,
+        val options: Map<String, String>
+    ) : SignInData()
+
+    data class HostedUISignInData(
+        val hostedUIOptions: HostedUIOptions
+    ) : SignInData()
 }

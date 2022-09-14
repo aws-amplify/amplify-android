@@ -13,8 +13,12 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.statemachine.codegen.data
+package com.amplifyframework.statemachine.codegen.actions
 
-enum class SignInMethod {
-    SRP, CUSTOM, HOSTED
+import com.amplifyframework.statemachine.Action
+import com.amplifyframework.statemachine.codegen.events.HostedUIEvent
+
+interface HostedUIActions {
+    fun showHostedUI(event: HostedUIEvent.EventType.ShowHostedUI): Action
+    fun fetchHostedUISignInToken(event: HostedUIEvent.EventType.FetchToken): Action
 }
