@@ -112,14 +112,14 @@ import com.amplifyframework.statemachine.codegen.states.SRPSignInState
 import com.amplifyframework.statemachine.codegen.states.SignInChallengeState
 import com.amplifyframework.statemachine.codegen.states.SignInState
 import com.amplifyframework.statemachine.codegen.states.SignOutState
-import java.util.concurrent.atomic.AtomicReference
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
-import kotlin.coroutines.suspendCoroutine
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
+import java.util.concurrent.atomic.AtomicReference
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
 
 internal class RealAWSCognitoAuthPlugin(
     private val configuration: AuthConfiguration,
@@ -395,22 +395,13 @@ internal class RealAWSCognitoAuthPlugin(
                     onError
                 )
                 is AuthenticationState.SignedIn -> {
-                    if (username == (authState.authNState as AuthenticationState.SignedIn).signedInData.username) {
-                        onError.accept(
-                            AuthException(
-                                "There is already a user in signedIn state. " +
-                                    "SignOut the user first before calling signIn",
-                                AuthException.InvalidStateException.TODO_RECOVERY_SUGGESTION
-                            )
+                    onError.accept(
+                        AuthException(
+                            "There is already a user in signedIn state. " +
+                                "SignOut the user first before calling signIn",
+                            AuthException.InvalidStateException.TODO_RECOVERY_SUGGESTION
                         )
-                    } else {
-                        onSuccess.accept(
-                            AuthSignInResult(
-                                true,
-                                AuthNextSignInStep(AuthSignInStep.DONE, mapOf(), null)
-                            )
-                        )
-                    }
+                    )
                 }
                 else -> onError.accept(AuthException.InvalidStateException())
             }
