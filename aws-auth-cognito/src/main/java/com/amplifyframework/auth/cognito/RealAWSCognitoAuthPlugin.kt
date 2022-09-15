@@ -1353,9 +1353,7 @@ internal class RealAWSCognitoAuthPlugin(
                 is AuthenticationState.NotConfigured ->
                     onComplete.accept(AWSCognitoAuthSignOutResult.CompleteSignOut)
                 // Continue sign out and clear auth or guest credentials
-                is AuthenticationState.SignedIn -> _signOut(options, onComplete)
-                is AuthenticationState.SignedOut ->
-                    onComplete.accept(AWSCognitoAuthSignOutResult.CompleteSignOut)
+                is AuthenticationState.SignedIn, is AuthenticationState.SignedOut -> _signOut(options, onComplete)
                 else -> onComplete.accept(
                     AWSCognitoAuthSignOutResult.FailedSignOut(AuthException.InvalidStateException())
                 )
@@ -1370,7 +1368,7 @@ internal class RealAWSCognitoAuthPlugin(
                 if (authState is AuthState.Configured) {
                     val (authNState, authZState) = authState
                     when {
-                        authNState is AuthenticationState.SignedOut && authZState is AuthorizationState.Configured -> {
+                        authNState is AuthenticationState.SignedOut -> {
                             token?.let(authStateMachine::cancel)
                             if (authNState.signedOutData.hasError) {
                                 val signedOutData = authNState.signedOutData
@@ -1400,7 +1398,7 @@ internal class RealAWSCognitoAuthPlugin(
                             )
                         }
                         else -> {
-                            // no-op
+                            // No - op
                         }
                     }
                 }
