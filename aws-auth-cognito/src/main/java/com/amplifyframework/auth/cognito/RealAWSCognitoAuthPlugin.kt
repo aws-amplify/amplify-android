@@ -1353,8 +1353,9 @@ internal class RealAWSCognitoAuthPlugin(
                 is AuthenticationState.NotConfigured ->
                     onComplete.accept(AWSCognitoAuthSignOutResult.CompleteSignOut)
                 // Continue sign out and clear auth or guest credentials
-                is AuthenticationState.SignedIn, is AuthenticationState.SignedOut ->
-                    _signOut(options, onComplete)
+                is AuthenticationState.SignedIn -> _signOut(options, onComplete)
+                is AuthenticationState.SignedOut ->
+                    onComplete.accept(AWSCognitoAuthSignOutResult.CompleteSignOut)
                 else -> onComplete.accept(
                     AWSCognitoAuthSignOutResult.FailedSignOut(AuthException.InvalidStateException())
                 )
