@@ -34,7 +34,6 @@ import org.junit.Assert
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.BeforeClass
-import org.junit.Ignore
 import org.junit.Test
 
 /**
@@ -73,7 +72,6 @@ class SearchApiTest {
      *
      * @throws GeoException will be thrown due to service exception.
      */
-    @Ignore("Flaky test. Fixme")
     @Test(expected = GeoException::class)
     fun cannotSearchByCoordinatesWithoutAuth() {
         val coordinates = Coordinates(

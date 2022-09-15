@@ -1368,7 +1368,7 @@ internal class RealAWSCognitoAuthPlugin(
                 if (authState is AuthState.Configured) {
                     val (authNState, authZState) = authState
                     when {
-                        authNState is AuthenticationState.SignedOut && authNState is AuthenticationState.SignedOut -> {
+                        authNState is AuthenticationState.SignedOut && authZState is AuthorizationState.Configured -> {
                             token?.let(authStateMachine::cancel)
                             if (authNState.signedOutData.hasError) {
                                 val signedOutData = authNState.signedOutData
