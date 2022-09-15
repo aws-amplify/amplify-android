@@ -25,7 +25,6 @@ import com.amplifyframework.testutils.sync.SynchronousAuth
 import com.amplifyframework.testutils.sync.SynchronousGeo
 import com.amplifyframework.testutils.sync.TestCategory
 import org.json.JSONObject
-import org.junit.After
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -52,11 +51,6 @@ class MapsApiTest {
         geo = SynchronousGeo.delegatingTo(geoCategory)
     }
 
-    @After
-    fun tearDown() {
-        signOutFromCognito()
-    }
-
     /**
      * Tests that default map resource's style document can be fetched from
      * Amazon Location Service using [AWSLocationGeoPlugin.getMapStyleDescriptor].
@@ -77,6 +71,7 @@ class MapsApiTest {
         val json = JSONObject(style!!.json)
         assertTrue(json.has("layers"))
         assertTrue(json.has("sources"))
+        signOutFromCognito()
     }
 
     /**
