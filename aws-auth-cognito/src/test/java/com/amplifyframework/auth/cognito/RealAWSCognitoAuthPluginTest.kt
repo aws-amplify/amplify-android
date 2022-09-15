@@ -83,6 +83,10 @@ import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.slot
 import io.mockk.verify
+import org.json.JSONObject
+import org.junit.Before
+import org.junit.Ignore
+import org.junit.Test
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
@@ -90,10 +94,6 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
-import org.json.JSONObject
-import org.junit.Before
-import org.junit.Ignore
-import org.junit.Test
 
 class RealAWSCognitoAuthPluginTest {
 
@@ -1465,9 +1465,9 @@ class RealAWSCognitoAuthPluginTest {
         configJsonObject.put("Endpoint", endpoint)
 
         val userPool = UserPoolConfiguration.fromJson(configJsonObject).build()
-        assertTrue(userPool.region == region, "Regions do not match expected")
-        assertTrue(userPool.poolId == poolId, "Pool id do not match expected")
-        assertTrue(userPool.appClient == appClientId, "AppClientId do not match expected")
-        assertTrue(userPool.endpoint == endpoint, "Endpoint do not match expected")
+        assertEquals(userPool.region, region, "Regions do not match expected")
+        assertEquals(userPool.poolId, poolId, "Pool id do not match expected")
+        assertEquals(userPool.appClient, appClientId, "AppClientId do not match expected")
+        assertEquals(userPool.endpoint, "https://$endpoint", "Endpoint do not match expected")
     }
 }
