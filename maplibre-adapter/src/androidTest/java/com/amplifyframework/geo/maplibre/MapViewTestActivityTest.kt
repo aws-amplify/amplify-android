@@ -70,6 +70,7 @@ class MapViewTestActivityTest {
                 activity.mapView.setStyle { style ->
                     continuation.resume(style)
                 }
+                signOutFromCognito(activity.auth)
             }
         }
         assertNotNull(mapStyle)
@@ -94,6 +95,7 @@ class MapViewTestActivityTest {
                     activity.mapView.getStyle { _, style ->
                         continuation.resume(style)
                     }
+                    signOutFromCognito(activity.auth)
                 }
             }
         }
@@ -119,6 +121,7 @@ class MapViewTestActivityTest {
                         continuation.resume(style)
                     }
                 }
+                signOutFromCognito(activity.auth)
             }
         }
         assertNotNull(mapStyle)
@@ -143,6 +146,7 @@ class MapViewTestActivityTest {
                         continuation.resume(style)
                     }
                 }
+                signOutFromCognito(activity.auth)
             }
         }
         this.launch(Dispatchers.Main) {
@@ -153,7 +157,6 @@ class MapViewTestActivityTest {
     }
 
     private fun signInWithCognito(auth: SynchronousAuth?) {
-        signOutFromCognito(auth)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val (username, password) = Credentials.load(context)
         auth?.signIn(username, password)
