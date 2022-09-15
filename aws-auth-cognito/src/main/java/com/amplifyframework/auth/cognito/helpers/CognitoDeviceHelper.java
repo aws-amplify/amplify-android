@@ -1,18 +1,16 @@
 /*
- *  Copyright 2013-2019 Amazon.com,
- *  Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
- *  Licensed under the Amazon Software License (the "License").
- *  You may not use this file except in compliance with the
- *  License. A copy of the License is located at
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
  *
- *      http://aws.amazon.com/asl/
+ *  http://aws.amazon.com/apache2.0
  *
- *  or in the "license" file accompanying this file. This file is
- *  distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
- *  CONDITIONS OF ANY KIND, express or implied. See the License
- *  for the specific language governing permissions and
- *  limitations under the License.
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
  */
 
 package com.amplifyframework.auth.cognito.helpers;
@@ -47,40 +45,19 @@ public final class CognitoDeviceHelper {
 
     private static final Object LOCK = new Object();
 
-    /**
-     * Default pagination limit.
-     */
-    public static final int DEFAULT_DEVICE_PAGINATION_LIMIT = 10;
-
-    static deviceSRP srpCalculator = null;
+    private static deviceSRP srpCalculator = null;
 
     /**
      * Reference to utility that provides access to SharedPreferences.
      */
-    static Map<String, AWSKeyValueStore> awsKeyValueStoreMap = new HashMap<String, AWSKeyValueStore>();
+    private static Map<String, AWSKeyValueStore> awsKeyValueStoreMap = new HashMap<String, AWSKeyValueStore>();
 
     /**
      * flag that indicates if the persistence is enabled or not.
      */
     private static boolean isPersistenceEnabled = true;
 
-    /**
-     * Set the flag that indicates if the persistence is enabled or not.
-     * @param isPersistenceEnabled flag that indicates if the persistence is enabled or not.
-     */
-    public static void setPersistenceEnabled(boolean isPersistenceEnabled) {
-        synchronized (LOCK) {
-            try {
-                CognitoDeviceHelper.isPersistenceEnabled = isPersistenceEnabled;
-                for (String sharedPreferencesName : awsKeyValueStoreMap.keySet()) {
-                    AWSKeyValueStore awsKeyValueStore = awsKeyValueStoreMap.get(sharedPreferencesName);
-                    awsKeyValueStore.setPersistenceEnabled(isPersistenceEnabled);
-                }
-            } catch (Exception ex) {
-                LOGGER.error("Error in setting the isPersistenceEnabled flag in the key-value store.", ex);
-            }
-        }
-    }
+    private CognitoDeviceHelper(){}
 
     /**
      * Retrieve an instance of AWSKeyValueStore for the sharedPreferencesName.
@@ -105,8 +82,8 @@ public final class CognitoDeviceHelper {
                     awsKeyValueStoreMap.put(sharedPreferencesName, awsKeyValueStore);
                     return awsKeyValueStore;
                 }
-            } catch (Exception ex) {
-                LOGGER.error("Error in retrieving the persistent store.", ex);
+            } catch (Exception exception) {
+                LOGGER.error("Error in retrieving the persistent store.", exception);
                 return null;
             }
         }
@@ -137,8 +114,8 @@ public final class CognitoDeviceHelper {
             if (awsKeyValueStore != null && awsKeyValueStore.contains(COGNITO_DEVICE_KEY)) {
                 return awsKeyValueStore.get(COGNITO_DEVICE_KEY);
             }
-        } catch (final Exception e) {
-            LOGGER.error("Error accessing SharedPreferences", e);
+        } catch (final Exception exception) {
+            LOGGER.error("Error accessing SharedPreferences", exception);
         }
         return null;
     }
@@ -158,8 +135,8 @@ public final class CognitoDeviceHelper {
             if (awsKeyValueStore != null && awsKeyValueStore.contains(COGNITO_DEVICE_SECRET)) {
                 return awsKeyValueStore.get(COGNITO_DEVICE_SECRET);
             }
-        } catch (final Exception e) {
-            LOGGER.error("Error accessing SharedPreferences", e);
+        } catch (final Exception exception) {
+            LOGGER.error("Error accessing SharedPreferences", exception);
         }
         return null;
     }
@@ -179,8 +156,8 @@ public final class CognitoDeviceHelper {
             if (awsKeyValueStore != null && awsKeyValueStore.contains(COGNITO_DEVICE_GROUP_KEY)) {
                 return awsKeyValueStore.get(COGNITO_DEVICE_GROUP_KEY);
             }
-        } catch (final Exception e) {
-            LOGGER.error("Error accessing SharedPreferences", e);
+        } catch (final Exception exception) {
+            LOGGER.error("Error accessing SharedPreferences", exception);
         }
         return null;
     }
@@ -201,8 +178,8 @@ public final class CognitoDeviceHelper {
         try {
             final AWSKeyValueStore awsKeyValueStore = getAWSKeyValueStore(context, username, userPoolId);
             awsKeyValueStore.put(COGNITO_DEVICE_KEY, deviceKey);
-        } catch (final Exception e) {
-            LOGGER.error("Error accessing SharedPreferences", e);
+        } catch (final Exception exception) {
+            LOGGER.error("Error accessing SharedPreferences", exception);
         }
     }
 
@@ -219,8 +196,8 @@ public final class CognitoDeviceHelper {
         try {
             final AWSKeyValueStore awsKeyValueStore = getAWSKeyValueStore(context, username, userPoolId);
             awsKeyValueStore.put(COGNITO_DEVICE_SECRET, deviceSecret);
-        } catch (final Exception e) {
-            LOGGER.error("Error accessing SharedPreferences", e);
+        } catch (final Exception exception) {
+            LOGGER.error("Error accessing SharedPreferences", exception);
         }
     }
 
@@ -237,8 +214,8 @@ public final class CognitoDeviceHelper {
         try {
             final AWSKeyValueStore awsKeyValueStore = getAWSKeyValueStore(context, username, userPoolId);
             awsKeyValueStore.put(COGNITO_DEVICE_GROUP_KEY, deviceGroupKey);
-        } catch (final Exception e) {
-            LOGGER.error("Error accessing SharedPreferences", e);
+        } catch (final Exception exception) {
+            LOGGER.error("Error accessing SharedPreferences", exception);
         }
     }
 
@@ -253,8 +230,8 @@ public final class CognitoDeviceHelper {
         try {
             final AWSKeyValueStore awsKeyValueStore = getAWSKeyValueStore(context, username, userPoolId);
             awsKeyValueStore.clear();
-        } catch (final Exception e) {
-            LOGGER.error("Error accessing SharedPreferences", e);
+        } catch (final Exception exception) {
+            LOGGER.error("Error accessing SharedPreferences", exception);
         }
     }
 
@@ -289,22 +266,29 @@ public final class CognitoDeviceHelper {
     }
 
     /**
+     * Returns a string with random characters.
+     *
+     * @return a string with random alpha-numeric characters.s
+     */
+    public static String generateRandomString() {
+        final UUID uuid = UUID.randomUUID();
+        return String.valueOf(uuid);
+    }
+
+    /**
      * Static class for SRP related calculations for devices.
      */
     @SuppressWarnings("checkstyle:typename")
     public static class deviceSRP {
-        private final BigInteger salt;
-        private final BigInteger verifier;
         private static final String HASH_ALGORITHM = "SHA-256";
-
         private static final ThreadLocal<MessageDigest> THREAD_MESSAGE_DIGEST =
             new ThreadLocal<MessageDigest>() {
                 @Override
                 protected MessageDigest initialValue() {
                     try {
                         return MessageDigest.getInstance(HASH_ALGORITHM);
-                    } catch (final NoSuchAlgorithmException e) {
-                        throw new ExceptionInInitializerError(e);
+                    } catch (final NoSuchAlgorithmException exception) {
+                        throw new ExceptionInInitializerError(exception);
                     }
                 }
             };
@@ -328,23 +312,39 @@ public final class CognitoDeviceHelper {
 
         private static final BigInteger N = new BigInteger(HEX_N, 16);
         private static final BigInteger GG = BigInteger.valueOf(2);
+        private static final int SALT_LENGTH_BITS = 128;
 
         private static final SecureRandom SECURE_RANDOM;
+
+        private final BigInteger salt;
+        private final BigInteger verifier;
 
         static {
             try {
                 SECURE_RANDOM = SecureRandom.getInstance("SHA1PRNG");
-            } catch (final NoSuchAlgorithmException e) {
-                throw new ExceptionInInitializerError(e);
+            } catch (final NoSuchAlgorithmException exception) {
+                throw new ExceptionInInitializerError(exception);
             }
         }
 
-        private static final int SALT_LENGTH_BITS = 128;
+        /**
+         * Helps to start the SRP validation of the device.
+         * @param deviceGroupKey REQUIRED: Group assigned to the device.
+         * @param deviceKey REQUIRED: Unique identifier assigned to the device.
+         * @param password REQUIRED: The device password.
+         */
+        public deviceSRP(String deviceGroupKey, String deviceKey, String password) {
+            final byte[] deviceKeyHash = getUserIdHash(deviceGroupKey, deviceKey, password);
+
+            salt = new BigInteger(SALT_LENGTH_BITS, SECURE_RANDOM);
+            verifier = calcVerifier(salt, deviceKeyHash);
+        }
 
         /**
-         * @return Salt used for SRP.
+         * Getter for salt.
+         * @return salt
          */
-        public BigInteger getSalt() {
+        private BigInteger getSalt() {
             return salt;
         }
 
@@ -354,19 +354,6 @@ public final class CognitoDeviceHelper {
          */
         public BigInteger getVerifier() {
             return verifier;
-        }
-
-        /**
-         * Helps to start the SRP validation of the device.
-         * @param deviceGroupKey REQUIRED: Group assigned to the device.
-         * @param deviceKey REQUIRED: Unique identifier assigned to the device. 
-         * @param password REQUIRED: The device password.
-         */
-        public deviceSRP(String deviceGroupKey, String deviceKey, String password) {
-            final byte[] deviceKeyHash = getUserIdHash(deviceGroupKey, deviceKey, password);
-
-            salt = new BigInteger(SALT_LENGTH_BITS, SECURE_RANDOM);
-            verifier = calcVerifier(salt, deviceKeyHash);
         }
 
         /**
@@ -430,12 +417,12 @@ public final class CognitoDeviceHelper {
 
         /**
          * Adds a string to the digest.
-         * @param s REQUIRED: String to add.
+         * @param stringToAdd REQUIRED: String to add.
          */
-        public static void update(String s) {
+        public static void update(String stringToAdd) {
             final MessageDigest md = THREAD_MESSAGE_DIGEST.get();
-            if (s != null) {
-                md.update(s.getBytes(StringUtils.UTF8));
+            if (stringToAdd != null) {
+                md.update(stringToAdd.getBytes(StringUtils.UTF8));
             }
         }
 
@@ -454,45 +441,35 @@ public final class CognitoDeviceHelper {
 
         /**
          * Adds a BigInteger to the digest.
-         * @param n REQUIRED: The number to add.
+         * @param number REQUIRED: The number to add.
          */
-        public static void update(BigInteger n) {
+        public static void update(BigInteger number) {
             final MessageDigest md = THREAD_MESSAGE_DIGEST.get();
-            if (n != null) {
-                md.update(n.toByteArray());
+            if (number != null) {
+                md.update(number.toByteArray());
             }
         }
 
         /**
          * Adds the contents of a byte-buffer to the digest.
-         * @param b REQUIRED: bytes to add.
+         * @param byteBuffer REQUIRED: bytes to add.
          */
-        public static void update(ByteBuffer b) {
+        public static void update(ByteBuffer byteBuffer) {
             final MessageDigest md = THREAD_MESSAGE_DIGEST.get();
-            if (b != null) {
-                md.update(b.array());
+            if (byteBuffer != null) {
+                md.update(byteBuffer.array());
             }
         }
 
         /**
          * Adds a byte array to the digest.
-         * @param b REQUIRED: bytes to add.
+         * @param bytes REQUIRED: bytes to add.
          */
-        public static void update(byte[] b) {
+        public static void update(byte[] bytes) {
             final MessageDigest md = THREAD_MESSAGE_DIGEST.get();
-            if (b != null) {
-                md.update(b);
+            if (bytes != null) {
+                md.update(bytes);
             }
         }
-    }
-
-    /**
-     * Returns a string with random characters.
-     *
-     * @return a string with random alpha-numeric characters.s
-     */
-    public static String generateRandomString() {
-        final UUID uuid = UUID.randomUUID();
-        return String.valueOf(uuid);
     }
 }
