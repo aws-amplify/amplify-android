@@ -27,10 +27,9 @@ dependencies {
     implementation project(path: ':aws-auth-cognito')
 
     implementation dependency.androidx.appcompat
-    implementation dependency.aws.pinpoint
-    implementation dependency.aws.mobileclient
     implementation dependency.aws.pinpointKotlin
     implementation dependency.kotlin.serializationJson
+    implementation project(path: ':testutils')
 
     testImplementation dependency.junit
     testImplementation dependency.mockk
@@ -41,7 +40,9 @@ dependencies {
     testImplementation dependency.kotlin.test.coroutines
 
     androidTestImplementation project(path: ':testutils')
+    androidTestImplementation dependency.androidx.test.core
     androidTestImplementation dependency.androidx.test.runner
-    implementation dependency.androidx.test.junit
+    androidTestImplementation dependency.androidx.test.junit
+    androidTestImplementation project(path: ':aws-analytics-pinpoint')
 }
 
