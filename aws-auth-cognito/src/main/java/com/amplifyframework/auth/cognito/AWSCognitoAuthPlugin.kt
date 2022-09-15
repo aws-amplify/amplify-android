@@ -75,11 +75,12 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
     @Throws(AmplifyException::class)
     override fun configure(pluginConfiguration: JSONObject, context: Context) {
         try {
-            val configuration = AuthConfiguration.fromJson(pluginConfiguration).build()
+            val configuration = AuthConfiguration.fromJson(pluginConfiguration)
             val authEnvironment = AuthEnvironment(
                 configuration,
                 AWSCognitoAuthServiceBehavior.fromConfiguration(configuration),
                 configuration.userPool?.let { UserContextDataProvider(context, it) },
+                HostedUIClient.create(context, configuration.oauth, logger),
                 logger
             )
             val authStateMachine = AuthStateMachine(authEnvironment)

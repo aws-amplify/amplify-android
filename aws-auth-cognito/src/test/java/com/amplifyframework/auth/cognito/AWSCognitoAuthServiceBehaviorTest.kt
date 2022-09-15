@@ -31,18 +31,17 @@ class AWSCognitoAuthServiceBehaviorTest {
     fun verifyFromConfiguration() {
         val expectedIdentityPoolConfigRegion = "identity-pool-region"
         val expectedUserPoolRegion = "user-pool-region"
-        val config = AuthConfiguration.Builder()
-            .identityPool(
-                IdentityPoolConfiguration.builder()
-                    .poolId("pool-a")
-                    .region(expectedIdentityPoolConfigRegion)
-                    .build()
-            ).userPool(
-                UserPoolConfiguration.Builder()
-                    .poolId("pool-b")
-                    .region(expectedUserPoolRegion)
-                    .build()
-            ).build()
+        val config = AuthConfiguration(
+            identityPool = IdentityPoolConfiguration.builder()
+                .poolId("pool-a")
+                .region(expectedIdentityPoolConfigRegion)
+                .build(),
+            userPool = UserPoolConfiguration.Builder()
+                .poolId("pool-b")
+                .region(expectedUserPoolRegion)
+                .build(),
+            oauth = null
+        )
 
         val testObject = AWSCognitoAuthServiceBehavior.fromConfiguration(config)
 

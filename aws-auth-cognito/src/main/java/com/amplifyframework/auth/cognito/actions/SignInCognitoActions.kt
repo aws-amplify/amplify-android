@@ -19,6 +19,7 @@ import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.SignInActions
 import com.amplifyframework.statemachine.codegen.events.CustomSignInEvent
+import com.amplifyframework.statemachine.codegen.events.HostedUIEvent
 import com.amplifyframework.statemachine.codegen.events.SRPEvent
 import com.amplifyframework.statemachine.codegen.events.SignInChallengeEvent
 import com.amplifyframework.statemachine.codegen.events.SignInEvent
@@ -47,6 +48,14 @@ object SignInCognitoActions : SignInActions {
             logger.verbose("$id Starting execution")
             val evt = SignInChallengeEvent(SignInChallengeEvent.EventType.WaitForAnswer(event.challenge))
             logger.verbose("$id Sending event ${evt.type}")
+            dispatcher.send(evt)
+        }
+
+    override fun startHostedUIAuthAction(event: SignInEvent.EventType.InitiateHostedUISignIn) =
+        Action<AuthEnvironment>("StartHostedUIAuth") { id, dispatcher ->
+            logger?.verbose("$id Starting execution")
+            val evt = HostedUIEvent(HostedUIEvent.EventType.ShowHostedUI(event.hostedUISignInData))
+            logger?.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
         }
 }
