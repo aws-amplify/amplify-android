@@ -451,7 +451,7 @@ internal class RealAWSCognitoAuthPlugin(
             {
                 // assign SRP as default if no options provided
                 val signInOptions = options as? AWSCognitoAuthSignInOptions ?: AWSCognitoAuthSignInOptions
-                    .builder().authFlowType(AuthFlowType.USER_SRP_AUTH).build()
+                    .builder().authFlowType(configuration.authFlowType).build()
 
                 val signInData = when (signInOptions.authFlowType) {
                     AuthFlowType.USER_SRP_AUTH -> {
