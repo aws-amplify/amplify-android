@@ -20,9 +20,7 @@ import com.amplifyframework.statemachine.StateMachineResolver
 import com.amplifyframework.statemachine.StateResolution
 import com.amplifyframework.statemachine.codegen.actions.FetchAuthSessionActions
 import com.amplifyframework.statemachine.codegen.events.FetchAuthSessionEvent
-import kotlinx.serialization.Serializable
 
-@Serializable
 sealed class FetchAuthSessionState : State {
     data class NotStarted(val id: String = "") : FetchAuthSessionState()
     data class FetchingIdentity(val id: String = "") : FetchAuthSessionState()

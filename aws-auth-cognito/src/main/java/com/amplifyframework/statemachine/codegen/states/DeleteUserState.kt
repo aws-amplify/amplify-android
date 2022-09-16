@@ -22,9 +22,7 @@ import com.amplifyframework.statemachine.StateResolution
 import com.amplifyframework.statemachine.codegen.actions.DeleteUserActions
 import com.amplifyframework.statemachine.codegen.events.DeleteUserEvent
 import java.lang.Exception
-import kotlinx.serialization.Serializable
 
-@Serializable
 sealed class DeleteUserState : State {
     data class NotStarted(val id: String = "") : DeleteUserState()
     data class DeletingUser(val id: String = "") : DeleteUserState()

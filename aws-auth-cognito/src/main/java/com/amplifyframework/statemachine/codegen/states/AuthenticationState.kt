@@ -26,29 +26,17 @@ import com.amplifyframework.statemachine.codegen.data.SignedInData
 import com.amplifyframework.statemachine.codegen.data.SignedOutData
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.SignOutEvent
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.Transient
 
-@Serializable @SerialName("AuthenticationState")
 sealed class AuthenticationState : State {
-    @Serializable @SerialName("AuthenticationState.NotConfigured")
     data class NotConfigured(val id: String = "") : AuthenticationState()
-    @Serializable @SerialName("AuthenticationState.Configured")
     data class Configured(val id: String = "") : AuthenticationState()
-    @Serializable @SerialName("AuthenticationState.SigningIn")
     data class SigningIn(override var signInState: SignInState) : AuthenticationState()
-    @Serializable @SerialName("AuthenticationState.SignedIn")
     data class SignedIn(val signedInData: SignedInData) : AuthenticationState()
-    @Serializable @SerialName("AuthenticationState.SigningOut")
     data class SigningOut(override var signOutState: SignOutState) : AuthenticationState()
-    @Serializable @SerialName("AuthenticationState.SignedOut")
     data class SignedOut(val signedOutData: SignedOutData) : AuthenticationState()
     data class Error(val exception: Exception) : AuthenticationState()
 
-    @Transient
     open var signInState: SignInState = SignInState.NotStarted()
-    @Transient
     open var signOutState: SignOutState = SignOutState.NotStarted()
 
     class Resolver(

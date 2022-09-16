@@ -21,15 +21,11 @@ import com.amplifyframework.statemachine.StateMachineResolver
 import com.amplifyframework.statemachine.StateResolution
 import com.amplifyframework.statemachine.codegen.actions.SRPActions
 import com.amplifyframework.statemachine.codegen.events.SRPEvent
-import kotlinx.serialization.Serializable
 
-@Serializable
 sealed class SRPSignInState : State {
-    @Serializable
     data class NotStarted(val id: String = "") : SRPSignInState()
     data class InitiatingSRPA(val id: String = "") : SRPSignInState()
     data class RespondingPasswordVerifier(val id: String = "") : SRPSignInState()
-    @Serializable
     data class SignedIn(val id: String = "") : SRPSignInState()
     data class Cancelling(val id: String = "") : SRPSignInState()
     data class Error(val exception: Exception) : SRPSignInState()

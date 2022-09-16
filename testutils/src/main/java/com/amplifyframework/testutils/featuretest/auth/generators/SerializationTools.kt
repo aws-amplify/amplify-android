@@ -20,6 +20,8 @@ import com.amplifyframework.auth.AuthException
 import com.amplifyframework.statemachine.codegen.states.AuthState
 import com.amplifyframework.testutils.featuretest.FeatureTestCase
 import com.amplifyframework.testutils.featuretest.auth.definitions.serialize
+import com.amplifyframework.testutils.featuretest.auth.serializers.AuthStatesProxy.Companion.deserializeToAuthState
+import com.amplifyframework.testutils.featuretest.auth.serializers.AuthStatesProxy.Companion.serialize
 import java.io.File
 import java.io.FileWriter
 import kotlinx.serialization.encodeToString
@@ -57,16 +59,14 @@ internal fun FeatureTestCase.exportJson() {
 }
 
 internal fun AuthState.exportJson() {
-    val format = Json {
-        prettyPrint = true
-    }
-
-    val result = format.encodeToString(this)
+    val result = this.serialize()
+    val reverse = result.deserializeToAuthState()
 
     val dirName = "states"
     val fileName = "${authNState?.javaClass?.simpleName}_${authZState?.javaClass?.simpleName}.json"
     writeFile(result, dirName, fileName)
     println("Json exported:\n $result")
+    println("Serialized can be reversed = ${reverse.serialize() == result}")
 }
 
 /**
