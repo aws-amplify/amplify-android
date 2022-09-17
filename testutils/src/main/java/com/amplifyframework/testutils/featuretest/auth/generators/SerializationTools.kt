@@ -20,8 +20,8 @@ import com.amplifyframework.auth.AuthException
 import com.amplifyframework.statemachine.codegen.states.AuthState
 import com.amplifyframework.testutils.featuretest.FeatureTestCase
 import com.amplifyframework.testutils.featuretest.auth.definitions.serialize
-import com.amplifyframework.testutils.featuretest.auth.serializers.AuthStatesProxy.Companion.deserializeToAuthState
-import com.amplifyframework.testutils.featuretest.auth.serializers.AuthStatesProxy.Companion.serialize
+import com.amplifyframework.testutils.featuretest.auth.serializers.deserializeToAuthState
+import com.amplifyframework.testutils.featuretest.auth.serializers.serialize
 import java.io.File
 import java.io.FileWriter
 import kotlinx.serialization.encodeToString

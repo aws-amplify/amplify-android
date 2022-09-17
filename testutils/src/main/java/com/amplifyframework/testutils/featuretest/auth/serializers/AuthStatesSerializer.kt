@@ -22,6 +22,7 @@ import com.amplifyframework.statemachine.codegen.data.SignedInData
 import com.amplifyframework.statemachine.codegen.states.AuthState
 import com.amplifyframework.statemachine.codegen.states.AuthenticationState
 import com.amplifyframework.statemachine.codegen.states.AuthorizationState
+import com.amplifyframework.testutils.featuretest.auth.serializers.AuthStatesProxy.Companion.format
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
@@ -127,12 +128,11 @@ internal data class AuthStatesProxy(
             }
             prettyPrint = true
         }
-
-        internal fun AuthState.serialize(): String = format.encodeToString(this)
-
-        internal fun String.deserializeToAuthState(): AuthState = format.decodeFromString(this)
     }
 }
+
+fun AuthState.serialize(): String = format.encodeToString(this)
+fun String.deserializeToAuthState(): AuthState = format.decodeFromString(this)
 
 private class AuthStatesSerializer<T> : KSerializer<T> {
     val serializer = AuthStatesProxy.serializer()

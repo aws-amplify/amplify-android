@@ -24,6 +24,7 @@ import com.amplifyframework.testutils.featuretest.ExpectationShapes
 import com.amplifyframework.testutils.featuretest.FeatureTestCase
 import com.amplifyframework.testutils.featuretest.ResponseType.Success
 import com.amplifyframework.testutils.featuretest.auth.generators.toJsonElement
+import com.amplifyframework.testutils.featuretest.auth.serializers.deserializeToAuthState
 import com.google.gson.Gson
 import featureTest.utilities.APICaptorFactory
 import featureTest.utilities.AuthOptionsFactory
@@ -216,6 +217,6 @@ class AWSCognitoAuthPluginFeatureTest(private val fileName: String) {
 
     private fun getState(state: String): AuthState {
         val stateFileUrl = this::class.java.getResource("$statesFilesBasePath/$state")
-        return Json.decodeFromString(File(stateFileUrl!!.file).readText())
+        return File(stateFileUrl!!.file).readText().deserializeToAuthState()
     }
 }
