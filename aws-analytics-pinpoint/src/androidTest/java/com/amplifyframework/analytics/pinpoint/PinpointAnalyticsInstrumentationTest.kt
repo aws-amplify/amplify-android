@@ -44,7 +44,8 @@ class PinpointAnalyticsInstrumentationTest {
         @RawRes val resourceId = Resources.getRawResourceId(context, CREDENTIALS_RESOURCE_NAME)
         val userAndPasswordPair = readCredentialsFromResource(context, resourceId)
         synchronousAuth.signIn(
-            userAndPasswordPair!!.first, userAndPasswordPair.second
+            userAndPasswordPair!!.first,
+            userAndPasswordPair.second
         )
         val hubAccumulator =
             HubAccumulator.create(HubChannel.ANALYTICS, AnalyticsChannelEventName.FLUSH_EVENTS, 1).start()
@@ -138,7 +139,7 @@ class PinpointAnalyticsInstrumentationTest {
             .addProperty("DemoDoubleProperty2", 2.0)
             .build()
         Amplify.Analytics.recordEvent(event1)
-        //Autosubmitter runs every 10 secs, so waiting for 15sec to receive the hub event
+        // Autosubmitter runs every 10 secs, so waiting for 15sec to receive the hub event
         val hubEvents1 = analyticsHubEventAccumulator1.await(EVENT_FLUSH_TIMEOUT_WAIT, TimeUnit.SECONDS)
         Assert.assertEquals(1, hubEvents1.size.toLong())
         val analyticsHubEventAccumulator2 =
@@ -150,7 +151,7 @@ class PinpointAnalyticsInstrumentationTest {
             .addProperty("DemoProperty2", 2.0)
             .build()
         Amplify.Analytics.recordEvent(event2)
-        //Autosubmitter runs every 10 secs, so waiting for 15sec to receive the hub event
+        // Autosubmitter runs every 10 secs, so waiting for 15sec to receive the hub event
         val hubEvents2 = analyticsHubEventAccumulator1.await(EVENT_FLUSH_TIMEOUT_WAIT, TimeUnit.SECONDS)
         Assert.assertEquals(1, hubEvents2.size.toLong())
     }
