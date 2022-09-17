@@ -28,14 +28,14 @@ import com.amplifyframework.testutils.HubAccumulator
 import com.amplifyframework.testutils.Resources
 import com.amplifyframework.testutils.Sleep
 import com.amplifyframework.testutils.sync.SynchronousAuth
+import java.util.UUID
+import java.util.concurrent.TimeUnit
 import org.json.JSONException
 import org.junit.After
 import org.junit.Assert
-import org.junit.BeforeClass
 import org.junit.Before
+import org.junit.BeforeClass
 import org.junit.Test
-import java.util.UUID
-import java.util.concurrent.TimeUnit
 
 class PinpointAnalyticsInstrumentationTest {
     @Before
@@ -81,7 +81,7 @@ class PinpointAnalyticsInstrumentationTest {
         Amplify.Analytics.flushEvents()
         val hubEvents = hubAccumulator.await(10, TimeUnit.SECONDS)
         Assert.assertEquals(1, hubEvents.size.toLong())
-        val submittedEvents = (hubEvents[0].data as ArrayList<AnalyticsEvent>?)!!
+        val submittedEvents = filterSessionEvents((hubEvents[0].data as ArrayList<AnalyticsEvent>))
         val submittedEvent = submittedEvents[0]
         Assert.assertEquals(submittedEvent.name, eventName)
         Assert.assertEquals("Pancakes", submittedEvent.properties["AnalyticsStringProperty"].value)
@@ -118,9 +118,8 @@ class PinpointAnalyticsInstrumentationTest {
         val hubEvents = analyticsHubEventAccumulator.await(10, TimeUnit.SECONDS)
         Assert.assertEquals(1, hubEvents.size.toLong())
         val hubEvent = analyticsHubEventAccumulator.awaitFirst()
-        val hubEventData = hubEvent.data as List<*>?
+        val hubEventData = filterSessionEvents((hubEvents[0].data as ArrayList<AnalyticsEvent>))
         Assert.assertEquals(AnalyticsChannelEventName.FLUSH_EVENTS.eventName, hubEvent.name)
-        assert(hubEventData != null)
         Assert.assertEquals(eventName1, (hubEventData!![0] as AnalyticsEvent).name)
         Assert.assertEquals(eventName2, (hubEventData[1] as AnalyticsEvent).name)
     }
@@ -182,7 +181,7 @@ class PinpointAnalyticsInstrumentationTest {
         Sleep.milliseconds(RECORD_INSERTION_TIMEOUT)
         Amplify.Analytics.flushEvents()
         val hubEvents = analyticsHubEventAccumulator.await(10, TimeUnit.SECONDS)
-        val submittedEvents = (hubEvents[0].data as ArrayList<AnalyticsEvent>?)!!
+        val submittedEvents = filterSessionEvents((hubEvents[0].data as ArrayList<AnalyticsEvent>))
         // TODO: still flaky here due to session starting mid-test
         Assert.assertEquals(2, submittedEvents.size.toLong())
         val event1Attributes = submittedEvents[0].properties
@@ -221,18 +220,28 @@ class PinpointAnalyticsInstrumentationTest {
         Sleep.milliseconds(RECORD_INSERTION_TIMEOUT)
         Amplify.Analytics.flushEvents()
         val hubEvents = analyticsHubEventAccumulator.await(10, TimeUnit.SECONDS)
-        val submittedEvents = hubEvents[0].data as ArrayList<AnalyticsEvent>?
+        val submittedEvents = filterSessionEvents((hubEvents[0].data as ArrayList<AnalyticsEvent>))
 
         // Assert: Ensure there are two events, the first has attributes, and the second doesn't
-        Assert.assertEquals("globalVal", submittedEvents!![0].properties["GlobalProperty"].value)
+        Assert.assertEquals("globalVal", submittedEvents[0].properties["GlobalProperty"].value)
         Assert.assertEquals(0, submittedEvents[1].properties.size().toLong())
+    }
+
+    private fun filterSessionEvents(syncedEvents: ArrayList<AnalyticsEvent>): MutableList<AnalyticsEvent> {
+        val result = mutableListOf<AnalyticsEvent>()
+        syncedEvents.forEach {
+            if (!it.name.startsWith("_session")) {
+                result.add(it)
+            }
+        }
+        return result
     }
 
     companion object {
         private const val EVENT_FLUSH_TIMEOUT_WAIT = 15 /* seconds */
         private const val CREDENTIALS_RESOURCE_NAME = "credentials"
         private const val COGNITO_CONFIGURATION_TIMEOUT = 10 * 1000L
-        private const val RECORD_INSERTION_TIMEOUT = 3 * 1000L
+        private const val RECORD_INSERTION_TIMEOUT = 5 * 1000L
         private lateinit var synchronousAuth: SynchronousAuth
         @BeforeClass
         @JvmStatic
