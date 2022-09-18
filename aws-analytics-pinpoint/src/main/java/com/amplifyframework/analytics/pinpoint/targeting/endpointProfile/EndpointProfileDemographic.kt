@@ -39,7 +39,7 @@ class EndpointProfileDemographic {
     fun getMake() = make
     fun setMake(make: String) = make.also { this.make = it }
 
-    internal var model: String = Build.MODEL
+    internal var model: String = Build.MODEL ?: TEST_MODEL
     fun getModel() = model
     fun setModel(model: String) = model.also { this.model = it }
 
@@ -59,7 +59,7 @@ class EndpointProfileDemographic {
     fun getPlatform() = platform
     fun setPlatform(platform: String) = platform.also { this.platform = it }
 
-    internal var platformVersion: String = Build.VERSION.RELEASE
+    internal var platformVersion: String = Build.VERSION.RELEASE ?: TEST_VERSION
     fun getPlatformVersion() = platformVersion
     fun setPlatformVersion(platformVersion: String) = platformVersion.also { this.platformVersion = it }
 
@@ -68,5 +68,7 @@ class EndpointProfileDemographic {
          * Android platform.
          */
         const val ENDPOINT_PLATFORM = "ANDROID"
+        const val TEST_MODEL = "TEST MODEL"
+        const val TEST_VERSION = "TEST VERSION"
     }
 }
