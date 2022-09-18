@@ -17,7 +17,6 @@ package featureTest.utilities
 
 import aws.sdk.kotlin.services.cognitoidentityprovider.CognitoIdentityProviderClient
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.CodeDeliveryDetailsType
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.CognitoIdentityProviderException
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeliveryMediumType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ForgotPasswordRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ForgotPasswordResponse
@@ -26,11 +25,12 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.SignUpResponse
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.testutils.featuretest.MockResponse
 import com.amplifyframework.testutils.featuretest.ResponseType
-import com.amplifyframework.testutils.featuretest.auth.definitions.toCognitoException
+import com.amplifyframework.testutils.featuretest.auth.serializers.CognitoIdentityProviderExceptionSerializer
 import io.mockk.CapturingSlot
 import io.mockk.coEvery
 import io.mockk.mockkObject
 import io.mockk.slot
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
@@ -42,8 +42,6 @@ class CognitoMockFactory(private val mockCognitoIPClient: CognitoIdentityProvide
 
     fun mock(mockResponse: MockResponse) {
         val responseObject = mockResponse.response as JsonObject
-        fun expectedException(responseObject: JsonObject) =
-            CognitoIdentityProviderException((responseObject["message"] as JsonPrimitive).content)
 
         return when (mockResponse.apiName) {
             "forgotPassword" -> {
@@ -51,7 +49,10 @@ class CognitoMockFactory(private val mockCognitoIPClient: CognitoIdentityProvide
 
                 coEvery { mockCognitoIPClient.forgotPassword(capture(requestBuilderCaptor)) } coAnswers {
                     if (mockResponse.responseType == ResponseType.Failure) {
-                        throw responseObject.toCognitoException()
+                        throw Json.decodeFromString(
+                            CognitoIdentityProviderExceptionSerializer,
+                            responseObject.toString()
+                        )
                     }
                     ForgotPasswordResponse.invoke {
                         this.codeDeliveryDetails = parseCodeDeliveryDetails(responseObject)
@@ -68,7 +69,10 @@ class CognitoMockFactory(private val mockCognitoIPClient: CognitoIdentityProvide
 
                 coEvery { mockCognitoIPClient.signUp(capture(requestCaptor)) } coAnswers {
                     if (mockResponse.responseType == ResponseType.Failure) {
-                        throw responseObject.toCognitoException()
+                        throw Json.decodeFromString(
+                            CognitoIdentityProviderExceptionSerializer,
+                            responseObject.toString()
+                        )
                     }
                     SignUpResponse.invoke {
                         this.codeDeliveryDetails = parseCodeDeliveryDetails(responseObject)

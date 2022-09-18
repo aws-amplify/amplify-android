@@ -15,15 +15,15 @@
 
 package com.amplifyframework.testutils.featuretest.auth.generators
 
+import aws.sdk.kotlin.services.cognitoidentity.model.CognitoIdentityException
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.CognitoIdentityProviderException
 import com.amplifyframework.auth.AuthException
 import com.amplifyframework.statemachine.codegen.states.AuthState
 import com.amplifyframework.testutils.featuretest.FeatureTestCase
-import com.amplifyframework.testutils.featuretest.auth.definitions.serialize
+import com.amplifyframework.testutils.featuretest.auth.serializers.CognitoIdentityExceptionSerializer
+import com.amplifyframework.testutils.featuretest.auth.serializers.CognitoIdentityProviderExceptionSerializer
 import com.amplifyframework.testutils.featuretest.auth.serializers.deserializeToAuthState
 import com.amplifyframework.testutils.featuretest.auth.serializers.serialize
-import java.io.File
-import java.io.FileWriter
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
@@ -31,6 +31,8 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import java.io.File
+import java.io.FileWriter
 
 const val basePath = ".temp/feature-test"
 
@@ -92,7 +94,11 @@ fun Any?.toJsonElement(): JsonElement {
         is Number -> JsonPrimitive(this)
         is String -> JsonPrimitive(this)
         is AuthException -> toJsonElement()
-        is CognitoIdentityProviderException -> serialize()
+        is CognitoIdentityProviderException -> Json.encodeToJsonElement(
+            CognitoIdentityProviderExceptionSerializer,
+            this
+        )
+        is CognitoIdentityException -> Json.encodeToJsonElement(CognitoIdentityExceptionSerializer, this)
         else -> JsonPrimitive(toString())
     }
 }
