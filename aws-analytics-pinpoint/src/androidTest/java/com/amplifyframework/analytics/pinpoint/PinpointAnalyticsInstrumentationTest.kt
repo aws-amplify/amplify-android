@@ -183,7 +183,6 @@ class PinpointAnalyticsInstrumentationTest {
         Amplify.Analytics.flushEvents()
         val hubEvents = analyticsHubEventAccumulator.await(10, TimeUnit.SECONDS)
         val submittedEvents = filterSessionEvents((hubEvents[0].data as ArrayList<AnalyticsEvent>))
-        // TODO: still flaky here due to session starting mid-test
         Assert.assertEquals(2, submittedEvents.size.toLong())
         val event1Attributes = submittedEvents[0].properties
         val event2Attributes = submittedEvents[1].properties
