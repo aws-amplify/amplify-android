@@ -24,6 +24,7 @@ import aws.sdk.kotlin.services.pinpoint.model.UpdateEndpointResponse
 import io.mockk.coEvery
 import io.mockk.coVerify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -55,6 +56,19 @@ class TargetingClientTest {
 
     @Test
     fun testUpdateEndpointProfile() = runTest {
+        setup()
+        val prefs = constructSharedPreferences()
+        targetingClient = TargetingClient(
+            pinpointClient,
+            pinpointNotificationClient,
+            idService,
+            prefs,
+            appDetails,
+            deviceDetails,
+            applicationContext,
+            coroutineDispatcher = UnconfinedTestDispatcher(testScheduler)
+        )
+
         targetingClient.addAttribute("attribute", listOf("a1", "a2"))
         targetingClient.addMetric("metric", 1.0)
 
@@ -62,7 +76,7 @@ class TargetingClientTest {
         coEvery { pinpointClient.updateEndpoint(ofType(UpdateEndpointRequest::class)) }.returns(updateEndpointResponse)
         targetingClient.updateEndpointProfile()
 
-        coVerify(timeout=3000) {
+        coVerify {
             pinpointClient.updateEndpoint(
                 coWithArg<UpdateEndpointRequest> {
                     assertNotNull(it.endpointRequest)
