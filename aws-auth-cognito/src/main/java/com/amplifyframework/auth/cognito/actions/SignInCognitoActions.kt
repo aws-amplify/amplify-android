@@ -89,7 +89,7 @@ object SignInCognitoActions : SignInActions {
                             this.salt = deviceVerifierMap["salt"]
                         }
                     }
-                )?:throw AuthException("Sign in failed", AuthException.TODO_RECOVERY_SUGGESTION)
+                ) ?: throw AuthException("Sign in failed", AuthException.TODO_RECOVERY_SUGGESTION)
                 val tokens = CognitoUserPoolTokens(idToken, accessToken, refreshToken, expiresIn)
                 val signedInData = SignedInData(userId, username, Date(), SignInMethod.SRP, tokens)
                 AuthenticationEvent(AuthenticationEvent.EventType.SignInCompleted(signedInData))
