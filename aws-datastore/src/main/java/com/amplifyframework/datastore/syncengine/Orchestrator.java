@@ -111,6 +111,7 @@ public final class Orchestrator {
             .appSync(appSync)
             .conflictResolver(conflictResolver)
             .retryHandler(retryHandler)
+            .onFailure(this::onApiSyncFailure)
             .build();
         this.syncProcessor = SyncProcessor.builder()
             .modelProvider(modelProvider)

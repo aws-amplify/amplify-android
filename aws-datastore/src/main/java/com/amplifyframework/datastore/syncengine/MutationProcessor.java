@@ -59,6 +59,7 @@ final class MutationProcessor {
     private final ConflictResolver conflictResolver;
     private final CompositeDisposable ongoingOperationsDisposable;
     private final RetryHandler retryHandler;
+    private final Consumer<Throwable> onFailure;
 
     private MutationProcessor(Builder builder) {
         this.merger = Objects.requireNonNull(builder.merger);
@@ -68,6 +69,7 @@ final class MutationProcessor {
         this.appSync = Objects.requireNonNull(builder.appSync);
         this.conflictResolver = Objects.requireNonNull(builder.conflictResolver);
         this.retryHandler = Objects.requireNonNull(builder.retryHandler);
+        this.onFailure = Objects.requireNonNull(builder.onFailure);
         this.ongoingOperationsDisposable = new CompositeDisposable();
     }
 
@@ -103,7 +105,10 @@ final class MutationProcessor {
             .flatMapCompletable(event -> drainMutationOutbox())
             .subscribe(
                 () -> LOG.warn("Observation of mutation outbox was completed."),
-                error -> LOG.warn("Error ended observation of mutation outbox: ", error)
+                error -> {
+                    LOG.warn("Error ended observation of mutation outbox: ", error);
+                    onFailure.accept(error);
+                }
             )
         );
     }
@@ -401,6 +406,7 @@ final class MutationProcessor {
             BuilderSteps.AppSyncStep,
             BuilderSteps.ConflictResolverStep,
             BuilderSteps.RetryHandlerStep,
+            BuilderSteps.OnFailureStep,
             BuilderSteps.BuildStep {
         private Merger merger;
         private VersionRepository versionRepository;
@@ -409,6 +415,7 @@ final class MutationProcessor {
         private AppSync appSync;
         private ConflictResolver conflictResolver;
         private RetryHandler retryHandler;
+        private Consumer<Throwable> onFailure;
 
         @NonNull
         @Override
@@ -454,8 +461,15 @@ final class MutationProcessor {
 
         @NonNull
         @Override
-        public BuilderSteps.BuildStep retryHandler(@NonNull RetryHandler retryHandler) {
+        public BuilderSteps.OnFailureStep retryHandler(@NonNull RetryHandler retryHandler) {
             this.retryHandler = retryHandler;
+            return Builder.this;
+        }
+
+        @NonNull
+        @Override
+        public BuilderSteps.BuildStep onFailure(@NonNull Consumer<Throwable> onFailure) {
+            this.onFailure = Objects.requireNonNull(onFailure);
             return Builder.this;
         }
 
@@ -499,7 +513,12 @@ final class MutationProcessor {
 
         interface RetryHandlerStep {
             @NonNull
-            BuildStep retryHandler(@NonNull RetryHandler retryHandler);
+            OnFailureStep retryHandler(@NonNull RetryHandler retryHandler);
+        }
+
+        interface OnFailureStep {
+            @NonNull
+            BuildStep onFailure(@NonNull Consumer<Throwable> onFailure);
         }
 
         interface BuildStep {
