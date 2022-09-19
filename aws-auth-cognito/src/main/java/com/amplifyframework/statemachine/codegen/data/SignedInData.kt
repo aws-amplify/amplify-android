@@ -15,9 +15,9 @@
 
 package com.amplifyframework.statemachine.codegen.data
 
-import com.amplifyframework.util.DateSerializer
-import kotlinx.serialization.Serializable
+import com.amplifyframework.statemachine.codegen.data.serializer.DateSerializer
 import java.util.Date
+import kotlinx.serialization.Serializable
 
 @Serializable
 data class SignedInData(

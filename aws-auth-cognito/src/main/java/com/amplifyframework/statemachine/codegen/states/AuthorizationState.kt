@@ -206,7 +206,7 @@ sealed class AuthorizationState : State {
                         if (oldState is SessionEstablished) {
                             StateResolution(SigningOut(oldState.amplifyCredential))
                         } else {
-                            defaultResolution
+                            StateResolution(SigningOut(AmplifyCredential.Empty))
                         }
                     }
                     authorizationEvent is AuthorizationEvent.EventType.FetchUnAuthSession -> {
