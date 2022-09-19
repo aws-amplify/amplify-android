@@ -148,7 +148,7 @@ final class SubscriptionProcessor {
             subscriptionsStarted = latch.abortableAwait(adjustedTimeoutSeconds, TimeUnit.SECONDS);
         } catch (InterruptedException exception) {
             LOG.warn("Subscription operations were interrupted during setup.");
-            return;
+            throw new DataStoreException("Subscription operations were interrupted during setup.", "Check your internet.");
         }
 
         if (subscriptionsStarted) {

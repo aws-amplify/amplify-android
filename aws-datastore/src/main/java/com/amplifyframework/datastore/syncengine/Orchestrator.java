@@ -282,6 +282,7 @@ public final class Orchestrator {
         storageObserver.stopObservingStorageChanges();
         LOG.info("Setting currentState to STOPPED");
         currentState.set(State.STOPPED);
+        publishNetworkStatusEvent(false);
     }
 
     /**
