@@ -18,6 +18,7 @@ package com.amplifyframework.auth.cognito.actions
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ConfirmDeviceRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeviceSecretVerifierConfigType
 import aws.smithy.kotlin.runtime.time.Instant
+import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.auth.cognito.helpers.CognitoDeviceHelper
 import com.amplifyframework.statemachine.Action
@@ -74,7 +75,7 @@ object SignInCognitoActions : SignInActions {
             val userId = deviceMetadata.userId
             val username = deviceMetadata.username
             val expiresIn = Instant.now().plus(deviceMetadata.expiresIn.seconds).epochSeconds
-            try {
+            val evt = try {
                 val deviceVerifierMap = CognitoDeviceHelper.generateVerificationParameters(
                     deviceKey,
                     deviceGroupKey
@@ -88,20 +89,15 @@ object SignInCognitoActions : SignInActions {
                             this.salt = deviceVerifierMap["salt"]
                         }
                     }
-                )
-                val evt = SignInEvent(SignInEvent.EventType.FinalizeSignIn())
+                ) ?: throw AuthException("Sign in failed", AuthException.TODO_RECOVERY_SUGGESTION)
                 val tokens = CognitoUserPoolTokens(idToken, accessToken, refreshToken, expiresIn)
                 val signedInData = SignedInData(userId, username, Date(), SignInMethod.SRP, tokens)
-
                 AuthenticationEvent(AuthenticationEvent.EventType.SignInCompleted(signedInData))
-                logger?.verbose("$id Sending event ${evt.type}")
-                dispatcher.send(evt)
             } catch (e: Exception) {
-                val errorEvent = SignInEvent(SignInEvent.EventType.ThrowError(e))
-                logger?.verbose("$id Sending event ${errorEvent.type}")
-                dispatcher.send(errorEvent)
-                AuthenticationEvent(AuthenticationEvent.EventType.CancelSignIn())
+                SignInEvent(SignInEvent.EventType.ThrowError(e))
             }
+            logger?.verbose("$id Sending event ${evt.type}")
+            dispatcher.send(evt)
         }
 
     override fun startHostedUIAuthAction(event: SignInEvent.EventType.InitiateHostedUISignIn) =

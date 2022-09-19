@@ -117,6 +117,10 @@ sealed class SignInState : State {
                         StateResolution(ResolvingChallenge(oldState.challengeState), listOf(action))
                     }
                     is SignInEvent.EventType.ThrowError -> StateResolution(Error(signInEvent.exception), listOf())
+                    is SignInEvent.EventType.ConfirmDevice -> {
+                        val action = signInActions.confirmDevice(signInEvent)
+                        StateResolution(ConfirmingDevice(), listOf(action))
+                    }
                     else -> defaultResolution
                 }
                 is ResolvingDeviceSrpa -> when (signInEvent) {
