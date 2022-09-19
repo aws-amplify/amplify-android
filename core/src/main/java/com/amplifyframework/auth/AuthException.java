@@ -84,8 +84,9 @@ public class AuthException extends AmplifyException {
      */
     public static class SignedInException extends AuthException {
         private static final long serialVersionUID = 1L;
-        private static final String MESSAGE = "You are currently signed in.";
-        private static final String RECOVERY_SUGGESTION = "Please sign out and reattempt the operation.";
+        private static final String MESSAGE = "There is already a user in signedIn state";
+        private static final String RECOVERY_SUGGESTION =
+                "SignOut the user first before calling signIn";
 
         /**
          * Default message/recovery suggestion without a cause.
