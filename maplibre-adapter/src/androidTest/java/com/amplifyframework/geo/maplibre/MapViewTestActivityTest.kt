@@ -15,35 +15,37 @@
 
 package com.amplifyframework.geo.maplibre
 
-import android.content.Context
 import android.graphics.Color
 import androidx.test.core.app.ApplicationProvider
-import androidx.test.core.app.launchActivity
+import androidx.test.ext.junit.rules.ActivityScenarioRule
 import com.amplifyframework.geo.maplibre.view.ClusteringOptions
 import com.amplifyframework.geo.maplibre.view.MapLibreView
-import com.amplifyframework.testutils.sync.SynchronousAuth
 import com.mapbox.mapboxsdk.maps.MapboxMap
 import com.mapbox.mapboxsdk.maps.Style
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
-import kotlin.coroutines.suspendCoroutine
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Rule
 import org.junit.Test
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
+
 
 class MapViewTestActivityTest {
+
+    @get:Rule
+    var rule = ActivityScenarioRule(MapViewTestActivity::class.java)
 
     /**
      * Tests that activity can successfully load a map instance.
      */
     @Test
     fun loadsMapSuccessfully() = runBlocking {
-        val scenario = launchActivity<MapViewTestActivity>()
         val map = suspendCoroutine<MapboxMap> { continuation ->
-            scenario.onActivity { activity ->
+            rule.scenario.onActivity { activity ->
                 activity.mapView.addOnDidFailLoadingMapListener { error ->
                     continuation.resumeWithException(RuntimeException(error))
                 }
@@ -59,18 +61,15 @@ class MapViewTestActivityTest {
      * Tests that clustering is enabled by default when setting the style for a map.
      */
     @Test
-    fun enablesClusteringByDefault() = runBlocking {
-        val scenario = launchActivity<MapViewTestActivity>()
+    fun enablesClusteringByDefault() = runBlockingSignedIn(rule) {
         val mapStyle = suspendCoroutine<Style> { continuation ->
-            scenario.onActivity { activity ->
+            rule.scenario.onActivity { activity ->
                 activity.mapView.addOnDidFailLoadingMapListener { error ->
                     continuation.resumeWithException(RuntimeException(error))
                 }
-                signInWithCognito(activity.auth)
                 activity.mapView.setStyle { style ->
                     continuation.resume(style)
                 }
-                signOutFromCognito(activity.auth)
             }
         }
         assertNotNull(mapStyle)
@@ -82,20 +81,17 @@ class MapViewTestActivityTest {
      * Tests that clustering can be enabled and clustering options passed in for the map.
      */
     @Test
-    fun clusteringCanBeEnabledWithOptions() = runBlocking {
+    fun clusteringCanBeEnabledWithOptions() = runBlockingSignedIn(rule) {
         val clusteringOptions = ClusteringOptions.builder().clusterColor(Color.RED).build()
-        val scenario = launchActivity<MapViewTestActivity>()
         val mapStyle = suspendCoroutine<Style> { continuation ->
-            scenario.onActivity { activity ->
+            rule.scenario.onActivity { activity ->
                 activity.mapView.addOnDidFailLoadingMapListener { error ->
                     continuation.resumeWithException(RuntimeException(error))
                 }
-                signInWithCognito(activity.auth)
                 activity.mapView.setClusterBehavior(true, clusteringOptions) {
                     activity.mapView.getStyle { _, style ->
                         continuation.resume(style)
                     }
-                    signOutFromCognito(activity.auth)
                 }
             }
         }
@@ -108,20 +104,17 @@ class MapViewTestActivityTest {
      * Tests that clustering can be enabled for the map without passing in clustering options.
      */
     @Test
-    fun clusteringCanBeEnabledWithoutOptions() = runBlocking {
-        val scenario = launchActivity<MapViewTestActivity>()
+    fun clusteringCanBeEnabledWithoutOptions() = runBlockingSignedIn(rule) {
         val mapStyle = suspendCoroutine<Style> { continuation ->
-            scenario.onActivity { activity ->
+            rule.scenario.onActivity { activity ->
                 activity.mapView.addOnDidFailLoadingMapListener { error ->
                     continuation.resumeWithException(RuntimeException(error))
                 }
-                signInWithCognito(activity.auth)
                 activity.mapView.setClusterBehavior(true, null) {
                     activity.mapView.getStyle { _, style ->
                         continuation.resume(style)
                     }
                 }
-                signOutFromCognito(activity.auth)
             }
         }
         assertNotNull(mapStyle)
@@ -133,36 +126,46 @@ class MapViewTestActivityTest {
      * Tests that clustering can be disabled for the map.
      */
     @Test
-    fun clusteringCanBeDisabled(): Unit = runBlocking {
-        val scenario = launchActivity<MapViewTestActivity>()
+    fun clusteringCanBeDisabled() = runBlockingSignedIn(rule) {
         val mapStyle = suspendCoroutine<Style> { continuation ->
-            scenario.onActivity { activity ->
+            rule.scenario.onActivity { activity ->
                 activity.mapView.addOnDidFailLoadingMapListener { error ->
                     continuation.resumeWithException(RuntimeException(error))
                 }
-                signInWithCognito(activity.auth)
                 activity.mapView.setClusterBehavior(false, null) {
                     activity.mapView.getStyle { _, style ->
                         continuation.resume(style)
                     }
                 }
-                signOutFromCognito(activity.auth)
             }
         }
-        this.launch(Dispatchers.Main) {
-            assertNotNull(mapStyle)
-            assertNull(mapStyle.getLayer(MapLibreView.CLUSTER_CIRCLE_LAYER_ID))
-            assertNull(mapStyle.getLayer(MapLibreView.CLUSTER_NUMBER_LAYER_ID))
+        assertNotNull(mapStyle)
+        assertNull(mapStyle.getLayer(MapLibreView.CLUSTER_CIRCLE_LAYER_ID))
+        assertNull(mapStyle.getLayer(MapLibreView.CLUSTER_NUMBER_LAYER_ID))
+    }
+
+    private fun <T> runBlockingSignedIn(
+        rule: ActivityScenarioRule<MapViewTestActivity>,
+        block: suspend CoroutineScope.() -> T
+    ): T {
+        return runBlocking(Dispatchers.Main) {
+            rule.scenario.onActivity {
+                signOutFromCognito() // first sign out to ensure we are in clean state
+                signInWithCognito()
+            }
+            val result = block()
+            rule.scenario.onActivity { signOutFromCognito() }
+            result
         }
     }
 
-    private fun signInWithCognito(auth: SynchronousAuth?) {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val (username, password) = Credentials.load(context)
-        auth?.signIn(username, password)
+    private fun signInWithCognito() {
+        val (username, password) = Credentials.load(ApplicationProvider.getApplicationContext())
+        val result = AmplifyWrapper.auth.signIn(username, password)
+        println("SignIn complete: ${result.isSignInComplete}")
     }
 
-    private fun signOutFromCognito(auth: SynchronousAuth?) {
-        auth?.signOut()
+    private fun signOutFromCognito() {
+        AmplifyWrapper.auth.signOut()
     }
 }

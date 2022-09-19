@@ -1353,7 +1353,20 @@ internal class RealAWSCognitoAuthPlugin(
                 is AuthenticationState.NotConfigured ->
                     onComplete.accept(AWSCognitoAuthSignOutResult.CompleteSignOut)
                 // Continue sign out and clear auth or guest credentials
-                is AuthenticationState.SignedIn, is AuthenticationState.SignedOut -> _signOut(options, onComplete)
+                is AuthenticationState.SignedIn, is AuthenticationState.SignedOut -> {
+                    // Send SignOut event here instead of OnSubscribedCallback handler to ensure we do not fire
+                    // onComplete immediately, which would happen if calling signOut while signed out
+                    val event = AuthenticationEvent(
+                        AuthenticationEvent.EventType.SignOutRequested(
+                            SignOutData(
+                                options.isGlobalSignOut,
+                                (options as? AWSCognitoAuthSignOutOptions)?.browserPackage
+                            )
+                        )
+                    )
+                    authStateMachine.send(event)
+                    _signOut(options, onComplete)
+                }
                 else -> onComplete.accept(
                     AWSCognitoAuthSignOutResult.FailedSignOut(AuthException.InvalidStateException())
                 )
@@ -1404,15 +1417,6 @@ internal class RealAWSCognitoAuthPlugin(
                 }
             },
             {
-                val event = AuthenticationEvent(
-                    AuthenticationEvent.EventType.SignOutRequested(
-                        SignOutData(
-                            options.isGlobalSignOut,
-                            (options as? AWSCognitoAuthSignOutOptions)?.browserPackage
-                        )
-                    )
-                )
-                authStateMachine.send(event)
             }
         )
     }
