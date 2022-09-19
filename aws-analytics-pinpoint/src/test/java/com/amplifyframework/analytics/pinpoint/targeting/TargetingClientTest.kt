@@ -62,7 +62,7 @@ class TargetingClientTest {
         coEvery { pinpointClient.updateEndpoint(ofType(UpdateEndpointRequest::class)) }.returns(updateEndpointResponse)
         targetingClient.updateEndpointProfile()
 
-        coVerify {
+        coVerify(timeout=3000) {
             pinpointClient.updateEndpoint(
                 coWithArg<UpdateEndpointRequest> {
                     assertNotNull(it.endpointRequest)
