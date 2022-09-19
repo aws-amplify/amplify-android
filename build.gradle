@@ -30,15 +30,8 @@ buildscript {
     }
 }
 
-def useAwsSdkReleaseBuild() {
-    return hasProperty('useAwsSdkReleaseBuild') && project.useAwsSdkReleaseBuild == "true"
-}
-
 allprojects {
     repositories {
-        maven {
-            url = 'https://aws.oss.sonatype.org/content/repositories/snapshots/'
-        }
         google()
         jcenter()
     }
