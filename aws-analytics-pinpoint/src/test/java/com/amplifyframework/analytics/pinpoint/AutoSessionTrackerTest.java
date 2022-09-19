@@ -19,8 +19,6 @@ import android.app.Activity;
 import android.app.Application;
 import android.os.Bundle;
 
-import com.amazonaws.mobileconnectors.pinpoint.analytics.AnalyticsClient;
-import com.amazonaws.mobileconnectors.pinpoint.analytics.SessionClient;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;

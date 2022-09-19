@@ -56,6 +56,54 @@ public class AuthException extends AmplifyException {
     }
 
     /**
+     * Auth exception caused by auth state being in an invalid state.
+     */
+    public static class InvalidStateException extends AuthException {
+        private static final long serialVersionUID = 1L;
+        private static final String MESSAGE = "Auth state is an invalid state, cannot process the request.";
+        private static final String RECOVERY_SUGGESTION = "Please reset auth plugin or reattempt the operation later.";
+
+        /**
+         * Default message/recovery suggestion without a cause.
+         */
+        public InvalidStateException() {
+            super(MESSAGE, RECOVERY_SUGGESTION);
+        }
+
+        /**
+         * Default message/recovery suggestion with a cause.
+         * @param cause The original error.
+         */
+        public InvalidStateException(Throwable cause) {
+            super(MESSAGE, cause, RECOVERY_SUGGESTION);
+        }
+    }
+
+    /**
+     * Auth exception caused by the user being already signed in.
+     */
+    public static class SignedInException extends AuthException {
+        private static final long serialVersionUID = 1L;
+        private static final String MESSAGE = "You are currently signed in.";
+        private static final String RECOVERY_SUGGESTION = "Please sign out and reattempt the operation.";
+
+        /**
+         * Default message/recovery suggestion without a cause.
+         */
+        public SignedInException() {
+            super(MESSAGE, RECOVERY_SUGGESTION);
+        }
+
+        /**
+         * Default message/recovery suggestion with a cause.
+         * @param cause The original error.
+         */
+        public SignedInException(Throwable cause) {
+            super(MESSAGE, cause, RECOVERY_SUGGESTION);
+        }
+    }
+
+    /**
      * Auth exception caused by the user being signed out.
      */
     public static class SignedOutException extends AuthException {
@@ -223,6 +271,30 @@ public class AuthException extends AmplifyException {
     }
 
     /**
+     * Could not update user password.
+     */
+    public static class UpdatePasswordException extends AuthException {
+        private static final long serialVersionUID = 1L;
+        private static final String MESSAGE = "Your password cannot be updated.";
+        private static final String RECOVERY_SUGGESTION = "Please sign in and reattempt the operation.";
+
+        /**
+         * Default message/recovery suggestion without a cause.
+         */
+        public UpdatePasswordException() {
+            super(MESSAGE, RECOVERY_SUGGESTION);
+        }
+
+        /**
+         * Default message/recovery suggestion with a cause.
+         * @param cause The original error.
+         */
+        public UpdatePasswordException(Throwable cause) {
+            super(MESSAGE, cause, RECOVERY_SUGGESTION);
+        }
+    }
+
+    /**
      * Could not perform the action because user was not found in the system.
      */
     public static class UserNotFoundException extends AuthException {
@@ -299,6 +371,13 @@ public class AuthException extends AmplifyException {
         private static final long serialVersionUID = 1L;
         private static final String MESSAGE = "Error in delivering the confirmation code.";
         private static final String RECOVERY_SUGGESTION = "Retry operation and send another confirmation code.";
+
+        /**
+         * Default message/recovery suggestion without a cause.
+         */
+        public CodeDeliveryFailureException() {
+            super(MESSAGE, RECOVERY_SUGGESTION);
+        }
 
         /**
          * Default message/recovery suggestion with a cause.
@@ -393,6 +472,13 @@ public class AuthException extends AmplifyException {
          */
         public InvalidUserPoolConfigurationException(Throwable cause) {
             super(MESSAGE, cause, RECOVERY_SUGGESTION);
+        }
+
+        /**
+         * Default message/recovery suggestion without a cause.
+         */
+        public InvalidUserPoolConfigurationException() {
+            super(MESSAGE, RECOVERY_SUGGESTION);
         }
     }
 
@@ -553,6 +639,105 @@ public class AuthException extends AmplifyException {
          */
         public UserCancelledException(String message, Throwable cause, String recoverySuggestion) {
             super(message, cause, recoverySuggestion);
+        }
+
+        /**
+         * Constructs an {@link UserCancelledException}.
+         * @param message Describes why the error has occurred
+         * @param recoverySuggestion How to remedy the error, if possible
+         */
+        public UserCancelledException(String message, String recoverySuggestion) {
+            super(message, recoverySuggestion);
+        }
+    }
+
+    /**
+     * Could not perform the operation due to incorrect lambda configuration.
+     */
+    public static class UnexpectedLambdaException extends AuthException {
+        private static final long serialVersionUID = 1L;
+        private static final String MESSAGE = "Invalid lambda response error.";
+        private static final String RECOVERY_SUGGESTION =
+                "Make sure that the lambda configuration is correct.";
+
+        /**
+         * Default message/recovery suggestion with a cause.
+         * @param cause The original error.
+         */
+        public UnexpectedLambdaException(Throwable cause) {
+            super(MESSAGE, cause, RECOVERY_SUGGESTION);
+        }
+    }
+
+    /**
+     * Could not perform the operation due to incorrect lambda configuration.
+     */
+    public static class UserLambdaValidationException extends AuthException {
+        private static final long serialVersionUID = 1L;
+        private static final String MESSAGE = "Invalid lambda response error.";
+        private static final String RECOVERY_SUGGESTION =
+                "Make sure that the lambda configuration is correct.";
+
+        /**
+         * Default message/recovery suggestion with a cause.
+         * @param cause The original error.
+         */
+        public UserLambdaValidationException(Throwable cause) {
+            super(MESSAGE, cause, RECOVERY_SUGGESTION);
+        }
+    }
+
+    /**
+     * Could not perform the operation due to invalid sms role trust relationship.
+     */
+    public static class InvalidSmsRoleTrustRelationshipException extends AuthException {
+        private static final long serialVersionUID = 1L;
+        private static final String MESSAGE = "Invalid SMS Role Trust Relationship error.";
+        private static final String RECOVERY_SUGGESTION =
+                "Make sure that the parameters passed are valid.";
+
+        /**
+         * Default message/recovery suggestion with a cause.
+         * @param cause The original error.
+         */
+        public InvalidSmsRoleTrustRelationshipException(Throwable cause) {
+            super(MESSAGE, cause, RECOVERY_SUGGESTION);
+        }
+    }
+
+    /**
+     * Could not perform the operation due to invalid lambda configuration.
+     */
+    public static class InvalidLambdaResponseException extends AuthException {
+        private static final long serialVersionUID = 1L;
+        private static final String MESSAGE = "Invalid lambda response error.";
+        private static final String RECOVERY_SUGGESTION =
+                "Make sure that the lambda configuration is correct.";
+
+        /**
+         * Default message/recovery suggestion with a cause.
+         * @param cause The original error.
+         */
+        public InvalidLambdaResponseException(Throwable cause) {
+            super(MESSAGE, cause, RECOVERY_SUGGESTION);
+        }
+    }
+
+    /**
+     * Could not perform the operation due to invalid email role access policy.
+     */
+    public static class InvalidEmailRoleAccessPolicyException extends AuthException {
+        private static final long serialVersionUID = 1L;
+        private static final String MESSAGE = "Invalid email role access policy error.";
+        private static final String RECOVERY_SUGGESTION =
+                "Make sure that the parameters passed are valid.";
+
+        /**
+         * Default message/recovery suggestion with a cause.
+         * @param cause The original error.
+         */
+        public InvalidEmailRoleAccessPolicyException(Throwable cause) {
+            super(MESSAGE, cause, RECOVERY_SUGGESTION);
         }
     }
 

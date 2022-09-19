@@ -18,11 +18,11 @@ package com.amplifyframework.storage.s3.operation;
 import android.annotation.SuppressLint;
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.auth.AuthCredentialsProvider;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.operation.StorageGetUrlOperation;
 import com.amplifyframework.storage.result.StorageGetUrlResult;
-import com.amplifyframework.storage.s3.CognitoAuthProvider;
 import com.amplifyframework.storage.s3.configuration.AWSS3StoragePluginConfiguration;
 import com.amplifyframework.storage.s3.request.AWSS3StorageGetPresignedUrlRequest;
 import com.amplifyframework.storage.s3.service.StorageService;
@@ -37,7 +37,7 @@ public final class AWSS3StorageGetPresignedUrlOperation
         extends StorageGetUrlOperation<AWSS3StorageGetPresignedUrlRequest> {
     private final StorageService storageService;
     private final ExecutorService executorService;
-    private final CognitoAuthProvider cognitoAuthProvider;
+    private final AuthCredentialsProvider authCredentialsProvider;
     private final Consumer<StorageGetUrlResult> onSuccess;
     private final Consumer<StorageException> onError;
     private final AWSS3StoragePluginConfiguration awsS3StoragePluginConfiguration;
@@ -48,7 +48,7 @@ public final class AWSS3StorageGetPresignedUrlOperation
      * @param storageService      S3 client wrapper
      * @param executorService     Executor service used for running
      *                            blocking operations on a separate thread
-     * @param cognitoAuthProvider Interface to retrieve AWS specific auth information
+     * @param authCredentialsProvider Interface to retrieve AWS specific auth information
      * @param request             getUrl request parameters
      * @param awss3StoragePluginConfiguration s3Plugin configuration
      * @param onSuccess           Notified when URL is generated.
@@ -57,7 +57,7 @@ public final class AWSS3StorageGetPresignedUrlOperation
     public AWSS3StorageGetPresignedUrlOperation(
             @NonNull StorageService storageService,
             @NonNull ExecutorService executorService,
-            @NonNull CognitoAuthProvider cognitoAuthProvider,
+            @NonNull AuthCredentialsProvider authCredentialsProvider,
             @NonNull AWSS3StorageGetPresignedUrlRequest request,
             @NonNull AWSS3StoragePluginConfiguration awss3StoragePluginConfiguration,
             @NonNull Consumer<StorageGetUrlResult> onSuccess,
@@ -66,7 +66,7 @@ public final class AWSS3StorageGetPresignedUrlOperation
         super(request);
         this.storageService = storageService;
         this.executorService = executorService;
-        this.cognitoAuthProvider = cognitoAuthProvider;
+        this.authCredentialsProvider = authCredentialsProvider;
         this.awsS3StoragePluginConfiguration = awss3StoragePluginConfiguration;
         this.onSuccess = onSuccess;
         this.onError = onError;
@@ -76,7 +76,7 @@ public final class AWSS3StorageGetPresignedUrlOperation
     @Override
     public void start() {
         executorService.submit(() -> {
-            awsS3StoragePluginConfiguration.getAWSS3PluginPrefixResolver(cognitoAuthProvider).
+            awsS3StoragePluginConfiguration.getAWSS3PluginPrefixResolver(authCredentialsProvider).
                     resolvePrefix(getRequest().getAccessLevel(),
                     getRequest().getTargetIdentityId(),
                         prefix -> {

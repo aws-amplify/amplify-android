@@ -60,7 +60,7 @@ public final class UserAgentTest {
     @Test
     public void testWithoutConfiguration() {
         final String userAgent = UserAgent.string();
-        assertTrue(userAgent.startsWith("amplify-android/" + BuildConfig.VERSION_NAME + " ("));
+        assertTrue(userAgent.startsWith("amplify-android:" + BuildConfig.VERSION_NAME + " md/"));
     }
 
     /**
@@ -73,7 +73,7 @@ public final class UserAgentTest {
         UserAgent.configure(platforms);
 
         final String userAgent = UserAgent.string();
-        assertTrue(userAgent.startsWith("amplify-android/" + BuildConfig.VERSION_NAME + " ("));
+        assertTrue(userAgent.startsWith("amplify-android:" + BuildConfig.VERSION_NAME + " md/"));
     }
 
     /**
@@ -88,7 +88,7 @@ public final class UserAgentTest {
         UserAgent.configure(platforms);
 
         final String userAgent = UserAgent.string();
-        assertTrue(userAgent.startsWith("amplify-flutter/" + version));
+        assertTrue(userAgent.startsWith("amplify-flutter:" + version));
     }
 
     /**
@@ -116,7 +116,7 @@ public final class UserAgentTest {
             String version = RandomString.string();
             platforms.put(platform, version);
             expected.append(platform.getLibraryName())
-                    .append("/")
+                    .append(":")
                     .append(version)
                     .append(" ");
         }

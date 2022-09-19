@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -43,6 +43,7 @@ import com.amplifyframework.auth.options.AuthUpdateUserAttributesOptions;
 import com.amplifyframework.auth.options.AuthWebUISignInOptions;
 import com.amplifyframework.auth.result.AuthResetPasswordResult;
 import com.amplifyframework.auth.result.AuthSignInResult;
+import com.amplifyframework.auth.result.AuthSignOutResult;
 import com.amplifyframework.auth.result.AuthSignUpResult;
 import com.amplifyframework.auth.result.AuthUpdateAttributeResult;
 
@@ -285,6 +286,7 @@ public interface RxAuthCategoryBehavior {
 
     /**
      * Complete password recovery process by inputting user's desired new password and confirmation code.
+     * @param username A login identifier e.g. `superdog22`; or an email/phone number, depending on configuration
      * @param newPassword The user's desired new password
      * @param confirmationCode The confirmation code the user received after starting the forgotPassword process
      * @param options Advanced options such as a map of auth information for custom auth
@@ -292,6 +294,7 @@ public interface RxAuthCategoryBehavior {
      *         emits an {@link AuthException} otherwise
      */
     Completable confirmResetPassword(
+            @NonNull String username,
             @NonNull String newPassword,
             @NonNull String confirmationCode,
             @NonNull AuthConfirmResetPasswordOptions options
@@ -299,12 +302,13 @@ public interface RxAuthCategoryBehavior {
 
     /**
      * Complete password recovery process by inputting user's desired new password and confirmation code.
+     * @param username A login identifier e.g. `superdog22`; or an email/phone number, depending on configuration
      * @param newPassword The user's desired new password
      * @param confirmationCode The confirmation code the user received after starting the forgotPassword process
      * @return An Rx {@link Completable} which completes successfully if password reset is confirmed,
      *         emits an {@link AuthException} otherwise
      */
-    Completable confirmResetPassword(@NonNull String newPassword, @NonNull String confirmationCode);
+    Completable confirmResetPassword(String username, @NonNull String newPassword, @NonNull String confirmationCode);
 
     /**
      * Update the password of an existing user - must be signed in to perform this action.
@@ -398,22 +402,20 @@ public interface RxAuthCategoryBehavior {
      * Gets the currently logged in User.
      * @return the currently logged in user with basic info and methods for fetching/updating user attributes
      */
-    AuthUser getCurrentUser();
+    Single<AuthUser> getCurrentUser();
 
     /**
      * Sign out of the current device.
-     * @return An Rx {@link Completable} which completes upon successful sign-out; emits an
-     *         {@link AuthException} otherwise
+     * @return An Rx {@link Single} which emits {@link AuthSignOutResult} on completion
      */
-    Completable signOut();
+    Single<AuthSignOutResult> signOut();
 
     /**
      * Sign out with advanced options.
      * @param options Advanced options for sign out (e.g. whether to sign out of all devices globally)
-     * @return An Rx {@link Completable} which completes upon successful sign-out;
-     *         emits an {@link AuthException} otherwise
+     * @return An Rx {@link Single} which emits {@link AuthSignOutResult} on completion
      */
-    Completable signOut(@NonNull AuthSignOutOptions options);
+    Single<AuthSignOutResult> signOut(@NonNull AuthSignOutOptions options);
 
     /**
      * Delete the account of the currently signed in user.

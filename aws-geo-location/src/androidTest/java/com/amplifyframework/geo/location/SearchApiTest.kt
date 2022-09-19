@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -17,8 +17,6 @@ package com.amplifyframework.geo.location
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
-
-import com.amplifyframework.auth.AuthCategory
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
 import com.amplifyframework.geo.GeoCategory
 import com.amplifyframework.geo.GeoException
@@ -29,12 +27,12 @@ import com.amplifyframework.geo.result.GeoSearchResult
 import com.amplifyframework.testutils.sync.SynchronousAuth
 import com.amplifyframework.testutils.sync.SynchronousGeo
 import com.amplifyframework.testutils.sync.TestCategory
-import org.junit.Assert.*
-
+import java.util.UUID
+import kotlin.random.Random.Default.nextDouble
+import org.junit.Assert
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import java.util.*
-import kotlin.random.Random.Default.nextDouble
 
 /**
  * Tests various functionalities related to Search API in [AWSLocationGeoPlugin].
@@ -49,12 +47,10 @@ class SearchApiTest {
     @Before
     fun setUp() {
         // Auth plugin uses default configuration
-        val authPlugin = AWSCognitoAuthPlugin()
-        val authCategory = TestCategory.forPlugin(authPlugin) as AuthCategory
-        auth = SynchronousAuth.delegatingTo(authCategory)
+        auth = SynchronousAuth.delegatingToCognito(ApplicationProvider.getApplicationContext(), AWSCognitoAuthPlugin())
 
         // Geo plugin uses above auth category to authenticate users
-        val geoPlugin = AWSLocationGeoPlugin(authProvider = authCategory)
+        val geoPlugin = AWSLocationGeoPlugin()
         val geoCategory = TestCategory.forPlugin(geoPlugin) as GeoCategory
         geo = SynchronousGeo.delegatingTo(geoCategory)
     }
@@ -102,8 +98,8 @@ class SearchApiTest {
         signInWithCognito()
         val query = UUID.randomUUID().toString()
         val result = geo?.searchByText(query, GeoSearchByTextOptions.defaults())
-        assertNotNull(result)
-        assertNotNull(result!!.places)
+        Assert.assertNotNull(result)
+        Assert.assertNotNull(result!!.places)
     }
 
     /**
@@ -121,11 +117,11 @@ class SearchApiTest {
             nextDouble(-180.0, 180.0)
         )
         val result = geo?.searchByCoordinates(coordinates, GeoSearchByCoordinatesOptions.defaults())
-        assertNotNull(result)
-        assertNotNull(result!!.places)
+        Assert.assertNotNull(result)
+        Assert.assertNotNull(result!!.places)
 
         // Reverse lookup will always return at least one result
-        assertFalse(result.places.isEmpty())
+        Assert.assertFalse(result.places.isEmpty())
 
         // First entry is on top of originally queried coordinates (within 1km)
         val queried = result.places[0].geometry as Coordinates

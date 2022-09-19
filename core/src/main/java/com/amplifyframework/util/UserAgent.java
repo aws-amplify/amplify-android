@@ -59,10 +59,13 @@ public final class UserAgent {
         // Pre-pend the additional platforms before Android user-agent
         final StringBuilder userAgent = new StringBuilder();
         for (Map.Entry<Platform, String> platform : platformVersions.entrySet()) {
-            userAgent.append(String.format("%s/%s ",
+            userAgent.append(String.format("%s:%s ",
                     platform.getKey().getLibraryName(),
                     platform.getValue()));
         }
+
+        // TODO: add md metadata if platform is flutter
+        // https://github.com/awslabs/aws-sdk-kotlin/issues/575
         userAgent.append(forAndroid());
 
         // The character limit for our User-Agent header is 254 characters.
@@ -103,12 +106,16 @@ public final class UserAgent {
         return instance;
     }
 
+    /**
+     * Return user-agent string of the form:
+     * amplify-android:x.x.x md/xxx/yyy-zzz /md/locale/en_US
+     * systemName and systemVersion not required, as it is part of sdk user-agent string.
+     * @return user-agent string
+     */
     private static String forAndroid() {
         return new UserAgent.Builder()
                 .libraryName(Platform.ANDROID.getLibraryName())
                 .libraryVersion(BuildConfig.VERSION_NAME)
-                .systemName("Android")
-                .systemVersion(Build.VERSION.RELEASE)
                 .deviceManufacturer(Build.MANUFACTURER)
                 .deviceName(Build.MODEL)
                 .userLanguage(System.getProperty("user.language"))
@@ -202,12 +209,12 @@ public final class UserAgent {
         }
 
         Builder deviceManufacturer(String deviceManufacturer) {
-            this.deviceManufacturer = sanitize(deviceManufacturer);
+            this.deviceManufacturer = escape(sanitize(deviceManufacturer));
             return this;
         }
 
         Builder deviceName(String deviceName) {
-            this.deviceName = sanitize(deviceName);
+            this.deviceName = escape(sanitize(deviceName));
             return this;
         }
 
@@ -225,9 +232,8 @@ public final class UserAgent {
         @Override
         public String toString() {
             return String.format(
-                "%s/%s (%s %s; %s %s; %s_%s)",
+                "%s:%s md/%s/%s md/locale/%s_%s",
                 libraryName, libraryVersion,
-                systemName, systemVersion,
                 deviceManufacturer, deviceName,
                 userLanguage, userRegion
             );
@@ -236,6 +242,11 @@ public final class UserAgent {
         @NonNull
         private static String sanitize(@Nullable String string) {
             return string != null ? string : "UNKNOWN";
+        }
+
+        @NonNull
+        private static String escape(@NonNull String string) {
+            return string.replace(" ", "_");
         }
     }
 }

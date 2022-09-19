@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -16,13 +16,17 @@
 package com.amplifyframework.testutils.sync;
 
 import android.app.Activity;
+import android.content.Context;
+import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.auth.AuthCategoryBehavior;
 import com.amplifyframework.auth.AuthCodeDeliveryDetails;
 import com.amplifyframework.auth.AuthDevice;
 import com.amplifyframework.auth.AuthException;
+import com.amplifyframework.auth.AuthPlugin;
 import com.amplifyframework.auth.AuthProvider;
 import com.amplifyframework.auth.AuthSession;
 import com.amplifyframework.auth.AuthUserAttribute;
@@ -44,6 +48,7 @@ import com.amplifyframework.auth.result.AuthSignInResult;
 import com.amplifyframework.auth.result.AuthSignUpResult;
 import com.amplifyframework.auth.result.AuthUpdateAttributeResult;
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.core.plugin.Plugin;
 import com.amplifyframework.testutils.Await;
 import com.amplifyframework.testutils.VoidResult;
 
@@ -59,7 +64,7 @@ import java.util.concurrent.TimeUnit;
  * performing various operations.
  */
 public final class SynchronousAuth {
-    private static final long AUTH_OPERATION_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(5);
+    private static final long AUTH_OPERATION_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(10);
     private final AuthCategoryBehavior asyncDelegate;
 
     private SynchronousAuth(AuthCategoryBehavior asyncDelegate) {
@@ -87,6 +92,28 @@ public final class SynchronousAuth {
     @NonNull
     public static SynchronousAuth delegatingToAmplify() {
         return new SynchronousAuth(Amplify.Auth);
+    }
+
+    /**
+     * Creates a synchronous auth wrapper which delegates to the AWSCognitoPlugin.
+     *
+     * @param context Application context
+     * @param authPlugin to delegate auth
+     * @return A synchronous auth wrapper
+     * @throws AmplifyException exception during configuring Amplify
+     * @throws InterruptedException exception during thread interruption
+     */
+    public static SynchronousAuth delegatingToCognito(Context context, Plugin<?> authPlugin)
+        throws AmplifyException, InterruptedException {
+        try {
+            Amplify.Auth.addPlugin((AuthPlugin<?>) authPlugin);
+            Amplify.configure(context);
+        } catch (Exception exception) {
+            Log.i("SynchronousAuth", "Amplify already called", exception);
+        }
+        //TODO: make authCategory confiuration synchronous
+        Thread.sleep(AUTH_OPERATION_TIMEOUT_MS);
+        return SynchronousAuth.delegatingTo(Amplify.Auth);
     }
 
     /**
@@ -312,44 +339,50 @@ public final class SynchronousAuth {
 
     /**
      * Complete password recovery process by inputting user's desired new password and confirmation code.
+     * @param username A login identifier e.g. `superdog22`; or an email/phone number, depending on configuration
      * @param newPassword The user's desired new password
      * @param confirmationCode The confirmation code the user received after starting the forgotPassword process
      * @param options Advanced options such as a map of auth information for custom auth
      * @throws AuthException exception
      */
     public void confirmResetPassword(
+            @NonNull String username,
             @NonNull String newPassword,
             @NonNull String confirmationCode,
             @NonNull AuthConfirmResetPasswordOptions options
     ) throws AuthException {
         Await.<Object, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
-                asyncDelegate.confirmResetPassword(
-                    newPassword,
-                    confirmationCode,
-                    options,
-                    () -> onResult.accept(VoidResult.instance()),
-                    onError
-                )
+            asyncDelegate.confirmResetPassword(
+                username,
+                newPassword,
+                confirmationCode,
+                options,
+                () -> onResult.accept(VoidResult.instance()),
+                onError
+            )
         );
     }
 
     /**
      * Complete password recovery process by inputting user's desired new password and confirmation code.
+     * @param username A login identifier e.g. `superdog22`; or an email/phone number, depending on configuration
      * @param newPassword The user's desired new password
      * @param confirmationCode The confirmation code the user received after starting the forgotPassword process
      * @throws AuthException exception
      */
     public void confirmResetPassword(
+            @NonNull String username,
             @NonNull String newPassword,
             @NonNull String confirmationCode
     ) throws AuthException {
         Await.<Object, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
-                asyncDelegate.confirmResetPassword(
-                    newPassword,
-                    confirmationCode,
-                    () -> onResult.accept(VoidResult.instance()),
-                    onError
-                )
+            asyncDelegate.confirmResetPassword(
+                username,
+                newPassword,
+                confirmationCode,
+                () -> onResult.accept(VoidResult.instance()),
+                onError
+            )
         );
     }
 
@@ -539,10 +572,7 @@ public final class SynchronousAuth {
      */
     public void signOut() throws AuthException {
         Await.<Object, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
-                asyncDelegate.signOut(
-                    () -> onResult.accept(VoidResult.instance()),
-                    onError
-                )
+                asyncDelegate.signOut(onResult::accept)
         );
     }
 
@@ -553,11 +583,7 @@ public final class SynchronousAuth {
      */
     public void signOut(AuthSignOutOptions options) throws AuthException {
         Await.<Object, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
-                asyncDelegate.signOut(
-                    options,
-                    () -> onResult.accept(VoidResult.instance()),
-                    onError
-                )
+                asyncDelegate.signOut(options, onResult::accept)
         );
     }
 

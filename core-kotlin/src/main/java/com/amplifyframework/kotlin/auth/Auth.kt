@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -39,6 +39,7 @@ import com.amplifyframework.auth.options.AuthUpdateUserAttributesOptions
 import com.amplifyframework.auth.options.AuthWebUISignInOptions
 import com.amplifyframework.auth.result.AuthResetPasswordResult
 import com.amplifyframework.auth.result.AuthSignInResult
+import com.amplifyframework.auth.result.AuthSignOutResult
 import com.amplifyframework.auth.result.AuthSignUpResult
 import com.amplifyframework.auth.result.AuthUpdateAttributeResult
 
@@ -225,6 +226,7 @@ interface Auth {
 
     /**
      * Complete password recovery process by inputting user's desired new password and confirmation code.
+     * @param username A login identifier e.g. `superdog22`; or an email/phone number, depending on configuration
      * @param newPassword The user's desired new password
      * @param confirmationCode The confirmation code the user received after starting the forgotPassword process
      * @param options Advanced options such as a map of auth information for custom auth,
@@ -232,6 +234,7 @@ interface Auth {
      */
     @Throws(AuthException::class)
     suspend fun confirmResetPassword(
+        username: String,
         newPassword: String,
         confirmationCode: String,
         options: AuthConfirmResetPasswordOptions = AuthConfirmResetPasswordOptions.defaults()
@@ -306,15 +309,15 @@ interface Auth {
      * @return the currently logged in user with basic info and methods for fetching/updating user attributes
      * @return Information about the current user
      */
-    fun getCurrentUser(): AuthUser?
+    suspend fun getCurrentUser(): AuthUser
 
     /**
      * Sign out with advanced options.
-     * @param options Advanced options for sign out (e.g. whether to sign out of all devices globally).
+     * @param options Advanced options for sign out (e.g. whether to sign out of all devices globally)
      *                If not provided, default options are used.
+     * @return A sign-out result; Check result types for next steps
      */
-    @Throws(AuthException::class)
-    suspend fun signOut(options: AuthSignOutOptions = AuthSignOutOptions.builder().build())
+    suspend fun signOut(options: AuthSignOutOptions = AuthSignOutOptions.builder().build()): AuthSignOutResult
 
     /**
      * Delete the account of the currently signed in user.

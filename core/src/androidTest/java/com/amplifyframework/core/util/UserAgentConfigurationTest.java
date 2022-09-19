@@ -56,10 +56,10 @@ public final class UserAgentConfigurationTest {
      */
     @Test
     public void testUserAgentIsGeneratedCorrectly() {
-        String expectedUserAgentPrefix = UserAgent.Platform.FLUTTER.getLibraryName() + "/" +
+        String expectedUserAgentPrefix = UserAgent.Platform.FLUTTER.getLibraryName() + ":" +
                 BuildConfig.VERSION_NAME + " " +
-                UserAgent.Platform.ANDROID.getLibraryName() + "/" +
-                BuildConfig.VERSION_NAME + " ("; // "(" asserts that system info follows this prefix
+                UserAgent.Platform.ANDROID.getLibraryName() + ":" +
+                BuildConfig.VERSION_NAME + " md/"; // "(" asserts that system info follows this prefix
         assertTrue(UserAgent.string().startsWith(expectedUserAgentPrefix));
     }
 

@@ -147,7 +147,8 @@ class SearchTextField @JvmOverloads constructor(
 
         // children
         addView(searchIcon)
-        addView(field,
+        addView(
+            field,
             LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT).apply {
                 weight = 1f
             }
@@ -197,25 +198,26 @@ class SearchTextField @JvmOverloads constructor(
     }
 
     private fun registerOnTextChangeListener() {
-        field.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(
-                text: CharSequence?,
-                start: Int,
-                count: Int,
-                after: Int
-            ) = Unit
+        field.addTextChangedListener(
+            object : TextWatcher {
+                override fun beforeTextChanged(
+                    text: CharSequence?,
+                    start: Int,
+                    count: Int,
+                    after: Int
+                ) = Unit
 
-            override fun onTextChanged(text: CharSequence?, start: Int, before: Int, after: Int) {
-                this@SearchTextField.updateClearIconVisibility()
+                override fun onTextChanged(text: CharSequence?, start: Int, before: Int, after: Int) {
+                    this@SearchTextField.updateClearIconVisibility()
+                }
+
+                override fun afterTextChanged(content: Editable?) {
+                    this@SearchTextField.onSearchQueryChangeListener?.onChange(
+                        content?.toString() ?: ""
+                    )
+                }
             }
-
-            override fun afterTextChanged(content: Editable?) {
-                this@SearchTextField.onSearchQueryChangeListener?.onChange(
-                    content?.toString() ?: ""
-                )
-            }
-
-        })
+        )
     }
 
     private fun updateClearIconVisibility() {
@@ -258,5 +260,4 @@ class SearchTextField @JvmOverloads constructor(
     interface OnSearchActionListener {
         fun handle(query: String)
     }
-
 }

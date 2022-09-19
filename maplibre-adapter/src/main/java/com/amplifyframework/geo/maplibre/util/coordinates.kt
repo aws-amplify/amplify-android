@@ -26,7 +26,8 @@ import com.mapbox.mapboxsdk.geometry.LatLng
  * @see toCoordinates
  */
 fun Coordinates.toLatLng(): LatLng = LatLng(
-    this.latitude, this.longitude
+    this.latitude,
+    this.longitude
 )
 
 /**
@@ -35,7 +36,8 @@ fun Coordinates.toLatLng(): LatLng = LatLng(
  * @see toLatLng
  */
 fun LatLng.toCoordinates(): Coordinates = Coordinates(
-    this.latitude, this.longitude
+    this.latitude,
+    this.longitude
 )
 
 /**

@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -15,35 +15,25 @@
 
 package com.amplifyframework.geo.maplibre.http
 
-import com.amazonaws.DefaultRequest
-import com.amazonaws.http.HttpMethodName
-import com.amazonaws.util.IOUtils
+import aws.smithy.kotlin.runtime.auth.awssigning.AwsSigningConfig
+import aws.smithy.kotlin.runtime.auth.awssigning.DefaultAwsSigner
+import aws.smithy.kotlin.runtime.http.Headers as AwsHeaders
+import aws.smithy.kotlin.runtime.http.HttpMethod
+import aws.smithy.kotlin.runtime.http.Protocol
+import aws.smithy.kotlin.runtime.http.QueryParameters
+import aws.smithy.kotlin.runtime.http.Url
+import aws.smithy.kotlin.runtime.http.content.ByteArrayContent
+import aws.smithy.kotlin.runtime.http.request.HttpRequest
 import com.amplifyframework.geo.location.AWSLocationGeoPlugin
+import java.io.ByteArrayOutputStream
+import java.io.IOException
+import kotlinx.coroutines.runBlocking
 import okhttp3.HttpUrl
 import okhttp3.Interceptor
 import okhttp3.Request
+import okhttp3.RequestBody
 import okhttp3.Response
 import okio.Buffer
-import java.io.ByteArrayInputStream
-import java.net.URI
-import java.util.*
-
-private typealias AWSRequest = com.amazonaws.Request<Any>
-
-private fun Request.Builder.copyFrom(request: AWSRequest): Request.Builder {
-    val urlBuilder = HttpUrl.Builder()
-        .host(request.endpoint.host)
-        .scheme(request.endpoint.scheme)
-        .encodedPath(request.encodedUriResourcePath)
-
-    request.parameters.forEach { (name, value) ->
-        urlBuilder.setQueryParameter(name, value)
-    }
-    request.headers.forEach { (name, value) ->
-        this.header(name, value)
-    }
-    return this.url(urlBuilder.build())
-}
 
 const val AMAZON_HOST = "amazonaws.com"
 
@@ -70,28 +60,86 @@ internal class AWSRequestSignerInterceptor(
         return chain.proceed(signedRequest)
     }
 
-    private fun signRequest(request: Request): DefaultRequest<Any> {
-        // read request content
-        val body = request.body?.let {
-            val buffer = Buffer()
-            it.writeTo(buffer)
-            IOUtils.toByteArray(buffer.inputStream())
-        } ?: ByteArray(0)
+    private fun Request.Builder.copyFrom(request: HttpRequest): Request.Builder {
+        val urlBuilder = HttpUrl.Builder()
+            .host(request.url.host)
+            .scheme(request.url.scheme.protocolName)
+            .encodedPath(request.url.encodedPath)
 
-        val client = plugin.escapeHatch
-        val url = request.url
-        val awsRequest = DefaultRequest<Any>(client.serviceName)
-        awsRequest.setEncodedResourcePath(request.url.encodedPath)
-        awsRequest.parameters = url.queryParameterNames.associateWith { url.queryParameter(it) }
-        awsRequest.endpoint = URI.create("${url.scheme}://${url.host}")
-        awsRequest.httpMethod = HttpMethodName.valueOf(request.method.toUpperCase(Locale.ROOT))
-        awsRequest.content = ByteArrayInputStream(body)
-        awsRequest.headers = request.headers.associate { (name, value) -> name to value }
-
-        // sign request with AWS Signer for the underlying service
-        val signer = client.getSignerByURI(awsRequest.endpoint)
-        signer.sign(awsRequest, plugin.credentialsProvider.credentials)
-        return awsRequest
+        request.url.parameters.forEach { name, parameters ->
+            parameters.forEach {
+                urlBuilder.setQueryParameter(name, it)
+            }
+        }
+        request.headers.forEach { name, values ->
+            values.forEach {
+                this.header(name, it)
+            }
+        }
+        return this.url(urlBuilder.build())
     }
 
+    private fun signRequest(request: Request): HttpRequest {
+        val url = request.url
+        val headers: AwsHeaders = AwsHeaders.invoke {
+            request.headers.forEach { (name, value) ->
+                setMissing(name, value)
+            }
+            set("Host", request.url.host)
+        }
+
+        val client = plugin.escapeHatch
+        val signingConfig = AwsSigningConfig.invoke {
+            region = client.config.region
+            service = "geo"
+            credentialsProvider = plugin.credentialsProvider
+        }
+
+        val httpUrl = Url(
+            scheme = Protocol.parse(url.scheme),
+            host = url.host,
+            port = url.port,
+            path = url.encodedPath,
+            parameters = QueryParameters.invoke {
+                url.queryParameterNames.map { name ->
+                    url.queryParameter(name)?.let { append(name, it) }
+                }
+            },
+        )
+
+        val bodyBytes: ByteArray = getBytes(request.body)
+        val body2 = ByteArrayContent(bodyBytes)
+        val method = HttpMethod.parse(request.method)
+        val awsRequest = HttpRequest(method, httpUrl, headers, body2)
+
+        return runBlocking {
+            // sign request with AWS Signer for the underlying service
+            DefaultAwsSigner.sign(awsRequest, signingConfig)
+        }.output
+    }
+
+    private fun getBytes(body: RequestBody?): ByteArray {
+        if (body == null) {
+            return "".toByteArray()
+        }
+        val BUFFER_SIZE = 1024 * 4
+        try {
+            ByteArrayOutputStream().use { output ->
+                // write the body to a byte array.
+                val buffer = Buffer()
+                body.writeTo(buffer)
+                val bytes = ByteArray(BUFFER_SIZE)
+                var n: Int
+                while (buffer.inputStream().read(bytes).also { n = it } != -1) {
+                    output.write(bytes, 0, n)
+                }
+                return output.toByteArray()
+            }
+        } catch (exception: IOException) {
+            throw Exception(
+                "Unable to calculate SigV4 signature for the request",
+                exception
+            )
+        }
+    }
 }
