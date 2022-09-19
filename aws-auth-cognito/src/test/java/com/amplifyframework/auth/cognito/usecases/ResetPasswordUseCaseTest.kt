@@ -84,7 +84,7 @@ class ResetPasswordUseCaseTest {
 
         // WHEN
         runBlocking {
-            resetPasswordUseCase.execute(dummyUserName, AuthResetPasswordOptions.defaults(), {}, {})
+            resetPasswordUseCase.execute(dummyUserName, AuthResetPasswordOptions.defaults(), null, {}, {})
         }
 
         // THEN
@@ -124,7 +124,7 @@ class ResetPasswordUseCaseTest {
 
         // WHEN
         runBlocking {
-            resetPasswordUseCase.execute(dummyUserName, AuthResetPasswordOptions.defaults(), onSuccess, onError)
+            resetPasswordUseCase.execute(dummyUserName, AuthResetPasswordOptions.defaults(), null, onSuccess, onError)
         }
 
         // THEN
@@ -150,7 +150,7 @@ class ResetPasswordUseCaseTest {
 
         // WHEN
         runBlocking {
-            resetPasswordUseCase.execute(dummyUserName, AuthResetPasswordOptions.defaults(), onSuccess, onError)
+            resetPasswordUseCase.execute(dummyUserName, AuthResetPasswordOptions.defaults(), null, onSuccess, onError)
         }
 
         // THEN

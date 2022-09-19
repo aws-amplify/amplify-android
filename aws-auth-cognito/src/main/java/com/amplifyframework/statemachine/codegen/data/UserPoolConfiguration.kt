@@ -15,6 +15,7 @@
 
 package com.amplifyframework.statemachine.codegen.data
 
+import com.amplifyframework.auth.AuthException
 import org.json.JSONObject
 
 /**
@@ -22,6 +23,7 @@ import org.json.JSONObject
  */
 data class UserPoolConfiguration internal constructor(val builder: Builder) {
     val region: String = builder.region
+    val endpoint: String? = builder.endpoint
     val poolId: String = builder.poolId
     val appClient: String = builder.appClientId
     val appClientSecret: String? = builder.appClientSecret
@@ -56,6 +58,7 @@ data class UserPoolConfiguration internal constructor(val builder: Builder) {
         configJson: JSONObject? = null
     ) {
         var region: String = DEFAULT_REGION
+        var endpoint: String? = null
         lateinit var poolId: String
         lateinit var appClientId: String
         var appClientSecret: String? = null
@@ -63,6 +66,7 @@ data class UserPoolConfiguration internal constructor(val builder: Builder) {
         init {
             configJson?.run {
                 region = optString(Config.REGION.key)
+                endpoint = validateEndpoint(optString(Config.ENDPOINT.key).takeUnless { it.isNullOrEmpty() })
                 poolId = optString(Config.POOL_ID.key)
                 appClientId = optString(Config.APP_CLIENT_ID.key)
                 appClientSecret = optString(Config.APP_CLIENT_SECRET.key).takeUnless { it.isNullOrEmpty() }
@@ -70,10 +74,32 @@ data class UserPoolConfiguration internal constructor(val builder: Builder) {
         }
 
         fun region(region: String) = apply { this.region = region }
+        fun endpoint(endpoint: String) = apply { this.endpoint = validateEndpoint(endpoint) }
         fun poolId(poolId: String) = apply { this.poolId = poolId }
         fun appClientId(appClientId: String) = apply { this.appClientId = appClientId }
         fun appClientSecret(appClientSecret: String) = apply { this.appClientSecret = appClientSecret }
         fun build() = UserPoolConfiguration(this)
+
+        @Throws(AuthException::class)
+        private fun validateEndpoint(endpoint: String?): String? {
+            try {
+                endpoint?.let {
+                    // regex to match valid host url only with no scheme, no path, and no query
+                    val regex = Regex(
+                        "^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\\-]*[a-zA-Z0-9])\\.)*([A-Za-z0-9]|[A-Za-z0-9]" +
+                            "[A-Za-z0-9\\-]*[A-Za-z0-9])\$"
+                    )
+                    if (!regex.matches(it))
+                        throw Exception("Invalid endpoint")
+                }
+                return endpoint
+            } catch (e: Exception) {
+                throw AuthException(
+                    "Invalid endpoint value $endpoint",
+                    "Expected fully qualified hostname with no scheme, no path and no query"
+                )
+            }
+        }
     }
 
     private enum class Config(val key: String) {
@@ -81,6 +107,11 @@ data class UserPoolConfiguration internal constructor(val builder: Builder) {
          * Amazon Cognito Service endpoint region.
          */
         REGION("Region"),
+
+        /**
+         * Contains user pool endpoint host.
+         */
+        ENDPOINT("Endpoint"),
 
         /**
          * Contains user pool identifier.

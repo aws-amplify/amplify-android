@@ -37,7 +37,7 @@ sealed class AuthorizationState : State {
     data class NotConfigured(val id: String = "") : AuthorizationState()
     data class Configured(val id: String = "") : AuthorizationState()
     data class SigningIn(val id: String = "") : AuthorizationState()
-    data class SigningOut(val id: String = "") : AuthorizationState()
+    data class SigningOut(val amplifyCredential: AmplifyCredential) : AuthorizationState()
     data class FetchingAuthSession(
         override val fetchAuthSessionState: FetchAuthSessionState?,
         val signedInData: SignedInData
@@ -150,9 +150,16 @@ sealed class AuthorizationState : State {
                     is AuthenticationEvent.EventType.CancelSignIn -> StateResolution(Configured())
                     else -> defaultResolution
                 }
-                is SigningOut -> when (event.isSignOutEvent()) {
-                    is SignOutEvent.EventType.SignOutLocally -> StateResolution(StoringCredentials(AmplifyCredential.Empty))
-                    else -> defaultResolution
+                is SigningOut -> {
+                    when {
+                        event.isSignOutEvent() is SignOutEvent.EventType.SignOutLocally -> {
+                            StateResolution(StoringCredentials(AmplifyCredential.Empty))
+                        }
+                        authenticationEvent is AuthenticationEvent.EventType.CancelSignOut -> {
+                            StateResolution(SessionEstablished(oldState.amplifyCredential))
+                        }
+                        else -> defaultResolution
+                    }
                 }
                 is FetchingUnAuthSession -> when (authorizationEvent) {
                     is AuthorizationEvent.EventType.Fetched -> {
@@ -195,7 +202,13 @@ sealed class AuthorizationState : State {
                 }
                 is Error -> when {
                     authenticationEvent is AuthenticationEvent.EventType.SignInRequested -> StateResolution(SigningIn())
-                    authenticationEvent is AuthenticationEvent.EventType.SignOutRequested -> StateResolution(SigningOut())
+                    authenticationEvent is AuthenticationEvent.EventType.SignOutRequested -> {
+                        if (oldState is SessionEstablished) {
+                            StateResolution(SigningOut(oldState.amplifyCredential))
+                        } else {
+                            defaultResolution
+                        }
+                    }
                     authorizationEvent is AuthorizationEvent.EventType.FetchUnAuthSession -> {
                         val action = authorizationActions.initializeFetchUnAuthSession()
                         val newState = FetchingUnAuthSession(oldState.fetchAuthSessionState)
