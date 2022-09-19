@@ -51,8 +51,8 @@ sealed class AmplifyCredential {
 }
 
 // TODO: Token abstraction if needed
-//@Serializable
-//sealed class AuthTokens{
+// @Serializable
+// sealed class AuthTokens{
 //    data class CognitoUserPoolTokens(
 //        val idToken: String?,
 //        val accessToken: String?,

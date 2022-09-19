@@ -125,7 +125,9 @@ sealed class AuthorizationState : State {
                         val newState = FetchingUnAuthSession(FetchAuthSessionState.NotStarted())
                         StateResolution(newState, listOf(action))
                     }
-                    deleteUserEvent is DeleteUserEvent.EventType.DeleteUser -> StateResolution(DeletingUser(oldState.deleteUserState))
+                    deleteUserEvent is DeleteUserEvent.EventType.DeleteUser -> StateResolution(
+                        DeletingUser(oldState.deleteUserState)
+                    )
                     authenticationEvent is AuthenticationEvent.EventType.SignInRequested -> StateResolution(SigningIn())
                     else -> defaultResolution
                 }
@@ -144,7 +146,8 @@ sealed class AuthorizationState : State {
                             FetchingAuthSession(
                                 FetchAuthSessionState.NotStarted(),
                                 authenticationEvent.signedInData
-                            ), listOf(action)
+                            ),
+                            listOf(action)
                         )
                     }
                     is AuthenticationEvent.EventType.CancelSignIn -> StateResolution(Configured())
@@ -185,15 +188,21 @@ sealed class AuthorizationState : State {
                     else -> defaultResolution
                 }
                 is RefreshingSession -> when (authorizationEvent) {
-                    is AuthorizationEvent.EventType.Refreshed -> StateResolution(StoringCredentials(authorizationEvent.amplifyCredential))
+                    is AuthorizationEvent.EventType.Refreshed -> StateResolution(
+                        StoringCredentials(authorizationEvent.amplifyCredential)
+                    )
                     is AuthorizationEvent.EventType.ThrowError -> StateResolution(Error(authorizationEvent.exception))
                     else -> defaultResolution
                 }
                 is SessionEstablished -> when {
                     authenticationEvent is AuthenticationEvent.EventType.SignInRequested -> StateResolution(SigningIn())
-                    authenticationEvent is AuthenticationEvent.EventType.SignOutRequested -> StateResolution(SigningOut())
+                    authenticationEvent is AuthenticationEvent.EventType.SignOutRequested -> StateResolution(
+                        SigningOut()
+                    )
                     authorizationEvent is AuthorizationEvent.EventType.RefreshSession -> {
-                        val action = authorizationActions.refreshAuthSessionAction(authorizationEvent.amplifyCredential)
+                        val action = authorizationActions.initiateRefreshSessionAction(
+                            authorizationEvent.amplifyCredential
+                        )
                         val newState =
                             RefreshingSession(authorizationEvent.amplifyCredential, RefreshSessionState.NotStarted())
                         StateResolution(newState, listOf(action))
@@ -215,8 +224,13 @@ sealed class AuthorizationState : State {
                         StateResolution(newState, listOf(action))
                     }
                     authorizationEvent is AuthorizationEvent.EventType.RefreshSession -> {
-                        val action = authorizationActions.refreshAuthSessionAction(authorizationEvent.amplifyCredential)
-                        val newState = RefreshingSession(authorizationEvent.amplifyCredential, RefreshSessionState.NotStarted())
+                        val action = authorizationActions.initiateRefreshSessionAction(
+                            authorizationEvent.amplifyCredential
+                        )
+                        val newState = RefreshingSession(
+                            authorizationEvent.amplifyCredential,
+                            RefreshSessionState.NotStarted()
+                        )
                         StateResolution(newState, listOf(action))
                     }
                     else -> defaultResolution

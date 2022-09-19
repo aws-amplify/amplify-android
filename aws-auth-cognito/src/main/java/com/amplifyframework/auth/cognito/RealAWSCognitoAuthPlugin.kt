@@ -752,7 +752,7 @@ internal class RealAWSCognitoAuthPlugin(
         authStateMachine.getCurrentState { authState ->
             when (val authZState = authState.authZState) {
                 is AuthorizationState.Configured -> {
-                    authStateMachine.send(AuthorizationEvent(AuthorizationEvent.EventType.FetchAuthSession))
+                    authStateMachine.send(AuthorizationEvent(AuthorizationEvent.EventType.FetchUnAuthSession))
                     _fetchAuthSession(onSuccess, onError)
                 }
                 is AuthorizationState.SessionEstablished -> {
@@ -1433,12 +1433,12 @@ internal class RealAWSCognitoAuthPlugin(
                         listenerToken?.let(credentialStoreStateMachine::cancel)
                         when (val credential = it.storedCredentials) {
                             is AmplifyCredential.UserPool -> _deleteUser(
-                                credential.tokens.accessToken!!,
+                                credential.signedInData.cognitoUserPoolTokens.accessToken!!,
                                 onSuccess,
                                 onError
                             )
                             is AmplifyCredential.UserAndIdentityPool -> _deleteUser(
-                                credential.tokens.accessToken!!,
+                                credential.signedInData.cognitoUserPoolTokens.accessToken!!,
                                 onSuccess,
                                 onError
                             )

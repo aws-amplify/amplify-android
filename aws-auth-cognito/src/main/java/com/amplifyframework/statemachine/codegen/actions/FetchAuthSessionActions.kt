@@ -19,9 +19,13 @@ import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.data.AWSCredentials
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.LoginsMapProvider
+import com.amplifyframework.statemachine.codegen.data.SignedInData
 
 interface FetchAuthSessionActions {
+    fun refreshUserPoolTokensAction(signedInData: SignedInData): Action
+    fun refreshAuthSessionAction(logins: LoginsMapProvider): Action
     fun fetchIdentityAction(loginsMap: LoginsMapProvider): Action
     fun fetchAWSCredentialsAction(identityId: String, loginsMap: LoginsMapProvider): Action
     fun notifySessionEstablishedAction(identityId: String, awsCredentials: AWSCredentials): Action
+    fun notifySessionRefreshedAction(amplifyCredential: AmplifyCredential): Action
 }

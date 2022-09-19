@@ -27,4 +27,8 @@ data class SignedInData(
     val signedInDate: Date,
     val signInMethod: SignInMethod,
     val cognitoUserPoolTokens: CognitoUserPoolTokens
-)
+) {
+    override fun toString(): String {
+        return "SignedInData($username)"
+    }
+}

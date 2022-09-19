@@ -34,8 +34,12 @@ open class AuthHelper {
          */
         fun getSecretHash(userId: String?, clientId: String?, clientSecret: String?): String? {
             return when {
-                userId.isNullOrEmpty() -> throw AuthException.InvalidParameterException(Exception("user ID cannot be null or empty"))
-                clientId.isNullOrEmpty() -> throw AuthException.InvalidParameterException(Exception("client ID cannot be null or empty"))
+                userId.isNullOrEmpty() -> throw AuthException.InvalidParameterException(
+                    Exception("user ID cannot be null or empty")
+                )
+                clientId.isNullOrEmpty() -> throw AuthException.InvalidParameterException(
+                    Exception("client ID cannot be null or empty")
+                )
                 clientSecret.isNullOrEmpty() -> null
                 else ->
                     try {

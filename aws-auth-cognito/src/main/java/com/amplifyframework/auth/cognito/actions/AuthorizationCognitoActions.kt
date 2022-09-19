@@ -15,27 +15,18 @@
 
 package com.amplifyframework.auth.cognito.actions
 
-import aws.sdk.kotlin.services.cognitoidentityprovider.initiateAuth
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.AuthFlowType
-import aws.smithy.kotlin.runtime.time.Instant
 import com.amplifyframework.auth.cognito.AuthEnvironment
-import com.amplifyframework.auth.cognito.helpers.AuthHelper
-import com.amplifyframework.auth.cognito.helpers.JWTParser
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.AuthorizationActions
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
-import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
 import com.amplifyframework.statemachine.codegen.data.LoginsMapProvider
 import com.amplifyframework.statemachine.codegen.data.SignedInData
 import com.amplifyframework.statemachine.codegen.events.AuthEvent
 import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
 import com.amplifyframework.statemachine.codegen.events.FetchAuthSessionEvent
-import kotlin.time.Duration.Companion.seconds
+import com.amplifyframework.statemachine.codegen.events.RefreshSessionEvent
 
 object AuthorizationCognitoActions : AuthorizationActions {
-    private const val KEY_SECRET_HASH = "SECRET_HASH"
-    private const val KEY_REFRESH_TOKEN = "REFRESH_TOKEN"
-
     override fun resetAuthorizationAction() = Action<AuthEnvironment>("resetAuthZ") { id, dispatcher ->
         logger?.verbose("$id Starting execution")
         // TODO: recover from error
@@ -65,10 +56,18 @@ object AuthorizationCognitoActions : AuthorizationActions {
         Action<AuthEnvironment>("InitFetchAuthSession") { id, dispatcher ->
             logger?.verbose("$id Starting execution")
             val evt = when {
-                configuration.userPool == null -> AuthorizationEvent(AuthorizationEvent.EventType.ThrowError(Exception("User Pool not configured.")))
-                configuration.identityPool == null -> AuthorizationEvent(AuthorizationEvent.EventType.ThrowError(Exception("Identity Pool not configured.")))
+                configuration.userPool == null -> AuthorizationEvent(
+                    AuthorizationEvent.EventType.ThrowError(Exception("User Pool not configured."))
+                )
+                configuration.identityPool == null -> AuthorizationEvent(
+                    AuthorizationEvent.EventType.ThrowError(Exception("Identity Pool not configured."))
+                )
                 else -> {
-                    val logins = LoginsMapProvider.CognitoUserPoolLogins(configuration.userPool.region, configuration.userPool.poolId, signedInData.cognitoUserPoolTokens.idToken!! )
+                    val logins = LoginsMapProvider.CognitoUserPoolLogins(
+                        configuration.userPool.region,
+                        configuration.userPool.poolId,
+                        signedInData.cognitoUserPoolTokens.idToken!!
+                    )
                     FetchAuthSessionEvent(FetchAuthSessionEvent.EventType.FetchIdentity(logins))
                 }
             }
@@ -76,68 +75,24 @@ object AuthorizationCognitoActions : AuthorizationActions {
             dispatcher.send(evt)
         }
 
-    override fun refreshAuthSessionAction(amplifyCredential: AmplifyCredential) =
-        Action<AuthEnvironment>("RefreshUserPoolTokens") { id, dispatcher ->
+    override fun initiateRefreshSessionAction(amplifyCredential: AmplifyCredential) =
+        Action<AuthEnvironment>("InitiateRefreshSession") { id, dispatcher ->
             logger?.verbose("$id Starting execution")
-            val evt = try {
-                when (amplifyCredential) {
-                    is AmplifyCredential.UserPool -> {
-                        val updatedCredential = refreshUserPoolTokens(this, amplifyCredential)
-                        if (configuration.identityPool != null) {
-                            FetchAuthSessionEvent(FetchAuthSessionEvent.EventType.FetchIdentity(updatedCredential))
-                        } else {
-                            AuthorizationEvent(AuthorizationEvent.EventType.Fetched(updatedCredential))
-                        }
-                    }
-                    is AmplifyCredential.UserAndIdentityPool -> {
-                        val updatedCredential = refreshUserPoolTokens(this, amplifyCredential)
-                        FetchAuthSessionEvent(FetchAuthSessionEvent.EventType.FetchIdentity(updatedCredential))
-                    }
-                    is AmplifyCredential.IdentityPool -> {
-                        FetchAuthSessionEvent(FetchAuthSessionEvent.EventType.FetchAwsCredentials(amplifyCredential))
-                    }
-                    else -> throw Exception("Credentials empty, cannot refresh.")
-                }
-            } catch (e: Exception) {
-                AuthorizationEvent(AuthorizationEvent.EventType.ThrowError(e))
+            val evt = when (amplifyCredential) {
+                is AmplifyCredential.UserPool -> RefreshSessionEvent(
+                    RefreshSessionEvent.EventType.RefreshUserPoolTokens(amplifyCredential.signedInData)
+                )
+                is AmplifyCredential.UserAndIdentityPool -> RefreshSessionEvent(
+                    RefreshSessionEvent.EventType.RefreshUserPoolTokens(amplifyCredential.signedInData)
+                )
+                is AmplifyCredential.IdentityPool -> RefreshSessionEvent(
+                    RefreshSessionEvent.EventType.RefreshUnAuthSession(LoginsMapProvider.UnAuthLogins())
+                )
+                else -> AuthorizationEvent(
+                    AuthorizationEvent.EventType.ThrowError(Exception("Credentials empty, cannot refresh."))
+                )
             }
             logger?.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
         }
-
-    private suspend fun refreshUserPoolTokens(
-        environment: AuthEnvironment,
-        amplifyCredential: AmplifyCredential,
-    ): AmplifyCredential {
-        val tokens = when (amplifyCredential) {
-            is AmplifyCredential.UserPool -> amplifyCredential.tokens
-            is AmplifyCredential.UserAndIdentityPool -> amplifyCredential.tokens
-            else -> null
-        }
-
-        val authParameters = mutableMapOf<String, String>()
-        val secretHash = AuthHelper.getSecretHash(
-            tokens?.accessToken?.let { JWTParser.getClaim(it, "username") } ?: "",
-            environment.configuration.userPool?.appClient,
-            environment.configuration.userPool?.appClientSecret
-        )
-        tokens?.refreshToken?.let { authParameters[KEY_REFRESH_TOKEN] = it }
-        secretHash?.let { authParameters[KEY_SECRET_HASH] = it }
-
-        val response = environment.cognitoAuthService.cognitoIdentityProviderClient?.initiateAuth {
-            authFlow = AuthFlowType.RefreshToken
-            clientId = environment.configuration.userPool?.appClient
-            this.authParameters = authParameters
-        }
-
-        val expiresIn = response?.authenticationResult?.expiresIn?.toLong() ?: 0
-        return AmplifyCredential.UserPool(
-            CognitoUserPoolTokens(
-                idToken = response?.authenticationResult?.idToken,
-                accessToken = response?.authenticationResult?.accessToken,
-                refreshToken = tokens?.refreshToken,
-                expiration = Instant.now().plus(expiresIn.seconds).epochSeconds
-            )
-        )
-    }
 }
