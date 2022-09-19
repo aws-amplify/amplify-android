@@ -47,6 +47,7 @@ dependencies {
     testImplementation dependency.mockk
     testImplementation dependency.robolectric
     testImplementation dependency.androidx.test.core
+    testImplementation dependency.kotlin.reflection
 
     androidTestImplementation dependency.androidx.test.runner
     androidTestImplementation dependency.androidx.test.junit
