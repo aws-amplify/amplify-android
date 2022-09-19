@@ -15,11 +15,15 @@
 
 package com.amplifyframework.statemachine.codegen.data
 
+import com.amplifyframework.statemachine.codegen.data.serializer.DateSerializer
 import java.util.Date
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class SignedInData(
     val userId: String,
     val username: String,
+    @Serializable(DateSerializer::class)
     val signedInDate: Date,
     val signInMethod: SignInMethod,
     val cognitoUserPoolTokens: CognitoUserPoolTokens
