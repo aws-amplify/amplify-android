@@ -1,0 +1,7 @@
+{
+  "type": "AuthState.Configured",
+  "AuthenticationState": {
+    "type": "AuthenticationState.Configured"
+  },
+  "AuthorizationState": null
+}
