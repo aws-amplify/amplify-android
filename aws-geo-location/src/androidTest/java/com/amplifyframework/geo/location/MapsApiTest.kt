@@ -25,30 +25,34 @@ import com.amplifyframework.testutils.sync.SynchronousAuth
 import com.amplifyframework.testutils.sync.SynchronousGeo
 import com.amplifyframework.testutils.sync.TestCategory
 import org.json.JSONObject
+import org.junit.After
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.BeforeClass
 import org.junit.Test
 
 /**
  * Tests various functionalities related to Maps API in [AWSLocationGeoPlugin].
  */
 class MapsApiTest {
-    private var auth: SynchronousAuth? = null
     private var geo: SynchronousGeo? = null
 
     /**
      * Set up test categories to be used for testing.
      */
     @Before
-    fun setUp() {
+    fun setUpBeforeTest() {
         // Auth plugin uses default configuration
-        auth = SynchronousAuth.delegatingToCognito(ApplicationProvider.getApplicationContext(), AWSCognitoAuthPlugin())
-
         // Geo plugin uses above auth category to authenticate users
         val geoPlugin = AWSLocationGeoPlugin()
         val geoCategory = TestCategory.forPlugin(geoPlugin) as GeoCategory
         geo = SynchronousGeo.delegatingTo(geoCategory)
+    }
+
+    @After
+    fun tearDown() {
+        signOutFromCognito()
     }
 
     /**
@@ -81,7 +85,6 @@ class MapsApiTest {
      */
     @Test(expected = GeoException::class)
     fun cannotFetchStyleWithoutAuth() {
-        signOutFromCognito()
         // should not be authorized to fetch map resource from Amazon Location Service
         geo?.getMapStyleDescriptor(GetMapStyleDescriptorOptions.defaults())
     }
@@ -94,5 +97,20 @@ class MapsApiTest {
 
     private fun signOutFromCognito() {
         auth?.signOut()
+    }
+
+    companion object {
+        lateinit var auth: SynchronousAuth
+
+        /**
+         * Set up test categories to be used for testing.
+         */
+        @BeforeClass
+        @JvmStatic
+        fun setUp() {
+            // Auth plugin uses default configuration
+            auth =
+                SynchronousAuth.delegatingToCognito(ApplicationProvider.getApplicationContext(), AWSCognitoAuthPlugin())
+        }
     }
 }
