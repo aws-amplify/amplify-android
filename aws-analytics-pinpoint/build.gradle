@@ -41,8 +41,7 @@ dependencies {
     testImplementation dependency.kotlin.test.coroutines
 
     androidTestImplementation project(path: ':testutils')
-    androidTestImplementation dependency.androidx.test.core
     androidTestImplementation dependency.androidx.test.runner
-    androidTestImplementation dependency.androidx.test.junit
+    implementation dependency.androidx.test.junit
 }
 

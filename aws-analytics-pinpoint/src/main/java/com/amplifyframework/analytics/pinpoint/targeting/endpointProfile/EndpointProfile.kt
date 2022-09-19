@@ -240,7 +240,7 @@ internal class EndpointProfile(
                 }
             }
             // If there are any attributes put then add the attributes to the structure
-            if (attributesJson.isEmpty()) {
+            if (attributesJson.isNotEmpty()) {
                 put("Attributes", attributesJson)
             }
 
@@ -256,7 +256,7 @@ internal class EndpointProfile(
             }
 
             // If there are any metrics put then add the attributes to the structure
-            if (metricsJson.isEmpty()) {
+            if (metricsJson.isNotEmpty()) {
                 put("Metrics", metricsJson)
             }
 
