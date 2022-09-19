@@ -24,6 +24,7 @@ import com.amplifyframework.auth.AuthPlugin
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.hub.HubChannel
+import com.amplifyframework.hub.HubEvent
 import com.amplifyframework.testutils.HubAccumulator
 import com.amplifyframework.testutils.Resources
 import com.amplifyframework.testutils.Sleep
@@ -65,7 +66,7 @@ class PinpointAnalyticsInstrumentationTest {
     @Test
     fun recordEventStoresPassedBasicAnalyticsEvent() {
         val hubAccumulator =
-            HubAccumulator.create(HubChannel.ANALYTICS, AnalyticsChannelEventName.FLUSH_EVENTS, 1).start()
+            HubAccumulator.create(HubChannel.ANALYTICS, AnalyticsChannelEventName.FLUSH_EVENTS, 2).start()
         // Arrange: Create an event
         val eventName = "Amplify-event" + UUID.randomUUID().toString()
         val event = AnalyticsEvent.builder()
@@ -81,8 +82,8 @@ class PinpointAnalyticsInstrumentationTest {
         Sleep.milliseconds(RECORD_INSERTION_TIMEOUT)
         Amplify.Analytics.flushEvents()
         val hubEvents = hubAccumulator.await(10, TimeUnit.SECONDS)
-        Assert.assertEquals(1, hubEvents.size.toLong())
-        val submittedEvents = filterSessionEvents((hubEvents[0].data as ArrayList<AnalyticsEvent>))
+        val submittedEvents = combineAndFilterEvents(hubEvents)
+        Assert.assertEquals(1, submittedEvents.size.toLong())
         val submittedEvent = submittedEvents[0]
         Assert.assertEquals(submittedEvent.name, eventName)
         Assert.assertEquals("Pancakes", submittedEvent.properties["AnalyticsStringProperty"].value)
@@ -97,7 +98,7 @@ class PinpointAnalyticsInstrumentationTest {
     @Test
     fun testFlushEventHubEvent() {
         val analyticsHubEventAccumulator =
-            HubAccumulator.create(HubChannel.ANALYTICS, AnalyticsChannelEventName.FLUSH_EVENTS, 1)
+            HubAccumulator.create(HubChannel.ANALYTICS, AnalyticsChannelEventName.FLUSH_EVENTS, 3)
                 .start()
         val eventName1 = "Amplify-event" + UUID.randomUUID().toString()
         val event1 = AnalyticsEvent.builder()
@@ -117,12 +118,12 @@ class PinpointAnalyticsInstrumentationTest {
         Sleep.milliseconds(RECORD_INSERTION_TIMEOUT)
         Amplify.Analytics.flushEvents()
         val hubEvents = analyticsHubEventAccumulator.await(10, TimeUnit.SECONDS)
-        Assert.assertEquals(1, hubEvents.size.toLong())
         val hubEvent = analyticsHubEventAccumulator.awaitFirst()
-        val hubEventData = filterSessionEvents((hubEvents[0].data as ArrayList<AnalyticsEvent>))
+        val submittedEvents = combineAndFilterEvents(hubEvents)
+        Assert.assertEquals(2, submittedEvents.size.toLong())
         Assert.assertEquals(AnalyticsChannelEventName.FLUSH_EVENTS.eventName, hubEvent.name)
-        Assert.assertEquals(eventName1, (hubEventData!![0] as AnalyticsEvent).name)
-        Assert.assertEquals(eventName2, (hubEventData[1] as AnalyticsEvent).name)
+        Assert.assertEquals(eventName1, submittedEvents[0].name)
+        Assert.assertEquals(eventName2, submittedEvents[1].name)
     }
 
     /**
@@ -162,7 +163,7 @@ class PinpointAnalyticsInstrumentationTest {
     @Test
     fun registerGlobalPropertiesAddsGivenPropertiesToRecordedEvents() {
         val analyticsHubEventAccumulator =
-            HubAccumulator.create(HubChannel.ANALYTICS, AnalyticsChannelEventName.FLUSH_EVENTS, 1)
+            HubAccumulator.create(HubChannel.ANALYTICS, AnalyticsChannelEventName.FLUSH_EVENTS, 3)
                 .start()
         // Arrange: Register global properties and create an event
         Amplify.Analytics.registerGlobalProperties(
@@ -182,7 +183,7 @@ class PinpointAnalyticsInstrumentationTest {
         Sleep.milliseconds(RECORD_INSERTION_TIMEOUT)
         Amplify.Analytics.flushEvents()
         val hubEvents = analyticsHubEventAccumulator.await(10, TimeUnit.SECONDS)
-        val submittedEvents = filterSessionEvents((hubEvents[0].data as ArrayList<AnalyticsEvent>))
+        val submittedEvents = combineAndFilterEvents(hubEvents)
         Assert.assertEquals(2, submittedEvents.size.toLong())
         val event1Attributes = submittedEvents[0].properties
         val event2Attributes = submittedEvents[1].properties
@@ -203,7 +204,7 @@ class PinpointAnalyticsInstrumentationTest {
     @Test
     fun unregisterGlobalPropertiesRemovesGivenProperties() {
         val analyticsHubEventAccumulator =
-            HubAccumulator.create(HubChannel.ANALYTICS, AnalyticsChannelEventName.FLUSH_EVENTS, 1)
+            HubAccumulator.create(HubChannel.ANALYTICS, AnalyticsChannelEventName.FLUSH_EVENTS, 3)
                 .start()
         // Arrange: Register a global property
         Amplify.Analytics.registerGlobalProperties(
@@ -220,18 +221,23 @@ class PinpointAnalyticsInstrumentationTest {
         Sleep.milliseconds(RECORD_INSERTION_TIMEOUT)
         Amplify.Analytics.flushEvents()
         val hubEvents = analyticsHubEventAccumulator.await(10, TimeUnit.SECONDS)
-        val submittedEvents = filterSessionEvents((hubEvents[0].data as ArrayList<AnalyticsEvent>))
+        val submittedEvents = combineAndFilterEvents(hubEvents)
 
         // Assert: Ensure there are two events, the first has attributes, and the second doesn't
+        Assert.assertEquals(2, submittedEvents.size.toLong())
         Assert.assertEquals("globalVal", submittedEvents[0].properties["GlobalProperty"].value)
         Assert.assertEquals(0, submittedEvents[1].properties.size().toLong())
     }
 
-    private fun filterSessionEvents(syncedEvents: ArrayList<AnalyticsEvent>): MutableList<AnalyticsEvent> {
+    private fun combineAndFilterEvents(hubEvents: List<HubEvent<*>>): MutableList<AnalyticsEvent> {
         val result = mutableListOf<AnalyticsEvent>()
-        syncedEvents.forEach {
-            if (!it.name.startsWith("_session")) {
-                result.add(it)
+        hubEvents.forEach {
+            if ((it.data as List<*>).size != 0) {
+                (it.data as ArrayList<*>).forEach { event ->
+                    if (!(event as AnalyticsEvent).name.startsWith("_session")) {
+                        result.add(event)
+                    }
+                }
             }
         }
         return result
