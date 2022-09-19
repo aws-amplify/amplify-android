@@ -17,29 +17,15 @@ package com.amplifyframework.geo.maplibre
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import com.amplifyframework.auth.AuthCategory
-import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
-import com.amplifyframework.geo.GeoCategory
-import com.amplifyframework.geo.location.AWSLocationGeoPlugin
 import com.amplifyframework.geo.maplibre.view.MapLibreView
-import com.amplifyframework.testutils.sync.SynchronousAuth
-import com.amplifyframework.testutils.sync.TestCategory
 
 /**
  * Activity that initializes MapLibre SDK with adapter on create.
  */
 class MapViewTestActivity : AppCompatActivity() {
-    internal var auth: SynchronousAuth? = null
-
-    private val geo: GeoCategory by lazy {
-        val awsCognitoAuthPlugin = AWSCognitoAuthPlugin()
-        val authCategory = TestCategory.forPlugin(awsCognitoAuthPlugin) as AuthCategory
-        auth = SynchronousAuth.delegatingToCognito(this, awsCognitoAuthPlugin)
-        TestCategory.forPlugin(AWSLocationGeoPlugin(authCategory = authCategory)) as GeoCategory
-    }
 
     internal val mapView: MapLibreView by lazy {
-        MapLibreView(context = applicationContext, geo = geo)
+        MapLibreView(context = applicationContext, geo = AmplifyWrapper.geo)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
