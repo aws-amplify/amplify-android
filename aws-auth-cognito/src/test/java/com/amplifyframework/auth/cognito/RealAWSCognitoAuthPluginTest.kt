@@ -54,9 +54,11 @@ import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
 import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions
 import com.amplifyframework.auth.options.AuthResetPasswordOptions
+import com.amplifyframework.auth.options.AuthSignInOptions
 import com.amplifyframework.auth.options.AuthSignUpOptions
 import com.amplifyframework.auth.options.AuthUpdateUserAttributesOptions
 import com.amplifyframework.auth.result.AuthResetPasswordResult
+import com.amplifyframework.auth.result.AuthSignInResult
 import com.amplifyframework.auth.result.AuthSignUpResult
 import com.amplifyframework.auth.result.AuthUpdateAttributeResult
 import com.amplifyframework.auth.result.step.AuthNextSignUpStep
@@ -68,6 +70,8 @@ import com.amplifyframework.logging.Logger
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
+import com.amplifyframework.statemachine.codegen.data.SignInMethod
+import com.amplifyframework.statemachine.codegen.data.SignedInData
 import com.amplifyframework.statemachine.codegen.data.UserPoolConfiguration
 import com.amplifyframework.statemachine.codegen.states.AuthState
 import com.amplifyframework.statemachine.codegen.states.AuthenticationState
@@ -84,6 +88,7 @@ import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.slot
 import io.mockk.verify
+import java.util.Date
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
@@ -193,6 +198,50 @@ class RealAWSCognitoAuthPluginTest {
 
         // WHEN
         plugin.confirmSignUp("user", "pass", AuthConfirmSignUpOptions.defaults(), onSuccess, onError)
+
+        // THEN
+        verify(exactly = 0) { onSuccess.accept(any()) }
+        verify { onError.accept(expectedAuthError) }
+    }
+
+    @Test
+    fun testSignInFailsIfNotConfigured() {
+        // GIVEN
+        val onSuccess = mockk<Consumer<AuthSignInResult>>()
+        val onError = mockk<Consumer<AuthException>>(relaxed = true)
+        val expectedAuthError = AWSCognitoAuthExceptions.NotConfiguredException()
+        currentState = AuthenticationState.NotConfigured()
+
+        // WHEN
+        plugin.signIn("user", "password", AuthSignInOptions.defaults(), onSuccess, onError)
+
+        // THEN
+        verify(exactly = 0) { onSuccess.accept(any()) }
+        verify { onError.accept(expectedAuthError) }
+    }
+
+    @Test
+    fun testSignInFailsIfAlreadySignedIn() {
+        // GIVEN
+        val onSuccess = mockk<Consumer<AuthSignInResult>>()
+        val onError = mockk<Consumer<AuthException>>(relaxed = true)
+        val expectedAuthError = AuthException(
+            "There is already a user in signedIn state. " +
+                "SignOut the user first before calling signIn",
+            AuthException.InvalidStateException.TODO_RECOVERY_SUGGESTION
+        )
+        currentState = AuthenticationState.SignedIn(
+            SignedInData(
+                "userId",
+                "user",
+                Date(),
+                SignInMethod.SRP,
+                CognitoUserPoolTokens("", "", "", 0)
+            )
+        )
+
+        // WHEN
+        plugin.signIn("user", "password", AuthSignInOptions.defaults(), onSuccess, onError)
 
         // THEN
         verify(exactly = 0) { onSuccess.accept(any()) }
