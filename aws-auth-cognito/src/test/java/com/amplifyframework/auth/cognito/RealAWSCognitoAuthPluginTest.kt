@@ -84,7 +84,6 @@ import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.slot
 import io.mockk.verify
-import org.json.JSONException
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
@@ -92,6 +91,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import org.json.JSONException
 import org.json.JSONObject
 import org.junit.Before
 import org.junit.Ignore
@@ -1479,7 +1479,7 @@ class RealAWSCognitoAuthPluginTest {
         val configAuthJsonObject = JSONObject()
         val configAuthDefaultJsonObject = JSONObject()
         configAuthDefaultJsonObject.put("authenticationFlowType", "INVALID_FLOW_TYPE")
-        configAuthJsonObject.put("Default",configAuthDefaultJsonObject)
+        configAuthJsonObject.put("Default", configAuthDefaultJsonObject)
         configJsonObject.put("Auth", configAuthJsonObject)
         var result = try {
             AuthConfiguration.fromJson(configJsonObject)
@@ -1495,9 +1495,9 @@ class RealAWSCognitoAuthPluginTest {
         val configAuthJsonObject = JSONObject()
         val configAuthDefaultJsonObject = JSONObject()
         configAuthDefaultJsonObject.put("authenticationFlowType", "USER_SRP_AUTH")
-        configAuthJsonObject.put("Default",configAuthDefaultJsonObject)
+        configAuthJsonObject.put("Default", configAuthDefaultJsonObject)
         configJsonObject.put("Auth", configAuthJsonObject)
         val configuration = AuthConfiguration.fromJson(configJsonObject)
-        assertEquals(configuration.authFlowType,AuthFlowType.USER_SRP_AUTH,"Auth flow types do not match expected")
+        assertEquals(configuration.authFlowType, AuthFlowType.USER_SRP_AUTH, "Auth flow types do not match expected")
     }
 }

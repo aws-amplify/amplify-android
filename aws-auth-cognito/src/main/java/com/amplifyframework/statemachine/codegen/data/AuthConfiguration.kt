@@ -52,20 +52,23 @@ data class AuthConfiguration internal constructor(
                     ?.optJSONObject("OAuth")?.let {
                         OauthConfiguration.fromJson(it)
                     },
-                authFlowType = getAutheticationFlowType(pluginJson.optJSONObject("Auth")
-                    ?.optJSONObject(configName)
-                    ?.optString("authenticationFlowType"))
+                authFlowType = getAutheticationFlowType(
+                    pluginJson.optJSONObject("Auth")
+                        ?.optJSONObject(configName)
+                        ?.optString("authenticationFlowType")
+                )
             )
         }
-        private fun getAutheticationFlowType(authType : String?) : AuthFlowType{
-            try{
-                if(authType.isNullOrEmpty()){
+        private fun getAutheticationFlowType(authType: String?): AuthFlowType {
+            try {
+                if (authType.isNullOrEmpty()) {
                     return AuthFlowType.USER_SRP_AUTH
                 }
                 return AuthFlowType.valueOf(authType)
-            }
-            catch (ex:Exception){
-                throw JSONException("Invalid auth flow type $authType. Valid flow types are ${AuthFlowType.values().joinToString()}")
+            } catch (ex: Exception) {
+                throw JSONException(
+                    "Invalid auth flow type $authType. Valid flow types are ${AuthFlowType.values().joinToString()}"
+                )
             }
         }
     }
