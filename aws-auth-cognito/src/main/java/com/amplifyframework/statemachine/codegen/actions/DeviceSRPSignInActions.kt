@@ -16,12 +16,10 @@
 package com.amplifyframework.statemachine.codegen.actions
 
 import com.amplifyframework.statemachine.Action
-import com.amplifyframework.statemachine.codegen.events.SignInEvent
+import com.amplifyframework.statemachine.codegen.events.DeviceSRPSignInEvent
 
-interface SignInActions {
-    fun startSRPAuthAction(event: SignInEvent.EventType.InitiateSignInWithSRP): Action
-    fun startCustomAuthAction(event: SignInEvent.EventType.InitiateSignInWithCustom): Action
-    fun initResolveChallenge(event: SignInEvent.EventType.ReceivedChallenge): Action
-    fun confirmDevice(event: SignInEvent.EventType.ConfirmDevice): Action
-    fun startHostedUIAuthAction(event: SignInEvent.EventType.InitiateHostedUISignIn): Action
+interface DeviceSRPSignInActions {
+    fun respondDeviceSRP(event: DeviceSRPSignInEvent.EventType.RespondDeviceSRPChallenge): Action
+    fun respondDevicePasswordVerifier(event: DeviceSRPSignInEvent.EventType.RespondDevicePasswordVerifier): Action
+    fun cancellingSignIn(event: DeviceSRPSignInEvent.EventType.CancelSRPSignIn): Action
 }
