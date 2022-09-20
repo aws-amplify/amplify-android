@@ -129,7 +129,7 @@ internal class RealAWSCognitoAuthPlugin(
     private val logger: Logger
 ) : AuthCategoryBehavior {
 
-    private val lastPublishedHubEventName = AtomicReference<AuthChannelEventName> ()
+    private val lastPublishedHubEventName = AtomicReference<AuthChannelEventName>()
 
     init {
         addAuthStateChangeListener()
@@ -384,10 +384,7 @@ internal class RealAWSCognitoAuthPlugin(
         authStateMachine.getCurrentState { authState ->
             when (authState.authNState) {
                 is AuthenticationState.NotConfigured -> onError.accept(
-                    AuthException(
-                        "Sign in failed.",
-                        "Cognito User Pool not configured. Please check amplifyconfiguration.json file."
-                    )
+                    AWSCognitoAuthExceptions.NotConfiguredException()
                 )
                 // Continue sign in
                 is AuthenticationState.SignedOut, is AuthenticationState.Configured -> _signIn(
@@ -397,9 +394,15 @@ internal class RealAWSCognitoAuthPlugin(
                     onSuccess,
                     onError
                 )
-                is AuthenticationState.SignedIn -> onSuccess.accept(
-                    AuthSignInResult(true, AuthNextSignInStep(AuthSignInStep.DONE, mapOf(), null))
-                )
+                is AuthenticationState.SignedIn -> {
+                    onError.accept(
+                        AuthException(
+                            "There is already a user in signedIn state. " +
+                                "SignOut the user first before calling signIn",
+                            AuthException.InvalidStateException.TODO_RECOVERY_SUGGESTION
+                        )
+                    )
+                }
                 else -> onError.accept(AuthException.InvalidStateException())
             }
         }
@@ -442,7 +445,6 @@ internal class RealAWSCognitoAuthPlugin(
                             AuthNextSignInStep(AuthSignInStep.DONE, mapOf(), null)
                         )
                         onSuccess.accept(authSignInResult)
-                        Amplify.Hub.publish(HubChannel.AUTH, HubEvent.create(AuthChannelEventName.SIGNED_IN))
                     }
                     else -> {
                         // no-op
@@ -745,8 +747,15 @@ internal class RealAWSCognitoAuthPlugin(
                 is AuthorizationState.Configured -> _fetchAuthSession(onSuccess = onSuccess, onError = onError)
                 is AuthorizationState.SessionEstablished -> {
                     val credential = authZState.amplifyCredential
-                    if (credential.isValid()) onSuccess.accept(credential.getCognitoSession())
-                    else _fetchAuthSession(true, credential, onSuccess = onSuccess, onError = onError)
+                    if (credential.isValid()) {
+                        onSuccess.accept(credential.getCognitoSession())
+                    } else {
+                        if (lastPublishedHubEventName.get() != AuthChannelEventName.SESSION_EXPIRED) {
+                            lastPublishedHubEventName.set(AuthChannelEventName.SESSION_EXPIRED)
+                            Amplify.Hub.publish(HubChannel.AUTH, HubEvent.create(AuthChannelEventName.SESSION_EXPIRED))
+                        }
+                        _fetchAuthSession(true, credential, onSuccess = onSuccess, onError = onError)
+                    }
                 }
                 else -> {
                     // no-op
@@ -1344,8 +1353,20 @@ internal class RealAWSCognitoAuthPlugin(
                 is AuthenticationState.NotConfigured ->
                     onComplete.accept(AWSCognitoAuthSignOutResult.CompleteSignOut)
                 // Continue sign out and clear auth or guest credentials
-                is AuthenticationState.SignedIn, is AuthenticationState.SignedOut ->
+                is AuthenticationState.SignedIn, is AuthenticationState.SignedOut -> {
+                    // Send SignOut event here instead of OnSubscribedCallback handler to ensure we do not fire
+                    // onComplete immediately, which would happen if calling signOut while signed out
+                    val event = AuthenticationEvent(
+                        AuthenticationEvent.EventType.SignOutRequested(
+                            SignOutData(
+                                options.isGlobalSignOut,
+                                (options as? AWSCognitoAuthSignOutOptions)?.browserPackage
+                            )
+                        )
+                    )
+                    authStateMachine.send(event)
                     _signOut(options, onComplete)
+                }
                 else -> onComplete.accept(
                     AWSCognitoAuthSignOutResult.FailedSignOut(AuthException.InvalidStateException())
                 )
@@ -1380,7 +1401,6 @@ internal class RealAWSCognitoAuthPlugin(
                             } else {
                                 onComplete.accept(AWSCognitoAuthSignOutResult.CompleteSignOut)
                             }
-                            Amplify.Hub.publish(HubChannel.AUTH, HubEvent.create(AuthChannelEventName.SIGNED_OUT))
                         }
                         authNState is AuthenticationState.Error -> {
                             token?.let(authStateMachine::cancel)
@@ -1391,21 +1411,12 @@ internal class RealAWSCognitoAuthPlugin(
                             )
                         }
                         else -> {
-                            // no-op
+                            // No - op
                         }
                     }
                 }
             },
             {
-                val event = AuthenticationEvent(
-                    AuthenticationEvent.EventType.SignOutRequested(
-                        SignOutData(
-                            options.isGlobalSignOut,
-                            (options as? AWSCognitoAuthSignOutOptions)?.browserPackage
-                        )
-                    )
-                )
-                authStateMachine.send(event)
             }
         )
     }
@@ -1530,20 +1541,36 @@ internal class RealAWSCognitoAuthPlugin(
             { authState ->
                 logger.verbose("Auth State Change: $authState")
 
-                dispatchHubEvent(authState)
-
                 when (authState) {
                     is AuthState.WaitingForCachedCredentials -> credentialStoreStateMachine.send(
                         CredentialStoreEvent(CredentialStoreEvent.EventType.LoadCredentialStore())
                     )
                     is AuthState.Configured -> {
-                        val authZState = authState.authZState
-                        if (authZState is AuthorizationState.WaitingToStore) {
-                            credentialStoreStateMachine.send(
-                                CredentialStoreEvent(
-                                    CredentialStoreEvent.EventType.StoreCredentials(authZState.amplifyCredential)
+                        val (authNState, authZState) = authState
+                        when {
+                            authZState is AuthorizationState.WaitingToStore -> {
+                                credentialStoreStateMachine.send(
+                                    CredentialStoreEvent(
+                                        CredentialStoreEvent.EventType.StoreCredentials(authZState.amplifyCredential)
+                                    )
                                 )
-                            )
+                            }
+                            authNState is AuthenticationState.SignedOut &&
+                                authZState is AuthorizationState.Configured
+                                && lastPublishedHubEventName.get() != AuthChannelEventName.SIGNED_OUT -> {
+                                lastPublishedHubEventName.set(AuthChannelEventName.SIGNED_OUT)
+                                Amplify.Hub.publish(HubChannel.AUTH, HubEvent.create(AuthChannelEventName.SIGNED_OUT))
+                            }
+                            authNState is AuthenticationState.SignedIn &&
+                                authZState is AuthorizationState.SessionEstablished
+                                && lastPublishedHubEventName.get() != AuthChannelEventName.SIGNED_IN -> {
+                                lastPublishedHubEventName.set(AuthChannelEventName.SIGNED_IN)
+                                Amplify.Hub.publish(HubChannel.AUTH, HubEvent.create(AuthChannelEventName.SIGNED_IN))
+                            }
+                            authState.authZState?.deleteUserState is DeleteUserState.UserDeleted
+                                && lastPublishedHubEventName.get() != AuthChannelEventName.USER_DELETED -> {
+                                Amplify.Hub.publish(HubChannel.AUTH, HubEvent.create(AuthChannelEventName.USER_DELETED))
+                            }
                         }
                     }
                     else -> {
@@ -1572,20 +1599,6 @@ internal class RealAWSCognitoAuthPlugin(
             },
             null
         )
-    }
-
-    private fun dispatchHubEvent(authState: AuthState) {
-        when {
-            authState.authNState is AuthenticationState.SignedIn -> AuthChannelEventName.SIGNED_IN
-            authState.authNState is AuthenticationState.SignedOut -> AuthChannelEventName.SIGNED_OUT
-            authState.authZState?.deleteUserState is DeleteUserState.UserDeleted -> AuthChannelEventName.USER_DELETED
-            else -> null
-        }?.takeUnless {
-            it != lastPublishedHubEventName.get()
-        }?.let { eventName ->
-            lastPublishedHubEventName.set(eventName)
-            Amplify.Hub.publish(HubChannel.AUTH, HubEvent.create(eventName))
-        }
     }
 
     private fun configureAuthStates() {
