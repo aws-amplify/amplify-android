@@ -1523,19 +1523,15 @@ class RealAWSCognitoAuthPluginTest {
     }
 
     @Test
-    fun `validate auth flow type fails`() {
+    fun `validate auth flow type defaults to user_srp_auth for invalid types`() {
         val configJsonObject = JSONObject()
         val configAuthJsonObject = JSONObject()
         val configAuthDefaultJsonObject = JSONObject()
         configAuthDefaultJsonObject.put("authenticationFlowType", "INVALID_FLOW_TYPE")
         configAuthJsonObject.put("Default", configAuthDefaultJsonObject)
         configJsonObject.put("Auth", configAuthJsonObject)
-        var result = try {
-            AuthConfiguration.fromJson(configJsonObject)
-        } catch (ex: Exception) {
-            ex
-        }
-        assertTrue(result is JSONException, "validation should fail for invalid flow types")
+        val configuration = AuthConfiguration.fromJson(configJsonObject)
+        assertEquals(configuration.authFlowType, AuthFlowType.USER_SRP_AUTH, "Auth flow types do not match expected")
     }
 
     @Test
@@ -1543,10 +1539,10 @@ class RealAWSCognitoAuthPluginTest {
         val configJsonObject = JSONObject()
         val configAuthJsonObject = JSONObject()
         val configAuthDefaultJsonObject = JSONObject()
-        configAuthDefaultJsonObject.put("authenticationFlowType", "USER_SRP_AUTH")
+        configAuthDefaultJsonObject.put("authenticationFlowType", "USER_PASSWORD_AUTH")
         configAuthJsonObject.put("Default", configAuthDefaultJsonObject)
         configJsonObject.put("Auth", configAuthJsonObject)
         val configuration = AuthConfiguration.fromJson(configJsonObject)
-        assertEquals(configuration.authFlowType, AuthFlowType.USER_SRP_AUTH, "Auth flow types do not match expected")
+        assertEquals(configuration.authFlowType, AuthFlowType.USER_PASSWORD_AUTH, "Auth flow types do not match expected")
     }
 }

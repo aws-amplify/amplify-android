@@ -60,16 +60,10 @@ data class AuthConfiguration internal constructor(
             )
         }
         private fun getAutheticationFlowType(authType: String?): AuthFlowType {
-            try {
-                if (authType.isNullOrEmpty()) {
-                    return AuthFlowType.USER_SRP_AUTH
-                }
-                return AuthFlowType.valueOf(authType)
-            } catch (ex: Exception) {
-                throw JSONException(
-                    "Invalid auth flow type $authType. Valid flow types are ${AuthFlowType.values().joinToString()}"
-                )
-            }
+            return if(!authType.isNullOrEmpty() && AuthFlowType.values().any { it.name == authType })
+                AuthFlowType.valueOf(authType)
+            else
+                AuthFlowType.USER_SRP_AUTH
         }
     }
 }
