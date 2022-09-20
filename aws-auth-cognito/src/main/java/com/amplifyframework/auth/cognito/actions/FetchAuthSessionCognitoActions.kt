@@ -73,8 +73,8 @@ object FetchAuthSessionCognitoActions : FetchAuthSessionActions {
 
                 if (configuration.identityPool != null) {
                     val logins = LoginsMapProvider.CognitoUserPoolLogins(
-                        configuration.userPool!!.region,
-                        configuration.userPool.poolId,
+                        configuration.userPool?.region,
+                        configuration.userPool?.poolId,
                         cognitoUserPoolTokens.idToken!!
                     )
                     RefreshSessionEvent(RefreshSessionEvent.EventType.RefreshAuthSession(updatedSignedInData, logins))

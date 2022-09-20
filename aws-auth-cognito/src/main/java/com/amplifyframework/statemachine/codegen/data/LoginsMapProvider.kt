@@ -17,7 +17,7 @@ package com.amplifyframework.statemachine.codegen.data
 
 sealed class LoginsMapProvider {
     data class UnAuthLogins(override val logins: Map<String, String> = mapOf()) : LoginsMapProvider()
-    data class CognitoUserPoolLogins(val region: String, val poolId: String, val idToken: String) :
+    data class CognitoUserPoolLogins(val region: String? = "", val poolId: String? = "", val idToken: String) :
         LoginsMapProvider() {
 
         /**

@@ -1466,7 +1466,8 @@ internal class RealAWSCognitoAuthPlugin(
         var listenerToken: StateChangeListenerToken? = null
         listenerToken = authStateMachine.listen(
             { authState ->
-                when (authState.authNState?.signOutState) {
+                val authNState = authState.authNState as? AuthenticationState.SigningOut
+                when (authNState?.signOutState) {
                     is SignOutState.SignedOut -> {
                         clearCredentialStore(
                             onSuccess = {
@@ -1483,7 +1484,8 @@ internal class RealAWSCognitoAuthPlugin(
                         // No-op
                     }
                 }
-                when (val deleteUserState = authState.authZState?.deleteUserState) {
+                val authZState = authState.authZState as? AuthorizationState.DeletingUser
+                when (val deleteUserState = authZState?.deleteUserState) {
                     is DeleteUserState.UserDeleted -> {
                         onSuccess.call()
                         Amplify.Hub.publish(
@@ -1550,6 +1552,7 @@ internal class RealAWSCognitoAuthPlugin(
                     )
                     is AuthState.Configured -> {
                         val (authNState, authZState) = authState
+                        val deleteUserAuthZState = authZState as? AuthorizationState.DeletingUser
                         when {
                             authZState is AuthorizationState.StoringCredentials -> {
                                 credentialStoreStateMachine.send(
@@ -1570,7 +1573,7 @@ internal class RealAWSCognitoAuthPlugin(
                                 lastPublishedHubEventName.set(AuthChannelEventName.SIGNED_IN)
                                 Amplify.Hub.publish(HubChannel.AUTH, HubEvent.create(AuthChannelEventName.SIGNED_IN))
                             }
-                            authState.authZState?.deleteUserState is DeleteUserState.UserDeleted
+                            deleteUserAuthZState?.deleteUserState is DeleteUserState.UserDeleted
                                 && lastPublishedHubEventName.get() != AuthChannelEventName.USER_DELETED -> {
                                 Amplify.Hub.publish(HubChannel.AUTH, HubEvent.create(AuthChannelEventName.USER_DELETED))
                             }
