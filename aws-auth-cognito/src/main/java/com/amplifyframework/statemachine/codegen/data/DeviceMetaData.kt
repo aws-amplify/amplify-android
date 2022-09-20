@@ -12,24 +12,15 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
+package com.amplifyframework.statemachine.codegen.data
 
-package com.amplifyframework.geo.maplibre
-
-import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
-import com.amplifyframework.geo.maplibre.view.MapLibreView
-
-/**
- * Activity that initializes MapLibre SDK with adapter on create.
- */
-class MapViewTestActivity : AppCompatActivity() {
-
-    internal val mapView: MapLibreView by lazy {
-        MapLibreView(context = applicationContext, geo = AmplifyWrapper.geo)
-    }
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(mapView)
-    }
-}
+data class DeviceMetaData(
+    val idToken: String,
+    val refreshToken: String,
+    val accessToken: String,
+    val deviceKey: String,
+    val deviceGroupKey: String,
+    val userId: String,
+    val username: String,
+    val expiresIn: Int
+)

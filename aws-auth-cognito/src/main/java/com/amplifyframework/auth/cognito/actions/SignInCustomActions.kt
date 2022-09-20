@@ -24,6 +24,7 @@ import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.auth.cognito.helpers.SignInChallengeHelper
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.CustomSignInActions
+import com.amplifyframework.statemachine.codegen.data.SignInMethod
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.CustomSignInEvent
 
@@ -58,7 +59,8 @@ object SignInCustomActions : CustomSignInActions {
                         challengeNameType = initiateAuthResponse.challengeName,
                         session = initiateAuthResponse.session,
                         challengeParameters = initiateAuthResponse.challengeParameters,
-                        authenticationResult = initiateAuthResponse.authenticationResult
+                        authenticationResult = initiateAuthResponse.authenticationResult,
+                        signInMethod = SignInMethod.CUSTOM
                     )
                 } else {
                     throw AuthException(

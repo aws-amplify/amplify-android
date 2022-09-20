@@ -384,10 +384,7 @@ internal class RealAWSCognitoAuthPlugin(
         authStateMachine.getCurrentState { authState ->
             when (authState.authNState) {
                 is AuthenticationState.NotConfigured -> onError.accept(
-                    AuthException(
-                        "Sign in failed.",
-                        "Cognito User Pool not configured. Please check amplifyconfiguration.json file."
-                    )
+                    AWSCognitoAuthExceptions.NotConfiguredException()
                 )
                 // Continue sign in
                 is AuthenticationState.SignedOut, is AuthenticationState.Configured -> _signIn(
@@ -397,9 +394,15 @@ internal class RealAWSCognitoAuthPlugin(
                     onSuccess,
                     onError
                 )
-                is AuthenticationState.SignedIn -> onSuccess.accept(
-                    AuthSignInResult(true, AuthNextSignInStep(AuthSignInStep.DONE, mapOf(), null))
-                )
+                is AuthenticationState.SignedIn -> {
+                    onError.accept(
+                        AuthException(
+                            "There is already a user in signedIn state. " +
+                                "SignOut the user first before calling signIn",
+                            AuthException.InvalidStateException.TODO_RECOVERY_SUGGESTION
+                        )
+                    )
+                }
                 else -> onError.accept(AuthException.InvalidStateException())
             }
         }
@@ -1350,8 +1353,20 @@ internal class RealAWSCognitoAuthPlugin(
                 is AuthenticationState.NotConfigured ->
                     onComplete.accept(AWSCognitoAuthSignOutResult.CompleteSignOut)
                 // Continue sign out and clear auth or guest credentials
-                is AuthenticationState.SignedIn, is AuthenticationState.SignedOut ->
+                is AuthenticationState.SignedIn, is AuthenticationState.SignedOut -> {
+                    // Send SignOut event here instead of OnSubscribedCallback handler to ensure we do not fire
+                    // onComplete immediately, which would happen if calling signOut while signed out
+                    val event = AuthenticationEvent(
+                        AuthenticationEvent.EventType.SignOutRequested(
+                            SignOutData(
+                                options.isGlobalSignOut,
+                                (options as? AWSCognitoAuthSignOutOptions)?.browserPackage
+                            )
+                        )
+                    )
+                    authStateMachine.send(event)
                     _signOut(options, onComplete)
+                }
                 else -> onComplete.accept(
                     AWSCognitoAuthSignOutResult.FailedSignOut(AuthException.InvalidStateException())
                 )
@@ -1396,21 +1411,12 @@ internal class RealAWSCognitoAuthPlugin(
                             )
                         }
                         else -> {
-                            // no-op
+                            // No - op
                         }
                     }
                 }
             },
             {
-                val event = AuthenticationEvent(
-                    AuthenticationEvent.EventType.SignOutRequested(
-                        SignOutData(
-                            options.isGlobalSignOut,
-                            (options as? AWSCognitoAuthSignOutOptions)?.browserPackage
-                        )
-                    )
-                )
-                authStateMachine.send(event)
             }
         )
     }
