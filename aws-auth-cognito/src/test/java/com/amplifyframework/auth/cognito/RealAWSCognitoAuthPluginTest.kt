@@ -96,7 +96,6 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
-import org.json.JSONException
 import org.json.JSONObject
 import org.junit.Before
 import org.junit.Ignore
@@ -1543,6 +1542,10 @@ class RealAWSCognitoAuthPluginTest {
         configAuthJsonObject.put("Default", configAuthDefaultJsonObject)
         configJsonObject.put("Auth", configAuthJsonObject)
         val configuration = AuthConfiguration.fromJson(configJsonObject)
-        assertEquals(configuration.authFlowType, AuthFlowType.USER_PASSWORD_AUTH, "Auth flow types do not match expected")
+        assertEquals(
+            configuration.authFlowType,
+            AuthFlowType.USER_PASSWORD_AUTH,
+            "Auth flow types do not match expected"
+        )
     }
 }

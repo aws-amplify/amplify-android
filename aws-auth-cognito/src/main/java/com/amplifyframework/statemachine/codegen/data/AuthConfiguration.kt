@@ -16,7 +16,6 @@
 package com.amplifyframework.statemachine.codegen.data
 
 import com.amplifyframework.auth.cognito.options.AuthFlowType
-import org.json.JSONException
 import org.json.JSONObject
 
 /**
@@ -60,7 +59,7 @@ data class AuthConfiguration internal constructor(
             )
         }
         private fun getAutheticationFlowType(authType: String?): AuthFlowType {
-            return if(!authType.isNullOrEmpty() && AuthFlowType.values().any { it.name == authType })
+            return if (!authType.isNullOrEmpty() && AuthFlowType.values().any { it.name == authType })
                 AuthFlowType.valueOf(authType)
             else
                 AuthFlowType.USER_SRP_AUTH
