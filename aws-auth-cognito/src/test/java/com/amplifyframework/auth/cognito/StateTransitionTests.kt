@@ -34,6 +34,7 @@ import com.amplifyframework.statemachine.codegen.states.AuthorizationState
 import com.amplifyframework.statemachine.codegen.states.CredentialStoreState
 import com.amplifyframework.statemachine.codegen.states.CustomSignInState
 import com.amplifyframework.statemachine.codegen.states.DeleteUserState
+import com.amplifyframework.statemachine.codegen.states.DeviceSRPSignInState
 import com.amplifyframework.statemachine.codegen.states.FetchAuthSessionState
 import com.amplifyframework.statemachine.codegen.states.HostedUISignInState
 import com.amplifyframework.statemachine.codegen.states.RefreshSessionState
@@ -89,6 +90,7 @@ class StateTransitionTests : StateTransitionTestBase() {
                         CustomSignInState.Resolver(mockSignInCustomActions),
                         SignInChallengeState.Resolver(mockSignInChallengeActions),
                         HostedUISignInState.Resolver(mockHostedUIActions),
+                        DeviceSRPSignInState.Resolver(mockDeviceSRPSignInActions),
                         mockSignInActions
                     ),
                     SignOutState.Resolver(mockSignOutActions),
