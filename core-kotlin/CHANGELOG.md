@@ -1,3 +1,17 @@
+## [Release 0.21.3](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.21.3)
+
+### Bug Fixes
+- fix(data): disable failing test (#1922)
+
+[See all changes between 0.21.2 and 0.21.3](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.21.2...release-kotlin_v0.21.3)
+
+## [Release 0.21.2](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.21.2)
+
+### Bug Fixes
+- **datastore**: Fix for Flutter backtick (#1866)
+
+[See all changes between 0.21.1 and 0.21.2](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.21.1...release-kotlin_v0.21.2)
+
 ## [Release 0.21.1](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.21.1)
 
 ### Bug Fixes

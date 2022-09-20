@@ -108,15 +108,6 @@ public final class LastSyncMetadata implements Model {
         return this.id;
     }
 
-    /**
-     * Gets the Type of the Model.
-     * @return The Type of the model.
-     */
-    @NonNull
-    @Override
-    public Type getType() {
-        return Type.SYSTEM;
-    }
 
     /**
      * Gets the Id of the Model.
