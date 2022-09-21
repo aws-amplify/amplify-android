@@ -175,7 +175,6 @@ public final class AWSS3StorageDownloadAccessLevelTest {
      * @throws Exception if download is unsuccessful
      */
     @Test
-    @Ignore("fix in dev-preview")
     public void testDownloadAuthenticatedPrivateAccess() throws Exception {
         synchronousAuth.signIn(userOne.getUsername(), userOne.getPassword());
         downloadOptions = StorageDownloadFileOptions.builder()
