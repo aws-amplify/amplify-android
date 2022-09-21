@@ -31,6 +31,7 @@ object CredentialStoreUtil {
             "testuser",
             Date(0),
             SignInMethod.SRP,
+            DeviceMetadata.Empty,
             CognitoUserPoolTokens("idToken", "accessToken", "refreshToken", 1212),
         ),
         "identityId",
