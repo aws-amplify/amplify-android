@@ -38,6 +38,7 @@ import com.amplifyframework.statemachine.codegen.states.DeleteUserState
 import com.amplifyframework.statemachine.codegen.states.DeviceSRPSignInState
 import com.amplifyframework.statemachine.codegen.states.FetchAuthSessionState
 import com.amplifyframework.statemachine.codegen.states.HostedUISignInState
+import com.amplifyframework.statemachine.codegen.states.RefreshSessionState
 import com.amplifyframework.statemachine.codegen.states.SRPSignInState
 import com.amplifyframework.statemachine.codegen.states.SignInChallengeState
 import com.amplifyframework.statemachine.codegen.states.SignInState
@@ -65,6 +66,10 @@ internal class AuthStateMachine(
             ),
             AuthorizationState.Resolver(
                 FetchAuthSessionState.Resolver(FetchAuthSessionCognitoActions),
+                RefreshSessionState.Resolver(
+                    FetchAuthSessionState.Resolver(FetchAuthSessionCognitoActions),
+                    FetchAuthSessionCognitoActions
+                ),
                 DeleteUserState.Resolver(DeleteUserActions),
                 AuthorizationCognitoActions
             ),
@@ -91,6 +96,10 @@ internal class AuthStateMachine(
                 ).logging(),
                 AuthorizationState.Resolver(
                     FetchAuthSessionState.Resolver(FetchAuthSessionCognitoActions).logging(),
+                    RefreshSessionState.Resolver(
+                        FetchAuthSessionState.Resolver(FetchAuthSessionCognitoActions).logging(),
+                        FetchAuthSessionCognitoActions
+                    ).logging(),
                     DeleteUserState.Resolver(DeleteUserActions),
                     AuthorizationCognitoActions
                 ).logging(),
