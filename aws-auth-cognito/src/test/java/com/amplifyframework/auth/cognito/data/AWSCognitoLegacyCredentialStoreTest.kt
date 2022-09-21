@@ -173,7 +173,7 @@ class AWSCognitoLegacyCredentialStoreTest {
             SignedInData(
                 "userId",
                 "username",
-                Date(234234L),
+                Date(0),
                 SignInMethod.SRP,
                 CognitoUserPoolTokens("idToken", "accessToken", "refreshToken", 123123)
             ),

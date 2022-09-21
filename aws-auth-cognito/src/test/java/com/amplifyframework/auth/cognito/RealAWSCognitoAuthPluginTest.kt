@@ -115,9 +115,9 @@ class RealAWSCognitoAuthPluginTest {
 
     private val credentials = AmplifyCredential.UserPool(
         SignedInData(
-            "test-id",
+            "userId",
             "username",
-            Date(),
+            Date(0),
             SignInMethod.SRP,
             CognitoUserPoolTokens(dummyToken, dummyToken, dummyToken, 120L)
         )
