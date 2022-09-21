@@ -1,3 +1,25 @@
+## [Release 1.37.4](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.37.4)
+
+### Miscellaneous
+- Run more devices in farm
+- Update region
+- change device filters
+- Fixing test failure because of list ordering.
+- namespace test report for multiple devices
+- Update generate_df_testrun_report
+- lower polling on device farm
+- Adding retry ability to mutation processor
+- Checkstyle fixes
+- Publish Javadocs (Amplify version) (#1897)
+- Checkstyle fixes
+- @Ignore import got lost via merge
+- DS flacky test fix.
+- Unignore test since @poojamat merged timeout raise
+- Lint unused import
+- Update build.gradle (#1959)
+
+[See all changes between 1.37.3 and 1.37.4](https://github.com/aws-amplify/amplify-android/compare/release_v1.37.3...release_v1.37.4)
+
 ## [Release 1.37.3](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.37.3)
 
 ### Bug Fixes
