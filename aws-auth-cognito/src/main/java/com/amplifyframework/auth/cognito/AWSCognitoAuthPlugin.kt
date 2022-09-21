@@ -53,7 +53,6 @@ import com.amplifyframework.core.Action
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
-import com.amplifyframework.util.UserAgent
 import org.json.JSONException
 import org.json.JSONObject
 
@@ -85,7 +84,6 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
                 logger
             )
             val authStateMachine = AuthStateMachine(authEnvironment)
-            System.setProperty("aws.frameworkMetadata", UserAgent.string())
             val credentialStoreStateMachine = createCredentialStoreStateMachine(configuration, context)
             realPlugin = RealAWSCognitoAuthPlugin(
                 configuration,
