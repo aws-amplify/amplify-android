@@ -21,6 +21,7 @@ import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 import com.amplifyframework.statemachine.codegen.data.AuthCredentialStore
 import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
+import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.data.IdentityPoolConfiguration
 import com.amplifyframework.statemachine.codegen.data.SignInMethod
 import com.amplifyframework.statemachine.codegen.data.SignedInData
@@ -29,7 +30,6 @@ import java.util.Date
 import java.util.Locale
 import org.junit.Assert
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mock
@@ -45,7 +45,7 @@ class AWSCognitoLegacyCredentialStoreTest {
 
         private const val prefix = "CognitoIdentityProvider"
         private const val appClient = "appClientId"
-        private const val userId = "userId"
+        private const val userId = "username"
         private val userIdTokenKey = String.format(
             Locale.US,
             "%s.%s.%s",
@@ -114,14 +114,13 @@ class AWSCognitoLegacyCredentialStoreTest {
         `when`(
             mockFactory.create(
                 mockContext,
-                AWSCognitoLegacyCredentialStore.APP_LOCAL_CACHE,
+                AWSCognitoLegacyCredentialStore.APP_TOKENS_INFO_CACHE,
                 true,
             )
         ).thenReturn(mockKeyValue)
     }
 
     @Test
-    @Ignore("fix as per new store format")
     fun testRetrieveCredential() {
         setupUserPoolConfig()
         setupIdentityPoolConfig()
@@ -135,7 +134,7 @@ class AWSCognitoLegacyCredentialStoreTest {
 
     private fun setupKeyValueGetters() {
         // Tokens
-        `when`(mockKeyValue.get(userIdTokenKey)).thenReturn("userId")
+        `when`(mockKeyValue.get(userIdTokenKey)).thenReturn("username")
         `when`(mockKeyValue.get(cachedIdTokenKey)).thenReturn("idToken")
         `when`(mockKeyValue.get(cachedAccessTokenKey)).thenReturn("accessToken")
         `when`(mockKeyValue.get(cachedRefreshTokenKey)).thenReturn("refreshToken")
@@ -171,10 +170,11 @@ class AWSCognitoLegacyCredentialStoreTest {
     private fun getCredential(): AmplifyCredential {
         return AmplifyCredential.UserAndIdentityPool(
             SignedInData(
-                "userId",
+                "",
                 "username",
                 Date(0),
                 SignInMethod.SRP,
+                DeviceMetadata.Empty,
                 CognitoUserPoolTokens("idToken", "accessToken", "refreshToken", 123123)
             ),
             "identityPool",

@@ -23,7 +23,6 @@ import com.amplifyframework.auth.cognito.testutils.CredentialStoreUtil
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 import org.junit.Assert.assertTrue
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -45,7 +44,6 @@ class AWSCognitoLegacyCredentialStoreInstrumentationTest {
     }
 
     @Test
-    @Ignore("fix as per new store format")
     fun test_legacy_store_implementation_can_retrieve_credentials_stored_using_aws_sdk() {
         val creds = store.retrieveCredential()
         assertTrue(creds == credential)

@@ -27,8 +27,8 @@ import java.util.Date
 object CredentialStoreUtil {
     private val credential = AmplifyCredential.UserAndIdentityPool(
         SignedInData(
-            "userId",
-            "username",
+            "",
+            "testuser",
             Date(0),
             SignInMethod.SRP,
             CognitoUserPoolTokens("idToken", "accessToken", "refreshToken", 1212),

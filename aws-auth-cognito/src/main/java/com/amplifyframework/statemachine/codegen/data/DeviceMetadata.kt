@@ -12,15 +12,18 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
+
 package com.amplifyframework.statemachine.codegen.data
 
-data class DeviceMetaData(
-    val idToken: String,
-    val refreshToken: String,
-    val accessToken: String,
-    val deviceKey: String,
-    val deviceGroupKey: String,
-    val userId: String,
-    val username: String,
-    val expiresIn: Int
-)
+import kotlinx.serialization.Serializable
+
+@Serializable
+sealed class DeviceMetadata {
+    data class Metadata(
+        val deviceKey: String?,
+        val deviceGroupKey: String?,
+        val deviceSecret: String? = null
+    ) : DeviceMetadata()
+
+    object Empty : DeviceMetadata()
+}
