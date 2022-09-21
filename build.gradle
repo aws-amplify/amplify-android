@@ -107,7 +107,7 @@ ext {
 
             cognitoidentity: "aws.sdk.kotlin:cognitoidentity:$awsKotlinSdkVersion",
             cognitoidentityprovider: "aws.sdk.kotlin:cognitoidentityprovider:$awsKotlinSdkVersion",
-            credentials: "aws.smithy.kotlin:aws-credentials:0.10.2",
+            credentials: "aws.smithy.kotlin:aws-credentials:0.12.5",
             ktor: "aws.smithy.kotlin:http-client-engine-ktor:0.7.7",
             location: "aws.sdk.kotlin:location:$awsKotlinSdkVersion",
             s3: "aws.sdk.kotlin:s3:$awsKotlinSdkVersion",
