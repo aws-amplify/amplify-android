@@ -21,6 +21,9 @@ import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 import com.amplifyframework.statemachine.codegen.data.AuthCredentialStore
 import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
+import com.amplifyframework.statemachine.codegen.data.SignInMethod
+import com.amplifyframework.statemachine.codegen.data.SignedInData
+import java.util.Date
 import java.util.Locale
 
 class AWSCognitoLegacyCredentialStore(
@@ -68,12 +71,19 @@ class AWSCognitoLegacyCredentialStore(
         val cognitoUserPoolTokens = retrieveCognitoUserPoolTokens()
         val awsCredentials = retrieveAWSCredentials()
         val identityId = retrieveIdentityId()
+
         return when {
             awsCredentials != null && identityId != null -> when (cognitoUserPoolTokens) {
                 null -> AmplifyCredential.IdentityPool(identityId, awsCredentials)
-                else -> AmplifyCredential.UserAndIdentityPool(cognitoUserPoolTokens, identityId, awsCredentials)
+                else -> {
+                    val signedInData = SignedInData("", "", Date(), SignInMethod.SRP, cognitoUserPoolTokens)
+                    AmplifyCredential.UserAndIdentityPool(signedInData, identityId, awsCredentials)
+                }
             }
-            cognitoUserPoolTokens != null -> AmplifyCredential.UserPool(cognitoUserPoolTokens)
+            cognitoUserPoolTokens != null -> {
+                val signedInData = SignedInData("", "", Date(), SignInMethod.SRP, cognitoUserPoolTokens)
+                AmplifyCredential.UserPool(signedInData)
+            }
             else -> AmplifyCredential.Empty
         }
     }
