@@ -114,7 +114,13 @@ class RealAWSCognitoAuthPluginTest {
     }
 
     private val credentials = AmplifyCredential.UserPool(
-        CognitoUserPoolTokens(dummyToken, dummyToken, dummyToken, 120L)
+        SignedInData(
+            "userId",
+            "username",
+            Date(0),
+            SignInMethod.SRP,
+            CognitoUserPoolTokens(dummyToken, dummyToken, dummyToken, 120L)
+        )
     )
 
     private val mockCognitoIPClient = mockk<CognitoIdentityProviderClient>()
@@ -223,11 +229,7 @@ class RealAWSCognitoAuthPluginTest {
         // GIVEN
         val onSuccess = mockk<Consumer<AuthSignInResult>>()
         val onError = mockk<Consumer<AuthException>>(relaxed = true)
-        val expectedAuthError = AuthException(
-            "There is already a user in signedIn state. " +
-                "SignOut the user first before calling signIn",
-            AuthException.InvalidStateException.TODO_RECOVERY_SUGGESTION
-        )
+        val expectedAuthError = AuthException.SignedInException()
         currentState = AuthenticationState.SignedIn(
             SignedInData(
                 "userId",
@@ -1165,7 +1167,13 @@ class RealAWSCognitoAuthPluginTest {
         val listenLatch = CountDownLatch(1)
 
         val invalidCredentials = AmplifyCredential.UserPool(
-            CognitoUserPoolTokens(null, null, null, 120L)
+            SignedInData(
+                "userId",
+                "username",
+                Date(),
+                SignInMethod.SRP,
+                CognitoUserPoolTokens(null, null, null, 120L)
+            )
         )
 
         val currentAuthState = mockk<AuthState> {
@@ -1305,7 +1313,13 @@ class RealAWSCognitoAuthPluginTest {
         val listenLatch = CountDownLatch(1)
 
         val invalidCredentials = AmplifyCredential.UserPool(
-            CognitoUserPoolTokens(null, null, null, 120L)
+            SignedInData(
+                "userId",
+                "username",
+                Date(),
+                SignInMethod.SRP,
+                CognitoUserPoolTokens(null, null, null, 120L)
+            )
         )
 
         val currentAuthState = mockk<AuthState> {

@@ -48,10 +48,10 @@ object SessionHelper {
     }
 
     /**
-     * Returns if the access and id tokens have not expired.
-     * @return boolean to indicate if the access and id tokens have not expired.
+     * Returns true if the access and id tokens have not expired.
+     * @return boolean to indicate if the access and id tokens are expired.
      */
-    fun isValid(userPoolTokens: CognitoUserPoolTokens): Boolean {
+    fun isValidTokens(userPoolTokens: CognitoUserPoolTokens): Boolean {
         val currentTimeStamp = Instant.now()
         return when {
             userPoolTokens.idToken == null -> false
@@ -62,10 +62,12 @@ object SessionHelper {
         }
     }
 
+    /**
+     * Returns true if the AWS credentials have not expired.
+     * @return boolean to indicate if the AWS credentials are expired.
+     */
     fun isValidSession(awsCredentials: AWSCredentials): Boolean {
-        return true
-        // TODO: verify session expiry
-//        val currentTimeStamp = Instant.now()
-//        return currentTimeStamp < awsCredentials.expiration?.let { Instant.ofEpochSecond(it) }
+        val currentTimeStamp = Instant.now()
+        return currentTimeStamp < awsCredentials.expiration?.let { Instant.ofEpochSecond(it) }
     }
 }
