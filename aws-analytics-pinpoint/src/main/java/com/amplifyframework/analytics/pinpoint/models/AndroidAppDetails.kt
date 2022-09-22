@@ -25,7 +25,7 @@ internal class AndroidAppDetails {
     val appTitle: String
     val packageName: String
     val versionCode: String
-    val versionName: String
+    val versionName: String?
 
     constructor(
         appId: String,
