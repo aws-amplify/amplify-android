@@ -207,7 +207,7 @@ internal class EventRecorder(
                 stopTimestamp = pinpointEvent.pinpointSession.sessionEnd?.let {
                     pinpointEvent.pinpointSession.sessionStart.millisToIsoDate()
                 }
-                duration = pinpointEvent.pinpointSession.sessionDuration?.toInt()
+                pinpointEvent.pinpointSession.sessionDuration?.toInt()?.let { duration = it }
             }
             val event = Event {
                 appPackageName = pinpointEvent.androidAppDetails.packageName
@@ -236,8 +236,8 @@ internal class EventRecorder(
             platformVersion = endpointProfile.demographic.platformVersion
         }
         val endpointLocation = EndpointLocation {
-            latitude = endpointProfile.location.latitude
-            longitude = endpointProfile.location.longitude
+            endpointProfile.location.latitude?.let { latitude = it }
+            endpointProfile.location.longitude?.let { longitude = it }
             postalCode = endpointProfile.location.postalCode
             city = endpointProfile.location.city
             region = endpointProfile.location.region

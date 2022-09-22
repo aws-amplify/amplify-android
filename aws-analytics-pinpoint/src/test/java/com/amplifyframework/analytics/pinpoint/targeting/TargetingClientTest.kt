@@ -29,6 +29,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -55,6 +56,7 @@ class TargetingClientTest {
     }
 
     @Test
+    @Ignore("fix in PR: #1958")
     fun testUpdateEndpointProfile() = runTest {
         setup()
         val prefs = constructSharedPreferences()

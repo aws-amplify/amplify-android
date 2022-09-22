@@ -28,12 +28,6 @@ data class UserPoolConfiguration internal constructor(val builder: Builder) {
     val appClient: String? = builder.appClientId
     val appClientSecret: String? = builder.appClientSecret
 
-    /**
-     * Amazon Cognito user pool: cognito-idp.<region>.amazonaws.com/<YOUR_USER_POOL_ID>,
-     * for example, cognito-idp.us-east-1.amazonaws.com/us-east-1_123456789.
-     */
-    val identityProviderName = "cognito-idp.$region.amazonaws.com/$poolId"
-
     companion object {
         private const val DEFAULT_REGION = "us-east-1"
 
