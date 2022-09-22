@@ -20,6 +20,7 @@ import com.amazonaws.internal.keyvaluestore.AWSKeyValueStore
 import com.amplifyframework.statemachine.codegen.data.AWSCredentials
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
+import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.data.SignInMethod
 import com.amplifyframework.statemachine.codegen.data.SignedInData
 import java.util.Date
@@ -31,7 +32,7 @@ object CredentialStoreUtil {
             "testuser",
             Date(0),
             SignInMethod.SRP,
-            DeviceMetadata.Empty,
+            DeviceMetadata.Metadata("someDeviceKey", "someDeviceGroupKey", "someSecret"),
             CognitoUserPoolTokens("idToken", "accessToken", "refreshToken", 1212),
         ),
         "identityId",
@@ -42,13 +43,19 @@ object CredentialStoreUtil {
         return credential
     }
 
-    fun setupLegacyStore(context: Context, appClientId: String, identityPoolId: String) {
+    fun setupLegacyStore(context: Context, appClientId: String, userPoolId: String, identityPoolId: String) {
         AWSKeyValueStore(context, "CognitoIdentityProviderCache", true).apply {
             put("CognitoIdentityProvider.$appClientId.testuser.idToken", "idToken")
             put("CognitoIdentityProvider.$appClientId.testuser.accessToken", "accessToken")
             put("CognitoIdentityProvider.$appClientId.testuser.refreshToken", "refreshToken")
             put("CognitoIdentityProvider.$appClientId.testuser.tokenExpiration", "1212")
             put("CognitoIdentityProvider.$appClientId.LastAuthUser", "testuser")
+        }
+
+        AWSKeyValueStore(context, "CognitoIdentityProviderDeviceCache.$userPoolId.testuser", true).apply {
+            put("DeviceKey", "someDeviceKey")
+            put("DeviceGroupKey", "someDeviceGroupKey")
+            put("DeviceSecret", "someSecret")
         }
 
         AWSKeyValueStore(context, "com.amazonaws.android.auth", true).apply {

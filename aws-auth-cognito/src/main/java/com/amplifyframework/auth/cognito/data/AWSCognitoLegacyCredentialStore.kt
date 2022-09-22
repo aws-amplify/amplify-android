@@ -101,6 +101,8 @@ class AWSCognitoLegacyCredentialStore(
 
     private fun deleteCognitoUserPoolTokens() {
         val keys = getTokenKeys()
+        val username = keys[APP_LAST_AUTH_USER]?.let { tokensKeyValue.get(it) }
+        deleteDeviceMetadata(username)
 
         keys[APP_LAST_AUTH_USER]?.let { tokensKeyValue.remove(it) }
         keys[TOKEN_TYPE_ID]?.let { tokensKeyValue.remove(it) }
@@ -119,6 +121,14 @@ class AWSCognitoLegacyCredentialStore(
             remove(namespace(SK_KEY))
             remove(namespace(ST_KEY))
             remove(namespace(EXP_KEY))
+        }
+    }
+
+    private fun deleteDeviceMetadata(username: String?) {
+        deviceKeyValue.apply {
+            remove(DEVICE_KEY)
+            remove(DEVICE_GROUP_KEY)
+            remove(DEVICE_SECRET_KEY)
         }
     }
 
@@ -150,6 +160,7 @@ class AWSCognitoLegacyCredentialStore(
     private fun retrieveDeviceMetadata(username: String?): DeviceMetadata {
         val deviceDetailsCacheKey = String.format(userDeviceDetailsCacheKey, username)
         deviceKeyValue = keyValueRepoFactory.create(context, deviceDetailsCacheKey)
+
         val deviceKey = deviceKeyValue.get(DEVICE_KEY)
         val deviceGroupKey = deviceKeyValue.get(DEVICE_GROUP_KEY)
         val deviceSecretKey = deviceKeyValue.get(DEVICE_SECRET_KEY)

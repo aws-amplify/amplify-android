@@ -23,12 +23,13 @@ import com.amplifyframework.auth.cognito.data.AWSCognitoLegacyCredentialStore.Co
 
 class KeyValueRepositoryFactory {
     fun create(context: Context, keyValueRepoID: String, persistenceEnabled: Boolean = true): KeyValueRepository {
-        return when (keyValueRepoID) {
-            awsKeyValueStoreIdentifier -> when {
+        return when {
+            keyValueRepoID == awsKeyValueStoreIdentifier -> when {
                 persistenceEnabled -> EncryptedKeyValueRepository(context, keyValueRepoID)
                 else -> InMemoryKeyValueRepository()
             }
-            AWS_KEY_VALUE_STORE_NAMESPACE_IDENTIFIER, APP_TOKENS_INFO_CACHE, APP_DEVICE_INFO_CACHE ->
+            keyValueRepoID == AWS_KEY_VALUE_STORE_NAMESPACE_IDENTIFIER ||
+                keyValueRepoID == APP_TOKENS_INFO_CACHE || keyValueRepoID.startsWith(APP_DEVICE_INFO_CACHE) ->
                 LegacyKeyValueRepository(context, keyValueRepoID)
             else -> InMemoryKeyValueRepository()
         }
