@@ -229,11 +229,7 @@ class RealAWSCognitoAuthPluginTest {
         // GIVEN
         val onSuccess = mockk<Consumer<AuthSignInResult>>()
         val onError = mockk<Consumer<AuthException>>(relaxed = true)
-        val expectedAuthError = AuthException(
-            "There is already a user in signedIn state. " +
-                "SignOut the user first before calling signIn",
-            AuthException.InvalidStateException.TODO_RECOVERY_SUGGESTION
-        )
+        val expectedAuthError = AuthException.SignedInException()
         currentState = AuthenticationState.SignedIn(
             SignedInData(
                 "userId",
