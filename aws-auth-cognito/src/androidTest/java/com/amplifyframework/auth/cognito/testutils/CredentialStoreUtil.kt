@@ -20,10 +20,19 @@ import com.amazonaws.internal.keyvaluestore.AWSKeyValueStore
 import com.amplifyframework.statemachine.codegen.data.AWSCredentials
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
+import com.amplifyframework.statemachine.codegen.data.SignInMethod
+import com.amplifyframework.statemachine.codegen.data.SignedInData
+import java.util.Date
 
 object CredentialStoreUtil {
     private val credential = AmplifyCredential.UserAndIdentityPool(
-        CognitoUserPoolTokens("idToken", "accessToken", "refreshToken", 1212),
+        SignedInData(
+            "userId",
+            "username",
+            Date(0),
+            SignInMethod.SRP,
+            CognitoUserPoolTokens("idToken", "accessToken", "refreshToken", 1212),
+        ),
         "identityId",
         AWSCredentials("accessKeyId", "secretAccessKey", "sessionToken", 1212)
     )
