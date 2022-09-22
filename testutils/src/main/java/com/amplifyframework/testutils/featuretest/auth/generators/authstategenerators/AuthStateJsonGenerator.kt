@@ -32,29 +32,24 @@ import java.util.Date
  *
  */
 object AuthStateJsonGenerator : SerializableProvider {
+    private val signedInData = SignedInData(
+        userId = "userId",
+        username = "username",
+        signedInDate = Date.from(Instant.ofEpochSecond(324234123)),
+        signInMethod = SignInMethod.SRP,
+        cognitoUserPoolTokens = CognitoUserPoolTokens(
+            idToken = "someToken",
+            accessToken = "someAccessToken",
+            refreshToken = "someRefreshToken",
+            expiration = 300
+        )
+    )
+
     private val signedInState = AuthState.Configured(
-        AuthenticationState.SignedIn(
-            SignedInData(
-                userId = "userId",
-                username = "username",
-                signedInDate = Date.from(Instant.ofEpochSecond(324234123)),
-                signInMethod = SignInMethod.SRP,
-                cognitoUserPoolTokens = CognitoUserPoolTokens(
-                    idToken = "someToken",
-                    accessToken = "someAccessToken",
-                    refreshToken = "someRefreshToken",
-                    expiration = 300
-                )
-            )
-        ),
+        AuthenticationState.SignedIn(signedInData),
         AuthorizationState.SessionEstablished(
             AmplifyCredential.UserAndIdentityPool(
-                CognitoUserPoolTokens(
-                    idToken = "someToken",
-                    accessToken = "someAccessToken",
-                    refreshToken = "someRefreshToken",
-                    expiration = 300
-                ),
+                signedInData,
                 identityId = "someIdentityId",
                 AWSCredentials(
                     accessKeyId = "someAccessKey",

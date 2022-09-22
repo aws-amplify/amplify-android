@@ -114,7 +114,13 @@ class RealAWSCognitoAuthPluginTest {
     }
 
     private val credentials = AmplifyCredential.UserPool(
-        CognitoUserPoolTokens(dummyToken, dummyToken, dummyToken, 120L)
+        SignedInData(
+            "userId",
+            "username",
+            Date(0),
+            SignInMethod.SRP,
+            CognitoUserPoolTokens(dummyToken, dummyToken, dummyToken, 120L)
+        )
     )
 
     private val mockCognitoIPClient = mockk<CognitoIdentityProviderClient>()
@@ -1161,7 +1167,13 @@ class RealAWSCognitoAuthPluginTest {
         val listenLatch = CountDownLatch(1)
 
         val invalidCredentials = AmplifyCredential.UserPool(
-            CognitoUserPoolTokens(null, null, null, 120L)
+            SignedInData(
+                "userId",
+                "username",
+                Date(),
+                SignInMethod.SRP,
+                CognitoUserPoolTokens(null, null, null, 120L)
+            )
         )
 
         val currentAuthState = mockk<AuthState> {
@@ -1301,7 +1313,13 @@ class RealAWSCognitoAuthPluginTest {
         val listenLatch = CountDownLatch(1)
 
         val invalidCredentials = AmplifyCredential.UserPool(
-            CognitoUserPoolTokens(null, null, null, 120L)
+            SignedInData(
+                "userId",
+                "username",
+                Date(),
+                SignInMethod.SRP,
+                CognitoUserPoolTokens(null, null, null, 120L)
+            )
         )
 
         val currentAuthState = mockk<AuthState> {
