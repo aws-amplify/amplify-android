@@ -113,14 +113,14 @@ import com.amplifyframework.statemachine.codegen.states.SRPSignInState
 import com.amplifyframework.statemachine.codegen.states.SignInChallengeState
 import com.amplifyframework.statemachine.codegen.states.SignInState
 import com.amplifyframework.statemachine.codegen.states.SignOutState
-import java.util.concurrent.atomic.AtomicReference
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
-import kotlin.coroutines.suspendCoroutine
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
+import java.util.concurrent.atomic.AtomicReference
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
 
 internal class RealAWSCognitoAuthPlugin(
     private val configuration: AuthConfiguration,
@@ -399,7 +399,7 @@ internal class RealAWSCognitoAuthPlugin(
                     onError.accept(
                         AuthException(
                             "There is already a user in signedIn state. " +
-                                "SignOut the user first before calling signIn",
+                                    "SignOut the user first before calling signIn",
                             AuthException.InvalidStateException.TODO_RECOVERY_SUGGESTION
                         )
                     )
@@ -439,7 +439,7 @@ internal class RealAWSCognitoAuthPlugin(
                         }
                     }
                     authNState is AuthenticationState.SignedIn
-                        && authZState is AuthorizationState.SessionEstablished -> {
+                            && authZState is AuthorizationState.SessionEstablished -> {
                         token?.let(authStateMachine::cancel)
                         val authSignInResult = AuthSignInResult(
                             true,
@@ -461,8 +461,11 @@ internal class RealAWSCognitoAuthPlugin(
                     AuthFlowType.USER_SRP_AUTH -> {
                         SignInData.SRPSignInData(username, password, signInOptions.metadata)
                     }
-                    AuthFlowType.CUSTOM_AUTH -> {
+                    AuthFlowType.CUSTOM_AUTH, AuthFlowType.CUSTOM_AUTH_WITHOUT_SRP -> {
                         SignInData.CustomAuthSignInData(username, password, signInOptions.metadata)
+                    }
+                    AuthFlowType.CUSTOM_AUTH_WITH_SRP -> {
+                        TODO()
                     }
                     AuthFlowType.USER_PASSWORD_AUTH -> {
                         TODO()
@@ -660,7 +663,7 @@ internal class RealAWSCognitoAuthPlugin(
                         }
                     }
                     authNState is AuthenticationState.SignedIn
-                        && authZState is AuthorizationState.SessionEstablished -> {
+                            && authZState is AuthorizationState.SessionEstablished -> {
                         token?.let(authStateMachine::cancel)
                         val authSignInResult =
                             AuthSignInResult(
@@ -1562,14 +1565,14 @@ internal class RealAWSCognitoAuthPlugin(
                                 )
                             }
                             authNState is AuthenticationState.SignedOut &&
-                                authZState is AuthorizationState.Configured
-                                && lastPublishedHubEventName.get() != AuthChannelEventName.SIGNED_OUT -> {
+                                    authZState is AuthorizationState.Configured
+                                    && lastPublishedHubEventName.get() != AuthChannelEventName.SIGNED_OUT -> {
                                 lastPublishedHubEventName.set(AuthChannelEventName.SIGNED_OUT)
                                 Amplify.Hub.publish(HubChannel.AUTH, HubEvent.create(AuthChannelEventName.SIGNED_OUT))
                             }
                             authNState is AuthenticationState.SignedIn &&
-                                authZState is AuthorizationState.SessionEstablished
-                                && lastPublishedHubEventName.get() != AuthChannelEventName.SIGNED_IN -> {
+                                    authZState is AuthorizationState.SessionEstablished
+                                    && lastPublishedHubEventName.get() != AuthChannelEventName.SIGNED_IN -> {
                                 lastPublishedHubEventName.set(AuthChannelEventName.SIGNED_IN)
                                 Amplify.Hub.publish(HubChannel.AUTH, HubEvent.create(AuthChannelEventName.SIGNED_IN))
                             }

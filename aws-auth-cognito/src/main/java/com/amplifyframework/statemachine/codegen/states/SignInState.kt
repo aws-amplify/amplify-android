@@ -109,6 +109,10 @@ sealed class SignInState : State {
                         SigningInWithHostedUI(HostedUISignInState.NotStarted()),
                         listOf(signInActions.startHostedUIAuthAction(signInEvent))
                     )
+                    is SignInEvent.EventType.InitiateCustomSignInWithSRP -> StateResolution(
+                        SigningInWithSRPCustom()
+                    //TODO: Update the action when this is called
+                    )
                     else -> defaultResolution
                 }
                 is SigningInWithSRP, is SigningInWithCustom -> when (signInEvent) {

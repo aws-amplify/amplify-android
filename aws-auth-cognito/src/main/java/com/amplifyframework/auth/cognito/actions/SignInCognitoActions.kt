@@ -49,7 +49,7 @@ object SignInCognitoActions : SignInActions {
         Action<AuthEnvironment>("StartCustomAuth") { id, dispatcher ->
             logger?.verbose("$id Starting execution")
             val evt = CustomSignInEvent(
-                CustomSignInEvent.EventType.InitiateCustomSignIn(event.username, event.password)
+                CustomSignInEvent.EventType.InitiateCustomSignIn(event.username)
             )
             logger?.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
