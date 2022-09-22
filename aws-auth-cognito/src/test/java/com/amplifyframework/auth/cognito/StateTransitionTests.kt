@@ -17,7 +17,6 @@ package com.amplifyframework.auth.cognito
 
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.StateChangeListenerToken
-import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
 import com.amplifyframework.statemachine.codegen.data.SignInData
 import com.amplifyframework.statemachine.codegen.data.SignOutData
 import com.amplifyframework.statemachine.codegen.data.SignedOutData
@@ -26,7 +25,6 @@ import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
 import com.amplifyframework.statemachine.codegen.events.CredentialStoreEvent
 import com.amplifyframework.statemachine.codegen.events.DeleteUserEvent
-import com.amplifyframework.statemachine.codegen.events.FetchAuthSessionEvent
 import com.amplifyframework.statemachine.codegen.events.SignInChallengeEvent
 import com.amplifyframework.statemachine.codegen.events.SignInEvent
 import com.amplifyframework.statemachine.codegen.events.SignOutEvent
@@ -39,6 +37,7 @@ import com.amplifyframework.statemachine.codegen.states.DeleteUserState
 import com.amplifyframework.statemachine.codegen.states.DeviceSRPSignInState
 import com.amplifyframework.statemachine.codegen.states.FetchAuthSessionState
 import com.amplifyframework.statemachine.codegen.states.HostedUISignInState
+import com.amplifyframework.statemachine.codegen.states.RefreshSessionState
 import com.amplifyframework.statemachine.codegen.states.SRPSignInState
 import com.amplifyframework.statemachine.codegen.states.SignInChallengeState
 import com.amplifyframework.statemachine.codegen.states.SignInState
@@ -53,7 +52,6 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito
@@ -99,7 +97,9 @@ class StateTransitionTests : StateTransitionTestBase() {
                     mockAuthenticationActions
                 ),
                 AuthorizationState.Resolver(
-                    FetchAuthSessionState.Resolver(
+                    FetchAuthSessionState.Resolver(mockFetchAuthSessionActions),
+                    RefreshSessionState.Resolver(
+                        FetchAuthSessionState.Resolver(mockFetchAuthSessionActions),
                         mockFetchAuthSessionActions
                     ),
                     DeleteUserState.Resolver(mockDeleteUserActions),
@@ -125,7 +125,7 @@ class StateTransitionTests : StateTransitionTestBase() {
                     )
                     is AuthState.Configured -> {
                         val authZState = authState.authZState
-                        if (authZState is AuthorizationState.WaitingToStore) {
+                        if (authZState is AuthorizationState.StoringCredentials) {
                             storeStateMachine.send(
                                 CredentialStoreEvent(
                                     CredentialStoreEvent.EventType.StoreCredentials(authZState.amplifyCredential)
@@ -174,6 +174,17 @@ class StateTransitionTests : StateTransitionTestBase() {
                         AuthEvent(
                             AuthEvent.EventType.ConfiguredAuthentication(configuration, credentials)
                         )
+                    )
+                }
+            )
+
+        Mockito.`when`(
+            mockAuthActions.initializeAuthorizationConfigurationAction(MockitoHelper.anyObject())
+        )
+            .thenReturn(
+                Action { dispatcher, _ ->
+                    dispatcher.send(
+                        AuthorizationEvent(AuthorizationEvent.EventType.CachedCredentialsAvailable(credentials))
                     )
                 }
             )
@@ -254,7 +265,10 @@ class StateTransitionTests : StateTransitionTestBase() {
         var token: StateChangeListenerToken? = null
         token = stateMachine.listen(
             {
-                if (it is AuthState.Configured && it.authNState is AuthenticationState.SignedOut) {
+                if (it is AuthState.Configured &&
+                    it.authNState is AuthenticationState.SignedOut &&
+                    it.authZState is AuthorizationState.Configured
+                ) {
                     token?.let(stateMachine::cancel)
                     listenLatch.countDown()
                 }
@@ -280,7 +294,10 @@ class StateTransitionTests : StateTransitionTestBase() {
         var token: StateChangeListenerToken? = null
         token = stateMachine.listen(
             {
-                if (it is AuthState.Configured && it.authNState is AuthenticationState.SignedIn) {
+                if (it is AuthState.Configured &&
+                    it.authNState is AuthenticationState.SignedIn &&
+                    it.authZState is AuthorizationState.SessionEstablished
+                ) {
                     token?.let(stateMachine::cancel)
                     listenLatch.countDown()
                 }
@@ -379,11 +396,6 @@ class StateTransitionTests : StateTransitionTestBase() {
                 }
             )
 
-        Mockito.`when`(signedInData.cognitoUserPoolTokens)
-            .thenReturn(
-                CognitoUserPoolTokens("", "", "", 0)
-            )
-
         val testLatch = CountDownLatch(1)
         val configureLatch = CountDownLatch(1)
         val subscribeLatch = CountDownLatch(1)
@@ -407,7 +419,8 @@ class StateTransitionTests : StateTransitionTestBase() {
                     )
                 }
 
-                val challengeState = it.authNState?.signInState?.challengeState.takeIf { signInChallengeState ->
+                val signInState = (it.authNState as? AuthenticationState.SigningIn)?.signInState
+                val challengeState = signInState?.challengeState.takeIf { signInChallengeState ->
                     signInChallengeState is SignInChallengeState.WaitingForAnswer
                 }
                 challengeState?.apply {
@@ -464,8 +477,9 @@ class StateTransitionTests : StateTransitionTestBase() {
                     )
                 }
 
-                val authNState =
-                    it.authNState.takeIf { itN -> itN is AuthenticationState.SignedOut }
+                val authNState = it.authNState.takeIf { itN ->
+                    itN is AuthenticationState.SignedOut && it.authZState is AuthorizationState.Configured
+                }
                 authNState?.apply {
                     token?.let(stateMachine::cancel)
                     testLatch.countDown()
@@ -508,8 +522,9 @@ class StateTransitionTests : StateTransitionTestBase() {
                     )
                 }
 
-                val authNState =
-                    it.authNState.takeIf { itN -> itN is AuthenticationState.SignedOut }
+                val authNState = it.authNState.takeIf { itN ->
+                    itN is AuthenticationState.SignedOut && it.authZState is AuthorizationState.Configured
+                }
                 authNState?.apply {
                     token?.let(stateMachine::cancel)
                     testLatch.countDown()
@@ -551,8 +566,9 @@ class StateTransitionTests : StateTransitionTestBase() {
                     )
                 }
 
-                val authNState =
-                    it.authNState.takeIf { itN -> itN is AuthenticationState.SignedOut }
+                val authNState = it.authNState.takeIf { itN ->
+                    itN is AuthenticationState.SignedOut && it.authZState is AuthorizationState.Configured
+                }
                 authNState?.apply {
                     token?.let(stateMachine::cancel)
                     testLatch.countDown()
@@ -574,15 +590,6 @@ class StateTransitionTests : StateTransitionTestBase() {
     }
 
     @Test
-    fun testSignUp() {
-    }
-
-    @Test
-    fun testConfirmSignUp() {
-    }
-
-    @Test
-    @Ignore("Todo")
     fun testFetchAuthSessionSignedIn() {
         setupConfigureSignedIn()
         val configureLatch = CountDownLatch(1)
@@ -592,19 +599,18 @@ class StateTransitionTests : StateTransitionTestBase() {
         var token: StateChangeListenerToken? = null
         token = stateMachine.listen(
             { it ->
-                val authState =
-                    it.takeIf {
-                        it is AuthState.Configured && it.authNState is AuthenticationState.SignedIn &&
-                            it.authZState is AuthorizationState.Configured
-                    }
+                val authState = it.takeIf {
+                    it is AuthState.Configured && it.authNState is AuthenticationState.SignedIn
+                }
                 authState?.run {
                     configureLatch.countDown()
                     stateMachine.send(AuthorizationEvent(AuthorizationEvent.EventType.FetchAuthSession))
                 }
 
-                val authZState =
-                    it.authZState.takeIf { itZ -> itZ is AuthorizationState.SessionEstablished }
-                authZState?.run {
+                val authNState = it.authNState.takeIf { itN ->
+                    itN is AuthenticationState.SignedIn && it.authZState is AuthorizationState.SessionEstablished
+                }
+                authNState?.run {
                     token?.let(stateMachine::cancel)
                     testLatch.countDown()
                 }
@@ -624,23 +630,9 @@ class StateTransitionTests : StateTransitionTestBase() {
         assertTrue { testLatch.await(5, TimeUnit.SECONDS) }
     }
 
-    private fun setupAuthZNoTokens() {
-        Mockito.`when`(
-            mockAuthorizationActions.initializeFetchAuthSession(MockitoHelper.anyObject())
-        )
-            .thenReturn(
-                Action { dispatcher, _ ->
-                    dispatcher.send(
-                        FetchAuthSessionEvent(FetchAuthSessionEvent.EventType.FetchIdentity(credentials))
-                    )
-                }
-            )
-    }
-
     @Test
     fun testFetchAuthSessionSignedOut() {
         setupConfigureSignedOut()
-        setupAuthZNoTokens()
         val configureLatch = CountDownLatch(1)
         val testLatch = CountDownLatch(1)
         val subscribeLatch = CountDownLatch(1)
@@ -648,25 +640,18 @@ class StateTransitionTests : StateTransitionTestBase() {
         var token: StateChangeListenerToken? = null
         token = stateMachine.listen(
             { it ->
-                val authState =
-                    it.takeIf {
-                        it is AuthState.Configured && it.authNState is AuthenticationState.SignedOut &&
-                            it.authZState is AuthorizationState.Configured
-                    }
+                val authState = it.takeIf {
+                    it is AuthState.Configured && it.authNState is AuthenticationState.SignedOut
+                }
                 authState?.run {
                     configureLatch.countDown()
-                    stateMachine.send(AuthorizationEvent(AuthorizationEvent.EventType.FetchAuthSession))
+                    stateMachine.send(AuthorizationEvent(AuthorizationEvent.EventType.FetchUnAuthSession))
                 }
 
-//                val authZFetchTokensState =
-//                    it.authZState.takeIf { itZ -> itZ is AuthorizationState.FetchingAuthSession }
-//                assertFalse(
-//                    authZFetchTokensState?.fetchAuthSessionState is FetchAuthSessionState.FetchingUserPoolTokens
-//                )
-
-                val authZState =
-                    it.authZState.takeIf { itZ -> itZ is AuthorizationState.SessionEstablished }
-                authZState?.run {
+                val authNState = it.authNState.takeIf { itN ->
+                    itN is AuthenticationState.SignedOut && it.authZState is AuthorizationState.SessionEstablished
+                }
+                authNState?.run {
                     token?.let(stateMachine::cancel)
                     testLatch.countDown()
                 }
@@ -687,7 +672,6 @@ class StateTransitionTests : StateTransitionTestBase() {
     }
 
     @Test
-    @Ignore("Todo")
     fun testRefreshUserPoolTokens() {
         setupConfigureSignedIn()
         val configureLatch = CountDownLatch(1)
@@ -696,18 +680,28 @@ class StateTransitionTests : StateTransitionTestBase() {
         var token: StateChangeListenerToken? = null
         token = stateMachine.listen(
             { it ->
-                val authState =
-                    it.takeIf { it is AuthState.Configured && it.authNState is AuthenticationState.SignedIn }
+                val authState = it.takeIf {
+                    it is AuthState.Configured && it.authNState is AuthenticationState.SignedIn
+                }
                 authState?.run {
                     configureLatch.countDown()
-                    stateMachine.send(AuthorizationEvent(AuthorizationEvent.EventType.FetchAuthSession))
-                }
-
-                val authZState =
-                    it.authZState.takeIf { itZ -> itZ is AuthorizationState.SessionEstablished }
-                authZState?.run {
                     token?.let(stateMachine::cancel)
-                    testLatch.countDown()
+
+                    stateMachine.send(AuthorizationEvent(AuthorizationEvent.EventType.RefreshSession(credentials)))
+                    stateMachine.listen(
+                        { it2 ->
+                            val authNState = it2.takeIf {
+                                it2 is AuthState.Configured &&
+                                    it2.authNState is AuthenticationState.SignedIn &&
+                                    it2.authZState is AuthorizationState.SessionEstablished
+                            }
+                            authNState?.run {
+                                token?.let(stateMachine::cancel)
+                                testLatch.countDown()
+                            }
+                        },
+                        null
+                    )
                 }
             },
             {
@@ -752,7 +746,7 @@ class StateTransitionTests : StateTransitionTestBase() {
                         )
                     )
                 }
-                val deleteUserState = it.authZState?.deleteUserState
+                val deleteUserState = (it.authZState as? AuthorizationState.DeletingUser)?.deleteUserState
                 val userDeletedSuccess = deleteUserState?.takeIf {
                     it is DeleteUserState.UserDeleted
                 }

@@ -17,10 +17,12 @@ package com.amplifyframework.statemachine.codegen.actions
 
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
+import com.amplifyframework.statemachine.codegen.data.SignedInData
 
 interface AuthorizationActions {
     fun resetAuthorizationAction(): Action
     fun configureAuthorizationAction(): Action
-    fun initializeFetchAuthSession(amplifyCredential: AmplifyCredential): Action
-    fun refreshAuthSessionAction(amplifyCredential: AmplifyCredential): Action
+    fun initializeFetchUnAuthSession(): Action
+    fun initializeFetchAuthSession(signedInData: SignedInData): Action
+    fun initiateRefreshSessionAction(amplifyCredential: AmplifyCredential): Action
 }
