@@ -12,6 +12,7 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
+
 package com.amplifyframework.statemachine.codegen.states
 
 import com.amplifyframework.statemachine.State
@@ -19,13 +20,15 @@ import com.amplifyframework.statemachine.StateMachineEvent
 import com.amplifyframework.statemachine.StateMachineResolver
 import com.amplifyframework.statemachine.StateResolution
 import com.amplifyframework.statemachine.codegen.actions.FetchAuthSessionActions
+import com.amplifyframework.statemachine.codegen.data.LoginsMapProvider
 import com.amplifyframework.statemachine.codegen.events.FetchAuthSessionEvent
 
 sealed class FetchAuthSessionState : State {
     data class NotStarted(val id: String = "") : FetchAuthSessionState()
-    data class FetchingIdentity(val id: String = "") : FetchAuthSessionState()
-    data class FetchingAWSCredentials(val id: String = "") : FetchAuthSessionState()
+    data class FetchingIdentity(val logins: LoginsMapProvider) : FetchAuthSessionState()
+    data class FetchingAWSCredentials(val identityId: String, val logins: LoginsMapProvider) : FetchAuthSessionState()
     data class Fetched(val id: String = "") : FetchAuthSessionState()
+    data class Error(val exception: Exception) : FetchAuthSessionState()
 
     class Resolver(
         private val fetchAuthSessionActions: FetchAuthSessionActions
@@ -42,46 +45,45 @@ sealed class FetchAuthSessionState : State {
             val fetchAuthSessionEvent = asFetchAuthSessionEvent(event)
             val defaultResolution = StateResolution(oldState)
             return when (oldState) {
-                is NotStarted -> {
-                    when (fetchAuthSessionEvent) {
-                        is FetchAuthSessionEvent.EventType.FetchAwsCredentials -> {
-                            val action =
-                                fetchAuthSessionActions.fetchAWSCredentialsAction(
-                                    fetchAuthSessionEvent.amplifyCredential
-                                )
-                            StateResolution(FetchingAWSCredentials(), listOf(action))
-                        }
-                        is FetchAuthSessionEvent.EventType.FetchIdentity -> {
-                            val action =
-                                fetchAuthSessionActions.fetchIdentityAction(fetchAuthSessionEvent.amplifyCredential)
-                            StateResolution(FetchingIdentity(), listOf(action))
-                        }
-                        else -> defaultResolution
+                is NotStarted -> when (fetchAuthSessionEvent) {
+                    is FetchAuthSessionEvent.EventType.FetchIdentity -> {
+                        val action = fetchAuthSessionActions.fetchIdentityAction(fetchAuthSessionEvent.logins)
+                        StateResolution(FetchingIdentity(fetchAuthSessionEvent.logins), listOf(action))
                     }
+                    is FetchAuthSessionEvent.EventType.FetchAwsCredentials -> {
+                        val action = fetchAuthSessionActions.fetchAWSCredentialsAction(
+                            fetchAuthSessionEvent.identityId,
+                            fetchAuthSessionEvent.logins
+                        )
+                        StateResolution(
+                            FetchingAWSCredentials(fetchAuthSessionEvent.identityId, fetchAuthSessionEvent.logins),
+                            listOf(action)
+                        )
+                    }
+                    else -> defaultResolution
                 }
-                is FetchingIdentity -> {
-                    when (fetchAuthSessionEvent) {
-                        is FetchAuthSessionEvent.EventType.FetchAwsCredentials -> {
-                            val action =
-                                fetchAuthSessionActions.fetchAWSCredentialsAction(
-                                    fetchAuthSessionEvent.amplifyCredential
-                                )
-                            StateResolution(FetchingAWSCredentials(), listOf(action))
-                        }
-                        else -> defaultResolution
+                is FetchingIdentity -> when (fetchAuthSessionEvent) {
+                    is FetchAuthSessionEvent.EventType.FetchAwsCredentials -> {
+                        val action = fetchAuthSessionActions.fetchAWSCredentialsAction(
+                            fetchAuthSessionEvent.identityId,
+                            fetchAuthSessionEvent.logins
+                        )
+                        StateResolution(
+                            FetchingAWSCredentials(fetchAuthSessionEvent.identityId, fetchAuthSessionEvent.logins),
+                            listOf(action)
+                        )
                     }
+                    else -> defaultResolution
                 }
-                is FetchingAWSCredentials -> {
-                    when (fetchAuthSessionEvent) {
-                        is FetchAuthSessionEvent.EventType.Fetched -> {
-                            val action =
-                                fetchAuthSessionActions.notifySessionEstablishedAction(
-                                    fetchAuthSessionEvent.amplifyCredential
-                                )
-                            StateResolution(Fetched(), listOf(action))
-                        }
-                        else -> defaultResolution
+                is FetchingAWSCredentials -> when (fetchAuthSessionEvent) {
+                    is FetchAuthSessionEvent.EventType.Fetched -> {
+                        val action = fetchAuthSessionActions.notifySessionEstablishedAction(
+                            fetchAuthSessionEvent.identityId,
+                            fetchAuthSessionEvent.awsCredentials
+                        )
+                        StateResolution(Fetched(), listOf(action))
                     }
+                    else -> defaultResolution
                 }
                 else -> defaultResolution
             }
