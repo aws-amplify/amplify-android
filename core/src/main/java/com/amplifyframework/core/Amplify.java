@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -144,7 +144,7 @@ public final class Amplify {
 
             // Configure User-Agent utility
             UserAgent.configure(configuration.getPlatformVersions());
-            System.setProperty("aws.frameworkMetadata", UserAgent.string());
+
             if (configuration.isDevMenuEnabled()) {
                 DeveloperMenu.singletonInstance(context).enableDeveloperMenu();
             }
