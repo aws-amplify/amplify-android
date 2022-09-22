@@ -21,9 +21,7 @@ import androidx.core.util.ObjectsCompat;
 import com.amplifyframework.util.Immutable;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -31,27 +29,13 @@ import java.util.Objects;
  */
 public class AuthWebUISignInOptions {
     private final List<String> scopes;
-    private final Map<String, String> signInQueryParameters;
-    private final Map<String, String> signOutQueryParameters;
-    private final Map<String, String> tokenQueryParameters;
 
     /**
      * Advanced options for signing in with a hosted web UI.
      * @param scopes specify OAUTH scopes
-     * @param signInQueryParameters map of custom parameters to send associated with sign in process
-     * @param signOutQueryParameters map of custom parameters to send associated with sign out process
-     * @param tokenQueryParameters map of custom parameters to send associated with token
      */
-    protected AuthWebUISignInOptions(
-            List<String> scopes,
-            Map<String, String> signInQueryParameters,
-            Map<String, String> signOutQueryParameters,
-            Map<String, String> tokenQueryParameters
-    ) {
+    protected AuthWebUISignInOptions(List<String> scopes) {
         this.scopes = scopes;
-        this.signInQueryParameters = signInQueryParameters;
-        this.signOutQueryParameters = signOutQueryParameters;
-        this.tokenQueryParameters = tokenQueryParameters;
     }
 
     /**
@@ -64,33 +48,6 @@ public class AuthWebUISignInOptions {
     }
 
     /**
-     * Get map of custom parameters to send associated with sign in process.
-     * @return map of custom parameters to send associated with sign in process.
-     */
-    @NonNull
-    public Map<String, String> getSignInQueryParameters() {
-        return signInQueryParameters;
-    }
-
-    /**
-     * Get map of custom parameters to send associated with sign out process.
-     * @return map of custom parameters to send associated with sign out process
-     */
-    @NonNull
-    public Map<String, String> getSignOutQueryParameters() {
-        return signOutQueryParameters;
-    }
-
-    /**
-     * Get map of custom parameters to send associated with token.
-     * @return map of custom parameters to send associated with token
-     */
-    @NonNull
-    public Map<String, String> getTokenQueryParameters() {
-        return tokenQueryParameters;
-    }
-
-    /**
      * Get a builder to construct an instance of this object.
      * @return a builder to construct an instance of this object.
      */
@@ -100,23 +57,18 @@ public class AuthWebUISignInOptions {
     }
 
     /**
-     * When overriding, be sure to include scopes, signInQueryParameters, signOutQueryParameters, and
-     * tokenQueryParameters in the hash.
+     * When overriding, be sure to include scopes in the hash.
      * @return Hash code of this object
      */
     @Override
     public int hashCode() {
         return ObjectsCompat.hash(
-                getScopes(),
-                getSignInQueryParameters(),
-                getSignOutQueryParameters(),
-                getTokenQueryParameters()
+                getScopes()
         );
     }
 
     /**
-     * When overriding, be sure to include scopes, signInQueryParameters, signOutQueryParameters, and
-     * tokenQueryParameters in the comparison.
+     * When overriding, be sure to include scopes in the comparison.
      * @return True if the two objects are equal, false otherwise
      */
     @Override
@@ -127,25 +79,18 @@ public class AuthWebUISignInOptions {
             return false;
         } else {
             AuthWebUISignInOptions authWebUISignInOptions = (AuthWebUISignInOptions) obj;
-            return ObjectsCompat.equals(getScopes(), authWebUISignInOptions.getScopes()) &&
-                ObjectsCompat.equals(getSignInQueryParameters(), authWebUISignInOptions.getSignInQueryParameters()) &&
-                ObjectsCompat.equals(getSignOutQueryParameters(), authWebUISignInOptions.getSignOutQueryParameters()) &&
-                ObjectsCompat.equals(getTokenQueryParameters(), authWebUISignInOptions.getTokenQueryParameters());
+            return ObjectsCompat.equals(getScopes(), authWebUISignInOptions.getScopes());
         }
     }
 
     /**
-     * When overriding, be sure to include scopes, signInQueryParameters, signOutQueryParameters, and
-     * tokenQueryParameters in the output string.
+     * When overriding, be sure to include scopes in the output string.
      * @return A string representation of the object
      */
     @Override
     public String toString() {
         return "AuthWebUISignInOptions{" +
                 "scopes=" + getScopes() +
-                ", signInQueryParameters=" + getSignInQueryParameters() +
-                ", signOutQueryParameters=" + getSignOutQueryParameters() +
-                ", tokenQueryParameters=" + getTokenQueryParameters() +
                 '}';
     }
 
@@ -155,18 +100,12 @@ public class AuthWebUISignInOptions {
      */
     public abstract static class Builder<T extends Builder<T>> {
         private List<String> scopes;
-        private Map<String, String> signInQueryParameters;
-        private Map<String, String> signOutQueryParameters;
-        private Map<String, String> tokenQueryParameters;
 
         /**
          * Initialize the builder object with fields initialized with empty collection objects.
          */
         public Builder() {
             this.scopes = new ArrayList<>();
-            this.signInQueryParameters = new HashMap<>();
-            this.signOutQueryParameters = new HashMap<>();
-            this.tokenQueryParameters = new HashMap<>();
         }
 
         /**
@@ -185,30 +124,6 @@ public class AuthWebUISignInOptions {
 
         /**
          * Map of custom parameters to send associated with sign in process.
-         * @return map of custom parameters to send associated with sign in process
-         */
-        public Map<String, String> getSignInQueryParameters() {
-            return signInQueryParameters;
-        }
-
-        /**
-         * Map of custom parameters to send associated with sign out process.
-         * @return map of custom parameters to send associated with sign out process
-         */
-        public Map<String, String> getSignOutQueryParameters() {
-            return signOutQueryParameters;
-        }
-
-        /**
-         * Map of custom parameters to send associated with token.
-         * @return map of custom parameters to send associated with token
-         */
-        public Map<String, String> getTokenQueryParameters() {
-            return tokenQueryParameters;
-        }
-
-        /**
-         * Map of custom parameters to send associated with sign in process.
          * @param scopes specify OAUTH scopes
          * @return The type of Builder object being used.
          */
@@ -221,55 +136,13 @@ public class AuthWebUISignInOptions {
         }
 
         /**
-         * Map of custom parameters to send associated with sign in process.
-         * @param signInQueryParameters map of custom parameters to send associated with sign in process
-         * @return The type of Builder object being used.
-         */
-        @NonNull
-        public T signInQueryParameters(@NonNull Map<String, String> signInQueryParameters) {
-            Objects.requireNonNull(signInQueryParameters);
-            this.signInQueryParameters.clear();
-            this.signInQueryParameters.putAll(signInQueryParameters);
-            return getThis();
-        }
-
-        /**
-         * Map of custom parameters to send associated with sign out process.
-         * @param signOutQueryParameters map of custom parameters to send associated with sign out process
-         * @return The type of Builder object being used.
-         */
-        @NonNull
-        public T signOutQueryParameters(@NonNull Map<String, String> signOutQueryParameters) {
-            Objects.requireNonNull(signOutQueryParameters);
-            this.signOutQueryParameters.clear();
-            this.signOutQueryParameters.putAll(signOutQueryParameters);
-            return getThis();
-        }
-
-        /**
-         * Map of custom parameters to send associated with token.
-         * @param tokenQueryParameters map of custom parameters to send associated with token
-         * @return The type of Builder object being used.
-         */
-        @NonNull
-        public T tokenQueryParameters(@NonNull Map<String, String> tokenQueryParameters) {
-            Objects.requireNonNull(tokenQueryParameters);
-            this.tokenQueryParameters.clear();
-            this.tokenQueryParameters.putAll(tokenQueryParameters);
-            return getThis();
-        }
-
-        /**
          * Build an instance of AuthWebUISignInOptions (or one of its subclasses).
          * @return an instance of AuthWebUISignInOptions (or one of its subclasses)
          */
         @NonNull
         public AuthWebUISignInOptions build() {
             return new AuthWebUISignInOptions(
-                    Immutable.of(scopes),
-                    Immutable.of(signInQueryParameters),
-                    Immutable.of(signOutQueryParameters),
-                    Immutable.of(tokenQueryParameters)
+                    Immutable.of(scopes)
             );
         }
     }
