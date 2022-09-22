@@ -1,3 +1,12 @@
+
+## [Release 1.37.4](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.37.4)
+
+### Miscellaneous
+- Publish Javadocs (Amplify version) (#1897)
+- Update build.gradle (#1959)
+
+[See all changes between 1.37.3 and 1.37.4](https://github.com/aws-amplify/amplify-android/compare/release_v1.37.3...release_v1.37.4)
+
 ## [Release 1.37.3](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.37.3)
 
 ### Bug Fixes
