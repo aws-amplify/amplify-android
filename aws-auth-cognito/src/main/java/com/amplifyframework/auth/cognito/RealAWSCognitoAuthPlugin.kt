@@ -113,14 +113,14 @@ import com.amplifyframework.statemachine.codegen.states.SRPSignInState
 import com.amplifyframework.statemachine.codegen.states.SignInChallengeState
 import com.amplifyframework.statemachine.codegen.states.SignInState
 import com.amplifyframework.statemachine.codegen.states.SignOutState
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.async
-import kotlinx.coroutines.launch
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 
 internal class RealAWSCognitoAuthPlugin(
     private val configuration: AuthConfiguration,
@@ -396,13 +396,7 @@ internal class RealAWSCognitoAuthPlugin(
                     onError
                 )
                 is AuthenticationState.SignedIn -> {
-                    onError.accept(
-                        AuthException(
-                            "There is already a user in signedIn state. " +
-                                    "SignOut the user first before calling signIn",
-                            AuthException.InvalidStateException.TODO_RECOVERY_SUGGESTION
-                        )
-                    )
+                    onError.accept(AuthException.SignedInException())
                 }
                 else -> onError.accept(AuthException.InvalidStateException())
             }
@@ -1577,7 +1571,7 @@ internal class RealAWSCognitoAuthPlugin(
                                 Amplify.Hub.publish(HubChannel.AUTH, HubEvent.create(AuthChannelEventName.SIGNED_IN))
                             }
                             deleteUserAuthZState?.deleteUserState is DeleteUserState.UserDeleted
-                                && lastPublishedHubEventName.get() != AuthChannelEventName.USER_DELETED -> {
+                                    && lastPublishedHubEventName.get() != AuthChannelEventName.USER_DELETED -> {
                                 Amplify.Hub.publish(HubChannel.AUTH, HubEvent.create(AuthChannelEventName.USER_DELETED))
                             }
                         }
