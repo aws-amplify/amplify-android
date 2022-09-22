@@ -396,13 +396,7 @@ internal class RealAWSCognitoAuthPlugin(
                     onError
                 )
                 is AuthenticationState.SignedIn -> {
-                    onError.accept(
-                        AuthException(
-                            "There is already a user in signedIn state. " +
-                                "SignOut the user first before calling signIn",
-                            AuthException.InvalidStateException.TODO_RECOVERY_SUGGESTION
-                        )
-                    )
+                    onError.accept(AuthException.SignedInException())
                 }
                 else -> onError.accept(AuthException.InvalidStateException())
             }
