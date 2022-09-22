@@ -1,23 +1,5 @@
 ## [Release 0.21.4](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.21.4)
 
-### Miscellaneous
-- Run more devices in farm
-- Update region
-- change device filters
-- Fixing test failure because of list ordering.
-- namespace test report for multiple devices
-- Update generate_df_testrun_report
-- lower polling on device farm
-- Adding retry ability to mutation processor
-- Checkstyle fixes
-- Publish Javadocs (Amplify version) (#1897)
-- Checkstyle fixes
-- @Ignore import got lost via merge
-- DS flacky test fix.
-- Unignore test since @poojamat merged timeout raise
-- Lint unused import
-- Update build.gradle (#1959)
-
 [See all changes between 0.21.3 and 0.21.4](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.21.3...release-kotlin_v0.21.4)
 
 ## [Release 0.21.3](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.21.3)
