@@ -16,17 +16,15 @@
 package com.amplifyframework.statemachine.codegen.events
 
 import com.amplifyframework.statemachine.StateMachineEvent
-import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
+import com.amplifyframework.statemachine.codegen.data.AWSCredentials
+import com.amplifyframework.statemachine.codegen.data.LoginsMapProvider
 import java.util.Date
 
-class FetchAuthSessionEvent(
-    val eventType: EventType,
-    override val time: Date? = null,
-) : StateMachineEvent {
+class FetchAuthSessionEvent(val eventType: EventType, override val time: Date? = null) : StateMachineEvent {
     sealed class EventType {
-        data class FetchIdentity(val amplifyCredential: AmplifyCredential) : EventType()
-        data class FetchAwsCredentials(val amplifyCredential: AmplifyCredential) : EventType()
-        data class Fetched(val amplifyCredential: AmplifyCredential) : EventType()
+        data class FetchIdentity(val logins: LoginsMapProvider) : EventType()
+        data class FetchAwsCredentials(val identityId: String, val logins: LoginsMapProvider) : EventType()
+        data class Fetched(val identityId: String, val awsCredentials: AWSCredentials) : EventType()
     }
 
     override val type: String = eventType.javaClass.simpleName

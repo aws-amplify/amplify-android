@@ -23,7 +23,6 @@ import com.amplifyframework.auth.cognito.testutils.Credentials
 import com.amplifyframework.hub.HubChannel
 import com.amplifyframework.testutils.HubAccumulator
 import com.amplifyframework.testutils.sync.SynchronousAuth
-import java.lang.RuntimeException
 import java.util.concurrent.TimeUnit
 import org.junit.After
 import org.junit.Before

@@ -35,7 +35,6 @@ internal object HostedUIHelper {
             providerInfo = HostedUIProviderInfo(
                 authProvider = authProvider,
                 idpIdentifier = (options as? AWSCognitoAuthWebUISignInOptions)?.idpIdentifier,
-                federationProviderName = (options as? AWSCognitoAuthWebUISignInOptions)?.federationProviderName
             ),
             browserPackage = (options as? AWSCognitoAuthWebUISignInOptions)?.browserPackage
         )

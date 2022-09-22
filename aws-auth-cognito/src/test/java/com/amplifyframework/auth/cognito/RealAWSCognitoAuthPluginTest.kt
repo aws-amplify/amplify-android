@@ -53,9 +53,11 @@ import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
 import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions
 import com.amplifyframework.auth.options.AuthResetPasswordOptions
+import com.amplifyframework.auth.options.AuthSignInOptions
 import com.amplifyframework.auth.options.AuthSignUpOptions
 import com.amplifyframework.auth.options.AuthUpdateUserAttributesOptions
 import com.amplifyframework.auth.result.AuthResetPasswordResult
+import com.amplifyframework.auth.result.AuthSignInResult
 import com.amplifyframework.auth.result.AuthSignUpResult
 import com.amplifyframework.auth.result.AuthUpdateAttributeResult
 import com.amplifyframework.auth.result.step.AuthNextSignUpStep
@@ -67,6 +69,8 @@ import com.amplifyframework.logging.Logger
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
+import com.amplifyframework.statemachine.codegen.data.SignInMethod
+import com.amplifyframework.statemachine.codegen.data.SignedInData
 import com.amplifyframework.statemachine.codegen.data.UserPoolConfiguration
 import com.amplifyframework.statemachine.codegen.states.AuthState
 import com.amplifyframework.statemachine.codegen.states.AuthenticationState
@@ -83,6 +87,7 @@ import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.slot
 import io.mockk.verify
+import java.util.Date
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
@@ -109,7 +114,13 @@ class RealAWSCognitoAuthPluginTest {
     }
 
     private val credentials = AmplifyCredential.UserPool(
-        CognitoUserPoolTokens(dummyToken, dummyToken, dummyToken, 120L)
+        SignedInData(
+            "userId",
+            "username",
+            Date(0),
+            SignInMethod.SRP,
+            CognitoUserPoolTokens(dummyToken, dummyToken, dummyToken, 120L)
+        )
     )
 
     private val mockCognitoIPClient = mockk<CognitoIdentityProviderClient>()
@@ -191,6 +202,46 @@ class RealAWSCognitoAuthPluginTest {
 
         // WHEN
         plugin.confirmSignUp("user", "pass", AuthConfirmSignUpOptions.defaults(), onSuccess, onError)
+
+        // THEN
+        verify(exactly = 0) { onSuccess.accept(any()) }
+        verify { onError.accept(expectedAuthError) }
+    }
+
+    @Test
+    fun testSignInFailsIfNotConfigured() {
+        // GIVEN
+        val onSuccess = mockk<Consumer<AuthSignInResult>>()
+        val onError = mockk<Consumer<AuthException>>(relaxed = true)
+        val expectedAuthError = AWSCognitoAuthExceptions.NotConfiguredException()
+        currentState = AuthenticationState.NotConfigured()
+
+        // WHEN
+        plugin.signIn("user", "password", AuthSignInOptions.defaults(), onSuccess, onError)
+
+        // THEN
+        verify(exactly = 0) { onSuccess.accept(any()) }
+        verify { onError.accept(expectedAuthError) }
+    }
+
+    @Test
+    fun testSignInFailsIfAlreadySignedIn() {
+        // GIVEN
+        val onSuccess = mockk<Consumer<AuthSignInResult>>()
+        val onError = mockk<Consumer<AuthException>>(relaxed = true)
+        val expectedAuthError = AuthException.SignedInException()
+        currentState = AuthenticationState.SignedIn(
+            SignedInData(
+                "userId",
+                "user",
+                Date(),
+                SignInMethod.SRP,
+                CognitoUserPoolTokens("", "", "", 0)
+            )
+        )
+
+        // WHEN
+        plugin.signIn("user", "password", AuthSignInOptions.defaults(), onSuccess, onError)
 
         // THEN
         verify(exactly = 0) { onSuccess.accept(any()) }
@@ -1116,7 +1167,13 @@ class RealAWSCognitoAuthPluginTest {
         val listenLatch = CountDownLatch(1)
 
         val invalidCredentials = AmplifyCredential.UserPool(
-            CognitoUserPoolTokens(null, null, null, 120L)
+            SignedInData(
+                "userId",
+                "username",
+                Date(),
+                SignInMethod.SRP,
+                CognitoUserPoolTokens(null, null, null, 120L)
+            )
         )
 
         val currentAuthState = mockk<AuthState> {
@@ -1256,7 +1313,13 @@ class RealAWSCognitoAuthPluginTest {
         val listenLatch = CountDownLatch(1)
 
         val invalidCredentials = AmplifyCredential.UserPool(
-            CognitoUserPoolTokens(null, null, null, 120L)
+            SignedInData(
+                "userId",
+                "username",
+                Date(),
+                SignInMethod.SRP,
+                CognitoUserPoolTokens(null, null, null, 120L)
+            )
         )
 
         val currentAuthState = mockk<AuthState> {
@@ -1465,9 +1528,9 @@ class RealAWSCognitoAuthPluginTest {
         configJsonObject.put("Endpoint", endpoint)
 
         val userPool = UserPoolConfiguration.fromJson(configJsonObject).build()
-        assertTrue(userPool.region == region, "Regions do not match expected")
-        assertTrue(userPool.poolId == poolId, "Pool id do not match expected")
-        assertTrue(userPool.appClient == appClientId, "AppClientId do not match expected")
-        assertTrue(userPool.endpoint == endpoint, "Endpoint do not match expected")
+        assertEquals(userPool.region, region, "Regions do not match expected")
+        assertEquals(userPool.poolId, poolId, "Pool id do not match expected")
+        assertEquals(userPool.appClient, appClientId, "AppClientId do not match expected")
+        assertEquals(userPool.endpoint, "https://$endpoint", "Endpoint do not match expected")
     }
 }
