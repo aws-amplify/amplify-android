@@ -21,7 +21,10 @@ import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
 import com.amplifyframework.statemachine.codegen.data.IdentityPoolConfiguration
+import com.amplifyframework.statemachine.codegen.data.SignInMethod
+import com.amplifyframework.statemachine.codegen.data.SignedInData
 import com.amplifyframework.statemachine.codegen.data.UserPoolConfiguration
+import java.util.Date
 import kotlin.test.assertEquals
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -132,7 +135,6 @@ class AWSCognitoAuthCredentialStoreTest {
     }
 
     @Test
-    @Ignore("fix as per new store format")
     fun testInMemoryCredentialStore() {
         val store = AWSCognitoAuthCredentialStore(mockContext, mockConfig, false)
 
@@ -187,7 +189,7 @@ class AWSCognitoAuthCredentialStoreTest {
         Mockito.`when`(mockConfig.userPool).thenReturn(
             UserPoolConfiguration {
                 this.poolId = USER_POOL_ID
-                this.appClientId = ""
+                this.appClientId = "appClientId"
             }
         )
     }
@@ -195,11 +197,12 @@ class AWSCognitoAuthCredentialStoreTest {
     private fun getCredential(): AmplifyCredential {
         val expiration = 123123L
         return AmplifyCredential.UserAndIdentityPool(
-            CognitoUserPoolTokens(
-                "idToken",
-                "accessToken",
-                "refreshToken",
-                expiration
+            SignedInData(
+                "userId",
+                "username",
+                Date(0),
+                SignInMethod.SRP,
+                CognitoUserPoolTokens("idToken", "accessToken", "refreshToken", expiration),
             ),
             "identityPool",
             AWSCredentials(
