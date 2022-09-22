@@ -26,6 +26,7 @@ dependencies {
     implementation dependency.androidx.nav.ui
     implementation dependency.androidx.nav.uiktx
     implementation dependency.androidx.nav.dynamicfeatures
+    implementation dependency.kotlin.serializationJson
 
     implementation dependency.aws.credentials
 

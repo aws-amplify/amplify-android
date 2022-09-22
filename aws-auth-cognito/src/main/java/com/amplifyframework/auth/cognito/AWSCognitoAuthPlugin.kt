@@ -35,6 +35,7 @@ import com.amplifyframework.auth.cognito.data.AWSCognitoLegacyCredentialStore
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
+import com.amplifyframework.auth.options.AuthFetchSessionOptions
 import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions
 import com.amplifyframework.auth.options.AuthResendUserAttributeConfirmationCodeOptions
 import com.amplifyframework.auth.options.AuthResetPasswordOptions
@@ -53,7 +54,6 @@ import com.amplifyframework.core.Action
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
-import com.amplifyframework.util.UserAgent
 import org.json.JSONException
 import org.json.JSONObject
 
@@ -85,7 +85,6 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
                 logger
             )
             val authStateMachine = AuthStateMachine(authEnvironment)
-            System.setProperty("aws.frameworkMetadata", UserAgent.string())
             val credentialStoreStateMachine = createCredentialStoreStateMachine(configuration, context)
             realPlugin = RealAWSCognitoAuthPlugin(
                 configuration,
@@ -223,6 +222,14 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
 
     override fun handleWebUISignInResponse(intent: Intent?) {
         realPlugin.handleWebUISignInResponse(intent)
+    }
+
+    override fun fetchAuthSession(
+        options: AuthFetchSessionOptions,
+        onSuccess: Consumer<AuthSession>,
+        onError: Consumer<AuthException>
+    ) {
+        realPlugin.fetchAuthSession(options, onSuccess, onError)
     }
 
     override fun fetchAuthSession(onSuccess: Consumer<AuthSession>, onError: Consumer<AuthException>) {
