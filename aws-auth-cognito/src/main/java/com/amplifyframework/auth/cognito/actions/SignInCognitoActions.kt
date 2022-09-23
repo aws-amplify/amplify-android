@@ -31,7 +31,6 @@ import com.amplifyframework.statemachine.codegen.events.SignInChallengeEvent
 import com.amplifyframework.statemachine.codegen.events.SignInEvent
 
 object SignInCognitoActions : SignInActions {
-
     override fun startSRPAuthAction(event: SignInEvent.EventType.InitiateSignInWithSRP) =
         Action<AuthEnvironment>("StartSRPAuth") { id, dispatcher ->
             logger?.verbose("$id Starting execution")
@@ -50,6 +49,16 @@ object SignInCognitoActions : SignInActions {
             dispatcher.send(evt)
         }
 
+    override fun startMigrationAuthAction(event: SignInEvent.EventType.InitiateMigrateAuth) =
+        Action<AuthEnvironment>("StartMigrationAuth") { id, dispatcher ->
+            logger?.verbose("$id Starting execution")
+            val evt = SignInEvent(
+                SignInEvent.EventType.InitiateMigrateAuth(event.username, event.password, event.metadata)
+            )
+            logger?.verbose("$id Sending event ${evt.type}")
+            dispatcher.send(evt)
+        }
+
     override fun initResolveChallenge(event: SignInEvent.EventType.ReceivedChallenge) =
         Action<AuthEnvironment>("InitResolveChallenge") { id, dispatcher ->
             logger?.verbose("$id Starting execution")
@@ -59,7 +68,7 @@ object SignInCognitoActions : SignInActions {
         }
 
     override fun confirmDevice(event: SignInEvent.EventType.ConfirmDevice): Action =
-        Action<AuthEnvironment>("InitResolveChallenge") { id, dispatcher ->
+        Action<AuthEnvironment>("ConfirmDevice") { id, dispatcher ->
             logger?.verbose("$id Starting execution")
             val deviceMetadata = event.signedInData.deviceMetadata as? DeviceMetadata.Metadata
             val deviceKey = deviceMetadata?.deviceKey

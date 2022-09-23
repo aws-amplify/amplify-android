@@ -71,7 +71,7 @@ object AuthenticationCognitoActions : AuthenticationActions {
                 is SignInData.CustomAuthSignInData -> {
                     if (data.username != null) {
                         SignInEvent(
-                            SignInEvent.EventType.InitiateSignInWithCustom(data.username, data.password, data.options)
+                            SignInEvent.EventType.InitiateSignInWithCustom(data.username, data.password, data.metadata)
                         )
                     } else {
                         AuthenticationEvent(
@@ -83,6 +83,19 @@ object AuthenticationCognitoActions : AuthenticationActions {
                 }
                 is SignInData.HostedUISignInData -> {
                     SignInEvent(SignInEvent.EventType.InitiateHostedUISignIn(data))
+                }
+                is SignInData.MigrationAuthSignInData -> {
+                    if (data.username != null && data.password != null) {
+                        SignInEvent(
+                            SignInEvent.EventType.InitiateMigrateAuth(data.username, data.password, data.metadata)
+                        )
+                    } else {
+                        AuthenticationEvent(
+                            AuthenticationEvent.EventType.ThrowError(
+                                AuthException("Sign in failed.", "username or password empty")
+                            )
+                        )
+                    }
                 }
             }
 

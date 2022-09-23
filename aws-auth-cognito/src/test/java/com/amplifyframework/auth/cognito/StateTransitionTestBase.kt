@@ -27,6 +27,7 @@ import com.amplifyframework.statemachine.codegen.actions.CustomSignInActions
 import com.amplifyframework.statemachine.codegen.actions.DeviceSRPSignInActions
 import com.amplifyframework.statemachine.codegen.actions.FetchAuthSessionActions
 import com.amplifyframework.statemachine.codegen.actions.HostedUIActions
+import com.amplifyframework.statemachine.codegen.actions.MigrateAuthActions
 import com.amplifyframework.statemachine.codegen.actions.SRPActions
 import com.amplifyframework.statemachine.codegen.actions.SignInActions
 import com.amplifyframework.statemachine.codegen.actions.SignInChallengeActions
@@ -118,6 +119,9 @@ open class StateTransitionTestBase {
 
     @Mock
     internal lateinit var mockSignInCustomActions: CustomSignInActions
+
+    @Mock
+    internal lateinit var mockMigrateAuthActions: MigrateAuthActions
 
     @Mock
     internal lateinit var mockHostedUIActions: HostedUIActions

@@ -459,7 +459,7 @@ internal class RealAWSCognitoAuthPlugin(
                         SignInData.CustomAuthSignInData(username, password, signInOptions.metadata)
                     }
                     AuthFlowType.USER_PASSWORD_AUTH -> {
-                        TODO()
+                        SignInData.MigrationAuthSignInData(username, password, signInOptions.metadata)
                     }
                 }
                 val event = AuthenticationEvent(AuthenticationEvent.EventType.SignInRequested(signInData))
