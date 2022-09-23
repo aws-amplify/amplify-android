@@ -69,6 +69,7 @@ import com.amplifyframework.logging.Logger
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
+import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.data.SignInMethod
 import com.amplifyframework.statemachine.codegen.data.SignedInData
 import com.amplifyframework.statemachine.codegen.data.UserPoolConfiguration
@@ -119,6 +120,7 @@ class RealAWSCognitoAuthPluginTest {
             "username",
             Date(0),
             SignInMethod.SRP,
+            DeviceMetadata.Empty,
             CognitoUserPoolTokens(dummyToken, dummyToken, dummyToken, 120L)
         )
     )
@@ -236,6 +238,7 @@ class RealAWSCognitoAuthPluginTest {
                 "user",
                 Date(),
                 SignInMethod.SRP,
+                DeviceMetadata.Empty,
                 CognitoUserPoolTokens("", "", "", 0)
             )
         )
@@ -1172,6 +1175,7 @@ class RealAWSCognitoAuthPluginTest {
                 "username",
                 Date(),
                 SignInMethod.SRP,
+                DeviceMetadata.Empty,
                 CognitoUserPoolTokens(null, null, null, 120L)
             )
         )
@@ -1318,6 +1322,7 @@ class RealAWSCognitoAuthPluginTest {
                 "username",
                 Date(),
                 SignInMethod.SRP,
+                DeviceMetadata.Empty,
                 CognitoUserPoolTokens(null, null, null, 120L)
             )
         )
@@ -1528,9 +1533,9 @@ class RealAWSCognitoAuthPluginTest {
         configJsonObject.put("Endpoint", endpoint)
 
         val userPool = UserPoolConfiguration.fromJson(configJsonObject).build()
-        assertTrue(userPool.region == region, "Regions do not match expected")
-        assertTrue(userPool.poolId == poolId, "Pool id do not match expected")
-        assertTrue(userPool.appClient == appClientId, "AppClientId do not match expected")
-        assertTrue(userPool.endpoint == endpoint, "Endpoint do not match expected")
+        assertEquals(userPool.region, region, "Regions do not match expected")
+        assertEquals(userPool.poolId, poolId, "Pool id do not match expected")
+        assertEquals(userPool.appClient, appClientId, "AppClientId do not match expected")
+        assertEquals(userPool.endpoint, "https://$endpoint", "Endpoint do not match expected")
     }
 }

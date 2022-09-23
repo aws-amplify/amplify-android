@@ -27,6 +27,7 @@ import com.amplifyframework.core.Consumer
 import com.amplifyframework.statemachine.StateMachineEvent
 import com.amplifyframework.statemachine.codegen.data.AuthChallenge
 import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
+import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.data.SignInMethod
 import com.amplifyframework.statemachine.codegen.data.SignedInData
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
@@ -51,9 +52,17 @@ object SignInChallengeHelper {
                 val signedInData = authenticationResult.let {
                     val expiresIn = Instant.now().plus(it.expiresIn.seconds).epochSeconds
                     val tokens = CognitoUserPoolTokens(it.idToken, it.accessToken, it.refreshToken, expiresIn)
-                    SignedInData(userId, username, Date(), signInMethod, tokens)
+                    val deviceMetaData = it.newDeviceMetadata?.let { metadata ->
+                        DeviceMetadata.Metadata(metadata.deviceKey, metadata.deviceGroupKey)
+                    } ?: DeviceMetadata.Empty
+                    SignedInData(userId, username, Date(), signInMethod, deviceMetaData, tokens)
                 }
-                AuthenticationEvent(AuthenticationEvent.EventType.SignInCompleted(signedInData))
+
+                if (signedInData.deviceMetadata == DeviceMetadata.Empty) {
+                    AuthenticationEvent(AuthenticationEvent.EventType.SignInCompleted(signedInData))
+                } else {
+                    SignInEvent(SignInEvent.EventType.ConfirmDevice(signedInData))
+                }
             }
             challengeNameType is ChallengeNameType.SmsMfa ||
                 challengeNameType is ChallengeNameType.CustomChallenge
