@@ -18,6 +18,7 @@ package com.amplifyframework.testutils.featuretest.auth.generators.authstategene
 import com.amplifyframework.statemachine.codegen.data.AWSCredentials
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
+import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.data.SignInMethod
 import com.amplifyframework.statemachine.codegen.data.SignedInData
 import com.amplifyframework.statemachine.codegen.states.AuthState
@@ -37,6 +38,11 @@ object AuthStateJsonGenerator : SerializableProvider {
         username = "username",
         signedInDate = Date.from(Instant.ofEpochSecond(324234123)),
         signInMethod = SignInMethod.SRP,
+        deviceMetadata = DeviceMetadata.Metadata(
+            deviceKey = "someDeviceKey",
+            deviceGroupKey = "someDeviceGroupKey",
+            deviceSecret = "someSecret"
+        ),
         cognitoUserPoolTokens = CognitoUserPoolTokens(
             idToken = "someToken",
             accessToken = "someAccessToken",

@@ -26,10 +26,8 @@ import com.amplifyframework.auth.cognito.helpers.SRPHelper
 import com.amplifyframework.auth.cognito.helpers.SignInChallengeHelper
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.SRPActions
-import com.amplifyframework.statemachine.codegen.data.DeviceMetaData
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.SRPEvent
-import com.amplifyframework.statemachine.codegen.events.SignInEvent
 
 object SRPCognitoActions : SRPActions {
     private const val KEY_PASSWORD_CLAIM_SECRET_BLOCK = "PASSWORD_CLAIM_SECRET_BLOCK"
@@ -42,12 +40,6 @@ object SRPCognitoActions : SRPActions {
     private const val KEY_USER_ID_FOR_SRP = "USER_ID_FOR_SRP"
     private const val KEY_SECRET_HASH = "SECRET_HASH"
     private const val KEY_USERNAME = "USERNAME"
-
-    private const val KEY_ID_TOKEN = "ID_TOKEN"
-    private const val KEY_ACCESS_TOKEN = "ID_TOKEN"
-    private const val KEY_REFRESH_TOKEN = "REFRESH_TOKEN"
-    private const val KEY_DEVICE_GROUP_KEY = "DEVICE_GROUP_KEY"
-    private const val KEY_DEVICE_KEY = "DEVICE_KEY"
 
     override fun initiateSRPAuthAction(event: SRPEvent.EventType.InitiateSRP) =
         Action<AuthEnvironment>("InitSRPAuth") { id, dispatcher ->
@@ -122,38 +114,18 @@ object SRPCognitoActions : SRPActions {
                     challengeResponses = challengeParams
                     encodedContextData?.let { userContextData { encodedData = it } }
                 }
-                response?.let { respondToAuthChallengeResponse ->
-                    respondToAuthChallengeResponse.authenticationResult?.newDeviceMetadata?.let { deviceMetaData ->
-                        val confirmDeviceParams = DeviceMetaData(
-                            idToken = respondToAuthChallengeResponse.authenticationResult?.idToken
-                                ?: throw AuthException("Sign in failed", AuthException.TODO_RECOVERY_SUGGESTION),
-                            refreshToken = respondToAuthChallengeResponse.authenticationResult?.refreshToken
-                                ?: throw AuthException("Sign in failed", AuthException.TODO_RECOVERY_SUGGESTION),
-                            accessToken = respondToAuthChallengeResponse.authenticationResult?.accessToken
-                                ?: throw AuthException("Sign in failed", AuthException.TODO_RECOVERY_SUGGESTION),
-                            deviceKey = deviceMetaData.deviceKey ?: throw AuthException(
-                                "Sign in failed",
-                                AuthException.TODO_RECOVERY_SUGGESTION
-                            ),
-                            userId = userId,
-                            username = username,
-                            deviceGroupKey = deviceMetaData.deviceGroupKey ?: throw AuthException(
-                                "Sign in failed",
-                                AuthException.TODO_RECOVERY_SUGGESTION
-                            ),
-                            expiresIn = respondToAuthChallengeResponse.authenticationResult?.expiresIn
-                                ?: throw AuthException("Sign in failed", AuthException.TODO_RECOVERY_SUGGESTION)
-                        )
-                        SignInEvent(SignInEvent.EventType.ConfirmDevice(confirmDeviceParams))
-                    } ?: SignInChallengeHelper.evaluateNextStep(
+                if (response != null) {
+                    SignInChallengeHelper.evaluateNextStep(
                         userId,
                         username,
-                        respondToAuthChallengeResponse.challengeName,
-                        respondToAuthChallengeResponse.session,
-                        respondToAuthChallengeResponse.challengeParameters,
-                        respondToAuthChallengeResponse.authenticationResult
+                        response.challengeName,
+                        response.session,
+                        response.challengeParameters,
+                        response.authenticationResult
                     )
-                } ?: throw AuthException("Sign in failed", AuthException.TODO_RECOVERY_SUGGESTION)
+                } else {
+                    throw AuthException("Sign in failed", AuthException.TODO_RECOVERY_SUGGESTION)
+                }
             } catch (e: Exception) {
                 val errorEvent = SRPEvent(SRPEvent.EventType.ThrowPasswordVerifierError(e))
                 logger?.verbose("$id Sending event ${errorEvent.type}")
