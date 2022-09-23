@@ -26,5 +26,6 @@ data class SignedInData(
     @Serializable(DateSerializer::class)
     val signedInDate: Date,
     val signInMethod: SignInMethod,
+    val deviceMetadata: DeviceMetadata,
     val cognitoUserPoolTokens: CognitoUserPoolTokens
 )
