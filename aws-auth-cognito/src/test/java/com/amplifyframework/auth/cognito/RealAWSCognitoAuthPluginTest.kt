@@ -48,6 +48,7 @@ import com.amplifyframework.auth.cognito.helpers.SRPHelper
 import com.amplifyframework.auth.cognito.options.AWSAuthResendUserAttributeConfirmationCodeOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttributeOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttributesOptions
+import com.amplifyframework.auth.cognito.options.AuthFlowType
 import com.amplifyframework.auth.cognito.usecases.ResetPasswordUseCase
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
@@ -1537,5 +1538,33 @@ class RealAWSCognitoAuthPluginTest {
         assertEquals(userPool.poolId, poolId, "Pool id do not match expected")
         assertEquals(userPool.appClient, appClientId, "AppClientId do not match expected")
         assertEquals(userPool.endpoint, "https://$endpoint", "Endpoint do not match expected")
+    }
+
+    @Test
+    fun `validate auth flow type defaults to user_srp_auth for invalid types`() {
+        val configJsonObject = JSONObject()
+        val configAuthJsonObject = JSONObject()
+        val configAuthDefaultJsonObject = JSONObject()
+        configAuthDefaultJsonObject.put("authenticationFlowType", "INVALID_FLOW_TYPE")
+        configAuthJsonObject.put("Default", configAuthDefaultJsonObject)
+        configJsonObject.put("Auth", configAuthJsonObject)
+        val configuration = AuthConfiguration.fromJson(configJsonObject)
+        assertEquals(configuration.authFlowType, AuthFlowType.USER_SRP_AUTH, "Auth flow types do not match expected")
+    }
+
+    @Test
+    fun `validate auth flow type success`() {
+        val configJsonObject = JSONObject()
+        val configAuthJsonObject = JSONObject()
+        val configAuthDefaultJsonObject = JSONObject()
+        configAuthDefaultJsonObject.put("authenticationFlowType", "USER_PASSWORD_AUTH")
+        configAuthJsonObject.put("Default", configAuthDefaultJsonObject)
+        configJsonObject.put("Auth", configAuthJsonObject)
+        val configuration = AuthConfiguration.fromJson(configJsonObject)
+        assertEquals(
+            configuration.authFlowType,
+            AuthFlowType.USER_PASSWORD_AUTH,
+            "Auth flow types do not match expected"
+        )
     }
 }
