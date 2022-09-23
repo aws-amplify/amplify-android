@@ -87,6 +87,9 @@ class AWSCognitoLegacyCredentialStoreTest {
             "tokenExpiration"
         )
 
+        private const val dummyToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwidXNlcm5hbW" +
+            "UiOiJhbXBsaWZ5X3VzZXIiLCJpYXQiOjE1MTYyMzkwMjJ9.zBiQ0guLRX34pUEYLPyDxQAyDDlXmL0JY7kgPWAHZos"
+
         private const val userDeviceDetailsCacheKey = "$deviceCachePrefix.$USER_POOL_ID.%s"
         private val deviceDetailsCacheKey = String.format(userDeviceDetailsCacheKey, userId)
     }
@@ -110,7 +113,7 @@ class AWSCognitoLegacyCredentialStoreTest {
         `when`(
             mockFactory.create(
                 mockContext,
-                AWSCognitoLegacyCredentialStore.AWS_AUTH_CREDENTIAL_PROVIDER,
+                AWSCognitoLegacyCredentialStore.AWS_KEY_VALUE_STORE_NAMESPACE_IDENTIFIER,
                 true,
             )
         ).thenReturn(mockKeyValue)
@@ -123,11 +126,19 @@ class AWSCognitoLegacyCredentialStoreTest {
             )
         ).thenReturn(mockKeyValue)
 
+        `when`(
+            mockFactory.create(
+                mockContext,
+                AWSCognitoLegacyCredentialStore.AWS_MOBILE_CLIENT_PROVIDER,
+                true,
+            )
+        ).thenReturn(mockKeyValue)
+
         `when`(mockFactory.create(mockContext, deviceDetailsCacheKey, true)).thenReturn(mockKeyValue)
     }
 
     @Test
-    fun testRetrieveCredential() {
+    fun testRetrieveSRPCredential() {
         setupUserPoolConfig()
         setupIdentityPoolConfig()
         setupKeyValueGetters()
@@ -135,14 +146,27 @@ class AWSCognitoLegacyCredentialStoreTest {
 
         val actual = persistentStore.retrieveCredential()
 
-        Assert.assertEquals(actual, getCredential())
+        Assert.assertEquals(actual, getSRPCredential())
+    }
+
+    @Test
+    fun testRetrieveHostedUICredential() {
+        setupUserPoolConfig()
+        setupIdentityPoolConfig()
+        setupKeyValueGetters()
+        `when`(mockKeyValue.get("signInMode")).thenReturn("2")
+        persistentStore = AWSCognitoLegacyCredentialStore(mockContext, mockConfig, mockFactory)
+
+        val actual = persistentStore.retrieveCredential()
+
+        Assert.assertEquals(actual, getHostedUICredential())
     }
 
     private fun setupKeyValueGetters() {
         // Tokens
         `when`(mockKeyValue.get(userIdTokenKey)).thenReturn("username")
         `when`(mockKeyValue.get(cachedIdTokenKey)).thenReturn("idToken")
-        `when`(mockKeyValue.get(cachedAccessTokenKey)).thenReturn("accessToken")
+        `when`(mockKeyValue.get(cachedAccessTokenKey)).thenReturn(dummyToken)
         `when`(mockKeyValue.get(cachedRefreshTokenKey)).thenReturn("refreshToken")
         `when`(mockKeyValue.get(cachedTokenExpirationKey)).thenReturn("123123")
 
@@ -159,6 +183,9 @@ class AWSCognitoLegacyCredentialStoreTest {
 
         // Identity ID
         `when`(mockKeyValue.get("$IDENTITY_POOL_ID.${"identityId"}")).thenReturn("identityPool")
+
+        // Mobile Client SignInMethod
+        `when`(mockKeyValue.get("signInMode")).thenReturn(null)
     }
 
     private fun setupIdentityPoolConfig() {
@@ -178,15 +205,30 @@ class AWSCognitoLegacyCredentialStoreTest {
         )
     }
 
-    private fun getCredential(): AmplifyCredential {
+    private fun getSRPCredential(): AmplifyCredential {
         return AmplifyCredential.UserAndIdentityPool(
             SignedInData(
-                "",
-                "username",
+                "1234567890",
+                "amplify_user",
                 Date(0),
-                SignInMethod.SRP,
+                SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH),
                 DeviceMetadata.Metadata("someDeviceKey", "someDeviceGroupKey", "someSecret"),
-                CognitoUserPoolTokens("idToken", "accessToken", "refreshToken", 123123)
+                CognitoUserPoolTokens("idToken", dummyToken, "refreshToken", 123123)
+            ),
+            "identityPool",
+            AWSCredentials("accessKeyId", "secretAccessKey", "sessionToken", 123123)
+        )
+    }
+
+    private fun getHostedUICredential(): AmplifyCredential {
+        return AmplifyCredential.UserAndIdentityPool(
+            SignedInData(
+                "1234567890",
+                "amplify_user",
+                Date(0),
+                SignInMethod.HostedUI(),
+                DeviceMetadata.Metadata("someDeviceKey", "someDeviceGroupKey", "someSecret"),
+                CognitoUserPoolTokens("idToken", dummyToken, "refreshToken", 123123)
             ),
             "identityPool",
             AWSCredentials("accessKeyId", "secretAccessKey", "sessionToken", 123123)

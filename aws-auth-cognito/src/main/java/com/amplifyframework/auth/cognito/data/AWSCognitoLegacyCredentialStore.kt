@@ -16,6 +16,7 @@
 package com.amplifyframework.auth.cognito.data
 
 import android.content.Context
+import com.amplifyframework.auth.cognito.helpers.SessionHelper
 import com.amplifyframework.statemachine.codegen.data.AWSCredentials
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
@@ -27,7 +28,7 @@ import com.amplifyframework.statemachine.codegen.data.SignedInData
 import java.util.Date
 import java.util.Locale
 
-class AWSCognitoLegacyCredentialStore(
+internal class AWSCognitoLegacyCredentialStore(
     val context: Context,
     private val authConfiguration: AuthConfiguration,
     private val keyValueRepoFactory: KeyValueRepositoryFactory = KeyValueRepositoryFactory()
@@ -62,7 +63,6 @@ class AWSCognitoLegacyCredentialStore(
         // Mobile Client Keys
         const val PROVIDER_KEY = "provider"
         const val SIGN_IN_MODE_KEY = "signInMode"
-
     }
 
     private val userDeviceDetailsCacheKey = "$APP_DEVICE_INFO_CACHE.${authConfiguration.userPool?.poolId}.%s"
@@ -158,12 +158,32 @@ class AWSCognitoLegacyCredentialStore(
 
     private fun retrieveSignedInData(): SignedInData? {
         val keys = getTokenKeys()
+        val cognitoUserPoolTokens = retrieveCognitoUserPoolTokens(keys) ?: return null
         val username = keys[APP_LAST_AUTH_USER]?.let { tokensKeyValue.get(it) }
         val deviceMetaData = retrieveDeviceMetadata(username)
-        val cognitoUserPoolTokens = retrieveCognitoUserPoolTokens(keys)
+        val signInMethod = retrieveUserPoolSignInMethod()
+            ?: SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH)
+        val tokenUserId =
+            try {
+                cognitoUserPoolTokens.accessToken?.let { SessionHelper.getUserSub(it) } ?: ""
+            } catch (e: Exception) {
+                ""
+            }
+        val tokenUsername =
+            try {
+                cognitoUserPoolTokens.accessToken?.let { SessionHelper.getUsername(it) } ?: ""
+            } catch (e: Exception) {
+                ""
+            }
 
-        return if (cognitoUserPoolTokens == null) null
-        else SignedInData("", username ?: "", Date(0), SignInMethod.SRP, deviceMetaData, cognitoUserPoolTokens)
+        return SignedInData(
+            tokenUserId,
+            tokenUsername,
+            Date(0),
+            signInMethod,
+            deviceMetaData,
+            cognitoUserPoolTokens
+        )
     }
 
     private fun retrieveDeviceMetadata(username: String?): DeviceMetadata {
@@ -252,5 +272,11 @@ class AWSCognitoLegacyCredentialStore(
 
     private fun getIdentityPoolId(): String? {
         return authConfiguration.identityPool?.poolId
+    }
+
+    private fun retrieveUserPoolSignInMethod() = when (mobileClientKeyValue.get(SIGN_IN_MODE_KEY)) {
+        "2" -> SignInMethod.HostedUI()
+        "1", "3" -> null
+        else -> SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH)
     }
 }

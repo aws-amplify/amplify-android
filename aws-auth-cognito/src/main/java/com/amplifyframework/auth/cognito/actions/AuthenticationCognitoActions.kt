@@ -94,7 +94,7 @@ object AuthenticationCognitoActions : AuthenticationActions {
         logger?.verbose("$id Starting execution")
 
         val evt = when {
-            signedInData != null && signedInData.signInMethod == SignInMethod.HOSTED -> {
+            signedInData != null && signedInData.signInMethod is SignInMethod.HostedUI -> {
                 SignOutEvent(SignOutEvent.EventType.InvokeHostedUISignOut(event.signOutData, signedInData))
             }
             signedInData != null && event.signOutData.globalSignOut -> {
