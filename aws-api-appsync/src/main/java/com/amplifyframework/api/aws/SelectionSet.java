@@ -16,6 +16,8 @@
 package com.amplifyframework.api.aws;
 
 import android.text.TextUtils;
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
@@ -26,6 +28,7 @@ import com.amplifyframework.core.model.AuthRule;
 import com.amplifyframework.core.model.AuthStrategy;
 import com.amplifyframework.core.model.CustomTypeField;
 import com.amplifyframework.core.model.CustomTypeSchema;
+import com.amplifyframework.core.model.LazyModel;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelAssociation;
 import com.amplifyframework.core.model.ModelField;
@@ -39,6 +42,7 @@ import com.amplifyframework.util.Wrap;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.TypeVariable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -285,7 +289,15 @@ public final class SelectionSet {
                             result.add(new SelectionSet(fieldName, fields));
                         }
                     } else if (depth >= 1) {
-                        Set<SelectionSet> fields = getModelFields((Class<Model>) field.getType(), depth - 1, operation);
+                        Class<Model> modalClass;
+                        if(field.getType() == LazyModel.class){
+                            ParameterizedType pType = (ParameterizedType)field.getGenericType() ;
+                            modalClass = (Class<Model>) pType.getActualTypeArguments()[0];
+                        } else {
+                            modalClass = (Class<Model>) field.getType();
+                        }
+
+                        Set<SelectionSet> fields = getModelFields(modalClass, depth - 1, operation);
                         result.add(new SelectionSet(fieldName, fields));
                     }
                 } else if (isCustomType(field)) {
@@ -300,7 +312,11 @@ public final class SelectionSet {
                     }
                 }
             }
+
+            Log.i("MetadataFields","for schema:" + schema.getName() + " operation: " + operation
+                    + " fields: " + requestOptions.modelMetaFields());
             for (String fieldName : requestOptions.modelMetaFields()) {
+
                 result.add(new SelectionSet(fieldName));
             }
             return result;

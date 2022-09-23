@@ -30,7 +30,7 @@ import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteTable;
 import com.amplifyframework.logging.Logger;
-import com.amplifyframework.util.GsonFactory;
+import com.amplifyframework.datastore.GsonFactory;
 
 import com.google.gson.Gson;
 

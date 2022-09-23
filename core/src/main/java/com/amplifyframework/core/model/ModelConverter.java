@@ -70,12 +70,17 @@ public final class ModelConverter {
         return result;
     }
 
-    private static Map<String, Object> extractAssociateId(ModelField modelField, Model instance,
+    private static <T extends Model> Map<String, Object> extractAssociateId(ModelField modelField, Model instance,
                                                                     ModelSchema schema)
             throws AmplifyException {
         final Object fieldValue = extractFieldValue(modelField.getName(), instance, schema);
-        if (modelField.isModel() && fieldValue instanceof Model) {
-            Model associatedModel = (Model) fieldValue;
+        if (modelField.isModel() && (fieldValue instanceof Model)  || fieldValue instanceof LazyModel) {
+            Model associatedModel;
+            if (fieldValue instanceof Model){
+                associatedModel = (Model) fieldValue;
+            } else {
+                associatedModel = ((LazyModel) fieldValue).getValue();
+            }
             ModelSchema childSchema =
                     SchemaRegistry.instance().getModelSchemaForModelClass(associatedModel.getModelName());
             /* Loop through primary key fields and get their respective values from the key map.
@@ -111,7 +116,7 @@ public final class ModelConverter {
             return Collections.singletonMap("id", ((Map<?, ?>) fieldValue).get("id"));
         } else if (modelField.isModel() && fieldValue == null) {
             return null;
-        } else {
+        }else {
             throw new IllegalStateException("Associated data is not a Model or Map.");
         }
     }

@@ -16,7 +16,6 @@
 buildscript {
     repositories {
         google()
-        jcenter()
         maven {
             url "https://plugins.gradle.org/m2/"
         }
@@ -24,7 +23,8 @@ buildscript {
 
     dependencies {
         classpath 'com.android.tools.build:gradle:4.0.2'
-        classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.4.31'
+        classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.6.0'
+        classpath "org.jetbrains.kotlin:kotlin-android-extensions:1.6.0"
         classpath "org.jetbrains.dokka:dokka-gradle-plugin:1.6.10"
         classpath 'org.jlleitschuh.gradle:ktlint-gradle:9.4.1'
     }
@@ -40,7 +40,8 @@ allprojects {
             url = 'https://aws.oss.sonatype.org/content/repositories/snapshots/'
         }
         google()
-        jcenter()
+        mavenCentral()
+        maven { url 'https://kotlin.bintray.com/kotlinx/' }
     }
 
     gradle.projectsEvaluated {
@@ -60,7 +61,7 @@ task clean(type: Delete) {
 
 ext {
     buildToolsVersion = "30.0.2"
-    compileSdkVersion = 30
+    compileSdkVersion = 31
     minSdkVersion = 16
     targetSdkVersion = 30
     awsSDKReleaseVersion = '2.53.0'
@@ -132,7 +133,7 @@ ext {
         mockito: 'org.mockito:mockito-core:3.1.0',
         mockk: 'io.mockk:mockk:1.10.6',
         mockwebserver: 'com.squareup.okhttp3:mockwebserver:4.9.1',
-        robolectric: 'org.robolectric:robolectric:4.5.1',
+        robolectric: 'org.robolectric:robolectric:4.7',
         jsonassert: 'org.skyscreamer:jsonassert:1.5.0'
     ]
 }

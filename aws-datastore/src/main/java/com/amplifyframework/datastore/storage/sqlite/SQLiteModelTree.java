@@ -29,8 +29,7 @@ import com.amplifyframework.core.model.SerializedModel;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteTable;
 import com.amplifyframework.logging.Logger;
 import com.amplifyframework.util.Empty;
-import com.amplifyframework.util.GsonFactory;
-import com.amplifyframework.util.Wrap;
+import com.amplifyframework.datastore.GsonFactory;import com.amplifyframework.util.Wrap;
 
 import com.google.gson.Gson;
 

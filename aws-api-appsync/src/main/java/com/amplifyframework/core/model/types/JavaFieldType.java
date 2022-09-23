@@ -18,6 +18,7 @@ package com.amplifyframework.core.model.types;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.amplifyframework.core.model.LazyModel;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.temporal.Temporal;
 
@@ -85,6 +86,9 @@ public enum JavaFieldType {
      * Represents the Model type.
      */
     MODEL(Model.class),
+
+    LAZY_MODEL(LazyModel.class),
+
 
     /**
      * Represents any custom type (objects that are not models).

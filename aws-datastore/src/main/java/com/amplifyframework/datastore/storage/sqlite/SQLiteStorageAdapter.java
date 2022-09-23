@@ -54,12 +54,13 @@ import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteColumn;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteTable;
 import com.amplifyframework.datastore.storage.sqlite.migrations.ModelMigrations;
 import com.amplifyframework.logging.Logger;
-import com.amplifyframework.util.GsonFactory;
+import com.amplifyframework.datastore.GsonFactory;
 import com.amplifyframework.util.Immutable;
 
 import com.google.gson.Gson;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -382,6 +383,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 DataStoreException dataStoreException = new DataStoreException(
                     "Error in saving the model: " + modelToString,
                     someOtherTypeOfException, "See attached exception for details."
+                        + Arrays.toString(someOtherTypeOfException.getStackTrace())
                 );
                 onError.accept(dataStoreException);
             }

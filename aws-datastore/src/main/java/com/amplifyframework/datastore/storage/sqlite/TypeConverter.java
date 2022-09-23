@@ -17,6 +17,7 @@ package com.amplifyframework.datastore.storage.sqlite;
 
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.core.model.LazyModel;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.types.JavaFieldType;
@@ -49,12 +50,16 @@ public final class TypeConverter {
         JAVA_TO_SQL.put(JavaFieldType.TIME, SQLiteDataType.TEXT);
         JAVA_TO_SQL.put(JavaFieldType.TIMESTAMP, SQLiteDataType.INTEGER);
         JAVA_TO_SQL.put(JavaFieldType.MODEL, SQLiteDataType.TEXT);
+        JAVA_TO_SQL.put(JavaFieldType.LAZY_MODEL, SQLiteDataType.TEXT);
         JAVA_TO_SQL.put(JavaFieldType.CUSTOM_TYPE, SQLiteDataType.TEXT);
     }
 
     static JavaFieldType getJavaFieldType(@NonNull ModelField field) {
         if (field.isModel()) {
             return JavaFieldType.MODEL;
+        }
+        if (field.isLazyModel()) {
+            return JavaFieldType.LAZY_MODEL;
         }
         if (field.isEnum()) {
             return JavaFieldType.ENUM;
@@ -75,6 +80,9 @@ public final class TypeConverter {
     public static JavaFieldType getJavaFieldTypeFromValue(@NonNull Object value) {
         if (value instanceof Model) {
             return JavaFieldType.MODEL;
+        }
+        if (value instanceof LazyModel) {
+            return JavaFieldType.LAZY_MODEL;
         }
         if (value instanceof Enum) {
             return JavaFieldType.ENUM;

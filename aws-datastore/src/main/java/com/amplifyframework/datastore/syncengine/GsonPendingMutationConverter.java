@@ -19,8 +19,7 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.datastore.DataStoreException;
-import com.amplifyframework.util.GsonFactory;
-
+import com.amplifyframework.datastore.GsonFactory;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 

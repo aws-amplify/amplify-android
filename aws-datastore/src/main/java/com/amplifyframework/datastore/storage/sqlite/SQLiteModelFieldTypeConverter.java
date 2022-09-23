@@ -16,11 +16,14 @@
 package com.amplifyframework.datastore.storage.sqlite;
 
 import android.database.Cursor;
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.core.model.LazyModel;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelSchema;
@@ -31,6 +34,7 @@ import com.amplifyframework.core.model.types.JavaFieldType;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.model.ModelFieldTypeConverter;
 import com.amplifyframework.datastore.model.ModelHelper;
+import com.amplifyframework.datastore.model.DataStoreLazyModel;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteColumn;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteTable;
 import com.amplifyframework.logging.Logger;
@@ -124,6 +128,10 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
                 return booleanValue ? 1L : 0L;
             case MODEL:
                 return value instanceof Map ? ((Map<?, ?>) value).get("id") : ((Model) value).getPrimaryKeyString();
+            case LAZY_MODEL:
+                Log.d("fieldtypeconverter", "lazymodel value:" + ((LazyModel<?>) value).getValue());
+                return  Objects.requireNonNull(((LazyModel<?>) value).getValue()).getPrimaryKeyString();
+
             case ENUM:
                 return value instanceof String ? value : ((Enum<?>) value).name();
             case CUSTOM_TYPE:
@@ -241,6 +249,8 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
                     return cursor.getString(columnIndex);
                 case MODEL:
                     return convertModelAssociationToTarget(cursor, field);
+                case LAZY_MODEL:
+                    return convertLazyModelAssociationToTarget(cursor, field);
                 case ENUM:
                     return convertEnumValueToTarget(valueAsString, field);
                 case CUSTOM_TYPE:
@@ -287,6 +297,22 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
         SQLiteModelFieldTypeConverter nestedModelConverter =
             new SQLiteModelFieldTypeConverter(innerModelSchema, schemaRegistry, gson, cursorInnerModelCounts);
         return nestedModelConverter.buildMapForModel(cursor);
+    }
+
+    @SuppressWarnings("unchecked") // Cast Type to Class<? extends Model>
+    private <M extends Model> Object convertLazyModelAssociationToTarget(
+            @NonNull Cursor cursor, @NonNull ModelField field) throws DataStoreException {
+        // Eager load model if the necessary columns are present inside the cursor.
+        // At the time of implementation, cursor should have been joined with these
+        // columns IF AND ONLY IF the model is a foreign key to the inner model.
+        ModelSchema innerModelSchema =
+                schemaRegistry.getModelSchemaForModelClass(field.getTargetType());
+        SQLiteModelFieldTypeConverter nestedModelConverter =
+                new SQLiteModelFieldTypeConverter(innerModelSchema, schemaRegistry, gson, cursorInnerModelCounts);
+        String jsonString = gson.toJson(nestedModelConverter.buildMapForModel(cursor));
+        Model model = gson.fromJson(jsonString,
+                innerModelSchema.getModelClass());
+        return new DataStoreLazyModel<M>((M) model, (Class<M>) innerModelSchema.getModelClass());
     }
 
     private Object convertCustomTypeToTarget(Cursor cursor, ModelField field, int columnIndex) throws IOException {

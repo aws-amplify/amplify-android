@@ -13,17 +13,18 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.util;
+package com.amplifyframework.datastore;
 
 import com.amplifyframework.api.graphql.GsonResponseAdapters;
 import com.amplifyframework.core.model.LazyModel;
 import com.amplifyframework.core.model.query.predicate.GsonPredicateAdapters;
 import com.amplifyframework.core.model.temporal.GsonTemporalAdapters;
 import com.amplifyframework.core.model.types.GsonJavaTypeAdapters;
+import com.amplifyframework.datastore.appsync.ModelWithMetadata;
 import com.amplifyframework.datastore.appsync.ModelWithMetadataAdapter;
 import com.amplifyframework.datastore.appsync.SerializedCustomTypeAdapter;
 import com.amplifyframework.datastore.appsync.SerializedModelAdapter;
-
+import com.amplifyframework.datastore.model.LazyModelAdapter;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -54,9 +55,9 @@ public final class GsonFactory {
         GsonPredicateAdapters.register(builder);
         GsonResponseAdapters.register(builder);
         ModelWithMetadataAdapter.register(builder);
+        builder.registerTypeAdapter(LazyModel.class, new LazyModelAdapter<>());
         SerializedModelAdapter.register(builder);
         SerializedCustomTypeAdapter.register(builder);
-        builder.registerTypeAdapter(LazyModel.class, new LazyModelAdapter<>());
         builder.serializeNulls();
         return builder.create();
     }

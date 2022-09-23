@@ -27,6 +27,7 @@ import com.amplifyframework.api.graphql.QueryType;
 import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.core.model.AuthRule;
 import com.amplifyframework.core.model.AuthStrategy;
+import com.amplifyframework.core.model.LazyModel;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelAssociation;
 import com.amplifyframework.core.model.ModelField;
@@ -480,9 +481,11 @@ final class AppSyncRequestFactory {
     private static Object extractAssociateId(ModelField modelField, Model instance, ModelSchema schema)
             throws AmplifyException {
         final Object fieldValue = extractFieldValue(modelField.getName(), instance, schema);
-        if (modelField.isModel() && fieldValue instanceof Model) {
+        if ((modelField.isModel()|| modelField.isLazyModel()) && fieldValue instanceof Model) {
             return ((Model) fieldValue).resolveIdentifier();
-        } else if (modelField.isModel() && fieldValue instanceof Map) {
+        } else if (modelField.isLazyModel() && fieldValue instanceof LazyModel) {
+            return ((LazyModel) fieldValue).getValue().resolveIdentifier();
+        }else if ((modelField.isModel()|| modelField.isLazyModel()) && fieldValue instanceof Map) {
             return ((Map<?, ?>) fieldValue).get("id");
         } else {
             throw new IllegalStateException("Associated data is not Model or Map.");

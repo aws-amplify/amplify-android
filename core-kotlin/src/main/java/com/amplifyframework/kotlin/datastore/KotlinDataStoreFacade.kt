@@ -21,27 +21,19 @@ import com.amplifyframework.core.model.Model
 import com.amplifyframework.core.model.query.ObserveQueryOptions
 import com.amplifyframework.core.model.query.QueryOptions
 import com.amplifyframework.core.model.query.predicate.QueryPredicate
-import com.amplifyframework.datastore.DataStoreCategoryBehavior as Delegate
 import com.amplifyframework.datastore.DataStoreException
 import com.amplifyframework.datastore.DataStoreItemChange
 import com.amplifyframework.datastore.DataStoreQuerySnapshot
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
-import kotlin.coroutines.suspendCoroutine
-import kotlin.reflect.KClass
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.channels.sendBlocking
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flattenMerge
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onCompletion
-import kotlinx.coroutines.flow.takeWhile
+import kotlinx.coroutines.flow.*
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
+import kotlin.reflect.KClass
+import com.amplifyframework.datastore.DataStoreCategoryBehavior as Delegate
 
 class KotlinDataStoreFacade(private val delegate: Delegate = Amplify.DataStore) : DataStore {
     @Throws(DataStoreException::class)
@@ -99,7 +91,6 @@ class KotlinDataStoreFacade(private val delegate: Delegate = Amplify.DataStore) 
         }
     }
 
-    @FlowPreview
     @ExperimentalCoroutinesApi
     @Throws(DataStoreException::class)
     override suspend fun observe(): Flow<DataStoreItemChange<out Model>> {
@@ -113,7 +104,6 @@ class KotlinDataStoreFacade(private val delegate: Delegate = Amplify.DataStore) 
         return observation.waitForStart()
     }
 
-    @FlowPreview
     @ExperimentalCoroutinesApi
     @Throws(DataStoreException::class)
     override suspend fun <T : Model> observe(itemClass: KClass<T>, itemId: String):
@@ -130,7 +120,6 @@ class KotlinDataStoreFacade(private val delegate: Delegate = Amplify.DataStore) 
             return observation.waitForStart()
         }
 
-    @FlowPreview
     @ExperimentalCoroutinesApi
     @Throws(DataStoreException::class)
     override suspend fun <T : Model> observe(
@@ -149,7 +138,6 @@ class KotlinDataStoreFacade(private val delegate: Delegate = Amplify.DataStore) 
         return observation.waitForStart()
     }
 
-    @FlowPreview
     @ExperimentalCoroutinesApi
     override suspend fun <T : Model> observeQuery(
         itemClass: KClass<T>,

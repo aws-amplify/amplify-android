@@ -16,9 +16,16 @@
 apply plugin: 'com.android.library'
 apply from: rootProject.file("configuration/checkstyle.gradle")
 apply from: rootProject.file("configuration/publishing.gradle")
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
+apply plugin: "org.jetbrains.dokka"
 
 dependencies {
+    implementation dependency.kotlin.stdlib
+    implementation dependency.kotlin.coroutines
+    implementation dependency.androidx.core_ktx
     implementation project(':core')
+    implementation project(':core-kotlin')
     implementation project(':aws-api-appsync')
 
     implementation dependency.androidx.appcompat
@@ -36,6 +43,7 @@ dependencies {
     testImplementation dependency.robolectric
     testImplementation dependency.androidx.test.core
     testImplementation dependency.mockk
+    testImplementation project(path: ':aws-datastore')
 
     androidTestImplementation dependency.mockito
     androidTestImplementation project(path: ':testmodels')
@@ -50,5 +58,6 @@ dependencies {
     androidTestImplementation dependency.rxjava
     androidTestImplementation dependency.okhttp
     androidTestImplementation dependency.oauth2
+    androidTestImplementation project(path: ':aws-datastore')
 }
 

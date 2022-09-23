@@ -32,6 +32,7 @@ import com.amplifyframework.util.Immutable;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -210,7 +211,14 @@ public final class ModelSchema {
                 field.getAnnotation(com.amplifyframework.core.model.annotations.ModelField.class);
         if (annotation != null) {
             final String fieldName = field.getName();
-            final Class<?> fieldType = field.getType();
+            final Class<?> fieldType;
+            if (field.getType() == LazyModel.class && field.getGenericType()
+                    instanceof ParameterizedType){
+                    ParameterizedType pType = (ParameterizedType)field.getGenericType() ;
+                    fieldType = (Class<?>) pType.getActualTypeArguments()[0];
+            } else {
+                fieldType = field.getType();
+            }
             final String targetType = annotation.targetType();
             final List<AuthRule> authRules = new ArrayList<>();
             for (com.amplifyframework.core.model.annotations.AuthRule ruleAnnotation : annotation.authRules()) {
@@ -225,10 +233,22 @@ public final class ModelSchema {
                     .isArray(Collection.class.isAssignableFrom(field.getType()))
                     .isEnum(Enum.class.isAssignableFrom(field.getType()))
                     .isModel(Model.class.isAssignableFrom(field.getType()))
+                    .isLazyModel(LazyModel.class.isAssignableFrom(field.getType()))
                     .authRules(authRules)
                     .build();
         }
         return null;
+    }
+
+    public static Class<?> findSuperClassParameterType(Object instance) {
+        Class<?> subClass = instance.getClass();
+        while (subClass != subClass.getSuperclass()) {
+            // instance.getClass() is no subclass of classOfInterest or instance is a direct instance of classOfInterest
+            subClass = subClass.getSuperclass();
+            if (subClass == null) throw new IllegalArgumentException();
+        }
+        ParameterizedType parameterizedType = (ParameterizedType) subClass.getGenericSuperclass();
+        return (Class<?>) parameterizedType.getActualTypeArguments()[0];
     }
 
     // Utility method to extract association metadata from a field

@@ -160,6 +160,16 @@ public final class SerializedModel implements Model {
                             .serializedData(fieldData)
                             .build());
                 }
+            } else if (field.isLazyModel()) {
+                ModelSchema fieldModelSchema = schemaRegistry.getModelSchemaForModelClass(field.getTargetType());
+                @SuppressWarnings("unchecked")
+                Map<String, Object> fieldData = (Map<String, Object>) serializedData.get(key);
+                if (fieldData != null) {
+                    result.put(key, SerializedModel.builder()
+                            .modelSchema(fieldModelSchema)
+                            .serializedData(fieldData)
+                            .build());
+                }
             } else if (field.isCustomType()) {
                 if (field.isArray()) {
                     @SuppressWarnings("unchecked")

@@ -16,24 +16,20 @@
 package com.amplifyframework.kotlin.hub
 
 import com.amplifyframework.core.Amplify
-import com.amplifyframework.hub.HubCategoryBehavior as Delegate
 import com.amplifyframework.hub.HubChannel
 import com.amplifyframework.hub.HubEvent
 import com.amplifyframework.hub.HubEventFilter
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.channels.sendBlocking
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import com.amplifyframework.hub.HubCategoryBehavior as Delegate
 
 class KotlinHubFacade(private val delegate: Delegate = Amplify.Hub) : Hub {
     override fun publish(channel: HubChannel, event: HubEvent<*>) {
         delegate.publish(channel, event)
     }
 
-    @FlowPreview
-    @ExperimentalCoroutinesApi
     override fun subscribe(channel: HubChannel, filter: HubEventFilter): Flow<HubEvent<*>> =
         callbackFlow {
             val token = delegate.subscribe(channel, filter) { sendBlocking(it) }

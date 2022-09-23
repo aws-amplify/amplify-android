@@ -54,6 +54,9 @@ public final class ModelField {
     // True if the field is an instance of model.
     private final boolean isModel;
 
+    // True if the field is an instance of model.
+    private final boolean isLazyModel;
+
     // True if the field is an instance of CustomType
     private final boolean isCustomType;
 
@@ -72,6 +75,7 @@ public final class ModelField {
         this.isArray = builder.isArray;
         this.isEnum = builder.isEnum;
         this.isModel = builder.isModel;
+        this.isLazyModel = builder.isLazyModel;
         this.isCustomType = builder.isCustomType;
         this.authRules = builder.authRules;
     }
@@ -152,6 +156,15 @@ public final class ModelField {
      */
     public boolean isModel() {
         return isModel;
+    }
+
+    /**
+     * Returns true if the field's target type is Model.
+     *
+     * @return True if the field's target type is Model.
+     */
+    public boolean isLazyModel() {
+        return isLazyModel;
     }
 
     /**
@@ -269,6 +282,9 @@ public final class ModelField {
         // True if the field's target type is Model.
         private boolean isModel = false;
 
+        // True if the field's target type is Model.
+        private boolean isLazyModel = false;
+
         // True if the field's target type is CustomType.
         private boolean isCustomType = false;
 
@@ -362,6 +378,16 @@ public final class ModelField {
          */
         public ModelFieldBuilder isModel(boolean isModel) {
             this.isModel = isModel;
+            return this;
+        }
+
+        /**
+         * Sets a flag indicating whether or not the field's target type is a Model.
+         * @param isLazyModel flag indicating if the field is a model
+         * @return the builder object
+         */
+        public ModelFieldBuilder isLazyModel(boolean isLazyModel) {
+            this.isLazyModel = isLazyModel;
             return this;
         }
 

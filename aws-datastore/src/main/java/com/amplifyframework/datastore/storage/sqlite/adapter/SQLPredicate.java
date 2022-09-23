@@ -35,7 +35,7 @@ import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.storage.sqlite.SQLiteModelFieldTypeConverter;
 import com.amplifyframework.datastore.storage.sqlite.SqlKeyword;
 import com.amplifyframework.datastore.storage.sqlite.TypeConverter;
-import com.amplifyframework.util.GsonFactory;
+import com.amplifyframework.datastore.GsonFactory;
 import com.amplifyframework.util.Immutable;
 import com.amplifyframework.util.Wrap;
 
