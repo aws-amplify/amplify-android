@@ -97,13 +97,12 @@ object AuthorizationCognitoActions : AuthorizationActions {
         cognitoAuthService: AWSCognitoAuthServiceBehavior
     ): AmplifyCredential {
         val authParameters = when (amplifyCredential) {
-            is AmplifyCredential.UserPool -> amplifyCredential.tokens.refreshToken?.let {
-                mapOf("REFRESH_TOKEN" to it)
+            is AmplifyCredential.UserPoolData->  {
+                amplifyCredential.signedInData.cognitoUserPoolTokens.refreshToken?.let {
+                    mapOf("REFRESH_TOKEN" to it)
+                }
             }
-            is AmplifyCredential.UserAndIdentityPool -> amplifyCredential.tokens.refreshToken?.let {
-                mapOf("REFRESH_TOKEN" to it)
-            }
-            else -> null
+            else -> throw Exception() // TODO: Better Exception message
         }
         val refreshTokenResponse = cognitoAuthService.cognitoIdentityProviderClient?.initiateAuth {
             authFlow = AuthFlowType.RefreshToken
@@ -119,6 +118,7 @@ object AuthorizationCognitoActions : AuthorizationActions {
             expiration = Instant.now().plus(expiresIn.seconds).epochSeconds
         )
 
-        return AmplifyCredential.UserPool(cognitoUserPoolTokens)
+        val updatedSignedInData = amplifyCredential.signedInData.copy(cognitoUserPoolTokens = cognitoUserPoolTokens)
+        return AmplifyCredential.UserPool(updatedSignedInData)
     }
 }

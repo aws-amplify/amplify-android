@@ -102,7 +102,7 @@ class AWSCognitoLegacyCredentialStoreTest {
         `when`(
             mockFactory.create(
                 mockContext,
-                AWSCognitoLegacyCredentialStore.AWS_KEY_VALUE_STORE_NAMESPACE_IDENTIFIER,
+                AWSCognitoLegacyCredentialStore.AWS_AUTH_CREDENTIAL_PROVIDER,
                 true,
             )
         ).thenReturn(mockKeyValue)

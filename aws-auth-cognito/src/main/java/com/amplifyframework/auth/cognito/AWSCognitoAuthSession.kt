@@ -138,9 +138,9 @@ data class AWSCognitoAuthSession(
 
 fun AmplifyCredential.isValid(): Boolean {
     return when (this) {
-        is AmplifyCredential.UserPool -> SessionHelper.isValid(tokens)
+        is AmplifyCredential.UserPool -> SessionHelper.isValid(signedInData.cognitoUserPoolTokens)
         is AmplifyCredential.UserAndIdentityPool ->
-            SessionHelper.isValid(tokens) &&
+            SessionHelper.isValid(signedInData.cognitoUserPoolTokens) &&
                 SessionHelper.isValidSession(credentials)
         is AmplifyCredential.IdentityPool -> SessionHelper.isValidSession(credentials)
         else -> false
@@ -153,8 +153,10 @@ fun AmplifyCredential.getCognitoSession(): AWSCognitoAuthSession {
             true,
             identityId = AuthSessionResult.failure(AuthException("", "")),
             awsCredentials = AWSCognitoAuthSession.getCredentials(AWSCredentials.empty),
-            userSub = AWSCognitoAuthSession.getUserSub(tokens),
-            userPoolTokens = AuthSessionResult.success(AWSCognitoAuthSession.getUserPoolTokens(tokens))
+            userSub = AWSCognitoAuthSession.getUserSub(signedInData.cognitoUserPoolTokens),
+            userPoolTokens = AuthSessionResult.success(
+                AWSCognitoAuthSession.getUserPoolTokens(signedInData.cognitoUserPoolTokens)
+            )
         )
         is AmplifyCredential.IdentityPool -> AWSCognitoAuthSession(
             false,
@@ -167,8 +169,10 @@ fun AmplifyCredential.getCognitoSession(): AWSCognitoAuthSession {
             true,
             identityId = AuthSessionResult.success(identityId),
             awsCredentials = AWSCognitoAuthSession.getCredentials(credentials),
-            userSub = AWSCognitoAuthSession.getUserSub(tokens),
-            userPoolTokens = AuthSessionResult.success(AWSCognitoAuthSession.getUserPoolTokens(tokens))
+            userSub = AWSCognitoAuthSession.getUserSub(signedInData.cognitoUserPoolTokens),
+            userPoolTokens = AuthSessionResult.success(
+                AWSCognitoAuthSession.getUserPoolTokens(signedInData.cognitoUserPoolTokens)
+            )
         )
         else -> AWSCognitoAuthSession(
             false,

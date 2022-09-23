@@ -28,20 +28,14 @@ import com.amplifyframework.statemachine.codegen.events.AuthEvent
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.SignInEvent
 import com.amplifyframework.statemachine.codegen.events.SignOutEvent
-import java.util.Date
 
 object AuthenticationCognitoActions : AuthenticationActions {
     override fun configureAuthenticationAction(event: AuthenticationEvent.EventType.Configure) =
         Action<AuthEnvironment>("ConfigureAuthN") { id, dispatcher ->
             logger?.verbose("$id Starting execution")
             val evt = when (val credentials = event.storedCredentials) {
-                is AmplifyCredential.UserPool -> {
-                    val signedInData = SignedInData("", "", Date(), SignInMethod.SRP, credentials.tokens)
-                    AuthenticationEvent(AuthenticationEvent.EventType.InitializedSignedIn(signedInData))
-                }
-                is AmplifyCredential.UserAndIdentityPool -> {
-                    val signedInData = SignedInData("", "", Date(), SignInMethod.SRP, credentials.tokens)
-                    AuthenticationEvent(AuthenticationEvent.EventType.InitializedSignedIn(signedInData))
+                is AmplifyCredential.UserPoolData -> {
+                    AuthenticationEvent(AuthenticationEvent.EventType.InitializedSignedIn(credentials.signedInData))
                 }
                 else -> AuthenticationEvent(AuthenticationEvent.EventType.InitializedSignedOut(SignedOutData()))
             }

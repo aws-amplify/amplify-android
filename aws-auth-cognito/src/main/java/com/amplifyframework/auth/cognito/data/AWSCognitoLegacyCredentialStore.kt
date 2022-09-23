@@ -21,7 +21,9 @@ import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 import com.amplifyframework.statemachine.codegen.data.AuthCredentialStore
 import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
-import java.util.Locale
+import com.amplifyframework.statemachine.codegen.data.SignInMethod
+import com.amplifyframework.statemachine.codegen.data.SignedInData
+import java.util.*
 
 class AWSCognitoLegacyCredentialStore(
     val context: Context,
@@ -30,8 +32,9 @@ class AWSCognitoLegacyCredentialStore(
 ) : AuthCredentialStore {
 
     companion object {
-        const val AWS_KEY_VALUE_STORE_NAMESPACE_IDENTIFIER: String = "com.amazonaws.android.auth"
+        const val AWS_AUTH_CREDENTIAL_PROVIDER: String = "com.amazonaws.android.auth"
         const val APP_LOCAL_CACHE = "CognitoIdentityProviderCache"
+        const val AWS_MOBILE_CLIENT_PROVIDER = "com.amazonaws.mobile.client"
 
         private const val ID_KEY: String = "identityId"
         private const val AK_KEY: String = "accessKey"
@@ -48,10 +51,18 @@ class AWSCognitoLegacyCredentialStore(
 
         // TODO check if below exists
         private const val TOKEN_EXPIRATION = "tokenExpiration"
+
+        // Mobile Client Keys
+        const val PROVIDER_KEY = "provider"
+        const val SIGN_IN_MODE_KEY = "signInMode"
+
     }
 
     private val idAndCredentialsKeyValue: KeyValueRepository =
-        keyValueRepoFactory.create(context, AWS_KEY_VALUE_STORE_NAMESPACE_IDENTIFIER)
+        keyValueRepoFactory.create(context, AWS_AUTH_CREDENTIAL_PROVIDER)
+
+    private val mobileClientKeyValue: KeyValueRepository =
+        keyValueRepoFactory.create(context, AWS_MOBILE_CLIENT_PROVIDER)
 
     private val tokensKeyValue: KeyValueRepository = keyValueRepoFactory.create(
         context,
@@ -71,9 +82,31 @@ class AWSCognitoLegacyCredentialStore(
         return when {
             awsCredentials != null && identityId != null -> when (cognitoUserPoolTokens) {
                 null -> AmplifyCredential.IdentityPool(identityId, awsCredentials)
-                else -> AmplifyCredential.UserAndIdentityPool(cognitoUserPoolTokens, identityId, awsCredentials)
+                // TODO: Properly prefill
+                else -> AmplifyCredential.UserAndIdentityPool(
+                    SignedInData(
+                        username = "",
+                        userId = "",
+                        signedInDate = Date(),
+                        signInMethod = SignInMethod.SRP,
+                        cognitoUserPoolTokens = cognitoUserPoolTokens
+                    ),
+                    identityId,
+                    awsCredentials
+                )
             }
-            cognitoUserPoolTokens != null -> AmplifyCredential.UserPool(cognitoUserPoolTokens)
+            cognitoUserPoolTokens != null -> {
+            // TODO: Properly prefill
+                AmplifyCredential.UserPool(
+                    SignedInData(
+                        username = "",
+                        userId = "",
+                        signedInDate = Date(),
+                        signInMethod = SignInMethod.SRP,
+                        cognitoUserPoolTokens = cognitoUserPoolTokens
+                    )
+                )
+            }
             else -> AmplifyCredential.Empty
         }
     }
@@ -135,6 +168,10 @@ class AWSCognitoLegacyCredentialStore(
             CognitoUserPoolTokens(idToken, accessToken, refreshToken, expiration)
         }
     }
+
+//    private fun retrieveSignInMethod(): SignInMethod {
+//        mobileClientKeyValue.get(SIGN_IN_MODE_KEY)
+//    }
 
     private fun getTokenKeys(): Map<String, String> {
         val appClient = authConfiguration.userPool?.appClient

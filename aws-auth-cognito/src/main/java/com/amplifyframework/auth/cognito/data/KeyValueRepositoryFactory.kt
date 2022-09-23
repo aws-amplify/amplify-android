@@ -17,7 +17,8 @@ package com.amplifyframework.auth.cognito.data
 
 import android.content.Context
 import com.amplifyframework.auth.cognito.data.AWSCognitoLegacyCredentialStore.Companion.APP_LOCAL_CACHE
-import com.amplifyframework.auth.cognito.data.AWSCognitoLegacyCredentialStore.Companion.AWS_KEY_VALUE_STORE_NAMESPACE_IDENTIFIER
+import com.amplifyframework.auth.cognito.data.AWSCognitoLegacyCredentialStore.Companion.AWS_AUTH_CREDENTIAL_PROVIDER
+import com.amplifyframework.auth.cognito.data.AWSCognitoLegacyCredentialStore.Companion.AWS_MOBILE_CLIENT_PROVIDER
 
 class KeyValueRepositoryFactory {
     fun create(context: Context, keyValueRepoID: String, persistenceEnabled: Boolean = true): KeyValueRepository {
@@ -27,7 +28,7 @@ class KeyValueRepositoryFactory {
                     persistenceEnabled -> EncryptedKeyValueRepository(context, keyValueRepoID)
                     else -> InMemoryKeyValueRepository()
                 }
-            AWS_KEY_VALUE_STORE_NAMESPACE_IDENTIFIER, APP_LOCAL_CACHE ->
+            AWS_AUTH_CREDENTIAL_PROVIDER, APP_LOCAL_CACHE, AWS_MOBILE_CLIENT_PROVIDER ->
                 LegacyKeyValueRepository(context, keyValueRepoID)
             else -> InMemoryKeyValueRepository()
         }

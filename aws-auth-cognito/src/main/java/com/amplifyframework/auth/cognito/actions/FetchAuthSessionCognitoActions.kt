@@ -31,8 +31,7 @@ object FetchAuthSessionCognitoActions : FetchAuthSessionActions {
             logger?.verbose("$id Starting execution")
             val evt = try {
                 val idToken = when (amplifyCredential) {
-                    is AmplifyCredential.UserPool -> amplifyCredential.tokens.idToken
-                    is AmplifyCredential.UserAndIdentityPool -> amplifyCredential.tokens.idToken
+                    is AmplifyCredential.UserPoolData -> amplifyCredential.signedInData.cognitoUserPoolTokens.idToken
                     else -> null
                 }
                 val loginsMap: Map<String, String>? = configuration.userPool?.identityProviderName?.let { provider ->
@@ -62,8 +61,7 @@ object FetchAuthSessionCognitoActions : FetchAuthSessionActions {
             logger?.verbose("$id Starting execution")
             val evt = try {
                 val idToken = when (amplifyCredential) {
-                    is AmplifyCredential.UserPool -> amplifyCredential.tokens.idToken
-                    is AmplifyCredential.UserAndIdentityPool -> amplifyCredential.tokens.idToken
+                    is AmplifyCredential.UserPoolData -> amplifyCredential.signedInData.cognitoUserPoolTokens.idToken
                     else -> null
                 }
                 val identityId = when (amplifyCredential) {
