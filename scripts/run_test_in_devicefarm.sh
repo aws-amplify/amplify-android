@@ -102,13 +102,10 @@ function stopDuplicates {
 }
 stopDuplicates
 
-max_devices=3
-#$CODEBUILD_WEBHOOK_BASE_REF will be /refs/heads/<base_branch>, using substring test for simplicity
-if [[ $CODEBUILD_WEBHOOK_BASE_REF == *"dev-preview"* ]];
-then
-    echo "Detected Dev-Preview branch. Running single device test"
-    max_devices=1
-fi
+#   +-+-+ +-+-+-+ +-+-+-+-+-+ +-+-+ +-+-+-+-+
+#   |D|o| |n|o|t| |m|e|r|g|e| |t|o| |m|a|i|n|
+#   +-+-+ +-+-+-+ +-+-+-+-+-+ +-+-+ +-+-+-+-+
+max_devices=1
 
 # Schedule the test run in device farm
 echo "Scheduling test run"

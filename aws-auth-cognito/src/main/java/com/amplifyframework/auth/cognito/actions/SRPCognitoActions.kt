@@ -40,6 +40,7 @@ object SRPCognitoActions : SRPActions {
     private const val KEY_USER_ID_FOR_SRP = "USER_ID_FOR_SRP"
     private const val KEY_SECRET_HASH = "SECRET_HASH"
     private const val KEY_USERNAME = "USERNAME"
+
     override fun initiateSRPAuthAction(event: SRPEvent.EventType.InitiateSRP) =
         Action<AuthEnvironment>("InitSRPAuth") { id, dispatcher ->
             logger?.verbose("$id Starting execution")
@@ -92,7 +93,6 @@ object SRPCognitoActions : SRPActions {
                 val userId = params.getValue(KEY_USER_ID_FOR_SRP)
 
                 srpHelper.setUserPoolParams(userId, configuration.userPool?.poolId!!)
-                val m1Signature = srpHelper.getSignature(salt, srpB, secretBlock)
                 val secretHash = AuthHelper.getSecretHash(
                     username,
                     configuration.userPool.appClient,
@@ -102,7 +102,7 @@ object SRPCognitoActions : SRPActions {
                 val challengeParams = mutableMapOf(
                     KEY_USERNAME to username,
                     KEY_PASSWORD_CLAIM_SECRET_BLOCK to secretBlock,
-                    KEY_PASSWORD_CLAIM_SIGNATURE to m1Signature,
+                    KEY_PASSWORD_CLAIM_SIGNATURE to srpHelper.getSignature(salt, srpB, secretBlock),
                     KEY_TIMESTAMP to srpHelper.dateString,
                 )
                 secretHash?.let { challengeParams[KEY_SECRET_HASH] = it }

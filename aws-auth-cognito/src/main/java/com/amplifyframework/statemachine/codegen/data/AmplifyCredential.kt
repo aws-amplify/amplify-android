@@ -44,13 +44,13 @@ sealed class AmplifyCredential {
     data class IdentityPool(override val identityId: String, override val credentials: AWSCredentials) :
         AmplifyCredential(), IdentityPoolData
 
-    //    @Serializable
+//    @Serializable
 //    @SerialName("identityPoolFederated")
-    data class IdentityPoolFederated(
-        val federatedToken: FederatedToken,
-        val identityId: String,
-        val credentials: AWSCredentials
-    ) : AmplifyCredential()
+//    data class IdentityPoolFederated(
+//        val federatedToken: FederatedToken,
+//        val identityId: String,
+//        val credentials: AWSCredentials
+//    ) : AmplifyCredential()
 
     @Serializable
     @SerialName("userAndIdentityPool")
@@ -59,37 +59,18 @@ sealed class AmplifyCredential {
         override val identityId: String,
         override val credentials: AWSCredentials
     ) : AmplifyCredential(), UserPoolData, IdentityPoolData
-
-    fun update(
-        identityId: String? = null,
-        awsCredentials: AWSCredentials? = null
-    ): AmplifyCredential {
-        return when {
-            identityId != null -> when (this) {
-                is UserAndIdentityPool -> copy(identityId = identityId)
-                is UserPool -> UserAndIdentityPool(signedInData, identityId, AWSCredentials.empty)
-                is IdentityPool -> copy(identityId = identityId)
-                else -> IdentityPool(identityId = identityId, AWSCredentials.empty)
-            }
-            awsCredentials != null -> when (this) {
-                is UserAndIdentityPool -> copy(credentials = awsCredentials)
-                is IdentityPool -> copy(credentials = awsCredentials)
-                else -> Empty
-            }
-            else -> this
-        }
-    }
 }
 
-// TODO: token abstraction
-// sealed class Token{
+// TODO: Token abstraction if needed
+// @Serializable
+// sealed class AuthTokens{
 //    data class CognitoUserPoolTokens(
 //        val idToken: String?,
 //        val accessToken: String?,
 //        val refreshToken: String?,
 //        val expiration: Long?,
-//    )
-//    data class FederatedToken(val token: String, val provider: AuthProvider) : Token()
+//    ) : AuthTokens()
+//    data class FederatedToken(val token: String, val provider: AuthProvider) : AuthTokens()
 // }
 
 data class FederatedToken(val token: String, val provider: AuthProvider)
