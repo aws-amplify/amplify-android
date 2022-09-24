@@ -27,9 +27,11 @@ import com.amplifyframework.core.Consumer
 import com.amplifyframework.statemachine.StateMachineEvent
 import com.amplifyframework.statemachine.codegen.data.AuthChallenge
 import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
+import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.data.SignInMethod
 import com.amplifyframework.statemachine.codegen.data.SignedInData
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
+import com.amplifyframework.statemachine.codegen.events.DeviceSRPSignInEvent
 import com.amplifyframework.statemachine.codegen.events.SignInEvent
 import java.util.Date
 import kotlin.time.Duration.Companion.seconds
@@ -42,6 +44,7 @@ object SignInChallengeHelper {
         session: String?,
         challengeParameters: Map<String, String>?,
         authenticationResult: AuthenticationResultType?,
+        // TODO: remove once we are able to get this from the configuration
         signInMethod: SignInMethod = SignInMethod.SRP
     ): StateMachineEvent {
         return when {
@@ -49,10 +52,17 @@ object SignInChallengeHelper {
                 val signedInData = authenticationResult.let {
                     val expiresIn = Instant.now().plus(it.expiresIn.seconds).epochSeconds
                     val tokens = CognitoUserPoolTokens(it.idToken, it.accessToken, it.refreshToken, expiresIn)
-                    SignedInData(userId, username, Date(), signInMethod, tokens)
+                    val deviceMetaData = it.newDeviceMetadata?.let { metadata ->
+                        DeviceMetadata.Metadata(metadata.deviceKey, metadata.deviceGroupKey)
+                    } ?: DeviceMetadata.Empty
+                    SignedInData(userId, username, Date(), signInMethod, deviceMetaData, tokens)
                 }
 
-                AuthenticationEvent(AuthenticationEvent.EventType.SignInCompleted(signedInData))
+                if (signedInData.deviceMetadata == DeviceMetadata.Empty) {
+                    AuthenticationEvent(AuthenticationEvent.EventType.SignInCompleted(signedInData))
+                } else {
+                    SignInEvent(SignInEvent.EventType.ConfirmDevice(signedInData))
+                }
             }
             challengeNameType is ChallengeNameType.SmsMfa ||
                 challengeNameType is ChallengeNameType.CustomChallenge
@@ -60,6 +70,13 @@ object SignInChallengeHelper {
                 val challenge =
                     AuthChallenge(challengeNameType.value, username, session, challengeParameters)
                 SignInEvent(SignInEvent.EventType.ReceivedChallenge(challenge))
+            }
+
+            challengeNameType is ChallengeNameType.DevicePasswordVerifier -> {
+                DeviceSRPSignInEvent(DeviceSRPSignInEvent.EventType.RespondDeviceSRPChallenge(challengeParameters))
+            }
+            challengeNameType is ChallengeNameType.DeviceSrpAuth -> {
+                DeviceSRPSignInEvent(DeviceSRPSignInEvent.EventType.RespondDevicePasswordVerifier(challengeParameters))
             }
             else -> SignInEvent(SignInEvent.EventType.ThrowError(Exception("Response did not contain sign in info.")))
         }

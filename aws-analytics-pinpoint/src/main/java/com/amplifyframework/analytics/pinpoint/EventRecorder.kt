@@ -29,6 +29,7 @@ import aws.sdk.kotlin.services.pinpoint.model.EventsRequest
 import aws.sdk.kotlin.services.pinpoint.model.PublicEndpoint
 import aws.sdk.kotlin.services.pinpoint.model.PutEventsRequest
 import aws.sdk.kotlin.services.pinpoint.model.Session
+import com.amplifyframework.analytics.AnalyticsEvent
 import com.amplifyframework.analytics.pinpoint.database.EventTable
 import com.amplifyframework.analytics.pinpoint.database.PinpointDatabase
 import com.amplifyframework.analytics.pinpoint.internal.core.util.millisToIsoDate
@@ -61,13 +62,14 @@ internal class EventRecorder(
         }
     }
 
-    internal suspend fun submitEvents(): List<PinpointEvent> {
+    internal suspend fun submitEvents(): List<AnalyticsEvent> {
         return withContext(coroutineDispatcher) {
             processEvents()
         }
     }
 
-    private suspend fun processEvents(): List<PinpointEvent> {
+    private suspend fun processEvents(): List<AnalyticsEvent> {
+        val syncedAnalyticsEvents = mutableListOf<AnalyticsEvent>()
         val syncedPinpointEvents = mutableListOf<PinpointEvent>()
         pinpointDatabase.queryAllEvents().use { cursor ->
             var currentSubmissions = 0
@@ -97,7 +99,21 @@ internal class EventRecorder(
                 currentSubmissions++
             } while (currentSubmissions < maxSubmissionsAllowed && cursor.moveToNext())
         }
-        return syncedPinpointEvents
+        syncedPinpointEvents.forEach { pinpointEvent ->
+            syncedAnalyticsEvents.add(convertPinpointEventToAnalyticsEvent(pinpointEvent))
+        }
+        return syncedAnalyticsEvents
+    }
+
+    private suspend fun convertPinpointEventToAnalyticsEvent(pinpointEvent: PinpointEvent): AnalyticsEvent {
+        val builder = AnalyticsEvent.builder().name(pinpointEvent.eventType)
+        pinpointEvent.attributes.forEach { (t, u) ->
+            builder.addProperty(t, u)
+        }
+        pinpointEvent.metrics.forEach { (t, u) ->
+            builder.addProperty(t, u)
+        }
+        return builder.build()
     }
 
     private suspend fun submitEventsAndProcessResponse(
@@ -191,7 +207,7 @@ internal class EventRecorder(
                 stopTimestamp = pinpointEvent.pinpointSession.sessionEnd?.let {
                     pinpointEvent.pinpointSession.sessionStart.millisToIsoDate()
                 }
-                duration = pinpointEvent.pinpointSession.sessionDuration?.toInt()
+                pinpointEvent.pinpointSession.sessionDuration?.toInt()?.let { duration = it }
             }
             val event = Event {
                 appPackageName = pinpointEvent.androidAppDetails.packageName
@@ -220,8 +236,8 @@ internal class EventRecorder(
             platformVersion = endpointProfile.demographic.platformVersion
         }
         val endpointLocation = EndpointLocation {
-            latitude = endpointProfile.location.latitude
-            longitude = endpointProfile.location.longitude
+            endpointProfile.location.latitude?.let { latitude = it }
+            endpointProfile.location.longitude?.let { longitude = it }
             postalCode = endpointProfile.location.postalCode
             city = endpointProfile.location.city
             region = endpointProfile.location.region

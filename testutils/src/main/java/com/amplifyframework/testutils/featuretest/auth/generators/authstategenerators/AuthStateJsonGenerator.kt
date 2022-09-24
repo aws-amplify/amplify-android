@@ -18,6 +18,7 @@ package com.amplifyframework.testutils.featuretest.auth.generators.authstategene
 import com.amplifyframework.statemachine.codegen.data.AWSCredentials
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
+import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.data.SignInMethod
 import com.amplifyframework.statemachine.codegen.data.SignedInData
 import com.amplifyframework.statemachine.codegen.states.AuthState
@@ -32,29 +33,29 @@ import java.util.Date
  *
  */
 object AuthStateJsonGenerator : SerializableProvider {
-    private val signedInState = AuthState.Configured(
-        AuthenticationState.SignedIn(
-            SignedInData(
-                userId = "userId",
-                username = "username",
-                signedInDate = Date.from(Instant.ofEpochSecond(324234123)),
-                signInMethod = SignInMethod.SRP,
-                cognitoUserPoolTokens = CognitoUserPoolTokens(
-                    idToken = "someToken",
-                    accessToken = "someAccessToken",
-                    refreshToken = "someRefreshToken",
-                    expiration = 300
-                )
-            )
+    private val signedInData = SignedInData(
+        userId = "userId",
+        username = "username",
+        signedInDate = Date.from(Instant.ofEpochSecond(324234123)),
+        signInMethod = SignInMethod.SRP,
+        deviceMetadata = DeviceMetadata.Metadata(
+            deviceKey = "someDeviceKey",
+            deviceGroupKey = "someDeviceGroupKey",
+            deviceSecret = "someSecret"
         ),
+        cognitoUserPoolTokens = CognitoUserPoolTokens(
+            idToken = "someToken",
+            accessToken = "someAccessToken",
+            refreshToken = "someRefreshToken",
+            expiration = 300
+        )
+    )
+
+    private val signedInState = AuthState.Configured(
+        AuthenticationState.SignedIn(signedInData),
         AuthorizationState.SessionEstablished(
             AmplifyCredential.UserAndIdentityPool(
-                CognitoUserPoolTokens(
-                    idToken = "someToken",
-                    accessToken = "someAccessToken",
-                    refreshToken = "someRefreshToken",
-                    expiration = 300
-                ),
+                signedInData,
                 identityId = "someIdentityId",
                 AWSCredentials(
                     accessKeyId = "someAccessKey",

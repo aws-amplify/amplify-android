@@ -21,17 +21,26 @@ import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 import com.amplifyframework.statemachine.codegen.data.AuthCredentialStore
 import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
+import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
+import com.amplifyframework.statemachine.codegen.data.SignInMethod
+import com.amplifyframework.statemachine.codegen.data.SignedInData
+import java.util.Date
 import java.util.Locale
 
 class AWSCognitoLegacyCredentialStore(
     val context: Context,
     private val authConfiguration: AuthConfiguration,
-    keyValueRepoFactory: KeyValueRepositoryFactory = KeyValueRepositoryFactory()
+    private val keyValueRepoFactory: KeyValueRepositoryFactory = KeyValueRepositoryFactory()
 ) : AuthCredentialStore {
 
     companion object {
         const val AWS_KEY_VALUE_STORE_NAMESPACE_IDENTIFIER: String = "com.amazonaws.android.auth"
-        const val APP_LOCAL_CACHE = "CognitoIdentityProviderCache"
+        const val APP_TOKENS_INFO_CACHE = "CognitoIdentityProviderCache"
+        const val APP_DEVICE_INFO_CACHE = "CognitoIdentityProviderDeviceCache"
+
+        private const val DEVICE_KEY = "DeviceKey"
+        private const val DEVICE_GROUP_KEY = "DeviceGroupKey"
+        private const val DEVICE_SECRET_KEY = "DeviceSecret"
 
         private const val ID_KEY: String = "identityId"
         private const val AK_KEY: String = "accessKey"
@@ -50,13 +59,14 @@ class AWSCognitoLegacyCredentialStore(
         private const val TOKEN_EXPIRATION = "tokenExpiration"
     }
 
+    private val userDeviceDetailsCacheKey = "$APP_DEVICE_INFO_CACHE.${authConfiguration.userPool?.poolId}.%s"
+
     private val idAndCredentialsKeyValue: KeyValueRepository =
         keyValueRepoFactory.create(context, AWS_KEY_VALUE_STORE_NAMESPACE_IDENTIFIER)
 
-    private val tokensKeyValue: KeyValueRepository = keyValueRepoFactory.create(
-        context,
-        APP_LOCAL_CACHE
-    )
+    private val tokensKeyValue: KeyValueRepository = keyValueRepoFactory.create(context, APP_TOKENS_INFO_CACHE)
+
+    private lateinit var deviceKeyValue: KeyValueRepository
 
     @Synchronized
     override fun saveCredential(credential: AmplifyCredential) {
@@ -65,15 +75,20 @@ class AWSCognitoLegacyCredentialStore(
 
     @Synchronized
     override fun retrieveCredential(): AmplifyCredential {
-        val cognitoUserPoolTokens = retrieveCognitoUserPoolTokens()
+        val signedInData = retrieveSignedInData()
         val awsCredentials = retrieveAWSCredentials()
         val identityId = retrieveIdentityId()
+
         return when {
-            awsCredentials != null && identityId != null -> when (cognitoUserPoolTokens) {
+            awsCredentials != null && identityId != null -> when (signedInData) {
                 null -> AmplifyCredential.IdentityPool(identityId, awsCredentials)
-                else -> AmplifyCredential.UserAndIdentityPool(cognitoUserPoolTokens, identityId, awsCredentials)
+                else -> {
+                    AmplifyCredential.UserAndIdentityPool(signedInData, identityId, awsCredentials)
+                }
             }
-            cognitoUserPoolTokens != null -> AmplifyCredential.UserPool(cognitoUserPoolTokens)
+            signedInData != null -> {
+                AmplifyCredential.UserPool(signedInData)
+            }
             else -> AmplifyCredential.Empty
         }
     }
@@ -86,7 +101,10 @@ class AWSCognitoLegacyCredentialStore(
 
     private fun deleteCognitoUserPoolTokens() {
         val keys = getTokenKeys()
+        val username = keys[APP_LAST_AUTH_USER]?.let { tokensKeyValue.get(it) }
+        deleteDeviceMetadata(username)
 
+        keys[APP_LAST_AUTH_USER]?.let { tokensKeyValue.remove(it) }
         keys[TOKEN_TYPE_ID]?.let { tokensKeyValue.remove(it) }
         keys[TOKEN_TYPE_ACCESS]?.let { tokensKeyValue.remove(it) }
         keys[TOKEN_TYPE_REFRESH]?.let { tokensKeyValue.remove(it) }
@@ -106,6 +124,14 @@ class AWSCognitoLegacyCredentialStore(
         }
     }
 
+    private fun deleteDeviceMetadata(username: String?) {
+        deviceKeyValue.apply {
+            remove(DEVICE_KEY)
+            remove(DEVICE_GROUP_KEY)
+            remove(DEVICE_SECRET_KEY)
+        }
+    }
+
     private fun retrieveAWSCredentials(): AWSCredentials? {
         val accessKey = idAndCredentialsKeyValue.get(namespace(AK_KEY))
         val secretKey = idAndCredentialsKeyValue.get(namespace(SK_KEY))
@@ -121,16 +147,36 @@ class AWSCognitoLegacyCredentialStore(
         return idAndCredentialsKeyValue.get(namespace(ID_KEY))
     }
 
-    private fun retrieveCognitoUserPoolTokens(): CognitoUserPoolTokens? {
+    private fun retrieveSignedInData(): SignedInData? {
         val keys = getTokenKeys()
+        val username = keys[APP_LAST_AUTH_USER]?.let { tokensKeyValue.get(it) }
+        val deviceMetaData = retrieveDeviceMetadata(username)
+        val cognitoUserPoolTokens = retrieveCognitoUserPoolTokens(keys)
 
+        return if (cognitoUserPoolTokens == null) null
+        else SignedInData("", username ?: "", Date(0), SignInMethod.SRP, deviceMetaData, cognitoUserPoolTokens)
+    }
+
+    private fun retrieveDeviceMetadata(username: String?): DeviceMetadata {
+        val deviceDetailsCacheKey = String.format(userDeviceDetailsCacheKey, username)
+        deviceKeyValue = keyValueRepoFactory.create(context, deviceDetailsCacheKey)
+
+        val deviceKey = deviceKeyValue.get(DEVICE_KEY)
+        val deviceGroupKey = deviceKeyValue.get(DEVICE_GROUP_KEY)
+        val deviceSecretKey = deviceKeyValue.get(DEVICE_SECRET_KEY)
+
+        return if (deviceKey == null && deviceGroupKey == null) DeviceMetadata.Empty
+        else DeviceMetadata.Metadata(deviceKey, deviceGroupKey, deviceSecretKey)
+    }
+
+    private fun retrieveCognitoUserPoolTokens(keys: Map<String, String>): CognitoUserPoolTokens? {
         val idToken = keys[TOKEN_TYPE_ID]?.let { tokensKeyValue.get(it) }
         val accessToken = keys[TOKEN_TYPE_ACCESS]?.let { tokensKeyValue.get(it) }
         val refreshToken = keys[TOKEN_TYPE_REFRESH]?.let { tokensKeyValue.get(it) }
         val expiration = keys[TOKEN_EXPIRATION]?.let { tokensKeyValue.get(it) }?.toLongOrNull()
 
         return if (idToken == null && accessToken == null && refreshToken == null) {
-            return null
+            null
         } else {
             CognitoUserPoolTokens(idToken, accessToken, refreshToken, expiration)
         }
@@ -184,6 +230,7 @@ class AWSCognitoLegacyCredentialStore(
         )
 
         return mapOf(
+            APP_LAST_AUTH_USER to userIdTokenKey,
             TOKEN_TYPE_ID to cachedIdTokenKey,
             TOKEN_TYPE_ACCESS to cachedAccessTokenKey,
             TOKEN_TYPE_REFRESH to cachedRefreshTokenKey,

@@ -24,10 +24,12 @@ import aws.sdk.kotlin.services.pinpoint.model.UpdateEndpointResponse
 import io.mockk.coEvery
 import io.mockk.coVerify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -54,7 +56,21 @@ class TargetingClientTest {
     }
 
     @Test
+    @Ignore("fix in PR: #1958")
     fun testUpdateEndpointProfile() = runTest {
+        setup()
+        val prefs = constructSharedPreferences()
+        targetingClient = TargetingClient(
+            pinpointClient,
+            pinpointNotificationClient,
+            idService,
+            prefs,
+            appDetails,
+            deviceDetails,
+            applicationContext,
+            coroutineDispatcher = UnconfinedTestDispatcher(testScheduler)
+        )
+
         targetingClient.addAttribute("attribute", listOf("a1", "a2"))
         targetingClient.addMetric("metric", 1.0)
 
