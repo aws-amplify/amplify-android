@@ -31,6 +31,27 @@
                         "expiresIn": 300
                     }
                 }
+            },
+            {
+                "type": "cognito",
+                "apiName": "getId",
+                "responseType": "success",
+                "response": {
+                    "identityId": "someIdentityId"
+                }
+            },
+            {
+                "type": "cognito",
+                "apiName": "getCredentialsForIdentity",
+                "responseType": "success",
+                "response": {
+                    "credentials": {
+                        "accessKeyId": "someAccessKey",
+                        "secretKey": "someSecretKey",
+                        "sessionToken": "someSessionToken",
+                        "expiration": 2342134
+                    }
+                }
             }
         ]
     },

@@ -66,7 +66,26 @@ object SignInTestCaseGenerator : SerializableProvider {
                             "expiresIn" to 300
                         )
                     ).toJsonElement()
-                )
+                ),
+                MockResponse(
+                    "cognito",
+                    "getId",
+                    ResponseType.Success,
+                    mapOf("identityId" to "someIdentityId").toJsonElement()
+                ),
+                MockResponse(
+                    "cognito",
+                    "getCredentialsForIdentity",
+                    ResponseType.Success,
+                    mapOf(
+                        "credentials" to mapOf(
+                            "accessKeyId" to "someAccessKey",
+                            "secretKey" to "someSecretKey",
+                            "sessionToken" to "someSessionToken",
+                            "expiration" to 2342134
+                        )
+                    ).toJsonElement()
+                ),
             )
         ),
         api = API(
@@ -80,7 +99,8 @@ object SignInTestCaseGenerator : SerializableProvider {
         validations = listOf(
             ExpectationShapes.Cognito(
                 apiName = "signIn",
-                // see [https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_SignUp.html]
+                // see [https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_InitiateAuth.html]
+                // see [https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_RespondToAuthChallenge.html]
                 request = mapOf(
                     "clientId" to "testAppClientId", // This should be pulled from configuration
                     "authFlow" to AuthFlowType.UserSrpAuth,

@@ -15,6 +15,7 @@
 
 package com.amplifyframework.auth.cognito
 
+import aws.sdk.kotlin.services.cognitoidentity.CognitoIdentityClient
 import aws.sdk.kotlin.services.cognitoidentityprovider.CognitoIdentityProviderClient
 import com.amplifyframework.logging.Logger
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
@@ -65,7 +66,8 @@ class AWSCognitoAuthPluginFeatureTest(private val fileName: String) {
     private lateinit var authStateMachine: AuthStateMachine
 
     private val mockCognitoIPClient = mockk<CognitoIdentityProviderClient>()
-    private val cognitoMockFactory = CognitoMockFactory(mockCognitoIPClient)
+    private val mockCognitoIdClient = mockk<CognitoIdentityClient>()
+    private val cognitoMockFactory = CognitoMockFactory(mockCognitoIPClient, mockCognitoIdClient)
 
     // Used to execute a test in situations where the platform Main dispatcher is not available
     // see [https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-test/]
@@ -132,6 +134,7 @@ class AWSCognitoAuthPluginFeatureTest(private val fileName: String) {
 
         val authService = mockk<AWSCognitoAuthServiceBehavior> {
             every { cognitoIdentityProviderClient } returns mockCognitoIPClient
+            every { cognitoIdentityClient } returns mockCognitoIdClient
         }
 
         val authEnvironment = AuthEnvironment(authConfiguration, authService, hostedUIClient = null)
