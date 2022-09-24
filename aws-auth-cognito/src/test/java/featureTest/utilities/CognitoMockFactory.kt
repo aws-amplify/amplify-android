@@ -15,7 +15,6 @@
 
 package featureTest.utilities
 
-import android.util.Base64
 import aws.sdk.kotlin.services.cognitoidentityprovider.CognitoIdentityProviderClient
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AuthenticationResultType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
@@ -30,18 +29,14 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.RespondToAuthChalle
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.SignUpRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.SignUpResponse
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
-import com.amplifyframework.auth.cognito.helpers.SRPHelper
 import com.amplifyframework.testutils.featuretest.MockResponse
 import com.amplifyframework.testutils.featuretest.ResponseType
 import com.amplifyframework.testutils.featuretest.auth.serializers.CognitoIdentityProviderExceptionSerializer
 import io.mockk.CapturingSlot
 import io.mockk.coEvery
-import io.mockk.mockkClass
 import io.mockk.mockkObject
-import io.mockk.mockkStatic
 import io.mockk.slot
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 

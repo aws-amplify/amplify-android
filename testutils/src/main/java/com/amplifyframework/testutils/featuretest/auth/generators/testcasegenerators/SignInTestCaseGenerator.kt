@@ -17,8 +17,6 @@ package com.amplifyframework.testutils.featuretest.auth.generators.testcasegener
 
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AuthFlowType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
-import com.amplifyframework.auth.AuthUserAttributeKey
-import com.amplifyframework.auth.result.step.AuthSignUpStep
 import com.amplifyframework.testutils.featuretest.API
 import com.amplifyframework.testutils.featuretest.ExpectationShapes
 import com.amplifyframework.testutils.featuretest.FeatureTestCase

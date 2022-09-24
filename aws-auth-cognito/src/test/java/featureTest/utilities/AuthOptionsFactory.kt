@@ -7,8 +7,8 @@ import com.amplifyframework.auth.options.AuthSignInOptions
 import com.amplifyframework.auth.options.AuthSignUpOptions
 import com.amplifyframework.testutils.featuretest.auth.AuthAPI
 import com.amplifyframework.testutils.featuretest.auth.AuthAPI.resetPassword
-import com.amplifyframework.testutils.featuretest.auth.AuthAPI.signUp
 import com.amplifyframework.testutils.featuretest.auth.AuthAPI.signIn
+import com.amplifyframework.testutils.featuretest.auth.AuthAPI.signUp
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 

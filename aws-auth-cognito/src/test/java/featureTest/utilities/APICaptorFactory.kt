@@ -24,8 +24,8 @@ import com.amplifyframework.testutils.featuretest.ExpectationShapes
 import com.amplifyframework.testutils.featuretest.ResponseType
 import com.amplifyframework.testutils.featuretest.auth.AuthAPI
 import com.amplifyframework.testutils.featuretest.auth.AuthAPI.resetPassword
-import com.amplifyframework.testutils.featuretest.auth.AuthAPI.signUp
 import com.amplifyframework.testutils.featuretest.auth.AuthAPI.signIn
+import com.amplifyframework.testutils.featuretest.auth.AuthAPI.signUp
 import io.mockk.CapturingSlot
 import io.mockk.every
 import io.mockk.mockk
