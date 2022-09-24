@@ -15,22 +15,33 @@
 
 package featureTest.utilities
 
+import android.util.Base64
 import aws.sdk.kotlin.services.cognitoidentityprovider.CognitoIdentityProviderClient
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.AuthenticationResultType
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.CodeDeliveryDetailsType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeliveryMediumType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ForgotPasswordRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ForgotPasswordResponse
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.InitiateAuthRequest
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.InitiateAuthResponse
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.RespondToAuthChallengeRequest
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.RespondToAuthChallengeResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.SignUpRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.SignUpResponse
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
+import com.amplifyframework.auth.cognito.helpers.SRPHelper
 import com.amplifyframework.testutils.featuretest.MockResponse
 import com.amplifyframework.testutils.featuretest.ResponseType
 import com.amplifyframework.testutils.featuretest.auth.serializers.CognitoIdentityProviderExceptionSerializer
 import io.mockk.CapturingSlot
 import io.mockk.coEvery
+import io.mockk.mockkClass
 import io.mockk.mockkObject
+import io.mockk.mockkStatic
 import io.mockk.slot
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
@@ -80,8 +91,71 @@ class CognitoMockFactory(private val mockCognitoIPClient: CognitoIdentityProvide
                 }
                 captures[mockResponse.apiName] = requestCaptor
             }
+            "initiateAuth" -> {
+                mockkObject(AuthHelper)
+                coEvery { AuthHelper.getSecretHash(any(), any(), any()) } returns "a hash"
 
+                val requestCaptor = slot<InitiateAuthRequest>()
+
+                coEvery { mockCognitoIPClient.initiateAuth(capture(requestCaptor)) } coAnswers {
+                    if (mockResponse.responseType == ResponseType.Failure) {
+                        throw Json.decodeFromString(
+                            CognitoIdentityProviderExceptionSerializer,
+                            responseObject.toString()
+                        )
+                    }
+                    InitiateAuthResponse.invoke {
+                        this.challengeName =
+                            ChallengeNameType.fromValue((responseObject["challengeName"] as JsonPrimitive).content)
+                        this.challengeParameters =
+                            parseChallengeParams(responseObject["challengeParameters"] as JsonObject)
+                    }
+                }
+                captures[mockResponse.apiName] = requestCaptor
+            }
+            "respondToAuthChallenge" -> {
+                mockkObject(AuthHelper)
+                coEvery { AuthHelper.getSecretHash(any(), any(), any()) } returns "a hash"
+
+//                mockkStatic(Base64::class)
+//                coEvery { Base64.encode(any(), any()) } returns "test".toByteArray()
+
+                val requestCaptor = slot<RespondToAuthChallengeRequest>()
+
+                coEvery { mockCognitoIPClient.respondToAuthChallenge(capture(requestCaptor)) } coAnswers {
+                    if (mockResponse.responseType == ResponseType.Failure) {
+                        throw Json.decodeFromString(
+                            CognitoIdentityProviderExceptionSerializer,
+                            responseObject.toString()
+                        )
+                    }
+                    RespondToAuthChallengeResponse.invoke {
+                        this.authenticationResult =
+                            parseAuthenticationResult(responseObject["authenticationResult"] as JsonObject)
+                    }
+                }
+                captures[mockResponse.apiName] = requestCaptor
+            }
             else -> throw Error("mock for ${mockResponse.apiName} not defined!")
+        }
+    }
+
+    private fun parseChallengeParams(params: JsonObject): Map<String, String> {
+        return mapOf(
+            "SALT" to (params["SALT"] as JsonPrimitive).content,
+            "SECRET_BLOCK" to (params["SECRET_BLOCK"] as JsonPrimitive).content,
+            "SRP_B" to (params["SRP_B"] as JsonPrimitive).content,
+            "USERNAME" to (params["USERNAME"] as JsonPrimitive).content,
+            "USER_ID_FOR_SRP" to (params["USER_ID_FOR_SRP"] as JsonPrimitive).content
+        )
+    }
+
+    private fun parseAuthenticationResult(result: JsonObject): AuthenticationResultType {
+        return AuthenticationResultType.invoke {
+            idToken = (result["idToken"] as JsonPrimitive).content
+            accessToken = (result["accessToken"] as JsonPrimitive).content
+            refreshToken = (result["refreshToken"] as JsonPrimitive).content
+            expiresIn = (result["expiresIn"] as JsonPrimitive).content.toInt()
         }
     }
 

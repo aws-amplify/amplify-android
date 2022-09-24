@@ -1,0 +1,64 @@
+{
+    "description": "Test that SRP signIn invokes proper cognito request and returns success",
+    "preConditions": {
+        "amplify-configuration": "authconfiguration.json",
+        "state": "SignedOut_Configured.json",
+        "mockedResponses": [
+            {
+                "type": "cognito",
+                "apiName": "initiateAuth",
+                "responseType": "success",
+                "response": {
+                    "challengeName": "PASSWORD_VERIFIER",
+                    "challengeParameters": {
+                        "SALT": "abc",
+                        "SECRET_BLOCK": "secretBlock",
+                        "SRP_B": "def",
+                        "USERNAME": "username",
+                        "USER_ID_FOR_SRP": "userId"
+                    }
+                }
+            },
+            {
+                "type": "cognito",
+                "apiName": "respondToAuthChallenge",
+                "responseType": "success",
+                "response": {
+                    "authenticationResult": {
+                        "idToken": "someToken",
+                        "accessToken": "someAccessToken",
+                        "refreshToken": "someRefreshToken",
+                        "expiresIn": 300
+                    }
+                }
+            }
+        ]
+    },
+    "api": {
+        "name": "signIn",
+        "params": {
+            "username": "username",
+            "password": "password"
+        },
+        "options": {
+        }
+    },
+    "validations": [
+        {
+            "type": "cognito",
+            "apiName": "signIn",
+            "request": {
+                "clientId": "testAppClientId",
+                "authFlow": "USER_SRP_AUTH",
+                "authParameters": {
+                    "username": "username",
+                    "SRP_A": "123"
+                }
+            }
+        },
+        {
+            "type": "state",
+            "expectedState": "SignedIn_SessionEstablished.json"
+        }
+    ]
+}

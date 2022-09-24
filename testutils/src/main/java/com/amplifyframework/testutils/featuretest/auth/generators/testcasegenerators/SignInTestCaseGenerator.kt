@@ -15,6 +15,8 @@
 
 package com.amplifyframework.testutils.featuretest.auth.generators.testcasegenerators
 
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.AuthFlowType
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
 import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.result.step.AuthSignUpStep
 import com.amplifyframework.testutils.featuretest.API
@@ -26,73 +28,78 @@ import com.amplifyframework.testutils.featuretest.ResponseType
 import com.amplifyframework.testutils.featuretest.auth.AuthAPI
 import com.amplifyframework.testutils.featuretest.auth.generators.SerializableProvider
 import com.amplifyframework.testutils.featuretest.auth.generators.toJsonElement
+import kotlinx.serialization.json.JsonObject
 
-object SignUpTestCaseGenerator : SerializableProvider {
-    private val username = "user"
+object SignInTestCaseGenerator : SerializableProvider {
+    private val userId = "userId"
+    private val username = "username"
     private val password = "password"
-    private val email = "user@domain.com"
-
-    private val codeDeliveryDetails = mapOf(
-        "destination" to email,
-        "deliveryMedium" to "EMAIL",
-        "attributeName" to "attributeName"
-    )
 
     val baseCase = FeatureTestCase(
-        description = "Test that signup invokes proper cognito request and returns success",
+        description = "Test that SRP signIn invokes proper cognito request and returns success",
         preConditions = PreConditions(
             "authconfiguration.json",
             "SignedOut_Configured.json",
             mockedResponses = listOf(
                 MockResponse(
                     "cognito",
-                    "signUp",
+                    "initiateAuth",
                     ResponseType.Success,
-                    mapOf("codeDeliveryDetails" to codeDeliveryDetails).toJsonElement()
+                    mapOf(
+                        "challengeName" to ChallengeNameType.PasswordVerifier,
+                        "challengeParameters" to mapOf(
+                            "SALT" to "abc",
+                            "SECRET_BLOCK" to "secretBlock",
+                            "SRP_B" to "def",
+                            "USERNAME" to username,
+                            "USER_ID_FOR_SRP" to userId
+                        )
+                    ).toJsonElement()
+                ),
+                MockResponse(
+                    "cognito",
+                    "respondToAuthChallenge",
+                    ResponseType.Success,
+                    mapOf(
+                        "authenticationResult" to mapOf(
+                            "idToken" to "someToken",
+                            "accessToken" to "someAccessToken",
+                            "refreshToken" to "someRefreshToken",
+                            "expiresIn" to 300
+                        )
+                    ).toJsonElement()
                 )
             )
         ),
         api = API(
-            AuthAPI.signUp,
+            AuthAPI.signIn,
             params = mapOf(
                 "username" to username,
                 "password" to password
             ).toJsonElement(),
-            options = mapOf(
-                "userAttributes" to mapOf(AuthUserAttributeKey.email().keyString to email)
-            ).toJsonElement()
+            options = JsonObject(emptyMap())
         ),
         validations = listOf(
             ExpectationShapes.Cognito(
-                apiName = "signUp",
+                apiName = "signIn",
                 // see [https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_SignUp.html]
                 request = mapOf(
                     "clientId" to "testAppClientId", // This should be pulled from configuration
-                    "username" to username,
-                    "password" to password,
-                    "userAttributes" to listOf(mapOf("name" to "email", "value" to email))
+                    "authFlow" to AuthFlowType.UserSrpAuth,
+                    "authParameters" to mapOf("username" to username, "SRP_A" to "123")
                 ).toJsonElement()
             ),
-            ExpectationShapes.Amplify(
-                apiName = AuthAPI.signUp,
-                responseType = ResponseType.Success,
-                response = mapOf(
-                    "isSignUpComplete" to false,
-                    "nextStep" to mapOf(
-                        "signUpStep" to AuthSignUpStep.CONFIRM_SIGN_UP_STEP,
-                        "additionalInfo" to emptyMap<String, String>(),
-                        "codeDeliveryDetails" to mapOf(
-                            "destination" to email,
-                            "deliveryMedium" to "EMAIL",
-                            "attributeName" to "attributeName"
-                        )
-                    ),
-                    "user" to mapOf(
-                        "userId" to "",
-                        "username" to username
-                    )
-                ).toJsonElement()
-            )
+//            ExpectationShapes.Amplify(
+//                apiName = AuthAPI.signIn,
+//                responseType = ResponseType.Success,
+//                response = mapOf(
+//                    "user" to mapOf(
+//                        "userId" to "",
+//                        "username" to username
+//                    )
+//                ).toJsonElement()
+//            ),
+            ExpectationShapes.State("SignedIn_SessionEstablished.json")
         )
     )
 

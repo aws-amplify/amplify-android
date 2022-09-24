@@ -98,7 +98,7 @@ class AWSCognitoAuthPluginFeatureTest(private val fileName: String) {
     fun setUp() {
         Dispatchers.setMain(mainThreadSurrogate)
         feature = readTestFeature(fileName)
-        sut.realPlugin = readconfiguration(feature.preConditions.`amplify-configuration`)
+        sut.realPlugin = readConfiguration(feature.preConditions.`amplify-configuration`)
         latch = CountDownLatch(1)
     }
 
@@ -121,7 +121,7 @@ class AWSCognitoAuthPluginFeatureTest(private val fileName: String) {
         return feature
     }
 
-    private fun readconfiguration(configuration: String): RealAWSCognitoAuthPlugin {
+    private fun readConfiguration(configuration: String): RealAWSCognitoAuthPlugin {
         val configFileUrl = this::class.java.getResource("$configurationFilesBasePath/$configuration")
         val configJSONObject =
             JSONObject(File(configFileUrl!!.file).readText())

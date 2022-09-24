@@ -79,7 +79,7 @@ object ResetPasswordTestCaseGenerator : SerializableProvider {
         description = "Test that Cognito is called with given payload and returns successful data",
         preConditions = PreConditions(
             "authconfiguration.json",
-            "SignedIn_SessionEstablished.json",
+            "SignedOut_Configured.json",
             mockedResponses = listOf()
         ),
         api = API(

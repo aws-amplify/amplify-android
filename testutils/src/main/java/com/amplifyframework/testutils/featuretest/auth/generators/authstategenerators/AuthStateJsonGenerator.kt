@@ -21,6 +21,7 @@ import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
 import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.data.SignInMethod
 import com.amplifyframework.statemachine.codegen.data.SignedInData
+import com.amplifyframework.statemachine.codegen.data.SignedOutData
 import com.amplifyframework.statemachine.codegen.states.AuthState
 import com.amplifyframework.statemachine.codegen.states.AuthenticationState
 import com.amplifyframework.statemachine.codegen.states.AuthorizationState
@@ -67,5 +68,10 @@ object AuthStateJsonGenerator : SerializableProvider {
         )
     )
 
-    override val serializables: List<Any> = listOf(signedInState)
+    private val signedOutState = AuthState.Configured(
+        AuthenticationState.SignedOut(SignedOutData("username")),
+        AuthorizationState.Configured()
+    )
+
+    override val serializables: List<Any> = listOf(signedInState, signedOutState)
 }
