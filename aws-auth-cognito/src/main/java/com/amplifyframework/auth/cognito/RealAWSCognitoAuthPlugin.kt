@@ -433,7 +433,7 @@ internal class RealAWSCognitoAuthPlugin(
                         }
                     }
                     authNState is AuthenticationState.SignedIn
-                            && authZState is AuthorizationState.SessionEstablished -> {
+                        && authZState is AuthorizationState.SessionEstablished -> {
                         token?.let(authStateMachine::cancel)
                         val authSignInResult = AuthSignInResult(
                             true,
@@ -448,13 +448,8 @@ internal class RealAWSCognitoAuthPlugin(
             },
             {
                 // assign SRP as default if no options provided
-                val signInOptions = options as? AWSCognitoAuthSignInOptions ?: if (password.isNullOrEmpty()) {
-                    AWSCognitoAuthSignInOptions
-                        .builder().authFlowType(AuthFlowType.CUSTOM_AUTH_WITHOUT_SRP).build()
-                } else {
-                    AWSCognitoAuthSignInOptions
-                        .builder().authFlowType(AuthFlowType.USER_SRP_AUTH).build()
-                }
+                val signInOptions = options as? AWSCognitoAuthSignInOptions ?: AWSCognitoAuthSignInOptions
+                    .builder().authFlowType(configuration.authFlowType).build()
 
                 val signInData = when (signInOptions.authFlowType) {
                     AuthFlowType.USER_SRP_AUTH -> {
@@ -662,7 +657,7 @@ internal class RealAWSCognitoAuthPlugin(
                         }
                     }
                     authNState is AuthenticationState.SignedIn
-                            && authZState is AuthorizationState.SessionEstablished -> {
+                        && authZState is AuthorizationState.SessionEstablished -> {
                         token?.let(authStateMachine::cancel)
                         val authSignInResult =
                             AuthSignInResult(
@@ -1564,19 +1559,19 @@ internal class RealAWSCognitoAuthPlugin(
                                 )
                             }
                             authNState is AuthenticationState.SignedOut &&
-                                    authZState is AuthorizationState.Configured
-                                    && lastPublishedHubEventName.get() != AuthChannelEventName.SIGNED_OUT -> {
+                                authZState is AuthorizationState.Configured
+                                && lastPublishedHubEventName.get() != AuthChannelEventName.SIGNED_OUT -> {
                                 lastPublishedHubEventName.set(AuthChannelEventName.SIGNED_OUT)
                                 Amplify.Hub.publish(HubChannel.AUTH, HubEvent.create(AuthChannelEventName.SIGNED_OUT))
                             }
                             authNState is AuthenticationState.SignedIn &&
-                                    authZState is AuthorizationState.SessionEstablished
-                                    && lastPublishedHubEventName.get() != AuthChannelEventName.SIGNED_IN -> {
+                                authZState is AuthorizationState.SessionEstablished
+                                && lastPublishedHubEventName.get() != AuthChannelEventName.SIGNED_IN -> {
                                 lastPublishedHubEventName.set(AuthChannelEventName.SIGNED_IN)
                                 Amplify.Hub.publish(HubChannel.AUTH, HubEvent.create(AuthChannelEventName.SIGNED_IN))
                             }
                             deleteUserAuthZState?.deleteUserState is DeleteUserState.UserDeleted
-                                    && lastPublishedHubEventName.get() != AuthChannelEventName.USER_DELETED -> {
+                                && lastPublishedHubEventName.get() != AuthChannelEventName.USER_DELETED -> {
                                 Amplify.Hub.publish(HubChannel.AUTH, HubEvent.create(AuthChannelEventName.USER_DELETED))
                             }
                         }
