@@ -15,6 +15,7 @@
 
 package com.amplifyframework.statemachine.codegen.data
 
+import com.amplifyframework.auth.cognito.options.AuthFlowType
 import org.json.JSONObject
 
 /**
@@ -23,7 +24,8 @@ import org.json.JSONObject
 data class AuthConfiguration internal constructor(
     val userPool: UserPoolConfiguration?,
     val identityPool: IdentityPoolConfiguration?,
-    val oauth: OauthConfiguration?
+    val oauth: OauthConfiguration?,
+    val authFlowType: AuthFlowType
 ) {
 
     companion object {
@@ -48,8 +50,19 @@ data class AuthConfiguration internal constructor(
                     ?.optJSONObject(configName)
                     ?.optJSONObject("OAuth")?.let {
                         OauthConfiguration.fromJson(it)
-                    }
+                    },
+                authFlowType = getAutheticationFlowType(
+                    pluginJson.optJSONObject("Auth")
+                        ?.optJSONObject(configName)
+                        ?.optString("authenticationFlowType")
+                )
             )
+        }
+        private fun getAutheticationFlowType(authType: String?): AuthFlowType {
+            return if (!authType.isNullOrEmpty() && AuthFlowType.values().any { it.name == authType })
+                AuthFlowType.valueOf(authType)
+            else
+                AuthFlowType.USER_SRP_AUTH
         }
     }
 }

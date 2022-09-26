@@ -15,6 +15,7 @@
 
 package com.amplifyframework.auth.cognito
 
+import com.amplifyframework.auth.cognito.options.AuthFlowType
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 import com.amplifyframework.statemachine.codegen.data.IdentityPoolConfiguration
 import com.amplifyframework.statemachine.codegen.data.UserPoolConfiguration
@@ -40,7 +41,8 @@ class AWSCognitoAuthServiceBehaviorTest {
                 .poolId("pool-b")
                 .region(expectedUserPoolRegion)
                 .build(),
-            oauth = null
+            oauth = null,
+            authFlowType = AuthFlowType.USER_SRP_AUTH
         )
 
         val testObject = AWSCognitoAuthServiceBehavior.fromConfiguration(config)

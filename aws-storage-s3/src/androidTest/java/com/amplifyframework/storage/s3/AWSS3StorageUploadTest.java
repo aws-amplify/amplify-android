@@ -117,7 +117,6 @@ public final class AWSS3StorageUploadTest {
      * @throws Exception if upload fails
      */
     @Test
-    @Ignore("fix in dev-preview")
     public void testUploadSmallFile() throws Exception {
         File uploadFile = new RandomTempFile(SMALL_FILE_SIZE);
         String fileName = uploadFile.getName();
@@ -130,7 +129,6 @@ public final class AWSS3StorageUploadTest {
      * @throws Exception if upload fails
      */
     @Test
-    @Ignore("fix in dev-preview")
     public void testUploadLargeFile() throws Exception {
         File uploadFile = new RandomTempFile(LARGE_FILE_SIZE);
         String fileName = uploadFile.getName();
@@ -146,7 +144,7 @@ public final class AWSS3StorageUploadTest {
      */
     @SuppressWarnings("unchecked")
     @Test
-    @Ignore("fix in dev-preview")
+    @Ignore("fix in dev-preview, waiting on https://github.com/awslabs/aws-sdk-kotlin/issues/704")
     public void testUploadFileIsCancelable() throws Exception {
         final CountDownLatch canceled = new CountDownLatch(1);
         final AtomicReference<Cancelable> opContainer = new AtomicReference<>();
@@ -196,7 +194,7 @@ public final class AWSS3StorageUploadTest {
      */
     @SuppressWarnings("unchecked")
     @Test
-    @Ignore("fix in dev-preview")
+    @Ignore("fix in dev-preview, waiting on https://github.com/awslabs/aws-sdk-kotlin/issues/704")
     public void testUploadFileIsResumable() throws Exception {
         final CountDownLatch completed = new CountDownLatch(1);
         final CountDownLatch resumed = new CountDownLatch(1);
