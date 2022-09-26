@@ -15,7 +15,6 @@
 
 package com.amplifyframework.statemachine.codegen.data
 
-import com.amplifyframework.auth.AuthProvider
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -33,13 +32,13 @@ sealed class AmplifyCredential {
     @SerialName("identityPool")
     data class IdentityPool(val identityId: String, val credentials: AWSCredentials) : AmplifyCredential()
 
-//    @Serializable
-//    @SerialName("identityPoolFederated")
-//    data class IdentityPoolFederated(
-//        val federatedToken: FederatedToken,
-//        val identityId: String,
-//        val credentials: AWSCredentials
-//    ) : AmplifyCredential()
+    @Serializable
+    @SerialName("identityPoolFederated")
+    data class IdentityPoolFederated(
+        val federatedToken: FederatedToken,
+        val identityId: String?,
+        val credentials: AWSCredentials? = null
+    ) : AmplifyCredential()
 
     @Serializable
     @SerialName("userAndIdentityPool")
@@ -62,7 +61,8 @@ sealed class AmplifyCredential {
 //    data class FederatedToken(val token: String, val provider: AuthProvider) : AuthTokens()
 // }
 
-data class FederatedToken(val token: String, val provider: AuthProvider)
+@Serializable
+data class FederatedToken(val token: String, val providerName: String)
 
 @Serializable
 data class CognitoUserPoolTokens(

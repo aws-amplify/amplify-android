@@ -19,6 +19,9 @@ import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.AuthorizationActions
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
+import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
+import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
+import com.amplifyframework.statemachine.codegen.data.FederatedToken
 import com.amplifyframework.statemachine.codegen.data.LoginsMapProvider
 import com.amplifyframework.statemachine.codegen.data.SignedInData
 import com.amplifyframework.statemachine.codegen.events.AuthEvent
@@ -95,4 +98,31 @@ object AuthorizationCognitoActions : AuthorizationActions {
             logger?.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
         }
+
+    override fun initializeFederationToIdentityPool(
+        federatedToken: FederatedToken,
+        developerProvidedIdentityId: String?
+    ) = Action<AuthEnvironment>("InitializeFederationToIdentityPool") { id, dispatcher ->
+        logger?.verbose("$id Starting execution")
+        val evt = try {
+            if (developerProvidedIdentityId != null) {
+                FetchAuthSessionEvent(
+                    FetchAuthSessionEvent.EventType.FetchAwsCredentials(
+                        developerProvidedIdentityId,
+                        LoginsMapProvider.AuthProviderLogins(federatedToken)
+                    )
+                )
+            } else {
+                FetchAuthSessionEvent(
+                    FetchAuthSessionEvent.EventType.FetchIdentity(
+                        LoginsMapProvider.AuthProviderLogins(federatedToken)
+                    )
+                )
+            }
+        } catch (e: Exception) {
+            AuthorizationEvent(AuthorizationEvent.EventType.ThrowError(e))
+        }
+        logger?.verbose("$id Sending event ${evt.type}")
+        dispatcher.send(evt)
+    }
 }

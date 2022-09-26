@@ -111,4 +111,10 @@ object AuthenticationCognitoActions : AuthenticationActions {
         logger?.verbose("$id Sending event ${evt.type}")
         dispatcher.send(evt)
     }
+
+    override fun clearFederationToIdentityPool(
+        event: AuthenticationEvent.EventType.ClearFederationToIdentityPool
+    ): Action {
+        TODO("not implemented")
+    }
 }

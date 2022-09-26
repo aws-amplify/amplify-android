@@ -32,6 +32,8 @@ import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.cognito.asf.UserContextDataProvider
 import com.amplifyframework.auth.cognito.data.AWSCognitoAuthCredentialStore
 import com.amplifyframework.auth.cognito.data.AWSCognitoLegacyCredentialStore
+import com.amplifyframework.auth.cognito.options.FederateToIdentityPoolOptions
+import com.amplifyframework.auth.cognito.result.FederateToIdentityPoolResult
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
@@ -397,6 +399,34 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
     override fun getPluginKey() = AWS_COGNITO_AUTH_PLUGIN_KEY
 
     override fun getVersion() = BuildConfig.VERSION_NAME
+
+    fun federateToIdentityPool(
+        authProvider: AuthProvider,
+        providerToken: String,
+        onSuccess: Consumer<FederateToIdentityPoolResult>,
+        onError: Consumer<AuthException>
+    ) {
+        realPlugin.federateToIdentityPool(authProvider, providerToken, null, onSuccess, onError)
+    }
+
+    fun federateToIdentityPool(
+        authProvider: AuthProvider,
+        providerToken: String,
+        options: FederateToIdentityPoolOptions,
+        onSuccess: Consumer<FederateToIdentityPoolResult>,
+        onError: Consumer<AuthException>
+    ) {
+        realPlugin.federateToIdentityPool(authProvider, providerToken, options, onSuccess, onError)
+    }
+
+    fun clearFederationToIdentityPool(
+        onSuccess: Action,
+        onError: Consumer<AuthException>
+    ) {
+        realPlugin.clearFederationToIdentityPool(onSuccess, onError)
+    }
+
+
 
     private fun createCredentialStoreStateMachine(
         configuration: AuthConfiguration,

@@ -16,6 +16,7 @@
 package com.amplifyframework.statemachine.codegen.states
 
 import com.amplifyframework.auth.cognito.isAuthenticationEvent
+import com.amplifyframework.auth.cognito.isAuthorizationEvent
 import com.amplifyframework.auth.cognito.isSignOutEvent
 import com.amplifyframework.statemachine.State
 import com.amplifyframework.statemachine.StateMachineEvent
@@ -25,6 +26,7 @@ import com.amplifyframework.statemachine.codegen.actions.AuthenticationActions
 import com.amplifyframework.statemachine.codegen.data.SignedInData
 import com.amplifyframework.statemachine.codegen.data.SignedOutData
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
+import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
 import com.amplifyframework.statemachine.codegen.events.SignOutEvent
 
 sealed class AuthenticationState : State {
@@ -34,6 +36,8 @@ sealed class AuthenticationState : State {
     data class SignedIn(val signedInData: SignedInData) : AuthenticationState()
     data class SigningOut(var signOutState: SignOutState = SignOutState.NotStarted()) : AuthenticationState()
     data class SignedOut(val signedOutData: SignedOutData) : AuthenticationState()
+    data class FederatingToIdentityPool(val id: String = "") : AuthenticationState()
+    data class FederatedToIdentityPool(val id: String = "") : AuthenticationState()
     data class Error(val exception: Exception) : AuthenticationState()
 
     class Resolver(
@@ -100,16 +104,43 @@ sealed class AuthenticationState : State {
                         }
                     }
                 }
-                is SignedOut -> when (authenticationEvent) {
-                    is AuthenticationEvent.EventType.SignInRequested -> {
-                        val action = authenticationActions.initiateSignInAction(authenticationEvent)
-                        StateResolution(SigningIn(), listOf(action))
+                is SignedOut ->  {
+                    val authorizationEvent = event.isAuthorizationEvent()
+                    when {
+                        authenticationEvent is AuthenticationEvent.EventType.SignInRequested -> {
+                            val action = authenticationActions.initiateSignInAction(authenticationEvent)
+                            StateResolution(SigningIn(), listOf(action))
+                        }
+                        authenticationEvent is AuthenticationEvent.EventType.SignOutRequested -> {
+                            val action = authenticationActions.initiateSignOutAction(authenticationEvent, null)
+                            StateResolution(SigningOut(), listOf(action))
+                        }
+                        authorizationEvent is AuthorizationEvent.EventType.StartFederationToIdentityPool -> {
+                            StateResolution(FederatingToIdentityPool())
+                        }
+                        else -> defaultResolution
                     }
-                    is AuthenticationEvent.EventType.SignOutRequested -> {
-                        val action = authenticationActions.initiateSignOutAction(authenticationEvent, null)
-                        StateResolution(SigningOut(), listOf(action))
+                }
+                is FederatingToIdentityPool -> {
+                    when (event.isAuthorizationEvent()) {
+                        is AuthorizationEvent.EventType.Fetched -> {
+                            StateResolution(FederatedToIdentityPool())
+                        }
+                        is AuthorizationEvent.EventType.ThrowError -> {
+                            // TODO: Handle error
+                            StateResolution(Error(Exception()))
+                        }
+                        else -> defaultResolution
                     }
-                    else -> defaultResolution
+                }
+                is FederatedToIdentityPool -> {
+                    when (authenticationEvent) {
+                        is AuthenticationEvent.EventType.SignOutRequested -> {
+                            val action = authenticationActions.initiateSignOutAction(authenticationEvent, null)
+                            StateResolution(SigningOut(), listOf(action))
+                        }
+                        else -> defaultResolution
+                    }
                 }
                 is Error -> defaultResolution
             }

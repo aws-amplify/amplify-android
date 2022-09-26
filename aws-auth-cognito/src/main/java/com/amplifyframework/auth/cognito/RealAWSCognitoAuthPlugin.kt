@@ -45,6 +45,7 @@ import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.auth.cognito.helpers.HostedUIHelper
 import com.amplifyframework.auth.cognito.helpers.JWTParser
 import com.amplifyframework.auth.cognito.helpers.SignInChallengeHelper
+import com.amplifyframework.auth.cognito.helpers.identityPoolProviderName
 import com.amplifyframework.auth.cognito.options.AWSAuthResendUserAttributeConfirmationCodeOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthConfirmSignInOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthResendSignUpCodeOptions
@@ -54,7 +55,9 @@ import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttribu
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttributesOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthWebUISignInOptions
 import com.amplifyframework.auth.cognito.options.AuthFlowType
+import com.amplifyframework.auth.cognito.options.FederateToIdentityPoolOptions
 import com.amplifyframework.auth.cognito.result.AWSCognitoAuthSignOutResult
+import com.amplifyframework.auth.cognito.result.FederateToIdentityPoolResult
 import com.amplifyframework.auth.cognito.result.GlobalSignOutError
 import com.amplifyframework.auth.cognito.result.HostedUIError
 import com.amplifyframework.auth.cognito.result.RevokeTokenError
@@ -93,6 +96,7 @@ import com.amplifyframework.logging.Logger
 import com.amplifyframework.statemachine.StateChangeListenerToken
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
+import com.amplifyframework.statemachine.codegen.data.FederatedToken
 import com.amplifyframework.statemachine.codegen.data.SignInData
 import com.amplifyframework.statemachine.codegen.data.SignOutData
 import com.amplifyframework.statemachine.codegen.events.AuthEvent
@@ -1616,5 +1620,101 @@ internal class RealAWSCognitoAuthPlugin(
                 authStateMachine.send(AuthEvent(AuthEvent.EventType.ConfigureAuth(configuration)))
             }
         )
+    }
+
+    fun federateToIdentityPool(
+        authProvider: AuthProvider,
+        providerToken: String,
+        options: FederateToIdentityPoolOptions?,
+        onSuccess: Consumer<FederateToIdentityPoolResult>,
+        onError: Consumer<AuthException>
+    ) {
+        authStateMachine.getCurrentState { authState ->
+            val authNState = authState.authNState
+            val authZState = authState.authZState
+            when {
+                authNState is AuthenticationState.NotConfigured -> onError.accept(
+                    AWSCognitoAuthExceptions.NotConfiguredException()
+                )
+                (authNState is AuthenticationState.SignedOut ||
+                        authNState is AuthenticationState.Error ||
+                        authNState is AuthenticationState.FederatedToIdentityPool
+                        ) || (authZState is AuthorizationState.Configured ||
+                        authZState is AuthorizationState.SessionEstablished ||
+                        authZState is AuthorizationState.Error) -> {
+
+                    if (authNState is AuthenticationState.FederatedToIdentityPool) {
+                        authStateMachine.send(
+                            AuthenticationEvent(AuthenticationEvent.EventType.ClearFederationToIdentityPool())
+                        )
+                        TODO("not implemented")
+                    } else {
+                        _federateToIdentityPool(authProvider, providerToken, options, onSuccess, onError)
+                    }
+                }
+                else -> onError.accept(AuthException.InvalidStateException())
+            }
+        }
+    }
+
+    private fun _federateToIdentityPool(
+        authProvider: AuthProvider,
+        providerToken: String,
+        options: FederateToIdentityPoolOptions?,
+        onSuccess: Consumer<FederateToIdentityPoolResult>,
+        onError: Consumer<AuthException>
+    ) {
+        var token: StateChangeListenerToken? = null
+        token = authStateMachine.listen(
+            { authState ->
+                val authNState = authState.authNState
+                val authZState = authState.authZState
+                when {
+                    authNState is AuthenticationState.FederatedToIdentityPool
+                            && authZState is AuthorizationState.SessionEstablished -> {
+                        token?.let(authStateMachine::cancel)
+                        val credential = authZState.amplifyCredential as? AmplifyCredential.IdentityPoolFederated
+                        val identityId = credential?.identityId
+                        val awsCredentials = credential?.credentials
+                        if (identityId != null && awsCredentials != null) {
+                            val result = FederateToIdentityPoolResult(
+                                credentials = awsCredentials,
+                                identityId = identityId
+                            )
+                            onSuccess.accept(result)
+                        } else {
+                            onError.accept(AuthException.UnknownException(Exception()))
+                            // TODO: Fix error message
+                        }
+                    }
+                    authNState is AuthenticationState.Error && authZState is AuthorizationState.Error -> {
+                        token?.let(authStateMachine::cancel)
+                        onError.accept(
+                            CognitoAuthExceptionConverter.lookup(
+                                authZState.exception,
+                                "Federate to identity pool failed."
+                            )
+                        )
+                    }
+                }
+            },
+            {
+                authStateMachine.send(
+                    AuthorizationEvent(
+                        AuthorizationEvent.EventType.StartFederationToIdentityPool(
+                            token = FederatedToken(providerToken, authProvider.identityPoolProviderName),
+                            identityId = options?.developerProvidedIdentityId
+                        )
+                    )
+                )
+            }
+        )
+    }
+
+    fun clearFederationToIdentityPool(
+        onSuccess: Action,
+        onError: Consumer<AuthException>
+    ) {
+        TODO("not implemented")
     }
 }
