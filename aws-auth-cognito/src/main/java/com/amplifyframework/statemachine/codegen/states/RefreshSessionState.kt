@@ -118,8 +118,8 @@ sealed class RefreshSessionState : State {
                     }
                     else -> defaultResolution
                 }
-                is RefreshingAuthSession -> when {
-                    fetchAuthSessionEvent is FetchAuthSessionEvent.EventType.Fetched -> {
+                is RefreshingAuthSession -> when (fetchAuthSessionEvent) {
+                    is FetchAuthSessionEvent.EventType.Fetched -> {
                         val amplifyCredential = AmplifyCredential.UserAndIdentityPool(
                             oldState.signedInData,
                             fetchAuthSessionEvent.identityId,

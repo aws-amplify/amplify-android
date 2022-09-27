@@ -44,7 +44,7 @@ object HostedUICognitoActions : HostedUIActions {
             }
         }
 
-    override fun fetchHostedUISignInToken(event: HostedUIEvent.EventType.FetchToken) =
+    override fun fetchHostedUISignInToken(event: HostedUIEvent.EventType.FetchToken, browserPackage: String?) =
         Action<AuthEnvironment>("InitHostedUITokenFetch") { id, dispatcher ->
             logger?.verbose("$id Starting execution")
             val evt = try {
@@ -58,7 +58,7 @@ object HostedUICognitoActions : HostedUIActions {
                     userId,
                     username,
                     Date(),
-                    SignInMethod.HOSTED,
+                    SignInMethod.HostedUI(browserPackage),
                     DeviceMetadata.Empty,
                     token
                 )
