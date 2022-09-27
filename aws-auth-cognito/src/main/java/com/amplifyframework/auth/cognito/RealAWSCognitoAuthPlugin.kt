@@ -1740,8 +1740,8 @@ internal class RealAWSCognitoAuthPlugin(
             val authZState = authState.authZState
             when {
                 authState is AuthState.Configured &&
-                        authNState is AuthenticationState.FederatedToIdentityPool &&
-                        authZState is AuthorizationState.SessionEstablished -> {
+                    authNState is AuthenticationState.FederatedToIdentityPool &&
+                    authZState is AuthorizationState.SessionEstablished -> {
                     val event = AuthenticationEvent(AuthenticationEvent.EventType.SignOutRequested(SignOutData()))
                     authStateMachine.send(event)
                     _clearFederationToIdentityPool(onSuccess, onError)
