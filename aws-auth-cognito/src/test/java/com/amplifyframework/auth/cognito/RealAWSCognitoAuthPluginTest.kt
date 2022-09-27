@@ -120,7 +120,7 @@ class RealAWSCognitoAuthPluginTest {
             "userId",
             "username",
             Date(0),
-            SignInMethod.SRP,
+            SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH),
             DeviceMetadata.Empty,
             CognitoUserPoolTokens(dummyToken, dummyToken, dummyToken, 120L)
         )
@@ -238,7 +238,7 @@ class RealAWSCognitoAuthPluginTest {
                 "userId",
                 "user",
                 Date(),
-                SignInMethod.SRP,
+                SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH),
                 DeviceMetadata.Empty,
                 CognitoUserPoolTokens("", "", "", 0)
             )
@@ -1175,7 +1175,7 @@ class RealAWSCognitoAuthPluginTest {
                 "userId",
                 "username",
                 Date(),
-                SignInMethod.SRP,
+                SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH),
                 DeviceMetadata.Empty,
                 CognitoUserPoolTokens(null, null, null, 120L)
             )
@@ -1322,7 +1322,7 @@ class RealAWSCognitoAuthPluginTest {
                 "userId",
                 "username",
                 Date(),
-                SignInMethod.SRP,
+                SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH),
                 DeviceMetadata.Empty,
                 CognitoUserPoolTokens(null, null, null, 120L)
             )

@@ -34,10 +34,7 @@ object AuthenticationCognitoActions : AuthenticationActions {
         Action<AuthEnvironment>("ConfigureAuthN") { id, dispatcher ->
             logger?.verbose("$id Starting execution")
             val evt = when (val credentials = event.storedCredentials) {
-                is AmplifyCredential.UserPool -> {
-                    AuthenticationEvent(AuthenticationEvent.EventType.InitializedSignedIn(credentials.signedInData))
-                }
-                is AmplifyCredential.UserAndIdentityPool -> {
+                is AmplifyCredential.UserPoolData -> {
                     AuthenticationEvent(AuthenticationEvent.EventType.InitializedSignedIn(credentials.signedInData))
                 }
                 else -> AuthenticationEvent(AuthenticationEvent.EventType.InitializedSignedOut(SignedOutData()))
@@ -97,7 +94,7 @@ object AuthenticationCognitoActions : AuthenticationActions {
         logger?.verbose("$id Starting execution")
 
         val evt = when {
-            signedInData != null && signedInData.signInMethod == SignInMethod.HOSTED -> {
+            signedInData != null && signedInData.signInMethod is SignInMethod.HostedUI -> {
                 SignOutEvent(SignOutEvent.EventType.InvokeHostedUISignOut(event.signOutData, signedInData))
             }
             signedInData != null && event.signOutData.globalSignOut -> {

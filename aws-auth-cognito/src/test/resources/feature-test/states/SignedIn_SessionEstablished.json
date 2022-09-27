@@ -6,7 +6,10 @@
             "userId": "userId",
             "username": "username",
             "signedInDate": 324234123000,
-            "signInMethod": "SRP",
+            "signInMethod": {
+                "type": "SignInMethod.ApiBased",
+                "authType": "USER_SRP_AUTH"
+            },
             "deviceMetadata": {
                 "type": "metadata",
                 "deviceKey": "someDeviceKey",
@@ -29,7 +32,10 @@
                 "userId": "userId",
                 "username": "username",
                 "signedInDate": 324234123000,
-                "signInMethod": "SRP",
+                "signInMethod": {
+                    "type": "SignInMethod.ApiBased",
+                    "authType": "USER_SRP_AUTH"
+                },
                 "deviceMetadata": {
                     "type": "metadata",
                     "deviceKey": "someDeviceKey",
