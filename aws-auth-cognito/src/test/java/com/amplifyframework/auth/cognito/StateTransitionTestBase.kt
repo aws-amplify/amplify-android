@@ -140,7 +140,7 @@ open class StateTransitionTestBase {
             "userId",
             "username",
             Date(0),
-            SignInMethod.SRP,
+            SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH),
             DeviceMetadata.Empty,
             CognitoUserPoolTokens("idToken", "accessToken", "refreshToken", 123123L),
         ),
