@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-=======
 ## [Release 0.21.4](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.21.4)
 
 ### Miscellaneous
@@ -8,7 +6,6 @@
 
 [See all changes between 0.21.3 and 0.21.4](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.21.3...release-kotlin_v0.21.4)
 
->>>>>>> main
 ## [Release 0.21.3](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.21.3)
 
 ### Bug Fixes
