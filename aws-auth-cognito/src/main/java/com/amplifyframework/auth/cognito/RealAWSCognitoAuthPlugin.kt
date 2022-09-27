@@ -396,13 +396,7 @@ internal class RealAWSCognitoAuthPlugin(
                     onError
                 )
                 is AuthenticationState.SignedIn -> {
-                    onError.accept(
-                        AuthException(
-                            "There is already a user in signedIn state. " +
-                                "SignOut the user first before calling signIn",
-                            AuthException.InvalidStateException.TODO_RECOVERY_SUGGESTION
-                        )
-                    )
+                    onError.accept(AuthException.SignedInException())
                 }
                 else -> onError.accept(AuthException.InvalidStateException())
             }
@@ -455,7 +449,7 @@ internal class RealAWSCognitoAuthPlugin(
             {
                 // assign SRP as default if no options provided
                 val signInOptions = options as? AWSCognitoAuthSignInOptions ?: AWSCognitoAuthSignInOptions
-                    .builder().authFlowType(AuthFlowType.USER_SRP_AUTH).build()
+                    .builder().authFlowType(configuration.authFlowType).build()
 
                 val signInData = when (signInOptions.authFlowType) {
                     AuthFlowType.USER_SRP_AUTH -> {

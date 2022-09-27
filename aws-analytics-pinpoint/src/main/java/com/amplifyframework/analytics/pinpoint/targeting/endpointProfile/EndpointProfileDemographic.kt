@@ -23,7 +23,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 class EndpointProfileDemographic {
-    internal constructor(versionName: String, make: String, locale: String) {
+    internal constructor(versionName: String?, make: String, locale: String) {
         this.appVersion = versionName
         this.make = make
         this.locale = locale
@@ -51,7 +51,7 @@ class EndpointProfileDemographic {
     fun getLocale() = locale
     fun setLocale(locale: String) = locale.also { this.locale = it }
 
-    internal var appVersion: String
+    internal var appVersion: String?
     fun getAppVersion() = appVersion
     fun setAppVersion(appVersion: String) = appVersion.also { this.appVersion = it }
 
