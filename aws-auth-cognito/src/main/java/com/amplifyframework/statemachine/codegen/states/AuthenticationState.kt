@@ -66,6 +66,9 @@ sealed class AuthenticationState : State {
                     is AuthenticationEvent.EventType.InitializedSignedIn -> StateResolution(
                         SignedIn(authenticationEvent.signedInData)
                     )
+                    is AuthenticationEvent.EventType.InitializedFederated -> StateResolution(
+                        FederatedToIdentityPool()
+                    )
                     is AuthenticationEvent.EventType.InitializedSignedOut -> StateResolution(
                         SignedOut(authenticationEvent.signedOutData)
                     )
@@ -104,7 +107,7 @@ sealed class AuthenticationState : State {
                         }
                     }
                 }
-                is SignedOut ->  {
+                is SignedOut -> {
                     val authorizationEvent = event.isAuthorizationEvent()
                     when {
                         authenticationEvent is AuthenticationEvent.EventType.SignInRequested -> {

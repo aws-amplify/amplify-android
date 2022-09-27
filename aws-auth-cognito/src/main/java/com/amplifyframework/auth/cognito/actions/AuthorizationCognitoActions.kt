@@ -19,8 +19,6 @@ import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.AuthorizationActions
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
-import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
-import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
 import com.amplifyframework.statemachine.codegen.data.FederatedToken
 import com.amplifyframework.statemachine.codegen.data.LoginsMapProvider
 import com.amplifyframework.statemachine.codegen.data.SignedInData

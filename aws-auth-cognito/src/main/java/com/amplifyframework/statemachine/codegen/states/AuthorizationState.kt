@@ -54,8 +54,8 @@ sealed class AuthorizationState : State {
     data class StoringCredentials(val amplifyCredential: AmplifyCredential) : AuthorizationState()
     data class SessionEstablished(val amplifyCredential: AmplifyCredential) : AuthorizationState()
     data class FederatingToIdentityPool(
-        val fetchAuthSessionState: FetchAuthSessionState?,
-        val federatedToken: FederatedToken
+        val federatedToken: FederatedToken,
+        val fetchAuthSessionState: FetchAuthSessionState
     ) : AuthorizationState()
     data class Error(val exception: Exception) : AuthorizationState()
 
@@ -108,8 +108,8 @@ sealed class AuthorizationState : State {
                                 authorizationEvent.identityId
                             )
                         val newState = FederatingToIdentityPool(
-                            FetchAuthSessionState.NotStarted(),
-                            authorizationEvent.token
+                            authorizationEvent.token,
+                            FetchAuthSessionState.NotStarted()
                         )
                         StateResolution(newState, listOf(action))
                     }
@@ -172,6 +172,24 @@ sealed class AuthorizationState : State {
                         val resolution = fetchAuthSessionResolver.resolve(oldState.fetchAuthSessionState, event)
                         StateResolution(
                             FetchingAuthSession(oldState.signedInData, resolution.newState),
+                            resolution.actions
+                        )
+                    }
+                }
+                is FederatingToIdentityPool -> when (authorizationEvent) {
+                    is AuthorizationEvent.EventType.Fetched -> {
+                        val amplifyCredential = AmplifyCredential.IdentityPoolFederated(
+                            oldState.federatedToken,
+                            authorizationEvent.identityId,
+                            authorizationEvent.awsCredentials
+                        )
+                        StateResolution(StoringCredentials(amplifyCredential))
+                    }
+                    is AuthorizationEvent.EventType.ThrowError -> StateResolution(Error(authorizationEvent.exception))
+                    else -> {
+                        val resolution = fetchAuthSessionResolver.resolve(oldState.fetchAuthSessionState, event)
+                        StateResolution(
+                            FederatingToIdentityPool(oldState.federatedToken, resolution.newState),
                             resolution.actions
                         )
                     }
@@ -240,15 +258,12 @@ sealed class AuthorizationState : State {
                                 authorizationEvent.identityId
                             )
                         val newState = FederatingToIdentityPool(
-                            FetchAuthSessionState.NotStarted(),
-                            authorizationEvent.token
+                            authorizationEvent.token,
+                            FetchAuthSessionState.NotStarted()
                         )
                         StateResolution(newState, listOf(action))
                     }
                     else -> defaultResolution
-                }
-                is FederatingToIdentityPool -> {
-                    defaultResolution
                 }
             }
         }

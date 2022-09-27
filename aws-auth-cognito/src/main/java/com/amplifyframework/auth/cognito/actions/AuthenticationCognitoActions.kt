@@ -40,6 +40,9 @@ object AuthenticationCognitoActions : AuthenticationActions {
                 is AmplifyCredential.UserAndIdentityPool -> {
                     AuthenticationEvent(AuthenticationEvent.EventType.InitializedSignedIn(credentials.signedInData))
                 }
+                is AmplifyCredential.IdentityPoolFederated -> {
+                    AuthenticationEvent(AuthenticationEvent.EventType.InitializedFederated)
+                }
                 else -> AuthenticationEvent(AuthenticationEvent.EventType.InitializedSignedOut(SignedOutData()))
             }
             logger?.verbose("$id Sending event ${evt.type}")
@@ -110,11 +113,5 @@ object AuthenticationCognitoActions : AuthenticationActions {
         }
         logger?.verbose("$id Sending event ${evt.type}")
         dispatcher.send(evt)
-    }
-
-    override fun clearFederationToIdentityPool(
-        event: AuthenticationEvent.EventType.ClearFederationToIdentityPool
-    ): Action {
-        TODO("not implemented")
     }
 }

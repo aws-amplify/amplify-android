@@ -426,8 +426,6 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         realPlugin.clearFederationToIdentityPool(onSuccess, onError)
     }
 
-
-
     private fun createCredentialStoreStateMachine(
         configuration: AuthConfiguration,
         context: Context

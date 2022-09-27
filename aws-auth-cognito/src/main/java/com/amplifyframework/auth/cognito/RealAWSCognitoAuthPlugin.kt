@@ -1368,6 +1368,16 @@ internal class RealAWSCognitoAuthPlugin(
                     authStateMachine.send(event)
                     _signOut(options, onComplete)
                 }
+                is AuthenticationState.FederatedToIdentityPool -> {
+                    onComplete.accept(
+                        AWSCognitoAuthSignOutResult.FailedSignOut(
+                            AuthException.InvalidStateException(
+                                "The user is currently federated to identity pool. " +
+                                    "You must call clearFederationToIdentityPool to clear credentials."
+                            )
+                        )
+                    )
+                }
                 else -> onComplete.accept(
                     AWSCognitoAuthSignOutResult.FailedSignOut(AuthException.InvalidStateException())
                 )
@@ -1636,21 +1646,24 @@ internal class RealAWSCognitoAuthPlugin(
                 authNState is AuthenticationState.NotConfigured -> onError.accept(
                     AWSCognitoAuthExceptions.NotConfiguredException()
                 )
-                (authNState is AuthenticationState.SignedOut ||
-                        authNState is AuthenticationState.Error ||
-                        authNState is AuthenticationState.FederatedToIdentityPool
-                        ) || (authZState is AuthorizationState.Configured ||
-                        authZState is AuthorizationState.SessionEstablished ||
-                        authZState is AuthorizationState.Error) -> {
-
-                    if (authNState is AuthenticationState.FederatedToIdentityPool) {
-                        authStateMachine.send(
-                            AuthenticationEvent(AuthenticationEvent.EventType.ClearFederationToIdentityPool())
+                authNState is AuthenticationState.FederatedToIdentityPool -> {
+                    onError.accept(
+                        AuthException.InvalidStateException(
+                            "The user is currently federated to identity pool. You " +
+                                "must call clearFederationToIdentityPool to clear credentials."
                         )
-                        TODO("not implemented")
-                    } else {
-                        _federateToIdentityPool(authProvider, providerToken, options, onSuccess, onError)
-                    }
+                    )
+                }
+                (
+                    authNState is AuthenticationState.SignedOut ||
+                        authNState is AuthenticationState.Error
+                    ) || (
+                    authZState is AuthorizationState.Configured ||
+                        authZState is AuthorizationState.SessionEstablished ||
+                        authZState is AuthorizationState.Error
+                    ) -> {
+
+                    _federateToIdentityPool(authProvider, providerToken, options, onSuccess, onError)
                 }
                 else -> onError.accept(AuthException.InvalidStateException())
             }
@@ -1671,7 +1684,7 @@ internal class RealAWSCognitoAuthPlugin(
                 val authZState = authState.authZState
                 when {
                     authNState is AuthenticationState.FederatedToIdentityPool
-                            && authZState is AuthorizationState.SessionEstablished -> {
+                        && authZState is AuthorizationState.SessionEstablished -> {
                         token?.let(authStateMachine::cancel)
                         val credential = authZState.amplifyCredential as? AmplifyCredential.IdentityPoolFederated
                         val identityId = credential?.identityId
