@@ -275,8 +275,12 @@ internal class AWSCognitoLegacyCredentialStore(
     }
 
     private fun retrieveUserPoolSignInMethod() = when (mobileClientKeyValue.get(SIGN_IN_MODE_KEY)) {
-        "2" -> SignInMethod.HostedUI()
-        "1", "3" -> null
+        "2" -> SignInMethod.HostedUI() // Unlikely to resolve as hosted ui with federation changes to "1"
+        "3" -> null
+        /*
+        In many sign in states, federation will be enabled making "1" the most common value. In this case, our safest
+        option is to default to SRP
+         */
         else -> SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH)
     }
 }
