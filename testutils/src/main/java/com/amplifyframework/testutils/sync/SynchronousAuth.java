@@ -59,7 +59,7 @@ import java.util.concurrent.TimeUnit;
  * performing various operations.
  */
 public final class SynchronousAuth {
-    private static final long AUTH_OPERATION_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(5);
+    private static final long AUTH_OPERATION_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(10);
     private final AuthCategoryBehavior asyncDelegate;
 
     private SynchronousAuth(AuthCategoryBehavior asyncDelegate) {
