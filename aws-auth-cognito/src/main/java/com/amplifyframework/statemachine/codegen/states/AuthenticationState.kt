@@ -55,12 +55,18 @@ sealed class AuthenticationState : State {
             val authenticationEvent = event.isAuthenticationEvent()
             val defaultResolution = StateResolution(oldState)
             return when (oldState) {
-                is NotConfigured -> when (authenticationEvent) {
-                    is AuthenticationEvent.EventType.Configure -> {
-                        val action = authenticationActions.configureAuthenticationAction(authenticationEvent)
-                        StateResolution(Configured(), listOf(action))
+                is NotConfigured -> {
+                    val authorizationEvent = event.isAuthorizationEvent()
+                    when {
+                        authenticationEvent is AuthenticationEvent.EventType.Configure -> {
+                            val action = authenticationActions.configureAuthenticationAction(authenticationEvent)
+                            StateResolution(Configured(), listOf(action))
+                        }
+                        authorizationEvent is AuthorizationEvent.EventType.StartFederationToIdentityPool -> {
+                            StateResolution(FederatingToIdentityPool())
+                        }
+                        else -> defaultResolution
                     }
-                    else -> defaultResolution
                 }
                 is Configured -> when (authenticationEvent) {
                     is AuthenticationEvent.EventType.InitializedSignedIn -> StateResolution(
@@ -125,13 +131,12 @@ sealed class AuthenticationState : State {
                     }
                 }
                 is FederatingToIdentityPool -> {
-                    when (event.isAuthorizationEvent()) {
+                    when (val authorizationEvent = event.isAuthorizationEvent()) {
                         is AuthorizationEvent.EventType.Fetched -> {
                             StateResolution(FederatedToIdentityPool())
                         }
                         is AuthorizationEvent.EventType.ThrowError -> {
-                            // TODO: Handle error
-                            StateResolution(Error(Exception()))
+                            StateResolution(Error(authorizationEvent.exception))
                         }
                         else -> defaultResolution
                     }
@@ -145,7 +150,14 @@ sealed class AuthenticationState : State {
                         else -> defaultResolution
                     }
                 }
-                is Error -> defaultResolution
+                is Error -> {
+                    when (event.isAuthorizationEvent()) {
+                        is AuthorizationEvent.EventType.StartFederationToIdentityPool -> {
+                            StateResolution(FederatingToIdentityPool())
+                        }
+                        else -> defaultResolution
+                    }
+                }
             }
         }
     }

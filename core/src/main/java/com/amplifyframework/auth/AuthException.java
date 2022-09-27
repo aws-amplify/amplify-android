@@ -278,6 +278,15 @@ public class AuthException extends AmplifyException {
                     "See the attached exception for more details"
             );
         }
+
+        /**
+         * Custom message and recovery suggestion when cause is unknown.
+         * @param message The custom error message.
+         * @param recoverSuggestion The custom recovery suggestion.
+         */
+        public UnknownException(@NonNull String message, @NonNull String recoverSuggestion) {
+            super(message, recoverSuggestion);
+        }
     }
 
     /**

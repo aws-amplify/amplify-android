@@ -1643,8 +1643,8 @@ internal class RealAWSCognitoAuthPlugin(
             val authNState = authState.authNState
             val authZState = authState.authZState
             when {
-                authNState is AuthenticationState.NotConfigured -> onError.accept(
-                    AWSCognitoAuthExceptions.NotConfiguredException()
+                authState !is AuthState.Configured -> onError.accept(
+                    AuthException.InvalidStateException("Federation could not be completed.")
                 )
                 authNState is AuthenticationState.FederatedToIdentityPool -> {
                     onError.accept(
@@ -1656,7 +1656,8 @@ internal class RealAWSCognitoAuthPlugin(
                 }
                 (
                     authNState is AuthenticationState.SignedOut ||
-                        authNState is AuthenticationState.Error
+                        authNState is AuthenticationState.Error ||
+                        authNState is AuthenticationState.NotConfigured
                     ) || (
                     authZState is AuthorizationState.Configured ||
                         authZState is AuthorizationState.SessionEstablished ||
@@ -1665,7 +1666,9 @@ internal class RealAWSCognitoAuthPlugin(
 
                     _federateToIdentityPool(authProvider, providerToken, options, onSuccess, onError)
                 }
-                else -> onError.accept(AuthException.InvalidStateException())
+                else -> onError.accept(
+                    AuthException.InvalidStateException("Federation could not be completed.")
+                )
             }
         }
     }
@@ -1696,8 +1699,12 @@ internal class RealAWSCognitoAuthPlugin(
                             )
                             onSuccess.accept(result)
                         } else {
-                            onError.accept(AuthException.UnknownException(Exception()))
-                            // TODO: Fix error message
+                            onError.accept(
+                                AuthException.UnknownException(
+                                    "Could not start federation to Identity Pool",
+                                    "An unclassified error prevented this operation."
+                                )
+                            )
                         }
                     }
                     authNState is AuthenticationState.Error && authZState is AuthorizationState.Error -> {
@@ -1705,7 +1712,7 @@ internal class RealAWSCognitoAuthPlugin(
                         onError.accept(
                             CognitoAuthExceptionConverter.lookup(
                                 authZState.exception,
-                                "Federate to identity pool failed."
+                                "Federation could not be completed."
                             )
                         )
                     }
