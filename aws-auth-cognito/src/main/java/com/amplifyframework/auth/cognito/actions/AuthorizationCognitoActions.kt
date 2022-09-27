@@ -79,10 +79,7 @@ object AuthorizationCognitoActions : AuthorizationActions {
         Action<AuthEnvironment>("InitiateRefreshSession") { id, dispatcher ->
             logger?.verbose("$id Starting execution")
             val evt = when (amplifyCredential) {
-                is AmplifyCredential.UserPool -> RefreshSessionEvent(
-                    RefreshSessionEvent.EventType.RefreshUserPoolTokens(amplifyCredential.signedInData)
-                )
-                is AmplifyCredential.UserAndIdentityPool -> RefreshSessionEvent(
+                is AmplifyCredential.UserPoolData -> RefreshSessionEvent(
                     RefreshSessionEvent.EventType.RefreshUserPoolTokens(amplifyCredential.signedInData)
                 )
                 is AmplifyCredential.IdentityPool -> RefreshSessionEvent(
