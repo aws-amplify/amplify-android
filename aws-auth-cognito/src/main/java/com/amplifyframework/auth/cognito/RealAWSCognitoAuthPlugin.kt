@@ -1366,7 +1366,7 @@ internal class RealAWSCognitoAuthPlugin(
                         )
                     )
                     authStateMachine.send(event)
-                    _signOut(options, onComplete)
+                    _signOut(onComplete)
                 }
                 is AuthenticationState.FederatedToIdentityPool -> {
                     onComplete.accept(
@@ -1385,7 +1385,7 @@ internal class RealAWSCognitoAuthPlugin(
         }
     }
 
-    private fun _signOut(options: AuthSignOutOptions, onComplete: Consumer<AuthSignOutResult>) {
+    private fun _signOut(onComplete: Consumer<AuthSignOutResult>) {
         var token: StateChangeListenerToken? = null
         token = authStateMachine.listen(
             { authState ->
@@ -1735,6 +1735,32 @@ internal class RealAWSCognitoAuthPlugin(
         onSuccess: Action,
         onError: Consumer<AuthException>
     ) {
-        TODO("not implemented")
+        authStateMachine.getCurrentState { authState ->
+            val authNState = authState.authNState
+            val authZState = authState.authZState
+            when {
+                authState is AuthState.Configured &&
+                        authNState is AuthenticationState.FederatedToIdentityPool &&
+                        authZState is AuthorizationState.SessionEstablished -> {
+                    val event = AuthenticationEvent(AuthenticationEvent.EventType.SignOutRequested(SignOutData()))
+                    authStateMachine.send(event)
+                    _clearFederationToIdentityPool(onSuccess, onError)
+                }
+                else -> {
+                    onError.accept(AuthException.InvalidStateException("Clearing of federation failed."))
+                }
+            }
+        }
+    }
+
+    private fun _clearFederationToIdentityPool(onSuccess: Action, onError: Consumer<AuthException>) {
+        _signOut {
+            when (it) {
+                is AWSCognitoAuthSignOutResult.FailedSignOut -> {
+                    onError.accept(it.error)
+                }
+                else -> onSuccess.call()
+            }
+        }
     }
 }
