@@ -400,6 +400,12 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
 
     override fun getVersion() = BuildConfig.VERSION_NAME
 
+    /**
+     * Federate to Identity Pool
+     * @param authProvider The auth provider you want to federate for (e.g. Facebook, Google, etc.)
+     * @param providerToken Provider token to start the federation for
+     * @param onSuccess Success callback
+     */
     fun federateToIdentityPool(
         authProvider: AuthProvider,
         providerToken: String,
@@ -409,6 +415,13 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         realPlugin.federateToIdentityPool(authProvider, providerToken, null, onSuccess, onError)
     }
 
+    /**
+     * Federate to Identity Pool
+     * @param authProvider The auth provider you want to federate for (e.g. Facebook, Google, etc.)
+     * @param providerToken Provider token to start the federation for
+     * @param options Advanced options for federating to identity pool
+     * @param onSuccess Success callback
+     */
     fun federateToIdentityPool(
         authProvider: AuthProvider,
         providerToken: String,
@@ -419,6 +432,11 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         realPlugin.federateToIdentityPool(authProvider, providerToken, options, onSuccess, onError)
     }
 
+    /**
+     * Clear Federation to Identity Pool
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     */
     fun clearFederationToIdentityPool(
         onSuccess: Action,
         onError: Consumer<AuthException>

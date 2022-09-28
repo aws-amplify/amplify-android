@@ -1440,7 +1440,7 @@ internal class RealAWSCognitoAuthPlugin(
                     is CredentialStoreState.Success -> {
                         listenerToken?.let(credentialStoreStateMachine::cancel)
                         when (val credential = it.storedCredentials) {
-                            is AmplifyCredential.UserPoolData -> _deleteUser(
+                            is AmplifyCredential.UserPoolTypeCredential -> _deleteUser(
                                 credential.signedInData.cognitoUserPoolTokens.accessToken!!,
                                 onSuccess,
                                 onError
