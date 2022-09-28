@@ -95,7 +95,8 @@ object SRPCognitoActions : SRPActions {
                 )
 
                 val authParams = mutableMapOf(
-                    KEY_USERNAME to event.username, KEY_SRP_A to srpHelper.getPublicA(),
+                    KEY_USERNAME to event.username,
+                    KEY_SRP_A to srpHelper.getPublicA(),
                     KEY_CHALLENGE_NAME to VALUE_SRP_A
                 )
                 secretHash?.let { authParams[KEY_SECRET_HASH] = it }

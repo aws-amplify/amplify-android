@@ -52,11 +52,11 @@ object SignInCognitoActions : SignInActions {
 
     override fun startCustomAuthWithSRPAction(event: SignInEvent.EventType.InitiateCustomSignInWithSRP): Action =
         Action<AuthEnvironment>("StartSRPAuth") { id, dispatcher ->
-        logger?.verbose("$id Starting execution")
-        val evt = SRPEvent(SRPEvent.EventType.InitiateSRPWithCustom(event.username))
-        logger?.verbose("$id Sending event ${evt.type}")
-        dispatcher.send(evt)
-    }
+            logger?.verbose("$id Starting execution")
+            val evt = SRPEvent(SRPEvent.EventType.InitiateSRPWithCustom(event.username))
+            logger?.verbose("$id Sending event ${evt.type}")
+            dispatcher.send(evt)
+        }
 
     override fun initResolveChallenge(event: SignInEvent.EventType.ReceivedChallenge) =
         Action<AuthEnvironment>("InitResolveChallenge") { id, dispatcher ->
