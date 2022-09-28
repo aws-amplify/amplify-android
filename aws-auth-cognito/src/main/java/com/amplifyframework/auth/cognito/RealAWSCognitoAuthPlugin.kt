@@ -442,9 +442,7 @@ internal class RealAWSCognitoAuthPlugin(
                         onSuccess.accept(authSignInResult)
                     }
                     else -> {
-                        // If it comes here it has errored out
-                        // Remove after debugging
-                        println("Tutorial: error")
+                        // no-op
                     }
                 }
             },
