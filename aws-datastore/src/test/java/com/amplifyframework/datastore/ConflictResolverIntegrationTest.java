@@ -111,12 +111,14 @@ public final class ConflictResolverIntegrationTest {
 
         JSONObject dataStorePluginJson = new JSONObject()
                 .put("syncIntervalInMinutes", 60);
+        DataStoreConfiguration config = DataStoreConfiguration.builder()
+                .conflictHandler(DataStoreConflictHandler.alwaysRetryLocal())
+                .errorHandler(mock(DataStoreErrorHandler.class))
+                .build();
         AWSDataStorePlugin awsDataStorePlugin = AWSDataStorePlugin.builder()
                 .modelProvider(modelProvider)
                 .apiCategory(mockApiCategory)
-                .dataStoreConfiguration(DataStoreConfiguration.builder()
-                        .conflictHandler(DataStoreConflictHandler.alwaysRetryLocal())
-                        .build())
+                .dataStoreConfiguration(config)
                 .build();
         SynchronousDataStore synchronousDataStore = SynchronousDataStore.delegatingTo(awsDataStorePlugin);
         awsDataStorePlugin.configure(dataStorePluginJson, context);
@@ -129,7 +131,7 @@ public final class ConflictResolverIntegrationTest {
         // Save person 1
         synchronousDataStore.save(person1);
         Person result1 = synchronousDataStore.get(Person.class, person1.getId());
-        assertTrue(latch.await(7, TimeUnit.SECONDS));
+        assertTrue(latch.await(30, TimeUnit.SECONDS));
         assertEquals(person1, result1);
     }
 

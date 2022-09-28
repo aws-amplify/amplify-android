@@ -44,7 +44,7 @@ public final class DataStoreConfiguration {
     @VisibleForTesting 
     static final int DEFAULT_SYNC_PAGE_SIZE = 1_000;
     @VisibleForTesting
-    static final boolean DEFAULT_DO_SYNC_RETRY = false;
+    static final boolean DEFAULT_DO_SYNC_RETRY = true;
     static final int MAX_RECORDS = 1000;
     static final long MAX_TIME_SEC = 2;
 

@@ -66,7 +66,7 @@ public final class DataStoreConfigurationTest {
         assertTrue(dataStoreConfiguration.getConflictHandler() instanceof AlwaysApplyRemoteHandler);
         assertTrue(dataStoreConfiguration.getErrorHandler() instanceof DefaultDataStoreErrorHandler);
         assertEquals(Collections.emptyMap(), dataStoreConfiguration.getSyncExpressions());
-        assertFalse(dataStoreConfiguration.getDoSyncRetry());
+        assertTrue(dataStoreConfiguration.getDoSyncRetry());
     }
 
     /**

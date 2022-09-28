@@ -15,6 +15,9 @@
 
 package com.amplifyframework.datastore.syncengine;
 
+import com.amplifyframework.datastore.DataStoreConfiguration;
+import com.amplifyframework.datastore.DataStoreConfigurationProvider;
+import com.amplifyframework.datastore.DataStoreErrorHandler;
 import com.amplifyframework.datastore.DataStoreException;
 
 import org.junit.Test;
@@ -26,6 +29,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 import io.reactivex.rxjava3.core.Single;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 public class RetryHandlerTest {
 
@@ -33,9 +41,16 @@ public class RetryHandlerTest {
      * Test no retry on success.
      */
     @Test
-    public void testNoRetryOnSuccess() {
+    public void testNoRetryOnSuccess() throws DataStoreException {
         //arrange
-        RetryHandler subject = new RetryHandler();
+        DataStoreConfigurationProvider configurationProvider = mock(DataStoreConfigurationProvider.class);
+        DataStoreConfiguration config = mock(DataStoreConfiguration.class);
+        when(configurationProvider.getConfiguration())
+                .thenReturn(config);
+        when(config.getErrorHandler())
+                .thenReturn(mock(DataStoreErrorHandler.class));
+        RetryHandler subject =
+                new RetryHandler(configurationProvider);
         String expectedValue = "Test value";
         Single<String> mockSingle = Single.create(emitter -> emitter.onSuccess(expectedValue));
 
@@ -52,9 +67,16 @@ public class RetryHandlerTest {
      * Test no retry on Irrecoverable error.
      */
     @Test
-    public void testNoRetryOnIrrecoverableError() {
+    public void testNoRetryOnIrrecoverableError() throws DataStoreException {
         //arrange
-        RetryHandler subject = new RetryHandler();
+        DataStoreConfigurationProvider configurationProvider = mock(DataStoreConfigurationProvider.class);
+        DataStoreConfiguration config = mock(DataStoreConfiguration.class);
+        when(configurationProvider.getConfiguration())
+                .thenReturn(config);
+        DataStoreErrorHandler errorHandler = mock(DataStoreErrorHandler.class);
+        when(config.getErrorHandler())
+                .thenReturn(errorHandler);
+        RetryHandler subject = new RetryHandler(configurationProvider);
         DataStoreException expectedException = new DataStoreException.
                 GraphQLResponseException("PaginatedResult<ModelWithMetadata<BlogOwner>>",
                 new ArrayList<>());
@@ -68,15 +90,23 @@ public class RetryHandlerTest {
                 .awaitDone(1, TimeUnit.SECONDS)
                 .assertError(expectedException)
                 .isDisposed();
+        verify(errorHandler, times(1)).accept(any());
     }
 
     /**
      * Test retry on recoverable error.
      */
     @Test
-    public void testRetryOnRecoverableError() {
+    public void testRetryOnRecoverableError() throws DataStoreException {
         //arrange
-        RetryHandler subject = new RetryHandler(8, 0, 1, 1);
+        DataStoreConfigurationProvider configurationProvider = mock(DataStoreConfigurationProvider.class);
+        DataStoreConfiguration config = mock(DataStoreConfiguration.class);
+        when(configurationProvider.getConfiguration())
+                .thenReturn(config);
+        when(config.getErrorHandler())
+                .thenReturn(mock(DataStoreErrorHandler.class));
+        RetryHandler subject = new RetryHandler(8, 0, 1,
+                1, configurationProvider);
         DataStoreException expectedException =
                 new DataStoreException("PaginatedResult<ModelWithMetadata<BlogOwner>>", "");
         AtomicInteger count = new AtomicInteger(0);
@@ -87,20 +117,24 @@ public class RetryHandlerTest {
         //act and assert
         subject.retry(mockSingle, new ArrayList<>())
                 .test()
-                .awaitDone(10, TimeUnit.SECONDS)
-                .assertError(expectedException)
+                .awaitDone(1, TimeUnit.SECONDS)
                 .isDisposed();
-
-        assertEquals(2, count.get());
     }
 
     /**
      * test jittered delay method return the correct delay time.
      */
     @Test
-    public void testJitteredDelaySec() {
+    public void testJitteredDelaySec() throws DataStoreException {
         //arrange
-        RetryHandler subject = new RetryHandler(8, 0, 1, 5);
+        DataStoreConfigurationProvider configurationProvider = mock(DataStoreConfigurationProvider.class);
+        DataStoreConfiguration config = mock(DataStoreConfiguration.class);
+        when(configurationProvider.getConfiguration())
+                .thenReturn(config);
+        when(config.getErrorHandler())
+                .thenReturn(mock(DataStoreErrorHandler.class));
+        RetryHandler subject = new RetryHandler(8, 0, 1,
+                5, configurationProvider );
         //act
         long delay = subject.jitteredDelaySec(2);
         //assert
@@ -111,9 +145,16 @@ public class RetryHandlerTest {
      * test jittered delay method return no more than the max delay time.
      */
     @Test
-    public void testJitteredDelaySecReturnsNoMoreThanMaxValue() {
+    public void testJitteredDelaySecReturnsNoMoreThanMaxValue() throws DataStoreException {
         //arrange
-        RetryHandler subject = new RetryHandler(8, 0, 1, 1);
+        DataStoreConfigurationProvider configurationProvider = mock(DataStoreConfigurationProvider.class);
+        DataStoreConfiguration config = mock(DataStoreConfiguration.class);
+        when(configurationProvider.getConfiguration())
+                .thenReturn(config);
+        when(config.getErrorHandler())
+                .thenReturn(mock(DataStoreErrorHandler.class));
+        RetryHandler subject = new RetryHandler(8, 0, 1,
+                1, configurationProvider);
         //act
         long delay = subject.jitteredDelaySec(2);
         //assert

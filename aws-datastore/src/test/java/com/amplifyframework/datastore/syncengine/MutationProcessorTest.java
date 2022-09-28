@@ -28,6 +28,7 @@ import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.datastore.DataStoreChannelEventName;
 import com.amplifyframework.datastore.DataStoreConfiguration;
 import com.amplifyframework.datastore.DataStoreConfigurationProvider;
+import com.amplifyframework.datastore.DataStoreErrorHandler;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.appsync.AppSyncMocking;
@@ -48,6 +49,7 @@ import org.mockito.ArgumentMatchers;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.shadows.ShadowLog;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -65,6 +67,7 @@ import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -82,6 +85,7 @@ public final class MutationProcessorTest {
     private AppSync appSync;
     private MutationProcessor mutationProcessor;
     private DataStoreConfigurationProvider configurationProvider;
+    private DataStoreErrorHandler dataStoreErrorHandler;
 
     /**
      * A {@link MutationProcessor} is being tested. To do so, we arrange mutations into
@@ -98,8 +102,15 @@ public final class MutationProcessorTest {
         Merger merger = new Merger(mutationOutbox, versionRepository, localStorageAdapter);
         this.appSync = mock(AppSync.class);
         this.configurationProvider = mock(DataStoreConfigurationProvider.class);
+        DataStoreConfiguration config = mock(DataStoreConfiguration.class);
+        when(configurationProvider.getConfiguration())
+                .thenReturn(config);
+        dataStoreErrorHandler = mock(DataStoreErrorHandler.class);
+        when(config.getErrorHandler())
+                .thenReturn(dataStoreErrorHandler);
         ConflictResolver conflictResolver = new ConflictResolver(configurationProvider, appSync);
-        RetryHandler retryHandler = new RetryHandler(1, 1, 2, 1);
+        RetryHandler retryHandler = new RetryHandler(1, 1, 2,
+                1, configurationProvider);
         schemaRegistry = SchemaRegistry.instance();
         schemaRegistry.register(Collections.singleton(BlogOwner.class));
         this.mutationProcessor = MutationProcessor.builder()
@@ -387,6 +398,57 @@ public final class MutationProcessorTest {
         mutationProcessor.startDrainingMutationOutbox();
         // Wait for the retry handler to be called.
         assertTrue(retryHandlerInvocationCount.await(300, TimeUnit.SECONDS));
+        mutationProcessor.stopDrainingMutationOutbox();
+    }
+
+    /**
+     * If the AppSync response to the mutation contains a non retry able
+     * error in the GraphQLResponse error list, then the error handler is called.
+     *
+     * @throws InterruptedException Latch
+     * @throws AmplifyException   On failure to build {@link ModelSchema}
+     */
+    @Test
+    public void errorHandlerCalledAfterIrRecoverableError()
+            throws AmplifyException, InterruptedException {
+        CountDownLatch retryHandlerInvocationCount = new CountDownLatch(1);
+        // Save a model, its metadata, and its last sync data.
+        BlogOwner model = BlogOwner.builder()
+                .name("Exceptional Blogger")
+                .build();
+        ModelMetadata metadata =
+                new ModelMetadata(model.getModelName() + "|" + model.getPrimaryKeyString(), false, 1,
+                        Temporal.Timestamp.now(), model.getModelName());
+        doAnswer(invocation -> {
+            int indexOfResponseConsumer = 5;
+            Consumer<DataStoreException> onError =
+                    invocation.getArgument(indexOfResponseConsumer);
+            retryHandlerInvocationCount.countDown();
+            onError.accept(new DataStoreException.GraphQLResponseException("Error",
+                    new ArrayList<>()));
+            return mock(GraphQLOperation.class);
+        }).when(appSync).update(ArgumentMatchers.<BlogOwner>any(),
+                any(ModelSchema.class),
+                anyInt(),
+                any(QueryPredicate.class),
+                ArgumentMatchers.<Consumer<GraphQLResponse<ModelWithMetadata<BlogOwner>>>>any(),
+                ArgumentMatchers.<Consumer<DataStoreException>>any());
+
+        ModelSchema schema = schemaRegistry.getModelSchemaForModelClass(BlogOwner.class);
+        LastSyncMetadata lastSyncMetadata = LastSyncMetadata.baseSyncedAt(schema.getName(),
+                1_000L);
+        synchronousStorageAdapter.save(model, metadata, lastSyncMetadata);
+
+        // Enqueue an update in the mutation outbox
+        assertTrue(mutationOutbox
+                .enqueue(PendingMutation.update(model, schema))
+                .blockingAwait(30, TimeUnit.SECONDS));
+
+        // Start the mutation processor.
+        mutationProcessor.startDrainingMutationOutbox();
+        // Wait for the retry handler to be called.
+        assertTrue(retryHandlerInvocationCount.await(300, TimeUnit.SECONDS));
+        verify(dataStoreErrorHandler, times(1)).accept(any());
         mutationProcessor.stopDrainingMutationOutbox();
     }
 }

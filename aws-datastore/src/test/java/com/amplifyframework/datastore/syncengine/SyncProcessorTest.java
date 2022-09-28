@@ -112,6 +112,7 @@ public final class SyncProcessorTest {
     private int modelCount;
     private RetryHandler requestRetry;
     private boolean isSyncRetryEnabled = true;
+    private DataStoreConfigurationProvider dataStoreConfigurationProvider;
 
 
     /**
@@ -123,17 +124,31 @@ public final class SyncProcessorTest {
         final LinkedHashSet<Class<? extends Model>> modelClasses = new LinkedHashSet<>();
         modelClasses.addAll(SystemModelsProviderFactory.create().models());
         modelClasses.addAll(AmplifyModelProvider.getInstance().models());
-        this.modelProvider = SimpleModelProvider.instance(UUID.randomUUID().toString(), modelClasses);
+        this.modelProvider = SimpleModelProvider.instance(UUID.randomUUID().toString(),
+                modelClasses);
         modelCount = modelProvider.models().size();
 
         this.appSync = mock(AppSync.class);
         this.errorHandlerCallCount = 0;
-        this.requestRetry = new RetryHandler();
+        buildConfig(10000);
 
-        initSyncProcessor(10_000);
+        this.requestRetry = new RetryHandler(dataStoreConfigurationProvider);
+        initSyncProcessor();
     }
 
-    private void initSyncProcessor(int syncMaxRecords) throws AmplifyException {
+    private void buildConfig(int maxSyncRecords) {
+        dataStoreConfigurationProvider = () -> DataStoreConfiguration
+                .builder()
+                .syncInterval(BASE_SYNC_INTERVAL_MINUTES, TimeUnit.MINUTES)
+                .syncMaxRecords(maxSyncRecords)
+                .syncPageSize(1_000)
+                .errorHandler(dataStoreException -> errorHandlerCallCount++)
+                .syncExpression(BlogOwner.class, () -> BlogOwner.NAME.beginsWith("J"))
+                .syncExpression(Author.class, QueryPredicates::none)
+                .build();
+    }
+
+    private void initSyncProcessor() throws AmplifyException {
         SchemaRegistry schemaRegistry = SchemaRegistry.instance();
         schemaRegistry.clear();
         schemaRegistry.register(modelProvider.models());
@@ -145,16 +160,6 @@ public final class SyncProcessorTest {
         final MutationOutbox mutationOutbox = new PersistentMutationOutbox(inMemoryStorageAdapter);
         final VersionRepository versionRepository = new VersionRepository(inMemoryStorageAdapter);
         final Merger merger = new Merger(mutationOutbox, versionRepository, inMemoryStorageAdapter);
-
-        DataStoreConfigurationProvider dataStoreConfigurationProvider = () -> DataStoreConfiguration
-                .builder()
-                .syncInterval(BASE_SYNC_INTERVAL_MINUTES, TimeUnit.MINUTES)
-                .syncMaxRecords(syncMaxRecords)
-                .syncPageSize(1_000)
-                .errorHandler(dataStoreException -> errorHandlerCallCount++)
-                .syncExpression(BlogOwner.class, () -> BlogOwner.NAME.beginsWith("J"))
-                .syncExpression(Author.class, QueryPredicates::none)
-                .build();
 
         QueryPredicateProvider queryPredicateProvider = new QueryPredicateProvider(dataStoreConfigurationProvider);
         queryPredicateProvider.resolvePredicates();
@@ -623,7 +628,7 @@ public final class SyncProcessorTest {
         when(requestRetry.retry(any(), any())).thenReturn(Single.error(
                 new DataStoreException("PaginatedResult<ModelWithMetadata<BlogOwner>>", "")));
 
-        initSyncProcessor(10_000);
+        initSyncProcessor();
         AppSyncMocking.sync(appSync)
                 .mockFailure(new DataStoreException("Something timed out during sync.", ""));
 
@@ -632,7 +637,6 @@ public final class SyncProcessorTest {
                 .test(false)
                 .assertNotComplete();
         verify(requestRetry, times(1)).retry(any(), any());
-
     }
 
     /**
@@ -648,7 +652,7 @@ public final class SyncProcessorTest {
         when(requestRetry.retry(any(), any())).thenReturn(Single.error(
                 new DataStoreException("PaginatedResult<ModelWithMetadata<BlogOwner>>", "")));
 
-        initSyncProcessor(10_000);
+        initSyncProcessor();
         AppSyncMocking.sync(appSync)
                 .mockFailure(new DataStoreException("Something timed out during sync.", ""));
 
@@ -657,7 +661,6 @@ public final class SyncProcessorTest {
                 .test(false)
                 .assertNotComplete();
         verify(requestRetry, times(0)).retry(any(), any());
-
     }
 
     /**
@@ -668,8 +671,8 @@ public final class SyncProcessorTest {
     @Test
     public void retryHandlesHydrateSubscriptionDispose() throws AmplifyException {
         // Arrange: mock failure when invoking hydrate
-        requestRetry = spy(RetryHandler.class);
-        initSyncProcessor(10_000);
+        requestRetry = spy(new RetryHandler(dataStoreConfigurationProvider));
+        initSyncProcessor();
         AppSyncMocking.sync(appSync)
                 .mockFailure(new DataStoreException("Something timed out during sync.", ""));
 
@@ -683,6 +686,33 @@ public final class SyncProcessorTest {
             }
         }, 10000);
         verify(requestRetry, times(1)).retry(any(), any());
+    }
+
+    /**
+     * Verify that retry is called on appsync failure and when dispose in called midway no exception is thrown.
+     *
+     * @throws AmplifyException On failure to build GraphQLRequest for sync query.
+     */
+    @Test
+    public void retryHandlesHydrateCallsErrorHandlerOnIrrecoverableError() throws AmplifyException {
+        // Arrange: mock failure when invoking hydrate
+        requestRetry = spy(new RetryHandler(dataStoreConfigurationProvider));
+        initSyncProcessor();
+        AppSyncMocking.sync(appSync)
+                .mockFailure(new DataStoreException.GraphQLResponseException("Something timed out during sync.",
+                        new ArrayList<GraphQLResponse.Error>()));
+
+        // Act: call hydrate.
+        TestObserver<Void> testObserver = syncProcessor.hydrate()
+                .test(false);
+        new Timer().schedule(new TimerTask() {
+            @Override
+            public void run() {
+                testObserver.dispose();
+            }
+        }, 10000);
+        verify(requestRetry, times(1)).retry(any(), any());
+        assertEquals(1, errorHandlerCallCount);
     }
 
     /**
@@ -728,7 +758,8 @@ public final class SyncProcessorTest {
     }
 
     private void syncAndExpect(int numPages, int maxSyncRecords) throws AmplifyException, InterruptedException {
-        initSyncProcessor(maxSyncRecords);
+        buildConfig(maxSyncRecords);
+        initSyncProcessor();
         // Arrange a subscription to the storage adapter. We're going to watch for changes.
         // We expect to see content here as a result of the SyncProcessor applying updates.
         final TestObserver<StorageItemChange<? extends Model>> adapterObserver = storageAdapter.observe().test();

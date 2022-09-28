@@ -26,6 +26,7 @@ import com.amplifyframework.core.model.SchemaRegistry;
 import com.amplifyframework.datastore.AWSDataStorePlugin;
 import com.amplifyframework.datastore.DataStoreChannelEventName;
 import com.amplifyframework.datastore.DataStoreConfigurationProvider;
+import com.amplifyframework.datastore.DataStoreErrorHandler;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.events.NetworkStatusEvent;
@@ -101,7 +102,7 @@ public final class Orchestrator {
         SyncTimeRegistry syncTimeRegistry = new SyncTimeRegistry(localStorageAdapter);
         ConflictResolver conflictResolver = new ConflictResolver(dataStoreConfigurationProvider, appSync);
         this.queryPredicateProvider = new QueryPredicateProvider(dataStoreConfigurationProvider);
-        RetryHandler retryHandler = new RetryHandler();
+        RetryHandler retryHandler = new RetryHandler(dataStoreConfigurationProvider);
 
         this.mutationProcessor = MutationProcessor.builder()
             .merger(merger)
@@ -120,7 +121,7 @@ public final class Orchestrator {
             .merger(merger)
             .dataStoreConfigurationProvider(dataStoreConfigurationProvider)
             .queryPredicateProvider(queryPredicateProvider)
-            .retryHandler(new RetryHandler())
+            .retryHandler(new RetryHandler(dataStoreConfigurationProvider))
                 .isSyncRetryEnabled(isSyncRetryEnabled)
             .build();
         this.subscriptionProcessor = SubscriptionProcessor.builder()

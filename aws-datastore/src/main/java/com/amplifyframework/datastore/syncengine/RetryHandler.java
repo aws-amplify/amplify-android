@@ -16,6 +16,8 @@
 package com.amplifyframework.datastore.syncengine;
 
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.datastore.DataStoreConfigurationProvider;
+import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.utils.ErrorInspector;
 import com.amplifyframework.logging.Logger;
 
@@ -39,6 +41,7 @@ public class RetryHandler {
     private final int jitterFactor;
     private final int maxAttempts;
     private final int maxDelayS;
+    private final DataStoreConfigurationProvider dataStoreConfigurationProvider;
 
     /**
      * Constructor to inject constants for unit testing.
@@ -46,26 +49,30 @@ public class RetryHandler {
      * @param jitterFactor jitterFactor for backoff.
      * @param maxAttempts max attempt for retrying.
      * @param maxDelayS max delay for retrying.
+     * @param dataStoreConfigurationProvider datastore configuration provider
      */
     public RetryHandler(int maxExponent,
                         int jitterFactor,
                         int maxAttempts,
-                        int maxDelayS) {
+                        int maxDelayS,
+                        DataStoreConfigurationProvider dataStoreConfigurationProvider) {
 
         this.maxExponent = maxExponent;
         this.jitterFactor = jitterFactor;
         this.maxAttempts = maxAttempts;
         this.maxDelayS = maxDelayS;
+        this.dataStoreConfigurationProvider = dataStoreConfigurationProvider;
     }
 
     /**
      * Parameter less constructor.
      */
-    public RetryHandler() {
+    public RetryHandler(DataStoreConfigurationProvider dataStoreConfigurationProvider) {
         maxExponent = MAX_EXPONENT_VALUE;
         jitterFactor = JITTER_FACTOR_VALUE;
         maxAttempts = MAX_ATTEMPTS_VALUE;
         maxDelayS = MAX_DELAY_S_VALUE;
+        this.dataStoreConfigurationProvider = dataStoreConfigurationProvider;
     }
 
     /**
@@ -89,8 +96,13 @@ public class RetryHandler {
         single.delaySubscription(delayInSeconds, TimeUnit.SECONDS)
                 .subscribe(emitter::onSuccess, error -> {
                     if (!emitter.isDisposed()) {
-                        LOG.verbose("Retry attempts left " + attemptsLeft + ". exception type:" + error.getClass());
-                        if (attemptsLeft == 0 || ErrorInspector.contains(error, skipExceptions)) {
+                        LOG.verbose("Retry attempts left " + attemptsLeft + ". exception type:"
+                                + error.getClass());
+                        if (ErrorInspector.contains(error, skipExceptions)) {
+                            dataStoreConfigurationProvider.getConfiguration().getErrorHandler()
+                                    .accept(new DataStoreException("Appsync request failed.",
+                                    error, "a non retryable error was returned while making the app " +
+                                    "sync request"));
                             emitter.onError(error);
                         } else {
                             call(single, emitter, jitteredDelaySec(attemptsLeft),

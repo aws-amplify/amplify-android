@@ -194,7 +194,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
      * @deprecated Use {@link Builder} instead.
      */
     @Deprecated
-    public AWSDataStorePlugin(@NonNull ModelProvider modelProvider) {
+    public AWSDataStorePlugin(@NonNull ModelProvider modelProvider) throws DataStoreException {
         this(Objects.requireNonNull(modelProvider), Amplify.API, null);
     }
 
@@ -210,7 +210,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     @VisibleForTesting
     AWSDataStorePlugin(@NonNull ModelProvider modelProvider,
                        @NonNull ApiCategory api,
-                       @Nullable DataStoreConfiguration dataStoreConfiguration) {
+                       @Nullable DataStoreConfiguration dataStoreConfiguration) throws DataStoreException {
         this(
             Objects.requireNonNull(modelProvider),
             SchemaRegistry.instance(),
