@@ -17,6 +17,7 @@ package com.amplifyframework.predictions.aws.auth
 
 import aws.smithy.kotlin.runtime.auth.awscredentials.Credentials
 import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider
+import com.amplifyframework.auth.AWSTemporaryCredentials
 import com.amplifyframework.auth.cognito.AWSCognitoAuthSession
 import com.amplifyframework.core.Amplify
 import kotlin.coroutines.resume
@@ -34,8 +35,8 @@ internal class CognitoCredentialsProvider : CredentialsProvider {
         return suspendCancellableCoroutine { continuation ->
             Amplify.Auth.fetchAuthSession(
                 { authSession ->
-                    (authSession as? AWSCognitoAuthSession)?.awsCredentials?.value?.let {
-                        continuation.resume(it)
+                    (authSession as? AWSCognitoAuthSession)?.awsCredentialsResult?.value?.let {
+                        continuation.resume(it.toCredentials())
                     } ?: continuation.resumeWithException(
                         Exception(
                             "Failed to get credentials. " +
@@ -49,4 +50,13 @@ internal class CognitoCredentialsProvider : CredentialsProvider {
             )
         }
     }
+}
+
+private fun AWSTemporaryCredentials.toCredentials(): Credentials {
+    return Credentials(
+        accessKeyId = this.accessKeyId,
+        secretAccessKey = this.secretAccessKey,
+        sessionToken = this.sessionToken,
+        expiration = this.expiration
+    )
 }
