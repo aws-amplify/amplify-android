@@ -113,14 +113,14 @@ import com.amplifyframework.statemachine.codegen.states.SRPSignInState
 import com.amplifyframework.statemachine.codegen.states.SignInChallengeState
 import com.amplifyframework.statemachine.codegen.states.SignInState
 import com.amplifyframework.statemachine.codegen.states.SignOutState
-import java.util.concurrent.atomic.AtomicReference
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
-import kotlin.coroutines.suspendCoroutine
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
+import java.util.concurrent.atomic.AtomicReference
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
 
 internal class RealAWSCognitoAuthPlugin(
     private val configuration: AuthConfiguration,
@@ -442,7 +442,9 @@ internal class RealAWSCognitoAuthPlugin(
                         onSuccess.accept(authSignInResult)
                     }
                     else -> {
-                        // no-op
+                        //If it comes here it has errored out
+                        //Remove after debugging
+                        println("Tutorial: error")
                     }
                 }
             },
@@ -456,10 +458,10 @@ internal class RealAWSCognitoAuthPlugin(
                         SignInData.SRPSignInData(username, password, signInOptions.metadata)
                     }
                     AuthFlowType.CUSTOM_AUTH, AuthFlowType.CUSTOM_AUTH_WITHOUT_SRP -> {
-                        SignInData.CustomAuthSignInData(username, null, signInOptions.metadata)
+                        SignInData.CustomAuthSignInData(username, signInOptions.metadata)
                     }
                     AuthFlowType.CUSTOM_AUTH_WITH_SRP -> {
-                        SignInData.CustomAuthSignInData(username, password, signInOptions.metadata)
+                        SignInData.CustomSRPAuthSignInData(username, signInOptions.metadata)
                     }
                     AuthFlowType.USER_PASSWORD_AUTH -> {
                         TODO()

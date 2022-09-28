@@ -110,8 +110,7 @@ sealed class SignInState : State {
                         listOf(signInActions.startHostedUIAuthAction(signInEvent))
                     )
                     is SignInEvent.EventType.InitiateCustomSignInWithSRP -> StateResolution(
-                        SigningInWithSRPCustom()
-                    //TODO: Update the action when this is called
+                        SigningInWithSRPCustom(), listOf(signInActions.startCustomAuthWithSRPAction(signInEvent))
                     )
                     else -> defaultResolution
                 }

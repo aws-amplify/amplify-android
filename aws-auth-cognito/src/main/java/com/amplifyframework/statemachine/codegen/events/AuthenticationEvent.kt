@@ -38,7 +38,7 @@ class AuthenticationEvent(val eventType: EventType, override val time: Date? = n
         data class SignInRequested(val signInData: SignInData) : EventType()
         data class SignInCompleted(val signedInData: SignedInData) : EventType()
         data class SignOutRequested(val signOutData: SignOutData) : EventType()
-        data class CancelSignIn(val id: String = "") : EventType()
+        data class CancelSignIn(val id: String = "", val error: Exception? = null) : EventType()
         data class CancelSignOut(val signedInData: SignedInData) : EventType()
         data class ResetSignUp(val id: String = "") : EventType()
         data class ThrowError(val exception: Exception) : EventType()
