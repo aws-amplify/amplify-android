@@ -20,5 +20,5 @@ import com.amplifyframework.statemachine.codegen.events.HostedUIEvent
 
 interface HostedUIActions {
     fun showHostedUI(event: HostedUIEvent.EventType.ShowHostedUI): Action
-    fun fetchHostedUISignInToken(event: HostedUIEvent.EventType.FetchToken): Action
+    fun fetchHostedUISignInToken(event: HostedUIEvent.EventType.FetchToken, browserPackage: String?): Action
 }
