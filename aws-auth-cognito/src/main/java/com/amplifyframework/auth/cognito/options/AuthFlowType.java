@@ -31,13 +31,14 @@ public enum AuthFlowType {
      */
     @Deprecated
     CUSTOM_AUTH("CUSTOM_AUTH"),
+
     /**
-     * type for CUSTOM_AUTH THAT STARTS WITH SRP
+     * type for CUSTOM_AUTH THAT STARTS WITH SRP.
      */
     CUSTOM_AUTH_WITH_SRP("CUSTOM_AUTH_WITH_SRP"),
 
     /**
-     * type for CUSTOM_AUTH
+     * type for CUSTOM_AUTH.
      */
     CUSTOM_AUTH_WITHOUT_SRP("CUSTOM_AUTH_WITHOUT_SRP"),
     /**
