@@ -165,7 +165,7 @@ class MapViewTestActivityTest {
     private fun signInWithCognito() {
         val (username, password) = Credentials.load(ApplicationProvider.getApplicationContext())
         val result = AmplifyWrapper.auth.signIn(username, password)
-        println("SignIn complete: ${result.isSignInComplete}")
+        println("SignIn complete: ${result.isSignedIn}")
     }
 
     private fun signOutFromCognito() {

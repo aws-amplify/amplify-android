@@ -182,13 +182,13 @@ class AWSCognitoAuthPluginTest {
 
     @Test
     fun verifyConfirmSignIn() {
-        val expectedConfirmationCode = "aaab"
+        val expectedChallengeResponse = "aaab"
         val expectedOnSuccess = Consumer<AuthSignInResult> { }
         val expectedOnError = Consumer<AuthException> { }
 
-        authPlugin.confirmSignIn(expectedConfirmationCode, expectedOnSuccess, expectedOnError)
+        authPlugin.confirmSignIn(expectedChallengeResponse, expectedOnSuccess, expectedOnError)
 
-        verify { realPlugin.confirmSignIn(expectedConfirmationCode, expectedOnSuccess, expectedOnError) }
+        verify { realPlugin.confirmSignIn(expectedChallengeResponse, expectedOnSuccess, expectedOnError) }
     }
 
     @Test
