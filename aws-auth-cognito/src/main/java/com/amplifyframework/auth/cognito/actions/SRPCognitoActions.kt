@@ -83,7 +83,7 @@ object SRPCognitoActions : SRPActions {
         }
 
     override fun initiateSRPWithCustomAuthAction(event: SRPEvent.EventType.InitiateSRPWithCustom): Action =
-        Action<AuthEnvironment>("InitSRPAuth") { id, dispatcher ->
+        Action<AuthEnvironment>("InitSRPCustomAuth") { id, dispatcher ->
             logger?.verbose("$id Starting execution")
             val evt = try {
                 srpHelper = SRPHelper()
