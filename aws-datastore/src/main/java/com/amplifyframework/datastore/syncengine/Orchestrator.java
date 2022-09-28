@@ -122,7 +122,7 @@ public final class Orchestrator {
             .dataStoreConfigurationProvider(dataStoreConfigurationProvider)
             .queryPredicateProvider(queryPredicateProvider)
             .retryHandler(new RetryHandler(dataStoreConfigurationProvider))
-                .isSyncRetryEnabled(isSyncRetryEnabled)
+            .isSyncRetryEnabled(isSyncRetryEnabled)
             .build();
         this.subscriptionProcessor = SubscriptionProcessor.builder()
                 .appSync(appSync)

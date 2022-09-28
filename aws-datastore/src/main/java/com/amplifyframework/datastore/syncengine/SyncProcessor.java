@@ -163,9 +163,7 @@ final class SyncProcessor {
                     )
                 ));
             })
-            .doOnError(failureToSync -> {
-                LOG.warn("Initial cloud sync failed for " + schema.getName() + ".", failureToSync);
-            })
+            .onErrorComplete()
             .doOnComplete(() ->
                 LOG.info("Successfully sync'd down model state from cloud.")
             );
@@ -275,7 +273,7 @@ final class SyncProcessor {
         return Single.create(emitter -> {
             Cancelable cancelable = appSync.sync(request, result -> {
                 if (result.hasErrors()) {
-                    emitter.onError(new DataStoreException(
+                    emitter.onError(new DataStoreException.IrRecoverableException(
                             String.format("A model sync failed: %s", result.getErrors()),
                             "Check your schema."
                     ));
