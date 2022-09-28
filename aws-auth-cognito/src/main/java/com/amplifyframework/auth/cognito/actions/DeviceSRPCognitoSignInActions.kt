@@ -58,7 +58,7 @@ object DeviceSRPCognitoSignInActions : DeviceSRPSignInActions {
                         )
                         SignInChallengeHelper.evaluateNextStep(
                             username = username,
-                            signInMethod = SignInMethod.SRP,
+                            signInMethod = SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH),
                             authenticationResult = respondToAuthChallenge.authenticationResult,
                             challengeNameType = respondToAuthChallenge.challengeName,
                             challengeParameters = respondToAuthChallenge.challengeParameters,
@@ -109,7 +109,7 @@ object DeviceSRPCognitoSignInActions : DeviceSRPSignInActions {
                         DeviceSRPSignInEvent(DeviceSRPSignInEvent.EventType.FinalizeSignIn())
                         SignInChallengeHelper.evaluateNextStep(
                             username = username,
-                            signInMethod = SignInMethod.SRP,
+                            signInMethod = SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH),
                             authenticationResult = respondToAuthChallenge.authenticationResult,
                             challengeNameType = respondToAuthChallenge.challengeName,
                             challengeParameters = respondToAuthChallenge.challengeParameters,

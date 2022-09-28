@@ -21,17 +21,28 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 sealed class AmplifyCredential {
+
+    interface UserPoolData {
+        val signedInData: SignedInData
+    }
+
+    interface IdentityPoolData {
+        val identityId: String
+        val credentials: AWSCredentials
+    }
+
     @Serializable
     @SerialName("empty")
     object Empty : AmplifyCredential()
 
     @Serializable
     @SerialName("userPool")
-    data class UserPool(val signedInData: SignedInData) : AmplifyCredential()
+    data class UserPool(override val signedInData: SignedInData) : AmplifyCredential(), UserPoolData
 
     @Serializable
     @SerialName("identityPool")
-    data class IdentityPool(val identityId: String, val credentials: AWSCredentials) : AmplifyCredential()
+    data class IdentityPool(override val identityId: String, override val credentials: AWSCredentials) :
+        AmplifyCredential(), IdentityPoolData
 
 //    @Serializable
 //    @SerialName("identityPoolFederated")
@@ -44,10 +55,10 @@ sealed class AmplifyCredential {
     @Serializable
     @SerialName("userAndIdentityPool")
     data class UserAndIdentityPool(
-        val signedInData: SignedInData,
-        val identityId: String,
-        val credentials: AWSCredentials
-    ) : AmplifyCredential()
+        override val signedInData: SignedInData,
+        override val identityId: String,
+        override val credentials: AWSCredentials
+    ) : AmplifyCredential(), UserPoolData, IdentityPoolData
 }
 
 // TODO: Token abstraction if needed

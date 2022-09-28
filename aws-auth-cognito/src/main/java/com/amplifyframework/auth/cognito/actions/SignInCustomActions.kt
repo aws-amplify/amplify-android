@@ -63,7 +63,7 @@ object SignInCustomActions : CustomSignInActions {
                         session = initiateAuthResponse.session,
                         challengeParameters = initiateAuthResponse.challengeParameters,
                         authenticationResult = initiateAuthResponse.authenticationResult,
-                        signInMethod = SignInMethod.CUSTOM
+                        signInMethod = SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.CUSTOM_AUTH)
                     )
                 } else {
                     throw AuthException(
