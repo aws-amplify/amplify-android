@@ -1,0 +1,10 @@
+{
+  "type": "AuthState.Configured",
+  "AuthenticationState": {
+    "type": "AuthenticationState.SignedOut",
+    "signedOutData": {}
+  },
+  "AuthorizationState": {
+    "type": "AuthorizationState.Configured"
+  }
+}

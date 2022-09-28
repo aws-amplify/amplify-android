@@ -18,6 +18,7 @@ package com.amplifyframework.testutils.featuretest.auth.generators
 import aws.sdk.kotlin.services.cognitoidentity.model.CognitoIdentityException
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.CognitoIdentityProviderException
 import com.amplifyframework.auth.AuthException
+import com.amplifyframework.auth.result.AuthSignOutResult
 import com.amplifyframework.statemachine.codegen.states.AuthState
 import com.amplifyframework.testutils.featuretest.FeatureTestCase
 import com.amplifyframework.testutils.featuretest.auth.serializers.CognitoIdentityExceptionSerializer
@@ -98,6 +99,7 @@ fun Any?.toJsonElement(): JsonElement {
             CognitoIdentityProviderExceptionSerializer,
             this
         )
+        is AuthSignOutResult -> toJsonElement()
         is CognitoIdentityException -> Json.encodeToJsonElement(CognitoIdentityExceptionSerializer, this)
         else -> JsonPrimitive(toString())
     }
@@ -111,5 +113,12 @@ fun AuthException.toJsonElement(): JsonElement {
         "cause" to cause
     )
 
+    return responseMap.toJsonElement()
+}
+
+fun AuthSignOutResult.toJsonElement(): JsonElement {
+    val responseMap = mutableMapOf<String, Any?>(
+        "type" to this.javaClass.simpleName
+    )
     return responseMap.toJsonElement()
 }

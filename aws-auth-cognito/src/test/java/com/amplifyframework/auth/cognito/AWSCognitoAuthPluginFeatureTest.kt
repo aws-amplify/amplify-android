@@ -22,6 +22,7 @@ import com.amplifyframework.statemachine.codegen.states.AuthState
 import com.amplifyframework.testutils.featuretest.API
 import com.amplifyframework.testutils.featuretest.ExpectationShapes
 import com.amplifyframework.testutils.featuretest.FeatureTestCase
+import com.amplifyframework.testutils.featuretest.ResponseType.Complete
 import com.amplifyframework.testutils.featuretest.ResponseType.Success
 import com.amplifyframework.testutils.featuretest.auth.generators.toJsonElement
 import com.amplifyframework.testutils.featuretest.auth.serializers.deserializeToAuthState
@@ -174,6 +175,10 @@ class AWSCognitoAuthPluginFeatureTest(private val fileName: String) {
                     APICaptorFactory.successCaptors[validation.apiName]?.captured.apply {
                         expectedResponse = Gson().fromJson(validation.response.toString(), this?.javaClass)
                     }
+                } else if (validation.responseType == Complete) {
+                    APICaptorFactory.completeCaptors[validation.apiName]?.captured.toJsonElement().apply {
+                        expectedResponse = validation.response as JsonObject
+                    }
                 } else {
                     APICaptorFactory.errorCaptor.captured.toJsonElement().apply {
                         expectedResponse = validation.response as JsonObject
@@ -201,11 +206,18 @@ class AWSCognitoAuthPluginFeatureTest(private val fileName: String) {
             it to (params[it.name] as? JsonPrimitive)?.content
         }?.toMutableMap()
         requiredParams?.set(targetApi.parameters[0], sut)
-        requiredParams?.set(
-            targetApi.parameters.first { it.name == "onSuccess" },
-            APICaptorFactory.onSuccess[api.name]
-        )
-        requiredParams?.set(targetApi.parameters.first { it.name == "onError" }, APICaptorFactory.onError)
+
+        requiredParams?.let {
+            targetApi.parameters.firstOrNull { it.name == "onSuccess" }?.let { onSuccess ->
+                it[onSuccess] = APICaptorFactory.onSuccess[api.name]
+            }
+            targetApi.parameters.firstOrNull { it.name == "onComplete" }?.let { onComplete ->
+                it[onComplete] = APICaptorFactory.onComplete[api.name]
+            }
+            targetApi.parameters.firstOrNull { it.name == "onError" }?.let { onError ->
+                it[onError] = APICaptorFactory.onError
+            }
+        }
 
         val optionsObj = AuthOptionsFactory.create(api.name, api.options as JsonObject)
         requiredParams?.set(targetApi.parameters.first { it.name == "options" }, optionsObj)

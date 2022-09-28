@@ -19,6 +19,7 @@ package com.amplifyframework.testutils.featuretest.auth.serializers
 
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.SignedInData
+import com.amplifyframework.statemachine.codegen.data.SignedOutData
 import com.amplifyframework.statemachine.codegen.states.AuthState
 import com.amplifyframework.statemachine.codegen.states.AuthenticationState
 import com.amplifyframework.statemachine.codegen.states.AuthorizationState
@@ -46,6 +47,8 @@ internal data class AuthStatesProxy(
     @Contextual
     val signedInData: SignedInData? = null,
     @Contextual
+    val signedOutData: SignedOutData? = null,
+    @Contextual
     val amplifyCredential: AmplifyCredential? = null
 ) {
 
@@ -53,6 +56,8 @@ internal data class AuthStatesProxy(
         return when (type) {
             "AuthState.Configured" -> AuthState.Configured(authNState, authZState) as T
             "AuthenticationState.SignedIn" -> signedInData?.let { AuthenticationState.SignedIn(it) } as T
+            "AuthenticationState.SignedOut" -> signedOutData?.let { AuthenticationState.SignedOut(it) } as T
+            "AuthorizationState.Configured" -> AuthorizationState.Configured() as T
             "AuthorizationState.SessionEstablished" -> amplifyCredential?.let {
                 AuthorizationState.SessionEstablished(it)
             } as T
@@ -90,14 +95,19 @@ internal data class AuthStatesProxy(
                             type = "AuthenticationState.SignedIn",
                             signedInData = authState.signedInData
                         )
-                        is AuthenticationState.SignedOut -> TODO()
+                        is AuthenticationState.SignedOut -> AuthStatesProxy(
+                            type = "AuthenticationState.SignedOut",
+                            signedOutData = authState.signedOutData
+                        )
                         is AuthenticationState.SigningIn -> TODO()
                         is AuthenticationState.SigningOut -> TODO()
                     }
                 }
                 is AuthorizationState -> {
                     when (authState) {
-                        is AuthorizationState.Configured -> TODO()
+                        is AuthorizationState.Configured -> AuthStatesProxy(
+                            type = "AuthorizationState.Configured"
+                        )
                         is AuthorizationState.DeletingUser -> TODO()
                         is AuthorizationState.Error -> TODO()
                         is AuthorizationState.FetchingAuthSession -> TODO()
@@ -125,6 +135,7 @@ internal data class AuthStatesProxy(
                 contextual(object : KSerializer<AuthState.Configured> by AuthStatesSerializer() {})
                 contextual(object : KSerializer<AuthenticationState> by AuthStatesSerializer() {})
                 contextual(object : KSerializer<AuthenticationState.SignedIn> by AuthStatesSerializer() {})
+                contextual(object : KSerializer<AuthenticationState.SignedOut> by AuthStatesSerializer() {})
                 contextual(object : KSerializer<AuthorizationState> by AuthStatesSerializer() {})
                 contextual(object : KSerializer<AuthorizationState.SessionEstablished> by AuthStatesSerializer() {})
             }

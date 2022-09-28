@@ -4,6 +4,7 @@ import com.amplifyframework.statemachine.codegen.states.AuthState
 import com.amplifyframework.testutils.featuretest.FeatureTestCase
 import com.amplifyframework.testutils.featuretest.auth.generators.authstategenerators.AuthStateJsonGenerator
 import com.amplifyframework.testutils.featuretest.auth.generators.testcasegenerators.ResetPasswordTestCaseGenerator
+import com.amplifyframework.testutils.featuretest.auth.generators.testcasegenerators.SignOutTestCaseGenerator
 import com.amplifyframework.testutils.featuretest.auth.generators.testcasegenerators.SignUpTestCaseGenerator
 
 interface SerializableProvider {
@@ -17,7 +18,8 @@ object JsonGenerator {
     private val providers: List<SerializableProvider> = listOf(
         AuthStateJsonGenerator,
         ResetPasswordTestCaseGenerator,
-        SignUpTestCaseGenerator
+        SignUpTestCaseGenerator,
+        SignOutTestCaseGenerator
     )
 
     fun generate() {

@@ -17,12 +17,14 @@ package featureTest.utilities
 
 import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.result.AuthResetPasswordResult
+import com.amplifyframework.auth.result.AuthSignOutResult
 import com.amplifyframework.auth.result.AuthSignUpResult
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.testutils.featuretest.ExpectationShapes
 import com.amplifyframework.testutils.featuretest.ResponseType
 import com.amplifyframework.testutils.featuretest.auth.AuthAPI
 import com.amplifyframework.testutils.featuretest.auth.AuthAPI.resetPassword
+import com.amplifyframework.testutils.featuretest.auth.AuthAPI.signOut
 import com.amplifyframework.testutils.featuretest.auth.AuthAPI.signUp
 import io.mockk.CapturingSlot
 import io.mockk.every
@@ -43,13 +45,19 @@ class APICaptorFactory(
             signUp to mockk<Consumer<AuthSignUpResult>>()
         )
         val onError = mockk<Consumer<AuthException>>()
+        val onComplete = mapOf(
+            signOut to mockk<Consumer<AuthSignOutResult>>()
+        )
         val successCaptors: MutableMap<AuthAPI, CapturingSlot<*>> = mutableMapOf()
+        val completeCaptors: MutableMap<AuthAPI, CapturingSlot<*>> = mutableMapOf()
         val errorCaptor = slot<AuthException>()
     }
 
     init {
         successCaptors.clear()
+        completeCaptors.clear()
         if (authApi.responseType == ResponseType.Success) setupOnSuccess()
+        if (authApi.responseType == ResponseType.Complete) setupOnComplete()
         else setupOnError()
     }
 
@@ -68,6 +76,18 @@ class APICaptorFactory(
                 successCaptors[apiName] = resultCaptor
             }
             else -> throw Error("onSuccess for $authApi is not defined!")
+        }
+    }
+
+    private fun setupOnComplete() {
+        when (val apiName = authApi.apiName) {
+            signOut -> {
+                val resultCaptor = slot<AuthSignOutResult>()
+                val consumer = onComplete[apiName] as Consumer<AuthSignOutResult>
+                every { consumer.accept(capture(resultCaptor)) } answers { latch.countDown() }
+                completeCaptors[apiName] = resultCaptor
+            }
+            else -> throw Error("onComplete for $authApi is not defined!")
         }
     }
 
