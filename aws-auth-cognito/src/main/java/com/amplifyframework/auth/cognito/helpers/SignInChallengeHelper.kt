@@ -45,7 +45,7 @@ object SignInChallengeHelper {
         challengeParameters: Map<String, String>?,
         authenticationResult: AuthenticationResultType?,
         // TODO: remove once we are able to get this from the configuration
-        signInMethod: SignInMethod = SignInMethod.SRP
+        signInMethod: SignInMethod = SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH)
     ): StateMachineEvent {
         return when {
             authenticationResult != null -> {
