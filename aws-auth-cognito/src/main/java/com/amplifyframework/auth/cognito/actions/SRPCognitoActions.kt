@@ -86,7 +86,7 @@ object SRPCognitoActions : SRPActions {
         Action<AuthEnvironment>("InitSRPCustomAuth") { id, dispatcher ->
             logger?.verbose("$id Starting execution")
             val evt = try {
-                srpHelper = SRPHelper()
+                srpHelper = SRPHelper("")
 
                 val secretHash = AuthHelper.getSecretHash(
                     event.username,
