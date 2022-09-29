@@ -540,7 +540,7 @@ public final class DataStoreConfiguration {
                 syncPageSize = getValueOrDefault(syncPageSize, DEFAULT_SYNC_PAGE_SIZE);
                 observeQueryMaxRecords = getValueOrDefault(observeQueryMaxRecords, MAX_RECORDS);
                 maxTimeLapseForObserveQuery = maxTimeLapseForObserveQuery == 0 ? MAX_TIME_SEC :
-                maxTimeLapseForObserveQuery;
+                                maxTimeLapseForObserveQuery;
                 doSyncRetry = true;
             }
             return new DataStoreConfiguration(this);

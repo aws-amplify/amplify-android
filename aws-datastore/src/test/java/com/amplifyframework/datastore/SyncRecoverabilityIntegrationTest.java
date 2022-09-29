@@ -15,18 +15,7 @@
 
 package com.amplifyframework.datastore;
 
-import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.when;
-
 import android.content.Context;
-
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.AmplifyException;
@@ -36,13 +25,10 @@ import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.ApiPlugin;
 import com.amplifyframework.api.events.ApiChannelEventName;
 import com.amplifyframework.api.events.ApiEndpointStatusChangeEvent;
-import com.amplifyframework.api.graphql.GraphQLLocation;
 import com.amplifyframework.api.graphql.GraphQLOperation;
-import com.amplifyframework.api.graphql.GraphQLPathSegment;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.PaginatedResult;
-import com.amplifyframework.auth.AuthException;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
@@ -68,15 +54,19 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatcher;
 import org.robolectric.RobolectricTestRunner;
 
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import io.reactivex.rxjava3.core.Completable;
+import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
 
 @RunWith(RobolectricTestRunner.class)
 public final class SyncRecoverabilityIntegrationTest {
@@ -150,9 +140,9 @@ public final class SyncRecoverabilityIntegrationTest {
         assertEquals(person1, result1);
     }
 
-
     @NonNull
-    private SynchronousDataStore getSynchronousDataStore(ApiCategory mockApiCategory) throws JSONException, AmplifyException {
+    private SynchronousDataStore getSynchronousDataStore(ApiCategory mockApiCategory)
+            throws JSONException, AmplifyException {
         JSONObject dataStorePluginJson = new JSONObject()
                 .put("syncIntervalInMinutes", 60);
         DataStoreConfiguration config = DataStoreConfiguration.builder()
@@ -164,7 +154,8 @@ public final class SyncRecoverabilityIntegrationTest {
                 .dataStoreConfiguration(config)
                 .isSyncRetryEnabled(true)
                 .build();
-        SynchronousDataStore synchronousDataStore = SynchronousDataStore.delegatingTo(awsDataStorePlugin);
+        SynchronousDataStore synchronousDataStore = SynchronousDataStore
+                .delegatingTo(awsDataStorePlugin);
         awsDataStorePlugin.configure(dataStorePluginJson, context);
         awsDataStorePlugin.initialize(context);
         awsDataStorePlugin.start(() -> { }, (onError) -> { });
@@ -199,7 +190,7 @@ public final class SyncRecoverabilityIntegrationTest {
             int indexOfResponseConsumer = 2;
             Consumer<AmplifyException> onError =
                     invocation.getArgument(indexOfResponseConsumer);
-            onError.accept(new ApiException.NonRetryableException("",""));
+            onError.accept(new ApiException.NonRetryableException("", ""));
             latch.countDown();
             return mock(GraphQLOperation.class);
 
@@ -225,12 +216,13 @@ public final class SyncRecoverabilityIntegrationTest {
             int indexOfResponseConsumer = 2;
             Consumer<ApiException> onError =
                     invocation.getArgument(indexOfResponseConsumer);
-            onError.accept(new ApiException("",""));
+            onError.accept(new ApiException("", ""));
             latch.countDown();
             return mock(GraphQLOperation.class);
         }).doAnswer(invocation -> {
             int indexOfResponseConsumer = 1;
-            ModelMetadata modelMetadata = new ModelMetadata(person.getId(), false, 1, Temporal.Timestamp.now(), "Person");
+            ModelMetadata modelMetadata = new ModelMetadata(person.getId(), false, 1,
+                    Temporal.Timestamp.now(), "Person");
             ModelWithMetadata<Person> modelWithMetadata = new ModelWithMetadata<>(person, modelMetadata);
             Consumer<GraphQLResponse<PaginatedResult<ModelWithMetadata<Person>>>> onResponse =
                     invocation.getArgument(indexOfResponseConsumer);

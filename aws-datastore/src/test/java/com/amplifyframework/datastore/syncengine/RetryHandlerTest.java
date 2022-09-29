@@ -39,6 +39,7 @@ public class RetryHandlerTest {
 
     /**
      * Test no retry on success.
+     * @throws DataStoreException throws DataStoreException
      */
     @Test
     public void testNoRetryOnSuccess() throws DataStoreException {
@@ -65,6 +66,7 @@ public class RetryHandlerTest {
 
     /**
      * Test no retry on Irrecoverable error.
+     * @throws DataStoreException throws DataStoreException
      */
     @Test
     public void testNoRetryOnIrrecoverableError() throws DataStoreException {
@@ -95,6 +97,7 @@ public class RetryHandlerTest {
 
     /**
      * Test retry on recoverable error.
+     * @throws DataStoreException throws DataStoreException
      */
     @Test
     public void testRetryOnRecoverableError() throws DataStoreException {
@@ -123,6 +126,7 @@ public class RetryHandlerTest {
 
     /**
      * test jittered delay method return the correct delay time.
+     * @throws DataStoreException throws DataStoreException
      */
     @Test
     public void testJitteredDelaySec() throws DataStoreException {
@@ -134,7 +138,7 @@ public class RetryHandlerTest {
         when(config.getErrorHandler())
                 .thenReturn(mock(DataStoreErrorHandler.class));
         RetryHandler subject = new RetryHandler(8, 0, 1,
-                5, configurationProvider );
+                5, configurationProvider);
         //act
         long delay = subject.jitteredDelaySec(2);
         //assert
@@ -143,6 +147,7 @@ public class RetryHandlerTest {
 
     /**
      * test jittered delay method return no more than the max delay time.
+     * @throws DataStoreException throws DataStoreException
      */
     @Test
     public void testJitteredDelaySecReturnsNoMoreThanMaxValue() throws DataStoreException {

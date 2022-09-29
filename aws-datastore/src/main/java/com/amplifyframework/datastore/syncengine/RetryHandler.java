@@ -65,7 +65,8 @@ public class RetryHandler {
     }
 
     /**
-     * Parameter less constructor.
+     * Constructor.
+     * @param dataStoreConfigurationProvider DataStoreConfigurationProvider
      */
     public RetryHandler(DataStoreConfigurationProvider dataStoreConfigurationProvider) {
         maxExponent = MAX_EXPONENT_VALUE;

@@ -192,6 +192,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
      * then remote synchronization will be performed through {@link Amplify#API}.
      * @param modelProvider Provider of models to be usable by plugin
      * @deprecated Use {@link Builder} instead.
+     * @throws DataStoreException throws DataStoreException
      */
     @Deprecated
     public AWSDataStorePlugin(@NonNull ModelProvider modelProvider) throws DataStoreException {
