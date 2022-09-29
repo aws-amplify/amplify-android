@@ -61,8 +61,8 @@ public class AuthException extends AmplifyException {
     public static class InvalidStateException extends AuthException {
         private static final long serialVersionUID = 1L;
         private static final String MESSAGE = "Auth state is an invalid state, cannot process the request.";
-        private static final String RECOVERY_SUGGESTION = "Operation performed is not a valid " +
-                "operation for the current auth state";
+        private static final String RECOVERY_SUGGESTION = "There may be another operation in " +
+                "progress. Please wait for the current operation to complete, and try again.";
 
         /**
          * Default message/recovery suggestion without a cause.
