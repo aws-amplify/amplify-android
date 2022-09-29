@@ -34,8 +34,11 @@ object AuthenticationCognitoActions : AuthenticationActions {
         Action<AuthEnvironment>("ConfigureAuthN") { id, dispatcher ->
             logger?.verbose("$id Starting execution")
             val evt = when (val credentials = event.storedCredentials) {
-                is AmplifyCredential.UserPoolData -> {
+                is AmplifyCredential.UserPoolTypeCredential -> {
                     AuthenticationEvent(AuthenticationEvent.EventType.InitializedSignedIn(credentials.signedInData))
+                }
+                is AmplifyCredential.IdentityPoolFederated -> {
+                    AuthenticationEvent(AuthenticationEvent.EventType.InitializedFederated)
                 }
                 else -> AuthenticationEvent(AuthenticationEvent.EventType.InitializedSignedOut(SignedOutData()))
             }

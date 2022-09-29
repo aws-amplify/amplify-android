@@ -13,9 +13,13 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.auth.result
+package com.amplifyframework.auth.cognito.result
+
+import com.amplifyframework.statemachine.codegen.data.AWSCredentials
 
 /**
- * Base SignOut result
+ * Wraps the result of a federation to Identity Pool.
+ * @param identityId Identity Id of federation
+ * @param credentials Returned credentials from successful federation
  */
-open class AuthSignOutResult
+data class FederateToIdentityPoolResult(val identityId: String, val credentials: AWSCredentials)

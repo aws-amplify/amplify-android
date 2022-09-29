@@ -26,6 +26,10 @@ import com.amplifyframework.statemachine.codegen.data.SignedInData
 import java.util.Date
 
 object CredentialStoreUtil {
+
+    private const val accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwidXNlcm5hbWUiO" +
+        "iJhbXBsaWZ5X3VzZXIiLCJpYXQiOjE1MTYyMzkwMjJ9.zBiQ0guLRX34pUEYLPyDxQAyDDlXmL0JY7kgPWAHZos"
+
     private val credential = AmplifyCredential.UserAndIdentityPool(
         SignedInData(
             "1234567890",
@@ -35,8 +39,7 @@ object CredentialStoreUtil {
             DeviceMetadata.Metadata("someDeviceKey", "someDeviceGroupKey", "someSecret"),
             CognitoUserPoolTokens(
                 "idToken",
-                "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwidXNlcm5hbWUiOiJhbXBs" +
-                    "aWZ5X3VzZXIiLCJpYXQiOjE1MTYyMzkwMjJ9.zBiQ0guLRX34pUEYLPyDxQAyDDlXmL0JY7kgPWAHZos",
+                accessToken,
                 "refreshToken",
                 1212
             ),
@@ -50,9 +53,6 @@ object CredentialStoreUtil {
     }
 
     fun setupLegacyStore(context: Context, appClientId: String, userPoolId: String, identityPoolId: String) {
-
-        val accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwidXNlcm5hbWUiOiJhbXBs" +
-            "aWZ5X3VzZXIiLCJpYXQiOjE1MTYyMzkwMjJ9.zBiQ0guLRX34pUEYLPyDxQAyDDlXmL0JY7kgPWAHZos"
 
         AWSKeyValueStore(context, "CognitoIdentityProviderCache", true).apply {
             put("CognitoIdentityProvider.$appClientId.testuser.idToken", "idToken")
