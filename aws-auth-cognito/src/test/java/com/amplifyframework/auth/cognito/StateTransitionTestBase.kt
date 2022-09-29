@@ -55,9 +55,9 @@ import com.amplifyframework.statemachine.codegen.events.SRPEvent
 import com.amplifyframework.statemachine.codegen.events.SignInChallengeEvent
 import com.amplifyframework.statemachine.codegen.events.SignInEvent
 import com.amplifyframework.statemachine.codegen.events.SignOutEvent
-import java.util.Date
 import org.mockito.Mock
 import org.mockito.Mockito
+import java.util.Date
 
 open class StateTransitionTestBase {
 
@@ -267,7 +267,6 @@ open class StateTransitionTestBase {
                         SignInEvent(
                             SignInEvent.EventType.InitiateSignInWithCustom(
                                 "username",
-                                "password",
                                 mapOf()
                             )
                         )
@@ -341,7 +340,6 @@ open class StateTransitionTestBase {
                         CustomSignInEvent(
                             CustomSignInEvent.EventType.InitiateCustomSignIn(
                                 "username",
-                                "password"
                             )
                         )
                     )
