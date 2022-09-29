@@ -84,7 +84,12 @@ sealed class AuthenticationState : State {
                     is AuthenticationEvent.EventType.SignInCompleted -> StateResolution(
                         SignedIn(authenticationEvent.signedInData)
                     )
-                    is AuthenticationEvent.EventType.CancelSignIn -> StateResolution(SignedOut(SignedOutData()))
+                    is AuthenticationEvent.EventType.CancelSignIn -> {
+                        if (authenticationEvent.error != null) {
+                            StateResolution(Error(authenticationEvent.error))
+                        }
+                        StateResolution(SignedOut(SignedOutData()))
+                    }
                     else -> {
                         val resolution = signInResolver.resolve(oldState.signInState, event)
                         StateResolution(SigningIn(resolution.newState), resolution.actions)
