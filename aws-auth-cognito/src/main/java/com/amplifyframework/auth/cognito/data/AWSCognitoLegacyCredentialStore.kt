@@ -288,7 +288,7 @@ internal class AWSCognitoLegacyCredentialStore(
         In almost all cases, federation will be enabled making "1" the most common value. Due to how mobile client
         stores credentials, it is difficult to determine the sign in method. If the stored provider matches a
         federateToIdentityPool provider, we return null so we can store the Federated Token. Otherwise, we will return
-        SRP, understanding we may not have the correct sign in method (ex: hosted ui)
+        SRP, with the understanding we may not have the correct sign in method (ex: hosted ui)
          */
         "1" -> {
             if (retrieveFederateToIdentityPoolToken() != null) {
