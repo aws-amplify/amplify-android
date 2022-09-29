@@ -67,7 +67,7 @@ public final class CognitoDeviceHelper {
      * Static class for SRP related calculations for devices.
      */
     @SuppressWarnings("checkstyle:typename")
-    private static class deviceSRP {
+    private static final class deviceSRP {
         private static final String HASH_ALGORITHM = "SHA-256";
         private static final ThreadLocal<MessageDigest> THREAD_MESSAGE_DIGEST =
             new ThreadLocal<MessageDigest>() {
@@ -80,7 +80,6 @@ public final class CognitoDeviceHelper {
                     }
                 }
             };
-
 
         private static final BigInteger N = new BigInteger(SRPHelper.getHexN(), 16);
         private static final BigInteger GG = BigInteger.valueOf(2);
