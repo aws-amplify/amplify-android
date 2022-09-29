@@ -16,6 +16,7 @@
 package com.amplifyframework.datastore;
 
 import android.content.Context;
+import androidx.annotation.NonNull;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiCategory;
@@ -104,7 +105,59 @@ public final class MutationProcessorRetryTest {
         // Setup Mock Api
         ApiCategory mockApiCategory = mockApiCategoryWithGraphQlApi();
         Person person1 = setupApiMock(latch, mockApiCategory);
+        SynchronousDataStore synchronousDataStore = getSynchronousDataStore(mockApiCategory);
 
+        // Save person 1
+        synchronousDataStore.save(person1);
+        Person result1 = synchronousDataStore.get(Person.class, person1.getId());
+        assertTrue(latch.await(700, TimeUnit.SECONDS));
+        assertEquals(person1, result1);
+    }
+
+    /**
+     * When {@link Completable} completes,
+     * If a mutation fails it is retried.
+     * @throws AmplifyException On failure interacting with storage adapter
+     * @throws InterruptedException If interrupted while awaiting terminal result in test observer
+     * @throws JSONException If unable to parse the JSON.
+     */
+    @SuppressWarnings("unchecked") // Varied types in Observable.fromArray(...).
+    @Test
+    public void testMutationProcessorMovesOnAnIrRecoverableError()
+            throws AmplifyException, JSONException, InterruptedException {
+        CountDownLatch latch = new CountDownLatch(4);
+        // Setup Mock Api
+        ApiCategory mockApiCategory = mockApiCategoryWithGraphQlApi();
+        Person person2 = setupApiMockForIrrecoverableErrorOnMutation(latch, mockApiCategory);
+        SynchronousDataStore synchronousDataStore = getSynchronousDataStore(mockApiCategory);
+        Person person1 = createPerson("test1", "being");
+        // Save person 1
+        synchronousDataStore.save(person1);
+        synchronousDataStore.save(person2);
+        Person result1 = synchronousDataStore.get(Person.class, person2.getId());
+        assertTrue(latch.await(700, TimeUnit.SECONDS));
+        assertEquals(person2, result1);
+    }
+
+    private Person setupApiMock(CountDownLatch latch, ApiCategory mockApiCategory) {
+        Person person1 = createPerson("Test", "Dummy I");
+        mockSuccessOnSubscription(mockApiCategory);
+        mockRecoverableErrorThenSuccessOnMutation(latch, mockApiCategory, person1);
+        mockSuccessfulSync(latch, mockApiCategory, person1);
+        return person1;
+    }
+
+    private Person setupApiMockForIrrecoverableErrorOnMutation(CountDownLatch latch, ApiCategory mockApiCategory) {
+        Person person1 = createPerson("Test2", "Dummy I");
+        mockSuccessOnSubscription(mockApiCategory);
+        mockIrRecoverableErrorThenSuccessOnMutation(latch, mockApiCategory, person1);
+        mockSuccessfulSync(latch, mockApiCategory, person1);
+        return person1;
+    }
+
+    @NonNull
+    private SynchronousDataStore getSynchronousDataStore(ApiCategory mockApiCategory)
+            throws JSONException, AmplifyException {
         JSONObject dataStorePluginJson = new JSONObject()
                 .put("syncIntervalInMinutes", 60);
         AWSDataStorePlugin awsDataStorePlugin = AWSDataStorePlugin.builder()
@@ -121,44 +174,49 @@ public final class MutationProcessorRetryTest {
 
         // Trick the DataStore since it's not getting initialized as part of the Amplify.initialize call chain
         Amplify.Hub.publish(HubChannel.DATASTORE, HubEvent.create(InitializationStatus.SUCCEEDED));
-
-        // Save person 1
-        synchronousDataStore.save(person1);
-        Person result1 = synchronousDataStore.get(Person.class, person1.getId());
-        assertTrue(latch.await(700, TimeUnit.SECONDS));
-        assertEquals(person1, result1);
+        return synchronousDataStore;
     }
 
-    @SuppressWarnings("unchecked")
-    private Person setupApiMock(CountDownLatch latch, ApiCategory mockApiCategory) {
-        Person person1 = createPerson("Test", "Dummy I");
-        //Mock success on subscription.
+    private void mockSuccessfulSync(CountDownLatch latch, ApiCategory mockApiCategory, Person person1) {
+        // Setup to mimic successful sync
         doAnswer(invocation -> {
-            int indexOfStartConsumer = 1;
-            Consumer<String> onStart = invocation.getArgument(indexOfStartConsumer);
-            GraphQLOperation<?> mockOperation = mock(GraphQLOperation.class);
-            doAnswer(opAnswer -> {
-                return null;
-            }).when(mockOperation).cancel();
+            int indexOfResponseConsumer = 1;
+            ModelMetadata modelMetadata = new ModelMetadata(person1.getId(), false, 1,
+                    Temporal.Timestamp.now(), "Person");
+            ModelWithMetadata<Person> modelWithMetadata = new ModelWithMetadata<>(person1, modelMetadata);
+            // Mock the API emitting an ApiEndpointStatusChangeEvent event.
+            Consumer<GraphQLResponse<PaginatedResult<ModelWithMetadata<Person>>>> onResponse =
+                    invocation.getArgument(indexOfResponseConsumer);
+            PaginatedResult<ModelWithMetadata<Person>> data =
+                    new PaginatedResult<>(Collections.singletonList(modelWithMetadata), null);
+            onResponse.accept(new GraphQLResponse<>(data, Collections.emptyList()));
+            latch.countDown();
+            return mock(GraphQLOperation.class);
+        }).doAnswer(invocation -> {
+            int indexOfResponseConsumer = 1;
+            Car car = Car.builder().build();
+            ModelMetadata modelMetadata = new ModelMetadata(car.getId(), false, 1, Temporal.Timestamp.now(), "Person");
+            ModelWithMetadata<Car> modelWithMetadata = new ModelWithMetadata<>(car, modelMetadata);
+            Consumer<GraphQLResponse<PaginatedResult<ModelWithMetadata<Car>>>> onResponse =
+                    invocation.getArgument(indexOfResponseConsumer);
+            PaginatedResult<ModelWithMetadata<Car>> data =
+                    new PaginatedResult<>(Collections.singletonList(modelWithMetadata), null);
+            onResponse.accept(new GraphQLResponse<>(data, Collections.emptyList()));
+            latch.countDown();
+            return mock(GraphQLOperation.class);
+        }).when(mockApiCategory).query(any(), any(), any());
+    }
 
-            // Trigger the subscription start event.
-            onStart.accept(RandomString.string());
-            return mockOperation;
-        }).when(mockApiCategory).subscribe(
-                any(GraphQLRequest.class),
-                any(Consumer.class),
-                any(Consumer.class),
-                any(Consumer.class),
-                any(Action.class)
-        );
-
+    private void mockRecoverableErrorThenSuccessOnMutation(CountDownLatch latch,
+                                                           ApiCategory mockApiCategory, Person person1) {
         //When mutate is called on the appsync for the first time a recoverable error is returned.
         doAnswer(invocation -> {
             int indexOfResponseConsumer = 2;
             Consumer<ApiException> onError =
                     invocation.getArgument(indexOfResponseConsumer);
 
-            onError.accept(new ApiException("Error", "Network error"));
+            onError.accept(new ApiException("Error", "Network erro" +
+                    "r"));
             // latch makes sure error response is returned.
             latch.countDown();
             return mock(GraphQLOperation.class);
@@ -178,36 +236,56 @@ public final class MutationProcessorRetryTest {
             latch.countDown();
             return mock(GraphQLOperation.class);
         }).when(mockApiCategory).mutate(any(), any(), any());
+    }
 
-        // Setup to mimic successful sync
+    private void mockIrRecoverableErrorThenSuccessOnMutation(CountDownLatch latch,
+                                                             ApiCategory mockApiCategory, Person person1) {
+        //When mutate is called on the appsync for the first time a recoverable error is returned.
         doAnswer(invocation -> {
-            int indexOfResponseConsumer = 1;
-            ModelMetadata modelMetadata = new ModelMetadata(person1.getId(), false, 1,
-                    Temporal.Timestamp.now(), "Person");
-            ModelWithMetadata<Person> modelWithMetadata = new ModelWithMetadata<>(person1, modelMetadata);
-            // Mock the API emitting an ApiEndpointStatusChangeEvent event.
-            Consumer<GraphQLResponse<PaginatedResult<ModelWithMetadata<Person>>>> onResponse =
+            int indexOfResponseConsumer = 2;
+            Consumer<ApiException> onError =
                     invocation.getArgument(indexOfResponseConsumer);
-            PaginatedResult<ModelWithMetadata<Person>> data =
-                    new PaginatedResult<>(Collections.singletonList(modelWithMetadata), null);
-            onResponse.accept(new GraphQLResponse<>(data, Collections.emptyList()));
-            latch.countDown();
-            return mock(GraphQLOperation.class);
 
-        }).doAnswer(invocation -> {
-            int indexOfResponseConsumer = 1;
-            Car car = Car.builder().build();
-            ModelMetadata modelMetadata = new ModelMetadata(car.getId(), false, 1, Temporal.Timestamp.now(), "Person");
-            ModelWithMetadata<Car> modelWithMetadata = new ModelWithMetadata<>(car, modelMetadata);
-            Consumer<GraphQLResponse<PaginatedResult<ModelWithMetadata<Car>>>> onResponse =
-                    invocation.getArgument(indexOfResponseConsumer);
-            PaginatedResult<ModelWithMetadata<Car>> data =
-                    new PaginatedResult<>(Collections.singletonList(modelWithMetadata), null);
-            onResponse.accept(new GraphQLResponse<>(data, Collections.emptyList()));
+            onError.accept(new ApiException.NonRetryableException("Error", "Auth error"));
+            // latch makes sure error response is returned.
             latch.countDown();
             return mock(GraphQLOperation.class);
-        }).when(mockApiCategory).query(any(), any(), any());
-        return person1;
+        }).doAnswer(invocation -> {
+            //When mutate is called on the appsync for the second time success response is returned
+            int indexOfResponseConsumer = 1;
+            Consumer<GraphQLResponse<ModelWithMetadata<Person>>> onResponse =
+                    invocation.getArgument(indexOfResponseConsumer);
+            ModelMetadata modelMetadata = new ModelMetadata(person1.getId(), false, 1, Temporal.Timestamp.now(),
+                    "Person");
+            ModelWithMetadata<Person> modelWithMetadata = new ModelWithMetadata<>(person1, modelMetadata);
+            onResponse.accept(new GraphQLResponse<>(modelWithMetadata, Collections.emptyList()));
+            // latch makes sure success response is returned.
+            latch.countDown();
+            return mock(GraphQLOperation.class);
+        }).when(mockApiCategory).mutate(any(), any(), any());
+    }
+
+    @SuppressWarnings("unchecked")
+    private void mockSuccessOnSubscription(ApiCategory mockApiCategory) {
+        //Mock success on subscription.
+        doAnswer(invocation -> {
+            int indexOfStartConsumer = 1;
+            Consumer<String> onStart = invocation.getArgument(indexOfStartConsumer);
+            GraphQLOperation<?> mockOperation = mock(GraphQLOperation.class);
+            doAnswer(opAnswer -> {
+                return null;
+            }).when(mockOperation).cancel();
+
+            // Trigger the subscription start event.
+            onStart.accept(RandomString.string());
+            return mockOperation;
+        }).when(mockApiCategory).subscribe(
+                any(GraphQLRequest.class),
+                any(Consumer.class),
+                any(Consumer.class),
+                any(Consumer.class),
+                any(Action.class)
+        );
     }
 
     private static ArgumentMatcher<GraphQLRequest<ModelWithMetadata<Person>>> getMatcherFor(Person person) {

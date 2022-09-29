@@ -119,9 +119,8 @@ final class MutationProcessor {
                 processOutboxItem(next)
                     .blockingAwait();
             } catch (RuntimeException error) {
-                return Completable.error(new DataStoreException(
-                        "Failed to process " + error, "Check your internet connection."
-                ));
+                LOG.error("Failed to process mutation:" + next + " error: " + error);
+                continue;
             }
         } while (true);
     }
@@ -339,6 +338,7 @@ final class MutationProcessor {
             @NonNull PendingMutation<T> mutation) {
         List<Class<? extends Throwable>> skipException = new ArrayList<>();
         skipException.add(DataStoreException.GraphQLResponseException.class);
+        skipException.add(DataStoreException.IrRecoverableException.class);
         skipException.add(ApiException.NonRetryableException.class);
         LOG.info("Started Publish with retry: " + mutation);
         return retryHandler.retry(publishToNetwork(mutation), skipException);

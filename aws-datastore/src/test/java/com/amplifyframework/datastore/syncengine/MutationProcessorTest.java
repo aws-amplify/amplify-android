@@ -49,7 +49,6 @@ import org.mockito.ArgumentMatchers;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.shadows.ShadowLog;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -150,6 +149,7 @@ public final class MutationProcessorTest {
         // and make sure that outbox status is published to hub.
         mutationProcessor.startDrainingMutationOutbox();
         statusAccumulator.await();
+        mutationProcessor.stopDrainingMutationOutbox();
     }
 
     /**
@@ -191,6 +191,7 @@ public final class MutationProcessorTest {
 
         // And that it was passed to AppSync for publication.
         verify(appSync).create(eq(tony), any(), any(), any());
+        mutationProcessor.stopDrainingMutationOutbox();
     }
 
     /**
@@ -293,6 +294,7 @@ public final class MutationProcessorTest {
         // Start the mutation processor and wait for hub event.
         mutationProcessor.startDrainingMutationOutbox();
         errorAccumulator.await();
+        mutationProcessor.stopDrainingMutationOutbox();
     }
 
     /**
@@ -335,6 +337,7 @@ public final class MutationProcessorTest {
         // Start draining the outbox.
         mutationProcessor.startDrainingMutationOutbox();
         accumulator.await();
+        mutationProcessor.stopDrainingMutationOutbox();
     }
 
 
@@ -397,7 +400,7 @@ public final class MutationProcessorTest {
         // Start the mutation processor.
         mutationProcessor.startDrainingMutationOutbox();
         // Wait for the retry handler to be called.
-        assertTrue(retryHandlerInvocationCount.await(300, TimeUnit.SECONDS));
+        assertTrue(retryHandlerInvocationCount.await(40, TimeUnit.SECONDS));
         mutationProcessor.stopDrainingMutationOutbox();
     }
 
@@ -423,9 +426,8 @@ public final class MutationProcessorTest {
             int indexOfResponseConsumer = 5;
             Consumer<DataStoreException> onError =
                     invocation.getArgument(indexOfResponseConsumer);
+            onError.accept(new DataStoreException.IrRecoverableException("Error", "Irrecoverable"));
             retryHandlerInvocationCount.countDown();
-            onError.accept(new DataStoreException.GraphQLResponseException("Error",
-                    new ArrayList<>()));
             return mock(GraphQLOperation.class);
         }).when(appSync).update(ArgumentMatchers.<BlogOwner>any(),
                 any(ModelSchema.class),
@@ -447,8 +449,9 @@ public final class MutationProcessorTest {
         // Start the mutation processor.
         mutationProcessor.startDrainingMutationOutbox();
         // Wait for the retry handler to be called.
-        assertTrue(retryHandlerInvocationCount.await(300, TimeUnit.SECONDS));
-        verify(dataStoreErrorHandler, times(1)).accept(any());
+        assertTrue(retryHandlerInvocationCount.await(100, TimeUnit.SECONDS));
         mutationProcessor.stopDrainingMutationOutbox();
+        verify(dataStoreErrorHandler, times(1)).accept(any());
+
     }
 }

@@ -17,6 +17,7 @@ package com.amplifyframework.datastore.syncengine;
 
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.datastore.DataStoreConfigurationProvider;
+import com.amplifyframework.datastore.DataStoreErrorHandler;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.utils.ErrorInspector;
 import com.amplifyframework.logging.Logger;
@@ -100,11 +101,13 @@ public class RetryHandler {
                         LOG.info("Retry attempts left " + attemptsLeft + ". exception type:"
                                 + error.getClass());
                         if (ErrorInspector.contains(error, skipExceptions)) {
-                            dataStoreConfigurationProvider.getConfiguration().getErrorHandler()
+                            DataStoreErrorHandler errorHandler = dataStoreConfigurationProvider
+                                    .getConfiguration().getErrorHandler();
+                            errorHandler
                                     .accept(new DataStoreException("Appsync request failed.",
                                     error, "a non retryable error was returned while making the app " +
                                     "sync request"));
-                            LOG.info("Call error handler for " + single);
+                            LOG.info("Call error handler: " + errorHandler + " for " + single);
                             emitter.onError(error);
                         } else {
                             call(single, emitter, jitteredDelaySec(attemptsLeft),

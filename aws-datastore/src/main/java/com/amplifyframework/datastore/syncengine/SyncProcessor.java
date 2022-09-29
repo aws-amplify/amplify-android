@@ -292,6 +292,7 @@ final class SyncProcessor {
             GraphQLRequest<PaginatedResult<ModelWithMetadata<T>>> request) {
         List<Class<? extends Throwable>> skipException = new ArrayList<>();
         skipException.add(DataStoreException.GraphQLResponseException.class);
+        skipException.add(DataStoreException.IrRecoverableException.class);
         skipException.add(ApiException.NonRetryableException.class);
         return requestRetry.retry(syncPage(request), skipException);
     }

@@ -136,7 +136,7 @@ public final class SyncRecoverabilityIntegrationTest {
         // Save person 1 and make sure appsync is called which tells that dataStore is in API sync mode.
         synchronousDataStore.save(person1);
         Person result1 = synchronousDataStore.get(Person.class, person1.getId());
-        assertTrue(latch.await(30, TimeUnit.SECONDS));
+        assertTrue(latch.await(60, TimeUnit.SECONDS));
         assertEquals(person1, result1);
     }
 
