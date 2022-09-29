@@ -1,3 +1,10 @@
+## [Release 1.37.5](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.37.5)
+
+### Miscellaneous
+- Update build.gradle (#1991)
+
+[See all changes between 1.37.4 and 1.37.5](https://github.com/aws-amplify/amplify-android/compare/release_v1.37.4...release_v1.37.5)
+
 ## [Release 1.37.4](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.37.4)
 
 ### Miscellaneous
