@@ -55,9 +55,9 @@ import com.amplifyframework.statemachine.codegen.events.SRPEvent
 import com.amplifyframework.statemachine.codegen.events.SignInChallengeEvent
 import com.amplifyframework.statemachine.codegen.events.SignInEvent
 import com.amplifyframework.statemachine.codegen.events.SignOutEvent
+import java.util.Date
 import org.mockito.Mock
 import org.mockito.Mockito
-import java.util.Date
 
 open class StateTransitionTestBase {
 
