@@ -15,14 +15,14 @@
 
 package com.amplifyframework.auth.cognito
 
-import aws.smithy.kotlin.runtime.time.Instant
-import com.amplifyframework.auth.AWSTemporaryCredentials
+import com.amplifyframework.auth.AWSCredentials
+import com.amplifyframework.auth.AWSCredentialsFactory
 import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.AuthException.SignedOutException
 import com.amplifyframework.auth.AuthSession
 import com.amplifyframework.auth.cognito.helpers.SessionHelper
 import com.amplifyframework.auth.result.AuthSessionResult
-import com.amplifyframework.statemachine.codegen.data.AWSCredentials
+import com.amplifyframework.statemachine.codegen.data.AWSCredentials as CognitoCredentials
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
 
@@ -46,7 +46,7 @@ data class AWSCognitoAuthSession(
      * The credentials which come from Identity Pool.
      * @return the credentials which come from Identity Pool
      */
-    val awsCredentialsResult: AuthSessionResult<AWSTemporaryCredentials>,
+    val awsCredentialsResult: AuthSessionResult<AWSCredentials>,
 
     /**
      * The id which comes from User Pools.
@@ -89,22 +89,17 @@ data class AWSCognitoAuthSession(
 //        }
 //    }
 
-        fun getCredentials(awsCredentials: AWSCredentials): AuthSessionResult<AWSTemporaryCredentials> {
-            return if (awsCredentials.accessKeyId != null && awsCredentials.secretAccessKey != null) {
-                val credentials = AWSTemporaryCredentials(
-                    accessKeyId = awsCredentials.accessKeyId,
-                    secretAccessKey = awsCredentials.secretAccessKey,
-                    sessionToken = awsCredentials.sessionToken,
-                    expiration = awsCredentials.expiration?.let { Instant.fromEpochSeconds(it) }
-                )
-                AuthSessionResult.success(credentials)
-            } else AuthSessionResult.failure(
+        fun getCredentials(awsCredentials: CognitoCredentials): AuthSessionResult<AWSCredentials> =
+            with(awsCredentials) {
+                AWSCredentialsFactory.createAWSCredentials(accessKeyId, secretAccessKey, sessionToken, expiration)
+            }?.let {
+                AuthSessionResult.success(it)
+            } ?: AuthSessionResult.failure(
                 AuthException(
                     "Could not fetch AWS Cognito credentials",
                     "Cognito Identity not configured. Please check amplifyconfiguration.json file."
                 )
             )
-        }
 
         private fun getIdentityId(identityId: String?): AuthSessionResult<String> {
             return if (identityId != null) AuthSessionResult.success(identityId) else AuthSessionResult.failure(
@@ -151,7 +146,7 @@ fun AmplifyCredential.getCognitoSession(): AWSCognitoAuthSession {
         is AmplifyCredential.UserPool -> AWSCognitoAuthSession(
             true,
             identityIdResult = AuthSessionResult.failure(AuthException("", "")),
-            awsCredentialsResult = AWSCognitoAuthSession.getCredentials(AWSCredentials.empty),
+            awsCredentialsResult = AWSCognitoAuthSession.getCredentials(CognitoCredentials.empty),
             userSubResult = AWSCognitoAuthSession.getUserSub(signedInData.cognitoUserPoolTokens),
             userPoolTokensResult = AuthSessionResult.success(
                 AWSCognitoAuthSession.getUserPoolTokens(signedInData.cognitoUserPoolTokens)

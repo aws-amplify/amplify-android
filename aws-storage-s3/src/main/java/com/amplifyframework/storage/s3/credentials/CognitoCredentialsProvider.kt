@@ -16,6 +16,7 @@
 package com.amplifyframework.storage.s3.credentials
 
 import aws.smithy.kotlin.runtime.auth.awscredentials.Credentials
+import com.amplifyframework.auth.AWSCredentials
 import com.amplifyframework.auth.AWSTemporaryCredentials
 import com.amplifyframework.auth.AuthCredentialsProvider
 import com.amplifyframework.auth.AuthSession
@@ -85,11 +86,11 @@ private fun AuthSession.toAWSCognitoAuthSession(): AWSCognitoAuthSession? {
     return null
 }
 
-private fun AWSTemporaryCredentials.toCredentials(): Credentials {
+private fun AWSCredentials.toCredentials(): Credentials {
     return Credentials(
         accessKeyId = this.accessKeyId,
         secretAccessKey = this.secretAccessKey,
-        sessionToken = this.sessionToken,
-        expiration = this.expiration
+        sessionToken = (this as? AWSTemporaryCredentials)?.sessionToken,
+        expiration = (this as? AWSTemporaryCredentials)?.expiration
     )
 }

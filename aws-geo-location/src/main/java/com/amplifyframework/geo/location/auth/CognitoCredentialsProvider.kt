@@ -17,6 +17,7 @@ package com.amplifyframework.geo.location.auth
 
 import aws.smithy.kotlin.runtime.auth.awscredentials.Credentials
 import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider
+import com.amplifyframework.auth.AWSCredentials
 import com.amplifyframework.auth.AWSTemporaryCredentials
 import com.amplifyframework.auth.AuthCategory
 import com.amplifyframework.auth.cognito.AWSCognitoAuthSession
@@ -49,11 +50,11 @@ internal class CognitoCredentialsProvider(private val authCategory: AuthCategory
     }
 }
 
-private fun AWSTemporaryCredentials.toCredentials(): Credentials {
+private fun AWSCredentials.toCredentials(): Credentials {
     return Credentials(
         accessKeyId = this.accessKeyId,
         secretAccessKey = this.secretAccessKey,
-        sessionToken = this.sessionToken,
-        expiration = this.expiration
+        sessionToken = (this as? AWSTemporaryCredentials)?.sessionToken,
+        expiration = (this as? AWSTemporaryCredentials)?.expiration
     )
 }
