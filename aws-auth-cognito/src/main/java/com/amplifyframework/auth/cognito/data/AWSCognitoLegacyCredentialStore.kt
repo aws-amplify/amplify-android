@@ -16,13 +16,16 @@
 package com.amplifyframework.auth.cognito.data
 
 import android.content.Context
+import com.amplifyframework.auth.AuthProvider
 import com.amplifyframework.auth.cognito.helpers.SessionHelper
+import com.amplifyframework.auth.cognito.helpers.identityProviderName
 import com.amplifyframework.statemachine.codegen.data.AWSCredentials
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 import com.amplifyframework.statemachine.codegen.data.AuthCredentialStore
 import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
 import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
+import com.amplifyframework.statemachine.codegen.data.FederatedToken
 import com.amplifyframework.statemachine.codegen.data.SignInMethod
 import com.amplifyframework.statemachine.codegen.data.SignedInData
 import java.util.Date
@@ -63,6 +66,7 @@ internal class AWSCognitoLegacyCredentialStore(
         // Mobile Client Keys
         const val PROVIDER_KEY = "provider"
         const val SIGN_IN_MODE_KEY = "signInMode"
+        const val TOKEN_KEY = "token"
     }
 
     private val userDeviceDetailsCacheKey = "$APP_DEVICE_INFO_CACHE.${authConfiguration.userPool?.poolId}.%s"
@@ -89,15 +93,23 @@ internal class AWSCognitoLegacyCredentialStore(
         val identityId = retrieveIdentityId()
 
         return when {
-            awsCredentials != null && identityId != null -> when (signedInData) {
-                null -> AmplifyCredential.IdentityPool(identityId, awsCredentials)
-                else -> {
-                    AmplifyCredential.UserAndIdentityPool(signedInData, identityId, awsCredentials)
+            awsCredentials != null && identityId != null -> {
+                val federateToIdentityPoolToken = retrieveFederateToIdentityPoolToken()
+                when {
+                    signedInData != null -> {
+                        AmplifyCredential.UserAndIdentityPool(signedInData, identityId, awsCredentials)
+                    }
+                    federateToIdentityPoolToken != null -> {
+                        AmplifyCredential.IdentityPoolFederated(
+                            federateToIdentityPoolToken,
+                            identityId,
+                            awsCredentials
+                        )
+                    }
+                    else -> { AmplifyCredential.IdentityPool(identityId, awsCredentials) }
                 }
             }
-            signedInData != null -> {
-                AmplifyCredential.UserPool(signedInData)
-            }
+            signedInData != null -> { AmplifyCredential.UserPool(signedInData) }
             else -> AmplifyCredential.Empty
         }
     }
@@ -152,17 +164,14 @@ internal class AWSCognitoLegacyCredentialStore(
         } else AWSCredentials(accessKey, secretKey, sessionToken, expiration)
     }
 
-    private fun retrieveIdentityId(): String? {
-        return idAndCredentialsKeyValue.get(namespace(ID_KEY))
-    }
+    private fun retrieveIdentityId() = idAndCredentialsKeyValue.get(namespace(ID_KEY))
 
     private fun retrieveSignedInData(): SignedInData? {
         val keys = getTokenKeys()
         val cognitoUserPoolTokens = retrieveCognitoUserPoolTokens(keys) ?: return null
+        val signInMethod = retrieveUserPoolSignInMethod() ?: return null
         val username = keys[APP_LAST_AUTH_USER]?.let { tokensKeyValue.get(it) }
         val deviceMetaData = retrieveDeviceMetadata(username)
-        val signInMethod = retrieveUserPoolSignInMethod()
-            ?: SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH)
         val tokenUserId =
             try {
                 cognitoUserPoolTokens.accessToken?.let { SessionHelper.getUserSub(it) } ?: ""
@@ -275,12 +284,42 @@ internal class AWSCognitoLegacyCredentialStore(
     }
 
     private fun retrieveUserPoolSignInMethod() = when (mobileClientKeyValue.get(SIGN_IN_MODE_KEY)) {
-        "2" -> SignInMethod.HostedUI() // Unlikely to resolve as hosted ui with federation changes to "1"
-        "3" -> null
         /*
-        In many sign in states, federation will be enabled making "1" the most common value. In this case, our safest
-        option is to default to SRP
+        In almost all cases, federation will be enabled making "1" the most common value. Due to how mobile client
+        stores credentials, it is difficult to determine the sign in method. If the stored provider matches a
+        federateToIdentityPool provider, we return null so we can store the Federated Token. Otherwise, we will return
+        SRP, with the understanding we may not have the correct sign in method (ex: hosted ui)
          */
+        "1" -> {
+            if (retrieveFederateToIdentityPoolToken() != null) {
+                null
+            } else {
+                SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH)
+            }
+        }
+        // This is an unlikely as hosted ui with federation will automatically change to "1".
+        // Disabling federation was only possible if the escape hatch was used.
+        "2" -> SignInMethod.HostedUI()
+        "3" -> null
         else -> SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH)
+    }
+
+    // only retrieve federate to identity pool token if stored provider is in list of known AuthProvider values
+    private fun retrieveFederateToIdentityPoolToken(): FederatedToken? {
+        val provider = mobileClientKeyValue.get(PROVIDER_KEY) ?: return null
+        val token = mobileClientKeyValue.get(TOKEN_KEY) ?: return null
+
+        val federatedIdentityPoolProviders = listOf(
+            AuthProvider.amazon().identityProviderName,
+            AuthProvider.facebook().identityProviderName,
+            AuthProvider.apple().identityProviderName,
+            AuthProvider.google().identityProviderName
+        )
+
+        return if (federatedIdentityPoolProviders.contains(provider)) {
+            FederatedToken(provider, token)
+        } else {
+            null
+        }
     }
 }

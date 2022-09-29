@@ -18,6 +18,7 @@ package com.amplifyframework.statemachine.codegen.events
 import com.amplifyframework.statemachine.StateMachineEvent
 import com.amplifyframework.statemachine.codegen.data.AWSCredentials
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
+import com.amplifyframework.statemachine.codegen.data.FederatedToken
 import java.util.Date
 
 class AuthorizationEvent(val eventType: EventType, override val time: Date? = null) :
@@ -32,6 +33,7 @@ class AuthorizationEvent(val eventType: EventType, override val time: Date? = nu
         data class CachedCredentialsAvailable(val amplifyCredential: AmplifyCredential) : EventType()
         data class UserDeleted(val id: String = "") : EventType()
         data class ThrowError(val exception: Exception) : EventType()
+        data class StartFederationToIdentityPool(val token: FederatedToken, val identityId: String?) : EventType()
     }
 
     override val type: String = eventType.javaClass.simpleName
