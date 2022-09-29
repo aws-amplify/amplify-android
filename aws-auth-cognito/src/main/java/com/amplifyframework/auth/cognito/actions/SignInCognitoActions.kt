@@ -44,8 +44,16 @@ object SignInCognitoActions : SignInActions {
         Action<AuthEnvironment>("StartCustomAuth") { id, dispatcher ->
             logger?.verbose("$id Starting execution")
             val evt = CustomSignInEvent(
-                CustomSignInEvent.EventType.InitiateCustomSignIn(event.username, event.password)
+                CustomSignInEvent.EventType.InitiateCustomSignIn(event.username)
             )
+            logger?.verbose("$id Sending event ${evt.type}")
+            dispatcher.send(evt)
+        }
+
+    override fun startCustomAuthWithSRPAction(event: SignInEvent.EventType.InitiateCustomSignInWithSRP): Action =
+        Action<AuthEnvironment>("StartSRPAuth") { id, dispatcher ->
+            logger?.verbose("$id Starting execution")
+            val evt = SRPEvent(SRPEvent.EventType.InitiateSRPWithCustom(event.username))
             logger?.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
         }

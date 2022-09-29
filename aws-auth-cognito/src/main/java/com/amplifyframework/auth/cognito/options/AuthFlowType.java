@@ -26,8 +26,21 @@ public enum AuthFlowType {
     USER_SRP_AUTH("USER_SRP_AUTH"),
     /**
      * type for CUSTOM_AUTH.
+     *
+     * @deprecated Replaced by AuthFlowType.CUSTOM_AUTH_WITHOUT_SRP
      */
+    @Deprecated
     CUSTOM_AUTH("CUSTOM_AUTH"),
+
+    /**
+     * type for CUSTOM_AUTH THAT STARTS WITH SRP.
+     */
+    CUSTOM_AUTH_WITH_SRP("CUSTOM_AUTH_WITH_SRP"),
+
+    /**
+     * type for CUSTOM_AUTH.
+     */
+    CUSTOM_AUTH_WITHOUT_SRP("CUSTOM_AUTH_WITHOUT_SRP"),
     /**
      * type for USER_PASSWORD_AUTH.
      */
