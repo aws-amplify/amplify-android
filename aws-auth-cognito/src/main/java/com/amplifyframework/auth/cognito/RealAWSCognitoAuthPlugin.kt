@@ -1658,7 +1658,6 @@ internal class RealAWSCognitoAuthPlugin(
                         authZState is AuthorizationState.SessionEstablished ||
                         authZState is AuthorizationState.Error
                     ) -> {
-
                     _federateToIdentityPool(authProvider, providerToken, options, onSuccess, onError)
                 }
                 else -> onError.accept(

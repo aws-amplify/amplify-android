@@ -285,8 +285,8 @@ internal class AWSCognitoLegacyCredentialStore(
 
     private fun retrieveUserPoolSignInMethod() = when (mobileClientKeyValue.get(SIGN_IN_MODE_KEY)) {
         /*
-        In most all cases, federation will be enabled making "1" the most common value. Due to the way mobile client
-        stored credentials, it is difficult to determine sign in method. If the stored provider matches a
+        In almost all cases, federation will be enabled making "1" the most common value. Due to how mobile client
+        stores credentials, it is difficult to determine the sign in method. If the stored provider matches a
         federateToIdentityPool provider, we return null so we can store the Federated Token. Otherwise, we will return
         SRP, understanding we may not have the correct sign in method (ex: hosted ui)
          */
@@ -297,7 +297,9 @@ internal class AWSCognitoLegacyCredentialStore(
                 SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH)
             }
         }
-        "2" -> SignInMethod.HostedUI() // Unlikely to resolve as hosted ui with federation changes to "1"
+        // This is an unlikely as hosted ui with federation will automatically change to "1".
+        // Disabling federation was only possible if the escape hatch was used.
+        "2" -> SignInMethod.HostedUI()
         "3" -> null
         else -> SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH)
     }
