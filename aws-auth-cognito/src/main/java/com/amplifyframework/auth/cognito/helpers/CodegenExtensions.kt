@@ -28,7 +28,7 @@ internal val AuthProvider.userPoolProviderName: String
         }
     }
 
-internal val AuthProvider.identityPoolProviderName: String
+internal val AuthProvider.identityProviderName: String
     get() {
         return when (this) {
             AuthProvider.amazon() -> "www.amazon.com"

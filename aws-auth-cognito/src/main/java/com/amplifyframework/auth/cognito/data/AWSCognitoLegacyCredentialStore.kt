@@ -18,7 +18,7 @@ package com.amplifyframework.auth.cognito.data
 import android.content.Context
 import com.amplifyframework.auth.AuthProvider
 import com.amplifyframework.auth.cognito.helpers.SessionHelper
-import com.amplifyframework.auth.cognito.helpers.identityPoolProviderName
+import com.amplifyframework.auth.cognito.helpers.identityProviderName
 import com.amplifyframework.statemachine.codegen.data.AWSCredentials
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
@@ -93,26 +93,23 @@ internal class AWSCognitoLegacyCredentialStore(
         val identityId = retrieveIdentityId()
 
         return when {
-            awsCredentials != null && identityId != null -> when (signedInData) {
-                null -> {
-                    val federateToIdentityPoolToken = retrieveFederateToIdentityPoolToken()
-                    if (federateToIdentityPoolToken != null) {
+            awsCredentials != null && identityId != null -> {
+                val federateToIdentityPoolToken = retrieveFederateToIdentityPoolToken()
+                when {
+                    signedInData != null -> {
+                        AmplifyCredential.UserAndIdentityPool(signedInData, identityId, awsCredentials)
+                    }
+                    federateToIdentityPoolToken != null -> {
                         AmplifyCredential.IdentityPoolFederated(
                             federateToIdentityPoolToken,
                             identityId,
                             awsCredentials
                         )
-                    } else {
-                        AmplifyCredential.IdentityPool(identityId, awsCredentials)
                     }
-                }
-                else -> {
-                    AmplifyCredential.UserAndIdentityPool(signedInData, identityId, awsCredentials)
+                    else -> { AmplifyCredential.IdentityPool(identityId, awsCredentials) }
                 }
             }
-            signedInData != null -> {
-                AmplifyCredential.UserPool(signedInData)
-            }
+            signedInData != null -> { AmplifyCredential.UserPool(signedInData) }
             else -> AmplifyCredential.Empty
         }
     }
@@ -311,10 +308,10 @@ internal class AWSCognitoLegacyCredentialStore(
         val token = mobileClientKeyValue.get(TOKEN_KEY) ?: return null
 
         val federatedIdentityPoolProviders = listOf(
-            AuthProvider.amazon().identityPoolProviderName,
-            AuthProvider.facebook().identityPoolProviderName,
-            AuthProvider.apple().identityPoolProviderName,
-            AuthProvider.google().identityPoolProviderName
+            AuthProvider.amazon().identityProviderName,
+            AuthProvider.facebook().identityProviderName,
+            AuthProvider.apple().identityProviderName,
+            AuthProvider.google().identityProviderName
         )
 
         return if (federatedIdentityPoolProviders.contains(provider)) {

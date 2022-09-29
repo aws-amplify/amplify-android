@@ -45,7 +45,7 @@ import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.auth.cognito.helpers.HostedUIHelper
 import com.amplifyframework.auth.cognito.helpers.JWTParser
 import com.amplifyframework.auth.cognito.helpers.SignInChallengeHelper
-import com.amplifyframework.auth.cognito.helpers.identityPoolProviderName
+import com.amplifyframework.auth.cognito.helpers.identityProviderName
 import com.amplifyframework.auth.cognito.options.AWSAuthResendUserAttributeConfirmationCodeOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthConfirmSignInOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthResendSignUpCodeOptions
@@ -1696,7 +1696,7 @@ internal class RealAWSCognitoAuthPlugin(
                         } else {
                             onError.accept(
                                 AuthException.UnknownException(
-                                    "Could not start federation to Identity Pool",
+                                    "Unable to parse credentials to expected output.",
                                     "An unclassified error prevented this operation."
                                 )
                             )
@@ -1717,7 +1717,7 @@ internal class RealAWSCognitoAuthPlugin(
                 authStateMachine.send(
                     AuthorizationEvent(
                         AuthorizationEvent.EventType.StartFederationToIdentityPool(
-                            token = FederatedToken(providerToken, authProvider.identityPoolProviderName),
+                            token = FederatedToken(providerToken, authProvider.identityProviderName),
                             identityId = options?.developerProvidedIdentityId
                         )
                     )

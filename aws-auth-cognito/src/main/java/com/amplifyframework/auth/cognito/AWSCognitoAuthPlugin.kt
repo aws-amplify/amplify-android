@@ -412,7 +412,13 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         onSuccess: Consumer<FederateToIdentityPoolResult>,
         onError: Consumer<AuthException>
     ) {
-        realPlugin.federateToIdentityPool(authProvider, providerToken, null, onSuccess, onError)
+        realPlugin.federateToIdentityPool(
+            authProvider,
+            providerToken,
+            FederateToIdentityPoolOptions.builder().build(),
+            onSuccess,
+            onError
+        )
     }
 
     /**

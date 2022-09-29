@@ -47,9 +47,9 @@ sealed class AmplifyCredential {
     @SerialName("identityPoolFederated")
     data class IdentityPoolFederated(
         val federatedToken: FederatedToken,
-        val identityId: String?,
-        val credentials: AWSCredentials? = null
-    ) : AmplifyCredential()
+        override val identityId: String,
+        override val credentials: AWSCredentials
+    ) : AmplifyCredential(), IdentityPoolTypeCredential
 
     @Serializable
     @SerialName("userAndIdentityPool")
