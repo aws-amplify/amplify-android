@@ -611,8 +611,8 @@ public final class SyncProcessorTest {
                         .blockingAwait(OP_TIMEOUT_MS, TimeUnit.MILLISECONDS)
         );
 
-        // Assert: sync process failed the first time the api threw an error
-        assertEquals(1, errorHandlerCallCount);
+        // Assert: sync process failed 10 times because sync for all the schemas failed.
+        assertEquals(10, errorHandlerCallCount);
     }
 
 

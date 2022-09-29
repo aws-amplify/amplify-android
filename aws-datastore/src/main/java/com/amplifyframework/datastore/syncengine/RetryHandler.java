@@ -96,20 +96,21 @@ public class RetryHandler {
         single.delaySubscription(delayInSeconds, TimeUnit.SECONDS)
                 .subscribe(emitter::onSuccess, error -> {
                     if (!emitter.isDisposed()) {
-                        LOG.verbose("Retry attempts left " + attemptsLeft + ". exception type:"
+                        LOG.info("Retry attempts left " + attemptsLeft + ". exception type:"
                                 + error.getClass());
                         if (ErrorInspector.contains(error, skipExceptions)) {
                             dataStoreConfigurationProvider.getConfiguration().getErrorHandler()
                                     .accept(new DataStoreException("Appsync request failed.",
                                     error, "a non retryable error was returned while making the app " +
                                     "sync request"));
+                            LOG.info("Call error handler for " + single);
                             emitter.onError(error);
                         } else {
                             call(single, emitter, jitteredDelaySec(attemptsLeft),
                                     attemptsLeft - 1, skipExceptions);
                         }
                     } else {
-                        LOG.verbose("The subscribing channel is disposed.");
+                        LOG.info("The subscribing channel is disposed.");
                     }
                 });
     }
