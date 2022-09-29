@@ -68,7 +68,20 @@ object AuthenticationCognitoActions : AuthenticationActions {
                 is SignInData.CustomAuthSignInData -> {
                     if (data.username != null) {
                         SignInEvent(
-                            SignInEvent.EventType.InitiateSignInWithCustom(data.username, data.password, data.options)
+                            SignInEvent.EventType.InitiateSignInWithCustom(data.username, data.options)
+                        )
+                    } else {
+                        AuthenticationEvent(
+                            AuthenticationEvent.EventType.ThrowError(
+                                AuthException("Sign in failed.", "username can not be empty")
+                            )
+                        )
+                    }
+                }
+                is SignInData.CustomSRPAuthSignInData -> {
+                    if (data.username != null) {
+                        SignInEvent(
+                            SignInEvent.EventType.InitiateCustomSignInWithSRP(data.username, data.options)
                         )
                     } else {
                         AuthenticationEvent(
