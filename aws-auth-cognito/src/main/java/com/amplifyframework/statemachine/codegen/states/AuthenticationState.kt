@@ -16,6 +16,7 @@
 package com.amplifyframework.statemachine.codegen.states
 
 import com.amplifyframework.auth.cognito.isAuthenticationEvent
+import com.amplifyframework.auth.cognito.isAuthorizationEvent
 import com.amplifyframework.auth.cognito.isSignOutEvent
 import com.amplifyframework.statemachine.State
 import com.amplifyframework.statemachine.StateMachineEvent
@@ -25,6 +26,7 @@ import com.amplifyframework.statemachine.codegen.actions.AuthenticationActions
 import com.amplifyframework.statemachine.codegen.data.SignedInData
 import com.amplifyframework.statemachine.codegen.data.SignedOutData
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
+import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
 import com.amplifyframework.statemachine.codegen.events.SignOutEvent
 
 sealed class AuthenticationState : State {
@@ -34,6 +36,8 @@ sealed class AuthenticationState : State {
     data class SignedIn(val signedInData: SignedInData) : AuthenticationState()
     data class SigningOut(var signOutState: SignOutState = SignOutState.NotStarted()) : AuthenticationState()
     data class SignedOut(val signedOutData: SignedOutData) : AuthenticationState()
+    data class FederatingToIdentityPool(val id: String = "") : AuthenticationState()
+    data class FederatedToIdentityPool(val id: String = "") : AuthenticationState()
     data class Error(val exception: Exception) : AuthenticationState()
 
     class Resolver(
@@ -51,16 +55,25 @@ sealed class AuthenticationState : State {
             val authenticationEvent = event.isAuthenticationEvent()
             val defaultResolution = StateResolution(oldState)
             return when (oldState) {
-                is NotConfigured -> when (authenticationEvent) {
-                    is AuthenticationEvent.EventType.Configure -> {
-                        val action = authenticationActions.configureAuthenticationAction(authenticationEvent)
-                        StateResolution(Configured(), listOf(action))
+                is NotConfigured -> {
+                    val authorizationEvent = event.isAuthorizationEvent()
+                    when {
+                        authenticationEvent is AuthenticationEvent.EventType.Configure -> {
+                            val action = authenticationActions.configureAuthenticationAction(authenticationEvent)
+                            StateResolution(Configured(), listOf(action))
+                        }
+                        authorizationEvent is AuthorizationEvent.EventType.StartFederationToIdentityPool -> {
+                            StateResolution(FederatingToIdentityPool())
+                        }
+                        else -> defaultResolution
                     }
-                    else -> defaultResolution
                 }
                 is Configured -> when (authenticationEvent) {
                     is AuthenticationEvent.EventType.InitializedSignedIn -> StateResolution(
                         SignedIn(authenticationEvent.signedInData)
+                    )
+                    is AuthenticationEvent.EventType.InitializedFederated -> StateResolution(
+                        FederatedToIdentityPool()
                     )
                     is AuthenticationEvent.EventType.InitializedSignedOut -> StateResolution(
                         SignedOut(authenticationEvent.signedOutData)
@@ -105,18 +118,51 @@ sealed class AuthenticationState : State {
                         }
                     }
                 }
-                is SignedOut -> when (authenticationEvent) {
-                    is AuthenticationEvent.EventType.SignInRequested -> {
-                        val action = authenticationActions.initiateSignInAction(authenticationEvent)
-                        StateResolution(SigningIn(), listOf(action))
+                is SignedOut -> {
+                    val authorizationEvent = event.isAuthorizationEvent()
+                    when {
+                        authenticationEvent is AuthenticationEvent.EventType.SignInRequested -> {
+                            val action = authenticationActions.initiateSignInAction(authenticationEvent)
+                            StateResolution(SigningIn(), listOf(action))
+                        }
+                        authenticationEvent is AuthenticationEvent.EventType.SignOutRequested -> {
+                            val action = authenticationActions.initiateSignOutAction(authenticationEvent, null)
+                            StateResolution(SigningOut(), listOf(action))
+                        }
+                        authorizationEvent is AuthorizationEvent.EventType.StartFederationToIdentityPool -> {
+                            StateResolution(FederatingToIdentityPool())
+                        }
+                        else -> defaultResolution
                     }
-                    is AuthenticationEvent.EventType.SignOutRequested -> {
-                        val action = authenticationActions.initiateSignOutAction(authenticationEvent, null)
-                        StateResolution(SigningOut(), listOf(action))
-                    }
-                    else -> defaultResolution
                 }
-                is Error -> defaultResolution
+                is FederatingToIdentityPool -> {
+                    when (val authorizationEvent = event.isAuthorizationEvent()) {
+                        is AuthorizationEvent.EventType.Fetched -> {
+                            StateResolution(FederatedToIdentityPool())
+                        }
+                        is AuthorizationEvent.EventType.ThrowError -> {
+                            StateResolution(Error(authorizationEvent.exception))
+                        }
+                        else -> defaultResolution
+                    }
+                }
+                is FederatedToIdentityPool -> {
+                    when (authenticationEvent) {
+                        is AuthenticationEvent.EventType.SignOutRequested -> {
+                            val action = authenticationActions.initiateSignOutAction(authenticationEvent, null)
+                            StateResolution(SigningOut(), listOf(action))
+                        }
+                        else -> defaultResolution
+                    }
+                }
+                is Error -> {
+                    when (event.isAuthorizationEvent()) {
+                        is AuthorizationEvent.EventType.StartFederationToIdentityPool -> {
+                            StateResolution(FederatingToIdentityPool())
+                        }
+                        else -> defaultResolution
+                    }
+                }
             }
         }
     }

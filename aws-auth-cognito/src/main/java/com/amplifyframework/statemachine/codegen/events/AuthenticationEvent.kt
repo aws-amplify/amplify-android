@@ -35,6 +35,7 @@ class AuthenticationEvent(val eventType: EventType, override val time: Date? = n
         object Configured : EventType()
         data class InitializedSignedIn(val signedInData: SignedInData) : EventType()
         data class InitializedSignedOut(val signedOutData: SignedOutData) : EventType()
+        object InitializedFederated : EventType()
         data class SignInRequested(val signInData: SignInData) : EventType()
         data class SignInCompleted(val signedInData: SignedInData) : EventType()
         data class SignOutRequested(val signOutData: SignOutData) : EventType()
