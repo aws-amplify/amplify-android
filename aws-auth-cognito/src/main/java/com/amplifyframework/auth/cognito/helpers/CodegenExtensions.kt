@@ -27,3 +27,14 @@ internal val AuthProvider.userPoolProviderName: String
             else -> providerKey
         }
     }
+
+internal val AuthProvider.identityProviderName: String
+    get() {
+        return when (this) {
+            AuthProvider.amazon() -> "www.amazon.com"
+            AuthProvider.facebook() -> "graph.facebook.com"
+            AuthProvider.google() -> "accounts.google.com"
+            AuthProvider.apple() -> "appleid.apple.com"
+            else -> providerKey
+        }
+    }

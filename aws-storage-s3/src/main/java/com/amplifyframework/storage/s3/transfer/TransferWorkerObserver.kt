@@ -21,6 +21,7 @@ import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.storage.s3.AWSS3StoragePlugin
+import com.amplifyframework.storage.s3.TransferOperations
 import com.amplifyframework.storage.s3.transfer.worker.BaseTransferWorker
 import java.util.concurrent.Executors
 import kotlinx.coroutines.CoroutineScope
@@ -102,8 +103,8 @@ internal class TransferWorkerObserver private constructor(
         workInfo: WorkInfo,
         transferRecord: TransferRecord
     ) {
-        updateTransferState(transferRecord, workInfo.state)
-        if (workInfo.state.isFinished) {
+        updateTransferState(transferRecord, workInfo.state, workInfo.id.toString())
+        if (workInfo.state.isFinished || transferRecord.state == TransferState.PAUSED) {
             logger.debug("remove observer for ${transferRecord.id}")
             removeObserver(transferRecord.id.toString())
         }
@@ -118,30 +119,32 @@ internal class TransferWorkerObserver private constructor(
         val completionTag = BaseTransferWorker.completionRequestTag.format(transferRecord.id)
         if (workInfo.tags.contains(initializationTag)) {
             if (listOf(WorkInfo.State.SUCCEEDED, WorkInfo.State.RUNNING).contains(workInfo.state)) {
-                updateTransferState(transferRecord, WorkInfo.State.RUNNING)
+                updateTransferState(transferRecord, WorkInfo.State.RUNNING, workInfo.id.toString())
                 return
             }
         } else if (workInfo.tags.contains(completionTag)) {
             if (abortRequest(transferRecord, workInfo.state)) {
-                transferRecord.abortMultipartUploadRequest(pluginKey, workManager)
+                TransferOperations.abortMultipartUploadRequest(transferRecord, pluginKey, workManager)
             }
-            updateTransferState(transferRecord, workInfo.state)
             if (workInfo.state.isFinished) {
+                updateTransferState(transferRecord, workInfo.state, workInfo.id.toString())
                 logger.debug("remove observer for ${transferRecord.id}")
                 removeObserver(transferRecord.id.toString())
             }
         }
     }
 
-    private fun updateTransferState(transferRecord: TransferRecord, workInfoState: WorkInfo.State) {
+    private fun updateTransferState(transferRecord: TransferRecord, workInfoState: WorkInfo.State, workInfoId: String) {
         transferRecord.state?.let {
             var nextState = workManagerToAmplifyStatesMap[workInfoState]!!
             transferRecord.state?.let { state ->
                 if (TransferState.isPaused(state)) {
                     nextState = TransferState.PAUSED
+                    transferStatusUpdater.removeWorkInfoId(workInfoId)
                 }
                 if (TransferState.isCancelled(state)) {
                     nextState = TransferState.CANCELED
+                    transferStatusUpdater.removeWorkInfoId(workInfoId)
                 }
             }
             if (!TransferState.isInTerminalState(transferRecord.state)) {

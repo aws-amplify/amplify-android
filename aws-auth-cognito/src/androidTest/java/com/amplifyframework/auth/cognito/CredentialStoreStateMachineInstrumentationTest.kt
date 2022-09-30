@@ -34,6 +34,7 @@ class CredentialStoreStateMachineInstrumentationTest {
     private val context = InstrumentationRegistry.getInstrumentation().context
 
     private val configuration = AuthConfigurationProvider.getAuthConfigurationObject()
+    private val userPoolId = configuration.userPool.userPool.PoolId
     private val identityPoolId = configuration.credentials.cognitoIdentity.identityData.PoolId
     private val userPoolAppClientId = configuration.userPool.userPool.AppClientId
 
@@ -41,7 +42,7 @@ class CredentialStoreStateMachineInstrumentationTest {
 
     @Before
     fun setup() {
-        CredentialStoreUtil.setupLegacyStore(context, userPoolAppClientId, identityPoolId)
+        CredentialStoreUtil.setupLegacyStore(context, userPoolAppClientId, userPoolId, identityPoolId)
     }
 
     private val authConfigJson = JSONObject(Gson().toJson(configuration))

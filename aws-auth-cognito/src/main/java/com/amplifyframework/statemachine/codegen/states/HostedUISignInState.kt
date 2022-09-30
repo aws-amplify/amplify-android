@@ -53,7 +53,10 @@ sealed class HostedUISignInState : State {
                 }
                 is ShowingUI -> when (hostedUIEvent) {
                     is HostedUIEvent.EventType.FetchToken -> {
-                        val action = hostedUIActions.fetchHostedUISignInToken(hostedUIEvent)
+                        val action = hostedUIActions.fetchHostedUISignInToken(
+                            hostedUIEvent,
+                            oldState.hostedUIOptions.browserPackage
+                        )
                         StateResolution(FetchingToken(), listOf(action))
                     }
                     is HostedUIEvent.EventType.ThrowError -> StateResolution((Error(hostedUIEvent.exception)))

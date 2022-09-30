@@ -92,7 +92,9 @@ data class UserPoolConfiguration internal constructor(val builder: Builder) {
                     if (!regex.matches(it))
                         throw Exception("Invalid endpoint")
                 }
-                return endpoint
+                return endpoint?.let {
+                    "https://$endpoint"
+                }
             } catch (e: Exception) {
                 throw AuthException(
                     "Invalid endpoint value $endpoint",

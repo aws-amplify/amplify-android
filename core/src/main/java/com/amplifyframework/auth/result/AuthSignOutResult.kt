@@ -15,4 +15,7 @@
 
 package com.amplifyframework.auth.result
 
+/**
+ * Base SignOut result
+ */
 open class AuthSignOutResult
