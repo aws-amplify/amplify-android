@@ -194,6 +194,10 @@ internal class TransferStatusUpdater private constructor(
         return transferWorkInfoIdMap[workInfoId]
     }
 
+    fun removeWorkInfoId(workInfoId: String) {
+        transferWorkInfoIdMap.remove(workInfoId)
+    }
+
     @Synchronized
     fun unregisterListener(transferRecordId: Int, transferListener: TransferListener) {
         mainHandler.post {

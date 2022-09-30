@@ -16,25 +16,36 @@
 package com.amplifyframework.auth.cognito.data
 
 import android.content.Context
+import com.amplifyframework.auth.AuthProvider
+import com.amplifyframework.auth.cognito.helpers.SessionHelper
+import com.amplifyframework.auth.cognito.helpers.identityProviderName
 import com.amplifyframework.statemachine.codegen.data.AWSCredentials
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 import com.amplifyframework.statemachine.codegen.data.AuthCredentialStore
 import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
+import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
+import com.amplifyframework.statemachine.codegen.data.FederatedToken
 import com.amplifyframework.statemachine.codegen.data.SignInMethod
 import com.amplifyframework.statemachine.codegen.data.SignedInData
 import java.util.Date
 import java.util.Locale
 
-class AWSCognitoLegacyCredentialStore(
+internal class AWSCognitoLegacyCredentialStore(
     val context: Context,
     private val authConfiguration: AuthConfiguration,
-    keyValueRepoFactory: KeyValueRepositoryFactory = KeyValueRepositoryFactory()
+    private val keyValueRepoFactory: KeyValueRepositoryFactory = KeyValueRepositoryFactory()
 ) : AuthCredentialStore {
 
     companion object {
         const val AWS_KEY_VALUE_STORE_NAMESPACE_IDENTIFIER: String = "com.amazonaws.android.auth"
-        const val APP_LOCAL_CACHE = "CognitoIdentityProviderCache"
+        const val AWS_MOBILE_CLIENT_PROVIDER = "com.amazonaws.mobile.client"
+        const val APP_TOKENS_INFO_CACHE = "CognitoIdentityProviderCache"
+        const val APP_DEVICE_INFO_CACHE = "CognitoIdentityProviderDeviceCache"
+
+        private const val DEVICE_KEY = "DeviceKey"
+        private const val DEVICE_GROUP_KEY = "DeviceGroupKey"
+        private const val DEVICE_SECRET_KEY = "DeviceSecret"
 
         private const val ID_KEY: String = "identityId"
         private const val AK_KEY: String = "accessKey"
@@ -51,15 +62,24 @@ class AWSCognitoLegacyCredentialStore(
 
         // TODO check if below exists
         private const val TOKEN_EXPIRATION = "tokenExpiration"
+
+        // Mobile Client Keys
+        const val PROVIDER_KEY = "provider"
+        const val SIGN_IN_MODE_KEY = "signInMode"
+        const val TOKEN_KEY = "token"
     }
+
+    private val userDeviceDetailsCacheKey = "$APP_DEVICE_INFO_CACHE.${authConfiguration.userPool?.poolId}.%s"
 
     private val idAndCredentialsKeyValue: KeyValueRepository =
         keyValueRepoFactory.create(context, AWS_KEY_VALUE_STORE_NAMESPACE_IDENTIFIER)
 
-    private val tokensKeyValue: KeyValueRepository = keyValueRepoFactory.create(
-        context,
-        APP_LOCAL_CACHE
-    )
+    private val mobileClientKeyValue: KeyValueRepository =
+        keyValueRepoFactory.create(context, AWS_MOBILE_CLIENT_PROVIDER)
+
+    private val tokensKeyValue: KeyValueRepository = keyValueRepoFactory.create(context, APP_TOKENS_INFO_CACHE)
+
+    private lateinit var deviceKeyValue: KeyValueRepository
 
     @Synchronized
     override fun saveCredential(credential: AmplifyCredential) {
@@ -68,22 +88,28 @@ class AWSCognitoLegacyCredentialStore(
 
     @Synchronized
     override fun retrieveCredential(): AmplifyCredential {
-        val cognitoUserPoolTokens = retrieveCognitoUserPoolTokens()
+        val signedInData = retrieveSignedInData()
         val awsCredentials = retrieveAWSCredentials()
         val identityId = retrieveIdentityId()
 
         return when {
-            awsCredentials != null && identityId != null -> when (cognitoUserPoolTokens) {
-                null -> AmplifyCredential.IdentityPool(identityId, awsCredentials)
-                else -> {
-                    val signedInData = SignedInData("", "", Date(), SignInMethod.SRP, cognitoUserPoolTokens)
-                    AmplifyCredential.UserAndIdentityPool(signedInData, identityId, awsCredentials)
+            awsCredentials != null && identityId != null -> {
+                val federateToIdentityPoolToken = retrieveFederateToIdentityPoolToken()
+                when {
+                    signedInData != null -> {
+                        AmplifyCredential.UserAndIdentityPool(signedInData, identityId, awsCredentials)
+                    }
+                    federateToIdentityPoolToken != null -> {
+                        AmplifyCredential.IdentityPoolFederated(
+                            federateToIdentityPoolToken,
+                            identityId,
+                            awsCredentials
+                        )
+                    }
+                    else -> { AmplifyCredential.IdentityPool(identityId, awsCredentials) }
                 }
             }
-            cognitoUserPoolTokens != null -> {
-                val signedInData = SignedInData("", "", Date(), SignInMethod.SRP, cognitoUserPoolTokens)
-                AmplifyCredential.UserPool(signedInData)
-            }
+            signedInData != null -> { AmplifyCredential.UserPool(signedInData) }
             else -> AmplifyCredential.Empty
         }
     }
@@ -96,7 +122,10 @@ class AWSCognitoLegacyCredentialStore(
 
     private fun deleteCognitoUserPoolTokens() {
         val keys = getTokenKeys()
+        val username = keys[APP_LAST_AUTH_USER]?.let { tokensKeyValue.get(it) }
+        deleteDeviceMetadata(username)
 
+        keys[APP_LAST_AUTH_USER]?.let { tokensKeyValue.remove(it) }
         keys[TOKEN_TYPE_ID]?.let { tokensKeyValue.remove(it) }
         keys[TOKEN_TYPE_ACCESS]?.let { tokensKeyValue.remove(it) }
         keys[TOKEN_TYPE_REFRESH]?.let { tokensKeyValue.remove(it) }
@@ -116,6 +145,14 @@ class AWSCognitoLegacyCredentialStore(
         }
     }
 
+    private fun deleteDeviceMetadata(username: String?) {
+        deviceKeyValue.apply {
+            remove(DEVICE_KEY)
+            remove(DEVICE_GROUP_KEY)
+            remove(DEVICE_SECRET_KEY)
+        }
+    }
+
     private fun retrieveAWSCredentials(): AWSCredentials? {
         val accessKey = idAndCredentialsKeyValue.get(namespace(AK_KEY))
         val secretKey = idAndCredentialsKeyValue.get(namespace(SK_KEY))
@@ -127,20 +164,57 @@ class AWSCognitoLegacyCredentialStore(
         } else AWSCredentials(accessKey, secretKey, sessionToken, expiration)
     }
 
-    private fun retrieveIdentityId(): String? {
-        return idAndCredentialsKeyValue.get(namespace(ID_KEY))
+    private fun retrieveIdentityId() = idAndCredentialsKeyValue.get(namespace(ID_KEY))
+
+    private fun retrieveSignedInData(): SignedInData? {
+        val keys = getTokenKeys()
+        val cognitoUserPoolTokens = retrieveCognitoUserPoolTokens(keys) ?: return null
+        val signInMethod = retrieveUserPoolSignInMethod() ?: return null
+        val username = keys[APP_LAST_AUTH_USER]?.let { tokensKeyValue.get(it) }
+        val deviceMetaData = retrieveDeviceMetadata(username)
+        val tokenUserId =
+            try {
+                cognitoUserPoolTokens.accessToken?.let { SessionHelper.getUserSub(it) } ?: ""
+            } catch (e: Exception) {
+                ""
+            }
+        val tokenUsername =
+            try {
+                cognitoUserPoolTokens.accessToken?.let { SessionHelper.getUsername(it) } ?: ""
+            } catch (e: Exception) {
+                ""
+            }
+
+        return SignedInData(
+            tokenUserId,
+            tokenUsername,
+            Date(0),
+            signInMethod,
+            deviceMetaData,
+            cognitoUserPoolTokens
+        )
     }
 
-    private fun retrieveCognitoUserPoolTokens(): CognitoUserPoolTokens? {
-        val keys = getTokenKeys()
+    private fun retrieveDeviceMetadata(username: String?): DeviceMetadata {
+        val deviceDetailsCacheKey = String.format(userDeviceDetailsCacheKey, username)
+        deviceKeyValue = keyValueRepoFactory.create(context, deviceDetailsCacheKey)
 
+        val deviceKey = deviceKeyValue.get(DEVICE_KEY)
+        val deviceGroupKey = deviceKeyValue.get(DEVICE_GROUP_KEY)
+        val deviceSecretKey = deviceKeyValue.get(DEVICE_SECRET_KEY)
+
+        return if (deviceKey == null && deviceGroupKey == null) DeviceMetadata.Empty
+        else DeviceMetadata.Metadata(deviceKey, deviceGroupKey, deviceSecretKey)
+    }
+
+    private fun retrieveCognitoUserPoolTokens(keys: Map<String, String>): CognitoUserPoolTokens? {
         val idToken = keys[TOKEN_TYPE_ID]?.let { tokensKeyValue.get(it) }
         val accessToken = keys[TOKEN_TYPE_ACCESS]?.let { tokensKeyValue.get(it) }
         val refreshToken = keys[TOKEN_TYPE_REFRESH]?.let { tokensKeyValue.get(it) }
         val expiration = keys[TOKEN_EXPIRATION]?.let { tokensKeyValue.get(it) }?.toLongOrNull()
 
         return if (idToken == null && accessToken == null && refreshToken == null) {
-            return null
+            null
         } else {
             CognitoUserPoolTokens(idToken, accessToken, refreshToken, expiration)
         }
@@ -194,6 +268,7 @@ class AWSCognitoLegacyCredentialStore(
         )
 
         return mapOf(
+            APP_LAST_AUTH_USER to userIdTokenKey,
             TOKEN_TYPE_ID to cachedIdTokenKey,
             TOKEN_TYPE_ACCESS to cachedAccessTokenKey,
             TOKEN_TYPE_REFRESH to cachedRefreshTokenKey,
@@ -206,5 +281,45 @@ class AWSCognitoLegacyCredentialStore(
 
     private fun getIdentityPoolId(): String? {
         return authConfiguration.identityPool?.poolId
+    }
+
+    private fun retrieveUserPoolSignInMethod() = when (mobileClientKeyValue.get(SIGN_IN_MODE_KEY)) {
+        /*
+        In almost all cases, federation will be enabled making "1" the most common value. Due to how mobile client
+        stores credentials, it is difficult to determine the sign in method. If the stored provider matches a
+        federateToIdentityPool provider, we return null so we can store the Federated Token. Otherwise, we will return
+        SRP, with the understanding we may not have the correct sign in method (ex: hosted ui)
+         */
+        "1" -> {
+            if (retrieveFederateToIdentityPoolToken() != null) {
+                null
+            } else {
+                SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH)
+            }
+        }
+        // This is an unlikely as hosted ui with federation will automatically change to "1".
+        // Disabling federation was only possible if the escape hatch was used.
+        "2" -> SignInMethod.HostedUI()
+        "3" -> null
+        else -> SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH)
+    }
+
+    // only retrieve federate to identity pool token if stored provider is in list of known AuthProvider values
+    private fun retrieveFederateToIdentityPoolToken(): FederatedToken? {
+        val provider = mobileClientKeyValue.get(PROVIDER_KEY) ?: return null
+        val token = mobileClientKeyValue.get(TOKEN_KEY) ?: return null
+
+        val federatedIdentityPoolProviders = listOf(
+            AuthProvider.amazon().identityProviderName,
+            AuthProvider.facebook().identityProviderName,
+            AuthProvider.apple().identityProviderName,
+            AuthProvider.google().identityProviderName
+        )
+
+        return if (federatedIdentityPoolProviders.contains(provider)) {
+            FederatedToken(provider, token)
+        } else {
+            null
+        }
     }
 }

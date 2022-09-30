@@ -42,9 +42,13 @@ object WorkmanagerTestUtils {
                     val driver = WorkManagerTestInitHelper.getTestDriver(context)
                     observer.forEach(
                         Consumer { action: WorkInfo ->
-                            driver?.setAllConstraintsMet(
-                                action.id
-                            )
+                            try {
+                                driver?.setAllConstraintsMet(
+                                    action.id
+                                )
+                            } catch (exception: IllegalArgumentException) {
+                                Log.d("WorkmanagerTestUtils", "failed to find task, error:" + exception.message)
+                            }
                         }
                     )
                 }

@@ -126,6 +126,9 @@ internal class DownloadProgressListener(
     override fun progressChanged(bytesTransferred: Long) {
         bytesTransferredSoFar += bytesTransferred
         transferRecord.bytesCurrent = bytesTransferredSoFar
+        if (transferRecord.bytesCurrent > transferRecord.bytesTotal) {
+            transferRecord.bytesCurrent = transferRecord.bytesTotal
+        }
         updateProgress()
     }
 

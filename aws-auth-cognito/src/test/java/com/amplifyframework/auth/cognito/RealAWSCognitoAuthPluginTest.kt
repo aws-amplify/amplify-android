@@ -48,6 +48,7 @@ import com.amplifyframework.auth.cognito.helpers.SRPHelper
 import com.amplifyframework.auth.cognito.options.AWSAuthResendUserAttributeConfirmationCodeOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttributeOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttributesOptions
+import com.amplifyframework.auth.cognito.options.AuthFlowType
 import com.amplifyframework.auth.cognito.usecases.ResetPasswordUseCase
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
@@ -69,6 +70,7 @@ import com.amplifyframework.logging.Logger
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
+import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.data.SignInMethod
 import com.amplifyframework.statemachine.codegen.data.SignedInData
 import com.amplifyframework.statemachine.codegen.data.UserPoolConfiguration
@@ -118,7 +120,8 @@ class RealAWSCognitoAuthPluginTest {
             "userId",
             "username",
             Date(0),
-            SignInMethod.SRP,
+            SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH),
+            DeviceMetadata.Empty,
             CognitoUserPoolTokens(dummyToken, dummyToken, dummyToken, 120L)
         )
     )
@@ -235,7 +238,8 @@ class RealAWSCognitoAuthPluginTest {
                 "userId",
                 "user",
                 Date(),
-                SignInMethod.SRP,
+                SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH),
+                DeviceMetadata.Empty,
                 CognitoUserPoolTokens("", "", "", 0)
             )
         )
@@ -1171,7 +1175,8 @@ class RealAWSCognitoAuthPluginTest {
                 "userId",
                 "username",
                 Date(),
-                SignInMethod.SRP,
+                SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH),
+                DeviceMetadata.Empty,
                 CognitoUserPoolTokens(null, null, null, 120L)
             )
         )
@@ -1317,7 +1322,8 @@ class RealAWSCognitoAuthPluginTest {
                 "userId",
                 "username",
                 Date(),
-                SignInMethod.SRP,
+                SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH),
+                DeviceMetadata.Empty,
                 CognitoUserPoolTokens(null, null, null, 120L)
             )
         )
@@ -1528,9 +1534,37 @@ class RealAWSCognitoAuthPluginTest {
         configJsonObject.put("Endpoint", endpoint)
 
         val userPool = UserPoolConfiguration.fromJson(configJsonObject).build()
-        assertTrue(userPool.region == region, "Regions do not match expected")
-        assertTrue(userPool.poolId == poolId, "Pool id do not match expected")
-        assertTrue(userPool.appClient == appClientId, "AppClientId do not match expected")
-        assertTrue(userPool.endpoint == endpoint, "Endpoint do not match expected")
+        assertEquals(userPool.region, region, "Regions do not match expected")
+        assertEquals(userPool.poolId, poolId, "Pool id do not match expected")
+        assertEquals(userPool.appClient, appClientId, "AppClientId do not match expected")
+        assertEquals(userPool.endpoint, "https://$endpoint", "Endpoint do not match expected")
+    }
+
+    @Test
+    fun `validate auth flow type defaults to user_srp_auth for invalid types`() {
+        val configJsonObject = JSONObject()
+        val configAuthJsonObject = JSONObject()
+        val configAuthDefaultJsonObject = JSONObject()
+        configAuthDefaultJsonObject.put("authenticationFlowType", "INVALID_FLOW_TYPE")
+        configAuthJsonObject.put("Default", configAuthDefaultJsonObject)
+        configJsonObject.put("Auth", configAuthJsonObject)
+        val configuration = AuthConfiguration.fromJson(configJsonObject)
+        assertEquals(configuration.authFlowType, AuthFlowType.USER_SRP_AUTH, "Auth flow types do not match expected")
+    }
+
+    @Test
+    fun `validate auth flow type success`() {
+        val configJsonObject = JSONObject()
+        val configAuthJsonObject = JSONObject()
+        val configAuthDefaultJsonObject = JSONObject()
+        configAuthDefaultJsonObject.put("authenticationFlowType", "USER_PASSWORD_AUTH")
+        configAuthJsonObject.put("Default", configAuthDefaultJsonObject)
+        configJsonObject.put("Auth", configAuthJsonObject)
+        val configuration = AuthConfiguration.fromJson(configJsonObject)
+        assertEquals(
+            configuration.authFlowType,
+            AuthFlowType.USER_PASSWORD_AUTH,
+            "Auth flow types do not match expected"
+        )
     }
 }

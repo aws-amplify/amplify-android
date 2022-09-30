@@ -135,47 +135,53 @@ public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOper
 
     @Override
     public void cancel() {
-        if (transferObserver != null) {
-            try {
-                storageService.cancelTransfer(transferObserver);
-            } catch (Exception exception) {
-                onError.accept(new StorageException(
-                    "Something went wrong while attempting to cancel your AWS S3 Storage upload file operation",
-                    exception,
-                    "See attached exception for more information and suggestions"
-                ));
+        executorService.submit(() -> {
+            if (transferObserver != null) {
+                try {
+                    storageService.cancelTransfer(transferObserver);
+                } catch (Exception exception) {
+                    onError.accept(new StorageException(
+                        "Something went wrong while attempting to cancel your AWS S3 Storage upload file operation",
+                        exception,
+                        "See attached exception for more information and suggestions"
+                    ));
+                }
             }
-        }
+        });
     }
 
     @Override
     public void pause() {
-        if (transferObserver != null) {
-            try {
-                storageService.pauseTransfer(transferObserver);
-            } catch (Exception exception) {
-                onError.accept(new StorageException(
-                    "Something went wrong while attempting to pause your AWS S3 Storage upload file operation",
-                    exception,
-                    "See attached exception for more information and suggestions"
-                ));
+        executorService.submit(() -> {
+            if (transferObserver != null) {
+                try {
+                    storageService.pauseTransfer(transferObserver);
+                } catch (Exception exception) {
+                    onError.accept(new StorageException(
+                        "Something went wrong while attempting to pause your AWS S3 Storage upload file operation",
+                        exception,
+                        "See attached exception for more information and suggestions"
+                    ));
+                }
             }
-        }
+        });
     }
 
     @Override
     public void resume() {
-        if (transferObserver != null) {
-            try {
-                storageService.resumeTransfer(transferObserver);
-            } catch (Exception exception) {
-                onError.accept(new StorageException(
-                    "Something went wrong while attempting to resume your AWS S3 Storage upload file operation",
-                    exception,
-                    "See attached exception for more information and suggestions"
-                ));
+        executorService.submit(() -> {
+            if (transferObserver != null) {
+                try {
+                    storageService.resumeTransfer(transferObserver);
+                } catch (Exception exception) {
+                    onError.accept(new StorageException(
+                        "Something went wrong while attempting to resume your AWS S3 Storage upload file operation",
+                        exception,
+                        "See attached exception for more information and suggestions"
+                    ));
+                }
             }
-        }
+        });
     }
 
     @SuppressLint("SyntheticAccessor")

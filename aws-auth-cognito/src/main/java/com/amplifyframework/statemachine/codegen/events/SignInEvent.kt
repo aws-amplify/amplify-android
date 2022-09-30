@@ -17,8 +17,8 @@ package com.amplifyframework.statemachine.codegen.events
 
 import com.amplifyframework.statemachine.StateMachineEvent
 import com.amplifyframework.statemachine.codegen.data.AuthChallenge
-import com.amplifyframework.statemachine.codegen.data.DeviceMetaData
 import com.amplifyframework.statemachine.codegen.data.SignInData
+import com.amplifyframework.statemachine.codegen.data.SignedInData
 import java.util.Date
 
 class SignInEvent(val eventType: EventType, override val time: Date? = null) : StateMachineEvent {
@@ -26,12 +26,15 @@ class SignInEvent(val eventType: EventType, override val time: Date? = null) : S
         data class InitiateSignInWithSRP(val username: String, val password: String) : EventType()
         data class InitiateSignInWithCustom(
             val username: String,
-            val password: String?,
+            val metadata: Map<String, String>
+        ) : EventType()
+        data class InitiateCustomSignInWithSRP(
+            val username: String,
             val metadata: Map<String, String>
         ) : EventType()
         data class InitiateHostedUISignIn(val hostedUISignInData: SignInData.HostedUISignInData) : EventType()
         data class SignedIn(val id: String = "") : EventType()
-        data class ConfirmDevice(val deviceMetaData: DeviceMetaData) : EventType()
+        data class ConfirmDevice(val signedInData: SignedInData) : EventType()
         data class FinalizeSignIn(val id: String = "") : EventType()
         data class ReceivedChallenge(val challenge: AuthChallenge) : EventType()
         data class ThrowError(val exception: Exception) : EventType()
