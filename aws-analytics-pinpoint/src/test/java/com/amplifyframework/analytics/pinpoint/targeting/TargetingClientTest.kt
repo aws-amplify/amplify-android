@@ -55,13 +55,11 @@ class TargetingClientTest {
     }
 
     @Test
-    @Ignore("fix in PR: #1958")
     fun testUpdateEndpointProfile() = runTest {
         setup()
         val prefs = constructSharedPreferences()
         targetingClient = TargetingClient(
             pinpointClient,
-            pinpointNotificationClient,
             idService,
             prefs,
             appDetails,
