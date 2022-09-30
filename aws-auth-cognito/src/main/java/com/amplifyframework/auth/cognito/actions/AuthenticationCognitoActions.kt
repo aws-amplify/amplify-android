@@ -34,8 +34,11 @@ object AuthenticationCognitoActions : AuthenticationActions {
         Action<AuthEnvironment>("ConfigureAuthN") { id, dispatcher ->
             logger?.verbose("$id Starting execution")
             val evt = when (val credentials = event.storedCredentials) {
-                is AmplifyCredential.UserPoolData -> {
+                is AmplifyCredential.UserPoolTypeCredential -> {
                     AuthenticationEvent(AuthenticationEvent.EventType.InitializedSignedIn(credentials.signedInData))
+                }
+                is AmplifyCredential.IdentityPoolFederated -> {
+                    AuthenticationEvent(AuthenticationEvent.EventType.InitializedFederated)
                 }
                 else -> AuthenticationEvent(AuthenticationEvent.EventType.InitializedSignedOut(SignedOutData()))
             }
@@ -68,7 +71,20 @@ object AuthenticationCognitoActions : AuthenticationActions {
                 is SignInData.CustomAuthSignInData -> {
                     if (data.username != null) {
                         SignInEvent(
-                            SignInEvent.EventType.InitiateSignInWithCustom(data.username, data.password, data.options)
+                            SignInEvent.EventType.InitiateSignInWithCustom(data.username, data.options)
+                        )
+                    } else {
+                        AuthenticationEvent(
+                            AuthenticationEvent.EventType.ThrowError(
+                                AuthException("Sign in failed.", "username can not be empty")
+                            )
+                        )
+                    }
+                }
+                is SignInData.CustomSRPAuthSignInData -> {
+                    if (data.username != null) {
+                        SignInEvent(
+                            SignInEvent.EventType.InitiateCustomSignInWithSRP(data.username, data.options)
                         )
                     } else {
                         AuthenticationEvent(

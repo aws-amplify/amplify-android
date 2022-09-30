@@ -13,13 +13,13 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.statemachine.codegen.actions
+package com.amplifyframework.auth.cognito.result
 
-import com.amplifyframework.statemachine.Action
-import com.amplifyframework.statemachine.codegen.events.SRPEvent
+import com.amplifyframework.statemachine.codegen.data.AWSCredentials
 
-interface SRPActions {
-    fun initiateSRPAuthAction(event: SRPEvent.EventType.InitiateSRP): Action
-    fun initiateSRPWithCustomAuthAction(event: SRPEvent.EventType.InitiateSRPWithCustom): Action
-    fun verifyPasswordSRPAction(event: SRPEvent.EventType.RespondPasswordVerifier): Action
-}
+/**
+ * Wraps the result of a federation to Identity Pool.
+ * @param identityId Identity Id of federation
+ * @param credentials Returned credentials from successful federation
+ */
+data class FederateToIdentityPoolResult(val identityId: String, val credentials: AWSCredentials)

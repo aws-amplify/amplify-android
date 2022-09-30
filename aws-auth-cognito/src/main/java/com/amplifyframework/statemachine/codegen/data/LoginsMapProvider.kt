@@ -17,6 +17,7 @@ package com.amplifyframework.statemachine.codegen.data
 
 sealed class LoginsMapProvider {
     data class UnAuthLogins(override val logins: Map<String, String> = mapOf()) : LoginsMapProvider()
+
     data class CognitoUserPoolLogins(
         private val region: String? = "",
         private val poolId: String? = "",
@@ -33,7 +34,7 @@ sealed class LoginsMapProvider {
     }
 
     data class AuthProviderLogins(private val federatedToken: FederatedToken) : LoginsMapProvider() {
-        override val logins = mapOf(federatedToken.provider.providerKey to federatedToken.token)
+        override val logins = mapOf(federatedToken.providerName to federatedToken.token)
     }
 
     abstract val logins: Map<String, String>
