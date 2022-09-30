@@ -85,7 +85,7 @@ public class RetryHandler {
      * @return single of type T.
      */
     public <T> Single<T> retry(Single<T> single, List<Class<? extends Throwable>> skipExceptions) {
-        return Single.create(emitter -> call(single, emitter, 0L, maxAttempts, skipExceptions));
+        return Single.create(emitter -> call(single, emitter, 0L, 1, skipExceptions));
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
@@ -93,12 +93,12 @@ public class RetryHandler {
             Single<T> single,
             SingleEmitter<T> emitter,
             Long delayInSeconds,
-            int attemptsLeft,
+            int numAttempt,
             List<Class<? extends Throwable>> skipExceptions) {
         single.delaySubscription(delayInSeconds, TimeUnit.SECONDS)
                 .subscribe(emitter::onSuccess, error -> {
                     if (!emitter.isDisposed()) {
-                        LOG.info("Retry attempts left " + attemptsLeft + ". exception type:"
+                        LOG.info("Retrying " + numAttempt + " time. exception type:"
                                 + error.getClass());
                         if (ErrorInspector.contains(error, skipExceptions)) {
                             DataStoreErrorHandler errorHandler = dataStoreConfigurationProvider
@@ -110,8 +110,8 @@ public class RetryHandler {
                             LOG.info("Call error handler: " + errorHandler + " for " + single);
                             emitter.onError(error);
                         } else {
-                            call(single, emitter, jitteredDelaySec(attemptsLeft),
-                                    attemptsLeft - 1, skipExceptions);
+                            call(single, emitter, jitteredDelaySec(numAttempt),
+                                    numAttempt + 1, skipExceptions);
                         }
                     } else {
                         LOG.info("The subscribing channel is disposed.");
@@ -122,11 +122,10 @@ public class RetryHandler {
 
     /**
      * Method returns jittered delay time in seconds.
-     * @param attemptsLeft number of attempts left.
+     * @param numAttempt number of attempts left.
      * @return delay in seconds.
      */
-    long jitteredDelaySec(int attemptsLeft) {
-        int numAttempt = maxAttempts - (maxAttempts - attemptsLeft);
+    long jitteredDelaySec(int numAttempt) {
         double waitTimeSeconds =
                 Math.min(maxDelayS, Math.pow(2, ((numAttempt) % maxExponent))
                         + jitterFactor * Math.random());

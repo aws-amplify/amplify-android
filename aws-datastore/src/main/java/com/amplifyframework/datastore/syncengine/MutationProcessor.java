@@ -25,6 +25,7 @@ import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.SchemaRegistry;
 import com.amplifyframework.core.model.SerializedModel;
+import com.amplifyframework.datastore.DataStoreChannelEventName;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.appsync.AppSyncConflictUnhandledError;
@@ -119,8 +120,12 @@ final class MutationProcessor {
                 processOutboxItem(next)
                     .blockingAwait();
             } catch (RuntimeException error) {
-                LOG.error("Failed to process mutation:" + next + " error: " + error);
-                continue;
+                LOG.warn("Failed to publish a local change = " + next, error);
+                PendingMutation<? extends Model> finalNext = next;
+                mutationOutbox.remove(next.getMutationId())
+                        .doOnComplete(() -> announceMutationFailed(finalNext, error))
+                        .onErrorComplete()
+                        .subscribe();
             }
         } while (true);
     }
@@ -160,17 +165,20 @@ final class MutationProcessor {
             // and then remove from the outbox to unblock the queue.
             // Otherwise, pass it through.
             .onErrorResumeNext(error -> {
-                if (error instanceof DataStoreException.GraphQLResponseException) {
-                    DataStoreException.GraphQLResponseException appSyncError =
-                        (DataStoreException.GraphQLResponseException) error;
-                    return mutationOutbox.remove(mutationOutboxItem.getMutationId())
-                        .doOnComplete(() -> announceMutationFailed(mutationOutboxItem, appSyncError));
-                }
-                return Completable.error(error);
+                DataStoreException.GraphQLResponseException appSyncError =
+                    (DataStoreException.GraphQLResponseException) error;
+                return mutationOutbox.remove(mutationOutboxItem.getMutationId())
+                    .doOnComplete(() -> announceMutationFailed(mutationOutboxItem, appSyncError));
             })
             // Finally, catch all.
             .doOnError(error -> {
                 LOG.warn("Failed to publish a local change = " + mutationOutboxItem, error);
+                DataStoreException.GraphQLResponseException appSyncError =
+                        (DataStoreException.GraphQLResponseException) error;
+                mutationOutbox.remove(mutationOutboxItem.getMutationId())
+                        .doOnComplete(() -> announceMutationFailed(mutationOutboxItem, appSyncError))
+                        .onErrorComplete()
+                        .subscribe();
             });
     }
 
@@ -220,12 +228,22 @@ final class MutationProcessor {
      */
     private <T extends Model> void announceMutationFailed(
             PendingMutation<T> pendingMutation,
-            DataStoreException.GraphQLResponseException error
+            Exception error
     ) {
-        List<GraphQLResponse.Error> errors = error.getErrors();
-        OutboxMutationFailedEvent<T> errorEvent =
-                OutboxMutationFailedEvent.create(pendingMutation, errors);
-        Amplify.Hub.publish(HubChannel.DATASTORE, errorEvent.toHubEvent());
+        List<GraphQLResponse.Error> errors;
+        HubEvent<?> hubEvent;
+        if (error instanceof DataStoreException.GraphQLResponseException) {
+            errors = ((DataStoreException.GraphQLResponseException) error)
+                    .getErrors();
+
+            OutboxMutationFailedEvent<T> errorEvent =
+                    OutboxMutationFailedEvent.create(pendingMutation, errors);
+            hubEvent = errorEvent.toHubEvent();
+        } else {
+            hubEvent = HubEvent.create(DataStoreChannelEventName.OUTBOX_MUTATION_FAILED,
+                    pendingMutation);
+        }
+        Amplify.Hub.publish(HubChannel.DATASTORE, hubEvent);
     }
 
     /**
