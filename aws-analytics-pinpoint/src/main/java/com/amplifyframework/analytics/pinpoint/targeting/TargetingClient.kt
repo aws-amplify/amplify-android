@@ -139,6 +139,7 @@ internal class TargetingClient(
             this.location = location
             this.demographic = demographic
             effectiveDate = endpointProfile.effectiveDate.millisToIsoDate()
+            optOut = endpointProfile.optOut
             attributes = endpointProfile.allAttributes
             metrics = endpointProfile.allMetrics
             this.user = user
