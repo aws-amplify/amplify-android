@@ -32,10 +32,9 @@ object AuthOptionsFactory {
         ).build()
 
     private fun getSignOutOptions(optionsData: JsonObject): AuthSignOutOptions {
-        val globalSignOutData  = (optionsData["globalSignOut"] as JsonPrimitive).booleanOrNull ?: false
+        val globalSignOutData = (optionsData["globalSignOut"] as JsonPrimitive).booleanOrNull ?: false
         return AuthSignOutOptions.builder()
             .globalSignOut(globalSignOutData)
             .build()
     }
-
 }

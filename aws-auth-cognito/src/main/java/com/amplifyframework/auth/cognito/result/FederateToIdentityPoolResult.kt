@@ -22,4 +22,4 @@ import com.amplifyframework.statemachine.codegen.data.AWSCredentials
  * @param identityId Identity Id of federation
  * @param credentials Returned credentials from successful federation
  */
-data class FederateToIdentityPoolResult(val identityId: String, val credentials: AWSCredentials)
+data class FederateToIdentityPoolResult internal constructor(val identityId: String, val credentials: AWSCredentials)

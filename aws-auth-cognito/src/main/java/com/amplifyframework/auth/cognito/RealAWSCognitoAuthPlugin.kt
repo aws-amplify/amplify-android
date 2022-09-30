@@ -1631,8 +1631,8 @@ internal class RealAWSCognitoAuthPlugin(
     }
 
     fun federateToIdentityPool(
-        authProvider: AuthProvider,
         providerToken: String,
+        authProvider: AuthProvider,
         options: FederateToIdentityPoolOptions?,
         onSuccess: Consumer<FederateToIdentityPoolResult>,
         onError: Consumer<AuthException>
@@ -1661,7 +1661,7 @@ internal class RealAWSCognitoAuthPlugin(
                         authZState is AuthorizationState.SessionEstablished ||
                         authZState is AuthorizationState.Error
                     ) -> {
-                    _federateToIdentityPool(authProvider, providerToken, options, onSuccess, onError)
+                    _federateToIdentityPool(providerToken, authProvider, options, onSuccess, onError)
                 }
                 else -> onError.accept(
                     AuthException.InvalidStateException("Federation could not be completed.")
@@ -1671,8 +1671,8 @@ internal class RealAWSCognitoAuthPlugin(
     }
 
     private fun _federateToIdentityPool(
-        authProvider: AuthProvider,
         providerToken: String,
+        authProvider: AuthProvider,
         options: FederateToIdentityPoolOptions?,
         onSuccess: Consumer<FederateToIdentityPoolResult>,
         onError: Consumer<AuthException>
