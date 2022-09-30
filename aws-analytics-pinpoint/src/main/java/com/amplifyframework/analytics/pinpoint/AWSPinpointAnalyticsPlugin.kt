@@ -16,6 +16,7 @@ package com.amplifyframework.analytics.pinpoint
 
 import android.app.Application
 import android.content.Context
+import aws.sdk.kotlin.services.pinpoint.PinpointClient
 import com.amplifyframework.analytics.AnalyticsEventBehavior
 import com.amplifyframework.analytics.AnalyticsPlugin
 import com.amplifyframework.analytics.AnalyticsProperties
@@ -33,6 +34,7 @@ class AWSPinpointAnalyticsPlugin : AnalyticsPlugin<Any>() {
     private val pluginKey = "awsPinpointAnalyticsPlugin"
     private val analyticsConfigKey = "pinpointAnalytics"
     private lateinit var awsPinpointAnalyticsPluginBehavior: AWSPinpointAnalyticsPluginBehavior
+    private lateinit var pinpointManager: PinpointManager
 
     override fun identifyUser(userId: String, profile: UserProfile?) {
         awsPinpointAnalyticsPluginBehavior.identifyUser(userId, profile)
@@ -93,7 +95,7 @@ class AWSPinpointAnalyticsPlugin : AnalyticsPlugin<Any>() {
             )
         }
         val awsAnalyticsConfig = configBuilder.build()
-        val pinpointManager = PinpointManager(
+        pinpointManager = PinpointManager(
             context,
             awsAnalyticsConfig,
             CognitoCredentialsProvider()
@@ -114,12 +116,12 @@ class AWSPinpointAnalyticsPlugin : AnalyticsPlugin<Any>() {
         autoEventSubmitter.start()
     }
 
-    override fun getEscapeHatch(): Any? {
-        TODO("Not yet implemented")
+    override fun getEscapeHatch(): PinpointClient {
+        return pinpointManager.pinpointClient
     }
 
     override fun getVersion(): String {
-        TODO("Not yet implemented")
+        return BuildConfig.VERSION_NAME
     }
 }
 
