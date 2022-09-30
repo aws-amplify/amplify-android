@@ -1,7 +1,7 @@
 package com.amplifyframework.auth.cognito.helpers
 
-import kotlin.test.assertEquals
 import org.junit.Test
+import kotlin.test.assertEquals
 
 class CognitoDeviceHelperTests {
 
