@@ -93,7 +93,7 @@ object FetchAuthSessionCognitoActions : FetchAuthSessionActions {
             logger?.verbose("$id Starting execution")
             val evt = try {
                 val refreshToken = signedInData.cognitoUserPoolTokens.refreshToken
-                if (hostedUIClient == null || refreshToken == null) throw Exception()
+                if (hostedUIClient == null || refreshToken == null) throw Exception() // TODO: Better Exception
 
                 val refreshedUserPoolTokens = hostedUIClient.fetchRefreshedToken(
                     signedInData.cognitoUserPoolTokens.refreshToken
