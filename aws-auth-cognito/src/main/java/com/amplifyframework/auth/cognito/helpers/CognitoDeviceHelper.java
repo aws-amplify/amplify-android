@@ -30,7 +30,7 @@ import java.util.UUID;
  * A utility class for device operations.
  */
 public final class CognitoDeviceHelper {
-    private static deviceSRP srpCalculator = null;
+    private static DeviceSRP srpCalculator = null;
 
     private CognitoDeviceHelper(){}
 
@@ -44,7 +44,7 @@ public final class CognitoDeviceHelper {
     public static Map<String, String> generateVerificationParameters(String deviceKey, String deviceGroup) {
         final Map<String, String> devVerfPars = new HashMap<String, String>();
         final String deviceSecret = generateRandomString();
-        srpCalculator = new deviceSRP(deviceGroup, deviceKey, deviceSecret);
+        srpCalculator = new DeviceSRP(deviceGroup, deviceKey, deviceSecret);
         final byte[] salt = srpCalculator.getSalt().toByteArray();
         final byte[] srpVerifier = srpCalculator.getVerifier().toByteArray();
         devVerfPars.put("salt", new String(Base64.encode(salt)));
@@ -67,7 +67,7 @@ public final class CognitoDeviceHelper {
      * Static class for SRP related calculations for devices.
      */
     @SuppressWarnings("checkstyle:typename")
-    private static final class deviceSRP {
+    private static final class DeviceSRP {
         private static final String HASH_ALGORITHM = "SHA-256";
         private static final ThreadLocal<MessageDigest> THREAD_MESSAGE_DIGEST =
             new ThreadLocal<MessageDigest>() {
@@ -104,7 +104,7 @@ public final class CognitoDeviceHelper {
          * @param deviceKey REQUIRED: Unique identifier assigned to the device.
          * @param password REQUIRED: The device password.
          */
-        private deviceSRP(String deviceGroupKey, String deviceKey, String password) {
+        private DeviceSRP(String deviceGroupKey, String deviceKey, String password) {
             final byte[] deviceKeyHash = getUserIdHash(deviceGroupKey, deviceKey, password);
 
             salt = new BigInteger(SALT_LENGTH_BITS, SECURE_RANDOM);
