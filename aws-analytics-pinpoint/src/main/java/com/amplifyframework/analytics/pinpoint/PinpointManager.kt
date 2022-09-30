@@ -39,16 +39,16 @@ internal class PinpointManager constructor(
     val analyticsClient: AnalyticsClient
     val sessionClient: SessionClient
     val targetingClient: TargetingClient
+    internal val pinpointClient: PinpointClient = PinpointClient {
+        credentialsProvider = this@PinpointManager.credentialsProvider
+        region = awsPinpointConfiguration.region
+    }
 
     companion object {
-        private const val SDK_NAME = "AMPLIFY-ANDROID"
+        private const val SDK_NAME = "amplify-android"
     }
 
     init {
-        val pinpointClient = PinpointClient {
-            credentialsProvider = this@PinpointManager.credentialsProvider
-            region = awsPinpointConfiguration.region
-        }
         val pinpointDatabase = PinpointDatabase(context)
         val sharedPrefs =
             context.getSharedPreferences(awsPinpointConfiguration.appId, Context.MODE_PRIVATE)
