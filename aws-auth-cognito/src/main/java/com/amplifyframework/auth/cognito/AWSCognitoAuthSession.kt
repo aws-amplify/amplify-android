@@ -16,7 +16,6 @@
 package com.amplifyframework.auth.cognito
 
 import com.amplifyframework.auth.AWSCredentials
-import com.amplifyframework.auth.AWSCredentialsFactory
 import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.AuthException.SignedOutException
 import com.amplifyframework.auth.AuthSession
@@ -91,7 +90,7 @@ data class AWSCognitoAuthSession(
 
         fun getCredentials(awsCredentials: CognitoCredentials): AuthSessionResult<AWSCredentials> =
             with(awsCredentials) {
-                AWSCredentialsFactory.createAWSCredentials(accessKeyId, secretAccessKey, sessionToken, expiration)
+                AWSCredentials.Factory.createAWSCredentials(accessKeyId, secretAccessKey, sessionToken, expiration)
             }?.let {
                 AuthSessionResult.success(it)
             } ?: AuthSessionResult.failure(

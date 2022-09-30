@@ -35,7 +35,34 @@ open class AWSCredentials(
      * The AWS secret access key for this credentials object.
      */
     open val secretAccessKey: String
-)
+) {
+    companion object Factory {
+
+        fun createAWSCredentials(
+            accessKeyId: String?,
+            secretAccessKey: String?,
+            sessionToken: String?,
+            expiration: Long?,
+        ): AWSCredentials? {
+            return when {
+                accessKeyId == null || secretAccessKey == null -> {
+                    null
+                }
+                sessionToken != null && expiration != null -> {
+                    AWSTemporaryCredentials(
+                        accessKeyId,
+                        secretAccessKey,
+                        sessionToken,
+                        Instant.fromEpochSeconds(expiration)
+                    )
+                }
+                else -> {
+                    AWSCredentials(accessKeyId, secretAccessKey)
+                }
+            }
+        }
+    }
+}
 
 class AWSTemporaryCredentials(
     /**

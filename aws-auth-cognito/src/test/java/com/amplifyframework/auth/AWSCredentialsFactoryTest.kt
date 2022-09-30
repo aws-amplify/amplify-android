@@ -15,7 +15,7 @@
 
 package com.amplifyframework.auth
 
-import com.amplifyframework.auth.AWSCredentialsFactory.createAWSCredentials
+import com.amplifyframework.auth.AWSCredentials.Factory.createAWSCredentials
 import kotlin.test.assertIs
 import kotlin.test.assertIsNot
 import kotlin.test.assertTrue
