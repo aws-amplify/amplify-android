@@ -42,6 +42,13 @@ internal class EndpointProfile(
     private val metrics: MutableMap<String, Double> = ConcurrentHashMap()
     private val currentNumOfAttributesAndMetrics = AtomicInteger(0)
 
+    /**
+     * Returns whether the endpoint is opted out of notification.
+     *
+     * @return String (ALL | NONE)
+     */
+    val optOut: String = "ALL" // opt out of all notifications until we add notification category
+
     private val country: String = try {
         applicationContext.resources.configuration.locales[0].isO3Country
     } catch (exception: MissingResourceException) {
@@ -229,6 +236,7 @@ internal class EndpointProfile(
             put("Location", Json.encodeToString(EndpointProfileLocation.serializer(), location))
             put("Demographic", Json.encodeToString(EndpointProfileDemographic.serializer(), demographic))
             put("EffectiveDate", effectiveDate.millisToIsoDate())
+            put("OptOut", optOut)
             val attributesJson = buildJsonObject {
                 for ((key, value) in allAttributes) {
                     try {
