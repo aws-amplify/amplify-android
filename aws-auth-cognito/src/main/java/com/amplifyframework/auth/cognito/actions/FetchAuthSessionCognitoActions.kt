@@ -88,6 +88,40 @@ object FetchAuthSessionCognitoActions : FetchAuthSessionActions {
             dispatcher.send(evt)
         }
 
+    override fun refreshHostedUIUserPoolTokensAction(signedInData: SignedInData) =
+        Action<AuthEnvironment>("InitiateRefreshHostedUITokens") { id, dispatcher ->
+            logger?.verbose("$id Starting execution")
+            val evt = try {
+                val refreshToken = signedInData.cognitoUserPoolTokens.refreshToken
+                if (hostedUIClient == null || refreshToken == null) throw Exception()
+
+                val refreshedUserPoolTokens = hostedUIClient.fetchRefreshedToken(
+                    signedInData.cognitoUserPoolTokens.refreshToken
+                ).copy(
+                    // A refresh does not provide a new refresh token,
+                    // so we rebuild the new token with the old refresh token.
+                    refreshToken = signedInData.cognitoUserPoolTokens.refreshToken
+                )
+
+                val updatedSignedInData = signedInData.copy(cognitoUserPoolTokens = refreshedUserPoolTokens)
+
+                if (configuration.identityPool != null) {
+                    val logins = LoginsMapProvider.CognitoUserPoolLogins(
+                        configuration.userPool?.region,
+                        configuration.userPool?.poolId,
+                        refreshedUserPoolTokens.idToken!!
+                    )
+                    RefreshSessionEvent(RefreshSessionEvent.EventType.RefreshAuthSession(updatedSignedInData, logins))
+                } else {
+                    RefreshSessionEvent(RefreshSessionEvent.EventType.Refreshed(updatedSignedInData))
+                }
+            } catch (e: Exception) {
+                AuthorizationEvent(AuthorizationEvent.EventType.ThrowError(e))
+            }
+            logger?.verbose("$id Sending event ${evt.type}")
+            dispatcher.send(evt)
+        }
+
     override fun refreshAuthSessionAction(logins: LoginsMapProvider) =
         Action<AuthEnvironment>("RefreshAuthSession") { id, dispatcher ->
             logger?.verbose("$id Starting execution")
