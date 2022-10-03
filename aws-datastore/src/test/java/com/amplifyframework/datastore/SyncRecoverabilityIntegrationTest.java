@@ -40,6 +40,7 @@ import com.amplifyframework.datastore.appsync.ModelMetadata;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
+import com.amplifyframework.logging.Logger;
 import com.amplifyframework.testmodels.personcar.AmplifyCliGeneratedModelProvider;
 import com.amplifyframework.testmodels.personcar.Car;
 import com.amplifyframework.testmodels.personcar.Person;
@@ -70,6 +71,7 @@ import static org.mockito.Mockito.when;
 
 @RunWith(RobolectricTestRunner.class)
 public final class SyncRecoverabilityIntegrationTest {
+    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
     private static final String MOCK_API_PLUGIN_NAME = "MockApiPlugin";
     private Context context;
     private ModelProvider modelProvider;
@@ -123,20 +125,27 @@ public final class SyncRecoverabilityIntegrationTest {
     @Test
     public void syncRecoversRetryingMultipleTimesOnRecoverableError()
             throws AmplifyException, JSONException, InterruptedException {
-        CountDownLatch latch = new CountDownLatch(4);
+        CountDownLatch syncLatch = new CountDownLatch(3);
+        CountDownLatch mutationLatch = new CountDownLatch(1);
+
         // Arrange
         ApiCategory mockApiCategory = mockApiCategoryWithGraphQlApi();
-        Person person1 = setupApiMockForRecoverableErrorOnSync(latch, mockApiCategory);
+        Person person1 = createPerson("Test", "Dummy I");
+        mockSuccessOnSubscriptions(mockApiCategory);
+
+        mockSuccessfulMutation(mutationLatch, mockApiCategory, person1);
+
+        mockSyncWithOneRecoverableErrorAndThenSuccess(syncLatch, mockApiCategory);
 
         SynchronousDataStore synchronousDataStore = getSynchronousDataStore(mockApiCategory);
 
         // Trick the DataStore since it's not getting initialized as part of the Amplify.initialize call chain
         Amplify.Hub.publish(HubChannel.DATASTORE, HubEvent.create(InitializationStatus.SUCCEEDED));
-
+        assertTrue(syncLatch.await(60, TimeUnit.SECONDS));
         // Save person 1 and make sure appsync is called which tells that dataStore is in API sync mode.
         synchronousDataStore.save(person1);
         Person result1 = synchronousDataStore.get(Person.class, person1.getId());
-        assertTrue(latch.await(60, TimeUnit.SECONDS));
+        assertTrue(mutationLatch.await(60, TimeUnit.SECONDS));
         assertEquals(person1, result1);
     }
 
@@ -173,17 +182,6 @@ public final class SyncRecoverabilityIntegrationTest {
         return person1;
     }
 
-    @SuppressWarnings("unchecked")
-    private Person setupApiMockForRecoverableErrorOnSync(CountDownLatch latch, ApiCategory mockApiCategory) {
-        Person person1 = createPerson("Test", "Dummy I");
-        mockSuccessOnSubscriptions(mockApiCategory);
-
-        mockSuccessfulMutation(latch, mockApiCategory, person1);
-
-        mockSyncWithOneRecoverableErrorAndThenSuccess(latch, mockApiCategory);
-        return person1;
-    }
-
     private void mockSyncWithOneIrrecoverableErrorAndOneSuccess(CountDownLatch latch, ApiCategory mockApiCategory) {
         // Setup to failure for sync on first model and failure on second model
         doAnswer(invocation -> {
@@ -214,10 +212,10 @@ public final class SyncRecoverabilityIntegrationTest {
         Person person = Person.builder().firstName("test").lastName("test").build();
         doAnswer(invocation -> {
             int indexOfResponseConsumer = 2;
-            Consumer<ApiException> onError =
-                    invocation.getArgument(indexOfResponseConsumer);
-            onError.accept(new ApiException("", ""));
+            Consumer<ApiException> onError = invocation.getArgument(indexOfResponseConsumer);
             latch.countDown();
+            LOG.info("sync error countdown");
+            onError.accept(new ApiException("", ""));
             return mock(GraphQLOperation.class);
         }).doAnswer(invocation -> {
             int indexOfResponseConsumer = 1;
@@ -228,20 +226,24 @@ public final class SyncRecoverabilityIntegrationTest {
                     invocation.getArgument(indexOfResponseConsumer);
             PaginatedResult<ModelWithMetadata<Person>> data =
                     new PaginatedResult<>(Collections.singletonList(modelWithMetadata), null);
-            onResponse.accept(new GraphQLResponse<>(data, Collections.emptyList()));
             latch.countDown();
+            LOG.info("sync first success countdown");
+            onResponse.accept(new GraphQLResponse<>(data, Collections.emptyList()));
             return mock(GraphQLOperation.class);
         }).doAnswer(invocation -> {
             int indexOfResponseConsumer = 1;
-            Car car = Car.builder().build();
-            ModelMetadata modelMetadata = new ModelMetadata(car.getId(), false, 1, Temporal.Timestamp.now(), "Person");
+            Car car = Car.builder()
+                    .owner(person).build();
+            ModelMetadata modelMetadata = new ModelMetadata(car.getId(), false, 1,
+                    Temporal.Timestamp.now(), "Person");
             ModelWithMetadata<Car> modelWithMetadata = new ModelWithMetadata<>(car, modelMetadata);
             Consumer<GraphQLResponse<PaginatedResult<ModelWithMetadata<Car>>>> onResponse =
                     invocation.getArgument(indexOfResponseConsumer);
             PaginatedResult<ModelWithMetadata<Car>> data =
                     new PaginatedResult<>(Collections.singletonList(modelWithMetadata), null);
-            onResponse.accept(new GraphQLResponse<>(data, Collections.emptyList()));
             latch.countDown();
+            LOG.info("sync second success countdown");
+            onResponse.accept(new GraphQLResponse<>(data, Collections.emptyList()));
             return mock(GraphQLOperation.class);
         }).when(mockApiCategory).query(any(), any(), any());
     }

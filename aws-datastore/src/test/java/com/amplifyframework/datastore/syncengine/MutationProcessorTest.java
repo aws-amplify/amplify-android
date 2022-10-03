@@ -254,7 +254,7 @@ public final class MutationProcessorTest {
         mutationProcessor.startDrainingMutationOutbox();
 
         // Wait for the conflict handler to be called.
-        Latch.await(handlerInvocationsRemainingCount);
+        Latch.await(handlerInvocationsRemainingCount, 30);
         mutationProcessor.stopDrainingMutationOutbox();
     }
 
