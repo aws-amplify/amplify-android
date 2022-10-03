@@ -823,7 +823,7 @@ internal class RealAWSCognitoAuthPlugin(
     ) {
         GlobalScope.async {
             try {
-                val tokens = getSession().userPoolTokens
+                val tokens = getSession().userPoolTokensResult
                 // TODO: Update the stubbed device key when device SRP auth is implemented with its own store.
                 authEnvironment.cognitoAuthService.cognitoIdentityProviderClient?.updateDeviceStatus(
                     UpdateDeviceStatusRequest.invoke {
@@ -876,7 +876,7 @@ internal class RealAWSCognitoAuthPlugin(
     private fun _fetchDevices(onSuccess: Consumer<MutableList<AuthDevice>>, onError: Consumer<AuthException>) {
         GlobalScope.async {
             try {
-                val tokens = getSession().userPoolTokens
+                val tokens = getSession().userPoolTokensResult
                 val response =
                     authEnvironment.cognitoAuthService.cognitoIdentityProviderClient?.listDevices(
                         ListDevicesRequest.invoke {
@@ -1012,7 +1012,7 @@ internal class RealAWSCognitoAuthPlugin(
         onError: Consumer<AuthException>
     ) {
         GlobalScope.async {
-            val tokens = getSession().userPoolTokens
+            val tokens = getSession().userPoolTokensResult
             val changePasswordRequest = ChangePasswordRequest.invoke {
                 previousPassword = oldPassword
                 proposedPassword = newPassword
@@ -1041,7 +1041,7 @@ internal class RealAWSCognitoAuthPlugin(
 
                     GlobalScope.launch {
                         try {
-                            val accessToken = getSession().userPoolTokens.value?.accessToken
+                            val accessToken = getSession().userPoolTokensResult.value?.accessToken
                             val getUserRequest = GetUserRequest.invoke {
                                 this.accessToken = accessToken
                             }
@@ -1134,7 +1134,7 @@ internal class RealAWSCognitoAuthPlugin(
                     is AuthenticationState.SignedIn -> {
                         GlobalScope.launch {
                             try {
-                                val accessToken = getSession().userPoolTokens.value?.accessToken
+                                val accessToken = getSession().userPoolTokensResult.value?.accessToken
                                 accessToken?.let {
                                     var userAttributes = attributes.map {
                                         AttributeType.invoke {
@@ -1226,7 +1226,7 @@ internal class RealAWSCognitoAuthPlugin(
                 is AuthenticationState.SignedIn -> {
                     GlobalScope.launch {
                         try {
-                            val accessToken = getSession().userPoolTokens.value?.accessToken
+                            val accessToken = getSession().userPoolTokensResult.value?.accessToken
                             accessToken?.let {
                                 val getUserAttributeVerificationCodeRequest =
                                     GetUserAttributeVerificationCodeRequest.invoke {
@@ -1295,7 +1295,7 @@ internal class RealAWSCognitoAuthPlugin(
                 is AuthenticationState.SignedIn -> {
                     GlobalScope.launch {
                         try {
-                            val accessToken = getSession().userPoolTokens.value?.accessToken
+                            val accessToken = getSession().userPoolTokensResult.value?.accessToken
                             accessToken?.let {
                                 val verifyUserAttributeRequest = VerifyUserAttributeRequest.invoke {
                                     this.accessToken = accessToken
@@ -1329,7 +1329,7 @@ internal class RealAWSCognitoAuthPlugin(
             }
 
             GlobalScope.async {
-                val accessToken = getSession().userPoolTokens.value?.accessToken
+                val accessToken = getSession().userPoolTokensResult.value?.accessToken
                 accessToken?.run {
                     val userid = JWTParser.getClaim(accessToken, "sub") ?: ""
                     val username = JWTParser.getClaim(accessToken, "username") ?: ""

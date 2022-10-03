@@ -15,13 +15,10 @@
 
 package com.amplifyframework.auth.cognito.helpers;
 
-import android.os.Build;
-
 import com.amazonaws.util.Base64;
 import com.amazonaws.util.StringUtils;
 
 import java.math.BigInteger;
-import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -33,19 +30,9 @@ import java.util.UUID;
  * A utility class for device operations.
  */
 public final class CognitoDeviceHelper {
-    private static deviceSRP srpCalculator = null;
+    private static DeviceSRP srpCalculator = null;
 
     private CognitoDeviceHelper(){}
-
-    /**
-     * Uses the Android class {@link Build} to return the model of
-     * the android device.
-     *
-     * @return Device model name, which is also the name of the device.
-     */
-    public static String getDeviceName() {
-        return Build.MODEL;
-    }
 
     /**
      * Generates SRP verification parameters for device verification.
@@ -57,7 +44,7 @@ public final class CognitoDeviceHelper {
     public static Map<String, String> generateVerificationParameters(String deviceKey, String deviceGroup) {
         final Map<String, String> devVerfPars = new HashMap<String, String>();
         final String deviceSecret = generateRandomString();
-        srpCalculator = new deviceSRP(deviceGroup, deviceKey, deviceSecret);
+        srpCalculator = new DeviceSRP(deviceGroup, deviceKey, deviceSecret);
         final byte[] salt = srpCalculator.getSalt().toByteArray();
         final byte[] srpVerifier = srpCalculator.getVerifier().toByteArray();
         devVerfPars.put("salt", new String(Base64.encode(salt)));
@@ -71,7 +58,7 @@ public final class CognitoDeviceHelper {
      *
      * @return a string with random alpha-numeric characters.s
      */
-    public static String generateRandomString() {
+    private static String generateRandomString() {
         final UUID uuid = UUID.randomUUID();
         return String.valueOf(uuid);
     }
@@ -80,7 +67,7 @@ public final class CognitoDeviceHelper {
      * Static class for SRP related calculations for devices.
      */
     @SuppressWarnings("checkstyle:typename")
-    public static class deviceSRP {
+    private static final class DeviceSRP {
         private static final String HASH_ALGORITHM = "SHA-256";
         private static final ThreadLocal<MessageDigest> THREAD_MESSAGE_DIGEST =
             new ThreadLocal<MessageDigest>() {
@@ -94,24 +81,7 @@ public final class CognitoDeviceHelper {
                 }
             };
 
-        private static final String HEX_N = "FFFFFFFFFFFFFFFFC90FDAA22168C234C4C6628B80DC1CD1"
-                + "29024E088A67CC74020BBEA63B139B22514A08798E3404DD"
-                + "EF9519B3CD3A431B302B0A6DF25F14374FE1356D6D51C245"
-                + "E485B576625E7EC6F44C42E9A637ED6B0BFF5CB6F406B7ED"
-                + "EE386BFB5A899FA5AE9F24117C4B1FE649286651ECE45B3D"
-                + "C2007CB8A163BF0598DA48361C55D39A69163FA8FD24CF5F"
-                + "83655D23DCA3AD961C62F356208552BB9ED529077096966D"
-                + "670C354E4ABC9804F1746C08CA18217C32905E462E36CE3B"
-                + "E39E772C180E86039B2783A2EC07A28FB5C55DF06F4C52C9"
-                + "DE2BCBF6955817183995497CEA956AE515D2261898FA0510"
-                + "15728E5A8AAAC42DAD33170D04507A33A85521ABDF1CBA64"
-                + "ECFB850458DBEF0A8AEA71575D060C7DB3970F85A6E1E4C7"
-                + "ABF5AE8CDB0933D71E8C94E04A25619DCEE3D2261AD2EE6B"
-                + "F12FFA06D98A0864D87602733EC86A64521F2B18177B200C"
-                + "BBE117577A615D6C770988C0BAD946E208E24FA074E5AB31"
-                + "43DB5BFCE0FD108E4B82D120A93AD2CAFFFFFFFFFFFFFFFF";
-
-        private static final BigInteger N = new BigInteger(HEX_N, 16);
+        private static final BigInteger N = new BigInteger(SRPHelper.getHexN(), 16);
         private static final BigInteger GG = BigInteger.valueOf(2);
         private static final int SALT_LENGTH_BITS = 128;
 
@@ -134,7 +104,7 @@ public final class CognitoDeviceHelper {
          * @param deviceKey REQUIRED: Unique identifier assigned to the device.
          * @param password REQUIRED: The device password.
          */
-        public deviceSRP(String deviceGroupKey, String deviceKey, String password) {
+        private DeviceSRP(String deviceGroupKey, String deviceKey, String password) {
             final byte[] deviceKeyHash = getUserIdHash(deviceGroupKey, deviceKey, password);
 
             salt = new BigInteger(SALT_LENGTH_BITS, SECURE_RANDOM);
@@ -153,7 +123,7 @@ public final class CognitoDeviceHelper {
          * Returns the generated verifier.
          * @return verifier.
          */
-        public BigInteger getVerifier() {
+        private BigInteger getVerifier() {
             return verifier;
         }
 
@@ -189,7 +159,7 @@ public final class CognitoDeviceHelper {
         /**
          * Start byte digest for SRP.
          */
-        public static void begin() {
+        private static void begin() {
             final MessageDigest md = THREAD_MESSAGE_DIGEST.get();
             md.reset();
         }
@@ -198,7 +168,7 @@ public final class CognitoDeviceHelper {
          * Complete digest.
          * @return the digest as a byte array.
          */
-        public static byte[] end() {
+        private static byte[] end() {
             final MessageDigest md = THREAD_MESSAGE_DIGEST.get();
             return md.digest();
         }
@@ -207,7 +177,7 @@ public final class CognitoDeviceHelper {
          * Adds a series of strings to the digest.
          * @param strings REQUIRED: Strings to add.
          */
-        public static void update(String... strings) {
+        private static void update(String... strings) {
             final MessageDigest md = THREAD_MESSAGE_DIGEST.get();
             for (final String s : strings) {
                 if (s != null) {
@@ -217,34 +187,10 @@ public final class CognitoDeviceHelper {
         }
 
         /**
-         * Adds a string to the digest.
-         * @param stringToAdd REQUIRED: String to add.
-         */
-        public static void update(String stringToAdd) {
-            final MessageDigest md = THREAD_MESSAGE_DIGEST.get();
-            if (stringToAdd != null) {
-                md.update(stringToAdd.getBytes(StringUtils.UTF8));
-            }
-        }
-
-        /**
-         * Adds a series of BigIntegers to the digest.
-         * @param bigInts REQUIRED: Numbers to add.
-         */
-        public static void update(BigInteger... bigInts) {
-            final MessageDigest md = THREAD_MESSAGE_DIGEST.get();
-            for (final BigInteger n : bigInts) {
-                if (n != null) {
-                    md.update(n.toByteArray());
-                }
-            }
-        }
-
-        /**
          * Adds a BigInteger to the digest.
          * @param number REQUIRED: The number to add.
          */
-        public static void update(BigInteger number) {
+        private static void update(BigInteger number) {
             final MessageDigest md = THREAD_MESSAGE_DIGEST.get();
             if (number != null) {
                 md.update(number.toByteArray());
@@ -252,21 +198,10 @@ public final class CognitoDeviceHelper {
         }
 
         /**
-         * Adds the contents of a byte-buffer to the digest.
-         * @param byteBuffer REQUIRED: bytes to add.
-         */
-        public static void update(ByteBuffer byteBuffer) {
-            final MessageDigest md = THREAD_MESSAGE_DIGEST.get();
-            if (byteBuffer != null) {
-                md.update(byteBuffer.array());
-            }
-        }
-
-        /**
          * Adds a byte array to the digest.
          * @param bytes REQUIRED: bytes to add.
          */
-        public static void update(byte[] bytes) {
+        private static void update(byte[] bytes) {
             final MessageDigest md = THREAD_MESSAGE_DIGEST.get();
             if (bytes != null) {
                 md.update(bytes);
