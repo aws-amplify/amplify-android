@@ -1440,7 +1440,7 @@ internal class RealAWSCognitoAuthPlugin(
             when (authState.authNState) {
                 is AuthenticationState.SignedIn -> {
                     GlobalScope.launch {
-                        val accessToken = getSession().userPoolTokens.value?.accessToken
+                        val accessToken = getSession().userPoolTokensResult.value?.accessToken
                         _deleteUser(accessToken!!, onSuccess, onError)
                     }
                 }
@@ -1453,8 +1453,8 @@ internal class RealAWSCognitoAuthPlugin(
         var listenerToken: StateChangeListenerToken? = null
         listenerToken = authStateMachine.listen(
             { authState ->
-                val authNState = authState.authNState as? AuthenticationState.SigningOut
-                when (authNState?.signOutState) {
+                val signOutState = (authState.authNState as? AuthenticationState.SigningOut)?.signOutState
+                when (signOutState) {
                     is SignOutState.SignedOut -> {
                         val event = DeleteUserEvent(DeleteUserEvent.EventType.SignOutDeletedUser())
                         authStateMachine.send(event)

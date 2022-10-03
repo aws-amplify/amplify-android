@@ -108,7 +108,7 @@ class StateTransitionTests : StateTransitionTestBase() {
                 ),
                 mockAuthActions
             ),
-            AuthEnvironment(configuration, cognitoAuthService, null, mockk())
+            AuthEnvironment(configuration, cognitoAuthService, null, null, mockk())
         )
 
         storeStateMachine = CredentialStoreStateMachine(

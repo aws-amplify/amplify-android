@@ -263,7 +263,7 @@ sealed class AuthorizationState : State {
                         StateResolution(newState, listOf(action))
                     }
                     deleteUserEvent is DeleteUserEvent.EventType.DeleteUser -> {
-                        StateResolution(DeletingUser(oldState.deleteUserState))
+                        StateResolution(DeletingUser(DeleteUserState.NotStarted()))
                     }
                     else -> defaultResolution
                 }
