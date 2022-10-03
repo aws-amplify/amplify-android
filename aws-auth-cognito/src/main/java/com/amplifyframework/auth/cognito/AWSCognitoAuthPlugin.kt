@@ -32,9 +32,12 @@ import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.cognito.asf.UserContextDataProvider
 import com.amplifyframework.auth.cognito.data.AWSCognitoAuthCredentialStore
 import com.amplifyframework.auth.cognito.data.AWSCognitoLegacyCredentialStore
+import com.amplifyframework.auth.cognito.options.FederateToIdentityPoolOptions
+import com.amplifyframework.auth.cognito.result.FederateToIdentityPoolResult
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
+import com.amplifyframework.auth.options.AuthFetchSessionOptions
 import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions
 import com.amplifyframework.auth.options.AuthResendUserAttributeConfirmationCodeOptions
 import com.amplifyframework.auth.options.AuthResetPasswordOptions
@@ -53,7 +56,6 @@ import com.amplifyframework.core.Action
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
-import com.amplifyframework.util.UserAgent
 import org.json.JSONException
 import org.json.JSONObject
 
@@ -84,7 +86,6 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
                 logger
             )
             val authStateMachine = AuthStateMachine(authEnvironment)
-            System.setProperty("aws.frameworkMetadata", UserAgent.string())
             val credentialStoreStateMachine = createCredentialStoreStateMachine(configuration, context)
             realPlugin = RealAWSCognitoAuthPlugin(
                 configuration,
@@ -222,6 +223,14 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
 
     override fun handleWebUISignInResponse(intent: Intent?) {
         realPlugin.handleWebUISignInResponse(intent)
+    }
+
+    override fun fetchAuthSession(
+        options: AuthFetchSessionOptions,
+        onSuccess: Consumer<AuthSession>,
+        onError: Consumer<AuthException>
+    ) {
+        realPlugin.fetchAuthSession(options, onSuccess, onError)
     }
 
     override fun fetchAuthSession(onSuccess: Consumer<AuthSession>, onError: Consumer<AuthException>) {
@@ -389,6 +398,56 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
     override fun getPluginKey() = AWS_COGNITO_AUTH_PLUGIN_KEY
 
     override fun getVersion() = BuildConfig.VERSION_NAME
+
+    /**
+     * Federate to Identity Pool
+     * @param authProvider The auth provider you want to federate for (e.g. Facebook, Google, etc.)
+     * @param providerToken Provider token to start the federation for
+     * @param onSuccess Success callback
+     */
+    fun federateToIdentityPool(
+        authProvider: AuthProvider,
+        providerToken: String,
+        onSuccess: Consumer<FederateToIdentityPoolResult>,
+        onError: Consumer<AuthException>
+    ) {
+        realPlugin.federateToIdentityPool(
+            authProvider,
+            providerToken,
+            FederateToIdentityPoolOptions.builder().build(),
+            onSuccess,
+            onError
+        )
+    }
+
+    /**
+     * Federate to Identity Pool
+     * @param authProvider The auth provider you want to federate for (e.g. Facebook, Google, etc.)
+     * @param providerToken Provider token to start the federation for
+     * @param options Advanced options for federating to identity pool
+     * @param onSuccess Success callback
+     */
+    fun federateToIdentityPool(
+        authProvider: AuthProvider,
+        providerToken: String,
+        options: FederateToIdentityPoolOptions,
+        onSuccess: Consumer<FederateToIdentityPoolResult>,
+        onError: Consumer<AuthException>
+    ) {
+        realPlugin.federateToIdentityPool(authProvider, providerToken, options, onSuccess, onError)
+    }
+
+    /**
+     * Clear Federation to Identity Pool
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     */
+    fun clearFederationToIdentityPool(
+        onSuccess: Action,
+        onError: Consumer<AuthException>
+    ) {
+        realPlugin.clearFederationToIdentityPool(onSuccess, onError)
+    }
 
     private fun createCredentialStoreStateMachine(
         configuration: AuthConfiguration,

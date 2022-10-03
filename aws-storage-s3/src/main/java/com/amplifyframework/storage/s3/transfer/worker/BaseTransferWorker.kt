@@ -48,7 +48,6 @@ import com.amplifyframework.storage.s3.transfer.TransferRecord
 import com.amplifyframework.storage.s3.transfer.TransferState
 import com.amplifyframework.storage.s3.transfer.TransferStatusUpdater
 import java.io.File
-import java.lang.Exception
 import java.nio.ByteBuffer
 
 /**
@@ -70,12 +69,13 @@ internal abstract class BaseTransferWorker(
 
     companion object {
         internal const val PART_RECORD_ID = "PART_RECORD_ID"
+        internal const val RUN_AS_FOREGROUND_TASK = "RUN_AS_FOREGROUND_TASK"
         internal const val WORKER_ID = "WORKER_ID"
         private const val OBJECT_TAGS_DELIMITER = "&"
         private const val OBJECT_TAG_KEY_VALUE_SEPARATOR = "="
         private const val REQUESTER_PAYS = "requester"
         private val CANNED_ACL_MAP =
-            ObjectCannedAcl.values().map { it.value to it }.toMap()
+            ObjectCannedAcl.values().associateBy { it.value }
         internal const val MULTI_PART_UPLOAD_ID = "multipartUploadId"
         internal const val TRANSFER_RECORD_ID = "TRANSFER_RECORD_ID"
         internal const val OUTPUT_TRANSFER_RECORD_ID = "OUTPUT_TRANSFER_RECORD_ID"
@@ -85,7 +85,12 @@ internal abstract class BaseTransferWorker(
     }
 
     override suspend fun doWork(): Result {
-        setForegroundAsync(getForegroundInfo())
+        // Foreground task is disabled until the foreground notification behavior and the recent customer feedback,
+        // it will be enabled in future based on the customer request.
+        val isForegroundTask: Boolean = (inputData.keyValueMap[RUN_AS_FOREGROUND_TASK] ?: false) as Boolean
+        if (isForegroundTask) {
+            setForegroundAsync(getForegroundInfo())
+        }
         val result = runCatching {
             val transferRecordId =
                 inputData.keyValueMap[PART_RECORD_ID] as? Int ?: inputData.keyValueMap[TRANSFER_RECORD_ID] as Int

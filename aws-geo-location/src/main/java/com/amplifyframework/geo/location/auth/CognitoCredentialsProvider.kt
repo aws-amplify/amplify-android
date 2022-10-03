@@ -17,6 +17,8 @@ package com.amplifyframework.geo.location.auth
 
 import aws.smithy.kotlin.runtime.auth.awscredentials.Credentials
 import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider
+import com.amplifyframework.auth.AWSCredentials
+import com.amplifyframework.auth.AWSTemporaryCredentials
 import com.amplifyframework.auth.AuthCategory
 import com.amplifyframework.auth.cognito.AWSCognitoAuthSession
 import kotlin.coroutines.resume
@@ -31,8 +33,8 @@ internal class CognitoCredentialsProvider(private val authCategory: AuthCategory
         return suspendCancellableCoroutine { continuation ->
             authCategory.fetchAuthSession(
                 { authSession ->
-                    (authSession as? AWSCognitoAuthSession)?.awsCredentials?.value?.let {
-                        continuation.resume(it)
+                    (authSession as? AWSCognitoAuthSession)?.awsCredentialsResult?.value?.let {
+                        continuation.resume(it.toCredentials())
                     } ?: continuation.resumeWithException(
                         Exception(
                             "Failed to get credentials. " +
@@ -46,4 +48,13 @@ internal class CognitoCredentialsProvider(private val authCategory: AuthCategory
             )
         }
     }
+}
+
+private fun AWSCredentials.toCredentials(): Credentials {
+    return Credentials(
+        accessKeyId = this.accessKeyId,
+        secretAccessKey = this.secretAccessKey,
+        sessionToken = (this as? AWSTemporaryCredentials)?.sessionToken,
+        expiration = (this as? AWSTemporaryCredentials)?.expiration
+    )
 }

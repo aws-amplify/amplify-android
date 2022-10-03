@@ -61,13 +61,22 @@ public class AuthException extends AmplifyException {
     public static class InvalidStateException extends AuthException {
         private static final long serialVersionUID = 1L;
         private static final String MESSAGE = "Auth state is an invalid state, cannot process the request.";
-        private static final String RECOVERY_SUGGESTION = "Please reset auth plugin or reattempt the operation later.";
+        private static final String RECOVERY_SUGGESTION = "There may be another operation in " +
+                "progress. Please wait for the current operation to complete, and try again.";
 
         /**
          * Default message/recovery suggestion without a cause.
          */
         public InvalidStateException() {
             super(MESSAGE, RECOVERY_SUGGESTION);
+        }
+
+        /**
+         * Default recovery suggestion with customizable message.
+         * @param message The custom message to provide.
+         */
+        public InvalidStateException(String message) {
+            super(message, RECOVERY_SUGGESTION);
         }
 
         /**
@@ -84,8 +93,9 @@ public class AuthException extends AmplifyException {
      */
     public static class SignedInException extends AuthException {
         private static final long serialVersionUID = 1L;
-        private static final String MESSAGE = "You are currently signed in.";
-        private static final String RECOVERY_SUGGESTION = "Please sign out and reattempt the operation.";
+        private static final String MESSAGE = "There is already a user in signedIn state";
+        private static final String RECOVERY_SUGGESTION =
+                "SignOut the user first before calling signIn";
 
         /**
          * Default message/recovery suggestion without a cause.
@@ -267,6 +277,15 @@ public class AuthException extends AmplifyException {
                     cause,
                     "See the attached exception for more details"
             );
+        }
+
+        /**
+         * Custom message and recovery suggestion when cause is unknown.
+         * @param message The custom error message.
+         * @param recoverSuggestion The custom recovery suggestion.
+         */
+        public UnknownException(@NonNull String message, @NonNull String recoverSuggestion) {
+            super(message, recoverSuggestion);
         }
     }
 

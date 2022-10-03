@@ -25,13 +25,13 @@ import aws.sdk.kotlin.services.s3.model.ObjectCannedAcl
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.storage.ObjectMetadata
 import com.amplifyframework.storage.s3.AWSS3StoragePlugin
+import com.amplifyframework.storage.s3.TransferOperations
 import com.amplifyframework.storage.s3.transfer.worker.RouterWorker
 import com.amplifyframework.storage.s3.transfer.worker.TransferWorkerFactory
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import java.io.InputStream
-import java.lang.IllegalArgumentException
 import kotlin.math.ceil
 import kotlin.math.max
 import kotlin.math.min
@@ -111,7 +111,8 @@ internal class TransferManager @JvmOverloads constructor(
         }
         val transferRecord = transferDB.getTransferRecordById(transferRecordId)
             ?: throw IllegalStateException("Failed to find transferRecord")
-        val transferObserver = transferRecord.start(
+        val transferObserver = TransferOperations.start(
+            transferRecord,
             pluginKey,
             transferStatusUpdater,
             workManager,
@@ -163,7 +164,8 @@ internal class TransferManager @JvmOverloads constructor(
         }
         val transferRecord = transferDB.getTransferRecordById(transferRecordId)
             ?: throw IllegalStateException("Failed to find transferRecord")
-        val transferObserver = transferRecord.start(
+        val transferObserver = TransferOperations.start(
+            transferRecord,
             pluginKey,
             transferStatusUpdater,
             workManager,
@@ -181,27 +183,33 @@ internal class TransferManager @JvmOverloads constructor(
 
     fun pause(transferRecordId: Int): Boolean {
         val transferRecord = transferStatusUpdater.activeTransferMap[transferRecordId]
-        return transferRecord?.pause(transferStatusUpdater, workManager) ?: false
+        return transferRecord?.let { TransferOperations.pause(it, transferStatusUpdater, workManager) } ?: false
     }
 
     fun resume(transferRecordId: Int): Boolean {
         val transferRecord = transferStatusUpdater.activeTransferMap[transferRecordId]
-        return transferRecord?.resume(
-            pluginKey,
-            transferStatusUpdater,
-            workManager,
-            transferWorkerObserver,
-            transferDB
-        ) ?: false
+        return transferRecord?.let {
+            TransferOperations.resume(
+                it,
+                pluginKey,
+                transferStatusUpdater,
+                workManager,
+                transferWorkerObserver,
+                transferDB
+            )
+        } ?: false
     }
 
     fun cancel(transferRecordId: Int): Boolean {
         val transferRecord = transferStatusUpdater.activeTransferMap[transferRecordId]
-        return transferRecord?.cancel(
-            pluginKey,
-            transferStatusUpdater,
-            workManager
-        ) ?: false
+        return transferRecord?.let {
+            TransferOperations.cancel(
+                it,
+                pluginKey,
+                transferStatusUpdater,
+                workManager
+            )
+        } ?: false
     }
 
     private fun createMultipartUploadRecords(

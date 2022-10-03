@@ -31,6 +31,7 @@ import com.amplifyframework.statemachine.codegen.events.CustomSignInEvent
 object SignInCustomActions : CustomSignInActions {
     private const val KEY_SECRET_HASH = "SECRET_HASH"
     private const val KEY_USERNAME = "USERNAME"
+    private const val KEY_DEVICE_KEY = "DEVICE_KEY"
     override fun initiateCustomSignInAuthAction(event: CustomSignInEvent.EventType.InitiateCustomSignIn): Action =
         Action<AuthEnvironment>("InitCustomAuth") { id, dispatcher ->
             logger.verbose("$id Starting execution")
@@ -43,11 +44,13 @@ object SignInCustomActions : CustomSignInActions {
 
                 val authParams = mutableMapOf(KEY_USERNAME to event.username)
                 secretHash?.let { authParams[KEY_SECRET_HASH] = it }
+                val encodedContextData = userContextDataProvider?.getEncodedContextData(event.username)
 
                 val initiateAuthResponse = cognitoAuthService.cognitoIdentityProviderClient?.initiateAuth {
                     authFlow = AuthFlowType.CustomAuth
                     clientId = configuration.userPool?.appClient
                     authParameters = authParams
+                    encodedContextData?.let { userContextData { encodedData = it } }
                 }
 
                 if (initiateAuthResponse?.challengeName == ChallengeNameType.CustomChallenge &&
@@ -60,7 +63,7 @@ object SignInCustomActions : CustomSignInActions {
                         session = initiateAuthResponse.session,
                         challengeParameters = initiateAuthResponse.challengeParameters,
                         authenticationResult = initiateAuthResponse.authenticationResult,
-                        signInMethod = SignInMethod.CUSTOM
+                        signInMethod = SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.CUSTOM_AUTH)
                     )
                 } else {
                     throw AuthException(
@@ -69,10 +72,7 @@ object SignInCustomActions : CustomSignInActions {
                     )
                 }
             } catch (e: Exception) {
-                val errorEvent = CustomSignInEvent(CustomSignInEvent.EventType.ThrowAuthError(e))
-                logger.verbose("$id Sending event ${errorEvent.type}")
-                dispatcher.send(errorEvent)
-                AuthenticationEvent(AuthenticationEvent.EventType.CancelSignIn())
+                AuthenticationEvent(AuthenticationEvent.EventType.CancelSignIn(error = e))
             }
             logger.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)

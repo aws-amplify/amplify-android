@@ -93,6 +93,8 @@ internal data class AuthStatesProxy(
                         is AuthenticationState.SignedOut -> TODO()
                         is AuthenticationState.SigningIn -> TODO()
                         is AuthenticationState.SigningOut -> TODO()
+                        is AuthenticationState.FederatingToIdentityPool -> TODO()
+                        is AuthenticationState.FederatedToIdentityPool -> TODO()
                     }
                 }
                 is AuthorizationState -> {
@@ -101,6 +103,8 @@ internal data class AuthStatesProxy(
                         is AuthorizationState.DeletingUser -> TODO()
                         is AuthorizationState.Error -> TODO()
                         is AuthorizationState.FetchingAuthSession -> TODO()
+                        is AuthorizationState.FetchingUnAuthSession -> TODO()
+                        is AuthorizationState.RefreshingSession -> TODO()
                         is AuthorizationState.NotConfigured -> TODO()
                         is AuthorizationState.SessionEstablished -> AuthStatesProxy(
                             type = "AuthorizationState.SessionEstablished",
@@ -108,7 +112,8 @@ internal data class AuthStatesProxy(
                         )
                         is AuthorizationState.SigningIn -> TODO()
                         is AuthorizationState.SigningOut -> TODO()
-                        is AuthorizationState.WaitingToStore -> TODO()
+                        is AuthorizationState.StoringCredentials -> TODO()
+                        is AuthorizationState.FederatingToIdentityPool -> TODO()
                     }
                 }
                 else -> {

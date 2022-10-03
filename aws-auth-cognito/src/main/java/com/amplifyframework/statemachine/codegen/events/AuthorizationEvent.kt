@@ -16,20 +16,24 @@
 package com.amplifyframework.statemachine.codegen.events
 
 import com.amplifyframework.statemachine.StateMachineEvent
+import com.amplifyframework.statemachine.codegen.data.AWSCredentials
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
+import com.amplifyframework.statemachine.codegen.data.FederatedToken
 import java.util.Date
 
 class AuthorizationEvent(val eventType: EventType, override val time: Date? = null) :
     StateMachineEvent {
     sealed class EventType {
         object Configure : EventType()
-        //        case fetchUnAuthSession
         object FetchAuthSession : EventType()
-        data class UserDeleted(val id: String = "") : EventType()
-        data class RefreshAuthSession(val amplifyCredential: AmplifyCredential) : EventType()
+        object FetchUnAuthSession : EventType()
+        data class Fetched(val identityId: String, val awsCredentials: AWSCredentials) : EventType()
+        data class RefreshSession(val amplifyCredential: AmplifyCredential) : EventType()
+        data class Refreshed(val amplifyCredential: AmplifyCredential) : EventType()
         data class CachedCredentialsAvailable(val amplifyCredential: AmplifyCredential) : EventType()
-        data class Fetched(val amplifyCredential: AmplifyCredential) : EventType()
+        data class UserDeleted(val id: String = "") : EventType()
         data class ThrowError(val exception: Exception) : EventType()
+        data class StartFederationToIdentityPool(val token: FederatedToken, val identityId: String?) : EventType()
     }
 
     override val type: String = eventType.javaClass.simpleName
