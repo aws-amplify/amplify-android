@@ -692,8 +692,8 @@ class StateTransitionTests : StateTransitionTestBase() {
                         { it2 ->
                             val authNState = it2.takeIf {
                                 it2 is AuthState.Configured &&
-                                        it2.authNState is AuthenticationState.SignedIn &&
-                                        it2.authZState is AuthorizationState.SessionEstablished
+                                    it2.authNState is AuthenticationState.SignedIn &&
+                                    it2.authZState is AuthorizationState.SessionEstablished
                             }
                             authNState?.run {
                                 token?.let(stateMachine::cancel)
