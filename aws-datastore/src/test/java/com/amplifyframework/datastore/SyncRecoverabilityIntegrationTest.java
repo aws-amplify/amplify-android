@@ -191,7 +191,6 @@ public final class SyncRecoverabilityIntegrationTest {
             onError.accept(new ApiException.NonRetryableException("", ""));
             latch.countDown();
             return mock(GraphQLOperation.class);
-
         }).doAnswer(invocation -> {
             int indexOfResponseConsumer = 1;
             Car car = Car.builder().build();
@@ -213,11 +212,12 @@ public final class SyncRecoverabilityIntegrationTest {
         doAnswer(invocation -> {
             int indexOfResponseConsumer = 2;
             Consumer<ApiException> onError = invocation.getArgument(indexOfResponseConsumer);
-            latch.countDown();
             LOG.info("sync error countdown");
             onError.accept(new ApiException("", ""));
+            latch.countDown();
             return mock(GraphQLOperation.class);
-        }).doAnswer(invocation -> {
+        })
+                .doAnswer(invocation -> {
             int indexOfResponseConsumer = 1;
             ModelMetadata modelMetadata = new ModelMetadata(person.getId(), false, 1,
                     Temporal.Timestamp.now(), "Person");
@@ -226,11 +226,12 @@ public final class SyncRecoverabilityIntegrationTest {
                     invocation.getArgument(indexOfResponseConsumer);
             PaginatedResult<ModelWithMetadata<Person>> data =
                     new PaginatedResult<>(Collections.singletonList(modelWithMetadata), null);
-            latch.countDown();
             LOG.info("sync first success countdown");
             onResponse.accept(new GraphQLResponse<>(data, Collections.emptyList()));
+            latch.countDown();
             return mock(GraphQLOperation.class);
-        }).doAnswer(invocation -> {
+        })
+                .doAnswer(invocation -> {
             int indexOfResponseConsumer = 1;
             Car car = Car.builder()
                     .owner(person).build();
