@@ -216,8 +216,7 @@ public final class SyncRecoverabilityIntegrationTest {
             onError.accept(new ApiException("", ""));
             latch.countDown();
             return mock(GraphQLOperation.class);
-        })
-                .doAnswer(invocation -> {
+        }).doAnswer(invocation -> {
             int indexOfResponseConsumer = 1;
             ModelMetadata modelMetadata = new ModelMetadata(person.getId(), false, 1,
                     Temporal.Timestamp.now(), "Person");
@@ -230,8 +229,7 @@ public final class SyncRecoverabilityIntegrationTest {
             onResponse.accept(new GraphQLResponse<>(data, Collections.emptyList()));
             latch.countDown();
             return mock(GraphQLOperation.class);
-        })
-                .doAnswer(invocation -> {
+        }).doAnswer(invocation -> {
             int indexOfResponseConsumer = 1;
             Car car = Car.builder()
                     .owner(person).build();
