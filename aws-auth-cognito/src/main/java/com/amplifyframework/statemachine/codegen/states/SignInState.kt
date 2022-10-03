@@ -121,6 +121,10 @@ sealed class SignInState : State {
                         SigningInViaMigrateAuth(MigrateSignInState.NotStarted()),
                         listOf(signInActions.startMigrationAuthAction(signInEvent))
                     )
+                    is SignInEvent.EventType.InitiateCustomSignInWithSRP -> StateResolution(
+                        SigningInWithSRPCustom(),
+                        listOf(signInActions.startCustomAuthWithSRPAction(signInEvent))
+                    )
                     else -> defaultResolution
                 }
                 is SigningInWithSRP, is SigningInWithCustom, is SigningInViaMigrateAuth -> when (signInEvent) {

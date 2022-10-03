@@ -390,7 +390,6 @@ class StateTransitionTests : StateTransitionTestBase() {
                         SignInEvent(
                             SignInEvent.EventType.InitiateSignInWithCustom(
                                 "username",
-                                "password",
                                 mapOf()
                             )
                         )
@@ -413,7 +412,6 @@ class StateTransitionTests : StateTransitionTestBase() {
                             AuthenticationEvent.EventType.SignInRequested(
                                 SignInData.CustomAuthSignInData(
                                     "username",
-                                    "password",
                                     emptyMap()
                                 )
                             )
