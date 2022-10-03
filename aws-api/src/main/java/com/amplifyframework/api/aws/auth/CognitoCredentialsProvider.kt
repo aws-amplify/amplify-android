@@ -18,6 +18,8 @@ package com.amplifyframework.api.aws.auth
 import aws.smithy.kotlin.runtime.auth.awscredentials.Credentials
 import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider
 import com.amplifyframework.api.ApiException
+import com.amplifyframework.auth.AWSCredentials
+import com.amplifyframework.auth.AWSTemporaryCredentials
 import com.amplifyframework.auth.cognito.AWSCognitoAuthSession
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
@@ -50,8 +52,8 @@ internal open class CognitoCredentialsProvider : CredentialsProvider {
         return suspendCoroutine { continuation ->
             Amplify.Auth.fetchAuthSession(
                 { authSession ->
-                    (authSession as? AWSCognitoAuthSession)?.awsCredentials?.value?.let {
-                        continuation.resume(it)
+                    (authSession as? AWSCognitoAuthSession)?.awsCredentialsResult?.value?.let {
+                        continuation.resume(it.toCredentials())
                     } ?: continuation.resumeWithException(
                         Exception(
                             "Failed to get credentials. " +
@@ -69,7 +71,7 @@ internal open class CognitoCredentialsProvider : CredentialsProvider {
     fun getAccessToken(onResult: Consumer<String>, onFailure: Consumer<Exception>) {
         Amplify.Auth.fetchAuthSession(
             { session ->
-                val tokens = (session as? AWSCognitoAuthSession)?.userPoolTokens?.value?.accessToken
+                val tokens = (session as? AWSCognitoAuthSession)?.userPoolTokensResult?.value?.accessToken
                 tokens?.let { onResult.accept(it) }
                     ?: onFailure.accept(
                         ApiException.ApiAuthException(
@@ -83,4 +85,13 @@ internal open class CognitoCredentialsProvider : CredentialsProvider {
             }
         )
     }
+}
+
+private fun AWSCredentials.toCredentials(): Credentials {
+    return Credentials(
+        accessKeyId = this.accessKeyId,
+        secretAccessKey = this.secretAccessKey,
+        sessionToken = (this as? AWSTemporaryCredentials)?.sessionToken,
+        expiration = (this as? AWSTemporaryCredentials)?.expiration
+    )
 }
