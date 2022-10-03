@@ -37,7 +37,7 @@ public final class Latch {
      * @param waitTimeMs Time to wait before throwing an error
      * @throws RuntimeException If the latch doesn't count down in the allotted timeout
      */
-    static void await(@NonNull CountDownLatch latch, long waitTimeMs) {
+    public static void await(@NonNull CountDownLatch latch, long waitTimeMs) {
         final boolean didCountDown;
         try {
             didCountDown = latch.await(waitTimeMs, TimeUnit.MILLISECONDS);
