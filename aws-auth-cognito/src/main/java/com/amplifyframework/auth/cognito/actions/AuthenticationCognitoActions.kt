@@ -59,7 +59,9 @@ object AuthenticationCognitoActions : AuthenticationActions {
             val evt = when (val data = event.signInData) {
                 is SignInData.SRPSignInData -> {
                     if (data.username != null && data.password != null) {
-                        SignInEvent(SignInEvent.EventType.InitiateSignInWithSRP(data.username, data.password))
+                        SignInEvent(
+                            SignInEvent.EventType.InitiateSignInWithSRP(data.username, data.password, data.metadata)
+                        )
                     } else {
                         AuthenticationEvent(
                             AuthenticationEvent.EventType.ThrowError(
@@ -71,7 +73,7 @@ object AuthenticationCognitoActions : AuthenticationActions {
                 is SignInData.CustomAuthSignInData -> {
                     if (data.username != null) {
                         SignInEvent(
-                            SignInEvent.EventType.InitiateSignInWithCustom(data.username, data.options)
+                            SignInEvent.EventType.InitiateSignInWithCustom(data.username, data.metadata)
                         )
                     } else {
                         AuthenticationEvent(
@@ -84,7 +86,7 @@ object AuthenticationCognitoActions : AuthenticationActions {
                 is SignInData.CustomSRPAuthSignInData -> {
                     if (data.username != null) {
                         SignInEvent(
-                            SignInEvent.EventType.InitiateCustomSignInWithSRP(data.username, data.options)
+                            SignInEvent.EventType.InitiateCustomSignInWithSRP(data.username, data.metadata)
                         )
                     } else {
                         AuthenticationEvent(

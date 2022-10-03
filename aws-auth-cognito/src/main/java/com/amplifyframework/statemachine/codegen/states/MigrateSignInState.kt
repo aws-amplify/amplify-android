@@ -52,7 +52,7 @@ sealed class MigrateSignInState : State {
                     is SignInEvent.EventType.FinalizeSignIn -> StateResolution(SignedIn())
                     else -> defaultResolution
                 }
-                is SignedIn -> defaultResolution
+                else -> defaultResolution
             }
         }
     }

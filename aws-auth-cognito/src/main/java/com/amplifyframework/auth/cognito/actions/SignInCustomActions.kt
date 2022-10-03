@@ -57,7 +57,6 @@ object SignInCustomActions : CustomSignInActions {
                     initiateAuthResponse.challengeParameters != null
                 ) {
                     SignInChallengeHelper.evaluateNextStep(
-                        userId = "",
                         username = event.username,
                         challengeNameType = initiateAuthResponse.challengeName,
                         session = initiateAuthResponse.session,

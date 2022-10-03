@@ -25,18 +25,18 @@ sealed class SignInData {
 
     data class CustomAuthSignInData(
         val username: String?,
-        val options: Map<String, String>
+        val metadata: Map<String, String>
     ) : SignInData()
 
     data class MigrationAuthSignInData(
         val username: String?,
         val password: String?,
-        val options: Map<String, String>
+        val metadata: Map<String, String>
     ) : SignInData()
 
     data class CustomSRPAuthSignInData(
         val username: String?,
-        val options: Map<String, String>
+        val metadata: Map<String, String>
     ) : SignInData()
 
     data class HostedUISignInData(

@@ -55,7 +55,6 @@ object MigrateAuthCognitoActions : MigrateAuthActions {
 
                 if (response != null) {
                     SignInChallengeHelper.evaluateNextStep(
-                        "",
                         event.username,
                         response.challengeName,
                         response.session,

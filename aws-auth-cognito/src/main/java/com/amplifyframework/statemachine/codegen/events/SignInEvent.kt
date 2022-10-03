@@ -23,20 +23,28 @@ import java.util.Date
 
 class SignInEvent(val eventType: EventType, override val time: Date? = null) : StateMachineEvent {
     sealed class EventType {
-        data class InitiateSignInWithSRP(val username: String, val password: String) : EventType()
+        data class InitiateSignInWithSRP(
+            val username: String,
+            val password: String,
+            val metadata: Map<String, String>
+        ) : EventType()
+
         data class InitiateSignInWithCustom(
             val username: String,
             val metadata: Map<String, String>
         ) : EventType()
+
         data class InitiateCustomSignInWithSRP(
             val username: String,
             val metadata: Map<String, String>
         ) : EventType()
+
         data class InitiateMigrateAuth(
             val username: String,
             val password: String,
             val metadata: Map<String, String>
         ) : EventType()
+
         data class InitiateHostedUISignIn(val hostedUISignInData: SignInData.HostedUISignInData) : EventType()
         data class SignedIn(val id: String = "") : EventType()
         data class ConfirmDevice(val signedInData: SignedInData) : EventType()
