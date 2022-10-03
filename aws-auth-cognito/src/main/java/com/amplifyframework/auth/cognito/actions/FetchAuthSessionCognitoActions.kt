@@ -38,6 +38,7 @@ import kotlin.time.Duration.Companion.seconds
 object FetchAuthSessionCognitoActions : FetchAuthSessionActions {
     private const val KEY_SECRET_HASH = "SECRET_HASH"
     private const val KEY_REFRESH_TOKEN = "REFRESH_TOKEN"
+    private const val KEY_DEVICE_KEY = "DEVICE_KEY"
 
     override fun refreshUserPoolTokensAction(signedInData: SignedInData) =
         Action<AuthEnvironment>("InitiateRefreshSession") { id, dispatcher ->
@@ -45,7 +46,7 @@ object FetchAuthSessionCognitoActions : FetchAuthSessionActions {
             val evt = try {
                 val tokens = signedInData.cognitoUserPoolTokens
 
-                val authParameters = mutableMapOf<String, String>()
+                val authParameters = mutableMapOf(KEY_DEVICE_KEY to "STUB")
                 val secretHash = AuthHelper.getSecretHash(
                     tokens.accessToken?.let { JWTParser.getClaim(it, "username") } ?: "",
                     configuration.userPool?.appClient,

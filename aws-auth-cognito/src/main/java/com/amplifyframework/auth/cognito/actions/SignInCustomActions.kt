@@ -42,7 +42,7 @@ object SignInCustomActions : CustomSignInActions {
                     configuration.userPool?.appClientSecret
                 )
 
-                val authParams = mutableMapOf(KEY_USERNAME to event.username)
+                val authParams = mutableMapOf(KEY_USERNAME to event.username, KEY_DEVICE_KEY to "STUB")
                 secretHash?.let { authParams[KEY_SECRET_HASH] = it }
                 val encodedContextData = userContextDataProvider?.getEncodedContextData(event.username)
 

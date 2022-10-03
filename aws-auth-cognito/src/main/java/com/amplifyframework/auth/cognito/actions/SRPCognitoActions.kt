@@ -42,6 +42,7 @@ object SRPCognitoActions : SRPActions {
     private const val KEY_SECRET_HASH = "SECRET_HASH"
     private const val KEY_USERNAME = "USERNAME"
     private const val KEY_CHALLENGE_NAME = "CHALLENGE_NAME"
+    private const val KEY_DEVICE_KEY = "DEVICE_KEY"
     override fun initiateSRPAuthAction(event: SRPEvent.EventType.InitiateSRP) =
         Action<AuthEnvironment>("InitSRPAuth") { id, dispatcher ->
             logger?.verbose("$id Starting execution")
@@ -54,7 +55,11 @@ object SRPCognitoActions : SRPActions {
                     configuration.userPool?.appClientSecret
                 )
 
-                val authParams = mutableMapOf(KEY_USERNAME to event.username, KEY_SRP_A to srpHelper.getPublicA())
+                val authParams = mutableMapOf(
+                    KEY_USERNAME to event.username,
+                    KEY_SRP_A to srpHelper.getPublicA(),
+                    KEY_DEVICE_KEY to "STUB"
+                )
                 secretHash?.let { authParams[KEY_SECRET_HASH] = it }
                 val encodedContextData = userContextDataProvider?.getEncodedContextData(event.username)
 
@@ -97,7 +102,8 @@ object SRPCognitoActions : SRPActions {
                 val authParams = mutableMapOf(
                     KEY_USERNAME to event.username,
                     KEY_SRP_A to srpHelper.getPublicA(),
-                    KEY_CHALLENGE_NAME to VALUE_SRP_A
+                    KEY_CHALLENGE_NAME to VALUE_SRP_A,
+                    KEY_DEVICE_KEY to "STUB"
                 )
                 secretHash?.let { authParams[KEY_SECRET_HASH] = it }
                 val encodedContextData = userContextDataProvider?.getEncodedContextData(event.username)
