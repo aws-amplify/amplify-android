@@ -15,6 +15,8 @@
 package com.amplifyframework.analytics.pinpoint.credentails
 
 import aws.smithy.kotlin.runtime.auth.awscredentials.Credentials
+import com.amplifyframework.auth.AWSCredentials
+import com.amplifyframework.auth.AWSTemporaryCredentials
 import com.amplifyframework.auth.AuthCredentialsProvider
 import com.amplifyframework.auth.AuthSession
 import com.amplifyframework.auth.cognito.AWSCognitoAuthSession
@@ -34,7 +36,7 @@ internal class CognitoCredentialsProvider : AuthCredentialsProvider {
         return suspendCoroutine { continuation ->
             Amplify.Auth.fetchAuthSession(
                 { authSession ->
-                    authSession.toAWSCognitoAuthSession()?.identityId?.value?.let {
+                    authSession.toAWSCognitoAuthSession()?.identityIdResult?.value?.let {
                         continuation.resume(it)
                     } ?: continuation.resumeWithException(
                         Exception(
@@ -57,8 +59,8 @@ internal class CognitoCredentialsProvider : AuthCredentialsProvider {
         return suspendCoroutine { continuation ->
             Amplify.Auth.fetchAuthSession(
                 { authSession ->
-                    authSession.toAWSCognitoAuthSession()?.awsCredentials?.value?.let {
-                        continuation.resume(it)
+                    authSession.toAWSCognitoAuthSession()?.awsCredentialsResult?.value?.let {
+                        continuation.resume(it.toCredentials())
                     } ?: continuation.resumeWithException(
                         Exception(
                             "Failed to get credentials. " +
@@ -72,6 +74,15 @@ internal class CognitoCredentialsProvider : AuthCredentialsProvider {
             )
         }
     }
+}
+
+private fun AWSCredentials.toCredentials(): Credentials {
+    return Credentials(
+        accessKeyId = this.accessKeyId,
+        secretAccessKey = this.secretAccessKey,
+        sessionToken = (this as? AWSTemporaryCredentials)?.sessionToken,
+        expiration = (this as? AWSTemporaryCredentials)?.expiration
+    )
 }
 
 private fun AuthSession.toAWSCognitoAuthSession(): AWSCognitoAuthSession? {
