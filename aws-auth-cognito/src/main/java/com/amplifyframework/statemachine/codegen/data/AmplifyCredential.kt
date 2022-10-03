@@ -15,18 +15,17 @@
 
 package com.amplifyframework.statemachine.codegen.data
 
-import com.amplifyframework.auth.AuthProvider
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
 sealed class AmplifyCredential {
 
-    interface UserPoolData {
+    interface UserPoolTypeCredential {
         val signedInData: SignedInData
     }
 
-    interface IdentityPoolData {
+    interface IdentityPoolTypeCredential {
         val identityId: String
         val credentials: AWSCredentials
     }
@@ -37,20 +36,20 @@ sealed class AmplifyCredential {
 
     @Serializable
     @SerialName("userPool")
-    data class UserPool(override val signedInData: SignedInData) : AmplifyCredential(), UserPoolData
+    data class UserPool(override val signedInData: SignedInData) : AmplifyCredential(), UserPoolTypeCredential
 
     @Serializable
     @SerialName("identityPool")
     data class IdentityPool(override val identityId: String, override val credentials: AWSCredentials) :
-        AmplifyCredential(), IdentityPoolData
+        AmplifyCredential(), IdentityPoolTypeCredential
 
-//    @Serializable
-//    @SerialName("identityPoolFederated")
-//    data class IdentityPoolFederated(
-//        val federatedToken: FederatedToken,
-//        val identityId: String,
-//        val credentials: AWSCredentials
-//    ) : AmplifyCredential()
+    @Serializable
+    @SerialName("identityPoolFederated")
+    data class IdentityPoolFederated(
+        val federatedToken: FederatedToken,
+        override val identityId: String,
+        override val credentials: AWSCredentials
+    ) : AmplifyCredential(), IdentityPoolTypeCredential
 
     @Serializable
     @SerialName("userAndIdentityPool")
@@ -58,7 +57,7 @@ sealed class AmplifyCredential {
         override val signedInData: SignedInData,
         override val identityId: String,
         override val credentials: AWSCredentials
-    ) : AmplifyCredential(), UserPoolData, IdentityPoolData
+    ) : AmplifyCredential(), UserPoolTypeCredential, IdentityPoolTypeCredential
 }
 
 // TODO: Token abstraction if needed
@@ -73,7 +72,8 @@ sealed class AmplifyCredential {
 //    data class FederatedToken(val token: String, val provider: AuthProvider) : AuthTokens()
 // }
 
-data class FederatedToken(val token: String, val provider: AuthProvider)
+@Serializable
+data class FederatedToken(val token: String, val providerName: String)
 
 @Serializable
 data class CognitoUserPoolTokens(

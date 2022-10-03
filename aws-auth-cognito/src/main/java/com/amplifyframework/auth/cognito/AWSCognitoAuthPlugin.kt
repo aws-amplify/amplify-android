@@ -32,6 +32,8 @@ import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.cognito.asf.UserContextDataProvider
 import com.amplifyframework.auth.cognito.data.AWSCognitoAuthCredentialStore
 import com.amplifyframework.auth.cognito.data.AWSCognitoLegacyCredentialStore
+import com.amplifyframework.auth.cognito.options.FederateToIdentityPoolOptions
+import com.amplifyframework.auth.cognito.result.FederateToIdentityPoolResult
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
@@ -397,6 +399,56 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
     override fun getPluginKey() = AWS_COGNITO_AUTH_PLUGIN_KEY
 
     override fun getVersion() = BuildConfig.VERSION_NAME
+
+    /**
+     * Federate to Identity Pool
+     * @param authProvider The auth provider you want to federate for (e.g. Facebook, Google, etc.)
+     * @param providerToken Provider token to start the federation for
+     * @param onSuccess Success callback
+     */
+    fun federateToIdentityPool(
+        authProvider: AuthProvider,
+        providerToken: String,
+        onSuccess: Consumer<FederateToIdentityPoolResult>,
+        onError: Consumer<AuthException>
+    ) {
+        realPlugin.federateToIdentityPool(
+            authProvider,
+            providerToken,
+            FederateToIdentityPoolOptions.builder().build(),
+            onSuccess,
+            onError
+        )
+    }
+
+    /**
+     * Federate to Identity Pool
+     * @param authProvider The auth provider you want to federate for (e.g. Facebook, Google, etc.)
+     * @param providerToken Provider token to start the federation for
+     * @param options Advanced options for federating to identity pool
+     * @param onSuccess Success callback
+     */
+    fun federateToIdentityPool(
+        authProvider: AuthProvider,
+        providerToken: String,
+        options: FederateToIdentityPoolOptions,
+        onSuccess: Consumer<FederateToIdentityPoolResult>,
+        onError: Consumer<AuthException>
+    ) {
+        realPlugin.federateToIdentityPool(authProvider, providerToken, options, onSuccess, onError)
+    }
+
+    /**
+     * Clear Federation to Identity Pool
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     */
+    fun clearFederationToIdentityPool(
+        onSuccess: Action,
+        onError: Consumer<AuthException>
+    ) {
+        realPlugin.clearFederationToIdentityPool(onSuccess, onError)
+    }
 
     private fun createCredentialStoreStateMachine(
         configuration: AuthConfiguration,

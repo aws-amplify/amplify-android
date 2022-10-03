@@ -130,7 +130,8 @@ ext {
             reflection: "org.jetbrains.kotlin:kotlin-reflect:1.7.10",
             test: [
                 junit: 'org.jetbrains.kotlin:kotlin-test-junit:1.5.31',
-                coroutines: 'org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.3'
+                coroutines: 'org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.3',
+                kotlinTest: 'org.jetbrains.kotlin:kotlin-test:1.7.10'
             ]
         ],
 

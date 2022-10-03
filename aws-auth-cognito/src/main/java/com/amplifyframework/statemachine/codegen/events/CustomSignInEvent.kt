@@ -24,8 +24,7 @@ class CustomSignInEvent(
 ) : StateMachineEvent {
     sealed class EventType {
         data class InitiateCustomSignIn(
-            val username: String,
-            val password: String?
+            val username: String
         ) : EventType()
 
         data class FinalizeSignIn(val id: String = "") : EventType()

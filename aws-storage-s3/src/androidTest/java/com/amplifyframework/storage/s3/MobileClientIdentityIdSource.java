@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -48,7 +48,8 @@ final class MobileClientIdentityIdSource implements IdentityIdSource {
                 synchronousAuth.signOut();
             }
             synchronousAuth.signIn(username, password);
-            String identityId = ((AWSCognitoAuthSession) synchronousAuth.fetchAuthSession()).getIdentityId().getValue();
+            String identityId = ((AWSCognitoAuthSession) synchronousAuth.fetchAuthSession())
+                    .getIdentityIdResult().getValue();
             synchronousAuth.signOut();
             return Objects.requireNonNull(identityId);
         } catch (NullPointerException | AuthException lookupFailure) {
