@@ -38,8 +38,8 @@ dependencies {
     testImplementation project(path: ':aws-auth-cognito')
     //noinspection GradleDependency
     testImplementation 'org.json:json:20180813'
-    testImplementation 'org.jetbrains.kotlin:kotlin-test:1.6.21'
     testImplementation dependency.kotlin.test.junit
+    testImplementation dependency.kotlin.test.kotlinTest
     testImplementation dependency.kotlin.test.coroutines
 
     testImplementation dependency.junit
