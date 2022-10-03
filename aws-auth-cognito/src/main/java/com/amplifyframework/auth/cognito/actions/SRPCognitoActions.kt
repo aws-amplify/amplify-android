@@ -84,7 +84,7 @@ object SRPCognitoActions : SRPActions {
 
     override fun initiateSRPWithCustomAuthAction(event: SRPEvent.EventType.InitiateSRPWithCustom): Action =
         Action<AuthEnvironment>("InitSRPCustomAuth") { id, dispatcher ->
-            logger?.verbose("$id Starting execution")
+            logger.verbose("$id Starting execution")
             val evt = try {
                 srpHelper = SRPHelper("")
 
@@ -117,12 +117,12 @@ object SRPCognitoActions : SRPActions {
                 }
             } catch (e: Exception) {
                 val errorEvent = SRPEvent(SRPEvent.EventType.ThrowAuthError(e))
-                logger?.verbose("$id Sending event ${errorEvent.type}")
+                logger.verbose("$id Sending event ${errorEvent.type}")
                 dispatcher.send(errorEvent)
 
                 AuthenticationEvent(AuthenticationEvent.EventType.CancelSignIn())
             }
-            logger?.verbose("$id Sending event ${evt.type}")
+            logger.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
         }
 

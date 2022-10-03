@@ -84,13 +84,13 @@ object FetchAuthSessionCognitoActions : FetchAuthSessionActions {
             } catch (e: Exception) {
                 AuthorizationEvent(AuthorizationEvent.EventType.ThrowError(e))
             }
-            logger?.verbose("$id Sending event ${evt.type}")
+            logger.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
         }
 
     override fun refreshHostedUIUserPoolTokensAction(signedInData: SignedInData) =
         Action<AuthEnvironment>("InitiateRefreshHostedUITokens") { id, dispatcher ->
-            logger?.verbose("$id Starting execution")
+            logger.verbose("$id Starting execution")
             val evt = try {
                 val refreshToken = signedInData.cognitoUserPoolTokens.refreshToken
                 if (hostedUIClient == null || refreshToken == null) throw Exception() // TODO: Better Exception
@@ -118,21 +118,21 @@ object FetchAuthSessionCognitoActions : FetchAuthSessionActions {
             } catch (e: Exception) {
                 AuthorizationEvent(AuthorizationEvent.EventType.ThrowError(e))
             }
-            logger?.verbose("$id Sending event ${evt.type}")
+            logger.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
         }
 
     override fun refreshAuthSessionAction(logins: LoginsMapProvider) =
         Action<AuthEnvironment>("RefreshAuthSession") { id, dispatcher ->
-            logger?.verbose("$id Starting execution")
+            logger.verbose("$id Starting execution")
             val evt = FetchAuthSessionEvent(FetchAuthSessionEvent.EventType.FetchIdentity(logins))
-            logger?.verbose("$id Sending event ${evt.type}")
+            logger.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
         }
 
     override fun fetchIdentityAction(loginsMap: LoginsMapProvider) =
         Action<AuthEnvironment>("FetchIdentity") { id, dispatcher ->
-            logger?.verbose("$id Starting execution")
+            logger.verbose("$id Starting execution")
             val evt = try {
                 val request = GetIdRequest {
                     identityPoolId = configuration.identityPool?.poolId

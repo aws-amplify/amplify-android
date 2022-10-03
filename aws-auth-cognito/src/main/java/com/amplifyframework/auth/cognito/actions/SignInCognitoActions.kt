@@ -52,9 +52,9 @@ object SignInCognitoActions : SignInActions {
 
     override fun startCustomAuthWithSRPAction(event: SignInEvent.EventType.InitiateCustomSignInWithSRP): Action =
         Action<AuthEnvironment>("StartSRPAuth") { id, dispatcher ->
-            logger?.verbose("$id Starting execution")
+            logger.verbose("$id Starting execution")
             val evt = SRPEvent(SRPEvent.EventType.InitiateSRPWithCustom(event.username))
-            logger?.verbose("$id Sending event ${evt.type}")
+            logger.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
         }
 
@@ -68,7 +68,7 @@ object SignInCognitoActions : SignInActions {
 
     override fun confirmDevice(event: SignInEvent.EventType.ConfirmDevice): Action =
         Action<AuthEnvironment>("InitResolveChallenge") { id, dispatcher ->
-            logger?.verbose("$id Starting execution")
+            logger.verbose("$id Starting execution")
             val deviceMetadata = event.signedInData.deviceMetadata as? DeviceMetadata.Metadata
             val deviceKey = deviceMetadata?.deviceKey
             val deviceGroupKey = deviceMetadata?.deviceGroupKey
@@ -91,15 +91,15 @@ object SignInCognitoActions : SignInActions {
             } catch (e: Exception) {
                 SignInEvent(SignInEvent.EventType.ThrowError(e))
             }
-            logger?.verbose("$id Sending event ${evt.type}")
+            logger.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
         }
 
     override fun startHostedUIAuthAction(event: SignInEvent.EventType.InitiateHostedUISignIn) =
         Action<AuthEnvironment>("StartHostedUIAuth") { id, dispatcher ->
-            logger?.verbose("$id Starting execution")
+            logger.verbose("$id Starting execution")
             val evt = HostedUIEvent(HostedUIEvent.EventType.ShowHostedUI(event.hostedUISignInData))
-            logger?.verbose("$id Sending event ${evt.type}")
+            logger.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
         }
 }
