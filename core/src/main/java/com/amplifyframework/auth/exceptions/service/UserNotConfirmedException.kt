@@ -23,6 +23,6 @@ import com.amplifyframework.auth.exceptions.ServiceException
 open class UserNotConfirmedException(cause: Throwable?) :
     ServiceException(
         "User not confirmed in the system.",
-        "Please confirm user first and then retry operation",
+        "Please confirm user first using the confirmUser API and then retry this operation",
         cause
     )
