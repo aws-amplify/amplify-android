@@ -15,8 +15,8 @@
 
 package com.amplifyframework.auth.cognito.helpers
 
+import com.amplifyframework.auth.cognito.exceptions.service.InvalidParameterException
 import com.amplifyframework.auth.exceptions.UnknownException
-import com.amplifyframework.auth.exceptions.service.InvalidParameterException
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 

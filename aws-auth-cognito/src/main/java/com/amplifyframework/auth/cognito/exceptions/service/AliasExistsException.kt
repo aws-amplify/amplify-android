@@ -12,17 +12,17 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package com.amplifyframework.auth.exceptions.service
+package com.amplifyframework.auth.cognito.exceptions.service
 
 import com.amplifyframework.auth.exceptions.ServiceException
 
 /**
- * Could not perform the action because confirmation code has expired.
- * @param cause The underlying cause of the exception
+ * Could not perform the action because alias (an account with certain email or phone) already exists in the system.
+ * @param cause The underlying cause of this exception
  */
-open class CodeExpiredException(cause: Throwable?) :
+open class AliasExistsException(cause: Throwable?) :
     ServiceException(
-        "Confirmation code has expired.",
-        "Resend a new confirmation code and then retry operation with it.",
+        "Alias (an account with this email or phone) already exists in the system.",
+        "Retry operation and use another alias.",
         cause
     )

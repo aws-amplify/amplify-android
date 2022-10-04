@@ -12,17 +12,17 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package com.amplifyframework.auth.exceptions.service
+package com.amplifyframework.auth.cognito.exceptions.service
 
 import com.amplifyframework.auth.exceptions.ServiceException
 
 /**
- * Could not perform the action because username already exists in the system.
+ * Could not find multi-factor authentication (MFA) method in AWS Cognito.
  * @param cause The underlying cause of this exception
  */
-open class UsernameExistsException(cause: Throwable?) :
+open class MFAMethodNotFoundException(cause: Throwable?) :
     ServiceException(
-        "Username already exists in the system.",
-        "Retry operation and enter another username.",
+        "Could not find multi-factor authentication (MFA) method.",
+        "Configure multi-factor authentication using Amplify CLI or AWS Cognito console.",
         cause
     )

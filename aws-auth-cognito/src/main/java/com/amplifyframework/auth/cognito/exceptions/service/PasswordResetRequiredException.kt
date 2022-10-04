@@ -12,17 +12,17 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package com.amplifyframework.auth.exceptions.service
+package com.amplifyframework.auth.cognito.exceptions.service
 
 import com.amplifyframework.auth.exceptions.ServiceException
 
 /**
- * Could not perform the operation since user made too many requests.
+ * Could not perform the action because password needs to be reset.
  * @param cause The underlying cause of this exception
  */
-open class TooManyRequestsException(cause: Throwable?) :
+open class PasswordResetRequiredException(cause: Throwable?) :
     ServiceException(
-        "Failed since the user made too many requests.",
-        "Make sure the requests send are controlled and the errors are properly handled.",
+        "Required to reset the password of the user.",
+        "Reset the password of the user.",
         cause
     )

@@ -12,13 +12,13 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package com.amplifyframework.auth.exceptions.service
+package com.amplifyframework.auth.cognito.exceptions.service
 
 import com.amplifyframework.auth.exceptions.ServiceException
 
 /**
- * Could not perform the action because user was not found in the system.
+ * Could not perform the action because there are incorrect parameters.
  * @param cause The underlying cause of this exception
  */
-open class UserNotFoundException(cause: Throwable?) :
-    ServiceException("User not found in the system.", "Please enter correct username.", cause)
+open class InvalidParameterException(cause: Throwable?) :
+    ServiceException("One or more parameters are incorrect.", "Enter correct parameters.", cause)

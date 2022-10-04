@@ -12,7 +12,7 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package com.amplifyframework.auth.exceptions.invalidstate
+package com.amplifyframework.auth.cognito.exceptions.invalidstate
 
 import com.amplifyframework.auth.exceptions.InvalidStateException
 

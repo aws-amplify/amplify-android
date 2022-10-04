@@ -12,13 +12,14 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package com.amplifyframework.auth.exceptions.service
+package com.amplifyframework.auth.cognito.exceptions.service
 
 import com.amplifyframework.auth.exceptions.ServiceException
 
 /**
- * Could not perform the action because there are incorrect parameters.
- * @param cause The underlying cause of this exception
+ * Could not complete an action because it was cancelled by the user.
+ * @param message An error message describing why this exception was thrown
+ * @param recoverySuggestion Text suggesting a way to recover from the error being described
  */
-open class InvalidParameterException(cause: Throwable?) :
-    ServiceException("One or more parameters are incorrect.", "Enter correct parameters.", cause)
+open class UserCancelledException(message: String, recoverySuggestion: String) :
+    ServiceException(message, recoverySuggestion)

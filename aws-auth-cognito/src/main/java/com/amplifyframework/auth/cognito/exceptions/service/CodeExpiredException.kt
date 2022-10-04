@@ -12,17 +12,17 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package com.amplifyframework.auth.exceptions.service
+package com.amplifyframework.auth.cognito.exceptions.service
 
 import com.amplifyframework.auth.exceptions.ServiceException
 
 /**
- * Could not perform the action because user is not confirmed in the system.
- * @param cause The underlying cause of this exception
+ * Could not perform the action because confirmation code has expired.
+ * @param cause The underlying cause of the exception
  */
-open class UserNotConfirmedException(cause: Throwable?) :
+open class CodeExpiredException(cause: Throwable?) :
     ServiceException(
-        "User not confirmed in the system.",
-        "Please confirm user first using the confirmUser API and then retry this operation",
+        "Confirmation code has expired.",
+        "Resend a new confirmation code and then retry operation with it.",
         cause
     )

@@ -12,17 +12,17 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package com.amplifyframework.auth.exceptions.service
+package com.amplifyframework.auth.cognito.exceptions.service
 
 import com.amplifyframework.auth.exceptions.ServiceException
 
 /**
- * Could not perform the action because error occurred when delivering the confirmation code.
- * @param cause The underlying cause of the exception
+ * Could not perform the action because number of allowed operation has exceeded.
+ * @param cause The underlying cause of this exception
  */
-open class CodeDeliveryFailureException(cause: Throwable? = null) :
+open class LimitExceededException(cause: Throwable?) :
     ServiceException(
-        "Error in delivering the confirmation code.",
-        "Retry operation and send another confirmation code.",
+        "Number of allowed operation has exceeded.",
+        "Please wait a while before re-attempting or increase the service limit.",
         cause
     )

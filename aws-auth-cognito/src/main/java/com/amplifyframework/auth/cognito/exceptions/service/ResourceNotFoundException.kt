@@ -12,15 +12,17 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package com.amplifyframework.auth.exceptions.service
+package com.amplifyframework.auth.cognito.exceptions.service
 
 import com.amplifyframework.auth.exceptions.ServiceException
 
 /**
- * Could not perform the action because the configuration of the signed in account does not support it.
+ * Could not perform the action because Amplify cannot find the requested resource.
+ * @param cause The underlying cause of this exception
  */
-open class InvalidAccountTypeException :
+open class ResourceNotFoundException(cause: Throwable?) :
     ServiceException(
-        "The account type you have configured doesn't support this operation.",
-        "Update your Auth configuration to an account type which supports this operation."
+        "Could not find the requested online resource.",
+        "Retry with exponential back-off or check your config file to be sure the endpoint is valid.",
+        cause
     )

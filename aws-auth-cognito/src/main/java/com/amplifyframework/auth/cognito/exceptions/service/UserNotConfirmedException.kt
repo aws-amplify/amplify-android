@@ -12,16 +12,17 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package com.amplifyframework.auth.exceptions.service
+package com.amplifyframework.auth.cognito.exceptions.service
 
 import com.amplifyframework.auth.exceptions.ServiceException
 
 /**
- * Could not perform the action because user made too many failed attempts for a given action.
+ * Could not perform the action because user is not confirmed in the system.
+ * @param cause The underlying cause of this exception
  */
-open class FailedAttemptsLimitExceededException(cause: Throwable?) :
+open class UserNotConfirmedException(cause: Throwable?) :
     ServiceException(
-        "User has made too many failed attempts for a given action.",
-        "Please check out the service configuration to see the condition of locking.",
+        "User not confirmed in the system.",
+        "Please confirm user first using the confirmUser API and then retry this operation",
         cause
     )

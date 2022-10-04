@@ -12,17 +12,17 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package com.amplifyframework.auth.exceptions.service
+package com.amplifyframework.auth.cognito.exceptions.service
 
 import com.amplifyframework.auth.exceptions.ServiceException
 
 /**
- * Could not perform the action because alias (an account with certain email or phone) already exists in the system.
+ * Could not perform the action because username already exists in the system.
  * @param cause The underlying cause of this exception
  */
-open class AliasExistsException(cause: Throwable?) :
+open class UsernameExistsException(cause: Throwable?) :
     ServiceException(
-        "Alias (an account with this email or phone) already exists in the system.",
-        "Retry operation and use another alias.",
+        "Username already exists in the system.",
+        "Retry operation and enter another username.",
         cause
     )

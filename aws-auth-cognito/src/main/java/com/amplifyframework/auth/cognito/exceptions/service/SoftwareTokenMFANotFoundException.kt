@@ -12,14 +12,13 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package com.amplifyframework.auth.exceptions.service
+package com.amplifyframework.auth.cognito.exceptions.service
 
 import com.amplifyframework.auth.exceptions.ServiceException
 
 /**
- * Could not complete an action because it was cancelled by the user.
- * @param message An error message describing why this exception was thrown
- * @param recoverySuggestion Text suggesting a way to recover from the error being described
+ * Could not find software token MFA for the user.
+ * @param cause The underlying cause of this exception
  */
-open class UserCancelledException(message: String, recoverySuggestion: String) :
-    ServiceException(message, recoverySuggestion)
+open class SoftwareTokenMFANotFoundException(cause: Throwable?) :
+    ServiceException("Could not find software token MFA.", "Enable the software token MFA for the user.", cause)

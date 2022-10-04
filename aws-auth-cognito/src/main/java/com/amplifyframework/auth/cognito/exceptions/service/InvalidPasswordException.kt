@@ -12,17 +12,13 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package com.amplifyframework.auth.exceptions.service
+package com.amplifyframework.auth.cognito.exceptions.service
 
 import com.amplifyframework.auth.exceptions.ServiceException
 
 /**
- * Could not perform the action because password needs to be reset.
+ * Could not perform the action because the password given is invalid.
  * @param cause The underlying cause of this exception
  */
-open class PasswordResetRequiredException(cause: Throwable?) :
-    ServiceException(
-        "Required to reset the password of the user.",
-        "Reset the password of the user.",
-        cause
-    )
+open class InvalidPasswordException(cause: Throwable?) :
+    ServiceException("The password given is invalid.", "Enter correct password.", cause)

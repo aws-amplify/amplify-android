@@ -12,17 +12,17 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package com.amplifyframework.auth.exceptions.service
+package com.amplifyframework.auth.cognito.exceptions.service
 
 import com.amplifyframework.auth.exceptions.ServiceException
 
 /**
- * Could not find multi-factor authentication (MFA) method in AWS Cognito.
+ * Could not perform the operation since user made too many requests.
  * @param cause The underlying cause of this exception
  */
-open class MFAMethodNotFoundException(cause: Throwable?) :
+open class TooManyRequestsException(cause: Throwable?) :
     ServiceException(
-        "Could not find multi-factor authentication (MFA) method.",
-        "Configure multi-factor authentication using Amplify CLI or AWS Cognito console.",
+        "Failed since the user made too many requests.",
+        "Make sure the requests send are controlled and the errors are properly handled.",
         cause
     )

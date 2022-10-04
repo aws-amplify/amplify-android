@@ -12,13 +12,15 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package com.amplifyframework.auth.exceptions.service
+package com.amplifyframework.auth.cognito.exceptions.service
 
 import com.amplifyframework.auth.exceptions.ServiceException
 
 /**
- * Could not find software token MFA for the user.
- * @param cause The underlying cause of this exception
+ * Could not perform the action because the configuration of the signed in account does not support it.
  */
-open class SoftwareTokenMFANotFoundException(cause: Throwable?) :
-    ServiceException("Could not find software token MFA.", "Enable the software token MFA for the user.", cause)
+open class InvalidAccountTypeException :
+    ServiceException(
+        "The account type you have configured doesn't support this operation.",
+        "Update your Auth configuration to an account type which supports this operation."
+    )

@@ -12,17 +12,16 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package com.amplifyframework.auth.exceptions.service
+package com.amplifyframework.auth.cognito.exceptions.service
 
 import com.amplifyframework.auth.exceptions.ServiceException
 
 /**
- * Could not perform the action because Amplify cannot find the requested resource.
- * @param cause The underlying cause of this exception
+ * Could not perform the action because user made too many failed attempts for a given action.
  */
-open class ResourceNotFoundException(cause: Throwable?) :
+open class FailedAttemptsLimitExceededException(cause: Throwable?) :
     ServiceException(
-        "Could not find the requested online resource.",
-        "Retry with exponential back-off or check your config file to be sure the endpoint is valid.",
+        "User has made too many failed attempts for a given action.",
+        "Please check out the service configuration to see the condition of locking.",
         cause
     )
