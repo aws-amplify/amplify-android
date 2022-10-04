@@ -46,7 +46,7 @@ import com.amplifyframework.auth.cognito.exceptions.AuthExceptionHelper
 import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidUserPoolConfigurationException
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.auth.cognito.helpers.HostedUIHelper
-import com.amplifyframework.auth.cognito.helpers.JWTParser
+import com.amplifyframework.auth.cognito.helpers.SessionHelper
 import com.amplifyframework.auth.cognito.helpers.SignInChallengeHelper
 import com.amplifyframework.auth.cognito.helpers.identityProviderName
 import com.amplifyframework.auth.cognito.options.AWSAuthResendUserAttributeConfirmationCodeOptions
@@ -432,13 +432,20 @@ internal class RealAWSCognitoAuthPlugin(
                 val authZState = authState.authZState
                 when {
                     authNState is AuthenticationState.SigningIn -> {
-                        val srpSignInState = (authNState.signInState as? SignInState.SigningInWithSRP)?.srpSignInState
-                        val challengeState = (authNState.signInState as? SignInState.ResolvingChallenge)?.challengeState
+                        val signInState = authNState.signInState
+                        val srpSignInState = (signInState as? SignInState.SigningInWithSRP)?.srpSignInState
+                        val challengeState = (signInState as? SignInState.ResolvingChallenge)?.challengeState
                         when {
                             srpSignInState is SRPSignInState.Error -> {
                                 token?.let(authStateMachine::cancel)
                                 onError.accept(
                                     CognitoAuthExceptionConverter.lookup(srpSignInState.exception, "Sign in failed.")
+                                )
+                            }
+                            signInState is SignInState.Error -> {
+                                token?.let(authStateMachine::cancel)
+                                onError.accept(
+                                    CognitoAuthExceptionConverter.lookup(signInState.exception, "Sign in failed.")
                                 )
                             }
                             challengeState is SignInChallengeState.WaitingForAnswer -> {
@@ -477,7 +484,7 @@ internal class RealAWSCognitoAuthPlugin(
                         SignInData.CustomSRPAuthSignInData(username, signInOptions.metadata)
                     }
                     AuthFlowType.USER_PASSWORD_AUTH -> {
-                        TODO()
+                        SignInData.MigrationAuthSignInData(username, password, signInOptions.metadata)
                     }
                 }
                 val event = AuthenticationEvent(AuthenticationEvent.EventType.SignInRequested(signInData))
@@ -1354,8 +1361,8 @@ internal class RealAWSCognitoAuthPlugin(
             GlobalScope.async {
                 val accessToken = getSession().userPoolTokensResult.value?.accessToken
                 accessToken?.run {
-                    val userid = JWTParser.getClaim(accessToken, "sub") ?: ""
-                    val username = JWTParser.getClaim(accessToken, "username") ?: ""
+                    val userid = SessionHelper.getUserSub(accessToken) ?: ""
+                    val username = SessionHelper.getUsername(accessToken) ?: ""
                     onSuccess.accept(AuthUser(userid, username))
                 } ?: onError.accept(InvalidUserPoolConfigurationException())
             }

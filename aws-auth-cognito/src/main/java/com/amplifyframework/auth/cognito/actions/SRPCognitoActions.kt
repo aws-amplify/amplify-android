@@ -162,7 +162,6 @@ object SRPCognitoActions : SRPActions {
                 }
                 if (response != null) {
                     SignInChallengeHelper.evaluateNextStep(
-                        userId,
                         username,
                         response.challengeName,
                         response.session,

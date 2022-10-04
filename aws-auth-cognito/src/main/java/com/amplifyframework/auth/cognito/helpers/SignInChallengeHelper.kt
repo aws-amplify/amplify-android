@@ -39,7 +39,6 @@ import kotlin.time.Duration.Companion.seconds
 
 object SignInChallengeHelper {
     fun evaluateNextStep(
-        userId: String = "",
         username: String,
         challengeNameType: ChallengeNameType?,
         session: String?,
@@ -51,6 +50,7 @@ object SignInChallengeHelper {
         return when {
             authenticationResult != null -> {
                 val signedInData = authenticationResult.let {
+                    val userId = it.accessToken?.let { token -> SessionHelper.getUserSub(token) } ?: ""
                     val expiresIn = Instant.now().plus(it.expiresIn.seconds).epochSeconds
                     val tokens = CognitoUserPoolTokens(it.idToken, it.accessToken, it.refreshToken, expiresIn)
                     val deviceMetaData = it.newDeviceMetadata?.let { metadata ->
@@ -92,7 +92,7 @@ object SignInChallengeHelper {
         when (ChallengeNameType.fromValue(challenge.challengeName)) {
             is ChallengeNameType.SmsMfa -> {
                 val deliveryDetails = AuthCodeDeliveryDetails(
-                    challengeParams.getValue("CODE_DELIVERY_DESTINATION") ?: "",
+                    challengeParams.getValue("CODE_DELIVERY_DESTINATION"),
                     AuthCodeDeliveryDetails.DeliveryMedium.fromString(
                         challengeParams.getValue("CODE_DELIVERY_DELIVERY_MEDIUM")
                     )
