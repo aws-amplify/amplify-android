@@ -17,24 +17,23 @@ package com.amplifyframework.auth.cognito.actions
 
 import aws.sdk.kotlin.services.cognitoidentityprovider.initiateAuth
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AuthFlowType
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
 import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.auth.cognito.helpers.SignInChallengeHelper
 import com.amplifyframework.statemachine.Action
-import com.amplifyframework.statemachine.codegen.actions.CustomSignInActions
-import com.amplifyframework.statemachine.codegen.data.SignInMethod
+import com.amplifyframework.statemachine.codegen.actions.MigrateAuthActions
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
-import com.amplifyframework.statemachine.codegen.events.CustomSignInEvent
+import com.amplifyframework.statemachine.codegen.events.SignInEvent
 
-object SignInCustomActions : CustomSignInActions {
-    private const val KEY_SECRET_HASH = "SECRET_HASH"
+object MigrateAuthCognitoActions : MigrateAuthActions {
     private const val KEY_USERNAME = "USERNAME"
-    private const val KEY_DEVICE_KEY = "DEVICE_KEY"
-    override fun initiateCustomSignInAuthAction(event: CustomSignInEvent.EventType.InitiateCustomSignIn): Action =
-        Action<AuthEnvironment>("InitCustomAuth") { id, dispatcher ->
-            logger.verbose("$id Starting execution")
+    private const val KEY_PASSWORD = "PASSWORD"
+    private const val KEY_SECRET_HASH = "SECRET_HASH"
+
+    override fun initiateMigrateAuthAction(event: SignInEvent.EventType.InitiateMigrateAuth) =
+        Action<AuthEnvironment>("InitMigrateAuth") { id, dispatcher ->
+            logger?.verbose("$id Starting execution")
             val evt = try {
                 val secretHash = AuthHelper.getSecretHash(
                     event.username,
@@ -42,38 +41,37 @@ object SignInCustomActions : CustomSignInActions {
                     configuration.userPool?.appClientSecret
                 )
 
-                val authParams = mutableMapOf(KEY_USERNAME to event.username)
+                val authParams = mutableMapOf(KEY_USERNAME to event.username, KEY_PASSWORD to event.password)
                 secretHash?.let { authParams[KEY_SECRET_HASH] = it }
                 val encodedContextData = userContextDataProvider?.getEncodedContextData(event.username)
 
-                val initiateAuthResponse = cognitoAuthService.cognitoIdentityProviderClient?.initiateAuth {
-                    authFlow = AuthFlowType.CustomAuth
+                val response = cognitoAuthService.cognitoIdentityProviderClient?.initiateAuth {
+                    authFlow = AuthFlowType.UserPasswordAuth
                     clientId = configuration.userPool?.appClient
                     authParameters = authParams
+                    clientMetadata = event.metadata
                     encodedContextData?.let { userContextData { encodedData = it } }
                 }
 
-                if (initiateAuthResponse?.challengeName == ChallengeNameType.CustomChallenge &&
-                    initiateAuthResponse.challengeParameters != null
-                ) {
+                if (response != null) {
                     SignInChallengeHelper.evaluateNextStep(
-                        username = event.username,
-                        challengeNameType = initiateAuthResponse.challengeName,
-                        session = initiateAuthResponse.session,
-                        challengeParameters = initiateAuthResponse.challengeParameters,
-                        authenticationResult = initiateAuthResponse.authenticationResult,
-                        signInMethod = SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.CUSTOM_AUTH)
+                        event.username,
+                        response.challengeName,
+                        response.session,
+                        response.challengeParameters,
+                        response.authenticationResult
                     )
                 } else {
-                    throw AuthException(
-                        "This sign in method is not supported",
-                        "Please consult our docs for supported sign in methods"
-                    )
+                    throw AuthException("Sign in failed", AuthException.TODO_RECOVERY_SUGGESTION)
                 }
             } catch (e: Exception) {
-                AuthenticationEvent(AuthenticationEvent.EventType.CancelSignIn(error = e))
+                val errorEvent = SignInEvent(SignInEvent.EventType.ThrowError(e))
+                logger?.verbose("$id Sending event ${errorEvent.type}")
+                dispatcher.send(errorEvent)
+
+                AuthenticationEvent(AuthenticationEvent.EventType.CancelSignIn())
             }
-            logger.verbose("$id Sending event ${evt.type}")
+            logger?.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
         }
 }

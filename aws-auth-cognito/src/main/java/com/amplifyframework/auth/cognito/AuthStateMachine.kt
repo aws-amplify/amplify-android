@@ -22,6 +22,7 @@ import com.amplifyframework.auth.cognito.actions.DeleteUserActions
 import com.amplifyframework.auth.cognito.actions.DeviceSRPCognitoSignInActions
 import com.amplifyframework.auth.cognito.actions.FetchAuthSessionCognitoActions
 import com.amplifyframework.auth.cognito.actions.HostedUICognitoActions
+import com.amplifyframework.auth.cognito.actions.MigrateAuthCognitoActions
 import com.amplifyframework.auth.cognito.actions.SRPCognitoActions
 import com.amplifyframework.auth.cognito.actions.SignInChallengeCognitoActions
 import com.amplifyframework.auth.cognito.actions.SignInCognitoActions
@@ -38,6 +39,7 @@ import com.amplifyframework.statemachine.codegen.states.DeleteUserState
 import com.amplifyframework.statemachine.codegen.states.DeviceSRPSignInState
 import com.amplifyframework.statemachine.codegen.states.FetchAuthSessionState
 import com.amplifyframework.statemachine.codegen.states.HostedUISignInState
+import com.amplifyframework.statemachine.codegen.states.MigrateSignInState
 import com.amplifyframework.statemachine.codegen.states.RefreshSessionState
 import com.amplifyframework.statemachine.codegen.states.SRPSignInState
 import com.amplifyframework.statemachine.codegen.states.SignInChallengeState
@@ -56,6 +58,7 @@ internal class AuthStateMachine(
                 SignInState.Resolver(
                     SRPSignInState.Resolver(SRPCognitoActions),
                     CustomSignInState.Resolver(SignInCustomActions),
+                    MigrateSignInState.Resolver(MigrateAuthCognitoActions),
                     SignInChallengeState.Resolver(SignInChallengeCognitoActions),
                     HostedUISignInState.Resolver(HostedUICognitoActions),
                     DeviceSRPSignInState.Resolver(DeviceSRPCognitoSignInActions),
@@ -86,6 +89,7 @@ internal class AuthStateMachine(
                     SignInState.Resolver(
                         SRPSignInState.Resolver(SRPCognitoActions).logging(),
                         CustomSignInState.Resolver(SignInCustomActions).logging(),
+                        MigrateSignInState.Resolver(MigrateAuthCognitoActions).logging(),
                         SignInChallengeState.Resolver(SignInChallengeCognitoActions).logging(),
                         HostedUISignInState.Resolver(HostedUICognitoActions).logging(),
                         DeviceSRPSignInState.Resolver(DeviceSRPCognitoSignInActions).logging(),
