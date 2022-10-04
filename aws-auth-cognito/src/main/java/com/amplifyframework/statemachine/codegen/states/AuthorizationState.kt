@@ -167,7 +167,10 @@ sealed class AuthorizationState : State {
                         )
                         StateResolution(StoringCredentials(amplifyCredential))
                     }
-                    is AuthorizationEvent.EventType.ThrowError -> StateResolution(Error(authorizationEvent.exception))
+                    is AuthorizationEvent.EventType.ThrowError -> {
+                        val amplifyCredential = AmplifyCredential.UserPool(oldState.signedInData)
+                        StateResolution(StoringCredentials(amplifyCredential))
+                    }
                     else -> {
                         val resolution = fetchAuthSessionResolver.resolve(oldState.fetchAuthSessionState, event)
                         StateResolution(

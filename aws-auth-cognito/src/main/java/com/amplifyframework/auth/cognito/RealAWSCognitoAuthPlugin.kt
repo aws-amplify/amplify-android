@@ -399,9 +399,7 @@ internal class RealAWSCognitoAuthPlugin(
                     onSuccess,
                     onError
                 )
-                is AuthenticationState.SignedIn -> {
-                    onError.accept(AuthException.SignedInException())
-                }
+                is AuthenticationState.SignedIn -> onError.accept(AuthException.SignedInException())
                 else -> onError.accept(AuthException.InvalidStateException())
             }
         }
@@ -445,9 +443,7 @@ internal class RealAWSCognitoAuthPlugin(
                         )
                         onSuccess.accept(authSignInResult)
                     }
-                    else -> {
-                        // no-op
-                    }
+                    else -> Unit
                 }
             },
             {
@@ -674,8 +670,7 @@ internal class RealAWSCognitoAuthPlugin(
                 }
             },
             {
-                val hostedUIOptions =
-                    HostedUIHelper.createHostedUIOptions(callingActivity, provider, options)
+                val hostedUIOptions = HostedUIHelper.createHostedUIOptions(callingActivity, provider, options)
                 authStateMachine.send(
                     AuthenticationEvent(
                         AuthenticationEvent.EventType.SignInRequested(
@@ -752,7 +747,7 @@ internal class RealAWSCognitoAuthPlugin(
         val forceRefresh = options.forceRefresh
         authStateMachine.getCurrentState { authState ->
             when (val authZState = authState.authZState) {
-                is AuthorizationState.Configured -> {
+                is AuthorizationState.Configured, is AuthorizationState.Error -> {
                     authStateMachine.send(AuthorizationEvent(AuthorizationEvent.EventType.FetchUnAuthSession))
                     _fetchAuthSession(onSuccess, onError)
                 }
@@ -769,9 +764,7 @@ internal class RealAWSCognitoAuthPlugin(
                         _fetchAuthSession(onSuccess, onError)
                     } else onSuccess.accept(credential.getCognitoSession())
                 }
-                else -> {
-                    // no-op
-                }
+                else -> Unit
             }
         }
     }
@@ -797,9 +790,7 @@ internal class RealAWSCognitoAuthPlugin(
                             )
                         )
                     }
-                    else -> {
-                        // no-op
-                    }
+                    else -> Unit
                 }
             },
             null
