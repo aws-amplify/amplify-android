@@ -15,8 +15,8 @@
 
 package com.amplifyframework.auth.cognito.actions
 
-import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.cognito.AuthEnvironment
+import com.amplifyframework.auth.exceptions.ValidationException
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.AuthenticationActions
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
@@ -63,7 +63,7 @@ object AuthenticationCognitoActions : AuthenticationActions {
                     } else {
                         AuthenticationEvent(
                             AuthenticationEvent.EventType.ThrowError(
-                                AuthException("Sign in failed.", "username or password empty")
+                                ValidationException("Sign in failed.", "username or password empty")
                             )
                         )
                     }
@@ -76,7 +76,7 @@ object AuthenticationCognitoActions : AuthenticationActions {
                     } else {
                         AuthenticationEvent(
                             AuthenticationEvent.EventType.ThrowError(
-                                AuthException("Sign in failed.", "username can not be empty")
+                                ValidationException("Sign in failed.", "username can not be empty")
                             )
                         )
                     }
@@ -89,7 +89,7 @@ object AuthenticationCognitoActions : AuthenticationActions {
                     } else {
                         AuthenticationEvent(
                             AuthenticationEvent.EventType.ThrowError(
-                                AuthException("Sign in failed.", "username can not be empty")
+                                ValidationException("Sign in failed.", "username can not be empty")
                             )
                         )
                     }

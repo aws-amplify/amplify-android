@@ -20,6 +20,7 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
 import aws.smithy.kotlin.runtime.time.Instant
 import com.amplifyframework.auth.AuthCodeDeliveryDetails
 import com.amplifyframework.auth.AuthException
+import com.amplifyframework.auth.exceptions.UnknownException
 import com.amplifyframework.auth.result.AuthSignInResult
 import com.amplifyframework.auth.result.step.AuthNextSignInStep
 import com.amplifyframework.auth.result.step.AuthSignInStep
@@ -116,7 +117,7 @@ object SignInChallengeHelper {
                 )
                 onSuccess.accept(authSignInResult)
             }
-            else -> onError.accept(AuthException.UnknownException(Exception("Challenge type not supported.")))
+            else -> onError.accept(UnknownException(cause = Exception("Challenge type not supported.")))
         }
     }
 }

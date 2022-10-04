@@ -34,6 +34,7 @@ import com.amplifyframework.auth.cognito.data.AWSCognitoAuthCredentialStore
 import com.amplifyframework.auth.cognito.data.AWSCognitoLegacyCredentialStore
 import com.amplifyframework.auth.cognito.options.FederateToIdentityPoolOptions
 import com.amplifyframework.auth.cognito.result.FederateToIdentityPoolResult
+import com.amplifyframework.auth.exceptions.ConfigurationException
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
@@ -96,10 +97,10 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
                 logger
             )
         } catch (exception: JSONException) {
-            throw AuthException(
+            throw ConfigurationException(
                 "Failed to configure AWSCognitoAuthPlugin.",
-                exception,
-                "Make sure your amplifyconfiguration.json is valid."
+                "Make sure your amplifyconfiguration.json is valid.",
+                exception
             )
         }
     }

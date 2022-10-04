@@ -33,8 +33,11 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.UserNotConfirmedExc
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.UserNotFoundException
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.UsernameExistsException
 import com.amplifyframework.auth.AuthException
-import com.amplifyframework.auth.AuthException.FailedAttemptsLimitExceededException
-import com.amplifyframework.auth.AuthException.SoftwareTokenMFANotFoundException
+import com.amplifyframework.auth.exceptions.UnknownException
+import com.amplifyframework.auth.exceptions.service.CodeExpiredException
+import com.amplifyframework.auth.exceptions.service.FailedAttemptsLimitExceededException
+import com.amplifyframework.auth.exceptions.service.MFAMethodNotFoundException
+import com.amplifyframework.auth.exceptions.service.SoftwareTokenMFANotFoundException
 
 /**
  * Convert AWS Cognito Exceptions to AuthExceptions.
@@ -51,26 +54,34 @@ class CognitoAuthExceptionConverter {
          */
         fun lookup(error: Exception, fallbackMessage: String): AuthException {
             return when (error) {
-                is UserNotFoundException -> AuthException.UserNotFoundException(error)
-                is UserNotConfirmedException -> AuthException.UserNotConfirmedException(error)
-                is UsernameExistsException -> AuthException.UsernameExistsException(error)
-                is AliasExistsException -> AuthException.AliasExistsException(error)
-                is InvalidPasswordException -> AuthException.InvalidPasswordException(error)
-                is InvalidParameterException -> AuthException.InvalidParameterException(error)
-                is ExpiredCodeException -> AuthException.CodeExpiredException(error)
-                is CodeMismatchException -> AuthException.CodeMismatchException(error)
-                is CodeDeliveryFailureException -> AuthException.CodeDeliveryFailureException(error)
-                is LimitExceededException -> AuthException.LimitExceededException(error)
-                is MfaMethodNotFoundException -> AuthException.MFAMethodNotFoundException(error)
-                is NotAuthorizedException -> AuthException.NotAuthorizedException(error)
-                is ResourceNotFoundException -> AuthException.ResourceNotFoundException(error)
-                is SoftwareTokenMfaNotFoundException -> SoftwareTokenMFANotFoundException(error)
-                is TooManyFailedAttemptsException -> FailedAttemptsLimitExceededException(error)
-                is TooManyRequestsException -> AuthException.TooManyRequestsException(error)
-                is PasswordResetRequiredException -> AuthException.PasswordResetRequiredException(
-                    error
-                )
-                else -> AuthException(fallbackMessage, error, defaultRecoveryMessage)
+                is UserNotFoundException -> com.amplifyframework.auth.exceptions.service.UserNotFoundException(error)
+                is UserNotConfirmedException ->
+                    com.amplifyframework.auth.exceptions.service.UserNotConfirmedException(error)
+                is UsernameExistsException ->
+                    com.amplifyframework.auth.exceptions.service.UsernameExistsException(error)
+                is AliasExistsException -> com.amplifyframework.auth.exceptions.service.AliasExistsException(error)
+                is InvalidPasswordException ->
+                    com.amplifyframework.auth.exceptions.service.InvalidPasswordException(error)
+                is InvalidParameterException ->
+                    com.amplifyframework.auth.exceptions.service.InvalidParameterException(error)
+                is ExpiredCodeException -> CodeExpiredException(error)
+                is CodeMismatchException -> com.amplifyframework.auth.exceptions.service.CodeMismatchException(error)
+                is CodeDeliveryFailureException ->
+                    com.amplifyframework.auth.exceptions.service.CodeDeliveryFailureException(error)
+                is LimitExceededException -> com.amplifyframework.auth.exceptions.service.LimitExceededException(error)
+                is MfaMethodNotFoundException -> MFAMethodNotFoundException(error)
+                is NotAuthorizedException -> com.amplifyframework.auth.exceptions.NotAuthorizedException(cause = error)
+                is ResourceNotFoundException ->
+                    com.amplifyframework.auth.exceptions.service.ResourceNotFoundException(error)
+                is SoftwareTokenMfaNotFoundException ->
+                    SoftwareTokenMFANotFoundException(error)
+                is TooManyFailedAttemptsException ->
+                    FailedAttemptsLimitExceededException(error)
+                is TooManyRequestsException ->
+                    com.amplifyframework.auth.exceptions.service.TooManyRequestsException(error)
+                is PasswordResetRequiredException ->
+                    com.amplifyframework.auth.exceptions.service.PasswordResetRequiredException(error)
+                else -> UnknownException(fallbackMessage, error)
             }
         }
     }

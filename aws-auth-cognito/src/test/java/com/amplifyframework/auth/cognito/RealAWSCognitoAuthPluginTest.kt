@@ -43,6 +43,8 @@ import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.AuthUser
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
+import com.amplifyframework.auth.cognito.exceptions.AuthExceptionHelper
+import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidUserPoolConfigurationException
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.auth.cognito.helpers.SRPHelper
 import com.amplifyframework.auth.cognito.options.AWSAuthResendUserAttributeConfirmationCodeOptions
@@ -50,6 +52,8 @@ import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttribu
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttributesOptions
 import com.amplifyframework.auth.cognito.options.AuthFlowType
 import com.amplifyframework.auth.cognito.usecases.ResetPasswordUseCase
+import com.amplifyframework.auth.exceptions.InvalidStateException
+import com.amplifyframework.auth.exceptions.invalidstate.SignedInException
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
 import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions
@@ -184,7 +188,7 @@ class RealAWSCognitoAuthPluginTest {
         // GIVEN
         val onSuccess = mockk<Consumer<AuthSignUpResult>>()
         val onError = mockk<Consumer<AuthException>>(relaxed = true)
-        val expectedAuthError = AWSCognitoAuthExceptions.NotConfiguredException()
+        val expectedAuthError = AuthExceptionHelper.createCognitoNotConfiguredException()
         currentState = AuthenticationState.NotConfigured()
 
         // WHEN
@@ -200,7 +204,7 @@ class RealAWSCognitoAuthPluginTest {
         // GIVEN
         val onSuccess = mockk<Consumer<AuthSignUpResult>>()
         val onError = mockk<Consumer<AuthException>>(relaxed = true)
-        val expectedAuthError = AWSCognitoAuthExceptions.NotConfiguredException()
+        val expectedAuthError = AuthExceptionHelper.createCognitoNotConfiguredException()
         currentState = AuthenticationState.NotConfigured()
 
         // WHEN
@@ -216,7 +220,7 @@ class RealAWSCognitoAuthPluginTest {
         // GIVEN
         val onSuccess = mockk<Consumer<AuthSignInResult>>()
         val onError = mockk<Consumer<AuthException>>(relaxed = true)
-        val expectedAuthError = AWSCognitoAuthExceptions.NotConfiguredException()
+        val expectedAuthError = AuthExceptionHelper.createCognitoNotConfiguredException()
         currentState = AuthenticationState.NotConfigured()
 
         // WHEN
@@ -232,7 +236,7 @@ class RealAWSCognitoAuthPluginTest {
         // GIVEN
         val onSuccess = mockk<Consumer<AuthSignInResult>>()
         val onError = mockk<Consumer<AuthException>>(relaxed = true)
-        val expectedAuthError = AuthException.SignedInException()
+        val expectedAuthError = SignedInException()
         currentState = AuthenticationState.SignedIn(
             SignedInData(
                 "userId",
@@ -257,7 +261,7 @@ class RealAWSCognitoAuthPluginTest {
         // GIVEN
         val onSuccess = mockk<Consumer<AuthSignUpResult>>()
         val onError = mockk<Consumer<AuthException>>(relaxed = true)
-        val expectedAuthError = AWSCognitoAuthExceptions.NotConfiguredException()
+        val expectedAuthError = AuthExceptionHelper.createCognitoNotConfiguredException()
         currentState = AuthenticationState.NotConfigured()
 
         // WHEN
@@ -304,7 +308,7 @@ class RealAWSCognitoAuthPluginTest {
         val onSuccess = mockk<Action>(relaxed = true)
         val latch = CountDownLatch(1)
         val onError = mockk<Consumer<AuthException>> {
-            every { accept(AuthException.InvalidStateException()) } answers { latch.countDown() }
+            every { accept(InvalidStateException()) } answers { latch.countDown() }
         }
 
         currentState = AuthenticationState.NotConfigured()
@@ -314,7 +318,7 @@ class RealAWSCognitoAuthPluginTest {
         assertTrue { latch.await(5, TimeUnit.SECONDS) }
 
         verify(exactly = 0) { onSuccess.call() }
-        verify { onError.accept(AuthException.InvalidStateException()) }
+        verify { onError.accept(InvalidStateException()) }
     }
 
     @Test
@@ -345,15 +349,13 @@ class RealAWSCognitoAuthPluginTest {
         // GIVEN
         val onSuccess = mockk<Consumer<AuthResetPasswordResult>>()
         val onError = mockk<Consumer<AuthException>>(relaxed = true)
-        val expectedAuthError = AuthException.InvalidUserPoolConfigurationException(
-            IllegalArgumentException("Required value was null.")
-        )
+        val expectedAuthError = InvalidUserPoolConfigurationException()
 
         val userPool = UserPoolConfiguration.invoke { appClientId = "app Client Id" }
         every { authService.cognitoIdentityProviderClient } returns null
         every { authConfiguration.userPool } returns userPool
 
-        val errorCaptor = slot<AuthException.InvalidUserPoolConfigurationException>()
+        val errorCaptor = slot<InvalidUserPoolConfigurationException>()
         justRun { onError.accept(capture(errorCaptor)) }
 
         // WHEN
@@ -369,15 +371,13 @@ class RealAWSCognitoAuthPluginTest {
         // GIVEN
         val onSuccess = mockk<Consumer<AuthResetPasswordResult>>()
         val onError = mockk<Consumer<AuthException>>(relaxed = true)
-        val expectedAuthError = AuthException.InvalidUserPoolConfigurationException(
-            IllegalArgumentException("Required value was null.")
-        )
+        val expectedAuthError = InvalidUserPoolConfigurationException()
 
         val userPool = UserPoolConfiguration.invoke { appClientId = null }
         every { authService.cognitoIdentityProviderClient } returns mockk()
         every { authConfiguration.userPool } returns userPool
 
-        val errorCaptor = slot<AuthException.InvalidUserPoolConfigurationException>()
+        val errorCaptor = slot<InvalidUserPoolConfigurationException>()
         justRun { onError.accept(capture(errorCaptor)) }
 
         // WHEN
@@ -475,7 +475,7 @@ class RealAWSCognitoAuthPluginTest {
         currentState = AuthenticationState.NotConfigured()
 
         every {
-            onError.accept(AuthException.InvalidStateException())
+            onError.accept(InvalidStateException())
         } answers {
             listenLatch.countDown()
         }
@@ -484,7 +484,7 @@ class RealAWSCognitoAuthPluginTest {
         plugin.fetchUserAttributes(onSuccess, onError)
 
         assertTrue { listenLatch.await(5, TimeUnit.SECONDS) }
-        coVerify(exactly = 1) { onError.accept(AuthException.InvalidStateException()) }
+        coVerify(exactly = 1) { onError.accept(InvalidStateException()) }
         verify(exactly = 0) { onSuccess.accept(any()) }
     }
 
@@ -893,7 +893,7 @@ class RealAWSCognitoAuthPluginTest {
 
         currentState = AuthenticationState.NotConfigured()
 
-        val resultCaptor = slot<AuthException.InvalidStateException>()
+        val resultCaptor = slot<InvalidStateException>()
         every { onError.accept(capture(resultCaptor)) } answers { listenLatch.countDown() }
 
         // WHEN
@@ -917,7 +917,7 @@ class RealAWSCognitoAuthPluginTest {
 
         currentState = AuthenticationState.NotConfigured()
 
-        val resultCaptor = slot<AuthException.InvalidStateException>()
+        val resultCaptor = slot<InvalidStateException>()
         every { onError.accept(capture(resultCaptor)) } answers { listenLatch.countDown() }
 
         // WHEN
@@ -1145,7 +1145,7 @@ class RealAWSCognitoAuthPluginTest {
         currentState = AuthenticationState.NotConfigured()
 
         every {
-            onError.accept(AuthException.InvalidStateException())
+            onError.accept(InvalidStateException())
         } answers {
             listenLatch.countDown()
         }
@@ -1159,7 +1159,7 @@ class RealAWSCognitoAuthPluginTest {
         )
 
         assertTrue { listenLatch.await(5, TimeUnit.SECONDS) }
-        coVerify(exactly = 1) { onError.accept(AuthException.InvalidStateException()) }
+        coVerify(exactly = 1) { onError.accept(InvalidStateException()) }
         verify(exactly = 0) { onSuccess.call() }
     }
 
@@ -1190,7 +1190,7 @@ class RealAWSCognitoAuthPluginTest {
         }
 
         every {
-            onError.accept(AuthException.InvalidUserPoolConfigurationException())
+            onError.accept(InvalidUserPoolConfigurationException())
         } answers {
             listenLatch.countDown()
         }
@@ -1204,7 +1204,7 @@ class RealAWSCognitoAuthPluginTest {
         )
 
         assertTrue { listenLatch.await(5, TimeUnit.SECONDS) }
-        coVerify(exactly = 1) { onError.accept(AuthException.InvalidUserPoolConfigurationException()) }
+        coVerify(exactly = 1) { onError.accept(InvalidUserPoolConfigurationException()) }
         verify(exactly = 0) { onSuccess.call() }
     }
 
@@ -1293,7 +1293,7 @@ class RealAWSCognitoAuthPluginTest {
         currentState = AuthenticationState.NotConfigured()
 
         every {
-            onError.accept(AuthException.InvalidStateException())
+            onError.accept(InvalidStateException())
         } answers {
             listenLatch.countDown()
         }
@@ -1306,7 +1306,7 @@ class RealAWSCognitoAuthPluginTest {
         )
 
         assertTrue { listenLatch.await(5, TimeUnit.SECONDS) }
-        coVerify(exactly = 1) { onError.accept(AuthException.InvalidStateException()) }
+        coVerify(exactly = 1) { onError.accept(InvalidStateException()) }
         verify(exactly = 0) { onSuccess.accept(any()) }
     }
 
@@ -1337,7 +1337,7 @@ class RealAWSCognitoAuthPluginTest {
         }
 
         every {
-            onError.accept(AuthException.InvalidUserPoolConfigurationException())
+            onError.accept(InvalidUserPoolConfigurationException())
         } answers {
             listenLatch.countDown()
         }
@@ -1350,7 +1350,7 @@ class RealAWSCognitoAuthPluginTest {
         )
 
         assertTrue { listenLatch.await(5, TimeUnit.SECONDS) }
-        coVerify(exactly = 1) { onError.accept(AuthException.InvalidUserPoolConfigurationException()) }
+        coVerify(exactly = 1) { onError.accept(InvalidUserPoolConfigurationException()) }
         verify(exactly = 0) { onSuccess.accept(any()) }
     }
 

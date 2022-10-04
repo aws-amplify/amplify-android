@@ -15,7 +15,8 @@
 
 package com.amplifyframework.auth.cognito.helpers
 
-import com.amplifyframework.auth.AuthException
+import com.amplifyframework.auth.exceptions.UnknownException
+import com.amplifyframework.auth.exceptions.service.InvalidParameterException
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 
@@ -34,8 +35,12 @@ open class AuthHelper {
          */
         fun getSecretHash(userId: String?, clientId: String?, clientSecret: String?): String? {
             return when {
-                userId == null -> throw AuthException.InvalidParameterException(Exception("user ID cannot be null"))
-                clientId == null -> throw AuthException.InvalidParameterException(Exception("client ID cannot be null"))
+                userId == null -> throw InvalidParameterException(
+                    Exception("user ID cannot be null")
+                )
+                clientId == null -> throw InvalidParameterException(
+                    Exception("client ID cannot be null")
+                )
                 clientSecret.isNullOrEmpty() -> null
                 else ->
                     try {
@@ -46,7 +51,7 @@ open class AuthHelper {
                         val raw = mac.doFinal(clientId.toByteArray())
                         String(android.util.Base64.encode(raw, android.util.Base64.NO_WRAP))
                     } catch (e: Exception) {
-                        throw AuthException.UnknownException(Exception("errors in HMAC calculation"))
+                        throw UnknownException(cause = Exception("errors in HMAC calculation"))
                     }
             }
         }

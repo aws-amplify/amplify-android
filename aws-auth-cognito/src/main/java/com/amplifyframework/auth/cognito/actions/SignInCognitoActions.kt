@@ -17,9 +17,10 @@ package com.amplifyframework.auth.cognito.actions
 
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ConfirmDeviceRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeviceSecretVerifierConfigType
-import com.amplifyframework.auth.AuthException
+import com.amplifyframework.AmplifyException
 import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.auth.cognito.helpers.CognitoDeviceHelper
+import com.amplifyframework.auth.exceptions.ServiceException
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.SignInActions
 import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
@@ -86,7 +87,10 @@ object SignInCognitoActions : SignInActions {
                             this.salt = deviceVerifierMap["salt"]
                         }
                     }
-                ) ?: throw AuthException("Sign in failed", AuthException.TODO_RECOVERY_SUGGESTION)
+                ) ?: throw ServiceException(
+                    "Sign in failed",
+                    AmplifyException.TODO_RECOVERY_SUGGESTION
+                )
                 AuthenticationEvent(AuthenticationEvent.EventType.SignInCompleted(event.signedInData))
             } catch (e: Exception) {
                 SignInEvent(SignInEvent.EventType.ThrowError(e))
