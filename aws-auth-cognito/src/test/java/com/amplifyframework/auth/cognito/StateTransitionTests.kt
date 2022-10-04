@@ -37,6 +37,7 @@ import com.amplifyframework.statemachine.codegen.states.DeleteUserState
 import com.amplifyframework.statemachine.codegen.states.DeviceSRPSignInState
 import com.amplifyframework.statemachine.codegen.states.FetchAuthSessionState
 import com.amplifyframework.statemachine.codegen.states.HostedUISignInState
+import com.amplifyframework.statemachine.codegen.states.MigrateSignInState
 import com.amplifyframework.statemachine.codegen.states.RefreshSessionState
 import com.amplifyframework.statemachine.codegen.states.SRPSignInState
 import com.amplifyframework.statemachine.codegen.states.SignInChallengeState
@@ -88,6 +89,7 @@ class StateTransitionTests : StateTransitionTestBase() {
                     SignInState.Resolver(
                         SRPSignInState.Resolver(mockSRPActions),
                         CustomSignInState.Resolver(mockSignInCustomActions),
+                        MigrateSignInState.Resolver(mockMigrateAuthActions),
                         SignInChallengeState.Resolver(mockSignInChallengeActions),
                         HostedUISignInState.Resolver(mockHostedUIActions),
                         DeviceSRPSignInState.Resolver(mockDeviceSRPSignInActions),
@@ -324,7 +326,7 @@ class StateTransitionTests : StateTransitionTestBase() {
                 Action { dispatcher, _ ->
                     dispatcher.send(
                         SignInEvent(
-                            SignInEvent.EventType.InitiateSignInWithSRP("username", "password")
+                            SignInEvent.EventType.InitiateSignInWithSRP("username", "password", emptyMap())
                         )
                     )
                 }

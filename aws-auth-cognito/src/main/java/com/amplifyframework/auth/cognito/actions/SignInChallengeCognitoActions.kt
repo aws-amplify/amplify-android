@@ -68,7 +68,6 @@ object SignInChallengeCognitoActions : SignInChallengeActions {
             }
             response?.let {
                 SignInChallengeHelper.evaluateNextStep(
-                    userId = "",
                     username = username ?: "",
                     challengeNameType = response.challengeName,
                     session = response.session,
