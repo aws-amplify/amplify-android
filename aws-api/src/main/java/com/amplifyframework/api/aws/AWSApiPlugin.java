@@ -73,6 +73,7 @@ import okhttp3.Protocol;
 public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     private final Map<String, ClientDetails> apiDetails;
     private final Map<String, OkHttpConfigurator> apiConfigurators;
+    private final Map<String, String> additionalHeader;
     private final GraphQLResponse.Factory gqlResponseFactory;
     private final ApiAuthProviders authProvider;
     private final ExecutorService executorService;
@@ -104,6 +105,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         this.authProvider = builder.apiAuthProviders;
         this.restApis = new HashSet<>();
         this.gqlApis = new HashSet<>();
+        this.additionalHeader = Immutable.of(builder.additionalHeaders);
         this.executorService = Executors.newCachedThreadPool();
         this.requestDecorator = new AuthRuleRequestDecorator(authProvider);
         this.apiConfigurators = Immutable.of(builder.apiConfigurators);
@@ -173,7 +175,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
                 restApis.add(apiName);
             } else if (EndpointType.GRAPHQL.equals(endpointType)) {
                 final SubscriptionAuthorizer subscriptionAuthorizer =
-                    new SubscriptionAuthorizer(apiConfiguration, authProvider);
+                    new SubscriptionAuthorizer(apiConfiguration, authProvider, additionalHeader);
                 final SubscriptionEndpoint subscriptionEndpoint =
                     new SubscriptionEndpoint(apiConfiguration, gqlResponseFactory, subscriptionAuthorizer);
                 clientDetails = new ClientDetails(apiConfiguration,
@@ -870,6 +872,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     public static final class Builder {
         private ApiAuthProviders apiAuthProviders;
         private final Map<String, OkHttpConfigurator> apiConfigurators;
+        private Map<String, String> additionalHeaders;
 
         private Builder() {
             this.apiAuthProviders = ApiAuthProviders.noProviderOverrides();
@@ -901,6 +904,17 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         public Builder configureClient(
                 @NonNull String forApiName, @NonNull OkHttpConfigurator byConfigurator) {
             this.apiConfigurators.put(forApiName, byConfigurator);
+            return this;
+        }
+
+        /**
+         *
+          * @param headers The headers will be sent during subscription authorization
+         * @return
+         */
+        public Builder addAdditionalHeader(Map<String, String> headers)
+        {
+            this.additionalHeaders = headers;
             return this;
         }
 
