@@ -136,15 +136,15 @@ class KotlinAuthFacadeTest {
     @Test
     fun resendSignUpCodeSucceeds() = runBlocking {
         val username = "tony"
-        val signUpResult = mockk<AuthSignUpResult>()
+        val codeDeliveryDetails = mockk<AuthCodeDeliveryDetails>()
         every {
             delegate.resendSignUpCode(eq(username), any(), any(), any())
         } answers {
             val indexOfResultConsumer = 2
-            val onResult = it.invocation.args[indexOfResultConsumer] as Consumer<AuthSignUpResult>
-            onResult.accept(signUpResult)
+            val onResult = it.invocation.args[indexOfResultConsumer] as Consumer<AuthCodeDeliveryDetails>
+            onResult.accept(codeDeliveryDetails)
         }
-        assertEquals(signUpResult, auth.resendSignUpCode(username))
+        assertEquals(codeDeliveryDetails, auth.resendSignUpCode(username))
     }
 
     /**

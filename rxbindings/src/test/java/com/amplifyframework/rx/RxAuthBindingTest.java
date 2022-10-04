@@ -167,25 +167,22 @@ public final class RxAuthBindingTest {
 
         // Arrange a result on the result consumer
         AuthCodeDeliveryDetails details = new AuthCodeDeliveryDetails(RandomString.string(), DeliveryMedium.EMAIL);
-        AuthSignUpStep step = AuthSignUpStep.CONFIRM_SIGN_UP_STEP;
-        AuthNextSignUpStep nextStep = new AuthNextSignUpStep(step, Collections.emptyMap(), details);
-        AuthSignUpResult result = new AuthSignUpResult(false, nextStep, null);
         doAnswer(invocation -> {
             // 0 = username, 1 = onResult, 2 = onFailure
             int positionOfResultConsumer = 1;
-            Consumer<AuthSignUpResult> onResult = invocation.getArgument(positionOfResultConsumer);
-            onResult.accept(result);
+            Consumer<AuthCodeDeliveryDetails> onResult = invocation.getArgument(positionOfResultConsumer);
+            onResult.accept(details);
             return null;
         }).when(delegate).resendSignUpCode(eq(username), anyConsumer(), anyConsumer());
 
         // Act: call the binding
-        TestObserver<AuthSignUpResult> observer = auth.resendSignUpCode(username).test();
+        TestObserver<AuthCodeDeliveryDetails> observer = auth.resendSignUpCode(username).test();
 
         // Assert: the result was furnished to the Rx Single
         observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
         observer
             .assertNoErrors()
-            .assertValue(result);
+            .assertValue(details);
     }
 
     /**
@@ -208,7 +205,7 @@ public final class RxAuthBindingTest {
         }).when(delegate).resendSignUpCode(eq(username), anyConsumer(), anyConsumer());
 
         // Act: call the binding
-        TestObserver<AuthSignUpResult> observer = auth.resendSignUpCode(username).test();
+        TestObserver<AuthCodeDeliveryDetails> observer = auth.resendSignUpCode(username).test();
 
         // Assert: the result was furnished to the Rx Single
         observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);

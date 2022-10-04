@@ -40,7 +40,6 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.VerifyUserAttribute
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.VerifyUserAttributeResponse
 import com.amplifyframework.auth.AuthCodeDeliveryDetails
 import com.amplifyframework.auth.AuthException
-import com.amplifyframework.auth.AuthUser
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.cognito.exceptions.AuthExceptionHelper
@@ -259,7 +258,7 @@ class RealAWSCognitoAuthPluginTest {
     @Test
     fun testResendSignUpCodeFailsIfNotConfigured() {
         // GIVEN
-        val onSuccess = mockk<Consumer<AuthSignUpResult>>()
+        val onSuccess = mockk<Consumer<AuthCodeDeliveryDetails>>()
         val onError = mockk<Consumer<AuthException>>(relaxed = true)
         val expectedAuthError = AuthExceptionHelper.createCognitoNotConfiguredException()
         currentState = AuthenticationState.NotConfigured()
@@ -660,6 +659,7 @@ class RealAWSCognitoAuthPluginTest {
         // GIVEN
         val onSuccess = mockk<Consumer<AuthSignUpResult>>()
         val onError = mockk<Consumer<AuthException>>()
+        val userId = "123456"
         val username = "user"
         val password = "password"
         val email = "user@domain.com"
@@ -687,11 +687,12 @@ class RealAWSCognitoAuthPluginTest {
                     deliveryDetails.getValue("ATTRIBUTE")
                 )
             ),
-            AuthUser("", username)
+            userId
         )
 
         coEvery { authService.cognitoIdentityProviderClient?.signUp(any()) } coAnswers {
             SignUpResponse.invoke {
+                this.userSub = userId
                 this.codeDeliveryDetails {
                     this.attributeName = "attributeName"
                     this.deliveryMedium = DeliveryMediumType.Email
@@ -836,11 +837,12 @@ class RealAWSCognitoAuthPluginTest {
         val latch = CountDownLatch(1)
 
         // GIVEN
-        val onSuccess = mockk<Consumer<AuthSignUpResult>>()
+        val onSuccess = mockk<Consumer<AuthCodeDeliveryDetails>>()
         val onError = mockk<Consumer<AuthException>>()
+        val userId = "123456"
         val username = "user"
 
-        val resultCaptor = slot<AuthSignUpResult>()
+        val resultCaptor = slot<AuthCodeDeliveryDetails>()
         every { onSuccess.accept(capture(resultCaptor)) } answers { latch.countDown() }
 
         currentState = AuthenticationState.SignedOut(mockk())
@@ -851,18 +853,10 @@ class RealAWSCognitoAuthPluginTest {
             "ATTRIBUTE" to "attributeName"
         )
 
-        val expectedAuthSignUpResult = AuthSignUpResult(
-            false,
-            AuthNextSignUpStep(
-                AuthSignUpStep.CONFIRM_SIGN_UP_STEP,
-                mapOf(),
-                AuthCodeDeliveryDetails(
-                    deliveryDetails.getValue("DESTINATION"),
-                    AuthCodeDeliveryDetails.DeliveryMedium.fromString(deliveryDetails.getValue("MEDIUM")),
-                    deliveryDetails.getValue("ATTRIBUTE")
-                )
-            ),
-            AuthUser("", username)
+        val expectedCodeDeliveryDetails = AuthCodeDeliveryDetails(
+            deliveryDetails.getValue("DESTINATION"),
+            AuthCodeDeliveryDetails.DeliveryMedium.fromString(deliveryDetails.getValue("MEDIUM")),
+            deliveryDetails.getValue("ATTRIBUTE")
         )
 
         coEvery { authService.cognitoIdentityProviderClient?.resendConfirmationCode(any()) } coAnswers {
@@ -881,7 +875,7 @@ class RealAWSCognitoAuthPluginTest {
 
         // THEN
         verify(exactly = 0) { onError.accept(any()) }
-        verify(exactly = 1) { onSuccess.accept(expectedAuthSignUpResult) }
+        verify(exactly = 1) { onSuccess.accept(expectedCodeDeliveryDetails) }
     }
 
     @Test

@@ -136,7 +136,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
 
     override fun resendSignUpCode(
         username: String,
-        onSuccess: Consumer<AuthSignUpResult>,
+        onSuccess: Consumer<AuthCodeDeliveryDetails>,
         onError: Consumer<AuthException>
     ) {
         realPlugin.resendSignUpCode(username, onSuccess, onError)
@@ -145,7 +145,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
     override fun resendSignUpCode(
         username: String,
         options: AuthResendSignUpCodeOptions,
-        onSuccess: Consumer<AuthSignUpResult>,
+        onSuccess: Consumer<AuthCodeDeliveryDetails>,
         onError: Consumer<AuthException>
     ) {
         realPlugin.resendSignUpCode(username, options, onSuccess, onError)
@@ -171,20 +171,20 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
     }
 
     override fun confirmSignIn(
-        confirmationCode: String,
+        challengeResponse: String,
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
     ) {
-        realPlugin.confirmSignIn(confirmationCode, onSuccess, onError)
+        realPlugin.confirmSignIn(challengeResponse, onSuccess, onError)
     }
 
     override fun confirmSignIn(
-        confirmationCode: String,
+        challengeResponse: String,
         options: AuthConfirmSignInOptions,
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
     ) {
-        realPlugin.confirmSignIn(confirmationCode, options, onSuccess, onError)
+        realPlugin.confirmSignIn(challengeResponse, options, onSuccess, onError)
     }
 
     override fun signInWithSocialWebUI(
