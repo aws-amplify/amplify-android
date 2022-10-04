@@ -452,6 +452,5 @@ public final class MutationProcessorTest {
         assertTrue(retryHandlerInvocationCount.await(100, TimeUnit.SECONDS));
         mutationProcessor.stopDrainingMutationOutbox();
         verify(dataStoreErrorHandler, times(1)).accept(any());
-
     }
 }

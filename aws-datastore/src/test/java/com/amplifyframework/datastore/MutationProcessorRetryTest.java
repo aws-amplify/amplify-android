@@ -214,7 +214,6 @@ public final class MutationProcessorRetryTest {
             int indexOfResponseConsumer = 2;
             Consumer<ApiException> onError =
                     invocation.getArgument(indexOfResponseConsumer);
-
             onError.accept(new ApiException("Error", "Network erro" +
                     "r"));
             // latch makes sure error response is returned.

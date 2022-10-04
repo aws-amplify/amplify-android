@@ -699,8 +699,8 @@ public final class SyncProcessorTest {
         requestRetry = spy(new RetryHandler(dataStoreConfigurationProvider));
         initSyncProcessor();
         AppSyncMocking.sync(appSync)
-                .mockFailure(new DataStoreException.GraphQLResponseException("Something timed out during sync.",
-                        new ArrayList<GraphQLResponse.Error>()));
+                .mockFailure(new DataStoreException.GraphQLResponseException("Something timed " +
+                        "out during sync.", new ArrayList<GraphQLResponse.Error>()));
 
         // Act: call hydrate.
         TestObserver<Void> testObserver = syncProcessor.hydrate()
@@ -711,7 +711,7 @@ public final class SyncProcessorTest {
                 testObserver.dispose();
             }
         }, 10000);
-        verify(requestRetry, times(1)).retry(any(), any());
+        verify(requestRetry).retry(any(), any());
         assertEquals(1, errorHandlerCallCount);
     }
 
