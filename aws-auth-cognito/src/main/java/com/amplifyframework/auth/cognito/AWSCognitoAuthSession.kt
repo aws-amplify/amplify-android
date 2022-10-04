@@ -16,7 +16,6 @@
 package com.amplifyframework.auth.cognito
 
 import com.amplifyframework.auth.AWSCredentials
-import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.AuthSession
 import com.amplifyframework.auth.cognito.helpers.SessionHelper
 import com.amplifyframework.auth.exceptions.ConfigurationException
@@ -145,7 +144,7 @@ fun AmplifyCredential.getCognitoSession(): AWSCognitoAuthSession {
     return when (this) {
         is AmplifyCredential.UserPool -> AWSCognitoAuthSession(
             true,
-            identityIdResult = AuthSessionResult.failure(AuthException("", "")), // TODO: Fix error message
+            identityIdResult = AuthSessionResult.failure(UnknownException()), // TODO: Fix error message
             awsCredentialsResult = AWSCognitoAuthSession.getCredentials(CognitoCredentials.empty),
             userSubResult = AWSCognitoAuthSession.getUserSub(signedInData.cognitoUserPoolTokens),
             userPoolTokensResult = AuthSessionResult.success(

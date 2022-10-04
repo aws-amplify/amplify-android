@@ -107,7 +107,7 @@ object AuthenticationCognitoActions : AuthenticationActions {
                     } else {
                         AuthenticationEvent(
                             AuthenticationEvent.EventType.ThrowError(
-                                AuthException("Sign in failed.", "username or password empty")
+                                ValidationException("Sign in failed.", "username or password empty")
                             )
                         )
                     }
