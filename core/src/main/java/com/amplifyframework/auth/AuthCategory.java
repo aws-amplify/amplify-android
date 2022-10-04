@@ -95,7 +95,7 @@ public final class AuthCategory extends Category<AuthPlugin<?>> implements AuthC
     public void resendSignUpCode(
             @NonNull String username,
             @NonNull AuthResendSignUpCodeOptions options,
-            @NonNull Consumer<AuthSignUpResult> onSuccess,
+            @NonNull Consumer<AuthCodeDeliveryDetails> onSuccess,
             @NonNull Consumer<AuthException> onError
     ) {
         getSelectedPlugin().resendSignUpCode(username, options, onSuccess, onError);
@@ -104,7 +104,7 @@ public final class AuthCategory extends Category<AuthPlugin<?>> implements AuthC
     @Override
     public void resendSignUpCode(
             @NonNull String username,
-            @NonNull Consumer<AuthSignUpResult> onSuccess,
+            @NonNull Consumer<AuthCodeDeliveryDetails> onSuccess,
             @NonNull Consumer<AuthException> onError
     ) {
         getSelectedPlugin().resendSignUpCode(username, onSuccess, onError);
@@ -133,21 +133,21 @@ public final class AuthCategory extends Category<AuthPlugin<?>> implements AuthC
 
     @Override
     public void confirmSignIn(
-            @NonNull String confirmationCode,
+            @NonNull String challengeResponse,
             @NonNull AuthConfirmSignInOptions options,
             @NonNull Consumer<AuthSignInResult> onSuccess,
             @NonNull Consumer<AuthException> onError
     ) {
-        getSelectedPlugin().confirmSignIn(confirmationCode, options, onSuccess, onError);
+        getSelectedPlugin().confirmSignIn(challengeResponse, options, onSuccess, onError);
     }
 
     @Override
     public void confirmSignIn(
-            @NonNull String confirmationCode,
+            @NonNull String challengeResponse,
             @NonNull Consumer<AuthSignInResult> onSuccess,
             @NonNull Consumer<AuthException> onError
     ) {
-        getSelectedPlugin().confirmSignIn(confirmationCode, onSuccess, onError);
+        getSelectedPlugin().confirmSignIn(challengeResponse, onSuccess, onError);
     }
 
     @Override
