@@ -179,11 +179,11 @@ public final class SynchronousAuth {
      * @throws AuthException exception
      */
     @NonNull
-    public AuthSignUpResult resendSignUpCode(
+    public AuthCodeDeliveryDetails resendSignUpCode(
             @NonNull String username,
             @NonNull AuthResendSignUpCodeOptions options
     ) throws AuthException {
-        return Await.<AuthSignUpResult, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
+        return Await.<AuthCodeDeliveryDetails, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
                 asyncDelegate.resendSignUpCode(username, options, onResult, onError)
         );
     }
@@ -195,10 +195,10 @@ public final class SynchronousAuth {
      * @throws AuthException exception
      */
     @NonNull
-    public AuthSignUpResult resendSignUpCode(
+    public AuthCodeDeliveryDetails resendSignUpCode(
             @NonNull String username
     ) throws AuthException {
-        return Await.<AuthSignUpResult, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
+        return Await.<AuthCodeDeliveryDetails, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
                 asyncDelegate.resendSignUpCode(username, onResult, onError)
         );
     }
@@ -241,33 +241,33 @@ public final class SynchronousAuth {
 
     /**
      * Confirm sign in synchronously.
-     * @param confirmationCode The code received as part of the multi-factor authentication process
+     * @param challengeResponse The code received as part of the multi-factor authentication process
      * @param options Advanced options such as a map of auth information for custom auth
      * @return result object
      * @throws AuthException exception
      */
     @NonNull
     public AuthSignInResult confirmSignIn(
-            @NonNull String confirmationCode,
+            @NonNull String challengeResponse,
             @NonNull AuthConfirmSignInOptions options
     ) throws AuthException {
         return Await.<AuthSignInResult, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
-                asyncDelegate.confirmSignIn(confirmationCode, options, onResult, onError)
+                asyncDelegate.confirmSignIn(challengeResponse, options, onResult, onError)
         );
     }
 
     /**
      * Confirm sign in synchronously.
-     * @param confirmationCode The code received as part of the multi-factor authentication process
+     * @param challengeResponse The code received as part of the multi-factor authentication process
      * @return result object
      * @throws AuthException exception
      */
     @NonNull
     public AuthSignInResult confirmSignIn(
-            @NonNull String confirmationCode
+            @NonNull String challengeResponse
     ) throws AuthException {
         return Await.<AuthSignInResult, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
-                asyncDelegate.confirmSignIn(confirmationCode, onResult, onError)
+                asyncDelegate.confirmSignIn(challengeResponse, onResult, onError)
         );
     }
 

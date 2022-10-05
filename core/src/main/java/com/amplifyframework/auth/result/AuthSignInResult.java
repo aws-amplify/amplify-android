@@ -26,18 +26,18 @@ import java.util.Objects;
  * Wraps the result of a sign up operation.
  */
 public final class AuthSignInResult {
-    private final boolean isSignInComplete;
+    private final boolean isSignedIn;
     private final AuthNextSignInStep nextStep;
 
     /**
      * Wraps the result of a sign up operation.
-     * @param isSignInComplete True if the user is successfully authenticated, False otherwise. Check
+     * @param isSignedIn True if the user is successfully authenticated, False otherwise. Check
      *                         {@link #getNextStep()} to see if there are any required or optional steps to still
      *                         be taken in the sign in flow.
      * @param nextStep Details about the next step in the sign in process (or whether the flow is now done).
      */
-    public AuthSignInResult(boolean isSignInComplete, @NonNull AuthNextSignInStep nextStep) {
-        this.isSignInComplete = isSignInComplete;
+    public AuthSignInResult(boolean isSignedIn, @NonNull AuthNextSignInStep nextStep) {
+        this.isSignedIn = isSignedIn;
         this.nextStep = Objects.requireNonNull(nextStep);
     }
 
@@ -47,8 +47,8 @@ public final class AuthSignInResult {
      * be taken in the sign in flow.
      * @return True if the user is successfully authenticated, False otherwise
      */
-    public boolean isSignInComplete() {
-        return isSignInComplete;
+    public boolean isSignedIn() {
+        return isSignedIn;
     }
 
     /**
@@ -61,19 +61,19 @@ public final class AuthSignInResult {
     }
 
     /**
-     * When overriding, be sure to include isSignInComplete and nextStep in the hash.
+     * When overriding, be sure to include isSignedIn and nextStep in the hash.
      * @return Hash code of this object
      */
     @Override
     public int hashCode() {
         return ObjectsCompat.hash(
-                isSignInComplete(),
+                isSignedIn(),
                 getNextStep()
         );
     }
 
     /**
-     * When overriding, be sure to include isSignInComplete and nextStep in the comparison.
+     * When overriding, be sure to include isSignedIn and nextStep in the comparison.
      * @return True if the two objects are equal, false otherwise
      */
     @Override
@@ -84,19 +84,19 @@ public final class AuthSignInResult {
             return false;
         } else {
             AuthSignInResult authSignUpResult = (AuthSignInResult) obj;
-            return ObjectsCompat.equals(isSignInComplete(), authSignUpResult.isSignInComplete()) &&
+            return ObjectsCompat.equals(isSignedIn(), authSignUpResult.isSignedIn()) &&
                     ObjectsCompat.equals(getNextStep(), authSignUpResult.getNextStep());
         }
     }
 
     /**
-     * When overriding, be sure to include isSignInComplete and nextStep in the output string.
+     * When overriding, be sure to include isSignedIn and nextStep in the output string.
      * @return A string representation of the object
      */
     @Override
     public String toString() {
         return "AuthSignInResult{" +
-                "isSignInComplete=" + isSignInComplete() +
+                "isSignedIn=" + isSignedIn() +
                 ", nextStep=" + getNextStep() +
                 '}';
     }

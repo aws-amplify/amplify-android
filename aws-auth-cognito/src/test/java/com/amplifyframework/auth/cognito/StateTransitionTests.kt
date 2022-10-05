@@ -37,11 +37,13 @@ import com.amplifyframework.statemachine.codegen.states.DeleteUserState
 import com.amplifyframework.statemachine.codegen.states.DeviceSRPSignInState
 import com.amplifyframework.statemachine.codegen.states.FetchAuthSessionState
 import com.amplifyframework.statemachine.codegen.states.HostedUISignInState
+import com.amplifyframework.statemachine.codegen.states.MigrateSignInState
 import com.amplifyframework.statemachine.codegen.states.RefreshSessionState
 import com.amplifyframework.statemachine.codegen.states.SRPSignInState
 import com.amplifyframework.statemachine.codegen.states.SignInChallengeState
 import com.amplifyframework.statemachine.codegen.states.SignInState
 import com.amplifyframework.statemachine.codegen.states.SignOutState
+import io.mockk.mockk
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
@@ -88,6 +90,7 @@ class StateTransitionTests : StateTransitionTestBase() {
                     SignInState.Resolver(
                         SRPSignInState.Resolver(mockSRPActions),
                         CustomSignInState.Resolver(mockSignInCustomActions),
+                        MigrateSignInState.Resolver(mockMigrateAuthActions),
                         SignInChallengeState.Resolver(mockSignInChallengeActions),
                         HostedUISignInState.Resolver(mockHostedUIActions),
                         DeviceSRPSignInState.Resolver(mockDeviceSRPSignInActions),
@@ -107,12 +110,12 @@ class StateTransitionTests : StateTransitionTestBase() {
                 ),
                 mockAuthActions
             ),
-            AuthEnvironment(configuration, cognitoAuthService, null, null)
+            AuthEnvironment(configuration, cognitoAuthService, null, null, mockk())
         )
 
         storeStateMachine = CredentialStoreStateMachine(
             CredentialStoreState.Resolver(credentialStoreActions),
-            CredentialStoreEnvironment(credentialStore, legacyCredentialStore)
+            CredentialStoreEnvironment(credentialStore, legacyCredentialStore, mockk())
         )
     }
 
@@ -324,7 +327,7 @@ class StateTransitionTests : StateTransitionTestBase() {
                 Action { dispatcher, _ ->
                     dispatcher.send(
                         SignInEvent(
-                            SignInEvent.EventType.InitiateSignInWithSRP("username", "password")
+                            SignInEvent.EventType.InitiateSignInWithSRP("username", "password", emptyMap())
                         )
                     )
                 }

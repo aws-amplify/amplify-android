@@ -104,10 +104,10 @@ public interface RxAuthCategoryBehavior {
      * be used to send them a new one.
      * @param username A login identifier e.g. `superdog22`; or an email/phone number, depending on configuration
      * @param options Advanced options such as a map of auth information for custom auth
-     * @return An Rx {@link Single} which emits an {@link AuthSignUpResult} on successful confirmation,
+     * @return An Rx {@link Single} which emits an {@link AuthCodeDeliveryDetails} on successful confirmation,
      *         or an {@link AuthException} on failure
      */
-    Single<AuthSignUpResult> resendSignUpCode(
+    Single<AuthCodeDeliveryDetails> resendSignUpCode(
             @NonNull String username,
             @NonNull AuthResendSignUpCodeOptions options
     );
@@ -116,10 +116,10 @@ public interface RxAuthCategoryBehavior {
      * If the user's code expires or they just missed it, this method can
      * be used to send them a new one.
      * @param username A login identifier e.g. `superdog22`; or an email/phone number, depending on configuration
-     * @return An Rx {@link Single} which emits an {@link AuthSignUpResult} on successful confirmation,
+     * @return An Rx {@link Single} which emits an {@link AuthCodeDeliveryDetails} on successful confirmation,
      *         or an {@link AuthException} on failure
      */
-    Single<AuthSignUpResult> resendSignUpCode(@NonNull String username);
+    Single<AuthCodeDeliveryDetails> resendSignUpCode(@NonNull String username);
 
     /**
      * Basic authentication to the app with a username and password or, if custom auth is setup,
@@ -147,23 +147,23 @@ public interface RxAuthCategoryBehavior {
 
     /**
      * Submit the confirmation code received as part of multi-factor Authentication during sign in.
-     * @param confirmationCode The code received as part of the multi-factor authentication process
+     * @param challengeResponse The code received as part of the multi-factor authentication process
      * @param options Advanced options such as a map of auth information for custom auth
      * @return An Rx {@link Single} which emits {@link AuthSignInResult} on success,
      *         {@link AuthException} on failure
      */
     Single<AuthSignInResult> confirmSignIn(
-            @Nullable String confirmationCode,
+            @Nullable String challengeResponse,
             @NonNull AuthConfirmSignInOptions options
     );
 
     /**
      * Submit the confirmation code received as part of multi-factor Authentication during sign in.
-     * @param confirmationCode The code received as part of the multi-factor authentication process
+     * @param challengeResponse The code received as part of the multi-factor authentication process
      * @return An Rx {@link Single} which emits {@link AuthSignInResult} on success,
      *         {@link AuthException} on failure
      */
-    Single<AuthSignInResult> confirmSignIn(@NonNull String confirmationCode);
+    Single<AuthSignInResult> confirmSignIn(@NonNull String challengeResponse);
 
     /**
      * Launch the specified auth provider's web UI sign in experience. You should also put the

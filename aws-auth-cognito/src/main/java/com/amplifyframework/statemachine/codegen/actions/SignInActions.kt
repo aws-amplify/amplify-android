@@ -21,6 +21,7 @@ import com.amplifyframework.statemachine.codegen.events.SignInEvent
 interface SignInActions {
     fun startSRPAuthAction(event: SignInEvent.EventType.InitiateSignInWithSRP): Action
     fun startCustomAuthAction(event: SignInEvent.EventType.InitiateSignInWithCustom): Action
+    fun startMigrationAuthAction(event: SignInEvent.EventType.InitiateMigrateAuth): Action
     fun startCustomAuthWithSRPAction(event: SignInEvent.EventType.InitiateCustomSignInWithSRP): Action
     fun initResolveChallenge(event: SignInEvent.EventType.ReceivedChallenge): Action
     fun confirmDevice(event: SignInEvent.EventType.ConfirmDevice): Action
