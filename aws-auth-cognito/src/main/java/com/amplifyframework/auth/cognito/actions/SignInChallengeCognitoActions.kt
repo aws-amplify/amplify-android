@@ -17,10 +17,10 @@ package com.amplifyframework.auth.cognito.actions
 
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
 import aws.sdk.kotlin.services.cognitoidentityprovider.respondToAuthChallenge
-import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.auth.cognito.helpers.SignInChallengeHelper
+import com.amplifyframework.auth.exceptions.UnknownException
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.SignInChallengeActions
 import com.amplifyframework.statemachine.codegen.data.AuthChallenge
@@ -35,7 +35,7 @@ object SignInChallengeCognitoActions : SignInChallengeActions {
         event: SignInChallengeEvent.EventType.VerifyChallengeAnswer,
         challenge: AuthChallenge
     ): Action = Action<AuthEnvironment>("VerifySignInChallenge") { id, dispatcher ->
-        logger?.verbose("$id Starting execution")
+        logger.verbose("$id Starting execution")
         val evt = try {
             val username = challenge.username
             val challengeResponses = mutableMapOf<String, String>()
@@ -68,7 +68,6 @@ object SignInChallengeCognitoActions : SignInChallengeActions {
             }
             response?.let {
                 SignInChallengeHelper.evaluateNextStep(
-                    userId = "",
                     username = username ?: "",
                     challengeNameType = response.challengeName,
                     session = response.session,
@@ -77,16 +76,13 @@ object SignInChallengeCognitoActions : SignInChallengeActions {
                 )
             } ?: CustomSignInEvent(
                 CustomSignInEvent.EventType.ThrowAuthError(
-                    AuthException(
-                        "Sign in failed",
-                        AuthException.TODO_RECOVERY_SUGGESTION
-                    )
+                    UnknownException("Sign in failed")
                 )
             )
         } catch (e: Exception) {
             SignInEvent(SignInEvent.EventType.ThrowError(e))
         }
-        logger?.verbose("$id Sending event ${evt.type}")
+        logger.verbose("$id Sending event ${evt.type}")
         dispatcher.send(evt)
     }
 
