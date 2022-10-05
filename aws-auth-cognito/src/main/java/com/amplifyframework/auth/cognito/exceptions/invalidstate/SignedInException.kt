@@ -22,6 +22,6 @@ import com.amplifyframework.auth.exceptions.InvalidStateException
  * @param recoverySuggestion recoverySuggestion Text suggesting a way to recover from the error being described
  */
 open class SignedInException(
-    message: String = "There is already a user in signedIn state.",
-    recoverySuggestion: String = "SignOut the user first before calling signIn."
+    message: String = "There is already a user signed in.",
+    recoverySuggestion: String = "Sign out the user first before signing in again."
 ) : InvalidStateException(message, recoverySuggestion)
