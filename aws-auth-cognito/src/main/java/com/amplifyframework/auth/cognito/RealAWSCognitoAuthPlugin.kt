@@ -43,6 +43,7 @@ import com.amplifyframework.auth.AuthUser
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.cognito.exceptions.AuthExceptionHelper
+import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidOauthConfigurationException
 import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidUserPoolConfigurationException
 import com.amplifyframework.auth.cognito.exceptions.invalidstate.SignedInException
 import com.amplifyframework.auth.cognito.exceptions.service.CodeDeliveryFailureException
@@ -611,20 +612,12 @@ internal class RealAWSCognitoAuthPlugin(
         authStateMachine.getCurrentState { authState ->
             when (authState.authNState) {
                 is AuthenticationState.NotConfigured -> onError.accept(
-                    ConfigurationException(
-                        "Sign in failed.",
-                        "Cognito User Pool not configured. Please check amplifyconfiguration.json file."
-                    )
+                    AuthExceptionHelper.createCognitoNotConfiguredException()
                 )
                 // Continue sign in
                 is AuthenticationState.SignedOut -> {
                     if (configuration.oauth == null) {
-                        onError.accept(
-                            ConfigurationException(
-                                "Sign in failed.",
-                                "HostedUI not configured or unable to parse from amplifyconfiguration.json file."
-                            )
-                        )
+                        onError.accept(InvalidOauthConfigurationException())
                         return@getCurrentState
                     }
 
@@ -636,9 +629,7 @@ internal class RealAWSCognitoAuthPlugin(
                         provider = provider
                     )
                 }
-                is AuthenticationState.SignedIn -> onError.accept(
-                    SignedInException()
-                )
+                is AuthenticationState.SignedIn -> onError.accept(SignedInException())
                 else -> onError.accept(InvalidStateException())
             }
         }
@@ -661,8 +652,13 @@ internal class RealAWSCognitoAuthPlugin(
                         val hostedUISignInState = authNState.signInState.hostedUISignInState
                         if (hostedUISignInState is HostedUISignInState.Error) {
                             token?.let(authStateMachine::cancel)
+                            val exception = hostedUISignInState.exception
                             onError.accept(
-                                CognitoAuthExceptionConverter.lookup(hostedUISignInState.exception, "Sign in failed.")
+                                if (exception is AuthException) {
+                                    exception
+                                } else {
+                                    UnknownException("Sign in failed", exception)
+                                }
                             )
                             authStateMachine.send(AuthenticationEvent(AuthenticationEvent.EventType.CancelSignIn()))
                         }
