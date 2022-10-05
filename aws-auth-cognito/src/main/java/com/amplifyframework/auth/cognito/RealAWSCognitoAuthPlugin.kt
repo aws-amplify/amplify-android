@@ -42,6 +42,7 @@ import com.amplifyframework.auth.AuthSession
 import com.amplifyframework.auth.AuthUser
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
+import com.amplifyframework.auth.cognito.data.AWSCognitoDeviceStore
 import com.amplifyframework.auth.cognito.exceptions.AuthExceptionHelper
 import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidUserPoolConfigurationException
 import com.amplifyframework.auth.cognito.exceptions.invalidstate.SignedInException
@@ -106,6 +107,7 @@ import com.amplifyframework.logging.Logger
 import com.amplifyframework.statemachine.StateChangeListenerToken
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
+import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.data.FederatedToken
 import com.amplifyframework.statemachine.codegen.data.SignInData
 import com.amplifyframework.statemachine.codegen.data.SignOutData
@@ -141,7 +143,8 @@ internal class RealAWSCognitoAuthPlugin(
     private val authEnvironment: AuthEnvironment,
     private val authStateMachine: AuthStateMachine,
     private val credentialStoreStateMachine: CredentialStoreStateMachine,
-    private val logger: Logger
+    private val logger: Logger,
+    private val deviceStore: AWSCognitoDeviceStore
 ) : AuthCategoryBehavior {
 
     private val lastPublishedHubEventName = AtomicReference<AuthChannelEventName>()
@@ -446,6 +449,7 @@ internal class RealAWSCognitoAuthPlugin(
                     authNState is AuthenticationState.SignedIn
                         && authZState is AuthorizationState.SessionEstablished -> {
                         token?.let(authStateMachine::cancel)
+                        username?.let { deviceStore.saveDeviceMetadata(it, authNState.signedInData.deviceMetadata) }
                         val authSignInResult = AuthSignInResult(
                             true,
                             AuthNextSignInStep(AuthSignInStep.DONE, mapOf(), null)
@@ -459,6 +463,11 @@ internal class RealAWSCognitoAuthPlugin(
                 // assign SRP as default if no options provided
                 val signInOptions = options as? AWSCognitoAuthSignInOptions ?: AWSCognitoAuthSignInOptions
                     .builder().authFlowType(configuration.authFlowType).build()
+
+                val deviceCredential = deviceStore.retrieveDeviceMetadata(username)
+                if (deviceCredential != DeviceMetadata.Empty) {
+                    signInOptions.metadata["DEVICE_KEY"] = (deviceCredential as DeviceMetadata.Metadata).deviceKey
+                }
 
                 val signInData = when (signInOptions.authFlowType) {
                     AuthFlowType.USER_SRP_AUTH -> {
@@ -810,9 +819,14 @@ internal class RealAWSCognitoAuthPlugin(
 
     override fun rememberDevice(onSuccess: Action, onError: Consumer<AuthException>) {
         authStateMachine.getCurrentState { authState ->
-            when (authState.authNState) {
+            when (val state = authState.authNState) {
                 is AuthenticationState.SignedIn -> {
-                    updateDevice(null, DeviceRememberedStatusType.Remembered, onSuccess, onError)
+                    updateDevice(
+                        (state.signedInData.deviceMetadata as DeviceMetadata.Metadata).deviceKey,
+                        DeviceRememberedStatusType.Remembered,
+                        onSuccess,
+                        onError
+                    )
                 }
                 else -> {
                     onError.accept(SignedOutException())
@@ -838,7 +852,7 @@ internal class RealAWSCognitoAuthPlugin(
                 authEnvironment.cognitoAuthService.cognitoIdentityProviderClient?.updateDeviceStatus(
                     UpdateDeviceStatusRequest.invoke {
                         accessToken = tokens.value?.accessToken
-                        deviceKey = alternateDeviceId ?: "STUB_DEVICE_KEY"
+                        deviceKey = alternateDeviceId
                         deviceRememberedStatus = rememberedStatusType
                     }
                 )

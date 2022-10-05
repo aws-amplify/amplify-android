@@ -52,7 +52,7 @@ object DeviceSRPCognitoSignInActions : DeviceSRPSignInActions {
                                 clientId = configuration.userPool?.appClient
                                 challengeResponses = mapOf(
                                     KEY_USERNAME to username,
-                                    KEY_DEVICE_KEY to "STUB", // TODO: get this from the device credential store
+                                    KEY_DEVICE_KEY to params.getValue(KEY_DEVICE_KEY),
                                     KEY_SRP_A to srpHelper.getPublicA()
                                 )
                             }
@@ -88,6 +88,7 @@ object DeviceSRPCognitoSignInActions : DeviceSRPSignInActions {
                     val secretBlock = params.getValue(KEY_SECRET_BLOCK)
                     val srpB = params.getValue(KEY_SRP_B)
                     val username = params.getValue(KEY_USERNAME)
+                    val deviceKey = params.getValue(KEY_DEVICE_KEY)
 
                     cognitoAuthService.cognitoIdentityProviderClient?.let {
                         val respondToAuthChallenge = it.respondToAuthChallenge(
@@ -99,7 +100,7 @@ object DeviceSRPCognitoSignInActions : DeviceSRPSignInActions {
                                     KEY_PASSWORD_CLAIM_SECRET_BLOCK to secretBlock,
                                     KEY_TIMESTAMP to srpHelper.dateString,
                                     KEY_PASSWORD_CLAIM_SIGNATURE to srpHelper.getSignature(salt, srpB, secretBlock),
-                                    KEY_DEVICE_KEY to "STUB", // TODO: get this from the device credential store
+                                    KEY_DEVICE_KEY to deviceKey
                                 )
                             }
                         )
@@ -128,7 +129,6 @@ object DeviceSRPCognitoSignInActions : DeviceSRPSignInActions {
     override fun cancellingSignIn(event: DeviceSRPSignInEvent.EventType.CancelSRPSignIn): Action =
         Action<AuthEnvironment>("CancelSignIn") { id, dispatcher ->
             logger.verbose("$id Starting execution")
-            // TODO: Cleaning up Device Storage once implemented
             val evt = DeviceSRPSignInEvent(DeviceSRPSignInEvent.EventType.RestoreToNotInitialized())
             dispatcher.send(evt)
         }
