@@ -35,8 +35,9 @@ class AWSCognitoAuthCredentialStore(
     }
 
     private val key = generateKey()
-    private var keyValue: KeyValueRepository =
+    private val keyValue: KeyValueRepository by lazy {
         keyValueRepoFactory.create(context, awsKeyValueStoreIdentifier, isPersistenceEnabled)
+    }
 
     override fun saveCredential(credential: AmplifyCredential) = keyValue.put(key, serializeCredential(credential))
 

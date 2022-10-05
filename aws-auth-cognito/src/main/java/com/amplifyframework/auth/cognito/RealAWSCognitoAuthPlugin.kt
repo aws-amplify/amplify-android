@@ -226,7 +226,7 @@ internal class RealAWSCognitoAuthPlugin(
                         deliveryDetails?.getValue("ATTRIBUTE")
                     )
                 ),
-                AuthUser(response?.userSub ?: "", username)
+                response?.userSub
             )
             onSuccess.accept(authSignUpResult)
             logger.verbose("SignUp Execution complete")
@@ -303,7 +303,7 @@ internal class RealAWSCognitoAuthPlugin(
 
     override fun resendSignUpCode(
         username: String,
-        onSuccess: Consumer<AuthSignUpResult>,
+        onSuccess: Consumer<AuthCodeDeliveryDetails>,
         onError: Consumer<AuthException>
     ) {
         resendSignUpCode(username, AuthResendSignUpCodeOptions.defaults(), onSuccess, onError)
@@ -312,7 +312,7 @@ internal class RealAWSCognitoAuthPlugin(
     override fun resendSignUpCode(
         username: String,
         options: AuthResendSignUpCodeOptions,
-        onSuccess: Consumer<AuthSignUpResult>,
+        onSuccess: Consumer<AuthCodeDeliveryDetails>,
         onError: Consumer<AuthException>
     ) {
         authStateMachine.getCurrentState { authState ->
@@ -331,7 +331,7 @@ internal class RealAWSCognitoAuthPlugin(
     private suspend fun _resendSignUpCode(
         username: String,
         options: AuthResendSignUpCodeOptions,
-        onSuccess: Consumer<AuthSignUpResult>,
+        onSuccess: Consumer<AuthCodeDeliveryDetails>,
         onError: Consumer<AuthException>
     ) {
         logger.verbose("ResendSignUpCode Starting execution")
@@ -359,22 +359,14 @@ internal class RealAWSCognitoAuthPlugin(
                 )
             }
 
-            val authSignUpResult = AuthSignUpResult(
-                false,
-                AuthNextSignUpStep(
-                    AuthSignUpStep.CONFIRM_SIGN_UP_STEP,
-                    mapOf(),
-                    AuthCodeDeliveryDetails(
-                        deliveryDetails?.getValue("DESTINATION") ?: "",
-                        AuthCodeDeliveryDetails.DeliveryMedium.fromString(
-                            deliveryDetails?.getValue("MEDIUM")
-                        ),
-                        deliveryDetails?.getValue("ATTRIBUTE")
-                    )
+            val codeDeliveryDetails = AuthCodeDeliveryDetails(
+                deliveryDetails?.getValue("DESTINATION") ?: "",
+                AuthCodeDeliveryDetails.DeliveryMedium.fromString(
+                    deliveryDetails?.getValue("MEDIUM")
                 ),
-                AuthUser("", username)
+                deliveryDetails?.getValue("ATTRIBUTE")
             )
-            onSuccess.accept(authSignUpResult)
+            onSuccess.accept(codeDeliveryDetails)
             logger.verbose("ResendSignUpCode Execution complete")
         } catch (exception: Exception) {
             onError.accept(CognitoAuthExceptionConverter.lookup(exception, "Resend sign up code failed."))
@@ -494,15 +486,15 @@ internal class RealAWSCognitoAuthPlugin(
     }
 
     override fun confirmSignIn(
-        confirmationCode: String,
+        challengeResponse: String,
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
     ) {
-        confirmSignIn(confirmationCode, AuthConfirmSignInOptions.defaults(), onSuccess, onError)
+        confirmSignIn(challengeResponse, AuthConfirmSignInOptions.defaults(), onSuccess, onError)
     }
 
     override fun confirmSignIn(
-        confirmationCode: String,
+        challengeResponse: String,
         options: AuthConfirmSignInOptions,
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
@@ -512,7 +504,7 @@ internal class RealAWSCognitoAuthPlugin(
             val signInState = (authNState as? AuthenticationState.SigningIn)?.signInState
             when ((signInState as? SignInState.ResolvingChallenge)?.challengeState) {
                 is SignInChallengeState.WaitingForAnswer -> {
-                    _confirmSignIn(confirmationCode, options, onSuccess, onError)
+                    _confirmSignIn(challengeResponse, options, onSuccess, onError)
                 }
                 else -> onError.accept(InvalidStateException())
             }
@@ -520,7 +512,7 @@ internal class RealAWSCognitoAuthPlugin(
     }
 
     private fun _confirmSignIn(
-        confirmationCode: String,
+        challengeResponse: String,
         options: AuthConfirmSignInOptions,
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
@@ -552,7 +544,7 @@ internal class RealAWSCognitoAuthPlugin(
                 val awsCognitoConfirmSignInOptions = options as? AWSCognitoAuthConfirmSignInOptions
                 val event = SignInChallengeEvent(
                     SignInChallengeEvent.EventType.VerifyChallengeAnswer(
-                        confirmationCode,
+                        challengeResponse,
                         awsCognitoConfirmSignInOptions?.metadata ?: mapOf()
                     )
                 )
@@ -875,7 +867,7 @@ internal class RealAWSCognitoAuthPlugin(
         authStateMachine.getCurrentState { authState ->
             when (authState.authNState) {
                 is AuthenticationState.SignedIn -> {
-                    val deviceID = device.deviceId.ifEmpty { null }
+                    val deviceID = device.id.ifEmpty { null }
                     updateDevice(deviceID, DeviceRememberedStatusType.NotRemembered, onSuccess, onError)
                 }
                 else -> {
@@ -1458,57 +1450,35 @@ internal class RealAWSCognitoAuthPlugin(
     }
 
     override fun deleteUser(onSuccess: Action, onError: Consumer<AuthException>) {
-        var listenerToken: StateChangeListenerToken? = null
-        listenerToken = credentialStoreStateMachine.listen(
-            {
-                when (it) {
-                    is CredentialStoreState.Success -> {
-                        listenerToken?.let(credentialStoreStateMachine::cancel)
-                        when (val credential = it.storedCredentials) {
-                            is AmplifyCredential.UserPoolTypeCredential -> _deleteUser(
-                                credential.signedInData.cognitoUserPoolTokens.accessToken!!,
-                                onSuccess,
-                                onError
-                            )
-                            else -> onError.accept(InvalidAccountTypeException())
-                        }
-                    }
-                    is CredentialStoreState.Error -> {
-                        listenerToken?.let(credentialStoreStateMachine::cancel)
-                        DeleteUserEvent(
-                            DeleteUserEvent.EventType.ThrowError(UnknownException(cause = it.error))
-                        )
-                    }
-                    else -> {
-                        // no-op
+        authStateMachine.getCurrentState { authState ->
+            when (authState.authNState) {
+                is AuthenticationState.SignedIn -> {
+                    GlobalScope.launch {
+                        val accessToken = getSession().userPoolTokensResult.value?.accessToken
+                        accessToken?.let {
+                            _deleteUser(accessToken, onSuccess, onError)
+                        } ?: onError.accept(SignedOutException())
                     }
                 }
-            },
-            {
-                credentialStoreStateMachine.send(
-                    CredentialStoreEvent(CredentialStoreEvent.EventType.LoadCredentialStore())
-                )
+                is AuthenticationState.SignedOut -> onError.accept(SignedOutException())
+                else -> onError.accept(InvalidStateException())
             }
-        )
+        }
     }
 
     private fun _deleteUser(token: String, onSuccess: Action, onError: Consumer<AuthException>) {
         var listenerToken: StateChangeListenerToken? = null
         listenerToken = authStateMachine.listen(
             { authState ->
-                val authNState = authState.authNState as? AuthenticationState.SigningOut
-                when (authNState?.signOutState) {
+                val signOutState = (authState.authNState as? AuthenticationState.SigningOut)?.signOutState
+                when (signOutState) {
                     is SignOutState.SignedOut -> {
-                        clearCredentialStore(
-                            onSuccess = {
-                                val event = DeleteUserEvent(DeleteUserEvent.EventType.SignOutDeletedUser())
-                                authStateMachine.send(event)
-                            },
-                            onError = {
-                                val event = DeleteUserEvent(DeleteUserEvent.EventType.ThrowError(it.error))
-                                authStateMachine.send(event)
-                            }
-                        )
+                        val event = DeleteUserEvent(DeleteUserEvent.EventType.SignOutDeletedUser())
+                        authStateMachine.send(event)
+                    }
+                    is SignOutState.Error -> {
+                        val event = DeleteUserEvent(DeleteUserEvent.EventType.ThrowError(signOutState.exception))
+                        authStateMachine.send(event)
                     }
                     else -> {
                         // No-op
@@ -1541,32 +1511,6 @@ internal class RealAWSCognitoAuthPlugin(
             {
                 val event = DeleteUserEvent(DeleteUserEvent.EventType.DeleteUser(accessToken = token))
                 authStateMachine.send(event)
-            }
-        )
-    }
-
-    private fun clearCredentialStore(onSuccess: () -> Unit, onError: (error: CredentialStoreState.Error) -> Unit) {
-        var token: StateChangeListenerToken? = null
-        token = credentialStoreStateMachine.listen(
-            {
-                when (it) {
-                    is CredentialStoreState.Success -> {
-                        token?.let(credentialStoreStateMachine::cancel)
-                        onSuccess()
-                    }
-                    is CredentialStoreState.Error -> {
-                        token?.let(credentialStoreStateMachine::cancel)
-                        onError(it)
-                    }
-                    else -> {
-                        // no op
-                    }
-                }
-            },
-            {
-                credentialStoreStateMachine.send(
-                    CredentialStoreEvent(CredentialStoreEvent.EventType.ClearCredentialStore())
-                )
             }
         )
     }
