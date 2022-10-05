@@ -71,13 +71,17 @@ internal class AWSCognitoLegacyCredentialStore(
 
     private val userDeviceDetailsCacheKey = "$APP_DEVICE_INFO_CACHE.${authConfiguration.userPool?.poolId}.%s"
 
-    private val idAndCredentialsKeyValue: KeyValueRepository =
+    private val idAndCredentialsKeyValue: KeyValueRepository by lazy {
         keyValueRepoFactory.create(context, AWS_KEY_VALUE_STORE_NAMESPACE_IDENTIFIER)
+    }
 
-    private val mobileClientKeyValue: KeyValueRepository =
+    private val mobileClientKeyValue: KeyValueRepository by lazy {
         keyValueRepoFactory.create(context, AWS_MOBILE_CLIENT_PROVIDER)
+    }
 
-    private val tokensKeyValue: KeyValueRepository = keyValueRepoFactory.create(context, APP_TOKENS_INFO_CACHE)
+    private val tokensKeyValue: KeyValueRepository by lazy {
+        keyValueRepoFactory.create(context, APP_TOKENS_INFO_CACHE)
+    }
 
     private lateinit var deviceKeyValue: KeyValueRepository
 
