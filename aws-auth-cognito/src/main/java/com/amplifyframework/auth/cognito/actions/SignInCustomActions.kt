@@ -18,10 +18,10 @@ package com.amplifyframework.auth.cognito.actions
 import aws.sdk.kotlin.services.cognitoidentityprovider.initiateAuth
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AuthFlowType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
-import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.auth.cognito.helpers.SignInChallengeHelper
+import com.amplifyframework.auth.exceptions.ServiceException
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.CustomSignInActions
 import com.amplifyframework.statemachine.codegen.data.SignInMethod
@@ -65,7 +65,7 @@ object SignInCustomActions : CustomSignInActions {
                         signInMethod = SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.CUSTOM_AUTH)
                     )
                 } else {
-                    throw AuthException(
+                    throw ServiceException(
                         "This sign in method is not supported",
                         "Please consult our docs for supported sign in methods"
                     )
