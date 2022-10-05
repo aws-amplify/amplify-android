@@ -107,7 +107,7 @@ public interface AuthCategoryBehavior {
     void resendSignUpCode(
             @NonNull String username,
             @NonNull AuthResendSignUpCodeOptions options,
-            @NonNull Consumer<AuthSignUpResult> onSuccess,
+            @NonNull Consumer<AuthCodeDeliveryDetails> onSuccess,
             @NonNull Consumer<AuthException> onError);
 
     /**
@@ -119,7 +119,7 @@ public interface AuthCategoryBehavior {
      */
     void resendSignUpCode(
             @NonNull String username,
-            @NonNull Consumer<AuthSignUpResult> onSuccess,
+            @NonNull Consumer<AuthCodeDeliveryDetails> onSuccess,
             @NonNull Consumer<AuthException> onError);
 
     /**
@@ -153,25 +153,25 @@ public interface AuthCategoryBehavior {
 
     /**
      * Submit the confirmation code received as part of multi-factor Authentication during sign in.
-     * @param confirmationCode The code received as part of the multi-factor authentication process
+     * @param challengeResponse The code received as part of the multi-factor authentication process
      * @param options Advanced options such as a map of auth information for custom auth
      * @param onSuccess Success callback
      * @param onError Error callback
      */
     void confirmSignIn(
-            @NonNull String confirmationCode,
+            @NonNull String challengeResponse,
             @NonNull AuthConfirmSignInOptions options,
             @NonNull Consumer<AuthSignInResult> onSuccess,
             @NonNull Consumer<AuthException> onError);
 
     /**
      * Submit the confirmation code received as part of multi-factor Authentication during sign in.
-     * @param confirmationCode The code received as part of the multi-factor authentication process
+     * @param challengeResponse The code received as part of the multi-factor authentication process
      * @param onSuccess Success callback
      * @param onError Error callback
      */
     void confirmSignIn(
-            @NonNull String confirmationCode,
+            @NonNull String challengeResponse,
             @NonNull Consumer<AuthSignInResult> onSuccess,
             @NonNull Consumer<AuthException> onError);
 

@@ -34,6 +34,7 @@ import com.amplifyframework.auth.cognito.data.AWSCognitoAuthCredentialStore
 import com.amplifyframework.auth.cognito.data.AWSCognitoLegacyCredentialStore
 import com.amplifyframework.auth.cognito.options.FederateToIdentityPoolOptions
 import com.amplifyframework.auth.cognito.result.FederateToIdentityPoolResult
+import com.amplifyframework.auth.exceptions.ConfigurationException
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
@@ -65,7 +66,6 @@ import org.json.JSONObject
 class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
     companion object {
         const val AWS_COGNITO_AUTH_LOG_NAMESPACE = "amplify:aws-cognito-auth:%s"
-
         private const val AWS_COGNITO_AUTH_PLUGIN_KEY = "awsCognitoAuthPlugin"
     }
 
@@ -96,10 +96,10 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
                 logger
             )
         } catch (exception: JSONException) {
-            throw AuthException(
+            throw ConfigurationException(
                 "Failed to configure AWSCognitoAuthPlugin.",
-                exception,
-                "Make sure your amplifyconfiguration.json is valid."
+                "Make sure your amplifyconfiguration.json is valid.",
+                exception
             )
         }
     }
@@ -135,7 +135,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
 
     override fun resendSignUpCode(
         username: String,
-        onSuccess: Consumer<AuthSignUpResult>,
+        onSuccess: Consumer<AuthCodeDeliveryDetails>,
         onError: Consumer<AuthException>
     ) {
         realPlugin.resendSignUpCode(username, onSuccess, onError)
@@ -144,7 +144,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
     override fun resendSignUpCode(
         username: String,
         options: AuthResendSignUpCodeOptions,
-        onSuccess: Consumer<AuthSignUpResult>,
+        onSuccess: Consumer<AuthCodeDeliveryDetails>,
         onError: Consumer<AuthException>
     ) {
         realPlugin.resendSignUpCode(username, options, onSuccess, onError)
@@ -170,20 +170,20 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
     }
 
     override fun confirmSignIn(
-        confirmationCode: String,
+        challengeResponse: String,
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
     ) {
-        realPlugin.confirmSignIn(confirmationCode, onSuccess, onError)
+        realPlugin.confirmSignIn(challengeResponse, onSuccess, onError)
     }
 
     override fun confirmSignIn(
-        confirmationCode: String,
+        challengeResponse: String,
         options: AuthConfirmSignInOptions,
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
     ) {
-        realPlugin.confirmSignIn(confirmationCode, options, onSuccess, onError)
+        realPlugin.confirmSignIn(challengeResponse, options, onSuccess, onError)
     }
 
     override fun signInWithSocialWebUI(
@@ -457,7 +457,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         val awsCognitoAuthCredentialStore = AWSCognitoAuthCredentialStore(context.applicationContext, configuration)
         val legacyCredentialStore = AWSCognitoLegacyCredentialStore(context.applicationContext, configuration)
         val credentialStoreEnvironment =
-            CredentialStoreEnvironment(awsCognitoAuthCredentialStore, legacyCredentialStore)
+            CredentialStoreEnvironment(awsCognitoAuthCredentialStore, legacyCredentialStore, logger)
         return CredentialStoreStateMachine(credentialStoreEnvironment)
     }
 }

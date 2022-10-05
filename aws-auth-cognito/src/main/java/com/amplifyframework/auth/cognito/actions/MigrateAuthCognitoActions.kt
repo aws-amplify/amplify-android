@@ -17,10 +17,11 @@ package com.amplifyframework.auth.cognito.actions
 
 import aws.sdk.kotlin.services.cognitoidentityprovider.initiateAuth
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AuthFlowType
-import com.amplifyframework.auth.AuthException
+import com.amplifyframework.AmplifyException
 import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.auth.cognito.helpers.SignInChallengeHelper
+import com.amplifyframework.auth.exceptions.ServiceException
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.MigrateAuthActions
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
@@ -62,7 +63,7 @@ object MigrateAuthCognitoActions : MigrateAuthActions {
                         response.authenticationResult
                     )
                 } else {
-                    throw AuthException("Sign in failed", AuthException.TODO_RECOVERY_SUGGESTION)
+                    throw ServiceException("Sign in failed", AmplifyException.TODO_RECOVERY_SUGGESTION)
                 }
             } catch (e: Exception) {
                 val errorEvent = SignInEvent(SignInEvent.EventType.ThrowError(e))

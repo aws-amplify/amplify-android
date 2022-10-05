@@ -18,10 +18,10 @@ package com.amplifyframework.auth.cognito.actions
 import aws.sdk.kotlin.services.cognitoidentityprovider.initiateAuth
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AuthFlowType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
-import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.auth.cognito.helpers.SignInChallengeHelper
+import com.amplifyframework.auth.exceptions.ServiceException
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.CustomSignInActions
 import com.amplifyframework.statemachine.codegen.data.SignInMethod
@@ -34,7 +34,7 @@ object SignInCustomActions : CustomSignInActions {
     private const val KEY_DEVICE_KEY = "DEVICE_KEY"
     override fun initiateCustomSignInAuthAction(event: CustomSignInEvent.EventType.InitiateCustomSignIn): Action =
         Action<AuthEnvironment>("InitCustomAuth") { id, dispatcher ->
-            logger?.verbose("$id Starting execution")
+            logger.verbose("$id Starting execution")
             val evt = try {
                 val secretHash = AuthHelper.getSecretHash(
                     event.username,
@@ -65,7 +65,7 @@ object SignInCustomActions : CustomSignInActions {
                         signInMethod = SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.CUSTOM_AUTH)
                     )
                 } else {
-                    throw AuthException(
+                    throw ServiceException(
                         "This sign in method is not supported",
                         "Please consult our docs for supported sign in methods"
                     )
@@ -73,7 +73,7 @@ object SignInCustomActions : CustomSignInActions {
             } catch (e: Exception) {
                 AuthenticationEvent(AuthenticationEvent.EventType.CancelSignIn(error = e))
             }
-            logger?.verbose("$id Sending event ${evt.type}")
+            logger.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
         }
 }
