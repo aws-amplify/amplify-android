@@ -19,7 +19,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
 
-import com.amplifyframework.auth.AuthUser;
 import com.amplifyframework.auth.result.step.AuthNextSignUpStep;
 
 import java.util.Objects;
@@ -30,7 +29,7 @@ import java.util.Objects;
 public final class AuthSignUpResult {
     private final boolean isSignUpComplete;
     private final AuthNextSignUpStep nextStep;
-    private final AuthUser user;
+    private final String userId;
 
     /**
      * Wraps the result of a sign up operation.
@@ -38,12 +37,12 @@ public final class AuthSignUpResult {
      *                         is successfully registered, there still may be additional steps that can be performed
      *                         such as user confirmation. Check {@link #getNextStep()} for this information.
      * @param nextStep Details about the next step in the sign up process (or whether the flow is now done).
-     * @param user If {@link #isSignUpComplete} is true, this holds the newly registered user. Otherwise, null.
+     * @param userId If {@link #isSignUpComplete} is true, this holds the newly registered user's id. Otherwise, null.
      */
-    public AuthSignUpResult(boolean isSignUpComplete, @NonNull AuthNextSignUpStep nextStep, @Nullable AuthUser user) {
+    public AuthSignUpResult(boolean isSignUpComplete, @NonNull AuthNextSignUpStep nextStep, @Nullable String userId) {
         this.isSignUpComplete = isSignUpComplete;
         this.nextStep = Objects.requireNonNull(nextStep);
-        this.user = user;
+        this.userId = userId;
     }
 
     /**
@@ -66,12 +65,12 @@ public final class AuthSignUpResult {
     }
 
     /**
-     * If {@link #isSignUpComplete} is true, this returns the newly registered user. Otherwise, null.
-     * @return the newly registered user if {@link #isSignUpComplete} is true. Otherwise, null.
+     * If {@link #isSignUpComplete} is true, this returns the newly registered user's id. Otherwise, null.
+     * @return the newly registered user's id if {@link #isSignUpComplete} is true. Otherwise, null.
      */
     @Nullable
-    public AuthUser getUser() {
-        return user;
+    public String getUserId() {
+        return userId;
     }
 
     /**
@@ -83,7 +82,7 @@ public final class AuthSignUpResult {
         return ObjectsCompat.hash(
                 isSignUpComplete(),
                 getNextStep(),
-                getUser()
+                getUserId()
         );
     }
 
@@ -101,7 +100,7 @@ public final class AuthSignUpResult {
             AuthSignUpResult authSignUpResult = (AuthSignUpResult) obj;
             return ObjectsCompat.equals(isSignUpComplete(), authSignUpResult.isSignUpComplete()) &&
                     ObjectsCompat.equals(getNextStep(), authSignUpResult.getNextStep()) &&
-                    ObjectsCompat.equals(getUser(), authSignUpResult.getUser());
+                    ObjectsCompat.equals(getUserId(), authSignUpResult.getUserId());
         }
     }
 
@@ -114,7 +113,7 @@ public final class AuthSignUpResult {
         return "AuthSignUpResult{" +
                 "isSignUpComplete=" + isSignUpComplete() +
                 ", nextStep=" + getNextStep() +
-                ", user=" + getUser() +
+                ", userId=" + getUserId() +
                 '}';
     }
 }

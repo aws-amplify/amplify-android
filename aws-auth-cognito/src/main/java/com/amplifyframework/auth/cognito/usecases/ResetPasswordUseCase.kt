@@ -18,6 +18,7 @@ package com.amplifyframework.auth.cognito.usecases
 import aws.sdk.kotlin.services.cognitoidentityprovider.CognitoIdentityProviderClient
 import aws.sdk.kotlin.services.cognitoidentityprovider.forgotPassword
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.CodeDeliveryDetailsType
+import com.amplifyframework.AmplifyException
 import com.amplifyframework.auth.AuthCodeDeliveryDetails
 import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.cognito.CognitoAuthExceptionConverter
@@ -69,7 +70,7 @@ internal class ResetPasswordUseCase(
         } catch (ex: Exception) {
             withContext(Dispatchers.Main) {
                 onError.accept(
-                    CognitoAuthExceptionConverter.lookup(ex, AuthException.REPORT_BUG_TO_AWS_SUGGESTION)
+                    CognitoAuthExceptionConverter.lookup(ex, AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION)
                 )
             }
         }

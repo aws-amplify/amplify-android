@@ -19,11 +19,12 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.initiateAuth
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AuthFlowType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
 import aws.sdk.kotlin.services.cognitoidentityprovider.respondToAuthChallenge
-import com.amplifyframework.auth.AuthException
+import com.amplifyframework.AmplifyException
 import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.auth.cognito.helpers.SRPHelper
 import com.amplifyframework.auth.cognito.helpers.SignInChallengeHelper
+import com.amplifyframework.auth.exceptions.ServiceException
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.SRPActions
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
@@ -44,7 +45,7 @@ object SRPCognitoActions : SRPActions {
     private const val KEY_CHALLENGE_NAME = "CHALLENGE_NAME"
     override fun initiateSRPAuthAction(event: SRPEvent.EventType.InitiateSRP) =
         Action<AuthEnvironment>("InitSRPAuth") { id, dispatcher ->
-            logger?.verbose("$id Starting execution")
+            logger.verbose("$id Starting execution")
             val evt = try {
                 srpHelper = SRPHelper(event.password)
 
@@ -73,18 +74,18 @@ object SRPCognitoActions : SRPActions {
                 }
             } catch (e: Exception) {
                 val errorEvent = SRPEvent(SRPEvent.EventType.ThrowAuthError(e))
-                logger?.verbose("$id Sending event ${errorEvent.type}")
+                logger.verbose("$id Sending event ${errorEvent.type}")
                 dispatcher.send(errorEvent)
 
                 AuthenticationEvent(AuthenticationEvent.EventType.CancelSignIn())
             }
-            logger?.verbose("$id Sending event ${evt.type}")
+            logger.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
         }
 
     override fun initiateSRPWithCustomAuthAction(event: SRPEvent.EventType.InitiateSRPWithCustom): Action =
         Action<AuthEnvironment>("InitSRPCustomAuth") { id, dispatcher ->
-            logger?.verbose("$id Starting execution")
+            logger.verbose("$id Starting execution")
             val evt = try {
                 srpHelper = SRPHelper("")
 
@@ -117,18 +118,18 @@ object SRPCognitoActions : SRPActions {
                 }
             } catch (e: Exception) {
                 val errorEvent = SRPEvent(SRPEvent.EventType.ThrowAuthError(e))
-                logger?.verbose("$id Sending event ${errorEvent.type}")
+                logger.verbose("$id Sending event ${errorEvent.type}")
                 dispatcher.send(errorEvent)
 
                 AuthenticationEvent(AuthenticationEvent.EventType.CancelSignIn())
             }
-            logger?.verbose("$id Sending event ${evt.type}")
+            logger.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
         }
 
     override fun verifyPasswordSRPAction(event: SRPEvent.EventType.RespondPasswordVerifier) =
         Action<AuthEnvironment>("VerifyPasswordSRP") { id, dispatcher ->
-            logger?.verbose("$id Starting execution")
+            logger.verbose("$id Starting execution")
             val evt = try {
                 val params = event.challengeParameters
                 val salt = params.getValue(KEY_SALT)
@@ -161,7 +162,6 @@ object SRPCognitoActions : SRPActions {
                 }
                 if (response != null) {
                     SignInChallengeHelper.evaluateNextStep(
-                        userId,
                         username,
                         response.challengeName,
                         response.session,
@@ -169,16 +169,19 @@ object SRPCognitoActions : SRPActions {
                         response.authenticationResult
                     )
                 } else {
-                    throw AuthException("Sign in failed", AuthException.TODO_RECOVERY_SUGGESTION)
+                    throw ServiceException(
+                        "Sign in failed",
+                        AmplifyException.TODO_RECOVERY_SUGGESTION
+                    )
                 }
             } catch (e: Exception) {
                 val errorEvent = SRPEvent(SRPEvent.EventType.ThrowPasswordVerifierError(e))
-                logger?.verbose("$id Sending event ${errorEvent.type}")
+                logger.verbose("$id Sending event ${errorEvent.type}")
                 dispatcher.send(errorEvent)
 
                 AuthenticationEvent(AuthenticationEvent.EventType.CancelSignIn())
             }
-            logger?.verbose("$id Sending event ${evt.type}")
+            logger.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
         }
 }

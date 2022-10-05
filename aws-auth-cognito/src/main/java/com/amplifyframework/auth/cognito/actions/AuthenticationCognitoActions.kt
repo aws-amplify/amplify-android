@@ -15,8 +15,8 @@
 
 package com.amplifyframework.auth.cognito.actions
 
-import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.cognito.AuthEnvironment
+import com.amplifyframework.auth.exceptions.ValidationException
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.AuthenticationActions
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
@@ -32,7 +32,7 @@ import com.amplifyframework.statemachine.codegen.events.SignOutEvent
 object AuthenticationCognitoActions : AuthenticationActions {
     override fun configureAuthenticationAction(event: AuthenticationEvent.EventType.Configure) =
         Action<AuthEnvironment>("ConfigureAuthN") { id, dispatcher ->
-            logger?.verbose("$id Starting execution")
+            logger.verbose("$id Starting execution")
             val evt = when (val credentials = event.storedCredentials) {
                 is AmplifyCredential.UserPoolTypeCredential -> {
                     AuthenticationEvent(AuthenticationEvent.EventType.InitializedSignedIn(credentials.signedInData))
@@ -42,28 +42,30 @@ object AuthenticationCognitoActions : AuthenticationActions {
                 }
                 else -> AuthenticationEvent(AuthenticationEvent.EventType.InitializedSignedOut(SignedOutData()))
             }
-            logger?.verbose("$id Sending event ${evt.type}")
+            logger.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
 
             val authEvent = AuthEvent(
                 AuthEvent.EventType.ConfiguredAuthentication(event.configuration, event.storedCredentials)
             )
-            logger?.verbose("$id Sending event ${authEvent.type}")
+            logger.verbose("$id Sending event ${authEvent.type}")
             dispatcher.send(authEvent)
         }
 
     override fun initiateSignInAction(event: AuthenticationEvent.EventType.SignInRequested) =
         Action<AuthEnvironment>("InitiateSignInAction") { id, dispatcher ->
-            logger?.verbose("$id Starting execution")
+            logger.verbose("$id Starting execution")
 
             val evt = when (val data = event.signInData) {
                 is SignInData.SRPSignInData -> {
                     if (data.username != null && data.password != null) {
-                        SignInEvent(SignInEvent.EventType.InitiateSignInWithSRP(data.username, data.password))
+                        SignInEvent(
+                            SignInEvent.EventType.InitiateSignInWithSRP(data.username, data.password, data.metadata)
+                        )
                     } else {
                         AuthenticationEvent(
                             AuthenticationEvent.EventType.ThrowError(
-                                AuthException("Sign in failed.", "username or password empty")
+                                ValidationException("Sign in failed.", "username or password empty")
                             )
                         )
                     }
@@ -71,12 +73,12 @@ object AuthenticationCognitoActions : AuthenticationActions {
                 is SignInData.CustomAuthSignInData -> {
                     if (data.username != null) {
                         SignInEvent(
-                            SignInEvent.EventType.InitiateSignInWithCustom(data.username, data.options)
+                            SignInEvent.EventType.InitiateSignInWithCustom(data.username, data.metadata)
                         )
                     } else {
                         AuthenticationEvent(
                             AuthenticationEvent.EventType.ThrowError(
-                                AuthException("Sign in failed.", "username can not be empty")
+                                ValidationException("Sign in failed.", "username can not be empty")
                             )
                         )
                     }
@@ -84,12 +86,12 @@ object AuthenticationCognitoActions : AuthenticationActions {
                 is SignInData.CustomSRPAuthSignInData -> {
                     if (data.username != null) {
                         SignInEvent(
-                            SignInEvent.EventType.InitiateCustomSignInWithSRP(data.username, data.options)
+                            SignInEvent.EventType.InitiateCustomSignInWithSRP(data.username, data.metadata)
                         )
                     } else {
                         AuthenticationEvent(
                             AuthenticationEvent.EventType.ThrowError(
-                                AuthException("Sign in failed.", "username can not be empty")
+                                ValidationException("Sign in failed.", "username can not be empty")
                             )
                         )
                     }
@@ -97,9 +99,22 @@ object AuthenticationCognitoActions : AuthenticationActions {
                 is SignInData.HostedUISignInData -> {
                     SignInEvent(SignInEvent.EventType.InitiateHostedUISignIn(data))
                 }
+                is SignInData.MigrationAuthSignInData -> {
+                    if (data.username != null && data.password != null) {
+                        SignInEvent(
+                            SignInEvent.EventType.InitiateMigrateAuth(data.username, data.password, data.metadata)
+                        )
+                    } else {
+                        AuthenticationEvent(
+                            AuthenticationEvent.EventType.ThrowError(
+                                ValidationException("Sign in failed.", "username or password empty")
+                            )
+                        )
+                    }
+                }
             }
 
-            logger?.verbose("$id Sending event ${evt.type}")
+            logger.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
         }
 
@@ -107,7 +122,7 @@ object AuthenticationCognitoActions : AuthenticationActions {
         event: AuthenticationEvent.EventType.SignOutRequested,
         signedInData: SignedInData?
     ) = Action<AuthEnvironment>("InitSignOut") { id, dispatcher ->
-        logger?.verbose("$id Starting execution")
+        logger.verbose("$id Starting execution")
 
         val evt = when {
             signedInData != null && signedInData.signInMethod is SignInMethod.HostedUI -> {
@@ -121,7 +136,7 @@ object AuthenticationCognitoActions : AuthenticationActions {
             }
             else -> SignOutEvent(SignOutEvent.EventType.SignOutLocally(signedInData))
         }
-        logger?.verbose("$id Sending event ${evt.type}")
+        logger.verbose("$id Sending event ${evt.type}")
         dispatcher.send(evt)
     }
 }

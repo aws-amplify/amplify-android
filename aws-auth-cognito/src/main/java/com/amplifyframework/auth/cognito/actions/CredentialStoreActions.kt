@@ -25,10 +25,10 @@ import com.amplifyframework.statemachine.codegen.events.CredentialStoreEvent
 object CredentialStoreActions : StoreActions {
     override fun migrateLegacyCredentialStoreAction() =
         Action<CredentialStoreEnvironment>("MigrateLegacyCredentials") { id, dispatcher ->
-            logger?.verbose("$id Starting execution")
+            logger.verbose("$id Starting execution")
             val evt = try {
                 val credentials = legacyCredentialStore.retrieveCredential()
-                if (credentials !is AmplifyCredential.Empty) {
+                if (credentials != AmplifyCredential.Empty) {
                     credentialStore.saveCredential(credentials)
                     legacyCredentialStore.deleteCredential()
                 }
@@ -36,54 +36,54 @@ object CredentialStoreActions : StoreActions {
             } catch (error: CredentialStoreError) {
                 CredentialStoreEvent(CredentialStoreEvent.EventType.ThrowError(error))
             }
-            logger?.verbose("$id Sending event ${evt.type}")
+            logger.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
         }
 
     override fun clearCredentialStoreAction() =
         Action<CredentialStoreEnvironment>("ClearCredentialStore") { id, dispatcher ->
-            logger?.verbose("$id Starting execution")
+            logger.verbose("$id Starting execution")
             val evt = try {
                 credentialStore.deleteCredential()
                 CredentialStoreEvent(CredentialStoreEvent.EventType.CompletedOperation(AmplifyCredential.Empty))
             } catch (error: CredentialStoreError) {
                 CredentialStoreEvent(CredentialStoreEvent.EventType.ThrowError(error))
             }
-            logger?.verbose("$id Sending event ${evt.type}")
+            logger.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
         }
 
     override fun loadCredentialStoreAction() =
         Action<CredentialStoreEnvironment>("LoadCredentialStore") { id, dispatcher ->
-            logger?.verbose("$id Starting execution")
+            logger.verbose("$id Starting execution")
             val evt = try {
                 val credentials = credentialStore.retrieveCredential()
                 CredentialStoreEvent(CredentialStoreEvent.EventType.CompletedOperation(credentials))
             } catch (error: CredentialStoreError) {
                 CredentialStoreEvent(CredentialStoreEvent.EventType.ThrowError(error))
             }
-            logger?.verbose("$id Sending event ${evt.type}")
+            logger.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
         }
 
     override fun storeCredentialsAction(credentials: AmplifyCredential) =
         Action<CredentialStoreEnvironment>("StoreCredentials") { id, dispatcher ->
-            logger?.verbose("$id Starting execution")
+            logger.verbose("$id Starting execution")
             val evt = try {
                 credentialStore.saveCredential(credentials)
                 CredentialStoreEvent(CredentialStoreEvent.EventType.CompletedOperation(credentials))
             } catch (error: CredentialStoreError) {
                 CredentialStoreEvent(CredentialStoreEvent.EventType.ThrowError(error))
             }
-            logger?.verbose("$id Sending event ${evt.type}")
+            logger.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
         }
 
     override fun moveToIdleStateAction() =
         Action<CredentialStoreEnvironment>("MoveToIdleState") { id, dispatcher ->
-            logger?.verbose("$id Starting execution")
+            logger.verbose("$id Starting execution")
             val evt = CredentialStoreEvent(CredentialStoreEvent.EventType.MoveToIdleState())
-            logger?.verbose("$id Sending event ${evt.type}")
+            logger.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
         }
 }

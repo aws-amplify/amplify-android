@@ -90,13 +90,13 @@ final class RxAuthBinding implements RxAuthCategoryBehavior {
     }
 
     @Override
-    public Single<AuthSignUpResult> resendSignUpCode(
+    public Single<AuthCodeDeliveryDetails> resendSignUpCode(
             @NonNull String username, @NonNull AuthResendSignUpCodeOptions options) {
         return toSingle((onResult, onError) -> delegate.resendSignUpCode(username, options, onResult, onError));
     }
 
     @Override
-    public Single<AuthSignUpResult> resendSignUpCode(@NonNull String username) {
+    public Single<AuthCodeDeliveryDetails> resendSignUpCode(@NonNull String username) {
         return toSingle((onResult, onError) -> delegate.resendSignUpCode(username, onResult, onError));
     }
 
@@ -114,14 +114,14 @@ final class RxAuthBinding implements RxAuthCategoryBehavior {
 
     @Override
     public Single<AuthSignInResult> confirmSignIn(
-            @Nullable String confirmationCode, @NonNull AuthConfirmSignInOptions options) {
+            @Nullable String challengeResponse, @NonNull AuthConfirmSignInOptions options) {
         return toSingle((onResult, onError) ->
-                delegate.confirmSignIn(confirmationCode, options, onResult, onError));
+                delegate.confirmSignIn(challengeResponse, options, onResult, onError));
     }
 
     @Override
-    public Single<AuthSignInResult> confirmSignIn(@NonNull String confirmationCode) {
-        return toSingle((onResult, onError) -> delegate.confirmSignIn(confirmationCode, onResult, onError));
+    public Single<AuthSignInResult> confirmSignIn(@NonNull String challengeResponse) {
+        return toSingle((onResult, onError) -> delegate.confirmSignIn(challengeResponse, onResult, onError));
     }
 
     @Override
