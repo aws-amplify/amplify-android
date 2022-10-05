@@ -20,7 +20,7 @@ import com.amplifyframework.auth.exceptions.ConfigurationException
  * Could not perform the action because the user pool is not configured or
  * is configured incorrectly.
  */
-class InvalidUserPoolConfigurationException: ConfigurationException(
+class InvalidUserPoolConfigurationException : ConfigurationException(
     message = "The user pool configuration is missing or invalid.",
-    recoverySuggestion = "Please check your user pool configuration."
+    recoverySuggestion = "Please check the user pool configuration in your amplifyconfiguration.json file."
 )
