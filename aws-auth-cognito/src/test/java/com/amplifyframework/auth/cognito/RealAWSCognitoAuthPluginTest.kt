@@ -42,7 +42,6 @@ import com.amplifyframework.auth.AuthCodeDeliveryDetails
 import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
-import com.amplifyframework.auth.cognito.exceptions.AuthExceptionHelper
 import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidUserPoolConfigurationException
 import com.amplifyframework.auth.cognito.exceptions.invalidstate.SignedInException
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
@@ -187,7 +186,7 @@ class RealAWSCognitoAuthPluginTest {
         // GIVEN
         val onSuccess = mockk<Consumer<AuthSignUpResult>>()
         val onError = mockk<Consumer<AuthException>>(relaxed = true)
-        val expectedAuthError = AuthExceptionHelper.createCognitoNotConfiguredException()
+        val expectedAuthError = InvalidUserPoolConfigurationException()
         currentState = AuthenticationState.NotConfigured()
 
         // WHEN
@@ -203,7 +202,7 @@ class RealAWSCognitoAuthPluginTest {
         // GIVEN
         val onSuccess = mockk<Consumer<AuthSignUpResult>>()
         val onError = mockk<Consumer<AuthException>>(relaxed = true)
-        val expectedAuthError = AuthExceptionHelper.createCognitoNotConfiguredException()
+        val expectedAuthError = InvalidUserPoolConfigurationException()
         currentState = AuthenticationState.NotConfigured()
 
         // WHEN
@@ -219,7 +218,7 @@ class RealAWSCognitoAuthPluginTest {
         // GIVEN
         val onSuccess = mockk<Consumer<AuthSignInResult>>()
         val onError = mockk<Consumer<AuthException>>(relaxed = true)
-        val expectedAuthError = AuthExceptionHelper.createCognitoNotConfiguredException()
+        val expectedAuthError = InvalidUserPoolConfigurationException()
         currentState = AuthenticationState.NotConfigured()
 
         // WHEN
@@ -260,7 +259,7 @@ class RealAWSCognitoAuthPluginTest {
         // GIVEN
         val onSuccess = mockk<Consumer<AuthCodeDeliveryDetails>>()
         val onError = mockk<Consumer<AuthException>>(relaxed = true)
-        val expectedAuthError = AuthExceptionHelper.createCognitoNotConfiguredException()
+        val expectedAuthError = InvalidUserPoolConfigurationException()
         currentState = AuthenticationState.NotConfigured()
 
         // WHEN

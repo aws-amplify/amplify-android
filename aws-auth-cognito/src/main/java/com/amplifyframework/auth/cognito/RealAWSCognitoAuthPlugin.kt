@@ -42,7 +42,6 @@ import com.amplifyframework.auth.AuthSession
 import com.amplifyframework.auth.AuthUser
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
-import com.amplifyframework.auth.cognito.exceptions.AuthExceptionHelper
 import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidOauthConfigurationException
 import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidUserPoolConfigurationException
 import com.amplifyframework.auth.cognito.exceptions.invalidstate.SignedInException
@@ -164,7 +163,7 @@ internal class RealAWSCognitoAuthPlugin(
         authStateMachine.getCurrentState { authState ->
             when (authState.authNState) {
                 is AuthenticationState.NotConfigured -> onError.accept(
-                    AuthExceptionHelper.createCognitoNotConfiguredException()
+                    InvalidUserPoolConfigurationException()
                 )
                 is AuthenticationState.SignedIn, is AuthenticationState.SignedOut -> GlobalScope.launch {
                     _signUp(username, password, options, onSuccess, onError)
@@ -254,7 +253,7 @@ internal class RealAWSCognitoAuthPlugin(
         authStateMachine.getCurrentState { authState ->
             when (authState.authNState) {
                 is AuthenticationState.NotConfigured -> onError.accept(
-                    AuthExceptionHelper.createCognitoNotConfiguredException()
+                    InvalidUserPoolConfigurationException()
                 )
                 is AuthenticationState.SignedIn, is AuthenticationState.SignedOut -> GlobalScope.launch {
                     _confirmSignUp(username, confirmationCode, options, onSuccess, onError)
@@ -318,7 +317,7 @@ internal class RealAWSCognitoAuthPlugin(
         authStateMachine.getCurrentState { authState ->
             when (authState.authNState) {
                 is AuthenticationState.NotConfigured -> onError.accept(
-                    AuthExceptionHelper.createCognitoNotConfiguredException()
+                    InvalidUserPoolConfigurationException()
                 )
                 is AuthenticationState.SignedIn, is AuthenticationState.SignedOut -> GlobalScope.launch {
                     _resendSignUpCode(username, options, onSuccess, onError)
@@ -392,7 +391,7 @@ internal class RealAWSCognitoAuthPlugin(
         authStateMachine.getCurrentState { authState ->
             when (authState.authNState) {
                 is AuthenticationState.NotConfigured -> onError.accept(
-                    AuthExceptionHelper.createCognitoNotConfiguredException()
+                    InvalidUserPoolConfigurationException()
                 )
                 // Continue sign in
                 is AuthenticationState.SignedOut, is AuthenticationState.Configured -> _signIn(
@@ -612,7 +611,7 @@ internal class RealAWSCognitoAuthPlugin(
         authStateMachine.getCurrentState { authState ->
             when (authState.authNState) {
                 is AuthenticationState.NotConfigured -> onError.accept(
-                    AuthExceptionHelper.createCognitoNotConfiguredException()
+                    InvalidUserPoolConfigurationException()
                 )
                 // Continue sign in
                 is AuthenticationState.SignedOut -> {
@@ -771,7 +770,7 @@ internal class RealAWSCognitoAuthPlugin(
                         _fetchAuthSession(onSuccess, onError)
                     } else onSuccess.accept(credential.getCognitoSession())
                 }
-                else -> Unit
+                else -> onError.accept(InvalidStateException())
             }
         }
     }
