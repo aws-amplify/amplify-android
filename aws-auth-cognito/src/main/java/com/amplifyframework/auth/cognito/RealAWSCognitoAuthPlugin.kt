@@ -31,6 +31,7 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.UpdateUserAttribute
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.VerifyUserAttributeRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.resendConfirmationCode
 import aws.sdk.kotlin.services.cognitoidentityprovider.signUp
+import com.amplifyframework.AmplifyException
 import com.amplifyframework.auth.AuthCategoryBehavior
 import com.amplifyframework.auth.AuthChannelEventName
 import com.amplifyframework.auth.AuthCodeDeliveryDetails
@@ -41,6 +42,11 @@ import com.amplifyframework.auth.AuthSession
 import com.amplifyframework.auth.AuthUser
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
+import com.amplifyframework.auth.cognito.exceptions.AuthExceptionHelper
+import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidUserPoolConfigurationException
+import com.amplifyframework.auth.cognito.exceptions.invalidstate.SignedInException
+import com.amplifyframework.auth.cognito.exceptions.service.CodeDeliveryFailureException
+import com.amplifyframework.auth.cognito.exceptions.service.UserCancelledException
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.auth.cognito.helpers.HostedUIHelper
 import com.amplifyframework.auth.cognito.helpers.SessionHelper
@@ -62,6 +68,10 @@ import com.amplifyframework.auth.cognito.result.GlobalSignOutError
 import com.amplifyframework.auth.cognito.result.HostedUIError
 import com.amplifyframework.auth.cognito.result.RevokeTokenError
 import com.amplifyframework.auth.cognito.usecases.ResetPasswordUseCase
+import com.amplifyframework.auth.exceptions.ConfigurationException
+import com.amplifyframework.auth.exceptions.InvalidStateException
+import com.amplifyframework.auth.exceptions.SignedOutException
+import com.amplifyframework.auth.exceptions.UnknownException
 import com.amplifyframework.auth.options.AWSCognitoAuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions
@@ -153,12 +163,12 @@ internal class RealAWSCognitoAuthPlugin(
         authStateMachine.getCurrentState { authState ->
             when (authState.authNState) {
                 is AuthenticationState.NotConfigured -> onError.accept(
-                    AWSCognitoAuthExceptions.NotConfiguredException()
+                    AuthExceptionHelper.createCognitoNotConfiguredException()
                 )
                 is AuthenticationState.SignedIn, is AuthenticationState.SignedOut -> GlobalScope.launch {
                     _signUp(username, password, options, onSuccess, onError)
                 }
-                else -> onError.accept(AuthException.InvalidStateException())
+                else -> onError.accept(InvalidStateException())
             }
         }
     }
@@ -243,12 +253,12 @@ internal class RealAWSCognitoAuthPlugin(
         authStateMachine.getCurrentState { authState ->
             when (authState.authNState) {
                 is AuthenticationState.NotConfigured -> onError.accept(
-                    AWSCognitoAuthExceptions.NotConfiguredException()
+                    AuthExceptionHelper.createCognitoNotConfiguredException()
                 )
                 is AuthenticationState.SignedIn, is AuthenticationState.SignedOut -> GlobalScope.launch {
                     _confirmSignUp(username, confirmationCode, options, onSuccess, onError)
                 }
-                else -> onError.accept(AuthException.InvalidStateException())
+                else -> onError.accept(InvalidStateException())
             }
         }
     }
@@ -307,12 +317,12 @@ internal class RealAWSCognitoAuthPlugin(
         authStateMachine.getCurrentState { authState ->
             when (authState.authNState) {
                 is AuthenticationState.NotConfigured -> onError.accept(
-                    AWSCognitoAuthExceptions.NotConfiguredException()
+                    AuthExceptionHelper.createCognitoNotConfiguredException()
                 )
                 is AuthenticationState.SignedIn, is AuthenticationState.SignedOut -> GlobalScope.launch {
                     _resendSignUpCode(username, options, onSuccess, onError)
                 }
-                else -> onError.accept(AuthException.InvalidStateException())
+                else -> onError.accept(InvalidStateException())
             }
         }
     }
@@ -381,7 +391,7 @@ internal class RealAWSCognitoAuthPlugin(
         authStateMachine.getCurrentState { authState ->
             when (authState.authNState) {
                 is AuthenticationState.NotConfigured -> onError.accept(
-                    AWSCognitoAuthExceptions.NotConfiguredException()
+                    AuthExceptionHelper.createCognitoNotConfiguredException()
                 )
                 // Continue sign in
                 is AuthenticationState.SignedOut, is AuthenticationState.Configured -> _signIn(
@@ -391,8 +401,8 @@ internal class RealAWSCognitoAuthPlugin(
                     onSuccess,
                     onError
                 )
-                is AuthenticationState.SignedIn -> onError.accept(AuthException.SignedInException())
-                else -> onError.accept(AuthException.InvalidStateException())
+                is AuthenticationState.SignedIn -> onError.accept(SignedInException())
+                else -> onError.accept(InvalidStateException())
             }
         }
     }
@@ -491,7 +501,7 @@ internal class RealAWSCognitoAuthPlugin(
                 is SignInChallengeState.WaitingForAnswer -> {
                     _confirmSignIn(challengeResponse, options, onSuccess, onError)
                 }
-                else -> onError.accept(AuthException.InvalidStateException())
+                else -> onError.accept(InvalidStateException())
             }
         }
     }
@@ -601,7 +611,7 @@ internal class RealAWSCognitoAuthPlugin(
         authStateMachine.getCurrentState { authState ->
             when (authState.authNState) {
                 is AuthenticationState.NotConfigured -> onError.accept(
-                    AuthException(
+                    ConfigurationException(
                         "Sign in failed.",
                         "Cognito User Pool not configured. Please check amplifyconfiguration.json file."
                     )
@@ -610,7 +620,7 @@ internal class RealAWSCognitoAuthPlugin(
                 is AuthenticationState.SignedOut -> {
                     if (configuration.oauth == null) {
                         onError.accept(
-                            AuthException(
+                            ConfigurationException(
                                 "Sign in failed.",
                                 "HostedUI not configured or unable to parse from amplifyconfiguration.json file."
                             )
@@ -626,8 +636,10 @@ internal class RealAWSCognitoAuthPlugin(
                         provider = provider
                     )
                 }
-                is AuthenticationState.SignedIn -> onError.accept(AuthException.SignedInException())
-                else -> onError.accept(AuthException.InvalidStateException())
+                is AuthenticationState.SignedIn -> onError.accept(
+                    SignedInException()
+                )
+                else -> onError.accept(InvalidStateException())
             }
         }
     }
@@ -646,7 +658,7 @@ internal class RealAWSCognitoAuthPlugin(
                 val authZState = authState.authZState
                 when {
                     authNState is AuthenticationState.SigningIn -> {
-                        val hostedUISignInState = authNState.signInState?.hostedUISignInState
+                        val hostedUISignInState = authNState.signInState.hostedUISignInState
                         if (hostedUISignInState is HostedUISignInState.Error) {
                             token?.let(authStateMachine::cancel)
                             onError.accept(
@@ -709,7 +721,7 @@ internal class RealAWSCognitoAuthPlugin(
                         authStateMachine.send(
                             HostedUIEvent(
                                 HostedUIEvent.EventType.ThrowError(
-                                    AuthException.UserCancelledException(
+                                    UserCancelledException(
                                         "The user cancelled the sign-in attempt, so it did not complete.",
                                         "To recover: catch this error, and show the sign-in screen again."
                                     )
@@ -803,7 +815,7 @@ internal class RealAWSCognitoAuthPlugin(
                     updateDevice(null, DeviceRememberedStatusType.Remembered, onSuccess, onError)
                 }
                 else -> {
-                    onError.accept(AuthException.SignedOutException())
+                    onError.accept(SignedOutException())
                 }
             }
         }
@@ -849,7 +861,7 @@ internal class RealAWSCognitoAuthPlugin(
                     updateDevice(deviceID, DeviceRememberedStatusType.NotRemembered, onSuccess, onError)
                 }
                 else -> {
-                    onError.accept(AuthException.SignedOutException())
+                    onError.accept(SignedOutException())
                 }
             }
         }
@@ -865,7 +877,7 @@ internal class RealAWSCognitoAuthPlugin(
                     _fetchDevices(onSuccess, onError)
                 }
                 else -> {
-                    onError.accept(AuthException.SignedOutException())
+                    onError.accept(SignedOutException())
                 }
             }
         }
@@ -918,7 +930,7 @@ internal class RealAWSCognitoAuthPlugin(
                 )
             }
         } catch (ex: Exception) {
-            onError.accept(AuthException.InvalidUserPoolConfigurationException(ex))
+            onError.accept(InvalidUserPoolConfigurationException())
         }
     }
 
@@ -941,7 +953,7 @@ internal class RealAWSCognitoAuthPlugin(
         authStateMachine.getCurrentState { authState ->
             if (authState.authNState is AuthenticationState.NotConfigured) {
                 onError.accept(
-                    AuthException(
+                    ConfigurationException(
                         "Confirm Reset Password failed.",
                         "Cognito User Pool not configured. Please check amplifyconfiguration.json file."
                     )
@@ -963,7 +975,9 @@ internal class RealAWSCognitoAuthPlugin(
                         encodedContextData?.let { this.userContextData { encodedData = it } }
                     }.let { onSuccess.call() }
                 } catch (ex: Exception) {
-                    onError.accept(CognitoAuthExceptionConverter.lookup(ex, AuthException.REPORT_BUG_TO_AWS_SUGGESTION))
+                    onError.accept(
+                        CognitoAuthExceptionConverter.lookup(ex, AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION)
+                    )
                 }
             }
         }
@@ -998,7 +1012,7 @@ internal class RealAWSCognitoAuthPlugin(
                 is AuthenticationState.SignedIn -> {
                     _updatePassword(oldPassword, newPassword, onSuccess, onError)
                 }
-                else -> onError.accept(AuthException.InvalidStateException())
+                else -> onError.accept(InvalidStateException())
             }
         }
     }
@@ -1060,7 +1074,7 @@ internal class RealAWSCognitoAuthPlugin(
                         }
                     }
                 }
-                else -> onError.accept(AuthException.InvalidStateException())
+                else -> onError.accept(InvalidStateException())
             }
         }
     }
@@ -1154,14 +1168,14 @@ internal class RealAWSCognitoAuthPlugin(
                                         getUpdateUserAttributeResult(userAttributeResponse, userAttributes)
                                     )
                                 } ?: continuation.resumeWithException(
-                                    AuthException.InvalidUserPoolConfigurationException()
+                                    InvalidUserPoolConfigurationException()
                                 )
                             } catch (e: Exception) {
                                 continuation.resumeWithException(CognitoAuthExceptionConverter.lookup(e, e.toString()))
                             }
                         }
                     }
-                    else -> continuation.resumeWithException(AuthException.InvalidStateException())
+                    else -> continuation.resumeWithException(InvalidStateException())
                 }
             }
         }
@@ -1252,18 +1266,18 @@ internal class RealAWSCognitoAuthPlugin(
                                         )
                                         onSuccess.accept(authCodeDeliveryDetails)
                                     } ?: {
-                                        onError.accept(AuthException.CodeDeliveryFailureException())
+                                        onError.accept(CodeDeliveryFailureException())
                                     }
                                 }
                             } ?: onError.accept(
-                                AuthException.InvalidUserPoolConfigurationException()
+                                InvalidUserPoolConfigurationException()
                             )
                         } catch (e: Exception) {
                             onError.accept(CognitoAuthExceptionConverter.lookup(e, e.toString()))
                         }
                     }
                 }
-                else -> onError.accept(AuthException.InvalidStateException())
+                else -> onError.accept(InvalidStateException())
             }
         }
     }
@@ -1305,13 +1319,13 @@ internal class RealAWSCognitoAuthPlugin(
                                         verifyUserAttributeRequest
                                     )
                                 onSuccess.call()
-                            } ?: onError.accept(AuthException.InvalidUserPoolConfigurationException())
+                            } ?: onError.accept(InvalidUserPoolConfigurationException())
                         } catch (e: Exception) {
                             onError.accept(CognitoAuthExceptionConverter.lookup(e, e.toString()))
                         }
                     }
                 }
-                else -> onError.accept(AuthException.InvalidStateException())
+                else -> onError.accept(InvalidStateException())
             }
         }
     }
@@ -1322,7 +1336,7 @@ internal class RealAWSCognitoAuthPlugin(
     ) {
         authStateMachine.getCurrentState { authState ->
             if (authState.authNState !is AuthenticationState.SignedIn) {
-                onError.accept(AuthException.SignedOutException())
+                onError.accept(SignedOutException())
                 return@getCurrentState
             }
 
@@ -1332,7 +1346,7 @@ internal class RealAWSCognitoAuthPlugin(
                     val userid = SessionHelper.getUserSub(accessToken) ?: ""
                     val username = SessionHelper.getUsername(accessToken) ?: ""
                     onSuccess.accept(AuthUser(userid, username))
-                } ?: onError.accept(AuthException.InvalidUserPoolConfigurationException())
+                } ?: onError.accept(InvalidUserPoolConfigurationException())
             }
         }
     }
@@ -1364,7 +1378,7 @@ internal class RealAWSCognitoAuthPlugin(
                 is AuthenticationState.FederatedToIdentityPool -> {
                     onComplete.accept(
                         AWSCognitoAuthSignOutResult.FailedSignOut(
-                            AuthException.InvalidStateException(
+                            InvalidStateException(
                                 "The user is currently federated to identity pool. " +
                                     "You must call clearFederationToIdentityPool to clear credentials."
                             )
@@ -1372,7 +1386,7 @@ internal class RealAWSCognitoAuthPlugin(
                     )
                 }
                 else -> onComplete.accept(
-                    AWSCognitoAuthSignOutResult.FailedSignOut(AuthException.InvalidStateException())
+                    AWSCognitoAuthSignOutResult.FailedSignOut(InvalidStateException())
                 )
             }
         }
@@ -1433,11 +1447,11 @@ internal class RealAWSCognitoAuthPlugin(
                         val accessToken = getSession().userPoolTokensResult.value?.accessToken
                         accessToken?.let {
                             _deleteUser(accessToken, onSuccess, onError)
-                        } ?: onError.accept(AuthException.SignedOutException())
+                        } ?: onError.accept(SignedOutException())
                     }
                 }
-                is AuthenticationState.SignedOut -> onError.accept(AuthException.SignedOutException())
-                else -> onError.accept(AuthException.InvalidStateException())
+                is AuthenticationState.SignedOut -> onError.accept(SignedOutException())
+                else -> onError.accept(InvalidStateException())
             }
         }
     }
@@ -1586,11 +1600,11 @@ internal class RealAWSCognitoAuthPlugin(
             val authZState = authState.authZState
             when {
                 authState !is AuthState.Configured -> onError.accept(
-                    AuthException.InvalidStateException("Federation could not be completed.")
+                    InvalidStateException("Federation could not be completed.")
                 )
                 authNState is AuthenticationState.FederatedToIdentityPool -> {
                     onError.accept(
-                        AuthException.InvalidStateException(
+                        InvalidStateException(
                             "The user is currently federated to identity pool. You " +
                                 "must call clearFederationToIdentityPool to clear credentials."
                         )
@@ -1608,7 +1622,7 @@ internal class RealAWSCognitoAuthPlugin(
                     _federateToIdentityPool(authProvider, providerToken, options, onSuccess, onError)
                 }
                 else -> onError.accept(
-                    AuthException.InvalidStateException("Federation could not be completed.")
+                    InvalidStateException("Federation could not be completed.")
                 )
             }
         }
@@ -1641,9 +1655,8 @@ internal class RealAWSCognitoAuthPlugin(
                             onSuccess.accept(result)
                         } else {
                             onError.accept(
-                                AuthException.UnknownException(
-                                    "Unable to parse credentials to expected output.",
-                                    "An unclassified error prevented this operation."
+                                UnknownException(
+                                    message = "Unable to parse credentials to expected output."
                                 )
                             )
                         }
@@ -1688,7 +1701,7 @@ internal class RealAWSCognitoAuthPlugin(
                     _clearFederationToIdentityPool(onSuccess, onError)
                 }
                 else -> {
-                    onError.accept(AuthException.InvalidStateException("Clearing of federation failed."))
+                    onError.accept(InvalidStateException("Clearing of federation failed."))
                 }
             }
         }
