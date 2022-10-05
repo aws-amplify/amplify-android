@@ -35,7 +35,7 @@ object SignInChallengeCognitoActions : SignInChallengeActions {
         event: SignInChallengeEvent.EventType.VerifyChallengeAnswer,
         challenge: AuthChallenge
     ): Action = Action<AuthEnvironment>("VerifySignInChallenge") { id, dispatcher ->
-        logger?.verbose("$id Starting execution")
+        logger.verbose("$id Starting execution")
         val evt = try {
             val username = challenge.username
             val challengeResponses = mutableMapOf<String, String>()
@@ -85,7 +85,7 @@ object SignInChallengeCognitoActions : SignInChallengeActions {
         } catch (e: Exception) {
             SignInEvent(SignInEvent.EventType.ThrowError(e))
         }
-        logger?.verbose("$id Sending event ${evt.type}")
+        logger.verbose("$id Sending event ${evt.type}")
         dispatcher.send(evt)
     }
 

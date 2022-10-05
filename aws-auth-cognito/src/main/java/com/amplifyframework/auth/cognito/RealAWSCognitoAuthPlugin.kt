@@ -1426,55 +1426,35 @@ internal class RealAWSCognitoAuthPlugin(
     }
 
     override fun deleteUser(onSuccess: Action, onError: Consumer<AuthException>) {
-        var listenerToken: StateChangeListenerToken? = null
-        listenerToken = credentialStoreStateMachine.listen(
-            {
-                when (it) {
-                    is CredentialStoreState.Success -> {
-                        listenerToken?.let(credentialStoreStateMachine::cancel)
-                        when (val credential = it.storedCredentials) {
-                            is AmplifyCredential.UserPoolTypeCredential -> _deleteUser(
-                                credential.signedInData.cognitoUserPoolTokens.accessToken!!,
-                                onSuccess,
-                                onError
-                            )
-                            else -> onError.accept(AuthException.InvalidAccountTypeException())
-                        }
-                    }
-                    is CredentialStoreState.Error -> {
-                        listenerToken?.let(credentialStoreStateMachine::cancel)
-                        DeleteUserEvent(DeleteUserEvent.EventType.ThrowError(AuthException.UnknownException(it.error)))
-                    }
-                    else -> {
-                        // no-op
+        authStateMachine.getCurrentState { authState ->
+            when (authState.authNState) {
+                is AuthenticationState.SignedIn -> {
+                    GlobalScope.launch {
+                        val accessToken = getSession().userPoolTokensResult.value?.accessToken
+                        accessToken?.let {
+                            _deleteUser(accessToken, onSuccess, onError)
+                        } ?: onError.accept(AuthException.SignedOutException())
                     }
                 }
-            },
-            {
-                credentialStoreStateMachine.send(
-                    CredentialStoreEvent(CredentialStoreEvent.EventType.LoadCredentialStore())
-                )
+                is AuthenticationState.SignedOut -> onError.accept(AuthException.SignedOutException())
+                else -> onError.accept(AuthException.InvalidStateException())
             }
-        )
+        }
     }
 
     private fun _deleteUser(token: String, onSuccess: Action, onError: Consumer<AuthException>) {
         var listenerToken: StateChangeListenerToken? = null
         listenerToken = authStateMachine.listen(
             { authState ->
-                val authNState = authState.authNState as? AuthenticationState.SigningOut
-                when (authNState?.signOutState) {
+                val signOutState = (authState.authNState as? AuthenticationState.SigningOut)?.signOutState
+                when (signOutState) {
                     is SignOutState.SignedOut -> {
-                        clearCredentialStore(
-                            onSuccess = {
-                                val event = DeleteUserEvent(DeleteUserEvent.EventType.SignOutDeletedUser())
-                                authStateMachine.send(event)
-                            },
-                            onError = {
-                                val event = DeleteUserEvent(DeleteUserEvent.EventType.ThrowError(it.error))
-                                authStateMachine.send(event)
-                            }
-                        )
+                        val event = DeleteUserEvent(DeleteUserEvent.EventType.SignOutDeletedUser())
+                        authStateMachine.send(event)
+                    }
+                    is SignOutState.Error -> {
+                        val event = DeleteUserEvent(DeleteUserEvent.EventType.ThrowError(signOutState.exception))
+                        authStateMachine.send(event)
                     }
                     else -> {
                         // No-op
@@ -1507,32 +1487,6 @@ internal class RealAWSCognitoAuthPlugin(
             {
                 val event = DeleteUserEvent(DeleteUserEvent.EventType.DeleteUser(accessToken = token))
                 authStateMachine.send(event)
-            }
-        )
-    }
-
-    private fun clearCredentialStore(onSuccess: () -> Unit, onError: (error: CredentialStoreState.Error) -> Unit) {
-        var token: StateChangeListenerToken? = null
-        token = credentialStoreStateMachine.listen(
-            {
-                when (it) {
-                    is CredentialStoreState.Success -> {
-                        token?.let(credentialStoreStateMachine::cancel)
-                        onSuccess()
-                    }
-                    is CredentialStoreState.Error -> {
-                        token?.let(credentialStoreStateMachine::cancel)
-                        onError(it)
-                    }
-                    else -> {
-                        // no op
-                    }
-                }
-            },
-            {
-                credentialStoreStateMachine.send(
-                    CredentialStoreEvent(CredentialStoreEvent.EventType.ClearCredentialStore())
-                )
             }
         )
     }

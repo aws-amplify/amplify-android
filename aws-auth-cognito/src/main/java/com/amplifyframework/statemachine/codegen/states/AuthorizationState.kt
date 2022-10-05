@@ -88,7 +88,6 @@ sealed class AuthorizationState : State {
                         val action = authorizationActions.configureAuthorizationAction()
                         StateResolution(SessionEstablished(authorizationEvent.amplifyCredential), listOf(action))
                     }
-                    // TODO: fix resulting state
                     is AuthorizationEvent.EventType.ThrowError -> {
                         val action = authorizationActions.resetAuthorizationAction()
                         StateResolution(Error(authorizationEvent.exception), listOf(action))
@@ -265,6 +264,9 @@ sealed class AuthorizationState : State {
                             FetchAuthSessionState.NotStarted()
                         )
                         StateResolution(newState, listOf(action))
+                    }
+                    deleteUserEvent is DeleteUserEvent.EventType.DeleteUser -> {
+                        StateResolution(DeletingUser(DeleteUserState.NotStarted()))
                     }
                     else -> defaultResolution
                 }
