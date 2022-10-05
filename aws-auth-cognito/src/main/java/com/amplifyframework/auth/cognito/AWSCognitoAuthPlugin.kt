@@ -32,6 +32,8 @@ import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.cognito.asf.UserContextDataProvider
 import com.amplifyframework.auth.cognito.data.AWSCognitoAuthCredentialStore
 import com.amplifyframework.auth.cognito.data.AWSCognitoLegacyCredentialStore
+import com.amplifyframework.auth.cognito.options.FederateToIdentityPoolOptions
+import com.amplifyframework.auth.cognito.result.FederateToIdentityPoolResult
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
@@ -63,7 +65,6 @@ import org.json.JSONObject
 class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
     companion object {
         const val AWS_COGNITO_AUTH_LOG_NAMESPACE = "amplify:aws-cognito-auth:%s"
-
         private const val AWS_COGNITO_AUTH_PLUGIN_KEY = "awsCognitoAuthPlugin"
     }
 
@@ -133,7 +134,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
 
     override fun resendSignUpCode(
         username: String,
-        onSuccess: Consumer<AuthSignUpResult>,
+        onSuccess: Consumer<AuthCodeDeliveryDetails>,
         onError: Consumer<AuthException>
     ) {
         realPlugin.resendSignUpCode(username, onSuccess, onError)
@@ -142,7 +143,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
     override fun resendSignUpCode(
         username: String,
         options: AuthResendSignUpCodeOptions,
-        onSuccess: Consumer<AuthSignUpResult>,
+        onSuccess: Consumer<AuthCodeDeliveryDetails>,
         onError: Consumer<AuthException>
     ) {
         realPlugin.resendSignUpCode(username, options, onSuccess, onError)
@@ -168,20 +169,20 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
     }
 
     override fun confirmSignIn(
-        confirmationCode: String,
+        challengeResponse: String,
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
     ) {
-        realPlugin.confirmSignIn(confirmationCode, onSuccess, onError)
+        realPlugin.confirmSignIn(challengeResponse, onSuccess, onError)
     }
 
     override fun confirmSignIn(
-        confirmationCode: String,
+        challengeResponse: String,
         options: AuthConfirmSignInOptions,
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
     ) {
-        realPlugin.confirmSignIn(confirmationCode, options, onSuccess, onError)
+        realPlugin.confirmSignIn(challengeResponse, options, onSuccess, onError)
     }
 
     override fun signInWithSocialWebUI(
@@ -398,6 +399,56 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
 
     override fun getVersion() = BuildConfig.VERSION_NAME
 
+    /**
+     * Federate to Identity Pool
+     * @param authProvider The auth provider you want to federate for (e.g. Facebook, Google, etc.)
+     * @param providerToken Provider token to start the federation for
+     * @param onSuccess Success callback
+     */
+    fun federateToIdentityPool(
+        authProvider: AuthProvider,
+        providerToken: String,
+        onSuccess: Consumer<FederateToIdentityPoolResult>,
+        onError: Consumer<AuthException>
+    ) {
+        realPlugin.federateToIdentityPool(
+            authProvider,
+            providerToken,
+            FederateToIdentityPoolOptions.builder().build(),
+            onSuccess,
+            onError
+        )
+    }
+
+    /**
+     * Federate to Identity Pool
+     * @param authProvider The auth provider you want to federate for (e.g. Facebook, Google, etc.)
+     * @param providerToken Provider token to start the federation for
+     * @param options Advanced options for federating to identity pool
+     * @param onSuccess Success callback
+     */
+    fun federateToIdentityPool(
+        authProvider: AuthProvider,
+        providerToken: String,
+        options: FederateToIdentityPoolOptions,
+        onSuccess: Consumer<FederateToIdentityPoolResult>,
+        onError: Consumer<AuthException>
+    ) {
+        realPlugin.federateToIdentityPool(authProvider, providerToken, options, onSuccess, onError)
+    }
+
+    /**
+     * Clear Federation to Identity Pool
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     */
+    fun clearFederationToIdentityPool(
+        onSuccess: Action,
+        onError: Consumer<AuthException>
+    ) {
+        realPlugin.clearFederationToIdentityPool(onSuccess, onError)
+    }
+
     private fun createCredentialStoreStateMachine(
         configuration: AuthConfiguration,
         context: Context
@@ -405,7 +456,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         val awsCognitoAuthCredentialStore = AWSCognitoAuthCredentialStore(context.applicationContext, configuration)
         val legacyCredentialStore = AWSCognitoLegacyCredentialStore(context.applicationContext, configuration)
         val credentialStoreEnvironment =
-            CredentialStoreEnvironment(awsCognitoAuthCredentialStore, legacyCredentialStore)
+            CredentialStoreEnvironment(awsCognitoAuthCredentialStore, legacyCredentialStore, logger)
         return CredentialStoreStateMachine(credentialStoreEnvironment)
     }
 }

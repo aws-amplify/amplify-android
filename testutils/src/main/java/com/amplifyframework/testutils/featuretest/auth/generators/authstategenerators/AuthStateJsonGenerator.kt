@@ -38,7 +38,7 @@ object AuthStateJsonGenerator : SerializableProvider {
         userId = "userId",
         username = "username",
         signedInDate = Date.from(Instant.ofEpochSecond(324234123)),
-        signInMethod = SignInMethod.SRP,
+        signInMethod = SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH),
         deviceMetadata = DeviceMetadata.Metadata(
             deviceKey = "someDeviceKey",
             deviceGroupKey = "someDeviceGroupKey",

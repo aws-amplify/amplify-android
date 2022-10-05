@@ -30,23 +30,23 @@ object HostedUICognitoActions : HostedUIActions {
 
     override fun showHostedUI(event: HostedUIEvent.EventType.ShowHostedUI) =
         Action<AuthEnvironment>("InitHostedUIAuth") { id, dispatcher ->
-            logger?.verbose("$id Starting execution")
+            logger.verbose("$id Starting execution")
             try {
                 if (hostedUIClient == null) throw Exception() // TODO: More detailed exception
                 hostedUIClient.launchCustomTabsSignIn(event.hostedUISignInData.hostedUIOptions)
             } catch (e: Exception) {
                 val errorEvent = HostedUIEvent(HostedUIEvent.EventType.ThrowError(e))
-                logger?.verbose("$id Sending event ${errorEvent.type}")
+                logger.verbose("$id Sending event ${errorEvent.type}")
                 dispatcher.send(errorEvent)
                 val evt = AuthenticationEvent(AuthenticationEvent.EventType.CancelSignIn())
-                logger?.verbose("$id Sending event ${evt.type}")
+                logger.verbose("$id Sending event ${evt.type}")
                 dispatcher.send(evt)
             }
         }
 
-    override fun fetchHostedUISignInToken(event: HostedUIEvent.EventType.FetchToken) =
+    override fun fetchHostedUISignInToken(event: HostedUIEvent.EventType.FetchToken, browserPackage: String?) =
         Action<AuthEnvironment>("InitHostedUITokenFetch") { id, dispatcher ->
-            logger?.verbose("$id Starting execution")
+            logger.verbose("$id Starting execution")
             val evt = try {
                 if (hostedUIClient == null) throw Exception() // TODO: More detailed exception
 
@@ -58,23 +58,23 @@ object HostedUICognitoActions : HostedUIActions {
                     userId,
                     username,
                     Date(),
-                    SignInMethod.HOSTED,
+                    SignInMethod.HostedUI(browserPackage),
                     DeviceMetadata.Empty,
                     token
                 )
                 val tokenFetchedEvent = HostedUIEvent(HostedUIEvent.EventType.TokenFetched)
-                logger?.verbose("$id Sending event ${tokenFetchedEvent.type}")
+                logger.verbose("$id Sending event ${tokenFetchedEvent.type}")
                 dispatcher.send(tokenFetchedEvent)
 
                 AuthenticationEvent(AuthenticationEvent.EventType.SignInCompleted(signedInData))
             } catch (e: Exception) {
                 val errorEvent = HostedUIEvent(HostedUIEvent.EventType.ThrowError(e))
-                logger?.verbose("$id Sending event ${errorEvent.type}")
+                logger.verbose("$id Sending event ${errorEvent.type}")
                 dispatcher.send(errorEvent)
 
                 AuthenticationEvent(AuthenticationEvent.EventType.CancelSignIn())
             }
-            logger?.verbose("$id Sending event ${evt.type}")
+            logger.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
         }
 }

@@ -43,6 +43,7 @@ import com.amplifyframework.statemachine.codegen.states.SRPSignInState
 import com.amplifyframework.statemachine.codegen.states.SignInChallengeState
 import com.amplifyframework.statemachine.codegen.states.SignInState
 import com.amplifyframework.statemachine.codegen.states.SignOutState
+import io.mockk.mockk
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
@@ -109,12 +110,12 @@ class StateTransitionTests : StateTransitionTestBase() {
                 ),
                 mockAuthActions
             ),
-            AuthEnvironment(configuration, cognitoAuthService, null, null)
+            AuthEnvironment(configuration, cognitoAuthService, null, null, mockk())
         )
 
         storeStateMachine = CredentialStoreStateMachine(
             CredentialStoreState.Resolver(credentialStoreActions),
-            CredentialStoreEnvironment(credentialStore, legacyCredentialStore)
+            CredentialStoreEnvironment(credentialStore, legacyCredentialStore, mockk())
         )
     }
 
@@ -326,7 +327,7 @@ class StateTransitionTests : StateTransitionTestBase() {
                 Action { dispatcher, _ ->
                     dispatcher.send(
                         SignInEvent(
-                            SignInEvent.EventType.InitiateSignInWithSRP("username", "password")
+                            SignInEvent.EventType.InitiateSignInWithSRP("username", "password", emptyMap())
                         )
                     )
                 }
@@ -390,7 +391,6 @@ class StateTransitionTests : StateTransitionTestBase() {
                         SignInEvent(
                             SignInEvent.EventType.InitiateSignInWithCustom(
                                 "username",
-                                "password",
                                 mapOf()
                             )
                         )
@@ -413,7 +413,6 @@ class StateTransitionTests : StateTransitionTestBase() {
                             AuthenticationEvent.EventType.SignInRequested(
                                 SignInData.CustomAuthSignInData(
                                     "username",
-                                    "password",
                                     emptyMap()
                                 )
                             )

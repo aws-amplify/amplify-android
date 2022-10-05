@@ -26,6 +26,7 @@ import com.amplifyframework.statemachine.StateMachineResolver
 import com.amplifyframework.statemachine.StateResolution
 import com.amplifyframework.statemachine.codegen.actions.AuthorizationActions
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
+import com.amplifyframework.statemachine.codegen.data.FederatedToken
 import com.amplifyframework.statemachine.codegen.data.SignedInData
 import com.amplifyframework.statemachine.codegen.events.AuthEvent
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
@@ -52,6 +53,10 @@ sealed class AuthorizationState : State {
     data class DeletingUser(val deleteUserState: DeleteUserState) : AuthorizationState()
     data class StoringCredentials(val amplifyCredential: AmplifyCredential) : AuthorizationState()
     data class SessionEstablished(val amplifyCredential: AmplifyCredential) : AuthorizationState()
+    data class FederatingToIdentityPool(
+        val federatedToken: FederatedToken,
+        val fetchAuthSessionState: FetchAuthSessionState
+    ) : AuthorizationState()
     data class Error(val exception: Exception) : AuthorizationState()
 
     override val type = this.toString()
@@ -83,7 +88,6 @@ sealed class AuthorizationState : State {
                         val action = authorizationActions.configureAuthorizationAction()
                         StateResolution(SessionEstablished(authorizationEvent.amplifyCredential), listOf(action))
                     }
-                    // TODO: fix resulting state
                     is AuthorizationEvent.EventType.ThrowError -> {
                         val action = authorizationActions.resetAuthorizationAction()
                         StateResolution(Error(authorizationEvent.exception), listOf(action))
@@ -94,6 +98,18 @@ sealed class AuthorizationState : State {
                     authorizationEvent is AuthorizationEvent.EventType.FetchUnAuthSession -> {
                         val action = authorizationActions.initializeFetchUnAuthSession()
                         val newState = FetchingUnAuthSession(FetchAuthSessionState.NotStarted())
+                        StateResolution(newState, listOf(action))
+                    }
+                    authorizationEvent is AuthorizationEvent.EventType.StartFederationToIdentityPool -> {
+                        val action =
+                            authorizationActions.initializeFederationToIdentityPool(
+                                authorizationEvent.token,
+                                authorizationEvent.identityId
+                            )
+                        val newState = FederatingToIdentityPool(
+                            authorizationEvent.token,
+                            FetchAuthSessionState.NotStarted()
+                        )
                         StateResolution(newState, listOf(action))
                     }
                     authenticationEvent is AuthenticationEvent.EventType.SignInRequested -> StateResolution(SigningIn())
@@ -150,11 +166,32 @@ sealed class AuthorizationState : State {
                         )
                         StateResolution(StoringCredentials(amplifyCredential))
                     }
-                    is AuthorizationEvent.EventType.ThrowError -> StateResolution(Error(authorizationEvent.exception))
+                    is AuthorizationEvent.EventType.ThrowError -> {
+                        val amplifyCredential = AmplifyCredential.UserPool(oldState.signedInData)
+                        StateResolution(StoringCredentials(amplifyCredential))
+                    }
                     else -> {
                         val resolution = fetchAuthSessionResolver.resolve(oldState.fetchAuthSessionState, event)
                         StateResolution(
                             FetchingAuthSession(oldState.signedInData, resolution.newState),
+                            resolution.actions
+                        )
+                    }
+                }
+                is FederatingToIdentityPool -> when (authorizationEvent) {
+                    is AuthorizationEvent.EventType.Fetched -> {
+                        val amplifyCredential = AmplifyCredential.IdentityPoolFederated(
+                            oldState.federatedToken,
+                            authorizationEvent.identityId,
+                            authorizationEvent.awsCredentials
+                        )
+                        StateResolution(StoringCredentials(amplifyCredential))
+                    }
+                    is AuthorizationEvent.EventType.ThrowError -> StateResolution(Error(authorizationEvent.exception))
+                    else -> {
+                        val resolution = fetchAuthSessionResolver.resolve(oldState.fetchAuthSessionState, event)
+                        StateResolution(
+                            FederatingToIdentityPool(oldState.federatedToken, resolution.newState),
                             resolution.actions
                         )
                     }
@@ -215,6 +252,21 @@ sealed class AuthorizationState : State {
                             RefreshSessionState.NotStarted()
                         )
                         StateResolution(newState, listOf(action))
+                    }
+                    authorizationEvent is AuthorizationEvent.EventType.StartFederationToIdentityPool -> {
+                        val action =
+                            authorizationActions.initializeFederationToIdentityPool(
+                                authorizationEvent.token,
+                                authorizationEvent.identityId
+                            )
+                        val newState = FederatingToIdentityPool(
+                            authorizationEvent.token,
+                            FetchAuthSessionState.NotStarted()
+                        )
+                        StateResolution(newState, listOf(action))
+                    }
+                    deleteUserEvent is DeleteUserEvent.EventType.DeleteUser -> {
+                        StateResolution(DeletingUser(DeleteUserState.NotStarted()))
                     }
                     else -> defaultResolution
                 }

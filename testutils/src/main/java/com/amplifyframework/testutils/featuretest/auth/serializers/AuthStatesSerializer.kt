@@ -101,6 +101,8 @@ internal data class AuthStatesProxy(
                         )
                         is AuthenticationState.SigningIn -> TODO()
                         is AuthenticationState.SigningOut -> TODO()
+                        is AuthenticationState.FederatingToIdentityPool -> TODO()
+                        is AuthenticationState.FederatedToIdentityPool -> TODO()
                     }
                 }
                 is AuthorizationState -> {
@@ -121,6 +123,7 @@ internal data class AuthStatesProxy(
                         is AuthorizationState.SigningIn -> TODO()
                         is AuthorizationState.SigningOut -> TODO()
                         is AuthorizationState.StoringCredentials -> TODO()
+                        is AuthorizationState.FederatingToIdentityPool -> TODO()
                     }
                 }
                 else -> {

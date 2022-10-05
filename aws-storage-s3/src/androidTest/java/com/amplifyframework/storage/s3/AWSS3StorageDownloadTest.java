@@ -147,7 +147,6 @@ public final class AWSS3StorageDownloadTest {
      * @throws Exception if download fails
      */
     @Test
-    @Ignore("fix in dev-preview")
     public void testDownloadSmallFile() throws Exception {
         synchronousStorage.downloadFile(SMALL_FILE_NAME, downloadFile, options);
         FileAssert.assertEquals(smallFile, downloadFile);
@@ -159,7 +158,6 @@ public final class AWSS3StorageDownloadTest {
      * @throws Exception if download fails
      */
     @Test
-    @Ignore("fix in dev-preview")
     public void testDownloadLargeFile() throws Exception {
         synchronousStorage.downloadFile(LARGE_FILE_NAME, downloadFile, options, EXTENDED_TIMEOUT_MS);
         FileAssert.assertEquals(largeFile, downloadFile);
@@ -174,7 +172,7 @@ public final class AWSS3StorageDownloadTest {
      */
     @SuppressWarnings("unchecked")
     @Test
-    @Ignore("fix in dev-preview")
+    @Ignore("fix in dev-preview, waiting on https://github.com/awslabs/aws-sdk-kotlin/issues/704")
     public void testDownloadFileIsCancelable() throws Exception {
         final CountDownLatch canceled = new CountDownLatch(1);
         final AtomicReference<Cancelable> opContainer = new AtomicReference<>();
@@ -221,7 +219,7 @@ public final class AWSS3StorageDownloadTest {
      */
     @SuppressWarnings("unchecked")
     @Test
-    @Ignore("fix in dev-preview")
+    @Ignore("fix in dev-preview, waiting on https://github.com/awslabs/aws-sdk-kotlin/issues/704")
     public void testDownloadFileIsResumable() throws Exception {
         final CountDownLatch completed = new CountDownLatch(1);
         final CountDownLatch resumed = new CountDownLatch(1);
@@ -247,6 +245,7 @@ public final class AWSS3StorageDownloadTest {
             downloadFile,
             options,
             progress -> {
+                //Log.i("DOWNLOAD TEST", "received "+progress.getFractionCompleted());
                 if (progress.getCurrentBytes() > 0 && resumed.getCount() > 0) {
                     opContainer.get().pause();
                 }

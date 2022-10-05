@@ -33,7 +33,7 @@ object MigrateAuthCognitoActions : MigrateAuthActions {
 
     override fun initiateMigrateAuthAction(event: SignInEvent.EventType.InitiateMigrateAuth) =
         Action<AuthEnvironment>("InitMigrateAuth") { id, dispatcher ->
-            logger?.verbose("$id Starting execution")
+            logger.verbose("$id Starting execution")
             val evt = try {
                 val secretHash = AuthHelper.getSecretHash(
                     event.username,
@@ -55,7 +55,6 @@ object MigrateAuthCognitoActions : MigrateAuthActions {
 
                 if (response != null) {
                     SignInChallengeHelper.evaluateNextStep(
-                        "",
                         event.username,
                         response.challengeName,
                         response.session,
@@ -67,12 +66,12 @@ object MigrateAuthCognitoActions : MigrateAuthActions {
                 }
             } catch (e: Exception) {
                 val errorEvent = SignInEvent(SignInEvent.EventType.ThrowError(e))
-                logger?.verbose("$id Sending event ${errorEvent.type}")
+                logger.verbose("$id Sending event ${errorEvent.type}")
                 dispatcher.send(errorEvent)
 
                 AuthenticationEvent(AuthenticationEvent.EventType.CancelSignIn())
             }
-            logger?.verbose("$id Sending event ${evt.type}")
+            logger.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
         }
 }

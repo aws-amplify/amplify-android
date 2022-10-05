@@ -27,14 +27,14 @@ import com.amplifyframework.statemachine.codegen.events.DeleteUserEvent
 object DeleteUserActions : DeleteUserActions {
     override fun initDeleteUserAction(accessToken: String): Action =
         Action<AuthEnvironment>("DeleteUser") { id, dispatcher ->
-            logger?.verbose("$id Starting execution")
+            logger.verbose("$id Starting execution")
             val evt = try {
                 cognitoAuthService.cognitoIdentityProviderClient?.deleteUser(
                     DeleteUserRequest.invoke { this.accessToken = accessToken }
                 )
                 AuthenticationEvent(AuthenticationEvent.EventType.SignOutRequested(SignOutData(globalSignOut = true)))
             } catch (e: Exception) {
-                logger?.warn("Failed to delete user.", e)
+                logger.warn("Failed to delete user.", e)
                 if (e is UserNotFoundException) {
                     // The user could have been remotely deleted, clear local session
                     AuthenticationEvent(
@@ -46,7 +46,7 @@ object DeleteUserActions : DeleteUserActions {
                     DeleteUserEvent(DeleteUserEvent.EventType.ThrowError(e))
                 }
             }
-            logger?.verbose("$id Sending event $evt")
+            logger.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
         }
 }

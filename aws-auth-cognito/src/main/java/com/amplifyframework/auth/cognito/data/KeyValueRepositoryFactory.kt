@@ -20,6 +20,7 @@ import com.amplifyframework.auth.cognito.data.AWSCognitoAuthCredentialStore.Comp
 import com.amplifyframework.auth.cognito.data.AWSCognitoLegacyCredentialStore.Companion.APP_DEVICE_INFO_CACHE
 import com.amplifyframework.auth.cognito.data.AWSCognitoLegacyCredentialStore.Companion.APP_TOKENS_INFO_CACHE
 import com.amplifyframework.auth.cognito.data.AWSCognitoLegacyCredentialStore.Companion.AWS_KEY_VALUE_STORE_NAMESPACE_IDENTIFIER
+import com.amplifyframework.auth.cognito.data.AWSCognitoLegacyCredentialStore.Companion.AWS_MOBILE_CLIENT_PROVIDER
 
 class KeyValueRepositoryFactory {
     fun create(context: Context, keyValueRepoID: String, persistenceEnabled: Boolean = true): KeyValueRepository {
@@ -29,7 +30,9 @@ class KeyValueRepositoryFactory {
                 else -> InMemoryKeyValueRepository()
             }
             keyValueRepoID == AWS_KEY_VALUE_STORE_NAMESPACE_IDENTIFIER ||
-                keyValueRepoID == APP_TOKENS_INFO_CACHE || keyValueRepoID.startsWith(APP_DEVICE_INFO_CACHE) ->
+                keyValueRepoID == APP_TOKENS_INFO_CACHE ||
+                keyValueRepoID == AWS_MOBILE_CLIENT_PROVIDER ||
+                keyValueRepoID.startsWith(APP_DEVICE_INFO_CACHE) ->
                 LegacyKeyValueRepository(context, keyValueRepoID)
             else -> InMemoryKeyValueRepository()
         }

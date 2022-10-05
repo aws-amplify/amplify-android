@@ -137,7 +137,7 @@ class AWSCognitoAuthPluginFeatureTest(private val fileName: String) {
             every { cognitoIdentityClient } returns mockCognitoIdClient
         }
 
-        val authEnvironment = AuthEnvironment(authConfiguration, authService, hostedUIClient = null)
+        val authEnvironment = AuthEnvironment(authConfiguration, authService, null, null, logger = mockk())
 
         authStateMachine = AuthStateMachine(authEnvironment, getState(feature.preConditions.state))
 
