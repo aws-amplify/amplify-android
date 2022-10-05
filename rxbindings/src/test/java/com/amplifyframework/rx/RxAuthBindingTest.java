@@ -137,7 +137,7 @@ public final class RxAuthBindingTest {
         AuthSignUpOptions options = AuthSignUpOptions.builder().build();
 
         // Arrange a callback on the failure consumer
-        AuthException failure = new AuthException("Sign up", "has failed");
+        AuthException failure = new AuthException("Sign up", "has failed", null);
         doAnswer(invocation -> {
             // 0 = username, 1 = pass, 2 = options, 3 = onSuccess, 4 = onFailure
             int positionOfFailureConsumer = 4;
@@ -167,25 +167,22 @@ public final class RxAuthBindingTest {
 
         // Arrange a result on the result consumer
         AuthCodeDeliveryDetails details = new AuthCodeDeliveryDetails(RandomString.string(), DeliveryMedium.EMAIL);
-        AuthSignUpStep step = AuthSignUpStep.CONFIRM_SIGN_UP_STEP;
-        AuthNextSignUpStep nextStep = new AuthNextSignUpStep(step, Collections.emptyMap(), details);
-        AuthSignUpResult result = new AuthSignUpResult(false, nextStep, null);
         doAnswer(invocation -> {
             // 0 = username, 1 = onResult, 2 = onFailure
             int positionOfResultConsumer = 1;
-            Consumer<AuthSignUpResult> onResult = invocation.getArgument(positionOfResultConsumer);
-            onResult.accept(result);
+            Consumer<AuthCodeDeliveryDetails> onResult = invocation.getArgument(positionOfResultConsumer);
+            onResult.accept(details);
             return null;
         }).when(delegate).resendSignUpCode(eq(username), anyConsumer(), anyConsumer());
 
         // Act: call the binding
-        TestObserver<AuthSignUpResult> observer = auth.resendSignUpCode(username).test();
+        TestObserver<AuthCodeDeliveryDetails> observer = auth.resendSignUpCode(username).test();
 
         // Assert: the result was furnished to the Rx Single
         observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
         observer
             .assertNoErrors()
-            .assertValue(result);
+            .assertValue(details);
     }
 
     /**
@@ -198,7 +195,7 @@ public final class RxAuthBindingTest {
         String username = RandomString.string();
 
         // Arrange a failure on the failure consumer
-        AuthException failure = new AuthException("Reset sign up", " has failed.");
+        AuthException failure = new AuthException("Reset sign up", " has failed.", null);
         doAnswer(invocation -> {
             // 0 = username, 1 = onResult, 2 = onFailure
             int positionOfFailureConsumer = 2;
@@ -208,7 +205,7 @@ public final class RxAuthBindingTest {
         }).when(delegate).resendSignUpCode(eq(username), anyConsumer(), anyConsumer());
 
         // Act: call the binding
-        TestObserver<AuthSignUpResult> observer = auth.resendSignUpCode(username).test();
+        TestObserver<AuthCodeDeliveryDetails> observer = auth.resendSignUpCode(username).test();
 
         // Assert: the result was furnished to the Rx Single
         observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
@@ -261,7 +258,7 @@ public final class RxAuthBindingTest {
         String password = RandomString.string();
 
         // Arrange a failure on the failure consumer
-        AuthException failure = new AuthException("Sign in", " has failed.");
+        AuthException failure = new AuthException("Sign in", " has failed.", null);
         doAnswer(invocation -> {
             // 0 = username, 1 = password, 2 = onResult, 3 = onFailure
             int positionOfFailureConsumer = 3;
@@ -322,7 +319,7 @@ public final class RxAuthBindingTest {
         String confirmationCode = RandomString.string();
 
         // Arrange a failure.
-        AuthException failure = new AuthException("Confirmation of sign in", " has failed.");
+        AuthException failure = new AuthException("Confirmation of sign in", " has failed.", null);
         doAnswer(invocation -> {
             // 0 = confirm code, 1 = onResult, 2 = onFailure
             int positionOfFailureConsumer = 2;
@@ -385,7 +382,8 @@ public final class RxAuthBindingTest {
         Activity activity = new Activity();
 
         // Arrange a failure
-        AuthException failure = new AuthException("Sign in with social provider", " has failed");
+        AuthException failure =
+                new AuthException("Sign in with social provider", " has failed", null);
         doAnswer(invocation -> {
             // 0 = provider, 1 = activity, 2 = result consumer, 3 = failure consumer
             int positionOfFailureConsumer = 3;
@@ -446,7 +444,7 @@ public final class RxAuthBindingTest {
         Activity activity = new Activity();
 
         // Arrange a failure
-        AuthException failure = new AuthException("Sign in with web UI", " has failed");
+        AuthException failure = new AuthException("Sign in with web UI", " has failed", null);
         doAnswer(invocation -> {
             // 0 = activity, 1 = result consumer, 2 = failure consumer
             int positionOfFailureConsumer = 2;
@@ -511,7 +509,7 @@ public final class RxAuthBindingTest {
     @Test
     public void testFetchAuthSessionFails() throws InterruptedException {
         // Arrange a failure when the delegate is called
-        AuthException failure = new AuthException("Fetch session", " has failed.");
+        AuthException failure = new AuthException("Fetch session", " has failed.", null);
         doAnswer(invocation -> {
             // 0 = onResult, 1 = onFailure
             int positionOfFailureConsumer = 1;
@@ -572,7 +570,7 @@ public final class RxAuthBindingTest {
         String username = RandomString.string();
 
         // Arrange delegate to furnish a failure
-        AuthException failure = new AuthException("Reset password", " has failed.");
+        AuthException failure = new AuthException("Reset password", " has failed.", null);
         doAnswer(invocation -> {
             // 0 = username, 1 = onResult, 2 = onFailure
             int positionOfFailureConsumer = 2;
@@ -636,7 +634,7 @@ public final class RxAuthBindingTest {
         String confirmationCode = RandomString.string();
 
         // Arrange delegate to furnish a failure
-        AuthException failure = new AuthException("Confirm password reset ", " has failed.");
+        AuthException failure = new AuthException("Confirm password reset ", " has failed.", null);
         doAnswer(invocation -> {
             // 0 = username, 1 = new pass, 2 = confirmation code, 3 = onComplete, 4 = onFailure
             int positionOfFailureConsumer = 4;
@@ -698,7 +696,7 @@ public final class RxAuthBindingTest {
         String newPassword = RandomString.string();
 
         // Arrange a callback on the failure consumer
-        AuthException failure = new AuthException("Update password ", "has failed");
+        AuthException failure = new AuthException("Update password ", "has failed", null);
         doAnswer(invocation -> {
             // 0 = old pass, 1 = new pass, 2 = onComplete, 3 = onFailure
             int positionOfFailureConsumer = 3;
@@ -1067,7 +1065,7 @@ public final class RxAuthBindingTest {
     @Test
     public void testDeleteUserFails() throws InterruptedException {
         // Arrange a callback on the failure consumer
-        AuthException failure = new AuthException("Delete user", "has failed");
+        AuthException failure = new AuthException("Delete user", "has failed", null);
         doAnswer(invocation -> {
             // 0 = onComplete, 1 = onFailure
             int positionOfFailureConsumer = 1;

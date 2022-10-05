@@ -127,7 +127,7 @@ class AWSCognitoAuthPluginTest {
     @Test
     fun verifyResendSignUpCode() {
         val expectedUsername = "user1"
-        val expectedOnSuccess = Consumer<AuthSignUpResult> { }
+        val expectedOnSuccess = Consumer<AuthCodeDeliveryDetails> { }
         val expectedOnError = Consumer<AuthException> { }
 
         authPlugin.resendSignUpCode(expectedUsername, expectedOnSuccess, expectedOnError)
@@ -139,7 +139,7 @@ class AWSCognitoAuthPluginTest {
     fun verifyOverloadedResendSignUpCode() {
         val expectedUsername = "user1"
         val expectedOptions = AuthResendSignUpCodeOptions.defaults()
-        val expectedOnSuccess = Consumer<AuthSignUpResult> { }
+        val expectedOnSuccess = Consumer<AuthCodeDeliveryDetails> { }
         val expectedOnError = Consumer<AuthException> { }
 
         authPlugin.resendSignUpCode(expectedUsername, expectedOptions, expectedOnSuccess, expectedOnError)
@@ -182,13 +182,13 @@ class AWSCognitoAuthPluginTest {
 
     @Test
     fun verifyConfirmSignIn() {
-        val expectedConfirmationCode = "aaab"
+        val expectedChallengeResponse = "aaab"
         val expectedOnSuccess = Consumer<AuthSignInResult> { }
         val expectedOnError = Consumer<AuthException> { }
 
-        authPlugin.confirmSignIn(expectedConfirmationCode, expectedOnSuccess, expectedOnError)
+        authPlugin.confirmSignIn(expectedChallengeResponse, expectedOnSuccess, expectedOnError)
 
-        verify { realPlugin.confirmSignIn(expectedConfirmationCode, expectedOnSuccess, expectedOnError) }
+        verify { realPlugin.confirmSignIn(expectedChallengeResponse, expectedOnSuccess, expectedOnError) }
     }
 
     @Test

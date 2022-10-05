@@ -83,7 +83,7 @@ class KotlinAuthFacade(private val delegate: Delegate = Amplify.Auth) : Auth {
     override suspend fun resendSignUpCode(
         username: String,
         options: AuthResendSignUpCodeOptions
-    ): AuthSignUpResult {
+    ): AuthCodeDeliveryDetails {
         return suspendCoroutine { continuation ->
             delegate.resendSignUpCode(
                 username,
@@ -111,12 +111,12 @@ class KotlinAuthFacade(private val delegate: Delegate = Amplify.Auth) : Auth {
     }
 
     override suspend fun confirmSignIn(
-        confirmationCode: String,
+        challengeResponse: String,
         options: AuthConfirmSignInOptions
     ): AuthSignInResult {
         return suspendCoroutine { continuation ->
             delegate.confirmSignIn(
-                confirmationCode,
+                challengeResponse,
                 options,
                 { continuation.resume(it) },
                 { continuation.resumeWithException(it) }
