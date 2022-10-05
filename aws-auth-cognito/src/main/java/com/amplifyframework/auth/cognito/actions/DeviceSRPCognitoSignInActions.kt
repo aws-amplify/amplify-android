@@ -17,9 +17,10 @@ package com.amplifyframework.auth.cognito.actions
 
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.RespondToAuthChallengeRequest
-import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.cognito.AuthEnvironment
+import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidUserPoolConfigurationException
 import com.amplifyframework.auth.cognito.helpers.SignInChallengeHelper
+import com.amplifyframework.auth.exceptions.UnknownException
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.DeviceSRPSignInActions
 import com.amplifyframework.statemachine.codegen.data.SignInMethod
@@ -64,11 +65,8 @@ object DeviceSRPCognitoSignInActions : DeviceSRPSignInActions {
                             challengeParameters = respondToAuthChallenge.challengeParameters,
                             session = respondToAuthChallenge.session,
                         )
-                    } ?: throw AuthException.InvalidUserPoolConfigurationException()
-                } ?: throw AuthException(
-                    "There was a problem while signing you in",
-                    AuthException.TODO_RECOVERY_SUGGESTION
-                )
+                    } ?: throw InvalidUserPoolConfigurationException()
+                } ?: throw UnknownException("There was a problem while signing you in")
             } catch (e: Exception) {
                 val errorEvent = DeviceSRPSignInEvent(DeviceSRPSignInEvent.EventType.CancelSRPSignIn())
                 logger.verbose("$id Sending event ${errorEvent.type}")
@@ -115,11 +113,8 @@ object DeviceSRPCognitoSignInActions : DeviceSRPSignInActions {
                             challengeParameters = respondToAuthChallenge.challengeParameters,
                             session = respondToAuthChallenge.session,
                         )
-                    } ?: throw AuthException.InvalidUserPoolConfigurationException()
-                } ?: throw AuthException(
-                    "There was a problem while signing you in",
-                    AuthException.TODO_RECOVERY_SUGGESTION
-                )
+                    } ?: throw InvalidUserPoolConfigurationException()
+                } ?: throw UnknownException("There was a problem while signing you in")
             } catch (e: Exception) {
                 val errorEvent = DeviceSRPSignInEvent(DeviceSRPSignInEvent.EventType.CancelSRPSignIn())
                 logger.verbose("$id Sending event ${errorEvent.type}")

@@ -16,10 +16,11 @@
 package com.amplifyframework.auth.cognito
 
 import com.amplifyframework.auth.AWSCredentials
-import com.amplifyframework.auth.AuthException
-import com.amplifyframework.auth.AuthException.SignedOutException
 import com.amplifyframework.auth.AuthSession
 import com.amplifyframework.auth.cognito.helpers.SessionHelper
+import com.amplifyframework.auth.exceptions.ConfigurationException
+import com.amplifyframework.auth.exceptions.SignedOutException
+import com.amplifyframework.auth.exceptions.UnknownException
 import com.amplifyframework.auth.result.AuthSessionResult
 import com.amplifyframework.statemachine.codegen.data.AWSCredentials as CognitoCredentials
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
@@ -65,18 +66,22 @@ data class AWSCognitoAuthSession(
                 AWSCredentials.Factory.createAWSCredentials(accessKeyId, secretAccessKey, sessionToken, expiration)
             }?.let {
                 AuthSessionResult.success(it)
-            } ?: AuthSessionResult.failure(SignedOutException(AuthException.GuestAccess.GUEST_ACCESS_DISABLED))
+            } ?: AuthSessionResult.failure(
+                SignedOutException(SignedOutException.RECOVERY_SUGGESTION_GUEST_ACCESS_DISABLED)
+            )
 
         fun getIdentityId(identityId: String?): AuthSessionResult<String> {
             return if (identityId != null) AuthSessionResult.success(identityId)
-            else AuthSessionResult.failure(SignedOutException(AuthException.GuestAccess.GUEST_ACCESS_DISABLED))
+            else AuthSessionResult.failure(
+                SignedOutException(SignedOutException.RECOVERY_SUGGESTION_GUEST_ACCESS_DISABLED)
+            )
         }
 
         fun getUserSub(userPoolTokens: CognitoUserPoolTokens?): AuthSessionResult<String> {
             return try {
                 AuthSessionResult.success(userPoolTokens?.accessToken?.let(SessionHelper::getUserSub))
             } catch (e: Exception) {
-                AuthSessionResult.failure(AuthException.UnknownException(e))
+                AuthSessionResult.failure(UnknownException(cause = e))
             }
         }
 
@@ -103,13 +108,13 @@ fun AmplifyCredential.getCognitoSession(): AWSCognitoAuthSession {
         is AmplifyCredential.UserPool -> AWSCognitoAuthSession(
             true,
             identityIdResult = AuthSessionResult.failure(
-                AuthException(
+                ConfigurationException(
                     "Could not retrieve Identity ID",
                     "Cognito Identity not configured. Please check amplifyconfiguration.json file."
                 )
             ),
             awsCredentialsResult = AuthSessionResult.failure(
-                AuthException(
+                ConfigurationException(
                     "Could not fetch AWS Cognito credentials",
                     "Cognito Identity not configured. Please check amplifyconfiguration.json file."
                 )
@@ -138,10 +143,14 @@ fun AmplifyCredential.getCognitoSession(): AWSCognitoAuthSession {
         else -> AWSCognitoAuthSession(
             false,
             identityIdResult = AuthSessionResult.failure(
-                SignedOutException(AuthException.GuestAccess.GUEST_ACCESS_POSSIBLE)
+                SignedOutException(
+                    recoverySuggestion = SignedOutException.RECOVERY_SUGGESTION_GUEST_ACCESS_POSSIBLE
+                )
             ),
             awsCredentialsResult = AuthSessionResult.failure(
-                SignedOutException(AuthException.GuestAccess.GUEST_ACCESS_POSSIBLE)
+                SignedOutException(
+                    recoverySuggestion = SignedOutException.RECOVERY_SUGGESTION_GUEST_ACCESS_POSSIBLE
+                )
             ),
             userSubResult = AuthSessionResult.failure(SignedOutException()),
             userPoolTokensResult = AuthSessionResult.failure(SignedOutException())

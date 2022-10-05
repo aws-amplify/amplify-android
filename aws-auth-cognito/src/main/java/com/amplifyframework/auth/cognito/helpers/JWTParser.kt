@@ -16,7 +16,7 @@
 package com.amplifyframework.auth.cognito.helpers
 
 import android.util.Base64
-import com.amplifyframework.auth.AuthException
+import com.amplifyframework.auth.exceptions.UnknownException
 import kotlin.text.Charsets.UTF_8
 import org.json.JSONObject
 
@@ -43,7 +43,7 @@ object JWTParser {
             val jwtSection = String(sectionDecoded, UTF_8)
             JSONObject(jwtSection)
         } catch (e: Exception) {
-            throw AuthException(e.localizedMessage, "error in parsing JSON")
+            throw UnknownException("${e.localizedMessage ?: ""}, error in parsing JSON")
         }
     }
 
@@ -61,7 +61,7 @@ object JWTParser {
             val jwtSection = String(sectionDecoded, UTF_8)
             JSONObject(jwtSection)
         } catch (e: Exception) {
-            throw AuthException(e.localizedMessage, "error in parsing JSON")
+            throw UnknownException("${e.localizedMessage ?: ""}, error in parsing JSON")
         }
     }
 
@@ -78,7 +78,7 @@ object JWTParser {
                 Base64.decode(jwt.split(".").toTypedArray()[SIGNATURE], Base64.URL_SAFE)
             String(sectionDecoded, UTF_8)
         } catch (e: Exception) {
-            throw AuthException(e.localizedMessage, "error in parsing JSON")
+            throw UnknownException("${e.localizedMessage ?: ""}, error in parsing JSON")
         }
     }
 
@@ -98,7 +98,7 @@ object JWTParser {
             val claimValue = claim?.let { payload[claim] }
             claimValue.toString()
         } catch (e: Exception) {
-            throw AuthException(e.localizedMessage, "invalid token")
+            throw UnknownException("${e.localizedMessage ?: ""}, Invalid token")
         }
     }
 
@@ -125,7 +125,7 @@ object JWTParser {
         // Check if the the JWT has the three parts
         val jwtParts = jwt.split(".").toTypedArray()
         if (jwtParts.size != JWT_PARTS) {
-            throw AuthException("not a JSON web token", "error in parsing JSON")
+            throw UnknownException("Not a JSON web token. Error in parsing JSON")
         }
     }
 }
