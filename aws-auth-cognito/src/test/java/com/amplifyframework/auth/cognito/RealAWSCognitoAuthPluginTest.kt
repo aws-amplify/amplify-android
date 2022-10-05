@@ -1471,7 +1471,8 @@ class RealAWSCognitoAuthPluginTest {
         configJsonObject.put("Region", "test-region")
         val invalidEndpoint = "fsjjdh.com?q=id"
         configJsonObject.put("Endpoint", invalidEndpoint)
-        val expectedErrorMessage = "Invalid endpoint value $invalidEndpoint"
+        val expectedErrorMessage = "Invalid endpoint value $invalidEndpoint. Expected fully qualified hostname with " +
+            "no scheme, no path and no query"
         var message = try {
             UserPoolConfiguration.fromJson(configJsonObject).build()
         } catch (ex: Exception) {
@@ -1488,7 +1489,8 @@ class RealAWSCognitoAuthPluginTest {
         configJsonObject.put("Region", "test-region")
         val invalidEndpoint = "fsjjdh.com/id"
         configJsonObject.put("Endpoint", invalidEndpoint)
-        val expectedErrorMessage = "Invalid endpoint value $invalidEndpoint"
+        val expectedErrorMessage = "Invalid endpoint value $invalidEndpoint. Expected fully qualified hostname with " +
+            "no scheme, no path and no query"
         var message = try {
             UserPoolConfiguration.fromJson(configJsonObject).build()
         } catch (ex: Exception) {
@@ -1506,7 +1508,8 @@ class RealAWSCognitoAuthPluginTest {
 
         val invalidEndpoint = "https://fsjjdh.com"
         configJsonObject.put("Endpoint", invalidEndpoint)
-        val expectedErrorMessage = "Invalid endpoint value $invalidEndpoint"
+        val expectedErrorMessage = "Invalid endpoint value $invalidEndpoint. Expected fully qualified hostname with " +
+            "no scheme, no path and no query"
         var message = try {
             UserPoolConfiguration.fromJson(configJsonObject).build()
         } catch (ex: Exception) {
