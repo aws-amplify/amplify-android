@@ -43,6 +43,7 @@ import com.amplifyframework.statemachine.codegen.states.SRPSignInState
 import com.amplifyframework.statemachine.codegen.states.SignInChallengeState
 import com.amplifyframework.statemachine.codegen.states.SignInState
 import com.amplifyframework.statemachine.codegen.states.SignOutState
+import io.mockk.mockk
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
@@ -109,12 +110,12 @@ class StateTransitionTests : StateTransitionTestBase() {
                 ),
                 mockAuthActions
             ),
-            AuthEnvironment(configuration, cognitoAuthService, null, null)
+            AuthEnvironment(configuration, cognitoAuthService, null, null, mockk())
         )
 
         storeStateMachine = CredentialStoreStateMachine(
             CredentialStoreState.Resolver(credentialStoreActions),
-            CredentialStoreEnvironment(credentialStore, legacyCredentialStore)
+            CredentialStoreEnvironment(credentialStore, legacyCredentialStore, mockk())
         )
     }
 
