@@ -76,7 +76,7 @@ import static org.mockito.Mockito.when;
  */
 @RunWith(RobolectricTestRunner.class)
 public final class MutationProcessorTest {
-    private static final long TIMEOUT_SECONDS = 5;
+    private static final long TIMEOUT_SECONDS = 10;
 
     private SchemaRegistry schemaRegistry;
     private SynchronousStorageAdapter synchronousStorageAdapter;
@@ -254,7 +254,7 @@ public final class MutationProcessorTest {
         mutationProcessor.startDrainingMutationOutbox();
 
         // Wait for the conflict handler to be called.
-        Latch.await(handlerInvocationsRemainingCount, 30);
+        Latch.await(handlerInvocationsRemainingCount, 60);
         mutationProcessor.stopDrainingMutationOutbox();
     }
 
