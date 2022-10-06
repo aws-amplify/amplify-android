@@ -60,7 +60,7 @@ sealed class CredentialStoreState : State {
                 }
                 is MigratingLegacyStore -> when (storeEvent) {
                     is CredentialStoreEvent.EventType.LoadCredentialStore -> {
-                        val action = storeActions.loadCredentialStoreAction(null)
+                        val action = storeActions.loadCredentialStoreAction(storeEvent.amplifyCredentialType, null)
                         StateResolution(LoadingStoredCredentials(), listOf(action))
                     }
                     is CredentialStoreEvent.EventType.ThrowError -> StateResolution(Error(storeEvent.error))
@@ -77,15 +77,25 @@ sealed class CredentialStoreState : State {
                 }
                 is Idle -> when (storeEvent) {
                     is CredentialStoreEvent.EventType.ClearCredentialStore -> {
-                        val action = storeActions.clearCredentialStoreAction(storeEvent.username)
+                        val action = storeActions.clearCredentialStoreAction(
+                            storeEvent.amplifyCredentialType,
+                            storeEvent.username
+                        )
                         StateResolution(ClearingCredentials(), listOf(action))
                     }
                     is CredentialStoreEvent.EventType.LoadCredentialStore -> {
-                        val action = storeActions.loadCredentialStoreAction(storeEvent.username)
+                        val action = storeActions.loadCredentialStoreAction(
+                            storeEvent.amplifyCredentialType,
+                            storeEvent.username
+                        )
                         StateResolution(LoadingStoredCredentials(), listOf(action))
                     }
                     is CredentialStoreEvent.EventType.StoreCredentials -> {
-                        val action = storeActions.storeCredentialsAction(storeEvent.username, storeEvent.credentials)
+                        val action = storeActions.storeCredentialsAction(
+                            storeEvent.amplifyCredentialType,
+                            storeEvent.username,
+                            storeEvent.credentials
+                        )
                         StateResolution(StoringCredentials(), listOf(action))
                     }
                     else -> StateResolution(oldState)

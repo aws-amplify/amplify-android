@@ -135,3 +135,9 @@ data class AWSCredentials(
             ")"
     }
 }
+
+enum class AmplifyCredentialType {
+    AMPLIFY_CREDENTIAL,
+    DEVICE_METADATA,
+    ASF_DEVICE_ID
+}

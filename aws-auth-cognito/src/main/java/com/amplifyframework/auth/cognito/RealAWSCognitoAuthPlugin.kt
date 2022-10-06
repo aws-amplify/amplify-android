@@ -105,6 +105,7 @@ import com.amplifyframework.hub.HubEvent
 import com.amplifyframework.logging.Logger
 import com.amplifyframework.statemachine.StateChangeListenerToken
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
+import com.amplifyframework.statemachine.codegen.data.AmplifyCredentialType
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.data.FederatedToken
@@ -397,7 +398,12 @@ internal class RealAWSCognitoAuthPlugin(
                 // Continue sign in
                 is AuthenticationState.SignedOut, is AuthenticationState.Configured -> {
                     credentialStoreStateMachine.send(
-                        CredentialStoreEvent(CredentialStoreEvent.EventType.LoadCredentialStore(username))
+                        CredentialStoreEvent(
+                            CredentialStoreEvent.EventType.LoadCredentialStore(
+                                AmplifyCredentialType.DEVICE_METADATA,
+                                username
+                            )
+                        )
                     )
                     credentialStoreStateMachine.listen(
                         { storeState ->
@@ -481,6 +487,7 @@ internal class RealAWSCognitoAuthPlugin(
                             credentialStoreStateMachine.send(
                                 CredentialStoreEvent(
                                     CredentialStoreEvent.EventType.StoreCredentials(
+                                        AmplifyCredentialType.DEVICE_METADATA,
                                         username,
                                         AmplifyCredential.DeviceData(authNState.deviceMetadata)
                                     )
@@ -1554,7 +1561,12 @@ internal class RealAWSCognitoAuthPlugin(
 
                 when (authState) {
                     is AuthState.WaitingForCachedCredentials -> credentialStoreStateMachine.send(
-                        CredentialStoreEvent(CredentialStoreEvent.EventType.LoadCredentialStore(null))
+                        CredentialStoreEvent(
+                            CredentialStoreEvent.EventType.LoadCredentialStore(
+                                AmplifyCredentialType.DEVICE_METADATA,
+                                null
+                            )
+                        )
                     )
                     is AuthState.Configured -> {
                         val (authNState, authZState) = authState
@@ -1564,6 +1576,7 @@ internal class RealAWSCognitoAuthPlugin(
                                 credentialStoreStateMachine.send(
                                     CredentialStoreEvent(
                                         CredentialStoreEvent.EventType.StoreCredentials(
+                                            AmplifyCredentialType.AMPLIFY_CREDENTIAL,
                                             null,
                                             authZState.amplifyCredential
                                         )

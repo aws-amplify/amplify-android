@@ -17,6 +17,7 @@ package com.amplifyframework.auth.cognito
 
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.StateChangeListenerToken
+import com.amplifyframework.statemachine.codegen.data.AmplifyCredentialType
 import com.amplifyframework.statemachine.codegen.data.SignInData
 import com.amplifyframework.statemachine.codegen.data.SignOutData
 import com.amplifyframework.statemachine.codegen.data.SignedOutData
@@ -131,7 +132,11 @@ class StateTransitionTests : StateTransitionTestBase() {
                         if (authZState is AuthorizationState.StoringCredentials) {
                             storeStateMachine.send(
                                 CredentialStoreEvent(
-                                    CredentialStoreEvent.EventType.StoreCredentials(authZState.amplifyCredential)
+                                    CredentialStoreEvent.EventType.StoreCredentials(
+                                        AmplifyCredentialType.AMPLIFY_CREDENTIAL,
+                                        null,
+                                        authZState.amplifyCredential
+                                    )
                                 )
                             )
                         }
