@@ -30,7 +30,7 @@ sealed class AmplifyCredential {
         val credentials: AWSCredentials
     }
 
-    interface DeviceMetaDataTypeCredential{
+    interface DeviceMetaDataTypeCredential {
         val deviceMetadata: DeviceMetadata
     }
 
@@ -44,7 +44,8 @@ sealed class AmplifyCredential {
 
     @Serializable
     @SerialName("deviceMetadata")
-    data class DeviceData(override val deviceMetadata: DeviceMetadata) : AmplifyCredential(), DeviceMetaDataTypeCredential
+    data class DeviceData(override val deviceMetadata: DeviceMetadata) :
+        AmplifyCredential(), DeviceMetaDataTypeCredential
 
     @Serializable
     @SerialName("identityPool")

@@ -194,7 +194,6 @@ internal class AWSCognitoLegacyCredentialStore(
             tokenUsername,
             Date(0),
             signInMethod,
-            deviceMetaData,
             cognitoUserPoolTokens
         )
     }

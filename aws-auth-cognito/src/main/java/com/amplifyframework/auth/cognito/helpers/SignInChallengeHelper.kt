@@ -49,20 +49,32 @@ object SignInChallengeHelper {
     ): StateMachineEvent {
         return when {
             authenticationResult != null -> {
-                val signedInData = authenticationResult.let {
+                authenticationResult.let {
                     val userId = it.accessToken?.let { token -> SessionHelper.getUserSub(token) } ?: ""
                     val expiresIn = Instant.now().plus(it.expiresIn.seconds).epochSeconds
                     val tokens = CognitoUserPoolTokens(it.idToken, it.accessToken, it.refreshToken, expiresIn)
-                    val deviceMetaData = it.newDeviceMetadata?.let { metadata ->
-                        DeviceMetadata.Metadata(metadata.deviceKey, metadata.deviceGroupKey)
-                    } ?: DeviceMetadata.Empty
-                    SignedInData(userId, username, Date(), signInMethod, deviceMetaData, tokens)
-                }
-
-                if (signedInData.deviceMetadata == DeviceMetadata.Empty) {
-                    AuthenticationEvent(AuthenticationEvent.EventType.SignInCompleted(signedInData))
-                } else {
-                    SignInEvent(SignInEvent.EventType.ConfirmDevice(signedInData))
+                    val signedInData = SignedInData(
+                        userId,
+                        username,
+                        Date(),
+                        signInMethod,
+                        tokens
+                    )
+                    it.newDeviceMetadata?.let { metadata ->
+                        SignInEvent(
+                            SignInEvent.EventType.ConfirmDevice(
+                                DeviceMetadata.Metadata(
+                                    metadata.deviceKey,
+                                    metadata.deviceGroupKey
+                                ),
+                                signedInData
+                            )
+                        )
+                    } ?: AuthenticationEvent(
+                        AuthenticationEvent.EventType.SignInCompleted(
+                            signedInData
+                        )
+                    )
                 }
             }
             challengeNameType is ChallengeNameType.SmsMfa ||

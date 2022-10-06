@@ -56,9 +56,9 @@ import com.amplifyframework.statemachine.codegen.events.SRPEvent
 import com.amplifyframework.statemachine.codegen.events.SignInChallengeEvent
 import com.amplifyframework.statemachine.codegen.events.SignInEvent
 import com.amplifyframework.statemachine.codegen.events.SignOutEvent
-import java.util.Date
 import org.mockito.Mock
 import org.mockito.Mockito
+import java.util.Date
 
 open class StateTransitionTestBase {
 
@@ -141,7 +141,6 @@ open class StateTransitionTestBase {
             "username",
             Date(0),
             SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH),
-            DeviceMetadata.Empty,
             CognitoUserPoolTokens("idToken", "accessToken", "refreshToken", 123123L),
         ),
         "identityPool",
@@ -158,7 +157,7 @@ open class StateTransitionTestBase {
             .thenReturn(
                 Action { dispatcher, _ ->
                     dispatcher.send(
-                        CredentialStoreEvent(CredentialStoreEvent.EventType.LoadCredentialStore())
+                        CredentialStoreEvent(CredentialStoreEvent.EventType.LoadCredentialStore(null))
                     )
                 }
             )
@@ -172,7 +171,7 @@ open class StateTransitionTestBase {
 //                }
 //            )
 
-        Mockito.`when`(credentialStoreActions.loadCredentialStoreAction())
+        Mockito.`when`(credentialStoreActions.loadCredentialStoreAction(null))
             .thenReturn(
                 Action { dispatcher, _ ->
                     dispatcher.send(
@@ -181,7 +180,7 @@ open class StateTransitionTestBase {
                 }
             )
 
-        Mockito.`when`(credentialStoreActions.storeCredentialsAction(MockitoHelper.anyObject()))
+        Mockito.`when`(credentialStoreActions.storeCredentialsAction(MockitoHelper.anyObject(), MockitoHelper.anyObject()))
             .thenReturn(
                 Action { dispatcher, _ ->
                     dispatcher.send(
@@ -396,7 +395,7 @@ open class StateTransitionTestBase {
                     dispatcher.send(SignInChallengeEvent(SignInChallengeEvent.EventType.Verified()))
                     dispatcher.send(CustomSignInEvent(CustomSignInEvent.EventType.FinalizeSignIn()))
                     dispatcher.send(
-                        AuthenticationEvent(AuthenticationEvent.EventType.SignInCompleted(signedInData))
+                        AuthenticationEvent(AuthenticationEvent.EventType.SignInCompleted(signedInData, DeviceMetadata.Empty))
                     )
                 }
             )
@@ -414,7 +413,7 @@ open class StateTransitionTestBase {
             .thenReturn(
                 Action { dispatcher, _ ->
                     dispatcher.send(
-                        AuthenticationEvent(AuthenticationEvent.EventType.SignInCompleted(signedInData))
+                        AuthenticationEvent(AuthenticationEvent.EventType.SignInCompleted(signedInData, DeviceMetadata.Empty))
                     )
                 }
             )

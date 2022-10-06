@@ -57,7 +57,7 @@ object CredentialStoreActions : StoreActions {
         Action<CredentialStoreEnvironment>("LoadCredentialStore") { id, dispatcher ->
             logger.verbose("$id Starting execution")
             val evt = try {
-                val credentials: AmplifyCredential = if(username != null) {
+                val credentials: AmplifyCredential = if (username != null) {
                     AmplifyCredential.DeviceData(credentialStore.retrieveDeviceMetadata(username))
                 } else {
                     credentialStore.retrieveCredential()

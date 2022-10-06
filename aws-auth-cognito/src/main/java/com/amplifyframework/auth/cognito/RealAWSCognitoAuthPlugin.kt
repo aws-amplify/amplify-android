@@ -128,14 +128,14 @@ import com.amplifyframework.statemachine.codegen.states.SRPSignInState
 import com.amplifyframework.statemachine.codegen.states.SignInChallengeState
 import com.amplifyframework.statemachine.codegen.states.SignInState
 import com.amplifyframework.statemachine.codegen.states.SignOutState
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.async
-import kotlinx.coroutines.launch
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 
 internal class RealAWSCognitoAuthPlugin(
     private val configuration: AuthConfiguration,
@@ -395,13 +395,43 @@ internal class RealAWSCognitoAuthPlugin(
                     AuthExceptionHelper.createCognitoNotConfiguredException()
                 )
                 // Continue sign in
-                is AuthenticationState.SignedOut, is AuthenticationState.Configured -> _signIn(
-                    username,
-                    password,
-                    options,
-                    onSuccess,
-                    onError
-                )
+                is AuthenticationState.SignedOut, is AuthenticationState.Configured -> {
+                    credentialStoreStateMachine.send(
+                        CredentialStoreEvent(CredentialStoreEvent.EventType.LoadCredentialStore(username))
+                    )
+                    credentialStoreStateMachine.listen(
+                        { storeState ->
+                            logger.verbose("Credential Store State Change: $storeState")
+                            when (storeState) {
+                                is CredentialStoreState.Success -> {
+                                    // assign SRP as default if no options provided
+                                    val signInOptions =
+                                        options as? AWSCognitoAuthSignInOptions ?: AWSCognitoAuthSignInOptions
+                                            .builder().authFlowType(configuration.authFlowType).build()
+
+                                    val deviceData = storeState.storedCredentials as AmplifyCredential.DeviceData
+
+                                    if (deviceData.deviceMetadata != DeviceMetadata.Empty) {
+                                        signInOptions.metadata["DEVICE_KEY"] =
+                                            (deviceData.deviceMetadata as DeviceMetadata.Metadata).deviceKey
+                                    }
+                                    _signIn(
+                                        username,
+                                        password,
+                                        signInOptions,
+                                        onSuccess,
+                                        onError
+                                    )
+                                }
+                                is CredentialStoreState.Error -> authStateMachine.send(
+                                    AuthEvent(AuthEvent.EventType.CachedCredentialsFailed)
+                                )
+                                else -> Unit
+                            }
+                        },
+                        null
+                    )
+                }
                 is AuthenticationState.SignedIn -> onError.accept(SignedInException())
                 else -> onError.accept(InvalidStateException())
             }
@@ -411,7 +441,7 @@ internal class RealAWSCognitoAuthPlugin(
     private fun _signIn(
         username: String?,
         password: String?,
-        options: AuthSignInOptions,
+        options: AWSCognitoAuthSignInOptions,
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
     ) {
@@ -447,10 +477,13 @@ internal class RealAWSCognitoAuthPlugin(
                     authNState is AuthenticationState.SignedIn
                         && authZState is AuthorizationState.SessionEstablished -> {
                         token?.let(authStateMachine::cancel)
-                        username?.let {
+                        if (!username.isNullOrEmpty() && authNState.deviceMetadata != DeviceMetadata.Empty) {
                             credentialStoreStateMachine.send(
                                 CredentialStoreEvent(
-                                    CredentialStoreEvent.EventType.StoreCredentials(it, AmplifyCredential.DeviceData(authNState.signedInData.deviceMetadata))
+                                    CredentialStoreEvent.EventType.StoreCredentials(
+                                        username,
+                                        AmplifyCredential.DeviceData(authNState.deviceMetadata)
+                                    )
                                 )
                             )
                         }
@@ -464,27 +497,18 @@ internal class RealAWSCognitoAuthPlugin(
                 }
             },
             {
-                // assign SRP as default if no options provided
-                val signInOptions = options as? AWSCognitoAuthSignInOptions ?: AWSCognitoAuthSignInOptions
-                    .builder().authFlowType(configuration.authFlowType).build()
-
-                //TODO: Get the device credential from the amplify credential store
-                if (deviceCredential != DeviceMetadata.Empty) {
-                    signInOptions.metadata["DEVICE_KEY"] = (deviceCredential as DeviceMetadata.Metadata).deviceKey
-                }
-
-                val signInData = when (signInOptions.authFlowType) {
+                val signInData = when (options.authFlowType) {
                     AuthFlowType.USER_SRP_AUTH -> {
-                        SignInData.SRPSignInData(username, password, signInOptions.metadata)
+                        SignInData.SRPSignInData(username, password, options.metadata)
                     }
                     AuthFlowType.CUSTOM_AUTH, AuthFlowType.CUSTOM_AUTH_WITHOUT_SRP -> {
-                        SignInData.CustomAuthSignInData(username, signInOptions.metadata)
+                        SignInData.CustomAuthSignInData(username, options.metadata)
                     }
                     AuthFlowType.CUSTOM_AUTH_WITH_SRP -> {
-                        SignInData.CustomSRPAuthSignInData(username, signInOptions.metadata)
+                        SignInData.CustomSRPAuthSignInData(username, options.metadata)
                     }
                     AuthFlowType.USER_PASSWORD_AUTH -> {
-                        SignInData.MigrationAuthSignInData(username, password, signInOptions.metadata)
+                        SignInData.MigrationAuthSignInData(username, password, options.metadata)
                     }
                 }
                 val event = AuthenticationEvent(AuthenticationEvent.EventType.SignInRequested(signInData))
@@ -826,7 +850,7 @@ internal class RealAWSCognitoAuthPlugin(
             when (val state = authState.authNState) {
                 is AuthenticationState.SignedIn -> {
                     updateDevice(
-                        (state.signedInData.deviceMetadata as DeviceMetadata.Metadata).deviceKey,
+                        (state.deviceMetadata as DeviceMetadata.Metadata).deviceKey,
                         DeviceRememberedStatusType.Remembered,
                         onSuccess,
                         onError
@@ -1539,7 +1563,10 @@ internal class RealAWSCognitoAuthPlugin(
                             authZState is AuthorizationState.StoringCredentials -> {
                                 credentialStoreStateMachine.send(
                                     CredentialStoreEvent(
-                                        CredentialStoreEvent.EventType.StoreCredentials(null, authZState.amplifyCredential)
+                                        CredentialStoreEvent.EventType.StoreCredentials(
+                                            null,
+                                            authZState.amplifyCredential
+                                        )
                                     )
                                 )
                             }

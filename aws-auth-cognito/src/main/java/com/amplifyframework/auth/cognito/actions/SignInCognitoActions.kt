@@ -23,7 +23,6 @@ import com.amplifyframework.auth.cognito.helpers.CognitoDeviceHelper
 import com.amplifyframework.auth.exceptions.ServiceException
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.SignInActions
-import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.CustomSignInEvent
 import com.amplifyframework.statemachine.codegen.events.HostedUIEvent
@@ -79,7 +78,7 @@ object SignInCognitoActions : SignInActions {
     override fun confirmDevice(event: SignInEvent.EventType.ConfirmDevice): Action =
         Action<AuthEnvironment>("ConfirmDevice") { id, dispatcher ->
             logger.verbose("$id Starting execution")
-            val deviceMetadata = event.signedInData.deviceMetadata as? DeviceMetadata.Metadata
+            val deviceMetadata = event.deviceMetadata
             val deviceKey = deviceMetadata?.deviceKey
             val deviceGroupKey = deviceMetadata?.deviceGroupKey
             val evt = try {

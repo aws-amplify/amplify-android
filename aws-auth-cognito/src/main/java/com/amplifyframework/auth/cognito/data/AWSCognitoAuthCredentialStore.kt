@@ -41,7 +41,10 @@ class AWSCognitoAuthCredentialStore(
 
     override fun saveCredential(credential: AmplifyCredential) = keyValue.put(key, serializeCredential(credential))
 
-    override fun saveDeviceMetadata(username: String, deviceMetadata: DeviceMetadata) = keyValue.put(username, serializeMetaData(deviceMetadata))
+    override fun saveDeviceMetadata(username: String, deviceMetadata: DeviceMetadata) = keyValue.put(
+        username,
+        serializeMetaData(deviceMetadata)
+    )
 
     override fun retrieveDeviceMetadata(username: String): DeviceMetadata = deserializeMetadata(keyValue.get(username))
 
@@ -77,7 +80,7 @@ class AWSCognitoAuthCredentialStore(
         return Json.encodeToString(credential)
     }
 
-    private fun serializeMetaData(deviceMetadata: DeviceMetadata ): String {
+    private fun serializeMetaData(deviceMetadata: DeviceMetadata): String {
         return Json.encodeToString(deviceMetadata)
     }
 }
