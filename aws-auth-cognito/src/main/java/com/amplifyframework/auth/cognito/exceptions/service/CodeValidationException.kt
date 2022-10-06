@@ -20,5 +20,5 @@ import com.amplifyframework.auth.exceptions.ServiceException
  * Could not perform the action because the code was unable to be parsed
  * @param message Explains the reason for the exception
  */
-open class CodeValidationError(message: String = "Failed to parse code from the fetch token Uri") :
+open class CodeValidationException(message: String = "Failed to parse code from the fetch token Uri") :
     ServiceException(message, TODO_RECOVERY_SUGGESTION)
