@@ -77,7 +77,7 @@ sealed class CredentialStoreState : State {
                 }
                 is Idle -> when (storeEvent) {
                     is CredentialStoreEvent.EventType.ClearCredentialStore -> {
-                        val action = storeActions.clearCredentialStoreAction()
+                        val action = storeActions.clearCredentialStoreAction(storeEvent.username)
                         StateResolution(ClearingCredentials(), listOf(action))
                     }
                     is CredentialStoreEvent.EventType.LoadCredentialStore -> {

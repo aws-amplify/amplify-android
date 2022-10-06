@@ -52,6 +52,8 @@ class AWSCognitoAuthCredentialStore(
 
     override fun deleteCredential() = keyValue.remove(key)
 
+    override fun deleteDeviceKeyCredential(username: String) = keyValue.remove(username)
+
     private fun generateKey(): String {
         var prefix = "amplify"
         val sessionKeySuffix = "session"

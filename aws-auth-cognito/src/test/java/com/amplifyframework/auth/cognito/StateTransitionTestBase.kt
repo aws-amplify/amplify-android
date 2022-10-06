@@ -162,7 +162,7 @@ open class StateTransitionTestBase {
                 }
             )
 
-//        Mockito.`when`(credentialStoreActions.clearCredentialStoreAction())
+//        Mockito.`when`(credentialStoreActions.clearCredentialStoreAction(null))
 //            .thenReturn(
 //                Action { dispatcher, _ ->
 //                    dispatcher.send(

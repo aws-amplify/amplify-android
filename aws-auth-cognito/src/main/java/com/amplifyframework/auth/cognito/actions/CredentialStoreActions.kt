@@ -40,10 +40,13 @@ object CredentialStoreActions : StoreActions {
             dispatcher.send(evt)
         }
 
-    override fun clearCredentialStoreAction() =
+    override fun clearCredentialStoreAction(username: String?) =
         Action<CredentialStoreEnvironment>("ClearCredentialStore") { id, dispatcher ->
             logger.verbose("$id Starting execution")
             val evt = try {
+                username?.let{
+                    credentialStore.deleteDeviceKeyCredential(it)
+                }
                 credentialStore.deleteCredential()
                 CredentialStoreEvent(CredentialStoreEvent.EventType.CompletedOperation(AmplifyCredential.Empty))
             } catch (error: CredentialStoreError) {

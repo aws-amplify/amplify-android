@@ -21,4 +21,5 @@ interface AuthCredentialStore {
     fun retrieveDeviceMetadata(username: String): DeviceMetadata
     fun retrieveCredential(): AmplifyCredential
     fun deleteCredential()
+    fun deleteDeviceKeyCredential(username: String)
 }
