@@ -56,9 +56,9 @@ import com.amplifyframework.statemachine.codegen.events.SRPEvent
 import com.amplifyframework.statemachine.codegen.events.SignInChallengeEvent
 import com.amplifyframework.statemachine.codegen.events.SignInEvent
 import com.amplifyframework.statemachine.codegen.events.SignOutEvent
+import java.util.Date
 import org.mockito.Mock
 import org.mockito.Mockito
-import java.util.Date
 
 open class StateTransitionTestBase {
 
@@ -180,7 +180,12 @@ open class StateTransitionTestBase {
                 }
             )
 
-        Mockito.`when`(credentialStoreActions.storeCredentialsAction(MockitoHelper.anyObject(), MockitoHelper.anyObject()))
+        Mockito.`when`(
+            credentialStoreActions.storeCredentialsAction(
+                MockitoHelper.anyObject(),
+                MockitoHelper.anyObject()
+            )
+        )
             .thenReturn(
                 Action { dispatcher, _ ->
                     dispatcher.send(
@@ -395,7 +400,12 @@ open class StateTransitionTestBase {
                     dispatcher.send(SignInChallengeEvent(SignInChallengeEvent.EventType.Verified()))
                     dispatcher.send(CustomSignInEvent(CustomSignInEvent.EventType.FinalizeSignIn()))
                     dispatcher.send(
-                        AuthenticationEvent(AuthenticationEvent.EventType.SignInCompleted(signedInData, DeviceMetadata.Empty))
+                        AuthenticationEvent(
+                            AuthenticationEvent.EventType.SignInCompleted(
+                                signedInData,
+                                DeviceMetadata.Empty
+                            )
+                        )
                     )
                 }
             )
@@ -413,7 +423,9 @@ open class StateTransitionTestBase {
             .thenReturn(
                 Action { dispatcher, _ ->
                     dispatcher.send(
-                        AuthenticationEvent(AuthenticationEvent.EventType.SignInCompleted(signedInData, DeviceMetadata.Empty))
+                        AuthenticationEvent(
+                            AuthenticationEvent.EventType.SignInCompleted(signedInData, DeviceMetadata.Empty)
+                        )
                     )
                 }
             )
@@ -502,7 +514,10 @@ open class StateTransitionTestBase {
             )
 
         Mockito.`when`(
-            mockFetchAuthSessionActions.fetchAWSCredentialsAction("identityId", LoginsMapProvider.UnAuthLogins())
+            mockFetchAuthSessionActions.fetchAWSCredentialsAction(
+                "identityId",
+                LoginsMapProvider.UnAuthLogins()
+            )
         )
             .thenReturn(
                 Action { dispatcher, _ ->
@@ -515,7 +530,10 @@ open class StateTransitionTestBase {
             )
 
         Mockito.`when`(
-            mockFetchAuthSessionActions.notifySessionEstablishedAction("identityId", dummyCredential.credentials)
+            mockFetchAuthSessionActions.notifySessionEstablishedAction(
+                "identityId",
+                dummyCredential.credentials
+            )
         )
             .thenReturn(
                 Action { dispatcher, _ ->
