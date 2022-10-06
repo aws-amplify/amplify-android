@@ -69,6 +69,12 @@ public abstract class StorageTransferOperation<R, T extends StorageTransferResul
     @NonNull
     private TransferState transferState;
 
+    /**
+     * StorageException that caused the failure.
+     */
+    @Nullable
+    private StorageException error;
+
     private Handler mainHandler = new Handler(Looper.getMainLooper());
 
     /**
@@ -156,6 +162,16 @@ public abstract class StorageTransferOperation<R, T extends StorageTransferResul
      */
     public void setOnError(@Nullable Consumer<StorageException> onError) {
         this.onError = onError;
+        if (transferState == TransferState.FAILED && onError != null) {
+            if (error == null) {
+                error = new StorageException(
+                    "Something went wrong with your AWS S3 Storage transfer operation",
+                    new UnknownError("Reason unknown"),
+                    "Please re-queue the operation"
+                );
+            }
+            onError.accept(error);
+        }
     }
 
     /**
@@ -163,7 +179,7 @@ public abstract class StorageTransferOperation<R, T extends StorageTransferResul
      *
      * @return onError Consumer which provides transfer errors
      */
-    public Consumer<StorageException> getOnError() {
+    protected Consumer<StorageException> getOnError() {
         return this.onError;
     }
 
@@ -186,5 +202,24 @@ public abstract class StorageTransferOperation<R, T extends StorageTransferResul
      */
     protected void runOnMainThread(Runnable runnable) {
         mainHandler.post(runnable);
+    }
+
+    /**
+     * Provide the exception which caused the failure.
+     *
+     * @return exception that caused the failure.
+     */
+    @NonNull
+    public StorageException getError() {
+        return error;
+    }
+
+    /**
+     * Set the exception which caused the failure.
+     *
+     * @param error that caused the failure.
+     */
+    protected void setError(@NonNull StorageException error) {
+        this.error = error;
     }
 }

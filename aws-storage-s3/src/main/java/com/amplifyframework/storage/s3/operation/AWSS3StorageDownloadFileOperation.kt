@@ -187,6 +187,14 @@ class AWSS3StorageDownloadFileOperation @JvmOverloads internal constructor(
         return transferObserver?.transferState ?: TransferState.UNKNOWN
     }
 
+    override fun setOnSuccess(onSuccess: Consumer<StorageDownloadFileResult>?) {
+        super.setOnSuccess(onSuccess)
+        // replay the onSuccess if transfer is already completed.
+        if (transferState == TransferState.COMPLETED) {
+            onSuccess?.accept(StorageDownloadFileResult.fromFile(file))
+        }
+    }
+
     inner class DownloadTransferListener : TransferListener {
         override fun onStateChanged(transferId: Int, state: TransferState) {
             Amplify.Hub.publish(
@@ -218,13 +226,12 @@ class AWSS3StorageDownloadFileOperation @JvmOverloads internal constructor(
             )
             runOnMainThread(
                 Runnable {
-                    onError?.accept(
-                        StorageException(
-                            "Something went wrong with your AWS S3 Storage download file operation",
-                            exception,
-                            "See attached exception for more information and suggestions"
-                        )
+                    error = StorageException(
+                        "Something went wrong with your AWS S3 Storage download file operation",
+                        exception,
+                        "See attached exception for more information and suggestions"
                     )
+                    onError?.accept(error)
                 }
             )
         }

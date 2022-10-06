@@ -200,6 +200,13 @@ class AWSS3StorageUploadInputStreamOperation @JvmOverloads internal constructor(
         return transferObserver?.transferState ?: TransferState.UNKNOWN
     }
 
+    override fun setOnSuccess(onSuccess: Consumer<StorageUploadInputStreamResult>?) {
+        super.setOnSuccess(onSuccess)
+        if (transferState == TransferState.COMPLETED) {
+            onSuccess?.accept(StorageUploadInputStreamResult.fromKey(request.key))
+        }
+    }
+
     private inner class UploadTransferListener : TransferListener {
         override fun onStateChanged(transferId: Int, state: TransferState) {
             Amplify.Hub.publish(
@@ -216,12 +223,11 @@ class AWSS3StorageUploadInputStreamOperation @JvmOverloads internal constructor(
                 TransferState.FAILED -> {
                     runOnMainThread(
                         Runnable {
-                            onError?.accept(
-                                StorageException(
-                                    "Storage upload operation was interrupted.",
-                                    "Please verify that you have a stable internet connection."
-                                )
+                            error = StorageException(
+                                "Storage upload operation was interrupted.",
+                                "Please verify that you have a stable internet connection."
                             )
+                            onError?.accept(error)
                         }
                     )
                     return
@@ -241,13 +247,12 @@ class AWSS3StorageUploadInputStreamOperation @JvmOverloads internal constructor(
             )
             runOnMainThread(
                 Runnable {
-                    onError?.accept(
-                        StorageException(
-                            "Something went wrong with your AWS S3 Storage upload input stream operation",
-                            exception,
-                            "See attached exception for more information and suggestions"
-                        )
+                    error = StorageException(
+                        "Something went wrong with your AWS S3 Storage upload input stream operation",
+                        exception,
+                        "See attached exception for more information and suggestions"
                     )
+                    onError?.accept(error)
                 }
             )
         }

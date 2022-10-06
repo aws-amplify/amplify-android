@@ -16,6 +16,7 @@
 package com.amplifyframework.storage.s3.transfer
 
 import android.database.sqlite.SQLiteDatabase
+import java.util.UUID
 
 class TransferTable {
     companion object {
@@ -273,10 +274,11 @@ class TransferTable {
         }
 
         /**
-         * Adds columns that were introduced in version 7 to the database
+         * Adds columns that were introduced in version 8 to the database
          */
         private fun addVersion8Columns(database: SQLiteDatabase) {
-            val addConnectionType = "ALTER TABLE $TABLE_TRANSFER ADD COLUMN $COLUMN_TRANSFER_ID text;"
+            val addConnectionType = "ALTER TABLE $TABLE_TRANSFER ADD COLUMN $COLUMN_TRANSFER_ID text " +
+                "DEFAULT '${UUID.randomUUID()}';"
             database.execSQL(addConnectionType)
         }
     }
