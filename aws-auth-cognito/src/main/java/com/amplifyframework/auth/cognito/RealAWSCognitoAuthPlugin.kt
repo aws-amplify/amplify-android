@@ -42,7 +42,6 @@ import com.amplifyframework.auth.AuthSession
 import com.amplifyframework.auth.AuthUser
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
-import com.amplifyframework.auth.cognito.data.AWSCognitoDeviceStore
 import com.amplifyframework.auth.cognito.exceptions.AuthExceptionHelper
 import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidUserPoolConfigurationException
 import com.amplifyframework.auth.cognito.exceptions.invalidstate.SignedInException
@@ -129,22 +128,21 @@ import com.amplifyframework.statemachine.codegen.states.SRPSignInState
 import com.amplifyframework.statemachine.codegen.states.SignInChallengeState
 import com.amplifyframework.statemachine.codegen.states.SignInState
 import com.amplifyframework.statemachine.codegen.states.SignOutState
-import java.util.concurrent.atomic.AtomicReference
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
-import kotlin.coroutines.suspendCoroutine
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
+import java.util.concurrent.atomic.AtomicReference
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
 
 internal class RealAWSCognitoAuthPlugin(
     private val configuration: AuthConfiguration,
     private val authEnvironment: AuthEnvironment,
     private val authStateMachine: AuthStateMachine,
     private val credentialStoreStateMachine: CredentialStoreStateMachine,
-    private val logger: Logger,
-    private val deviceStore: AWSCognitoDeviceStore
+    private val logger: Logger
 ) : AuthCategoryBehavior {
 
     private val lastPublishedHubEventName = AtomicReference<AuthChannelEventName>()
@@ -449,7 +447,13 @@ internal class RealAWSCognitoAuthPlugin(
                     authNState is AuthenticationState.SignedIn
                         && authZState is AuthorizationState.SessionEstablished -> {
                         token?.let(authStateMachine::cancel)
-                        username?.let { deviceStore.saveDeviceMetadata(it, authNState.signedInData.deviceMetadata) }
+                        username?.let {
+                            credentialStoreStateMachine.send(
+                                CredentialStoreEvent(
+                                    CredentialStoreEvent.EventType.StoreCredentials(it, AmplifyCredential.DeviceData(authNState.signedInData.deviceMetadata))
+                                )
+                            )
+                        }
                         val authSignInResult = AuthSignInResult(
                             true,
                             AuthNextSignInStep(AuthSignInStep.DONE, mapOf(), null)
@@ -464,7 +468,7 @@ internal class RealAWSCognitoAuthPlugin(
                 val signInOptions = options as? AWSCognitoAuthSignInOptions ?: AWSCognitoAuthSignInOptions
                     .builder().authFlowType(configuration.authFlowType).build()
 
-                val deviceCredential = deviceStore.retrieveDeviceMetadata(username)
+                //TODO: Get the device credential from the amplify credential store
                 if (deviceCredential != DeviceMetadata.Empty) {
                     signInOptions.metadata["DEVICE_KEY"] = (deviceCredential as DeviceMetadata.Metadata).deviceKey
                 }
@@ -1526,7 +1530,7 @@ internal class RealAWSCognitoAuthPlugin(
 
                 when (authState) {
                     is AuthState.WaitingForCachedCredentials -> credentialStoreStateMachine.send(
-                        CredentialStoreEvent(CredentialStoreEvent.EventType.LoadCredentialStore())
+                        CredentialStoreEvent(CredentialStoreEvent.EventType.LoadCredentialStore(null))
                     )
                     is AuthState.Configured -> {
                         val (authNState, authZState) = authState
@@ -1535,7 +1539,7 @@ internal class RealAWSCognitoAuthPlugin(
                             authZState is AuthorizationState.StoringCredentials -> {
                                 credentialStoreStateMachine.send(
                                     CredentialStoreEvent(
-                                        CredentialStoreEvent.EventType.StoreCredentials(authZState.amplifyCredential)
+                                        CredentialStoreEvent.EventType.StoreCredentials(null, authZState.amplifyCredential)
                                     )
                                 )
                             }

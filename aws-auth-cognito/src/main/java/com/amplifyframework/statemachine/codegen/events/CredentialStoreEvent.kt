@@ -24,8 +24,8 @@ class CredentialStoreEvent(val eventType: EventType, override val time: Date? = 
     StateMachineEvent {
     sealed class EventType {
         data class MigrateLegacyCredentialStore(val id: String = "") : EventType()
-        data class LoadCredentialStore(val id: String = "") : EventType()
-        data class StoreCredentials(val credentials: AmplifyCredential) : EventType()
+        data class LoadCredentialStore(val username: String?) : EventType()
+        data class StoreCredentials(val username: String?, val credentials: AmplifyCredential) : EventType()
         data class ClearCredentialStore(val id: String = "") : EventType()
         data class CompletedOperation(val storedCredentials: AmplifyCredential) : EventType()
         data class MoveToIdleState(val id: String = "") : EventType()

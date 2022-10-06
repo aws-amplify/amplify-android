@@ -31,7 +31,6 @@ import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.cognito.asf.UserContextDataProvider
 import com.amplifyframework.auth.cognito.data.AWSCognitoAuthCredentialStore
-import com.amplifyframework.auth.cognito.data.AWSCognitoDeviceStore
 import com.amplifyframework.auth.cognito.data.AWSCognitoLegacyCredentialStore
 import com.amplifyframework.auth.cognito.options.FederateToIdentityPoolOptions
 import com.amplifyframework.auth.cognito.result.FederateToIdentityPoolResult
@@ -89,14 +88,12 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
             )
             val authStateMachine = AuthStateMachine(authEnvironment)
             val credentialStoreStateMachine = createCredentialStoreStateMachine(configuration, context)
-            val deviceStore = AWSCognitoDeviceStore(context)
             realPlugin = RealAWSCognitoAuthPlugin(
                 configuration,
                 authEnvironment,
                 authStateMachine,
                 credentialStoreStateMachine,
-                logger,
-                deviceStore
+                logger
             )
         } catch (exception: JSONException) {
             throw ConfigurationException(

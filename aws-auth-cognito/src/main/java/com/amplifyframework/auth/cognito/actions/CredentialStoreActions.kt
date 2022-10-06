@@ -32,7 +32,7 @@ object CredentialStoreActions : StoreActions {
                     credentialStore.saveCredential(credentials)
                     legacyCredentialStore.deleteCredential()
                 }
-                CredentialStoreEvent(CredentialStoreEvent.EventType.LoadCredentialStore())
+                CredentialStoreEvent(CredentialStoreEvent.EventType.LoadCredentialStore(null))
             } catch (error: CredentialStoreError) {
                 CredentialStoreEvent(CredentialStoreEvent.EventType.ThrowError(error))
             }
@@ -53,11 +53,15 @@ object CredentialStoreActions : StoreActions {
             dispatcher.send(evt)
         }
 
-    override fun loadCredentialStoreAction() =
+    override fun loadCredentialStoreAction(username: String?) =
         Action<CredentialStoreEnvironment>("LoadCredentialStore") { id, dispatcher ->
             logger.verbose("$id Starting execution")
             val evt = try {
-                val credentials = credentialStore.retrieveCredential()
+                val credentials: AmplifyCredential = if(username != null) {
+                    AmplifyCredential.DeviceData(credentialStore.retrieveDeviceMetadata(username))
+                } else {
+                    credentialStore.retrieveCredential()
+                }
                 CredentialStoreEvent(CredentialStoreEvent.EventType.CompletedOperation(credentials))
             } catch (error: CredentialStoreError) {
                 CredentialStoreEvent(CredentialStoreEvent.EventType.ThrowError(error))
@@ -66,11 +70,18 @@ object CredentialStoreActions : StoreActions {
             dispatcher.send(evt)
         }
 
-    override fun storeCredentialsAction(credentials: AmplifyCredential) =
+    override fun storeCredentialsAction(username: String?, credentials: AmplifyCredential) =
         Action<CredentialStoreEnvironment>("StoreCredentials") { id, dispatcher ->
             logger.verbose("$id Starting execution")
             val evt = try {
-                credentialStore.saveCredential(credentials)
+                if (username != null && credentials is AmplifyCredential.DeviceMetaDataTypeCredential) {
+                    credentialStore.saveDeviceMetadata(
+                        username,
+                        credentials.deviceMetadata
+                    )
+                } else {
+                    credentialStore.saveCredential(credentials)
+                }
                 CredentialStoreEvent(CredentialStoreEvent.EventType.CompletedOperation(credentials))
             } catch (error: CredentialStoreError) {
                 CredentialStoreEvent(CredentialStoreEvent.EventType.ThrowError(error))
