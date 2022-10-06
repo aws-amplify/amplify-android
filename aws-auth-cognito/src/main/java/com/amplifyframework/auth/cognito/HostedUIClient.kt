@@ -26,7 +26,7 @@ import androidx.browser.customtabs.CustomTabsIntent
 import androidx.browser.customtabs.CustomTabsServiceConnection
 import androidx.browser.customtabs.CustomTabsSession
 import com.amplifyframework.auth.cognito.activities.CustomTabsManagerActivity
-import com.amplifyframework.auth.cognito.exceptions.service.CodeValidationError
+import com.amplifyframework.auth.cognito.exceptions.service.CodeValidationException
 import com.amplifyframework.auth.cognito.helpers.BrowserHelper
 import com.amplifyframework.auth.cognito.helpers.HostedUIHttpHelper
 import com.amplifyframework.auth.cognito.helpers.PkceHelper
@@ -103,9 +103,9 @@ internal class HostedUIClient private constructor(
         val code = uri.getQueryParameter("code")
 
         if (errorState != null) {
-            throw CodeValidationError(errorState)
+            throw CodeValidationException(errorState)
         } else if (callbackState == null || code == null) {
-            throw CodeValidationError()
+            throw CodeValidationException()
         }
 
         val body = mapOf(
