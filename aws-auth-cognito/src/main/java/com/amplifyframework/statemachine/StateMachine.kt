@@ -183,6 +183,9 @@ internal open class StateMachine<StateType : State, EnvironmentType : Environmen
      */
     private fun process(event: StateMachineEvent) {
         val resolution = resolver.resolve(currentState, event)
+        println("StateMachine CurrentState: ${currentState.type}")
+        println("StateMachine Event: ${event.type}")
+        println("StateMachine ResolutionState: ${resolution.newState.type}")
         if (currentState != resolution.newState) {
             currentState = resolution.newState
             val subscribersToRemove = subscribers.filter { !notifySubscribers(it, resolution.newState) }
