@@ -157,5 +157,5 @@ internal class AWSRequestSignerInterceptor(
         }
     }
 
-    class SignCredentialsException: IllegalStateException()
+    class SignCredentialsException : IllegalStateException()
 }
