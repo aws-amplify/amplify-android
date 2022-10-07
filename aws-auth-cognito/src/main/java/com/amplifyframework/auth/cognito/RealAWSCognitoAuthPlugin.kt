@@ -70,6 +70,7 @@ import com.amplifyframework.auth.cognito.result.RevokeTokenError
 import com.amplifyframework.auth.cognito.usecases.ResetPasswordUseCase
 import com.amplifyframework.auth.exceptions.ConfigurationException
 import com.amplifyframework.auth.exceptions.InvalidStateException
+import com.amplifyframework.auth.exceptions.SessionExpiredException
 import com.amplifyframework.auth.exceptions.SignedOutException
 import com.amplifyframework.auth.exceptions.UnknownException
 import com.amplifyframework.auth.options.AWSCognitoAuthConfirmResetPasswordOptions
@@ -798,6 +799,8 @@ internal class RealAWSCognitoAuthPlugin(
                         when (val error = authZState.exception) {
                             is SessionError -> {
                                 val idpError = when (error.exception) {
+                                    is aws.sdk.kotlin.services.cognitoidentityprovider.model.NotAuthorizedException ->
+                                        SessionExpiredException()
                                     is aws.sdk.kotlin.services.cognitoidentity.model.NotAuthorizedException ->
                                         SignedOutException(SignedOutException.RECOVERY_SUGGESTION_GUEST_ACCESS_DISABLED)
                                     is aws.sdk.kotlin.services.cognitoidentity.model.CognitoIdentityException ->
