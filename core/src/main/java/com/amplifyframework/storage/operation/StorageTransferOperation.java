@@ -15,8 +15,6 @@
 
 package com.amplifyframework.storage.operation;
 
-import android.os.Handler;
-import android.os.Looper;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -74,8 +72,6 @@ public abstract class StorageTransferOperation<R, T extends StorageTransferResul
      */
     @Nullable
     private StorageException error;
-
-    private Handler mainHandler = new Handler(Looper.getMainLooper());
 
     /**
      * Constructs a new AmplifyOperation.
@@ -205,16 +201,6 @@ public abstract class StorageTransferOperation<R, T extends StorageTransferResul
         onProgress = null;
         onSuccess = null;
         internalOnError = null;
-    }
-
-    /**
-     * Runs the operation on main thread.
-     *
-     * @param runnable task to run
-     *
-     */
-    protected void runOnMainThread(Runnable runnable) {
-        mainHandler.post(runnable);
     }
 
     /**

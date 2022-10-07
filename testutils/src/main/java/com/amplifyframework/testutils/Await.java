@@ -15,12 +15,9 @@
 
 package com.amplifyframework.testutils;
 
-import android.os.Looper;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.Consumer;
-
-import org.robolectric.Shadows;
 
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
@@ -33,24 +30,22 @@ import java.util.concurrent.atomic.AtomicReference;
 public final class Await {
     private static final long DEFAULT_WAIT_TIME_MS = TimeUnit.SECONDS.toMillis(7);
 
-    private Await() {
-    }
+    private Await() {}
 
     /**
      * Awaits emission of either a result of an error.
      * Blocks the thread of execution until either the value is
      * available, of a default timeout has elapsed.
-     *
      * @param resultErrorEmitter A function which emits result or error
-     * @param <R>                Type of result
-     * @param <E>                type of error
+     * @param <R> Type of result
+     * @param <E> type of error
      * @return The result
-     * @throws E                if error is emitted
+     * @throws E if error is emitted
      * @throws RuntimeException In all other situations where there is not a non-null result
      */
     @NonNull
     public static <R, E extends Throwable> R result(
-        @NonNull ResultErrorEmitter<R, E> resultErrorEmitter) throws E {
+            @NonNull ResultErrorEmitter<R, E> resultErrorEmitter) throws E {
         return result(DEFAULT_WAIT_TIME_MS, resultErrorEmitter);
     }
 
@@ -58,18 +53,17 @@ public final class Await {
      * Await emission of either a result or an error.
      * Blocks the thread of execution until either the value is available,
      * or the timeout is reached.
-     *
-     * @param timeMs             Amount of time to wait
+     * @param timeMs Amount of time to wait
      * @param resultErrorEmitter A function which emits result or error
-     * @param <R>                Type of result
-     * @param <E>                Type of error
+     * @param <R> Type of result
+     * @param <E> Type of error
      * @return The result
-     * @throws E                if error is emitted
+     * @throws E if error is emitted
      * @throws RuntimeException In all other situations where there is not a non-null result
      */
     @NonNull
     public static <R, E extends Throwable> R result(
-        long timeMs, @NonNull ResultErrorEmitter<R, E> resultErrorEmitter) throws E {
+            long timeMs, @NonNull ResultErrorEmitter<R, E> resultErrorEmitter) throws E {
 
         Objects.requireNonNull(resultErrorEmitter);
 
@@ -92,10 +86,9 @@ public final class Await {
     /**
      * Awaits receipt of an error or a callback.
      * Blocks the thread of execution until it arrives, or until the wait times out.
-     *
      * @param resultErrorEmitter An emitter of result of error
-     * @param <R>                Type of result
-     * @param <E>                Type of error
+     * @param <R> Type of result
+     * @param <E> Type of error
      * @return The error that was emitted by the emitter
      * @throws RuntimeException If no error was emitted by emitter
      */
@@ -107,17 +100,16 @@ public final class Await {
     /**
      * Awaits receipt of an error on an error callback.
      * Blocks the calling thread until it shows up, or until timeout elapses.
-     *
-     * @param timeMs             Amount of time to wait
+     * @param timeMs Amount of time to wait
      * @param resultErrorEmitter A function which emits result or error
-     * @param <R>                Type of result
-     * @param <E>                Type of error
+     * @param <R> Type of result
+     * @param <E> Type of error
      * @return Error, if attained
      * @throws RuntimeException If no error is emitted by the emitter
      */
     @NonNull
     public static <R, E extends Throwable> E error(
-        long timeMs, @NonNull ResultErrorEmitter<R, E> resultErrorEmitter) {
+            long timeMs, @NonNull ResultErrorEmitter<R, E> resultErrorEmitter) {
 
         Objects.requireNonNull(resultErrorEmitter);
 
@@ -138,10 +130,10 @@ public final class Await {
     }
 
     private static <R, E extends Throwable> void await(
-        long timeMs,
-        @NonNull ResultErrorEmitter<R, E> resultErrorEmitter,
-        @NonNull AtomicReference<R> resultContainer,
-        @NonNull AtomicReference<E> errorContainer) {
+            long timeMs,
+            @NonNull ResultErrorEmitter<R, E> resultErrorEmitter,
+            @NonNull AtomicReference<R> resultContainer,
+            @NonNull AtomicReference<E> errorContainer) {
         final CountDownLatch latch = new CountDownLatch(1);
         final AtomicReference<Throwable> unexpectedErrorContainer = new AtomicReference<>();
         final Thread thread = new Thread(() -> {
@@ -168,15 +160,9 @@ public final class Await {
         });
         thread.setDaemon(true);
         thread.start();
-        while (latch.getCount() > 0) {
-            // keep the main looper idle to flush any incoming messages
-            try {
-                Shadows.shadowOf(Looper.getMainLooper()).idle();
-            } catch (Exception classCastException) {
-                // ignore the error.
-            }
-        }
+
         Latch.await(latch, timeMs);
+
         try {
             thread.join();
         } catch (InterruptedException threadJoinFailure) {
@@ -191,7 +177,6 @@ public final class Await {
     /**
      * A function which, upon completion, either emits a single result,
      * or emits an error.
-     *
      * @param <R> Type of result
      * @param <E> Type of error
      */
@@ -199,9 +184,8 @@ public final class Await {
         /**
          * A function that emits a value upon completion, either as a
          * result or as an error.
-         *
          * @param onResult Callback invoked upon emission of result
-         * @param onError  Callback invoked upon emission of error
+         * @param onError Callback invoked upon emission of error
          */
         void emitTo(@NonNull Consumer<R> onResult, @NonNull Consumer<E> onError);
     }

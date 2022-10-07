@@ -116,15 +116,13 @@ class AWSS3StorageUploadInputStreamOperation @JvmOverloads internal constructor(
                             )
                             transferObserver?.setTransferListener(UploadTransferListener())
                         } catch (ioException: IOException) {
-                            runOnMainThread {
-                                onError?.accept(
-                                    StorageException(
-                                        "Issue uploading inputStream.",
-                                        ioException,
-                                        "See included exception for more details and suggestions to fix."
-                                    )
+                            onError?.accept(
+                                StorageException(
+                                    "Issue uploading inputStream.",
+                                    ioException,
+                                    "See included exception for more details and suggestions to fix."
                                 )
-                            }
+                            )
                         }
                     },
                     onError
@@ -139,16 +137,14 @@ class AWSS3StorageUploadInputStreamOperation @JvmOverloads internal constructor(
                 try {
                     storageService.pauseTransfer(it)
                 } catch (exception: java.lang.Exception) {
-                    runOnMainThread {
-                        onError?.accept(
-                            StorageException(
-                                "Something went wrong while attempting to pause your AWS S3 Storage " +
-                                    "upload input stream operation",
-                                exception,
-                                "See attached exception for more information and suggestions"
-                            )
+                    onError?.accept(
+                        StorageException(
+                            "Something went wrong while attempting to pause your AWS S3 Storage " +
+                                "upload input stream operation",
+                            exception,
+                            "See attached exception for more information and suggestions"
                         )
-                    }
+                    )
                 }
             }
         }
@@ -160,16 +156,14 @@ class AWSS3StorageUploadInputStreamOperation @JvmOverloads internal constructor(
                 try {
                     storageService.resumeTransfer(it)
                 } catch (exception: java.lang.Exception) {
-                    runOnMainThread {
-                        onError?.accept(
-                            StorageException(
-                                "Something went wrong while attempting to resume your AWS S3 Storage " +
-                                    "upload input stream operation",
-                                exception,
-                                "See attached exception for more information and suggestions"
-                            )
+                    onError?.accept(
+                        StorageException(
+                            "Something went wrong while attempting to resume your AWS S3 Storage " +
+                                "upload input stream operation",
+                            exception,
+                            "See attached exception for more information and suggestions"
                         )
-                    }
+                    )
                 }
             }
         }
@@ -181,16 +175,14 @@ class AWSS3StorageUploadInputStreamOperation @JvmOverloads internal constructor(
                 try {
                     storageService.cancelTransfer(it)
                 } catch (exception: java.lang.Exception) {
-                    runOnMainThread {
-                        onError?.accept(
-                            StorageException(
-                                "Something went wrong while attempting to cancel your AWS S3 Storage " +
-                                    "upload input stream operation",
-                                exception,
-                                "See attached exception for more information and suggestions"
-                            )
+                    onError?.accept(
+                        StorageException(
+                            "Something went wrong while attempting to cancel your AWS S3 Storage " +
+                                "upload input stream operation",
+                            exception,
+                            "See attached exception for more information and suggestions"
                         )
-                    }
+                    )
                 }
             }
         }
@@ -215,19 +207,15 @@ class AWSS3StorageUploadInputStreamOperation @JvmOverloads internal constructor(
             )
             when (state) {
                 TransferState.COMPLETED -> {
-                    runOnMainThread { onSuccess?.accept(StorageUploadInputStreamResult.fromKey(request.key)) }
+                    onSuccess?.accept(StorageUploadInputStreamResult.fromKey(request.key))
                     return
                 }
                 TransferState.FAILED -> {
-                    runOnMainThread(
-                        Runnable {
-                            onError?.accept(
-                                StorageException(
-                                    "Storage upload operation was interrupted.",
-                                    "Please verify that you have a stable internet connection."
-                                )
-                            )
-                        }
+                    onError?.accept(
+                        StorageException(
+                            "Storage upload operation was interrupted.",
+                            "Please verify that you have a stable internet connection."
+                        )
                     )
                     return
                 }
@@ -236,7 +224,7 @@ class AWSS3StorageUploadInputStreamOperation @JvmOverloads internal constructor(
         }
 
         override fun onProgressChanged(transferId: Int, bytesCurrent: Long, bytesTotal: Long) {
-            runOnMainThread(Runnable { onProgress?.accept(StorageTransferProgress(bytesCurrent, bytesTotal)) })
+            onProgress?.accept(StorageTransferProgress(bytesCurrent, bytesTotal))
         }
 
         override fun onError(transferId: Int, exception: Exception) {
@@ -244,16 +232,12 @@ class AWSS3StorageUploadInputStreamOperation @JvmOverloads internal constructor(
                 HubChannel.STORAGE,
                 HubEvent.create(StorageChannelEventName.UPLOAD_ERROR, exception)
             )
-            runOnMainThread(
-                Runnable {
-                    onError?.accept(
-                        StorageException(
-                            "Something went wrong with your AWS S3 Storage upload input stream operation",
-                            exception,
-                            "See attached exception for more information and suggestions"
-                        )
-                    )
-                }
+            onError?.accept(
+                StorageException(
+                    "Something went wrong with your AWS S3 Storage upload input stream operation",
+                    exception,
+                    "See attached exception for more information and suggestions"
+                )
             )
         }
     }

@@ -103,15 +103,13 @@ class AWSS3StorageUploadFileOperation @JvmOverloads internal constructor(
                             transferObserver = storageService.uploadFile(transferId, serviceKey, file, objectMetadata)
                             transferObserver?.setTransferListener(UploadTransferListener())
                         } catch (exception: Exception) {
-                            runOnMainThread {
-                                onError?.accept(
-                                    StorageException(
-                                        "Issue uploading file.",
-                                        exception,
-                                        "See included exception for more details and suggestions to fix."
-                                    )
+                            onError?.accept(
+                                StorageException(
+                                    "Issue uploading file.",
+                                    exception,
+                                    "See included exception for more details and suggestions to fix."
                                 )
-                            }
+                            )
                         }
                     },
                     onError
@@ -126,16 +124,14 @@ class AWSS3StorageUploadFileOperation @JvmOverloads internal constructor(
                 try {
                     storageService.pauseTransfer(it)
                 } catch (exception: java.lang.Exception) {
-                    runOnMainThread {
-                        onError?.accept(
-                            StorageException(
-                                "Something went wrong while attempting to pause your " +
-                                    "AWS S3 Storage upload file operation",
-                                exception,
-                                "See attached exception for more information and suggestions"
-                            )
+                    onError?.accept(
+                        StorageException(
+                            "Something went wrong while attempting to pause your " +
+                                "AWS S3 Storage upload file operation",
+                            exception,
+                            "See attached exception for more information and suggestions"
                         )
-                    }
+                    )
                 }
             }
         }
@@ -147,16 +143,14 @@ class AWSS3StorageUploadFileOperation @JvmOverloads internal constructor(
                 try {
                     storageService.resumeTransfer(it)
                 } catch (exception: java.lang.Exception) {
-                    runOnMainThread {
-                        onError?.accept(
-                            StorageException(
-                                "Something went wrong while attempting to resume your " +
-                                    "AWS S3 Storage upload file operation",
-                                exception,
-                                "See attached exception for more information and suggestions"
-                            )
+                    onError?.accept(
+                        StorageException(
+                            "Something went wrong while attempting to resume your " +
+                                "AWS S3 Storage upload file operation",
+                            exception,
+                            "See attached exception for more information and suggestions"
                         )
-                    }
+                    )
                 }
             }
         }
@@ -168,16 +162,14 @@ class AWSS3StorageUploadFileOperation @JvmOverloads internal constructor(
                 try {
                     storageService.cancelTransfer(it)
                 } catch (exception: java.lang.Exception) {
-                    runOnMainThread {
-                        onError?.accept(
-                            StorageException(
-                                "Something went wrong while attempting to cancel your " +
-                                    "AWS S3 Storage upload file operation",
-                                exception,
-                                "See attached exception for more information and suggestions"
-                            )
+                    onError?.accept(
+                        StorageException(
+                            "Something went wrong while attempting to cancel your " +
+                                "AWS S3 Storage upload file operation",
+                            exception,
+                            "See attached exception for more information and suggestions"
                         )
-                    }
+                    )
                 }
             }
         }
@@ -202,7 +194,7 @@ class AWSS3StorageUploadFileOperation @JvmOverloads internal constructor(
             )
             when (state) {
                 TransferState.COMPLETED -> {
-                    runOnMainThread(Runnable { onSuccess?.accept(StorageUploadFileResult.fromKey(request.key)) })
+                    onSuccess?.accept(StorageUploadFileResult.fromKey(request.key))
                     return
                 }
                 TransferState.FAILED -> {}
@@ -211,7 +203,7 @@ class AWSS3StorageUploadFileOperation @JvmOverloads internal constructor(
         }
 
         override fun onProgressChanged(transferId: Int, bytesCurrent: Long, bytesTotal: Long) {
-            runOnMainThread(Runnable { onProgress?.accept(StorageTransferProgress(bytesCurrent, bytesTotal)) })
+            onProgress?.accept(StorageTransferProgress(bytesCurrent, bytesTotal))
         }
 
         override fun onError(transferId: Int, exception: java.lang.Exception) {
@@ -219,16 +211,12 @@ class AWSS3StorageUploadFileOperation @JvmOverloads internal constructor(
                 HubChannel.STORAGE,
                 HubEvent.create(StorageChannelEventName.UPLOAD_ERROR, exception)
             )
-            runOnMainThread(
-                Runnable {
-                    onError?.accept(
-                        StorageException(
-                            "Something went wrong with your AWS S3 Storage upload file operation",
-                            exception,
-                            "See attached exception for more information and suggestions"
-                        )
-                    )
-                }
+            onError?.accept(
+                StorageException(
+                    "Something went wrong with your AWS S3 Storage upload file operation",
+                    exception,
+                    "See attached exception for more information and suggestions"
+                )
             )
         }
     }
