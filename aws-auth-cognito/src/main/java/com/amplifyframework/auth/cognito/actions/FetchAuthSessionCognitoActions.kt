@@ -53,11 +53,13 @@ object FetchAuthSessionCognitoActions : FetchAuthSessionActions {
                 )
                 tokens.refreshToken?.let { authParameters[KEY_REFRESH_TOKEN] = it }
                 secretHash?.let { authParameters[KEY_SECRET_HASH] = it }
+                val encodedContextData = userContextDataProvider?.getEncodedContextData(signedInData.username)
 
                 val response = cognitoAuthService.cognitoIdentityProviderClient?.initiateAuth {
                     authFlow = AuthFlowType.RefreshToken
                     clientId = configuration.userPool?.appClient
                     this.authParameters = authParameters
+                    encodedContextData?.let { userContextData { encodedData = it } }
                 }
 
                 val expiresIn = response?.authenticationResult?.expiresIn?.toLong() ?: 0
