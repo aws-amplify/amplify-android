@@ -158,9 +158,10 @@ internal class TargetingClient(
         coroutineScope.launch {
             try {
                 LOG.info("Updating EndpointProfile.")
+                // This could fail if credentials are no longer stored due to sign out before this call is processed
                 pinpointClient.updateEndpoint(updateEndpointRequest)
                 LOG.info("EndpointProfile updated successfully.")
-            } catch (e: PinpointException) {
+            } catch (e: Exception) {
                 LOG.error("PinpointException occurred during endpoint update:", e)
             }
         }
