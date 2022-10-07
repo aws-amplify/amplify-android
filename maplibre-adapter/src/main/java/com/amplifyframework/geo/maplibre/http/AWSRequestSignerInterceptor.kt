@@ -57,7 +57,7 @@ internal class AWSRequestSignerInterceptor(
             return Response.Builder()
                 .code(401)
                 .protocol(okhttp3.Protocol.HTTP_1_1)
-                .message("Failed to sign credentials from CredentialProvider")
+                .message("Failed to sign credentials from CredentialsProvider")
                 .request(request)
                 .build()
         }
