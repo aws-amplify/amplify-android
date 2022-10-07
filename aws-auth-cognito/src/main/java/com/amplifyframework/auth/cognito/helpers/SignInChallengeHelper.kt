@@ -72,7 +72,8 @@ object SignInChallengeHelper {
                         )
                     } ?: AuthenticationEvent(
                         AuthenticationEvent.EventType.SignInCompleted(
-                            signedInData
+                            signedInData,
+                            DeviceMetadata.Empty
                         )
                     )
                 }

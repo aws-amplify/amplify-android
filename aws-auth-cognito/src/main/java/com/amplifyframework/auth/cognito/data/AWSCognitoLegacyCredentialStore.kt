@@ -90,6 +90,10 @@ internal class AWSCognitoLegacyCredentialStore(
         // no-op
     }
 
+    override fun saveDeviceMetadata(username: String, deviceMetadata: DeviceMetadata) {
+        // no-op
+    }
+
     @Synchronized
     override fun retrieveCredential(): AmplifyCredential {
         val signedInData = retrieveSignedInData()
@@ -122,6 +126,10 @@ internal class AWSCognitoLegacyCredentialStore(
         deleteAWSCredentials()
         deleteIdentityId()
         deleteCognitoUserPoolTokens()
+    }
+
+    override fun deleteDeviceKeyCredential(username: String) {
+        // no-op
     }
 
     private fun deleteCognitoUserPoolTokens() {
@@ -174,8 +182,6 @@ internal class AWSCognitoLegacyCredentialStore(
         val keys = getTokenKeys()
         val cognitoUserPoolTokens = retrieveCognitoUserPoolTokens(keys) ?: return null
         val signInMethod = retrieveUserPoolSignInMethod() ?: return null
-        val username = keys[APP_LAST_AUTH_USER]?.let { tokensKeyValue.get(it) }
-        val deviceMetaData = retrieveDeviceMetadata(username)
         val tokenUserId =
             try {
                 cognitoUserPoolTokens.accessToken?.let { SessionHelper.getUserSub(it) } ?: ""
@@ -198,7 +204,7 @@ internal class AWSCognitoLegacyCredentialStore(
         )
     }
 
-    private fun retrieveDeviceMetadata(username: String?): DeviceMetadata {
+    override fun retrieveDeviceMetadata(username: String): DeviceMetadata {
         val deviceDetailsCacheKey = String.format(userDeviceDetailsCacheKey, username)
         deviceKeyValue = keyValueRepoFactory.create(context, deviceDetailsCacheKey)
 

@@ -23,6 +23,7 @@ import com.amplifyframework.auth.cognito.helpers.CognitoDeviceHelper
 import com.amplifyframework.auth.exceptions.ServiceException
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.SignInActions
+import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.CustomSignInEvent
 import com.amplifyframework.statemachine.codegen.events.HostedUIEvent
@@ -99,7 +100,7 @@ object SignInCognitoActions : SignInActions {
                     "Sign in failed",
                     AmplifyException.TODO_RECOVERY_SUGGESTION
                 )
-                AuthenticationEvent(AuthenticationEvent.EventType.SignInCompleted(event.signedInData))
+                AuthenticationEvent(AuthenticationEvent.EventType.SignInCompleted(event.signedInData, DeviceMetadata.Metadata(deviceKey, deviceGroupKey)))
             } catch (e: Exception) {
                 SignInEvent(SignInEvent.EventType.ThrowError(e))
             }

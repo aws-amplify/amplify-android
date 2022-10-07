@@ -19,6 +19,7 @@ import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.auth.cognito.helpers.JWTParser
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.HostedUIActions
+import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.data.SignInMethod
 import com.amplifyframework.statemachine.codegen.data.SignedInData
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
@@ -64,7 +65,7 @@ object HostedUICognitoActions : HostedUIActions {
                 logger.verbose("$id Sending event ${tokenFetchedEvent.type}")
                 dispatcher.send(tokenFetchedEvent)
 
-                AuthenticationEvent(AuthenticationEvent.EventType.SignInCompleted(signedInData))
+                AuthenticationEvent(AuthenticationEvent.EventType.SignInCompleted(signedInData, DeviceMetadata.Empty))
             } catch (e: Exception) {
                 val errorEvent = HostedUIEvent(HostedUIEvent.EventType.ThrowError(e))
                 logger.verbose("$id Sending event ${errorEvent.type}")
