@@ -44,6 +44,7 @@ class PinpointAnalyticsInstrumentationTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         @RawRes val resourceId = Resources.getRawResourceId(context, CREDENTIALS_RESOURCE_NAME)
         val userAndPasswordPair = readCredentialsFromResource(context, resourceId)
+        synchronousAuth.signOut()
         synchronousAuth.signIn(
             userAndPasswordPair!!.first,
             userAndPasswordPair.second
