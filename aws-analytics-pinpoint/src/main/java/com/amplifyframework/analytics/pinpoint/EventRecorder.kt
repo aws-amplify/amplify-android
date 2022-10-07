@@ -126,7 +126,7 @@ internal class EventRecorder(
         try {
             // This could fail if credentials are no longer stored due to sign out before this call is processed
             response = pinpointClient.putEvents(putEventRequest)
-        } catch(e: Exception) {
+        } catch (e: Exception) {
             return emptyList()
         }
         val eventIdsToBeDeleted = mutableListOf<PinpointEvent>()

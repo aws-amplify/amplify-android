@@ -21,7 +21,6 @@ import aws.sdk.kotlin.services.pinpoint.model.EndpointDemographic
 import aws.sdk.kotlin.services.pinpoint.model.EndpointLocation
 import aws.sdk.kotlin.services.pinpoint.model.EndpointRequest
 import aws.sdk.kotlin.services.pinpoint.model.EndpointUser
-import aws.sdk.kotlin.services.pinpoint.model.PinpointException
 import aws.sdk.kotlin.services.pinpoint.model.UpdateEndpointRequest
 import com.amplifyframework.analytics.pinpoint.internal.core.idresolver.SharedPrefsUniqueIdService
 import com.amplifyframework.analytics.pinpoint.internal.core.util.millisToIsoDate
