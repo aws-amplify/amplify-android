@@ -18,6 +18,7 @@
 package com.amplifyframework.testutils.featuretest.auth.serializers
 
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
+import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.data.SignedInData
 import com.amplifyframework.statemachine.codegen.states.AuthState
 import com.amplifyframework.statemachine.codegen.states.AuthenticationState
@@ -52,7 +53,7 @@ internal data class AuthStatesProxy(
     internal fun <T> toRealAuthState(): T {
         return when (type) {
             "AuthState.Configured" -> AuthState.Configured(authNState, authZState) as T
-            "AuthenticationState.SignedIn" -> signedInData?.let { AuthenticationState.SignedIn(it) } as T
+            "AuthenticationState.SignedIn" -> signedInData?.let { AuthenticationState.SignedIn(it, DeviceMetadata.Empty) } as T
             "AuthorizationState.SessionEstablished" -> amplifyCredential?.let {
                 AuthorizationState.SessionEstablished(it)
             } as T
