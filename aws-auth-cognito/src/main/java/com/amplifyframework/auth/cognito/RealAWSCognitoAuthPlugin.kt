@@ -109,6 +109,7 @@ import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 import com.amplifyframework.statemachine.codegen.data.FederatedToken
 import com.amplifyframework.statemachine.codegen.data.SignInData
 import com.amplifyframework.statemachine.codegen.data.SignOutData
+import com.amplifyframework.statemachine.codegen.errors.SessionError
 import com.amplifyframework.statemachine.codegen.events.AuthEvent
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
@@ -794,12 +795,30 @@ internal class RealAWSCognitoAuthPlugin(
                     }
                     is AuthorizationState.Error -> {
                         token?.let(authStateMachine::cancel)
-                        onError.accept(
-                            CognitoAuthExceptionConverter.lookup(
-                                authZState.exception,
-                                "Fetch auth session failed."
+                        when (val error = authZState.exception) {
+                            is SessionError -> {
+                                val idpError = when (error.exception) {
+                                    is aws.sdk.kotlin.services.cognitoidentity.model.NotAuthorizedException ->
+                                        SignedOutException(SignedOutException.RECOVERY_SUGGESTION_GUEST_ACCESS_DISABLED)
+                                    is aws.sdk.kotlin.services.cognitoidentity.model.CognitoIdentityException ->
+                                        SignedOutException(
+                                            SignedOutException.RECOVERY_SUGGESTION_GUEST_ACCESS_POSSIBLE,
+                                            cause = CognitoAuthExceptionConverter.lookup(
+                                                error,
+                                                "Fetch auth session failed."
+                                            )
+                                        )
+                                    // TODO: session expired
+                                    else -> UnknownException("Fetch auth session failed.", error)
+                                }
+                                onSuccess.accept(error.amplifyCredential.getCognitoSession(idpError))
+                            }
+                            else -> onSuccess.accept(
+                                AmplifyCredential.Empty.getCognitoSession(
+                                    UnknownException("Fetch auth session failed.", error)
+                                )
                             )
-                        )
+                        }
                     }
                     else -> Unit
                 }
@@ -1577,9 +1596,9 @@ internal class RealAWSCognitoAuthPlugin(
             { authState ->
                 when (authState) {
                     is AuthState.Configured -> {
-                        token?.let(credentialStoreStateMachine::cancel)
+                        token?.let(authStateMachine::cancel)
                     }
-                    else -> {} // handle errors
+                    else -> Unit // handle errors
                 }
             },
             {

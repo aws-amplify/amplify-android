@@ -28,6 +28,7 @@ import com.amplifyframework.statemachine.codegen.actions.AuthorizationActions
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.FederatedToken
 import com.amplifyframework.statemachine.codegen.data.SignedInData
+import com.amplifyframework.statemachine.codegen.errors.SessionError
 import com.amplifyframework.statemachine.codegen.events.AuthEvent
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
@@ -151,7 +152,9 @@ sealed class AuthorizationState : State {
                         )
                         StateResolution(StoringCredentials(amplifyCredential))
                     }
-                    is AuthorizationEvent.EventType.ThrowError -> StateResolution(Error(authorizationEvent.exception))
+                    is AuthorizationEvent.EventType.ThrowError -> StateResolution(
+                        Error(SessionError(authorizationEvent.exception, AmplifyCredential.Empty))
+                    )
                     else -> {
                         val resolution = fetchAuthSessionResolver.resolve(oldState.fetchAuthSessionState, event)
                         StateResolution(FetchingUnAuthSession(resolution.newState), resolution.actions)
@@ -200,7 +203,9 @@ sealed class AuthorizationState : State {
                     is AuthorizationEvent.EventType.Refreshed -> StateResolution(
                         StoringCredentials(authorizationEvent.amplifyCredential)
                     )
-                    is AuthorizationEvent.EventType.ThrowError -> StateResolution(Error(authorizationEvent.exception))
+                    is AuthorizationEvent.EventType.ThrowError -> StateResolution(
+                        Error(SessionError(authorizationEvent.exception, oldState.existingCredential))
+                    )
                     else -> {
                         val resolution = refreshSessionResolver.resolve(oldState.refreshSessionState, event)
                         StateResolution(

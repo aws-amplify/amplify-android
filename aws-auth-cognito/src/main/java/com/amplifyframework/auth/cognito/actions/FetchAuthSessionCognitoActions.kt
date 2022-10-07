@@ -22,7 +22,7 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.AuthFlowType
 import aws.smithy.kotlin.runtime.time.Instant
 import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
-import com.amplifyframework.auth.cognito.helpers.JWTParser
+import com.amplifyframework.auth.cognito.helpers.SessionHelper
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.FetchAuthSessionActions
 import com.amplifyframework.statemachine.codegen.data.AWSCredentials
@@ -47,7 +47,7 @@ object FetchAuthSessionCognitoActions : FetchAuthSessionActions {
 
                 val authParameters = mutableMapOf<String, String>()
                 val secretHash = AuthHelper.getSecretHash(
-                    tokens.accessToken?.let { JWTParser.getClaim(it, "username") } ?: "",
+                    signedInData.username,
                     configuration.userPool?.appClient,
                     configuration.userPool?.appClientSecret
                 )
@@ -70,8 +70,12 @@ object FetchAuthSessionCognitoActions : FetchAuthSessionActions {
                     expiration = Instant.now().plus(expiresIn.seconds).epochSeconds
                 )
 
-                // TODO: update other properties in signed in data too
-                val updatedSignedInData = signedInData.copy(cognitoUserPoolTokens = cognitoUserPoolTokens)
+                val updatedSignedInData = signedInData.copy(
+                    userId = cognitoUserPoolTokens.accessToken?.let(SessionHelper::getUserSub) ?: signedInData.userId,
+                    username = cognitoUserPoolTokens.accessToken?.let(SessionHelper::getUsername)
+                        ?: signedInData.username,
+                    cognitoUserPoolTokens = cognitoUserPoolTokens
+                )
 
                 if (configuration.identityPool != null) {
                     val logins = LoginsMapProvider.CognitoUserPoolLogins(
