@@ -46,6 +46,8 @@ import com.amplifyframework.testutils.random.RandomString;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.robolectric.RobolectricTestRunner;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -70,6 +72,7 @@ import static org.mockito.Mockito.when;
 /**
  * Tests the {@link RxStorageBinding}.
  */
+@RunWith(RobolectricTestRunner.class)
 public final class RxStorageBindingTest {
     private static final long TIMEOUT_MS = TimeUnit.SECONDS.toMillis(5);
     private RxStorageCategoryBehavior rxStorage;
