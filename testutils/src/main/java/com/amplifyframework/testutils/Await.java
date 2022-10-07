@@ -172,7 +172,7 @@ public final class Await {
             // keep the main looper idle to flush any incoming messages
             try {
                 Shadows.shadowOf(Looper.getMainLooper()).idle();
-            } catch (ClassCastException classCastException) {
+            } catch (Exception classCastException) {
                 // ignore the error.
             }
         }
