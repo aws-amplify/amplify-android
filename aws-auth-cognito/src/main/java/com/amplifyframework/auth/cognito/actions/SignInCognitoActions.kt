@@ -100,7 +100,12 @@ object SignInCognitoActions : SignInActions {
                     "Sign in failed",
                     AmplifyException.TODO_RECOVERY_SUGGESTION
                 )
-                AuthenticationEvent(AuthenticationEvent.EventType.SignInCompleted(event.signedInData, DeviceMetadata.Metadata(deviceKey, deviceGroupKey)))
+                AuthenticationEvent(
+                    AuthenticationEvent.EventType.SignInCompleted(
+                        event.signedInData,
+                        DeviceMetadata.Metadata(deviceKey, deviceGroupKey)
+                    )
+                )
             } catch (e: Exception) {
                 SignInEvent(SignInEvent.EventType.ThrowError(e))
             }

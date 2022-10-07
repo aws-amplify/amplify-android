@@ -172,7 +172,9 @@ object SignOutCognitoActions : SignOutActions {
     override fun userCancelledAction(event: SignOutEvent.EventType.UserCancelled) =
         Action<AuthEnvironment>("UserCancelledSignOut") { id, dispatcher ->
             logger.verbose("$id Starting execution")
-            val evt = AuthenticationEvent(AuthenticationEvent.EventType.CancelSignOut(event.signedInData, DeviceMetadata.Empty))
+            val evt = AuthenticationEvent(
+                AuthenticationEvent.EventType.CancelSignOut(event.signedInData, DeviceMetadata.Empty)
+            )
             logger.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
         }

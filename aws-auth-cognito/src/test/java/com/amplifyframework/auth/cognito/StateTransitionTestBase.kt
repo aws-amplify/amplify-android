@@ -35,6 +35,7 @@ import com.amplifyframework.statemachine.codegen.actions.SignOutActions
 import com.amplifyframework.statemachine.codegen.actions.StoreActions
 import com.amplifyframework.statemachine.codegen.data.AWSCredentials
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
+import com.amplifyframework.statemachine.codegen.data.AmplifyCredentialType
 import com.amplifyframework.statemachine.codegen.data.AuthChallenge
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
@@ -157,7 +158,12 @@ open class StateTransitionTestBase {
             .thenReturn(
                 Action { dispatcher, _ ->
                     dispatcher.send(
-                        CredentialStoreEvent(CredentialStoreEvent.EventType.LoadCredentialStore(null))
+                        CredentialStoreEvent(
+                            CredentialStoreEvent.EventType.LoadCredentialStore(
+                                AmplifyCredentialType.AMPLIFY_CREDENTIAL,
+                                null
+                            )
+                        )
                     )
                 }
             )
@@ -171,7 +177,7 @@ open class StateTransitionTestBase {
 //                }
 //            )
 
-        Mockito.`when`(credentialStoreActions.loadCredentialStoreAction(null))
+        Mockito.`when`(credentialStoreActions.loadCredentialStoreAction(AmplifyCredentialType.AMPLIFY_CREDENTIAL, null))
             .thenReturn(
                 Action { dispatcher, _ ->
                     dispatcher.send(
@@ -182,6 +188,7 @@ open class StateTransitionTestBase {
 
         Mockito.`when`(
             credentialStoreActions.storeCredentialsAction(
+                AmplifyCredentialType.AMPLIFY_CREDENTIAL,
                 MockitoHelper.anyObject(),
                 MockitoHelper.anyObject()
             )

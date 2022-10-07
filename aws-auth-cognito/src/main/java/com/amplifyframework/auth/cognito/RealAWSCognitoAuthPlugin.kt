@@ -129,14 +129,14 @@ import com.amplifyframework.statemachine.codegen.states.SRPSignInState
 import com.amplifyframework.statemachine.codegen.states.SignInChallengeState
 import com.amplifyframework.statemachine.codegen.states.SignInState
 import com.amplifyframework.statemachine.codegen.states.SignOutState
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.async
-import kotlinx.coroutines.launch
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 
 internal class RealAWSCognitoAuthPlugin(
     private val configuration: AuthConfiguration,
@@ -418,7 +418,8 @@ internal class RealAWSCognitoAuthPlugin(
                                     if (storeState.storedCredentials is AmplifyCredential.DeviceData) {
                                         if (storeState.storedCredentials.deviceMetadata != DeviceMetadata.Empty) {
                                             signInOptions.metadata["DEVICE_KEY"] =
-                                                (storeState.storedCredentials.deviceMetadata as DeviceMetadata.Metadata).deviceKey
+                                                (storeState.storedCredentials.deviceMetadata as DeviceMetadata.Metadata)
+                                                    .deviceKey
                                         }
                                     }
                                     _signIn(
@@ -481,7 +482,7 @@ internal class RealAWSCognitoAuthPlugin(
                         }
                     }
                     authNState is AuthenticationState.SignedIn
-                            && authZState is AuthorizationState.SessionEstablished -> {
+                        && authZState is AuthorizationState.SessionEstablished -> {
                         token?.let(authStateMachine::cancel)
                         if (!username.isNullOrEmpty() && authNState.deviceMetadata != DeviceMetadata.Empty) {
                             credentialStoreStateMachine.send(
@@ -712,7 +713,7 @@ internal class RealAWSCognitoAuthPlugin(
                         }
                     }
                     authNState is AuthenticationState.SignedIn
-                            && authZState is AuthorizationState.SessionEstablished -> {
+                        && authZState is AuthorizationState.SessionEstablished -> {
                         token?.let(authStateMachine::cancel)
                         val authSignInResult =
                             AuthSignInResult(
@@ -1429,7 +1430,7 @@ internal class RealAWSCognitoAuthPlugin(
                         AWSCognitoAuthSignOutResult.FailedSignOut(
                             InvalidStateException(
                                 "The user is currently federated to identity pool. " +
-                                        "You must call clearFederationToIdentityPool to clear credentials."
+                                    "You must call clearFederationToIdentityPool to clear credentials."
                             )
                         )
                     )
@@ -1584,19 +1585,19 @@ internal class RealAWSCognitoAuthPlugin(
                                 )
                             }
                             authNState is AuthenticationState.SignedOut &&
-                                    authZState is AuthorizationState.Configured
-                                    && lastPublishedHubEventName.get() != AuthChannelEventName.SIGNED_OUT -> {
+                                authZState is AuthorizationState.Configured
+                                && lastPublishedHubEventName.get() != AuthChannelEventName.SIGNED_OUT -> {
                                 lastPublishedHubEventName.set(AuthChannelEventName.SIGNED_OUT)
                                 Amplify.Hub.publish(HubChannel.AUTH, HubEvent.create(AuthChannelEventName.SIGNED_OUT))
                             }
                             authNState is AuthenticationState.SignedIn &&
-                                    authZState is AuthorizationState.SessionEstablished
-                                    && lastPublishedHubEventName.get() != AuthChannelEventName.SIGNED_IN -> {
+                                authZState is AuthorizationState.SessionEstablished
+                                && lastPublishedHubEventName.get() != AuthChannelEventName.SIGNED_IN -> {
                                 lastPublishedHubEventName.set(AuthChannelEventName.SIGNED_IN)
                                 Amplify.Hub.publish(HubChannel.AUTH, HubEvent.create(AuthChannelEventName.SIGNED_IN))
                             }
                             deleteUserAuthZState?.deleteUserState is DeleteUserState.UserDeleted
-                                    && lastPublishedHubEventName.get() != AuthChannelEventName.USER_DELETED -> {
+                                && lastPublishedHubEventName.get() != AuthChannelEventName.USER_DELETED -> {
                                 Amplify.Hub.publish(HubChannel.AUTH, HubEvent.create(AuthChannelEventName.USER_DELETED))
                             }
                         }
@@ -1664,19 +1665,19 @@ internal class RealAWSCognitoAuthPlugin(
                     onError.accept(
                         InvalidStateException(
                             "The user is currently federated to identity pool. You " +
-                                    "must call clearFederationToIdentityPool to clear credentials."
+                                "must call clearFederationToIdentityPool to clear credentials."
                         )
                     )
                 }
                 (
-                        authNState is AuthenticationState.SignedOut ||
-                                authNState is AuthenticationState.Error ||
-                                authNState is AuthenticationState.NotConfigured
-                        ) || (
-                        authZState is AuthorizationState.Configured ||
-                                authZState is AuthorizationState.SessionEstablished ||
-                                authZState is AuthorizationState.Error
-                        ) -> {
+                    authNState is AuthenticationState.SignedOut ||
+                        authNState is AuthenticationState.Error ||
+                        authNState is AuthenticationState.NotConfigured
+                    ) || (
+                    authZState is AuthorizationState.Configured ||
+                        authZState is AuthorizationState.SessionEstablished ||
+                        authZState is AuthorizationState.Error
+                    ) -> {
                     _federateToIdentityPool(authProvider, providerToken, options, onSuccess, onError)
                 }
                 else -> onError.accept(
@@ -1700,7 +1701,7 @@ internal class RealAWSCognitoAuthPlugin(
                 val authZState = authState.authZState
                 when {
                     authNState is AuthenticationState.FederatedToIdentityPool
-                            && authZState is AuthorizationState.SessionEstablished -> {
+                        && authZState is AuthorizationState.SessionEstablished -> {
                         token?.let(authStateMachine::cancel)
                         val credential = authZState.amplifyCredential as? AmplifyCredential.IdentityPoolFederated
                         val identityId = credential?.identityId
@@ -1752,8 +1753,8 @@ internal class RealAWSCognitoAuthPlugin(
             val authZState = authState.authZState
             when {
                 authState is AuthState.Configured &&
-                        authNState is AuthenticationState.FederatedToIdentityPool &&
-                        authZState is AuthorizationState.SessionEstablished -> {
+                    authNState is AuthenticationState.FederatedToIdentityPool &&
+                    authZState is AuthorizationState.SessionEstablished -> {
                     val event = AuthenticationEvent(AuthenticationEvent.EventType.SignOutRequested(SignOutData()))
                     authStateMachine.send(event)
                     _clearFederationToIdentityPool(onSuccess, onError)
