@@ -45,6 +45,8 @@ object DeviceSRPCognitoSignInActions : DeviceSRPSignInActions {
             val evt = try {
                 event.challengeParameters?.let { params ->
                     val username = params.getValue(KEY_USERNAME)
+                    val encodedContextData = userContextDataProvider?.getEncodedContextData(username)
+
                     cognitoAuthService.cognitoIdentityProviderClient?.let {
                         val respondToAuthChallenge = it.respondToAuthChallenge(
                             RespondToAuthChallengeRequest.invoke {
@@ -55,6 +57,7 @@ object DeviceSRPCognitoSignInActions : DeviceSRPSignInActions {
                                     KEY_DEVICE_KEY to params.getValue(KEY_DEVICE_KEY),
                                     KEY_SRP_A to srpHelper.getPublicA()
                                 )
+                                encodedContextData?.let { userContextData { encodedData = it } }
                             }
                         )
                         SignInChallengeHelper.evaluateNextStep(
@@ -89,6 +92,7 @@ object DeviceSRPCognitoSignInActions : DeviceSRPSignInActions {
                     val srpB = params.getValue(KEY_SRP_B)
                     val username = params.getValue(KEY_USERNAME)
                     val deviceKey = params.getValue(KEY_DEVICE_KEY)
+                    val encodedContextData = userContextDataProvider?.getEncodedContextData(username)
 
                     cognitoAuthService.cognitoIdentityProviderClient?.let {
                         val respondToAuthChallenge = it.respondToAuthChallenge(
@@ -102,6 +106,7 @@ object DeviceSRPCognitoSignInActions : DeviceSRPSignInActions {
                                     KEY_PASSWORD_CLAIM_SIGNATURE to srpHelper.getSignature(salt, srpB, secretBlock),
                                     KEY_DEVICE_KEY to deviceKey
                                 )
+                                encodedContextData?.let { userContextData { encodedData = it } }
                             }
                         )
 
