@@ -215,19 +215,18 @@ class AWSS3StorageUploadInputStreamOperation @JvmOverloads internal constructor(
             )
             when (state) {
                 TransferState.COMPLETED -> {
-                    runOnMainThread(
-                        Runnable { onSuccess?.accept(StorageUploadInputStreamResult.fromKey(request.key)) }
-                    )
+                    runOnMainThread { onSuccess?.accept(StorageUploadInputStreamResult.fromKey(request.key)) }
                     return
                 }
                 TransferState.FAILED -> {
                     runOnMainThread(
                         Runnable {
-                            error = StorageException(
-                                "Storage upload operation was interrupted.",
-                                "Please verify that you have a stable internet connection."
+                            onError?.accept(
+                                StorageException(
+                                    "Storage upload operation was interrupted.",
+                                    "Please verify that you have a stable internet connection."
+                                )
                             )
-                            onError?.accept(error)
                         }
                     )
                     return
@@ -247,12 +246,13 @@ class AWSS3StorageUploadInputStreamOperation @JvmOverloads internal constructor(
             )
             runOnMainThread(
                 Runnable {
-                    error = StorageException(
-                        "Something went wrong with your AWS S3 Storage upload input stream operation",
-                        exception,
-                        "See attached exception for more information and suggestions"
+                    onError?.accept(
+                        StorageException(
+                            "Something went wrong with your AWS S3 Storage upload input stream operation",
+                            exception,
+                            "See attached exception for more information and suggestions"
+                        )
                     )
-                    onError?.accept(error)
                 }
             )
         }

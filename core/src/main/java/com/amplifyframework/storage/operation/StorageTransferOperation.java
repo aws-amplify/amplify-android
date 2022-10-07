@@ -55,7 +55,7 @@ public abstract class StorageTransferOperation<R, T extends StorageTransferResul
      * Consumer that notifies transfer error.
      */
     @Nullable
-    private Consumer<StorageException> onError;
+    private Consumer<StorageException> internalOnError;
 
     /**
      * Unique identifier for the transfer.
@@ -97,7 +97,7 @@ public abstract class StorageTransferOperation<R, T extends StorageTransferResul
         this.transferId = transferId;
         this.onProgress = onProgress;
         this.onSuccess = onSuccess;
-        this.onError = onError;
+        this.internalOnError = new InternalOnError(onError);
     }
 
     /**
@@ -109,6 +109,15 @@ public abstract class StorageTransferOperation<R, T extends StorageTransferResul
     @NonNull
     public String getTransferId() {
         return transferId;
+    }
+
+    /**
+     * Sets current transfer state.
+     *
+     * @param transferState set current transfer state
+     */
+    protected void setTransferState(@NonNull TransferState transferState) {
+        this.transferState = transferState;
     }
 
     /**
@@ -161,8 +170,12 @@ public abstract class StorageTransferOperation<R, T extends StorageTransferResul
      * @param onError Consumer which provides transfer errors
      */
     public void setOnError(@Nullable Consumer<StorageException> onError) {
-        this.onError = onError;
-        if (transferState == TransferState.FAILED && onError != null) {
+        if (onError == null) {
+            this.internalOnError = null;
+            return;
+        }
+        this.internalOnError = new InternalOnError(onError);
+        if (getTransferState() == TransferState.FAILED) {
             if (error == null) {
                 error = new StorageException(
                     "Something went wrong with your AWS S3 Storage transfer operation",
@@ -170,7 +183,7 @@ public abstract class StorageTransferOperation<R, T extends StorageTransferResul
                     "Please re-queue the operation"
                 );
             }
-            onError.accept(error);
+            internalOnError.accept(error);
         }
     }
 
@@ -180,7 +193,7 @@ public abstract class StorageTransferOperation<R, T extends StorageTransferResul
      * @return onError Consumer which provides transfer errors
      */
     protected Consumer<StorageException> getOnError() {
-        return this.onError;
+        return this.internalOnError;
     }
 
     /**
@@ -191,7 +204,7 @@ public abstract class StorageTransferOperation<R, T extends StorageTransferResul
     public void clearAllListeners() {
         onProgress = null;
         onSuccess = null;
-        onError = null;
+        internalOnError = null;
     }
 
     /**
@@ -221,5 +234,23 @@ public abstract class StorageTransferOperation<R, T extends StorageTransferResul
      */
     protected void setError(@NonNull StorageException error) {
         this.error = error;
+    }
+
+    /**
+     * Internal class to persist the error locally.
+     *
+     */
+    private class InternalOnError implements Consumer<StorageException> {
+        private Consumer<StorageException> onError;
+
+        InternalOnError(Consumer<StorageException> onError) {
+            this.onError = onError;
+        }
+
+        @Override
+        public void accept(@NonNull StorageException value) {
+            setError(value);
+            onError.accept(value);
+        }
     }
 }

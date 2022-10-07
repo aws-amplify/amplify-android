@@ -226,12 +226,13 @@ class AWSS3StorageDownloadFileOperation @JvmOverloads internal constructor(
             )
             runOnMainThread(
                 Runnable {
-                    error = StorageException(
-                        "Something went wrong with your AWS S3 Storage download file operation",
-                        exception,
-                        "See attached exception for more information and suggestions"
+                    onError?.accept(
+                        StorageException(
+                            "Something went wrong with your AWS S3 Storage download file operation",
+                            exception,
+                            "See attached exception for more information and suggestions"
+                        )
                     )
-                    onError?.accept(error)
                 }
             )
         }
