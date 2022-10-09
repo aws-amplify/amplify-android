@@ -38,7 +38,7 @@ interface AWSS3PluginPrefixResolver {
         accessLevel: StorageAccessLevel,
         targetIdentity: String?,
         onSuccess: Consumer<String>,
-        onError: Consumer<StorageException>
+        onError: Consumer<StorageException>?
     )
 }
 
@@ -53,7 +53,7 @@ internal class StorageAccessLevelAwarePrefixResolver(
         accessLevel: StorageAccessLevel,
         targetIdentity: String?,
         onSuccess: Consumer<String>,
-        onError: Consumer<StorageException>
+        onError: Consumer<StorageException>?
     ) {
         val identityId = runCatching {
             runBlocking {
@@ -66,7 +66,9 @@ internal class StorageAccessLevelAwarePrefixResolver(
                 onSuccess.accept(S3Keys.getAccessLevelPrefix(accessLevel, resultIdentityId))
             }
             else -> {
-                onError.accept(StorageException("Failed to fetch identity ID", identityId.exceptionOrNull().toString()))
+                onError?.accept(
+                    StorageException("Failed to fetch identity ID", identityId.exceptionOrNull().toString())
+                )
             }
         }
     }
