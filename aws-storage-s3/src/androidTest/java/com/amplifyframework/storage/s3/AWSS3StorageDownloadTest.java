@@ -172,7 +172,6 @@ public final class AWSS3StorageDownloadTest {
      */
     @SuppressWarnings("unchecked")
     @Test
-    @Ignore("fix in dev-preview, waiting on https://github.com/awslabs/aws-sdk-kotlin/issues/704")
     public void testDownloadFileIsCancelable() throws Exception {
         final CountDownLatch canceled = new CountDownLatch(1);
         final AtomicReference<Cancelable> opContainer = new AtomicReference<>();
@@ -219,7 +218,6 @@ public final class AWSS3StorageDownloadTest {
      */
     @SuppressWarnings("unchecked")
     @Test
-    @Ignore("fix in dev-preview, waiting on https://github.com/awslabs/aws-sdk-kotlin/issues/704")
     public void testDownloadFileIsResumable() throws Exception {
         final CountDownLatch completed = new CountDownLatch(1);
         final CountDownLatch resumed = new CountDownLatch(1);
@@ -270,7 +268,6 @@ public final class AWSS3StorageDownloadTest {
      */
     @SuppressWarnings("unchecked")
     @Test
-    @Ignore("fix in dev-preview, waiting on https://github.com/awslabs/aws-sdk-kotlin/issues/704")
     public void testGetTransferOnPause() throws Exception {
         final CountDownLatch completed = new CountDownLatch(1);
         final CountDownLatch resumed = new CountDownLatch(1);
