@@ -105,7 +105,7 @@ stopDuplicates
 #   +-+-+ +-+-+-+ +-+-+-+-+-+ +-+-+ +-+-+-+-+
 #   |D|o| |n|o|t| |m|e|r|g|e| |t|o| |m|a|i|n|
 #   +-+-+ +-+-+-+ +-+-+-+-+-+ +-+-+ +-+-+-+-+
-max_devices=1
+max_devices=3
 
 # Schedule the test run in device farm
 echo "Scheduling test run"
