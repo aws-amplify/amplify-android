@@ -15,6 +15,7 @@
 
 package com.amplifyframework.auth.cognito.actions
 
+import android.os.Build
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ConfirmDeviceRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeviceSecretVerifierConfigType
 import com.amplifyframework.AmplifyException
@@ -23,6 +24,8 @@ import com.amplifyframework.auth.cognito.helpers.CognitoDeviceHelper
 import com.amplifyframework.auth.exceptions.ServiceException
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.SignInActions
+import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
+import com.amplifyframework.statemachine.codegen.data.CredentialType
 import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.CustomSignInEvent
@@ -52,11 +55,11 @@ object SignInCognitoActions : SignInActions {
 
     override fun startMigrationAuthAction(event: SignInEvent.EventType.InitiateMigrateAuth) =
         Action<AuthEnvironment>("StartMigrationAuth") { id, dispatcher ->
-            logger?.verbose("$id Starting execution")
+            logger.verbose("$id Starting execution")
             val evt = SignInEvent(
                 SignInEvent.EventType.InitiateMigrateAuth(event.username, event.password, event.metadata)
             )
-            logger?.verbose("$id Sending event ${evt.type}")
+            logger.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
         }
 
@@ -83,23 +86,26 @@ object SignInCognitoActions : SignInActions {
             val deviceKey = deviceMetadata.deviceKey
             val deviceGroupKey = deviceMetadata.deviceGroupKey
             val evt = try {
-                val deviceVerifierMap = CognitoDeviceHelper.generateVerificationParameters(
-                    deviceKey,
-                    deviceGroupKey
-                )
+                val deviceVerifierMap = CognitoDeviceHelper.generateVerificationParameters(deviceKey, deviceGroupKey)
+
                 cognitoAuthService.cognitoIdentityProviderClient?.confirmDevice(
                     ConfirmDeviceRequest.invoke {
                         this.accessToken = event.signedInData.cognitoUserPoolTokens.accessToken
                         this.deviceKey = deviceKey
+                        this.deviceName = Build.MODEL
                         this.deviceSecretVerifierConfig = DeviceSecretVerifierConfigType.invoke {
                             this.passwordVerifier = deviceVerifierMap["verifier"]
                             this.salt = deviceVerifierMap["salt"]
                         }
                     }
-                ) ?: throw ServiceException(
-                    "Sign in failed",
-                    AmplifyException.TODO_RECOVERY_SUGGESTION
+                ) ?: throw ServiceException("Sign in failed", AmplifyException.TODO_RECOVERY_SUGGESTION)
+
+                val updatedDeviceMetadata = deviceMetadata.copy(deviceSecret = deviceVerifierMap["secret"])
+                credentialStoreClient.storeCredentials(
+                    CredentialType.Device(event.signedInData.username),
+                    AmplifyCredential.DeviceData(updatedDeviceMetadata)
                 )
+
                 AuthenticationEvent(
                     AuthenticationEvent.EventType.SignInCompleted(
                         event.signedInData,

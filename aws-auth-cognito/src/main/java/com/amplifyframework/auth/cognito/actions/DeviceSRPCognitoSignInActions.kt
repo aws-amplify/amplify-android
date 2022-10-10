@@ -19,6 +19,7 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.RespondToAuthChallengeRequest
 import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidUserPoolConfigurationException
+import com.amplifyframework.auth.cognito.helpers.SRPHelper
 import com.amplifyframework.auth.cognito.helpers.SignInChallengeHelper
 import com.amplifyframework.auth.exceptions.UnknownException
 import com.amplifyframework.statemachine.Action
@@ -54,6 +55,8 @@ object DeviceSRPCognitoSignInActions : DeviceSRPSignInActions {
                     val deviceMetadata = (deviceCredentials as AmplifyCredential.DeviceData)
                         .deviceMetadata as? DeviceMetadata.Metadata
 
+                    srpHelper = SRPHelper(deviceMetadata?.deviceSecret ?: "")
+
                     cognitoAuthService.cognitoIdentityProviderClient?.let {
                         val respondToAuthChallenge = it.respondToAuthChallenge(
                             RespondToAuthChallengeRequest.invoke {
@@ -67,13 +70,11 @@ object DeviceSRPCognitoSignInActions : DeviceSRPSignInActions {
                                 encodedContextData?.let { userContextData { encodedData = it } }
                             }
                         )
-                        SignInChallengeHelper.evaluateNextStep(
-                            username = username,
-                            signInMethod = SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH),
-                            authenticationResult = respondToAuthChallenge.authenticationResult,
-                            challengeNameType = respondToAuthChallenge.challengeName,
-                            challengeParameters = respondToAuthChallenge.challengeParameters,
-                            session = respondToAuthChallenge.session,
+
+                        DeviceSRPSignInEvent(
+                            DeviceSRPSignInEvent.EventType.RespondDevicePasswordVerifier(
+                                respondToAuthChallenge.challengeParameters
+                            )
                         )
                     } ?: throw InvalidUserPoolConfigurationException()
                 } ?: throw UnknownException("There was a problem while signing you in")
@@ -100,6 +101,12 @@ object DeviceSRPCognitoSignInActions : DeviceSRPSignInActions {
                     val username = params.getValue(KEY_USERNAME)
                     val deviceKey = params.getValue(KEY_DEVICE_KEY)
                     val encodedContextData = userContextDataProvider?.getEncodedContextData(username)
+
+                    val deviceCredentials = credentialStoreClient.loadCredentials(CredentialType.Device(username))
+                    val deviceMetadata = (deviceCredentials as AmplifyCredential.DeviceData)
+                        .deviceMetadata as? DeviceMetadata.Metadata
+
+                    srpHelper.setUserPoolParams(deviceMetadata?.deviceKey ?: "", deviceMetadata?.deviceGroupKey ?: "")
 
                     cognitoAuthService.cognitoIdentityProviderClient?.let {
                         val respondToAuthChallenge = it.respondToAuthChallenge(

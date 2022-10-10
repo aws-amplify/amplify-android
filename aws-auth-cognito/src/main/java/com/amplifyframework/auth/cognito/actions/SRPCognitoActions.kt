@@ -47,6 +47,7 @@ object SRPCognitoActions : SRPActions {
     private const val KEY_USERNAME = "USERNAME"
     private const val KEY_DEVICE_KEY = "DEVICE_KEY"
     private const val KEY_CHALLENGE_NAME = "CHALLENGE_NAME"
+
     override fun initiateSRPAuthAction(event: SRPEvent.EventType.InitiateSRP) =
         Action<AuthEnvironment>("InitSRPAuth") { id, dispatcher ->
             logger.verbose("$id Starting execution")
@@ -152,7 +153,9 @@ object SRPCognitoActions : SRPActions {
                 val srpB = params.getValue(KEY_SRP_B)
                 val username = params.getValue(KEY_USERNAME)
                 val userId = params.getValue(KEY_USER_ID_FOR_SRP)
+
                 srpHelper.setUserPoolParams(userId, configuration.userPool?.poolId!!)
+
                 val secretHash = AuthHelper.getSecretHash(
                     username,
                     configuration.userPool.appClient,
