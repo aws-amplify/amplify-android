@@ -370,6 +370,35 @@ internal class RealAWSCognitoAuthPlugin(
         }
     }
 
+    private fun loadDeviceMetadata(username: String?, action: (DeviceMetadata.Metadata?)->Unit){
+        credentialStoreStateMachine.listen(
+            { storeState ->
+                logger.verbose("Credential Store State Change: $storeState")
+                when (storeState) {
+                    is CredentialStoreState.Success -> {
+                        val deviceCredentials = storeState.storedCredentials as? AmplifyCredential.DeviceData
+                        val deviceMetadata = deviceCredentials?.deviceMetadata as? DeviceMetadata.Metadata
+                        action.invoke(deviceMetadata)
+                    }
+                    is CredentialStoreState.Error -> authStateMachine.send(
+                        AuthEvent(AuthEvent.EventType.CachedCredentialsFailed)
+                    )
+                    else -> Unit
+                }
+            },
+            {
+                credentialStoreStateMachine.send(
+                    CredentialStoreEvent(
+                        CredentialStoreEvent.EventType.LoadCredentialStore(
+                            AmplifyCredentialType.DEVICE_METADATA,
+                            username
+                        )
+                    )
+                )
+            }
+        )
+    }
+
     override fun signIn(
         username: String?,
         password: String?,

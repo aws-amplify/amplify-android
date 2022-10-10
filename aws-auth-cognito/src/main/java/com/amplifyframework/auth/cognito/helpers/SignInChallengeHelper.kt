@@ -85,12 +85,8 @@ object SignInChallengeHelper {
                     AuthChallenge(challengeNameType.value, username, session, challengeParameters)
                 SignInEvent(SignInEvent.EventType.ReceivedChallenge(challenge))
             }
-
-            challengeNameType is ChallengeNameType.DevicePasswordVerifier -> {
-                DeviceSRPSignInEvent(DeviceSRPSignInEvent.EventType.RespondDeviceSRPChallenge(challengeParameters))
-            }
             challengeNameType is ChallengeNameType.DeviceSrpAuth -> {
-                DeviceSRPSignInEvent(DeviceSRPSignInEvent.EventType.RespondDevicePasswordVerifier(challengeParameters))
+                DeviceSRPSignInEvent(DeviceSRPSignInEvent.EventType.RespondDeviceSRPChallenge(challengeParameters))
             }
             else -> SignInEvent(SignInEvent.EventType.ThrowError(Exception("Response did not contain sign in info.")))
         }

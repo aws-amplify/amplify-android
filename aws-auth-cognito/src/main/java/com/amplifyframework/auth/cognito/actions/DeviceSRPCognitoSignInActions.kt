@@ -51,6 +51,7 @@ object DeviceSRPCognitoSignInActions : DeviceSRPSignInActions {
                     srpHelper = SRPHelper("DEVICE_SECRET")
 
                     val username = params.getValue(KEY_USERNAME)
+                    val deviceKey = params.getValue(KEY_DEVICE_KEY)
                     val encodedContextData = userContextDataProvider?.getEncodedContextData(username)
 
                     val deviceCredentials = credentialStoreClient.loadCredentials(CredentialType.Device(username))
@@ -71,15 +72,7 @@ object DeviceSRPCognitoSignInActions : DeviceSRPSignInActions {
                             }
                         )
 
-                        // TODO: next step is always device password verifier?
-                        SignInChallengeHelper.evaluateNextStep(
-                            username = username,
-                            signInMethod = SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH),
-                            authenticationResult = respondToAuthChallenge.authenticationResult,
-                            challengeNameType = respondToAuthChallenge.challengeName,
-                            challengeParameters = respondToAuthChallenge.challengeParameters,
-                            session = respondToAuthChallenge.session,
-                        )
+                        DeviceSRPSignInEvent(DeviceSRPSignInEvent.EventType.RespondDevicePasswordVerifier(respondToAuthChallenge.challengeParameters))
                     } ?: throw InvalidUserPoolConfigurationException()
                 } ?: throw UnknownException("There was a problem while signing you in")
             } catch (e: Exception) {
@@ -106,7 +99,7 @@ object DeviceSRPCognitoSignInActions : DeviceSRPSignInActions {
                     val deviceKey = params.getValue(KEY_DEVICE_KEY)
                     val encodedContextData = userContextDataProvider?.getEncodedContextData(username)
 
-                    srpHelper.setUserPoolParams("STUB_DEVICE_KEY", "STUB_DEVICE_GROUP")
+                    srpHelper.setUserPoolParams(deviceKey, "STUB_DEVICE_GROUP")
 
                     cognitoAuthService.cognitoIdentityProviderClient?.let {
                         val respondToAuthChallenge = it.respondToAuthChallenge(

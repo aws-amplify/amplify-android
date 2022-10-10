@@ -47,6 +47,7 @@ object SRPCognitoActions : SRPActions {
     private const val KEY_USERNAME = "USERNAME"
     private const val KEY_DEVICE_KEY = "DEVICE_KEY"
     private const val KEY_CHALLENGE_NAME = "CHALLENGE_NAME"
+
     override fun initiateSRPAuthAction(event: SRPEvent.EventType.InitiateSRP) =
         Action<AuthEnvironment>("InitSRPAuth") { id, dispatcher ->
             logger.verbose("$id Starting execution")

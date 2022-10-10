@@ -23,6 +23,8 @@ import java.util.UUID
  * A utility class for device operations.
  */
 object CognitoDeviceHelper {
+    const val SALT_LENGTH_BITS = 128
+
     /**
      * Generates SRP verification parameters for device verification.
      *
@@ -32,7 +34,7 @@ object CognitoDeviceHelper {
      */
     fun generateVerificationParameters(deviceKey: String, deviceGroup: String): Map<String, String> {
         val deviceSecret = UUID.randomUUID().toString()
-        val salt = BigInteger(128, SecureRandom())
+        val salt = BigInteger(SALT_LENGTH_BITS, SecureRandom())
 
         val srpHelper = SRPHelper(deviceSecret)
         srpHelper.setUserPoolParams(deviceKey, deviceGroup)
