@@ -48,7 +48,7 @@ sealed class AWSCognitoAuthSignOutResult : AuthSignOutResult() {
      * Indicates a failed sign out that did not complete. The user will remain signed in
      * @param error that occurred during sign out
      */
-    data class FailedSignOut(val error: AuthException) : AWSCognitoAuthSignOutResult() {
+    data class FailedSignOut internal constructor(val error: AuthException) : AWSCognitoAuthSignOutResult() {
 
         /**
          * Indicates if credentials have been cleared from local device
@@ -62,7 +62,7 @@ sealed class AWSCognitoAuthSignOutResult : AuthSignOutResult() {
      * @param globalSignOutError Global sign out failed. Use escape hatch with returned credentials to retry.
      * @param revokeTokenError Revoking token failed. Use escape hatch with returned token to retry.
      */
-    data class PartialSignOut(
+    data class PartialSignOut internal constructor(
         val hostedUIError: HostedUIError? = null,
         val globalSignOutError: GlobalSignOutError? = null,
         val revokeTokenError: RevokeTokenError? = null,
