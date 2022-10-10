@@ -20,7 +20,6 @@ import com.amazonaws.internal.keyvaluestore.AWSKeyValueStore
 import com.amplifyframework.statemachine.codegen.data.AWSCredentials
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
-import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.data.SignInMethod
 import com.amplifyframework.statemachine.codegen.data.SignedInData
 import java.util.Date
@@ -36,7 +35,6 @@ object CredentialStoreUtil {
             "amplify_user",
             Date(0),
             SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH),
-            DeviceMetadata.Metadata("someDeviceKey", "someDeviceGroupKey", "someSecret"),
             CognitoUserPoolTokens(
                 "idToken",
                 accessToken,

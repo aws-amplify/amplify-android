@@ -23,6 +23,7 @@ import com.amplifyframework.statemachine.StateMachineEvent
 import com.amplifyframework.statemachine.StateMachineResolver
 import com.amplifyframework.statemachine.StateResolution
 import com.amplifyframework.statemachine.codegen.actions.AuthenticationActions
+import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.data.SignedInData
 import com.amplifyframework.statemachine.codegen.data.SignedOutData
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
@@ -33,7 +34,7 @@ sealed class AuthenticationState : State {
     data class NotConfigured(val id: String = "") : AuthenticationState()
     data class Configured(val id: String = "") : AuthenticationState()
     data class SigningIn(var signInState: SignInState = SignInState.NotStarted()) : AuthenticationState()
-    data class SignedIn(val signedInData: SignedInData) : AuthenticationState()
+    data class SignedIn(val signedInData: SignedInData, val deviceMetadata: DeviceMetadata) : AuthenticationState()
     data class SigningOut(var signOutState: SignOutState = SignOutState.NotStarted()) : AuthenticationState()
     data class SignedOut(val signedOutData: SignedOutData) : AuthenticationState()
     data class FederatingToIdentityPool(val id: String = "") : AuthenticationState()
@@ -70,7 +71,7 @@ sealed class AuthenticationState : State {
                 }
                 is Configured -> when (authenticationEvent) {
                     is AuthenticationEvent.EventType.InitializedSignedIn -> StateResolution(
-                        SignedIn(authenticationEvent.signedInData)
+                        SignedIn(authenticationEvent.signedInData, authenticationEvent.deviceMetadata)
                     )
                     is AuthenticationEvent.EventType.InitializedFederated -> StateResolution(
                         FederatedToIdentityPool()
@@ -82,7 +83,7 @@ sealed class AuthenticationState : State {
                 }
                 is SigningIn -> when (authenticationEvent) {
                     is AuthenticationEvent.EventType.SignInCompleted -> StateResolution(
-                        SignedIn(authenticationEvent.signedInData)
+                        SignedIn(authenticationEvent.signedInData, authenticationEvent.deviceMetadata)
                     )
                     is AuthenticationEvent.EventType.CancelSignIn -> {
                         if (authenticationEvent.error != null) {
@@ -110,7 +111,9 @@ sealed class AuthenticationState : State {
                             StateResolution(SignedOut(signOutEvent.signedOutData))
                         }
                         authenticationEvent is AuthenticationEvent.EventType.CancelSignOut -> {
-                            StateResolution(SignedIn(authenticationEvent.signedInData))
+                            StateResolution(
+                                SignedIn(authenticationEvent.signedInData, authenticationEvent.deviceMetadata)
+                            )
                         }
                         else -> {
                             val resolution = signOutResolver.resolve(oldState.signOutState, event)
