@@ -24,7 +24,6 @@ import com.amplifyframework.analytics.pinpoint.models.AndroidAppDetails
 import com.amplifyframework.analytics.pinpoint.models.AndroidDeviceDetails
 import com.amplifyframework.analytics.pinpoint.models.SDKInfo
 import com.amplifyframework.analytics.pinpoint.targeting.TargetingClient
-import com.amplifyframework.analytics.pinpoint.targeting.notification.PinpointNotificationClient
 import com.amplifyframework.core.BuildConfig
 
 /**
@@ -57,7 +56,6 @@ internal class PinpointManager constructor(
         val androidDeviceDetails = AndroidDeviceDetails(getCarrier(context))
         targetingClient = TargetingClient(
             pinpointClient,
-            PinpointNotificationClient(),
             sharedPrefsUniqueIdService,
             sharedPrefs,
             androidAppDetails,
