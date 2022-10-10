@@ -80,8 +80,8 @@ object SignInCognitoActions : SignInActions {
         Action<AuthEnvironment>("ConfirmDevice") { id, dispatcher ->
             logger.verbose("$id Starting execution")
             val deviceMetadata = event.deviceMetadata
-            val deviceKey = deviceMetadata?.deviceKey
-            val deviceGroupKey = deviceMetadata?.deviceGroupKey
+            val deviceKey = deviceMetadata.deviceKey
+            val deviceGroupKey = deviceMetadata.deviceGroupKey
             val evt = try {
                 val deviceVerifierMap = CognitoDeviceHelper.generateVerificationParameters(
                     deviceKey,

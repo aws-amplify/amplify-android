@@ -136,8 +136,8 @@ data class AWSCredentials(
     }
 }
 
-enum class AmplifyCredentialType {
-    AMPLIFY_CREDENTIAL,
-    DEVICE_METADATA,
-    ASF_DEVICE_ID
+sealed class CredentialType {
+    object Amplify : CredentialType()
+    data class Device(val username: String?) : CredentialType()
+    object ASF : CredentialType()
 }

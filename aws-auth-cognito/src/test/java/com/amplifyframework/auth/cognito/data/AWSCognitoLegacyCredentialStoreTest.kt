@@ -133,7 +133,7 @@ class AWSCognitoLegacyCredentialStoreTest {
             )
         ).thenReturn(mockKeyValue)
 
-        `when`(mockFactory.create(mockContext, deviceDetailsCacheKey, true)).thenReturn(mockKeyValue)
+//        `when`(mockFactory.create(mockContext, deviceDetailsCacheKey, true)).thenReturn(mockKeyValue)
     }
 
     @Test
@@ -169,10 +169,11 @@ class AWSCognitoLegacyCredentialStoreTest {
         `when`(mockKeyValue.get(cachedRefreshTokenKey)).thenReturn("refreshToken")
         `when`(mockKeyValue.get(cachedTokenExpirationKey)).thenReturn("123123")
 
+        // TODO: test device metadata migration
         // Device Metadata
-        `when`(mockKeyValue.get("DeviceKey")).thenReturn("someDeviceKey")
-        `when`(mockKeyValue.get("DeviceGroupKey")).thenReturn("someDeviceGroupKey")
-        `when`(mockKeyValue.get("DeviceSecret")).thenReturn("someSecret")
+//        `when`(mockKeyValue.get("DeviceKey")).thenReturn("someDeviceKey")
+//        `when`(mockKeyValue.get("DeviceGroupKey")).thenReturn("someDeviceGroupKey")
+//        `when`(mockKeyValue.get("DeviceSecret")).thenReturn("someSecret")
 
         // AWS Creds
         `when`(mockKeyValue.get("$IDENTITY_POOL_ID.${"accessKey"}")).thenReturn("accessKeyId")

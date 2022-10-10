@@ -80,8 +80,6 @@ internal data class AuthStatesProxy(
                         is AuthState.ConfiguringAuthorization -> TODO()
                         is AuthState.Error -> TODO()
                         is AuthState.NotConfigured -> TODO()
-                        is AuthState.ValidatingCredentialsAndConfiguration -> TODO()
-                        is AuthState.WaitingForCachedCredentials -> TODO()
                     }
                 }
                 is AuthenticationState -> {

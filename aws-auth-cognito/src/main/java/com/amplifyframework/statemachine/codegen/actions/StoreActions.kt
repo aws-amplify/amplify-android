@@ -17,15 +17,14 @@ package com.amplifyframework.statemachine.codegen.actions
 
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
-import com.amplifyframework.statemachine.codegen.data.AmplifyCredentialType
+import com.amplifyframework.statemachine.codegen.data.CredentialType
 
 interface StoreActions {
     fun migrateLegacyCredentialStoreAction(): Action
-    fun clearCredentialStoreAction(amplifyCredentialType: AmplifyCredentialType, username: String?): Action
-    fun loadCredentialStoreAction(amplifyCredentialType: AmplifyCredentialType, username: String?): Action
+    fun clearCredentialStoreAction(credentialType: CredentialType): Action
+    fun loadCredentialStoreAction(credentialType: CredentialType): Action
     fun storeCredentialsAction(
-        amplifyCredentialType: AmplifyCredentialType,
-        username: String?,
+        credentialType: CredentialType,
         credentials: AmplifyCredential
     ): Action
     fun moveToIdleStateAction(): Action
