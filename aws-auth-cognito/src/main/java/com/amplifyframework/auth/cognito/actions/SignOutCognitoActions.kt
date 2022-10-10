@@ -18,6 +18,7 @@ package com.amplifyframework.auth.cognito.actions
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.GlobalSignOutRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.RevokeTokenRequest
 import com.amplifyframework.auth.cognito.AuthEnvironment
+import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidOauthConfigurationException
 import com.amplifyframework.auth.cognito.helpers.JWTParser
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.SignOutActions
@@ -34,7 +35,7 @@ object SignOutCognitoActions : SignOutActions {
         Action<AuthEnvironment>("HostedUISignOut") { id, dispatcher ->
             logger.verbose("$id Starting execution")
             try {
-                if (hostedUIClient == null) throw Exception() // TODO: More detailed exception
+                if (hostedUIClient == null) throw InvalidOauthConfigurationException()
                 hostedUIClient.launchCustomTabsSignOut(event.signOutData.browserPackage)
             } catch (e: Exception) {
                 logger.warn("Failed to sign out web ui.", e)
