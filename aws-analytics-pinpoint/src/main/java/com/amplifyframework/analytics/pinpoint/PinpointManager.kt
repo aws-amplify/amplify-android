@@ -25,6 +25,7 @@ import com.amplifyframework.analytics.pinpoint.models.AndroidDeviceDetails
 import com.amplifyframework.analytics.pinpoint.models.SDKInfo
 import com.amplifyframework.analytics.pinpoint.targeting.TargetingClient
 import com.amplifyframework.core.BuildConfig
+import com.amplifyframework.util.UserAgent.Platform
 
 /**
  * PinpointManager is the entry point to Pinpoint Analytics and Targeting.
@@ -44,7 +45,7 @@ internal class PinpointManager constructor(
     }
 
     companion object {
-        private const val SDK_NAME = "amplify-android"
+        private val SDK_NAME = Platform.ANDROID.libraryName
     }
 
     init {
