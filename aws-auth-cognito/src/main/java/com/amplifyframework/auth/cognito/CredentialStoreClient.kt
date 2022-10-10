@@ -22,15 +22,16 @@ import com.amplifyframework.logging.Logger
 import com.amplifyframework.statemachine.StateChangeListenerToken
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
+import com.amplifyframework.statemachine.codegen.data.CredentialType
 import com.amplifyframework.statemachine.codegen.events.CredentialStoreEvent
 import com.amplifyframework.statemachine.codegen.states.CredentialStoreState
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
 interface StoreClientBehavior {
-    suspend fun loadCredentials(): AmplifyCredential
-    suspend fun storeCredentials(amplifyCredential: AmplifyCredential)
-    suspend fun clearCredentials()
+    suspend fun loadCredentials(credentialType: CredentialType): AmplifyCredential
+    suspend fun storeCredentials(credentialType: CredentialType, amplifyCredential: AmplifyCredential)
+    suspend fun clearCredentials(credentialType: CredentialType)
 }
 
 class CredentialStoreClient(configuration: AuthConfiguration, context: Context, val logger: Logger) :
@@ -76,30 +77,32 @@ class CredentialStoreClient(configuration: AuthConfiguration, context: Context, 
         )
     }
 
-    override suspend fun loadCredentials(): AmplifyCredential {
+    override suspend fun loadCredentials(credentialType: CredentialType): AmplifyCredential {
         return suspendCoroutine { continuation ->
             listenForResult(
-                CredentialStoreEvent(CredentialStoreEvent.EventType.LoadCredentialStore()),
+                CredentialStoreEvent(CredentialStoreEvent.EventType.LoadCredentialStore(credentialType)),
                 { continuation.resumeWith(it) },
                 { continuation.resumeWithException(it) }
             )
         }
     }
 
-    override suspend fun storeCredentials(amplifyCredential: AmplifyCredential) {
+    override suspend fun storeCredentials(credentialType: CredentialType, amplifyCredential: AmplifyCredential) {
         return suspendCoroutine { continuation ->
             listenForResult(
-                CredentialStoreEvent(CredentialStoreEvent.EventType.StoreCredentials(amplifyCredential)),
+                CredentialStoreEvent(
+                    CredentialStoreEvent.EventType.StoreCredentials(credentialType, amplifyCredential)
+                ),
                 { continuation.resumeWith(Result.success(Unit)) },
                 { continuation.resumeWithException(it) }
             )
         }
     }
 
-    override suspend fun clearCredentials() {
+    override suspend fun clearCredentials(credentialType: CredentialType) {
         return suspendCoroutine { continuation ->
             listenForResult(
-                CredentialStoreEvent(CredentialStoreEvent.EventType.ClearCredentialStore()),
+                CredentialStoreEvent(CredentialStoreEvent.EventType.ClearCredentialStore(credentialType)),
                 { continuation.resumeWith(Result.success(Unit)) },
                 { continuation.resumeWithException(it) }
             )

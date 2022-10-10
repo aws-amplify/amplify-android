@@ -23,6 +23,9 @@ import com.amplifyframework.auth.cognito.helpers.SignInChallengeHelper
 import com.amplifyframework.auth.exceptions.UnknownException
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.DeviceSRPSignInActions
+import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
+import com.amplifyframework.statemachine.codegen.data.CredentialType
+import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.data.SignInMethod
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.DeviceSRPSignInEvent
@@ -47,6 +50,10 @@ object DeviceSRPCognitoSignInActions : DeviceSRPSignInActions {
                     val username = params.getValue(KEY_USERNAME)
                     val encodedContextData = userContextDataProvider?.getEncodedContextData(username)
 
+                    val deviceCredentials = credentialStoreClient.loadCredentials(CredentialType.Device(username))
+                    val deviceMetadata = (deviceCredentials as AmplifyCredential.DeviceData)
+                        .deviceMetadata as? DeviceMetadata.Metadata
+
                     cognitoAuthService.cognitoIdentityProviderClient?.let {
                         val respondToAuthChallenge = it.respondToAuthChallenge(
                             RespondToAuthChallengeRequest.invoke {
@@ -54,7 +61,7 @@ object DeviceSRPCognitoSignInActions : DeviceSRPSignInActions {
                                 clientId = configuration.userPool?.appClient
                                 challengeResponses = mapOf(
                                     KEY_USERNAME to username,
-                                    KEY_DEVICE_KEY to params.getValue(KEY_DEVICE_KEY),
+                                    KEY_DEVICE_KEY to deviceMetadata?.deviceKey!!,
                                     KEY_SRP_A to srpHelper.getPublicA()
                                 )
                                 encodedContextData?.let { userContextData { encodedData = it } }

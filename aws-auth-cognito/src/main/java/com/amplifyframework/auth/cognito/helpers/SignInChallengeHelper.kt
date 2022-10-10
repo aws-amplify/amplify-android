@@ -64,8 +64,8 @@ object SignInChallengeHelper {
                         SignInEvent(
                             SignInEvent.EventType.ConfirmDevice(
                                 DeviceMetadata.Metadata(
-                                    metadata.deviceKey,
-                                    metadata.deviceGroupKey
+                                    metadata.deviceKey ?: "",
+                                    metadata.deviceGroupKey ?: ""
                                 ),
                                 signedInData
                             )

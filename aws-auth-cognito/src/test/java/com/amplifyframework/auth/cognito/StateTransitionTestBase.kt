@@ -35,10 +35,10 @@ import com.amplifyframework.statemachine.codegen.actions.SignOutActions
 import com.amplifyframework.statemachine.codegen.actions.StoreActions
 import com.amplifyframework.statemachine.codegen.data.AWSCredentials
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
-import com.amplifyframework.statemachine.codegen.data.AmplifyCredentialType
 import com.amplifyframework.statemachine.codegen.data.AuthChallenge
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
+import com.amplifyframework.statemachine.codegen.data.CredentialType
 import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.data.LoginsMapProvider
 import com.amplifyframework.statemachine.codegen.data.SignInData
@@ -160,7 +160,7 @@ open class StateTransitionTestBase {
                     dispatcher.send(
                         CredentialStoreEvent(
                             CredentialStoreEvent.EventType.LoadCredentialStore(
-                                AmplifyCredentialType.AMPLIFY_CREDENTIAL,
+                                CredentialType.AMPLIFY_CREDENTIAL,
                                 null
                             )
                         )
@@ -177,7 +177,7 @@ open class StateTransitionTestBase {
 //                }
 //            )
 
-        Mockito.`when`(credentialStoreActions.loadCredentialStoreAction(AmplifyCredentialType.AMPLIFY_CREDENTIAL, null))
+        Mockito.`when`(credentialStoreActions.loadCredentialStoreAction(CredentialType.AMPLIFY_CREDENTIAL, null))
             .thenReturn(
                 Action { dispatcher, _ ->
                     dispatcher.send(
@@ -188,7 +188,7 @@ open class StateTransitionTestBase {
 
         Mockito.`when`(
             credentialStoreActions.storeCredentialsAction(
-                AmplifyCredentialType.AMPLIFY_CREDENTIAL,
+                CredentialType.AMPLIFY_CREDENTIAL,
                 MockitoHelper.anyObject(),
                 MockitoHelper.anyObject()
             )

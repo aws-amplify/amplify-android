@@ -17,7 +17,7 @@ package com.amplifyframework.auth.cognito
 
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.StateChangeListenerToken
-import com.amplifyframework.statemachine.codegen.data.AmplifyCredentialType
+import com.amplifyframework.statemachine.codegen.data.CredentialType
 import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.data.SignInData
 import com.amplifyframework.statemachine.codegen.data.SignOutData
@@ -128,7 +128,7 @@ class StateTransitionTests : StateTransitionTestBase() {
                     is AuthState.WaitingForCachedCredentials -> storeStateMachine.send(
                         CredentialStoreEvent(
                             CredentialStoreEvent.EventType.LoadCredentialStore(
-                                AmplifyCredentialType.AMPLIFY_CREDENTIAL,
+                                CredentialType.AMPLIFY_CREDENTIAL,
                                 null
                             )
                         )
@@ -139,7 +139,7 @@ class StateTransitionTests : StateTransitionTestBase() {
                             storeStateMachine.send(
                                 CredentialStoreEvent(
                                     CredentialStoreEvent.EventType.StoreCredentials(
-                                        AmplifyCredentialType.AMPLIFY_CREDENTIAL,
+                                        CredentialType.AMPLIFY_CREDENTIAL,
                                         null,
                                         authZState.amplifyCredential
                                     )

@@ -212,8 +212,8 @@ internal class AWSCognitoLegacyCredentialStore(
         val deviceGroupKey = deviceKeyValue.get(DEVICE_GROUP_KEY)
         val deviceSecretKey = deviceKeyValue.get(DEVICE_SECRET_KEY)
 
-        return if (deviceKey == null && deviceGroupKey == null) DeviceMetadata.Empty
-        else DeviceMetadata.Metadata(deviceKey, deviceGroupKey, deviceSecretKey)
+        return if (deviceKey.isNullOrEmpty() && deviceGroupKey.isNullOrEmpty()) DeviceMetadata.Empty
+        else DeviceMetadata.Metadata(deviceKey ?: "", deviceGroupKey ?: "", deviceSecretKey)
     }
 
     private fun retrieveCognitoUserPoolTokens(keys: Map<String, String>): CognitoUserPoolTokens? {

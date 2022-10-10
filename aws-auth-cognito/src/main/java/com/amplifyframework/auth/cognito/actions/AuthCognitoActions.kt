@@ -19,6 +19,7 @@ import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.AuthActions
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
+import com.amplifyframework.statemachine.codegen.data.CredentialType
 import com.amplifyframework.statemachine.codegen.events.AuthEvent
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
@@ -27,7 +28,7 @@ object AuthCognitoActions : AuthActions {
     override fun initializeAuthConfigurationAction(event: AuthEvent.EventType.ConfigureAuth) =
         Action<AuthEnvironment>("InitAuthConfig") { id, dispatcher ->
             logger.verbose("$id Starting execution")
-            val storedCredentials = credentialStoreClient.loadCredentials()
+            val storedCredentials = credentialStoreClient.loadCredentials(CredentialType.Amplify)
             val evt = configuration.userPool?.run {
                 AuthEvent(AuthEvent.EventType.ConfigureAuthentication(configuration, storedCredentials))
             } ?: AuthEvent(AuthEvent.EventType.ConfigureAuthorization(configuration, storedCredentials))
