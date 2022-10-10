@@ -50,8 +50,17 @@ internal class AWSRequestSignerInterceptor(
             return chain.proceed(request)
         }
 
-        // OkHttpRequest -> Signed AWSRequest
-        val awsRequest = signRequest(request)
+        val awsRequest = try {
+            // OkHttpRequest -> Signed AWSRequest
+            signRequest(request)
+        } catch (e: SignCredentialsException) {
+            return Response.Builder()
+                .code(401)
+                .protocol(okhttp3.Protocol.HTTP_1_1)
+                .message("Failed to sign credentials from CredentialsProvider")
+                .request(request)
+                .build()
+        }
 
         // add signed parameters and headers to original request
         val signedRequest = request.newBuilder()
@@ -79,6 +88,7 @@ internal class AWSRequestSignerInterceptor(
         return this.url(urlBuilder.build())
     }
 
+    @Throws(SignCredentialsException::class)
     private fun signRequest(request: Request): HttpRequest {
         val url = request.url
         val headers: AwsHeaders = AwsHeaders.invoke {
@@ -112,10 +122,14 @@ internal class AWSRequestSignerInterceptor(
         val method = HttpMethod.parse(request.method)
         val awsRequest = HttpRequest(method, httpUrl, headers, body2)
 
-        return runBlocking {
-            // sign request with AWS Signer for the underlying service
-            DefaultAwsSigner.sign(awsRequest, signingConfig)
-        }.output
+        try {
+            return runBlocking {
+                // sign request with AWS Signer for the underlying service
+                DefaultAwsSigner.sign(awsRequest, signingConfig)
+            }.output
+        } catch (e: Exception) {
+            throw SignCredentialsException()
+        }
     }
 
     private fun getBytes(body: RequestBody?): ByteArray {
@@ -142,4 +156,6 @@ internal class AWSRequestSignerInterceptor(
             )
         }
     }
+
+    class SignCredentialsException : IllegalStateException()
 }
