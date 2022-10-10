@@ -770,7 +770,7 @@ internal class RealAWSCognitoAuthPlugin(
                         _fetchAuthSession(onSuccess, onError)
                     } else onSuccess.accept(credential.getCognitoSession())
                 }
-                else -> onError.accept(InvalidStateException())
+                else -> Unit
             }
         }
     }
