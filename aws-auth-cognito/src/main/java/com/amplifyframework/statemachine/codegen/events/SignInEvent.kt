@@ -48,6 +48,11 @@ class SignInEvent(val eventType: EventType, override val time: Date? = null) : S
 
         data class InitiateHostedUISignIn(val hostedUISignInData: SignInData.HostedUISignInData) : EventType()
         data class SignedIn(val id: String = "") : EventType()
+        data class InitiateSignInWithDeviceSRP(
+            val username: String,
+            val metadata: Map<String, String>
+        ) : EventType()
+
         data class ConfirmDevice(
             val deviceMetadata: DeviceMetadata.Metadata,
             val signedInData: SignedInData

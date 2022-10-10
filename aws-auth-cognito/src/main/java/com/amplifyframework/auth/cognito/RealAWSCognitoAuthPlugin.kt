@@ -521,10 +521,10 @@ internal class RealAWSCognitoAuthPlugin(
                         )
                         onSuccess.accept(authSignInResult)
                     }
-                    challengeState is SignInChallengeState.Error -> {
+                    signInState is SignInState.Error -> {
                         token?.let(authStateMachine::cancel)
                         onError.accept(
-                            CognitoAuthExceptionConverter.lookup(challengeState.exception, "Confirm Sign in failed.")
+                            CognitoAuthExceptionConverter.lookup(signInState.exception, "Confirm Sign in failed.")
                         )
                     }
                 }

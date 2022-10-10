@@ -92,7 +92,10 @@ class SRPHelper(private val password: String) {
 
     fun setUserPoolParams(userId: String, userPoolName: String) {
         this.userId = userId
-        this.userPoolName = userPoolName.split(Regex("_"), 2)[1]
+        this.userPoolName = userPoolName
+        if (userPoolName.contains("_")) {
+            this.userPoolName = userPoolName.split(Regex("_"), 2)[1]
+        }
     }
 
     @TestOnly
