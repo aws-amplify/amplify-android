@@ -53,11 +53,11 @@ object SignInCognitoActions : SignInActions {
 
     override fun startMigrationAuthAction(event: SignInEvent.EventType.InitiateMigrateAuth) =
         Action<AuthEnvironment>("StartMigrationAuth") { id, dispatcher ->
-            logger?.verbose("$id Starting execution")
+            logger.verbose("$id Starting execution")
             val evt = SignInEvent(
                 SignInEvent.EventType.InitiateMigrateAuth(event.username, event.password, event.metadata)
             )
-            logger?.verbose("$id Sending event ${evt.type}")
+            logger.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
         }
 

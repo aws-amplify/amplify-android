@@ -39,8 +39,8 @@ object CognitoDeviceHelper {
         val verifier = srpHelper.computePasswordVerifier(salt)
 
         val params = mutableMapOf<String, String>()
-        params["salt"] = String(android.util.Base64.decode(salt.toByteArray(), android.util.Base64.NO_WRAP))
-        params["verifier"] = String(android.util.Base64.decode(verifier.toByteArray(), android.util.Base64.NO_WRAP))
+        params["salt"] = android.util.Base64.encodeToString(salt.toByteArray(), android.util.Base64.NO_WRAP)
+        params["verifier"] = android.util.Base64.encodeToString(verifier.toByteArray(), android.util.Base64.NO_WRAP)
         params["secret"] = deviceSecret
         return params
     }
