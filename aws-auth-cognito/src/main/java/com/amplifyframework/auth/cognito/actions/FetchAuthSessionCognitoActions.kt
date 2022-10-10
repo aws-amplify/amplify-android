@@ -21,8 +21,10 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.initiateAuth
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AuthFlowType
 import aws.smithy.kotlin.runtime.time.Instant
 import com.amplifyframework.auth.cognito.AuthEnvironment
+import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidOauthConfigurationException
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.auth.cognito.helpers.JWTParser
+import com.amplifyframework.auth.exceptions.UnknownException
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.FetchAuthSessionActions
 import com.amplifyframework.statemachine.codegen.data.AWSCredentials
@@ -53,11 +55,13 @@ object FetchAuthSessionCognitoActions : FetchAuthSessionActions {
                 )
                 tokens.refreshToken?.let { authParameters[KEY_REFRESH_TOKEN] = it }
                 secretHash?.let { authParameters[KEY_SECRET_HASH] = it }
+                val encodedContextData = userContextDataProvider?.getEncodedContextData(signedInData.username)
 
                 val response = cognitoAuthService.cognitoIdentityProviderClient?.initiateAuth {
                     authFlow = AuthFlowType.RefreshToken
                     clientId = configuration.userPool?.appClient
                     this.authParameters = authParameters
+                    encodedContextData?.let { userContextData { encodedData = it } }
                 }
 
                 val expiresIn = response?.authenticationResult?.expiresIn?.toLong() ?: 0
@@ -93,7 +97,8 @@ object FetchAuthSessionCognitoActions : FetchAuthSessionActions {
             logger.verbose("$id Starting execution")
             val evt = try {
                 val refreshToken = signedInData.cognitoUserPoolTokens.refreshToken
-                if (hostedUIClient == null || refreshToken == null) throw Exception() // TODO: Better Exception
+                if (hostedUIClient == null) throw InvalidOauthConfigurationException()
+                if (refreshToken == null) throw UnknownException("Unable to refresh token due to missing refreshToken.")
 
                 val refreshedUserPoolTokens = hostedUIClient.fetchRefreshedToken(
                     signedInData.cognitoUserPoolTokens.refreshToken

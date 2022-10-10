@@ -12,16 +12,12 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
+package com.amplifyframework.auth.cognito.exceptions.service
 
-package com.amplifyframework.auth.cognito.exceptions
+import com.amplifyframework.auth.exceptions.ServiceException
 
-import com.amplifyframework.auth.exceptions.ConfigurationException
-
-internal object AuthExceptionHelper {
-
-    fun createCognitoNotConfiguredException() = ConfigurationException(
-        message = "Auth not configured, cannot process the request.",
-        recoverySuggestion = "Cognito User Pool not configured. " +
-            "Please check amplifyconfiguration.json file."
-    )
-}
+/**
+ * Could not perform the action because the token was unable to be parsed
+ */
+open class ParseTokenException :
+    ServiceException("Failed to parse token", TODO_RECOVERY_SUGGESTION)

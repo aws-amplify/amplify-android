@@ -44,12 +44,13 @@ internal class TransferDBHelper(private val context: Context) :
 
         // This represents the latest database version.
         // Update this when the database is being upgraded.
-        private const val DATABASE_VERSION = 7
+        private const val DATABASE_VERSION = 8
         private const val BASE_PATH = "transfers"
         private const val TRANSFERS = 10
         private const val TRANSFER_ID = 20
         private const val TRANSFER_PART = 30
         private const val TRANSFER_STATE = 40
+        private const val TRANSFER_RECORD_ID = 50
     }
 
     init {
@@ -69,6 +70,8 @@ internal class TransferDBHelper(private val context: Context) :
 
         // The Uri of TRANSFER_STATE is for records with a specific state.
         uriMatcher.addURI(authority, "$BASE_PATH/state/*", TRANSFER_STATE)
+
+        uriMatcher.addURI(authority, "$BASE_PATH/transferId/*", TRANSFER_RECORD_ID)
     }
 
     override fun onCreate(database: SQLiteDatabase) {
@@ -136,6 +139,11 @@ internal class TransferDBHelper(private val context: Context) :
             TRANSFER_STATE -> {
                 queryBuilder.appendWhere(TransferTable.COLUMN_STATE + "=")
                 queryBuilder.appendWhereEscapeString(uri.lastPathSegment!!)
+            }
+            TRANSFER_RECORD_ID -> {
+                queryBuilder.appendWhere(
+                    "${TransferTable.COLUMN_TRANSFER_ID}='${uri.lastPathSegment}'"
+                )
             }
             else -> throw java.lang.IllegalArgumentException("Unknown URI: $uri")
         }
@@ -219,13 +227,13 @@ internal class TransferDBHelper(private val context: Context) :
                 selection,
                 selectionArgs
             )
-            TRANSFER_ID, TRANSFER_PART -> {
-                val id = uri.lastPathSegment
-                val columnName = uriType.takeIf { uriType == TRANSFER_PART }?.let {
-                    TransferTable.COLUMN_MAIN_UPLOAD_ID
-                } ?: let {
-                    TransferTable.COLUMN_ID
+            TRANSFER_ID, TRANSFER_PART, TRANSFER_RECORD_ID -> {
+                val columnName = when (uriType) {
+                    TRANSFER_PART -> { TransferTable.COLUMN_MAIN_UPLOAD_ID }
+                    TRANSFER_RECORD_ID -> { TransferTable.COLUMN_TRANSFER_ID }
+                    else -> { TransferTable.COLUMN_ID }
                 }
+                val id = uri.lastPathSegment
                 if (TextUtils.isEmpty(selection)) {
                     database.delete(
                         TransferTable.TABLE_TRANSFER,

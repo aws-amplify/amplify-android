@@ -12,15 +12,10 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package com.amplifyframework.auth.cognito.exceptions.configuration
 
-import com.amplifyframework.auth.exceptions.ConfigurationException
+package com.amplifyframework.storage.result;
 
 /**
- * Could not perform the action because the user pool is not configured or
- * is configured incorrectly.
+ * Base operation type for all transfer behavior on the Storage category.
  */
-class InvalidUserPoolConfigurationException : ConfigurationException(
-    message = "The user pool configuration is missing or invalid.",
-    recoverySuggestion = "Please check the user pool configuration in your amplifyconfiguration.json file."
-)
+public abstract class StorageTransferResult {}
