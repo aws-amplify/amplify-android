@@ -15,10 +15,12 @@
 package com.amplifyframework.storage.s3.transfer
 
 import android.database.Cursor
+import com.amplifyframework.storage.TransferState
 import com.amplifyframework.storage.s3.utils.JsonUtils
 
 data class TransferRecord(
     var id: Int,
+    var transferId: String,
     var mainUploadId: Int = 0,
     var isRequesterPays: Int = 0,
     var isMultipart: Int = 0,
@@ -63,7 +65,8 @@ data class TransferRecord(
         @JvmStatic
         fun updateFromDB(c: Cursor): TransferRecord {
             val id = c.getInt(c.getColumnIndexOrThrow(TransferTable.COLUMN_ID))
-            return TransferRecord(id).apply {
+            val transferId = c.getString(c.getColumnIndexOrThrow(TransferTable.COLUMN_TRANSFER_ID))
+            return TransferRecord(id, transferId).apply {
                 this.mainUploadId =
                     c.getInt(c.getColumnIndexOrThrow(TransferTable.COLUMN_MAIN_UPLOAD_ID))
                 this.type =

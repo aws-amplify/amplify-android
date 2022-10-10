@@ -21,7 +21,6 @@ import aws.sdk.kotlin.services.pinpoint.model.EndpointDemographic
 import aws.sdk.kotlin.services.pinpoint.model.EndpointLocation
 import aws.sdk.kotlin.services.pinpoint.model.EndpointRequest
 import aws.sdk.kotlin.services.pinpoint.model.EndpointUser
-import aws.sdk.kotlin.services.pinpoint.model.PinpointException
 import aws.sdk.kotlin.services.pinpoint.model.UpdateEndpointRequest
 import com.amplifyframework.analytics.pinpoint.internal.core.idresolver.SharedPrefsUniqueIdService
 import com.amplifyframework.analytics.pinpoint.internal.core.util.millisToIsoDate
@@ -154,9 +153,10 @@ internal class TargetingClient(
         coroutineScope.launch {
             try {
                 LOG.info("Updating EndpointProfile.")
+                // This could fail if credentials are no longer stored due to sign out before this call is processed
                 pinpointClient.updateEndpoint(updateEndpointRequest)
                 LOG.info("EndpointProfile updated successfully.")
-            } catch (e: PinpointException) {
+            } catch (e: Exception) {
                 LOG.error("PinpointException occurred during endpoint update:", e)
             }
         }
