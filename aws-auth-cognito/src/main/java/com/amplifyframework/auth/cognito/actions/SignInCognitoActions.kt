@@ -102,7 +102,7 @@ object SignInCognitoActions : SignInActions {
 
                 val updatedDeviceMetadata = deviceMetadata.copy(deviceSecret = deviceVerifierMap["secret"])
                 credentialStoreClient.storeCredentials(
-                    CredentialType.Device(event.username),
+                    CredentialType.Device(event.signedInData.username),
                     AmplifyCredential.DeviceData(updatedDeviceMetadata)
                 )
 

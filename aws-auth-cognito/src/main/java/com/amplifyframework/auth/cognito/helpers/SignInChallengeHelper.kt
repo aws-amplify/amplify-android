@@ -63,7 +63,6 @@ object SignInChallengeHelper {
                     it.newDeviceMetadata?.let { metadata ->
                         SignInEvent(
                             SignInEvent.EventType.ConfirmDevice(
-                                username,
                                 DeviceMetadata.Metadata(
                                     metadata.deviceKey ?: "",
                                     metadata.deviceGroupKey ?: ""
