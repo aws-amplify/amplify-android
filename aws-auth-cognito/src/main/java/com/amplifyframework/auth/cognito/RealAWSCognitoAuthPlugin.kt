@@ -405,12 +405,14 @@ internal class RealAWSCognitoAuthPlugin(
                             )
                         )
                     )
-                    credentialStoreStateMachine.listen(
+                    var token: StateChangeListenerToken? = null
+                    token = credentialStoreStateMachine.listen(
                         { storeState ->
                             logger.verbose("Credential Store State Change: $storeState")
                             when (storeState) {
                                 is CredentialStoreState.Success -> {
                                     // assign SRP as default if no options provided
+                                    token?.let(authStateMachine::cancel)
                                     val signInOptions =
                                         options as? AWSCognitoAuthSignInOptions ?: AWSCognitoAuthSignInOptions
                                             .builder().authFlowType(configuration.authFlowType).build()
@@ -430,9 +432,12 @@ internal class RealAWSCognitoAuthPlugin(
                                         onError
                                     )
                                 }
-                                is CredentialStoreState.Error -> authStateMachine.send(
-                                    AuthEvent(AuthEvent.EventType.CachedCredentialsFailed)
-                                )
+                                is CredentialStoreState.Error -> {
+                                    token?.let(authStateMachine::cancel)
+                                    authStateMachine.send(
+                                        AuthEvent(AuthEvent.EventType.CachedCredentialsFailed)
+                                    )
+                                }
                                 else -> Unit
                             }
                         },

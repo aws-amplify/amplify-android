@@ -53,7 +53,9 @@ internal data class AuthStatesProxy(
     internal fun <T> toRealAuthState(): T {
         return when (type) {
             "AuthState.Configured" -> AuthState.Configured(authNState, authZState) as T
-            "AuthenticationState.SignedIn" -> signedInData?.let { AuthenticationState.SignedIn(it, DeviceMetadata.Empty) } as T
+            "AuthenticationState.SignedIn" -> signedInData?.let {
+                AuthenticationState.SignedIn(it, DeviceMetadata.Empty)
+            } as T
             "AuthorizationState.SessionEstablished" -> amplifyCredential?.let {
                 AuthorizationState.SessionEstablished(it)
             } as T
