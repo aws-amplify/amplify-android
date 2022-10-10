@@ -13,15 +13,14 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.storage.s3.transfer
+package com.amplifyframework.storage
 
 /**
  * The current state of a transfer. A transfer is initially in WAITING state
  * when added. It will turn into IN_PROGRESS once it starts. Customers can pause
  * or cancel the transfer when needed and turns it into PAUSED or CANCELED state
  * respectively. Finally the transfer will either succeed as COMPLETED or fail
- * as FAILED. WAITING_FOR_NETWORK state may kick in for an active transfer when
- * network is lost. The other enum values are internal use only.
+ * as FAILED. The other enum values are internal use only.
  */
 enum class TransferState {
     /**
@@ -63,12 +62,6 @@ enum class TransferState {
     FAILED,
 
     /**
-     * This state represents a transfer that is currently on hold, waiting for
-     * the network to become available
-     */
-    WAITING_FOR_NETWORK,
-
-    /**
      * This state represents a transfer that is a completed part of a multi-part
      * upload. This state is primarily used internally and there should be no
      * need to use this state.
@@ -90,14 +83,6 @@ enum class TransferState {
      * need to use this state.
      */
     PENDING_PAUSE,
-
-    /**
-     * This state represents a transfer that has been requested to pause by the
-     * client because the network has been loss, but the service processing
-     * transfers has not yet fulfilled this request. This state is primarily
-     * used internally and there should be no need to use this state.
-     */
-    PENDING_NETWORK_DISCONNECT,
 
     /**
      * This is an internal value used to detect if the current transfer is in an

@@ -47,7 +47,9 @@ open class TransferDBTest {
 
     @Test
     fun testInsertSingleTransferRecord() {
+        val transferId = UUID.randomUUID().toString()
         val uri = transferDB.insertSingleTransferRecord(
+            transferId,
             TransferType.UPLOAD,
             bucketName,
             fileKey,
@@ -57,6 +59,7 @@ open class TransferDBTest {
         )
 
         getInsertedRecord(uri)?.run {
+            Assert.assertEquals(transferId, this.transferId)
             Assert.assertEquals(TransferType.UPLOAD, this.type)
             Assert.assertEquals(tempFile, File(this.file!!))
             Assert.assertEquals(fileKey, this.key)
@@ -68,6 +71,7 @@ open class TransferDBTest {
     fun testMultiPartUploadRecord() {
         val uploadID = UUID.randomUUID().toString()
         val uri = transferDB.insertMultipartUploadRecord(
+            uploadID,
             bucketName,
             fileKey,
             tempFile,
@@ -92,6 +96,7 @@ open class TransferDBTest {
         val key = UUID.randomUUID().toString()
         val contentValues = arrayOfNulls<ContentValues>(3)
         contentValues[0] = transferDB.generateContentValuesForMultiPartUpload(
+            key,
             bucketName,
             key,
             tempFile,
@@ -104,6 +109,7 @@ open class TransferDBTest {
             null
         )
         contentValues[1] = transferDB.generateContentValuesForMultiPartUpload(
+            key,
             bucketName,
             key,
             tempFile,
@@ -116,6 +122,7 @@ open class TransferDBTest {
             null
         )
         contentValues[2] = transferDB.generateContentValuesForMultiPartUpload(
+            key,
             bucketName,
             key,
             tempFile,

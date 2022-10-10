@@ -15,6 +15,8 @@
 
 package com.amplifyframework.storage.s3.transfer
 
+import com.amplifyframework.storage.TransferState
+
 /**
  * Observer to observe update for a transfer
  **/
@@ -25,9 +27,9 @@ internal data class TransferObserver @JvmOverloads constructor(
     val key: String? = null,
     val filePath: String? = null,
     private val listener: TransferListener? = null,
+    var transferState: TransferState = TransferState.WAITING
 ) {
 
-    var transferState = TransferState.WAITING
     var bytesTransferred: Long = 0L
     var totalBytes: Long = 0L
     private var transferStatusListener: TransferStatusListener?

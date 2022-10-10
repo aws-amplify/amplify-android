@@ -19,7 +19,7 @@ import java.util.TreeMap
  */
 data class ObjectMetadata @JvmOverloads constructor(
     var userMetadata: Map<String, String> = TreeMap(String.CASE_INSENSITIVE_ORDER),
-    var metaData: Map<String, Any> = TreeMap(String.CASE_INSENSITIVE_ORDER),
+    var metaData: MutableMap<String, Any?> = TreeMap(String.CASE_INSENSITIVE_ORDER),
     var httpExpiresDate: Date? = null,
     var expirationTime: Date? = null,
     var expirationTimeRuleId: String? = null,
