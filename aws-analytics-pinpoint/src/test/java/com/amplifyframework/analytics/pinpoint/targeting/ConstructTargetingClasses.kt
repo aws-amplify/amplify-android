@@ -24,7 +24,6 @@ import com.amplifyframework.analytics.pinpoint.internal.core.idresolver.SharedPr
 import com.amplifyframework.analytics.pinpoint.models.AndroidAppDetails
 import com.amplifyframework.analytics.pinpoint.models.AndroidDeviceDetails
 import com.amplifyframework.analytics.pinpoint.targeting.endpointProfile.EndpointProfile
-import com.amplifyframework.analytics.pinpoint.targeting.notification.PinpointNotificationClient
 import io.mockk.every
 import io.mockk.mockk
 import java.util.Locale
@@ -47,7 +46,6 @@ internal val locale = Locale.US
 internal val country = "en_US"
 internal val effectiveDate = 0L
 
-internal val pinpointNotificationClient = PinpointNotificationClient()
 internal val idService = mockk<SharedPrefsUniqueIdService>()
 internal val appDetails = AndroidAppDetails(appID, appTitle, packageName, versionCode, versionName)
 internal val deviceDetails = AndroidDeviceDetails(carrier = carrier, locale = locale)
@@ -62,7 +60,6 @@ internal fun setup() {
 internal fun constructEndpointProfile(): EndpointProfile {
     setup()
     val endpointProfile = EndpointProfile(
-        pinpointNotificationClient,
         idService,
         appDetails,
         deviceDetails,
@@ -83,7 +80,6 @@ internal fun constructTargetingClient(): TargetingClient {
     val prefs = constructSharedPreferences()
     return TargetingClient(
         pinpointClient,
-        pinpointNotificationClient,
         idService,
         prefs,
         appDetails,
