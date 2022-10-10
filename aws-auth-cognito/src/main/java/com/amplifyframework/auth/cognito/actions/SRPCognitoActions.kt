@@ -153,7 +153,9 @@ object SRPCognitoActions : SRPActions {
                 val srpB = params.getValue(KEY_SRP_B)
                 val username = params.getValue(KEY_USERNAME)
                 val userId = params.getValue(KEY_USER_ID_FOR_SRP)
+
                 srpHelper.setUserPoolParams(userId, configuration.userPool?.poolId!!)
+
                 val secretHash = AuthHelper.getSecretHash(
                     username,
                     configuration.userPool.appClient,

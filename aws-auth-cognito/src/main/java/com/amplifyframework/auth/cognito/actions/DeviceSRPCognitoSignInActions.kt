@@ -48,15 +48,14 @@ object DeviceSRPCognitoSignInActions : DeviceSRPSignInActions {
             logger.verbose("$id Starting execution")
             val evt = try {
                 event.challengeParameters?.let { params ->
-                    srpHelper = SRPHelper("DEVICE_SECRET")
-
                     val username = params.getValue(KEY_USERNAME)
-                    val deviceKey = params.getValue(KEY_DEVICE_KEY)
                     val encodedContextData = userContextDataProvider?.getEncodedContextData(username)
 
                     val deviceCredentials = credentialStoreClient.loadCredentials(CredentialType.Device(username))
                     val deviceMetadata = (deviceCredentials as AmplifyCredential.DeviceData)
                         .deviceMetadata as? DeviceMetadata.Metadata
+
+                    srpHelper = SRPHelper(deviceMetadata?.deviceSecret ?: "")
 
                     cognitoAuthService.cognitoIdentityProviderClient?.let {
                         val respondToAuthChallenge = it.respondToAuthChallenge(
@@ -65,14 +64,18 @@ object DeviceSRPCognitoSignInActions : DeviceSRPSignInActions {
                                 clientId = configuration.userPool?.appClient
                                 challengeResponses = mapOf(
                                     KEY_USERNAME to username,
-                                    KEY_DEVICE_KEY to deviceMetadata?.deviceKey!!,
+                                    KEY_DEVICE_KEY to (deviceMetadata?.deviceKey ?: ""),
                                     KEY_SRP_A to srpHelper.getPublicA()
                                 )
                                 encodedContextData?.let { userContextData { encodedData = it } }
                             }
                         )
 
-                        DeviceSRPSignInEvent(DeviceSRPSignInEvent.EventType.RespondDevicePasswordVerifier(respondToAuthChallenge.challengeParameters))
+                        DeviceSRPSignInEvent(
+                            DeviceSRPSignInEvent.EventType.RespondDevicePasswordVerifier(
+                                respondToAuthChallenge.challengeParameters
+                            )
+                        )
                     } ?: throw InvalidUserPoolConfigurationException()
                 } ?: throw UnknownException("There was a problem while signing you in")
             } catch (e: Exception) {
@@ -99,7 +102,11 @@ object DeviceSRPCognitoSignInActions : DeviceSRPSignInActions {
                     val deviceKey = params.getValue(KEY_DEVICE_KEY)
                     val encodedContextData = userContextDataProvider?.getEncodedContextData(username)
 
-                    srpHelper.setUserPoolParams(deviceKey, "STUB_DEVICE_GROUP")
+                    val deviceCredentials = credentialStoreClient.loadCredentials(CredentialType.Device(username))
+                    val deviceMetadata = (deviceCredentials as AmplifyCredential.DeviceData)
+                        .deviceMetadata as? DeviceMetadata.Metadata
+
+                    srpHelper.setUserPoolParams(deviceMetadata?.deviceKey ?: "", deviceMetadata?.deviceGroupKey ?: "")
 
                     cognitoAuthService.cognitoIdentityProviderClient?.let {
                         val respondToAuthChallenge = it.respondToAuthChallenge(

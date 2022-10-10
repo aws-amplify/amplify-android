@@ -24,6 +24,8 @@ import com.amplifyframework.auth.cognito.helpers.CognitoDeviceHelper
 import com.amplifyframework.auth.exceptions.ServiceException
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.SignInActions
+import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
+import com.amplifyframework.statemachine.codegen.data.CredentialType
 import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.CustomSignInEvent
@@ -84,10 +86,8 @@ object SignInCognitoActions : SignInActions {
             val deviceKey = deviceMetadata.deviceKey
             val deviceGroupKey = deviceMetadata.deviceGroupKey
             val evt = try {
-                val deviceVerifierMap = CognitoDeviceHelper.generateVerificationParameters(
-                    deviceKey!!,
-                    deviceGroupKey!!
-                )
+                val deviceVerifierMap = CognitoDeviceHelper.generateVerificationParameters(deviceKey, deviceGroupKey)
+
                 cognitoAuthService.cognitoIdentityProviderClient?.confirmDevice(
                     ConfirmDeviceRequest.invoke {
                         this.accessToken = event.signedInData.cognitoUserPoolTokens.accessToken
@@ -98,10 +98,14 @@ object SignInCognitoActions : SignInActions {
                             this.salt = deviceVerifierMap["salt"]
                         }
                     }
-                ) ?: throw ServiceException(
-                    "Sign in failed",
-                    AmplifyException.TODO_RECOVERY_SUGGESTION
+                ) ?: throw ServiceException("Sign in failed", AmplifyException.TODO_RECOVERY_SUGGESTION)
+
+                val updatedDeviceMetadata = deviceMetadata.copy(deviceSecret = deviceVerifierMap["secret"])
+                credentialStoreClient.storeCredentials(
+                    CredentialType.Device(event.username),
+                    AmplifyCredential.DeviceData(updatedDeviceMetadata)
                 )
+
                 AuthenticationEvent(
                     AuthenticationEvent.EventType.SignInCompleted(
                         event.signedInData,
