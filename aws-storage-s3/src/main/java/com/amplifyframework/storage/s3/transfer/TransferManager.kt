@@ -32,6 +32,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import java.io.InputStream
+import java.util.UUID
 import kotlin.math.ceil
 import kotlin.math.max
 import kotlin.math.min
@@ -49,8 +50,7 @@ internal class TransferManager @JvmOverloads constructor(
 ) {
 
     private val transferDB: TransferDB = TransferDB.getInstance(context)
-    private val transferStatusUpdater: TransferStatusUpdater =
-        TransferStatusUpdater.getInstance(context)
+    val transferStatusUpdater: TransferStatusUpdater = TransferStatusUpdater.getInstance(context)
     private val logger =
         Amplify.Logging.forNamespace(
             AWSS3StoragePlugin.AWS_S3_STORAGE_LOG_NAMESPACE.format(this::class.java.simpleName)
@@ -88,6 +88,7 @@ internal class TransferManager @JvmOverloads constructor(
      */
     @JvmOverloads
     fun upload(
+        transferId: String,
         bucket: String,
         key: String,
         file: File,
@@ -96,9 +97,10 @@ internal class TransferManager @JvmOverloads constructor(
         listener: TransferListener? = null
     ): TransferObserver {
         val transferRecordId = if (shouldUploadInMultipart(file)) {
-            createMultipartUploadRecords(bucket, key, file, metadata, cannedAcl)
+            createMultipartUploadRecords(transferId, bucket, key, file, metadata, cannedAcl)
         } else {
             val uri = transferDB.insertSingleTransferRecord(
+                transferId,
                 TransferType.UPLOAD,
                 bucket,
                 key,
@@ -130,12 +132,14 @@ internal class TransferManager @JvmOverloads constructor(
 
     @Throws(IOException::class)
     fun upload(
+        transferId: String,
         key: String,
         inputStream: InputStream,
         options: UploadOptions
     ): TransferObserver {
         val file = writeInputStreamToFile(inputStream)
         return upload(
+            transferId,
             options.bucket,
             key,
             file,
@@ -147,6 +151,7 @@ internal class TransferManager @JvmOverloads constructor(
 
     @JvmOverloads
     fun download(
+        transferId: String,
         bucket: String,
         key: String,
         file: File,
@@ -155,7 +160,7 @@ internal class TransferManager @JvmOverloads constructor(
         if (file.isDirectory) {
             throw IllegalArgumentException("Invalid file: $file")
         }
-        val uri = transferDB.insertSingleTransferRecord(TransferType.DOWNLOAD, bucket, key, file)
+        val uri = transferDB.insertSingleTransferRecord(transferId, TransferType.DOWNLOAD, bucket, key, file)
         val transferRecordId: Int = uri.lastPathSegment?.toInt()
             ?: throw IllegalStateException("Invalid TransferRecord ID ${uri.lastPathSegment}")
         if (file.isFile) {
@@ -197,6 +202,11 @@ internal class TransferManager @JvmOverloads constructor(
                 transferWorkerObserver,
                 transferDB
             )
+            mainHandler.post {
+                workManager
+                    .getWorkInfosForUniqueWorkLiveData(transferRecordId.toString())
+                    .observeForever(transferWorkerObserver)
+            }
         } ?: false
     }
 
@@ -212,7 +222,14 @@ internal class TransferManager @JvmOverloads constructor(
         } ?: false
     }
 
+    fun getTransferOperationById(
+        transferId: String
+    ): TransferRecord? {
+        return transferDB.getTransferByTransferId(transferId)
+    }
+
     private fun createMultipartUploadRecords(
+        transferId: String,
         bucket: String,
         key: String,
         file: File,
@@ -228,6 +245,7 @@ internal class TransferManager @JvmOverloads constructor(
         var fileOffset = 0L
         val contentValues = arrayOfNulls<ContentValues>(partCount + 1)
         contentValues[0] = transferDB.generateContentValuesForMultiPartUpload(
+            transferId,
             bucket,
             key,
             file,
@@ -242,6 +260,7 @@ internal class TransferManager @JvmOverloads constructor(
         repeat(partCount) {
             val bytesForPart = min(optimalPartSize, remainingLength)
             contentValues[partNum] = transferDB.generateContentValuesForMultiPartUpload(
+                UUID.randomUUID().toString(),
                 bucket,
                 key,
                 file,
