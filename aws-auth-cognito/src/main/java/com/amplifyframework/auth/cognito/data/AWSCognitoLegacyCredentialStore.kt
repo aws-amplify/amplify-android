@@ -90,6 +90,10 @@ internal class AWSCognitoLegacyCredentialStore(
         // no-op
     }
 
+    override fun saveDeviceMetadata(username: String, deviceMetadata: DeviceMetadata) {
+        // no-op
+    }
+
     @Synchronized
     override fun retrieveCredential(): AmplifyCredential {
         val signedInData = retrieveSignedInData()
@@ -122,6 +126,10 @@ internal class AWSCognitoLegacyCredentialStore(
         deleteAWSCredentials()
         deleteIdentityId()
         deleteCognitoUserPoolTokens()
+    }
+
+    override fun deleteDeviceKeyCredential(username: String) {
+        // no-op
     }
 
     private fun deleteCognitoUserPoolTokens() {
@@ -174,8 +182,6 @@ internal class AWSCognitoLegacyCredentialStore(
         val keys = getTokenKeys()
         val cognitoUserPoolTokens = retrieveCognitoUserPoolTokens(keys) ?: return null
         val signInMethod = retrieveUserPoolSignInMethod() ?: return null
-        val username = keys[APP_LAST_AUTH_USER]?.let { tokensKeyValue.get(it) }
-        val deviceMetaData = retrieveDeviceMetadata(username)
         val tokenUserId =
             try {
                 cognitoUserPoolTokens.accessToken?.let { SessionHelper.getUserSub(it) } ?: ""
@@ -194,12 +200,11 @@ internal class AWSCognitoLegacyCredentialStore(
             tokenUsername,
             Date(0),
             signInMethod,
-            deviceMetaData,
             cognitoUserPoolTokens
         )
     }
 
-    private fun retrieveDeviceMetadata(username: String?): DeviceMetadata {
+    override fun retrieveDeviceMetadata(username: String): DeviceMetadata {
         val deviceDetailsCacheKey = String.format(userDeviceDetailsCacheKey, username)
         deviceKeyValue = keyValueRepoFactory.create(context, deviceDetailsCacheKey)
 
@@ -207,8 +212,8 @@ internal class AWSCognitoLegacyCredentialStore(
         val deviceGroupKey = deviceKeyValue.get(DEVICE_GROUP_KEY)
         val deviceSecretKey = deviceKeyValue.get(DEVICE_SECRET_KEY)
 
-        return if (deviceKey == null && deviceGroupKey == null) DeviceMetadata.Empty
-        else DeviceMetadata.Metadata(deviceKey, deviceGroupKey, deviceSecretKey)
+        return if (deviceKey.isNullOrEmpty() && deviceGroupKey.isNullOrEmpty()) DeviceMetadata.Empty
+        else DeviceMetadata.Metadata(deviceKey ?: "", deviceGroupKey ?: "", deviceSecretKey)
     }
 
     private fun retrieveCognitoUserPoolTokens(keys: Map<String, String>): CognitoUserPoolTokens? {

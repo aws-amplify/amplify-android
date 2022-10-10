@@ -30,6 +30,7 @@ import com.amplifyframework.statemachine.codegen.events.SignOutEvent
 internal class AuthEnvironment internal constructor(
     val configuration: AuthConfiguration,
     val cognitoAuthService: AWSCognitoAuthServiceBehavior,
+    val credentialStoreClient: StoreClientBehavior,
     val userContextDataProvider: UserContextDataProvider? = null,
     val hostedUIClient: HostedUIClient?,
     val logger: Logger

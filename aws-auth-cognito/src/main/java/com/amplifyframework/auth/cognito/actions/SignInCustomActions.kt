@@ -46,6 +46,9 @@ object SignInCustomActions : CustomSignInActions {
                 secretHash?.let { authParams[KEY_SECRET_HASH] = it }
                 val encodedContextData = userContextDataProvider?.getEncodedContextData(event.username)
 
+                val deviceKey = event.metadata[KEY_DEVICE_KEY]
+                deviceKey?.let { authParams[KEY_DEVICE_KEY] = it }
+
                 val initiateAuthResponse = cognitoAuthService.cognitoIdentityProviderClient?.initiateAuth {
                     authFlow = AuthFlowType.CustomAuth
                     clientId = configuration.userPool?.appClient
