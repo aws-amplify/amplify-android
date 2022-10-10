@@ -114,7 +114,6 @@ import com.amplifyframework.statemachine.codegen.data.SignOutData
 import com.amplifyframework.statemachine.codegen.events.AuthEvent
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
-import com.amplifyframework.statemachine.codegen.events.CredentialStoreEvent
 import com.amplifyframework.statemachine.codegen.events.DeleteUserEvent
 import com.amplifyframework.statemachine.codegen.events.HostedUIEvent
 import com.amplifyframework.statemachine.codegen.events.SignInChallengeEvent
@@ -122,7 +121,6 @@ import com.amplifyframework.statemachine.codegen.events.SignOutEvent
 import com.amplifyframework.statemachine.codegen.states.AuthState
 import com.amplifyframework.statemachine.codegen.states.AuthenticationState
 import com.amplifyframework.statemachine.codegen.states.AuthorizationState
-import com.amplifyframework.statemachine.codegen.states.CredentialStoreState
 import com.amplifyframework.statemachine.codegen.states.DeleteUserState
 import com.amplifyframework.statemachine.codegen.states.HostedUISignInState
 import com.amplifyframework.statemachine.codegen.states.SRPSignInState
@@ -142,7 +140,6 @@ internal class RealAWSCognitoAuthPlugin(
     private val configuration: AuthConfiguration,
     private val authEnvironment: AuthEnvironment,
     private val authStateMachine: AuthStateMachine,
-    private val credentialStoreStateMachine: CredentialStoreStateMachine,
     private val logger: Logger
 ) : AuthCategoryBehavior {
 
@@ -1556,29 +1553,10 @@ internal class RealAWSCognitoAuthPlugin(
                 logger.verbose("Auth State Change: $authState")
 
                 when (authState) {
-                    is AuthState.WaitingForCachedCredentials -> credentialStoreStateMachine.send(
-                        CredentialStoreEvent(
-                            CredentialStoreEvent.EventType.LoadCredentialStore(
-                                AmplifyCredentialType.DEVICE_METADATA,
-                                null
-                            )
-                        )
-                    )
                     is AuthState.Configured -> {
                         val (authNState, authZState) = authState
                         val deleteUserAuthZState = authZState as? AuthorizationState.DeletingUser
                         when {
-                            authZState is AuthorizationState.StoringCredentials -> {
-                                credentialStoreStateMachine.send(
-                                    CredentialStoreEvent(
-                                        CredentialStoreEvent.EventType.StoreCredentials(
-                                            AmplifyCredentialType.AMPLIFY_CREDENTIAL,
-                                            null,
-                                            authZState.amplifyCredential
-                                        )
-                                    )
-                                )
-                            }
                             authNState is AuthenticationState.SignedOut &&
                                 authZState is AuthorizationState.Configured
                                 && lastPublishedHubEventName.get() != AuthChannelEventName.SIGNED_OUT -> {
@@ -1597,28 +1575,7 @@ internal class RealAWSCognitoAuthPlugin(
                             }
                         }
                     }
-                    else -> {
-                        // No-op
-                    }
-                }
-            },
-            null
-        )
-
-        credentialStoreStateMachine.listen(
-            { storeState ->
-                logger.verbose("Credential Store State Change: $storeState")
-
-                when (storeState) {
-                    is CredentialStoreState.Success -> authStateMachine.send(
-                        AuthEvent(AuthEvent.EventType.ReceivedCachedCredentials(storeState.storedCredentials))
-                    )
-                    is CredentialStoreState.Error -> authStateMachine.send(
-                        AuthEvent(AuthEvent.EventType.CachedCredentialsFailed)
-                    )
-                    else -> {
-                        // no op
-                    }
+                    else -> Unit
                 }
             },
             null

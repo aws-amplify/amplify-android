@@ -30,8 +30,6 @@ import com.amplifyframework.auth.AuthUser
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.cognito.asf.UserContextDataProvider
-import com.amplifyframework.auth.cognito.data.AWSCognitoAuthCredentialStore
-import com.amplifyframework.auth.cognito.data.AWSCognitoLegacyCredentialStore
 import com.amplifyframework.auth.cognito.options.FederateToIdentityPoolOptions
 import com.amplifyframework.auth.cognito.result.FederateToIdentityPoolResult
 import com.amplifyframework.auth.exceptions.ConfigurationException
@@ -79,20 +77,21 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
     override fun configure(pluginConfiguration: JSONObject, context: Context) {
         try {
             val configuration = AuthConfiguration.fromJson(pluginConfiguration)
+            val credentialStoreClient = CredentialStoreClient(configuration, context, logger)
             val authEnvironment = AuthEnvironment(
                 configuration,
                 AWSCognitoAuthServiceBehavior.fromConfiguration(configuration),
+                credentialStoreClient,
                 configuration.userPool?.let { UserContextDataProvider(context, it) },
                 HostedUIClient.create(context, configuration.oauth, logger),
                 logger
             )
+
             val authStateMachine = AuthStateMachine(authEnvironment)
-            val credentialStoreStateMachine = createCredentialStoreStateMachine(configuration, context)
             realPlugin = RealAWSCognitoAuthPlugin(
                 configuration,
                 authEnvironment,
                 authStateMachine,
-                credentialStoreStateMachine,
                 logger
             )
         } catch (exception: JSONException) {
@@ -448,16 +447,5 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         onError: Consumer<AuthException>
     ) {
         realPlugin.clearFederationToIdentityPool(onSuccess, onError)
-    }
-
-    private fun createCredentialStoreStateMachine(
-        configuration: AuthConfiguration,
-        context: Context
-    ): CredentialStoreStateMachine {
-        val awsCognitoAuthCredentialStore = AWSCognitoAuthCredentialStore(context.applicationContext, configuration)
-        val legacyCredentialStore = AWSCognitoLegacyCredentialStore(context.applicationContext, configuration)
-        val credentialStoreEnvironment =
-            CredentialStoreEnvironment(awsCognitoAuthCredentialStore, legacyCredentialStore, logger)
-        return CredentialStoreStateMachine(credentialStoreEnvironment)
     }
 }

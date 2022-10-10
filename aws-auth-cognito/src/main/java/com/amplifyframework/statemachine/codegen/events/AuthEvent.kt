@@ -24,7 +24,6 @@ class AuthEvent(val eventType: EventType, override val time: Date? = null) :
     StateMachineEvent {
     sealed class EventType {
         data class ConfigureAuth(val configuration: AuthConfiguration) : EventType()
-        data class FetchCachedCredentials(val configuration: AuthConfiguration) : EventType()
         data class ReceivedCachedCredentials(val storedCredentials: AmplifyCredential) : EventType()
         object CachedCredentialsFailed : EventType()
         data class ConfigureAuthentication(

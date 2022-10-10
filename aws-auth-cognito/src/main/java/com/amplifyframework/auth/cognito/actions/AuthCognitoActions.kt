@@ -27,7 +27,10 @@ object AuthCognitoActions : AuthActions {
     override fun initializeAuthConfigurationAction(event: AuthEvent.EventType.ConfigureAuth) =
         Action<AuthEnvironment>("InitAuthConfig") { id, dispatcher ->
             logger.verbose("$id Starting execution")
-            val evt = AuthEvent(AuthEvent.EventType.FetchCachedCredentials(configuration))
+            val storedCredentials = credentialStoreClient.loadCredentials()
+            val evt = configuration.userPool?.run {
+                AuthEvent(AuthEvent.EventType.ConfigureAuthentication(configuration, storedCredentials))
+            } ?: AuthEvent(AuthEvent.EventType.ConfigureAuthorization(configuration, storedCredentials))
             logger.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
         }
@@ -51,21 +54,11 @@ object AuthCognitoActions : AuthActions {
                     else -> AuthorizationEvent(AuthorizationEvent.EventType.CachedCredentialsAvailable(credentials))
                 }
             }
-            val evt = when {
-                event is AuthEvent.EventType.ConfiguredAuthentication -> handleEvent(event.storedCredentials)
-                event is AuthEvent.EventType.ConfigureAuthorization -> handleEvent(event.storedCredentials)
+            val evt = when (event) {
+                is AuthEvent.EventType.ConfiguredAuthentication -> handleEvent(event.storedCredentials)
+                is AuthEvent.EventType.ConfigureAuthorization -> handleEvent(event.storedCredentials)
                 else -> AuthorizationEvent(AuthorizationEvent.EventType.Configure)
             }
-            logger.verbose("$id Sending event ${evt.type}")
-            dispatcher.send(evt)
-        }
-
-    override fun validateCredentialsAndConfiguration(event: AuthEvent.EventType.ReceivedCachedCredentials) =
-        Action<AuthEnvironment>("InitAuthZConfig") { id, dispatcher ->
-            logger.verbose("$id Starting execution")
-            val evt = configuration.userPool?.run {
-                AuthEvent(AuthEvent.EventType.ConfigureAuthentication(configuration, event.storedCredentials))
-            } ?: AuthEvent(AuthEvent.EventType.ConfigureAuthorization(configuration, event.storedCredentials))
             logger.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
         }

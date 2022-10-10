@@ -120,4 +120,17 @@ object AuthorizationCognitoActions : AuthorizationActions {
         logger.verbose("$id Sending event ${evt.type}")
         dispatcher.send(evt)
     }
+
+    override fun persistCredentials(amplifyCredential: AmplifyCredential) =
+        Action<AuthEnvironment>("PersistCredentials") { id, dispatcher ->
+            logger.verbose("$id Starting execution")
+            val evt = try {
+                credentialStoreClient.storeCredentials(amplifyCredential)
+                AuthEvent(AuthEvent.EventType.ReceivedCachedCredentials(amplifyCredential))
+            } catch (e: Exception) {
+                AuthEvent(AuthEvent.EventType.CachedCredentialsFailed)
+            }
+            logger.verbose("$id Sending event ${evt.type}")
+            dispatcher.send(evt)
+        }
 }
