@@ -30,8 +30,12 @@ object CredentialStoreActions : StoreActions {
             val evt = try {
                 val credentials = legacyCredentialStore.retrieveCredential()
                 if (credentials != AmplifyCredential.Empty) {
+                    val username = (credentials as AmplifyCredential.UserPoolTypeCredential).signedInData.username
+                    val deviceMetaData = legacyCredentialStore.retrieveDeviceMetadata(username)
                     credentialStore.saveCredential(credentials)
+                    credentialStore.saveDeviceMetadata(username, deviceMetaData)
                     legacyCredentialStore.deleteCredential()
+                    legacyCredentialStore.deleteDeviceKeyCredential(username)
                 }
                 CredentialStoreEvent(CredentialStoreEvent.EventType.LoadCredentialStore(CredentialType.Amplify))
             } catch (error: CredentialStoreError) {
