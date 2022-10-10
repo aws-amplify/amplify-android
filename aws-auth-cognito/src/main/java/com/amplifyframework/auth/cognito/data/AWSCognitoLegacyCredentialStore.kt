@@ -128,10 +128,6 @@ internal class AWSCognitoLegacyCredentialStore(
         deleteCognitoUserPoolTokens()
     }
 
-    override fun deleteDeviceKeyCredential(username: String) {
-        // no-op
-    }
-
     private fun deleteCognitoUserPoolTokens() {
         val keys = getTokenKeys()
         val username = keys[APP_LAST_AUTH_USER]?.let { tokensKeyValue.get(it) }
@@ -142,6 +138,10 @@ internal class AWSCognitoLegacyCredentialStore(
         keys[TOKEN_TYPE_ACCESS]?.let { tokensKeyValue.remove(it) }
         keys[TOKEN_TYPE_REFRESH]?.let { tokensKeyValue.remove(it) }
         keys[TOKEN_EXPIRATION]?.let { tokensKeyValue.remove(it) }
+    }
+
+    override fun deleteDeviceKeyCredential(username: String) {
+        // no-op
     }
 
     private fun deleteIdentityId() {
