@@ -40,12 +40,12 @@ import aws.smithy.kotlin.runtime.time.Instant
 import aws.smithy.kotlin.runtime.util.InternalApi
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.storage.ObjectMetadata
+import com.amplifyframework.storage.TransferState
 import com.amplifyframework.storage.s3.AWSS3StoragePlugin
 import com.amplifyframework.storage.s3.R
 import com.amplifyframework.storage.s3.transfer.ProgressListener
 import com.amplifyframework.storage.s3.transfer.TransferDB
 import com.amplifyframework.storage.s3.transfer.TransferRecord
-import com.amplifyframework.storage.s3.transfer.TransferState
 import com.amplifyframework.storage.s3.transfer.TransferStatusUpdater
 import java.io.File
 import java.nio.ByteBuffer

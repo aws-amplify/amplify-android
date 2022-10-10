@@ -13,13 +13,9 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.auth.cognito.result
-
-import com.amplifyframework.statemachine.codegen.data.AWSCredentials
+package com.amplifyframework.storage.result;
 
 /**
- * Wraps the result of a federation to Identity Pool.
- * @param identityId Identity Id of federation
- * @param credentials Returned credentials from successful federation
+ * Base operation type for all transfer behavior on the Storage category.
  */
-data class FederateToIdentityPoolResult internal constructor(val identityId: String, val credentials: AWSCredentials)
+public abstract class StorageTransferResult {}

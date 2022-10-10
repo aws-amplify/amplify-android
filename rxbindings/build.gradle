@@ -28,4 +28,5 @@ dependencies {
     testImplementation dependency.mockito
     testImplementation dependency.androidx.test.core
     testImplementation dependency.robolectric
+    testImplementation project(path: ':rxbindings')
 }
