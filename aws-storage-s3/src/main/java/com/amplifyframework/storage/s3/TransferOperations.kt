@@ -1,30 +1,3 @@
-package com.amplifyframework.storage.s3
-
-import androidx.work.Constraints
-import androidx.work.Data
-import androidx.work.ExistingWorkPolicy
-import androidx.work.NetworkType
-import androidx.work.OneTimeWorkRequest
-import androidx.work.WorkManager
-import androidx.work.workDataOf
-import com.amplifyframework.storage.s3.transfer.MultiPartUploadTaskListener
-import com.amplifyframework.storage.s3.transfer.TransferDB
-import com.amplifyframework.storage.s3.transfer.TransferListener
-import com.amplifyframework.storage.s3.transfer.TransferObserver
-import com.amplifyframework.storage.s3.transfer.TransferRecord
-import com.amplifyframework.storage.s3.transfer.TransferState
-import com.amplifyframework.storage.s3.transfer.TransferStatusUpdater
-import com.amplifyframework.storage.s3.transfer.TransferType
-import com.amplifyframework.storage.s3.transfer.TransferWorkerObserver
-import com.amplifyframework.storage.s3.transfer.worker.AbortMultiPartUploadWorker
-import com.amplifyframework.storage.s3.transfer.worker.BaseTransferWorker
-import com.amplifyframework.storage.s3.transfer.worker.CompleteMultiPartUploadWorker
-import com.amplifyframework.storage.s3.transfer.worker.DownloadWorker
-import com.amplifyframework.storage.s3.transfer.worker.InitiateMultiPartUploadTransferWorker
-import com.amplifyframework.storage.s3.transfer.worker.PartUploadTransferWorker
-import com.amplifyframework.storage.s3.transfer.worker.RouterWorker
-import com.amplifyframework.storage.s3.transfer.worker.SinglePartUploadWorker
-
 /*
  * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
@@ -39,6 +12,32 @@ import com.amplifyframework.storage.s3.transfer.worker.SinglePartUploadWorker
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
+package com.amplifyframework.storage.s3
+
+import androidx.work.Constraints
+import androidx.work.Data
+import androidx.work.ExistingWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.OneTimeWorkRequest
+import androidx.work.WorkManager
+import androidx.work.workDataOf
+import com.amplifyframework.storage.TransferState
+import com.amplifyframework.storage.s3.transfer.MultiPartUploadTaskListener
+import com.amplifyframework.storage.s3.transfer.TransferDB
+import com.amplifyframework.storage.s3.transfer.TransferListener
+import com.amplifyframework.storage.s3.transfer.TransferObserver
+import com.amplifyframework.storage.s3.transfer.TransferRecord
+import com.amplifyframework.storage.s3.transfer.TransferStatusUpdater
+import com.amplifyframework.storage.s3.transfer.TransferType
+import com.amplifyframework.storage.s3.transfer.TransferWorkerObserver
+import com.amplifyframework.storage.s3.transfer.worker.AbortMultiPartUploadWorker
+import com.amplifyframework.storage.s3.transfer.worker.BaseTransferWorker
+import com.amplifyframework.storage.s3.transfer.worker.CompleteMultiPartUploadWorker
+import com.amplifyframework.storage.s3.transfer.worker.DownloadWorker
+import com.amplifyframework.storage.s3.transfer.worker.InitiateMultiPartUploadTransferWorker
+import com.amplifyframework.storage.s3.transfer.worker.PartUploadTransferWorker
+import com.amplifyframework.storage.s3.transfer.worker.RouterWorker
+import com.amplifyframework.storage.s3.transfer.worker.SinglePartUploadWorker
 
 internal object TransferOperations {
 
@@ -119,9 +118,8 @@ internal object TransferOperations {
             if (TransferState.isPaused(transferRecord.state)) {
                 if (transferRecord.isMultipart == 1) {
                     abortMultipartUploadRequest(transferRecord, pluginKey, workManager)
-                } else {
-                    nextState = TransferState.CANCELED
                 }
+                nextState = TransferState.CANCELED
             } else {
                 workManager.cancelUniqueWork(transferRecord.id.toString())
             }

@@ -30,7 +30,7 @@ class AWSS3StoragePluginConfigurationTest : TestCase() {
                 accessLevel: StorageAccessLevel,
                 targetIdentity: String?,
                 onSuccess: Consumer<String>,
-                onError: Consumer<StorageException>
+                onError: Consumer<StorageException>?
             ) {
                 onSuccess.accept("")
             }

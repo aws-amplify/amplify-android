@@ -28,8 +28,11 @@ import com.google.common.util.concurrent.MoreExecutors
 import java.io.File
 import org.junit.Before
 import org.junit.Test
+import org.junit.runner.RunWith
 import org.mockito.Mockito
+import org.robolectric.RobolectricTestRunner
 
+@RunWith(RobolectricTestRunner::class)
 class AWSS3StorageUploadFileOperationTest {
 
     private lateinit var awsS3StorageUploadFileOperation: AWSS3StorageUploadFileOperation
@@ -68,6 +71,7 @@ class AWSS3StorageUploadFileOperationTest {
         )
         awsS3StorageUploadFileOperation.start()
         Mockito.verify(storageService).uploadFile(
+            Mockito.eq(awsS3StorageUploadFileOperation.transferId),
             Mockito.eq(expectedKey),
             Mockito.eq(tempFile),
             Mockito.any(ObjectMetadata::class.java)
@@ -99,7 +103,7 @@ class AWSS3StorageUploadFileOperationTest {
                         accessLevel: StorageAccessLevel,
                         targetIdentity: String?,
                         onSuccess: Consumer<String>,
-                        onError: Consumer<StorageException>
+                        onError: Consumer<StorageException>?
                     ) {
                         onSuccess.accept("")
                     }
@@ -111,6 +115,7 @@ class AWSS3StorageUploadFileOperationTest {
         )
         awsS3StorageUploadFileOperation.start()
         Mockito.verify(storageService).uploadFile(
+            Mockito.eq(awsS3StorageUploadFileOperation.transferId),
             Mockito.eq(expectedKey),
             Mockito.eq(tempFile),
             Mockito.any(ObjectMetadata::class.java)
@@ -142,7 +147,7 @@ class AWSS3StorageUploadFileOperationTest {
                         accessLevel: StorageAccessLevel,
                         targetIdentity: String?,
                         onSuccess: Consumer<String>,
-                        onError: Consumer<StorageException>
+                        onError: Consumer<StorageException>?
                     ) {
                         onSuccess.accept("publicCustom/")
                     }
@@ -154,6 +159,7 @@ class AWSS3StorageUploadFileOperationTest {
         )
         awsS3StorageUploadFileOperation.start()
         Mockito.verify(storageService).uploadFile(
+            Mockito.eq(awsS3StorageUploadFileOperation.transferId),
             Mockito.eq(expectedKey),
             Mockito.eq(tempFile),
             Mockito.any(ObjectMetadata::class.java)
