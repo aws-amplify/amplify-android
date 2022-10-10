@@ -138,6 +138,6 @@ data class AWSCredentials(
 
 sealed class CredentialType {
     object Amplify : CredentialType()
-    data class Device(val username: String?) : CredentialType()
+    data class Device(val username: String) : CredentialType()
     object ASF : CredentialType()
 }

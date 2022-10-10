@@ -54,7 +54,7 @@ object CredentialStoreActions : StoreActions {
                         credentialStore.deleteCredential()
                     }
                     is CredentialType.Device -> {
-                        credentialStore.deleteDeviceKeyCredential(credentialType.username ?: "")
+                        credentialStore.deleteDeviceKeyCredential(credentialType.username)
                     }
                     CredentialType.ASF -> TODO()
                 }
@@ -76,7 +76,7 @@ object CredentialStoreActions : StoreActions {
                     }
                     is CredentialType.Device -> {
                         AmplifyCredential.DeviceData(
-                            credentialStore.retrieveDeviceMetadata(credentialType.username ?: "")
+                            credentialStore.retrieveDeviceMetadata(credentialType.username)
                         )
                     }
                     CredentialType.ASF -> {
@@ -104,11 +104,13 @@ object CredentialStoreActions : StoreActions {
                     }
                     is CredentialType.Device -> {
                         credentialStore.saveDeviceMetadata(
-                            credentialType.username ?: "",
+                            credentialType.username,
                             (credentials as AmplifyCredential.DeviceMetaDataTypeCredential).deviceMetadata
                         )
                     }
-                    CredentialType.ASF -> TODO()
+                    CredentialType.ASF -> {
+                        // TODO
+                    }
                 }
                 CredentialStoreEvent(CredentialStoreEvent.EventType.CompletedOperation(credentials))
             } catch (error: CredentialStoreError) {

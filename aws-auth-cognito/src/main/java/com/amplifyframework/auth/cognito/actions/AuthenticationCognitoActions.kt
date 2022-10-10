@@ -36,9 +36,11 @@ object AuthenticationCognitoActions : AuthenticationActions {
             logger.verbose("$id Starting execution")
             val evt = when (val credentials = event.storedCredentials) {
                 is AmplifyCredential.UserPoolTypeCredential -> {
-                    val deviceDataCredentials = (credentialStoreClient.loadCredentials(
-                        CredentialType.Device(credentials.signedInData.username)
-                    ) as AmplifyCredential.DeviceData).deviceMetadata
+                    val deviceDataCredentials = (
+                        credentialStoreClient.loadCredentials(
+                            CredentialType.Device(credentials.signedInData.username)
+                        ) as AmplifyCredential.DeviceData
+                        ).deviceMetadata
                     AuthenticationEvent(
                         AuthenticationEvent.EventType.InitializedSignedIn(
                             credentials.signedInData,
