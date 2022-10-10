@@ -69,13 +69,21 @@ class AWSCognitoAuthCredentialStore(
     }
 
     private fun deserializeCredential(encodedCredential: String?): AmplifyCredential {
-        val credentials = encodedCredential?.let { Json.decodeFromString(it) as AmplifyCredential }
-        return credentials ?: AmplifyCredential.Empty
+        return try {
+            val credentials = encodedCredential?.let { Json.decodeFromString(it) as AmplifyCredential }
+            credentials ?: AmplifyCredential.Empty
+        } catch (e: Exception) {
+            AmplifyCredential.Empty
+        }
     }
 
     private fun deserializeMetadata(encodedDeviceMetadata: String?): DeviceMetadata {
-        val deviceMetadata = encodedDeviceMetadata?.let { Json.decodeFromString(it) as DeviceMetadata }
-        return deviceMetadata ?: DeviceMetadata.Empty
+        return try {
+            val deviceMetadata = encodedDeviceMetadata?.let { Json.decodeFromString(it) as DeviceMetadata }
+            deviceMetadata ?: DeviceMetadata.Empty
+        } catch (e: Exception) {
+            DeviceMetadata.Empty
+        }
     }
 
     private fun serializeCredential(credential: AmplifyCredential): String {
