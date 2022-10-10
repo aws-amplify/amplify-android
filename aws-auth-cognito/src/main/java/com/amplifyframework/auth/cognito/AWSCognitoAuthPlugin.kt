@@ -401,19 +401,19 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
 
     /**
      * Federate to Identity Pool
-     * @param authProvider The auth provider you want to federate for (e.g. Facebook, Google, etc.)
      * @param providerToken Provider token to start the federation for
+     * @param authProvider The auth provider you want to federate for (e.g. Facebook, Google, etc.)
      * @param onSuccess Success callback
      */
     fun federateToIdentityPool(
-        authProvider: AuthProvider,
         providerToken: String,
+        authProvider: AuthProvider,
         onSuccess: Consumer<FederateToIdentityPoolResult>,
         onError: Consumer<AuthException>
     ) {
         realPlugin.federateToIdentityPool(
-            authProvider,
             providerToken,
+            authProvider,
             FederateToIdentityPoolOptions.builder().build(),
             onSuccess,
             onError
@@ -422,19 +422,19 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
 
     /**
      * Federate to Identity Pool
-     * @param authProvider The auth provider you want to federate for (e.g. Facebook, Google, etc.)
      * @param providerToken Provider token to start the federation for
+     * @param authProvider The auth provider you want to federate for (e.g. Facebook, Google, etc.)
      * @param options Advanced options for federating to identity pool
      * @param onSuccess Success callback
      */
     fun federateToIdentityPool(
-        authProvider: AuthProvider,
         providerToken: String,
+        authProvider: AuthProvider,
         options: FederateToIdentityPoolOptions,
         onSuccess: Consumer<FederateToIdentityPoolResult>,
         onError: Consumer<AuthException>
     ) {
-        realPlugin.federateToIdentityPool(authProvider, providerToken, options, onSuccess, onError)
+        realPlugin.federateToIdentityPool(providerToken, authProvider, options, onSuccess, onError)
     }
 
     /**

@@ -17,7 +17,6 @@
 package com.amplifyframework.analytics.pinpoint.targeting
 
 import aws.sdk.kotlin.services.pinpoint.PinpointClient
-import aws.sdk.kotlin.services.pinpoint.model.ChannelType
 import aws.sdk.kotlin.services.pinpoint.model.EndpointRequest
 import aws.sdk.kotlin.services.pinpoint.model.UpdateEndpointRequest
 import aws.sdk.kotlin.services.pinpoint.model.UpdateEndpointResponse
@@ -29,7 +28,6 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -56,13 +54,11 @@ class TargetingClientTest {
     }
 
     @Test
-    @Ignore("fix in PR: #1958")
     fun testUpdateEndpointProfile() = runTest {
         setup()
         val prefs = constructSharedPreferences()
         targetingClient = TargetingClient(
             pinpointClient,
-            pinpointNotificationClient,
             idService,
             prefs,
             appDetails,
@@ -86,7 +82,6 @@ class TargetingClientTest {
                     assertEquals("app id", it.applicationId)
                     assertEquals(listOf("a1", "a2"), request.attributes?.get("attribute") ?: listOf("wrong"))
                     assertEquals(1.0, request.metrics?.get("metric") ?: -1.0, 0.01)
-                    assertEquals(ChannelType.Gcm, request.channelType)
                 }
             )
         }
