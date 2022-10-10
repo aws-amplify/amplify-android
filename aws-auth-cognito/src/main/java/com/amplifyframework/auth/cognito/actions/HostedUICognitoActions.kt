@@ -62,14 +62,13 @@ object HostedUICognitoActions : HostedUIActions {
                     username,
                     Date(),
                     SignInMethod.HostedUI(browserPackage),
-                    DeviceMetadata.Empty,
                     token
                 )
                 val tokenFetchedEvent = HostedUIEvent(HostedUIEvent.EventType.TokenFetched)
                 logger.verbose("$id Sending event ${tokenFetchedEvent.type}")
                 dispatcher.send(tokenFetchedEvent)
 
-                AuthenticationEvent(AuthenticationEvent.EventType.SignInCompleted(signedInData))
+                AuthenticationEvent(AuthenticationEvent.EventType.SignInCompleted(signedInData, DeviceMetadata.Empty))
             } catch (e: Exception) {
                 val errorEvent = HostedUIEvent(HostedUIEvent.EventType.ThrowError(e))
                 logger.verbose("$id Sending event ${errorEvent.type}")

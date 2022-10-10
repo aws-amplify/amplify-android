@@ -10,12 +10,6 @@
                 "type": "SignInMethod.ApiBased",
                 "authType": "USER_SRP_AUTH"
             },
-            "deviceMetadata": {
-                "type": "metadata",
-                "deviceKey": "someDeviceKey",
-                "deviceGroupKey": "someDeviceGroupKey",
-                "deviceSecret": "someSecret"
-            },
             "cognitoUserPoolTokens": {
                 "idToken": "someToken",
                 "accessToken": "someAccessToken",
@@ -35,12 +29,6 @@
                 "signInMethod": {
                     "type": "SignInMethod.ApiBased",
                     "authType": "USER_SRP_AUTH"
-                },
-                "deviceMetadata": {
-                    "type": "metadata",
-                    "deviceKey": "someDeviceKey",
-                    "deviceGroupKey": "someDeviceGroupKey",
-                    "deviceSecret": "someSecret"
                 },
                 "cognitoUserPoolTokens": {
                     "idToken": "someToken",

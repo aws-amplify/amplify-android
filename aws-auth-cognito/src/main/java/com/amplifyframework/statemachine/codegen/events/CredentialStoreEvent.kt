@@ -17,6 +17,7 @@ package com.amplifyframework.statemachine.codegen.events
 
 import com.amplifyframework.statemachine.StateMachineEvent
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
+import com.amplifyframework.statemachine.codegen.data.CredentialType
 import com.amplifyframework.statemachine.codegen.errors.CredentialStoreError
 import java.util.Date
 
@@ -24,9 +25,12 @@ class CredentialStoreEvent(val eventType: EventType, override val time: Date? = 
     StateMachineEvent {
     sealed class EventType {
         data class MigrateLegacyCredentialStore(val id: String = "") : EventType()
-        data class LoadCredentialStore(val id: String = "") : EventType()
-        data class StoreCredentials(val credentials: AmplifyCredential) : EventType()
-        data class ClearCredentialStore(val id: String = "") : EventType()
+        data class LoadCredentialStore(val credentialType: CredentialType) : EventType()
+        data class StoreCredentials(
+            val credentialType: CredentialType,
+            val credentials: AmplifyCredential
+        ) : EventType()
+        data class ClearCredentialStore(val credentialType: CredentialType) : EventType()
         data class CompletedOperation(val storedCredentials: AmplifyCredential) : EventType()
         data class MoveToIdleState(val id: String = "") : EventType()
         data class ThrowError(val error: CredentialStoreError) : EventType()
