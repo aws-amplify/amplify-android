@@ -84,8 +84,8 @@ object SignInCognitoActions : SignInActions {
             val deviceGroupKey = deviceMetadata.deviceGroupKey
             val evt = try {
                 val deviceVerifierMap = CognitoDeviceHelper.generateVerificationParameters(
-                    deviceKey,
-                    deviceGroupKey
+                    deviceKey!!,
+                    deviceGroupKey!!
                 )
                 cognitoAuthService.cognitoIdentityProviderClient?.confirmDevice(
                     ConfirmDeviceRequest.invoke {
