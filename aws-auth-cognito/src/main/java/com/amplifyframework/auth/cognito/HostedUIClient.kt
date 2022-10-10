@@ -26,6 +26,7 @@ import androidx.browser.customtabs.CustomTabsIntent
 import androidx.browser.customtabs.CustomTabsServiceConnection
 import androidx.browser.customtabs.CustomTabsSession
 import com.amplifyframework.auth.cognito.activities.CustomTabsManagerActivity
+import com.amplifyframework.auth.cognito.exceptions.service.CodeValidationException
 import com.amplifyframework.auth.cognito.helpers.BrowserHelper
 import com.amplifyframework.auth.cognito.helpers.HostedUIHttpHelper
 import com.amplifyframework.auth.cognito.helpers.PkceHelper
@@ -102,29 +103,9 @@ internal class HostedUIClient private constructor(
         val code = uri.getQueryParameter("code")
 
         if (errorState != null) {
-            // TODO: More detailed exception
-            throw Exception()
+            throw CodeValidationException(errorState)
         } else if (callbackState == null || code == null) {
-            // TODO: More detailed exception
-            throw Exception()
-        }
-
-        val fetchUrl = URL(
-            Uri.Builder()
-                .scheme("https")
-                .authority(configuration.domain)
-                .appendPath("oauth2")
-                .appendPath("token")
-                .build().toString()
-        )
-
-        val headers = mutableMapOf("Content-Type" to "application/x-www-form-urlencoded").apply {
-            if (configuration.appSecret != null) {
-                put(
-                    "Authorization",
-                    PkceHelper.encodeBase64("${configuration.appClient}:${configuration.appSecret}")
-                )
-            }
+            throw CodeValidationException()
         }
 
         val body = mapOf(
@@ -135,7 +116,17 @@ internal class HostedUIClient private constructor(
             "code" to code
         )
 
-        return HostedUIHttpHelper.fetchTokens(fetchUrl, headers, body)
+        return HostedUIHttpHelper.fetchTokens(createFetchTokenUrl(), createFetchTokenHeaders(), body)
+    }
+
+    fun fetchRefreshedToken(refreshToken: String): CognitoUserPoolTokens {
+        val body = mapOf(
+            "grant_type" to "refresh_token",
+            "client_id" to configuration.appClient,
+            "redirect_uri" to configuration.signInRedirectURI,
+            "refresh_token" to refreshToken
+        )
+        return HostedUIHttpHelper.fetchTokens(createFetchTokenUrl(), createFetchTokenHeaders(), body)
     }
 
     private fun createAuthorizeUri(hostedUIOptions: HostedUIOptions): Uri {
@@ -175,14 +166,33 @@ internal class HostedUIClient private constructor(
         return builder.build()
     }
 
-    private fun createSignOutUri(): Uri {
-        return Uri.Builder()
+    private fun createFetchTokenUrl() =
+        URL(
+            Uri.Builder()
+                .scheme("https")
+                .authority(configuration.domain)
+                .appendPath("oauth2")
+                .appendPath("token")
+                .build().toString()
+        )
+
+    private fun createFetchTokenHeaders(): Map<String, String> =
+        mutableMapOf("Content-Type" to "application/x-www-form-urlencoded").apply {
+            if (configuration.appSecret != null) {
+                put(
+                    "Authorization",
+                    PkceHelper.encodeBase64("${configuration.appClient}:${configuration.appSecret}")
+                )
+            }
+        }
+
+    private fun createSignOutUri(): Uri =
+        Uri.Builder()
             .scheme("https")
             .authority(configuration.domain).appendPath("logout")
             .appendQueryParameter("client_id", configuration.appClient)
             .appendQueryParameter("logout_uri", configuration.signOutRedirectURI)
             .build()
-    }
 
     override fun onCustomTabsServiceConnected(name: ComponentName, client: CustomTabsClient) {
         this.client = client

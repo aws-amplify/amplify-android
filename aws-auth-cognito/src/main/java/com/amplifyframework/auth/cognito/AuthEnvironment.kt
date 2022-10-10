@@ -32,7 +32,7 @@ internal class AuthEnvironment internal constructor(
     val cognitoAuthService: AWSCognitoAuthServiceBehavior,
     val userContextDataProvider: UserContextDataProvider? = null,
     val hostedUIClient: HostedUIClient?,
-    val logger: Logger? = null
+    val logger: Logger
 ) : Environment {
     internal lateinit var srpHelper: SRPHelper
 }

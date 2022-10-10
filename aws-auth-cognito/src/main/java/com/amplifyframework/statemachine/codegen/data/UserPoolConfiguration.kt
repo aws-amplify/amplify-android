@@ -96,9 +96,9 @@ data class UserPoolConfiguration internal constructor(val builder: Builder) {
                     "https://$endpoint"
                 }
             } catch (e: Exception) {
-                throw AuthException(
-                    "Invalid endpoint value $endpoint",
-                    "Expected fully qualified hostname with no scheme, no path and no query"
+                throw Exception(
+                    "Invalid endpoint value $endpoint. Expected fully qualified hostname with no scheme, " +
+                        "no path and no query"
                 )
             }
         }

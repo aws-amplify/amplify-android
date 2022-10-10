@@ -11,6 +11,7 @@ import com.amplifyframework.storage.ObjectMetadata
 import com.amplifyframework.storage.StorageItem
 import com.amplifyframework.storage.s3.transfer.TransferManager
 import com.amplifyframework.storage.s3.transfer.TransferObserver
+import com.amplifyframework.storage.s3.transfer.TransferRecord
 import com.amplifyframework.storage.s3.transfer.UploadOptions
 import com.amplifyframework.storage.s3.utils.S3Keys
 import java.io.File
@@ -39,7 +40,7 @@ internal class AWSS3StorageService(
         credentialsProvider = authCredentialsProvider
     }
 
-    private val transferManager: TransferManager =
+    val transferManager: TransferManager =
         TransferManager(context, s3Client, awsS3StoragePluginKey)
 
     /**
@@ -65,8 +66,8 @@ internal class AWSS3StorageService(
      * @param file Target file
      * @return A transfer observer
      */
-    override fun downloadToFile(serviceKey: String, file: File): TransferObserver {
-        return transferManager.download(s3BucketName, serviceKey, file)
+    override fun downloadToFile(transferId: String, serviceKey: String, file: File): TransferObserver {
+        return transferManager.download(transferId, s3BucketName, serviceKey, file)
     }
 
     /**
@@ -77,11 +78,12 @@ internal class AWSS3StorageService(
      * @return A transfer observer
      */
     override fun uploadFile(
+        transferId: String,
         serviceKey: String,
         file: File,
         metadata: ObjectMetadata
     ): TransferObserver {
-        return transferManager.upload(s3BucketName, serviceKey, file, metadata)
+        return transferManager.upload(transferId, s3BucketName, serviceKey, file, metadata)
     }
 
     /**
@@ -93,12 +95,13 @@ internal class AWSS3StorageService(
      * @throws IOException An IOException thrown during the process writing an InputStream into a file
      */
     override fun uploadInputStream(
+        transferId: String,
         serviceKey: String,
         inputStream: InputStream,
         metadata: ObjectMetadata
     ): TransferObserver {
         val uploadOptions = UploadOptions(s3BucketName, metadata)
-        return transferManager.upload(serviceKey, inputStream, uploadOptions)
+        return transferManager.upload(transferId, serviceKey, inputStream, uploadOptions)
     }
 
     /**
@@ -168,6 +171,16 @@ internal class AWSS3StorageService(
      */
     override fun cancelTransfer(transferObserver: TransferObserver) {
         transferManager.cancel(transferObserver.id)
+    }
+
+    /**
+     * Gets an existing transfer in the local device queue.
+     * Register consumer to observe result of transfer lookup.
+     * @param transferId the unique identifier of the object in storage
+     * @return transfer record matching the transfer id
+     */
+    override fun getTransfer(transferId: String): TransferRecord? {
+        return transferManager.getTransferOperationById(transferId)
     }
 
     /**

@@ -86,7 +86,7 @@ public class AWSS3StorageListOperationTest {
                         accessLevel: StorageAccessLevel,
                         targetIdentity: String?,
                         onSuccess: Consumer<String>,
-                        onError: Consumer<StorageException>
+                        onError: Consumer<StorageException>?
                     ) {
                         onSuccess.accept("")
                     }
@@ -120,7 +120,7 @@ public class AWSS3StorageListOperationTest {
                         accessLevel: StorageAccessLevel,
                         targetIdentity: String?,
                         onSuccess: Consumer<String>,
-                        onError: Consumer<StorageException>
+                        onError: Consumer<StorageException>?
                     ) {
                         onSuccess.accept("publicCustom/")
                     }

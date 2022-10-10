@@ -16,7 +16,6 @@
 package com.amplifyframework.testutils.featuretest.auth.generators.testcasegenerators
 
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.NotAuthorizedException
-import com.amplifyframework.auth.AuthException
 import com.amplifyframework.testutils.featuretest.API
 import com.amplifyframework.testutils.featuretest.ExpectationShapes
 import com.amplifyframework.testutils.featuretest.FeatureTestCase
@@ -115,8 +114,8 @@ object ResetPasswordTestCaseGenerator : SerializableProvider {
                     ExpectationShapes.Amplify(
                         AuthAPI.resetPassword,
                         ResponseType.Failure,
-                        AuthException.NotAuthorizedException(
-                            errorResponse
+                        com.amplifyframework.auth.exceptions.NotAuthorizedException(
+                            errorResponse.toString()
                         ).toJsonElement(),
                     )
                 )
