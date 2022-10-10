@@ -15,6 +15,7 @@
 
 package com.amplifyframework.auth.cognito.actions
 
+import android.os.Build
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ConfirmDeviceRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeviceSecretVerifierConfigType
 import com.amplifyframework.AmplifyException
@@ -91,6 +92,7 @@ object SignInCognitoActions : SignInActions {
                     ConfirmDeviceRequest.invoke {
                         this.accessToken = event.signedInData.cognitoUserPoolTokens.accessToken
                         this.deviceKey = deviceKey
+                        this.deviceName = Build.MODEL
                         this.deviceSecretVerifierConfig = DeviceSecretVerifierConfigType.invoke {
                             this.passwordVerifier = deviceVerifierMap["verifier"]
                             this.salt = deviceVerifierMap["salt"]

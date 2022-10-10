@@ -19,6 +19,7 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.RespondToAuthChallengeRequest
 import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidUserPoolConfigurationException
+import com.amplifyframework.auth.cognito.helpers.SRPHelper
 import com.amplifyframework.auth.cognito.helpers.SignInChallengeHelper
 import com.amplifyframework.auth.exceptions.UnknownException
 import com.amplifyframework.statemachine.Action
@@ -47,6 +48,8 @@ object DeviceSRPCognitoSignInActions : DeviceSRPSignInActions {
             logger.verbose("$id Starting execution")
             val evt = try {
                 event.challengeParameters?.let { params ->
+                    srpHelper = SRPHelper("DEVICE_SECRET")
+
                     val username = params.getValue(KEY_USERNAME)
                     val encodedContextData = userContextDataProvider?.getEncodedContextData(username)
 
@@ -67,6 +70,8 @@ object DeviceSRPCognitoSignInActions : DeviceSRPSignInActions {
                                 encodedContextData?.let { userContextData { encodedData = it } }
                             }
                         )
+
+                        // TODO: next step is always device password verifier?
                         SignInChallengeHelper.evaluateNextStep(
                             username = username,
                             signInMethod = SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH),
@@ -100,6 +105,8 @@ object DeviceSRPCognitoSignInActions : DeviceSRPSignInActions {
                     val username = params.getValue(KEY_USERNAME)
                     val deviceKey = params.getValue(KEY_DEVICE_KEY)
                     val encodedContextData = userContextDataProvider?.getEncodedContextData(username)
+
+                    srpHelper.setUserPoolParams("STUB_DEVICE_KEY", "STUB_DEVICE_GROUP")
 
                     cognitoAuthService.cognitoIdentityProviderClient?.let {
                         val respondToAuthChallenge = it.respondToAuthChallenge(
