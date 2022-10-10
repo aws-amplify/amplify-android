@@ -25,6 +25,8 @@ import com.amplifyframework.auth.AuthSession
 import com.amplifyframework.auth.AuthUser
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
+import com.amplifyframework.auth.cognito.options.FederateToIdentityPoolOptions
+import com.amplifyframework.auth.cognito.result.FederateToIdentityPoolResult
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
@@ -614,6 +616,61 @@ class AWSCognitoAuthPluginTest {
         authPlugin.deleteUser(expectedOnSuccess, expectedOnError)
 
         verify { realPlugin.deleteUser(expectedOnSuccess, expectedOnError) }
+    }
+
+    @Test
+    fun verifyFederateToIdentityPool() {
+        val expectedToken = "adsfkjadlfjk4"
+        val expectedProvider = AuthProvider.amazon()
+        val expectedOnSuccess = Consumer<FederateToIdentityPoolResult> { }
+        val expectedOnError = Consumer<AuthException> { }
+        val options = FederateToIdentityPoolOptions.builder().build()
+
+        authPlugin.federateToIdentityPool(expectedToken, expectedProvider, expectedOnSuccess, expectedOnError)
+
+        verify {
+            realPlugin.federateToIdentityPool(
+                expectedToken,
+                expectedProvider,
+                options,
+                expectedOnSuccess,
+                expectedOnError
+            )
+        }
+    }
+
+    @Test
+    fun verifyFederateToIdentityPoolWithOptions() {
+        val expectedToken = "adsfkjadlfjk4"
+        val expectedProvider = AuthProvider.amazon()
+        val expectedOnSuccess = Consumer<FederateToIdentityPoolResult> { }
+        val expectedOnError = Consumer<AuthException> { }
+        val options = FederateToIdentityPoolOptions
+            .builder()
+            .developerProvidedIdentityId("devid")
+            .build()
+
+        authPlugin.federateToIdentityPool(expectedToken, expectedProvider, options, expectedOnSuccess, expectedOnError)
+
+        verify {
+            realPlugin.federateToIdentityPool(
+                expectedToken,
+                expectedProvider,
+                options,
+                expectedOnSuccess,
+                expectedOnError
+            )
+        }
+    }
+
+    @Test
+    fun verifyClearFederationToIdentityPool() {
+        val expectedOnSuccess = Action { }
+        val expectedOnError = Consumer<AuthException> { }
+
+        authPlugin.clearFederationToIdentityPool(expectedOnSuccess, expectedOnError)
+
+        verify { realPlugin.clearFederationToIdentityPool(expectedOnSuccess, expectedOnError) }
     }
 
     @Test
