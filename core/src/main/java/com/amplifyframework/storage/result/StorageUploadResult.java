@@ -23,7 +23,7 @@ import java.util.Objects;
 /**
  * The result of an upload operation in the Storage category.
  */
-public class StorageUploadResult {
+public class StorageUploadResult extends StorageTransferResult {
     private final String key;
 
     StorageUploadResult(String key) {

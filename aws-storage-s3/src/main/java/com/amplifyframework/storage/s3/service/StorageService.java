@@ -21,6 +21,7 @@ import androidx.annotation.NonNull;
 import com.amplifyframework.storage.ObjectMetadata;
 import com.amplifyframework.storage.StorageItem;
 import com.amplifyframework.storage.s3.transfer.TransferObserver;
+import com.amplifyframework.storage.s3.transfer.TransferRecord;
 
 import java.io.File;
 import java.io.IOException;
@@ -46,11 +47,13 @@ public interface StorageService {
      * Begin downloading a specific item to a file and return an observer
      * to monitor download progress.
      *
+     * @param transferId unique id for this transfer
      * @param serviceKey key to uniquely specify item to download
      * @param file       file to write downloaded item
      * @return An instance of {@link TransferObserver} to monitor download
      */
-    TransferObserver downloadToFile(@NonNull String serviceKey,
+    TransferObserver downloadToFile(@NonNull String transferId,
+                                    @NonNull String serviceKey,
                                     @NonNull File file);
 
     /**
@@ -58,12 +61,14 @@ public interface StorageService {
      * to monitor upload progress. This item will be stored with specified
      * metadata.
      *
+     * @param transferId unique id for this transfer
      * @param serviceKey Key to uniquely label item in storage
      * @param file       file to upload
      * @param metadata   metadata to attach to uploaded item
      * @return An instance of {@link TransferObserver} to monitor upload
      */
-    TransferObserver uploadFile(@NonNull String serviceKey,
+    TransferObserver uploadFile(@NonNull String transferId,
+                                @NonNull String serviceKey,
                                 @NonNull File file,
                                 @NonNull ObjectMetadata metadata);
 
@@ -72,6 +77,7 @@ public interface StorageService {
      * to monitor upload progress. This item will be stored with specified
      * metadata.
      *
+     * @param transferId unique id for this transfer
      * @param serviceKey  key to uniquely label item in storage
      * @param inputStream InputStream from which to read content
      * @param metadata    Metadata to attach to uploaded item
@@ -79,7 +85,8 @@ public interface StorageService {
      * @throws IOException on error reading the InputStream, or saving it to a temporary
      *                     File before the upload begins.
      */
-    TransferObserver uploadInputStream(@NonNull String serviceKey,
+    TransferObserver uploadInputStream(@NonNull String transferId,
+                                       @NonNull String serviceKey,
                                        @NonNull InputStream inputStream,
                                        @NonNull ObjectMetadata metadata)
         throws IOException;
@@ -120,6 +127,15 @@ public interface StorageService {
      * @param transfer Transfer to cancel
      */
     void cancelTransfer(@NonNull TransferObserver transfer);
+
+    /**
+     * Gets an existing transfer in the local device queue.
+     * Register consumer to observe result of transfer lookup.
+     * @param transferId the unique identifier of the object in storage
+     *
+     * @return transferRecord matching the transferId
+     */
+    TransferRecord getTransfer(@NonNull String transferId);
 
     /**
      * A method to create an instance of storage service.
