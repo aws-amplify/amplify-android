@@ -61,7 +61,7 @@ object DeviceSRPCognitoSignInActions : DeviceSRPSignInActions {
                                 clientId = configuration.userPool?.appClient
                                 challengeResponses = mapOf(
                                     KEY_USERNAME to username,
-                                    KEY_DEVICE_KEY to deviceMetadata?.deviceKey!!,
+                                    KEY_DEVICE_KEY to (deviceMetadata?.deviceKey ?: ""),
                                     KEY_SRP_A to srpHelper.getPublicA()
                                 )
                                 encodedContextData?.let { userContextData { encodedData = it } }
