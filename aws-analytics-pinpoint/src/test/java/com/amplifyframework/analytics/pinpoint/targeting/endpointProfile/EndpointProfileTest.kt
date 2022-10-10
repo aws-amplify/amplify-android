@@ -30,8 +30,8 @@ class EndpointProfileTest : TestCase() {
 
     fun `test serialization`() {
         val expected =
-            "{\"ApplicationId\":\"app id\",\"EndpointId\":\"unique-id\",\"ChannelType\":\"GCM\",\"Address\":" +
-                "\"\",\"Location\":\"{\\\"country\\\":\\\"en_US\\\"}\",\"Demographic\":\"{\\\"make\\\":" +
+            "{\"ApplicationId\":\"app id\",\"EndpointId\":\"unique-id\"," +
+                "\"Location\":\"{\\\"country\\\":\\\"en_US\\\"}\",\"Demographic\":\"{\\\"make\\\":" +
                 "\\\"TEST MANUFACTURER\\\",\\\"locale\\\":\\\"en_US\\\",\\\"appVersion\\\":\\\"1.0.0\\\"}\"," +
                 "\"EffectiveDate\":\"${effectiveDate.millisToIsoDate()}\",\"OptOut\":\"ALL\",\"User\":\"{}\"}"
         assertEquals(expected, endpointProfile.toString())
@@ -57,8 +57,8 @@ class EndpointProfileTest : TestCase() {
         assertEquals(4.0, endpointProfile.allMetrics["metric4"])
 
         val expected =
-            "{\"ApplicationId\":\"app id\",\"EndpointId\":\"unique-id\",\"ChannelType\":\"GCM\",\"Address\":" +
-                "\"\",\"Location\":\"{\\\"country\\\":\\\"en_US\\\"}\",\"Demographic\":\"{\\\"make\\\":" +
+            "{\"ApplicationId\":\"app id\",\"EndpointId\":\"unique-id\"," +
+                "\"Location\":\"{\\\"country\\\":\\\"en_US\\\"}\",\"Demographic\":\"{\\\"make\\\":" +
                 "\\\"TEST MANUFACTURER\\\",\\\"locale\\\":\\\"en_US\\\",\\\"appVersion\\\":\\\"1.0.0\\\"}\"," +
                 "\"EffectiveDate\":\"${effectiveDate.millisToIsoDate()}\",\"OptOut\":\"ALL\"," +
                 "\"Metrics\":{\"metric2\":2.0,\"metric3\":-3.0,\"metric4\":4.0},\"User\":\"{}\"}"
@@ -91,8 +91,8 @@ class EndpointProfileTest : TestCase() {
 
         println(endpointProfile.toString())
         val expected =
-            "{\"ApplicationId\":\"app id\",\"EndpointId\":\"unique-id\",\"ChannelType\":\"GCM\",\"Address\":" +
-                "\"\",\"Location\":\"{\\\"country\\\":\\\"en_US\\\"}\",\"Demographic\":\"{\\\"make\\\":" +
+            "{\"ApplicationId\":\"app id\",\"EndpointId\":\"unique-id\"," +
+                "\"Location\":\"{\\\"country\\\":\\\"en_US\\\"}\",\"Demographic\":\"{\\\"make\\\":" +
                 "\\\"TEST MANUFACTURER\\\",\\\"locale\\\":\\\"en_US\\\",\\\"appVersion\\\":\\\"1.0.0\\\"}\"," +
                 "\"EffectiveDate\":\"${effectiveDate.millisToIsoDate()}\",\"OptOut\":\"ALL\"," +
                 "\"Attributes\":{\"attribute4\":[\"g\",\"h\",\"i\"],\"attribute3\":[\"\"]," +

@@ -12,7 +12,7 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package com.amplifyframework.analytics.pinpoint.credentails
+package com.amplifyframework.analytics.pinpoint.credentials
 
 import aws.smithy.kotlin.runtime.auth.awscredentials.Credentials
 import com.amplifyframework.auth.AWSCredentials
