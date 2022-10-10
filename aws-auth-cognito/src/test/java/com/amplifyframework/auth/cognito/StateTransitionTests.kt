@@ -17,13 +17,13 @@ package com.amplifyframework.auth.cognito
 
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.StateChangeListenerToken
+import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.data.SignInData
 import com.amplifyframework.statemachine.codegen.data.SignOutData
 import com.amplifyframework.statemachine.codegen.data.SignedOutData
 import com.amplifyframework.statemachine.codegen.events.AuthEvent
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
-import com.amplifyframework.statemachine.codegen.events.CredentialStoreEvent
 import com.amplifyframework.statemachine.codegen.events.DeleteUserEvent
 import com.amplifyframework.statemachine.codegen.events.SignInChallengeEvent
 import com.amplifyframework.statemachine.codegen.events.SignInEvent
@@ -31,7 +31,6 @@ import com.amplifyframework.statemachine.codegen.events.SignOutEvent
 import com.amplifyframework.statemachine.codegen.states.AuthState
 import com.amplifyframework.statemachine.codegen.states.AuthenticationState
 import com.amplifyframework.statemachine.codegen.states.AuthorizationState
-import com.amplifyframework.statemachine.codegen.states.CredentialStoreState
 import com.amplifyframework.statemachine.codegen.states.CustomSignInState
 import com.amplifyframework.statemachine.codegen.states.DeleteUserState
 import com.amplifyframework.statemachine.codegen.states.DeviceSRPSignInState
@@ -56,6 +55,7 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mock
 import org.mockito.Mockito
 import org.mockito.junit.MockitoJUnitRunner
 
@@ -65,11 +65,12 @@ class StateTransitionTests : StateTransitionTestBase() {
     private val mainThreadSurrogate = newSingleThreadContext("Main thread")
 
     internal lateinit var stateMachine: AuthStateMachine
-    private lateinit var storeStateMachine: CredentialStoreStateMachine
+
+    @Mock
+    private lateinit var storeClient: CredentialStoreClient
 
     @Before
     fun setUp() {
-        setupCredentialStoreActions()
         setupAuthActions()
         setupAuthNActions()
         setupAuthZActions()
@@ -79,7 +80,6 @@ class StateTransitionTests : StateTransitionTestBase() {
         setupFetchAuthActions()
         setupDeleteAction()
         setupStateMachine()
-        addStateChangeListeners()
         Dispatchers.setMain(mainThreadSurrogate)
     }
 
@@ -110,55 +110,7 @@ class StateTransitionTests : StateTransitionTestBase() {
                 ),
                 mockAuthActions
             ),
-            AuthEnvironment(configuration, cognitoAuthService, null, null, mockk())
-        )
-
-        storeStateMachine = CredentialStoreStateMachine(
-            CredentialStoreState.Resolver(credentialStoreActions),
-            CredentialStoreEnvironment(credentialStore, legacyCredentialStore, mockk())
-        )
-    }
-
-    private fun addStateChangeListeners() {
-        stateMachine.listen(
-            { authState ->
-                when (authState) {
-                    is AuthState.WaitingForCachedCredentials -> storeStateMachine.send(
-                        CredentialStoreEvent(CredentialStoreEvent.EventType.LoadCredentialStore())
-                    )
-                    is AuthState.Configured -> {
-                        val authZState = authState.authZState
-                        if (authZState is AuthorizationState.StoringCredentials) {
-                            storeStateMachine.send(
-                                CredentialStoreEvent(
-                                    CredentialStoreEvent.EventType.StoreCredentials(authZState.amplifyCredential)
-                                )
-                            )
-                        }
-                    }
-                    else -> {
-                        // No-op
-                    }
-                }
-            },
-            null
-        )
-
-        storeStateMachine.listen(
-            { storeState ->
-                when (storeState) {
-                    is CredentialStoreState.Success -> stateMachine.send(
-                        AuthEvent(AuthEvent.EventType.ReceivedCachedCredentials(storeState.storedCredentials))
-                    )
-                    is CredentialStoreState.Error -> stateMachine.send(
-                        AuthEvent(AuthEvent.EventType.CachedCredentialsFailed)
-                    )
-                    else -> {
-                        // No-op
-                    }
-                }
-            },
-            null
+            AuthEnvironment(configuration, cognitoAuthService, storeClient, null, null, mockk())
         )
     }
 
@@ -170,7 +122,7 @@ class StateTransitionTests : StateTransitionTestBase() {
                 Action { dispatcher, _ ->
                     dispatcher.send(
                         AuthenticationEvent(
-                            AuthenticationEvent.EventType.InitializedSignedIn(signedInData)
+                            AuthenticationEvent.EventType.InitializedSignedIn(signedInData, DeviceMetadata.Empty)
                         )
                     )
                     dispatcher.send(
