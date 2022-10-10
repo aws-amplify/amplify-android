@@ -12,15 +12,13 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package com.amplifyframework.auth.cognito.exceptions.configuration
+package com.amplifyframework.auth.cognito.exceptions.service
 
-import com.amplifyframework.auth.exceptions.ConfigurationException
+import com.amplifyframework.auth.exceptions.ServiceException
 
 /**
- * Could not perform the action because the user pool is not configured or
- * is configured incorrectly.
+ * Could not perform the action because the code was unable to be parsed
+ * @param message Explains the reason for the exception
  */
-class InvalidUserPoolConfigurationException : ConfigurationException(
-    message = "The user pool configuration is missing or invalid.",
-    recoverySuggestion = "Please check the user pool configuration in your amplifyconfiguration.json file."
-)
+open class CodeValidationException(message: String = "Failed to parse code from the fetch token Uri") :
+    ServiceException(message, TODO_RECOVERY_SUGGESTION)

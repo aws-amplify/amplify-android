@@ -19,6 +19,7 @@ import android.content.Context
 import android.os.Handler
 import android.os.Looper
 import com.amplifyframework.core.Amplify
+import com.amplifyframework.storage.TransferState
 import com.amplifyframework.storage.s3.AWSS3StoragePlugin
 import java.io.File
 import java.util.concurrent.ConcurrentHashMap

@@ -16,7 +16,6 @@
 package com.amplifyframework.statemachine.codegen.data
 
 import com.amplifyframework.auth.AuthException
-import com.amplifyframework.auth.exceptions.ValidationException
 import org.json.JSONObject
 
 /**
@@ -97,9 +96,9 @@ data class UserPoolConfiguration internal constructor(val builder: Builder) {
                     "https://$endpoint"
                 }
             } catch (e: Exception) {
-                throw ValidationException(
-                    "Invalid endpoint value $endpoint",
-                    "Expected fully qualified hostname with no scheme, no path and no query"
+                throw Exception(
+                    "Invalid endpoint value $endpoint. Expected fully qualified hostname with no scheme, " +
+                        "no path and no query"
                 )
             }
         }
