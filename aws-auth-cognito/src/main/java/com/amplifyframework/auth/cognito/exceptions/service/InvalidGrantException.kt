@@ -12,14 +12,13 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
+package com.amplifyframework.auth.cognito.exceptions.service
 
-package com.amplifyframework.auth.cognito.result
-
-import com.amplifyframework.statemachine.codegen.data.AWSCredentials
+import com.amplifyframework.auth.exceptions.ServiceException
 
 /**
- * Wraps the result of a federation to Identity Pool.
- * @param identityId Identity Id of federation
- * @param credentials Returned credentials from successful federation
+ * Could not perform the action because the token was unable to be parsed
+ * @param message Explains the reason for the exception
  */
-data class FederateToIdentityPoolResult internal constructor(val identityId: String, val credentials: AWSCredentials)
+open class InvalidGrantException(message: String) :
+    ServiceException(message, TODO_RECOVERY_SUGGESTION)
