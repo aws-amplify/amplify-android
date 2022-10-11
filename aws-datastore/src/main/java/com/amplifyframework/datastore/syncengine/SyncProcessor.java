@@ -16,6 +16,7 @@
 package com.amplifyframework.datastore.syncengine;
 
 import androidx.annotation.NonNull;
+import androidx.core.util.Supplier;
 
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLRequest;
@@ -35,19 +36,25 @@ import com.amplifyframework.datastore.DataStoreChannelEventName;
 import com.amplifyframework.datastore.DataStoreConfigurationProvider;
 import com.amplifyframework.datastore.DataStoreErrorHandler;
 import com.amplifyframework.datastore.DataStoreException;
+import com.amplifyframework.datastore.DataStoreSyncSupplier;
 import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
 import com.amplifyframework.datastore.events.SyncQueriesStartedEvent;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.logging.Logger;
+import com.amplifyframework.util.ForEach;
 import com.amplifyframework.util.Time;
 
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Flowable;
@@ -65,6 +72,7 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
  */
 final class SyncProcessor {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
+    private static final int SYNC_SUBSCRIPTION_SWITCH_MILLISECONDS = 500;
 
     private final ModelProvider modelProvider;
     private final SchemaRegistry schemaRegistry;
@@ -72,6 +80,7 @@ final class SyncProcessor {
     private final AppSync appSync;
     private final Merger merger;
     private final DataStoreConfigurationProvider dataStoreConfigurationProvider;
+    private Supplier<DataStoreSyncSupplier> dataStoreSyncSupplierSupplier;
     private final QueryPredicateProvider queryPredicateProvider;
     private final RetryHandler requestRetry;
     private final boolean isSyncRetryEnabled;
@@ -84,6 +93,7 @@ final class SyncProcessor {
         this.merger = builder.merger;
         this.dataStoreConfigurationProvider = builder.dataStoreConfigurationProvider;
         this.queryPredicateProvider = builder.queryPredicateProvider;
+        this.dataStoreSyncSupplierSupplier = builder.dataStoreSyncSupplier;
         this.requestRetry = builder.requestRetry;
         this.isSyncRetryEnabled = builder.isSyncRetryEnabled;
     }
@@ -103,7 +113,9 @@ final class SyncProcessor {
      */
     Completable hydrate() {
         final List<Completable> hydrationTasks = new ArrayList<>();
-        List<ModelSchema> modelSchemas = new ArrayList<>(modelProvider.modelSchemas().values());
+        final ConcurrentLinkedQueue<String> hydratedModels = new ConcurrentLinkedQueue<>();
+        List<ModelSchema> modelSchemas = new ArrayList<>(
+                this.dataStoreSyncSupplierSupplier.get().getModels(this.modelProvider).values());
 
         // And sort them all, according to their model's topological order,
         // So that when we save them, the references will exist.
@@ -115,16 +127,21 @@ final class SyncProcessor {
             //Check to see if query predicate for this schema is not equal to none. This means customer does
             // not want to sync the data for this model.
             if (!QueryPredicates.none().equals(queryPredicateProvider.getPredicate(schema.getName()))) {
-                hydrationTasks.add(createHydrationTask(schema));
+                hydrationTasks.add(createHydrationTask(schema, hydratedModels));
                 toBeSyncedModelArray.add(schema.getName());
             }
         }
 
-        return Completable.concat(hydrationTasks)
+        return Completable.merge(hydrationTasks)
             .doOnSubscribe(ignore -> {
                 // This is where we trigger the syncQueriesStarted event since
                 // doOnSubscribe means that all upstream hydration tasks
                 // have started.
+                String[] modelNames =
+                        ForEach.inCollection(
+                                this.dataStoreSyncSupplierSupplier.get().getModels(this.modelProvider).values(),
+                                ModelSchema::getName
+                        ).toArray(new String[0]);
                 Amplify.Hub.publish(HubChannel.DATASTORE,
                     HubEvent.create(DataStoreChannelEventName.SYNC_QUERIES_STARTED,
                         new SyncQueriesStartedEvent(toBeSyncedModelArray.toArray(new String[0]))
@@ -138,25 +155,55 @@ final class SyncProcessor {
             });
     }
 
-    private Completable createHydrationTask(ModelSchema schema) {
+    private Completable createHydrationTask(ModelSchema schema, ConcurrentLinkedQueue<String> hydratedModels) {
         ModelSyncMetricsAccumulator metricsAccumulator = new ModelSyncMetricsAccumulator(schema.getName());
+
+        List<String> dependencies = new ArrayList<>(
+                schema.getAssociations().values().stream()
+                        .filter((i) -> i.isOwner())
+                        .map((i) -> i.getAssociatedType())
+                        .collect(Collectors.toList()));
+
+        LOG.debug("Sync dependencies for model:" + schema.getName() + " - "
+                + dependencies.toString());
+
         return syncTimeRegistry.lookupLastSyncTime(schema.getName())
+            .delaySubscription(
+                    Flowable.interval(SYNC_SUBSCRIPTION_SWITCH_MILLISECONDS, TimeUnit.MILLISECONDS)
+                            .doOnNext((i) -> {
+                                LOG.verbose("Waiting to meet dependency for " + schema.getName()
+                                        + "\n dependencies: " + dependencies.toString()
+                                        + "\n hydrated: " + hydratedModels.toString()
+                                );
+                            })
+                            .filter((i) ->
+                                    dependencies.isEmpty() || hydratedModels.containsAll(dependencies))
+                            .doOnNext((i) ->
+                                    LOG.debug("Dependencies met for " + schema.getName() + " current list: "
+                                            + hydratedModels.toString()
+                                    )
+                            ).take(1)
+            )
             .map(this::filterOutOldSyncTimes)
             // And for each, perform a sync. The network response will contain an Iterable<ModelWithMetadata<T>>
             .flatMap(lastSyncTime -> {
                 // Sync all the pages
+                SyncTime newSyncTime = SyncTime.now();
                 return syncModel(schema, lastSyncTime)
                     // Switch to a new thread so that subsequent API fetches will happen in parallel with DB writes.
                     .observeOn(Schedulers.io())
                     // Flatten to a stream of ModelWithMetadata objects
                     .concatMap(Flowable::fromIterable)
                     .concatMapCompletable(item -> merger.merge(item, metricsAccumulator::increment))
-                    .toSingle(() -> lastSyncTime.exists() ? SyncType.DELTA : SyncType.BASE);
+                    .toSingle(() -> lastSyncTime.exists() ? new AbstractMap.SimpleEntry<>(SyncType.DELTA, newSyncTime)
+                            : new AbstractMap.SimpleEntry<>(SyncType.BASE, newSyncTime));
             })
-            .flatMapCompletable(syncType -> {
+            .flatMapCompletable(res -> {
+                SyncType syncType = res.getKey();
+                SyncTime syncTime = res.getValue();
                 Completable syncTimeSaveCompletable = SyncType.DELTA.equals(syncType) ?
-                    syncTimeRegistry.saveLastDeltaSyncTime(schema.getName(), SyncTime.now()) :
-                    syncTimeRegistry.saveLastBaseSyncTime(schema.getName(), SyncTime.now());
+                    syncTimeRegistry.saveLastDeltaSyncTime(schema.getName(), syncTime) :
+                    syncTimeRegistry.saveLastBaseSyncTime(schema.getName(), syncTime);
                 return syncTimeSaveCompletable.andThen(Completable.fromAction(() ->
                     Amplify.Hub.publish(
                         HubChannel.DATASTORE, metricsAccumulator.toModelSyncedEvent(syncType).toHubEvent()
@@ -174,7 +221,14 @@ final class SyncProcessor {
             })
             .doOnComplete(() ->
                 LOG.info("Successfully sync'd down model state from cloud.")
-            );
+            )
+            .doFinally(() -> {
+                hydratedModels.add(schema.getName());
+                LOG.debug("Adding to hydrated model list :" + schema.getName() +
+                        " \n current list: " + hydratedModels.toString()
+                );
+            })
+            .subscribeOn(Schedulers.io());
     }
 
     /**
@@ -219,7 +273,7 @@ final class SyncProcessor {
     private <T extends Model> Flowable<List<ModelWithMetadata<T>>> syncModel(ModelSchema schema, SyncTime syncTime)
             throws DataStoreException {
         final Long lastSyncTimeAsLong = syncTime.exists() ? syncTime.toLong() : null;
-        final Integer syncPageSize = dataStoreConfigurationProvider.getConfiguration().getSyncPageSize();
+        final Integer syncPageSize = dataStoreConfigurationProvider.getConfiguration().getModelSyncPageSize(schema.getName());
         final Integer syncMaxRecords = dataStoreConfigurationProvider.getConfiguration().getSyncMaxRecords();
         AtomicReference<Integer> recordsFetched = new AtomicReference<>(0);
         QueryPredicate predicate = queryPredicateProvider.getPredicate(schema.getName());
@@ -310,7 +364,7 @@ final class SyncProcessor {
      */
     public static final class Builder implements ModelProviderStep, SchemaRegistryStep,
             SyncTimeRegistryStep, AppSyncStep, MergerStep, DataStoreConfigurationProviderStep,
-            QueryPredicateProviderStep, RetryHandlerStep, SyncRetryStep, BuildStep {
+            QueryPredicateProviderStep, RetryHandlerStep, SyncRetryStep, DataStoreSyncSupplierStep, BuildStep {
         private ModelProvider modelProvider;
         private SchemaRegistry schemaRegistry;
         private SyncTimeRegistry syncTimeRegistry;
@@ -320,6 +374,7 @@ final class SyncProcessor {
         private QueryPredicateProvider queryPredicateProvider;
         private RetryHandler requestRetry;
         private boolean isSyncRetryEnabled;
+        private Supplier<DataStoreSyncSupplier> dataStoreSyncSupplier;
 
         @NonNull
         @Override
@@ -373,8 +428,15 @@ final class SyncProcessor {
 
         @NonNull
         @Override
-        public BuildStep isSyncRetryEnabled(boolean isSyncRetryEnabled) {
+        public DataStoreSyncSupplierStep isSyncRetryEnabled(boolean isSyncRetryEnabled) {
             this.isSyncRetryEnabled = isSyncRetryEnabled;
+            return Builder.this;
+        }
+
+        @NonNull
+        @Override
+        public BuildStep dataStoreSyncSupplier(Supplier<DataStoreSyncSupplier> dataStoreSyncSupplier) {
+            this.dataStoreSyncSupplier = Objects.requireNonNull(dataStoreSyncSupplier);
             return Builder.this;
         }
 
@@ -435,7 +497,12 @@ final class SyncProcessor {
 
     interface SyncRetryStep {
         @NonNull
-        BuildStep isSyncRetryEnabled(boolean isSyncRetryEnabled);
+        DataStoreSyncSupplierStep isSyncRetryEnabled(boolean isSyncRetryEnabled);
+    }
+
+    interface DataStoreSyncSupplierStep {
+        @NonNull
+        BuildStep dataStoreSyncSupplier(Supplier<DataStoreSyncSupplier> dataStoreSyncSupplier);
     }
 
     interface BuildStep {

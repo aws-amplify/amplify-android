@@ -31,6 +31,7 @@ import com.amplifyframework.datastore.DataStoreChannelEventName;
 import com.amplifyframework.datastore.DataStoreConfiguration;
 import com.amplifyframework.datastore.DataStoreConfigurationProvider;
 import com.amplifyframework.datastore.DataStoreException;
+import com.amplifyframework.datastore.DefaultDataStoreSyncSupplier;
 import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.appsync.AppSyncMocking;
 import com.amplifyframework.datastore.appsync.ModelMetadata;
@@ -169,6 +170,7 @@ public final class SyncProcessorTest {
             .queryPredicateProvider(queryPredicateProvider)
             .retryHandler(requestRetry)
             .isSyncRetryEnabled(isSyncRetryEnabled)
+            .dataStoreSyncSupplier(() -> DefaultDataStoreSyncSupplier.instance())
             .build();
     }
 

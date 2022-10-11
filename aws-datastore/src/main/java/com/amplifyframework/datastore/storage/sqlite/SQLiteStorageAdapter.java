@@ -42,6 +42,7 @@ import com.amplifyframework.core.model.query.QueryOptions;
 import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryField;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
+import com.amplifyframework.core.model.query.predicate.QueryPredicateGroup;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.DataStoreConfiguration;
 import com.amplifyframework.datastore.DataStoreException;
@@ -798,7 +799,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         final String tableName = table.getName();
         final String primaryKeyName = table.getPrimaryKey().getName();
         final QueryPredicate matchId = QueryField.field(tableName, primaryKeyName).eq(model.getPrimaryKeyString());
-        final QueryPredicate condition = predicate.and(matchId);
+        final QueryPredicate condition = QueryPredicateGroup.andOf(predicate).and(matchId);
         return sqlCommandProcessor.executeExists(sqlCommandFactory.existsFor(schema, condition));
     }
 

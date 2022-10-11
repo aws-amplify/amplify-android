@@ -16,14 +16,19 @@
 package com.amplifyframework.datastore.syncengine;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.SchemaRegistry;
+import com.amplifyframework.core.model.query.predicate.QueryPredicates;
+import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.core.model.SerializedModel;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.appsync.AppSync;
@@ -89,7 +94,7 @@ final class MutationProcessor {
      * we have to keep the mutation in the outbox, so that we can try to publish
      * it again later, when network conditions become favorable again.
      */
-    void startDrainingMutationOutbox() {
+    void startDrainingMutationOutbox(@Nullable Action onPipelineBroken) {
         ongoingOperationsDisposable.add(mutationOutbox.events()
             .doOnSubscribe(disposable ->
                 LOG.info(
@@ -103,9 +108,18 @@ final class MutationProcessor {
             .flatMapCompletable(event -> drainMutationOutbox())
             .subscribe(
                 () -> LOG.warn("Observation of mutation outbox was completed."),
-                error -> LOG.warn("Error ended observation of mutation outbox: ", error)
+                error -> {
+                    LOG.warn("Error ended observation of mutation outbox: ", error);
+                    if (onPipelineBroken != null) {
+                        onPipelineBroken.call();
+                    }
+                }
             )
         );
+    }
+
+    void startDrainingMutationOutbox() {
+        startDrainingMutationOutbox(null);
     }
 
     private Completable drainMutationOutbox() {

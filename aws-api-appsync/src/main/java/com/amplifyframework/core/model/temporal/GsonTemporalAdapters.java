@@ -159,7 +159,7 @@ public final class GsonTemporalAdapters {
     public static final class JavaDateAdapter implements JsonSerializer<Date> {
         @Override
         public JsonElement serialize(Date date, Type typeOfSrc, JsonSerializationContext context) {
-            DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+            DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault());
             return new JsonPrimitive(dateFormat.format(date));
         }
     }

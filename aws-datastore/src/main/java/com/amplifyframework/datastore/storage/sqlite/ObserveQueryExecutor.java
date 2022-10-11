@@ -22,6 +22,7 @@ import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.query.ObserveQueryOptions;
+import com.amplifyframework.core.model.query.Page;
 import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.datastore.DataStoreConfiguration;
 import com.amplifyframework.datastore.DataStoreException;
@@ -175,8 +176,10 @@ public class ObserveQueryExecutor<T extends Model> implements Cancelable {
                                 @NonNull Consumer<DataStoreQuerySnapshot<T>> onQuerySnapshot,
                                 @NonNull Consumer<DataStoreException> onObservationError) {
         List<T> models = sqlQueryProcessor.queryOfflineData(itemClass,
-                Where.matchesAndSorts(options.getQueryPredicate(),
-                                      options.getSortBy()), onObservationError);
+                Where.matchesAndSorts(
+                        options.getQueryPredicate(),
+                        options.getSortBy()).paginated(Page.firstPage().withLimit(maxRecords)),
+                onObservationError);
         Consumer<DataStoreException> onQueryError = value -> {
             cancel();
             onObservationError.accept(value);
