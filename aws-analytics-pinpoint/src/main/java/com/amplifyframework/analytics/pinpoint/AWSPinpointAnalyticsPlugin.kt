@@ -20,7 +20,7 @@ import com.amplifyframework.analytics.AnalyticsEventBehavior
 import com.amplifyframework.analytics.AnalyticsPlugin
 import com.amplifyframework.analytics.AnalyticsProperties
 import com.amplifyframework.analytics.UserProfile
-import com.amplifyframework.analytics.pinpoint.credentails.CognitoCredentialsProvider
+import com.amplifyframework.analytics.pinpoint.credentials.CognitoCredentialsProvider
 import org.json.JSONObject
 
 /**

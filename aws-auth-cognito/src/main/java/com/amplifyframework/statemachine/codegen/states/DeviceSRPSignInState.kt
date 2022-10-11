@@ -27,7 +27,6 @@ sealed class DeviceSRPSignInState : State {
     data class InitiatingDeviceSRP(val id: String = "") : DeviceSRPSignInState()
     data class RespondingDevicePasswordVerifier(val id: String = "") : DeviceSRPSignInState()
     data class SignedIn(val id: String = "") : DeviceSRPSignInState()
-    data class Cancelling(val id: String = "") : DeviceSRPSignInState()
     data class Error(val exception: Exception) : DeviceSRPSignInState()
 
     class Resolver(private val deviceSRPSignInActions: DeviceSRPSignInActions) :
@@ -67,33 +66,13 @@ sealed class DeviceSRPSignInState : State {
                         is DeviceSRPSignInEvent.EventType.ThrowAuthError -> {
                             StateResolution(Error(deviceSRPEvent.exception))
                         }
-                        is DeviceSRPSignInEvent.EventType.CancelSRPSignIn -> {
-                            StateResolution(
-                                Cancelling(),
-                                listOf(deviceSRPSignInActions.cancellingSignIn(deviceSRPEvent))
-                            )
-                        }
                         else -> StateResolution(oldState)
                     }
                 }
                 is RespondingDevicePasswordVerifier -> {
                     when (deviceSRPEvent) {
-                        is DeviceSRPSignInEvent.EventType.CancelSRPSignIn -> {
-                            StateResolution(
-                                Cancelling(),
-                                listOf(deviceSRPSignInActions.cancellingSignIn(deviceSRPEvent))
-                            )
-                        }
                         is DeviceSRPSignInEvent.EventType.FinalizeSignIn -> {
                             StateResolution(SignedIn())
-                        }
-                        else -> StateResolution(oldState)
-                    }
-                }
-                is Cancelling -> {
-                    when (deviceSRPEvent) {
-                        is DeviceSRPSignInEvent.EventType.RestoreToNotInitialized -> {
-                            StateResolution(NotStarted())
                         }
                         else -> StateResolution(oldState)
                     }
