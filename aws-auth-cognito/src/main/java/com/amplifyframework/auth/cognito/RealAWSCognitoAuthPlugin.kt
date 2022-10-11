@@ -1576,7 +1576,7 @@ internal class RealAWSCognitoAuthPlugin(
                     authNState is AuthenticationState.SignedOut ||
                         authNState is AuthenticationState.Error ||
                         authNState is AuthenticationState.NotConfigured
-                    ) || (
+                    ) && (
                     authZState is AuthorizationState.Configured ||
                         authZState is AuthorizationState.SessionEstablished ||
                         authZState is AuthorizationState.Error
