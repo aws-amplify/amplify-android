@@ -16,12 +16,10 @@
 package com.amplifyframework.analytics.pinpoint.targeting.endpointProfile
 
 import android.content.Context
-import aws.sdk.kotlin.services.pinpoint.model.ChannelType
 import com.amplifyframework.analytics.pinpoint.internal.core.idresolver.SharedPrefsUniqueIdService
 import com.amplifyframework.analytics.pinpoint.internal.core.util.millisToIsoDate
 import com.amplifyframework.analytics.pinpoint.models.AndroidAppDetails
 import com.amplifyframework.analytics.pinpoint.models.AndroidDeviceDetails
-import com.amplifyframework.analytics.pinpoint.targeting.notification.PinpointNotificationClient
 import com.amplifyframework.core.Amplify
 import java.util.Collections
 import java.util.MissingResourceException
@@ -35,7 +33,6 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
 internal class EndpointProfile(
-    private val pinpointNotificationClient: PinpointNotificationClient, // TODO: remove notification client dependency
     idService: SharedPrefsUniqueIdService,
     appDetails: AndroidAppDetails,
     deviceDetails: AndroidDeviceDetails,
@@ -50,10 +47,7 @@ internal class EndpointProfile(
      *
      * @return String (ALL | NONE)
      */
-    val optOut: String
-        get() = if (pinpointNotificationClient.areAppNotificationsEnabled() &&
-            pinpointNotificationClient.getDeviceToken().isNotBlank()
-        ) "NONE" else "ALL"
+    val optOut: String = "ALL" // opt out of all notifications until we add notification category
 
     private val country: String = try {
         applicationContext.resources.configuration.locales[0].isO3Country
@@ -71,18 +65,6 @@ internal class EndpointProfile(
     var user: EndpointProfileUser = EndpointProfileUser()
     val applicationId = appDetails.appId
     val endpointId = idService.getUniqueId()
-
-    /**
-     * Channel Type of this endpoint, currently defaults to GCM
-     */
-    val channelType: ChannelType
-        get() = pinpointNotificationClient.getChannelType()
-
-    /**
-     * Address of the endpoint. The token that is returned by the channel selected.
-     */
-    val address: String
-        get() = pinpointNotificationClient.getDeviceToken()
 
     /**
      * Adds a custom attribute to this [EndpointProfile] with the specified key.
@@ -251,8 +233,6 @@ internal class EndpointProfile(
         return buildJsonObject {
             put("ApplicationId", applicationId)
             put("EndpointId", endpointId)
-            put("ChannelType", channelType.value)
-            put("Address", address)
             put("Location", Json.encodeToString(EndpointProfileLocation.serializer(), location))
             put("Demographic", Json.encodeToString(EndpointProfileDemographic.serializer(), demographic))
             put("EffectiveDate", effectiveDate.millisToIsoDate())

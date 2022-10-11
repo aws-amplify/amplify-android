@@ -40,7 +40,6 @@ import com.amplifyframework.testutils.sync.SynchronousStorage;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
@@ -144,7 +143,6 @@ public final class AWSS3StorageUploadTest {
      */
     @SuppressWarnings("unchecked")
     @Test
-    @Ignore("fix in dev-preview, waiting on https://github.com/awslabs/aws-sdk-kotlin/issues/704")
     public void testUploadFileIsCancelable() throws Exception {
         final CountDownLatch canceled = new CountDownLatch(1);
         final AtomicReference<Cancelable> opContainer = new AtomicReference<>();
@@ -194,7 +192,6 @@ public final class AWSS3StorageUploadTest {
      */
     @SuppressWarnings("unchecked")
     @Test
-    @Ignore("fix in dev-preview, waiting on https://github.com/awslabs/aws-sdk-kotlin/issues/704")
     public void testUploadFileIsResumable() throws Exception {
         final CountDownLatch completed = new CountDownLatch(1);
         final CountDownLatch resumed = new CountDownLatch(1);

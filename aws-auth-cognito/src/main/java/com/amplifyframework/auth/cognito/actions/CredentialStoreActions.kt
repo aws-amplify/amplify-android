@@ -19,6 +19,7 @@ import com.amplifyframework.auth.cognito.CredentialStoreEnvironment
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.StoreActions
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
+import com.amplifyframework.statemachine.codegen.data.CredentialType
 import com.amplifyframework.statemachine.codegen.errors.CredentialStoreError
 import com.amplifyframework.statemachine.codegen.events.CredentialStoreEvent
 
@@ -29,10 +30,14 @@ object CredentialStoreActions : StoreActions {
             val evt = try {
                 val credentials = legacyCredentialStore.retrieveCredential()
                 if (credentials != AmplifyCredential.Empty) {
+                    val username = (credentials as AmplifyCredential.UserPoolTypeCredential).signedInData.username
+                    val deviceMetaData = legacyCredentialStore.retrieveDeviceMetadata(username)
                     credentialStore.saveCredential(credentials)
+                    credentialStore.saveDeviceMetadata(username, deviceMetaData)
                     legacyCredentialStore.deleteCredential()
+                    legacyCredentialStore.deleteDeviceKeyCredential(username)
                 }
-                CredentialStoreEvent(CredentialStoreEvent.EventType.LoadCredentialStore())
+                CredentialStoreEvent(CredentialStoreEvent.EventType.LoadCredentialStore(CredentialType.Amplify))
             } catch (error: CredentialStoreError) {
                 CredentialStoreEvent(CredentialStoreEvent.EventType.ThrowError(error))
             }
@@ -40,11 +45,21 @@ object CredentialStoreActions : StoreActions {
             dispatcher.send(evt)
         }
 
-    override fun clearCredentialStoreAction() =
+    override fun clearCredentialStoreAction(credentialType: CredentialType) =
         Action<CredentialStoreEnvironment>("ClearCredentialStore") { id, dispatcher ->
             logger.verbose("$id Starting execution")
             val evt = try {
-                credentialStore.deleteCredential()
+                when (credentialType) {
+                    CredentialType.Amplify -> {
+                        credentialStore.deleteCredential()
+                    }
+                    is CredentialType.Device -> {
+                        credentialStore.deleteDeviceKeyCredential(credentialType.username)
+                    }
+                    CredentialType.ASF -> {
+                        // TODO
+                    }
+                }
                 CredentialStoreEvent(CredentialStoreEvent.EventType.CompletedOperation(AmplifyCredential.Empty))
             } catch (error: CredentialStoreError) {
                 CredentialStoreEvent(CredentialStoreEvent.EventType.ThrowError(error))
@@ -53,11 +68,23 @@ object CredentialStoreActions : StoreActions {
             dispatcher.send(evt)
         }
 
-    override fun loadCredentialStoreAction() =
+    override fun loadCredentialStoreAction(credentialType: CredentialType) =
         Action<CredentialStoreEnvironment>("LoadCredentialStore") { id, dispatcher ->
             logger.verbose("$id Starting execution")
             val evt = try {
-                val credentials = credentialStore.retrieveCredential()
+                val credentials: AmplifyCredential = when (credentialType) {
+                    CredentialType.Amplify -> {
+                        credentialStore.retrieveCredential()
+                    }
+                    is CredentialType.Device -> {
+                        AmplifyCredential.DeviceData(
+                            credentialStore.retrieveDeviceMetadata(credentialType.username)
+                        )
+                    }
+                    CredentialType.ASF -> {
+                        AmplifyCredential.Empty
+                    }
+                }
                 CredentialStoreEvent(CredentialStoreEvent.EventType.CompletedOperation(credentials))
             } catch (error: CredentialStoreError) {
                 CredentialStoreEvent(CredentialStoreEvent.EventType.ThrowError(error))
@@ -66,11 +93,29 @@ object CredentialStoreActions : StoreActions {
             dispatcher.send(evt)
         }
 
-    override fun storeCredentialsAction(credentials: AmplifyCredential) =
+    override fun storeCredentialsAction(
+        credentialType: CredentialType,
+        credentials: AmplifyCredential
+    ) =
         Action<CredentialStoreEnvironment>("StoreCredentials") { id, dispatcher ->
             logger.verbose("$id Starting execution")
             val evt = try {
-                credentialStore.saveCredential(credentials)
+                when (credentialType) {
+                    CredentialType.Amplify -> {
+                        credentialStore.saveCredential(credentials)
+                    }
+                    is CredentialType.Device -> {
+                        if (credentials is AmplifyCredential.DeviceMetaDataTypeCredential) {
+                            credentialStore.saveDeviceMetadata(
+                                credentialType.username,
+                                (credentials as AmplifyCredential.DeviceMetaDataTypeCredential).deviceMetadata
+                            )
+                        }
+                    }
+                    CredentialType.ASF -> {
+                        // TODO
+                    }
+                }
                 CredentialStoreEvent(CredentialStoreEvent.EventType.CompletedOperation(credentials))
             } catch (error: CredentialStoreError) {
                 CredentialStoreEvent(CredentialStoreEvent.EventType.ThrowError(error))

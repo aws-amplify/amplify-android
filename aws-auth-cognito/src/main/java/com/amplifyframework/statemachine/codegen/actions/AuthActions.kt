@@ -22,5 +22,4 @@ interface AuthActions {
     fun initializeAuthConfigurationAction(event: AuthEvent.EventType.ConfigureAuth): Action
     fun initializeAuthenticationConfigurationAction(event: AuthEvent.EventType.ConfigureAuthentication): Action
     fun initializeAuthorizationConfigurationAction(event: AuthEvent.EventType): Action
-    fun validateCredentialsAndConfiguration(event: AuthEvent.EventType.ReceivedCachedCredentials): Action
 }

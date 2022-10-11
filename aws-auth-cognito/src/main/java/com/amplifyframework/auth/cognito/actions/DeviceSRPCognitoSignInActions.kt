@@ -16,13 +16,19 @@
 package com.amplifyframework.auth.cognito.actions
 
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.NotAuthorizedException
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.RespondToAuthChallengeRequest
+import com.amplifyframework.AmplifyException
 import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidUserPoolConfigurationException
+import com.amplifyframework.auth.cognito.helpers.SRPHelper
 import com.amplifyframework.auth.cognito.helpers.SignInChallengeHelper
-import com.amplifyframework.auth.exceptions.UnknownException
+import com.amplifyframework.auth.exceptions.ServiceException
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.DeviceSRPSignInActions
+import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
+import com.amplifyframework.statemachine.codegen.data.CredentialType
+import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.data.SignInMethod
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.DeviceSRPSignInEvent
@@ -38,40 +44,55 @@ object DeviceSRPCognitoSignInActions : DeviceSRPSignInActions {
     private const val KEY_SRP_B = "SRP_B"
     private const val KEY_USERNAME = "USERNAME"
     private const val KEY_DEVICE_KEY = "DEVICE_KEY"
+    private const val KEY_DEVICE_GROUP_KEY = "DEVICE_GROUP_KEY"
 
     override fun respondDeviceSRP(event: DeviceSRPSignInEvent.EventType.RespondDeviceSRPChallenge): Action =
-        Action<AuthEnvironment>("RespondToDevicePasswordVerifier") { id, dispatcher ->
+        Action<AuthEnvironment>("RespondDeviceSRP") { id, dispatcher ->
             logger.verbose("$id Starting execution")
+            val username = event.username
             val evt = try {
-                event.challengeParameters?.let { params ->
-                    val username = params.getValue(KEY_USERNAME)
-                    val encodedContextData = userContextDataProvider?.getEncodedContextData(username)
+                val encodedContextData = userContextDataProvider?.getEncodedContextData(username)
 
-                    cognitoAuthService.cognitoIdentityProviderClient?.let {
-                        val respondToAuthChallenge = it.respondToAuthChallenge(
-                            RespondToAuthChallengeRequest.invoke {
-                                challengeName = ChallengeNameType.DeviceSrpAuth
-                                clientId = configuration.userPool?.appClient
-                                challengeResponses = mapOf(
-                                    KEY_USERNAME to username,
-                                    KEY_DEVICE_KEY to "STUB", // TODO: get this from the device credential store
-                                    KEY_SRP_A to srpHelper.getPublicA()
-                                )
-                                encodedContextData?.let { userContextData { encodedData = it } }
-                            }
+                val deviceCredentials = credentialStoreClient.loadCredentials(CredentialType.Device(username))
+                val deviceMetadata = (deviceCredentials as AmplifyCredential.DeviceData)
+                    .deviceMetadata as? DeviceMetadata.Metadata
+
+                srpHelper = SRPHelper(deviceMetadata?.deviceSecret ?: "")
+
+                cognitoAuthService.cognitoIdentityProviderClient?.let { client ->
+                    val respondToAuthChallenge = client.respondToAuthChallenge(
+                        RespondToAuthChallengeRequest.invoke {
+                            challengeName = ChallengeNameType.DeviceSrpAuth
+                            clientId = configuration.userPool?.appClient
+                            challengeResponses = mapOf(
+                                KEY_USERNAME to username,
+                                KEY_DEVICE_KEY to (deviceMetadata?.deviceKey ?: ""),
+                                KEY_SRP_A to srpHelper.getPublicA()
+                            )
+                            encodedContextData?.let { userContextData { encodedData = it } }
+                        }
+                    )
+
+                    respondToAuthChallenge.challengeParameters?.let { params ->
+                        var challengeParams = params
+                        deviceMetadata?.let {
+                            challengeParams = challengeParams.plus(KEY_DEVICE_KEY to it.deviceKey)
+                            challengeParams = challengeParams.plus(KEY_DEVICE_GROUP_KEY to it.deviceGroupKey)
+                        }
+
+                        DeviceSRPSignInEvent(
+                            DeviceSRPSignInEvent.EventType.RespondDevicePasswordVerifier(challengeParams)
                         )
-                        SignInChallengeHelper.evaluateNextStep(
-                            username = username,
-                            signInMethod = SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH),
-                            authenticationResult = respondToAuthChallenge.authenticationResult,
-                            challengeNameType = respondToAuthChallenge.challengeName,
-                            challengeParameters = respondToAuthChallenge.challengeParameters,
-                            session = respondToAuthChallenge.session,
-                        )
-                    } ?: throw InvalidUserPoolConfigurationException()
-                } ?: throw UnknownException("There was a problem while signing you in")
-            } catch (e: Exception) {
-                val errorEvent = DeviceSRPSignInEvent(DeviceSRPSignInEvent.EventType.CancelSRPSignIn())
+                    } ?: throw ServiceException(
+                        "Challenge params are empty.",
+                        AmplifyException.TODO_RECOVERY_SUGGESTION
+                    )
+                } ?: throw InvalidUserPoolConfigurationException()
+            } catch (exception: Exception) {
+                if (exception is NotAuthorizedException) {
+                    credentialStoreClient.clearCredentials(CredentialType.Device(username))
+                }
+                val errorEvent = DeviceSRPSignInEvent(DeviceSRPSignInEvent.EventType.ThrowAuthError(exception))
                 logger.verbose("$id Sending event ${errorEvent.type}")
                 dispatcher.send(errorEvent)
                 AuthenticationEvent(AuthenticationEvent.EventType.CancelSignIn())
@@ -85,56 +106,56 @@ object DeviceSRPCognitoSignInActions : DeviceSRPSignInActions {
     ): Action =
         Action<AuthEnvironment>("RespondToDevicePasswordVerifier") { id, dispatcher ->
             logger.verbose("$id Starting execution")
+            val params = event.challengeParameters
+            val username = params.getValue(KEY_USERNAME)
             val evt = try {
-                event.challengeParameters?.let { params ->
-                    val salt = params.getValue(KEY_SALT)
-                    val secretBlock = params.getValue(KEY_SECRET_BLOCK)
-                    val srpB = params.getValue(KEY_SRP_B)
-                    val username = params.getValue(KEY_USERNAME)
-                    val encodedContextData = userContextDataProvider?.getEncodedContextData(username)
+                val salt = params.getValue(KEY_SALT)
+                val secretBlock = params.getValue(KEY_SECRET_BLOCK)
+                val srpB = params.getValue(KEY_SRP_B)
+                val deviceKey = params.getValue(KEY_DEVICE_KEY)
+                val deviceGroupKey = params.getValue(KEY_DEVICE_GROUP_KEY)
+                val encodedContextData = userContextDataProvider?.getEncodedContextData(username)
 
-                    cognitoAuthService.cognitoIdentityProviderClient?.let {
-                        val respondToAuthChallenge = it.respondToAuthChallenge(
-                            RespondToAuthChallengeRequest.invoke {
-                                challengeName = ChallengeNameType.DevicePasswordVerifier
-                                clientId = configuration.userPool?.appClient
-                                challengeResponses = mapOf(
-                                    KEY_USERNAME to username,
-                                    KEY_PASSWORD_CLAIM_SECRET_BLOCK to secretBlock,
-                                    KEY_TIMESTAMP to srpHelper.dateString,
-                                    KEY_PASSWORD_CLAIM_SIGNATURE to srpHelper.getSignature(salt, srpB, secretBlock),
-                                    KEY_DEVICE_KEY to "STUB", // TODO: get this from the device credential store
-                                )
-                                encodedContextData?.let { userContextData { encodedData = it } }
-                            }
-                        )
+                srpHelper.setUserPoolParams(deviceKey, deviceGroupKey)
 
-                        DeviceSRPSignInEvent(DeviceSRPSignInEvent.EventType.FinalizeSignIn())
-                        SignInChallengeHelper.evaluateNextStep(
-                            username = username,
-                            signInMethod = SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH),
-                            authenticationResult = respondToAuthChallenge.authenticationResult,
-                            challengeNameType = respondToAuthChallenge.challengeName,
-                            challengeParameters = respondToAuthChallenge.challengeParameters,
-                            session = respondToAuthChallenge.session,
-                        )
-                    } ?: throw InvalidUserPoolConfigurationException()
-                } ?: throw UnknownException("There was a problem while signing you in")
-            } catch (e: Exception) {
-                val errorEvent = DeviceSRPSignInEvent(DeviceSRPSignInEvent.EventType.CancelSRPSignIn())
+                cognitoAuthService.cognitoIdentityProviderClient?.let {
+                    val respondToAuthChallenge = it.respondToAuthChallenge(
+                        RespondToAuthChallengeRequest.invoke {
+                            challengeName = ChallengeNameType.DevicePasswordVerifier
+                            clientId = configuration.userPool?.appClient
+                            challengeResponses = mapOf(
+                                KEY_USERNAME to username,
+                                KEY_PASSWORD_CLAIM_SECRET_BLOCK to secretBlock,
+                                KEY_TIMESTAMP to srpHelper.dateString,
+                                KEY_PASSWORD_CLAIM_SIGNATURE to srpHelper.getSignature(salt, srpB, secretBlock),
+                                KEY_DEVICE_KEY to deviceKey
+                            )
+                            encodedContextData?.let { userContextData { encodedData = it } }
+                        }
+                    )
+
+                    DeviceSRPSignInEvent(DeviceSRPSignInEvent.EventType.FinalizeSignIn())
+                    SignInChallengeHelper.evaluateNextStep(
+                        username = username,
+                        signInMethod = SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH),
+                        authenticationResult = respondToAuthChallenge.authenticationResult,
+                        challengeNameType = respondToAuthChallenge.challengeName,
+                        challengeParameters = respondToAuthChallenge.challengeParameters,
+                        session = respondToAuthChallenge.session,
+                    )
+                } ?: throw InvalidUserPoolConfigurationException()
+            } catch (exception: Exception) {
+                if (exception is NotAuthorizedException) {
+                    credentialStoreClient.clearCredentials(CredentialType.Device(username))
+                }
+                val errorEvent = DeviceSRPSignInEvent(
+                    DeviceSRPSignInEvent.EventType.ThrowPasswordVerifiedError(exception)
+                )
                 logger.verbose("$id Sending event ${errorEvent.type}")
                 dispatcher.send(errorEvent)
                 AuthenticationEvent(AuthenticationEvent.EventType.CancelSignIn())
             }
             logger.verbose("$id Sending event ${evt.type}")
-            dispatcher.send(evt)
-        }
-
-    override fun cancellingSignIn(event: DeviceSRPSignInEvent.EventType.CancelSRPSignIn): Action =
-        Action<AuthEnvironment>("CancelSignIn") { id, dispatcher ->
-            logger.verbose("$id Starting execution")
-            // TODO: Cleaning up Device Storage once implemented
-            val evt = DeviceSRPSignInEvent(DeviceSRPSignInEvent.EventType.RestoreToNotInitialized())
             dispatcher.send(evt)
         }
 }
