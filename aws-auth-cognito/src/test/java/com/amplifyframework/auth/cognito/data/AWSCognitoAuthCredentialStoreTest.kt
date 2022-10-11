@@ -20,7 +20,6 @@ import com.amplifyframework.statemachine.codegen.data.AWSCredentials
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
-import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.data.IdentityPoolConfiguration
 import com.amplifyframework.statemachine.codegen.data.SignInMethod
 import com.amplifyframework.statemachine.codegen.data.SignedInData
@@ -203,7 +202,6 @@ class AWSCognitoAuthCredentialStoreTest {
                 "username",
                 Date(0),
                 SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH),
-                DeviceMetadata.Empty,
                 CognitoUserPoolTokens("idToken", "accessToken", "refreshToken", expiration),
             ),
             "identityPool",
