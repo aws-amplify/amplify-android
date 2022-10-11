@@ -108,20 +108,6 @@ fun AmplifyCredential.getCognitoSession(exception: AuthException = SignedOutExce
             userSubResult = AWSCognitoAuthSession.getUserSubResult(signedInData.cognitoUserPoolTokens),
             userPoolTokensResult = AWSCognitoAuthSession.getUserPoolTokensResult(signedInData.cognitoUserPoolTokens)
         )
-        is AmplifyCredential.IdentityPool -> AWSCognitoAuthSession(
-            false,
-            identityIdResult = AWSCognitoAuthSession.getIdentityIdResult(identityId),
-            awsCredentialsResult = AWSCognitoAuthSession.getCredentialsResult(credentials),
-            userSubResult = AuthSessionResult.failure(SignedOutException()),
-            userPoolTokensResult = AuthSessionResult.failure(SignedOutException())
-        )
-        is AmplifyCredential.IdentityPoolFederated -> AWSCognitoAuthSession(
-            false,
-            identityIdResult = AWSCognitoAuthSession.getIdentityIdResult(identityId),
-            awsCredentialsResult = AWSCognitoAuthSession.getCredentialsResult(credentials),
-            userSubResult = AuthSessionResult.failure(SignedOutException()),
-            userPoolTokensResult = AuthSessionResult.failure(SignedOutException())
-        )
         is AmplifyCredential.UserAndIdentityPool -> AWSCognitoAuthSession(
             true,
             identityIdResult = AWSCognitoAuthSession.getIdentityIdResult(identityId),
@@ -129,7 +115,14 @@ fun AmplifyCredential.getCognitoSession(exception: AuthException = SignedOutExce
             userSubResult = AWSCognitoAuthSession.getUserSubResult(signedInData.cognitoUserPoolTokens),
             userPoolTokensResult = AWSCognitoAuthSession.getUserPoolTokensResult(signedInData.cognitoUserPoolTokens)
         )
-        is AmplifyCredential.Empty -> AWSCognitoAuthSession(
+        is AmplifyCredential.IdentityPoolTypeCredential -> AWSCognitoAuthSession(
+            false,
+            identityIdResult = AWSCognitoAuthSession.getIdentityId(identityId),
+            awsCredentialsResult = AWSCognitoAuthSession.getCredentials(credentials),
+            userSubResult = AuthSessionResult.failure(SignedOutException()),
+            userPoolTokensResult = AuthSessionResult.failure(SignedOutException())
+        )
+        else -> AWSCognitoAuthSession(
             false,
             identityIdResult = AuthSessionResult.failure(exception),
             awsCredentialsResult = AuthSessionResult.failure(exception),

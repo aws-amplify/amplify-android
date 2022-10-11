@@ -30,6 +30,10 @@ sealed class AmplifyCredential {
         val credentials: AWSCredentials
     }
 
+    interface DeviceMetaDataTypeCredential {
+        val deviceMetadata: DeviceMetadata
+    }
+
     @Serializable
     @SerialName("empty")
     object Empty : AmplifyCredential()
@@ -37,6 +41,11 @@ sealed class AmplifyCredential {
     @Serializable
     @SerialName("userPool")
     data class UserPool(override val signedInData: SignedInData) : AmplifyCredential(), UserPoolTypeCredential
+
+    @Serializable
+    @SerialName("deviceMetadata")
+    data class DeviceData(override val deviceMetadata: DeviceMetadata) :
+        AmplifyCredential(), DeviceMetaDataTypeCredential
 
     @Serializable
     @SerialName("identityPool")
@@ -129,4 +138,10 @@ data class AWSCredentials(
             "expiration = $expiration" +
             ")"
     }
+}
+
+sealed class CredentialType {
+    object Amplify : CredentialType()
+    data class Device(val username: String) : CredentialType()
+    object ASF : CredentialType()
 }

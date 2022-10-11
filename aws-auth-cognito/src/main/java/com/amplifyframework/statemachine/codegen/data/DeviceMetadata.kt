@@ -23,8 +23,8 @@ sealed class DeviceMetadata {
     @Serializable
     @SerialName("metadata")
     data class Metadata(
-        val deviceKey: String?,
-        val deviceGroupKey: String?,
+        val deviceKey: String,
+        val deviceGroupKey: String,
         val deviceSecret: String? = null
     ) : DeviceMetadata()
 

@@ -28,6 +28,7 @@ import aws.sdk.kotlin.services.pinpoint.model.EventsBatch
 import aws.sdk.kotlin.services.pinpoint.model.EventsRequest
 import aws.sdk.kotlin.services.pinpoint.model.PublicEndpoint
 import aws.sdk.kotlin.services.pinpoint.model.PutEventsRequest
+import aws.sdk.kotlin.services.pinpoint.model.PutEventsResponse
 import aws.sdk.kotlin.services.pinpoint.model.Session
 import com.amplifyframework.analytics.AnalyticsEvent
 import com.amplifyframework.analytics.pinpoint.database.EventTable
@@ -121,7 +122,13 @@ internal class EventRecorder(
         endpointProfile: EndpointProfile
     ): List<PinpointEvent> {
         val putEventRequest = createPutEventsRequest(events, endpointProfile)
-        val response = pinpointClient.putEvents(putEventRequest)
+        val response: PutEventsResponse
+        try {
+            // This could fail if credentials are no longer stored due to sign out before this call is processed
+            response = pinpointClient.putEvents(putEventRequest)
+        } catch (e: Exception) {
+            return emptyList()
+        }
         val eventIdsToBeDeleted = mutableListOf<PinpointEvent>()
         response.eventsResponse?.results?.let { result ->
             processEndpointResponse(result[endpointProfile.endpointId]?.endpointItemResponse)
@@ -205,7 +212,7 @@ internal class EventRecorder(
                 id = pinpointEvent.pinpointSession.sessionId
                 startTimestamp = pinpointEvent.pinpointSession.sessionStart.millisToIsoDate()
                 stopTimestamp = pinpointEvent.pinpointSession.sessionEnd?.let {
-                    pinpointEvent.pinpointSession.sessionStart.millisToIsoDate()
+                    pinpointEvent.pinpointSession.sessionEnd.millisToIsoDate()
                 }
                 pinpointEvent.pinpointSession.sessionDuration?.toInt()?.let { duration = it }
             }
@@ -249,7 +256,6 @@ internal class EventRecorder(
         }
 
         return PublicEndpoint {
-            channelType = endpointProfile.channelType
             location = endpointLocation
             demographic = endpointDemographic
             effectiveDate = endpointProfile.effectiveDate.millisToIsoDate()

@@ -16,6 +16,10 @@
 package com.amplifyframework.auth.cognito.helpers
 
 import aws.smithy.kotlin.runtime.time.Instant
+import com.amplifyframework.AmplifyException
+import com.amplifyframework.auth.cognito.exceptions.service.InvalidGrantException
+import com.amplifyframework.auth.cognito.exceptions.service.ParseTokenException
+import com.amplifyframework.auth.exceptions.ServiceException
 import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
 import java.io.BufferedReader
 import java.io.DataOutputStream
@@ -62,27 +66,27 @@ internal object HostedUIHttpHelper {
                 val responseString = responseStream.bufferedReader().use(BufferedReader::readText)
                 return parseTokenResponse(responseString)
             } else {
-                // TODO: Better error message, AuthServiceException(httpsURLConnection.getResponseMessage())
-                throw Exception()
+                throw ServiceException(
+                    message = connection.responseMessage,
+                    recoverySuggestion = AmplifyException.TODO_RECOVERY_SUGGESTION
+                )
             }
         }
 
     private fun parseTokenResponse(responseString: String): CognitoUserPoolTokens {
 
         if (responseString.isEmpty()) {
-            // TODO: Better error message
-            throw Exception()
+            throw ParseTokenException()
         }
 
         try {
-
             val response = json.decodeFromString<FetchTokenResponse>(responseString)
 
             response.error?.let {
                 if (it == "invalid_grant") {
-                    throw Exception() // TODO: Better error message, AuthInvalidGrantException(errorText)
+                    throw InvalidGrantException(it)
                 } else {
-                    throw Exception() // TODO: Better error message, AuthServiceException(errorText)
+                    throw ServiceException(it, AmplifyException.TODO_RECOVERY_SUGGESTION)
                 }
             }
 
@@ -93,8 +97,11 @@ internal object HostedUIHttpHelper {
                 expiration = response.expiration
             )
         } catch (e: Exception) {
-            // TODO: Better error message, AuthClientException(e.message, e)
-            throw e
+            throw ServiceException(
+                message = e.message ?: "An unknown service error has occurred",
+                recoverySuggestion = AmplifyException.TODO_RECOVERY_SUGGESTION,
+                cause = e
+            )
         }
     }
 }

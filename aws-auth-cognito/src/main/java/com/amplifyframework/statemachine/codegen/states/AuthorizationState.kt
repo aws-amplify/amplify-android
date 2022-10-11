@@ -137,7 +137,8 @@ sealed class AuthorizationState : State {
                 }
                 is SigningOut -> when {
                     event.isSignOutEvent() is SignOutEvent.EventType.SignOutLocally -> {
-                        StateResolution(StoringCredentials(AmplifyCredential.Empty))
+                        val action = authorizationActions.persistCredentials(AmplifyCredential.Empty)
+                        StateResolution(StoringCredentials(AmplifyCredential.Empty), listOf(action))
                     }
                     authenticationEvent is AuthenticationEvent.EventType.CancelSignOut -> {
                         StateResolution(SessionEstablished(oldState.amplifyCredential))
@@ -150,7 +151,8 @@ sealed class AuthorizationState : State {
                             authorizationEvent.identityId,
                             authorizationEvent.awsCredentials
                         )
-                        StateResolution(StoringCredentials(amplifyCredential))
+                        val action = authorizationActions.persistCredentials(amplifyCredential)
+                        StateResolution(StoringCredentials(amplifyCredential), listOf(action))
                     }
                     is AuthorizationEvent.EventType.ThrowError -> StateResolution(
                         Error(SessionError(authorizationEvent.exception, AmplifyCredential.Empty))
@@ -167,11 +169,13 @@ sealed class AuthorizationState : State {
                             authorizationEvent.identityId,
                             authorizationEvent.awsCredentials
                         )
-                        StateResolution(StoringCredentials(amplifyCredential))
+                        val action = authorizationActions.persistCredentials(amplifyCredential)
+                        StateResolution(StoringCredentials(amplifyCredential), listOf(action))
                     }
                     is AuthorizationEvent.EventType.ThrowError -> {
                         val amplifyCredential = AmplifyCredential.UserPool(oldState.signedInData)
-                        StateResolution(StoringCredentials(amplifyCredential))
+                        val action = authorizationActions.persistCredentials(amplifyCredential)
+                        StateResolution(StoringCredentials(amplifyCredential), listOf(action))
                     }
                     else -> {
                         val resolution = fetchAuthSessionResolver.resolve(oldState.fetchAuthSessionState, event)
@@ -188,7 +192,8 @@ sealed class AuthorizationState : State {
                             authorizationEvent.identityId,
                             authorizationEvent.awsCredentials
                         )
-                        StateResolution(StoringCredentials(amplifyCredential))
+                        val action = authorizationActions.persistCredentials(amplifyCredential)
+                        StateResolution(StoringCredentials(amplifyCredential), listOf(action))
                     }
                     is AuthorizationEvent.EventType.ThrowError -> StateResolution(Error(authorizationEvent.exception))
                     else -> {
@@ -200,9 +205,10 @@ sealed class AuthorizationState : State {
                     }
                 }
                 is RefreshingSession -> when (authorizationEvent) {
-                    is AuthorizationEvent.EventType.Refreshed -> StateResolution(
-                        StoringCredentials(authorizationEvent.amplifyCredential)
-                    )
+                    is AuthorizationEvent.EventType.Refreshed -> {
+                        val action = authorizationActions.persistCredentials(authorizationEvent.amplifyCredential)
+                        StateResolution(StoringCredentials(authorizationEvent.amplifyCredential), listOf(action))
+                    }
                     is AuthorizationEvent.EventType.ThrowError -> StateResolution(
                         Error(SessionError(authorizationEvent.exception, oldState.existingCredential))
                     )

@@ -57,6 +57,7 @@ internal class SessionClient(
                     sessionStopEvent,
                     session.sessionId,
                     session.startTime,
+                    stopTime,
                     session.sessionDuration
                 )
                 it.recordEvent(pinpointEvent)
@@ -74,7 +75,6 @@ internal class SessionClient(
                 sessionStartEvent,
                 newSession.sessionId,
                 newSession.startTime,
-                newSession.sessionDuration
             )
             it.recordEvent(pinpointEvent)
         }
