@@ -27,6 +27,9 @@ import com.amplifyframework.auth.cognito.helpers.SignInChallengeHelper
 import com.amplifyframework.auth.exceptions.ServiceException
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.SRPActions
+import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
+import com.amplifyframework.statemachine.codegen.data.CredentialType
+import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.SRPEvent
 
@@ -42,7 +45,9 @@ object SRPCognitoActions : SRPActions {
     private const val KEY_USER_ID_FOR_SRP = "USER_ID_FOR_SRP"
     private const val KEY_SECRET_HASH = "SECRET_HASH"
     private const val KEY_USERNAME = "USERNAME"
+    private const val KEY_DEVICE_KEY = "DEVICE_KEY"
     private const val KEY_CHALLENGE_NAME = "CHALLENGE_NAME"
+
     override fun initiateSRPAuthAction(event: SRPEvent.EventType.InitiateSRP) =
         Action<AuthEnvironment>("InitSRPAuth") { id, dispatcher ->
             logger.verbose("$id Starting execution")
@@ -56,8 +61,14 @@ object SRPCognitoActions : SRPActions {
                 )
 
                 val authParams = mutableMapOf(KEY_USERNAME to event.username, KEY_SRP_A to srpHelper.getPublicA())
+
                 secretHash?.let { authParams[KEY_SECRET_HASH] = it }
                 val encodedContextData = userContextDataProvider?.getEncodedContextData(event.username)
+
+                val deviceCredentials = credentialStoreClient.loadCredentials(CredentialType.Device(event.username))
+                val deviceMetadata = (deviceCredentials as AmplifyCredential.DeviceData)
+                    .deviceMetadata as? DeviceMetadata.Metadata
+                deviceMetadata?.let { authParams[KEY_DEVICE_KEY] = it.deviceKey }
 
                 val initiateAuthResponse = cognitoAuthService.cognitoIdentityProviderClient?.initiateAuth {
                     authFlow = AuthFlowType.UserSrpAuth
@@ -67,8 +78,12 @@ object SRPCognitoActions : SRPActions {
                 }
 
                 when (initiateAuthResponse?.challengeName) {
-                    ChallengeNameType.PasswordVerifier -> initiateAuthResponse.challengeParameters?.let {
-                        SRPEvent(SRPEvent.EventType.RespondPasswordVerifier(it))
+                    ChallengeNameType.PasswordVerifier -> initiateAuthResponse.challengeParameters?.let { params ->
+                        val challengeParams = deviceMetadata?.deviceKey?.let {
+                            params.plus(KEY_DEVICE_KEY to it)
+                        } ?: params
+
+                        SRPEvent(SRPEvent.EventType.RespondPasswordVerifier(challengeParams))
                     } ?: throw Exception("Auth challenge parameters are empty.")
                     else -> throw Exception("Not yet implemented.")
                 }
@@ -103,6 +118,11 @@ object SRPCognitoActions : SRPActions {
                 secretHash?.let { authParams[KEY_SECRET_HASH] = it }
                 val encodedContextData = userContextDataProvider?.getEncodedContextData(event.username)
 
+                val deviceCredentials = credentialStoreClient.loadCredentials(CredentialType.Device(event.username))
+                val deviceMetadata = (deviceCredentials as AmplifyCredential.DeviceData)
+                    .deviceMetadata as? DeviceMetadata.Metadata
+                deviceMetadata?.let { authParams[KEY_DEVICE_KEY] = it.deviceKey }
+
                 val initiateAuthResponse = cognitoAuthService.cognitoIdentityProviderClient?.initiateAuth {
                     authFlow = AuthFlowType.CustomAuth
                     clientId = configuration.userPool?.appClient
@@ -111,9 +131,17 @@ object SRPCognitoActions : SRPActions {
                 }
 
                 when (initiateAuthResponse?.challengeName) {
-                    ChallengeNameType.PasswordVerifier -> initiateAuthResponse.challengeParameters?.let {
-                        SRPEvent(SRPEvent.EventType.RespondPasswordVerifier(it))
-                    } ?: throw Exception("Auth challenge parameters are empty.")
+                    ChallengeNameType.PasswordVerifier ->
+                        initiateAuthResponse.challengeParameters?.let { params ->
+                            val challengeParams = deviceMetadata?.deviceKey?.let {
+                                params.plus(KEY_DEVICE_KEY to it)
+                            } ?: params
+
+                            SRPEvent(SRPEvent.EventType.RespondPasswordVerifier(challengeParams))
+                        } ?: throw ServiceException(
+                            "Auth challenge parameters are empty.",
+                            AmplifyException.TODO_RECOVERY_SUGGESTION
+                        )
                     else -> throw Exception("Not yet implemented.")
                 }
             } catch (e: Exception) {
@@ -137,8 +165,10 @@ object SRPCognitoActions : SRPActions {
                 val srpB = params.getValue(KEY_SRP_B)
                 val username = params.getValue(KEY_USERNAME)
                 val userId = params.getValue(KEY_USER_ID_FOR_SRP)
+                val deviceKey = params.getOrDefault(KEY_DEVICE_KEY, "")
 
                 srpHelper.setUserPoolParams(userId, configuration.userPool?.poolId!!)
+
                 val secretHash = AuthHelper.getSecretHash(
                     username,
                     configuration.userPool.appClient,
@@ -153,6 +183,8 @@ object SRPCognitoActions : SRPActions {
                 )
                 secretHash?.let { challengeParams[KEY_SECRET_HASH] = it }
                 val encodedContextData = userContextDataProvider?.getEncodedContextData(username)
+
+                challengeParams[KEY_DEVICE_KEY] = deviceKey
 
                 val response = cognitoAuthService.cognitoIdentityProviderClient?.respondToAuthChallenge {
                     challengeName = ChallengeNameType.PasswordVerifier
