@@ -140,7 +140,6 @@ ext {
 subprojects { project ->
     afterEvaluate {
         configureAndroidLibrary(project)
-        println("awsSKDRelease version selected: $awsSdkVersion")
         project.apply from: '../jacoco.gradle'
     }
 }

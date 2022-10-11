@@ -1,9 +1,6 @@
 name: Amplify Android Maven Release
 
 on:
-  push:
-    branches:
-      - 'sdhuka/revert-publisher'
   workflow_dispatch:
 
 permissions:
