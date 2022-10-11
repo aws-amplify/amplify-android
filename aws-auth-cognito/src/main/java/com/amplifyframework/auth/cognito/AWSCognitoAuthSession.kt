@@ -124,13 +124,6 @@ fun AmplifyCredential.getCognitoSession(): AWSCognitoAuthSession {
                 AWSCognitoAuthSession.getUserPoolTokens(signedInData.cognitoUserPoolTokens)
             )
         )
-        is AmplifyCredential.IdentityPool -> AWSCognitoAuthSession(
-            false,
-            identityIdResult = AWSCognitoAuthSession.getIdentityId(identityId),
-            awsCredentialsResult = AWSCognitoAuthSession.getCredentials(credentials),
-            userSubResult = AuthSessionResult.failure(SignedOutException()),
-            userPoolTokensResult = AuthSessionResult.failure(SignedOutException())
-        )
         is AmplifyCredential.UserAndIdentityPool -> AWSCognitoAuthSession(
             true,
             identityIdResult = AuthSessionResult.success(identityId),
@@ -139,6 +132,13 @@ fun AmplifyCredential.getCognitoSession(): AWSCognitoAuthSession {
             userPoolTokensResult = AuthSessionResult.success(
                 AWSCognitoAuthSession.getUserPoolTokens(signedInData.cognitoUserPoolTokens)
             )
+        )
+        is AmplifyCredential.IdentityPoolTypeCredential -> AWSCognitoAuthSession(
+            false,
+            identityIdResult = AWSCognitoAuthSession.getIdentityId(identityId),
+            awsCredentialsResult = AWSCognitoAuthSession.getCredentials(credentials),
+            userSubResult = AuthSessionResult.failure(SignedOutException()),
+            userPoolTokensResult = AuthSessionResult.failure(SignedOutException())
         )
         else -> AWSCognitoAuthSession(
             false,
