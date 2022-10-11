@@ -25,8 +25,8 @@ import com.amplifyframework.auth.exceptions.ServiceException
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.CustomSignInActions
 import com.amplifyframework.statemachine.codegen.data.SignInMethod
-import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.CustomSignInEvent
+import com.amplifyframework.statemachine.codegen.events.SignInEvent
 
 object SignInCustomActions : CustomSignInActions {
     private const val KEY_SECRET_HASH = "SECRET_HASH"
@@ -74,7 +74,7 @@ object SignInCustomActions : CustomSignInActions {
                     )
                 }
             } catch (e: Exception) {
-                AuthenticationEvent(AuthenticationEvent.EventType.CancelSignIn(error = e))
+                SignInEvent(SignInEvent.EventType.ThrowError(e))
             }
             logger.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
