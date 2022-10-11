@@ -29,6 +29,7 @@ import com.amplifyframework.statemachine.codegen.data.CredentialType
 import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.CustomSignInEvent
+import com.amplifyframework.statemachine.codegen.events.DeviceSRPSignInEvent
 import com.amplifyframework.statemachine.codegen.events.HostedUIEvent
 import com.amplifyframework.statemachine.codegen.events.SRPEvent
 import com.amplifyframework.statemachine.codegen.events.SignInChallengeEvent
@@ -64,9 +65,17 @@ object SignInCognitoActions : SignInActions {
         }
 
     override fun startCustomAuthWithSRPAction(event: SignInEvent.EventType.InitiateCustomSignInWithSRP): Action =
-        Action<AuthEnvironment>("StartSRPAuth") { id, dispatcher ->
+        Action<AuthEnvironment>("StartCustomSRPAuth") { id, dispatcher ->
             logger.verbose("$id Starting execution")
             val evt = SRPEvent(SRPEvent.EventType.InitiateSRPWithCustom(event.username, event.metadata))
+            logger.verbose("$id Sending event ${evt.type}")
+            dispatcher.send(evt)
+        }
+
+    override fun startDeviceSRPAuthAction(event: SignInEvent.EventType.InitiateSignInWithDeviceSRP) =
+        Action<AuthEnvironment>("StartDeviceSRPAuth") { id, dispatcher ->
+            logger.verbose("$id Starting execution")
+            val evt = DeviceSRPSignInEvent(DeviceSRPSignInEvent.EventType.RespondDeviceSRPChallenge(event.username))
             logger.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
         }
