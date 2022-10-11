@@ -32,7 +32,6 @@ import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.data.SignInMethod
 import com.amplifyframework.statemachine.codegen.data.SignedInData
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
-import com.amplifyframework.statemachine.codegen.events.DeviceSRPSignInEvent
 import com.amplifyframework.statemachine.codegen.events.SignInEvent
 import java.util.Date
 import kotlin.time.Duration.Companion.seconds
@@ -86,7 +85,7 @@ object SignInChallengeHelper {
                 SignInEvent(SignInEvent.EventType.ReceivedChallenge(challenge))
             }
             challengeNameType is ChallengeNameType.DeviceSrpAuth -> {
-                DeviceSRPSignInEvent(DeviceSRPSignInEvent.EventType.RespondDeviceSRPChallenge(challengeParameters))
+                SignInEvent(SignInEvent.EventType.InitiateSignInWithDeviceSRP(username, mapOf()))
             }
             else -> SignInEvent(SignInEvent.EventType.ThrowError(Exception("Response did not contain sign in info.")))
         }
