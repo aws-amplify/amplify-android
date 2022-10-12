@@ -72,7 +72,6 @@ import com.amplifyframework.logging.Logger
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
-import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.data.SignInMethod
 import com.amplifyframework.statemachine.codegen.data.SignedInData
 import com.amplifyframework.statemachine.codegen.data.UserPoolConfiguration
@@ -123,7 +122,6 @@ class RealAWSCognitoAuthPluginTest {
             "username",
             Date(0),
             SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH),
-            DeviceMetadata.Empty,
             CognitoUserPoolTokens(dummyToken, dummyToken, dummyToken, 120L)
         )
     )
@@ -150,7 +148,6 @@ class RealAWSCognitoAuthPluginTest {
             )
         }
     }
-    private var credentialStoreStateMachine = mockk<CredentialStoreStateMachine>(relaxed = true)
 
     private lateinit var plugin: RealAWSCognitoAuthPlugin
 
@@ -160,7 +157,6 @@ class RealAWSCognitoAuthPluginTest {
             authConfiguration,
             authEnvironment,
             authStateMachine,
-            credentialStoreStateMachine,
             logger
         )
 
@@ -241,9 +237,9 @@ class RealAWSCognitoAuthPluginTest {
                 "user",
                 Date(),
                 SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH),
-                DeviceMetadata.Empty,
                 CognitoUserPoolTokens("", "", "", 0)
-            )
+            ),
+            mockk()
         )
 
         // WHEN
@@ -280,7 +276,7 @@ class RealAWSCognitoAuthPluginTest {
         val onError = mockk<Consumer<AuthException>>(relaxed = true)
 
         val currentAuthState = mockk<AuthState> {
-            every { authNState } returns AuthenticationState.SignedIn(mockk())
+            every { authNState } returns AuthenticationState.SignedIn(mockk(), mockk())
             every { authZState } returns AuthorizationState.SessionEstablished(credentials)
         }
         every { authStateMachine.getCurrentState(captureLambda()) } answers {
@@ -328,7 +324,7 @@ class RealAWSCognitoAuthPluginTest {
             every { accept(any()) } answers { latch.countDown() }
         }
         val currentAuthState = mockk<AuthState> {
-            every { authNState } returns AuthenticationState.SignedIn(mockk())
+            every { authNState } returns AuthenticationState.SignedIn(mockk(), mockk())
             every { authZState } returns AuthorizationState.SessionEstablished(credentials)
         }
         every { authStateMachine.getCurrentState(captureLambda()) } answers {
@@ -416,7 +412,7 @@ class RealAWSCognitoAuthPluginTest {
         val listenLatch = CountDownLatch(1)
 
         val currentAuthState = mockk<AuthState> {
-            every { authNState } returns AuthenticationState.SignedIn(mockk())
+            every { authNState } returns AuthenticationState.SignedIn(mockk(), mockk())
             every { authZState } returns AuthorizationState.SessionEstablished(credentials)
         }
         every { authStateMachine.getCurrentState(captureLambda()) } answers {
@@ -604,7 +600,7 @@ class RealAWSCognitoAuthPluginTest {
 
     @Test
     fun `test signup API with given arguments and auth signed in`() {
-        currentState = AuthenticationState.SignedIn(mockk())
+        currentState = AuthenticationState.SignedIn(mockk(), mockk())
         `test signup API with given arguments`()
     }
 
@@ -711,7 +707,7 @@ class RealAWSCognitoAuthPluginTest {
 
     @Test
     fun `test confirm signup API with given arguments and auth signed in`() {
-        currentState = AuthenticationState.SignedIn(mockk())
+        currentState = AuthenticationState.SignedIn(mockk(), mockk())
         `test confirm signup API with given arguments`()
     }
 
@@ -794,7 +790,7 @@ class RealAWSCognitoAuthPluginTest {
 
     @Test
     fun `test resend signup code API with given arguments and auth signed in`() {
-        currentState = AuthenticationState.SignedIn(mockk())
+        currentState = AuthenticationState.SignedIn(mockk(), mockk())
         `test resend signup code API with given arguments`()
     }
 
@@ -937,7 +933,7 @@ class RealAWSCognitoAuthPluginTest {
         val listenLatch = CountDownLatch(1)
 
         val currentAuthState = mockk<AuthState> {
-            every { authNState } returns AuthenticationState.SignedIn(mockk())
+            every { authNState } returns AuthenticationState.SignedIn(mockk(), mockk())
             every { authZState } returns AuthorizationState.SessionEstablished(credentials)
         }
         every { authStateMachine.getCurrentState(captureLambda()) } answers {
@@ -985,7 +981,7 @@ class RealAWSCognitoAuthPluginTest {
         val listenLatch = CountDownLatch(1)
 
         val currentAuthState = mockk<AuthState> {
-            every { authNState } returns AuthenticationState.SignedIn(mockk())
+            every { authNState } returns AuthenticationState.SignedIn(mockk(), mockk())
             every { authZState } returns AuthorizationState.SessionEstablished(credentials)
         }
         every { authStateMachine.getCurrentState(captureLambda()) } answers {
@@ -1037,7 +1033,7 @@ class RealAWSCognitoAuthPluginTest {
         val listenLatch = CountDownLatch(1)
 
         val currentAuthState = mockk<AuthState> {
-            every { authNState } returns AuthenticationState.SignedIn(mockk())
+            every { authNState } returns AuthenticationState.SignedIn(mockk(), mockk())
             every { authZState } returns AuthorizationState.SessionEstablished(credentials)
         }
         every { authStateMachine.getCurrentState(captureLambda()) } answers {
@@ -1169,13 +1165,12 @@ class RealAWSCognitoAuthPluginTest {
                 "username",
                 Date(),
                 SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH),
-                DeviceMetadata.Empty,
                 CognitoUserPoolTokens(null, null, null, 120L)
             )
         )
 
         val currentAuthState = mockk<AuthState> {
-            every { authNState } returns AuthenticationState.SignedIn(mockk())
+            every { authNState } returns AuthenticationState.SignedIn(mockk(), mockk())
             every { authZState } returns AuthorizationState.SessionEstablished(invalidCredentials)
         }
         every { authStateMachine.getCurrentState(captureLambda()) } answers {
@@ -1209,7 +1204,7 @@ class RealAWSCognitoAuthPluginTest {
         val listenLatch = CountDownLatch(1)
 
         val currentAuthState = mockk<AuthState> {
-            every { authNState } returns AuthenticationState.SignedIn(mockk())
+            every { authNState } returns AuthenticationState.SignedIn(mockk(), mockk())
             every { authZState } returns AuthorizationState.SessionEstablished(credentials)
         }
         every { authStateMachine.getCurrentState(captureLambda()) } answers {
@@ -1247,7 +1242,7 @@ class RealAWSCognitoAuthPluginTest {
         val listenLatch = CountDownLatch(1)
 
         val currentAuthState = mockk<AuthState> {
-            every { authNState } returns AuthenticationState.SignedIn(mockk())
+            every { authNState } returns AuthenticationState.SignedIn(mockk(), mockk())
             every { authZState } returns AuthorizationState.SessionEstablished(credentials)
         }
         every { authStateMachine.getCurrentState(captureLambda()) } answers {
@@ -1316,13 +1311,12 @@ class RealAWSCognitoAuthPluginTest {
                 "username",
                 Date(),
                 SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH),
-                DeviceMetadata.Empty,
                 CognitoUserPoolTokens(null, null, null, 120L)
             )
         )
 
         val currentAuthState = mockk<AuthState> {
-            every { authNState } returns AuthenticationState.SignedIn(mockk())
+            every { authNState } returns AuthenticationState.SignedIn(mockk(), mockk())
             every { authZState } returns AuthorizationState.SessionEstablished(invalidCredentials)
         }
         every { authStateMachine.getCurrentState(captureLambda()) } answers {
@@ -1355,7 +1349,7 @@ class RealAWSCognitoAuthPluginTest {
         val listenLatch = CountDownLatch(1)
 
         val currentAuthState = mockk<AuthState> {
-            every { authNState } returns AuthenticationState.SignedIn(mockk())
+            every { authNState } returns AuthenticationState.SignedIn(mockk(), mockk())
             every { authZState } returns AuthorizationState.SessionEstablished(credentials)
         }
         every { authStateMachine.getCurrentState(captureLambda()) } answers {
@@ -1394,7 +1388,7 @@ class RealAWSCognitoAuthPluginTest {
         val listenLatch = CountDownLatch(1)
 
         val currentAuthState = mockk<AuthState> {
-            every { authNState } returns AuthenticationState.SignedIn(mockk())
+            every { authNState } returns AuthenticationState.SignedIn(mockk(), mockk())
             every { authZState } returns AuthorizationState.SessionEstablished(credentials)
         }
         every { authStateMachine.getCurrentState(captureLambda()) } answers {

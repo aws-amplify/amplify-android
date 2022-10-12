@@ -19,6 +19,7 @@ import android.content.Context
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 import com.amplifyframework.statemachine.codegen.data.AuthCredentialStore
+import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -35,15 +36,23 @@ class AWSCognitoAuthCredentialStore(
     }
 
     private val key = generateKey()
-    private val keyValue: KeyValueRepository by lazy {
+    private var keyValue: KeyValueRepository =
         keyValueRepoFactory.create(context, awsKeyValueStoreIdentifier, isPersistenceEnabled)
-    }
 
     override fun saveCredential(credential: AmplifyCredential) = keyValue.put(key, serializeCredential(credential))
+
+    override fun saveDeviceMetadata(username: String, deviceMetadata: DeviceMetadata) = keyValue.put(
+        username,
+        serializeMetaData(deviceMetadata)
+    )
+
+    override fun retrieveDeviceMetadata(username: String): DeviceMetadata = deserializeMetadata(keyValue.get(username))
 
     override fun retrieveCredential(): AmplifyCredential = deserializeCredential(keyValue.get(key))
 
     override fun deleteCredential() = keyValue.remove(key)
+
+    override fun deleteDeviceKeyCredential(username: String) = keyValue.remove(username)
 
     private fun generateKey(): String {
         var prefix = "amplify"
@@ -60,11 +69,28 @@ class AWSCognitoAuthCredentialStore(
     }
 
     private fun deserializeCredential(encodedCredential: String?): AmplifyCredential {
-        val credentials = encodedCredential?.let { Json.decodeFromString(it) as AmplifyCredential }
-        return credentials ?: AmplifyCredential.Empty
+        return try {
+            val credentials = encodedCredential?.let { Json.decodeFromString(it) as AmplifyCredential }
+            credentials ?: AmplifyCredential.Empty
+        } catch (e: Exception) {
+            AmplifyCredential.Empty
+        }
+    }
+
+    private fun deserializeMetadata(encodedDeviceMetadata: String?): DeviceMetadata {
+        return try {
+            val deviceMetadata = encodedDeviceMetadata?.let { Json.decodeFromString(it) as DeviceMetadata }
+            deviceMetadata ?: DeviceMetadata.Empty
+        } catch (e: Exception) {
+            DeviceMetadata.Empty
+        }
     }
 
     private fun serializeCredential(credential: AmplifyCredential): String {
         return Json.encodeToString(credential)
+    }
+
+    private fun serializeMetaData(deviceMetadata: DeviceMetadata): String {
+        return Json.encodeToString(deviceMetadata)
     }
 }

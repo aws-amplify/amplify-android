@@ -212,7 +212,7 @@ internal class EventRecorder(
                 id = pinpointEvent.pinpointSession.sessionId
                 startTimestamp = pinpointEvent.pinpointSession.sessionStart.millisToIsoDate()
                 stopTimestamp = pinpointEvent.pinpointSession.sessionEnd?.let {
-                    pinpointEvent.pinpointSession.sessionStart.millisToIsoDate()
+                    pinpointEvent.pinpointSession.sessionEnd.millisToIsoDate()
                 }
                 pinpointEvent.pinpointSession.sessionDuration?.toInt()?.let { duration = it }
             }
@@ -256,7 +256,6 @@ internal class EventRecorder(
         }
 
         return PublicEndpoint {
-            channelType = endpointProfile.channelType
             location = endpointLocation
             demographic = endpointDemographic
             effectiveDate = endpointProfile.effectiveDate.millisToIsoDate()

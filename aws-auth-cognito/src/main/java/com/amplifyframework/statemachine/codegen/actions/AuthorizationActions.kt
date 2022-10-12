@@ -27,4 +27,5 @@ interface AuthorizationActions {
     fun initializeFetchAuthSession(signedInData: SignedInData): Action
     fun initiateRefreshSessionAction(amplifyCredential: AmplifyCredential): Action
     fun initializeFederationToIdentityPool(federatedToken: FederatedToken, developerProvidedIdentityId: String?): Action
+    fun persistCredentials(amplifyCredential: AmplifyCredential): Action
 }

@@ -134,18 +134,23 @@ class AWSCognitoAuthPluginFeatureTest(private val fileName: String) {
             every { cognitoIdentityProviderClient } returns mockCognitoIPClient
         }
 
-        val authEnvironment = AuthEnvironment(authConfiguration, authService, null, null, logger = mockk())
+        val credentialStoreClient = mockk<CredentialStoreClient>(relaxed = true)
+        val authEnvironment = AuthEnvironment(
+            authConfiguration,
+            authService,
+            credentialStoreClient,
+            null,
+            null,
+            logger = mockk()
+        )
+        val logger = mockk<Logger>(relaxed = true)
 
         authStateMachine = AuthStateMachine(authEnvironment, getState(feature.preConditions.state))
-
-        val credentialStoreStateMachine = mockk<CredentialStoreStateMachine>(relaxed = true)
-        val logger = mockk<Logger>(relaxed = true)
 
         return RealAWSCognitoAuthPlugin(
             authConfiguration,
             authEnvironment,
             authStateMachine,
-            credentialStoreStateMachine,
             logger
         )
     }
