@@ -17,13 +17,16 @@ package com.amplifyframework.auth.cognito.actions
 
 import aws.sdk.kotlin.services.cognitoidentity.model.GetCredentialsForIdentityRequest
 import aws.sdk.kotlin.services.cognitoidentity.model.GetIdRequest
+import aws.sdk.kotlin.services.cognitoidentity.model.NotAuthorizedException
 import aws.sdk.kotlin.services.cognitoidentityprovider.initiateAuth
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AuthFlowType
 import aws.smithy.kotlin.runtime.time.Instant
 import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidOauthConfigurationException
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
-import com.amplifyframework.auth.cognito.helpers.JWTParser
+import com.amplifyframework.auth.cognito.helpers.SessionHelper
+import com.amplifyframework.auth.exceptions.SessionExpiredException
+import com.amplifyframework.auth.exceptions.SignedOutException
 import com.amplifyframework.auth.exceptions.UnknownException
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.FetchAuthSessionActions
@@ -49,7 +52,7 @@ object FetchAuthSessionCognitoActions : FetchAuthSessionActions {
 
                 val authParameters = mutableMapOf<String, String>()
                 val secretHash = AuthHelper.getSecretHash(
-                    tokens.accessToken?.let { JWTParser.getClaim(it, "username") } ?: "",
+                    signedInData.username,
                     configuration.userPool?.appClient,
                     configuration.userPool?.appClientSecret
                 )
@@ -72,8 +75,12 @@ object FetchAuthSessionCognitoActions : FetchAuthSessionActions {
                     expiration = Instant.now().plus(expiresIn.seconds).epochSeconds
                 )
 
-                // TODO: update other properties in signed in data too
-                val updatedSignedInData = signedInData.copy(cognitoUserPoolTokens = cognitoUserPoolTokens)
+                val updatedSignedInData = signedInData.copy(
+                    userId = cognitoUserPoolTokens.accessToken?.let(SessionHelper::getUserSub) ?: signedInData.userId,
+                    username = cognitoUserPoolTokens.accessToken?.let(SessionHelper::getUsername)
+                        ?: signedInData.username,
+                    cognitoUserPoolTokens = cognitoUserPoolTokens
+                )
 
                 if (configuration.identityPool != null) {
                     val logins = LoginsMapProvider.CognitoUserPoolLogins(
@@ -85,6 +92,9 @@ object FetchAuthSessionCognitoActions : FetchAuthSessionActions {
                 } else {
                     RefreshSessionEvent(RefreshSessionEvent.EventType.Refreshed(updatedSignedInData))
                 }
+            } catch (notAuthorized: NotAuthorizedException) {
+                val error = SessionExpiredException(cause = notAuthorized)
+                AuthorizationEvent(AuthorizationEvent.EventType.ThrowError(error))
             } catch (e: Exception) {
                 AuthorizationEvent(AuthorizationEvent.EventType.ThrowError(e))
             }
@@ -120,6 +130,9 @@ object FetchAuthSessionCognitoActions : FetchAuthSessionActions {
                 } else {
                     RefreshSessionEvent(RefreshSessionEvent.EventType.Refreshed(updatedSignedInData))
                 }
+            } catch (notAuthorized: NotAuthorizedException) {
+                val error = SessionExpiredException(cause = notAuthorized)
+                AuthorizationEvent(AuthorizationEvent.EventType.ThrowError(error))
             } catch (e: Exception) {
                 AuthorizationEvent(AuthorizationEvent.EventType.ThrowError(e))
             }
@@ -149,8 +162,18 @@ object FetchAuthSessionCognitoActions : FetchAuthSessionActions {
                 response?.identityId?.let {
                     FetchAuthSessionEvent(FetchAuthSessionEvent.EventType.FetchAwsCredentials(it, loginsMap))
                 } ?: throw Exception("Fetching identity id failed.")
+            } catch (notAuthorized: NotAuthorizedException) {
+                val exception = SignedOutException(
+                    recoverySuggestion = SignedOutException.RECOVERY_SUGGESTION_GUEST_ACCESS_DISABLED,
+                    cause = notAuthorized
+                )
+                AuthorizationEvent(AuthorizationEvent.EventType.ThrowError(exception))
             } catch (e: Exception) {
-                AuthorizationEvent(AuthorizationEvent.EventType.ThrowError(e))
+                val exception = SignedOutException(
+                    recoverySuggestion = SignedOutException.RECOVERY_SUGGESTION_GUEST_ACCESS_POSSIBLE,
+                    cause = e
+                )
+                AuthorizationEvent(AuthorizationEvent.EventType.ThrowError(exception))
             }
             logger.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
@@ -176,8 +199,18 @@ object FetchAuthSessionCognitoActions : FetchAuthSessionActions {
                     )
                     FetchAuthSessionEvent(FetchAuthSessionEvent.EventType.Fetched(identityId, credentials))
                 } ?: throw Exception("Fetching AWS credentials failed.")
+            } catch (notAuthorized: NotAuthorizedException) {
+                val exception = SignedOutException(
+                    recoverySuggestion = SignedOutException.RECOVERY_SUGGESTION_GUEST_ACCESS_DISABLED,
+                    cause = notAuthorized
+                )
+                AuthorizationEvent(AuthorizationEvent.EventType.ThrowError(exception))
             } catch (e: Exception) {
-                AuthorizationEvent(AuthorizationEvent.EventType.ThrowError(e))
+                val exception = SignedOutException(
+                    recoverySuggestion = SignedOutException.RECOVERY_SUGGESTION_GUEST_ACCESS_POSSIBLE,
+                    cause = e
+                )
+                AuthorizationEvent(AuthorizationEvent.EventType.ThrowError(exception))
             }
             logger.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
