@@ -24,6 +24,7 @@ import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidOauthConfigurationException
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.auth.cognito.helpers.SessionHelper
+import com.amplifyframework.auth.exceptions.SessionExpiredException
 import com.amplifyframework.auth.exceptions.UnknownException
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.FetchAuthSessionActions
@@ -90,7 +91,8 @@ object FetchAuthSessionCognitoActions : FetchAuthSessionActions {
                     RefreshSessionEvent(RefreshSessionEvent.EventType.Refreshed(updatedSignedInData))
                 }
             } catch (e: Exception) {
-                AuthorizationEvent(AuthorizationEvent.EventType.ThrowError(e))
+                val error = SessionExpiredException(cause = e)
+                AuthorizationEvent(AuthorizationEvent.EventType.ThrowError(error))
             }
             logger.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)

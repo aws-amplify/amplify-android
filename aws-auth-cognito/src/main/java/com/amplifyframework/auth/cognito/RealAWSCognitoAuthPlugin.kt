@@ -756,10 +756,6 @@ internal class RealAWSCognitoAuthPlugin(
                 is AuthorizationState.SessionEstablished -> {
                     val credential = authZState.amplifyCredential
                     if (!credential.isValid() || forceRefresh) {
-                        if (lastPublishedHubEventName.get() != AuthChannelEventName.SESSION_EXPIRED) {
-                            lastPublishedHubEventName.set(AuthChannelEventName.SESSION_EXPIRED)
-                            Amplify.Hub.publish(HubChannel.AUTH, HubEvent.create(AuthChannelEventName.SESSION_EXPIRED))
-                        }
                         authStateMachine.send(
                             AuthorizationEvent(AuthorizationEvent.EventType.RefreshSession(credential))
                         )
@@ -788,8 +784,6 @@ internal class RealAWSCognitoAuthPlugin(
                         when (val error = authZState.exception) {
                             is SessionError -> {
                                 val idpError = when (error.exception) {
-                                    is aws.sdk.kotlin.services.cognitoidentityprovider.model.NotAuthorizedException ->
-                                        SessionExpiredException()
                                     is aws.sdk.kotlin.services.cognitoidentity.model.NotAuthorizedException ->
                                         SignedOutException(SignedOutException.RECOVERY_SUGGESTION_GUEST_ACCESS_DISABLED)
                                     is aws.sdk.kotlin.services.cognitoidentity.model.CognitoIdentityException ->
@@ -800,11 +794,11 @@ internal class RealAWSCognitoAuthPlugin(
                                                 "Fetch auth session failed."
                                             )
                                         )
-                                    // TODO: session expired
                                     else -> UnknownException("Fetch auth session failed.", error)
                                 }
                                 onSuccess.accept(error.amplifyCredential.getCognitoSession(idpError))
                             }
+                            is SessionExpiredException -> AmplifyCredential.Empty.getCognitoSession(error)
                             else -> onSuccess.accept(
                                 AmplifyCredential.Empty.getCognitoSession(
                                     UnknownException("Fetch auth session failed.", error)
@@ -1529,23 +1523,27 @@ internal class RealAWSCognitoAuthPlugin(
                     is AuthState.Configured -> {
                         val (authNState, authZState) = authState
                         val deleteUserAuthZState = authZState as? AuthorizationState.DeletingUser
-                        when {
+                        val hubEvent = when {
                             authNState is AuthenticationState.SignedOut &&
-                                authZState is AuthorizationState.Configured
-                                && lastPublishedHubEventName.get() != AuthChannelEventName.SIGNED_OUT -> {
-                                lastPublishedHubEventName.set(AuthChannelEventName.SIGNED_OUT)
-                                Amplify.Hub.publish(HubChannel.AUTH, HubEvent.create(AuthChannelEventName.SIGNED_OUT))
+                                authZState is AuthorizationState.Configured -> {
+                                AuthChannelEventName.SIGNED_OUT
                             }
                             authNState is AuthenticationState.SignedIn &&
-                                authZState is AuthorizationState.SessionEstablished
-                                && lastPublishedHubEventName.get() != AuthChannelEventName.SIGNED_IN -> {
-                                lastPublishedHubEventName.set(AuthChannelEventName.SIGNED_IN)
-                                Amplify.Hub.publish(HubChannel.AUTH, HubEvent.create(AuthChannelEventName.SIGNED_IN))
+                                authZState is AuthorizationState.SessionEstablished -> {
+                                AuthChannelEventName.SIGNED_IN
                             }
-                            deleteUserAuthZState?.deleteUserState is DeleteUserState.UserDeleted
-                                && lastPublishedHubEventName.get() != AuthChannelEventName.USER_DELETED -> {
-                                Amplify.Hub.publish(HubChannel.AUTH, HubEvent.create(AuthChannelEventName.USER_DELETED))
+                            deleteUserAuthZState?.deleteUserState is DeleteUserState.UserDeleted -> {
+                                AuthChannelEventName.USER_DELETED
                             }
+                            authNState is AuthenticationState.SignedIn && authZState is AuthorizationState.Error &&
+                                authZState.exception is SessionExpiredException -> {
+                                AuthChannelEventName.SESSION_EXPIRED
+                            }
+                            else -> lastPublishedHubEventName.get()
+                        }
+                        if (lastPublishedHubEventName.get() != hubEvent) {
+                            lastPublishedHubEventName.set(hubEvent)
+                            Amplify.Hub.publish(HubChannel.AUTH, HubEvent.create(hubEvent))
                         }
                     }
                     else -> Unit
