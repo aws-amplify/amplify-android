@@ -157,7 +157,6 @@ object DeviceSRPCognitoSignInActions : DeviceSRPSignInActions {
                 )
                 logger.verbose("$id Sending event ${errorEvent.type}")
                 dispatcher.send(errorEvent)
-
                 val errorEvent2 = SignInEvent(SignInEvent.EventType.ThrowError(exception))
                 logger.verbose("$id Sending event ${errorEvent.type}")
                 dispatcher.send(errorEvent2)
