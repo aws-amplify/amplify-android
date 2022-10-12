@@ -46,6 +46,7 @@ import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidOauthCo
 import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidUserPoolConfigurationException
 import com.amplifyframework.auth.cognito.exceptions.invalidstate.SignedInException
 import com.amplifyframework.auth.cognito.exceptions.service.CodeDeliveryFailureException
+import com.amplifyframework.auth.cognito.exceptions.service.InvalidAccountTypeException
 import com.amplifyframework.auth.cognito.exceptions.service.UserCancelledException
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.auth.cognito.helpers.HostedUIHelper
@@ -783,27 +784,27 @@ internal class RealAWSCognitoAuthPlugin(
                         token?.let(authStateMachine::cancel)
                         when (val error = authZState.exception) {
                             is SessionError -> {
-                                val idpError = when (error.exception) {
-                                    is aws.sdk.kotlin.services.cognitoidentity.model.NotAuthorizedException ->
-                                        SignedOutException(SignedOutException.RECOVERY_SUGGESTION_GUEST_ACCESS_DISABLED)
-                                    is aws.sdk.kotlin.services.cognitoidentity.model.CognitoIdentityException ->
-                                        SignedOutException(
-                                            SignedOutException.RECOVERY_SUGGESTION_GUEST_ACCESS_POSSIBLE,
-                                            cause = CognitoAuthExceptionConverter.lookup(
-                                                error,
-                                                "Fetch auth session failed."
-                                            )
-                                        )
-                                    else -> UnknownException("Fetch auth session failed.", error)
+                                when (error.exception) {
+                                    is SignedOutException -> {
+                                        onSuccess.accept(error.amplifyCredential.getCognitoSession(error.exception))
+                                    }
+                                    is SessionExpiredException -> {
+                                        onSuccess.accept(AmplifyCredential.Empty.getCognitoSession(error.exception))
+                                    }
+                                    else -> {
+                                        val errorResult = UnknownException("Fetch auth session failed.", error)
+                                        onSuccess.accept(error.amplifyCredential.getCognitoSession(errorResult))
+                                    }
                                 }
-                                onSuccess.accept(error.amplifyCredential.getCognitoSession(idpError))
                             }
-                            is SessionExpiredException -> AmplifyCredential.Empty.getCognitoSession(error)
-                            else -> onSuccess.accept(
-                                AmplifyCredential.Empty.getCognitoSession(
-                                    UnknownException("Fetch auth session failed.", error)
-                                )
-                            )
+                            is ConfigurationException -> {
+                                val errorResult = InvalidAccountTypeException(error)
+                                onSuccess.accept(AmplifyCredential.Empty.getCognitoSession(errorResult))
+                            }
+                            else -> {
+                                val errorResult = UnknownException("Fetch auth session failed.", error)
+                                onSuccess.accept(AmplifyCredential.Empty.getCognitoSession(errorResult))
+                            }
                         }
                     }
                     else -> Unit
@@ -1536,7 +1537,8 @@ internal class RealAWSCognitoAuthPlugin(
                                 AuthChannelEventName.USER_DELETED
                             }
                             authNState is AuthenticationState.SignedIn && authZState is AuthorizationState.Error &&
-                                authZState.exception is SessionExpiredException -> {
+                                authZState.exception is SessionError &&
+                                authZState.exception.exception is SessionExpiredException -> {
                                 AuthChannelEventName.SESSION_EXPIRED
                             }
                             else -> lastPublishedHubEventName.get()

@@ -19,8 +19,9 @@ import com.amplifyframework.auth.exceptions.ServiceException
 /**
  * Could not perform the action because the configuration of the signed in account does not support it.
  */
-open class InvalidAccountTypeException :
+open class InvalidAccountTypeException(override val cause: Throwable?) :
     ServiceException(
         "The account type you have configured doesn't support this operation.",
-        "Update your Auth configuration to an account type which supports this operation."
+        "Update your Auth configuration to an account type which supports this operation.",
+        cause
     )

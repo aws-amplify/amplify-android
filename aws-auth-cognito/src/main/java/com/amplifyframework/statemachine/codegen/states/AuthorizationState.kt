@@ -89,10 +89,7 @@ sealed class AuthorizationState : State {
                         val action = authorizationActions.configureAuthorizationAction()
                         StateResolution(SessionEstablished(authorizationEvent.amplifyCredential), listOf(action))
                     }
-                    is AuthorizationEvent.EventType.ThrowError -> {
-                        val action = authorizationActions.resetAuthorizationAction()
-                        StateResolution(Error(authorizationEvent.exception), listOf(action))
-                    }
+                    is AuthorizationEvent.EventType.ThrowError -> StateResolution(NotConfigured())
                     else -> defaultResolution
                 }
                 is Configured -> when {
@@ -195,7 +192,9 @@ sealed class AuthorizationState : State {
                         val action = authorizationActions.persistCredentials(amplifyCredential)
                         StateResolution(StoringCredentials(amplifyCredential), listOf(action))
                     }
-                    is AuthorizationEvent.EventType.ThrowError -> StateResolution(Error(authorizationEvent.exception))
+                    is AuthorizationEvent.EventType.ThrowError -> StateResolution(
+                        Error(SessionError(authorizationEvent.exception, AmplifyCredential.Empty))
+                    )
                     else -> {
                         val resolution = fetchAuthSessionResolver.resolve(oldState.fetchAuthSessionState, event)
                         StateResolution(

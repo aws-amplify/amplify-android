@@ -30,14 +30,6 @@ import com.amplifyframework.statemachine.codegen.events.FetchAuthSessionEvent
 import com.amplifyframework.statemachine.codegen.events.RefreshSessionEvent
 
 object AuthorizationCognitoActions : AuthorizationActions {
-    override fun resetAuthorizationAction() = Action<AuthEnvironment>("resetAuthZ") { id, dispatcher ->
-        logger.verbose("$id Starting execution")
-        // TODO: recover from error
-//        val evt = AuthorizationEvent(AuthorizationEvent.EventType.Configure(configuration))
-//        logger.verbose("$id Sending event ${evt.type}")
-//        dispatcher.send(evt)
-    }
-
     override fun configureAuthorizationAction() = Action<AuthEnvironment>("ConfigureAuthZ") { id, dispatcher ->
         logger.verbose("$id Starting execution")
         val evt = AuthEvent(AuthEvent.EventType.ConfiguredAuthorization)
@@ -118,21 +110,13 @@ object AuthorizationCognitoActions : AuthorizationActions {
         developerProvidedIdentityId: String?
     ) = Action<AuthEnvironment>("InitializeFederationToIdentityPool") { id, dispatcher ->
         logger.verbose("$id Starting execution")
-        val evt = try {
-            if (developerProvidedIdentityId != null) {
-                FetchAuthSessionEvent(
-                    FetchAuthSessionEvent.EventType.FetchAwsCredentials(
-                        developerProvidedIdentityId,
-                        LoginsMapProvider.AuthProviderLogins(federatedToken)
-                    )
-                )
-            } else {
-                FetchAuthSessionEvent(
-                    FetchAuthSessionEvent.EventType.FetchIdentity(LoginsMapProvider.AuthProviderLogins(federatedToken))
-                )
-            }
-        } catch (e: Exception) {
-            AuthorizationEvent(AuthorizationEvent.EventType.ThrowError(e))
+        val logins = LoginsMapProvider.AuthProviderLogins(federatedToken)
+        val evt = if (developerProvidedIdentityId != null) {
+            FetchAuthSessionEvent(
+                FetchAuthSessionEvent.EventType.FetchAwsCredentials(developerProvidedIdentityId, logins)
+            )
+        } else {
+            FetchAuthSessionEvent(FetchAuthSessionEvent.EventType.FetchIdentity(logins))
         }
         logger.verbose("$id Sending event ${evt.type}")
         dispatcher.send(evt)
