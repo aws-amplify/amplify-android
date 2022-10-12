@@ -16,6 +16,7 @@
 package com.amplifyframework.auth.cognito.actions
 
 import com.amplifyframework.auth.cognito.AuthEnvironment
+import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidOauthConfigurationException
 import com.amplifyframework.auth.cognito.helpers.JWTParser
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.HostedUIActions
@@ -32,7 +33,7 @@ object HostedUICognitoActions : HostedUIActions {
         Action<AuthEnvironment>("InitHostedUIAuth") { id, dispatcher ->
             logger.verbose("$id Starting execution")
             try {
-                if (hostedUIClient == null) throw Exception() // TODO: More detailed exception
+                if (hostedUIClient == null) throw InvalidOauthConfigurationException()
                 hostedUIClient.launchCustomTabsSignIn(event.hostedUISignInData.hostedUIOptions)
             } catch (e: Exception) {
                 val errorEvent = HostedUIEvent(HostedUIEvent.EventType.ThrowError(e))
@@ -48,7 +49,9 @@ object HostedUICognitoActions : HostedUIActions {
         Action<AuthEnvironment>("InitHostedUITokenFetch") { id, dispatcher ->
             logger.verbose("$id Starting execution")
             val evt = try {
-                if (hostedUIClient == null) throw Exception() // TODO: More detailed exception
+                // This should never happen, but if it does it is due to bad Oauth configuration block in
+                // amplify json config
+                if (hostedUIClient == null) throw InvalidOauthConfigurationException()
 
                 val token = hostedUIClient.fetchToken(event.uri)
                 val userId = token.accessToken?.let { JWTParser.getClaim(it, "sub") } ?: ""
@@ -59,14 +62,13 @@ object HostedUICognitoActions : HostedUIActions {
                     username,
                     Date(),
                     SignInMethod.HostedUI(browserPackage),
-                    DeviceMetadata.Empty,
                     token
                 )
                 val tokenFetchedEvent = HostedUIEvent(HostedUIEvent.EventType.TokenFetched)
                 logger.verbose("$id Sending event ${tokenFetchedEvent.type}")
                 dispatcher.send(tokenFetchedEvent)
 
-                AuthenticationEvent(AuthenticationEvent.EventType.SignInCompleted(signedInData))
+                AuthenticationEvent(AuthenticationEvent.EventType.SignInCompleted(signedInData, DeviceMetadata.Empty))
             } catch (e: Exception) {
                 val errorEvent = HostedUIEvent(HostedUIEvent.EventType.ThrowError(e))
                 logger.verbose("$id Sending event ${errorEvent.type}")

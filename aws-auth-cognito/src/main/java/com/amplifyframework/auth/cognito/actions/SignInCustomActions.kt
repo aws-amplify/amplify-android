@@ -27,6 +27,7 @@ import com.amplifyframework.statemachine.codegen.actions.CustomSignInActions
 import com.amplifyframework.statemachine.codegen.data.SignInMethod
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.CustomSignInEvent
+import com.amplifyframework.statemachine.codegen.events.SignInEvent
 
 object SignInCustomActions : CustomSignInActions {
     private const val KEY_SECRET_HASH = "SECRET_HASH"
@@ -45,6 +46,9 @@ object SignInCustomActions : CustomSignInActions {
                 val authParams = mutableMapOf(KEY_USERNAME to event.username)
                 secretHash?.let { authParams[KEY_SECRET_HASH] = it }
                 val encodedContextData = userContextDataProvider?.getEncodedContextData(event.username)
+
+                val deviceKey = event.metadata[KEY_DEVICE_KEY]
+                deviceKey?.let { authParams[KEY_DEVICE_KEY] = it }
 
                 val initiateAuthResponse = cognitoAuthService.cognitoIdentityProviderClient?.initiateAuth {
                     authFlow = AuthFlowType.CustomAuth
@@ -71,7 +75,11 @@ object SignInCustomActions : CustomSignInActions {
                     )
                 }
             } catch (e: Exception) {
-                AuthenticationEvent(AuthenticationEvent.EventType.CancelSignIn(error = e))
+                val errorEvent = SignInEvent(SignInEvent.EventType.ThrowError(e))
+                logger.verbose("$id Sending event ${errorEvent.type}")
+                dispatcher.send(errorEvent)
+
+                AuthenticationEvent(AuthenticationEvent.EventType.CancelSignIn())
             }
             logger.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)

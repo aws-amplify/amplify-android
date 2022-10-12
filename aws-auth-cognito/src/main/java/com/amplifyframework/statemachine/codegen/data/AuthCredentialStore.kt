@@ -17,6 +17,9 @@ package com.amplifyframework.statemachine.codegen.data
 
 interface AuthCredentialStore {
     fun saveCredential(credential: AmplifyCredential)
+    fun saveDeviceMetadata(username: String, deviceMetadata: DeviceMetadata)
+    fun retrieveDeviceMetadata(username: String): DeviceMetadata
     fun retrieveCredential(): AmplifyCredential
     fun deleteCredential()
+    fun deleteDeviceKeyCredential(username: String)
 }

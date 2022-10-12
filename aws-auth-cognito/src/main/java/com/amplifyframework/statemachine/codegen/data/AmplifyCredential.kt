@@ -30,6 +30,10 @@ sealed class AmplifyCredential {
         val credentials: AWSCredentials
     }
 
+    interface DeviceMetaDataTypeCredential {
+        val deviceMetadata: DeviceMetadata
+    }
+
     @Serializable
     @SerialName("empty")
     object Empty : AmplifyCredential()
@@ -37,6 +41,11 @@ sealed class AmplifyCredential {
     @Serializable
     @SerialName("userPool")
     data class UserPool(override val signedInData: SignedInData) : AmplifyCredential(), UserPoolTypeCredential
+
+    @Serializable
+    @SerialName("deviceMetadata")
+    data class DeviceData(override val deviceMetadata: DeviceMetadata) :
+        AmplifyCredential(), DeviceMetaDataTypeCredential
 
     @Serializable
     @SerialName("identityPool")
@@ -72,29 +81,26 @@ sealed class AmplifyCredential {
 //    data class FederatedToken(val token: String, val provider: AuthProvider) : AuthTokens()
 // }
 
+/**
+ * Contains identity provider info to federate a provider into identity pool
+ * @param token identity provider token (Cognito or 3rd party)
+ * @param providerName identity provider name
+ */
 @Serializable
 data class FederatedToken(val token: String, val providerName: String)
 
+/**
+ * Contains cognito user pool JWT tokens
+ * @param idToken User Pool id token
+ * @param accessToken User Pool access token
+ * @param refreshToken User Pool refresh token
+ * @param expiration Auth result expiration but not token expiration
+ */
 @Serializable
 data class CognitoUserPoolTokens(
-    /**
-     * User Pool id token
-     */
     val idToken: String?,
-
-    /**
-     * User Pool access token
-     */
     val accessToken: String?,
-
-    /**
-     * User Pool refresh token
-     */
     val refreshToken: String?,
-
-    /**
-     * Auth result expiration but not token expiration
-     */
     val expiration: Long?,
 ) {
     override fun toString(): String {
@@ -106,6 +112,13 @@ data class CognitoUserPoolTokens(
     }
 }
 
+/**
+ * Contains AWS credentials that allows access to AWS resources
+ * @param accessKeyId access key id
+ * @param secretAccessKey secret access key
+ * @param sessionToken temporary session token
+ * @param expiration session token expiration
+ */
 @Serializable
 data class AWSCredentials(
     val accessKeyId: String?,
@@ -125,4 +138,10 @@ data class AWSCredentials(
             "expiration = $expiration" +
             ")"
     }
+}
+
+sealed class CredentialType {
+    object Amplify : CredentialType()
+    data class Device(val username: String) : CredentialType()
+    object ASF : CredentialType()
 }

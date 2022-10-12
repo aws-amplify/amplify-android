@@ -60,7 +60,7 @@ sealed class CredentialStoreState : State {
                 }
                 is MigratingLegacyStore -> when (storeEvent) {
                     is CredentialStoreEvent.EventType.LoadCredentialStore -> {
-                        val action = storeActions.loadCredentialStoreAction()
+                        val action = storeActions.loadCredentialStoreAction(storeEvent.credentialType)
                         StateResolution(LoadingStoredCredentials(), listOf(action))
                     }
                     is CredentialStoreEvent.EventType.ThrowError -> StateResolution(Error(storeEvent.error))
@@ -77,15 +77,18 @@ sealed class CredentialStoreState : State {
                 }
                 is Idle -> when (storeEvent) {
                     is CredentialStoreEvent.EventType.ClearCredentialStore -> {
-                        val action = storeActions.clearCredentialStoreAction()
+                        val action = storeActions.clearCredentialStoreAction(storeEvent.credentialType)
                         StateResolution(ClearingCredentials(), listOf(action))
                     }
                     is CredentialStoreEvent.EventType.LoadCredentialStore -> {
-                        val action = storeActions.loadCredentialStoreAction()
+                        val action = storeActions.loadCredentialStoreAction(storeEvent.credentialType)
                         StateResolution(LoadingStoredCredentials(), listOf(action))
                     }
                     is CredentialStoreEvent.EventType.StoreCredentials -> {
-                        val action = storeActions.storeCredentialsAction(storeEvent.credentials)
+                        val action = storeActions.storeCredentialsAction(
+                            storeEvent.credentialType,
+                            storeEvent.credentials
+                        )
                         StateResolution(StoringCredentials(), listOf(action))
                     }
                     else -> StateResolution(oldState)

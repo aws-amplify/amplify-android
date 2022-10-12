@@ -18,6 +18,7 @@
 package com.amplifyframework.testutils.featuretest.auth.serializers
 
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
+import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.data.SignedInData
 import com.amplifyframework.statemachine.codegen.data.SignedOutData
 import com.amplifyframework.statemachine.codegen.states.AuthState
@@ -56,7 +57,9 @@ internal data class AuthStatesProxy(
         return when (type) {
             "AuthState.Configured" -> AuthState.Configured(authNState, authZState) as T
             "AuthenticationState.SignedOut" -> signedOutData?.let { AuthenticationState.SignedOut(it) } as T
-            "AuthenticationState.SignedIn" -> signedInData?.let { AuthenticationState.SignedIn(it) } as T
+            "AuthenticationState.SignedIn" -> signedInData?.let {
+                AuthenticationState.SignedIn(it, DeviceMetadata.Empty)
+            } as T
             "AuthorizationState.Configured" -> AuthorizationState.Configured() as T
             "AuthorizationState.SessionEstablished" -> amplifyCredential?.let {
                 AuthorizationState.SessionEstablished(it)
@@ -82,8 +85,6 @@ internal data class AuthStatesProxy(
                         is AuthState.ConfiguringAuthorization -> TODO()
                         is AuthState.Error -> TODO()
                         is AuthState.NotConfigured -> TODO()
-                        is AuthState.ValidatingCredentialsAndConfiguration -> TODO()
-                        is AuthState.WaitingForCachedCredentials -> TODO()
                     }
                 }
                 is AuthenticationState -> {

@@ -23,7 +23,7 @@ import com.amplifyframework.auth.AuthException
  * @param cause The original error.
  */
 open class SignedOutException(
-    message: String = "Your session has expired.",
+    message: String = "You are currently signed out.",
     recoverySuggestion: String = RECOVERY_SUGGESTION_GUEST_ACCESS_DISABLED,
     cause: Throwable? = null
 ) : AuthException(message, recoverySuggestion, cause) {
@@ -32,7 +32,5 @@ open class SignedOutException(
         const val RECOVERY_SUGGESTION_GUEST_ACCESS_POSSIBLE = "If you have guest access enabled, please check " +
             "that your device is online and try again. Otherwise if guest access is not enabled, you'll " +
             "need to sign in and try again."
-        const val RECOVERY_SUGGESTION_GUEST_ACCESS_ENABLED = "For guest access, please check that your device " +
-            "is online and try again. For normal user access, please sign in."
     }
 }

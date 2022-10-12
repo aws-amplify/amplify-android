@@ -18,9 +18,11 @@ package com.amplifyframework.auth.cognito.actions
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.GlobalSignOutRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.RevokeTokenRequest
 import com.amplifyframework.auth.cognito.AuthEnvironment
+import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidOauthConfigurationException
 import com.amplifyframework.auth.cognito.helpers.JWTParser
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.SignOutActions
+import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.data.GlobalSignOutErrorData
 import com.amplifyframework.statemachine.codegen.data.HostedUIErrorData
 import com.amplifyframework.statemachine.codegen.data.RevokeTokenErrorData
@@ -33,7 +35,7 @@ object SignOutCognitoActions : SignOutActions {
         Action<AuthEnvironment>("HostedUISignOut") { id, dispatcher ->
             logger.verbose("$id Starting execution")
             try {
-                if (hostedUIClient == null) throw Exception() // TODO: More detailed exception
+                if (hostedUIClient == null) throw InvalidOauthConfigurationException()
                 hostedUIClient.launchCustomTabsSignOut(event.signOutData.browserPackage)
             } catch (e: Exception) {
                 logger.warn("Failed to sign out web ui.", e)
@@ -171,7 +173,9 @@ object SignOutCognitoActions : SignOutActions {
     override fun userCancelledAction(event: SignOutEvent.EventType.UserCancelled) =
         Action<AuthEnvironment>("UserCancelledSignOut") { id, dispatcher ->
             logger.verbose("$id Starting execution")
-            val evt = AuthenticationEvent(AuthenticationEvent.EventType.CancelSignOut(event.signedInData))
+            val evt = AuthenticationEvent(
+                AuthenticationEvent.EventType.CancelSignOut(event.signedInData, DeviceMetadata.Empty)
+            )
             logger.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
         }
