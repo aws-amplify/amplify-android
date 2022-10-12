@@ -136,6 +136,10 @@ sealed class SignInState : State {
                         ResolvingDeviceSRP(DeviceSRPSignInState.NotStarted()),
                         listOf(signInActions.startDeviceSRPAuthAction(signInEvent))
                     )
+                    is SignInEvent.EventType.ConfirmDevice -> {
+                        val action = signInActions.confirmDevice(signInEvent)
+                        StateResolution(ConfirmingDevice(), listOf(action))
+                    }
                     is SignInEvent.EventType.ThrowError -> StateResolution(Error(signInEvent.exception))
                     else -> defaultResolution
                 }
