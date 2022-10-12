@@ -848,10 +848,14 @@ internal class RealAWSCognitoAuthPlugin(
         onError: Consumer<AuthException>
     ) {
         authStateMachine.getCurrentState { authState ->
-            when (authState.authNState) {
+            when (val authState = authState.authNState) {
                 is AuthenticationState.SignedIn -> {
-                    val deviceID = device.id.ifEmpty { null }
-                    updateDevice(deviceID, DeviceRememberedStatusType.NotRemembered, onSuccess, onError)
+                    if (device.id.isEmpty()) {
+                        val deviceKey = (authState.deviceMetadata as? DeviceMetadata.Metadata)?.deviceKey
+                        updateDevice(deviceKey, DeviceRememberedStatusType.NotRemembered, onSuccess, onError)
+                    } else {
+                        updateDevice(device.id, DeviceRememberedStatusType.NotRemembered, onSuccess, onError)
+                    }
                 }
                 else -> {
                     onError.accept(SignedOutException())
