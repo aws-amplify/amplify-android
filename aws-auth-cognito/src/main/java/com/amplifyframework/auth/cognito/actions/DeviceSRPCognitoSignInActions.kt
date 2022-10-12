@@ -32,6 +32,7 @@ import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.data.SignInMethod
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.DeviceSRPSignInEvent
+import com.amplifyframework.statemachine.codegen.events.SignInEvent
 
 object DeviceSRPCognitoSignInActions : DeviceSRPSignInActions {
 
@@ -95,6 +96,9 @@ object DeviceSRPCognitoSignInActions : DeviceSRPSignInActions {
                 val errorEvent = DeviceSRPSignInEvent(DeviceSRPSignInEvent.EventType.ThrowAuthError(exception))
                 logger.verbose("$id Sending event ${errorEvent.type}")
                 dispatcher.send(errorEvent)
+                val errorEvent2 = SignInEvent(SignInEvent.EventType.ThrowError(exception))
+                logger.verbose("$id Sending event ${errorEvent.type}")
+                dispatcher.send(errorEvent2)
                 AuthenticationEvent(AuthenticationEvent.EventType.CancelSignIn())
             }
             logger.verbose("$id Sending event ${evt.type}")
@@ -128,7 +132,7 @@ object DeviceSRPCognitoSignInActions : DeviceSRPSignInActions {
                                 KEY_PASSWORD_CLAIM_SECRET_BLOCK to secretBlock,
                                 KEY_TIMESTAMP to srpHelper.dateString,
                                 KEY_PASSWORD_CLAIM_SIGNATURE to srpHelper.getSignature(salt, srpB, secretBlock),
-                                KEY_DEVICE_KEY to deviceKey
+                                KEY_DEVICE_KEY to ""
                             )
                             encodedContextData?.let { userContextData { encodedData = it } }
                         }
@@ -153,6 +157,10 @@ object DeviceSRPCognitoSignInActions : DeviceSRPSignInActions {
                 )
                 logger.verbose("$id Sending event ${errorEvent.type}")
                 dispatcher.send(errorEvent)
+
+                val errorEvent2 = SignInEvent(SignInEvent.EventType.ThrowError(exception))
+                logger.verbose("$id Sending event ${errorEvent.type}")
+                dispatcher.send(errorEvent2)
                 AuthenticationEvent(AuthenticationEvent.EventType.CancelSignIn())
             }
             logger.verbose("$id Sending event ${evt.type}")
