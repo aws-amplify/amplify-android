@@ -132,7 +132,7 @@ object DeviceSRPCognitoSignInActions : DeviceSRPSignInActions {
                                 KEY_PASSWORD_CLAIM_SECRET_BLOCK to secretBlock,
                                 KEY_TIMESTAMP to srpHelper.dateString,
                                 KEY_PASSWORD_CLAIM_SIGNATURE to srpHelper.getSignature(salt, srpB, secretBlock),
-                                KEY_DEVICE_KEY to ""
+                                KEY_DEVICE_KEY to deviceKey
                             )
                             encodedContextData?.let { userContextData { encodedData = it } }
                         }
