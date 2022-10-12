@@ -12,16 +12,12 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package com.amplifyframework.auth.cognito.exceptions.service
 
-import com.amplifyframework.auth.exceptions.ServiceException
+package com.amplifyframework.statemachine.codegen.errors
 
-/**
- * Could not perform the action because the configuration of the signed in account does not support it.
- */
-open class InvalidAccountTypeException(override val cause: Throwable?) :
-    ServiceException(
-        "The account type you have configured doesn't support this operation.",
-        "Update your Auth configuration to an account type which supports this operation.",
-        cause
-    )
+import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
+
+data class SessionError(val exception: Exception, val amplifyCredential: AmplifyCredential) : Exception(
+    exception.message,
+    exception.cause
+)
