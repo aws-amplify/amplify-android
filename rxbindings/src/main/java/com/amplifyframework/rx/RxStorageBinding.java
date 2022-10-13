@@ -26,6 +26,7 @@ import com.amplifyframework.rx.RxAdapters.CancelableBehaviors;
 import com.amplifyframework.storage.StorageCategory;
 import com.amplifyframework.storage.StorageCategoryBehavior;
 import com.amplifyframework.storage.StorageException;
+import com.amplifyframework.storage.operation.StorageTransferOperation;
 import com.amplifyframework.storage.options.StorageDownloadFileOptions;
 import com.amplifyframework.storage.options.StorageGetUrlOptions;
 import com.amplifyframework.storage.options.StorageListOptions;
@@ -37,6 +38,7 @@ import com.amplifyframework.storage.result.StorageGetUrlResult;
 import com.amplifyframework.storage.result.StorageListResult;
 import com.amplifyframework.storage.result.StorageRemoveResult;
 import com.amplifyframework.storage.result.StorageTransferProgress;
+import com.amplifyframework.storage.result.StorageTransferResult;
 import com.amplifyframework.storage.result.StorageUploadFileResult;
 import com.amplifyframework.storage.result.StorageUploadInputStreamResult;
 
@@ -163,6 +165,16 @@ public final class RxStorageBinding implements RxStorageCategoryBehavior {
             storage.list(path, options, onResult, onError);
             return new NoOpCancelable(); // StorageListOperation is not Cancelable at the moment!
         });
+    }
+
+    @NonNull
+    @Override
+    public Single<StorageTransferOperation<?, ? extends StorageTransferResult>> getTransfer(
+        @NonNull String transferId) {
+        return toSingle(((onResult, onError) -> {
+            storage.getTransfer(transferId, onResult, onError);
+            return new NoOpCancelable(); // StorageListOperation is not Cancelable at the moment!
+        }));
     }
 
     private <T> Single<T> toSingle(CancelableBehaviors.ResultEmitter<T, StorageException> method) {

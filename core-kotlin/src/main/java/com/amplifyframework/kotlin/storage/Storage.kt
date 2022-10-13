@@ -17,6 +17,7 @@ package com.amplifyframework.kotlin.storage
 
 import com.amplifyframework.core.async.Cancelable
 import com.amplifyframework.storage.StorageException
+import com.amplifyframework.storage.operation.StorageTransferOperation
 import com.amplifyframework.storage.options.StorageDownloadFileOptions
 import com.amplifyframework.storage.options.StorageGetUrlOptions
 import com.amplifyframework.storage.options.StorageListOptions
@@ -28,6 +29,7 @@ import com.amplifyframework.storage.result.StorageGetUrlResult
 import com.amplifyframework.storage.result.StorageListResult
 import com.amplifyframework.storage.result.StorageRemoveResult
 import com.amplifyframework.storage.result.StorageTransferProgress
+import com.amplifyframework.storage.result.StorageTransferResult
 import com.amplifyframework.storage.result.StorageUploadFileResult
 import com.amplifyframework.storage.result.StorageUploadInputStreamResult
 import java.io.File
@@ -83,6 +85,9 @@ interface Storage {
         path: String,
         options: StorageListOptions = StorageListOptions.defaultInstance()
     ): StorageListResult
+
+    @Throws(StorageException::class)
+    suspend fun getTransfer(transferId: String): StorageTransferOperation<*, StorageTransferResult>
 
     @FlowPreview
     data class InProgressStorageOperation<T>(
