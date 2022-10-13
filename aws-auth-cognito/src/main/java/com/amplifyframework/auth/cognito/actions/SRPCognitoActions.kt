@@ -32,6 +32,7 @@ import com.amplifyframework.statemachine.codegen.data.CredentialType
 import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.SRPEvent
+import com.amplifyframework.statemachine.codegen.events.SignInEvent
 
 object SRPCognitoActions : SRPActions {
     private const val KEY_PASSWORD_CLAIM_SECRET_BLOCK = "PASSWORD_CLAIM_SECRET_BLOCK"
@@ -102,7 +103,7 @@ object SRPCognitoActions : SRPActions {
         Action<AuthEnvironment>("InitSRPCustomAuth") { id, dispatcher ->
             logger.verbose("$id Starting execution")
             val evt = try {
-                srpHelper = SRPHelper("")
+                srpHelper = SRPHelper(event.password)
 
                 val secretHash = AuthHelper.getSecretHash(
                     event.username,
@@ -148,7 +149,9 @@ object SRPCognitoActions : SRPActions {
                 val errorEvent = SRPEvent(SRPEvent.EventType.ThrowAuthError(e))
                 logger.verbose("$id Sending event ${errorEvent.type}")
                 dispatcher.send(errorEvent)
-
+                val errorEvent2 = SignInEvent(SignInEvent.EventType.ThrowError(e))
+                logger.verbose("$id Sending event ${errorEvent.type}")
+                dispatcher.send(errorEvent2)
                 AuthenticationEvent(AuthenticationEvent.EventType.CancelSignIn())
             }
             logger.verbose("$id Sending event ${evt.type}")
@@ -210,7 +213,9 @@ object SRPCognitoActions : SRPActions {
                 val errorEvent = SRPEvent(SRPEvent.EventType.ThrowPasswordVerifierError(e))
                 logger.verbose("$id Sending event ${errorEvent.type}")
                 dispatcher.send(errorEvent)
-
+                val errorEvent2 = SignInEvent(SignInEvent.EventType.ThrowError(e))
+                logger.verbose("$id Sending event ${errorEvent.type}")
+                dispatcher.send(errorEvent2)
                 AuthenticationEvent(AuthenticationEvent.EventType.CancelSignIn())
             }
             logger.verbose("$id Sending event ${evt.type}")
