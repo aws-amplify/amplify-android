@@ -15,10 +15,10 @@
 
 package com.amplifyframework.kotlin.storage
 
-import com.amplifyframework.storage.StorageCategoryBehavior as Delegate
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.async.Cancelable
 import com.amplifyframework.kotlin.storage.Storage.InProgressStorageOperation
+import com.amplifyframework.storage.StorageCategoryBehavior as Delegate
 import com.amplifyframework.storage.StorageException
 import com.amplifyframework.storage.operation.StorageTransferOperation
 import com.amplifyframework.storage.options.StorageDownloadFileOptions
