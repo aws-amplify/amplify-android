@@ -21,6 +21,7 @@ import android.util.Pair
 import androidx.annotation.RawRes
 import androidx.test.core.app.ApplicationProvider
 import aws.sdk.kotlin.services.pinpoint.PinpointClient
+import aws.sdk.kotlin.services.pinpoint.model.EndpointLocation
 import aws.sdk.kotlin.services.pinpoint.model.EndpointResponse
 import aws.sdk.kotlin.services.pinpoint.model.GetEndpointRequest
 import com.amplifyframework.analytics.AnalyticsEvent
@@ -252,14 +253,9 @@ class PinpointAnalyticsInstrumentationTest {
             .plan("test-plan")
             .location(location)
             .customProperties(properties)
-            // next one maybe optional (also added _AWSPinpoint_UserProfile [what's the difference??])
-            .userAttributes(
-                AnalyticsProperties.builder()
-                    .add("SomeOtherUserAttribute", "value?")
-                    .build()
-            )
             .build()
         Amplify.Analytics.identifyUser("userId", userProfile)
+        Sleep.milliseconds(PINPOINT_ROUNDTRIP_TIMEOUT)
         val endpointResponse = fetchEndpointResponse()
         assertCommonEndpointResponseProperties(endpointResponse)
         assert(null == endpointResponse.user!!.userAttributes)
@@ -268,7 +264,7 @@ class PinpointAnalyticsInstrumentationTest {
     /**
      * [AWSPinpointUserProfile] extends [UserProfile] to include
      * [AWSPinpointUserProfile.userAttributes] which is specific to Pinpoint. This test is very
-     * similar to testIdentifyUserWithDefaultProfile, but it adds user attributes in additional
+     * similar to testIdentifyUserWithDefaultProfile, but it adds user attributes in addition
      * to the endpoint attributes.
      */
     @Test
@@ -285,6 +281,7 @@ class PinpointAnalyticsInstrumentationTest {
             .userAttributes(userAttributes)
             .build()
         Amplify.Analytics.identifyUser("userId", pinpointUserProfile)
+        Sleep.milliseconds(PINPOINT_ROUNDTRIP_TIMEOUT)
         val endpointResponse = fetchEndpointResponse()
         assertCommonEndpointResponseProperties(endpointResponse)
         Assert.assertEquals(
@@ -316,7 +313,6 @@ class PinpointAnalyticsInstrumentationTest {
         Assert.assertEquals("user@test.com", attributes["email"]!![0])
         Assert.assertEquals("test-user", attributes["name"]!![0])
         Assert.assertEquals("test-plan", attributes["plan"]!![0])
-        /* commenting out because Pinpoint service not currently returning location
         val endpointProfileLocation: EndpointLocation = endpointResponse.location!!
         Assert.assertEquals(47.6154086, endpointProfileLocation.latitude!!, 0.1)
         Assert.assertEquals((-122.3349685), endpointProfileLocation.longitude!!, 0.1)
@@ -324,7 +320,6 @@ class PinpointAnalyticsInstrumentationTest {
         Assert.assertEquals("Seattle", endpointProfileLocation.city)
         Assert.assertEquals("WA", endpointProfileLocation.region)
         Assert.assertEquals("USA", endpointProfileLocation.country)
-         */
         Assert.assertEquals("TestStringValue", attributes["TestStringProperty"]!![0])
         Assert.assertEquals(1.0, endpointResponse.metrics!!["TestDoubleProperty"]!!, 0.1)
     }
@@ -371,6 +366,7 @@ class PinpointAnalyticsInstrumentationTest {
         private const val CREDENTIALS_RESOURCE_NAME = "credentials"
         private const val CONFIGURATION_NAME = "amplifyconfiguration"
         private const val COGNITO_CONFIGURATION_TIMEOUT = 10 * 1000L
+        private const val PINPOINT_ROUNDTRIP_TIMEOUT = 10 * 1000L
         private const val RECORD_INSERTION_TIMEOUT = 5 * 1000L
         private const val UNIQUE_ID_KEY = "UniqueId"
         private lateinit var synchronousAuth: SynchronousAuth
