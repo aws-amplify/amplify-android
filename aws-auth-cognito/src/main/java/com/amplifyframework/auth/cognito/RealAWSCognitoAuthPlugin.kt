@@ -750,7 +750,7 @@ internal class RealAWSCognitoAuthPlugin(
         val forceRefresh = options.forceRefresh
         authStateMachine.getCurrentState { authState ->
             when (val authZState = authState.authZState) {
-                is AuthorizationState.Configured, is AuthorizationState.Error -> {
+                is AuthorizationState.Configured -> {
                     authStateMachine.send(AuthorizationEvent(AuthorizationEvent.EventType.FetchUnAuthSession))
                     _fetchAuthSession(onSuccess, onError)
                 }
@@ -762,6 +762,17 @@ internal class RealAWSCognitoAuthPlugin(
                         )
                         _fetchAuthSession(onSuccess, onError)
                     } else onSuccess.accept(credential.getCognitoSession())
+                }
+                is AuthorizationState.Error -> {
+                    val error = authZState.exception
+                    if (error is SessionError) {
+                        authStateMachine.send(
+                            AuthorizationEvent(AuthorizationEvent.EventType.RefreshSession(error.amplifyCredential))
+                        )
+                        _fetchAuthSession(onSuccess, onError)
+                    } else {
+                        onError.accept(InvalidStateException())
+                    }
                 }
                 else -> onError.accept(InvalidStateException())
             }
