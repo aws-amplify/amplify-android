@@ -47,7 +47,7 @@ object FetchAuthSessionCognitoActions : FetchAuthSessionActions {
     private const val KEY_DEVICE_KEY = "DEVICE_KEY"
 
     override fun refreshUserPoolTokensAction(signedInData: SignedInData) =
-        Action<AuthEnvironment>("InitiateRefreshSession") { id, dispatcher ->
+        Action<AuthEnvironment>("RefreshUserPoolTokens") { id, dispatcher ->
             logger.verbose("$id Starting execution")
             val evt = try {
                 val username = signedInData.username
@@ -110,7 +110,7 @@ object FetchAuthSessionCognitoActions : FetchAuthSessionActions {
         }
 
     override fun refreshHostedUIUserPoolTokensAction(signedInData: SignedInData) =
-        Action<AuthEnvironment>("InitiateRefreshHostedUITokens") { id, dispatcher ->
+        Action<AuthEnvironment>("RefreshHostedUITokens") { id, dispatcher ->
             logger.verbose("$id Starting execution")
             val evt = try {
                 val username = signedInData.username
