@@ -763,6 +763,17 @@ internal class RealAWSCognitoAuthPlugin(
                         _fetchAuthSession(onSuccess, onError)
                     } else onSuccess.accept(credential.getCognitoSession())
                 }
+                is AuthorizationState.Error -> {
+                    val error = authZState.exception
+                    if (error is SessionError) {
+                        authStateMachine.send(
+                            AuthorizationEvent(AuthorizationEvent.EventType.RefreshSession(error.amplifyCredential))
+                        )
+                        _fetchAuthSession(onSuccess, onError)
+                    } else {
+                        onError.accept(InvalidStateException())
+                    }
+                }
                 else -> onError.accept(InvalidStateException())
             }
         }
