@@ -750,7 +750,7 @@ internal class RealAWSCognitoAuthPlugin(
         val forceRefresh = options.forceRefresh
         authStateMachine.getCurrentState { authState ->
             when (val authZState = authState.authZState) {
-                is AuthorizationState.Configured, is AuthorizationState.Error -> {
+                is AuthorizationState.Configured -> {
                     authStateMachine.send(AuthorizationEvent(AuthorizationEvent.EventType.FetchUnAuthSession))
                     _fetchAuthSession(onSuccess, onError)
                 }
@@ -762,6 +762,17 @@ internal class RealAWSCognitoAuthPlugin(
                         )
                         _fetchAuthSession(onSuccess, onError)
                     } else onSuccess.accept(credential.getCognitoSession())
+                }
+                is AuthorizationState.Error -> {
+                    val error = authZState.exception
+                    if (error is SessionError) {
+                        authStateMachine.send(
+                            AuthorizationEvent(AuthorizationEvent.EventType.RefreshSession(error.amplifyCredential))
+                        )
+                        _fetchAuthSession(onSuccess, onError)
+                    } else {
+                        onError.accept(InvalidStateException())
+                    }
                 }
                 else -> onError.accept(InvalidStateException())
             }
@@ -865,10 +876,14 @@ internal class RealAWSCognitoAuthPlugin(
         onError: Consumer<AuthException>
     ) {
         authStateMachine.getCurrentState { authState ->
-            when (authState.authNState) {
+            when (val authState = authState.authNState) {
                 is AuthenticationState.SignedIn -> {
-                    val deviceID = device.id.ifEmpty { null }
-                    updateDevice(deviceID, DeviceRememberedStatusType.NotRemembered, onSuccess, onError)
+                    if (device.id.isEmpty()) {
+                        val deviceKey = (authState.deviceMetadata as? DeviceMetadata.Metadata)?.deviceKey
+                        updateDevice(deviceKey, DeviceRememberedStatusType.NotRemembered, onSuccess, onError)
+                    } else {
+                        updateDevice(device.id, DeviceRememberedStatusType.NotRemembered, onSuccess, onError)
+                    }
                 }
                 else -> {
                     onError.accept(SignedOutException())

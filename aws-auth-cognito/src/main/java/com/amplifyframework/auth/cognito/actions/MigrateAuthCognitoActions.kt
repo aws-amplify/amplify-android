@@ -31,7 +31,6 @@ object MigrateAuthCognitoActions : MigrateAuthActions {
     private const val KEY_USERNAME = "USERNAME"
     private const val KEY_PASSWORD = "PASSWORD"
     private const val KEY_SECRET_HASH = "SECRET_HASH"
-    private const val KEY_DEVICE_KEY = "DEVICE_KEY"
 
     override fun initiateMigrateAuthAction(event: SignInEvent.EventType.InitiateMigrateAuth) =
         Action<AuthEnvironment>("InitMigrateAuth") { id, dispatcher ->
@@ -46,9 +45,6 @@ object MigrateAuthCognitoActions : MigrateAuthActions {
                 val authParams = mutableMapOf(KEY_USERNAME to event.username, KEY_PASSWORD to event.password)
                 secretHash?.let { authParams[KEY_SECRET_HASH] = it }
                 val encodedContextData = userContextDataProvider?.getEncodedContextData(event.username)
-
-                val deviceKey = event.metadata[KEY_DEVICE_KEY]
-                deviceKey?.let { authParams[KEY_DEVICE_KEY] = it }
 
                 val response = cognitoAuthService.cognitoIdentityProviderClient?.initiateAuth {
                     authFlow = AuthFlowType.UserPasswordAuth
