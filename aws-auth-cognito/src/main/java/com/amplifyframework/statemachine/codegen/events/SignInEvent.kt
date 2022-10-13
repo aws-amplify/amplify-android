@@ -37,6 +37,7 @@ class SignInEvent(val eventType: EventType, override val time: Date? = null) : S
 
         data class InitiateCustomSignInWithSRP(
             val username: String,
+            val password: String,
             val metadata: Map<String, String>
         ) : EventType()
 
