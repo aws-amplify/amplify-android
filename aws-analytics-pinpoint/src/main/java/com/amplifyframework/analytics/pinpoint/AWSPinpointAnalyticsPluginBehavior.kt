@@ -27,6 +27,7 @@ import com.amplifyframework.analytics.AnalyticsStringProperty
 import com.amplifyframework.analytics.UserProfile
 import com.amplifyframework.analytics.pinpoint.models.AWSPinpointUserProfile
 import com.amplifyframework.analytics.pinpoint.targeting.TargetingClient
+import com.amplifyframework.analytics.pinpoint.targeting.endpointProfile.EndpointProfileLocation
 import com.amplifyframework.analytics.pinpoint.targeting.endpointProfile.EndpointProfileUser
 
 internal class AWSPinpointAnalyticsPluginBehavior(
@@ -44,6 +45,22 @@ internal class AWSPinpointAnalyticsPluginBehavior(
     }
 
     override fun identifyUser(userId: String, profile: UserProfile?) {
+        val endpointProfile = targetingClient.currentEndpoint().apply {
+            addAttribute(USER_NAME_KEY, profile?.name?.let { listOf(it) } ?: emptyList())
+            addAttribute(USER_EMAIL_KEY, profile?.email?.let { listOf(it) } ?: emptyList())
+            addAttribute(USER_PLAN_KEY, profile?.plan?.let { listOf(it) } ?: emptyList())
+            profile?.location?.let { userLocation ->
+                val country = userLocation.country
+                if (null != country) {
+                    location = EndpointProfileLocation(country)
+                    userLocation.city?.let { location.city = it }
+                    userLocation.region?.let { location.region = it }
+                    userLocation.latitude?.let { location.latitude = it }
+                    userLocation.longitude?.let { location.longitude = it }
+                    userLocation.postalCode?.let { location.postalCode = it }
+                }
+            }
+        }
         val endpointUser = EndpointProfileUser().apply {
             setUserId(userId)
             if (profile is AWSPinpointUserProfile) {
@@ -56,14 +73,24 @@ internal class AWSPinpointAnalyticsPluginBehavior(
                         }
                     }
                 }
+                profile.customProperties?.let {
+                    it.forEach { entry ->
+                        when (val property = entry.value) {
+                            is AnalyticsStringProperty, is AnalyticsBooleanProperty -> {
+                                endpointProfile.addAttribute(entry.key, listOf(property.value.toString()))
+                            }
+                            is AnalyticsIntegerProperty, is AnalyticsDoubleProperty -> {
+                                endpointProfile.addMetric(entry.key, property.value.toString().toDouble())
+                            }
+                            else -> {
+                                throw IllegalArgumentException("Invalid property type")
+                            }
+                        }
+                    }
+                }
             }
         }
-        val endpointProfile = targetingClient.currentEndpoint().apply {
-            addAttribute(USER_NAME_KEY, profile?.name?.let { listOf(it) } ?: emptyList())
-            addAttribute(USER_EMAIL_KEY, profile?.email?.let { listOf(it) } ?: emptyList())
-            addAttribute(USER_PLAN_KEY, profile?.plan?.let { listOf(it) } ?: emptyList())
-            user = endpointUser
-        }
+        endpointProfile.user = endpointUser
         targetingClient.updateEndpointProfile(endpointProfile)
     }
 

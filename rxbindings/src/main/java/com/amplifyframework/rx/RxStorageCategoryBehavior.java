@@ -19,6 +19,7 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.storage.StorageCategoryBehavior;
 import com.amplifyframework.storage.StorageException;
+import com.amplifyframework.storage.operation.StorageTransferOperation;
 import com.amplifyframework.storage.options.StorageDownloadFileOptions;
 import com.amplifyframework.storage.options.StorageGetUrlOptions;
 import com.amplifyframework.storage.options.StorageListOptions;
@@ -29,6 +30,7 @@ import com.amplifyframework.storage.result.StorageDownloadFileResult;
 import com.amplifyframework.storage.result.StorageGetUrlResult;
 import com.amplifyframework.storage.result.StorageListResult;
 import com.amplifyframework.storage.result.StorageRemoveResult;
+import com.amplifyframework.storage.result.StorageTransferResult;
 import com.amplifyframework.storage.result.StorageUploadFileResult;
 import com.amplifyframework.storage.result.StorageUploadInputStreamResult;
 
@@ -207,5 +209,17 @@ public interface RxStorageCategoryBehavior {
     Single<StorageListResult> list(
             @NonNull String path,
             @NonNull StorageListOptions options
+    );
+
+    /**
+     * Queries the transfer form local db.
+     * @param transferId ID of the transferOperation
+     * @return A single which emits a StorageTransferOperation on success, or an error on failure.
+     *         The getTransfer operation does not begin until subscription. You can cancel the listing
+     *         by disposing the single subscription.
+     */
+    @NonNull
+    Single<StorageTransferOperation<?, ? extends StorageTransferResult>> getTransfer(
+        @NonNull String transferId
     );
 }

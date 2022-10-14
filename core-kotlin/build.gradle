@@ -38,6 +38,7 @@ dependencies {
     testImplementation dependency.androidx.test.core
     testImplementation dependency.junit
     testImplementation dependency.mockk
+    testImplementation dependency.kotlin.test.coroutines
     testImplementation project(':testmodels')
 }
 

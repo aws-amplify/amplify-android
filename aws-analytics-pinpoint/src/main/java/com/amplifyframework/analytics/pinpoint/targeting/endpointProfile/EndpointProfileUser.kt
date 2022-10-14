@@ -21,7 +21,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 class EndpointProfileUser {
     private var userId: String? = null
-    private var userAttributes: MutableMap<String, List<String>>? = null
+    private var userAttributes: MutableMap<String, List<String>> = ConcurrentHashMap()
     fun getUserId(): String? {
         return userId
     }
@@ -30,19 +30,16 @@ class EndpointProfileUser {
         this.userId = userId
     }
 
-    fun getUserAttributes(): Map<String, List<String>>? {
+    fun getUserAttributes(): Map<String, List<String>> {
         return userAttributes
     }
 
-    fun setUserAttributes(userAttributes: MutableMap<String, List<String>>?) {
+    fun setUserAttributes(userAttributes: MutableMap<String, List<String>>) {
         this.userAttributes = userAttributes
     }
 
     fun addUserAttribute(key: String, value: List<String>): EndpointProfileUser {
-        if (userAttributes == null) {
-            userAttributes = ConcurrentHashMap()
-        }
-        userAttributes!![key] = value
+        userAttributes[key] = value
         return this
     }
 }

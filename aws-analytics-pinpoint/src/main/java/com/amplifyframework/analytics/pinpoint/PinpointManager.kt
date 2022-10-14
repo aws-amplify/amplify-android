@@ -25,6 +25,7 @@ import com.amplifyframework.analytics.pinpoint.models.AndroidDeviceDetails
 import com.amplifyframework.analytics.pinpoint.models.SDKInfo
 import com.amplifyframework.analytics.pinpoint.targeting.TargetingClient
 import com.amplifyframework.core.BuildConfig
+import com.amplifyframework.util.UserAgent.Platform
 
 /**
  * PinpointManager is the entry point to Pinpoint Analytics and Targeting.
@@ -38,16 +39,16 @@ internal class PinpointManager constructor(
     val analyticsClient: AnalyticsClient
     val sessionClient: SessionClient
     val targetingClient: TargetingClient
+    internal val pinpointClient: PinpointClient = PinpointClient {
+        credentialsProvider = this@PinpointManager.credentialsProvider
+        region = awsPinpointConfiguration.region
+    }
 
     companion object {
-        private const val SDK_NAME = "AMPLIFY-ANDROID"
+        private val SDK_NAME = Platform.ANDROID.libraryName
     }
 
     init {
-        val pinpointClient = PinpointClient {
-            credentialsProvider = this@PinpointManager.credentialsProvider
-            region = awsPinpointConfiguration.region
-        }
         val pinpointDatabase = PinpointDatabase(context)
         val sharedPrefs =
             context.getSharedPreferences(awsPinpointConfiguration.appId, Context.MODE_PRIVATE)

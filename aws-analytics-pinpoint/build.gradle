@@ -42,6 +42,7 @@ dependencies {
     androidTestImplementation project(path: ':testutils')
     androidTestImplementation dependency.androidx.test.core
     androidTestImplementation dependency.androidx.test.runner
+    androidTestImplementation dependency.kotlin.test.coroutines
     implementation dependency.androidx.test.junit
     androidTestImplementation project(path: ':aws-analytics-pinpoint')
 }
