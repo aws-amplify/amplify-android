@@ -1485,14 +1485,13 @@ internal class RealAWSCognitoAuthPlugin(
         var listenerToken: StateChangeListenerToken? = null
         listenerToken = authStateMachine.listen(
             { authState ->
-                val signOutState = (authState.authNState as? AuthenticationState.SigningOut)?.signOutState
-                when (signOutState) {
-                    is SignOutState.SignedOut -> {
+                when (val authNState = authState.authNState) {
+                    is AuthenticationState.SignedOut -> {
                         val event = DeleteUserEvent(DeleteUserEvent.EventType.SignOutDeletedUser())
                         authStateMachine.send(event)
                     }
-                    is SignOutState.Error -> {
-                        val event = DeleteUserEvent(DeleteUserEvent.EventType.ThrowError(signOutState.exception))
+                    is AuthenticationState.Error -> {
+                        val event = DeleteUserEvent(DeleteUserEvent.EventType.ThrowError(authNState.exception))
                         authStateMachine.send(event)
                     }
                     else -> {

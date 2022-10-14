@@ -26,6 +26,7 @@ import com.amplifyframework.statemachine.codegen.data.LoginsMapProvider
 import com.amplifyframework.statemachine.codegen.data.SignedInData
 import com.amplifyframework.statemachine.codegen.events.AuthEvent
 import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
+import com.amplifyframework.statemachine.codegen.events.DeleteUserEvent
 import com.amplifyframework.statemachine.codegen.events.FetchAuthSessionEvent
 import com.amplifyframework.statemachine.codegen.events.RefreshSessionEvent
 
@@ -121,6 +122,13 @@ object AuthorizationCognitoActions : AuthorizationActions {
         logger.verbose("$id Sending event ${evt.type}")
         dispatcher.send(evt)
     }
+
+    override fun initiateDeleteUser(event: DeleteUserEvent.EventType.DeleteUser) =
+        Action<AuthEnvironment>("InitiateDeleteUser") { id, dispatcher ->
+            val evt = DeleteUserEvent(DeleteUserEvent.EventType.DeleteUser(event.accessToken))
+            logger.verbose("$id Sending event ${evt.type}")
+            dispatcher.send(evt)
+        }
 
     override fun persistCredentials(amplifyCredential: AmplifyCredential) =
         Action<AuthEnvironment>("PersistCredentials") { id, dispatcher ->

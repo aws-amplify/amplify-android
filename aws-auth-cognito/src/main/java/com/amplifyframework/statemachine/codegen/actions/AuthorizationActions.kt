@@ -19,6 +19,7 @@ import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.FederatedToken
 import com.amplifyframework.statemachine.codegen.data.SignedInData
+import com.amplifyframework.statemachine.codegen.events.DeleteUserEvent
 
 interface AuthorizationActions {
     fun configureAuthorizationAction(): Action
@@ -26,5 +27,6 @@ interface AuthorizationActions {
     fun initializeFetchAuthSession(signedInData: SignedInData): Action
     fun initiateRefreshSessionAction(amplifyCredential: AmplifyCredential): Action
     fun initializeFederationToIdentityPool(federatedToken: FederatedToken, developerProvidedIdentityId: String?): Action
+    fun initiateDeleteUser(event: DeleteUserEvent.EventType.DeleteUser): Action
     fun persistCredentials(amplifyCredential: AmplifyCredential): Action
 }
