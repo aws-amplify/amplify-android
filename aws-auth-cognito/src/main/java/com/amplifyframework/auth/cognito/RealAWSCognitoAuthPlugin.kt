@@ -1469,10 +1469,14 @@ internal class RealAWSCognitoAuthPlugin(
             when (authState.authNState) {
                 is AuthenticationState.SignedIn -> {
                     GlobalScope.launch {
-                        val accessToken = getSession().userPoolTokensResult.value?.accessToken
-                        accessToken?.let {
-                            _deleteUser(accessToken, onSuccess, onError)
-                        } ?: onError.accept(SignedOutException())
+                        try {
+                            val accessToken = getSession().userPoolTokensResult.value?.accessToken
+                            accessToken?.let {
+                                _deleteUser(accessToken, onSuccess, onError)
+                            } ?: onError.accept(SignedOutException())
+                        } catch (error: Exception) {
+                            onError.accept(SignedOutException())
+                        }
                     }
                 }
                 is AuthenticationState.SignedOut -> onError.accept(SignedOutException())
