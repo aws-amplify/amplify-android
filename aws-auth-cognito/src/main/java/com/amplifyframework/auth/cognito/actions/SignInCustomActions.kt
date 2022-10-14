@@ -24,6 +24,9 @@ import com.amplifyframework.auth.cognito.helpers.SignInChallengeHelper
 import com.amplifyframework.auth.exceptions.ServiceException
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.CustomSignInActions
+import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
+import com.amplifyframework.statemachine.codegen.data.CredentialType
+import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.data.SignInMethod
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.CustomSignInEvent
@@ -47,8 +50,10 @@ object SignInCustomActions : CustomSignInActions {
                 secretHash?.let { authParams[KEY_SECRET_HASH] = it }
                 val encodedContextData = userContextDataProvider?.getEncodedContextData(event.username)
 
-                val deviceKey = event.metadata[KEY_DEVICE_KEY]
-                deviceKey?.let { authParams[KEY_DEVICE_KEY] = it }
+                val deviceCredentials = credentialStoreClient.loadCredentials(CredentialType.Device(event.username))
+                val deviceMetadata = (deviceCredentials as AmplifyCredential.DeviceData)
+                    .deviceMetadata as? DeviceMetadata.Metadata
+                deviceMetadata?.let { authParams[KEY_DEVICE_KEY] = it.deviceKey }
 
                 val initiateAuthResponse = cognitoAuthService.cognitoIdentityProviderClient?.initiateAuth {
                     authFlow = AuthFlowType.CustomAuth
