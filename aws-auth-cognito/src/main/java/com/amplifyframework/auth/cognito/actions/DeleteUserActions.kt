@@ -32,7 +32,7 @@ object DeleteUserActions : DeleteUserActions {
                 cognitoAuthService.cognitoIdentityProviderClient?.deleteUser(
                     DeleteUserRequest.invoke { this.accessToken = accessToken }
                 )
-                AuthenticationEvent(AuthenticationEvent.EventType.SignOutRequested(SignOutData(globalSignOut = true)))
+                AuthenticationEvent(AuthenticationEvent.EventType.SignOutRequested(SignOutData(globalSignOut = false)))
             } catch (e: Exception) {
                 logger.warn("Failed to delete user.", e)
                 if (e is UserNotFoundException) {

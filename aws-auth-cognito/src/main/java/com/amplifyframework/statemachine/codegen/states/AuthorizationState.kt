@@ -58,6 +58,7 @@ sealed class AuthorizationState : State {
         val federatedToken: FederatedToken,
         val fetchAuthSessionState: FetchAuthSessionState
     ) : AuthorizationState()
+
     data class Error(val exception: Exception) : AuthorizationState()
 
     override val type = this.toString()
@@ -229,7 +230,8 @@ sealed class AuthorizationState : State {
                         SigningOut(oldState.amplifyCredential)
                     )
                     deleteUserEvent is DeleteUserEvent.EventType.DeleteUser -> StateResolution(
-                        DeletingUser(DeleteUserState.NotStarted())
+                        DeletingUser(DeleteUserState.NotStarted()),
+                        listOf(authorizationActions.initiateDeleteUser(deleteUserEvent))
                     )
                     authorizationEvent is AuthorizationEvent.EventType.RefreshSession -> {
                         val action = authorizationActions.initiateRefreshSessionAction(
@@ -276,7 +278,10 @@ sealed class AuthorizationState : State {
                         StateResolution(newState, listOf(action))
                     }
                     deleteUserEvent is DeleteUserEvent.EventType.DeleteUser -> {
-                        StateResolution(DeletingUser(DeleteUserState.NotStarted()))
+                        StateResolution(
+                            DeletingUser(DeleteUserState.NotStarted()),
+                            listOf(authorizationActions.initiateDeleteUser(deleteUserEvent))
+                        )
                     }
                     else -> defaultResolution
                 }
