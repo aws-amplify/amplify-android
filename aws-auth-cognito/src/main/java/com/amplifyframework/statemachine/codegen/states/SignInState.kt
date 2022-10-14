@@ -27,7 +27,7 @@ sealed class SignInState : State {
     data class SigningInWithSRP(override var srpSignInState: SRPSignInState?) : SignInState()
     data class SigningInWithHostedUI(override var hostedUISignInState: HostedUISignInState?) : SignInState()
     data class SigningInWithCustom(override var customSignInState: CustomSignInState?) : SignInState()
-    data class SigningInWithSRPCustom(val id: String = "") : SignInState()
+    data class SigningInWithSRPCustom(override var srpSignInState: SRPSignInState?) : SignInState()
     data class SigningInViaMigrateAuth(override var migrateSignInState: MigrateSignInState?) : SignInState()
     data class ResolvingDeviceSRP(override var deviceSRPSignInState: DeviceSRPSignInState?) : SignInState()
     data class ResolvingChallenge(override var challengeState: SignInChallengeState?) : SignInState()
@@ -122,12 +122,13 @@ sealed class SignInState : State {
                         listOf(signInActions.startMigrationAuthAction(signInEvent))
                     )
                     is SignInEvent.EventType.InitiateCustomSignInWithSRP -> StateResolution(
-                        SigningInWithSRPCustom(),
+                        SigningInWithSRPCustom(oldState.srpSignInState),
                         listOf(signInActions.startCustomAuthWithSRPAction(signInEvent))
                     )
                     else -> defaultResolution
                 }
-                is SigningInWithSRP, is SigningInWithCustom, is SigningInViaMigrateAuth -> when (signInEvent) {
+                is SigningInWithSRP, is SigningInWithCustom, is SigningInViaMigrateAuth,
+                is SigningInWithSRPCustom -> when (signInEvent) {
                     is SignInEvent.EventType.ReceivedChallenge -> {
                         val action = signInActions.initResolveChallenge(signInEvent)
                         StateResolution(ResolvingChallenge(oldState.challengeState), listOf(action))
@@ -191,6 +192,7 @@ sealed class SignInState : State {
             is SigningInViaMigrateAuth -> SigningInViaMigrateAuth(migrateSignInState)
             is SigningInWithCustom -> SigningInWithCustom(customSignInState)
             is SigningInWithHostedUI -> SigningInWithHostedUI(hostedUISignInState)
+            is SigningInWithSRPCustom -> SigningInWithSRPCustom(srpSignInState)
             is ResolvingDeviceSRP -> ResolvingDeviceSRP(deviceSRPSignInState)
             else -> signInState
         }

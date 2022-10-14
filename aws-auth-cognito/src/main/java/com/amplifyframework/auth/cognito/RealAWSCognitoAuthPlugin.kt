@@ -465,7 +465,7 @@ internal class RealAWSCognitoAuthPlugin(
                         SignInData.CustomAuthSignInData(username, options.metadata)
                     }
                     AuthFlowType.CUSTOM_AUTH_WITH_SRP -> {
-                        SignInData.CustomSRPAuthSignInData(username, options.metadata)
+                        SignInData.CustomSRPAuthSignInData(username, password, options.metadata)
                     }
                     AuthFlowType.USER_PASSWORD_AUTH -> {
                         SignInData.MigrationAuthSignInData(username, password, options.metadata)
