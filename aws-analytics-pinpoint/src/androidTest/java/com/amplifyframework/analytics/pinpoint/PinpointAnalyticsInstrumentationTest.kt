@@ -254,7 +254,7 @@ class PinpointAnalyticsInstrumentationTest {
             .location(location)
             .customProperties(properties)
             .build()
-        Amplify.Analytics.identifyUser("userId", userProfile)
+        Amplify.Analytics.identifyUser(UUID.randomUUID().toString(), userProfile)
         Sleep.milliseconds(PINPOINT_ROUNDTRIP_TIMEOUT)
         val endpointResponse = fetchEndpointResponse()
         assertCommonEndpointResponseProperties(endpointResponse)
@@ -280,7 +280,7 @@ class PinpointAnalyticsInstrumentationTest {
             .customProperties(properties)
             .userAttributes(userAttributes)
             .build()
-        Amplify.Analytics.identifyUser("userId", pinpointUserProfile)
+        Amplify.Analytics.identifyUser(UUID.randomUUID().toString(), pinpointUserProfile)
         Sleep.milliseconds(PINPOINT_ROUNDTRIP_TIMEOUT)
         val endpointResponse = fetchEndpointResponse()
         assertCommonEndpointResponseProperties(endpointResponse)
@@ -380,12 +380,18 @@ class PinpointAnalyticsInstrumentationTest {
             val context = ApplicationProvider.getApplicationContext<Context>()
             @RawRes val resourceId = Resources.getRawResourceId(context, CONFIGURATION_NAME)
             appId = readAppIdFromResource(context, resourceId)
+            preferences = context.getSharedPreferences(appId, Context.MODE_PRIVATE)
+            setUniqueId()
             Amplify.Auth.addPlugin(AWSCognitoAuthPlugin() as AuthPlugin<*>)
             Amplify.addPlugin(AWSPinpointAnalyticsPlugin())
             Amplify.configure(context)
             Sleep.milliseconds(COGNITO_CONFIGURATION_TIMEOUT)
             synchronousAuth = SynchronousAuth.delegatingTo(Amplify.Auth)
-            preferences = context.getSharedPreferences(appId, Context.MODE_PRIVATE)
+        }
+
+        private fun setUniqueId() {
+            uniqueId = UUID.randomUUID().toString()
+            preferences.edit().putString(UNIQUE_ID_KEY, uniqueId).commit()
         }
 
         private fun readCredentialsFromResource(context: Context, @RawRes resourceId: Int): Pair<String, String>? {
