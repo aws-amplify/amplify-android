@@ -36,6 +36,7 @@ sealed class SignInData {
 
     data class CustomSRPAuthSignInData(
         val username: String?,
+        val password: String?,
         val metadata: Map<String, String>
     ) : SignInData()
 
