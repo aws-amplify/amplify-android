@@ -173,7 +173,7 @@ public final class RxStorageBinding implements RxStorageCategoryBehavior {
         @NonNull String transferId) {
         return toSingle(((onResult, onError) -> {
             storage.getTransfer(transferId, onResult, onError);
-            return new NoOpCancelable(); // StorageListOperation is not Cancelable at the moment!
+            return new NoOpCancelable();
         }));
     }
 
