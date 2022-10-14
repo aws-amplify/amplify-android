@@ -38,11 +38,6 @@ object AuthStateJsonGenerator : SerializableProvider {
         username = "username",
         signedInDate = Date.from(Instant.ofEpochSecond(324234123)),
         signInMethod = SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH),
-        deviceMetadata = DeviceMetadata.Metadata(
-            deviceKey = "someDeviceKey",
-            deviceGroupKey = "someDeviceGroupKey",
-            deviceSecret = "someSecret"
-        ),
         cognitoUserPoolTokens = CognitoUserPoolTokens(
             idToken = "someToken",
             accessToken = "someAccessToken",
@@ -52,7 +47,7 @@ object AuthStateJsonGenerator : SerializableProvider {
     )
 
     private val signedInState = AuthState.Configured(
-        AuthenticationState.SignedIn(signedInData),
+        AuthenticationState.SignedIn(signedInData, DeviceMetadata.Empty),
         AuthorizationState.SessionEstablished(
             AmplifyCredential.UserAndIdentityPool(
                 signedInData,

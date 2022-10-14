@@ -13,13 +13,11 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.statemachine.codegen.data
+package com.amplifyframework.statemachine.codegen.errors
 
-interface AuthCredentialStore {
-    fun saveCredential(credential: AmplifyCredential)
-    fun saveDeviceMetadata(username: String, deviceMetadata: DeviceMetadata)
-    fun retrieveDeviceMetadata(username: String): DeviceMetadata
-    fun retrieveCredential(): AmplifyCredential
-    fun deleteCredential()
-    fun deleteDeviceKeyCredential(username: String)
-}
+import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
+
+data class SessionError(val exception: Exception, val amplifyCredential: AmplifyCredential) : Exception(
+    exception.message,
+    exception.cause
+)

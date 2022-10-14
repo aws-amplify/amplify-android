@@ -29,7 +29,7 @@ sealed class SignInState : State {
     data class SigningInWithCustom(override var customSignInState: CustomSignInState?) : SignInState()
     data class SigningInWithSRPCustom(val id: String = "") : SignInState()
     data class SigningInViaMigrateAuth(override var migrateSignInState: MigrateSignInState?) : SignInState()
-    data class ResolvingDeviceSrpa(override var deviceSRPSignInState: DeviceSRPSignInState?) : SignInState()
+    data class ResolvingDeviceSRP(override var deviceSRPSignInState: DeviceSRPSignInState?) : SignInState()
     data class ResolvingChallenge(override var challengeState: SignInChallengeState?) : SignInState()
     data class ConfirmingDevice(val id: String = "") : SignInState()
     data class Done(val id: String = "") : SignInState()
@@ -132,37 +132,43 @@ sealed class SignInState : State {
                         val action = signInActions.initResolveChallenge(signInEvent)
                         StateResolution(ResolvingChallenge(oldState.challengeState), listOf(action))
                     }
-                    is SignInEvent.EventType.ThrowError -> StateResolution(Error(signInEvent.exception), listOf())
+                    is SignInEvent.EventType.InitiateSignInWithDeviceSRP -> StateResolution(
+                        ResolvingDeviceSRP(DeviceSRPSignInState.NotStarted()),
+                        listOf(signInActions.startDeviceSRPAuthAction(signInEvent))
+                    )
                     is SignInEvent.EventType.ConfirmDevice -> {
                         val action = signInActions.confirmDevice(signInEvent)
                         StateResolution(ConfirmingDevice(), listOf(action))
                     }
+                    is SignInEvent.EventType.ThrowError -> StateResolution(Error(signInEvent.exception))
                     else -> defaultResolution
                 }
-                is ResolvingDeviceSrpa -> when (signInEvent) {
+                is ResolvingChallenge -> when (signInEvent) {
+                    is SignInEvent.EventType.ConfirmDevice -> {
+                        val action = signInActions.confirmDevice(signInEvent)
+                        StateResolution(ConfirmingDevice(), listOf(action))
+                    }
+                    is SignInEvent.EventType.ThrowError -> StateResolution(Error(signInEvent.exception))
+                    else -> defaultResolution
+                }
+                is ResolvingDeviceSRP -> when (signInEvent) {
                     is SignInEvent.EventType.ReceivedChallenge -> {
                         val action = signInActions.initResolveChallenge(signInEvent)
                         StateResolution(ResolvingChallenge(oldState.challengeState), listOf(action))
                     }
-
-                    is SignInEvent.EventType.ConfirmDevice -> {
-                        val action = signInActions.confirmDevice(signInEvent)
-                        StateResolution(ConfirmingDevice(), listOf(action))
-                    }
-                    is SignInEvent.EventType.ThrowError -> {
-                        StateResolution(Error(signInEvent.exception), listOf())
-                    }
+                    is SignInEvent.EventType.ThrowError -> StateResolution(Error(signInEvent.exception))
                     else -> defaultResolution
                 }
                 is ConfirmingDevice -> when (signInEvent) {
                     is SignInEvent.EventType.FinalizeSignIn -> {
                         StateResolution(SignedIn())
                     }
+                    is SignInEvent.EventType.ThrowError -> StateResolution(Error(signInEvent.exception))
                     else -> defaultResolution
                 }
                 is SigningInWithHostedUI -> when (signInEvent) {
                     is SignInEvent.EventType.SignedIn -> StateResolution(Done())
-                    is SignInEvent.EventType.ThrowError -> StateResolution(Error(signInEvent.exception), listOf())
+                    is SignInEvent.EventType.ThrowError -> StateResolution(Error(signInEvent.exception))
                     else -> defaultResolution
                 }
                 else -> defaultResolution
@@ -185,7 +191,7 @@ sealed class SignInState : State {
             is SigningInViaMigrateAuth -> SigningInViaMigrateAuth(migrateSignInState)
             is SigningInWithCustom -> SigningInWithCustom(customSignInState)
             is SigningInWithHostedUI -> SigningInWithHostedUI(hostedUISignInState)
-            is ResolvingDeviceSrpa -> ResolvingDeviceSrpa(deviceSRPSignInState)
+            is ResolvingDeviceSRP -> ResolvingDeviceSRP(deviceSRPSignInState)
             else -> signInState
         }
     }

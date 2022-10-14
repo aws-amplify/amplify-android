@@ -20,6 +20,7 @@ import com.amplifyframework.auth.exceptions.ValidationException
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.AuthenticationActions
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
+import com.amplifyframework.statemachine.codegen.data.CredentialType
 import com.amplifyframework.statemachine.codegen.data.SignInData
 import com.amplifyframework.statemachine.codegen.data.SignInMethod
 import com.amplifyframework.statemachine.codegen.data.SignedInData
@@ -35,7 +36,17 @@ object AuthenticationCognitoActions : AuthenticationActions {
             logger.verbose("$id Starting execution")
             val evt = when (val credentials = event.storedCredentials) {
                 is AmplifyCredential.UserPoolTypeCredential -> {
-                    AuthenticationEvent(AuthenticationEvent.EventType.InitializedSignedIn(credentials.signedInData))
+                    val deviceDataCredentials = (
+                        credentialStoreClient.loadCredentials(
+                            CredentialType.Device(credentials.signedInData.username)
+                        ) as AmplifyCredential.DeviceData
+                        ).deviceMetadata
+                    AuthenticationEvent(
+                        AuthenticationEvent.EventType.InitializedSignedIn(
+                            credentials.signedInData,
+                            deviceDataCredentials
+                        )
+                    )
                 }
                 is AmplifyCredential.IdentityPoolFederated -> {
                     AuthenticationEvent(AuthenticationEvent.EventType.InitializedFederated)

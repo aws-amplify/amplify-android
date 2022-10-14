@@ -21,10 +21,10 @@ import com.amplifyframework.statemachine.codegen.data.FederatedToken
 import com.amplifyframework.statemachine.codegen.data.SignedInData
 
 interface AuthorizationActions {
-    fun resetAuthorizationAction(): Action
     fun configureAuthorizationAction(): Action
     fun initializeFetchUnAuthSession(): Action
     fun initializeFetchAuthSession(signedInData: SignedInData): Action
     fun initiateRefreshSessionAction(amplifyCredential: AmplifyCredential): Action
     fun initializeFederationToIdentityPool(federatedToken: FederatedToken, developerProvidedIdentityId: String?): Action
+    fun persistCredentials(amplifyCredential: AmplifyCredential): Action
 }
