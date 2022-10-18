@@ -50,9 +50,9 @@ import com.amplifyframework.core.Consumer
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlin.test.assertEquals
 import org.junit.Before
 import org.junit.Test
-import kotlin.test.assertEquals
 
 class AWSCognitoAuthPluginTest {
 
