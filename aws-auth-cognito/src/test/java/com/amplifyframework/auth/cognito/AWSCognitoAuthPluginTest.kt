@@ -50,9 +50,9 @@ import com.amplifyframework.core.Consumer
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import kotlin.test.assertEquals
 import org.junit.Before
 import org.junit.Test
+import kotlin.test.assertEquals
 
 class AWSCognitoAuthPluginTest {
 
@@ -443,7 +443,7 @@ class AWSCognitoAuthPluginTest {
 
     @Test
     fun verifyFetchUserAttributes() {
-        val expectedOnSuccess = Consumer<MutableList<AuthUserAttribute>> { }
+        val expectedOnSuccess = Consumer<List<AuthUserAttribute>> { }
         val expectedOnError = Consumer<AuthException> { }
 
         authPlugin.fetchUserAttributes(expectedOnSuccess, expectedOnError)

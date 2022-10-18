@@ -90,6 +90,10 @@ import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.slot
 import io.mockk.verify
+import org.json.JSONObject
+import org.junit.Before
+import org.junit.Ignore
+import org.junit.Test
 import java.util.Date
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -98,10 +102,6 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
-import org.json.JSONObject
-import org.junit.Before
-import org.junit.Ignore
-import org.junit.Test
 
 class RealAWSCognitoAuthPluginTest {
 
@@ -407,7 +407,7 @@ class RealAWSCognitoAuthPluginTest {
     @Test
     fun `fetch user attributes with success`() {
         // GIVEN
-        val onSuccess = mockk<Consumer<MutableList<AuthUserAttribute>>>(relaxed = true)
+        val onSuccess = mockk<Consumer<List<AuthUserAttribute>>>(relaxed = true)
         val onError = mockk<Consumer<AuthException>>(relaxed = true)
         val listenLatch = CountDownLatch(1)
 
@@ -462,7 +462,7 @@ class RealAWSCognitoAuthPluginTest {
     @Test
     fun `fetch user attributes fails when not in SignedIn state`() {
         // GIVEN
-        val onSuccess = mockk<Consumer<MutableList<AuthUserAttribute>>>(relaxed = true)
+        val onSuccess = mockk<Consumer<List<AuthUserAttribute>>>(relaxed = true)
         val onError = mockk<Consumer<AuthException>>(relaxed = true)
         val listenLatch = CountDownLatch(1)
 
