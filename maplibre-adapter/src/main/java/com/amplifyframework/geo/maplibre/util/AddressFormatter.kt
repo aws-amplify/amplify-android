@@ -35,7 +35,6 @@ interface AddressFormatter {
      * @return the formatted name
      */
     fun formatName(place: AmazonLocationPlace): String
-
 }
 
 /**
@@ -76,5 +75,4 @@ object DefaultAddressFormatter : AddressFormatter {
         }
         return name
     }
-
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -26,26 +26,29 @@ import com.amplifyframework.predictions.models.Selection;
 import com.amplifyframework.predictions.models.Table;
 import com.amplifyframework.testutils.random.RandomString;
 
-import com.amazonaws.services.textract.model.Block;
-import com.amazonaws.services.textract.model.BlockType;
-import com.amazonaws.services.textract.model.BoundingBox;
-import com.amazonaws.services.textract.model.EntityType;
-import com.amazonaws.services.textract.model.Geometry;
-import com.amazonaws.services.textract.model.Point;
-import com.amazonaws.services.textract.model.Relationship;
-import com.amazonaws.services.textract.model.SelectionStatus;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import aws.sdk.kotlin.services.textract.model.Block;
+import aws.sdk.kotlin.services.textract.model.BlockType;
+import aws.sdk.kotlin.services.textract.model.BoundingBox;
+import aws.sdk.kotlin.services.textract.model.EntityType;
+import aws.sdk.kotlin.services.textract.model.Geometry;
+import aws.sdk.kotlin.services.textract.model.Point;
+import aws.sdk.kotlin.services.textract.model.Relationship;
+import aws.sdk.kotlin.services.textract.model.SelectionStatus;
 import io.reactivex.rxjava3.core.Observable;
+import kotlin.Unit;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -106,11 +109,13 @@ public final class TextractResultTransformersTest {
      */
     @Test
     public void testIdentifiedTextConversion() {
-        Block block = new Block()
-                .withText(RandomString.string())
-                .withConfidence(random.nextFloat())
-                .withGeometry(randomGeometry())
-                .withPage(random.nextInt());
+        Block block = Block.Companion.invoke((blockBuilder) -> {
+            blockBuilder.setText(RandomString.string());
+            blockBuilder.setConfidence(random.nextFloat());
+            blockBuilder.setGeometry(randomGeometry());
+            blockBuilder.setPage(random.nextInt());
+            return Unit.INSTANCE;
+        });
 
         // Test block conversion
         IdentifiedText text = TextractResultTransformers.fetchIdentifiedText(block);
@@ -129,16 +134,20 @@ public final class TextractResultTransformersTest {
         Selection selection;
 
         // Assert that SELECTED sets it to selected
-        block = new Block()
-                .withSelectionStatus(SelectionStatus.SELECTED)
-                .withGeometry(randomGeometry());
+        block = Block.Companion.invoke((blockBuilder) -> {
+            blockBuilder.setSelectionStatus(SelectionStatus.Selected.INSTANCE);
+            blockBuilder.setGeometry(randomGeometry());
+            return Unit.INSTANCE;
+        });
         selection = TextractResultTransformers.fetchSelection(block);
         assertTrue(selection.isSelected());
 
         // Assert that NOT_SELECTED sets it to not selected
-        block = new Block()
-                .withSelectionStatus(SelectionStatus.NOT_SELECTED)
-                .withGeometry(randomGeometry());
+        block = Block.Companion.invoke((blockBuilder) -> {
+            blockBuilder.setSelectionStatus(SelectionStatus.NotSelected.INSTANCE);
+            blockBuilder.setGeometry(randomGeometry());
+            return Unit.INSTANCE;
+        });
         selection = TextractResultTransformers.fetchSelection(block);
         assertFalse(selection.isSelected());
     }
@@ -149,28 +158,43 @@ public final class TextractResultTransformersTest {
      */
     @Test
     public void testTableConversion() {
-        Block cellTextBlock = new Block()
-                .withId(RandomString.string())
-                .withText(RandomString.string());
-        Block cellSelectionBlock = new Block()
-                .withId(RandomString.string())
-                .withSelectionStatus(SelectionStatus.SELECTED);
-        Block cellBlock = new Block()
-                .withId(RandomString.string())
-                .withBlockType(BlockType.CELL)
-                .withConfidence(random.nextFloat())
-                .withGeometry(randomGeometry())
-                .withRowIndex(random.nextInt())
-                .withColumnIndex(random.nextInt())
-                .withRelationships(new Relationship()
-                        .withIds(cellTextBlock.getId(), cellSelectionBlock.getId()));
-        Block tableBlock = new Block()
-                .withId(RandomString.string())
-                .withBlockType(BlockType.TABLE)
-                .withConfidence(random.nextFloat())
-                .withGeometry(randomGeometry())
-                .withRelationships(new Relationship()
-                        .withIds(cellBlock.getId()));
+        Block cellTextBlock = Block.Companion.invoke((blockBuilder) -> {
+            blockBuilder.setId(RandomString.string());
+            blockBuilder.setText(RandomString.string());
+            return Unit.INSTANCE;
+        });
+        Block cellSelectionBlock = Block.Companion.invoke((blockBuilder) -> {
+            blockBuilder.setId(RandomString.string());
+            blockBuilder.setSelectionStatus(SelectionStatus.Selected.INSTANCE);
+            return Unit.INSTANCE;
+        });
+        Relationship cellRelationship = Relationship.Companion.invoke((relationshipBuilder) -> {
+            List<String> ids = Arrays.asList(cellTextBlock.getId(), cellSelectionBlock.getId());
+            relationshipBuilder.setIds(ids);
+            return Unit.INSTANCE;
+        });
+        Block cellBlock = Block.Companion.invoke((blockBuilder) -> {
+            blockBuilder.setId(RandomString.string());
+            blockBuilder.setBlockType(BlockType.Cell.INSTANCE);
+            blockBuilder.setConfidence(random.nextFloat());
+            blockBuilder.setGeometry(randomGeometry());
+            blockBuilder.setRowIndex(random.nextInt());
+            blockBuilder.setColumnIndex(random.nextInt());
+            blockBuilder.setRelationships(Collections.singletonList(cellRelationship));
+            return Unit.INSTANCE;     
+        });
+        Relationship tableRelationship = Relationship.Companion.invoke((relationshipBuilder) -> {
+            relationshipBuilder.setIds(Collections.singletonList(cellBlock.getId()));
+            return Unit.INSTANCE;
+        });
+        Block tableBlock = Block.Companion.invoke((blockBuilder) -> {
+            blockBuilder.setId(RandomString.string());
+            blockBuilder.setBlockType(BlockType.Table.INSTANCE);
+            blockBuilder.setConfidence(random.nextFloat());
+            blockBuilder.setGeometry(randomGeometry());
+            blockBuilder.setRelationships(Collections.singletonList(tableRelationship));
+            return Unit.INSTANCE;
+        });
 
         // Construct a map to act as a graph
         Map<String, Block> blockMap = new HashMap<>();
@@ -199,26 +223,41 @@ public final class TextractResultTransformersTest {
      */
     @Test
     public void testKeyValueConversion() {
-        Block valueTextBlock = new Block()
-                .withId(RandomString.string())
-                .withText(RandomString.string());
-        Block keyTextBlock = new Block()
-                .withId(RandomString.string())
-                .withText(RandomString.string());
-        Block valueBlock = new Block()
-                .withId(RandomString.string())
-                .withBlockType(BlockType.KEY_VALUE_SET)
-                .withEntityTypes(EntityType.VALUE.toString())
-                .withRelationships(new Relationship()
-                        .withIds(valueTextBlock.getId()));
-        Block keyBlock = new Block()
-                .withId(RandomString.string())
-                .withBlockType(BlockType.KEY_VALUE_SET)
-                .withEntityTypes(EntityType.KEY.toString())
-                .withConfidence(random.nextFloat())
-                .withGeometry(randomGeometry())
-                .withRelationships(new Relationship()
-                        .withIds(keyTextBlock.getId(), valueBlock.getId()));
+        Block valueTextBlock = Block.Companion.invoke((blockBuilder) -> {
+            blockBuilder.setId(RandomString.string());
+            blockBuilder.setText(RandomString.string());
+            return Unit.INSTANCE;
+        });
+        Block keyTextBlock = Block.Companion.invoke((blockBuilder) -> {
+            blockBuilder.setId(RandomString.string());
+            blockBuilder.setText(RandomString.string());
+            return Unit.INSTANCE;
+        });
+        Relationship valueRelationship = Relationship.Companion.invoke((relationshipBuilder) -> {
+            relationshipBuilder.setIds(Collections.singletonList(valueTextBlock.getId()));
+            return Unit.INSTANCE;
+        });
+        Block valueBlock = Block.Companion.invoke((blockBuilder) -> {
+            blockBuilder.setId(RandomString.string());
+            blockBuilder.setBlockType(BlockType.KeyValueSet.INSTANCE);
+            blockBuilder.setEntityTypes(Collections.singletonList(EntityType.Value.INSTANCE));
+            blockBuilder.setRelationships(Collections.singletonList(valueRelationship));
+            return Unit.INSTANCE;
+        });
+        Relationship keyRelationship = Relationship.Companion.invoke((relationshipBuilder) -> {
+            List<String> ids = Arrays.asList(keyTextBlock.getId(), valueBlock.getId());
+            relationshipBuilder.setIds(ids);
+            return Unit.INSTANCE;
+        });
+        Block keyBlock = Block.Companion.invoke((blockBuilder) -> {
+            blockBuilder.setId(RandomString.string());
+            blockBuilder.setBlockType(BlockType.KeyValueSet.INSTANCE);
+            blockBuilder.setEntityTypes(Collections.singletonList(EntityType.Key.INSTANCE));
+            blockBuilder.setConfidence(random.nextFloat());
+            blockBuilder.setGeometry(randomGeometry());
+            blockBuilder.setRelationships(Collections.singletonList(keyRelationship));
+            return Unit.INSTANCE;
+        });
 
         // Construct a map to act as a graph
         Map<String, Block> blockMap = new HashMap<>();
@@ -233,28 +272,33 @@ public final class TextractResultTransformersTest {
     }
 
     private BoundingBox randomBox() {
-        return new BoundingBox()
-                .withHeight(random.nextFloat())
-                .withLeft(random.nextFloat())
-                .withTop(random.nextFloat())
-                .withWidth(random.nextFloat());
+        return BoundingBox.Companion.invoke((boxBuilder) -> {
+            boxBuilder.setHeight(random.nextFloat());
+            boxBuilder.setLeft(random.nextFloat());
+            boxBuilder.setTop(random.nextFloat());
+            boxBuilder.setWidth(random.nextFloat());
+            return Unit.INSTANCE;
+        });
     }
 
     private List<Point> randomPolygon() {
         final int minPoints = 3;
         List<Point> points = new ArrayList<>();
         for (int i = 0; i < minPoints; i++) {
-            points.add(new Point()
-                    .withX(random.nextFloat())
-                    .withY(random.nextFloat())
-            );
+            points.add(Point.Companion.invoke((pointBuilder) -> {
+                pointBuilder.setX(random.nextFloat());
+                pointBuilder.setY(random.nextFloat());
+                return Unit.INSTANCE;
+            }));
         }
         return points;
     }
 
     private Geometry randomGeometry() {
-        return new Geometry()
-                .withBoundingBox(randomBox())
-                .withPolygon(randomPolygon());
+        return Geometry.Companion.invoke((geometryBuilder) -> {
+            geometryBuilder.setBoundingBox(randomBox());
+            geometryBuilder.setPolygon(randomPolygon());
+            return Unit.INSTANCE;
+        });
     }
 }

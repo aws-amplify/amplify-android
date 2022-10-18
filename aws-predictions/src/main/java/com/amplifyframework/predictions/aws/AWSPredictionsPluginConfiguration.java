@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -25,7 +25,6 @@ import com.amplifyframework.predictions.aws.configuration.InterpretTextConfigura
 import com.amplifyframework.predictions.aws.configuration.SpeechGeneratorConfiguration;
 import com.amplifyframework.predictions.aws.configuration.TranslateTextConfiguration;
 
-import com.amazonaws.regions.Region;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -35,7 +34,7 @@ import org.json.JSONObject;
  * as well as their network policy.
  */
 public final class AWSPredictionsPluginConfiguration {
-    private final Region defaultRegion;
+    private final String defaultRegion;
     private final NetworkPolicy defaultNetworkPolicy;
     private final SpeechGeneratorConfiguration speechGeneratorConfiguration;
     private final TranslateTextConfiguration translateTextConfiguration;
@@ -45,7 +44,7 @@ public final class AWSPredictionsPluginConfiguration {
     private final InterpretTextConfiguration interpretTextConfiguration;
 
     private AWSPredictionsPluginConfiguration(
-            Region defaultRegion,
+            String defaultRegion,
             SpeechGeneratorConfiguration speechGeneratorConfiguration,
             TranslateTextConfiguration translateTextConfiguration,
             IdentifyLabelsConfiguration identifyLabelsConfiguration,
@@ -79,7 +78,7 @@ public final class AWSPredictionsPluginConfiguration {
             );
         }
 
-        final Region defaultRegion;
+        final String defaultRegion;
         final SpeechGeneratorConfiguration speechGeneratorConfiguration;
         final TranslateTextConfiguration translateTextConfiguration;
         final IdentifyLabelsConfiguration identifyLabelsConfiguration;
@@ -89,8 +88,7 @@ public final class AWSPredictionsPluginConfiguration {
 
         try {
             // Get default region
-            String regionString = configurationJson.getString(ConfigKey.DEFAULT_REGION.key());
-            defaultRegion = Region.getRegion(regionString);
+            defaultRegion = configurationJson.getString(ConfigKey.DEFAULT_REGION.key());
 
             if (configurationJson.has(ConfigKey.CONVERT.key())) {
                 JSONObject convertJson = configurationJson.getJSONObject(ConfigKey.CONVERT.key());
@@ -142,7 +140,7 @@ public final class AWSPredictionsPluginConfiguration {
      * @return the default AWS endpoint region
      */
     @NonNull
-    public Region getDefaultRegion() {
+    public String getDefaultRegion() {
         return defaultRegion;
     }
 

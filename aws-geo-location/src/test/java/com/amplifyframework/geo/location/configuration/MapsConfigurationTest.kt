@@ -33,18 +33,29 @@ class MapsConfigurationTest {
     @Test
     fun mapsConfigurationBuildsFromJson() {
         val json = JSONObject()
-            .put("items", JSONObject()
-                .put("map_A", JSONObject()
-                    .put("style", "style_A"))
-                .put("map_B", JSONObject()
-                    .put("style", "style_B")))
+            .put(
+                "items",
+                JSONObject()
+                    .put(
+                        "map_A",
+                        JSONObject()
+                            .put("style", "style_A")
+                    )
+                    .put(
+                        "map_B",
+                        JSONObject()
+                            .put("style", "style_B")
+                    )
+            )
             .put("default", "map_B")
         val config = MapsConfiguration.fromJson(json).build()
         val expected = MapsConfiguration.builder()
-            .items(setOf(
-                MapStyle("map_A", "style_A"),
-                MapStyle("map_B", "style_B")
-            ))
+            .items(
+                setOf(
+                    MapStyle("map_A", "style_A"),
+                    MapStyle("map_B", "style_B")
+                )
+            )
             .default(MapStyle("map_B", "style_B"))
             .build()
         assertEquals(expected, config)
@@ -57,9 +68,15 @@ class MapsConfigurationTest {
     @Test
     fun defaultIsNotExplicitlyRequired() {
         val json = JSONObject()
-            .put("items", JSONObject()
-                .put("map_A", JSONObject()
-                    .put("style", "style_A")))
+            .put(
+                "items",
+                JSONObject()
+                    .put(
+                        "map_A",
+                        JSONObject()
+                            .put("style", "style_A")
+                    )
+            )
         val config = MapsConfiguration.fromJson(json).build()
         val expected = MapsConfiguration.builder()
             .items(setOf(MapStyle("map_A", "style_A")))

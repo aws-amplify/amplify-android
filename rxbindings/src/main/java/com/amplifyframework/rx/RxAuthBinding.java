@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -44,6 +44,7 @@ import com.amplifyframework.auth.options.AuthUpdateUserAttributesOptions;
 import com.amplifyframework.auth.options.AuthWebUISignInOptions;
 import com.amplifyframework.auth.result.AuthResetPasswordResult;
 import com.amplifyframework.auth.result.AuthSignInResult;
+import com.amplifyframework.auth.result.AuthSignOutResult;
 import com.amplifyframework.auth.result.AuthSignUpResult;
 import com.amplifyframework.auth.result.AuthUpdateAttributeResult;
 import com.amplifyframework.core.Amplify;
@@ -89,13 +90,13 @@ final class RxAuthBinding implements RxAuthCategoryBehavior {
     }
 
     @Override
-    public Single<AuthSignUpResult> resendSignUpCode(
+    public Single<AuthCodeDeliveryDetails> resendSignUpCode(
             @NonNull String username, @NonNull AuthResendSignUpCodeOptions options) {
         return toSingle((onResult, onError) -> delegate.resendSignUpCode(username, options, onResult, onError));
     }
 
     @Override
-    public Single<AuthSignUpResult> resendSignUpCode(@NonNull String username) {
+    public Single<AuthCodeDeliveryDetails> resendSignUpCode(@NonNull String username) {
         return toSingle((onResult, onError) -> delegate.resendSignUpCode(username, onResult, onError));
     }
 
@@ -113,14 +114,14 @@ final class RxAuthBinding implements RxAuthCategoryBehavior {
 
     @Override
     public Single<AuthSignInResult> confirmSignIn(
-            @Nullable String confirmationCode, @NonNull AuthConfirmSignInOptions options) {
+            @Nullable String challengeResponse, @NonNull AuthConfirmSignInOptions options) {
         return toSingle((onResult, onError) ->
-                delegate.confirmSignIn(confirmationCode, options, onResult, onError));
+                delegate.confirmSignIn(challengeResponse, options, onResult, onError));
     }
 
     @Override
-    public Single<AuthSignInResult> confirmSignIn(@NonNull String confirmationCode) {
-        return toSingle((onResult, onError) -> delegate.confirmSignIn(confirmationCode, onResult, onError));
+    public Single<AuthSignInResult> confirmSignIn(@NonNull String challengeResponse) {
+        return toSingle((onResult, onError) -> delegate.confirmSignIn(challengeResponse, onResult, onError));
     }
 
     @Override
@@ -197,18 +198,32 @@ final class RxAuthBinding implements RxAuthCategoryBehavior {
 
     @Override
     public Completable confirmResetPassword(
+            @NonNull String username,
             @NonNull String newPassword,
             @NonNull String confirmationCode,
             @NonNull AuthConfirmResetPasswordOptions options
     ) {
         return toCompletable((onComplete, onError) ->
-            delegate.confirmResetPassword(newPassword, confirmationCode, options, onComplete, onError));
+            delegate.confirmResetPassword(
+                username, newPassword, confirmationCode, options, onComplete, onError
+            )
+        );
     }
 
     @Override
-    public Completable confirmResetPassword(@NonNull String newPassword, @NonNull String confirmationCode) {
+    public Completable confirmResetPassword(
+            @NonNull String username,
+            @NonNull String newPassword,
+            @NonNull String confirmationCode) {
         return toCompletable((onComplete, onError) ->
-            delegate.confirmResetPassword(newPassword, confirmationCode, onComplete, onError));
+            delegate.confirmResetPassword(
+                    username,
+                    newPassword,
+                    confirmationCode,
+                    onComplete,
+                    onError
+            )
+        );
     }
 
     @Override
@@ -273,19 +288,18 @@ final class RxAuthBinding implements RxAuthCategoryBehavior {
     }
 
     @Override
-    public AuthUser getCurrentUser() {
-        return delegate.getCurrentUser();
+    public Single<AuthUser> getCurrentUser() {
+        return toSingle(delegate::getCurrentUser);
     }
 
     @Override
-    public Completable signOut() {
-        return toCompletable(delegate::signOut);
+    public Single<AuthSignOutResult> signOut() {
+        return toSingle((onComplete, onError) -> delegate.signOut(onComplete));
     }
 
     @Override
-    public Completable signOut(@NonNull AuthSignOutOptions options) {
-        return toCompletable((onComplete, onError) ->
-            delegate.signOut(options, onComplete, onError));
+    public Single<AuthSignOutResult> signOut(@NonNull AuthSignOutOptions options) {
+        return toSingle((onComplete, onError) -> delegate.signOut(options, onComplete));
     }
     
     @Override
