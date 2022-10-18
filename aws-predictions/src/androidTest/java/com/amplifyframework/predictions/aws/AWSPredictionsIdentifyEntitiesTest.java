@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package com.amplifyframework.predictions.aws;
 import android.content.Context;
 import android.graphics.Bitmap;
 
+import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin;
 import com.amplifyframework.predictions.PredictionsCategory;
 import com.amplifyframework.predictions.aws.test.R;
 import com.amplifyframework.predictions.models.EmotionType;
@@ -27,7 +28,7 @@ import com.amplifyframework.predictions.models.IdentifyActionType;
 import com.amplifyframework.predictions.result.IdentifyEntitiesResult;
 import com.amplifyframework.testutils.Assets;
 import com.amplifyframework.testutils.FeatureAssert;
-import com.amplifyframework.testutils.sync.SynchronousMobileClient;
+import com.amplifyframework.testutils.sync.SynchronousAuth;
 import com.amplifyframework.testutils.sync.SynchronousPredictions;
 import com.amplifyframework.util.Empty;
 
@@ -53,14 +54,14 @@ public final class AWSPredictionsIdentifyEntitiesTest {
 
     /**
      * Configure Predictions category before each test.
-     * @throws Exception if mobile client initialization fails
+     * @throws Exception if {@link SynchronousAuth} initialization fails
      */
     @Before
     public void setUp() throws Exception {
         Context context = getApplicationContext();
 
         // Set up Auth
-        SynchronousMobileClient.instance().initialize();
+        SynchronousAuth.delegatingToCognito(context, new AWSCognitoAuthPlugin());
 
         // Delegate to Predictions category
         PredictionsCategory asyncDelegate =

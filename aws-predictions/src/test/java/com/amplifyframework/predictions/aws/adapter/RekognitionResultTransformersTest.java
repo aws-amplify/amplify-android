@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -28,18 +28,6 @@ import com.amplifyframework.predictions.models.Pose;
 import com.amplifyframework.testutils.FeatureAssert;
 import com.amplifyframework.testutils.random.RandomString;
 
-import com.amazonaws.services.rekognition.model.Beard;
-import com.amazonaws.services.rekognition.model.BoundingBox;
-import com.amazonaws.services.rekognition.model.EyeOpen;
-import com.amazonaws.services.rekognition.model.Eyeglasses;
-import com.amazonaws.services.rekognition.model.FaceDetail;
-import com.amazonaws.services.rekognition.model.Geometry;
-import com.amazonaws.services.rekognition.model.MouthOpen;
-import com.amazonaws.services.rekognition.model.Mustache;
-import com.amazonaws.services.rekognition.model.Point;
-import com.amazonaws.services.rekognition.model.Smile;
-import com.amazonaws.services.rekognition.model.Sunglasses;
-import com.amazonaws.services.rekognition.model.TextDetection;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -52,6 +40,20 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+
+import aws.sdk.kotlin.services.rekognition.model.Beard;
+import aws.sdk.kotlin.services.rekognition.model.BoundingBox;
+import aws.sdk.kotlin.services.rekognition.model.EyeOpen;
+import aws.sdk.kotlin.services.rekognition.model.Eyeglasses;
+import aws.sdk.kotlin.services.rekognition.model.FaceDetail;
+import aws.sdk.kotlin.services.rekognition.model.Geometry;
+import aws.sdk.kotlin.services.rekognition.model.MouthOpen;
+import aws.sdk.kotlin.services.rekognition.model.Mustache;
+import aws.sdk.kotlin.services.rekognition.model.Point;
+import aws.sdk.kotlin.services.rekognition.model.Smile;
+import aws.sdk.kotlin.services.rekognition.model.Sunglasses;
+import aws.sdk.kotlin.services.rekognition.model.TextDetection;
+import kotlin.Unit;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -111,11 +113,13 @@ public final class RekognitionResultTransformersTest {
      */
     @Test
     public void testPoseConversion() {
-        com.amazonaws.services.rekognition.model.Pose rekognitionPose =
-                new com.amazonaws.services.rekognition.model.Pose()
-                .withPitch(random.nextFloat())
-                .withRoll(random.nextFloat())
-                .withYaw(random.nextFloat());
+        aws.sdk.kotlin.services.rekognition.model.Pose rekognitionPose =
+                aws.sdk.kotlin.services.rekognition.model.Pose.Companion.invoke((poseBuilder) -> {
+                    poseBuilder.setPitch(random.nextFloat());
+                    poseBuilder.setRoll(random.nextFloat());
+                    poseBuilder.setYaw(random.nextFloat());
+                    return Unit.INSTANCE;
+                });
 
         Pose amplifyPose = RekognitionResultTransformers.fromRekognitionPose(rekognitionPose);
         assertEquals(rekognitionPose.getPitch(), amplifyPose.getPitch(), DELTA);
@@ -129,18 +133,20 @@ public final class RekognitionResultTransformersTest {
      */
     @Test
     public void testAgeRangeConversion() {
-        int low = random.nextInt();
-        int high = random.nextInt();
-        // high cannot be lower than low
-        if (low > high) {
-            int temp = high;
-            high = low;
-            low = temp;
-        }
-        com.amazonaws.services.rekognition.model.AgeRange rekognitionAgeRange =
-                new com.amazonaws.services.rekognition.model.AgeRange()
-                .withHigh(high)
-                .withLow(low);
+        aws.sdk.kotlin.services.rekognition.model.AgeRange rekognitionAgeRange =
+                aws.sdk.kotlin.services.rekognition.model.AgeRange.Companion.invoke((ageRangeBuilder) -> {
+                    int low = random.nextInt();
+                    int high = random.nextInt();
+                    // high cannot be lower than low
+                    if (low > high) {
+                        int temp = high;
+                        high = low;
+                        low = temp;
+                    }
+                    ageRangeBuilder.setHigh(high);
+                    ageRangeBuilder.setLow(low);
+                    return Unit.INSTANCE;
+                });
 
         AgeRange amplifyAgeRange = RekognitionResultTransformers.fromRekognitionAgeRange(rekognitionAgeRange);
         assertEquals(rekognitionAgeRange.getHigh().intValue(), amplifyAgeRange.getHigh());
@@ -153,10 +159,12 @@ public final class RekognitionResultTransformersTest {
      */
     @Test
     public void testTextDetectionConversion() {
-        TextDetection detection = new TextDetection()
-                .withDetectedText(RandomString.string())
-                .withConfidence(random.nextFloat())
-                .withGeometry(randomGeometry());
+        TextDetection detection = TextDetection.Companion.invoke((textDetectionBuilder) -> {
+            textDetectionBuilder.setDetectedText(RandomString.string());
+            textDetectionBuilder.setConfidence(random.nextFloat());
+            textDetectionBuilder.setGeometry(randomGeometry());
+            return Unit.INSTANCE;
+        });
 
         // Test text detection conversion
         IdentifiedText text = RekognitionResultTransformers.fromTextDetection(detection);
@@ -171,22 +179,32 @@ public final class RekognitionResultTransformersTest {
      */
     @Test
     public void testLandmarksConversion() {
-        com.amazonaws.services.rekognition.model.Landmark leftEyeDown =
-                new com.amazonaws.services.rekognition.model.Landmark()
-                        .withType(com.amazonaws.services.rekognition.model.LandmarkType.LeftEyeDown)
-                        .withX(random.nextFloat())
-                        .withY(random.nextFloat());
-        com.amazonaws.services.rekognition.model.Landmark leftEyeRight =
-                new com.amazonaws.services.rekognition.model.Landmark()
-                        .withType(com.amazonaws.services.rekognition.model.LandmarkType.LeftEyeRight)
-                        .withX(random.nextFloat())
-                        .withY(random.nextFloat());
-        com.amazonaws.services.rekognition.model.Landmark mouthDown =
-                new com.amazonaws.services.rekognition.model.Landmark()
-                        .withType(com.amazonaws.services.rekognition.model.LandmarkType.MouthDown)
-                        .withX(random.nextFloat())
-                        .withY(random.nextFloat());
-        List<com.amazonaws.services.rekognition.model.Landmark> rekognitionLandmarks = Arrays.asList(
+        aws.sdk.kotlin.services.rekognition.model.Landmark leftEyeDown =
+                aws.sdk.kotlin.services.rekognition.model.Landmark.Companion.invoke((landmarkBuilder) -> {
+                    landmarkBuilder.setType(
+                            aws.sdk.kotlin.services.rekognition.model.LandmarkType.LeftEyeDown.INSTANCE
+                    );
+                    landmarkBuilder.setX(random.nextFloat());
+                    landmarkBuilder.setY(random.nextFloat());
+                    return Unit.INSTANCE;
+                });
+        aws.sdk.kotlin.services.rekognition.model.Landmark leftEyeRight =
+                aws.sdk.kotlin.services.rekognition.model.Landmark.Companion.invoke((landmarkBuilder) -> {
+                    landmarkBuilder.setType(
+                            aws.sdk.kotlin.services.rekognition.model.LandmarkType.LeftEyeRight.INSTANCE
+                    );
+                    landmarkBuilder.setX(random.nextFloat());
+                    landmarkBuilder.setY(random.nextFloat());
+                    return Unit.INSTANCE;
+                });
+        aws.sdk.kotlin.services.rekognition.model.Landmark mouthDown =
+                aws.sdk.kotlin.services.rekognition.model.Landmark.Companion.invoke((landmarkBuilder) -> {
+                    landmarkBuilder.setType(aws.sdk.kotlin.services.rekognition.model.LandmarkType.MouthDown.INSTANCE);
+                    landmarkBuilder.setX(random.nextFloat());
+                    landmarkBuilder.setY(random.nextFloat());
+                    return Unit.INSTANCE;
+                });
+        List<aws.sdk.kotlin.services.rekognition.model.Landmark> rekognitionLandmarks = Arrays.asList(
                 leftEyeDown,
                 leftEyeRight,
                 mouthDown
@@ -225,28 +243,44 @@ public final class RekognitionResultTransformersTest {
      */
     @Test
     public void testFaceDetailConversion() {
-        FaceDetail faceDetail = new FaceDetail()
-                .withBeard(new Beard()
-                        .withValue(random.nextBoolean())
-                        .withConfidence(random.nextFloat()))
-                .withSunglasses(new Sunglasses()
-                        .withValue(random.nextBoolean())
-                        .withConfidence(random.nextFloat()))
-                .withSmile(new Smile()
-                        .withValue(random.nextBoolean())
-                        .withConfidence(random.nextFloat()))
-                .withEyeglasses(new Eyeglasses()
-                        .withValue(random.nextBoolean())
-                        .withConfidence(random.nextFloat()))
-                .withMustache(new Mustache()
-                        .withValue(random.nextBoolean())
-                        .withConfidence(random.nextFloat()))
-                .withMouthOpen(new MouthOpen()
-                        .withValue(random.nextBoolean())
-                        .withConfidence(random.nextFloat()))
-                .withEyesOpen(new EyeOpen()
-                        .withValue(random.nextBoolean())
-                        .withConfidence(random.nextFloat()));
+        FaceDetail faceDetail = FaceDetail.Companion.invoke((faceDetailBuilder) -> {
+            faceDetailBuilder.setBeard(Beard.Companion.invoke((beardBuilder) -> {
+                beardBuilder.setValue(random.nextBoolean());
+                beardBuilder.setConfidence(random.nextFloat());
+                return Unit.INSTANCE;
+            }));
+            faceDetailBuilder.setSunglasses(Sunglasses.Companion.invoke((sunglassesBuilder) -> {
+                sunglassesBuilder.setValue(random.nextBoolean());
+                sunglassesBuilder.setConfidence(random.nextFloat());
+                return Unit.INSTANCE;
+            }));
+            faceDetailBuilder.setSmile(Smile.Companion.invoke((smileBuilder) -> {
+                smileBuilder.setValue(random.nextBoolean());
+                smileBuilder.setConfidence(random.nextFloat());
+                return Unit.INSTANCE;
+            }));
+            faceDetailBuilder.setEyeglasses(Eyeglasses.Companion.invoke((eyeglassesBuilder) -> {
+                eyeglassesBuilder.setValue(random.nextBoolean());
+                eyeglassesBuilder.setConfidence(random.nextFloat());
+                return Unit.INSTANCE;
+            }));
+            faceDetailBuilder.setMustache(Mustache.Companion.invoke((mustacheBuilder) -> {
+                mustacheBuilder.setValue(random.nextBoolean());
+                mustacheBuilder.setConfidence(random.nextFloat());
+                return Unit.INSTANCE;
+            }));
+            faceDetailBuilder.setMouthOpen(MouthOpen.Companion.invoke((mouthOpenBuilder) -> {
+                mouthOpenBuilder.setValue(random.nextBoolean());
+                mouthOpenBuilder.setConfidence(random.nextFloat());
+                return Unit.INSTANCE;
+            }));
+            faceDetailBuilder.setEyesOpen(EyeOpen.Companion.invoke((eyesOpenBuilder) -> {
+                eyesOpenBuilder.setValue(random.nextBoolean());
+                eyesOpenBuilder.setConfidence(random.nextFloat());
+                return Unit.INSTANCE;
+            }));
+            return Unit.INSTANCE;
+        });
 
         List<BinaryFeature> features = RekognitionResultTransformers.fromFaceDetail(faceDetail);
         FeatureAssert.assertMatches(
@@ -264,28 +298,33 @@ public final class RekognitionResultTransformersTest {
     }
 
     private BoundingBox randomBox() {
-        return new BoundingBox()
-                .withHeight(random.nextFloat())
-                .withLeft(random.nextFloat())
-                .withTop(random.nextFloat())
-                .withWidth(random.nextFloat());
+        return BoundingBox.Companion.invoke((boundingBoxBuilder) -> {
+            boundingBoxBuilder.setHeight(random.nextFloat());
+            boundingBoxBuilder.setLeft(random.nextFloat());
+            boundingBoxBuilder.setTop(random.nextFloat());
+            boundingBoxBuilder.setWidth(random.nextFloat());
+            return Unit.INSTANCE;
+        });
     }
 
     private List<Point> randomPolygon() {
         final int minPoints = 3;
         List<Point> points = new ArrayList<>();
         for (int i = 0; i < minPoints; i++) {
-            points.add(new Point()
-                    .withX(random.nextFloat())
-                    .withY(random.nextFloat())
-            );
+            points.add(Point.Companion.invoke((pointBuilder) -> {
+                pointBuilder.setX(random.nextFloat());
+                pointBuilder.setY(random.nextFloat());
+                return Unit.INSTANCE;
+            }));
         }
         return points;
     }
 
     private Geometry randomGeometry() {
-        return new Geometry()
-                .withBoundingBox(randomBox())
-                .withPolygon(randomPolygon());
+        return Geometry.Companion.invoke((geometryBuilder) -> {
+            geometryBuilder.setBoundingBox(randomBox());
+            geometryBuilder.setPolygon(randomPolygon());
+            return Unit.INSTANCE;
+        });
     }
 }

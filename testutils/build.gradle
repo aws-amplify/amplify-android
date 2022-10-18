@@ -13,17 +13,26 @@
  * permissions and limitations under the License.
  */
 
+plugins {
+    id "org.jetbrains.kotlin.plugin.serialization" version "1.6.10"
+}
+
 apply plugin: 'com.android.library'
 apply from: rootProject.file("configuration/checkstyle.gradle")
 apply plugin: 'kotlin-android'
 
 dependencies {
     implementation project(path: ':core')
-    implementation dependency.aws.mobileclient
     implementation dependency.junit
     implementation dependency.mockito
     implementation dependency.androidx.test.core
     implementation dependency.rxjava
+
+    implementation dependency.kotlin.serializationJson
+    implementation dependency.aws.cognitoidentity
+    implementation dependency.aws.cognitoidentityprovider
+
+    implementation project(path: ':aws-auth-cognito')
 
     // dependency on Model/GraphQL integration classes
     // remove when modules are re-organized to provide better isolation

@@ -15,7 +15,6 @@
 
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
-apply plugin: 'org.jlleitschuh.gradle.ktlint'
 apply from: rootProject.file("configuration/publishing.gradle")
 apply plugin: 'org.jetbrains.dokka'
 
@@ -39,13 +38,13 @@ dependencies {
     testImplementation dependency.androidx.test.core
     testImplementation dependency.junit
     testImplementation dependency.mockk
+    testImplementation dependency.kotlin.test.coroutines
     testImplementation project(':testmodels')
-}
-
-ktlint {
-    android.set(true)
 }
 
 afterEvaluate {
     it.android.kotlinOptions.jvmTarget = '1.8'
+    it.android.kotlinOptions.freeCompilerArgs += [
+        '-opt-in=kotlin.RequiresOptIn',
+    ]
 }

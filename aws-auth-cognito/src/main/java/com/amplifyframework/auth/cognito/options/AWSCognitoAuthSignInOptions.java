@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -39,8 +39,8 @@ public final class AWSCognitoAuthSignInOptions extends AuthSignInOptions {
      * @param authFlowType AuthFlowType to be used by signIn API
      */
     protected AWSCognitoAuthSignInOptions(
-        Map<String, String> metadata,
-        AuthFlowType authFlowType
+            Map<String, String> metadata,
+            AuthFlowType authFlowType
     ) {
         this.metadata = metadata;
         this.authFlowType = authFlowType;
@@ -79,7 +79,7 @@ public final class AWSCognitoAuthSignInOptions extends AuthSignInOptions {
     @Override
     public int hashCode() {
         return ObjectsCompat.hash(
-            getMetadata()
+                getMetadata()
         );
     }
 
@@ -98,8 +98,8 @@ public final class AWSCognitoAuthSignInOptions extends AuthSignInOptions {
     @Override
     public String toString() {
         return "AWSCognitoAuthSignInOptions{" +
-            "metadata=" + metadata +
-            '}';
+                "metadata=" + metadata +
+                '}';
     }
 
     /**
@@ -161,8 +161,8 @@ public final class AWSCognitoAuthSignInOptions extends AuthSignInOptions {
         @NonNull
         public AWSCognitoAuthSignInOptions build() {
             return new AWSCognitoAuthSignInOptions(
-                Immutable.of(metadata),
-                authFlowType
+                    Immutable.of(metadata),
+                    authFlowType
             );
         }
     }

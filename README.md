@@ -1,3 +1,4 @@
+## Amplify for Android (Developer Preview)
 <img src="https://s3.amazonaws.com/aws-mobile-hub-images/aws-amplify-logo.png" alt="AWS Amplify" width="550">
  
 [![DiscordChat](https://img.shields.io/discord/308323056592486420?logo=discord)](https://discord.gg/jWVbPfC)
@@ -23,7 +24,7 @@ Guide](https://docs.amplify.aws/start/q/integration/android).
 
 | Category                                                                                        | AWS Provider | Description                                |
 |-------------------------------------------------------------------------------------------------|--------------|--------------------------------------------|
-| **[Authentication](https://docs.amplify.aws/lib/auth/getting-started/q/platform/android)**      | Cognito      | Building blocks to create auth experiences |
+| **[Authentication](https://docs.amplify.aws/lib/devpreview/getting-started/q/platform/android/)**      | Cognito      | Building blocks to create auth experiences <br> *Note: Authentication category only supports **Sign Up**, **Sign In**, **Sign Out**, **Fetch Auth Session** and **getCurrentUser** API's.* |
 | **[Storage](https://docs.amplify.aws/lib/storage/getting-started/q/platform/android)**          | S3           | Manages content in public, protected, private storage buckets |
 | **[DataStore](https://docs.amplify.aws/lib/datastore/getting-started/q/platform/android)**      | AppSync      | Programming model for shared and distributed data, with simple online/offline synchronization |
 | **[API (GraphQL)](https://docs.amplify.aws/lib/graphqlapi/getting-started/q/platform/android)** | AppSync      | Interact with your GraphQL or AppSync endpoint |
@@ -35,9 +36,25 @@ Guide](https://docs.amplify.aws/start/q/integration/android).
 including: Amazon Comprehend, Amazon Polly, Amazon Rekognition, Amazon
 Textract, and Amazon Translate.
 
+All services and features not listed above are supported via the [Kotlin SDK](https://github.com/awslabs/aws-sdk-kotlin) or if supported by a category can be accessed via the Escape Hatch like below:
+
+### Kotlin
+
+```kotlin
+val s3StoragePlugin = Amplify.Storage.getPlugin("awsS3StoragePlugin")
+val s3Client = s3StoragePlugin.escapeHatch as S3Client
+```
+
+### Java
+
+```java
+AWSS3StoragePlugin plugin = (AWSS3StoragePlugin) Amplify.Storage.getPlugin("awsS3StoragePlugin");
+S3Client s3Client = plugin.getEscapeHatch();
+```
+
 ## Platform Support
 
-The Amplify Framework supports Android API level 16 (Android 4.1) and above.
+The Amplify Framework supports Android API level 24 (Android 7.0) and above.
 
 ## Using Amplify from Your App
 
@@ -52,12 +69,12 @@ dependencies section:
 ```groovy
 dependencies {
     // Only specify modules that provide functionality your app will use
-    implementation 'com.amplifyframework:aws-analytics-pinpoint:1.37.5'
-    implementation 'com.amplifyframework:aws-api:1.37.5'
-    implementation 'com.amplifyframework:aws-auth-cognito:1.37.5'
-    implementation 'com.amplifyframework:aws-datastore:1.37.5'
-    implementation 'com.amplifyframework:aws-predictions:1.37.5'
-    implementation 'com.amplifyframework:aws-storage-s3:1.37.5'
+    implementation 'com.amplifyframework:aws-analytics-pinpoint:1.37.0-dev-preview.0'
+    implementation 'com.amplifyframework:aws-api:1.37.0-dev-preview.0'
+    implementation 'com.amplifyframework:aws-auth-cognito:1.37.0-dev-preview.0'
+    implementation 'com.amplifyframework:aws-datastore:1.37.0-dev-preview.0'
+    implementation 'com.amplifyframework:aws-predictions:1.37.0-dev-preview.0'
+    implementation 'com.amplifyframework:aws-storage-s3:1.37.0-dev-preview.0'
 }
 ```
 
@@ -91,27 +108,21 @@ Amplify's default interface renders results through async callbacks. We also pro
  - [Using RxJava with Amplify](https://docs.amplify.aws/lib/project-setup/rxjava/q/platform/android)
  - [Kotlin Coroutines Support](https://docs.amplify.aws/lib/project-setup/coroutines/q/platform/android)
 
-### Authentication
-
-The default plugins for Amplify Android use the Authentication category to
-provide authentication with AWS services. The default implementation uses Amazon
-Cognito which allows you to add user sign-up, sign-in, and access control to
-your mobile apps.
-
-Please see [Getting Started with
-Authentication](https://docs.amplify.aws/lib/auth/getting-started/q/platform/android)
-for full details.
-
 ## License
 
 This library is licensed under the [Apache 2.0 License](./LICENSE).
 
 ## Report a Bug
 
-We appreciate your feedback -- comments, questions, and bug reports. Please
+[![Open Bugs](https://img.shields.io/github/issues/aws-amplify/amplify-android/bug?color=d73a4a&label=bugs)](https://github.com/aws-amplify/amplify-android/issues?q=is%3Aissue+is%3Aopen+label%3Abug)
+[![Open Questions](https://img.shields.io/github/issues/aws-amplify/amplify-android/question?color=558dfd&label=questions)](https://github.com/aws-amplify/amplify-android/issues?q=is%3Aissue+label%3A%22question%22+is%3Aopen)
+[![Feature Requests](https://img.shields.io/github/issues/aws-amplify/amplify-android/feature-request?color=ff9001&label=feature%20requests)](https://github.com/aws-amplify/amplify-android/issues?q=is%3Aissue+label%3A%22feature-request%22+is%3Aopen+)
+[![Closed Issues](https://img.shields.io/github/issues-closed/aws-amplify/amplify-android?color=%2325CC00)](https://github.com/aws-amplify/amplify-android/issues?q=is%3Aissue+is%3Aclosed+)
+
+We appreciate your feedback – comments, questions, and bug reports. Please
 [submit a GitHub issue](https://github.com/aws-amplify/amplify-android/issues),
 and we'll get back to you.
 
 ## Contribute to the Project
 
-Please see the [Contributing Guidelines](./CONTRIBUTING.md).
+We welcome any and all contributions from the community! Make sure you read through our [Contribution Guidelines](./CONTRIBUTING.md) before submitting any PR's. Thanks! ♥️

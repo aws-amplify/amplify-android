@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ apply from: rootProject.file("configuration/checkstyle.gradle")
 apply from: rootProject.file("configuration/publishing.gradle")
 
 ext {
-    minSdkVersion = 21
+    minSdkVersion = 24
 }
 
 android {
@@ -37,7 +37,7 @@ dependencies {
     implementation project(":aws-auth-cognito")
     implementation project(":aws-geo-location")
     implementation project(":core")
-    implementation dependency.aws.core
+    implementation dependency.aws.signing
     implementation dependency.maplibre.sdk
     implementation dependency.maplibre.annotations
     implementation dependency.okhttp
