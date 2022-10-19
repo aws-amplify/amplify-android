@@ -21,6 +21,7 @@ import com.amplifyframework.statemachine.StateMachineResolver
 import com.amplifyframework.statemachine.StateResolution
 import com.amplifyframework.statemachine.codegen.actions.FetchAuthSessionActions
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
+import com.amplifyframework.statemachine.codegen.data.FederatedToken
 import com.amplifyframework.statemachine.codegen.data.SignInMethod
 import com.amplifyframework.statemachine.codegen.data.SignedInData
 import com.amplifyframework.statemachine.codegen.events.FetchAuthSessionEvent
@@ -35,6 +36,11 @@ sealed class RefreshSessionState : State {
     ) : RefreshSessionState()
 
     data class RefreshingUnAuthSession(
+        override val fetchAuthSessionState: FetchAuthSessionState?
+    ) : RefreshSessionState()
+
+    data class RefreshingFederatedSession(
+        val federatedToken: FederatedToken,
         override val fetchAuthSessionState: FetchAuthSessionState?
     ) : RefreshSessionState()
 
@@ -98,11 +104,36 @@ sealed class RefreshSessionState : State {
                         val action = fetchAuthSessionActions.refreshAuthSessionAction(refreshSessionEvent.logins)
                         StateResolution(RefreshingUnAuthSession(FetchAuthSessionState.NotStarted()), listOf(action))
                     }
+                    is RefreshSessionEvent.EventType.RefreshFederatedSession -> {
+                        val action = fetchAuthSessionActions.fetchAWSCredentialsAction(
+                            refreshSessionEvent.identityId,
+                            refreshSessionEvent.logins
+                        )
+                        StateResolution(
+                            RefreshingFederatedSession(
+                                refreshSessionEvent.federatedToken,
+                                FetchAuthSessionState.NotStarted()
+                            ),
+                            listOf(action)
+                        )
+                    }
                     else -> defaultResolution
                 }
                 is RefreshingUnAuthSession -> when (fetchAuthSessionEvent) {
                     is FetchAuthSessionEvent.EventType.Fetched -> {
                         val amplifyCredential = AmplifyCredential.IdentityPool(
+                            fetchAuthSessionEvent.identityId,
+                            fetchAuthSessionEvent.awsCredentials
+                        )
+                        val action = fetchAuthSessionActions.notifySessionRefreshedAction(amplifyCredential)
+                        StateResolution(Refreshed(), listOf(action))
+                    }
+                    else -> defaultResolution
+                }
+                is RefreshingFederatedSession -> when (fetchAuthSessionEvent) {
+                    is FetchAuthSessionEvent.EventType.Fetched -> {
+                        val amplifyCredential = AmplifyCredential.IdentityPoolFederated(
+                            oldState.federatedToken,
                             fetchAuthSessionEvent.identityId,
                             fetchAuthSessionEvent.awsCredentials
                         )
@@ -149,6 +180,10 @@ sealed class RefreshSessionState : State {
         override fun build(): RefreshSessionState = when (refreshSessionState) {
             is RefreshingUnAuthSession -> RefreshingUnAuthSession(fetchAuthSessionState)
             is RefreshingAuthSession -> RefreshingAuthSession(refreshSessionState.signedInData, fetchAuthSessionState)
+            is RefreshingFederatedSession -> RefreshingFederatedSession(
+                refreshSessionState.federatedToken,
+                fetchAuthSessionState
+            )
             else -> refreshSessionState
         }
     }

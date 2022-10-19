@@ -69,25 +69,20 @@ sealed class AmplifyCredential {
     ) : AmplifyCredential(), UserPoolTypeCredential, IdentityPoolTypeCredential
 }
 
-// TODO: Token abstraction if needed
-// @Serializable
-// sealed class AuthTokens{
-//    data class CognitoUserPoolTokens(
-//        val idToken: String?,
-//        val accessToken: String?,
-//        val refreshToken: String?,
-//        val expiration: Long?,
-//    ) : AuthTokens()
-//    data class FederatedToken(val token: String, val provider: AuthProvider) : AuthTokens()
-// }
-
 /**
  * Contains identity provider info to federate a provider into identity pool
  * @param token identity provider token (Cognito or 3rd party)
  * @param providerName identity provider name
  */
 @Serializable
-data class FederatedToken(val token: String, val providerName: String)
+data class FederatedToken(val token: String, val providerName: String) {
+    override fun toString(): String {
+        return "FederatedToken(" +
+            "token = ${token?.substring(0..4)}***, " +
+            "providerName = $providerName" +
+            ")"
+    }
+}
 
 /**
  * Contains cognito user pool JWT tokens

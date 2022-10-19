@@ -150,10 +150,14 @@ sealed class AuthenticationState : State {
                     }
                 }
                 is FederatedToIdentityPool -> {
-                    when (authenticationEvent) {
-                        is AuthenticationEvent.EventType.SignOutRequested -> {
+                    val authorizationEvent = event.isAuthorizationEvent()
+                    when {
+                        authenticationEvent is AuthenticationEvent.EventType.SignOutRequested -> {
                             val action = authenticationActions.initiateSignOutAction(authenticationEvent, null)
                             StateResolution(SigningOut(), listOf(action))
+                        }
+                        authorizationEvent is AuthorizationEvent.EventType.StartFederationToIdentityPool -> {
+                            StateResolution(FederatingToIdentityPool())
                         }
                         else -> defaultResolution
                     }

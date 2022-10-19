@@ -98,6 +98,16 @@ object AuthorizationCognitoActions : AuthorizationActions {
                 is AmplifyCredential.IdentityPool -> RefreshSessionEvent(
                     RefreshSessionEvent.EventType.RefreshUnAuthSession(LoginsMapProvider.UnAuthLogins())
                 )
+                is AmplifyCredential.IdentityPoolFederated -> {
+                    val logins = LoginsMapProvider.AuthProviderLogins(amplifyCredential.federatedToken)
+                    RefreshSessionEvent(
+                        RefreshSessionEvent.EventType.RefreshFederatedSession(
+                            amplifyCredential.federatedToken,
+                            amplifyCredential.identityId,
+                            logins
+                        )
+                    )
+                }
                 else -> AuthorizationEvent(
                     AuthorizationEvent.EventType.ThrowError(Exception("Credentials empty, cannot refresh."))
                 )

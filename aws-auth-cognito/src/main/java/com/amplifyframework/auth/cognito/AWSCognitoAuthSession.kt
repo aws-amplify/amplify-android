@@ -20,6 +20,7 @@ import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.AuthSession
 import com.amplifyframework.auth.cognito.helpers.SessionHelper
 import com.amplifyframework.auth.exceptions.ConfigurationException
+import com.amplifyframework.auth.exceptions.InvalidStateException
 import com.amplifyframework.auth.exceptions.SignedOutException
 import com.amplifyframework.auth.exceptions.UnknownException
 import com.amplifyframework.auth.result.AuthSessionResult
@@ -115,13 +116,26 @@ fun AmplifyCredential.getCognitoSession(exception: AuthException = SignedOutExce
             userSubResult = AWSCognitoAuthSession.getUserSubResult(signedInData.cognitoUserPoolTokens),
             userPoolTokensResult = AWSCognitoAuthSession.getUserPoolTokensResult(signedInData.cognitoUserPoolTokens)
         )
-        is AmplifyCredential.IdentityPoolTypeCredential -> AWSCognitoAuthSession(
+        is AmplifyCredential.IdentityPool -> AWSCognitoAuthSession(
             false,
             identityIdResult = AWSCognitoAuthSession.getIdentityIdResult(identityId),
             awsCredentialsResult = AWSCognitoAuthSession.getCredentialsResult(credentials),
             userSubResult = AuthSessionResult.failure(SignedOutException()),
             userPoolTokensResult = AuthSessionResult.failure(SignedOutException())
         )
+        is AmplifyCredential.IdentityPoolFederated -> {
+            val userPoolException = InvalidStateException(
+                message = "Users Federated to Identity Pool do not have User Pool access.",
+                recoverySuggestion = "To access User Pool data, you must use a Sign In method."
+            )
+            AWSCognitoAuthSession(
+                true,
+                identityIdResult = AWSCognitoAuthSession.getIdentityIdResult(identityId),
+                awsCredentialsResult = AWSCognitoAuthSession.getCredentialsResult(credentials),
+                userSubResult = AuthSessionResult.failure(userPoolException),
+                userPoolTokensResult = AuthSessionResult.failure(userPoolException)
+            )
+        }
         else -> AWSCognitoAuthSession(
             false,
             identityIdResult = AuthSessionResult.failure(exception),
