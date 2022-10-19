@@ -422,7 +422,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
         awsMobileClient.signIn(username,
             password,
             metadata,
-            Collections.emptyMap(),
+            metadata,
             sdkAuthFlowType,
             new Callback<SignInResult>() {
                 @Override
