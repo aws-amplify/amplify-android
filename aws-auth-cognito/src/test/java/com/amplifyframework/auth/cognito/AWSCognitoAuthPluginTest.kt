@@ -443,7 +443,7 @@ class AWSCognitoAuthPluginTest {
 
     @Test
     fun verifyFetchUserAttributes() {
-        val expectedOnSuccess = Consumer<MutableList<AuthUserAttribute>> { }
+        val expectedOnSuccess = Consumer<List<AuthUserAttribute>> { }
         val expectedOnError = Consumer<AuthException> { }
 
         authPlugin.fetchUserAttributes(expectedOnSuccess, expectedOnError)

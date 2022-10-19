@@ -1068,7 +1068,7 @@ internal class RealAWSCognitoAuthPlugin(
     }
 
     override fun fetchUserAttributes(
-        onSuccess: Consumer<MutableList<AuthUserAttribute>>,
+        onSuccess: Consumer<List<AuthUserAttribute>>,
         onError: Consumer<AuthException>
     ) {
         authStateMachine.getCurrentState { authState ->
@@ -1093,7 +1093,7 @@ internal class RealAWSCognitoAuthPlugin(
                                     )
                                 }
                             }
-                            onSuccess.accept(userAttributes.toMutableList())
+                            onSuccess.accept(userAttributes)
                         } catch (e: Exception) {
                             onError.accept(CognitoAuthExceptionConverter.lookup(e, e.toString()))
                         }

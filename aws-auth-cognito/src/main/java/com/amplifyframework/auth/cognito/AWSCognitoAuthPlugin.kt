@@ -308,7 +308,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
     }
 
     override fun fetchUserAttributes(
-        onSuccess: Consumer<MutableList<AuthUserAttribute>>,
+        onSuccess: Consumer<List<AuthUserAttribute>>,
         onError: Consumer<AuthException>
     ) {
         realPlugin.fetchUserAttributes(onSuccess, onError)
