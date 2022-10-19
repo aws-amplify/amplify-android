@@ -1,5 +1,5 @@
 {
-    "description": "Test that SRP signIn invokes proper cognito request and returns success",
+    "description": "Test that SRP signIn invokes proper cognito request and returns SMS challenge",
     "preConditions": {
         "amplify-configuration": "authconfiguration.json",
         "state": "SignedOut_Configured.json",
@@ -24,32 +24,11 @@
                 "apiName": "respondToAuthChallenge",
                 "responseType": "success",
                 "response": {
-                    "authenticationResult": {
-                        "idToken": "someToken",
-                        "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNTE2MjM5MDIyfQ.WK8_fwfvSU7wdDl5sovnRApzUp6FHNB5ljS8KAO0QeA",
-                        "refreshToken": "someRefreshToken",
-                        "expiresIn": 300
-                    }
-                }
-            },
-            {
-                "type": "cognito",
-                "apiName": "getId",
-                "responseType": "success",
-                "response": {
-                    "identityId": "someIdentityId"
-                }
-            },
-            {
-                "type": "cognito",
-                "apiName": "getCredentialsForIdentity",
-                "responseType": "success",
-                "response": {
-                    "credentials": {
-                        "accessKeyId": "someAccessKey",
-                        "secretKey": "someSecretKey",
-                        "sessionToken": "someSessionToken",
-                        "expiration": 2342134
+                    "session": "someSession",
+                    "challengeName": "SMS_MFA",
+                    "challengeParameters": {
+                        "CODE_DELIVERY_DELIVERY_MEDIUM": "SMS",
+                        "CODE_DELIVERY_DESTINATION": "+12345678900"
                     }
                 }
             }
@@ -70,18 +49,22 @@
             "apiName": "signIn",
             "responseType": "success",
             "response": {
-                "isSignedIn": true,
+                "isSignedIn": false,
                 "nextStep": {
-                    "signInStep": "DONE",
+                    "signInStep": "CONFIRM_SIGN_IN_WITH_SMS_MFA_CODE",
                     "additionalInfo": {
                     },
-                    "codeDeliveryDetails": null
+                    "codeDeliveryDetails": {
+                        "destination": "+12345678900",
+                        "deliveryMedium": "SMS",
+                        "attributeName": null
+                    }
                 }
             }
         },
         {
             "type": "state",
-            "expectedState": "SignedIn_SessionEstablished.json"
+            "expectedState": "SigningIn_SigningIn.json"
         }
     ]
 }

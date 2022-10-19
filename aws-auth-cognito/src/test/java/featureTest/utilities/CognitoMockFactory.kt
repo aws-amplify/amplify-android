@@ -111,10 +111,13 @@ class CognitoMockFactory(
                         )
                     }
                     InitiateAuthResponse.invoke {
-                        this.challengeName =
-                            ChallengeNameType.fromValue((responseObject["challengeName"] as JsonPrimitive).content)
-                        this.challengeParameters =
-                            parseChallengeParams(responseObject["challengeParameters"] as JsonObject)
+                        this.challengeName = responseObject["challengeName"]?.let {
+                            ChallengeNameType.fromValue((it as JsonPrimitive).content)
+                        }
+
+                        this.challengeParameters = responseObject["challengeParameters"]?.let {
+                            parseChallengeParams(it as JsonObject)
+                        }
                     }
                 }
                 captures[mockResponse.apiName] = requestCaptor
@@ -122,9 +125,6 @@ class CognitoMockFactory(
             "respondToAuthChallenge" -> {
                 mockkObject(AuthHelper)
                 coEvery { AuthHelper.getSecretHash(any(), any(), any()) } returns "a hash"
-
-//                mockkStatic(Base64::class)
-//                coEvery { Base64.encode(any(), any()) } returns "test".toByteArray()
 
                 val requestCaptor = slot<RespondToAuthChallengeRequest>()
 
@@ -136,8 +136,16 @@ class CognitoMockFactory(
                         )
                     }
                     RespondToAuthChallengeResponse.invoke {
-                        this.authenticationResult =
-                            parseAuthenticationResult(responseObject["authenticationResult"] as JsonObject)
+                        this.authenticationResult = responseObject["authenticationResult"]?.let {
+                            parseAuthenticationResult(it as JsonObject)
+                        }
+                        this.session = responseObject["session"]?.let { (it as JsonPrimitive).content }
+                        this.challengeName = responseObject["challengeName"]?.let {
+                            ChallengeNameType.fromValue((it as JsonPrimitive).content)
+                        }
+                        this.challengeParameters = responseObject["challengeParameters"]?.let {
+                            parseChallengeParams(it as JsonObject)
+                        }
                     }
                 }
                 captures[mockResponse.apiName] = requestCaptor
@@ -179,13 +187,7 @@ class CognitoMockFactory(
     }
 
     private fun parseChallengeParams(params: JsonObject): Map<String, String> {
-        return mapOf(
-            "SALT" to (params["SALT"] as JsonPrimitive).content,
-            "SECRET_BLOCK" to (params["SECRET_BLOCK"] as JsonPrimitive).content,
-            "SRP_B" to (params["SRP_B"] as JsonPrimitive).content,
-            "USERNAME" to (params["USERNAME"] as JsonPrimitive).content,
-            "USER_ID_FOR_SRP" to (params["USER_ID_FOR_SRP"] as JsonPrimitive).content
-        )
+        return params.mapValues { (k, v) -> (v as JsonPrimitive).content }
     }
 
     private fun parseAuthenticationResult(result: JsonObject): AuthenticationResultType {

@@ -18,7 +18,10 @@ package com.amplifyframework.auth.cognito
 import aws.sdk.kotlin.services.cognitoidentity.CognitoIdentityClient
 import aws.sdk.kotlin.services.cognitoidentityprovider.CognitoIdentityProviderClient
 import com.amplifyframework.logging.Logger
+import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
+import com.amplifyframework.statemachine.codegen.data.CredentialType
+import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.states.AuthState
 import com.amplifyframework.testutils.featuretest.API
 import com.amplifyframework.testutils.featuretest.ExpectationShapes
@@ -31,8 +34,10 @@ import featureTest.utilities.APICaptorFactory
 import featureTest.utilities.AuthOptionsFactory
 import featureTest.utilities.CognitoMockFactory
 import featureTest.utilities.CognitoRequestFactory.getExpectedRequestFor
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import java.io.File
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -40,6 +45,7 @@ import kotlin.reflect.KParameter
 import kotlin.reflect.full.memberFunctions
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.newSingleThreadContext
 import kotlinx.coroutines.runBlocking
@@ -138,24 +144,24 @@ class AWSCognitoAuthPluginFeatureTest(private val fileName: String) {
         }
 
         val credentialStoreClient = mockk<CredentialStoreClient>(relaxed = true)
+        coEvery { credentialStoreClient.loadCredentials(capture(slot<CredentialType.Device>())) } coAnswers {
+            AmplifyCredential.DeviceData(DeviceMetadata.Empty)
+        }
+
+        val logger = mockk<Logger>(relaxed = true)
+
         val authEnvironment = AuthEnvironment(
             authConfiguration,
             authService,
             credentialStoreClient,
             null,
             null,
-            logger = mockk()
+            logger
         )
-        val logger = mockk<Logger>(relaxed = true)
 
         authStateMachine = AuthStateMachine(authEnvironment, getState(feature.preConditions.state))
 
-        return RealAWSCognitoAuthPlugin(
-            authConfiguration,
-            authEnvironment,
-            authStateMachine,
-            logger
-        )
+        return RealAWSCognitoAuthPlugin(authConfiguration, authEnvironment, authStateMachine, logger)
     }
 
     private fun setupMocks() {
@@ -197,7 +203,7 @@ class AWSCognitoAuthPluginFeatureTest(private val fileName: String) {
                     assertEquals(getState(validation.expectedState), authState)
                     getStateLatch.countDown()
                 }
-                getStateLatch.await(10, TimeUnit.SECONDS)
+                assertTrue(getStateLatch.await(10, TimeUnit.SECONDS))
             }
         }
     }
