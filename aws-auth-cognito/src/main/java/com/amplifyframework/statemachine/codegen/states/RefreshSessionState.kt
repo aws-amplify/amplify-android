@@ -106,8 +106,8 @@ sealed class RefreshSessionState : State {
                     }
                     is RefreshSessionEvent.EventType.RefreshFederatedSession -> {
                         val action = fetchAuthSessionActions.fetchAWSCredentialsAction(
-                            refreshSessionEvent.identityId,
-                            refreshSessionEvent.logins
+                            refreshSessionEvent.logins,
+                            refreshSessionEvent.identityId
                         )
                         StateResolution(
                             RefreshingFederatedSession(
