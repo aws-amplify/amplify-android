@@ -69,18 +69,6 @@ sealed class AmplifyCredential {
     ) : AmplifyCredential(), UserPoolTypeCredential, IdentityPoolTypeCredential
 }
 
-// TODO: Token abstraction if needed
-// @Serializable
-// sealed class AuthTokens{
-//    data class CognitoUserPoolTokens(
-//        val idToken: String?,
-//        val accessToken: String?,
-//        val refreshToken: String?,
-//        val expiration: Long?,
-//    ) : AuthTokens()
-//    data class FederatedToken(val token: String, val provider: AuthProvider) : AuthTokens()
-// }
-
 /**
  * Contains identity provider info to federate a provider into identity pool
  * @param token identity provider token (Cognito or 3rd party)
@@ -109,6 +97,17 @@ data class CognitoUserPoolTokens(
             "accessToken = ${accessToken?.substring(0..4)}***, " +
             "refreshToken = ${refreshToken?.substring(0..4)}***" +
             ")"
+    }
+
+    override fun equals(other: Any?): Boolean {
+        return if (super.equals(other)) {
+            true
+        } else if (other == null || javaClass != other.javaClass) {
+            false
+        } else {
+            val tokens = other as CognitoUserPoolTokens
+            idToken == tokens.idToken && accessToken == tokens.accessToken && refreshToken == tokens.refreshToken
+        }
     }
 }
 

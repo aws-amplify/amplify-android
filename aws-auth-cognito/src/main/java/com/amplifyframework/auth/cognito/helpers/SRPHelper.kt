@@ -187,6 +187,6 @@ class SRPHelper(private val password: String) {
         val sValue = computeS(uValue, xValue, bigIntSRPB)
         val key = computePasswordAuthenticationKey(sValue, uValue)
         val m1Signature = generateM1Signature(key, secretBlock)
-        return String(android.util.Base64.encode(m1Signature, android.util.Base64.NO_WRAP))
+        return android.util.Base64.encodeToString(m1Signature, android.util.Base64.NO_WRAP)
     }
 }
