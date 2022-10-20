@@ -35,7 +35,7 @@ import com.amplifyframework.statemachine.codegen.events.SRPEvent
 import com.amplifyframework.statemachine.codegen.events.SignInChallengeEvent
 import com.amplifyframework.statemachine.codegen.events.SignInEvent
 
-object SignInCognitoActions : SignInActions {
+internal object SignInCognitoActions : SignInActions {
     override fun startSRPAuthAction(event: SignInEvent.EventType.InitiateSignInWithSRP) =
         Action<AuthEnvironment>("StartSRPAuth") { id, dispatcher ->
             logger.verbose("$id Starting execution")

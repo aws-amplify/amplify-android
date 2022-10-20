@@ -20,7 +20,7 @@ import com.amplifyframework.statemachine.codegen.data.AWSCredentials
 import com.amplifyframework.statemachine.codegen.data.LoginsMapProvider
 import java.util.Date
 
-class FetchAuthSessionEvent(val eventType: EventType, override val time: Date? = null) : StateMachineEvent {
+internal class FetchAuthSessionEvent(val eventType: EventType, override val time: Date? = null) : StateMachineEvent {
     sealed class EventType {
         data class FetchIdentity(val logins: LoginsMapProvider) : EventType()
         data class FetchAwsCredentials(val identityId: String, val logins: LoginsMapProvider) : EventType()

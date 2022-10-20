@@ -21,7 +21,7 @@ import org.json.JSONObject
 /**
  * Configuration options for specifying cognito user pool.
  */
-data class UserPoolConfiguration internal constructor(val builder: Builder) {
+internal data class UserPoolConfiguration internal constructor(val builder: Builder) {
     val region: String? = builder.region
     val endpoint: String? = builder.endpoint
     val poolId: String? = builder.poolId

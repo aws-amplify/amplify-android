@@ -25,7 +25,7 @@ interface AWSCognitoAuthServiceBehavior {
     var cognitoIdentityClient: CognitoIdentityClient?
 
     companion object {
-        fun fromConfiguration(configuration: AuthConfiguration): AWSCognitoAuthServiceBehavior {
+        internal fun fromConfiguration(configuration: AuthConfiguration): AWSCognitoAuthServiceBehavior {
             val cognitoIdentityProviderClient = configuration.userPool?.let { it ->
 
                 CognitoIdentityProviderClient {

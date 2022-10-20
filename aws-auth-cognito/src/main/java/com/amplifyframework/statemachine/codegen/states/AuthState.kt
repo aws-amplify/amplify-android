@@ -23,7 +23,7 @@ import com.amplifyframework.statemachine.StateResolution
 import com.amplifyframework.statemachine.codegen.actions.AuthActions
 import com.amplifyframework.statemachine.codegen.events.AuthEvent
 
-sealed class AuthState : State {
+internal sealed class AuthState : State {
     data class NotConfigured(val id: String = "") : AuthState()
     data class ConfiguringAuth(val id: String = "") : AuthState()
     data class ConfiguringAuthentication(override var authNState: AuthenticationState?) : AuthState()

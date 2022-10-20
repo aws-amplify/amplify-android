@@ -22,7 +22,7 @@ import java.security.Key
 import java.security.KeyStore
 import javax.crypto.KeyGenerator
 
-object LegacyKeyProvider {
+internal object LegacyKeyProvider {
     private const val AES_KEY_ALGORITHM = "AES"
     private const val CIPHER_AES_GCM_NOPADDING_KEY_LENGTH_IN_BITS = 256
     private const val ANDROID_KEY_STORE_NAME = "AndroidKeyStore"

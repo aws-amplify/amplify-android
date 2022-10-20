@@ -32,6 +32,8 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.VerifyUserAttribute
 import aws.sdk.kotlin.services.cognitoidentityprovider.resendConfirmationCode
 import aws.sdk.kotlin.services.cognitoidentityprovider.signUp
 import com.amplifyframework.AmplifyException
+import com.amplifyframework.auth.AWSCredentials
+import com.amplifyframework.auth.AWSTemporaryCredentials
 import com.amplifyframework.auth.AuthCategoryBehavior
 import com.amplifyframework.auth.AuthChannelEventName
 import com.amplifyframework.auth.AuthCodeDeliveryDetails
@@ -1649,9 +1651,15 @@ internal class RealAWSCognitoAuthPlugin(
                         val credential = authZState.amplifyCredential as? AmplifyCredential.IdentityPoolFederated
                         val identityId = credential?.identityId
                         val awsCredentials = credential?.credentials
-                        if (identityId != null && awsCredentials != null) {
+                        val temporaryAwsCredentials = AWSCredentials.createAWSCredentials(
+                            awsCredentials?.accessKeyId,
+                            awsCredentials?.secretAccessKey,
+                            awsCredentials?.sessionToken,
+                            awsCredentials?.expiration
+                        ) as? AWSTemporaryCredentials
+                        if (identityId != null && temporaryAwsCredentials != null) {
                             val result = FederateToIdentityPoolResult(
-                                credentials = awsCredentials,
+                                credentials = temporaryAwsCredentials,
                                 identityId = identityId
                             )
                             onSuccess.accept(result)

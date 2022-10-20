@@ -17,7 +17,7 @@ package com.amplifyframework.statemachine.codegen.data
 
 import android.app.Activity
 
-data class HostedUIOptions(
+internal data class HostedUIOptions(
     val callingActivity: Activity,
     val scopes: List<String>?,
     val providerInfo: HostedUIProviderInfo,

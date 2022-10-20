@@ -22,7 +22,7 @@ import java.util.UUID
 /**
  * A utility class for device operations.
  */
-object CognitoDeviceHelper {
+internal object CognitoDeviceHelper {
     const val SALT_LENGTH_BITS = 128
 
     /**

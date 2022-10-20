@@ -20,7 +20,7 @@ import com.amplifyframework.auth.exceptions.UnknownException
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 
-open class AuthHelper {
+internal open class AuthHelper {
 
     companion object {
         val HMAC_SHA_256 = "HmacSHA256"

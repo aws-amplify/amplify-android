@@ -18,7 +18,7 @@ package com.amplifyframework.auth.cognito
 import com.amplifyframework.auth.cognito.actions.AuthCognitoActions
 import com.amplifyframework.auth.cognito.actions.AuthenticationCognitoActions
 import com.amplifyframework.auth.cognito.actions.AuthorizationCognitoActions
-import com.amplifyframework.auth.cognito.actions.DeleteUserActions
+import com.amplifyframework.auth.cognito.actions.DeleteUserCognitoActions
 import com.amplifyframework.auth.cognito.actions.DeviceSRPCognitoSignInActions
 import com.amplifyframework.auth.cognito.actions.FetchAuthSessionCognitoActions
 import com.amplifyframework.auth.cognito.actions.HostedUICognitoActions
@@ -26,7 +26,7 @@ import com.amplifyframework.auth.cognito.actions.MigrateAuthCognitoActions
 import com.amplifyframework.auth.cognito.actions.SRPCognitoActions
 import com.amplifyframework.auth.cognito.actions.SignInChallengeCognitoActions
 import com.amplifyframework.auth.cognito.actions.SignInCognitoActions
-import com.amplifyframework.auth.cognito.actions.SignInCustomActions
+import com.amplifyframework.auth.cognito.actions.SignInCustomCognitoActions
 import com.amplifyframework.auth.cognito.actions.SignOutCognitoActions
 import com.amplifyframework.statemachine.Environment
 import com.amplifyframework.statemachine.StateMachine
@@ -57,7 +57,7 @@ internal class AuthStateMachine(
             AuthenticationState.Resolver(
                 SignInState.Resolver(
                     SRPSignInState.Resolver(SRPCognitoActions),
-                    CustomSignInState.Resolver(SignInCustomActions),
+                    CustomSignInState.Resolver(SignInCustomCognitoActions),
                     MigrateSignInState.Resolver(MigrateAuthCognitoActions),
                     SignInChallengeState.Resolver(SignInChallengeCognitoActions),
                     HostedUISignInState.Resolver(HostedUICognitoActions),
@@ -73,7 +73,7 @@ internal class AuthStateMachine(
                     FetchAuthSessionState.Resolver(FetchAuthSessionCognitoActions),
                     FetchAuthSessionCognitoActions
                 ),
-                DeleteUserState.Resolver(DeleteUserActions),
+                DeleteUserState.Resolver(DeleteUserCognitoActions),
                 AuthorizationCognitoActions
             ),
             AuthCognitoActions
@@ -88,7 +88,7 @@ internal class AuthStateMachine(
                 AuthenticationState.Resolver(
                     SignInState.Resolver(
                         SRPSignInState.Resolver(SRPCognitoActions).logging(),
-                        CustomSignInState.Resolver(SignInCustomActions).logging(),
+                        CustomSignInState.Resolver(SignInCustomCognitoActions).logging(),
                         MigrateSignInState.Resolver(MigrateAuthCognitoActions).logging(),
                         SignInChallengeState.Resolver(SignInChallengeCognitoActions).logging(),
                         HostedUISignInState.Resolver(HostedUICognitoActions).logging(),
@@ -104,7 +104,7 @@ internal class AuthStateMachine(
                         FetchAuthSessionState.Resolver(FetchAuthSessionCognitoActions).logging(),
                         FetchAuthSessionCognitoActions
                     ).logging(),
-                    DeleteUserState.Resolver(DeleteUserActions),
+                    DeleteUserState.Resolver(DeleteUserCognitoActions),
                     AuthorizationCognitoActions
                 ).logging(),
                 AuthCognitoActions
