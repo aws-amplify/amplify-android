@@ -22,7 +22,7 @@ import com.amplifyframework.statemachine.StateResolution
 import com.amplifyframework.statemachine.codegen.actions.MigrateAuthActions
 import com.amplifyframework.statemachine.codegen.events.SignInEvent
 
-sealed class MigrateSignInState : State {
+internal sealed class MigrateSignInState : State {
     data class NotStarted(val id: String = "") : MigrateSignInState()
     data class SigningIn(val id: String = "") : MigrateSignInState()
     data class SignedIn(val id: String = "") : MigrateSignInState()

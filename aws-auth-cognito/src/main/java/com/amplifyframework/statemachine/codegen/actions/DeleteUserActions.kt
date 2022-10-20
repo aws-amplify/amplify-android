@@ -2,6 +2,6 @@ package com.amplifyframework.statemachine.codegen.actions
 
 import com.amplifyframework.statemachine.Action
 
-interface DeleteUserActions {
+internal interface DeleteUserActions {
     fun initDeleteUserAction(accessToken: String): Action
 }

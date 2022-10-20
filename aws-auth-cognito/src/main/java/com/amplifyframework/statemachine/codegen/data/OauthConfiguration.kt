@@ -17,7 +17,7 @@ package com.amplifyframework.statemachine.codegen.data
 
 import org.json.JSONObject
 
-data class OauthConfiguration internal constructor(
+internal data class OauthConfiguration internal constructor(
     val appClient: String,
     val appSecret: String?,
     val domain: String,

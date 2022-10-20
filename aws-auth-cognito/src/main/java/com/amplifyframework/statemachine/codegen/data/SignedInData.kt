@@ -20,7 +20,7 @@ import java.util.Date
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class SignedInData(
+internal data class SignedInData(
     val userId: String,
     val username: String,
     @Serializable(DateSerializer::class)

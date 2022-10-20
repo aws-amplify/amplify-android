@@ -23,7 +23,7 @@ import com.amplifyframework.statemachine.codegen.data.CredentialType
 import com.amplifyframework.statemachine.codegen.errors.CredentialStoreError
 import com.amplifyframework.statemachine.codegen.events.CredentialStoreEvent
 
-object CredentialStoreActions : StoreActions {
+internal object CredentialStoreCognitoActions : StoreActions {
     override fun migrateLegacyCredentialStoreAction() =
         Action<CredentialStoreEnvironment>("MigrateLegacyCredentials") { id, dispatcher ->
             logger.verbose("$id Starting execution")

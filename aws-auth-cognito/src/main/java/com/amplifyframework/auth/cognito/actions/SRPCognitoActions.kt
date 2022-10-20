@@ -34,7 +34,7 @@ import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.SRPEvent
 import com.amplifyframework.statemachine.codegen.events.SignInEvent
 
-object SRPCognitoActions : SRPActions {
+internal object SRPCognitoActions : SRPActions {
     private const val KEY_PASSWORD_CLAIM_SECRET_BLOCK = "PASSWORD_CLAIM_SECRET_BLOCK"
     private const val KEY_PASSWORD_CLAIM_SIGNATURE = "PASSWORD_CLAIM_SIGNATURE"
     private const val KEY_TIMESTAMP = "TIMESTAMP"

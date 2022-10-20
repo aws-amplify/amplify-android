@@ -24,7 +24,7 @@ import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.errors.CredentialStoreError
 import com.amplifyframework.statemachine.codegen.events.CredentialStoreEvent
 
-sealed class CredentialStoreState : State {
+internal sealed class CredentialStoreState : State {
     data class NotConfigured(val id: String = "") : CredentialStoreState()
     data class MigratingLegacyStore(val id: String = "") : CredentialStoreState()
     data class LoadingStoredCredentials(val id: String = "") : CredentialStoreState()

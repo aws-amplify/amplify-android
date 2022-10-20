@@ -26,7 +26,7 @@ import javax.crypto.spec.SecretKeySpec
  * username, userPoolId and timestamp so these are already factored in the
  * generated signature.
  */
-class SignatureGenerator {
+internal class SignatureGenerator {
     companion object {
         private val TAG = SignatureGenerator::class.java.simpleName
         private const val HMAC_SHA_256 = "HmacSHA256"

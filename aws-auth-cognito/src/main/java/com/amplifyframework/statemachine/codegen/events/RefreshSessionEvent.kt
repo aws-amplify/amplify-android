@@ -20,7 +20,7 @@ import com.amplifyframework.statemachine.codegen.data.LoginsMapProvider
 import com.amplifyframework.statemachine.codegen.data.SignedInData
 import java.util.Date
 
-class RefreshSessionEvent(val eventType: EventType, override val time: Date? = null) : StateMachineEvent {
+internal class RefreshSessionEvent(val eventType: EventType, override val time: Date? = null) : StateMachineEvent {
     sealed class EventType {
         data class RefreshUserPoolTokens(val signedInData: SignedInData) : EventType()
         data class RefreshAuthSession(val signedInData: SignedInData, val logins: LoginsMapProvider) : EventType()
