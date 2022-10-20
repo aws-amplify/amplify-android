@@ -757,18 +757,43 @@ internal class RealAWSCognitoAuthPlugin(
                 is AuthorizationState.SessionEstablished -> {
                     val credential = authZState.amplifyCredential
                     if (!credential.isValid() || forceRefresh) {
-                        authStateMachine.send(
-                            AuthorizationEvent(AuthorizationEvent.EventType.RefreshSession(credential))
-                        )
+                        if (credential is AmplifyCredential.IdentityPoolFederated) {
+                            authStateMachine.send(
+                                AuthorizationEvent(
+                                    AuthorizationEvent.EventType.StartFederationToIdentityPool(
+                                        credential.federatedToken,
+                                        credential.identityId,
+                                        credential
+                                    )
+                                )
+                            )
+                        } else {
+                            authStateMachine.send(
+                                AuthorizationEvent(AuthorizationEvent.EventType.RefreshSession(credential))
+                            )
+                        }
                         _fetchAuthSession(onSuccess, onError)
                     } else onSuccess.accept(credential.getCognitoSession())
                 }
                 is AuthorizationState.Error -> {
                     val error = authZState.exception
                     if (error is SessionError) {
-                        authStateMachine.send(
-                            AuthorizationEvent(AuthorizationEvent.EventType.RefreshSession(error.amplifyCredential))
-                        )
+                        val amplifyCredential = error.amplifyCredential
+                        if (amplifyCredential is AmplifyCredential.IdentityPoolFederated) {
+                            authStateMachine.send(
+                                AuthorizationEvent(
+                                    AuthorizationEvent.EventType.StartFederationToIdentityPool(
+                                        amplifyCredential.federatedToken,
+                                        amplifyCredential.identityId,
+                                        amplifyCredential
+                                    )
+                                )
+                            )
+                        } else {
+                            authStateMachine.send(
+                                AuthorizationEvent(AuthorizationEvent.EventType.RefreshSession(amplifyCredential))
+                            )
+                        }
                         _fetchAuthSession(onSuccess, onError)
                     } else {
                         onError.accept(InvalidStateException())
@@ -1615,7 +1640,13 @@ internal class RealAWSCognitoAuthPlugin(
                         authZState is AuthorizationState.Error
                     ) -> {
 
-                    val existingCredential = (authZState as? AuthorizationState.SessionEstablished)?.amplifyCredential
+                    val existingCredential = when (authZState) {
+                        is AuthorizationState.SessionEstablished -> authZState.amplifyCredential
+                        is AuthorizationState.Error -> {
+                            (authZState.exception as? SessionError)?.amplifyCredential
+                        }
+                        else -> null
+                    }
                     authStateMachine.send(
                         AuthorizationEvent(
                             AuthorizationEvent.EventType.StartFederationToIdentityPool(
@@ -1693,9 +1724,12 @@ internal class RealAWSCognitoAuthPlugin(
             val authZState = authState.authZState
             when {
                 authState is AuthState.Configured &&
-                    authNState is AuthenticationState.FederatedToIdentityPool &&
-                    authZState is AuthorizationState.SessionEstablished -> {
-                    val event = AuthenticationEvent(AuthenticationEvent.EventType.SignOutRequested(SignOutData()))
+                        (authNState is AuthenticationState.FederatedToIdentityPool &&
+                                authZState is AuthorizationState.SessionEstablished) ||
+                        (authZState is AuthorizationState.Error &&
+                                authZState.exception is SessionError &&
+                                authZState.exception.amplifyCredential is AmplifyCredential.IdentityPoolFederated) -> {
+                    val event = AuthenticationEvent(AuthenticationEvent.EventType.ClearFederationToIdentityPool())
                     authStateMachine.send(event)
                     _clearFederationToIdentityPool(onSuccess, onError)
                 }

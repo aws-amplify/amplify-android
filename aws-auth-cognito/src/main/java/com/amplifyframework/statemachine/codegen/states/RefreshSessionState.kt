@@ -39,11 +39,6 @@ sealed class RefreshSessionState : State {
         override val fetchAuthSessionState: FetchAuthSessionState?
     ) : RefreshSessionState()
 
-    data class RefreshingFederatedSession(
-        val federatedToken: FederatedToken,
-        override val fetchAuthSessionState: FetchAuthSessionState?
-    ) : RefreshSessionState()
-
     data class Refreshed(val id: String = "") : RefreshSessionState()
 
     open val fetchAuthSessionState: FetchAuthSessionState? = FetchAuthSessionState.NotStarted()
@@ -104,36 +99,11 @@ sealed class RefreshSessionState : State {
                         val action = fetchAuthSessionActions.refreshAuthSessionAction(refreshSessionEvent.logins)
                         StateResolution(RefreshingUnAuthSession(FetchAuthSessionState.NotStarted()), listOf(action))
                     }
-                    is RefreshSessionEvent.EventType.RefreshFederatedSession -> {
-                        val action = fetchAuthSessionActions.fetchAWSCredentialsAction(
-                            refreshSessionEvent.logins,
-                            refreshSessionEvent.identityId
-                        )
-                        StateResolution(
-                            RefreshingFederatedSession(
-                                refreshSessionEvent.federatedToken,
-                                FetchAuthSessionState.NotStarted()
-                            ),
-                            listOf(action)
-                        )
-                    }
                     else -> defaultResolution
                 }
                 is RefreshingUnAuthSession -> when (fetchAuthSessionEvent) {
                     is FetchAuthSessionEvent.EventType.Fetched -> {
                         val amplifyCredential = AmplifyCredential.IdentityPool(
-                            fetchAuthSessionEvent.identityId,
-                            fetchAuthSessionEvent.awsCredentials
-                        )
-                        val action = fetchAuthSessionActions.notifySessionRefreshedAction(amplifyCredential)
-                        StateResolution(Refreshed(), listOf(action))
-                    }
-                    else -> defaultResolution
-                }
-                is RefreshingFederatedSession -> when (fetchAuthSessionEvent) {
-                    is FetchAuthSessionEvent.EventType.Fetched -> {
-                        val amplifyCredential = AmplifyCredential.IdentityPoolFederated(
-                            oldState.federatedToken,
                             fetchAuthSessionEvent.identityId,
                             fetchAuthSessionEvent.awsCredentials
                         )
@@ -180,10 +150,6 @@ sealed class RefreshSessionState : State {
         override fun build(): RefreshSessionState = when (refreshSessionState) {
             is RefreshingUnAuthSession -> RefreshingUnAuthSession(fetchAuthSessionState)
             is RefreshingAuthSession -> RefreshingAuthSession(refreshSessionState.signedInData, fetchAuthSessionState)
-            is RefreshingFederatedSession -> RefreshingFederatedSession(
-                refreshSessionState.federatedToken,
-                fetchAuthSessionState
-            )
             else -> refreshSessionState
         }
     }

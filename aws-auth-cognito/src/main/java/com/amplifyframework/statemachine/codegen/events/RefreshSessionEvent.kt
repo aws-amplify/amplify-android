@@ -16,7 +16,6 @@
 package com.amplifyframework.statemachine.codegen.events
 
 import com.amplifyframework.statemachine.StateMachineEvent
-import com.amplifyframework.statemachine.codegen.data.FederatedToken
 import com.amplifyframework.statemachine.codegen.data.LoginsMapProvider
 import com.amplifyframework.statemachine.codegen.data.SignedInData
 import java.util.Date
@@ -26,11 +25,6 @@ class RefreshSessionEvent(val eventType: EventType, override val time: Date? = n
         data class RefreshUserPoolTokens(val signedInData: SignedInData) : EventType()
         data class RefreshAuthSession(val signedInData: SignedInData, val logins: LoginsMapProvider) : EventType()
         data class RefreshUnAuthSession(val logins: LoginsMapProvider) : EventType()
-        data class RefreshFederatedSession(
-            val federatedToken: FederatedToken,
-            val identityId: String,
-            val logins: LoginsMapProvider
-        ) : EventType()
         data class Refreshed(val signedInData: SignedInData) : EventType()
     }
 

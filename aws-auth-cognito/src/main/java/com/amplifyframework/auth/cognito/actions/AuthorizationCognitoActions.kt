@@ -99,12 +99,9 @@ object AuthorizationCognitoActions : AuthorizationActions {
                     RefreshSessionEvent.EventType.RefreshUnAuthSession(LoginsMapProvider.UnAuthLogins())
                 )
                 is AmplifyCredential.IdentityPoolFederated -> {
-                    val logins = LoginsMapProvider.AuthProviderLogins(amplifyCredential.federatedToken)
-                    RefreshSessionEvent(
-                        RefreshSessionEvent.EventType.RefreshFederatedSession(
-                            amplifyCredential.federatedToken,
-                            amplifyCredential.identityId,
-                            logins
+                    AuthorizationEvent(
+                        AuthorizationEvent.EventType.ThrowError(
+                            Exception("Refreshing credentials from federationToIdentityPool is not supported.")
                         )
                     )
                 }
