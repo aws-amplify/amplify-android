@@ -83,9 +83,9 @@ data class AWSCognitoAuthSession(
 fun AmplifyCredential.isValid(): Boolean {
     return when (this) {
         is AmplifyCredential.UserPool -> SessionHelper.isValidTokens(signedInData.cognitoUserPoolTokens)
-        is AmplifyCredential.IdentityPool -> SessionHelper.isValidSession(credentials)
         is AmplifyCredential.UserAndIdentityPool ->
             SessionHelper.isValidTokens(signedInData.cognitoUserPoolTokens) && SessionHelper.isValidSession(credentials)
+        is AmplifyCredential.IdentityPoolTypeCredential -> SessionHelper.isValidSession(credentials)
         else -> false
     }
 }
