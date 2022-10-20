@@ -42,7 +42,7 @@ object SignUpTestCaseGenerator : SerializableProvider {
         description = "Test that signup invokes proper cognito request and returns success",
         preConditions = PreConditions(
             "authconfiguration.json",
-            "SignedIn_SessionEstablished.json",
+            "SignedOut_Configured.json",
             mockedResponses = listOf(
                 MockResponse(
                     "cognito",
