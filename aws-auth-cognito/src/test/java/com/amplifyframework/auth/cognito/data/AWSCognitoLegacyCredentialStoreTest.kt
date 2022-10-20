@@ -21,6 +21,7 @@ import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 import com.amplifyframework.statemachine.codegen.data.AuthCredentialStore
 import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
+import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.data.IdentityPoolConfiguration
 import com.amplifyframework.statemachine.codegen.data.SignInMethod
 import com.amplifyframework.statemachine.codegen.data.SignedInData
@@ -133,7 +134,7 @@ class AWSCognitoLegacyCredentialStoreTest {
             )
         ).thenReturn(mockKeyValue)
 
-//        `when`(mockFactory.create(mockContext, deviceDetailsCacheKey, true)).thenReturn(mockKeyValue)
+        `when`(mockFactory.create(mockContext, deviceDetailsCacheKey, true)).thenReturn(mockKeyValue)
     }
 
     @Test
@@ -146,6 +147,19 @@ class AWSCognitoLegacyCredentialStoreTest {
         val actual = persistentStore.retrieveCredential()
 
         Assert.assertEquals(actual, getSRPCredential())
+    }
+
+    @Test
+    fun testRetrieveDeviceMetaData() {
+        setupUserPoolConfig()
+        setupIdentityPoolConfig()
+        setupKeyValueGetters()
+        `when`(mockKeyValue.get("signInMode")).thenReturn("2")
+        persistentStore = AWSCognitoLegacyCredentialStore(mockContext, mockConfig, mockFactory)
+
+        val actual = persistentStore.retrieveDeviceMetadata("username")
+
+        Assert.assertEquals(actual, getDeviceMetaData())
     }
 
     @Test
@@ -169,11 +183,10 @@ class AWSCognitoLegacyCredentialStoreTest {
         `when`(mockKeyValue.get(cachedRefreshTokenKey)).thenReturn("refreshToken")
         `when`(mockKeyValue.get(cachedTokenExpirationKey)).thenReturn("123123")
 
-        // TODO: test device metadata migration
         // Device Metadata
-//        `when`(mockKeyValue.get("DeviceKey")).thenReturn("someDeviceKey")
-//        `when`(mockKeyValue.get("DeviceGroupKey")).thenReturn("someDeviceGroupKey")
-//        `when`(mockKeyValue.get("DeviceSecret")).thenReturn("someSecret")
+        `when`(mockKeyValue.get("DeviceKey")).thenReturn("someDeviceKey")
+        `when`(mockKeyValue.get("DeviceGroupKey")).thenReturn("someDeviceGroupKey")
+        `when`(mockKeyValue.get("DeviceSecret")).thenReturn("someSecret")
 
         // AWS Creds
         `when`(mockKeyValue.get("$IDENTITY_POOL_ID.${"accessKey"}")).thenReturn("accessKeyId")
@@ -217,6 +230,16 @@ class AWSCognitoLegacyCredentialStoreTest {
             "identityPool",
             AWSCredentials("accessKeyId", "secretAccessKey", "sessionToken", 123123)
         )
+    }
+
+    private fun getDeviceMetaData(): DeviceMetadata {
+        return AmplifyCredential.DeviceData(
+            DeviceMetadata.Metadata(
+                "someDeviceKey",
+                "someDeviceGroupKey",
+                "someSecret"
+            )
+        ).deviceMetadata
     }
 
     private fun getHostedUICredential(): AmplifyCredential {
