@@ -54,6 +54,11 @@ allprojects {
     }
 }
 
+apply plugin: 'org.jetbrains.dokka'
+dokkaHtmlCollector {
+    outputDirectory = rootProject.buildDir
+}
+
 task clean(type: Delete) {
     delete rootProject.buildDir
 }
@@ -166,6 +171,20 @@ subprojects { project ->
     afterEvaluate {
         configureAndroidLibrary(project)
         project.apply from: '../jacoco.gradle'
+    }
+    if (!project.name.contains("test")) {
+        apply plugin: 'org.jetbrains.dokka'
+        dokkaHtml {
+            dokkaSourceSets {
+                configureEach {
+                    includeNonPublic.set(false)
+                    skipEmptyPackages.set(true)
+                    skipDeprecated.set(true)
+                    reportUndocumented.set(true)
+                    jdkVersion.set(8)
+                }
+            }
+        }
     }
 }
 
