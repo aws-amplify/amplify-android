@@ -105,6 +105,17 @@ data class CognitoUserPoolTokens(
             "refreshToken = ${refreshToken?.substring(0..4)}***" +
             ")"
     }
+
+    override fun equals(other: Any?): Boolean {
+        return if (super.equals(other)) {
+            true
+        } else if (other == null || javaClass != other.javaClass) {
+            false
+        } else {
+            val tokens = other as CognitoUserPoolTokens
+            idToken == tokens.idToken && accessToken == tokens.accessToken && refreshToken == tokens.refreshToken
+        }
+    }
 }
 
 /**

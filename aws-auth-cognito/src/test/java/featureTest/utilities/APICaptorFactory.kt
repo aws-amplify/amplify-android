@@ -17,12 +17,14 @@ package featureTest.utilities
 
 import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.result.AuthResetPasswordResult
+import com.amplifyframework.auth.result.AuthSignInResult
 import com.amplifyframework.auth.result.AuthSignUpResult
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.testutils.featuretest.ExpectationShapes
 import com.amplifyframework.testutils.featuretest.ResponseType
 import com.amplifyframework.testutils.featuretest.auth.AuthAPI
 import com.amplifyframework.testutils.featuretest.auth.AuthAPI.resetPassword
+import com.amplifyframework.testutils.featuretest.auth.AuthAPI.signIn
 import com.amplifyframework.testutils.featuretest.auth.AuthAPI.signUp
 import io.mockk.CapturingSlot
 import io.mockk.every
@@ -40,7 +42,8 @@ class APICaptorFactory(
     companion object {
         val onSuccess = mapOf(
             resetPassword to mockk<Consumer<AuthResetPasswordResult>>(),
-            signUp to mockk<Consumer<AuthSignUpResult>>()
+            signUp to mockk<Consumer<AuthSignUpResult>>(),
+            signIn to mockk<Consumer<AuthSignInResult>>()
         )
         val onError = mockk<Consumer<AuthException>>()
         val successCaptors: MutableMap<AuthAPI, CapturingSlot<*>> = mutableMapOf()
@@ -64,6 +67,12 @@ class APICaptorFactory(
             signUp -> {
                 val resultCaptor = slot<AuthSignUpResult>()
                 val consumer = onSuccess[apiName] as Consumer<AuthSignUpResult>
+                every { consumer.accept(capture(resultCaptor)) } answers { latch.countDown() }
+                successCaptors[apiName] = resultCaptor
+            }
+            signIn -> {
+                val resultCaptor = slot<AuthSignInResult>()
+                val consumer = onSuccess[apiName] as Consumer<AuthSignInResult>
                 every { consumer.accept(capture(resultCaptor)) } answers { latch.countDown() }
                 successCaptors[apiName] = resultCaptor
             }

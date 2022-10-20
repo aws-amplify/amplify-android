@@ -12,14 +12,14 @@
         "CredentialsProvider": {
           "CognitoIdentity": {
             "Default": {
-              "PoolId": "testIdentityPoolId",
+              "PoolId": "us-east-1_testIdentityPoolId",
               "Region": "us-east-1"
             }
           }
         },
         "CognitoUserPool": {
           "Default": {
-            "PoolId": "testUserPoolId",
+            "PoolId": "us-east-1_testUserPoolId",
             "AppClientId": "testAppClientId",
             "AppClientSecret": "testAppClientSecret",
             "Region": "us-east-1"
