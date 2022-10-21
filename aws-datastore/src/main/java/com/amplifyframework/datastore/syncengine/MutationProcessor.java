@@ -387,6 +387,7 @@ final class MutationProcessor {
         // If error was not due to ConflictUnhandled, then mark it as an AppSync
         // error and bubble it up further to be taken care of inside
         // processOutboxItem() method.
+        //This is the place where we need to do fine grain the irrecoverable error
         return Single.error(new DataStoreException.GraphQLResponseException(
             "Mutation failed. Failed mutation = " + pendingMutation + ". " +
                 "AppSync response contained errors = " + errors, errors

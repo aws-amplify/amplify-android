@@ -271,6 +271,7 @@ final class SyncProcessor {
             GraphQLRequest<PaginatedResult<ModelWithMetadata<T>>> request) {
         return Single.create(emitter -> {
             Cancelable cancelable = appSync.sync(request, result -> {
+                //This is the place where we need to do fine grain the irrecoverable error
                 if (result.hasErrors()) {
                     emitter.onError(new DataStoreException.IrRecoverableException(
                             String.format("A model sync failed: %s", result.getErrors()),
