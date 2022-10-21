@@ -113,6 +113,7 @@ public final class SyncRecoverabilityIntegrationTest {
         Person result1 = synchronousDataStore.get(Person.class, person1.getId());
         assertTrue(latch.await(30, TimeUnit.SECONDS));
         assertEquals(person1, result1);
+        synchronousDataStore.stop();
     }
 
     /**
@@ -149,6 +150,7 @@ public final class SyncRecoverabilityIntegrationTest {
         Person result1 = synchronousDataStore.get(Person.class, person1.getId());
         assertTrue(mutationLatch.await(30, TimeUnit.SECONDS));
         assertEquals(person1, result1);
+        synchronousDataStore.stop();
     }
 
     @NonNull

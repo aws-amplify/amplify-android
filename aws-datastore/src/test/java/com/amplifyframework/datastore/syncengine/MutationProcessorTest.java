@@ -148,7 +148,7 @@ public final class MutationProcessorTest {
         // Start draining the outbox which has one mutation enqueued,
         // and make sure that outbox status is published to hub.
         mutationProcessor.startDrainingMutationOutbox();
-        statusAccumulator.await();
+        statusAccumulator.await(10, TimeUnit.SECONDS);
         mutationProcessor.stopDrainingMutationOutbox();
     }
 
@@ -293,7 +293,7 @@ public final class MutationProcessorTest {
 
         // Start the mutation processor and wait for hub event.
         mutationProcessor.startDrainingMutationOutbox();
-        errorAccumulator.await();
+        errorAccumulator.await(10, TimeUnit.SECONDS);
         mutationProcessor.stopDrainingMutationOutbox();
     }
 
