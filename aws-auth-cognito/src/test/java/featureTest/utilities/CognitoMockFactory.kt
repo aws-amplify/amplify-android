@@ -35,11 +35,11 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.RespondToAuthChalle
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.SignUpRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.SignUpResponse
 import aws.smithy.kotlin.runtime.time.Instant
+import com.amplifyframework.auth.cognito.featuretest.MockResponse
+import com.amplifyframework.auth.cognito.featuretest.ResponseType
+import com.amplifyframework.auth.cognito.featuretest.serializers.CognitoIdentityExceptionSerializer
+import com.amplifyframework.auth.cognito.featuretest.serializers.CognitoIdentityProviderExceptionSerializer
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
-import com.amplifyframework.testutils.featuretest.MockResponse
-import com.amplifyframework.testutils.featuretest.ResponseType
-import com.amplifyframework.testutils.featuretest.auth.serializers.CognitoIdentityExceptionSerializer
-import com.amplifyframework.testutils.featuretest.auth.serializers.CognitoIdentityProviderExceptionSerializer
 import io.mockk.CapturingSlot
 import io.mockk.coEvery
 import io.mockk.mockkObject
