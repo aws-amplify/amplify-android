@@ -36,7 +36,7 @@ import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
  * @param userSubResult The id which comes from User Pools.
  * @param userPoolTokensResult The tokens which come from User Pools (access, id, refresh tokens).
  */
-data class AWSCognitoAuthSession(
+data class AWSCognitoAuthSession internal constructor(
     @get:JvmName("getSignedIn")
     val isSignedIn: Boolean,
     val identityIdResult: AuthSessionResult<String>,
@@ -44,7 +44,7 @@ data class AWSCognitoAuthSession(
     val userSubResult: AuthSessionResult<String>,
     val userPoolTokensResult: AuthSessionResult<AWSCognitoUserPoolTokens>
 ) : AuthSession(isSignedIn) {
-    companion object {
+    internal companion object {
         fun getCredentialsResult(awsCredentials: CognitoCredentials): AuthSessionResult<AWSCredentials> =
             with(awsCredentials) {
                 AWSCredentials.createAWSCredentials(accessKeyId, secretAccessKey, sessionToken, expiration)
@@ -79,7 +79,7 @@ data class AWSCognitoAuthSession(
     }
 }
 
-fun AmplifyCredential.isValid(): Boolean {
+internal fun AmplifyCredential.isValid(): Boolean {
     return when (this) {
         is AmplifyCredential.UserPool -> SessionHelper.isValidTokens(signedInData.cognitoUserPoolTokens)
         is AmplifyCredential.IdentityPool -> SessionHelper.isValidSession(credentials)
@@ -89,7 +89,9 @@ fun AmplifyCredential.isValid(): Boolean {
     }
 }
 
-fun AmplifyCredential.getCognitoSession(exception: AuthException = SignedOutException()): AWSCognitoAuthSession {
+internal fun AmplifyCredential.getCognitoSession(
+    exception: AuthException = SignedOutException()
+): AWSCognitoAuthSession {
     return when (this) {
         is AmplifyCredential.UserPool -> AWSCognitoAuthSession(
             true,

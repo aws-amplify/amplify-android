@@ -13,17 +13,17 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.testutils.featuretest.auth.generators
+package com.amplifyframework.auth.cognito.featuretest.generators
 
 import aws.sdk.kotlin.services.cognitoidentity.model.CognitoIdentityException
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.CognitoIdentityProviderException
 import com.amplifyframework.auth.AuthException
+import com.amplifyframework.auth.cognito.featuretest.FeatureTestCase
+import com.amplifyframework.auth.cognito.featuretest.serializers.CognitoIdentityExceptionSerializer
+import com.amplifyframework.auth.cognito.featuretest.serializers.CognitoIdentityProviderExceptionSerializer
+import com.amplifyframework.auth.cognito.featuretest.serializers.deserializeToAuthState
+import com.amplifyframework.auth.cognito.featuretest.serializers.serialize
 import com.amplifyframework.statemachine.codegen.states.AuthState
-import com.amplifyframework.testutils.featuretest.FeatureTestCase
-import com.amplifyframework.testutils.featuretest.auth.serializers.CognitoIdentityExceptionSerializer
-import com.amplifyframework.testutils.featuretest.auth.serializers.CognitoIdentityProviderExceptionSerializer
-import com.amplifyframework.testutils.featuretest.auth.serializers.deserializeToAuthState
-import com.amplifyframework.testutils.featuretest.auth.serializers.serialize
 import java.io.File
 import java.io.FileWriter
 import kotlinx.serialization.encodeToString

@@ -19,7 +19,7 @@ import com.amplifyframework.statemachine.codegen.data.AWSCredentials
 import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
 import java.time.Instant
 
-object SessionHelper {
+internal object SessionHelper {
     /**
      * Returns expiration of this id token.
      * @return id token expiration claim as {@link java.time.Instant} in UTC.

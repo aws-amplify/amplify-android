@@ -21,7 +21,7 @@ import com.amplifyframework.statemachine.codegen.data.FederatedToken
 import com.amplifyframework.statemachine.codegen.data.SignedInData
 import com.amplifyframework.statemachine.codegen.events.DeleteUserEvent
 
-interface AuthorizationActions {
+internal interface AuthorizationActions {
     fun configureAuthorizationAction(): Action
     fun initializeFetchUnAuthSession(): Action
     fun initializeFetchAuthSession(signedInData: SignedInData): Action

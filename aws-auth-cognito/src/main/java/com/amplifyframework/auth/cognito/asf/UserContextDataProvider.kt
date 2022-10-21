@@ -28,7 +28,7 @@ import org.json.JSONObject
  * @param configuration config containing cognito userPoolId for the application
  * and secret key (for now, this would be application clientId) used while generating signature.
  */
-class UserContextDataProvider(private val context: Context, private val configuration: UserPoolConfiguration) {
+internal class UserContextDataProvider(private val context: Context, private val configuration: UserPoolConfiguration) {
     companion object {
         private val TAG = UserContextDataProvider::class.java.simpleName
         private const val VERSION_VALUE = "ANDROID20171114"

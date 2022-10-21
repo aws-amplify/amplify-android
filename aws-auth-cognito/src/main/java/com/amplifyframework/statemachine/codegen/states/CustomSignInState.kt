@@ -22,7 +22,7 @@ import com.amplifyframework.statemachine.StateResolution
 import com.amplifyframework.statemachine.codegen.actions.CustomSignInActions
 import com.amplifyframework.statemachine.codegen.events.CustomSignInEvent
 
-sealed class CustomSignInState : State {
+internal sealed class CustomSignInState : State {
     data class NotStarted(val id: String = "") : CustomSignInState()
     data class Initiating(val id: String = "") : CustomSignInState()
     data class SignedIn(val id: String = "") : CustomSignInState()

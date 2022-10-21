@@ -30,7 +30,7 @@ import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
 import com.amplifyframework.statemachine.codegen.events.SignOutEvent
 
-sealed class AuthenticationState : State {
+internal sealed class AuthenticationState : State {
     data class NotConfigured(val id: String = "") : AuthenticationState()
     data class Configured(val id: String = "") : AuthenticationState()
     data class SigningIn(var signInState: SignInState = SignInState.NotStarted()) : AuthenticationState()

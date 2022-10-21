@@ -32,7 +32,7 @@ import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.CustomSignInEvent
 import com.amplifyframework.statemachine.codegen.events.SignInEvent
 
-object SignInCustomActions : CustomSignInActions {
+internal object SignInCustomCognitoActions : CustomSignInActions {
     private const val KEY_SECRET_HASH = "SECRET_HASH"
     private const val KEY_USERNAME = "USERNAME"
     private const val KEY_DEVICE_KEY = "DEVICE_KEY"

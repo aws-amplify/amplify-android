@@ -19,7 +19,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-sealed class SignInMethod {
+internal sealed class SignInMethod {
 
     @Serializable
     @SerialName("SignInMethod.ApiBased")

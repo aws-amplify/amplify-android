@@ -23,7 +23,7 @@ import androidx.security.crypto.EncryptedSharedPreferences.PrefKeyEncryptionSche
 import androidx.security.crypto.EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
 import androidx.security.crypto.MasterKeys
 
-class EncryptedKeyValueRepository(
+internal class EncryptedKeyValueRepository(
     private val context: Context,
     private val sharedPreferencesName: String,
 ) : KeyValueRepository {

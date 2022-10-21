@@ -17,7 +17,7 @@ package com.amplifyframework.statemachine.state
 
 import java.util.Date
 
-enum class Color : com.amplifyframework.statemachine.State {
+internal enum class Color : com.amplifyframework.statemachine.State {
     red, green, blue, yellow;
 
     override val type = name

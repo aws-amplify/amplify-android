@@ -21,7 +21,7 @@ import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.FederatedToken
 import java.util.Date
 
-class AuthorizationEvent(val eventType: EventType, override val time: Date? = null) :
+internal class AuthorizationEvent(val eventType: EventType, override val time: Date? = null) :
     StateMachineEvent {
     sealed class EventType {
         object Configure : EventType()

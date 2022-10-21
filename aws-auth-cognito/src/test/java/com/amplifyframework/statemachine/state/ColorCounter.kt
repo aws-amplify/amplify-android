@@ -21,7 +21,7 @@ import com.amplifyframework.statemachine.StateMachineEvent
 import com.amplifyframework.statemachine.StateMachineResolver
 import com.amplifyframework.statemachine.StateResolution
 
-data class ColorCounter(val color: Color, val counter: Counter, val hasTriggered: Boolean) :
+internal data class ColorCounter(val color: Color, val counter: Counter, val hasTriggered: Boolean) :
     State {
     override val type = "${color.type}.${counter.type}"
 

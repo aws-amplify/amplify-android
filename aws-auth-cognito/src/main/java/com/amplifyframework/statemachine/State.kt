@@ -30,7 +30,7 @@ package com.amplifyframework.statemachine
  * may be derived from the values of its substates, or they may evolve independently in response to Events. A State may
  * have at most one "parent" State.
  */
-interface State {
+internal interface State {
     val type: String
         get() = this.javaClass.simpleName
 
