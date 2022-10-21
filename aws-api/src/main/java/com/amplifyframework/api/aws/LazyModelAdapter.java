@@ -1,12 +1,11 @@
-package com.amplifyframework.datastore.model;
+package com.amplifyframework.api.aws;
 
 import android.util.Log;
 
 
 import com.amplifyframework.core.model.LazyModel;
 import com.amplifyframework.core.model.Model;
-
-import com.google.gson.Gson;
+import com.amplifyframework.core.model.SchemaRegistry;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
@@ -18,11 +17,11 @@ import com.google.gson.JsonSerializer;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 public class LazyModelAdapter<M extends Model> implements JsonDeserializer<LazyModel<M>>,
         JsonSerializer<LazyModel<M>> {
-
 
     @SuppressWarnings("unchecked")
     @Override
@@ -35,10 +34,17 @@ public class LazyModelAdapter<M extends Model> implements JsonDeserializer<LazyM
                 " typeOfT type name" + type + " context " +
                 context);
         HashMap<String, Map<String, Object>> predicateMap = new HashMap<>();
-        JsonObject jsonObject = json.getAsJsonObject();
-        Map<String, Object> predicateKeyMap = new Gson().fromJson(jsonObject, HashMap.class);
+         Map<String, Object> predicateKeyMap = new HashMap<>();
+        Iterator<String> primaryKeysIterator = SchemaRegistry.instance()
+                .getModelSchemaForModelClass(type)
+                .getPrimaryIndexFields().iterator();
+        JsonObject jsonObject = (JsonObject) json;
+        while (primaryKeysIterator.hasNext()){
+            String primaryKey = primaryKeysIterator.next();
+            predicateKeyMap.put(primaryKey, jsonObject.get(primaryKey));
+        }
         predicateMap.put(type.getSimpleName(), predicateKeyMap);
-        return new DataStoreLazyModel<M>(type, predicateMap, new DatastoreLazyQueryPredicate<>());
+        return new AppSyncLazyModel<>(type, predicateMap, new AppSyncLazyQueryPredicate<>());
     }
 
     @Override

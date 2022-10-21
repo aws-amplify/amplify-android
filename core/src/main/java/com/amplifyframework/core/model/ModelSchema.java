@@ -209,6 +209,7 @@ public final class ModelSchema {
     private static ModelField createModelField(Field field) {
         com.amplifyframework.core.model.annotations.ModelField annotation =
                 field.getAnnotation(com.amplifyframework.core.model.annotations.ModelField.class);
+        String[] targetNames;
         if (annotation != null) {
             final String fieldName = field.getName();
             final Class<?> fieldType;
@@ -234,6 +235,7 @@ public final class ModelSchema {
                     .isEnum(Enum.class.isAssignableFrom(field.getType()))
                     .isModel(Model.class.isAssignableFrom(field.getType()))
                     .isLazyModel(LazyModel.class.isAssignableFrom(field.getType()))
+                    .isLazyList(LazyList.class.isAssignableFrom(field.getType()))
                     .authRules(authRules)
                     .build();
         }
@@ -268,6 +270,7 @@ public final class ModelSchema {
             return ModelAssociation.builder()
                     .name(HasOne.class.getSimpleName())
                     .associatedName(association.associatedWith())
+                    .targetNames(association.targetNames())
                     .associatedType(association.type().getSimpleName())
                     .build();
         }
@@ -275,6 +278,7 @@ public final class ModelSchema {
             HasMany association = Objects.requireNonNull(field.getAnnotation(HasMany.class));
             return ModelAssociation.builder()
                     .name(HasMany.class.getSimpleName())
+                    .targetNames(association.targetNames())
                     .associatedName(association.associatedWith())
                     .associatedType(association.type().getSimpleName())
                     .build();

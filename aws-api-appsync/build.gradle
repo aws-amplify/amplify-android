@@ -21,7 +21,11 @@ apply plugin: 'kotlin-android-extensions'
 apply plugin: "org.jetbrains.dokka"
 
 dependencies {
+    implementation dependency.kotlin.stdlib
+    implementation dependency.kotlin.coroutines
+    implementation dependency.androidx.core_ktx
     implementation project(':core')
+    implementation project(':core-kotlin')
 
     implementation dependency.androidx.annotation
     implementation dependency.androidx.core

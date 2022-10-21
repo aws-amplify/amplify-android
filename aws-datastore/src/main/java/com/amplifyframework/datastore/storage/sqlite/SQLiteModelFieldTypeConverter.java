@@ -27,11 +27,13 @@ import com.amplifyframework.core.model.LazyModel;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.SchemaHelper;
 import com.amplifyframework.core.model.SchemaRegistry;
 import com.amplifyframework.core.model.SerializedModel;
 import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.core.model.types.JavaFieldType;
 import com.amplifyframework.datastore.DataStoreException;
+import com.amplifyframework.datastore.model.DatastoreLazyQueryPredicate;
 import com.amplifyframework.datastore.model.ModelFieldTypeConverter;
 import com.amplifyframework.datastore.model.ModelHelper;
 import com.amplifyframework.datastore.model.DataStoreLazyModel;
@@ -49,6 +51,8 @@ import java.time.OffsetTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -210,12 +214,16 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
             // Skip if there is no equivalent column for field in object
             final SQLiteColumn column = columns.get(field.getName());
             if (column == null) {
-                LOGGER.verbose(String.format("Column with name %s does not exist", field.getName()));
-                return null;
+                if (field.isLazyModel() || field.isLazyList()) {
+                    return getDataStoreLazyModelForNonBelongsTo(cursor, field);
+                } else {
+                    LOGGER.verbose(String.format("Column with name %s does not exist", field.getName()));
+                    return null;
+                }
             }
 
             String columnName = column.getAliasedName();
-            if (javaFieldType == JavaFieldType.MODEL) {
+            if (javaFieldType == JavaFieldType.MODEL || javaFieldType == JavaFieldType.LAZY_MODEL) {
                 int newInnerModelCount = 1;
                 String fieldTargetType = field.getTargetType();
                 if (cursorInnerModelCounts.containsKey(fieldTargetType)) {
@@ -231,7 +239,7 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
                     columnName += modelCount;
                 }
             }
-            
+
             final int columnIndex = cursor.getColumnIndexOrThrow(columnName);
             // This check is necessary, because primitive values will return 0 even when null
             if (cursor.isNull(columnIndex)) {
@@ -250,7 +258,7 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
                 case MODEL:
                     return convertModelAssociationToTarget(cursor, field);
                 case LAZY_MODEL:
-                    return convertLazyModelAssociationToTarget(cursor, field);
+                    return convertLazyModelAssociationToTargetForBelongsTo(cursor, field);
                 case ENUM:
                     return convertEnumValueToTarget(valueAsString, field);
                 case CUSTOM_TYPE:
@@ -280,11 +288,27 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
         } catch (Exception exception) {
             throw new DataStoreException(
                     String.format("Error converting field \"%s\" from model \"%s\"",
-                    field.getName(), parentSchema.getName()),
+                            field.getName(), parentSchema.getName()),
                     exception,
                     AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION
             );
         }
+    }
+
+
+        @NonNull
+    private Map<String, Object> getDataStoreLazyModelForNonBelongsTo
+            (@NonNull Cursor cursor, @NonNull ModelField field) {
+        Map<String, Object> mapOfKeyIdentifiers = new HashMap<>();
+        SQLiteColumn column = SQLiteTable.fromSchema(parentSchema)
+                .getPrimaryKey();
+        final int columnIndex = cursor.getColumnIndexOrThrow(column.getAliasedName());
+        Object value = cursor.getString(columnIndex);
+        String associatedFieldName = field.getName();
+        String foreignKeyName = SQLiteTable.getForeignKeyColumnName(parentSchema.getVersion(),
+                associatedFieldName, parentSchema.getAssociations().get(associatedFieldName));
+        mapOfKeyIdentifiers.put(foreignKeyName, value);
+        return mapOfKeyIdentifiers;
     }
 
     private Object convertModelAssociationToTarget(
@@ -299,8 +323,8 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
         return nestedModelConverter.buildMapForModel(cursor);
     }
 
-    @SuppressWarnings("unchecked") // Cast Type to Class<? extends Model>
-    private <M extends Model> Object convertLazyModelAssociationToTarget(
+    @SuppressWarnings("unchecked") // Cast Type to Class<M>
+    private <M extends Model> DataStoreLazyModel<M> convertLazyModelAssociationToTargetForBelongsTo(
             @NonNull Cursor cursor, @NonNull ModelField field) throws DataStoreException {
         // Eager load model if the necessary columns are present inside the cursor.
         // At the time of implementation, cursor should have been joined with these
@@ -309,10 +333,21 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
                 schemaRegistry.getModelSchemaForModelClass(field.getTargetType());
         SQLiteModelFieldTypeConverter nestedModelConverter =
                 new SQLiteModelFieldTypeConverter(innerModelSchema, schemaRegistry, gson, cursorInnerModelCounts);
-        String jsonString = gson.toJson(nestedModelConverter.buildMapForModel(cursor));
+        Map<String, Object> nestedModelMap = nestedModelConverter.buildMapForModel(cursor);
+        Map.Entry<String, List<String>> set = new SchemaHelper()
+                .getAssociatedKeys(parentSchema, field).entrySet().iterator().next();
+        Map<String, Object> identityKeyMap = new HashMap<>();
+        for (String identityField: innerModelSchema.getPrimaryIndexFields()) {
+            identityKeyMap.put(identityField, nestedModelMap.get(identityField));
+        }
+
+        Map<String, Map<String, Object>> foreignKeyFieldMap =  new HashMap<>();
+        foreignKeyFieldMap.put(innerModelSchema.getModelClass().getSimpleName(), identityKeyMap);
+        String jsonString = gson.toJson(nestedModelMap);
         Model model = gson.fromJson(jsonString,
                 innerModelSchema.getModelClass());
-        return new DataStoreLazyModel<M>((M) model, (Class<M>) innerModelSchema.getModelClass());
+        return new DataStoreLazyModel<M>((Class<M>) innerModelSchema.getModelClass(),
+                foreignKeyFieldMap, new DatastoreLazyQueryPredicate<>());
     }
 
     private Object convertCustomTypeToTarget(Cursor cursor, ModelField field, int columnIndex) throws IOException {

@@ -22,7 +22,6 @@ import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.PaginatedResult;
-import com.amplifyframework.util.GsonFactory;
 import com.amplifyframework.util.TypeMaker;
 
 import com.google.gson.Gson;
@@ -57,7 +56,8 @@ final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
     @Override
     public <T> GraphQLResponse<T> buildResponse(GraphQLRequest<T> request, String responseJson)
             throws ApiException {
-        Type responseType = TypeMaker.getParameterizedType(GraphQLResponse.class, request.getResponseType());
+        Type responseType = TypeMaker.getParameterizedType(GraphQLResponse.class,
+                request.getResponseType());
         try {
             Gson responseGson = gson.newBuilder()
                 .registerTypeHierarchyAdapter(Iterable.class, new IterableDeserializer<>(request))

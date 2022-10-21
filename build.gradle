@@ -23,7 +23,7 @@ buildscript {
 
     dependencies {
         classpath 'com.android.tools.build:gradle:4.0.2'
-        classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.6.0'
+        classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.7.10'
         classpath "org.jetbrains.kotlin:kotlin-android-extensions:1.6.0"
         classpath "org.jetbrains.dokka:dokka-gradle-plugin:1.6.10"
         classpath 'org.jlleitschuh.gradle:ktlint-gradle:9.4.1'
@@ -141,7 +141,6 @@ ext {
 subprojects { project ->
     afterEvaluate {
         configureAndroidLibrary(project)
-        project.apply from: '../jacoco.gradle'
     }
 }
 
