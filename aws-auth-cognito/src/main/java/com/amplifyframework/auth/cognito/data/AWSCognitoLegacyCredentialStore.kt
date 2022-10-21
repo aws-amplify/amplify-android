@@ -42,10 +42,12 @@ internal class AWSCognitoLegacyCredentialStore(
         const val AWS_MOBILE_CLIENT_PROVIDER = "com.amazonaws.mobile.client"
         const val APP_TOKENS_INFO_CACHE = "CognitoIdentityProviderCache"
         const val APP_DEVICE_INFO_CACHE = "CognitoIdentityProviderDeviceCache"
+        const val LOCAL_STORAGE_PATH = "AWS.Cognito.ContextData"
 
         private const val DEVICE_KEY = "DeviceKey"
         private const val DEVICE_GROUP_KEY = "DeviceGroupKey"
         private const val DEVICE_SECRET_KEY = "DeviceSecret"
+        private const val LOCAL_STORAGE_DEVICE_ID_KEY = "CognitoDeviceId"
 
         private const val ID_KEY: String = "identityId"
         private const val AK_KEY: String = "accessKey"
@@ -85,14 +87,9 @@ internal class AWSCognitoLegacyCredentialStore(
 
     private lateinit var deviceKeyValue: KeyValueRepository
 
-    @Synchronized
-    override fun saveCredential(credential: AmplifyCredential) {
-        // no-op
-    }
-
-    override fun saveDeviceMetadata(username: String, deviceMetadata: DeviceMetadata) {
-        // no-op
-    }
+    override fun saveCredential(credential: AmplifyCredential) = Unit
+    override fun saveDeviceMetadata(username: String, deviceMetadata: DeviceMetadata) = Unit
+    override fun saveASFDevice(device: AmplifyCredential.ASFDevice) = Unit
 
     @Synchronized
     override fun retrieveCredential(): AmplifyCredential {
@@ -122,6 +119,13 @@ internal class AWSCognitoLegacyCredentialStore(
         }
     }
 
+    @Synchronized
+    override fun retrieveASFDevice(): AmplifyCredential.ASFDevice? {
+        val sharedPreferences = context.getSharedPreferences(LOCAL_STORAGE_PATH, Context.MODE_PRIVATE)
+        val deviceId = sharedPreferences?.getString(LOCAL_STORAGE_DEVICE_ID_KEY, null)
+        return deviceId?.let { AmplifyCredential.ASFDevice(it) }
+    }
+
     override fun deleteCredential() {
         deleteAWSCredentials()
         deleteIdentityId()
@@ -129,14 +133,20 @@ internal class AWSCognitoLegacyCredentialStore(
     }
 
     override fun deleteDeviceKeyCredential(username: String) {
-        // no-op
+        deviceKeyValue.apply {
+            remove(DEVICE_KEY)
+            remove(DEVICE_GROUP_KEY)
+            remove(DEVICE_SECRET_KEY)
+        }
+    }
+
+    override fun deleteASFDevice() {
+        val sharedPreferences = context.getSharedPreferences(LOCAL_STORAGE_PATH, Context.MODE_PRIVATE)
+        sharedPreferences.edit().remove(LOCAL_STORAGE_DEVICE_ID_KEY).apply()
     }
 
     private fun deleteCognitoUserPoolTokens() {
         val keys = getTokenKeys()
-        val username = keys[APP_LAST_AUTH_USER]?.let { tokensKeyValue.get(it) }
-        deleteDeviceMetadata(username)
-
         keys[APP_LAST_AUTH_USER]?.let { tokensKeyValue.remove(it) }
         keys[TOKEN_TYPE_ID]?.let { tokensKeyValue.remove(it) }
         keys[TOKEN_TYPE_ACCESS]?.let { tokensKeyValue.remove(it) }
@@ -154,14 +164,6 @@ internal class AWSCognitoLegacyCredentialStore(
             remove(namespace(SK_KEY))
             remove(namespace(ST_KEY))
             remove(namespace(EXP_KEY))
-        }
-    }
-
-    private fun deleteDeviceMetadata(username: String?) {
-        deviceKeyValue.apply {
-            remove(DEVICE_KEY)
-            remove(DEVICE_GROUP_KEY)
-            remove(DEVICE_SECRET_KEY)
         }
     }
 
@@ -204,6 +206,7 @@ internal class AWSCognitoLegacyCredentialStore(
         )
     }
 
+    @Synchronized
     override fun retrieveDeviceMetadata(username: String): DeviceMetadata {
         val deviceDetailsCacheKey = String.format(userDeviceDetailsCacheKey, username)
         deviceKeyValue = keyValueRepoFactory.create(context, deviceDetailsCacheKey)

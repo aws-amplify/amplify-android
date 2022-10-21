@@ -20,8 +20,11 @@ import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.StoreActions
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.CredentialType
+import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.errors.CredentialStoreError
 import com.amplifyframework.statemachine.codegen.events.CredentialStoreEvent
+import java.util.Date
+import java.util.UUID
 
 object CredentialStoreActions : StoreActions {
     override fun migrateLegacyCredentialStoreAction() =
@@ -30,13 +33,28 @@ object CredentialStoreActions : StoreActions {
             val evt = try {
                 val credentials = legacyCredentialStore.retrieveCredential()
                 if (credentials != AmplifyCredential.Empty) {
-                    val username = (credentials as AmplifyCredential.UserPoolTypeCredential).signedInData.username
-                    val deviceMetaData = legacyCredentialStore.retrieveDeviceMetadata(username)
+                    // migrate credentials
                     credentialStore.saveCredential(credentials)
-                    credentialStore.saveDeviceMetadata(username, deviceMetaData)
                     legacyCredentialStore.deleteCredential()
-                    legacyCredentialStore.deleteDeviceKeyCredential(username)
+
+                    // migrate device data
+                    if (credentials is AmplifyCredential.UserPoolTypeCredential) {
+                        val username = credentials.signedInData.username
+                        val deviceMetaData = legacyCredentialStore.retrieveDeviceMetadata(username)
+                        if (deviceMetaData != DeviceMetadata.Empty) {
+                            credentialStore.saveDeviceMetadata(username, deviceMetaData)
+                            legacyCredentialStore.deleteDeviceKeyCredential(username)
+                        }
+                    }
                 }
+
+                // migrate ASF device
+                val asfDevice = legacyCredentialStore.retrieveASFDevice()
+                asfDevice?.let {
+                    credentialStore.saveASFDevice(asfDevice)
+                    legacyCredentialStore.deleteASFDevice()
+                }
+
                 CredentialStoreEvent(CredentialStoreEvent.EventType.LoadCredentialStore(CredentialType.Amplify))
             } catch (error: CredentialStoreError) {
                 CredentialStoreEvent(CredentialStoreEvent.EventType.ThrowError(error))
@@ -50,15 +68,9 @@ object CredentialStoreActions : StoreActions {
             logger.verbose("$id Starting execution")
             val evt = try {
                 when (credentialType) {
-                    CredentialType.Amplify -> {
-                        credentialStore.deleteCredential()
-                    }
-                    is CredentialType.Device -> {
-                        credentialStore.deleteDeviceKeyCredential(credentialType.username)
-                    }
-                    CredentialType.ASF -> {
-                        // TODO
-                    }
+                    CredentialType.Amplify -> credentialStore.deleteCredential()
+                    is CredentialType.Device -> credentialStore.deleteDeviceKeyCredential(credentialType.username)
+                    CredentialType.ASF -> credentialStore.deleteASFDevice()
                 }
                 CredentialStoreEvent(CredentialStoreEvent.EventType.CompletedOperation(AmplifyCredential.Empty))
             } catch (error: CredentialStoreError) {
@@ -73,17 +85,13 @@ object CredentialStoreActions : StoreActions {
             logger.verbose("$id Starting execution")
             val evt = try {
                 val credentials: AmplifyCredential = when (credentialType) {
-                    CredentialType.Amplify -> {
-                        credentialStore.retrieveCredential()
-                    }
+                    CredentialType.Amplify -> credentialStore.retrieveCredential()
                     is CredentialType.Device -> {
-                        AmplifyCredential.DeviceData(
-                            credentialStore.retrieveDeviceMetadata(credentialType.username)
-                        )
+                        AmplifyCredential.DeviceData(credentialStore.retrieveDeviceMetadata(credentialType.username))
                     }
-                    CredentialType.ASF -> {
-                        AmplifyCredential.Empty
-                    }
+                    CredentialType.ASF -> credentialStore.retrieveASFDevice() ?: AmplifyCredential.ASFDevice(
+                        "${UUID.randomUUID()}:${Date().time}"
+                    )
                 }
                 CredentialStoreEvent(CredentialStoreEvent.EventType.CompletedOperation(credentials))
             } catch (error: CredentialStoreError) {
@@ -93,27 +101,21 @@ object CredentialStoreActions : StoreActions {
             dispatcher.send(evt)
         }
 
-    override fun storeCredentialsAction(
-        credentialType: CredentialType,
-        credentials: AmplifyCredential
-    ) =
+    override fun storeCredentialsAction(credentialType: CredentialType, credentials: AmplifyCredential) =
         Action<CredentialStoreEnvironment>("StoreCredentials") { id, dispatcher ->
             logger.verbose("$id Starting execution")
             val evt = try {
                 when (credentialType) {
-                    CredentialType.Amplify -> {
-                        credentialStore.saveCredential(credentials)
-                    }
+                    CredentialType.Amplify -> credentialStore.saveCredential(credentials)
                     is CredentialType.Device -> {
-                        if (credentials is AmplifyCredential.DeviceMetaDataTypeCredential) {
-                            credentialStore.saveDeviceMetadata(
-                                credentialType.username,
-                                (credentials as AmplifyCredential.DeviceMetaDataTypeCredential).deviceMetadata
-                            )
+                        val deviceData = credentials as? AmplifyCredential.DeviceMetaDataTypeCredential
+                        deviceData?.let {
+                            credentialStore.saveDeviceMetadata(credentialType.username, it.deviceMetadata)
                         }
                     }
                     CredentialType.ASF -> {
-                        // TODO
+                        val asfDevice = credentials as? AmplifyCredential.ASFDevice
+                        asfDevice?.let { credentialStore.saveASFDevice(it) }
                     }
                 }
                 CredentialStoreEvent(CredentialStoreEvent.EventType.CompletedOperation(credentials))

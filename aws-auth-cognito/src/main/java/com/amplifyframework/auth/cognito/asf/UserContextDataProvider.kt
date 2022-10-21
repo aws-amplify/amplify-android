@@ -18,17 +18,17 @@ package com.amplifyframework.auth.cognito.asf
 import android.content.Context
 import android.util.Base64
 import android.util.Log
-import com.amplifyframework.statemachine.codegen.data.UserPoolConfiguration
 import org.json.JSONException
 import org.json.JSONObject
 
 /**
  * Provides the user context data that is sent to the server.
  * @param context android application context
- * @param configuration config containing cognito userPoolId for the application
- * and secret key (for now, this would be application clientId) used while generating signature.
+ * @param poolId cognito userPoolId
+ * @param clientId cognito appClientId used as secret key while generating signature
+ * @param deviceId randomly generated deviceId
  */
-class UserContextDataProvider(private val context: Context, private val configuration: UserPoolConfiguration) {
+class UserContextDataProvider(private val context: Context, private val poolId: String, private val clientId: String, private val deviceId: String) {
     companion object {
         private val TAG = UserContextDataProvider::class.java.simpleName
         private const val VERSION_VALUE = "ANDROID20171114"
@@ -44,7 +44,7 @@ class UserContextDataProvider(private val context: Context, private val configur
 
     private val timestamp = System.currentTimeMillis().toString()
 
-    private val aggregator = ContextDataAggregator
+    private val aggregator = ContextDataAggregator(deviceId)
 
     @Throws(JSONException::class)
     private fun getJsonPayload(contextData: Map<String, String?>, username: String, userPoolId: String): JSONObject {
@@ -80,9 +80,9 @@ class UserContextDataProvider(private val context: Context, private val configur
      */
     fun getEncodedContextData(username: String) = try {
         val contextData = aggregator.getAggregatedData(context)
-        val payload = getJsonPayload(contextData, username, configuration.poolId!!)
+        val payload = getJsonPayload(contextData, username, poolId)
         val payloadString = payload.toString()
-        val signature = SignatureGenerator.getSignature(payloadString, configuration.appClient!!, VERSION_VALUE)
+        val signature = SignatureGenerator.getSignature(payloadString, clientId, VERSION_VALUE)
         val jsonResponse = getJsonResponse(payloadString, signature)
         getEncodedResponse(jsonResponse)
     } catch (e: Exception) {

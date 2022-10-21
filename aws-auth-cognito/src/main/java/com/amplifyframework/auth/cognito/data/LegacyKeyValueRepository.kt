@@ -28,7 +28,7 @@ import javax.crypto.Cipher
 import javax.crypto.spec.GCMParameterSpec
 
 class LegacyKeyValueRepository(
-    private val context: Context,
+    context: Context,
     private val sharedPreferencesName: String,
     private var isPersistenceEnabled: Boolean = true,
 ) : KeyValueRepository {
@@ -83,7 +83,7 @@ class LegacyKeyValueRepository(
     }
 
     private fun getCacheForKey(key: String): MutableMap<String, String> {
-        return cacheFactory.getOrPut(key, { mutableMapOf() })
+        return cacheFactory.getOrPut(key) { mutableMapOf() }
     }
 
     /**
