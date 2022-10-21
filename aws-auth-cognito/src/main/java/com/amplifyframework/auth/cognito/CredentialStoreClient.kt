@@ -28,13 +28,13 @@ import com.amplifyframework.statemachine.codegen.states.CredentialStoreState
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
-interface StoreClientBehavior {
+internal interface StoreClientBehavior {
     suspend fun loadCredentials(credentialType: CredentialType): AmplifyCredential
     suspend fun storeCredentials(credentialType: CredentialType, amplifyCredential: AmplifyCredential)
     suspend fun clearCredentials(credentialType: CredentialType)
 }
 
-class CredentialStoreClient(configuration: AuthConfiguration, context: Context, val logger: Logger) :
+internal class CredentialStoreClient(configuration: AuthConfiguration, context: Context, val logger: Logger) :
     StoreClientBehavior {
     private val credentialStoreStateMachine = createCredentialStoreStateMachine(configuration, context)
 

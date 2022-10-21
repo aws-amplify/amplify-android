@@ -31,7 +31,7 @@ class EncryptedKeyValueRepositoryTest {
     // Testing using partial mock as the sut is basically a wrapper
     // of EncryptedSharedPreferences which is created statically, making it difficult to mock or stub
     @Mock
-    lateinit var repository: EncryptedKeyValueRepository
+    internal lateinit var repository: EncryptedKeyValueRepository
 
     @Mock
     lateinit var context: Context

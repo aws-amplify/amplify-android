@@ -42,7 +42,7 @@ import com.amplifyframework.auth.exceptions.UnknownException
 /**
  * Convert AWS Cognito Exceptions to AuthExceptions.
  */
-class CognitoAuthExceptionConverter {
+internal class CognitoAuthExceptionConverter {
     companion object {
         private const val defaultRecoveryMessage = "See attached exception for more details."
 

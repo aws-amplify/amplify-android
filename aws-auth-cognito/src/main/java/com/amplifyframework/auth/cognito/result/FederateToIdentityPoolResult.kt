@@ -15,11 +15,14 @@
 
 package com.amplifyframework.auth.cognito.result
 
-import com.amplifyframework.statemachine.codegen.data.AWSCredentials
+import com.amplifyframework.auth.AWSTemporaryCredentials
 
 /**
  * Wraps the result of a federation to Identity Pool.
  * @param identityId Identity Id of federation
  * @param credentials Returned credentials from successful federation
  */
-data class FederateToIdentityPoolResult internal constructor(val identityId: String, val credentials: AWSCredentials)
+data class FederateToIdentityPoolResult internal constructor(
+    val identityId: String,
+    val credentials: AWSTemporaryCredentials
+)

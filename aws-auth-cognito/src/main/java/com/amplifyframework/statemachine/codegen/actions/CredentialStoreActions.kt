@@ -19,7 +19,7 @@ import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.CredentialType
 
-interface StoreActions {
+internal interface CredentialStoreActions {
     fun migrateLegacyCredentialStoreAction(): Action
     fun clearCredentialStoreAction(credentialType: CredentialType): Action
     fun loadCredentialStoreAction(credentialType: CredentialType): Action

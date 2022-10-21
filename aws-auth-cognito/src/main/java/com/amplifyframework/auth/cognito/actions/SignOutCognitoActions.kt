@@ -30,7 +30,7 @@ import com.amplifyframework.statemachine.codegen.data.SignedOutData
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.SignOutEvent
 
-object SignOutCognitoActions : SignOutActions {
+internal object SignOutCognitoActions : SignOutActions {
     override fun hostedUISignOutAction(event: SignOutEvent.EventType.InvokeHostedUISignOut) =
         Action<AuthEnvironment>("HostedUISignOut") { id, dispatcher ->
             logger.verbose("$id Starting execution")

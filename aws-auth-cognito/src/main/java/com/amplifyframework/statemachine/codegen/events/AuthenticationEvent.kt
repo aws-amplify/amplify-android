@@ -25,7 +25,7 @@ import com.amplifyframework.statemachine.codegen.data.SignedInData
 import com.amplifyframework.statemachine.codegen.data.SignedOutData
 import java.util.Date
 
-class AuthenticationEvent(val eventType: EventType, override val time: Date? = null) :
+internal class AuthenticationEvent(val eventType: EventType, override val time: Date? = null) :
     StateMachineEvent {
     sealed class EventType {
         data class Configure(

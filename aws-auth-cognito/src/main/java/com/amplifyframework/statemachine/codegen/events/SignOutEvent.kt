@@ -24,7 +24,7 @@ import com.amplifyframework.statemachine.codegen.data.SignedInData
 import com.amplifyframework.statemachine.codegen.data.SignedOutData
 import java.util.Date
 
-class SignOutEvent(
+internal class SignOutEvent(
     val eventType: EventType,
     override val time: Date? = null,
 ) : StateMachineEvent {

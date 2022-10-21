@@ -42,7 +42,7 @@ import com.amplifyframework.statemachine.codegen.events.FetchAuthSessionEvent
 import com.amplifyframework.statemachine.codegen.events.RefreshSessionEvent
 import kotlin.time.Duration.Companion.seconds
 
-object FetchAuthSessionCognitoActions : FetchAuthSessionActions {
+internal object FetchAuthSessionCognitoActions : FetchAuthSessionActions {
     private const val KEY_SECRET_HASH = "SECRET_HASH"
     private const val KEY_REFRESH_TOKEN = "REFRESH_TOKEN"
     private const val KEY_DEVICE_KEY = "DEVICE_KEY"

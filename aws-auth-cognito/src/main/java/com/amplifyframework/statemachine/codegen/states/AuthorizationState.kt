@@ -35,7 +35,7 @@ import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
 import com.amplifyframework.statemachine.codegen.events.DeleteUserEvent
 import com.amplifyframework.statemachine.codegen.events.SignOutEvent
 
-sealed class AuthorizationState : State {
+internal sealed class AuthorizationState : State {
     data class NotConfigured(val id: String = "") : AuthorizationState()
     data class Configured(val id: String = "") : AuthorizationState()
     data class SigningIn(val id: String = "") : AuthorizationState()
