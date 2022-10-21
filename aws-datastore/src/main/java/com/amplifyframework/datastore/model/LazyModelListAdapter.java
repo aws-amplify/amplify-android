@@ -34,7 +34,7 @@ public class LazyModelListAdapter<M extends Model> implements JsonDeserializer<L
                 " typeOfT type name" + type + " context " +
                 context);
         JsonObject jsonObject = json.getAsJsonObject();
-        Map<String, Object> predicateKeyMap = new Gson().fromJson(jsonObject, HashMap.class);
+        Map<String, Object> predicateKeyMap = context.deserialize(jsonObject, HashMap.class);
         return new DataStoreLazyModelList<>(type, predicateKeyMap, new DatastoreLazyQueryPredicate<>());
     }
 

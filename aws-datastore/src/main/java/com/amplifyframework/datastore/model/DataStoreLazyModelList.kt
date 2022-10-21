@@ -24,10 +24,9 @@ class DataStoreLazyModelList<M : Model>(private val clazz: Class<M>,
     @OptIn(ExperimentalCoroutinesApi::class)
     override suspend fun get(): List<M>? {
         value?.let { return value }
-        return Amplify.DataStore.query(
-            clazz.kotlin,
-            Where.matches(predicate.createPredicate(clazz, keyMap))
+        value = Amplify.DataStore.query(clazz.kotlin, Where.matches(predicate.createPredicate(clazz, keyMap))
         ).toList()
+        return value
     }
 
     override fun get(onSuccess: Consumer<List<M>>, onFailure: Consumer<AmplifyException>) {

@@ -334,8 +334,6 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
         SQLiteModelFieldTypeConverter nestedModelConverter =
                 new SQLiteModelFieldTypeConverter(innerModelSchema, schemaRegistry, gson, cursorInnerModelCounts);
         Map<String, Object> nestedModelMap = nestedModelConverter.buildMapForModel(cursor);
-        Map.Entry<String, List<String>> set = new SchemaHelper()
-                .getAssociatedKeys(parentSchema, field).entrySet().iterator().next();
         Map<String, Object> identityKeyMap = new HashMap<>();
         for (String identityField: innerModelSchema.getPrimaryIndexFields()) {
             identityKeyMap.put(identityField, nestedModelMap.get(identityField));
