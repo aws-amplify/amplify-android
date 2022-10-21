@@ -42,7 +42,7 @@ class AuthenticationEvent(val eventType: EventType, override val time: Date? = n
         data class SignOutRequested(val signOutData: SignOutData) : EventType()
         data class CancelSignIn(val error: Exception? = null) : EventType()
         data class CancelSignOut(val signedInData: SignedInData, val deviceMetadata: DeviceMetadata) : EventType()
-        data class ClearFederationToIdentityPool(val id: String = ""): EventType()
+        data class ClearFederationToIdentityPool(val id: String = "") : EventType()
         data class ThrowError(val exception: Exception) : EventType()
     }
 

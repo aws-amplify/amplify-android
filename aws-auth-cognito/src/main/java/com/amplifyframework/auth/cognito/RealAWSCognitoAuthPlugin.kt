@@ -1724,11 +1724,15 @@ internal class RealAWSCognitoAuthPlugin(
             val authZState = authState.authZState
             when {
                 authState is AuthState.Configured &&
-                        (authNState is AuthenticationState.FederatedToIdentityPool &&
-                                authZState is AuthorizationState.SessionEstablished) ||
-                        (authZState is AuthorizationState.Error &&
-                                authZState.exception is SessionError &&
-                                authZState.exception.amplifyCredential is AmplifyCredential.IdentityPoolFederated) -> {
+                    (
+                        authNState is AuthenticationState.FederatedToIdentityPool &&
+                            authZState is AuthorizationState.SessionEstablished
+                        ) ||
+                    (
+                        authZState is AuthorizationState.Error &&
+                            authZState.exception is SessionError &&
+                            authZState.exception.amplifyCredential is AmplifyCredential.IdentityPoolFederated
+                        ) -> {
                     val event = AuthenticationEvent(AuthenticationEvent.EventType.ClearFederationToIdentityPool())
                     authStateMachine.send(event)
                     _clearFederationToIdentityPool(onSuccess, onError)
