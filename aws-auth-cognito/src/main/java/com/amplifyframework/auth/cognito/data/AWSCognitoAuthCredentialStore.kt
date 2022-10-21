@@ -24,7 +24,7 @@ import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
-class AWSCognitoAuthCredentialStore(
+internal class AWSCognitoAuthCredentialStore(
     val context: Context,
     private val authConfiguration: AuthConfiguration,
     isPersistenceEnabled: Boolean = true,

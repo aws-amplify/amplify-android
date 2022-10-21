@@ -19,7 +19,7 @@ import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.data.SignedInData
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 
-interface AuthenticationActions {
+internal interface AuthenticationActions {
     fun configureAuthenticationAction(event: AuthenticationEvent.EventType.Configure): Action
     fun initiateSignInAction(event: AuthenticationEvent.EventType.SignInRequested): Action
     fun initiateSignOutAction(

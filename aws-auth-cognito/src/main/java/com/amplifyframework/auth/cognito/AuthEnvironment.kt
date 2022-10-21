@@ -38,22 +38,22 @@ internal class AuthEnvironment internal constructor(
     internal lateinit var srpHelper: SRPHelper
 }
 
-fun StateMachineEvent.isAuthEvent(): AuthEvent.EventType? {
+internal fun StateMachineEvent.isAuthEvent(): AuthEvent.EventType? {
     return (this as? AuthEvent)?.eventType
 }
 
-fun StateMachineEvent.isAuthenticationEvent(): AuthenticationEvent.EventType? {
+internal fun StateMachineEvent.isAuthenticationEvent(): AuthenticationEvent.EventType? {
     return (this as? AuthenticationEvent)?.eventType
 }
 
-fun StateMachineEvent.isAuthorizationEvent(): AuthorizationEvent.EventType? {
+internal fun StateMachineEvent.isAuthorizationEvent(): AuthorizationEvent.EventType? {
     return (this as? AuthorizationEvent)?.eventType
 }
 
-fun StateMachineEvent.isSignOutEvent(): SignOutEvent.EventType? {
+internal fun StateMachineEvent.isSignOutEvent(): SignOutEvent.EventType? {
     return (this as? SignOutEvent)?.eventType
 }
 
-fun StateMachineEvent.isDeleteUserEvent(): DeleteUserEvent.EventType? {
+internal fun StateMachineEvent.isDeleteUserEvent(): DeleteUserEvent.EventType? {
     return (this as? DeleteUserEvent)?.eventType
 }

@@ -24,7 +24,7 @@ import com.amplifyframework.statemachine.codegen.data.SignOutData
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.DeleteUserEvent
 
-object DeleteUserActions : DeleteUserActions {
+internal object DeleteUserCognitoActions : DeleteUserActions {
     override fun initDeleteUserAction(accessToken: String): Action =
         Action<AuthEnvironment>("DeleteUser") { id, dispatcher ->
             logger.verbose("$id Starting execution")

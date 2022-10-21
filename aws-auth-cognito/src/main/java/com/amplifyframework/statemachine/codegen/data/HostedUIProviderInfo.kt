@@ -17,7 +17,7 @@ package com.amplifyframework.statemachine.codegen.data
 
 import com.amplifyframework.auth.AuthProvider
 
-data class HostedUIProviderInfo(
+internal data class HostedUIProviderInfo(
     val authProvider: AuthProvider? = null,
     val idpIdentifier: String? = null,
 )

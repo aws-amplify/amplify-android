@@ -13,9 +13,8 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.testutils.featuretest
+package com.amplifyframework.auth.cognito.featuretest
 
-import com.amplifyframework.testutils.featuretest.auth.AuthAPI
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
