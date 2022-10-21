@@ -17,13 +17,13 @@ package com.amplifyframework.auth.cognito.actions
 
 import com.amplifyframework.auth.cognito.CredentialStoreEnvironment
 import com.amplifyframework.statemachine.Action
-import com.amplifyframework.statemachine.codegen.actions.StoreActions
+import com.amplifyframework.statemachine.codegen.actions.CredentialStoreActions
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.CredentialType
 import com.amplifyframework.statemachine.codegen.errors.CredentialStoreError
 import com.amplifyframework.statemachine.codegen.events.CredentialStoreEvent
 
-internal object CredentialStoreCognitoActions : StoreActions {
+internal object CredentialStoreCognitoActions : CredentialStoreActions {
     override fun migrateLegacyCredentialStoreAction() =
         Action<CredentialStoreEnvironment>("MigrateLegacyCredentials") { id, dispatcher ->
             logger.verbose("$id Starting execution")

@@ -13,8 +13,9 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.testutils.featuretest.auth.generators.authstategenerators
+package com.amplifyframework.auth.cognito.featuretest.generators.authstategenerators
 
+import com.amplifyframework.auth.cognito.featuretest.generators.SerializableProvider
 import com.amplifyframework.statemachine.codegen.data.AWSCredentials
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.AuthChallenge
@@ -28,7 +29,6 @@ import com.amplifyframework.statemachine.codegen.states.AuthenticationState
 import com.amplifyframework.statemachine.codegen.states.AuthorizationState
 import com.amplifyframework.statemachine.codegen.states.SignInChallengeState
 import com.amplifyframework.statemachine.codegen.states.SignInState
-import com.amplifyframework.testutils.featuretest.auth.generators.SerializableProvider
 import java.time.Instant
 import java.util.Date
 

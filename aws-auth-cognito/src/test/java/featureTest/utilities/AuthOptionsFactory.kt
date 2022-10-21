@@ -2,13 +2,13 @@ package featureTest.utilities
 
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
+import com.amplifyframework.auth.cognito.featuretest.AuthAPI
+import com.amplifyframework.auth.cognito.featuretest.AuthAPI.resetPassword
+import com.amplifyframework.auth.cognito.featuretest.AuthAPI.signIn
+import com.amplifyframework.auth.cognito.featuretest.AuthAPI.signUp
 import com.amplifyframework.auth.options.AuthResetPasswordOptions
 import com.amplifyframework.auth.options.AuthSignInOptions
 import com.amplifyframework.auth.options.AuthSignUpOptions
-import com.amplifyframework.testutils.featuretest.auth.AuthAPI
-import com.amplifyframework.testutils.featuretest.auth.AuthAPI.resetPassword
-import com.amplifyframework.testutils.featuretest.auth.AuthAPI.signIn
-import com.amplifyframework.testutils.featuretest.auth.AuthAPI.signUp
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 

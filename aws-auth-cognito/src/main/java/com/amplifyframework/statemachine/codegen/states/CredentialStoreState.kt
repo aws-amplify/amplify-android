@@ -19,7 +19,7 @@ import com.amplifyframework.statemachine.State
 import com.amplifyframework.statemachine.StateMachineEvent
 import com.amplifyframework.statemachine.StateMachineResolver
 import com.amplifyframework.statemachine.StateResolution
-import com.amplifyframework.statemachine.codegen.actions.StoreActions
+import com.amplifyframework.statemachine.codegen.actions.CredentialStoreActions
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.errors.CredentialStoreError
 import com.amplifyframework.statemachine.codegen.events.CredentialStoreEvent
@@ -36,7 +36,8 @@ internal sealed class CredentialStoreState : State {
 
     override val type = this.toString()
 
-    class Resolver(private val storeActions: StoreActions) : StateMachineResolver<CredentialStoreState> {
+    class Resolver(private val credentialStoreActions: CredentialStoreActions) :
+        StateMachineResolver<CredentialStoreState> {
         override val defaultState = NotConfigured()
 
         private fun asCredentialStoreEvent(event: StateMachineEvent): CredentialStoreEvent.EventType? {
@@ -53,14 +54,14 @@ internal sealed class CredentialStoreState : State {
                 is NotConfigured -> when (storeEvent) {
                     is CredentialStoreEvent.EventType.MigrateLegacyCredentialStore,
                     is CredentialStoreEvent.EventType.LoadCredentialStore -> {
-                        val action = storeActions.migrateLegacyCredentialStoreAction()
+                        val action = credentialStoreActions.migrateLegacyCredentialStoreAction()
                         StateResolution(MigratingLegacyStore(), listOf(action))
                     }
                     else -> defaultResolution
                 }
                 is MigratingLegacyStore -> when (storeEvent) {
                     is CredentialStoreEvent.EventType.LoadCredentialStore -> {
-                        val action = storeActions.loadCredentialStoreAction(storeEvent.credentialType)
+                        val action = credentialStoreActions.loadCredentialStoreAction(storeEvent.credentialType)
                         StateResolution(LoadingStoredCredentials(), listOf(action))
                     }
                     is CredentialStoreEvent.EventType.ThrowError -> StateResolution(Error(storeEvent.error))
@@ -68,7 +69,7 @@ internal sealed class CredentialStoreState : State {
                 }
                 is LoadingStoredCredentials, is StoringCredentials, is ClearingCredentials -> when (storeEvent) {
                     is CredentialStoreEvent.EventType.CompletedOperation -> {
-                        val action = storeActions.moveToIdleStateAction()
+                        val action = credentialStoreActions.moveToIdleStateAction()
                         val newState = Success(storeEvent.storedCredentials)
                         StateResolution(newState, listOf(action))
                     }
@@ -77,15 +78,15 @@ internal sealed class CredentialStoreState : State {
                 }
                 is Idle -> when (storeEvent) {
                     is CredentialStoreEvent.EventType.ClearCredentialStore -> {
-                        val action = storeActions.clearCredentialStoreAction(storeEvent.credentialType)
+                        val action = credentialStoreActions.clearCredentialStoreAction(storeEvent.credentialType)
                         StateResolution(ClearingCredentials(), listOf(action))
                     }
                     is CredentialStoreEvent.EventType.LoadCredentialStore -> {
-                        val action = storeActions.loadCredentialStoreAction(storeEvent.credentialType)
+                        val action = credentialStoreActions.loadCredentialStoreAction(storeEvent.credentialType)
                         StateResolution(LoadingStoredCredentials(), listOf(action))
                     }
                     is CredentialStoreEvent.EventType.StoreCredentials -> {
-                        val action = storeActions.storeCredentialsAction(
+                        val action = credentialStoreActions.storeCredentialsAction(
                             storeEvent.credentialType,
                             storeEvent.credentials
                         )
@@ -95,7 +96,7 @@ internal sealed class CredentialStoreState : State {
                 }
                 is Success, is Error -> when (storeEvent) {
                     is CredentialStoreEvent.EventType.MoveToIdleState -> {
-                        val action = storeActions.moveToIdleStateAction()
+                        val action = credentialStoreActions.moveToIdleStateAction()
                         StateResolution(Idle(), listOf(action))
                     }
                     else -> StateResolution(oldState)
