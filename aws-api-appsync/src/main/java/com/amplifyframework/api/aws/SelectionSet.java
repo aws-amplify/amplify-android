@@ -28,6 +28,7 @@ import com.amplifyframework.core.model.AuthRule;
 import com.amplifyframework.core.model.AuthStrategy;
 import com.amplifyframework.core.model.CustomTypeField;
 import com.amplifyframework.core.model.CustomTypeSchema;
+import com.amplifyframework.core.model.LazyList;
 import com.amplifyframework.core.model.LazyModel;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelAssociation;
@@ -65,6 +66,7 @@ public final class SelectionSet {
 
     /**
      * Copy constructor.
+     *
      * @param selectionSet node to copy
      */
     @SuppressWarnings("CopyConstructorMissesField") // It is cloned, by recursion
@@ -74,6 +76,7 @@ public final class SelectionSet {
 
     /**
      * Constructor for a leaf node (no children).
+     *
      * @param value String value of the field.
      */
     public SelectionSet(String value) {
@@ -82,6 +85,7 @@ public final class SelectionSet {
 
     /**
      * Default constructor.
+     *
      * @param value String value of the field
      * @param nodes Set of child nodes
      */
@@ -92,6 +96,7 @@ public final class SelectionSet {
 
     /**
      * Returns child nodes.
+     *
      * @return child nodes
      */
     @NonNull
@@ -101,17 +106,17 @@ public final class SelectionSet {
 
     /**
      * Generate the String value of the SelectionSet used in the GraphQL query document, with no margin.
-     *
+     * <p>
      * Sample return value:
-     *   items {
-     *     foo
-     *     bar
-     *     modelName {
-     *       foo
-     *       bar
-     *     }
-     *   }
-     *   nextToken
+     * items {
+     * foo
+     * bar
+     * modelName {
+     * foo
+     * bar
+     * }
+     * }
+     * nextToken
      *
      * @return String value of the selection set for a GraphQL query document.
      */
@@ -122,6 +127,7 @@ public final class SelectionSet {
 
     /**
      * Generates the String value of the SelectionSet for a GraphQL query document.
+     *
      * @param margin a margin with which to prefix each field of the selection set.
      * @return String value of the SelectionSet for a GraphQL query document.
      */
@@ -166,6 +172,7 @@ public final class SelectionSet {
 
     /**
      * Create a new SelectionSet builder.
+     *
      * @return a new SelectionSet builder.
      */
     public static SelectionSet.Builder builder() {
@@ -181,7 +188,8 @@ public final class SelectionSet {
         private GraphQLRequestOptions requestOptions;
         private ModelSchema modelSchema;
 
-        Builder() { }
+        Builder() {
+        }
 
         public Builder modelClass(@NonNull Class<? extends Model> modelClass) {
             this.modelClass = Objects.requireNonNull(modelClass);
@@ -205,6 +213,7 @@ public final class SelectionSet {
 
         /**
          * Builds the SelectionSet containing all of the fields of the provided model class.
+         *
          * @return selection set
          * @throws AmplifyException if a ModelSchema cannot be created from the provided model class.
          */
@@ -227,8 +236,8 @@ public final class SelectionSet {
         /**
          * Expects a {@link SelectionSet} containing {@link Model} fields as nodes, and returns a new root node with two
          * children:
-         *  - "items" with nodes being the children of the provided node.
-         *  - "nextToken"
+         * - "items" with nodes being the children of the provided node.
+         * - "nextToken"
          *
          * @param node a root node, with a value of null, and pagination fields
          * @return A selection set
@@ -251,6 +260,7 @@ public final class SelectionSet {
          * TODO: this is mostly duplicative of {@link #getModelFields(ModelSchema, int, Operation)}.
          * Long-term, we want to remove this current method and rely only on the ModelSchema-based
          * version.
+         *
          * @param clazz Class from which to build selection set
          * @param depth Number of children deep to explore
          * @return Selection Set
@@ -279,19 +289,20 @@ public final class SelectionSet {
             for (Field field : FieldFinder.findModelFieldsIn(clazz)) {
                 String fieldName = field.getName();
                 if (schema.getAssociations().containsKey(fieldName)) {
-                    if (List.class.isAssignableFrom(field.getType())) {
+                    if (List.class.isAssignableFrom(field.getType()) ||
+                            LazyList.class.isAssignableFrom(field.getType())) {
                         if (depth >= 1) {
                             ParameterizedType listType = (ParameterizedType) field.getGenericType();
                             Class<Model> listTypeClass = (Class<Model>) listType.getActualTypeArguments()[0];
                             Set<SelectionSet> fields = wrapPagination(getModelFields(listTypeClass,
-                                                                depth - 1,
-                                                                operation));
+                                    depth - 1,
+                                    operation));
                             result.add(new SelectionSet(fieldName, fields));
                         }
                     } else if (depth >= 1) {
                         Class<Model> modalClass;
-                        if(field.getType() == LazyModel.class){
-                            ParameterizedType pType = (ParameterizedType)field.getGenericType() ;
+                        if (LazyModel.class.isAssignableFrom(field.getType())) {
+                            ParameterizedType pType = (ParameterizedType) field.getGenericType();
                             modalClass = (Class<Model>) pType.getActualTypeArguments()[0];
                         } else {
                             modalClass = (Class<Model>) field.getType();
@@ -313,7 +324,7 @@ public final class SelectionSet {
                 }
             }
 
-            Log.i("MetadataFields","for schema:" + schema.getName() + " operation: " + operation
+            Log.i("MetadataFields", "for schema:" + schema.getName() + " operation: " + operation
                     + " fields: " + requestOptions.modelMetaFields());
             for (String fieldName : requestOptions.modelMetaFields()) {
 
@@ -324,6 +335,7 @@ public final class SelectionSet {
 
         /**
          * We handle customType fields differently as DEPTH does not apply here.
+         *
          * @param clazz class we wish to build selection set for
          * @return A set of selection sets
          */
@@ -342,6 +354,7 @@ public final class SelectionSet {
 
         /**
          * Helper to determine if field is a custom type. If custom types we need to build nested selection set.
+         *
          * @param field field we wish to check
          * @return True if the field is of a custom type
          */
@@ -361,6 +374,7 @@ public final class SelectionSet {
 
         /**
          * Get the class of a field. If field is a collection, it returns the Generic type
+         *
          * @return The class of the field
          */
         static Class<?> getClassForField(Field field) {
@@ -383,8 +397,8 @@ public final class SelectionSet {
             Set<SelectionSet> result = new HashSet<>();
             if (
                     depth == 0
-                    && LeafSerializationBehavior.JUST_ID.equals(requestOptions.leafSerializationBehavior())
-                    && operation != QueryType.SYNC
+                            && LeafSerializationBehavior.JUST_ID.equals(requestOptions.leafSerializationBehavior())
+                            && operation != QueryType.SYNC
             ) {
                 Iterator<String> primaryKeyIterator = modelSchema.getPrimaryIndexFields().listIterator();
                 if (primaryKeyIterator.hasNext()) {

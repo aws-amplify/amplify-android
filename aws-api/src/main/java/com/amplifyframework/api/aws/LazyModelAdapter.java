@@ -33,7 +33,6 @@ public class LazyModelAdapter<M extends Model> implements JsonDeserializer<LazyM
         Log.d("LazyModelAdapter", "json: "+ json + " typeOfT " + typeOfT +
                 " typeOfT type name" + type + " context " +
                 context);
-        HashMap<String, Map<String, Object>> predicateMap = new HashMap<>();
          Map<String, Object> predicateKeyMap = new HashMap<>();
         Iterator<String> primaryKeysIterator = SchemaRegistry.instance()
                 .getModelSchemaForModelClass(type)
@@ -43,8 +42,7 @@ public class LazyModelAdapter<M extends Model> implements JsonDeserializer<LazyM
             String primaryKey = primaryKeysIterator.next();
             predicateKeyMap.put(primaryKey, jsonObject.get(primaryKey));
         }
-        predicateMap.put(type.getSimpleName(), predicateKeyMap);
-        return new AppSyncLazyModel<>(type, predicateMap, new AppSyncLazyQueryPredicate<>());
+        return new AppSyncLazyModel<>(type, predicateKeyMap, new AppSyncLazyQueryPredicate<>());
     }
 
     @Override
