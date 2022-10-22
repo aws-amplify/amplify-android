@@ -61,7 +61,10 @@ object FetchAuthSessionCognitoActions : FetchAuthSessionActions {
                 )
                 tokens.refreshToken?.let { authParameters[KEY_REFRESH_TOKEN] = it }
                 secretHash?.let { authParameters[KEY_SECRET_HASH] = it }
-                val encodedContextData = userContextDataProvider?.getEncodedContextData(username)
+                
+                val asfDevice = credentialStoreClient.loadCredentials(CredentialType.ASF)
+                val deviceId = (asfDevice as AmplifyCredential.ASFDevice).id
+                val encodedContextData = userContextDataProvider?.getEncodedContextData(username, deviceId)
 
                 val deviceCredentials = credentialStoreClient.loadCredentials(CredentialType.Device(username))
                 val deviceMetadata = (deviceCredentials as AmplifyCredential.DeviceData)

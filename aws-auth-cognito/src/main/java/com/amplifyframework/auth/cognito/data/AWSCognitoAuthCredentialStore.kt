@@ -32,7 +32,7 @@ class AWSCognitoAuthCredentialStore(
 ) : AuthCredentialStore {
 
     companion object {
-        private const val awsKeyValueStoreIdentifier = "com.amplify.credentialStore"
+        const val awsKeyValueStoreIdentifier = "com.amplify.credentialStore"
         private const val Key_Session = "session"
         private const val Key_DeviceMetadata = "deviceMetadata"
         private const val Key_ASFDevice = "asfDevice"

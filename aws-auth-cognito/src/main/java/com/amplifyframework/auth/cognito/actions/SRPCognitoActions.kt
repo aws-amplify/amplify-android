@@ -62,9 +62,11 @@ object SRPCognitoActions : SRPActions {
                 )
 
                 val authParams = mutableMapOf(KEY_USERNAME to event.username, KEY_SRP_A to srpHelper.getPublicA())
-
                 secretHash?.let { authParams[KEY_SECRET_HASH] = it }
-                val encodedContextData = userContextDataProvider?.getEncodedContextData(event.username)
+
+                val asfDevice = credentialStoreClient.loadCredentials(CredentialType.ASF)
+                val deviceId = (asfDevice as AmplifyCredential.ASFDevice).id
+                val encodedContextData = userContextDataProvider?.getEncodedContextData(event.username, deviceId)
 
                 val deviceCredentials = credentialStoreClient.loadCredentials(CredentialType.Device(event.username))
                 val deviceMetadata = (deviceCredentials as AmplifyCredential.DeviceData)
@@ -117,7 +119,10 @@ object SRPCognitoActions : SRPActions {
                     KEY_CHALLENGE_NAME to VALUE_SRP_A
                 )
                 secretHash?.let { authParams[KEY_SECRET_HASH] = it }
-                val encodedContextData = userContextDataProvider?.getEncodedContextData(event.username)
+
+                val asfDevice = credentialStoreClient.loadCredentials(CredentialType.ASF)
+                val deviceId = (asfDevice as AmplifyCredential.ASFDevice).id
+                val encodedContextData = userContextDataProvider?.getEncodedContextData(event.username, deviceId)
 
                 val deviceCredentials = credentialStoreClient.loadCredentials(CredentialType.Device(event.username))
                 val deviceMetadata = (deviceCredentials as AmplifyCredential.DeviceData)
@@ -185,7 +190,10 @@ object SRPCognitoActions : SRPActions {
                     KEY_TIMESTAMP to srpHelper.dateString,
                 )
                 secretHash?.let { challengeParams[KEY_SECRET_HASH] = it }
-                val encodedContextData = userContextDataProvider?.getEncodedContextData(username)
+
+                val asfDevice = credentialStoreClient.loadCredentials(CredentialType.ASF)
+                val deviceId = (asfDevice as AmplifyCredential.ASFDevice).id
+                val encodedContextData = userContextDataProvider?.getEncodedContextData(username, deviceId)
 
                 challengeParams[KEY_DEVICE_KEY] = deviceKey
 

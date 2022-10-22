@@ -52,7 +52,9 @@ object DeviceSRPCognitoSignInActions : DeviceSRPSignInActions {
             logger.verbose("$id Starting execution")
             val username = event.username
             val evt = try {
-                val encodedContextData = userContextDataProvider?.getEncodedContextData(username)
+                val asfDevice = credentialStoreClient.loadCredentials(CredentialType.ASF)
+                val deviceId = (asfDevice as AmplifyCredential.ASFDevice).id
+                val encodedContextData = userContextDataProvider?.getEncodedContextData(username, deviceId)
 
                 val deviceCredentials = credentialStoreClient.loadCredentials(CredentialType.Device(username))
                 val deviceMetadata = (deviceCredentials as AmplifyCredential.DeviceData)
@@ -118,7 +120,10 @@ object DeviceSRPCognitoSignInActions : DeviceSRPSignInActions {
                 val srpB = params.getValue(KEY_SRP_B)
                 val deviceKey = params.getValue(KEY_DEVICE_KEY)
                 val deviceGroupKey = params.getValue(KEY_DEVICE_GROUP_KEY)
-                val encodedContextData = userContextDataProvider?.getEncodedContextData(username)
+                
+                val asfDevice = credentialStoreClient.loadCredentials(CredentialType.ASF)
+                val deviceId = (asfDevice as AmplifyCredential.ASFDevice).id
+                val encodedContextData = userContextDataProvider?.getEncodedContextData(username, deviceId)
 
                 srpHelper.setUserPoolParams(deviceKey, deviceGroupKey)
 

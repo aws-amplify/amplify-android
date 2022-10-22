@@ -108,6 +108,7 @@ import com.amplifyframework.logging.Logger
 import com.amplifyframework.statemachine.StateChangeListenerToken
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
+import com.amplifyframework.statemachine.codegen.data.CredentialType
 import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.data.FederatedToken
 import com.amplifyframework.statemachine.codegen.data.SignInData
@@ -190,7 +191,9 @@ internal class RealAWSCognitoAuthPlugin(
                 }
             }
 
-            val encodedContextData = authEnvironment.userContextDataProvider?.getEncodedContextData(username)
+            val asfDevice = authEnvironment.credentialStoreClient.loadCredentials(CredentialType.ASF)
+            val deviceId = (asfDevice as AmplifyCredential.ASFDevice).id
+            val encodedContextData = authEnvironment.userContextDataProvider?.getEncodedContextData(username, deviceId)
 
             val response = authEnvironment.cognitoAuthService.cognitoIdentityProviderClient?.signUp {
                 this.username = username
@@ -273,7 +276,9 @@ internal class RealAWSCognitoAuthPlugin(
     ) {
         logger.verbose("ConfirmSignUp Starting execution")
         try {
-            val encodedContextData = authEnvironment.userContextDataProvider?.getEncodedContextData(username)
+            val asfDevice = authEnvironment.credentialStoreClient.loadCredentials(CredentialType.ASF)
+            val deviceId = (asfDevice as AmplifyCredential.ASFDevice).id
+            val encodedContextData = authEnvironment.userContextDataProvider?.getEncodedContextData(username, deviceId)
 
             authEnvironment.cognitoAuthService.cognitoIdentityProviderClient?.confirmSignUp {
                 this.username = username
@@ -337,7 +342,9 @@ internal class RealAWSCognitoAuthPlugin(
         logger.verbose("ResendSignUpCode Starting execution")
         try {
             val metadata = (options as? AWSCognitoAuthResendSignUpCodeOptions)?.metadata
-            val encodedContextData = authEnvironment.userContextDataProvider?.getEncodedContextData(username)
+            val asfDevice = authEnvironment.credentialStoreClient.loadCredentials(CredentialType.ASF)
+            val deviceId = (asfDevice as AmplifyCredential.ASFDevice).id
+            val encodedContextData = authEnvironment.userContextDataProvider?.getEncodedContextData(username, deviceId)
 
             val response = authEnvironment.cognitoAuthService.cognitoIdentityProviderClient?.resendConfirmationCode {
                 clientId = configuration.userPool?.appClient
@@ -943,9 +950,11 @@ internal class RealAWSCognitoAuthPlugin(
             )
 
             val appClient = requireNotNull(configuration.userPool?.appClient)
-            val encodedData = authEnvironment.userContextDataProvider?.getEncodedContextData(username)
-
             GlobalScope.launch {
+                val asfDevice = authEnvironment.credentialStoreClient.loadCredentials(CredentialType.ASF)
+                val deviceId = (asfDevice as AmplifyCredential.ASFDevice).id
+                val encodedData = authEnvironment.userContextDataProvider?.getEncodedContextData(username, deviceId)
+
                 ResetPasswordUseCase(cognitoIdentityProviderClient, appClient).execute(
                     username,
                     options,
@@ -988,7 +997,12 @@ internal class RealAWSCognitoAuthPlugin(
 
             GlobalScope.launch {
                 try {
-                    val encodedContextData = authEnvironment.userContextDataProvider?.getEncodedContextData(username)
+                    val asfDevice = authEnvironment.credentialStoreClient.loadCredentials(CredentialType.ASF)
+                    val deviceId = (asfDevice as AmplifyCredential.ASFDevice).id
+                    val encodedContextData = authEnvironment.userContextDataProvider?.getEncodedContextData(
+                        username,
+                        deviceId
+                    )
 
                     authEnvironment.cognitoAuthService.cognitoIdentityProviderClient!!.confirmForgotPassword {
                         this.username = username

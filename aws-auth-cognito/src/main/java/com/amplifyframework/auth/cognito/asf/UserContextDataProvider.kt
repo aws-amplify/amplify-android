@@ -26,9 +26,8 @@ import org.json.JSONObject
  * @param context android application context
  * @param poolId cognito userPoolId
  * @param clientId cognito appClientId used as secret key while generating signature
- * @param deviceId randomly generated deviceId
  */
-class UserContextDataProvider(private val context: Context, private val poolId: String, private val clientId: String, private val deviceId: String) {
+class UserContextDataProvider(private val context: Context, private val poolId: String, private val clientId: String) {
     companion object {
         private val TAG = UserContextDataProvider::class.java.simpleName
         private const val VERSION_VALUE = "ANDROID20171114"
@@ -44,7 +43,7 @@ class UserContextDataProvider(private val context: Context, private val poolId: 
 
     private val timestamp = System.currentTimeMillis().toString()
 
-    private val aggregator = ContextDataAggregator(deviceId)
+    private lateinit var aggregator: ContextDataAggregator
 
     @Throws(JSONException::class)
     private fun getJsonPayload(contextData: Map<String, String?>, username: String, userPoolId: String): JSONObject {
@@ -76,9 +75,11 @@ class UserContextDataProvider(private val context: Context, private val poolId: 
      * 'payload'. Payload is a JSON object that contains 'username',
      * 'userPoolId', 'timestamp' and 'contextData'.
      * @param username username for the user
-     * @return base64 encoded userContextData.
+     * @param deviceId randomly generated deviceId
+     * @return base64 encoded userContextData
      */
-    fun getEncodedContextData(username: String) = try {
+    fun getEncodedContextData(username: String, deviceId: String) = try {
+        aggregator = lazy { ContextDataAggregator(deviceId) }.value
         val contextData = aggregator.getAggregatedData(context)
         val payload = getJsonPayload(contextData, username, poolId)
         val payloadString = payload.toString()

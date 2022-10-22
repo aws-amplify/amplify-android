@@ -48,7 +48,10 @@ object SignInCustomActions : CustomSignInActions {
 
                 val authParams = mutableMapOf(KEY_USERNAME to event.username)
                 secretHash?.let { authParams[KEY_SECRET_HASH] = it }
-                val encodedContextData = userContextDataProvider?.getEncodedContextData(event.username)
+                
+                val asfDevice = credentialStoreClient.loadCredentials(CredentialType.ASF)
+                val deviceId = (asfDevice as AmplifyCredential.ASFDevice).id
+                val encodedContextData = userContextDataProvider?.getEncodedContextData(event.username, deviceId)
 
                 val deviceCredentials = credentialStoreClient.loadCredentials(CredentialType.Device(event.username))
                 val deviceMetadata = (deviceCredentials as AmplifyCredential.DeviceData)

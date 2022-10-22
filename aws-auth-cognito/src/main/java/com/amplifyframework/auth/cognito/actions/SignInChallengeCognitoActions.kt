@@ -23,7 +23,9 @@ import com.amplifyframework.auth.cognito.helpers.SignInChallengeHelper
 import com.amplifyframework.auth.exceptions.UnknownException
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.SignInChallengeActions
+import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.AuthChallenge
+import com.amplifyframework.statemachine.codegen.data.CredentialType
 import com.amplifyframework.statemachine.codegen.events.CustomSignInEvent
 import com.amplifyframework.statemachine.codegen.events.SignInChallengeEvent
 import com.amplifyframework.statemachine.codegen.events.SignInEvent
@@ -57,7 +59,10 @@ object SignInChallengeCognitoActions : SignInChallengeActions {
                 configuration.userPool?.appClientSecret
             )
             secretHash?.let { challengeResponses[KEY_SECRET_HASH] = it }
-            val encodedContextData = username?.let { userContextDataProvider?.getEncodedContextData(it) }
+            
+            val asfDevice = credentialStoreClient.loadCredentials(CredentialType.ASF)
+            val deviceId = (asfDevice as AmplifyCredential.ASFDevice).id
+            val encodedContextData = username?.let { userContextDataProvider?.getEncodedContextData(it, deviceId) }
 
             val response = cognitoAuthService.cognitoIdentityProviderClient?.respondToAuthChallenge {
                 clientId = configuration.userPool?.appClient
