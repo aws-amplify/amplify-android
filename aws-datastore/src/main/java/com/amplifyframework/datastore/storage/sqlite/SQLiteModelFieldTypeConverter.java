@@ -324,7 +324,7 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
     }
 
     @SuppressWarnings("unchecked") // Cast Type to Class<M>
-    private <M extends Model> DataStoreLazyModel<M> convertLazyModelAssociationToTargetForBelongsTo(
+    private <M extends Model> Map<String, Object> convertLazyModelAssociationToTargetForBelongsTo(
             @NonNull Cursor cursor, @NonNull ModelField field) throws DataStoreException {
         // Eager load model if the necessary columns are present inside the cursor.
         // At the time of implementation, cursor should have been joined with these
@@ -338,14 +338,11 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
         for (String identityField: innerModelSchema.getPrimaryIndexFields()) {
             identityKeyMap.put(identityField, nestedModelMap.get(identityField));
         }
+//
+//        foreignKeyFieldMap.put(innerModelSchema.getModelClass().getSimpleName(), identityKeyMap);
+//        String jsonString = gson.toJson(nestedModelMap);
 
-        Map<String, Map<String, Object>> foreignKeyFieldMap =  new HashMap<>();
-        foreignKeyFieldMap.put(innerModelSchema.getModelClass().getSimpleName(), identityKeyMap);
-        String jsonString = gson.toJson(nestedModelMap);
-        Model model = gson.fromJson(jsonString,
-                innerModelSchema.getModelClass());
-        return new DataStoreLazyModel<M>((Class<M>) innerModelSchema.getModelClass(),
-                foreignKeyFieldMap, new DatastoreLazyQueryPredicate<>());
+        return identityKeyMap;
     }
 
     private Object convertCustomTypeToTarget(Cursor cursor, ModelField field, int columnIndex) throws IOException {

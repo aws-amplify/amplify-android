@@ -34,11 +34,9 @@ public class LazyModelAdapter<M extends Model> implements JsonDeserializer<LazyM
         Log.d("LazyModelAdapter", "json: "+ json + " typeOfT " + typeOfT +
                 " typeOfT type name" + type + " context " +
                 context);
-        HashMap<String, Map<String, Object>> predicateMap = new HashMap<>();
         JsonObject jsonObject = json.getAsJsonObject();
         Map<String, Object> predicateKeyMap = new Gson().fromJson(jsonObject, HashMap.class);
-        predicateMap.put(type.getSimpleName(), predicateKeyMap);
-        return new DataStoreLazyModel<M>(type, predicateMap, new DatastoreLazyQueryPredicate<>());
+        return new DataStoreLazyModel<M>(type, predicateKeyMap, new DatastoreLazyQueryPredicate<>());
     }
 
     @Override
