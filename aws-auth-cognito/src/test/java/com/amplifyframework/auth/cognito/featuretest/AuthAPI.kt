@@ -1,4 +1,4 @@
-package com.amplifyframework.testutils.featuretest.auth
+package com.amplifyframework.auth.cognito.featuretest
 
 /**
  * List of APIs supported by Auth.

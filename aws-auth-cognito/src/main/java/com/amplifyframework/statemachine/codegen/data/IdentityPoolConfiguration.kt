@@ -20,7 +20,7 @@ import org.json.JSONObject
 /**
  * Configuration options for specifying cognito identity pool.
  */
-data class IdentityPoolConfiguration internal constructor(val builder: Builder) {
+internal data class IdentityPoolConfiguration internal constructor(val builder: Builder) {
     val region: String? = builder.region
     val poolId: String? = builder.poolId
 

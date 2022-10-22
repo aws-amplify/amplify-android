@@ -16,7 +16,7 @@
 package com.amplifyframework.auth.cognito
 
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
-import com.amplifyframework.auth.cognito.actions.DeleteUserActions
+import com.amplifyframework.auth.cognito.actions.DeleteUserCognitoActions
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.AuthActions
 import com.amplifyframework.statemachine.codegen.actions.AuthenticationActions
@@ -120,7 +120,7 @@ open class StateTransitionTestBase {
     internal lateinit var mockFetchAuthSessionActions: FetchAuthSessionActions
 
     @Mock
-    internal lateinit var mockDeleteUserActions: DeleteUserActions
+    internal lateinit var mockDeleteUserActions: DeleteUserCognitoActions
 
     private val dummyCredential = AmplifyCredential.UserAndIdentityPool(
         SignedInData(

@@ -16,16 +16,16 @@
 package featureTest.utilities
 
 import com.amplifyframework.auth.AuthException
+import com.amplifyframework.auth.cognito.featuretest.AuthAPI
+import com.amplifyframework.auth.cognito.featuretest.AuthAPI.resetPassword
+import com.amplifyframework.auth.cognito.featuretest.AuthAPI.signIn
+import com.amplifyframework.auth.cognito.featuretest.AuthAPI.signUp
+import com.amplifyframework.auth.cognito.featuretest.ExpectationShapes
+import com.amplifyframework.auth.cognito.featuretest.ResponseType
 import com.amplifyframework.auth.result.AuthResetPasswordResult
 import com.amplifyframework.auth.result.AuthSignInResult
 import com.amplifyframework.auth.result.AuthSignUpResult
 import com.amplifyframework.core.Consumer
-import com.amplifyframework.testutils.featuretest.ExpectationShapes
-import com.amplifyframework.testutils.featuretest.ResponseType
-import com.amplifyframework.testutils.featuretest.auth.AuthAPI
-import com.amplifyframework.testutils.featuretest.auth.AuthAPI.resetPassword
-import com.amplifyframework.testutils.featuretest.auth.AuthAPI.signIn
-import com.amplifyframework.testutils.featuretest.auth.AuthAPI.signUp
 import io.mockk.CapturingSlot
 import io.mockk.every
 import io.mockk.mockk

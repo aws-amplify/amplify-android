@@ -34,7 +34,7 @@ import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.DeviceSRPSignInEvent
 import com.amplifyframework.statemachine.codegen.events.SignInEvent
 
-object DeviceSRPCognitoSignInActions : DeviceSRPSignInActions {
+internal object DeviceSRPCognitoSignInActions : DeviceSRPSignInActions {
 
     private const val KEY_PASSWORD_CLAIM_SECRET_BLOCK = "PASSWORD_CLAIM_SECRET_BLOCK"
     private const val KEY_PASSWORD_CLAIM_SIGNATURE = "PASSWORD_CLAIM_SIGNATURE"
@@ -120,7 +120,7 @@ object DeviceSRPCognitoSignInActions : DeviceSRPSignInActions {
                 val srpB = params.getValue(KEY_SRP_B)
                 val deviceKey = params.getValue(KEY_DEVICE_KEY)
                 val deviceGroupKey = params.getValue(KEY_DEVICE_GROUP_KEY)
-                
+
                 val asfDevice = credentialStoreClient.loadCredentials(CredentialType.ASF)
                 val deviceId = (asfDevice as AmplifyCredential.ASFDevice).id
                 val encodedContextData = userContextDataProvider?.getEncodedContextData(username, deviceId)

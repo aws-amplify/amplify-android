@@ -29,7 +29,7 @@ import com.amplifyframework.statemachine.codegen.data.CredentialType
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.SignInEvent
 
-object MigrateAuthCognitoActions : MigrateAuthActions {
+internal object MigrateAuthCognitoActions : MigrateAuthActions {
     private const val KEY_USERNAME = "USERNAME"
     private const val KEY_PASSWORD = "PASSWORD"
     private const val KEY_SECRET_HASH = "SECRET_HASH"
@@ -46,7 +46,7 @@ object MigrateAuthCognitoActions : MigrateAuthActions {
 
                 val authParams = mutableMapOf(KEY_USERNAME to event.username, KEY_PASSWORD to event.password)
                 secretHash?.let { authParams[KEY_SECRET_HASH] = it }
-                
+
                 val asfDevice = credentialStoreClient.loadCredentials(CredentialType.ASF)
                 val deviceId = (asfDevice as AmplifyCredential.ASFDevice).id
                 val encodedContextData = userContextDataProvider?.getEncodedContextData(event.username, deviceId)

@@ -32,7 +32,7 @@ import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.CustomSignInEvent
 import com.amplifyframework.statemachine.codegen.events.SignInEvent
 
-object SignInCustomActions : CustomSignInActions {
+internal object SignInCustomCognitoActions : CustomSignInActions {
     private const val KEY_SECRET_HASH = "SECRET_HASH"
     private const val KEY_USERNAME = "USERNAME"
     private const val KEY_DEVICE_KEY = "DEVICE_KEY"
@@ -48,7 +48,7 @@ object SignInCustomActions : CustomSignInActions {
 
                 val authParams = mutableMapOf(KEY_USERNAME to event.username)
                 secretHash?.let { authParams[KEY_SECRET_HASH] = it }
-                
+
                 val asfDevice = credentialStoreClient.loadCredentials(CredentialType.ASF)
                 val deviceId = (asfDevice as AmplifyCredential.ASFDevice).id
                 val encodedContextData = userContextDataProvider?.getEncodedContextData(event.username, deviceId)

@@ -27,7 +27,7 @@ import kotlin.math.abs
 /**
  * Collects information that identifies the device.
  */
-class DeviceDataCollector(private val deviceId: String) : DataCollector {
+internal class DeviceDataCollector(private val deviceId: String) : DataCollector {
     companion object {
         private const val PLATFORM_VALUE = "ANDROID"
 

@@ -27,7 +27,7 @@ import java.security.spec.AlgorithmParameterSpec
 import javax.crypto.Cipher
 import javax.crypto.spec.GCMParameterSpec
 
-class LegacyKeyValueRepository(
+internal class LegacyKeyValueRepository(
     context: Context,
     private val sharedPreferencesName: String,
     private var isPersistenceEnabled: Boolean = true,

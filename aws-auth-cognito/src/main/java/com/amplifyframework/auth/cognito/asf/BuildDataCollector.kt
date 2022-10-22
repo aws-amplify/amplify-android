@@ -21,7 +21,7 @@ import android.os.Build
 /**
  * Collects build information for underlying device hardware.
  */
-class BuildDataCollector : DataCollector {
+internal class BuildDataCollector : DataCollector {
     companion object {
         /**
          * The consumer-visible brand with which the product/hardware will be associated

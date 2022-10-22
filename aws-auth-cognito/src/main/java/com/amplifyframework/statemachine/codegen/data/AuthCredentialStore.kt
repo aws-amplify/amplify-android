@@ -15,7 +15,7 @@
 
 package com.amplifyframework.statemachine.codegen.data
 
-interface AuthCredentialStore {
+internal interface AuthCredentialStore {
     // Amplify Credentials
     fun saveCredential(credential: AmplifyCredential)
     fun retrieveCredential(): AmplifyCredential

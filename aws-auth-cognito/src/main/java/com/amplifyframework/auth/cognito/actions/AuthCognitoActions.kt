@@ -24,7 +24,7 @@ import com.amplifyframework.statemachine.codegen.events.AuthEvent
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
 
-object AuthCognitoActions : AuthActions {
+internal object AuthCognitoActions : AuthActions {
     override fun initializeAuthConfigurationAction(event: AuthEvent.EventType.ConfigureAuth) =
         Action<AuthEnvironment>("InitAuthConfig") { id, dispatcher ->
             logger.verbose("$id Starting execution")
