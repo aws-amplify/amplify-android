@@ -19,7 +19,7 @@ import com.amplifyframework.statemachine.StateMachineEvent
 import com.amplifyframework.statemachine.codegen.data.AuthChallenge
 import java.util.Date
 
-class SignInChallengeEvent(val eventType: EventType, override val time: Date? = null) : StateMachineEvent {
+internal class SignInChallengeEvent(val eventType: EventType, override val time: Date? = null) : StateMachineEvent {
     sealed class EventType {
         data class WaitForAnswer(val challenge: AuthChallenge) : EventType()
         data class VerifyChallengeAnswer(val answer: String, val options: Map<String, String>) : EventType()

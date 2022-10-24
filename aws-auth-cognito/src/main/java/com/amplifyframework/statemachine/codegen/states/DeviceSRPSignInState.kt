@@ -22,7 +22,7 @@ import com.amplifyframework.statemachine.StateResolution
 import com.amplifyframework.statemachine.codegen.actions.DeviceSRPSignInActions
 import com.amplifyframework.statemachine.codegen.events.DeviceSRPSignInEvent
 
-sealed class DeviceSRPSignInState : State {
+internal sealed class DeviceSRPSignInState : State {
     data class NotStarted(val id: String = "") : DeviceSRPSignInState()
     data class InitiatingDeviceSRP(val id: String = "") : DeviceSRPSignInState()
     data class RespondingDevicePasswordVerifier(val id: String = "") : DeviceSRPSignInState()

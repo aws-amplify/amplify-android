@@ -18,7 +18,7 @@ package com.amplifyframework.statemachine.codegen.actions
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.events.SignOutEvent
 
-interface SignOutActions {
+internal interface SignOutActions {
     fun hostedUISignOutAction(event: SignOutEvent.EventType.InvokeHostedUISignOut): Action
     fun localSignOutAction(event: SignOutEvent.EventType.SignOutLocally): Action
     fun globalSignOutAction(event: SignOutEvent.EventType.SignOutGlobally): Action

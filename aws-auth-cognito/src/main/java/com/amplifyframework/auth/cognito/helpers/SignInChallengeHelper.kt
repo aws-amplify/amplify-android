@@ -36,7 +36,7 @@ import com.amplifyframework.statemachine.codegen.events.SignInEvent
 import java.util.Date
 import kotlin.time.Duration.Companion.seconds
 
-object SignInChallengeHelper {
+internal object SignInChallengeHelper {
     fun evaluateNextStep(
         username: String,
         challengeNameType: ChallengeNameType?,

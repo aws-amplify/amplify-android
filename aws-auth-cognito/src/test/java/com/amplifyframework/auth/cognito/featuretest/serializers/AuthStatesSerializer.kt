@@ -15,8 +15,9 @@
 
 @file:Suppress("UNCHECKED_CAST")
 
-package com.amplifyframework.testutils.featuretest.auth.serializers
+package com.amplifyframework.auth.cognito.featuretest.serializers
 
+import com.amplifyframework.auth.cognito.featuretest.serializers.AuthStatesProxy.Companion.format
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.AuthChallenge
 import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
@@ -27,7 +28,6 @@ import com.amplifyframework.statemachine.codegen.states.AuthenticationState
 import com.amplifyframework.statemachine.codegen.states.AuthorizationState
 import com.amplifyframework.statemachine.codegen.states.SignInChallengeState
 import com.amplifyframework.statemachine.codegen.states.SignInState
-import com.amplifyframework.testutils.featuretest.auth.serializers.AuthStatesProxy.Companion.format
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
@@ -199,8 +199,8 @@ internal data class AuthStatesProxy(
     }
 }
 
-fun AuthState.serialize(): String = format.encodeToString(this)
-fun String.deserializeToAuthState(): AuthState = format.decodeFromString(this)
+internal fun AuthState.serialize(): String = format.encodeToString(this)
+internal fun String.deserializeToAuthState(): AuthState = format.decodeFromString(this)
 
 private class AuthStatesSerializer<T> : KSerializer<T> {
     val serializer = AuthStatesProxy.serializer()

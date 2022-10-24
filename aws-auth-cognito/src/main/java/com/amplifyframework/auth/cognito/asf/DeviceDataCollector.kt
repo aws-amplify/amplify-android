@@ -29,7 +29,7 @@ import kotlin.math.abs
 /**
  * Collects information that identifies the device.
  */
-class DeviceDataCollector : DataCollector {
+internal class DeviceDataCollector : DataCollector {
     companion object {
         private const val PLATFORM_VALUE = "ANDROID"
         private const val LOCAL_STORAGE_PATH = "AWS.Cognito.ContextData"

@@ -18,7 +18,7 @@ package com.amplifyframework.statemachine.codegen.events
 import com.amplifyframework.statemachine.StateMachineEvent
 import java.util.Date
 
-class DeleteUserEvent(
+internal class DeleteUserEvent(
     val eventType: EventType,
     override val time: Date? = null,
 ) : StateMachineEvent {

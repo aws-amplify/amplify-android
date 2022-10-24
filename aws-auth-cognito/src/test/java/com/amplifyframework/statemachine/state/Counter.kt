@@ -36,7 +36,7 @@ internal class CounterStateMachine(
     }
 }
 
-data class Counter(val value: Int) : State {
+internal data class Counter(val value: Int) : State {
     override val type = "Counter"
 
     class Event(

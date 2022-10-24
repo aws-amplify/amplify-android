@@ -18,6 +18,6 @@ package com.amplifyframework.statemachine.codegen.actions
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.events.SignInEvent
 
-interface MigrateAuthActions {
+internal interface MigrateAuthActions {
     fun initiateMigrateAuthAction(event: SignInEvent.EventType.InitiateMigrateAuth): Action
 }

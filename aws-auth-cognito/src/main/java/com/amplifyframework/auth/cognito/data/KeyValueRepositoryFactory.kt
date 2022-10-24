@@ -22,7 +22,7 @@ import com.amplifyframework.auth.cognito.data.AWSCognitoLegacyCredentialStore.Co
 import com.amplifyframework.auth.cognito.data.AWSCognitoLegacyCredentialStore.Companion.AWS_KEY_VALUE_STORE_NAMESPACE_IDENTIFIER
 import com.amplifyframework.auth.cognito.data.AWSCognitoLegacyCredentialStore.Companion.AWS_MOBILE_CLIENT_PROVIDER
 
-class KeyValueRepositoryFactory {
+internal class KeyValueRepositoryFactory {
     fun create(context: Context, keyValueRepoID: String, persistenceEnabled: Boolean = true): KeyValueRepository {
         return when {
             keyValueRepoID == awsKeyValueStoreIdentifier -> when {

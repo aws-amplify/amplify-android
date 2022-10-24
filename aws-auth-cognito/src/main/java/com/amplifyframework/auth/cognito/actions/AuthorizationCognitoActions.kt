@@ -30,7 +30,7 @@ import com.amplifyframework.statemachine.codegen.events.DeleteUserEvent
 import com.amplifyframework.statemachine.codegen.events.FetchAuthSessionEvent
 import com.amplifyframework.statemachine.codegen.events.RefreshSessionEvent
 
-object AuthorizationCognitoActions : AuthorizationActions {
+internal object AuthorizationCognitoActions : AuthorizationActions {
     override fun configureAuthorizationAction() = Action<AuthEnvironment>("ConfigureAuthZ") { id, dispatcher ->
         logger.verbose("$id Starting execution")
         val evt = AuthEvent(AuthEvent.EventType.ConfiguredAuthorization)
@@ -98,6 +98,13 @@ object AuthorizationCognitoActions : AuthorizationActions {
                 is AmplifyCredential.IdentityPool -> RefreshSessionEvent(
                     RefreshSessionEvent.EventType.RefreshUnAuthSession(LoginsMapProvider.UnAuthLogins())
                 )
+                is AmplifyCredential.IdentityPoolFederated -> {
+                    AuthorizationEvent(
+                        AuthorizationEvent.EventType.ThrowError(
+                            Exception("Refreshing credentials from federationToIdentityPool is not supported.")
+                        )
+                    )
+                }
                 else -> AuthorizationEvent(
                     AuthorizationEvent.EventType.ThrowError(Exception("Credentials empty, cannot refresh."))
                 )

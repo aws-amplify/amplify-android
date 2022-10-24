@@ -19,7 +19,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-sealed class AmplifyCredential {
+internal sealed class AmplifyCredential {
 
     interface UserPoolTypeCredential {
         val signedInData: SignedInData
@@ -75,7 +75,14 @@ sealed class AmplifyCredential {
  * @param providerName identity provider name
  */
 @Serializable
-data class FederatedToken(val token: String, val providerName: String)
+internal data class FederatedToken(val token: String, val providerName: String) {
+    override fun toString(): String {
+        return "FederatedToken(" +
+            "token = ${token.substring(0..4)}***, " +
+            "providerName = $providerName" +
+            ")"
+    }
+}
 
 /**
  * Contains cognito user pool JWT tokens
@@ -85,7 +92,7 @@ data class FederatedToken(val token: String, val providerName: String)
  * @param expiration Auth result expiration but not token expiration
  */
 @Serializable
-data class CognitoUserPoolTokens(
+internal data class CognitoUserPoolTokens(
     val idToken: String?,
     val accessToken: String?,
     val refreshToken: String?,
@@ -119,7 +126,7 @@ data class CognitoUserPoolTokens(
  * @param expiration session token expiration
  */
 @Serializable
-data class AWSCredentials(
+internal data class AWSCredentials(
     val accessKeyId: String?,
     val secretAccessKey: String?,
     val sessionToken: String?,
@@ -139,7 +146,7 @@ data class AWSCredentials(
     }
 }
 
-sealed class CredentialType {
+internal sealed class CredentialType {
     object Amplify : CredentialType()
     data class Device(val username: String) : CredentialType()
     object ASF : CredentialType()

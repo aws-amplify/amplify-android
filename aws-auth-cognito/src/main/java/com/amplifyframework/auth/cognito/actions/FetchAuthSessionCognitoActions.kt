@@ -24,6 +24,7 @@ import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidOauthConfigurationException
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.auth.cognito.helpers.SessionHelper
+import com.amplifyframework.auth.exceptions.NotAuthorizedException
 import com.amplifyframework.auth.exceptions.SessionExpiredException
 import com.amplifyframework.auth.exceptions.SignedOutException
 import com.amplifyframework.auth.exceptions.UnknownException
@@ -41,7 +42,7 @@ import com.amplifyframework.statemachine.codegen.events.FetchAuthSessionEvent
 import com.amplifyframework.statemachine.codegen.events.RefreshSessionEvent
 import kotlin.time.Duration.Companion.seconds
 
-object FetchAuthSessionCognitoActions : FetchAuthSessionActions {
+internal object FetchAuthSessionCognitoActions : FetchAuthSessionActions {
     private const val KEY_SECRET_HASH = "SECRET_HASH"
     private const val KEY_REFRESH_TOKEN = "REFRESH_TOKEN"
     private const val KEY_DEVICE_KEY = "DEVICE_KEY"
@@ -176,7 +177,7 @@ object FetchAuthSessionCognitoActions : FetchAuthSessionActions {
                     FetchAuthSessionEvent(FetchAuthSessionEvent.EventType.FetchAwsCredentials(it, loginsMap))
                 } ?: throw Exception("Fetching identity id failed.")
             } catch (notAuthorized: aws.sdk.kotlin.services.cognitoidentity.model.NotAuthorizedException) {
-                val exception = SignedOutException(
+                val exception = NotAuthorizedException(
                     recoverySuggestion = SignedOutException.RECOVERY_SUGGESTION_GUEST_ACCESS_DISABLED,
                     cause = notAuthorized
                 )
@@ -213,7 +214,7 @@ object FetchAuthSessionCognitoActions : FetchAuthSessionActions {
                     FetchAuthSessionEvent(FetchAuthSessionEvent.EventType.Fetched(identityId, credentials))
                 } ?: throw Exception("Fetching AWS credentials failed.")
             } catch (notAuthorized: aws.sdk.kotlin.services.cognitoidentity.model.NotAuthorizedException) {
-                val exception = SignedOutException(
+                val exception = NotAuthorizedException(
                     recoverySuggestion = SignedOutException.RECOVERY_SUGGESTION_GUEST_ACCESS_DISABLED,
                     cause = notAuthorized
                 )
