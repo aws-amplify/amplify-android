@@ -1,3 +1,5 @@
+package com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerators
+
 /*
  * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
@@ -13,8 +15,6 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerators
-
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.NotAuthorizedException
 import com.amplifyframework.auth.cognito.featuretest.API
 import com.amplifyframework.auth.cognito.featuretest.AuthAPI
@@ -27,69 +27,37 @@ import com.amplifyframework.auth.cognito.featuretest.generators.SerializableProv
 import com.amplifyframework.auth.cognito.featuretest.generators.toJsonElement
 import kotlinx.serialization.json.JsonObject
 
-object ResetPasswordTestCaseGenerator : SerializableProvider {
+object DeleteUserTestCaseGenerator : SerializableProvider {
     private val mockCognitoResponse = MockResponse(
         "cognito",
-        "forgotPassword",
+        "deleteUser",
         ResponseType.Success,
-        mapOf(
-            "codeDeliveryDetails" to mapOf(
-                "destination" to "dummy destination",
-                "deliveryMedium" to "EMAIL",
-                "attributeName" to "dummy attribute"
-            )
-        ).toJsonElement()
-    )
-
-    private val codeDeliveryDetails = mapOf(
-        "destination" to "dummy destination",
-        "deliveryMedium" to "EMAIL",
-        "attributeName" to "dummy attribute"
-    )
-
-    private val expectedSuccess =
-        mapOf(
-            "isPasswordReset" to false,
-            "nextStep" to
-                mapOf(
-                    "resetPasswordStep" to "CONFIRM_RESET_PASSWORD_WITH_CODE",
-                    "additionalInfo" to emptyMap<String, String>(),
-                    "codeDeliveryDetails" to codeDeliveryDetails
-                )
-        ).toJsonElement()
-
-    private val cognitoValidation = ExpectationShapes.Cognito(
-        "forgotPassword",
-        mapOf(
-            "username" to "someUsername",
-            "clientId" to "testAppClientId",
-            "clientMetadata" to emptyMap<String, String>()
-        ).toJsonElement()
+        JsonObject(emptyMap())
     )
 
     private val apiReturnValidation = ExpectationShapes.Amplify(
-        AuthAPI.resetPassword,
+        AuthAPI.deleteUser,
         ResponseType.Success,
-        expectedSuccess,
+        JsonObject(emptyMap()),
     )
 
     private val baseCase = FeatureTestCase(
         description = "Test that Cognito is called with given payload and returns successful data",
         preConditions = PreConditions(
             "authconfiguration.json",
-            "SignedOut_Configured.json",
-            mockedResponses = listOf()
+            "SignedIn_SessionEstablished.json",
+            mockedResponses = listOf(mockCognitoResponse)
         ),
         api = API(
-            AuthAPI.resetPassword,
-            mapOf("username" to "someUsername").toJsonElement(),
+            AuthAPI.deleteUser,
+            JsonObject(emptyMap()),
             JsonObject(emptyMap())
         ),
-        validations = listOf(cognitoValidation, apiReturnValidation)
+        validations = listOf(apiReturnValidation)
     )
 
     private val successCase: FeatureTestCase = baseCase.copy(
-        description = "AuthResetPasswordResult object is returned when reset password succeeds",
+        description = "Nothing is returned when delete user succeeds",
         preConditions = baseCase.preConditions.copy(mockedResponses = listOf(mockCognitoResponse)),
         validations = baseCase.validations.plus(apiReturnValidation)
     )
@@ -98,12 +66,12 @@ object ResetPasswordTestCaseGenerator : SerializableProvider {
         get() {
             val errorResponse = NotAuthorizedException.invoke { message = "Cognito error message" }
             return baseCase.copy(
-                description = "AuthException is thrown when forgotPassword API call fails",
+                description = "AuthException is thrown when deleteUser API call fails",
                 preConditions = baseCase.preConditions.copy(
                     mockedResponses = listOf(
                         MockResponse(
                             "cognito",
-                            "forgotPassword",
+                            "deleteUser",
                             ResponseType.Failure,
                             errorResponse.toJsonElement()
                         )
@@ -111,7 +79,7 @@ object ResetPasswordTestCaseGenerator : SerializableProvider {
                 ),
                 validations = listOf(
                     ExpectationShapes.Amplify(
-                        AuthAPI.resetPassword,
+                        AuthAPI.deleteUser,
                         ResponseType.Failure,
                         com.amplifyframework.auth.exceptions.NotAuthorizedException(
                             errorResponse.toString()

@@ -17,14 +17,12 @@ package featureTest.utilities
 
 import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.cognito.featuretest.AuthAPI
-import com.amplifyframework.auth.cognito.featuretest.AuthAPI.resetPassword
-import com.amplifyframework.auth.cognito.featuretest.AuthAPI.signIn
-import com.amplifyframework.auth.cognito.featuretest.AuthAPI.signUp
 import com.amplifyframework.auth.cognito.featuretest.ExpectationShapes
 import com.amplifyframework.auth.cognito.featuretest.ResponseType
 import com.amplifyframework.auth.result.AuthResetPasswordResult
 import com.amplifyframework.auth.result.AuthSignInResult
 import com.amplifyframework.auth.result.AuthSignUpResult
+import com.amplifyframework.core.Action
 import com.amplifyframework.core.Consumer
 import io.mockk.CapturingSlot
 import io.mockk.every
@@ -41,9 +39,10 @@ class APICaptorFactory(
 ) {
     companion object {
         val onSuccess = mapOf(
-            resetPassword to mockk<Consumer<AuthResetPasswordResult>>(),
-            signUp to mockk<Consumer<AuthSignUpResult>>(),
-            signIn to mockk<Consumer<AuthSignInResult>>()
+            AuthAPI.resetPassword to mockk<Consumer<AuthResetPasswordResult>>(),
+            AuthAPI.signUp to mockk<Consumer<AuthSignUpResult>>(),
+            AuthAPI.signIn to mockk<Consumer<AuthSignInResult>>(),
+            AuthAPI.deleteUser to mockk<Action>()
         )
         val onError = mockk<Consumer<AuthException>>()
         val successCaptors: MutableMap<AuthAPI, CapturingSlot<*>> = mutableMapOf()
@@ -58,22 +57,30 @@ class APICaptorFactory(
 
     private fun setupOnSuccess() {
         when (val apiName = authApi.apiName) {
-            resetPassword -> {
+            AuthAPI.resetPassword -> {
                 val resultCaptor = slot<AuthResetPasswordResult>()
                 val consumer = onSuccess[apiName] as Consumer<AuthResetPasswordResult>
                 every { consumer.accept(capture(resultCaptor)) } answers { latch.countDown() }
                 successCaptors[apiName] = resultCaptor
             }
-            signUp -> {
+            AuthAPI.signUp -> {
                 val resultCaptor = slot<AuthSignUpResult>()
                 val consumer = onSuccess[apiName] as Consumer<AuthSignUpResult>
                 every { consumer.accept(capture(resultCaptor)) } answers { latch.countDown() }
                 successCaptors[apiName] = resultCaptor
             }
-            signIn -> {
+            AuthAPI.signIn -> {
                 val resultCaptor = slot<AuthSignInResult>()
                 val consumer = onSuccess[apiName] as Consumer<AuthSignInResult>
                 every { consumer.accept(capture(resultCaptor)) } answers { latch.countDown() }
+                successCaptors[apiName] = resultCaptor
+            }
+            AuthAPI.deleteUser -> {
+                val resultCaptor = slot<Action>()
+                val consumer = onSuccess[apiName] as Action
+                every { consumer.call() } answers { latch.countDown() }
+                resultCaptor.captured = Action {}
+                resultCaptor.isCaptured = true
                 successCaptors[apiName] = resultCaptor
             }
             else -> throw Error("onSuccess for $authApi is not defined!")

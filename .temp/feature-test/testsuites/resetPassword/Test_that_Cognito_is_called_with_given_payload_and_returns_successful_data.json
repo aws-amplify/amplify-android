@@ -1,0 +1,47 @@
+{
+    "description": "Test that Cognito is called with given payload and returns successful data",
+    "preConditions": {
+        "amplify-configuration": "authconfiguration.json",
+        "state": "SignedOut_Configured.json",
+        "mockedResponses": [
+        ]
+    },
+    "api": {
+        "name": "resetPassword",
+        "params": {
+            "username": "someUsername"
+        },
+        "options": {
+        }
+    },
+    "validations": [
+        {
+            "type": "cognito",
+            "apiName": "forgotPassword",
+            "request": {
+                "username": "someUsername",
+                "clientId": "testAppClientId",
+                "clientMetadata": {
+                }
+            }
+        },
+        {
+            "type": "amplify",
+            "apiName": "resetPassword",
+            "responseType": "success",
+            "response": {
+                "isPasswordReset": false,
+                "nextStep": {
+                    "resetPasswordStep": "CONFIRM_RESET_PASSWORD_WITH_CODE",
+                    "additionalInfo": {
+                    },
+                    "codeDeliveryDetails": {
+                        "destination": "dummy destination",
+                        "deliveryMedium": "EMAIL",
+                        "attributeName": "dummy attribute"
+                    }
+                }
+            }
+        }
+    ]
+}

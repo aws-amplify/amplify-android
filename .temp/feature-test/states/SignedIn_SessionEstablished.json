@@ -1,0 +1,49 @@
+{
+    "type": "AuthState.Configured",
+    "AuthenticationState": {
+        "type": "AuthenticationState.SignedIn",
+        "signedInData": {
+            "userId": "userId",
+            "username": "username",
+            "signedInDate": 0,
+            "signInMethod": {
+                "type": "SignInMethod.ApiBased",
+                "authType": "USER_SRP_AUTH"
+            },
+            "cognitoUserPoolTokens": {
+                "idToken": "someToken",
+                "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNTE2MjM5MDIyfQ.WK8_fwfvSU7wdDl5sovnRApzUp6FHNB5ljS8KAO0QeA",
+                "refreshToken": "someRefreshToken",
+                "expiration": 300
+            }
+        }
+    },
+    "AuthorizationState": {
+        "type": "AuthorizationState.SessionEstablished",
+        "amplifyCredential": {
+            "type": "userAndIdentityPool",
+            "signedInData": {
+                "userId": "userId",
+                "username": "username",
+                "signedInDate": 0,
+                "signInMethod": {
+                    "type": "SignInMethod.ApiBased",
+                    "authType": "USER_SRP_AUTH"
+                },
+                "cognitoUserPoolTokens": {
+                    "idToken": "someToken",
+                    "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNTE2MjM5MDIyfQ.WK8_fwfvSU7wdDl5sovnRApzUp6FHNB5ljS8KAO0QeA",
+                    "refreshToken": "someRefreshToken",
+                    "expiration": 300
+                }
+            },
+            "identityId": "someIdentityId",
+            "credentials": {
+                "accessKeyId": "someAccessKey",
+                "secretAccessKey": "someSecretKey",
+                "sessionToken": "someSessionToken",
+                "expiration": 2342134
+            }
+        }
+    }
+}

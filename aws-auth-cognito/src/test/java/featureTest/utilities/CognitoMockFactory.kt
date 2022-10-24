@@ -25,6 +25,8 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.CognitoIdentityProviderCl
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AuthenticationResultType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.CodeDeliveryDetailsType
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeleteUserRequest
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeleteUserResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeliveryMediumType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ForgotPasswordRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ForgotPasswordResponse
@@ -179,6 +181,20 @@ class CognitoMockFactory(
                     GetCredentialsForIdentityResponse.invoke {
                         this.credentials = parseCredentials(responseObject["credentials"] as JsonObject)
                     }
+                }
+                captures[mockResponse.apiName] = requestCaptor
+            }
+            "deleteUser" -> {
+                val requestCaptor = slot<DeleteUserRequest>()
+
+                coEvery { mockCognitoIPClient.deleteUser(capture(requestCaptor)) } coAnswers {
+                    if (mockResponse.responseType == ResponseType.Failure) {
+                        throw Json.decodeFromString(
+                            CognitoIdentityProviderExceptionSerializer,
+                            responseObject.toString()
+                        )
+                    }
+                    DeleteUserResponse.invoke {}
                 }
                 captures[mockResponse.apiName] = requestCaptor
             }
