@@ -18,7 +18,7 @@ package com.amplifyframework.storage.s3.transfer
 import android.database.sqlite.SQLiteDatabase
 import java.util.UUID
 
-class TransferTable {
+internal class TransferTable {
     companion object {
         // Database table name
         const val TABLE_TRANSFER = "awstransfer"

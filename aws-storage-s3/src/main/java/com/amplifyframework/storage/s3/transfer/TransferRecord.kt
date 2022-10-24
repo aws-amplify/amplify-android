@@ -18,7 +18,7 @@ import android.database.Cursor
 import com.amplifyframework.storage.TransferState
 import com.amplifyframework.storage.s3.utils.JsonUtils
 
-data class TransferRecord(
+internal data class TransferRecord(
     var id: Int,
     var transferId: String,
     var mainUploadId: Int = 0,
