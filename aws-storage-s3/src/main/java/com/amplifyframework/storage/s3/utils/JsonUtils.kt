@@ -17,7 +17,7 @@ package com.amplifyframework.storage.s3.utils
 
 import com.google.gson.Gson
 
-object JsonUtils {
+internal object JsonUtils {
 
     fun mapToString(input: Map<String, String>): String {
         return Gson().toJson(input).toString()
