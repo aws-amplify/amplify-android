@@ -132,6 +132,9 @@ internal sealed class AuthorizationState : State {
                             listOf(action)
                         )
                     }
+                    is AuthenticationEvent.EventType.SignOutRequested -> StateResolution(
+                        SigningOut(AmplifyCredential.Empty)
+                    )
                     is AuthenticationEvent.EventType.CancelSignIn -> StateResolution(Configured())
                     else -> defaultResolution
                 }
@@ -236,7 +239,13 @@ internal sealed class AuthorizationState : State {
                     StateResolution(DeletingUser(resolution.newState), resolution.actions)
                 }
                 is SessionEstablished -> when {
-                    authenticationEvent is AuthenticationEvent.EventType.SignInRequested -> StateResolution(SigningIn())
+                    authenticationEvent is AuthenticationEvent.EventType.SignInRequested -> {
+                        if (oldState.amplifyCredential is AmplifyCredential.IdentityPool) {
+                            StateResolution(SigningIn())
+                        } else {
+                            defaultResolution
+                        }
+                    }
                     authenticationEvent is AuthenticationEvent.EventType.SignOutRequested -> StateResolution(
                         SigningOut(oldState.amplifyCredential)
                     )

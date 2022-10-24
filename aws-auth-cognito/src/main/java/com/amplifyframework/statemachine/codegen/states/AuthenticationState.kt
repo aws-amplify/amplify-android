@@ -86,6 +86,10 @@ internal sealed class AuthenticationState : State {
                     is AuthenticationEvent.EventType.SignInCompleted -> StateResolution(
                         SignedIn(authenticationEvent.signedInData, authenticationEvent.deviceMetadata)
                     )
+                    is AuthenticationEvent.EventType.SignOutRequested -> {
+                        val action = authenticationActions.initiateSignOutAction(authenticationEvent, null)
+                        StateResolution(SigningOut(), listOf(action))
+                    }
                     is AuthenticationEvent.EventType.CancelSignIn -> {
                         if (authenticationEvent.error != null) {
                             StateResolution(Error(authenticationEvent.error))
