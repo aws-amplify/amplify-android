@@ -26,8 +26,6 @@ import com.amplifyframework.statemachine.codegen.data.IdentityPoolConfiguration
 import com.amplifyframework.statemachine.codegen.data.SignInMethod
 import com.amplifyframework.statemachine.codegen.data.SignedInData
 import com.amplifyframework.statemachine.codegen.data.UserPoolConfiguration
-import java.util.Date
-import java.util.Locale
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
@@ -35,6 +33,8 @@ import org.junit.runner.RunWith
 import org.mockito.Mock
 import org.mockito.Mockito.`when`
 import org.mockito.junit.MockitoJUnitRunner
+import java.util.Date
+import java.util.Locale
 
 @RunWith(MockitoJUnitRunner::class)
 class AWSCognitoLegacyCredentialStoreTest {
@@ -154,7 +154,6 @@ class AWSCognitoLegacyCredentialStoreTest {
         setupUserPoolConfig()
         setupIdentityPoolConfig()
         setupKeyValueGetters()
-        `when`(mockKeyValue.get("signInMode")).thenReturn("2")
         persistentStore = AWSCognitoLegacyCredentialStore(mockContext, mockConfig, mockFactory)
 
         val actual = persistentStore.retrieveDeviceMetadata("username")
