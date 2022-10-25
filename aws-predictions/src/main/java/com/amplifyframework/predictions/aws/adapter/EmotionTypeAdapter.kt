@@ -29,6 +29,7 @@ object EmotionTypeAdapter {
      * @param emotion the emotion type returned by AWS Rekognition
      * @return Amplify's [EmotionType] enum
      */
+    @JvmStatic
     fun fromRekognition(emotion: String): EmotionType {
         return when (EmotionName.fromValue(emotion)) {
             EmotionName.Happy -> EmotionType.HAPPY
