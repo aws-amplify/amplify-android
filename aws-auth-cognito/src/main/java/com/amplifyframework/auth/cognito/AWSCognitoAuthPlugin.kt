@@ -73,6 +73,11 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
     @VisibleForTesting
     internal lateinit var realPlugin: RealAWSCognitoAuthPlugin
 
+    override fun initialize(context: Context) {
+        super.initialize(context)
+        realPlugin.initialize()
+    }
+
     @Throws(AmplifyException::class)
     override fun configure(pluginConfiguration: JSONObject, context: Context) {
         try {

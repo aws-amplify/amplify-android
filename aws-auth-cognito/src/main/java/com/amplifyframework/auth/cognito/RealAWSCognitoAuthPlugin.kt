@@ -129,6 +129,8 @@ import com.amplifyframework.statemachine.codegen.states.SRPSignInState
 import com.amplifyframework.statemachine.codegen.states.SignInChallengeState
 import com.amplifyframework.statemachine.codegen.states.SignInState
 import com.amplifyframework.statemachine.codegen.states.SignOutState
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
@@ -153,6 +155,29 @@ internal class RealAWSCognitoAuthPlugin(
     }
 
     fun escapeHatch() = authEnvironment.cognitoAuthService
+
+    @Throws(AmplifyException::class)
+    fun initialize() {
+        var token: StateChangeListenerToken? = null
+        val latch = CountDownLatch(1)
+        token = authStateMachine.listen(
+            { authState ->
+                if (authState is AuthState.Configured) {
+                    token?.let(authStateMachine::cancel)
+                    latch.countDown()
+                }
+            },
+            { }
+        )
+        try {
+            latch.await(10, TimeUnit.SECONDS)
+        } catch (e: Exception) {
+            throw AmplifyException(
+                "Failed to configure auth state machine",
+                "Try re-run the application again"
+            )
+        }
+    }
 
     override fun signUp(
         username: String,
