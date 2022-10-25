@@ -15,12 +15,12 @@
 
 package com.amplifyframework.storage.s3.configuration
 
+import com.amplifyframework.auth.AuthCredentialsProvider
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.storage.StorageAccessLevel
 import com.amplifyframework.storage.StorageException
-import com.amplifyframework.storage.s3.CognitoAuthProvider
+import io.mockk.mockk
 import junit.framework.TestCase
-import org.mockito.Mockito
 
 class AWSS3StoragePluginConfigurationTest : TestCase() {
 
@@ -30,25 +30,25 @@ class AWSS3StoragePluginConfigurationTest : TestCase() {
                 accessLevel: StorageAccessLevel,
                 targetIdentity: String?,
                 onSuccess: Consumer<String>,
-                onError: Consumer<StorageException>
+                onError: Consumer<StorageException>?
             ) {
                 onSuccess.accept("")
             }
         }
-        val cognitoAuthProvider = Mockito.mock(CognitoAuthProvider::class.java)
+        val authCredentialsProvider = mockk<AuthCredentialsProvider>()
         val awsS3StoragePluginConfiguration = AWSS3StoragePluginConfiguration {
             awsS3PluginPrefixResolver = customAWSS3PluginPrefixResolver
         }
         val resultS3PluginPrefixResolver =
-            awsS3StoragePluginConfiguration.getAWSS3PluginPrefixResolver(cognitoAuthProvider)
+            awsS3StoragePluginConfiguration.getAWSS3PluginPrefixResolver(authCredentialsProvider)
         assertEquals(resultS3PluginPrefixResolver, customAWSS3PluginPrefixResolver)
     }
 
     fun testGetDefaultAWSS3PluginPrefixResolver() {
         val awsS3StoragePluginConfiguration = AWSS3StoragePluginConfiguration {}
-        val cognitoAuthProvider = Mockito.mock(CognitoAuthProvider::class.java)
+        val authCredentialsProvider = mockk<AuthCredentialsProvider>()
         val awsS3PluginPrefixResolver =
-            awsS3StoragePluginConfiguration.getAWSS3PluginPrefixResolver(cognitoAuthProvider)
+            awsS3StoragePluginConfiguration.getAWSS3PluginPrefixResolver(authCredentialsProvider)
         assert(awsS3PluginPrefixResolver is StorageAccessLevelAwarePrefixResolver)
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -43,6 +43,7 @@ import com.amplifyframework.auth.options.AuthUpdateUserAttributesOptions;
 import com.amplifyframework.auth.options.AuthWebUISignInOptions;
 import com.amplifyframework.auth.result.AuthResetPasswordResult;
 import com.amplifyframework.auth.result.AuthSignInResult;
+import com.amplifyframework.auth.result.AuthSignOutResult;
 import com.amplifyframework.auth.result.AuthSignUpResult;
 import com.amplifyframework.auth.result.AuthUpdateAttributeResult;
 
@@ -103,10 +104,10 @@ public interface RxAuthCategoryBehavior {
      * be used to send them a new one.
      * @param username A login identifier e.g. `superdog22`; or an email/phone number, depending on configuration
      * @param options Advanced options such as a map of auth information for custom auth
-     * @return An Rx {@link Single} which emits an {@link AuthSignUpResult} on successful confirmation,
+     * @return An Rx {@link Single} which emits an {@link AuthCodeDeliveryDetails} on successful confirmation,
      *         or an {@link AuthException} on failure
      */
-    Single<AuthSignUpResult> resendSignUpCode(
+    Single<AuthCodeDeliveryDetails> resendSignUpCode(
             @NonNull String username,
             @NonNull AuthResendSignUpCodeOptions options
     );
@@ -115,10 +116,10 @@ public interface RxAuthCategoryBehavior {
      * If the user's code expires or they just missed it, this method can
      * be used to send them a new one.
      * @param username A login identifier e.g. `superdog22`; or an email/phone number, depending on configuration
-     * @return An Rx {@link Single} which emits an {@link AuthSignUpResult} on successful confirmation,
+     * @return An Rx {@link Single} which emits an {@link AuthCodeDeliveryDetails} on successful confirmation,
      *         or an {@link AuthException} on failure
      */
-    Single<AuthSignUpResult> resendSignUpCode(@NonNull String username);
+    Single<AuthCodeDeliveryDetails> resendSignUpCode(@NonNull String username);
 
     /**
      * Basic authentication to the app with a username and password or, if custom auth is setup,
@@ -146,23 +147,23 @@ public interface RxAuthCategoryBehavior {
 
     /**
      * Submit the confirmation code received as part of multi-factor Authentication during sign in.
-     * @param confirmationCode The code received as part of the multi-factor authentication process
+     * @param challengeResponse The code received as part of the multi-factor authentication process
      * @param options Advanced options such as a map of auth information for custom auth
      * @return An Rx {@link Single} which emits {@link AuthSignInResult} on success,
      *         {@link AuthException} on failure
      */
     Single<AuthSignInResult> confirmSignIn(
-            @Nullable String confirmationCode,
+            @Nullable String challengeResponse,
             @NonNull AuthConfirmSignInOptions options
     );
 
     /**
      * Submit the confirmation code received as part of multi-factor Authentication during sign in.
-     * @param confirmationCode The code received as part of the multi-factor authentication process
+     * @param challengeResponse The code received as part of the multi-factor authentication process
      * @return An Rx {@link Single} which emits {@link AuthSignInResult} on success,
      *         {@link AuthException} on failure
      */
-    Single<AuthSignInResult> confirmSignIn(@NonNull String confirmationCode);
+    Single<AuthSignInResult> confirmSignIn(@NonNull String challengeResponse);
 
     /**
      * Launch the specified auth provider's web UI sign in experience. You should also put the
@@ -285,6 +286,7 @@ public interface RxAuthCategoryBehavior {
 
     /**
      * Complete password recovery process by inputting user's desired new password and confirmation code.
+     * @param username A login identifier e.g. `superdog22`; or an email/phone number, depending on configuration
      * @param newPassword The user's desired new password
      * @param confirmationCode The confirmation code the user received after starting the forgotPassword process
      * @param options Advanced options such as a map of auth information for custom auth
@@ -292,6 +294,7 @@ public interface RxAuthCategoryBehavior {
      *         emits an {@link AuthException} otherwise
      */
     Completable confirmResetPassword(
+            @NonNull String username,
             @NonNull String newPassword,
             @NonNull String confirmationCode,
             @NonNull AuthConfirmResetPasswordOptions options
@@ -299,12 +302,13 @@ public interface RxAuthCategoryBehavior {
 
     /**
      * Complete password recovery process by inputting user's desired new password and confirmation code.
+     * @param username A login identifier e.g. `superdog22`; or an email/phone number, depending on configuration
      * @param newPassword The user's desired new password
      * @param confirmationCode The confirmation code the user received after starting the forgotPassword process
      * @return An Rx {@link Completable} which completes successfully if password reset is confirmed,
      *         emits an {@link AuthException} otherwise
      */
-    Completable confirmResetPassword(@NonNull String newPassword, @NonNull String confirmationCode);
+    Completable confirmResetPassword(String username, @NonNull String newPassword, @NonNull String confirmationCode);
 
     /**
      * Update the password of an existing user - must be signed in to perform this action.
@@ -398,22 +402,20 @@ public interface RxAuthCategoryBehavior {
      * Gets the currently logged in User.
      * @return the currently logged in user with basic info and methods for fetching/updating user attributes
      */
-    AuthUser getCurrentUser();
+    Single<AuthUser> getCurrentUser();
 
     /**
      * Sign out of the current device.
-     * @return An Rx {@link Completable} which completes upon successful sign-out; emits an
-     *         {@link AuthException} otherwise
+     * @return An Rx {@link Single} which emits {@link AuthSignOutResult} on completion
      */
-    Completable signOut();
+    Single<AuthSignOutResult> signOut();
 
     /**
      * Sign out with advanced options.
      * @param options Advanced options for sign out (e.g. whether to sign out of all devices globally)
-     * @return An Rx {@link Completable} which completes upon successful sign-out;
-     *         emits an {@link AuthException} otherwise
+     * @return An Rx {@link Single} which emits {@link AuthSignOutResult} on completion
      */
-    Completable signOut(@NonNull AuthSignOutOptions options);
+    Single<AuthSignOutResult> signOut(@NonNull AuthSignOutOptions options);
 
     /**
      * Delete the account of the currently signed in user.

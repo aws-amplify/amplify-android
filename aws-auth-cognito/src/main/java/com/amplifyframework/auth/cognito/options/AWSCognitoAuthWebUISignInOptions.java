@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -23,40 +23,28 @@ import com.amplifyframework.auth.options.AuthWebUISignInOptions;
 import com.amplifyframework.util.Immutable;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * Cognito extension of web ui sign in options to add the platform specific fields.
  */
 public final class AWSCognitoAuthWebUISignInOptions extends AuthWebUISignInOptions {
     private final String idpIdentifier;
-    private final String federationProviderName;
     private final String browserPackage;
 
     /**
      * Advanced options for signing in via a hosted web ui.
      * @param scopes specify OAUTH scopes
-     * @param signInQueryParameters map of custom parameters to send associated with sign in process
-     * @param signOutQueryParameters map of custom parameters to send associated with sign out process
-     * @param tokenQueryParameters map of custom parameters to send associated with token
      * @param idpIdentifier The IdentityProvider identifier if using multiple instances of same identity provider.
-     * @param federationProviderName If federating with Cognito Identity and using a provider lik Auth0 specify the
-     *                               provider name, e.g. .auth0.com
      * @param browserPackage Specify which browser package should be used for web sign in (e.g. "org.mozilla.firefox").
      *                       Defaults to the Chrome package if not specified.
      */
     protected AWSCognitoAuthWebUISignInOptions(
             List<String> scopes,
-            Map<String, String> signInQueryParameters,
-            Map<String, String> signOutQueryParameters,
-            Map<String, String> tokenQueryParameters,
             String idpIdentifier,
-            String federationProviderName,
             String browserPackage
     ) {
-        super(scopes, signInQueryParameters, signOutQueryParameters, tokenQueryParameters);
+        super(scopes);
         this.idpIdentifier = idpIdentifier;
-        this.federationProviderName = federationProviderName;
         this.browserPackage = browserPackage;
     }
 
@@ -67,15 +55,6 @@ public final class AWSCognitoAuthWebUISignInOptions extends AuthWebUISignInOptio
     @Nullable
     public String getIdpIdentifier() {
         return idpIdentifier;
-    }
-
-    /**
-     * If federating with Cognito Identity and using a provider lik Auth0 specify the provider name, e.g. .auth0.com
-     * @return the provider name
-     */
-    @Nullable
-    public String getFederationProviderName() {
-        return federationProviderName;
     }
 
     /**
@@ -100,11 +79,7 @@ public final class AWSCognitoAuthWebUISignInOptions extends AuthWebUISignInOptio
     public int hashCode() {
         return ObjectsCompat.hash(
                 getScopes(),
-                getSignInQueryParameters(),
-                getSignOutQueryParameters(),
-                getTokenQueryParameters(),
                 getIdpIdentifier(),
-                getFederationProviderName(),
                 getBrowserPackage()
         );
     }
@@ -118,11 +93,7 @@ public final class AWSCognitoAuthWebUISignInOptions extends AuthWebUISignInOptio
         } else {
             AWSCognitoAuthWebUISignInOptions webUISignInOptions = (AWSCognitoAuthWebUISignInOptions) obj;
             return ObjectsCompat.equals(getScopes(), webUISignInOptions.getScopes()) &&
-                    ObjectsCompat.equals(getSignInQueryParameters(), webUISignInOptions.getSignInQueryParameters()) &&
-                    ObjectsCompat.equals(getSignOutQueryParameters(), webUISignInOptions.getSignOutQueryParameters()) &&
-                    ObjectsCompat.equals(getTokenQueryParameters(), webUISignInOptions.getTokenQueryParameters()) &&
                     ObjectsCompat.equals(getIdpIdentifier(), webUISignInOptions.getIdpIdentifier()) &&
-                    ObjectsCompat.equals(getFederationProviderName(), webUISignInOptions.getFederationProviderName()) &&
                     ObjectsCompat.equals(getBrowserPackage(), webUISignInOptions.getBrowserPackage());
         }
     }
@@ -131,11 +102,7 @@ public final class AWSCognitoAuthWebUISignInOptions extends AuthWebUISignInOptio
     public String toString() {
         return "AWSCognitoAuthWebUISignInOptions{" +
                 "scopes=" + getScopes() +
-                ", signInQueryParameters=" + getSignInQueryParameters() +
-                ", signOutQueryParameters=" + getSignOutQueryParameters() +
-                ", tokenQueryParameters=" + getTokenQueryParameters() +
                 ", idpIdentifier=" + getIdpIdentifier() +
-                ", federationProviderName=" + getFederationProviderName() +
                 ", browserPackage=" + getBrowserPackage() +
                 '}';
     }
@@ -145,7 +112,6 @@ public final class AWSCognitoAuthWebUISignInOptions extends AuthWebUISignInOptio
      */
     public static final class CognitoBuilder extends Builder<CognitoBuilder> {
         private String idpIdentifier;
-        private String federationProviderName;
         private String browserPackage;
 
         /**
@@ -176,18 +142,6 @@ public final class AWSCognitoAuthWebUISignInOptions extends AuthWebUISignInOptio
         }
 
         /**
-         * If federating with Cognito Identity and using a provider lik Auth0 specify the provider name.
-         * @param federationProviderName If federating with Cognito Identity and using a provider lik Auth0 specify the
-         *                               provider name, e.g. .auth0.com
-         * @return the instance of the builder.
-         */
-        @NonNull
-        public CognitoBuilder federationProviderName(@NonNull String federationProviderName) {
-            this.federationProviderName = federationProviderName;
-            return getThis();
-        }
-
-        /**
          * This can optionally be set to specify which browser package should perform the sign in action
          * (e.g. "org.mozilla.firefox"). Defaults to the Chrome package if not set.
          *
@@ -207,11 +161,7 @@ public final class AWSCognitoAuthWebUISignInOptions extends AuthWebUISignInOptio
         public AWSCognitoAuthWebUISignInOptions build() {
             return new AWSCognitoAuthWebUISignInOptions(
                     Immutable.of(super.getScopes()),
-                    Immutable.of(super.getSignInQueryParameters()),
-                    Immutable.of(super.getSignOutQueryParameters()),
-                    Immutable.of(super.getTokenQueryParameters()),
                     idpIdentifier,
-                    federationProviderName,
                     browserPackage
             );
         }

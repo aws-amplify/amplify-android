@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -31,8 +31,6 @@ import com.amplifyframework.core.model.AuthRule;
 import com.amplifyframework.core.model.AuthStrategy;
 import com.amplifyframework.core.model.ModelOperation;
 
-import com.amazonaws.mobileconnectors.cognitoidentityprovider.exceptions.CognitoParameterInvalidException;
-import com.amazonaws.mobileconnectors.cognitoidentityprovider.util.CognitoJWTParser;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -150,7 +148,7 @@ public final class AuthRuleRequestDecorator {
 
     private String getIdentityValue(String identityClaim, AuthorizationType authType) throws ApiException {
         try {
-            return CognitoJWTParser
+            return CognitoJWTParser.Companion
                     .getPayload(getAuthToken(authType))
                     .getString(identityClaim);
         } catch (JSONException error) {
@@ -171,7 +169,7 @@ public final class AuthRuleRequestDecorator {
     private ArrayList<String> getUserGroups(String groupClaim, AuthorizationType authType) throws ApiException {
         ArrayList<String> groups = new ArrayList<>();
         try {
-            JSONObject accessToken = CognitoJWTParser
+            JSONObject accessToken = CognitoJWTParser.Companion
                     .getPayload(getAuthToken(authType));
             if (accessToken.has(groupClaim)) {
                 JSONArray jsonGroups = accessToken.getJSONArray(groupClaim);

@@ -20,6 +20,7 @@ import com.amplifyframework.core.async.Cancelable
 import com.amplifyframework.kotlin.storage.Storage.InProgressStorageOperation
 import com.amplifyframework.storage.StorageCategoryBehavior as Delegate
 import com.amplifyframework.storage.StorageException
+import com.amplifyframework.storage.operation.StorageTransferOperation
 import com.amplifyframework.storage.options.StorageDownloadFileOptions
 import com.amplifyframework.storage.options.StorageGetUrlOptions
 import com.amplifyframework.storage.options.StorageListOptions
@@ -31,6 +32,7 @@ import com.amplifyframework.storage.result.StorageGetUrlResult
 import com.amplifyframework.storage.result.StorageListResult
 import com.amplifyframework.storage.result.StorageRemoveResult
 import com.amplifyframework.storage.result.StorageTransferProgress
+import com.amplifyframework.storage.result.StorageTransferResult
 import com.amplifyframework.storage.result.StorageUploadFileResult
 import com.amplifyframework.storage.result.StorageUploadInputStreamResult
 import java.io.File
@@ -150,6 +152,21 @@ class KotlinStorageFacade(private val delegate: Delegate = Amplify.Storage) : St
                 options,
                 { continuation.resume(it) },
                 { continuation.resumeWithException(it) }
+            )
+        }
+    }
+
+    @Throws(StorageException::class)
+    override suspend fun getTransfer(transferId: String): StorageTransferOperation<*, StorageTransferResult> {
+        return suspendCoroutine { continuation ->
+            delegate.getTransfer(
+                transferId,
+                {
+                    continuation.resume(it as StorageTransferOperation<*, StorageTransferResult>)
+                },
+                {
+                    continuation.resumeWithException(it)
+                }
             )
         }
     }
