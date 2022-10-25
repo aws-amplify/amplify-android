@@ -174,7 +174,7 @@ internal class RealAWSCognitoAuthPlugin(
         } catch (e: Exception) {
             throw AmplifyException(
                 "Failed to configure auth state machine",
-                "Try re-run the application again"
+                "Try re-run the application"
             )
         }
     }
