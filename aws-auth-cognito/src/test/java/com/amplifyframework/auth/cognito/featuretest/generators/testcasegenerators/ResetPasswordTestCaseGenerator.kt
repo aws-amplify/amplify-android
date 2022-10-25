@@ -13,18 +13,18 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.testutils.featuretest.auth.generators.testcasegenerators
+package com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerators
 
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.NotAuthorizedException
-import com.amplifyframework.testutils.featuretest.API
-import com.amplifyframework.testutils.featuretest.ExpectationShapes
-import com.amplifyframework.testutils.featuretest.FeatureTestCase
-import com.amplifyframework.testutils.featuretest.MockResponse
-import com.amplifyframework.testutils.featuretest.PreConditions
-import com.amplifyframework.testutils.featuretest.ResponseType
-import com.amplifyframework.testutils.featuretest.auth.AuthAPI
-import com.amplifyframework.testutils.featuretest.auth.generators.SerializableProvider
-import com.amplifyframework.testutils.featuretest.auth.generators.toJsonElement
+import com.amplifyframework.auth.cognito.featuretest.API
+import com.amplifyframework.auth.cognito.featuretest.AuthAPI
+import com.amplifyframework.auth.cognito.featuretest.ExpectationShapes
+import com.amplifyframework.auth.cognito.featuretest.FeatureTestCase
+import com.amplifyframework.auth.cognito.featuretest.MockResponse
+import com.amplifyframework.auth.cognito.featuretest.PreConditions
+import com.amplifyframework.auth.cognito.featuretest.ResponseType
+import com.amplifyframework.auth.cognito.featuretest.generators.SerializableProvider
+import com.amplifyframework.auth.cognito.featuretest.generators.toJsonElement
 import kotlinx.serialization.json.JsonObject
 
 object ResetPasswordTestCaseGenerator : SerializableProvider {
@@ -72,13 +72,12 @@ object ResetPasswordTestCaseGenerator : SerializableProvider {
         ResponseType.Success,
         expectedSuccess,
     )
-    private val finalStateValidation = ExpectationShapes.State("AuthenticationState_SignedIn.json")
 
     private val baseCase = FeatureTestCase(
         description = "Test that Cognito is called with given payload and returns successful data",
         preConditions = PreConditions(
             "authconfiguration.json",
-            "SignedIn_SessionEstablished.json",
+            "SignedOut_Configured.json",
             mockedResponses = listOf()
         ),
         api = API(

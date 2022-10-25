@@ -15,8 +15,8 @@
 
 package com.amplifyframework.statemachine
 
-typealias ActionClosure = suspend (EventDispatcher, Environment) -> Unit
-typealias BoundActionClosure<T> = suspend T.(String?, EventDispatcher) -> Unit
+internal typealias ActionClosure = suspend (EventDispatcher, Environment) -> Unit
+internal typealias BoundActionClosure<T> = suspend T.(String?, EventDispatcher) -> Unit
 
 /**
  * "Side Effects" that states may wish to perform when exiting in response to a StateMachineEvent.
@@ -29,7 +29,7 @@ typealias BoundActionClosure<T> = suspend T.(String?, EventDispatcher) -> Unit
  * Side effects are part of the return value of State Resolvers. They are resolved and executed by the State Machine
  * after the new State is fully resolved and applied.
  */
-interface Action {
+internal interface Action {
     val id: String
         get() = this.javaClass.simpleName
 
@@ -58,7 +58,7 @@ interface Action {
     }
 }
 
-class BasicAction(override var id: String, val block: ActionClosure) : Action {
+internal class BasicAction(override var id: String, val block: ActionClosure) : Action {
     override suspend fun execute(dispatcher: EventDispatcher, environment: Environment) {
         block(dispatcher, environment)
     }

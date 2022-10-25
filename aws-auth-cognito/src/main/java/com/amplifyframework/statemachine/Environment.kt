@@ -18,4 +18,4 @@ package com.amplifyframework.statemachine
 /**
  * Environments provide a way to access dependencies at runtime.
  */
-interface Environment
+internal interface Environment

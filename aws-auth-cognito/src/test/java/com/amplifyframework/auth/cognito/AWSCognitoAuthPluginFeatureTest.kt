@@ -15,23 +15,29 @@
 
 package com.amplifyframework.auth.cognito
 
+import aws.sdk.kotlin.services.cognitoidentity.CognitoIdentityClient
 import aws.sdk.kotlin.services.cognitoidentityprovider.CognitoIdentityProviderClient
+import com.amplifyframework.auth.cognito.featuretest.API
+import com.amplifyframework.auth.cognito.featuretest.ExpectationShapes
+import com.amplifyframework.auth.cognito.featuretest.FeatureTestCase
+import com.amplifyframework.auth.cognito.featuretest.ResponseType.Success
+import com.amplifyframework.auth.cognito.featuretest.generators.toJsonElement
+import com.amplifyframework.auth.cognito.featuretest.serializers.deserializeToAuthState
 import com.amplifyframework.logging.Logger
+import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
+import com.amplifyframework.statemachine.codegen.data.CredentialType
+import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.states.AuthState
-import com.amplifyframework.testutils.featuretest.API
-import com.amplifyframework.testutils.featuretest.ExpectationShapes
-import com.amplifyframework.testutils.featuretest.FeatureTestCase
-import com.amplifyframework.testutils.featuretest.ResponseType.Success
-import com.amplifyframework.testutils.featuretest.auth.generators.toJsonElement
-import com.amplifyframework.testutils.featuretest.auth.serializers.deserializeToAuthState
 import com.google.gson.Gson
 import featureTest.utilities.APICaptorFactory
 import featureTest.utilities.AuthOptionsFactory
 import featureTest.utilities.CognitoMockFactory
 import featureTest.utilities.CognitoRequestFactory.getExpectedRequestFor
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import java.io.File
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -39,6 +45,7 @@ import kotlin.reflect.KParameter
 import kotlin.reflect.full.memberFunctions
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.newSingleThreadContext
 import kotlinx.coroutines.runBlocking
@@ -65,7 +72,8 @@ class AWSCognitoAuthPluginFeatureTest(private val fileName: String) {
     private lateinit var authStateMachine: AuthStateMachine
 
     private val mockCognitoIPClient = mockk<CognitoIdentityProviderClient>()
-    private val cognitoMockFactory = CognitoMockFactory(mockCognitoIPClient)
+    private val mockCognitoIdClient = mockk<CognitoIdentityClient>()
+    private val cognitoMockFactory = CognitoMockFactory(mockCognitoIPClient, mockCognitoIdClient)
 
     // Used to execute a test in situations where the platform Main dispatcher is not available
     // see [https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-test/]
@@ -98,7 +106,7 @@ class AWSCognitoAuthPluginFeatureTest(private val fileName: String) {
     fun setUp() {
         Dispatchers.setMain(mainThreadSurrogate)
         feature = readTestFeature(fileName)
-        sut.realPlugin = readconfiguration(feature.preConditions.`amplify-configuration`)
+        sut.realPlugin = readConfiguration(feature.preConditions.`amplify-configuration`)
         latch = CountDownLatch(1)
     }
 
@@ -121,7 +129,7 @@ class AWSCognitoAuthPluginFeatureTest(private val fileName: String) {
         return feature
     }
 
-    private fun readconfiguration(configuration: String): RealAWSCognitoAuthPlugin {
+    private fun readConfiguration(configuration: String): RealAWSCognitoAuthPlugin {
         val configFileUrl = this::class.java.getResource("$configurationFilesBasePath/$configuration")
         val configJSONObject =
             JSONObject(File(configFileUrl!!.file).readText())
@@ -132,27 +140,28 @@ class AWSCognitoAuthPluginFeatureTest(private val fileName: String) {
 
         val authService = mockk<AWSCognitoAuthServiceBehavior> {
             every { cognitoIdentityProviderClient } returns mockCognitoIPClient
+            every { cognitoIdentityClient } returns mockCognitoIdClient
         }
 
         val credentialStoreClient = mockk<CredentialStoreClient>(relaxed = true)
+        coEvery { credentialStoreClient.loadCredentials(capture(slot<CredentialType.Device>())) } coAnswers {
+            AmplifyCredential.DeviceData(DeviceMetadata.Empty)
+        }
+
+        val logger = mockk<Logger>(relaxed = true)
+
         val authEnvironment = AuthEnvironment(
             authConfiguration,
             authService,
             credentialStoreClient,
             null,
             null,
-            logger = mockk()
+            logger
         )
-        val logger = mockk<Logger>(relaxed = true)
 
         authStateMachine = AuthStateMachine(authEnvironment, getState(feature.preConditions.state))
 
-        return RealAWSCognitoAuthPlugin(
-            authConfiguration,
-            authEnvironment,
-            authStateMachine,
-            logger
-        )
+        return RealAWSCognitoAuthPlugin(authConfiguration, authEnvironment, authStateMachine, logger)
     }
 
     private fun setupMocks() {
@@ -194,7 +203,7 @@ class AWSCognitoAuthPluginFeatureTest(private val fileName: String) {
                     assertEquals(getState(validation.expectedState), authState)
                     getStateLatch.countDown()
                 }
-                getStateLatch.await(10, TimeUnit.SECONDS)
+                assertTrue(getStateLatch.await(10, TimeUnit.SECONDS))
             }
         }
     }
@@ -212,8 +221,10 @@ class AWSCognitoAuthPluginFeatureTest(private val fileName: String) {
         )
         requiredParams?.set(targetApi.parameters.first { it.name == "onError" }, APICaptorFactory.onError)
 
-        val optionsObj = AuthOptionsFactory.create(api.name, api.options as JsonObject)
-        requiredParams?.set(targetApi.parameters.first { it.name == "options" }, optionsObj)
+        targetApi?.parameters?.firstOrNull { it.name == "options" }?.let { options ->
+            val optionsObj = AuthOptionsFactory.create(api.name, api.options as JsonObject)
+            requiredParams?.set(options, optionsObj)
+        }
 
         runBlocking {
             requiredParams?.let { targetApi.callBy(it) }

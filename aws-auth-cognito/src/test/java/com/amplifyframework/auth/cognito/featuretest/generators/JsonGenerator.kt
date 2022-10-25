@@ -1,10 +1,12 @@
-package com.amplifyframework.testutils.featuretest.auth.generators
+package com.amplifyframework.auth.cognito.featuretest.generators
 
+import com.amplifyframework.auth.cognito.featuretest.FeatureTestCase
+import com.amplifyframework.auth.cognito.featuretest.generators.authstategenerators.AuthStateJsonGenerator
+import com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerators.DeleteUserTestCaseGenerator
+import com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerators.ResetPasswordTestCaseGenerator
+import com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerators.SignInTestCaseGenerator
+import com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerators.SignUpTestCaseGenerator
 import com.amplifyframework.statemachine.codegen.states.AuthState
-import com.amplifyframework.testutils.featuretest.FeatureTestCase
-import com.amplifyframework.testutils.featuretest.auth.generators.authstategenerators.AuthStateJsonGenerator
-import com.amplifyframework.testutils.featuretest.auth.generators.testcasegenerators.ResetPasswordTestCaseGenerator
-import com.amplifyframework.testutils.featuretest.auth.generators.testcasegenerators.SignUpTestCaseGenerator
 
 interface SerializableProvider {
     val serializables: List<Any>
@@ -17,7 +19,9 @@ object JsonGenerator {
     private val providers: List<SerializableProvider> = listOf(
         AuthStateJsonGenerator,
         ResetPasswordTestCaseGenerator,
-        SignUpTestCaseGenerator
+        SignUpTestCaseGenerator,
+        SignInTestCaseGenerator,
+        DeleteUserTestCaseGenerator
     )
 
     fun generate() {

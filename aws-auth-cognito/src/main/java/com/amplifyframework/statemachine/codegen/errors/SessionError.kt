@@ -17,7 +17,7 @@ package com.amplifyframework.statemachine.codegen.errors
 
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 
-data class SessionError(val exception: Exception, val amplifyCredential: AmplifyCredential) : Exception(
+internal data class SessionError(val exception: Exception, val amplifyCredential: AmplifyCredential) : Exception(
     exception.message,
     exception.cause
 )

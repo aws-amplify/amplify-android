@@ -34,7 +34,7 @@ import org.jetbrains.annotations.TestOnly
  * https://github.com/aws-amplify/aws-sdk-android/blob/main/aws-android-sdk-cognitoidentityprovider/src/main/java/com/amazonaws/mobileconnectors/cognitoidentityprovider/CognitoUser.java#L3587
  * SRP requires Kotlin version 1.5+, and minSDK version 24.
  */
-class SRPHelper(private val password: String) {
+internal class SRPHelper(private val password: String) {
 
     companion object {
         private val EPHEMERAL_KEY_LENGTH = 1024
@@ -187,6 +187,6 @@ class SRPHelper(private val password: String) {
         val sValue = computeS(uValue, xValue, bigIntSRPB)
         val key = computePasswordAuthenticationKey(sValue, uValue)
         val m1Signature = generateM1Signature(key, secretBlock)
-        return String(android.util.Base64.encode(m1Signature, android.util.Base64.NO_WRAP))
+        return android.util.Base64.encodeToString(m1Signature, android.util.Base64.NO_WRAP)
     }
 }

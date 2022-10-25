@@ -31,7 +31,7 @@ import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.SignInEvent
 import com.amplifyframework.statemachine.codegen.events.SignOutEvent
 
-object AuthenticationCognitoActions : AuthenticationActions {
+internal object AuthenticationCognitoActions : AuthenticationActions {
     override fun configureAuthenticationAction(event: AuthenticationEvent.EventType.Configure) =
         Action<AuthEnvironment>("ConfigureAuthN") { id, dispatcher ->
             logger.verbose("$id Starting execution")

@@ -15,15 +15,19 @@
 
 @file:Suppress("UNCHECKED_CAST")
 
-package com.amplifyframework.testutils.featuretest.auth.serializers
+package com.amplifyframework.auth.cognito.featuretest.serializers
 
+import com.amplifyframework.auth.cognito.featuretest.serializers.AuthStatesProxy.Companion.format
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
+import com.amplifyframework.statemachine.codegen.data.AuthChallenge
 import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.data.SignedInData
+import com.amplifyframework.statemachine.codegen.data.SignedOutData
 import com.amplifyframework.statemachine.codegen.states.AuthState
 import com.amplifyframework.statemachine.codegen.states.AuthenticationState
 import com.amplifyframework.statemachine.codegen.states.AuthorizationState
-import com.amplifyframework.testutils.featuretest.auth.serializers.AuthStatesProxy.Companion.format
+import com.amplifyframework.statemachine.codegen.states.SignInChallengeState
+import com.amplifyframework.statemachine.codegen.states.SignInState
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
@@ -44,8 +48,16 @@ internal data class AuthStatesProxy(
     val authNState: AuthenticationState? = null,
     @Contextual @SerialName("AuthorizationState")
     val authZState: AuthorizationState? = null,
+    @Contextual @SerialName("SignInState")
+    val signInState: SignInState = SignInState.NotStarted(),
+    @Contextual @SerialName("SignInChallengeState")
+    val signInChallengeState: SignInChallengeState? = null,
     @Contextual
     val signedInData: SignedInData? = null,
+    @Contextual
+    val signedOutData: SignedOutData? = null,
+    @Contextual
+    val authChallenge: AuthChallenge? = null,
     @Contextual
     val amplifyCredential: AmplifyCredential? = null
 ) {
@@ -53,11 +65,19 @@ internal data class AuthStatesProxy(
     internal fun <T> toRealAuthState(): T {
         return when (type) {
             "AuthState.Configured" -> AuthState.Configured(authNState, authZState) as T
+            "AuthenticationState.SignedOut" -> signedOutData?.let { AuthenticationState.SignedOut(it) } as T
             "AuthenticationState.SignedIn" -> signedInData?.let {
                 AuthenticationState.SignedIn(it, DeviceMetadata.Empty)
             } as T
+            "AuthenticationState.SigningIn" -> AuthenticationState.SigningIn(signInState) as T
+            "AuthorizationState.Configured" -> AuthorizationState.Configured() as T
             "AuthorizationState.SessionEstablished" -> amplifyCredential?.let {
                 AuthorizationState.SessionEstablished(it)
+            } as T
+            "AuthorizationState.SigningIn" -> AuthorizationState.SigningIn() as T
+            "SignInState.ResolvingChallenge" -> SignInState.ResolvingChallenge(signInChallengeState) as T
+            "SignInChallengeState.WaitingForAnswer" -> authChallenge?.let {
+                SignInChallengeState.WaitingForAnswer(it)
             } as T
             else -> {
                 error("Cannot get real type!")
@@ -91,8 +111,14 @@ internal data class AuthStatesProxy(
                             type = "AuthenticationState.SignedIn",
                             signedInData = authState.signedInData
                         )
-                        is AuthenticationState.SignedOut -> TODO()
-                        is AuthenticationState.SigningIn -> TODO()
+                        is AuthenticationState.SignedOut -> AuthStatesProxy(
+                            type = "AuthenticationState.SignedOut",
+                            signedOutData = authState.signedOutData
+                        )
+                        is AuthenticationState.SigningIn -> AuthStatesProxy(
+                            type = "AuthenticationState.SigningIn",
+                            signInState = authState.signInState
+                        )
                         is AuthenticationState.SigningOut -> TODO()
                         is AuthenticationState.FederatingToIdentityPool -> TODO()
                         is AuthenticationState.FederatedToIdentityPool -> TODO()
@@ -100,8 +126,12 @@ internal data class AuthStatesProxy(
                 }
                 is AuthorizationState -> {
                     when (authState) {
-                        is AuthorizationState.Configured -> TODO()
-                        is AuthorizationState.DeletingUser -> TODO()
+                        is AuthorizationState.Configured -> AuthStatesProxy(
+                            type = "AuthorizationState.Configured"
+                        )
+                        is AuthorizationState.DeletingUser -> AuthStatesProxy(
+                            type = "AuthorizationState.DeletingUser"
+                        )
                         is AuthorizationState.Error -> TODO()
                         is AuthorizationState.FetchingAuthSession -> TODO()
                         is AuthorizationState.FetchingUnAuthSession -> TODO()
@@ -111,10 +141,42 @@ internal data class AuthStatesProxy(
                             type = "AuthorizationState.SessionEstablished",
                             amplifyCredential = authState.amplifyCredential
                         )
-                        is AuthorizationState.SigningIn -> TODO()
+                        is AuthorizationState.SigningIn -> AuthStatesProxy(
+                            type = "AuthorizationState.SigningIn",
+                        )
                         is AuthorizationState.SigningOut -> TODO()
                         is AuthorizationState.StoringCredentials -> TODO()
                         is AuthorizationState.FederatingToIdentityPool -> TODO()
+                    }
+                }
+                is SignInState -> {
+                    when (authState) {
+                        is SignInState.NotStarted -> TODO()
+                        is SignInState.ConfirmingDevice -> TODO()
+                        is SignInState.Done -> TODO()
+                        is SignInState.Error -> TODO()
+                        is SignInState.ResolvingChallenge -> AuthStatesProxy(
+                            type = "SignInState.ResolvingChallenge",
+                            signInChallengeState = authState.challengeState
+                        )
+                        is SignInState.ResolvingDeviceSRP -> TODO()
+                        is SignInState.SignedIn -> TODO()
+                        is SignInState.SigningInViaMigrateAuth -> TODO()
+                        is SignInState.SigningInWithCustom -> TODO()
+                        is SignInState.SigningInWithHostedUI -> TODO()
+                        is SignInState.SigningInWithSRP -> TODO()
+                        is SignInState.SigningInWithSRPCustom -> TODO()
+                    }
+                }
+                is SignInChallengeState -> {
+                    when (authState) {
+                        is SignInChallengeState.NotStarted -> TODO()
+                        is SignInChallengeState.Verified -> TODO()
+                        is SignInChallengeState.Verifying -> TODO()
+                        is SignInChallengeState.WaitingForAnswer -> AuthStatesProxy(
+                            type = "SignInChallengeState.WaitingForAnswer",
+                            authChallenge = authState.challenge
+                        )
                     }
                 }
                 else -> {
@@ -129,6 +191,8 @@ internal data class AuthStatesProxy(
                 contextual(object : KSerializer<AuthState.Configured> by AuthStatesSerializer() {})
                 contextual(object : KSerializer<AuthenticationState> by AuthStatesSerializer() {})
                 contextual(object : KSerializer<AuthenticationState.SignedIn> by AuthStatesSerializer() {})
+                contextual(object : KSerializer<SignInState> by AuthStatesSerializer() {})
+                contextual(object : KSerializer<SignInChallengeState> by AuthStatesSerializer() {})
                 contextual(object : KSerializer<AuthorizationState> by AuthStatesSerializer() {})
                 contextual(object : KSerializer<AuthorizationState.SessionEstablished> by AuthStatesSerializer() {})
             }
@@ -137,8 +201,8 @@ internal data class AuthStatesProxy(
     }
 }
 
-fun AuthState.serialize(): String = format.encodeToString(this)
-fun String.deserializeToAuthState(): AuthState = format.decodeFromString(this)
+internal fun AuthState.serialize(): String = format.encodeToString(this)
+internal fun String.deserializeToAuthState(): AuthState = format.decodeFromString(this)
 
 private class AuthStatesSerializer<T> : KSerializer<T> {
     val serializer = AuthStatesProxy.serializer()

@@ -15,7 +15,10 @@
 
 package com.amplifyframework.statemachine.codegen.data
 
-data class AuthChallenge(
+import kotlinx.serialization.Serializable
+
+@Serializable
+internal data class AuthChallenge(
     val challengeName: String,
     val username: String? = null,
     val session: String?,

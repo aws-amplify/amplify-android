@@ -27,7 +27,7 @@ import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.HostedUIEvent
 import java.util.Date
 
-object HostedUICognitoActions : HostedUIActions {
+internal object HostedUICognitoActions : HostedUIActions {
 
     override fun showHostedUI(event: HostedUIEvent.EventType.ShowHostedUI) =
         Action<AuthEnvironment>("InitHostedUIAuth") { id, dispatcher ->

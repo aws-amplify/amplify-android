@@ -38,7 +38,7 @@ import java.util.logging.Logger
  * - The State Machine stores the new composite state as the new state of the System
  * - The State Machine dispatches Effects for resolution and execution
  */
-interface StateMachineResolver<StateType : State> {
+internal interface StateMachineResolver<StateType : State> {
     val defaultState: StateType
     fun resolve(oldState: StateType, event: StateMachineEvent): StateResolution<StateType>
 
@@ -54,7 +54,7 @@ interface StateMachineResolver<StateType : State> {
     }
 }
 
-class AnyResolver<StateType : State, ResolverType : StateMachineResolver<StateType>>(
+internal class AnyResolver<StateType : State, ResolverType : StateMachineResolver<StateType>>(
     val resolver: ResolverType
 ) :
     StateMachineResolver<StateType> {

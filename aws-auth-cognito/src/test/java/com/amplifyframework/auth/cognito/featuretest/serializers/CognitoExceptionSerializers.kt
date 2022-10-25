@@ -15,7 +15,7 @@
 
 @file:Suppress("UNCHECKED_CAST")
 
-package com.amplifyframework.testutils.featuretest.auth.serializers
+package com.amplifyframework.auth.cognito.featuretest.serializers
 
 import aws.sdk.kotlin.services.cognitoidentity.model.CognitoIdentityException
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.CognitoIdentityProviderException
