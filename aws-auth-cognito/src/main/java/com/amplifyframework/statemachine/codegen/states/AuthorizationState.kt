@@ -237,9 +237,10 @@ internal sealed class AuthorizationState : State {
                 }
                 is SessionEstablished -> when {
                     authenticationEvent is AuthenticationEvent.EventType.SignInRequested -> StateResolution(SigningIn())
-                    authenticationEvent is AuthenticationEvent.EventType.SignOutRequested -> StateResolution(
-                        SigningOut(oldState.amplifyCredential)
-                    )
+                    authenticationEvent is AuthenticationEvent.EventType.SignOutRequested ||
+                        authenticationEvent is AuthenticationEvent.EventType.ClearFederationToIdentityPool -> {
+                        StateResolution(SigningOut(oldState.amplifyCredential))
+                    }
                     deleteUserEvent is DeleteUserEvent.EventType.DeleteUser -> StateResolution(
                         DeletingUser(DeleteUserState.NotStarted()),
                         listOf(authorizationActions.initiateDeleteUser(deleteUserEvent))
