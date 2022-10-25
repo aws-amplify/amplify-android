@@ -25,9 +25,9 @@
                 "responseType": "success",
                 "response": {
                     "authenticationResult": {
-                        "idToken": "someToken",
-                        "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNTE2MjM5MDIyfQ.WK8_fwfvSU7wdDl5sovnRApzUp6FHNB5ljS8KAO0QeA",
-                        "refreshToken": "someRefreshToken",
+                        "idToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNzYwMTE1NjAwfQ._L_IDDiGEfskVOLmKpiUXQgv097Kq3HsK_ZghhAWIqM",
+                        "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNzYwMTE1NjAwfQ._L_IDDiGEfskVOLmKpiUXQgv097Kq3HsK_ZghhAWIqM",
+                        "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNzYwMTE1NjAwfQ._L_IDDiGEfskVOLmKpiUXQgv097Kq3HsK_ZghhAWIqM",
                         "expiresIn": 300
                     }
                 }
@@ -48,7 +48,7 @@
                     "credentials": {
                         "accessKeyId": "someAccessKey",
                         "secretKey": "someSecretKey",
-                        "sessionToken": "someSessionToken",
+                        "sessionToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNzYwMTE1NjAwfQ._L_IDDiGEfskVOLmKpiUXQgv097Kq3HsK_ZghhAWIqM",
                         "expiration": 2342134
                     }
                 }

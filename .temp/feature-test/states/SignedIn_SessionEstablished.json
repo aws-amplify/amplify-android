@@ -12,7 +12,7 @@
             },
             "cognitoUserPoolTokens": {
                 "idToken": "someToken",
-                "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNTE2MjM5MDIyfQ.WK8_fwfvSU7wdDl5sovnRApzUp6FHNB5ljS8KAO0QeA",
+                "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNzYwMTE1NjAwfQ._L_IDDiGEfskVOLmKpiUXQgv097Kq3HsK_ZghhAWIqM",
                 "refreshToken": "someRefreshToken",
                 "expiration": 300
             }
@@ -32,7 +32,7 @@
                 },
                 "cognitoUserPoolTokens": {
                     "idToken": "someToken",
-                    "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNTE2MjM5MDIyfQ.WK8_fwfvSU7wdDl5sovnRApzUp6FHNB5ljS8KAO0QeA",
+                    "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNzYwMTE1NjAwfQ._L_IDDiGEfskVOLmKpiUXQgv097Kq3HsK_ZghhAWIqM",
                     "refreshToken": "someRefreshToken",
                     "expiration": 300
                 }
@@ -42,7 +42,7 @@
                 "accessKeyId": "someAccessKey",
                 "secretAccessKey": "someSecretKey",
                 "sessionToken": "someSessionToken",
-                "expiration": 2342134
+                "expiration": 1760115600
             }
         }
     }

@@ -47,6 +47,10 @@ class APICaptorFactory(
         val onError = mockk<Consumer<AuthException>>()
         val successCaptors: MutableMap<AuthAPI, CapturingSlot<*>> = mutableMapOf()
         val errorCaptor = slot<AuthException>()
+        val actionCaptor = slot<Map<String, Any>>().apply {
+            captured = emptyMap()
+            isCaptured = true
+        }
     }
 
     init {
@@ -76,12 +80,9 @@ class APICaptorFactory(
                 successCaptors[apiName] = resultCaptor
             }
             AuthAPI.deleteUser -> {
-                val resultCaptor = slot<Action>()
                 val consumer = onSuccess[apiName] as Action
                 every { consumer.call() } answers { latch.countDown() }
-                resultCaptor.captured = Action {}
-                resultCaptor.isCaptured = true
-                successCaptors[apiName] = resultCaptor
+                successCaptors[apiName] = actionCaptor
             }
             else -> throw Error("onSuccess for $authApi is not defined!")
         }

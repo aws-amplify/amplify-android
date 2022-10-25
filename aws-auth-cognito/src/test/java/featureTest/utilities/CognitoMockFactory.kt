@@ -185,6 +185,8 @@ class CognitoMockFactory(
                 captures[mockResponse.apiName] = requestCaptor
             }
             "deleteUser" -> {
+                mockkObject(AuthHelper)
+                coEvery { AuthHelper.getSecretHash(any(), any(), any()) } returns "a hash"
                 val requestCaptor = slot<DeleteUserRequest>()
 
                 coEvery { mockCognitoIPClient.deleteUser(capture(requestCaptor)) } coAnswers {

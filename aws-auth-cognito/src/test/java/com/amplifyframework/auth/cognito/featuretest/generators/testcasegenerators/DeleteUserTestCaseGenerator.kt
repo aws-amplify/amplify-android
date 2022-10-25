@@ -64,7 +64,7 @@ object DeleteUserTestCaseGenerator : SerializableProvider {
 
     private val errorCase: FeatureTestCase
         get() {
-            val errorResponse = NotAuthorizedException.invoke { message = "Cognito error message" }
+            val errorResponse = NotAuthorizedException.invoke { message = "Failed since user is not authorized." }
             return baseCase.copy(
                 description = "AuthException is thrown when deleteUser API call fails",
                 preConditions = baseCase.preConditions.copy(
@@ -82,7 +82,8 @@ object DeleteUserTestCaseGenerator : SerializableProvider {
                         AuthAPI.deleteUser,
                         ResponseType.Failure,
                         com.amplifyframework.auth.exceptions.NotAuthorizedException(
-                            errorResponse.toString()
+                            message = errorResponse.message.toString(),
+                            cause = errorResponse
                         ).toJsonElement(),
                     )
                 )
