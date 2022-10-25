@@ -37,7 +37,8 @@ import java.util.Date
  *
  */
 object AuthStateJsonGenerator : SerializableProvider {
-    const val dummyToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNzYwMTE1NjAwfQ._L_IDDiGEfskVOLmKpiUXQgv097Kq3HsK_ZghhAWIqM"
+    const val dummyToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZ" +
+        "SI6InVzZXJuYW1lIiwiZXhwIjoxNzYwMTE1NjAwfQ._L_IDDiGEfskVOLmKpiUXQgv097Kq3HsK_ZghhAWIqM"
 
     private const val username = "username"
 
