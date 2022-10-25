@@ -221,8 +221,10 @@ class AWSCognitoAuthPluginFeatureTest(private val fileName: String) {
         )
         requiredParams?.set(targetApi.parameters.first { it.name == "onError" }, APICaptorFactory.onError)
 
-        val optionsObj = AuthOptionsFactory.create(api.name, api.options as JsonObject)
-        requiredParams?.set(targetApi.parameters.first { it.name == "options" }, optionsObj)
+        targetApi?.parameters?.firstOrNull { it.name == "options" }?.let { options ->
+            val optionsObj = AuthOptionsFactory.create(api.name, api.options as JsonObject)
+            requiredParams?.set(options, optionsObj)
+        }
 
         runBlocking {
             requiredParams?.let { targetApi.callBy(it) }

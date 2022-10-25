@@ -37,8 +37,8 @@ import java.util.Date
  *
  */
 object AuthStateJsonGenerator : SerializableProvider {
-    const val dummyToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1l" +
-        "IiwiZXhwIjoxNTE2MjM5MDIyfQ.WK8_fwfvSU7wdDl5sovnRApzUp6FHNB5ljS8KAO0QeA"
+    const val dummyToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZ" +
+        "SI6InVzZXJuYW1lIiwiZXhwIjoxNzYwMTE1NjAwfQ._L_IDDiGEfskVOLmKpiUXQgv097Kq3HsK_ZghhAWIqM"
 
     private const val username = "username"
 
@@ -65,7 +65,7 @@ object AuthStateJsonGenerator : SerializableProvider {
                     accessKeyId = "someAccessKey",
                     secretAccessKey = "someSecretKey",
                     sessionToken = "someSessionToken",
-                    expiration = 2342134
+                    expiration = 1760115600
                 )
             )
         )
