@@ -193,6 +193,7 @@ internal data class AuthStatesProxy(
                 contextual(object : KSerializer<SignInChallengeState> by AuthStatesSerializer() {})
                 contextual(object : KSerializer<AuthorizationState> by AuthStatesSerializer() {})
                 contextual(object : KSerializer<AuthorizationState.SessionEstablished> by AuthStatesSerializer() {})
+                contextual(object : KSerializer<AuthenticationState.SignedOut> by AuthStatesSerializer() {})
             }
             prettyPrint = true
         }
