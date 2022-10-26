@@ -37,8 +37,8 @@ import java.util.Date
  *
  */
 object AuthStateJsonGenerator : SerializableProvider {
-    const val dummyToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZ" +
-        "SI6InVzZXJuYW1lIiwiZXhwIjoxNzYwMTE1NjAwfQ._L_IDDiGEfskVOLmKpiUXQgv097Kq3HsK_ZghhAWIqM"
+    const val dummyToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1l" +
+            "IiwiZXhwIjoxNTE2MjM5MDIyLCJvcmlnaW5fanRpIjoib3JpZ2luX2p0aSJ9.Xqa-vjJe5wwwsqeRAdHf8kTBn_rYSkDn2lB7xj9Z1xU"
 
     private const val username = "username"
 
@@ -48,9 +48,9 @@ object AuthStateJsonGenerator : SerializableProvider {
         signedInDate = Date.from(Instant.ofEpochSecond(0)),
         signInMethod = SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH),
         cognitoUserPoolTokens = CognitoUserPoolTokens(
-            idToken = "someToken",
+            idToken = dummyToken,
             accessToken = dummyToken,
-            refreshToken = "someRefreshToken",
+            refreshToken = dummyToken,
             expiration = 300
         )
     )
@@ -64,8 +64,8 @@ object AuthStateJsonGenerator : SerializableProvider {
                 AWSCredentials(
                     accessKeyId = "someAccessKey",
                     secretAccessKey = "someSecretKey",
-                    sessionToken = "someSessionToken",
-                    expiration = 1760115600
+                    sessionToken = dummyToken,
+                    expiration = 2342134
                 )
             )
         )
