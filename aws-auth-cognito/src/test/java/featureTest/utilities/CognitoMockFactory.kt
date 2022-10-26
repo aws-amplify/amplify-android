@@ -159,7 +159,7 @@ class CognitoMockFactory(
                 captures[mockResponse.apiName] = requestCaptor
             }
             "confirmDevice" -> {
-                //TODO: most likely will need to mock other things
+                // TODO: most likely will need to mock other things
                 mockkObject(AuthHelper)
                 coEvery { AuthHelper.getSecretHash(any(), any(), any()) } returns "a hash"
 
