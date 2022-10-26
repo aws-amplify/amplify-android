@@ -58,7 +58,7 @@ internal object HostedUIHttpHelper {
             val responseCode = connection.responseCode
 
             if (responseCode >= HttpURLConnection.HTTP_OK && responseCode < HttpURLConnection.HTTP_INTERNAL_ERROR) {
-                val responseStream = if (responseCode < HttpURLConnection.HTTP_BAD_REQUEST) {
+                val responseStream = if (responseCode < HttpURLConnection.HTTP_MULT_CHOICE) {
                     connection.inputStream
                 } else {
                     connection.errorStream
