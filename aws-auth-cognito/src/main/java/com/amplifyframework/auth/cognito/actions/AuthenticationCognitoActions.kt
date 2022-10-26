@@ -145,8 +145,8 @@ internal object AuthenticationCognitoActions : AuthenticationActions {
                 SignOutEvent(SignOutEvent.EventType.InvokeHostedUISignOut(event.signOutData, signedInData))
             }
             signedInData != null &&
-                    signedInData.signInMethod == SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.UNKNOWN) &&
-                    hostedUIClient != null -> {
+                signedInData.signInMethod == SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.UNKNOWN) &&
+                hostedUIClient != null -> {
                 /*
                 If sign in method is unknown, this is due to SignInMethod not being tracked in Amplify v1. We try to
                 assume that hosted ui sign in may have been used if hostedUIClient is configured. This only happens if

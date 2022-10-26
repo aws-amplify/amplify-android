@@ -698,7 +698,8 @@ internal class RealAWSCognitoAuthPlugin(
                 is AuthenticationState.SigningOut -> {
                     (authNState.signOutState as? SignOutState.SigningOutHostedUI)?.let { signOutState ->
                         if (signOutState.signedInData.signInMethod !=
-                            SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.UNKNOWN) && callbackUri == null) {
+                            SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.UNKNOWN) && callbackUri == null
+                        ) {
                             authStateMachine.send(
                                 SignOutEvent(SignOutEvent.EventType.UserCancelled(signOutState.signedInData))
                             )
