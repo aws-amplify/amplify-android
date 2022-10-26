@@ -23,8 +23,6 @@ import com.amplifyframework.statemachine.codegen.data.CredentialType
 import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.errors.CredentialStoreError
 import com.amplifyframework.statemachine.codegen.events.CredentialStoreEvent
-import java.util.Date
-import java.util.UUID
 
 internal object CredentialStoreCognitoActions : CredentialStoreActions {
     override fun migrateLegacyCredentialStoreAction() =
@@ -50,7 +48,7 @@ internal object CredentialStoreCognitoActions : CredentialStoreActions {
 
                 // migrate ASF device
                 val asfDevice = legacyCredentialStore.retrieveASFDevice()
-                asfDevice?.let {
+                asfDevice.id?.let {
                     credentialStore.saveASFDevice(asfDevice)
                     legacyCredentialStore.deleteASFDevice()
                 }
@@ -89,9 +87,7 @@ internal object CredentialStoreCognitoActions : CredentialStoreActions {
                     is CredentialType.Device -> {
                         AmplifyCredential.DeviceData(credentialStore.retrieveDeviceMetadata(credentialType.username))
                     }
-                    CredentialType.ASF -> credentialStore.retrieveASFDevice() ?: AmplifyCredential.ASFDevice(
-                        "${UUID.randomUUID()}:${Date().time}"
-                    )
+                    CredentialType.ASF -> credentialStore.retrieveASFDevice()
                 }
                 CredentialStoreEvent(CredentialStoreEvent.EventType.CompletedOperation(credentials))
             } catch (error: CredentialStoreError) {
@@ -115,7 +111,7 @@ internal object CredentialStoreCognitoActions : CredentialStoreActions {
                     }
                     CredentialType.ASF -> {
                         val asfDevice = credentials as? AmplifyCredential.ASFDevice
-                        asfDevice?.let { credentialStore.saveASFDevice(it) }
+                        asfDevice?.id?.let { credentialStore.saveASFDevice(asfDevice) }
                     }
                 }
                 CredentialStoreEvent(CredentialStoreEvent.EventType.CompletedOperation(credentials))

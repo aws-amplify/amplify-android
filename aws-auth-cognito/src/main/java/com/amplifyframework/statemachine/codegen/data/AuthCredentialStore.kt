@@ -28,6 +28,6 @@ internal interface AuthCredentialStore {
 
     // ASF Device
     fun saveASFDevice(device: AmplifyCredential.ASFDevice)
-    fun retrieveASFDevice(): AmplifyCredential.ASFDevice?
+    fun retrieveASFDevice(): AmplifyCredential.ASFDevice
     fun deleteASFDevice()
 }

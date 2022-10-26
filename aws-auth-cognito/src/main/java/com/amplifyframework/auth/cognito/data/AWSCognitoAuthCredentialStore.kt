@@ -65,7 +65,7 @@ internal class AWSCognitoAuthCredentialStore(
         keyValue.get(generateKey("$username.$Key_DeviceMetadata"))
     )
 
-    override fun retrieveASFDevice(): AmplifyCredential.ASFDevice? = deserializeASFDevice(
+    override fun retrieveASFDevice(): AmplifyCredential.ASFDevice = deserializeASFDevice(
         keyValue.get(generateKey(Key_ASFDevice))
     )
     //endregion
@@ -112,12 +112,12 @@ internal class AWSCognitoAuthCredentialStore(
         }
     }
 
-    private fun deserializeASFDevice(encodedASFDevice: String?): AmplifyCredential.ASFDevice? {
+    private fun deserializeASFDevice(encodedASFDevice: String?): AmplifyCredential.ASFDevice {
         return try {
             val asfDevice = encodedASFDevice?.let { Json.decodeFromString(it) as AmplifyCredential.ASFDevice }
-            asfDevice
+            asfDevice ?: AmplifyCredential.ASFDevice(null)
         } catch (e: Exception) {
-            null
+            AmplifyCredential.ASFDevice(null)
         }
     }
     //endregion

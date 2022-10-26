@@ -29,6 +29,8 @@ import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
 import com.amplifyframework.statemachine.codegen.events.DeleteUserEvent
 import com.amplifyframework.statemachine.codegen.events.SignOutEvent
+import java.util.Date
+import java.util.UUID
 
 internal class AuthEnvironment internal constructor(
     val configuration: AuthConfiguration,
@@ -41,8 +43,14 @@ internal class AuthEnvironment internal constructor(
     internal lateinit var srpHelper: SRPHelper
 
     suspend fun getUserContextData(username: String): String? {
-        val asfDevice = credentialStoreClient.loadCredentials(CredentialType.ASF)
-        val deviceId = (asfDevice as AmplifyCredential.ASFDevice).id
+        val asfDevice = credentialStoreClient.loadCredentials(CredentialType.ASF) as? AmplifyCredential.ASFDevice
+        val deviceId = if (asfDevice?.id == null) {
+            val newDeviceId = "${UUID.randomUUID()}:${Date().time}"
+            val newASFDevice = AmplifyCredential.ASFDevice(newDeviceId)
+            credentialStoreClient.storeCredentials(CredentialType.ASF, newASFDevice)
+            newDeviceId
+        } else asfDevice.id
+
         return userContextDataProvider?.getEncodedContextData(username, deviceId)
     }
 

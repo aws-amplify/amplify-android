@@ -120,10 +120,10 @@ internal class AWSCognitoLegacyCredentialStore(
     }
 
     @Synchronized
-    override fun retrieveASFDevice(): AmplifyCredential.ASFDevice? {
+    override fun retrieveASFDevice(): AmplifyCredential.ASFDevice {
         val sharedPreferences = context.getSharedPreferences(LOCAL_STORAGE_PATH, Context.MODE_PRIVATE)
         val deviceId = sharedPreferences?.getString(LOCAL_STORAGE_DEVICE_ID_KEY, null)
-        return deviceId?.let { AmplifyCredential.ASFDevice(it) }
+        return AmplifyCredential.ASFDevice(deviceId)
     }
 
     override fun deleteCredential() {

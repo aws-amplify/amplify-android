@@ -70,7 +70,7 @@ internal sealed class AmplifyCredential {
 
     @Serializable
     @SerialName("asfDevice")
-    data class ASFDevice(val id: String) : AmplifyCredential()
+    data class ASFDevice(val id: String?) : AmplifyCredential()
 }
 
 /**
