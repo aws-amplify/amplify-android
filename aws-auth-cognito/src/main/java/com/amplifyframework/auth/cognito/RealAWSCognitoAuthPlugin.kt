@@ -113,6 +113,7 @@ import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.data.FederatedToken
 import com.amplifyframework.statemachine.codegen.data.SignInData
+import com.amplifyframework.statemachine.codegen.data.SignInMethod
 import com.amplifyframework.statemachine.codegen.data.SignOutData
 import com.amplifyframework.statemachine.codegen.errors.SessionError
 import com.amplifyframework.statemachine.codegen.events.AuthEvent
@@ -696,13 +697,12 @@ internal class RealAWSCognitoAuthPlugin(
             when (val authNState = it.authNState) {
                 is AuthenticationState.SigningOut -> {
                     (authNState.signOutState as? SignOutState.SigningOutHostedUI)?.let { signOutState ->
-                        if (callbackUri == null) {
-                            // Notify failed web sign out
+                        if (signOutState.signedInData.signInMethod !=
+                            SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.UNKNOWN) && callbackUri == null) {
                             authStateMachine.send(
                                 SignOutEvent(SignOutEvent.EventType.UserCancelled(signOutState.signedInData))
                             )
-                        }
-                        if (signOutState.globalSignOut) {
+                        } else if (signOutState.globalSignOut) {
                             authStateMachine.send(
                                 SignOutEvent(SignOutEvent.EventType.SignOutGlobally(signOutState.signedInData))
                             )
