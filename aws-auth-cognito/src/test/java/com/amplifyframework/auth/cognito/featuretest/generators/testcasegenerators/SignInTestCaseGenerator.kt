@@ -56,9 +56,9 @@ object SignInTestCaseGenerator : SerializableProvider {
         ResponseType.Success,
         mapOf(
             "authenticationResult" to mapOf(
-                "idToken" to "someToken",
+                "idToken" to AuthStateJsonGenerator.dummyToken,
                 "accessToken" to AuthStateJsonGenerator.dummyToken,
-                "refreshToken" to "someRefreshToken",
+                "refreshToken" to AuthStateJsonGenerator.dummyToken,
                 "expiresIn" to 300
             )
         ).toJsonElement()
@@ -93,7 +93,7 @@ object SignInTestCaseGenerator : SerializableProvider {
             "credentials" to mapOf(
                 "accessKeyId" to "someAccessKey",
                 "secretKey" to "someSecretKey",
-                "sessionToken" to "someSessionToken",
+                "sessionToken" to AuthStateJsonGenerator.dummyToken,
                 "expiration" to 2342134
             )
         ).toJsonElement()
