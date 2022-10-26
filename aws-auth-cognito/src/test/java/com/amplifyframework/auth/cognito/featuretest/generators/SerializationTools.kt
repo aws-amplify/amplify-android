@@ -23,6 +23,7 @@ import com.amplifyframework.auth.cognito.featuretest.serializers.CognitoIdentity
 import com.amplifyframework.auth.cognito.featuretest.serializers.CognitoIdentityProviderExceptionSerializer
 import com.amplifyframework.auth.cognito.featuretest.serializers.deserializeToAuthState
 import com.amplifyframework.auth.cognito.featuretest.serializers.serialize
+import com.amplifyframework.auth.result.AuthSignOutResult
 import com.amplifyframework.statemachine.codegen.states.AuthState
 import java.io.File
 import java.io.FileWriter
@@ -94,6 +95,7 @@ fun Any?.toJsonElement(): JsonElement {
         is Number -> JsonPrimitive(this)
         is String -> JsonPrimitive(this)
         is AuthException -> toJsonElement()
+        is AuthSignOutResult -> toJsonElement()
         is CognitoIdentityProviderException -> Json.encodeToJsonElement(
             CognitoIdentityProviderExceptionSerializer,
             this
@@ -111,5 +113,12 @@ fun AuthException.toJsonElement(): JsonElement {
         "cause" to cause
     )
 
+    return responseMap.toJsonElement()
+}
+
+fun AuthSignOutResult.toJsonElement(): JsonElement {
+    val responseMap = mutableMapOf<String, Any?>(
+        "type" to this.javaClass.simpleName
+    )
     return responseMap.toJsonElement()
 }
