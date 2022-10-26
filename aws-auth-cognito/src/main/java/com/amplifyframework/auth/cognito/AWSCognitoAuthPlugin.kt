@@ -74,7 +74,6 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
     internal lateinit var realPlugin: RealAWSCognitoAuthPlugin
 
     override fun initialize(context: Context) {
-        super.initialize(context)
         realPlugin.initialize()
     }
 

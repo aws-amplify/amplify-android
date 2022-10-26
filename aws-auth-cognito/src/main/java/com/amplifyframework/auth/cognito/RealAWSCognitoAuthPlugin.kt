@@ -17,6 +17,7 @@ package com.amplifyframework.auth.cognito
 
 import android.app.Activity
 import android.content.Intent
+import androidx.annotation.WorkerThread
 import aws.sdk.kotlin.services.cognitoidentityprovider.confirmForgotPassword
 import aws.sdk.kotlin.services.cognitoidentityprovider.confirmSignUp
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AttributeType
@@ -158,6 +159,7 @@ internal class RealAWSCognitoAuthPlugin(
 
     fun escapeHatch() = authEnvironment.cognitoAuthService
 
+    @WorkerThread
     @Throws(AmplifyException::class)
     fun initialize() {
         var token: StateChangeListenerToken? = null
@@ -176,7 +178,7 @@ internal class RealAWSCognitoAuthPlugin(
         } catch (e: Exception) {
             throw AmplifyException(
                 "Failed to configure auth state machine",
-                "Try re-run the application"
+                "Make sure your amplifyconfiguration.json is valid"
             )
         }
     }
