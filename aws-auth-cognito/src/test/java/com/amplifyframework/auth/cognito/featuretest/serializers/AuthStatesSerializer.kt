@@ -129,7 +129,9 @@ internal data class AuthStatesProxy(
                         is AuthorizationState.Configured -> AuthStatesProxy(
                             type = "AuthorizationState.Configured"
                         )
-                        is AuthorizationState.DeletingUser -> TODO()
+                        is AuthorizationState.DeletingUser -> AuthStatesProxy(
+                            type = "AuthorizationState.DeletingUser"
+                        )
                         is AuthorizationState.Error -> TODO()
                         is AuthorizationState.FetchingAuthSession -> TODO()
                         is AuthorizationState.FetchingUnAuthSession -> TODO()
