@@ -21,7 +21,7 @@ import org.json.JSONObject
 /**
  * Configuration options for [AWSCognitoAuthPlugin].
  */
-data class AuthConfiguration internal constructor(
+internal data class AuthConfiguration internal constructor(
     val userPool: UserPoolConfiguration?,
     val identityPool: IdentityPoolConfiguration?,
     val oauth: OauthConfiguration?,

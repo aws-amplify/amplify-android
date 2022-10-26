@@ -15,4 +15,4 @@
 
 package com.amplifyframework.statemachine.codegen.data
 
-data class GlobalSignOutErrorData(val accessToken: String?, val error: Exception)
+internal data class GlobalSignOutErrorData(val accessToken: String?, val error: Exception)

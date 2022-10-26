@@ -25,7 +25,7 @@ import com.amplifyframework.statemachine.codegen.data.SignedInData
 import com.amplifyframework.statemachine.codegen.data.SignedOutData
 import java.util.Date
 
-class AuthenticationEvent(val eventType: EventType, override val time: Date? = null) :
+internal class AuthenticationEvent(val eventType: EventType, override val time: Date? = null) :
     StateMachineEvent {
     sealed class EventType {
         data class Configure(
@@ -42,7 +42,7 @@ class AuthenticationEvent(val eventType: EventType, override val time: Date? = n
         data class SignOutRequested(val signOutData: SignOutData) : EventType()
         data class CancelSignIn(val error: Exception? = null) : EventType()
         data class CancelSignOut(val signedInData: SignedInData, val deviceMetadata: DeviceMetadata) : EventType()
-        data class ResetSignUp(val id: String = "") : EventType()
+        data class ClearFederationToIdentityPool(val id: String = "") : EventType()
         data class ThrowError(val exception: Exception) : EventType()
     }
 

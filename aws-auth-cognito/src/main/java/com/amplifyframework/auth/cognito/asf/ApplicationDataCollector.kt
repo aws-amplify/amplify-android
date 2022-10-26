@@ -23,7 +23,7 @@ import android.util.Log
 /**
  * Collects application related data for the device.
  */
-class ApplicationDataCollector : DataCollector {
+internal class ApplicationDataCollector : DataCollector {
     companion object {
         private val TAG = ApplicationDataCollector::class.java.simpleName
         private const val ALL_FLAGS_OFF = 0

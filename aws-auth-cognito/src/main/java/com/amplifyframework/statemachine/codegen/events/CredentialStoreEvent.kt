@@ -21,7 +21,7 @@ import com.amplifyframework.statemachine.codegen.data.CredentialType
 import com.amplifyframework.statemachine.codegen.errors.CredentialStoreError
 import java.util.Date
 
-class CredentialStoreEvent(val eventType: EventType, override val time: Date? = null) :
+internal class CredentialStoreEvent(val eventType: EventType, override val time: Date? = null) :
     StateMachineEvent {
     sealed class EventType {
         data class MigrateLegacyCredentialStore(val id: String = "") : EventType()

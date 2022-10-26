@@ -15,7 +15,7 @@
 
 package com.amplifyframework.statemachine.codegen.data
 
-sealed class SignInData {
+internal sealed class SignInData {
 
     data class SRPSignInData(
         val username: String?,
