@@ -21,6 +21,7 @@ import com.amplifyframework.auth.cognito.featuretest.ExpectationShapes
 import com.amplifyframework.auth.cognito.featuretest.ResponseType
 import com.amplifyframework.auth.result.AuthResetPasswordResult
 import com.amplifyframework.auth.result.AuthSignInResult
+import com.amplifyframework.auth.result.AuthSignOutResult
 import com.amplifyframework.auth.result.AuthSignUpResult
 import com.amplifyframework.core.Action
 import com.amplifyframework.core.Consumer
@@ -45,7 +46,11 @@ class APICaptorFactory(
             AuthAPI.deleteUser to mockk<Action>()
         )
         val onError = mockk<Consumer<AuthException>>()
+        val onComplete = mapOf(
+            AuthAPI.signOut to mockk<Consumer<AuthSignOutResult>>()
+        )
         val successCaptors: MutableMap<AuthAPI, CapturingSlot<*>> = mutableMapOf()
+        val completeCaptors: MutableMap<AuthAPI, CapturingSlot<*>> = mutableMapOf()
         val errorCaptor = slot<AuthException>()
         val actionCaptor = slot<Map<String, Any>>().apply {
             captured = emptyMap()
@@ -55,7 +60,9 @@ class APICaptorFactory(
 
     init {
         successCaptors.clear()
+        completeCaptors.clear()
         if (authApi.responseType == ResponseType.Success) setupOnSuccess()
+        if (authApi.responseType == ResponseType.Complete) setupOnComplete()
         else setupOnError()
     }
 
@@ -85,6 +92,18 @@ class APICaptorFactory(
                 successCaptors[apiName] = actionCaptor
             }
             else -> throw Error("onSuccess for $authApi is not defined!")
+        }
+    }
+
+    private fun setupOnComplete() {
+        when (val apiName = authApi.apiName) {
+            AuthAPI.signOut -> {
+                val resultCaptor = slot<AuthSignOutResult>()
+                val consumer = onComplete[apiName] as Consumer<AuthSignOutResult>
+                every { consumer.accept(capture(resultCaptor)) } answers { latch.countDown() }
+                completeCaptors[apiName] = resultCaptor
+            }
+            else -> throw Error("onComplete for $authApi is not defined!")
         }
     }
 
