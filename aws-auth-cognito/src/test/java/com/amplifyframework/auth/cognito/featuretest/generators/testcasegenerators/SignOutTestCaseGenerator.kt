@@ -18,15 +18,31 @@ import com.amplifyframework.auth.cognito.featuretest.API
 import com.amplifyframework.auth.cognito.featuretest.AuthAPI
 import com.amplifyframework.auth.cognito.featuretest.ExpectationShapes
 import com.amplifyframework.auth.cognito.featuretest.FeatureTestCase
+import com.amplifyframework.auth.cognito.featuretest.MockResponse
 import com.amplifyframework.auth.cognito.featuretest.PreConditions
 import com.amplifyframework.auth.cognito.featuretest.ResponseType
 import com.amplifyframework.auth.cognito.featuretest.generators.SerializableProvider
 import com.amplifyframework.auth.cognito.featuretest.generators.toJsonElement
 import com.amplifyframework.auth.cognito.result.AWSCognitoAuthSignOutResult
+import kotlinx.serialization.json.JsonObject
 
 object SignOutTestCaseGenerator : SerializableProvider {
 
-    val baseCase = FeatureTestCase(
+    private val mockedGlobalSignOutSuccessResponse = MockResponse(
+        "cognito",
+        "globalSignOut",
+        ResponseType.Success,
+        JsonObject(emptyMap())
+    )
+
+    private val mockedRevokeTokenSignOutSuccessResponse = MockResponse(
+        "cognito",
+        "revokeToken",
+        ResponseType.Success,
+        JsonObject(emptyMap())
+    )
+
+    private val signedOutSuccessCase = FeatureTestCase(
         description = "Test that signOut while already signed out returns complete with success",
         preConditions = PreConditions(
             "authconfiguration.json",
@@ -49,5 +65,43 @@ object SignOutTestCaseGenerator : SerializableProvider {
         )
     )
 
-    override val serializables: List<Any> = listOf(baseCase)
+    private val signedInSuccessCase = FeatureTestCase(
+        description = "Test that signOut while signed in returns complete with success",
+        preConditions = PreConditions(
+            "authconfiguration.json",
+            "SignedIn_SessionEstablished.json",
+            mockedResponses = listOf(
+                mockedRevokeTokenSignOutSuccessResponse
+            )
+        ),
+        api = API(
+            AuthAPI.signOut,
+            params = emptyMap<String, String>().toJsonElement(),
+            options = mapOf(
+                "globalSignOut" to false
+            ).toJsonElement()
+        ),
+        validations = listOf(
+            ExpectationShapes.Amplify(
+                apiName = AuthAPI.signOut,
+                responseType = ResponseType.Complete,
+                response = AWSCognitoAuthSignOutResult.CompleteSignOut.toJsonElement()
+            )
+        )
+    )
+
+    private val globalSignedInSuccessCase = signedInSuccessCase.copy(
+        description = "Test that global signOut while signed in returns complete with success",
+        preConditions = signedInSuccessCase.preConditions.copy(
+            mockedResponses = listOf(
+                mockedGlobalSignOutSuccessResponse,
+                mockedRevokeTokenSignOutSuccessResponse
+            )
+        ),
+        api = signedInSuccessCase.api.copy(
+            options = mapOf("globalSignOut" to true).toJsonElement()
+        )
+    )
+
+    override val serializables: List<Any> = listOf(signedOutSuccessCase, signedInSuccessCase, globalSignedInSuccessCase)
 }

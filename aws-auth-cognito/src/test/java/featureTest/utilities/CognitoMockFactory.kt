@@ -30,10 +30,14 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeleteUserResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeliveryMediumType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ForgotPasswordRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ForgotPasswordResponse
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.GlobalSignOutRequest
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.GlobalSignOutResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.InitiateAuthRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.InitiateAuthResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.RespondToAuthChallengeRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.RespondToAuthChallengeResponse
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.RevokeTokenRequest
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.RevokeTokenResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.SignUpRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.SignUpResponse
 import aws.smithy.kotlin.runtime.time.Instant
@@ -197,6 +201,32 @@ class CognitoMockFactory(
                         )
                     }
                     DeleteUserResponse.invoke {}
+                }
+                captures[mockResponse.apiName] = requestCaptor
+            }
+            "revokeToken" -> {
+                val requestCaptor = slot<RevokeTokenRequest>()
+                coEvery { mockCognitoIPClient.revokeToken(capture(requestCaptor)) } coAnswers {
+                    if (mockResponse.responseType == ResponseType.Failure) {
+                        throw Json.decodeFromString(
+                            CognitoIdentityExceptionSerializer,
+                            responseObject.toString()
+                        )
+                    }
+                    RevokeTokenResponse.invoke {}
+                }
+                captures[mockResponse.apiName] = requestCaptor
+            }
+            "globalSignOut" -> {
+                val requestCaptor = slot<GlobalSignOutRequest>()
+                coEvery { mockCognitoIPClient.globalSignOut(capture(requestCaptor)) } coAnswers {
+                    if (mockResponse.responseType == ResponseType.Failure) {
+                        throw Json.decodeFromString(
+                            CognitoIdentityExceptionSerializer,
+                            responseObject.toString()
+                        )
+                    }
+                    GlobalSignOutResponse.invoke {}
                 }
                 captures[mockResponse.apiName] = requestCaptor
             }
