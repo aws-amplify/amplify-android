@@ -27,9 +27,6 @@ import com.amplifyframework.auth.cognito.helpers.SignInChallengeHelper
 import com.amplifyframework.auth.exceptions.ServiceException
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.SRPActions
-import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
-import com.amplifyframework.statemachine.codegen.data.CredentialType
-import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.SRPEvent
 import com.amplifyframework.statemachine.codegen.events.SignInEvent
@@ -64,13 +61,8 @@ internal object SRPCognitoActions : SRPActions {
                 val authParams = mutableMapOf(KEY_USERNAME to event.username, KEY_SRP_A to srpHelper.getPublicA())
                 secretHash?.let { authParams[KEY_SECRET_HASH] = it }
 
-                val asfDevice = credentialStoreClient.loadCredentials(CredentialType.ASF)
-                val deviceId = (asfDevice as AmplifyCredential.ASFDevice).id
-                val encodedContextData = userContextDataProvider?.getEncodedContextData(event.username, deviceId)
-
-                val deviceCredentials = credentialStoreClient.loadCredentials(CredentialType.Device(event.username))
-                val deviceMetadata = (deviceCredentials as AmplifyCredential.DeviceData)
-                    .deviceMetadata as? DeviceMetadata.Metadata
+                val encodedContextData = getUserContextData(event.username)
+                val deviceMetadata = getDeviceMetadata(event.username)
                 deviceMetadata?.let { authParams[KEY_DEVICE_KEY] = it.deviceKey }
 
                 val initiateAuthResponse = cognitoAuthService.cognitoIdentityProviderClient?.initiateAuth {
@@ -120,13 +112,8 @@ internal object SRPCognitoActions : SRPActions {
                 )
                 secretHash?.let { authParams[KEY_SECRET_HASH] = it }
 
-                val asfDevice = credentialStoreClient.loadCredentials(CredentialType.ASF)
-                val deviceId = (asfDevice as AmplifyCredential.ASFDevice).id
-                val encodedContextData = userContextDataProvider?.getEncodedContextData(event.username, deviceId)
-
-                val deviceCredentials = credentialStoreClient.loadCredentials(CredentialType.Device(event.username))
-                val deviceMetadata = (deviceCredentials as AmplifyCredential.DeviceData)
-                    .deviceMetadata as? DeviceMetadata.Metadata
+                val encodedContextData = getUserContextData(event.username)
+                val deviceMetadata = getDeviceMetadata(event.username)
                 deviceMetadata?.let { authParams[KEY_DEVICE_KEY] = it.deviceKey }
 
                 val initiateAuthResponse = cognitoAuthService.cognitoIdentityProviderClient?.initiateAuth {
@@ -190,12 +177,9 @@ internal object SRPCognitoActions : SRPActions {
                     KEY_TIMESTAMP to srpHelper.dateString,
                 )
                 secretHash?.let { challengeParams[KEY_SECRET_HASH] = it }
-
-                val asfDevice = credentialStoreClient.loadCredentials(CredentialType.ASF)
-                val deviceId = (asfDevice as AmplifyCredential.ASFDevice).id
-                val encodedContextData = userContextDataProvider?.getEncodedContextData(username, deviceId)
-
                 challengeParams[KEY_DEVICE_KEY] = deviceKey
+
+                val encodedContextData = getUserContextData(username)
 
                 val response = cognitoAuthService.cognitoIdentityProviderClient?.respondToAuthChallenge {
                     challengeName = ChallengeNameType.PasswordVerifier

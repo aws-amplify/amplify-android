@@ -20,7 +20,10 @@ import com.amplifyframework.auth.cognito.helpers.SRPHelper
 import com.amplifyframework.logging.Logger
 import com.amplifyframework.statemachine.Environment
 import com.amplifyframework.statemachine.StateMachineEvent
+import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
+import com.amplifyframework.statemachine.codegen.data.CredentialType
+import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.events.AuthEvent
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
@@ -31,11 +34,22 @@ internal class AuthEnvironment internal constructor(
     val configuration: AuthConfiguration,
     val cognitoAuthService: AWSCognitoAuthServiceBehavior,
     val credentialStoreClient: StoreClientBehavior,
-    val userContextDataProvider: UserContextDataProvider? = null,
+    private val userContextDataProvider: UserContextDataProvider? = null,
     val hostedUIClient: HostedUIClient?,
     val logger: Logger
 ) : Environment {
     internal lateinit var srpHelper: SRPHelper
+
+    suspend fun getUserContextData(username: String): String? {
+        val asfDevice = credentialStoreClient.loadCredentials(CredentialType.ASF)
+        val deviceId = (asfDevice as AmplifyCredential.ASFDevice).id
+        return userContextDataProvider?.getEncodedContextData(username, deviceId)
+    }
+
+    suspend fun getDeviceMetadata(username: String): DeviceMetadata.Metadata? {
+        val deviceCredentials = credentialStoreClient.loadCredentials(CredentialType.Device(username))
+        return (deviceCredentials as AmplifyCredential.DeviceData).deviceMetadata as? DeviceMetadata.Metadata
+    }
 }
 
 internal fun StateMachineEvent.isAuthEvent(): AuthEvent.EventType? {

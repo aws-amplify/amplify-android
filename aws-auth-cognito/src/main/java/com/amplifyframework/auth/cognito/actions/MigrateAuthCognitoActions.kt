@@ -24,8 +24,6 @@ import com.amplifyframework.auth.cognito.helpers.SignInChallengeHelper
 import com.amplifyframework.auth.exceptions.ServiceException
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.MigrateAuthActions
-import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
-import com.amplifyframework.statemachine.codegen.data.CredentialType
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.SignInEvent
 
@@ -47,9 +45,7 @@ internal object MigrateAuthCognitoActions : MigrateAuthActions {
                 val authParams = mutableMapOf(KEY_USERNAME to event.username, KEY_PASSWORD to event.password)
                 secretHash?.let { authParams[KEY_SECRET_HASH] = it }
 
-                val asfDevice = credentialStoreClient.loadCredentials(CredentialType.ASF)
-                val deviceId = (asfDevice as AmplifyCredential.ASFDevice).id
-                val encodedContextData = userContextDataProvider?.getEncodedContextData(event.username, deviceId)
+                val encodedContextData = getUserContextData(event.username)
 
                 val response = cognitoAuthService.cognitoIdentityProviderClient?.initiateAuth {
                     authFlow = AuthFlowType.UserPasswordAuth

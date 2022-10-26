@@ -26,9 +26,7 @@ import com.amplifyframework.auth.cognito.helpers.SignInChallengeHelper
 import com.amplifyframework.auth.exceptions.ServiceException
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.DeviceSRPSignInActions
-import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.CredentialType
-import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.data.SignInMethod
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.DeviceSRPSignInEvent
@@ -52,13 +50,8 @@ internal object DeviceSRPCognitoSignInActions : DeviceSRPSignInActions {
             logger.verbose("$id Starting execution")
             val username = event.username
             val evt = try {
-                val asfDevice = credentialStoreClient.loadCredentials(CredentialType.ASF)
-                val deviceId = (asfDevice as AmplifyCredential.ASFDevice).id
-                val encodedContextData = userContextDataProvider?.getEncodedContextData(username, deviceId)
-
-                val deviceCredentials = credentialStoreClient.loadCredentials(CredentialType.Device(username))
-                val deviceMetadata = (deviceCredentials as AmplifyCredential.DeviceData)
-                    .deviceMetadata as? DeviceMetadata.Metadata
+                val encodedContextData = getUserContextData(username)
+                val deviceMetadata = getDeviceMetadata(username)
 
                 srpHelper = SRPHelper(deviceMetadata?.deviceSecret ?: "")
 
@@ -121,9 +114,7 @@ internal object DeviceSRPCognitoSignInActions : DeviceSRPSignInActions {
                 val deviceKey = params.getValue(KEY_DEVICE_KEY)
                 val deviceGroupKey = params.getValue(KEY_DEVICE_GROUP_KEY)
 
-                val asfDevice = credentialStoreClient.loadCredentials(CredentialType.ASF)
-                val deviceId = (asfDevice as AmplifyCredential.ASFDevice).id
-                val encodedContextData = userContextDataProvider?.getEncodedContextData(username, deviceId)
+                val encodedContextData = getUserContextData(username)
 
                 srpHelper.setUserPoolParams(deviceKey, deviceGroupKey)
 
