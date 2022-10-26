@@ -177,7 +177,7 @@ internal class RealAWSCognitoAuthPlugin(
             latch.await(10, TimeUnit.SECONDS)
         } catch (e: Exception) {
             throw AmplifyException(
-                "Failed to configure auth state machine",
+                "Failed to configure auth plugin.",
                 "Make sure your amplifyconfiguration.json is valid"
             )
         }
