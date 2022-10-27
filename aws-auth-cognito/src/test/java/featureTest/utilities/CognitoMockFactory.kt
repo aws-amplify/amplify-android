@@ -25,6 +25,8 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.CognitoIdentityProviderCl
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AuthenticationResultType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.CodeDeliveryDetailsType
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.ConfirmDeviceRequest
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.ConfirmDeviceResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeleteUserRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeleteUserResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeliveryMediumType
@@ -153,6 +155,19 @@ class CognitoMockFactory(
                             parseChallengeParams(it as JsonObject)
                         }
                     }
+                }
+                captures[mockResponse.apiName] = requestCaptor
+            }
+            "confirmDevice" -> {
+                val requestCaptor = slot<ConfirmDeviceRequest>()
+                coEvery { mockCognitoIPClient.confirmDevice(capture(requestCaptor)) } coAnswers {
+                    if (mockResponse.responseType == ResponseType.Failure) {
+                        throw Json.decodeFromString(
+                            CognitoIdentityProviderExceptionSerializer,
+                            responseObject.toString()
+                        )
+                    }
+                    ConfirmDeviceResponse.invoke {}
                 }
                 captures[mockResponse.apiName] = requestCaptor
             }
