@@ -2,7 +2,6 @@
 
 ### Miscellaneous
 - Add clientMetadata to signIn
-- fix tests
 - Update build.gradle (#2045)
 
 [See all changes between 0.21.5 and 0.21.6](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.21.5...release-kotlin_v0.21.6)
