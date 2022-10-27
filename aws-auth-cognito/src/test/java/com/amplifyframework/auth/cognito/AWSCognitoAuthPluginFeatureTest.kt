@@ -18,9 +18,9 @@ package com.amplifyframework.auth.cognito
 import aws.sdk.kotlin.services.cognitoidentity.CognitoIdentityClient
 import aws.sdk.kotlin.services.cognitoidentityprovider.CognitoIdentityProviderClient
 import com.amplifyframework.auth.cognito.featuretest.API
+import com.amplifyframework.auth.cognito.featuretest.AuthAPI
 import com.amplifyframework.auth.cognito.featuretest.ExpectationShapes
 import com.amplifyframework.auth.cognito.featuretest.FeatureTestCase
-import com.amplifyframework.auth.cognito.featuretest.ResponseType.Success
 import com.amplifyframework.auth.cognito.featuretest.generators.toJsonElement
 import com.amplifyframework.auth.cognito.featuretest.serializers.deserializeToAuthState
 import com.amplifyframework.logging.Logger
@@ -29,11 +29,9 @@ import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 import com.amplifyframework.statemachine.codegen.data.CredentialType
 import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.states.AuthState
-import com.google.gson.Gson
-import featureTest.utilities.APICaptorFactory
-import featureTest.utilities.AuthOptionsFactory
+import featureTest.utilities.APIExecutor
 import featureTest.utilities.CognitoMockFactory
-import featureTest.utilities.CognitoRequestFactory.getExpectedRequestFor
+import io.mockk.clearAllMocks
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -41,11 +39,8 @@ import io.mockk.slot
 import java.io.File
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
-import kotlin.reflect.KParameter
-import kotlin.reflect.full.memberFunctions
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.newSingleThreadContext
 import kotlinx.coroutines.runBlocking
@@ -54,7 +49,6 @@ import kotlinx.coroutines.test.setMain
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
 import org.json.JSONObject
 import org.junit.After
 import org.junit.Before
@@ -63,15 +57,15 @@ import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 
 @RunWith(Parameterized::class)
-class AWSCognitoAuthPluginFeatureTest(private val fileName: String) {
+class AWSCognitoAuthPluginFeatureTest(private val testCase: FeatureTestCase) {
 
     lateinit var feature: FeatureTestCase
-    lateinit var latch: CountDownLatch
+    private var apiExecutionResult: Any? = null
 
-    val sut = AWSCognitoAuthPlugin()
+    private val sut = AWSCognitoAuthPlugin()
     private lateinit var authStateMachine: AuthStateMachine
 
-    private val mockCognitoIPClient = mockk<CognitoIdentityProviderClient>()
+    private val mockCognitoIPClient = mockk<CognitoIdentityProviderClient>(relaxed = true)
     private val mockCognitoIdClient = mockk<CognitoIdentityClient>()
     private val cognitoMockFactory = CognitoMockFactory(mockCognitoIPClient, mockCognitoIdClient)
 
@@ -82,6 +76,7 @@ class AWSCognitoAuthPluginFeatureTest(private val fileName: String) {
     @After
     fun tearDown() {
         Dispatchers.resetMain()
+        clearAllMocks()
     }
 
     companion object {
@@ -89,44 +84,47 @@ class AWSCognitoAuthPluginFeatureTest(private val fileName: String) {
         private const val statesFilesBasePath = "/feature-test/states"
         private const val configurationFilesBasePath = "/feature-test/configuration"
 
+        private val apisToSkip: List<AuthAPI> = listOf()
+
         @JvmStatic
-        @Parameterized.Parameters(name = "test file : {0}")
-        fun data(): Collection<String> {
+        @Parameterized.Parameters(name = "{0}")
+        fun data(): Collection<FeatureTestCase> {
             val resourceDir = File(this::class.java.getResource(testSuiteBasePath)?.file!!)
             assert(resourceDir.isDirectory)
 
             return resourceDir.walkTopDown()
                 .filterNot { it.isDirectory }.map {
                     it.toRelativeString(resourceDir)
-                }.toList()
+                }.map {
+                    readTestFeature(it)
+                }.toList().filterNot {
+                    it.api.name in apisToSkip
+                }
+        }
+
+        private fun readTestFeature(fileName: String): FeatureTestCase {
+            val testCaseFile = this::class.java.getResource("$testSuiteBasePath/$fileName")
+            return Json.decodeFromString(File(testCaseFile!!.toURI()).readText())
         }
     }
 
     @Before
     fun setUp() {
         Dispatchers.setMain(mainThreadSurrogate)
-        feature = readTestFeature(fileName)
+        feature = testCase
         sut.realPlugin = readConfiguration(feature.preConditions.`amplify-configuration`)
-        latch = CountDownLatch(1)
     }
 
     @Test
     fun api_feature_test() {
         // GIVEN
-        setupMocks()
+        feature.preConditions.mockedResponses.forEach(cognitoMockFactory::mock)
 
         // WHEN
         callAPI(feature.api)
 
         // THEN
-        latch.await()
         feature.validations.forEach(this::verify)
-    }
-
-    private fun readTestFeature(fileName: String): FeatureTestCase {
-        val testCaseFile = this::class.java.getResource("$testSuiteBasePath/$fileName")
-        feature = Json.decodeFromString(File(testCaseFile!!.toURI()).readText())
-        return feature
     }
 
     private fun readConfiguration(configuration: String): RealAWSCognitoAuthPlugin {
@@ -164,38 +162,16 @@ class AWSCognitoAuthPluginFeatureTest(private val fileName: String) {
         return RealAWSCognitoAuthPlugin(authConfiguration, authEnvironment, authStateMachine, logger)
     }
 
-    private fun setupMocks() {
-        feature.preConditions.mockedResponses.forEach(cognitoMockFactory::mock)
-
-        feature.validations.filterIsInstance<ExpectationShapes.Amplify>().filter {
-            it.apiName == feature.api.name
-        }.forEach {
-            APICaptorFactory(it, latch)
-        }
-    }
-
     private fun verify(validation: ExpectationShapes) {
         when (validation) {
             is ExpectationShapes.Cognito -> {
-                val actualResult = cognitoMockFactory.getActualResultFor(validation.apiName)
-
-                assertNotNull(actualResult)
-                assertEquals(getExpectedRequestFor(validation), actualResult)
+                cognitoMockFactory.verify(validation)
             }
             is ExpectationShapes.Amplify -> {
-                val expectedResponse: Any
-                val actualResult = if (validation.responseType == Success) {
-                    APICaptorFactory.successCaptors[validation.apiName]?.captured.apply {
-                        expectedResponse = Gson().fromJson(validation.response.toString(), this?.javaClass)
-                    }
-                } else {
-                    APICaptorFactory.errorCaptor.captured.toJsonElement().apply {
-                        expectedResponse = validation.response as JsonObject
-                    }
-                }
+                val expectedResponse = validation.response
 
-                assertNotNull(actualResult)
-                assertEquals(expectedResponse, actualResult)
+                assertNotNull(apiExecutionResult)
+                assertEquals(expectedResponse, apiExecutionResult.toJsonElement())
             }
             is ExpectationShapes.State -> {
                 val getStateLatch = CountDownLatch(1)
@@ -203,30 +179,13 @@ class AWSCognitoAuthPluginFeatureTest(private val fileName: String) {
                     assertEquals(getState(validation.expectedState), authState)
                     getStateLatch.countDown()
                 }
-                assertTrue(getStateLatch.await(10, TimeUnit.SECONDS))
+                getStateLatch.await(10, TimeUnit.SECONDS)
             }
         }
     }
 
-    private fun callAPI(api: API) {
-        val targetApi = sut::class.memberFunctions.find { it.name == api.name.name }
-        val params = api.params as JsonObject
-        val requiredParams: MutableMap<KParameter, Any?>? = targetApi?.parameters?.associate {
-            it to (params[it.name] as? JsonPrimitive)?.content
-        }?.toMutableMap()
-        requiredParams?.set(targetApi.parameters[0], sut)
-        requiredParams?.set(
-            targetApi.parameters.first { it.name == "onSuccess" },
-            APICaptorFactory.onSuccess[api.name]
-        )
-        requiredParams?.set(targetApi.parameters.first { it.name == "onError" }, APICaptorFactory.onError)
-
-        val optionsObj = AuthOptionsFactory.create(api.name, api.options as JsonObject)
-        requiredParams?.set(targetApi.parameters.first { it.name == "options" }, optionsObj)
-
-        runBlocking {
-            requiredParams?.let { targetApi.callBy(it) }
-        }
+    private fun callAPI(api: API) = runBlocking {
+        apiExecutionResult = APIExecutor.execute(sut, api.name, api.params as JsonObject, api.options as JsonObject)
     }
 
     private fun getState(state: String): AuthState {

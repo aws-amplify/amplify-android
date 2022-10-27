@@ -29,7 +29,11 @@ data class FeatureTestCase(
     val preConditions: PreConditions,
     val api: API,
     val validations: List<ExpectationShapes>
-)
+) {
+    override fun toString(): String {
+        return "${api.name} : $description"
+    }
+}
 
 @Serializable
 data class PreConditions(
@@ -47,7 +51,7 @@ data class API(
 
 @Serializable
 data class MockResponse(
-    val type: String,
+    val type: CognitoType,
     val apiName: String,
     val responseType: ResponseType,
     val response: JsonElement
@@ -62,13 +66,26 @@ enum class ResponseType {
 }
 
 @Serializable
+enum class CognitoType {
+    @SerialName("cognitoIdentity")
+    CognitoIdentity,
+    @SerialName("cognitoIdentityProvider")
+    CognitoIdentityProvider
+}
+
+@Serializable
 sealed class ExpectationShapes {
     @Serializable
-    @SerialName("cognito")
-    data class Cognito(
-        val apiName: String,
-        val request: JsonElement
-    ) : ExpectationShapes()
+    sealed class Cognito : ExpectationShapes() {
+        abstract val apiName: String
+        abstract val request: JsonElement
+
+        @Serializable @SerialName("cognitoIdentity")
+        data class CognitoIdentity(override val apiName: String, override val request: JsonElement) : Cognito()
+
+        @Serializable @SerialName("cognitoIdentityProvider")
+        data class CognitoIdentityProvider(override val apiName: String, override val request: JsonElement) : Cognito()
+    }
 
     @Serializable
     @SerialName("amplify")

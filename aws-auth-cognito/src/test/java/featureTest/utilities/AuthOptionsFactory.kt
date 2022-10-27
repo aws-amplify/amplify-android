@@ -6,9 +6,18 @@ import com.amplifyframework.auth.cognito.featuretest.AuthAPI
 import com.amplifyframework.auth.cognito.featuretest.AuthAPI.resetPassword
 import com.amplifyframework.auth.cognito.featuretest.AuthAPI.signIn
 import com.amplifyframework.auth.cognito.featuretest.AuthAPI.signUp
+import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
+import com.amplifyframework.auth.options.AuthConfirmSignInOptions
+import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
+import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions
+import com.amplifyframework.auth.options.AuthResendUserAttributeConfirmationCodeOptions
 import com.amplifyframework.auth.options.AuthResetPasswordOptions
 import com.amplifyframework.auth.options.AuthSignInOptions
+import com.amplifyframework.auth.options.AuthSignOutOptions
 import com.amplifyframework.auth.options.AuthSignUpOptions
+import com.amplifyframework.auth.options.AuthUpdateUserAttributeOptions
+import com.amplifyframework.auth.options.AuthUpdateUserAttributesOptions
+import com.amplifyframework.auth.options.AuthWebUISignInOptions
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
@@ -16,12 +25,37 @@ import kotlinx.serialization.json.JsonPrimitive
  * Factory to create specialized options object for the top level APIs
  */
 object AuthOptionsFactory {
-    fun create(apiName: AuthAPI, optionsData: JsonObject): Any? = when (apiName) {
+    fun <T> create(apiName: AuthAPI, optionsData: JsonObject): T = when (apiName) {
+        AuthAPI.confirmResetPassword -> AuthConfirmResetPasswordOptions.defaults()
         resetPassword -> AuthResetPasswordOptions.defaults()
         signUp -> getSignUpOptions(optionsData)
+        AuthAPI.confirmSignIn -> AuthConfirmSignInOptions.defaults()
+        AuthAPI.confirmSignUp -> AuthConfirmSignUpOptions.defaults()
+        AuthAPI.confirmUserAttribute -> null
+        AuthAPI.deleteUser -> null
+        AuthAPI.fetchAuthSession -> null
+        AuthAPI.fetchDevices -> null
+        AuthAPI.fetchUserAttributes -> TODO()
+        AuthAPI.forgetDevice -> TODO()
+        AuthAPI.getCurrentUser -> TODO()
+        AuthAPI.handleWebUISignInResponse -> TODO()
+        AuthAPI.rememberDevice -> TODO()
+        AuthAPI.resendSignUpCode -> AuthResendSignUpCodeOptions.defaults()
+        AuthAPI.resendUserAttributeConfirmationCode -> AuthResendUserAttributeConfirmationCodeOptions.defaults()
         signIn -> AuthSignInOptions.defaults()
-        else -> throw Error("Options for $apiName is not defined!")
-    }
+        AuthAPI.signInWithSocialWebUI -> AuthWebUISignInOptions.builder().build()
+        AuthAPI.signInWithWebUI -> AuthWebUISignInOptions.builder().build()
+        AuthAPI.signOut -> AuthSignOutOptions.builder().build()
+        AuthAPI.updatePassword -> TODO()
+        AuthAPI.updateUserAttribute -> AuthUpdateUserAttributeOptions.defaults()
+        AuthAPI.updateUserAttributes -> AuthUpdateUserAttributesOptions.defaults()
+        AuthAPI.clearFederationToIdentityPool -> TODO()
+        AuthAPI.configure -> TODO()
+        AuthAPI.federateToIdentityPool -> TODO()
+        AuthAPI.getEscapeHatch -> TODO()
+        AuthAPI.getPluginKey -> TODO()
+        AuthAPI.getVersion -> TODO()
+    } as T
 
     private fun getSignUpOptions(optionsData: JsonObject): AuthSignUpOptions =
         AuthSignUpOptions.builder().userAttributes(

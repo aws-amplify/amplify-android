@@ -16,34 +16,33 @@
 package featureTest.utilities
 
 import aws.sdk.kotlin.services.cognitoidentity.CognitoIdentityClient
+import aws.sdk.kotlin.services.cognitoidentity.model.CognitoIdentityProvider
 import aws.sdk.kotlin.services.cognitoidentity.model.Credentials
-import aws.sdk.kotlin.services.cognitoidentity.model.GetCredentialsForIdentityRequest
 import aws.sdk.kotlin.services.cognitoidentity.model.GetCredentialsForIdentityResponse
-import aws.sdk.kotlin.services.cognitoidentity.model.GetIdRequest
 import aws.sdk.kotlin.services.cognitoidentity.model.GetIdResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.CognitoIdentityProviderClient
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AuthenticationResultType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.CodeDeliveryDetailsType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeliveryMediumType
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.ForgotPasswordRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ForgotPasswordResponse
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.InitiateAuthRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.InitiateAuthResponse
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.RespondToAuthChallengeRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.RespondToAuthChallengeResponse
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.SignUpRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.SignUpResponse
 import aws.smithy.kotlin.runtime.time.Instant
+import com.amplifyframework.auth.cognito.featuretest.CognitoType
+import com.amplifyframework.auth.cognito.featuretest.ExpectationShapes
+import com.amplifyframework.auth.cognito.featuretest.ExpectationShapes.Cognito
 import com.amplifyframework.auth.cognito.featuretest.MockResponse
 import com.amplifyframework.auth.cognito.featuretest.ResponseType
 import com.amplifyframework.auth.cognito.featuretest.serializers.CognitoIdentityExceptionSerializer
 import com.amplifyframework.auth.cognito.featuretest.serializers.CognitoIdentityProviderExceptionSerializer
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
-import io.mockk.CapturingSlot
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.mockkObject
-import io.mockk.slot
+import kotlin.reflect.full.callSuspend
+import kotlin.reflect.full.declaredFunctions
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -55,61 +54,35 @@ class CognitoMockFactory(
     private val mockCognitoIPClient: CognitoIdentityProviderClient,
     private val mockCognitoIdClient: CognitoIdentityClient
 ) {
-    private val captures: MutableMap<String, CapturingSlot<*>> = mutableMapOf()
-
     fun mock(mockResponse: MockResponse) {
         val responseObject = mockResponse.response as JsonObject
 
-        return when (mockResponse.apiName) {
+        when (mockResponse.apiName) {
             "forgotPassword" -> {
-                val requestBuilderCaptor = slot<ForgotPasswordRequest>()
-
-                coEvery { mockCognitoIPClient.forgotPassword(capture(requestBuilderCaptor)) } coAnswers {
-                    if (mockResponse.responseType == ResponseType.Failure) {
-                        throw Json.decodeFromString(
-                            CognitoIdentityProviderExceptionSerializer,
-                            responseObject.toString()
-                        )
-                    }
+                coEvery { mockCognitoIPClient.forgotPassword(any()) } coAnswers {
+                    setupError(mockResponse, responseObject)
                     ForgotPasswordResponse.invoke {
                         this.codeDeliveryDetails = parseCodeDeliveryDetails(responseObject)
                     }
                 }
-
-                captures[mockResponse.apiName] = requestBuilderCaptor
             }
             "signUp" -> {
                 mockkObject(AuthHelper)
                 coEvery { AuthHelper.getSecretHash(any(), any(), any()) } returns "a hash"
 
-                val requestCaptor = slot<SignUpRequest>()
-
-                coEvery { mockCognitoIPClient.signUp(capture(requestCaptor)) } coAnswers {
-                    if (mockResponse.responseType == ResponseType.Failure) {
-                        throw Json.decodeFromString(
-                            CognitoIdentityProviderExceptionSerializer,
-                            responseObject.toString()
-                        )
-                    }
+                coEvery { mockCognitoIPClient.signUp(any()) } coAnswers {
+                    setupError(mockResponse, responseObject)
                     SignUpResponse.invoke {
                         this.codeDeliveryDetails = parseCodeDeliveryDetails(responseObject)
                     }
                 }
-                captures[mockResponse.apiName] = requestCaptor
             }
             "initiateAuth" -> {
                 mockkObject(AuthHelper)
                 coEvery { AuthHelper.getSecretHash(any(), any(), any()) } returns "a hash"
 
-                val requestCaptor = slot<InitiateAuthRequest>()
-
-                coEvery { mockCognitoIPClient.initiateAuth(capture(requestCaptor)) } coAnswers {
-                    if (mockResponse.responseType == ResponseType.Failure) {
-                        throw Json.decodeFromString(
-                            CognitoIdentityProviderExceptionSerializer,
-                            responseObject.toString()
-                        )
-                    }
+                coEvery { mockCognitoIPClient.initiateAuth(any()) } coAnswers {
+                    setupError(mockResponse, responseObject)
                     InitiateAuthResponse.invoke {
                         this.challengeName = responseObject["challengeName"]?.let {
                             ChallengeNameType.fromValue((it as JsonPrimitive).content)
@@ -120,21 +93,13 @@ class CognitoMockFactory(
                         }
                     }
                 }
-                captures[mockResponse.apiName] = requestCaptor
             }
             "respondToAuthChallenge" -> {
                 mockkObject(AuthHelper)
                 coEvery { AuthHelper.getSecretHash(any(), any(), any()) } returns "a hash"
 
-                val requestCaptor = slot<RespondToAuthChallengeRequest>()
-
-                coEvery { mockCognitoIPClient.respondToAuthChallenge(capture(requestCaptor)) } coAnswers {
-                    if (mockResponse.responseType == ResponseType.Failure) {
-                        throw Json.decodeFromString(
-                            CognitoIdentityProviderExceptionSerializer,
-                            responseObject.toString()
-                        )
-                    }
+                coEvery { mockCognitoIPClient.respondToAuthChallenge(any()) } coAnswers {
+                    setupError(mockResponse, responseObject)
                     RespondToAuthChallengeResponse.invoke {
                         this.authenticationResult = responseObject["authenticationResult"]?.let {
                             parseAuthenticationResult(it as JsonObject)
@@ -148,41 +113,39 @@ class CognitoMockFactory(
                         }
                     }
                 }
-                captures[mockResponse.apiName] = requestCaptor
             }
             "getId" -> {
-                val requestCaptor = slot<GetIdRequest>()
-
-                coEvery { mockCognitoIdClient.getId(capture(requestCaptor)) } coAnswers {
-                    if (mockResponse.responseType == ResponseType.Failure) {
-                        throw Json.decodeFromString(
-                            CognitoIdentityExceptionSerializer,
-                            responseObject.toString()
-                        )
-                    }
+                coEvery { mockCognitoIdClient.getId(any()) } coAnswers {
+                    setupError(mockResponse, responseObject)
                     GetIdResponse.invoke {
                         this.identityId = (responseObject["identityId"] as JsonPrimitive).content
                     }
                 }
-                captures[mockResponse.apiName] = requestCaptor
             }
             "getCredentialsForIdentity" -> {
-                val requestCaptor = slot<GetCredentialsForIdentityRequest>()
-
-                coEvery { mockCognitoIdClient.getCredentialsForIdentity(capture(requestCaptor)) } coAnswers {
-                    if (mockResponse.responseType == ResponseType.Failure) {
-                        throw Json.decodeFromString(
-                            CognitoIdentityExceptionSerializer,
-                            responseObject.toString()
-                        )
-                    }
+                coEvery { mockCognitoIdClient.getCredentialsForIdentity(any()) } coAnswers {
+                    setupError(mockResponse, responseObject)
                     GetCredentialsForIdentityResponse.invoke {
                         this.credentials = parseCredentials(responseObject["credentials"] as JsonObject)
                     }
                 }
-                captures[mockResponse.apiName] = requestCaptor
             }
             else -> throw Error("mock for ${mockResponse.apiName} not defined!")
+        }
+    }
+
+    private fun setupError(
+        mockResponse: MockResponse,
+        responseObject: JsonObject
+    ) {
+        if (mockResponse.responseType == ResponseType.Failure) {
+            throw Json.decodeFromString(
+                when (mockResponse.type) {
+                    CognitoType.CognitoIdentity -> CognitoIdentityExceptionSerializer
+                    CognitoType.CognitoIdentityProvider -> CognitoIdentityProviderExceptionSerializer
+                },
+                responseObject.toString()
+            )
         }
     }
 
@@ -219,6 +182,21 @@ class CognitoMockFactory(
         }
     }
 
-    fun getActualResultFor(apiName: String): Any =
-        captures[apiName]?.captured ?: throw Error("Actual result for $apiName is not defined")
+    /**
+     * Verifies if Cognito was method was called with expected request object.
+     * Note this only checks for IDP Client, ID Client to be implemented.
+     */
+    fun verify(validation: Cognito) {
+        val expectedRequest = CognitoRequestFactory.getExpectedRequestFor(validation)
+        coVerify {
+            when (validation) {
+                is Cognito.CognitoIdentity -> mockCognitoIdClient to mockCognitoIPClient::class
+                is Cognito.CognitoIdentityProvider -> mockCognitoIPClient to mockCognitoIPClient::class
+            }.apply {
+                second.declaredFunctions.first {
+                    it.name == validation.apiName
+                }.callSuspend(first, expectedRequest)
+            }
+        }
+    }
 }

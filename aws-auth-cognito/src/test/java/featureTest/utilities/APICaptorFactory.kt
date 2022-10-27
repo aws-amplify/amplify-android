@@ -15,72 +15,234 @@
 
 package featureTest.utilities
 
-import com.amplifyframework.auth.AuthException
+import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
 import com.amplifyframework.auth.cognito.featuretest.AuthAPI
+import com.amplifyframework.auth.cognito.featuretest.AuthAPI.clearFederationToIdentityPool
+import com.amplifyframework.auth.cognito.featuretest.AuthAPI.configure
+import com.amplifyframework.auth.cognito.featuretest.AuthAPI.confirmResetPassword
+import com.amplifyframework.auth.cognito.featuretest.AuthAPI.confirmSignIn
+import com.amplifyframework.auth.cognito.featuretest.AuthAPI.confirmSignUp
+import com.amplifyframework.auth.cognito.featuretest.AuthAPI.confirmUserAttribute
+import com.amplifyframework.auth.cognito.featuretest.AuthAPI.deleteUser
+import com.amplifyframework.auth.cognito.featuretest.AuthAPI.federateToIdentityPool
+import com.amplifyframework.auth.cognito.featuretest.AuthAPI.fetchAuthSession
+import com.amplifyframework.auth.cognito.featuretest.AuthAPI.fetchDevices
+import com.amplifyframework.auth.cognito.featuretest.AuthAPI.fetchUserAttributes
+import com.amplifyframework.auth.cognito.featuretest.AuthAPI.forgetDevice
+import com.amplifyframework.auth.cognito.featuretest.AuthAPI.getCurrentUser
+import com.amplifyframework.auth.cognito.featuretest.AuthAPI.getEscapeHatch
+import com.amplifyframework.auth.cognito.featuretest.AuthAPI.getPluginKey
+import com.amplifyframework.auth.cognito.featuretest.AuthAPI.getVersion
+import com.amplifyframework.auth.cognito.featuretest.AuthAPI.handleWebUISignInResponse
+import com.amplifyframework.auth.cognito.featuretest.AuthAPI.rememberDevice
+import com.amplifyframework.auth.cognito.featuretest.AuthAPI.resendSignUpCode
+import com.amplifyframework.auth.cognito.featuretest.AuthAPI.resendUserAttributeConfirmationCode
 import com.amplifyframework.auth.cognito.featuretest.AuthAPI.resetPassword
 import com.amplifyframework.auth.cognito.featuretest.AuthAPI.signIn
+import com.amplifyframework.auth.cognito.featuretest.AuthAPI.signInWithSocialWebUI
+import com.amplifyframework.auth.cognito.featuretest.AuthAPI.signInWithWebUI
+import com.amplifyframework.auth.cognito.featuretest.AuthAPI.signOut
 import com.amplifyframework.auth.cognito.featuretest.AuthAPI.signUp
-import com.amplifyframework.auth.cognito.featuretest.ExpectationShapes
-import com.amplifyframework.auth.cognito.featuretest.ResponseType
-import com.amplifyframework.auth.result.AuthResetPasswordResult
-import com.amplifyframework.auth.result.AuthSignInResult
-import com.amplifyframework.auth.result.AuthSignUpResult
+import com.amplifyframework.auth.cognito.featuretest.AuthAPI.updatePassword
+import com.amplifyframework.auth.cognito.featuretest.AuthAPI.updateUserAttribute
+import com.amplifyframework.auth.cognito.featuretest.AuthAPI.updateUserAttributes
+import com.amplifyframework.auth.cognito.featuretest.AuthAPI.values
+import com.amplifyframework.core.Action
 import com.amplifyframework.core.Consumer
-import io.mockk.CapturingSlot
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.slot
+import com.google.gson.Gson
 import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+import kotlin.reflect.KClass
+import kotlin.reflect.KParameter
+import kotlin.reflect.full.declaredFunctions
+import kotlinx.serialization.json.JsonObject
 
-/**
- * Factory with association of results captor to top level APIs
- */
-class APICaptorFactory(
-    private val authApi: ExpectationShapes.Amplify,
-    private val latch: CountDownLatch, // ToDo: Remove this param
-) {
-    companion object {
-        val onSuccess = mapOf(
-            resetPassword to mockk<Consumer<AuthResetPasswordResult>>(),
-            signUp to mockk<Consumer<AuthSignUpResult>>(),
-            signIn to mockk<Consumer<AuthSignInResult>>()
-        )
-        val onError = mockk<Consumer<AuthException>>()
-        val successCaptors: MutableMap<AuthAPI, CapturingSlot<*>> = mutableMapOf()
-        val errorCaptor = slot<AuthException>()
+class NewAPI(internal val method: (AWSCognitoAuthPlugin, Map<String, *>, JsonObject) -> Unit)
+
+object APIExecutor {
+    private lateinit var latch: CountDownLatch
+    private var result: Any? = null
+
+    fun execute(sut: AWSCognitoAuthPlugin, apiName: AuthAPI, namedParams: Map<String, *>, options: JsonObject): Any? {
+        latch = CountDownLatch(1)
+        apis[apiName]?.method?.invoke(sut, namedParams, options)
+        latch.await(5, TimeUnit.SECONDS)
+        return result
     }
 
-    init {
-        successCaptors.clear()
-        if (authApi.responseType == ResponseType.Success) setupOnSuccess()
-        else setupOnError()
-    }
-
-    private fun setupOnSuccess() {
-        when (val apiName = authApi.apiName) {
-            resetPassword -> {
-                val resultCaptor = slot<AuthResetPasswordResult>()
-                val consumer = onSuccess[apiName] as Consumer<AuthResetPasswordResult>
-                every { consumer.accept(capture(resultCaptor)) } answers { latch.countDown() }
-                successCaptors[apiName] = resultCaptor
+    private val apis = values().associateWith { authAPI ->
+        NewAPI { sut, namedParams, options ->
+            when (authAPI) {
+                clearFederationToIdentityPool -> sut.clearFederationToIdentityPool(getAction(), getConsumer())
+                configure -> sut.configure(
+                    getParam("pluginConfiguration", namedParams),
+                    getParam("context", namedParams)
+                )
+                confirmResetPassword -> sut.confirmResetPassword(
+                    getParam("username", namedParams),
+                    getParam("newPassword", namedParams),
+                    getParam("confirmationCode", namedParams),
+                    AuthOptionsFactory.create(authAPI, options),
+                    getAction(),
+                    getConsumer()
+                )
+                confirmSignIn -> sut.confirmSignIn(
+                    getParam("challengeResponse", namedParams),
+                    AuthOptionsFactory.create(authAPI, options),
+                    getConsumer(),
+                    getConsumer()
+                )
+                confirmSignUp -> sut.confirmSignUp(
+                    getParam("username", namedParams),
+                    getParam("confirmationCode", namedParams),
+                    AuthOptionsFactory.create(authAPI, options),
+                    getConsumer(),
+                    getConsumer()
+                )
+                confirmUserAttribute -> sut.confirmUserAttribute(
+                    getParam("attributeKey", namedParams),
+                    getParam("confirmationCode", namedParams),
+                    getAction(),
+                    getConsumer()
+                )
+                deleteUser -> sut.deleteUser(getAction(), getConsumer())
+                federateToIdentityPool -> sut.federateToIdentityPool(
+                    getParam("providerToken", namedParams),
+                    getParam("authProvider", namedParams),
+                    AuthOptionsFactory.create(authAPI, options),
+                    getConsumer(),
+                    getConsumer()
+                )
+                fetchAuthSession -> sut.fetchAuthSession(
+                    AuthOptionsFactory.create(authAPI, options),
+                    getConsumer(),
+                    getConsumer()
+                )
+                fetchDevices -> sut.fetchDevices(getConsumer(), getConsumer())
+                fetchUserAttributes -> sut.fetchUserAttributes(getConsumer(), getConsumer())
+                forgetDevice -> sut.forgetDevice(getParam("device", namedParams), getAction(), getConsumer())
+                getCurrentUser -> sut.getCurrentUser(getConsumer(), getConsumer())
+                getEscapeHatch -> sut.escapeHatch
+                getPluginKey -> sut.pluginKey
+                getVersion -> sut.version
+                handleWebUISignInResponse -> sut.handleWebUISignInResponse(getParam("intent", namedParams))
+                rememberDevice -> sut.rememberDevice(getAction(), getConsumer())
+                resendSignUpCode -> sut.resendSignUpCode(
+                    getParam("username", namedParams),
+                    AuthOptionsFactory.create(authAPI, options),
+                    getConsumer(),
+                    getConsumer()
+                )
+                resendUserAttributeConfirmationCode -> sut.resendUserAttributeConfirmationCode(
+                    getParam(
+                        "attributeKey",
+                        namedParams
+                    ),
+                    AuthOptionsFactory.create(authAPI, options),
+                    getConsumer(),
+                    getConsumer()
+                )
+                resetPassword -> sut.resetPassword(
+                    getParam("username", namedParams),
+                    AuthOptionsFactory.create(authAPI, options),
+                    getConsumer(),
+                    getConsumer()
+                )
+                signIn -> sut.signIn(
+                    getParam("username", namedParams),
+                    getParam("password", namedParams),
+                    AuthOptionsFactory.create(authAPI, options),
+                    getConsumer(),
+                    getConsumer()
+                )
+                signInWithSocialWebUI -> sut.signInWithSocialWebUI(
+                    getParam("provider", namedParams),
+                    getParam("callingActivity", namedParams),
+                    AuthOptionsFactory.create(authAPI, options),
+                    getConsumer(),
+                    getConsumer()
+                )
+                signInWithWebUI -> sut.signInWithWebUI(
+                    getParam("callingActivity", namedParams),
+                    AuthOptionsFactory.create(authAPI, options),
+                    getConsumer(),
+                    getConsumer()
+                )
+                signOut -> sut.signOut(AuthOptionsFactory.create(authAPI, options), getConsumer())
+                signUp -> sut.signUp(
+                    getParam("username", namedParams),
+                    getParam("password", namedParams),
+                    AuthOptionsFactory.create(authAPI, options),
+                    getConsumer(),
+                    getConsumer()
+                )
+                updatePassword -> sut.updatePassword(
+                    getParam("oldPassword", namedParams),
+                    getParam("newPassword", namedParams),
+                    getAction(),
+                    getConsumer()
+                )
+                updateUserAttribute -> sut.updateUserAttribute(
+                    getParam("attribute", namedParams),
+                    AuthOptionsFactory.create(authAPI, options),
+                    getConsumer(),
+                    getConsumer()
+                )
+                updateUserAttributes -> sut.updateUserAttributes(
+                    getParam("attributes", namedParams),
+                    AuthOptionsFactory.create(authAPI, options),
+                    getConsumer(),
+                    getConsumer()
+                )
             }
-            signUp -> {
-                val resultCaptor = slot<AuthSignUpResult>()
-                val consumer = onSuccess[apiName] as Consumer<AuthSignUpResult>
-                every { consumer.accept(capture(resultCaptor)) } answers { latch.countDown() }
-                successCaptors[apiName] = resultCaptor
-            }
-            signIn -> {
-                val resultCaptor = slot<AuthSignInResult>()
-                val consumer = onSuccess[apiName] as Consumer<AuthSignInResult>
-                every { consumer.accept(capture(resultCaptor)) } answers { latch.countDown() }
-                successCaptors[apiName] = resultCaptor
-            }
-            else -> throw Error("onSuccess for $authApi is not defined!")
         }
     }
 
-    private fun setupOnError() {
-        every { onError.accept(capture(errorCaptor)) } answers { latch.countDown() }
+    /**
+     * Traverses given json to find value of paramName
+     */
+    private inline fun <reified T> getParam(paramName: String, paramsObject: Map<String, *>): T {
+        paramsObject.entries.first {
+            it.key == paramName
+        }.apply {
+            return Gson().fromJson(value.toString(), T::class.java)
+        }
     }
+
+    private fun <T> getConsumer(): Consumer<T> = Consumer<T> {
+        result = it
+        latch.countDown()
+    }
+
+    private fun getAction(): Action = Action {
+        result = Unit
+        latch.countDown()
+    }
+}
+
+/**
+ * Just a Helper Function to generate function calls
+ *
+ */
+fun main() {
+    AWSCognitoAuthPlugin::class.declaredFunctions
+        .forEach {
+            print("AuthAPI.${it.name} ->")
+            print(" sut.${it.name}(")
+            val params = it.parameters.filter { param ->
+                param.kind == KParameter.Kind.VALUE
+            }.joinToString(separator = ", ") { param ->
+                if (param.type.classifier as KClass<*> == Action::class) {
+                    "getAction()"
+                } else if (param.name == "options") {
+                    "AuthOptionsFactory.create(authAPI, options)"
+                } else if (param.name in listOf("onSuccess", "onError", "onComplete")) {
+                    "getConsumer()"
+                } else {
+                    "getParam(\"${param.name}\", namedParams)"
+                }
+            }
+
+            println("$params)")
+        }
 }
