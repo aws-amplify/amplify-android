@@ -44,6 +44,6 @@ object JsonGenerator {
 }
 
 fun main() {
-    JsonGenerator.cleanDirectory()
+    cleanDirectory()
     JsonGenerator.generate()
 }
