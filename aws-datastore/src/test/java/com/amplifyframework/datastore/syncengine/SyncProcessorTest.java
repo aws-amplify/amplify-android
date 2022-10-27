@@ -712,7 +712,7 @@ public final class SyncProcessorTest {
             }
         }, 10000);
         verify(requestRetry).retry(any(), any());
-        assertEquals(1, errorHandlerCallCount);
+        assertEquals(10, errorHandlerCallCount);
     }
 
     /**
