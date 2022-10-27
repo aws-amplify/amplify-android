@@ -219,7 +219,7 @@ object SignInTestCaseGenerator : SerializableProvider {
 
     private val challengeCase = baseCase.copy(
         description = "Test that SRP signIn invokes proper cognito request and returns SMS challenge",
-        PreConditions(
+        preConditions = PreConditions(
             "authconfiguration.json",
             "SignedOut_Configured.json",
             mockedResponses = listOf(
