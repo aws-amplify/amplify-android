@@ -33,8 +33,6 @@ import com.amplifyframework.statemachine.codegen.actions.FetchAuthSessionActions
 import com.amplifyframework.statemachine.codegen.data.AWSCredentials
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
-import com.amplifyframework.statemachine.codegen.data.CredentialType
-import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.data.LoginsMapProvider
 import com.amplifyframework.statemachine.codegen.data.SignedInData
 import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
@@ -62,11 +60,9 @@ internal object FetchAuthSessionCognitoActions : FetchAuthSessionActions {
                 )
                 tokens.refreshToken?.let { authParameters[KEY_REFRESH_TOKEN] = it }
                 secretHash?.let { authParameters[KEY_SECRET_HASH] = it }
-                val encodedContextData = userContextDataProvider?.getEncodedContextData(username)
 
-                val deviceCredentials = credentialStoreClient.loadCredentials(CredentialType.Device(username))
-                val deviceMetadata = (deviceCredentials as AmplifyCredential.DeviceData)
-                    .deviceMetadata as? DeviceMetadata.Metadata
+                val encodedContextData = getUserContextData(username)
+                val deviceMetadata = getDeviceMetadata(username)
                 deviceMetadata?.let { authParameters[KEY_DEVICE_KEY] = it.deviceKey }
 
                 val response = cognitoAuthService.cognitoIdentityProviderClient?.initiateAuth {
