@@ -39,7 +39,7 @@ internal object SignOutCognitoActions : SignOutActions {
                 hostedUIClient.launchCustomTabsSignOut(event.signOutData.browserPackage)
             } catch (e: Exception) {
                 logger.warn("Failed to sign out web ui.", e)
-                val hostedUIErrorData = HostedUIErrorData(e)
+                val hostedUIErrorData = HostedUIErrorData(hostedUIClient?.createSignOutUri()?.toString(), e)
                 val evt = if (event.signOutData.globalSignOut) {
                     SignOutEvent(SignOutEvent.EventType.SignOutGlobally(event.signedInData, hostedUIErrorData))
                 } else {

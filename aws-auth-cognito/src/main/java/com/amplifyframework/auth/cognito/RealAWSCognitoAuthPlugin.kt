@@ -48,6 +48,7 @@ import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidOauthCo
 import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidUserPoolConfigurationException
 import com.amplifyframework.auth.cognito.exceptions.invalidstate.SignedInException
 import com.amplifyframework.auth.cognito.exceptions.service.CodeDeliveryFailureException
+import com.amplifyframework.auth.cognito.exceptions.service.HostedUISignOutException
 import com.amplifyframework.auth.cognito.exceptions.service.InvalidAccountTypeException
 import com.amplifyframework.auth.cognito.exceptions.service.UserCancelledException
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
@@ -112,6 +113,7 @@ import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.data.FederatedToken
+import com.amplifyframework.statemachine.codegen.data.HostedUIErrorData
 import com.amplifyframework.statemachine.codegen.data.SignInData
 import com.amplifyframework.statemachine.codegen.data.SignInMethod
 import com.amplifyframework.statemachine.codegen.data.SignOutData
@@ -697,20 +699,42 @@ internal class RealAWSCognitoAuthPlugin(
             when (val authNState = it.authNState) {
                 is AuthenticationState.SigningOut -> {
                     (authNState.signOutState as? SignOutState.SigningOutHostedUI)?.let { signOutState ->
-                        if (signOutState.signedInData.signInMethod !=
-                            SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.UNKNOWN) && callbackUri == null
+                        if (callbackUri == null && signOutState.signedInData.signInMethod !=
+                            SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.UNKNOWN)
                         ) {
                             authStateMachine.send(
                                 SignOutEvent(SignOutEvent.EventType.UserCancelled(signOutState.signedInData))
                             )
-                        } else if (signOutState.globalSignOut) {
-                            authStateMachine.send(
-                                SignOutEvent(SignOutEvent.EventType.SignOutGlobally(signOutState.signedInData))
-                            )
                         } else {
-                            authStateMachine.send(
-                                SignOutEvent(SignOutEvent.EventType.RevokeToken(signOutState.signedInData))
-                            )
+                            val hostedUIErrorData = if (callbackUri == null) {
+                                // This error will be appended if sign out redirect failed with an UNKNOWN sign in
+                                // method. We will provide a URL to allow the developer to manually retry.
+                                HostedUIErrorData(
+                                    url = authEnvironment.hostedUIClient?.createSignOutUri()?.toString(),
+                                    error = HostedUISignOutException(authEnvironment.hostedUIClient != null)
+                                )
+                            } else {
+                                null
+                            }
+                            if (signOutState.globalSignOut) {
+                                authStateMachine.send(
+                                    SignOutEvent(
+                                        SignOutEvent.EventType.SignOutGlobally(
+                                            signOutState.signedInData,
+                                            hostedUIErrorData
+                                        )
+                                    )
+                                )
+                            } else {
+                                authStateMachine.send(
+                                    SignOutEvent(
+                                        SignOutEvent.EventType.RevokeToken(
+                                            signOutState.signedInData,
+                                            hostedUIErrorData
+                                        )
+                                    )
+                                )
+                            }
                         }
                     }
                 }
@@ -730,7 +754,13 @@ internal class RealAWSCognitoAuthPlugin(
                         authStateMachine.send(HostedUIEvent(HostedUIEvent.EventType.FetchToken(callbackUri)))
                     }
                 }
-                else -> Unit
+                else -> {
+                    logger.warn(
+                        "Received handleWebUIResponse but ignoring because the user is not currently signing in " +
+                                "or signing out"
+                    )
+                    Unit
+                }
             }
         }
     }
