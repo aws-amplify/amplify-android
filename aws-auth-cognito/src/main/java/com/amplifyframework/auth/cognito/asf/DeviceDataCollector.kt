@@ -19,21 +19,17 @@ import android.content.Context
 import android.provider.Settings
 import android.view.Display
 import android.view.WindowManager
-import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
-import java.util.UUID
 import java.util.concurrent.TimeUnit
 import kotlin.math.abs
 
 /**
  * Collects information that identifies the device.
  */
-internal class DeviceDataCollector : DataCollector {
+internal class DeviceDataCollector(private val deviceId: String) : DataCollector {
     companion object {
         private const val PLATFORM_VALUE = "ANDROID"
-        private const val LOCAL_STORAGE_PATH = "AWS.Cognito.ContextData"
-        private const val LOCAL_STORAGE_DEVICE_ID_KEY = "CognitoDeviceId"
 
         /**
          * DeviceId that Cognito has associated with the device
@@ -86,20 +82,6 @@ internal class DeviceDataCollector : DataCollector {
         return windowManager.defaultDisplay
     }
 
-    private fun getCognitoDeviceAgent(context: Context): String {
-        // TODO: use credential store
-        val sharedPreferences = context.getSharedPreferences(LOCAL_STORAGE_PATH, Context.MODE_PRIVATE)
-        val storedId = sharedPreferences?.getString(LOCAL_STORAGE_DEVICE_ID_KEY, null)
-        if (storedId != null) {
-            return storedId
-        }
-        val deviceId = "${UUID.randomUUID()}:${Date().time}"
-        val editor = sharedPreferences.edit()
-        editor.putString(LOCAL_STORAGE_DEVICE_ID_KEY, deviceId)
-        editor.apply()
-        return deviceId
-    }
-
     /**
      * {@inheritDoc}
      */
@@ -109,7 +91,7 @@ internal class DeviceDataCollector : DataCollector {
             TIMEZONE to timezoneOffset,
             PLATFORM_KEY to PLATFORM_VALUE,
             THIRD_PARTY_DEVICE_AGENT to thirdPartyDeviceAgent,
-            DEVICE_AGENT to getCognitoDeviceAgent(context),
+            DEVICE_AGENT to deviceId,
             DEVICE_LANGUAGE to language,
             DEVICE_HEIGHT to display.height.toString(),
             DEVICE_WIDTH to display.width.toString(),
