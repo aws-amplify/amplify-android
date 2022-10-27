@@ -57,7 +57,8 @@ internal object SignInChallengeCognitoActions : SignInChallengeActions {
                 configuration.userPool?.appClientSecret
             )
             secretHash?.let { challengeResponses[KEY_SECRET_HASH] = it }
-            val encodedContextData = username?.let { userContextDataProvider?.getEncodedContextData(it) }
+
+            val encodedContextData = username?.let { getUserContextData(it) }
 
             val response = cognitoAuthService.cognitoIdentityProviderClient?.respondToAuthChallenge {
                 clientId = configuration.userPool?.appClient
