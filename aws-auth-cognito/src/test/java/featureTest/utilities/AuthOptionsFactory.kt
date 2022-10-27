@@ -3,11 +3,8 @@ package featureTest.utilities
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.cognito.featuretest.AuthAPI
-import com.amplifyframework.auth.cognito.featuretest.AuthAPI.confirmSignIn
-import com.amplifyframework.auth.cognito.featuretest.AuthAPI.deleteUser
 import com.amplifyframework.auth.cognito.featuretest.AuthAPI.resetPassword
 import com.amplifyframework.auth.cognito.featuretest.AuthAPI.signIn
-import com.amplifyframework.auth.cognito.featuretest.AuthAPI.signOut
 import com.amplifyframework.auth.cognito.featuretest.AuthAPI.signUp
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions
@@ -23,7 +20,6 @@ import com.amplifyframework.auth.options.AuthUpdateUserAttributesOptions
 import com.amplifyframework.auth.options.AuthWebUISignInOptions
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.booleanOrNull
 
 /**
  * Factory to create specialized options object for the top level APIs
@@ -49,7 +45,7 @@ object AuthOptionsFactory {
         signIn -> AuthSignInOptions.defaults()
         AuthAPI.signInWithSocialWebUI -> AuthWebUISignInOptions.builder().build()
         AuthAPI.signInWithWebUI -> AuthWebUISignInOptions.builder().build()
-        AuthAPI.signOut -> getSignOutOptions(optionsData)
+        AuthAPI.signOut -> AuthSignOutOptions.builder().build()
         AuthAPI.updatePassword -> TODO()
         AuthAPI.updateUserAttribute -> AuthUpdateUserAttributeOptions.defaults()
         AuthAPI.updateUserAttributes -> AuthUpdateUserAttributesOptions.defaults()
@@ -67,11 +63,4 @@ object AuthOptionsFactory {
                 AuthUserAttribute(AuthUserAttributeKey.custom(it.key), (it.value as JsonPrimitive).content)
             }
         ).build()
-
-    private fun getSignOutOptions(optionsData: JsonObject): AuthSignOutOptions {
-        val globalSignOutData = (optionsData["globalSignOut"] as JsonPrimitive).booleanOrNull ?: false
-        return AuthSignOutOptions.builder()
-            .globalSignOut(globalSignOutData)
-            .build()
-    }
 }

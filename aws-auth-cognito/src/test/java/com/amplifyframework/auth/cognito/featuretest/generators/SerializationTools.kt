@@ -81,6 +81,66 @@ internal fun AuthState.exportJson() {
     println("Serialized can be reversed = ${reverse.serialize() == result}")
 }
 
+internal fun List<FeatureTestCase>.exportToMd() {
+    val outputStream = FileOutputStream("testSuite.md")
+    val writer = outputStream.bufferedWriter()
+    val jsonFormat = Json { prettyPrint = true }
+
+    groupBy { it.api.name }
+        .forEach {
+            with(writer) {
+                newLine()
+                write("# ${it.key.name}") // Header 1
+                newLine()
+                it.value.forEach {
+                    newLine()
+                    write("## Case: *${it.description}*")
+                    newLine()
+                    // Preconditions (GIVEN)
+                    write("### Preconditions") // Header 2
+                    newLine()
+                    write("- **Amplify Configuration**: ${it.preConditions.`amplify-configuration`}")
+                    newLine()
+                    write("- **Initial State:** ${it.preConditions.state}")
+                    newLine()
+                    write("- **Mock Responses:** ")
+                    printCodeBlock {
+                        if (it.preConditions.mockedResponses.isEmpty()) "[]" else
+                            jsonFormat.encodeToString(it.preConditions.mockedResponses)
+                    }
+
+                    // Parameters (WHEN)
+                    write("### Input")
+                    newLine()
+                    write("- **params:**")
+                    printCodeBlock {
+                        jsonFormat.encodeToString(it.api.params)
+                    }
+                    write("- **options:**")
+                    printCodeBlock { jsonFormat.encodeToString(it.api.options) }
+
+                    // Then
+                    write("### Validations")
+                    newLine()
+                    it.validations.forEach {
+                        printCodeBlock { jsonFormat.encodeToString(it) }
+                    }
+                }
+            }
+        }
+    writer.flush()
+}
+
+private fun BufferedWriter.printCodeBlock(blob: () -> String) {
+    newLine()
+    write("```json")
+    newLine()
+    write(blob.invoke())
+    newLine()
+    write("```")
+    newLine()
+}
+
 /**
  * Generates a md file with all the test cases formatted.
  */
