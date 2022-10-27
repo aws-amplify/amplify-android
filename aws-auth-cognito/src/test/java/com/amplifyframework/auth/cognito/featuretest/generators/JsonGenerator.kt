@@ -2,6 +2,7 @@ package com.amplifyframework.auth.cognito.featuretest.generators
 
 import com.amplifyframework.auth.cognito.featuretest.FeatureTestCase
 import com.amplifyframework.auth.cognito.featuretest.generators.authstategenerators.AuthStateJsonGenerator
+import com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerators.ConfirmSignInTestCaseGenerator
 import com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerators.DeleteUserTestCaseGenerator
 import com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerators.ResetPasswordTestCaseGenerator
 import com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerators.SignInTestCaseGenerator
@@ -23,6 +24,7 @@ object JsonGenerator {
         SignUpTestCaseGenerator,
         SignInTestCaseGenerator,
         SignOutTestCaseGenerator,
+        ConfirmSignInTestCaseGenerator,
         DeleteUserTestCaseGenerator
     )
 
