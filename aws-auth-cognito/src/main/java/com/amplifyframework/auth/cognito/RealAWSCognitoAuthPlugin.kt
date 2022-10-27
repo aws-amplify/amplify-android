@@ -195,7 +195,7 @@ internal class RealAWSCognitoAuthPlugin(
                 }
             }
 
-            val encodedContextData = authEnvironment.userContextDataProvider?.getEncodedContextData(username)
+            val encodedContextData = authEnvironment.getUserContextData(username)
 
             val response = authEnvironment.cognitoAuthService.cognitoIdentityProviderClient?.signUp {
                 this.username = username
@@ -278,7 +278,7 @@ internal class RealAWSCognitoAuthPlugin(
     ) {
         logger.verbose("ConfirmSignUp Starting execution")
         try {
-            val encodedContextData = authEnvironment.userContextDataProvider?.getEncodedContextData(username)
+            val encodedContextData = authEnvironment.getUserContextData(username)
 
             authEnvironment.cognitoAuthService.cognitoIdentityProviderClient?.confirmSignUp {
                 this.username = username
@@ -342,7 +342,7 @@ internal class RealAWSCognitoAuthPlugin(
         logger.verbose("ResendSignUpCode Starting execution")
         try {
             val metadata = (options as? AWSCognitoAuthResendSignUpCodeOptions)?.metadata
-            val encodedContextData = authEnvironment.userContextDataProvider?.getEncodedContextData(username)
+            val encodedContextData = authEnvironment.getUserContextData(username)
 
             val response = authEnvironment.cognitoAuthService.cognitoIdentityProviderClient?.resendConfirmationCode {
                 clientId = configuration.userPool?.appClient
@@ -519,10 +519,12 @@ internal class RealAWSCognitoAuthPlugin(
         token = authStateMachine.listen(
             { authState ->
                 val authNState = authState.authNState
+                val authZState = authState.authZState
                 val signInState = (authNState as? AuthenticationState.SigningIn)?.signInState
                 val challengeState = (signInState as? SignInState.ResolvingChallenge)?.challengeState
                 when {
-                    authNState is AuthenticationState.SignedIn -> {
+                    authNState is AuthenticationState.SignedIn
+                        && authZState is AuthorizationState.SessionEstablished -> {
                         token?.let(authStateMachine::cancel)
                         val authSignInResult = AuthSignInResult(
                             true,
@@ -1005,9 +1007,9 @@ internal class RealAWSCognitoAuthPlugin(
             )
 
             val appClient = requireNotNull(configuration.userPool?.appClient)
-            val encodedData = authEnvironment.userContextDataProvider?.getEncodedContextData(username)
-
             GlobalScope.launch {
+                val encodedData = authEnvironment.getUserContextData(username)
+
                 ResetPasswordUseCase(cognitoIdentityProviderClient, appClient).execute(
                     username,
                     options,
@@ -1050,7 +1052,7 @@ internal class RealAWSCognitoAuthPlugin(
 
             GlobalScope.launch {
                 try {
-                    val encodedContextData = authEnvironment.userContextDataProvider?.getEncodedContextData(username)
+                    val encodedContextData = authEnvironment.getUserContextData(username)
 
                     authEnvironment.cognitoAuthService.cognitoIdentityProviderClient!!.confirmForgotPassword {
                         this.username = username

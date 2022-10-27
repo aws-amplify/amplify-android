@@ -169,7 +169,7 @@ class RealAWSCognitoAuthPluginTest {
             appClientSecret = "app Client Secret"
         }
 
-        coEvery { authEnvironment.userContextDataProvider?.getEncodedContextData(any()) } returns null
+        coEvery { authEnvironment.getUserContextData(any()) } returns null
 
         // set up SRP helper
         mockkObject(SRPHelper)
