@@ -3,11 +3,13 @@ package featureTest.utilities
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.cognito.featuretest.AuthAPI
+import com.amplifyframework.auth.cognito.featuretest.AuthAPI.confirmSignIn
 import com.amplifyframework.auth.cognito.featuretest.AuthAPI.deleteUser
 import com.amplifyframework.auth.cognito.featuretest.AuthAPI.resetPassword
 import com.amplifyframework.auth.cognito.featuretest.AuthAPI.signIn
 import com.amplifyframework.auth.cognito.featuretest.AuthAPI.signOut
 import com.amplifyframework.auth.cognito.featuretest.AuthAPI.signUp
+import com.amplifyframework.auth.options.AuthConfirmSignInOptions
 import com.amplifyframework.auth.options.AuthResetPasswordOptions
 import com.amplifyframework.auth.options.AuthSignInOptions
 import com.amplifyframework.auth.options.AuthSignOutOptions
@@ -25,6 +27,7 @@ object AuthOptionsFactory {
         signUp -> getSignUpOptions(optionsData)
         signIn -> AuthSignInOptions.defaults()
         signOut -> getSignOutOptions(optionsData)
+        confirmSignIn -> AuthConfirmSignInOptions.defaults()
         deleteUser -> null
         else -> throw Error("Options for $apiName is not defined!")
     }
