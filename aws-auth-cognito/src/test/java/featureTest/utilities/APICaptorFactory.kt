@@ -43,6 +43,7 @@ class APICaptorFactory(
             AuthAPI.resetPassword to mockk<Consumer<AuthResetPasswordResult>>(),
             AuthAPI.signUp to mockk<Consumer<AuthSignUpResult>>(),
             AuthAPI.signIn to mockk<Consumer<AuthSignInResult>>(),
+            AuthAPI.confirmSignIn to mockk<Consumer<AuthSignInResult>>(),
             AuthAPI.deleteUser to mockk<Action>()
         )
         val onError = mockk<Consumer<AuthException>>()
@@ -81,6 +82,12 @@ class APICaptorFactory(
                 successCaptors[apiName] = resultCaptor
             }
             AuthAPI.signIn -> {
+                val resultCaptor = slot<AuthSignInResult>()
+                val consumer = onSuccess[apiName] as Consumer<AuthSignInResult>
+                every { consumer.accept(capture(resultCaptor)) } answers { latch.countDown() }
+                successCaptors[apiName] = resultCaptor
+            }
+            AuthAPI.confirmSignIn -> {
                 val resultCaptor = slot<AuthSignInResult>()
                 val consumer = onSuccess[apiName] as Consumer<AuthSignInResult>
                 every { consumer.accept(capture(resultCaptor)) } answers { latch.countDown() }
