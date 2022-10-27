@@ -159,12 +159,7 @@ class CognitoMockFactory(
                 captures[mockResponse.apiName] = requestCaptor
             }
             "confirmDevice" -> {
-                // TODO: most likely will need to mock other things
-                mockkObject(AuthHelper)
-                coEvery { AuthHelper.getSecretHash(any(), any(), any()) } returns "a hash"
-
                 val requestCaptor = slot<ConfirmDeviceRequest>()
-
                 coEvery { mockCognitoIPClient.confirmDevice(capture(requestCaptor)) } coAnswers {
                     if (mockResponse.responseType == ResponseType.Failure) {
                         throw Json.decodeFromString(
