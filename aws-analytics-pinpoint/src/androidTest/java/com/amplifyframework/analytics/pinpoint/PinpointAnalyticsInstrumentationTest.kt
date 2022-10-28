@@ -369,6 +369,7 @@ class PinpointAnalyticsInstrumentationTest {
         private const val PINPOINT_ROUNDTRIP_TIMEOUT = 10 * 1000L
         private const val RECORD_INSERTION_TIMEOUT = 5 * 1000L
         private const val UNIQUE_ID_KEY = "UniqueId"
+        private const val PREFERENCES_AND_FILE_MANAGER_SUFFIX = "515d6767-01b7-49e5-8273-c8d11b0f331d"
         private lateinit var synchronousAuth: SynchronousAuth
         private lateinit var preferences: SharedPreferences
         private lateinit var appId: String
@@ -380,7 +381,10 @@ class PinpointAnalyticsInstrumentationTest {
             val context = ApplicationProvider.getApplicationContext<Context>()
             @RawRes val resourceId = Resources.getRawResourceId(context, CONFIGURATION_NAME)
             appId = readAppIdFromResource(context, resourceId)
-            preferences = context.getSharedPreferences(appId, Context.MODE_PRIVATE)
+            preferences = context.getSharedPreferences(
+                appId + PREFERENCES_AND_FILE_MANAGER_SUFFIX,
+                Context.MODE_PRIVATE
+            )
             setUniqueId()
             Amplify.Auth.addPlugin(AWSCognitoAuthPlugin() as AuthPlugin<*>)
             Amplify.addPlugin(AWSPinpointAnalyticsPlugin())

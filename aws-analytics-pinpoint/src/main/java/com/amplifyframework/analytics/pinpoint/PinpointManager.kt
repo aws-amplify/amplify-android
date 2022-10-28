@@ -46,12 +46,22 @@ internal class PinpointManager constructor(
 
     companion object {
         private val SDK_NAME = Platform.ANDROID.libraryName
+
+        // UUID to identify a unique shared preferences and directory the library
+        // can use, will be concatenated with the appId to ensure no collision.
+        // Needs to be the same as the SDK suffix so that customers migrating keep
+        // analytics data
+        private const val PREFERENCES_AND_FILE_MANAGER_SUFFIX = "515d6767-01b7-49e5-8273-c8d11b0f331d"
     }
 
     init {
         val pinpointDatabase = PinpointDatabase(context)
         val sharedPrefs =
-            context.getSharedPreferences(awsPinpointConfiguration.appId, Context.MODE_PRIVATE)
+            context.getSharedPreferences(
+                awsPinpointConfiguration.appId +
+                    PREFERENCES_AND_FILE_MANAGER_SUFFIX,
+                Context.MODE_PRIVATE
+            )
         val sharedPrefsUniqueIdService = SharedPrefsUniqueIdService(sharedPrefs)
         val androidAppDetails = AndroidAppDetails(context, awsPinpointConfiguration.appId)
         val androidDeviceDetails = AndroidDeviceDetails(getCarrier(context))
