@@ -688,32 +688,6 @@ public final class SyncProcessorTest {
         verify(requestRetry, times(1)).retry(any(), any());
     }
 
-    /**
-     * Verify that retry is called on appsync failure and when dispose in called midway no exception is thrown.
-     *
-     * @throws AmplifyException On failure to build GraphQLRequest for sync query.
-     */
-    @Test
-    public void retryHandlesHydrateCallsErrorHandlerOnIrrecoverableError() throws AmplifyException {
-        // Arrange: mock failure when invoking hydrate
-        requestRetry = spy(new RetryHandler(dataStoreConfigurationProvider));
-        initSyncProcessor();
-        AppSyncMocking.sync(appSync)
-                .mockFailure(new DataStoreException.GraphQLResponseException("Something timed " +
-                        "out during sync.", new ArrayList<GraphQLResponse.Error>()));
-
-        // Act: call hydrate.
-        TestObserver<Void> testObserver = syncProcessor.hydrate()
-                .test(false);
-        new Timer().schedule(new TimerTask() {
-            @Override
-            public void run() {
-                testObserver.dispose();
-            }
-        }, 10000);
-        verify(requestRetry).retry(any(), any());
-        assertEquals(10, errorHandlerCallCount);
-    }
 
     /**
      * Validate that all records are synced, via pagination.
