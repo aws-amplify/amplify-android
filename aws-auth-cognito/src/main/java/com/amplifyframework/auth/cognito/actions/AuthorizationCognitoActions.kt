@@ -98,6 +98,13 @@ internal object AuthorizationCognitoActions : AuthorizationActions {
                 is AmplifyCredential.IdentityPool -> RefreshSessionEvent(
                     RefreshSessionEvent.EventType.RefreshUnAuthSession(LoginsMapProvider.UnAuthLogins())
                 )
+                is AmplifyCredential.IdentityPoolFederated -> {
+                    AuthorizationEvent(
+                        AuthorizationEvent.EventType.ThrowError(
+                            Exception("Refreshing credentials from federationToIdentityPool is not supported.")
+                        )
+                    )
+                }
                 else -> AuthorizationEvent(
                     AuthorizationEvent.EventType.ThrowError(Exception("Credentials empty, cannot refresh."))
                 )

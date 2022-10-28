@@ -83,7 +83,7 @@ internal class LegacyKeyValueRepository(
     }
 
     private fun getCacheForKey(key: String): MutableMap<String, String> {
-        return cacheFactory.getOrPut(key, { mutableMapOf() })
+        return cacheFactory.getOrPut(key) { mutableMapOf() }
     }
 
     /**

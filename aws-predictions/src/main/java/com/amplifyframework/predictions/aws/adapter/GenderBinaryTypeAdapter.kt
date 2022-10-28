@@ -29,6 +29,7 @@ object GenderBinaryTypeAdapter {
      * @param gender Gender type returned by AWS Rekognition
      * @return Amplify's [GenderBinaryType] enum
      */
+    @JvmStatic
     fun fromRekognition(gender: String): GenderBinaryType {
         return when (GenderType.fromValue(gender)) {
             GenderType.Male -> GenderBinaryType.MALE

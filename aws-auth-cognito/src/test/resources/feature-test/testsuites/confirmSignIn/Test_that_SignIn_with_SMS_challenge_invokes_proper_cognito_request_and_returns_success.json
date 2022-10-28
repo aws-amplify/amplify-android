@@ -1,26 +1,11 @@
 {
-    "description": "Test that SRP signIn invokes proper cognito request and returns success",
+    "description": "Test that SignIn with SMS challenge invokes proper cognito request and returns success",
     "preConditions": {
         "amplify-configuration": "authconfiguration.json",
-        "state": "SignedOut_Configured.json",
+        "state": "SigningIn_SigningIn.json",
         "mockedResponses": [
             {
-                "type": "cognitoIdentityProvider",
-                "apiName": "initiateAuth",
-                "responseType": "success",
-                "response": {
-                    "challengeName": "PASSWORD_VERIFIER",
-                    "challengeParameters": {
-                        "SALT": "abc",
-                        "SECRET_BLOCK": "secretBlock",
-                        "SRP_B": "def",
-                        "USERNAME": "username",
-                        "USER_ID_FOR_SRP": "userId"
-                    }
-                }
-            },
-            {
-                "type": "cognitoIdentityProvider",
+                "type": "cognito",
                 "apiName": "respondToAuthChallenge",
                 "responseType": "success",
                 "response": {
@@ -33,7 +18,7 @@
                 }
             },
             {
-                "type": "cognitoIdentity",
+                "type": "cognito",
                 "apiName": "getId",
                 "responseType": "success",
                 "response": {
@@ -41,7 +26,7 @@
                 }
             },
             {
-                "type": "cognitoIdentity",
+                "type": "cognito",
                 "apiName": "getCredentialsForIdentity",
                 "responseType": "success",
                 "response": {
@@ -56,10 +41,9 @@
         ]
     },
     "api": {
-        "name": "signIn",
+        "name": "confirmSignIn",
         "params": {
-            "username": "username",
-            "password": "password"
+            "challengeResponse": "000000"
         },
         "options": {
         }
@@ -67,14 +51,15 @@
     "validations": [
         {
             "type": "amplify",
-            "apiName": "signIn",
+            "apiName": "confirmSignIn",
             "responseType": "success",
             "response": {
                 "isSignedIn": true,
                 "nextStep": {
                     "signInStep": "DONE",
                     "additionalInfo": {
-                    }
+                    },
+                    "codeDeliveryDetails": null
                 }
             }
         },

@@ -43,11 +43,6 @@ internal sealed class AmplifyCredential {
     data class UserPool(override val signedInData: SignedInData) : AmplifyCredential(), UserPoolTypeCredential
 
     @Serializable
-    @SerialName("deviceMetadata")
-    data class DeviceData(override val deviceMetadata: DeviceMetadata) :
-        AmplifyCredential(), DeviceMetaDataTypeCredential
-
-    @Serializable
     @SerialName("identityPool")
     data class IdentityPool(override val identityId: String, override val credentials: AWSCredentials) :
         AmplifyCredential(), IdentityPoolTypeCredential
@@ -67,6 +62,15 @@ internal sealed class AmplifyCredential {
         override val identityId: String,
         override val credentials: AWSCredentials
     ) : AmplifyCredential(), UserPoolTypeCredential, IdentityPoolTypeCredential
+
+    @Serializable
+    @SerialName("deviceMetadata")
+    data class DeviceData(override val deviceMetadata: DeviceMetadata) :
+        AmplifyCredential(), DeviceMetaDataTypeCredential
+
+    @Serializable
+    @SerialName("asfDevice")
+    data class ASFDevice(val id: String?) : AmplifyCredential()
 }
 
 /**

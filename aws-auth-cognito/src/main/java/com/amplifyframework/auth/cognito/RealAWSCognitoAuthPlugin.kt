@@ -147,7 +147,7 @@ internal class RealAWSCognitoAuthPlugin(
     private val logger: Logger
 ) : AuthCategoryBehavior {
 
-    private val lastPublishedHubEventName = AtomicReference<AuthChannelEventName>()
+    private val lastPublishedHubEventName = AtomicReference<String>()
 
     init {
         addAuthStateChangeListener()
@@ -192,7 +192,7 @@ internal class RealAWSCognitoAuthPlugin(
                 }
             }
 
-            val encodedContextData = authEnvironment.userContextDataProvider?.getEncodedContextData(username)
+            val encodedContextData = authEnvironment.getUserContextData(username)
 
             val response = authEnvironment.cognitoAuthService.cognitoIdentityProviderClient?.signUp {
                 this.username = username
@@ -275,7 +275,7 @@ internal class RealAWSCognitoAuthPlugin(
     ) {
         logger.verbose("ConfirmSignUp Starting execution")
         try {
-            val encodedContextData = authEnvironment.userContextDataProvider?.getEncodedContextData(username)
+            val encodedContextData = authEnvironment.getUserContextData(username)
 
             authEnvironment.cognitoAuthService.cognitoIdentityProviderClient?.confirmSignUp {
                 this.username = username
@@ -339,7 +339,7 @@ internal class RealAWSCognitoAuthPlugin(
         logger.verbose("ResendSignUpCode Starting execution")
         try {
             val metadata = (options as? AWSCognitoAuthResendSignUpCodeOptions)?.metadata
-            val encodedContextData = authEnvironment.userContextDataProvider?.getEncodedContextData(username)
+            val encodedContextData = authEnvironment.getUserContextData(username)
 
             val response = authEnvironment.cognitoAuthService.cognitoIdentityProviderClient?.resendConfirmationCode {
                 clientId = configuration.userPool?.appClient
@@ -454,6 +454,7 @@ internal class RealAWSCognitoAuthPlugin(
                             AuthNextSignInStep(AuthSignInStep.DONE, mapOf(), null)
                         )
                         onSuccess.accept(authSignInResult)
+                        sendHubEvent(AuthChannelEventName.SIGNED_IN.toString())
                     }
                     else -> Unit
                 }
@@ -515,16 +516,19 @@ internal class RealAWSCognitoAuthPlugin(
         token = authStateMachine.listen(
             { authState ->
                 val authNState = authState.authNState
+                val authZState = authState.authZState
                 val signInState = (authNState as? AuthenticationState.SigningIn)?.signInState
                 val challengeState = (signInState as? SignInState.ResolvingChallenge)?.challengeState
                 when {
-                    authNState is AuthenticationState.SignedIn -> {
+                    authNState is AuthenticationState.SignedIn
+                        && authZState is AuthorizationState.SessionEstablished -> {
                         token?.let(authStateMachine::cancel)
                         val authSignInResult = AuthSignInResult(
                             true,
                             AuthNextSignInStep(AuthSignInStep.DONE, mapOf(), null)
                         )
                         onSuccess.accept(authSignInResult)
+                        sendHubEvent(AuthChannelEventName.SIGNED_IN.toString())
                     }
                     signInState is SignInState.Error -> {
                         token?.let(authStateMachine::cancel)
@@ -670,6 +674,7 @@ internal class RealAWSCognitoAuthPlugin(
                                 AuthNextSignInStep(AuthSignInStep.DONE, mapOf(), null)
                             )
                         onSuccess.accept(authSignInResult)
+                        sendHubEvent(AuthChannelEventName.SIGNED_IN.toString())
                     }
                     else -> Unit
                 }
@@ -759,18 +764,43 @@ internal class RealAWSCognitoAuthPlugin(
                 is AuthorizationState.SessionEstablished -> {
                     val credential = authZState.amplifyCredential
                     if (!credential.isValid() || forceRefresh) {
-                        authStateMachine.send(
-                            AuthorizationEvent(AuthorizationEvent.EventType.RefreshSession(credential))
-                        )
+                        if (credential is AmplifyCredential.IdentityPoolFederated) {
+                            authStateMachine.send(
+                                AuthorizationEvent(
+                                    AuthorizationEvent.EventType.StartFederationToIdentityPool(
+                                        credential.federatedToken,
+                                        credential.identityId,
+                                        credential
+                                    )
+                                )
+                            )
+                        } else {
+                            authStateMachine.send(
+                                AuthorizationEvent(AuthorizationEvent.EventType.RefreshSession(credential))
+                            )
+                        }
                         _fetchAuthSession(onSuccess, onError)
                     } else onSuccess.accept(credential.getCognitoSession())
                 }
                 is AuthorizationState.Error -> {
                     val error = authZState.exception
                     if (error is SessionError) {
-                        authStateMachine.send(
-                            AuthorizationEvent(AuthorizationEvent.EventType.RefreshSession(error.amplifyCredential))
-                        )
+                        val amplifyCredential = error.amplifyCredential
+                        if (amplifyCredential is AmplifyCredential.IdentityPoolFederated) {
+                            authStateMachine.send(
+                                AuthorizationEvent(
+                                    AuthorizationEvent.EventType.StartFederationToIdentityPool(
+                                        amplifyCredential.federatedToken,
+                                        amplifyCredential.identityId,
+                                        amplifyCredential
+                                    )
+                                )
+                            )
+                        } else {
+                            authStateMachine.send(
+                                AuthorizationEvent(AuthorizationEvent.EventType.RefreshSession(amplifyCredential))
+                            )
+                        }
                         _fetchAuthSession(onSuccess, onError)
                     } else {
                         onError.accept(InvalidStateException())
@@ -803,6 +833,7 @@ internal class RealAWSCognitoAuthPlugin(
                                     }
                                     is SessionExpiredException -> {
                                         onSuccess.accept(AmplifyCredential.Empty.getCognitoSession(error.exception))
+                                        sendHubEvent(AuthChannelEventName.SESSION_EXPIRED.toString())
                                     }
                                     else -> {
                                         val errorResult = UnknownException("Fetch auth session failed.", error)
@@ -945,9 +976,9 @@ internal class RealAWSCognitoAuthPlugin(
             )
 
             val appClient = requireNotNull(configuration.userPool?.appClient)
-            val encodedData = authEnvironment.userContextDataProvider?.getEncodedContextData(username)
-
             GlobalScope.launch {
+                val encodedData = authEnvironment.getUserContextData(username)
+
                 ResetPasswordUseCase(cognitoIdentityProviderClient, appClient).execute(
                     username,
                     options,
@@ -990,7 +1021,7 @@ internal class RealAWSCognitoAuthPlugin(
 
             GlobalScope.launch {
                 try {
-                    val encodedContextData = authEnvironment.userContextDataProvider?.getEncodedContextData(username)
+                    val encodedContextData = authEnvironment.getUserContextData(username)
 
                     authEnvironment.cognitoAuthService.cognitoIdentityProviderClient!!.confirmForgotPassword {
                         this.username = username
@@ -1400,7 +1431,7 @@ internal class RealAWSCognitoAuthPlugin(
                         )
                     )
                     authStateMachine.send(event)
-                    _signOut(onComplete)
+                    _signOut(onComplete = onComplete)
                 }
                 is AuthenticationState.FederatedToIdentityPool -> {
                     onComplete.accept(
@@ -1419,7 +1450,7 @@ internal class RealAWSCognitoAuthPlugin(
         }
     }
 
-    private fun _signOut(onComplete: Consumer<AuthSignOutResult>) {
+    private fun _signOut(sendHubEvent: Boolean = true, onComplete: Consumer<AuthSignOutResult>) {
         var token: StateChangeListenerToken? = null
         token = authStateMachine.listen(
             { authState ->
@@ -1443,8 +1474,14 @@ internal class RealAWSCognitoAuthPlugin(
                                         }
                                     )
                                 )
+                                if (sendHubEvent) {
+                                    sendHubEvent(AuthChannelEventName.SIGNED_OUT.toString())
+                                }
                             } else {
                                 onComplete.accept(AWSCognitoAuthSignOutResult.CompleteSignOut)
+                                if (sendHubEvent) {
+                                    sendHubEvent(AuthChannelEventName.SIGNED_OUT.toString())
+                                }
                             }
                         }
                         authNState is AuthenticationState.Error -> {
@@ -1508,10 +1545,7 @@ internal class RealAWSCognitoAuthPlugin(
                 when (val deleteUserState = authZState?.deleteUserState) {
                     is DeleteUserState.UserDeleted -> {
                         onSuccess.call()
-                        Amplify.Hub.publish(
-                            HubChannel.AUTH,
-                            HubEvent.create(AuthChannelEventName.USER_DELETED)
-                        )
+                        sendHubEvent(AuthChannelEventName.USER_DELETED.toString())
                         listenerToken?.let(authStateMachine::cancel)
                     }
                     is DeleteUserState.Error -> {
@@ -1536,43 +1570,7 @@ internal class RealAWSCognitoAuthPlugin(
     }
 
     private fun addAuthStateChangeListener() {
-        authStateMachine.listen(
-            { authState ->
-                logger.verbose("Auth State Change: $authState")
-
-                when (authState) {
-                    is AuthState.Configured -> {
-                        val (authNState, authZState) = authState
-                        val deleteUserAuthZState = authZState as? AuthorizationState.DeletingUser
-                        val hubEvent = when {
-                            authNState is AuthenticationState.SignedOut &&
-                                authZState is AuthorizationState.Configured -> {
-                                AuthChannelEventName.SIGNED_OUT
-                            }
-                            authNState is AuthenticationState.SignedIn &&
-                                authZState is AuthorizationState.SessionEstablished -> {
-                                AuthChannelEventName.SIGNED_IN
-                            }
-                            deleteUserAuthZState?.deleteUserState is DeleteUserState.UserDeleted -> {
-                                AuthChannelEventName.USER_DELETED
-                            }
-                            authNState is AuthenticationState.SignedIn && authZState is AuthorizationState.Error &&
-                                authZState.exception is SessionError &&
-                                authZState.exception.exception is SessionExpiredException -> {
-                                AuthChannelEventName.SESSION_EXPIRED
-                            }
-                            else -> lastPublishedHubEventName.get()
-                        }
-                        if (lastPublishedHubEventName.get() != hubEvent) {
-                            lastPublishedHubEventName.set(hubEvent)
-                            Amplify.Hub.publish(HubChannel.AUTH, HubEvent.create(hubEvent))
-                        }
-                    }
-                    else -> Unit
-                }
-            },
-            null
-        )
+        authStateMachine.listen({ authState -> logger.verbose("Auth State Change: $authState") }, null)
     }
 
     private fun configureAuthStates() {
@@ -1606,23 +1604,34 @@ internal class RealAWSCognitoAuthPlugin(
                 authState !is AuthState.Configured -> onError.accept(
                     InvalidStateException("Federation could not be completed.")
                 )
-                authNState is AuthenticationState.FederatedToIdentityPool -> {
-                    onError.accept(
-                        InvalidStateException(
-                            "The user is currently federated to identity pool. You " +
-                                "must call clearFederationToIdentityPool to clear credentials."
-                        )
-                    )
-                }
                 (
                     authNState is AuthenticationState.SignedOut ||
                         authNState is AuthenticationState.Error ||
-                        authNState is AuthenticationState.NotConfigured
+                        authNState is AuthenticationState.NotConfigured ||
+                        authNState is AuthenticationState.FederatedToIdentityPool
                     ) && (
                     authZState is AuthorizationState.Configured ||
                         authZState is AuthorizationState.SessionEstablished ||
                         authZState is AuthorizationState.Error
                     ) -> {
+
+                    val existingCredential = when (authZState) {
+                        is AuthorizationState.SessionEstablished -> authZState.amplifyCredential
+                        is AuthorizationState.Error -> {
+                            (authZState.exception as? SessionError)?.amplifyCredential
+                        }
+                        else -> null
+                    }
+                    authStateMachine.send(
+                        AuthorizationEvent(
+                            AuthorizationEvent.EventType.StartFederationToIdentityPool(
+                                token = FederatedToken(providerToken, authProvider.identityProviderName),
+                                identityId = options?.developerProvidedIdentityId,
+                                existingCredential
+                            )
+                        )
+                    )
+
                     _federateToIdentityPool(providerToken, authProvider, options, onSuccess, onError)
                 }
                 else -> onError.accept(
@@ -1663,6 +1672,7 @@ internal class RealAWSCognitoAuthPlugin(
                                 identityId = identityId
                             )
                             onSuccess.accept(result)
+                            sendHubEvent(AWSCognitoAuthChannelEventName.FEDERATED_TO_IDENTITY_POOL.toString())
                         } else {
                             onError.accept(
                                 UnknownException(
@@ -1683,14 +1693,6 @@ internal class RealAWSCognitoAuthPlugin(
                 }
             },
             {
-                authStateMachine.send(
-                    AuthorizationEvent(
-                        AuthorizationEvent.EventType.StartFederationToIdentityPool(
-                            token = FederatedToken(providerToken, authProvider.identityProviderName),
-                            identityId = options?.developerProvidedIdentityId
-                        )
-                    )
-                )
             }
         )
     }
@@ -1704,9 +1706,16 @@ internal class RealAWSCognitoAuthPlugin(
             val authZState = authState.authZState
             when {
                 authState is AuthState.Configured &&
-                    authNState is AuthenticationState.FederatedToIdentityPool &&
-                    authZState is AuthorizationState.SessionEstablished -> {
-                    val event = AuthenticationEvent(AuthenticationEvent.EventType.SignOutRequested(SignOutData()))
+                    (
+                        authNState is AuthenticationState.FederatedToIdentityPool &&
+                            authZState is AuthorizationState.SessionEstablished
+                        ) ||
+                    (
+                        authZState is AuthorizationState.Error &&
+                            authZState.exception is SessionError &&
+                            authZState.exception.amplifyCredential is AmplifyCredential.IdentityPoolFederated
+                        ) -> {
+                    val event = AuthenticationEvent(AuthenticationEvent.EventType.ClearFederationToIdentityPool())
                     authStateMachine.send(event)
                     _clearFederationToIdentityPool(onSuccess, onError)
                 }
@@ -1718,13 +1727,23 @@ internal class RealAWSCognitoAuthPlugin(
     }
 
     private fun _clearFederationToIdentityPool(onSuccess: Action, onError: Consumer<AuthException>) {
-        _signOut {
+        _signOut(sendHubEvent = false) {
             when (it) {
                 is AWSCognitoAuthSignOutResult.FailedSignOut -> {
                     onError.accept(it.error)
                 }
-                else -> onSuccess.call()
+                else -> {
+                    onSuccess.call()
+                    sendHubEvent(AWSCognitoAuthChannelEventName.FEDERATION_TO_IDENTITY_POOL_CLEARED.toString())
+                }
             }
+        }
+    }
+
+    private fun sendHubEvent(eventName: String) {
+        if (lastPublishedHubEventName.get() != eventName) {
+            lastPublishedHubEventName.set(eventName)
+            Amplify.Hub.publish(HubChannel.AUTH, HubEvent.create(eventName))
         }
     }
 }

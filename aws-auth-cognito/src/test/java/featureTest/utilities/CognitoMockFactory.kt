@@ -16,7 +16,6 @@
 package featureTest.utilities
 
 import aws.sdk.kotlin.services.cognitoidentity.CognitoIdentityClient
-import aws.sdk.kotlin.services.cognitoidentity.model.CognitoIdentityProvider
 import aws.sdk.kotlin.services.cognitoidentity.model.Credentials
 import aws.sdk.kotlin.services.cognitoidentity.model.GetCredentialsForIdentityResponse
 import aws.sdk.kotlin.services.cognitoidentity.model.GetIdResponse
@@ -24,14 +23,17 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.CognitoIdentityProviderCl
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AuthenticationResultType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.CodeDeliveryDetailsType
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.ConfirmDeviceResponse
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeleteUserResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeliveryMediumType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ForgotPasswordResponse
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.GlobalSignOutResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.InitiateAuthResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.RespondToAuthChallengeResponse
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.RevokeTokenResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.SignUpResponse
 import aws.smithy.kotlin.runtime.time.Instant
 import com.amplifyframework.auth.cognito.featuretest.CognitoType
-import com.amplifyframework.auth.cognito.featuretest.ExpectationShapes
 import com.amplifyframework.auth.cognito.featuretest.ExpectationShapes.Cognito
 import com.amplifyframework.auth.cognito.featuretest.MockResponse
 import com.amplifyframework.auth.cognito.featuretest.ResponseType
@@ -41,11 +43,11 @@ import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockkObject
-import kotlin.reflect.full.callSuspend
-import kotlin.reflect.full.declaredFunctions
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlin.reflect.full.callSuspend
+import kotlin.reflect.full.declaredFunctions
 
 /**
  * Factory to mock aws sdk's cognito API calls and responses.
@@ -114,6 +116,12 @@ class CognitoMockFactory(
                     }
                 }
             }
+            "confirmDevice" -> {
+                coEvery { mockCognitoIPClient.confirmDevice(any()) } coAnswers {
+                    setupError(mockResponse, responseObject)
+                    ConfirmDeviceResponse.invoke {}
+                }
+            }
             "getId" -> {
                 coEvery { mockCognitoIdClient.getId(any()) } coAnswers {
                     setupError(mockResponse, responseObject)
@@ -128,6 +136,27 @@ class CognitoMockFactory(
                     GetCredentialsForIdentityResponse.invoke {
                         this.credentials = parseCredentials(responseObject["credentials"] as JsonObject)
                     }
+                }
+            }
+            "deleteUser" -> {
+                mockkObject(AuthHelper)
+                coEvery { AuthHelper.getSecretHash(any(), any(), any()) } returns "a hash"
+
+                coEvery { mockCognitoIPClient.deleteUser(any()) } coAnswers {
+                    setupError(mockResponse, responseObject)
+                    DeleteUserResponse.invoke {}
+                }
+            }
+            "revokeToken" -> {
+                coEvery { mockCognitoIPClient.revokeToken(any()) } coAnswers {
+                    setupError(mockResponse, responseObject)
+                    RevokeTokenResponse.invoke {}
+                }
+            }
+            "globalSignOut" -> {
+                coEvery { mockCognitoIPClient.globalSignOut(any()) } coAnswers {
+                    setupError(mockResponse, responseObject)
+                    GlobalSignOutResponse.invoke {}
                 }
             }
             else -> throw Error("mock for ${mockResponse.apiName} not defined!")

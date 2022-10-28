@@ -61,6 +61,8 @@ data class MockResponse(
 enum class ResponseType {
     @SerialName("success")
     Success,
+    @SerialName("complete")
+    Complete,
     @SerialName("failure")
     Failure
 }

@@ -1,11 +1,11 @@
 {
-    "description": "Test that SRP signIn invokes proper cognito request and returns success",
+    "description": "Test that Device SRP signIn invokes proper cognito request and returns success",
     "preConditions": {
         "amplify-configuration": "authconfiguration.json",
         "state": "SignedOut_Configured.json",
         "mockedResponses": [
             {
-                "type": "cognitoIdentityProvider",
+                "type": "cognito",
                 "apiName": "initiateAuth",
                 "responseType": "success",
                 "response": {
@@ -20,7 +20,7 @@
                 }
             },
             {
-                "type": "cognitoIdentityProvider",
+                "type": "cognito",
                 "apiName": "respondToAuthChallenge",
                 "responseType": "success",
                 "response": {
@@ -28,12 +28,23 @@
                         "idToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNTE2MjM5MDIyLCJvcmlnaW5fanRpIjoib3JpZ2luX2p0aSJ9.Xqa-vjJe5wwwsqeRAdHf8kTBn_rYSkDn2lB7xj9Z1xU",
                         "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNTE2MjM5MDIyLCJvcmlnaW5fanRpIjoib3JpZ2luX2p0aSJ9.Xqa-vjJe5wwwsqeRAdHf8kTBn_rYSkDn2lB7xj9Z1xU",
                         "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNTE2MjM5MDIyLCJvcmlnaW5fanRpIjoib3JpZ2luX2p0aSJ9.Xqa-vjJe5wwwsqeRAdHf8kTBn_rYSkDn2lB7xj9Z1xU",
-                        "expiresIn": 300
+                        "expiresIn": 300,
+                        "newDeviceMetadata": {
+                            "deviceKey": "someDeviceKey",
+                            "deviceGroupKey": "someDeviceGroupKey"
+                        }
                     }
                 }
             },
             {
-                "type": "cognitoIdentity",
+                "type": "cognito",
+                "apiName": "confirmDevice",
+                "responseType": "success",
+                "response": {
+                }
+            },
+            {
+                "type": "cognito",
                 "apiName": "getId",
                 "responseType": "success",
                 "response": {
@@ -41,7 +52,7 @@
                 }
             },
             {
-                "type": "cognitoIdentity",
+                "type": "cognito",
                 "apiName": "getCredentialsForIdentity",
                 "responseType": "success",
                 "response": {
@@ -74,7 +85,8 @@
                 "nextStep": {
                     "signInStep": "DONE",
                     "additionalInfo": {
-                    }
+                    },
+                    "codeDeliveryDetails": null
                 }
             }
         },
