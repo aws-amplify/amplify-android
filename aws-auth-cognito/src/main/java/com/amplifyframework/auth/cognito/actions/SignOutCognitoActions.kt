@@ -26,6 +26,7 @@ import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.data.GlobalSignOutErrorData
 import com.amplifyframework.statemachine.codegen.data.HostedUIErrorData
 import com.amplifyframework.statemachine.codegen.data.RevokeTokenErrorData
+import com.amplifyframework.statemachine.codegen.data.SignInMethod
 import com.amplifyframework.statemachine.codegen.data.SignedOutData
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.SignOutEvent
@@ -36,7 +37,9 @@ internal object SignOutCognitoActions : SignOutActions {
             logger.verbose("$id Starting execution")
             try {
                 if (hostedUIClient == null) throw InvalidOauthConfigurationException()
-                hostedUIClient.launchCustomTabsSignOut(event.signOutData.browserPackage)
+                val browserPackage = event.signOutData.browserPackage
+                    ?: (event.signedInData.signInMethod as? SignInMethod.HostedUI)?.browserPackage
+                hostedUIClient.launchCustomTabsSignOut(browserPackage)
             } catch (e: Exception) {
                 logger.warn("Failed to sign out web ui.", e)
                 val hostedUIErrorData = HostedUIErrorData(hostedUIClient?.createSignOutUri()?.toString(), e)
@@ -111,7 +114,7 @@ internal object SignOutCognitoActions : SignOutActions {
                             token = refreshToken
                         }
                     )
-                    SignOutEvent(SignOutEvent.EventType.SignOutLocally(event.signedInData, null))
+                    SignOutEvent(SignOutEvent.EventType.SignOutLocally(event.signedInData, event.hostedUIErrorData))
                 } else {
                     logger.debug("Access Token does not contain `origin_jti` claim. Skip revoking tokens.")
                     val error = RevokeTokenErrorData(
