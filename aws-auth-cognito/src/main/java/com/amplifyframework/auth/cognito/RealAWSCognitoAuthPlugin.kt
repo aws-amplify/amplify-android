@@ -759,7 +759,7 @@ internal class RealAWSCognitoAuthPlugin(
                 else -> {
                     logger.warn(
                         "Received handleWebUIResponse but ignoring because the user is not currently signing in " +
-                                "or signing out"
+                            "or signing out"
                     )
                     Unit
                 }
