@@ -44,7 +44,8 @@ internal object MigrateAuthCognitoActions : MigrateAuthActions {
 
                 val authParams = mutableMapOf(KEY_USERNAME to event.username, KEY_PASSWORD to event.password)
                 secretHash?.let { authParams[KEY_SECRET_HASH] = it }
-                val encodedContextData = userContextDataProvider?.getEncodedContextData(event.username)
+
+                val encodedContextData = getUserContextData(event.username)
 
                 val response = cognitoAuthService.cognitoIdentityProviderClient?.initiateAuth {
                     authFlow = AuthFlowType.UserPasswordAuth
