@@ -64,6 +64,24 @@ object SignInTestCaseGenerator : SerializableProvider {
         ).toJsonElement()
     )
 
+    private val mockedRespondToAuthChallengeWithDeviceMetadataResponse = MockResponse(
+        "cognito",
+        "respondToAuthChallenge",
+        ResponseType.Success,
+        mapOf(
+            "authenticationResult" to mapOf(
+                "idToken" to AuthStateJsonGenerator.dummyToken,
+                "accessToken" to AuthStateJsonGenerator.dummyToken,
+                "refreshToken" to AuthStateJsonGenerator.dummyToken,
+                "expiresIn" to 300,
+                "newDeviceMetadata" to mapOf(
+                    "deviceKey" to "someDeviceKey",
+                    "deviceGroupKey" to "someDeviceGroupKey"
+                )
+            )
+        ).toJsonElement()
+    )
+
     private val mockedSMSChallengeResponse = MockResponse(
         "cognito",
         "respondToAuthChallenge",
@@ -129,6 +147,13 @@ object SignInTestCaseGenerator : SerializableProvider {
         ).toJsonElement()
     )
 
+    private val mockConfirmDeviceResponse = MockResponse(
+        "cognito",
+        "confirmDevice",
+        ResponseType.Success,
+        JsonObject(emptyMap())
+    )
+
     private val baseCase = FeatureTestCase(
         description = "Test that SRP signIn invokes proper cognito request and returns success",
         preConditions = PreConditions(
@@ -165,6 +190,33 @@ object SignInTestCaseGenerator : SerializableProvider {
         )
     )
 
+    private val deviceSRPTestCase = FeatureTestCase(
+        description = "Test that Device SRP signIn invokes proper cognito request and returns success",
+        preConditions = PreConditions(
+            "authconfiguration.json",
+            "SignedOut_Configured.json",
+            mockedResponses = listOf(
+                mockedInitiateAuthResponse,
+                mockedRespondToAuthChallengeWithDeviceMetadataResponse,
+                mockConfirmDeviceResponse,
+                mockedIdentityIdResponse,
+                mockedAWSCredentialsResponse,
+            )
+        ),
+        api = API(
+            AuthAPI.signIn,
+            params = mapOf(
+                "username" to username,
+                "password" to password
+            ).toJsonElement(),
+            options = JsonObject(emptyMap())
+        ),
+        validations = listOf(
+            mockedSignInSuccessExpectation,
+            ExpectationShapes.State("SignedIn_SessionEstablished.json")
+        )
+    )
+
     private val challengeCase = baseCase.copy(
         description = "Test that SRP signIn invokes proper cognito request and returns SMS challenge",
         preConditions = PreConditions(
@@ -181,5 +233,5 @@ object SignInTestCaseGenerator : SerializableProvider {
         )
     )
 
-    override val serializables: List<Any> = listOf(baseCase, challengeCase)
+    override val serializables: List<Any> = listOf(baseCase, challengeCase, deviceSRPTestCase)
 }
