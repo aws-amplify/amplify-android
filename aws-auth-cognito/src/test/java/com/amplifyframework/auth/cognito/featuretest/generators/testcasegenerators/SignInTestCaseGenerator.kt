@@ -66,7 +66,7 @@ object SignInTestCaseGenerator : SerializableProvider {
     )
 
     private val mockedRespondToAuthChallengeWithDeviceMetadataResponse = MockResponse(
-        "cognito",
+        CognitoType.CognitoIdentityProvider,
         "respondToAuthChallenge",
         ResponseType.Success,
         mapOf(
@@ -147,7 +147,7 @@ object SignInTestCaseGenerator : SerializableProvider {
     )
 
     private val mockConfirmDeviceResponse = MockResponse(
-        "cognito",
+        CognitoType.CognitoIdentityProvider,
         "confirmDevice",
         ResponseType.Success,
         JsonObject(emptyMap())

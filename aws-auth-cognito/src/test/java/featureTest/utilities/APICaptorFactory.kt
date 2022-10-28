@@ -50,12 +50,9 @@ import com.amplifyframework.auth.cognito.featuretest.AuthAPI.values
 import com.amplifyframework.core.Action
 import com.amplifyframework.core.Consumer
 import com.google.gson.Gson
+import kotlinx.serialization.json.JsonObject
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
-import kotlin.reflect.KClass
-import kotlin.reflect.KParameter
-import kotlin.reflect.full.declaredFunctions
-import kotlinx.serialization.json.JsonObject
 
 class NewAPI(internal val method: (AWSCognitoAuthPlugin, Map<String, *>, JsonObject) -> Unit)
 
@@ -70,6 +67,30 @@ object APIExecutor {
         return result
     }
 
+    /**
+     * Generated code
+     *
+     * AWSCognitoAuthPlugin::class.declaredFunctions
+     * .forEach {
+     *     print("AuthAPI.${it.name} ->")
+     *     print(" sut.${it.name}(")
+     *     val params = it.parameters.filter { param ->
+     *         param.kind == KParameter.Kind.VALUE
+     *     }.joinToString(separator = ", ") { param ->
+     *         if (param.type.classifier as KClass<*> == Action::class) {
+     *             "getAction()"
+     *         } else if (param.name == "options") {
+     *             "AuthOptionsFactory.create(authAPI, options)"
+     *         } else if (param.name in listOf("onSuccess", "onError", "onComplete")) {
+     *             "getConsumer()"
+     *         } else {
+     *             "getParam(\"${param.name}\", namedParams)"
+     *         }
+     *     }
+     *
+     *     println("$params)")
+     * }
+    */
     private val apis = values().associateWith { authAPI ->
         NewAPI { sut, namedParams, options ->
             when (authAPI) {
@@ -218,31 +239,4 @@ object APIExecutor {
         result = Unit
         latch.countDown()
     }
-}
-
-/**
- * Just a Helper Function to generate function calls
- *
- */
-fun main() {
-    AWSCognitoAuthPlugin::class.declaredFunctions
-        .forEach {
-            print("AuthAPI.${it.name} ->")
-            print(" sut.${it.name}(")
-            val params = it.parameters.filter { param ->
-                param.kind == KParameter.Kind.VALUE
-            }.joinToString(separator = ", ") { param ->
-                if (param.type.classifier as KClass<*> == Action::class) {
-                    "getAction()"
-                } else if (param.name == "options") {
-                    "AuthOptionsFactory.create(authAPI, options)"
-                } else if (param.name in listOf("onSuccess", "onError", "onComplete")) {
-                    "getConsumer()"
-                } else {
-                    "getParam(\"${param.name}\", namedParams)"
-                }
-            }
-
-            println("$params)")
-        }
 }
