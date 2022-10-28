@@ -419,7 +419,7 @@ public final class AuthComponentTest {
             signIn(eq(USERNAME),
                 eq(PASSWORD),
                 eq(CLIENTMETADATA),
-                eq(Collections.emptyMap()),
+                eq(CLIENTMETADATA),
                 eq(null),
                 (Callback<SignInResult>) any()
             );
@@ -476,7 +476,7 @@ public final class AuthComponentTest {
             signIn(eq(USERNAME),
                 eq(PASSWORD),
                 eq(CLIENTMETADATA),
-                eq(Collections.emptyMap()),
+                eq(CLIENTMETADATA),
                 eq(com.amazonaws.services.cognitoidentityprovider.model.AuthFlowType.CUSTOM_AUTH),
                 (Callback<SignInResult>) any()
             );
