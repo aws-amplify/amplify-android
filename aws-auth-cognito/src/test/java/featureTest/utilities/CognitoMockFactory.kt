@@ -43,11 +43,11 @@ import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockkObject
+import kotlin.reflect.full.callSuspend
+import kotlin.reflect.full.declaredFunctions
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
-import kotlin.reflect.full.callSuspend
-import kotlin.reflect.full.declaredFunctions
 
 /**
  * Factory to mock aws sdk's cognito API calls and responses.

@@ -20,18 +20,17 @@ import com.amplifyframework.auth.cognito.featuretest.API
 import com.amplifyframework.core.Action
 import com.amplifyframework.core.Consumer
 import com.google.gson.Gson
-import kotlinx.serialization.json.JsonObject
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import kotlin.reflect.KClass
 import kotlin.reflect.KParameter
 import kotlin.reflect.full.declaredFunctions
+import kotlinx.serialization.json.JsonObject
 
 val apiExecutor: (AWSCognitoAuthPlugin, API) -> Any = { authPlugin: AWSCognitoAuthPlugin, api: API ->
 
     lateinit var result: Any
     val latch = CountDownLatch(1)
-
 
     val targetApi = authPlugin::class.declaredFunctions.first { it.name == api.name.name }
 
@@ -49,7 +48,6 @@ val apiExecutor: (AWSCognitoAuthPlugin, API) -> Any = { authPlugin: AWSCognitoAu
             kParam.name == "options" -> AuthOptionsFactory.create(api.name, api.options as JsonObject)
             else -> kParam.name?.let { getParam(it, api.params as JsonObject) }
         }
-
     }
 
     targetApi.callBy(requiredParams)
@@ -68,5 +66,3 @@ private inline fun <reified T> getParam(paramName: String, paramsObject: Map<Str
         return Gson().fromJson(value.toString(), T::class.java)
     }
 }
-
-
