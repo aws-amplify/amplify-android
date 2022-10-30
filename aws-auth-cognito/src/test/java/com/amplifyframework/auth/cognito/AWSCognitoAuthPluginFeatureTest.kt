@@ -17,7 +17,6 @@ package com.amplifyframework.auth.cognito
 
 import aws.sdk.kotlin.services.cognitoidentity.CognitoIdentityClient
 import aws.sdk.kotlin.services.cognitoidentityprovider.CognitoIdentityProviderClient
-import com.amplifyframework.auth.cognito.featuretest.API
 import com.amplifyframework.auth.cognito.featuretest.AuthAPI
 import com.amplifyframework.auth.cognito.featuretest.ExpectationShapes
 import com.amplifyframework.auth.cognito.featuretest.FeatureTestCase
@@ -29,8 +28,8 @@ import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 import com.amplifyframework.statemachine.codegen.data.CredentialType
 import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.states.AuthState
-import featureTest.utilities.APIExecutor
 import featureTest.utilities.CognitoMockFactory
+import featureTest.utilities.apiExecutor
 import io.mockk.clearAllMocks
 import io.mockk.coEvery
 import io.mockk.every
@@ -40,10 +39,8 @@ import java.io.File
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.newSingleThreadContext
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import kotlinx.serialization.decodeFromString
@@ -122,7 +119,7 @@ class AWSCognitoAuthPluginFeatureTest(private val testCase: FeatureTestCase) {
         feature.preConditions.mockedResponses.forEach(cognitoMockFactory::mock)
 
         // WHEN
-        callAPI(feature.api)
+        apiExecutionResult = apiExecutor(sut, feature.api)
 
         // THEN
         feature.validations.forEach(this::verify)
@@ -182,10 +179,6 @@ class AWSCognitoAuthPluginFeatureTest(private val testCase: FeatureTestCase) {
                 getStateLatch.await(10, TimeUnit.SECONDS)
             }
         }
-    }
-
-    private fun callAPI(api: API) = runBlocking {
-        apiExecutionResult = APIExecutor.execute(sut, api.name, api.params as JsonObject, api.options as JsonObject)
     }
 
     private fun getState(state: String): AuthState {
