@@ -34,17 +34,13 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.RevokeTokenResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.SignUpResponse
 import aws.smithy.kotlin.runtime.time.Instant
 import com.amplifyframework.auth.cognito.featuretest.CognitoType
-import com.amplifyframework.auth.cognito.featuretest.ExpectationShapes.Cognito
 import com.amplifyframework.auth.cognito.featuretest.MockResponse
 import com.amplifyframework.auth.cognito.featuretest.ResponseType
 import com.amplifyframework.auth.cognito.featuretest.serializers.CognitoIdentityExceptionSerializer
 import com.amplifyframework.auth.cognito.featuretest.serializers.CognitoIdentityProviderExceptionSerializer
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import io.mockk.coEvery
-import io.mockk.coVerify
 import io.mockk.mockkObject
-import kotlin.reflect.full.callSuspend
-import kotlin.reflect.full.declaredFunctions
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -208,24 +204,6 @@ class CognitoMockFactory(
             deliveryMedium =
                 DeliveryMediumType.fromValue((codeDeliveryDetails["deliveryMedium"] as JsonPrimitive).content)
             attributeName = (codeDeliveryDetails["attributeName"] as JsonPrimitive).content
-        }
-    }
-
-    /**
-     * Verifies if Cognito was method was called with expected request object.
-     * Note this only checks for IDP Client, ID Client to be implemented.
-     */
-    fun verify(validation: Cognito) {
-        val expectedRequest = CognitoRequestFactory.getExpectedRequestFor(validation)
-        coVerify {
-            when (validation) {
-                is Cognito.CognitoIdentity -> mockCognitoIdClient to mockCognitoIPClient::class
-                is Cognito.CognitoIdentityProvider -> mockCognitoIPClient to mockCognitoIPClient::class
-            }.apply {
-                second.declaredFunctions.first {
-                    it.name == validation.apiName
-                }.callSuspend(first, expectedRequest)
-            }
         }
     }
 }

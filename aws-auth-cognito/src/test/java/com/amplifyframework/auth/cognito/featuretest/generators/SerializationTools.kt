@@ -74,6 +74,9 @@ internal fun AuthState.exportJson() {
     println("Serialized can be reversed = ${reverse.serialize() == result}")
 }
 
+/**
+ * Generates a md file with all the test cases formatted.
+ */
 internal fun List<FeatureTestCase>.exportToMd() {
     val outputStream = FileOutputStream("testSuite.md")
     val writer = outputStream.bufferedWriter()

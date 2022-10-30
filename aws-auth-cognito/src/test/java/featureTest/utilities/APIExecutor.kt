@@ -27,7 +27,10 @@ import kotlin.reflect.KParameter
 import kotlin.reflect.full.declaredFunctions
 import kotlinx.serialization.json.JsonObject
 
-val apiExecutor: (AWSCognitoAuthPlugin, API) -> Any = { authPlugin: AWSCognitoAuthPlugin, api: API ->
+/**
+ * Executes the API on given [AWSCognitoAuthPlugin] instance
+ */
+internal val apiExecutor: (AWSCognitoAuthPlugin, API) -> Any = { authPlugin: AWSCognitoAuthPlugin, api: API ->
 
     lateinit var result: Any
     val latch = CountDownLatch(1)

@@ -19,6 +19,9 @@ import aws.sdk.kotlin.services.cognitoidentity.CognitoIdentityClient
 import aws.sdk.kotlin.services.cognitoidentityprovider.CognitoIdentityProviderClient
 import com.amplifyframework.auth.cognito.featuretest.AuthAPI
 import com.amplifyframework.auth.cognito.featuretest.ExpectationShapes
+import com.amplifyframework.auth.cognito.featuretest.ExpectationShapes.Cognito
+import com.amplifyframework.auth.cognito.featuretest.ExpectationShapes.Cognito.CognitoIdentity
+import com.amplifyframework.auth.cognito.featuretest.ExpectationShapes.Cognito.CognitoIdentityProvider
 import com.amplifyframework.auth.cognito.featuretest.FeatureTestCase
 import com.amplifyframework.auth.cognito.featuretest.generators.toJsonElement
 import com.amplifyframework.auth.cognito.featuretest.serializers.deserializeToAuthState
@@ -29,15 +32,19 @@ import com.amplifyframework.statemachine.codegen.data.CredentialType
 import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.states.AuthState
 import featureTest.utilities.CognitoMockFactory
+import featureTest.utilities.CognitoRequestFactory
 import featureTest.utilities.apiExecutor
 import io.mockk.clearAllMocks
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import java.io.File
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
+import kotlin.reflect.full.callSuspend
+import kotlin.reflect.full.declaredFunctions
 import kotlin.test.assertEquals
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.newSingleThreadContext
@@ -161,9 +168,8 @@ class AWSCognitoAuthPluginFeatureTest(private val testCase: FeatureTestCase) {
 
     private fun verify(validation: ExpectationShapes) {
         when (validation) {
-            is ExpectationShapes.Cognito -> {
-                cognitoMockFactory.verify(validation)
-            }
+            is Cognito -> verifyCognito(validation)
+
             is ExpectationShapes.Amplify -> {
                 val expectedResponse = validation.response
 
@@ -183,5 +189,20 @@ class AWSCognitoAuthPluginFeatureTest(private val testCase: FeatureTestCase) {
     private fun getState(state: String): AuthState {
         val stateFileUrl = this::class.java.getResource("$statesFilesBasePath/$state")
         return File(stateFileUrl!!.file).readText().deserializeToAuthState()
+    }
+
+    private fun verifyCognito(validation: Cognito) {
+        val expectedRequest = CognitoRequestFactory.getExpectedRequestFor(validation)
+
+        coVerify {
+            when (validation) {
+                is CognitoIdentity -> mockCognitoIdClient to mockCognitoIPClient::class
+                is CognitoIdentityProvider -> mockCognitoIPClient to mockCognitoIPClient::class
+            }.apply {
+                second.declaredFunctions.first {
+                    it.name == validation.apiName
+                }.callSuspend(first, expectedRequest)
+            }
+        }
     }
 }
