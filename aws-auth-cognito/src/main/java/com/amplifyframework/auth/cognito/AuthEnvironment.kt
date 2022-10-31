@@ -15,6 +15,7 @@
 
 package com.amplifyframework.auth.cognito
 
+import android.content.Context
 import com.amplifyframework.auth.cognito.asf.UserContextDataProvider
 import com.amplifyframework.auth.cognito.helpers.SRPHelper
 import com.amplifyframework.logging.Logger
@@ -33,6 +34,7 @@ import java.util.Date
 import java.util.UUID
 
 internal class AuthEnvironment internal constructor(
+    val context: Context,
     val configuration: AuthConfiguration,
     val cognitoAuthService: AWSCognitoAuthServiceBehavior,
     val credentialStoreClient: StoreClientBehavior,
@@ -40,7 +42,42 @@ internal class AuthEnvironment internal constructor(
     val hostedUIClient: HostedUIClient?,
     val logger: Logger
 ) : Environment {
+
+    companion object {
+        /*
+        Auth plugin needs to read from Pinpoint shared preferences, but we don't currently have an architecture
+        that allows the plugins to pass data between each other. We are duplicating this suffix constant because it
+        is internal to the Pinpoint class, which analytics does not pull in. If the Pinpoint suffix is updated, this
+        needs updated as well.
+         */
+        const val PINPOINT_SHARED_PREFS_SUFFIX = "515d6767-01b7-49e5-8273-c8d11b0f331d"
+        const val PINPOINT_UNIQUE_ID_KEY = "UniqueId"
+    }
+
     internal lateinit var srpHelper: SRPHelper
+    private var cachedPinpointEndpointId: String? = null
+
+        /*
+        Auth plugin needs to read from Pinpoint shared preferences, but we don't currently have an architecture
+        that allows the plugins to pass data between each other. We are retrieving the pinpointEndpointId by reading
+        Pinpoint preferences constructed from pinpointAppId + a shared prefs suffix. If the storage of UniqueId changes
+        in Pinpoint, we need to update here as well.
+         */
+    fun getPinpointEndpointId(): String? {
+        if (configuration.pinpointAppId == null) return null
+        if (cachedPinpointEndpointId != null) return cachedPinpointEndpointId
+
+        val pinpointPrefs = context.getSharedPreferences(
+            "${configuration.pinpointAppId}$PINPOINT_SHARED_PREFS_SUFFIX",
+            Context.MODE_PRIVATE
+        )
+
+        val uniqueId = pinpointPrefs.getString(PINPOINT_UNIQUE_ID_KEY, null)
+        if (uniqueId != null) {
+            this.cachedPinpointEndpointId = uniqueId
+        }
+        return uniqueId
+    }
 
     suspend fun getUserContextData(username: String): String? {
         val asfDevice = credentialStoreClient.loadCredentials(CredentialType.ASF) as? AmplifyCredential.ASFDevice

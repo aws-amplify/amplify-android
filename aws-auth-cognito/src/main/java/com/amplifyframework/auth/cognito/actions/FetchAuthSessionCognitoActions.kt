@@ -18,6 +18,7 @@ package com.amplifyframework.auth.cognito.actions
 import aws.sdk.kotlin.services.cognitoidentity.model.GetCredentialsForIdentityRequest
 import aws.sdk.kotlin.services.cognitoidentity.model.GetIdRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.initiateAuth
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.AnalyticsMetadataType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AuthFlowType
 import aws.smithy.kotlin.runtime.time.Instant
 import com.amplifyframework.auth.cognito.AuthEnvironment
@@ -64,11 +65,15 @@ internal object FetchAuthSessionCognitoActions : FetchAuthSessionActions {
                 val encodedContextData = getUserContextData(username)
                 val deviceMetadata = getDeviceMetadata(username)
                 deviceMetadata?.let { authParameters[KEY_DEVICE_KEY] = it.deviceKey }
+                val pinpointEndpointId = getPinpointEndpointId()
 
                 val response = cognitoAuthService.cognitoIdentityProviderClient?.initiateAuth {
                     authFlow = AuthFlowType.RefreshToken
                     clientId = configuration.userPool?.appClient
                     this.authParameters = authParameters
+                    pinpointEndpointId?.let {
+                        this.analyticsMetadata = AnalyticsMetadataType.invoke { analyticsEndpointId = it }
+                    }
                     encodedContextData?.let { userContextData { encodedData = it } }
                 }
 
