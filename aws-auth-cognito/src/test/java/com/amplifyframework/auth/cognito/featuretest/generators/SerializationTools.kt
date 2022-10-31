@@ -25,6 +25,8 @@ import com.amplifyframework.auth.cognito.featuretest.serializers.deserializeToAu
 import com.amplifyframework.auth.cognito.featuretest.serializers.serialize
 import com.amplifyframework.auth.result.AuthSignOutResult
 import com.amplifyframework.statemachine.codegen.states.AuthState
+import java.io.File
+import java.io.FileWriter
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
@@ -32,8 +34,6 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
-import java.io.File
-import java.io.FileWriter
 
 const val basePath = ".temp/feature-test"
 
