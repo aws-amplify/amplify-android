@@ -40,7 +40,7 @@ allprojects {
             url = 'https://aws.oss.sonatype.org/content/repositories/snapshots/'
         }
         google()
-        jcenter()
+        mavenCentral()
     }
 
     gradle.projectsEvaluated {
