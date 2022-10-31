@@ -19,6 +19,7 @@ import android.app.Activity
 import android.content.Intent
 import aws.sdk.kotlin.services.cognitoidentityprovider.confirmForgotPassword
 import aws.sdk.kotlin.services.cognitoidentityprovider.confirmSignUp
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.AnalyticsMetadataType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AttributeType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChangePasswordRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeviceRememberedStatusType
@@ -193,6 +194,7 @@ internal class RealAWSCognitoAuthPlugin(
             }
 
             val encodedContextData = authEnvironment.getUserContextData(username)
+            val pinpointEndpointId = authEnvironment.getPinpointEndpointId()
 
             val response = authEnvironment.cognitoAuthService.cognitoIdentityProviderClient?.signUp {
                 this.username = username
@@ -204,6 +206,9 @@ internal class RealAWSCognitoAuthPlugin(
                     configuration.userPool?.appClient,
                     configuration.userPool?.appClientSecret
                 )
+                pinpointEndpointId?.let {
+                    this.analyticsMetadata = AnalyticsMetadataType.invoke { analyticsEndpointId = it }
+                }
                 encodedContextData?.let { this.userContextData { encodedData = it } }
             }
 
@@ -276,6 +281,7 @@ internal class RealAWSCognitoAuthPlugin(
         logger.verbose("ConfirmSignUp Starting execution")
         try {
             val encodedContextData = authEnvironment.getUserContextData(username)
+            val pinpointEndpointId = authEnvironment.getPinpointEndpointId()
 
             authEnvironment.cognitoAuthService.cognitoIdentityProviderClient?.confirmSignUp {
                 this.username = username
@@ -286,6 +292,9 @@ internal class RealAWSCognitoAuthPlugin(
                     configuration.userPool?.appClient,
                     configuration.userPool?.appClientSecret
                 )
+                pinpointEndpointId?.let {
+                    this.analyticsMetadata = AnalyticsMetadataType.invoke { analyticsEndpointId = it }
+                }
                 encodedContextData?.let { this.userContextData { encodedData = it } }
             }
 
@@ -340,6 +349,7 @@ internal class RealAWSCognitoAuthPlugin(
         try {
             val metadata = (options as? AWSCognitoAuthResendSignUpCodeOptions)?.metadata
             val encodedContextData = authEnvironment.getUserContextData(username)
+            val pinpointEndpointId = authEnvironment.getPinpointEndpointId()
 
             val response = authEnvironment.cognitoAuthService.cognitoIdentityProviderClient?.resendConfirmationCode {
                 clientId = configuration.userPool?.appClient
@@ -350,6 +360,9 @@ internal class RealAWSCognitoAuthPlugin(
                     configuration.userPool?.appClientSecret
                 )
                 clientMetadata = metadata
+                pinpointEndpointId?.let {
+                    this.analyticsMetadata = AnalyticsMetadataType.invoke { analyticsEndpointId = it }
+                }
                 encodedContextData?.let { this.userContextData { encodedData = it } }
             }
 
@@ -978,11 +991,13 @@ internal class RealAWSCognitoAuthPlugin(
             val appClient = requireNotNull(configuration.userPool?.appClient)
             GlobalScope.launch {
                 val encodedData = authEnvironment.getUserContextData(username)
+                val pinpointEndpointId = authEnvironment.getPinpointEndpointId()
 
                 ResetPasswordUseCase(cognitoIdentityProviderClient, appClient).execute(
                     username,
                     options,
                     encodedData,
+                    pinpointEndpointId,
                     onSuccess,
                     onError
                 )
@@ -1022,6 +1037,7 @@ internal class RealAWSCognitoAuthPlugin(
             GlobalScope.launch {
                 try {
                     val encodedContextData = authEnvironment.getUserContextData(username)
+                    val pinpointEndpointId = authEnvironment.getPinpointEndpointId()
 
                     authEnvironment.cognitoAuthService.cognitoIdentityProviderClient!!.confirmForgotPassword {
                         this.username = username
@@ -1031,6 +1047,9 @@ internal class RealAWSCognitoAuthPlugin(
                             (options as? AWSCognitoAuthConfirmResetPasswordOptions)?.metadata ?: mapOf()
                         clientId = configuration.userPool?.appClient
                         encodedContextData?.let { this.userContextData { encodedData = it } }
+                        pinpointEndpointId?.let {
+                            this.analyticsMetadata = AnalyticsMetadataType.invoke { analyticsEndpointId = it }
+                        }
                     }.let { onSuccess.call() }
                 } catch (ex: Exception) {
                     onError.accept(
