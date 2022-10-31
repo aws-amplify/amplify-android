@@ -72,7 +72,7 @@ internal class InitiateMultiPartUploadTransferWorkerTest {
         coEvery { s3Client.createMultipartUpload(any()) }.answers { createUploadResponse }
         every { transferDB.getTransferRecordById(any()) }.answers { transferRecord }
         every { transferStatusUpdater.updateMultipartId(1, "upload_id") }.answers { }
-
+        every { transferStatusUpdater.updateTransferState(any(), TransferState.IN_PROGRESS) }.answers { }
         val worker = InitiateMultiPartUploadTransferWorker(
             s3Client,
             transferDB,
