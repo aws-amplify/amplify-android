@@ -69,8 +69,13 @@ ext {
     minSdkVersion = 24
     targetSdkVersion = 30
 
+<<<<<<< Updated upstream
     awsSdkVersion = '2.55.0'
     awsKotlinSdkVersion = '0.17.7-beta'
+=======
+    awsSdkVersion = '2.52.1'
+    awsKotlinSdkVersion = '0.17.9-beta'
+>>>>>>> Stashed changes
     fragmentVersion = '1.3.1'
     navigationVersion = '2.3.4'
     dependency = [

@@ -96,25 +96,26 @@ internal class TransferStatusUpdater private constructor(
 
     @Synchronized
     fun updateTransferState(transferRecordId: Int, newState: TransferState) {
-        transferDB.updateState(transferRecordId, newState).takeIf { it == 0 }?.let {
-            logger.error("Failed to update, transferRecord $transferRecordId not found")
-        }
-        activeTransferMap[transferRecordId]?.apply {
-            state = newState
-        }
-
-        if (TransferState.COMPLETED == newState) {
-            removeTransferRecord(transferRecordId)
-        }
-
-        transferStatusListenerMap[transferRecordId]?.forEach { listener ->
-            run {
-                mainHandler.post { listener.onStateChanged(transferRecordId, newState) }
+        activeTransferMap[transferRecordId]?.let { transferRecord ->
+            if (transferRecord.state == newState || TransferState.isInTerminalState(transferRecord.state)) {
+                return
             }
-        }
 
-        if (TransferState.isInTerminalState(newState)) {
-            unregisterAllListener(transferRecordId)
+            transferDB.updateState(transferRecord.id, newState)
+
+            transferRecord.state = newState
+
+            if (TransferState.COMPLETED == newState) {
+                removeTransferRecord(transferRecord.id)
+            }
+
+            transferStatusListenerMap[transferRecord.id]?.forEach { listener ->
+                mainHandler.post { listener.onStateChanged(transferRecord.id, newState) }
+            }
+
+            if (TransferState.isInTerminalState(newState)) {
+                unregisterAllListener(transferRecord.id)
+            }
         }
     }
 

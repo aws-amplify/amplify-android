@@ -57,6 +57,11 @@ enum class TransferState {
     CANCELED,
 
     /**
+     * This state represents a multipart transfer that has failed, pending abort
+     */
+    PENDING_FAILED,
+
+    /**
      * This state represents a transfer that has failed
      */
     FAILED,
@@ -109,7 +114,7 @@ enum class TransferState {
 
         @JvmStatic
         fun isInTerminalState(state: TransferState?) =
-            setOf(COMPLETED, CANCELED, FAILED).contains(state)
+            setOf(COMPLETED, CANCELED, FAILED, PART_COMPLETED).contains(state)
 
         @JvmStatic
         fun isPaused(state: TransferState?) =
