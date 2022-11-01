@@ -96,7 +96,7 @@ internal class AWSCognitoAuthCredentialStore(
     //region Deserialization
     private fun deserializeCredential(encodedCredential: String?): AmplifyCredential {
         return try {
-            encodedCredential?.let { Json.decodeFromString(it)} ?: AmplifyCredential.Empty
+            encodedCredential?.let { Json.decodeFromString(it) } ?: AmplifyCredential.Empty
         } catch (e: Exception) {
             AmplifyCredential.Empty
         }
@@ -112,7 +112,7 @@ internal class AWSCognitoAuthCredentialStore(
 
     private fun deserializeASFDevice(encodedASFDevice: String?): AmplifyCredential.ASFDevice {
         return try {
-            encodedASFDevice?.let { Json.decodeFromString(it)} ?: AmplifyCredential.ASFDevice(null)
+            encodedASFDevice?.let { Json.decodeFromString(it) } ?: AmplifyCredential.ASFDevice(null)
         } catch (e: Exception) {
             AmplifyCredential.ASFDevice(null)
         }
