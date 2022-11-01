@@ -26,7 +26,6 @@ internal data class AuthConfiguration internal constructor(
     val identityPool: IdentityPoolConfiguration?,
     val oauth: OauthConfiguration?,
     val authFlowType: AuthFlowType,
-    val pinpointAppId: String? = null
 ) {
 
     companion object {
@@ -56,10 +55,7 @@ internal data class AuthConfiguration internal constructor(
                     pluginJson.optJSONObject("Auth")
                         ?.optJSONObject(configName)
                         ?.optString("authenticationFlowType")
-                ),
-                pinpointAppId = pluginJson.optJSONObject("PinpointAnalytics")
-                    ?.optJSONObject(configName)
-                    ?.optString("AppId").takeUnless { it.isNullOrEmpty() }
+                )
             )
         }
         private fun getAutheticationFlowType(authType: String?): AuthFlowType {

@@ -27,6 +27,7 @@ internal data class UserPoolConfiguration internal constructor(val builder: Buil
     val poolId: String? = builder.poolId
     val appClient: String? = builder.appClientId
     val appClientSecret: String? = builder.appClientSecret
+    val pinpointAppId: String? = builder.pinpointAppId
 
     companion object {
         private const val DEFAULT_REGION = "us-east-1"
@@ -62,6 +63,7 @@ internal data class UserPoolConfiguration internal constructor(val builder: Buil
         var poolId: String? = null
         var appClientId: String? = null
         var appClientSecret: String? = null
+        var pinpointAppId: String? = null
 
         init {
             configJson?.run {
@@ -70,6 +72,7 @@ internal data class UserPoolConfiguration internal constructor(val builder: Buil
                 poolId = optString(Config.POOL_ID.key).takeUnless { it.isNullOrEmpty() }
                 appClientId = optString(Config.APP_CLIENT_ID.key).takeUnless { it.isNullOrEmpty() }
                 appClientSecret = optString(Config.APP_CLIENT_SECRET.key).takeUnless { it.isNullOrEmpty() }
+                pinpointAppId = optString(Config.PINPOINT_APP_ID.key).takeUnless { it.isNullOrEmpty() }
             }
         }
 
@@ -78,6 +81,7 @@ internal data class UserPoolConfiguration internal constructor(val builder: Buil
         fun poolId(poolId: String) = apply { this.poolId = poolId }
         fun appClientId(appClientId: String) = apply { this.appClientId = appClientId }
         fun appClientSecret(appClientSecret: String) = apply { this.appClientSecret = appClientSecret }
+        fun pinpointAppId(pinpointAppId: String) = apply { this.pinpointAppId = pinpointAppId }
         fun build() = UserPoolConfiguration(this)
 
         @Throws(AuthException::class)
@@ -129,5 +133,10 @@ internal data class UserPoolConfiguration internal constructor(val builder: Buil
          * Contains user pool app client secret.
          */
         APP_CLIENT_SECRET("AppClientSecret"),
+
+        /**
+         * Contains pinpoint app id to link auth events to Pinpoint.
+         */
+        PINPOINT_APP_ID("PinpointAppId")
     }
 }
