@@ -15,6 +15,7 @@
 
 package com.amplifyframework.auth.cognito
 
+import android.annotation.SuppressLint
 import android.content.Context
 import com.amplifyframework.auth.cognito.asf.UserContextDataProvider
 import com.amplifyframework.auth.cognito.helpers.SRPHelper
@@ -63,19 +64,26 @@ internal class AuthEnvironment internal constructor(
         Pinpoint preferences constructed from pinpointAppId + a shared prefs suffix. If the storage of UniqueId changes
         in Pinpoint, we need to update here as well.
          */
+    @SuppressLint("ApplySharedPref")
+    @Synchronized
     fun getPinpointEndpointId(): String? {
-        if (configuration.pinpointAppId == null) return null
+        if (configuration.userPool?.pinpointAppId == null) return null
         if (cachedPinpointEndpointId != null) return cachedPinpointEndpointId
 
         val pinpointPrefs = context.getSharedPreferences(
-            "${configuration.pinpointAppId}$PINPOINT_SHARED_PREFS_SUFFIX",
+            "${configuration.userPool.pinpointAppId}$PINPOINT_SHARED_PREFS_SUFFIX",
             Context.MODE_PRIVATE
         )
 
-        val uniqueId = pinpointPrefs.getString(PINPOINT_UNIQUE_ID_KEY, null)
-        if (uniqueId != null) {
-            this.cachedPinpointEndpointId = uniqueId
+        val uniqueIdFromPrefs = pinpointPrefs.getString(PINPOINT_UNIQUE_ID_KEY, null)
+        val uniqueId = if (uniqueIdFromPrefs == null) {
+            val newUniqueId = UUID.randomUUID().toString()
+            pinpointPrefs.edit().putString(PINPOINT_UNIQUE_ID_KEY, uniqueIdFromPrefs).commit()
+            newUniqueId
+        } else {
+            uniqueIdFromPrefs
         }
+        this.cachedPinpointEndpointId = uniqueId
         return uniqueId
     }
 

@@ -114,8 +114,8 @@ class RealAWSCognitoAuthPluginTest {
     private var authConfiguration = mockk<AuthConfiguration> {
         every { userPool } returns UserPoolConfiguration.invoke {
             this.appClientId = this@RealAWSCognitoAuthPluginTest.appClientId
+            this.pinpointAppId = null
         }
-        every { pinpointAppId } returns null
     }
 
     private val credentials = AmplifyCredential.UserPool(
