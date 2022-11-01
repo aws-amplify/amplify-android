@@ -96,8 +96,7 @@ internal class AWSCognitoAuthCredentialStore(
     //region Deserialization
     private fun deserializeCredential(encodedCredential: String?): AmplifyCredential {
         return try {
-            val credentials = encodedCredential?.let { Json.decodeFromString(it) as AmplifyCredential }
-            credentials ?: AmplifyCredential.Empty
+            encodedCredential?.let { Json.decodeFromString(it)} ?: AmplifyCredential.Empty
         } catch (e: Exception) {
             AmplifyCredential.Empty
         }
@@ -105,8 +104,7 @@ internal class AWSCognitoAuthCredentialStore(
 
     private fun deserializeMetadata(encodedDeviceMetadata: String?): DeviceMetadata {
         return try {
-            val deviceMetadata = encodedDeviceMetadata?.let { Json.decodeFromString(it) as DeviceMetadata }
-            deviceMetadata ?: DeviceMetadata.Empty
+            encodedDeviceMetadata?.let { Json.decodeFromString(it) } ?: DeviceMetadata.Empty
         } catch (e: Exception) {
             DeviceMetadata.Empty
         }
@@ -114,8 +112,7 @@ internal class AWSCognitoAuthCredentialStore(
 
     private fun deserializeASFDevice(encodedASFDevice: String?): AmplifyCredential.ASFDevice {
         return try {
-            val asfDevice = encodedASFDevice?.let { Json.decodeFromString(it) as AmplifyCredential.ASFDevice }
-            asfDevice ?: AmplifyCredential.ASFDevice(null)
+            encodedASFDevice?.let { Json.decodeFromString(it)} ?: AmplifyCredential.ASFDevice(null)
         } catch (e: Exception) {
             AmplifyCredential.ASFDevice(null)
         }
