@@ -182,6 +182,11 @@ subprojects { project ->
                     skipDeprecated.set(true)
                     reportUndocumented.set(true)
                     jdkVersion.set(8)
+
+                    perPackageOption {
+                        prefix = "com.amplifyframework.auth.cognito.helpers.FlutterFactory"
+                        suppress = true
+                    }
                 }
             }
         }
