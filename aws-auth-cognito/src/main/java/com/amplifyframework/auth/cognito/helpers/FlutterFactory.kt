@@ -11,13 +11,13 @@ import com.amplifyframework.auth.result.AuthSessionResult
  * a stable public API.
  */
 object FlutterFactory {
-    
+
     fun createAWSCognitoUserPoolTokens(
         accessToken: String?,
         idToken: String?,
         refreshToken: String?
     ) = AWSCognitoUserPoolTokens(accessToken, idToken, refreshToken)
-    
+
     fun createAWSCognitoAuthSession(
         isSignedIn: Boolean,
         identityIdResult: AuthSessionResult<String>,
