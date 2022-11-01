@@ -19,7 +19,7 @@ class AmplifyTools implements Plugin<Project> {
         project.task('createAmplifyApp') {
             def npx = 'npx'
 
-            if (project.file(gradleConfigFileName).exists()) {
+            if (project.file("${project.projectDir}/$gradleConfigFileName").exists()) {
                 return
             }
 
@@ -29,6 +29,7 @@ class AmplifyTools implements Plugin<Project> {
 
             try {
                 project.exec {
+                    workingDir ${project.projectDir}
                     commandLine npx, 'amplify-app', '--platform', 'android'
                 }
             } catch (commandLineFailure) {
@@ -37,7 +38,7 @@ class AmplifyTools implements Plugin<Project> {
         }
 
         project.task('getConfig') {
-            def inputConfigFile = project.file('amplify-gradle-config.json')
+            def inputConfigFile = project.file("${project.projectDir}/amplify-gradle-config.json")
             if (inputConfigFile.isFile()) {
                 def configText = inputConfigFile.text
                 def jsonSlurper = new JsonSlurper()
@@ -53,9 +54,9 @@ class AmplifyTools implements Plugin<Project> {
         project.getConfig.dependsOn('createAmplifyApp')
 
         project.task('datastoreSync') {
-            def transformConfFile = project.file('amplify/backend/api/amplifyDatasource/transform.conf.json')
-            if (project.file('amplify/backend/api').exists()) {
-                new File('amplify/backend/api').eachFileRecurse(groovy.io.FileType.FILES) {
+            def transformConfFile = project.file("${project.projectDir}/amplify/backend/api/amplifyDatasource/transform.conf.json")
+            if (project.file("${project.projectDir}/amplify/backend/api").exists()) {
+                new File("${project.projectDir}/amplify/backend/api").eachFileRecurse(groovy.io.FileType.FILES) {
                     if (it.name.endsWith('transform.conf.json')) {
                         transformConfFile = project.file(it)
                     }
@@ -95,6 +96,7 @@ class AmplifyTools implements Plugin<Project> {
 
             doLast {
                 project.exec {
+                    workingDir ${project.projectDir}
                     commandLine amplify, 'codegen', 'model'
                 }
             }
@@ -144,12 +146,14 @@ class AmplifyTools implements Plugin<Project> {
                     providersConfig = StringEscapeUtils.escapeJavaScript(providersConfig)
                 }
 
-                if (project.file('./amplify/.config/local-env-info.json').exists()) {
+                if (project.file("${project.projectDir}/amplify/.config/local-env-info.json").exists()) {
+                    workingDir ${project.projectDir}
                     project.exec {
                         commandLine amplify, 'push', '--yes'
                     }
                 } else {
                     project.exec {
+                        workingDir ${project.projectDir}
                         commandLine amplify, 'init',
                                 '--amplify', amplifyConfig,
                                 '--providers', providersConfig,
@@ -162,9 +166,9 @@ class AmplifyTools implements Plugin<Project> {
         project.amplifyPush.dependsOn('datastoreSync')
 
         project.task('addModelgenToWorkspace') {
-            if (project.file('./.idea/workspace.xml').exists()) {
+            if (project.file("${project.projectDir}/.idea/workspace.xml").exists()) {
                 //Open XML file
-                def xml = new XmlParser().parse('./.idea/workspace.xml')
+                def xml = new XmlParser().parse("${project.projectDir}/.idea/workspace.xml")
                 def RunManagerNode = xml.component.find { it.'@name' == 'RunManager' } as Node
                 def configModelgenCheck = null
                 if (RunManagerNode) {
@@ -193,7 +197,7 @@ class AmplifyTools implements Plugin<Project> {
                     RunManagerNode.append(configurationNode)
 
                     //Save File
-                    def writer = new FileWriter('./.idea/workspace.xml')
+                    def writer = new FileWriter("${project.projectDir}/.idea/workspace.xml")
 
                     //Pretty print XML
                     groovy.xml.XmlUtil.serialize(xml, writer)
@@ -202,9 +206,9 @@ class AmplifyTools implements Plugin<Project> {
         }
 
         project.task('addAmplifyPushToWorkspace') {
-            if (project.file('./.idea/workspace.xml').exists()) {
+            if (project.file("${project.projectDir}/.idea/workspace.xml").exists()) {
                 //Open file
-                def xml = new XmlParser().parse('./.idea/workspace.xml')
+                def xml = new XmlParser().parse("${project.projectDir}/.idea/workspace.xml")
                 def RunManagerNode = xml.component.find { it.'@name' == 'RunManager' } as Node
                 def configAmplifyPushCheck = null
                 if (RunManagerNode) {
@@ -233,7 +237,7 @@ class AmplifyTools implements Plugin<Project> {
                     RunManagerNode.append(configurationNode)
 
                     //Save File
-                    def writer = new FileWriter('./.idea/workspace.xml')
+                    def writer = new FileWriter("${project.projectDir}/.idea/workspace.xml")
 
                     //Pretty print XML
                     groovy.xml.XmlUtil.serialize(xml, writer)
