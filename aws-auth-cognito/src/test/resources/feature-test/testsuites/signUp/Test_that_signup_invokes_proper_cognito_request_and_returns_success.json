@@ -5,7 +5,7 @@
         "state": "SignedOut_Configured.json",
         "mockedResponses": [
             {
-                "type": "cognito",
+                "type": "cognitoIdentityProvider",
                 "apiName": "signUp",
                 "responseType": "success",
                 "response": {
@@ -32,7 +32,7 @@
     },
     "validations": [
         {
-            "type": "cognito",
+            "type": "cognitoIdentityProvider",
             "apiName": "signUp",
             "request": {
                 "clientId": "testAppClientId",
@@ -61,10 +61,6 @@
                         "deliveryMedium": "EMAIL",
                         "attributeName": "attributeName"
                     }
-                },
-                "user": {
-                    "userId": "",
-                    "username": "user"
                 }
             }
         }
