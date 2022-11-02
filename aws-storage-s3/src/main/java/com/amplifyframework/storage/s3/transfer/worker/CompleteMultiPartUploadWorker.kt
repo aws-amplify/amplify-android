@@ -38,7 +38,6 @@ internal class CompleteMultiPartUploadWorker(
         return s3.completeMultipartUpload {
             bucket = transferRecord.bucketName
             key = transferRecord.key
-            // TODO("Add userAgent")
             multipartUpload = CompletedMultipartUpload {
                 parts = completedParts
             }

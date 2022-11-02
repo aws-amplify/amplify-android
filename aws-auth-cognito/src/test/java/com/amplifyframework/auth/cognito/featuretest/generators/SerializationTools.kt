@@ -23,9 +23,11 @@ import com.amplifyframework.auth.cognito.featuretest.serializers.CognitoIdentity
 import com.amplifyframework.auth.cognito.featuretest.serializers.CognitoIdentityProviderExceptionSerializer
 import com.amplifyframework.auth.cognito.featuretest.serializers.deserializeToAuthState
 import com.amplifyframework.auth.cognito.featuretest.serializers.serialize
-import com.amplifyframework.auth.result.AuthSignOutResult
 import com.amplifyframework.statemachine.codegen.states.AuthState
+import com.google.gson.Gson
+import java.io.BufferedWriter
 import java.io.File
+import java.io.FileOutputStream
 import java.io.FileWriter
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -35,7 +37,7 @@ import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
-const val basePath = ".temp/feature-test"
+const val basePath = "aws-auth-cognito/src/test/resources/feature-test"
 
 fun writeFile(json: String, dirName: String, fileName: String) {
     val directory = File("$basePath/$dirName")
@@ -80,6 +82,69 @@ internal fun AuthState.exportJson() {
 }
 
 /**
+ * Generates a md file with all the test cases formatted.
+ */
+internal fun List<FeatureTestCase>.exportToMd() {
+    val outputStream = FileOutputStream("testSuite.md")
+    val writer = outputStream.bufferedWriter()
+    val jsonFormat = Json { prettyPrint = true }
+
+    groupBy { it.api.name }
+        .forEach {
+            with(writer) {
+                newLine()
+                write("# ${it.key.name}") // Header 1
+                newLine()
+                it.value.forEach {
+                    newLine()
+                    write("## Case: *${it.description}*")
+                    newLine()
+                    // Preconditions (GIVEN)
+                    write("### Preconditions") // Header 2
+                    newLine()
+                    write("- **Amplify Configuration**: ${it.preConditions.`amplify-configuration`}")
+                    newLine()
+                    write("- **Initial State:** ${it.preConditions.state}")
+                    newLine()
+                    write("- **Mock Responses:** ")
+                    printCodeBlock {
+                        if (it.preConditions.mockedResponses.isEmpty()) "[]" else
+                            jsonFormat.encodeToString(it.preConditions.mockedResponses)
+                    }
+
+                    // Parameters (WHEN)
+                    write("### Input")
+                    newLine()
+                    write("- **params:**")
+                    printCodeBlock {
+                        jsonFormat.encodeToString(it.api.params)
+                    }
+                    write("- **options:**")
+                    printCodeBlock { jsonFormat.encodeToString(it.api.options) }
+
+                    // Then
+                    write("### Validations")
+                    newLine()
+                    it.validations.forEach {
+                        printCodeBlock { jsonFormat.encodeToString(it) }
+                    }
+                }
+            }
+        }
+    writer.flush()
+}
+
+private fun BufferedWriter.printCodeBlock(blob: () -> String) {
+    newLine()
+    write("```json")
+    newLine()
+    write(blob.invoke())
+    newLine()
+    write("```")
+    newLine()
+}
+
+/**
  * Extension class to convert primitives and collections
  * from [https://github.com/Kotlin/kotlinx.serialization/issues/296#issuecomment-1132714147]
  */
@@ -102,13 +167,12 @@ fun Any?.toJsonElement(): JsonElement {
         is Number -> JsonPrimitive(this)
         is String -> JsonPrimitive(this)
         is AuthException -> toJsonElement()
-        is AuthSignOutResult -> toJsonElement()
         is CognitoIdentityProviderException -> Json.encodeToJsonElement(
             CognitoIdentityProviderExceptionSerializer,
             this
         )
         is CognitoIdentityException -> Json.encodeToJsonElement(CognitoIdentityExceptionSerializer, this)
-        else -> JsonPrimitive(toString())
+        else -> gsonBasedSerializer(this)
     }
 }
 
@@ -123,9 +187,15 @@ fun AuthException.toJsonElement(): JsonElement {
     return responseMap.toJsonElement()
 }
 
-fun AuthSignOutResult.toJsonElement(): JsonElement {
-    val responseMap = mutableMapOf<String, Any?>(
-        "type" to this.javaClass.simpleName
-    )
-    return responseMap.toJsonElement()
+/**
+ * Uses Gson to convert objects which cannot be serialized,
+ * tries to convert to map of params to vals
+ */
+fun gsonBasedSerializer(value: Any): JsonElement {
+    val gson = Gson()
+    return try {
+        gson.fromJson(gson.toJson(value).toString(), Map::class.java).toJsonElement()
+    } catch (ex: Exception) {
+        JsonPrimitive(value.toString())
+    }
 }

@@ -5,7 +5,7 @@
         "state": "SignedIn_SessionEstablished.json",
         "mockedResponses": [
             {
-                "type": "cognito",
+                "type": "cognitoIdentityProvider",
                 "apiName": "deleteUser",
                 "responseType": "success",
                 "response": {

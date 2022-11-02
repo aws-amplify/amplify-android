@@ -186,7 +186,7 @@ internal class HostedUIClient private constructor(
             }
         }
 
-    private fun createSignOutUri(): Uri =
+    internal fun createSignOutUri(): Uri =
         Uri.Builder()
             .scheme("https")
             .authority(configuration.domain).appendPath("logout")
