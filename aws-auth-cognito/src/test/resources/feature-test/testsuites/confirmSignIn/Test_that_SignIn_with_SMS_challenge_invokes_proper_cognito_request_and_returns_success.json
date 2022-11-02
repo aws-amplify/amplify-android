@@ -5,7 +5,7 @@
         "state": "SigningIn_SigningIn.json",
         "mockedResponses": [
             {
-                "type": "cognito",
+                "type": "cognitoIdentityProvider",
                 "apiName": "respondToAuthChallenge",
                 "responseType": "success",
                 "response": {
@@ -18,7 +18,7 @@
                 }
             },
             {
-                "type": "cognito",
+                "type": "cognitoIdentity",
                 "apiName": "getId",
                 "responseType": "success",
                 "response": {
@@ -26,7 +26,7 @@
                 }
             },
             {
-                "type": "cognito",
+                "type": "cognitoIdentity",
                 "apiName": "getCredentialsForIdentity",
                 "responseType": "success",
                 "response": {
@@ -58,8 +58,7 @@
                 "nextStep": {
                     "signInStep": "DONE",
                     "additionalInfo": {
-                    },
-                    "codeDeliveryDetails": null
+                    }
                 }
             }
         },

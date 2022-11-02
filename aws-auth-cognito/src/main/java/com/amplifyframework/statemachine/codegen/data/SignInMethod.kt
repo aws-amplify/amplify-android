@@ -29,7 +29,8 @@ internal sealed class SignInMethod {
         enum class AuthType {
             USER_SRP_AUTH,
             CUSTOM_AUTH,
-            USER_PASSWORD_AUTH
+            USER_PASSWORD_AUTH,
+            UNKNOWN
         }
     }
 

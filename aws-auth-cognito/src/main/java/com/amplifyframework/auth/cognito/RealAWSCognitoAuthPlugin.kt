@@ -17,8 +17,10 @@ package com.amplifyframework.auth.cognito
 
 import android.app.Activity
 import android.content.Intent
+import androidx.annotation.WorkerThread
 import aws.sdk.kotlin.services.cognitoidentityprovider.confirmForgotPassword
 import aws.sdk.kotlin.services.cognitoidentityprovider.confirmSignUp
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.AnalyticsMetadataType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AttributeType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChangePasswordRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeviceRememberedStatusType
@@ -48,6 +50,7 @@ import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidOauthCo
 import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidUserPoolConfigurationException
 import com.amplifyframework.auth.cognito.exceptions.invalidstate.SignedInException
 import com.amplifyframework.auth.cognito.exceptions.service.CodeDeliveryFailureException
+import com.amplifyframework.auth.cognito.exceptions.service.HostedUISignOutException
 import com.amplifyframework.auth.cognito.exceptions.service.InvalidAccountTypeException
 import com.amplifyframework.auth.cognito.exceptions.service.UserCancelledException
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
@@ -112,7 +115,9 @@ import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.data.FederatedToken
+import com.amplifyframework.statemachine.codegen.data.HostedUIErrorData
 import com.amplifyframework.statemachine.codegen.data.SignInData
+import com.amplifyframework.statemachine.codegen.data.SignInMethod
 import com.amplifyframework.statemachine.codegen.data.SignOutData
 import com.amplifyframework.statemachine.codegen.errors.SessionError
 import com.amplifyframework.statemachine.codegen.events.AuthEvent
@@ -131,6 +136,8 @@ import com.amplifyframework.statemachine.codegen.states.SRPSignInState
 import com.amplifyframework.statemachine.codegen.states.SignInChallengeState
 import com.amplifyframework.statemachine.codegen.states.SignInState
 import com.amplifyframework.statemachine.codegen.states.SignOutState
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
@@ -155,6 +162,30 @@ internal class RealAWSCognitoAuthPlugin(
     }
 
     fun escapeHatch() = authEnvironment.cognitoAuthService
+
+    @WorkerThread
+    @Throws(AmplifyException::class)
+    fun initialize() {
+        var token: StateChangeListenerToken? = null
+        val latch = CountDownLatch(1)
+        token = authStateMachine.listen(
+            { authState ->
+                if (authState is AuthState.Configured) {
+                    token?.let(authStateMachine::cancel)
+                    latch.countDown()
+                }
+            },
+            { }
+        )
+        try {
+            latch.await(10, TimeUnit.SECONDS)
+        } catch (e: Exception) {
+            throw AmplifyException(
+                "Failed to configure auth plugin.",
+                "Make sure your amplifyconfiguration.json is valid"
+            )
+        }
+    }
 
     override fun signUp(
         username: String,
@@ -193,6 +224,7 @@ internal class RealAWSCognitoAuthPlugin(
             }
 
             val encodedContextData = authEnvironment.getUserContextData(username)
+            val pinpointEndpointId = authEnvironment.getPinpointEndpointId()
 
             val response = authEnvironment.cognitoAuthService.cognitoIdentityProviderClient?.signUp {
                 this.username = username
@@ -204,6 +236,9 @@ internal class RealAWSCognitoAuthPlugin(
                     configuration.userPool?.appClient,
                     configuration.userPool?.appClientSecret
                 )
+                pinpointEndpointId?.let {
+                    this.analyticsMetadata = AnalyticsMetadataType.invoke { analyticsEndpointId = it }
+                }
                 encodedContextData?.let { this.userContextData { encodedData = it } }
             }
 
@@ -276,6 +311,7 @@ internal class RealAWSCognitoAuthPlugin(
         logger.verbose("ConfirmSignUp Starting execution")
         try {
             val encodedContextData = authEnvironment.getUserContextData(username)
+            val pinpointEndpointId = authEnvironment.getPinpointEndpointId()
 
             authEnvironment.cognitoAuthService.cognitoIdentityProviderClient?.confirmSignUp {
                 this.username = username
@@ -286,6 +322,9 @@ internal class RealAWSCognitoAuthPlugin(
                     configuration.userPool?.appClient,
                     configuration.userPool?.appClientSecret
                 )
+                pinpointEndpointId?.let {
+                    this.analyticsMetadata = AnalyticsMetadataType.invoke { analyticsEndpointId = it }
+                }
                 encodedContextData?.let { this.userContextData { encodedData = it } }
             }
 
@@ -340,6 +379,7 @@ internal class RealAWSCognitoAuthPlugin(
         try {
             val metadata = (options as? AWSCognitoAuthResendSignUpCodeOptions)?.metadata
             val encodedContextData = authEnvironment.getUserContextData(username)
+            val pinpointEndpointId = authEnvironment.getPinpointEndpointId()
 
             val response = authEnvironment.cognitoAuthService.cognitoIdentityProviderClient?.resendConfirmationCode {
                 clientId = configuration.userPool?.appClient
@@ -350,6 +390,9 @@ internal class RealAWSCognitoAuthPlugin(
                     configuration.userPool?.appClientSecret
                 )
                 clientMetadata = metadata
+                pinpointEndpointId?.let {
+                    this.analyticsMetadata = AnalyticsMetadataType.invoke { analyticsEndpointId = it }
+                }
                 encodedContextData?.let { this.userContextData { encodedData = it } }
             }
 
@@ -698,20 +741,42 @@ internal class RealAWSCognitoAuthPlugin(
             when (val authNState = it.authNState) {
                 is AuthenticationState.SigningOut -> {
                     (authNState.signOutState as? SignOutState.SigningOutHostedUI)?.let { signOutState ->
-                        if (callbackUri == null) {
-                            // Notify failed web sign out
+                        if (callbackUri == null && signOutState.signedInData.signInMethod !=
+                            SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.UNKNOWN)
+                        ) {
                             authStateMachine.send(
                                 SignOutEvent(SignOutEvent.EventType.UserCancelled(signOutState.signedInData))
                             )
-                        }
-                        if (signOutState.globalSignOut) {
-                            authStateMachine.send(
-                                SignOutEvent(SignOutEvent.EventType.SignOutGlobally(signOutState.signedInData))
-                            )
                         } else {
-                            authStateMachine.send(
-                                SignOutEvent(SignOutEvent.EventType.RevokeToken(signOutState.signedInData))
-                            )
+                            val hostedUIErrorData = if (callbackUri == null) {
+                                // This error will be appended if sign out redirect failed with an UNKNOWN sign in
+                                // method. We will provide a URL to allow the developer to manually retry.
+                                HostedUIErrorData(
+                                    url = authEnvironment.hostedUIClient?.createSignOutUri()?.toString(),
+                                    error = HostedUISignOutException(authEnvironment.hostedUIClient != null)
+                                )
+                            } else {
+                                null
+                            }
+                            if (signOutState.globalSignOut) {
+                                authStateMachine.send(
+                                    SignOutEvent(
+                                        SignOutEvent.EventType.SignOutGlobally(
+                                            signOutState.signedInData,
+                                            hostedUIErrorData
+                                        )
+                                    )
+                                )
+                            } else {
+                                authStateMachine.send(
+                                    SignOutEvent(
+                                        SignOutEvent.EventType.RevokeToken(
+                                            signOutState.signedInData,
+                                            hostedUIErrorData
+                                        )
+                                    )
+                                )
+                            }
                         }
                     }
                 }
@@ -731,7 +796,13 @@ internal class RealAWSCognitoAuthPlugin(
                         authStateMachine.send(HostedUIEvent(HostedUIEvent.EventType.FetchToken(callbackUri)))
                     }
                 }
-                else -> Unit
+                else -> {
+                    logger.warn(
+                        "Received handleWebUIResponse but ignoring because the user is not currently signing in " +
+                            "or signing out"
+                    )
+                    Unit
+                }
             }
         }
     }
@@ -978,11 +1049,13 @@ internal class RealAWSCognitoAuthPlugin(
             val appClient = requireNotNull(configuration.userPool?.appClient)
             GlobalScope.launch {
                 val encodedData = authEnvironment.getUserContextData(username)
+                val pinpointEndpointId = authEnvironment.getPinpointEndpointId()
 
                 ResetPasswordUseCase(cognitoIdentityProviderClient, appClient).execute(
                     username,
                     options,
                     encodedData,
+                    pinpointEndpointId,
                     onSuccess,
                     onError
                 )
@@ -1022,6 +1095,7 @@ internal class RealAWSCognitoAuthPlugin(
             GlobalScope.launch {
                 try {
                     val encodedContextData = authEnvironment.getUserContextData(username)
+                    val pinpointEndpointId = authEnvironment.getPinpointEndpointId()
 
                     authEnvironment.cognitoAuthService.cognitoIdentityProviderClient!!.confirmForgotPassword {
                         this.username = username
@@ -1031,6 +1105,9 @@ internal class RealAWSCognitoAuthPlugin(
                             (options as? AWSCognitoAuthConfirmResetPasswordOptions)?.metadata ?: mapOf()
                         clientId = configuration.userPool?.appClient
                         encodedContextData?.let { this.userContextData { encodedData = it } }
+                        pinpointEndpointId?.let {
+                            this.analyticsMetadata = AnalyticsMetadataType.invoke { analyticsEndpointId = it }
+                        }
                     }.let { onSuccess.call() }
                 } catch (ex: Exception) {
                     onError.accept(

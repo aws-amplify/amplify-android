@@ -17,6 +17,7 @@ package com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerat
 
 import com.amplifyframework.auth.cognito.featuretest.API
 import com.amplifyframework.auth.cognito.featuretest.AuthAPI
+import com.amplifyframework.auth.cognito.featuretest.CognitoType
 import com.amplifyframework.auth.cognito.featuretest.ExpectationShapes
 import com.amplifyframework.auth.cognito.featuretest.FeatureTestCase
 import com.amplifyframework.auth.cognito.featuretest.MockResponse
@@ -31,7 +32,7 @@ object ConfirmSignInTestCaseGenerator : SerializableProvider {
     private const val challengeCode = "000000"
 
     private val mockedRespondToAuthChallengeResponse = MockResponse(
-        "cognito",
+        CognitoType.CognitoIdentityProvider,
         "respondToAuthChallenge",
         ResponseType.Success,
         mapOf(
@@ -45,14 +46,14 @@ object ConfirmSignInTestCaseGenerator : SerializableProvider {
     )
 
     private val mockedIdentityIdResponse = MockResponse(
-        "cognito",
+        CognitoType.CognitoIdentity,
         "getId",
         ResponseType.Success,
         mapOf("identityId" to "someIdentityId").toJsonElement()
     )
 
     private val mockedAWSCredentialsResponse = MockResponse(
-        "cognito",
+        CognitoType.CognitoIdentity,
         "getCredentialsForIdentity",
         ResponseType.Success,
         mapOf(
@@ -73,7 +74,6 @@ object ConfirmSignInTestCaseGenerator : SerializableProvider {
             "nextStep" to mapOf(
                 "signInStep" to "DONE",
                 "additionalInfo" to JsonObject(emptyMap()),
-                "codeDeliveryDetails" to null
             )
         ).toJsonElement()
     )

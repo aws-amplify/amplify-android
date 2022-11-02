@@ -16,6 +16,7 @@
 package com.amplifyframework.auth.cognito.usecases
 
 import aws.sdk.kotlin.services.cognitoidentityprovider.CognitoIdentityProviderClient
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.AnalyticsMetadataType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.CodeDeliveryDetailsType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.CognitoIdentityProviderException
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeliveryMediumType
@@ -50,6 +51,7 @@ class ResetPasswordUseCaseTest {
 
     private val dummyClientId = "app client id"
     private val dummyUserName = "username"
+    private val expectedPinpointEndpointId = "abc123"
 
     private val mockCognitoIPClient: CognitoIdentityProviderClient = mockk()
 
@@ -80,11 +82,19 @@ class ResetPasswordUseCaseTest {
             username = dummyUserName
             clientMetadata = mapOf()
             clientId = dummyClientId
+            analyticsMetadata = AnalyticsMetadataType.invoke { analyticsEndpointId = expectedPinpointEndpointId }
         }
 
         // WHEN
         runBlocking {
-            resetPasswordUseCase.execute(dummyUserName, AuthResetPasswordOptions.defaults(), null, {}, {})
+            resetPasswordUseCase.execute(
+                dummyUserName,
+                AuthResetPasswordOptions.defaults(),
+                null,
+                expectedPinpointEndpointId,
+                {},
+                {}
+            )
         }
 
         // THEN
@@ -124,7 +134,14 @@ class ResetPasswordUseCaseTest {
 
         // WHEN
         runBlocking {
-            resetPasswordUseCase.execute(dummyUserName, AuthResetPasswordOptions.defaults(), null, onSuccess, onError)
+            resetPasswordUseCase.execute(
+                dummyUserName,
+                AuthResetPasswordOptions.defaults(),
+                null,
+                expectedPinpointEndpointId,
+                onSuccess,
+                onError
+            )
         }
 
         // THEN
@@ -150,7 +167,14 @@ class ResetPasswordUseCaseTest {
 
         // WHEN
         runBlocking {
-            resetPasswordUseCase.execute(dummyUserName, AuthResetPasswordOptions.defaults(), null, onSuccess, onError)
+            resetPasswordUseCase.execute(
+                dummyUserName,
+                AuthResetPasswordOptions.defaults(),
+                null,
+                expectedPinpointEndpointId,
+                onSuccess,
+                onError
+            )
         }
 
         // THEN

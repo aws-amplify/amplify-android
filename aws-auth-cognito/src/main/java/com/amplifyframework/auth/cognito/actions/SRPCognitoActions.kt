@@ -16,6 +16,7 @@
 package com.amplifyframework.auth.cognito.actions
 
 import aws.sdk.kotlin.services.cognitoidentityprovider.initiateAuth
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.AnalyticsMetadataType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AuthFlowType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
 import aws.sdk.kotlin.services.cognitoidentityprovider.respondToAuthChallenge
@@ -64,11 +65,15 @@ internal object SRPCognitoActions : SRPActions {
                 val encodedContextData = getUserContextData(event.username)
                 val deviceMetadata = getDeviceMetadata(event.username)
                 deviceMetadata?.let { authParams[KEY_DEVICE_KEY] = it.deviceKey }
+                val pinpointEndpointId = getPinpointEndpointId()
 
                 val initiateAuthResponse = cognitoAuthService.cognitoIdentityProviderClient?.initiateAuth {
                     authFlow = AuthFlowType.UserSrpAuth
                     clientId = configuration.userPool?.appClient
                     authParameters = authParams
+                    pinpointEndpointId?.let {
+                        this.analyticsMetadata = AnalyticsMetadataType.invoke { analyticsEndpointId = it }
+                    }
                     encodedContextData?.let { userContextData { encodedData = it } }
                 }
 
@@ -115,11 +120,15 @@ internal object SRPCognitoActions : SRPActions {
                 val encodedContextData = getUserContextData(event.username)
                 val deviceMetadata = getDeviceMetadata(event.username)
                 deviceMetadata?.let { authParams[KEY_DEVICE_KEY] = it.deviceKey }
+                val pinpointEndpointId = getPinpointEndpointId()
 
                 val initiateAuthResponse = cognitoAuthService.cognitoIdentityProviderClient?.initiateAuth {
                     authFlow = AuthFlowType.CustomAuth
                     clientId = configuration.userPool?.appClient
                     authParameters = authParams
+                    pinpointEndpointId?.let {
+                        this.analyticsMetadata = AnalyticsMetadataType.invoke { analyticsEndpointId = it }
+                    }
                     encodedContextData?.let { userContextData { encodedData = it } }
                 }
 
