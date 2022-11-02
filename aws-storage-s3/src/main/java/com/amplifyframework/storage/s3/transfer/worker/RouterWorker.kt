@@ -29,7 +29,7 @@ import java.lang.IllegalStateException
  * Worker to route transfer WorkRequest to appropriate WorkerFactory
  */
 @SuppressLint("RestrictedApi")
-internal open class RouterWorker constructor(
+internal class RouterWorker constructor(
     appContext: Context,
     private val parameter: WorkerParameters
 ) : ListenableWorker(appContext, parameter) {
