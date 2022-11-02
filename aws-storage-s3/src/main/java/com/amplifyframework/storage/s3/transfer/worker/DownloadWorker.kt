@@ -56,10 +56,6 @@ internal class DownloadWorker(
             transferRecord.bytesTotal = totalBytes
             transferRecord.bytesCurrent = downloadedBytes
             file.parentFile?.takeIf { !it.exists() }?.mkdirs()
-            val bufferSize = takeIf { response.contentLength < defaultBufferSize }?.let {
-                response.contentLength
-            } ?: defaultBufferSize
-            val byteArray = ByteArray(bufferSize.toInt())
             writeToFileWithProgressUpdates(response.body as ByteStream.OneShotStream, file, downloadProgressListener)
             transferStatusUpdater.updateProgress(
                 transferRecord.id,

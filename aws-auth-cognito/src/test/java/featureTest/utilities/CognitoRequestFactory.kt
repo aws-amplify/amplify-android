@@ -70,6 +70,6 @@ object CognitoRequestFactory {
             SignUpRequest.invoke(expectedRequest)
         }
 
-        else -> throw Error("Expected request for $targetApi for Cognito is not defined")
+        else -> error("Expected request for $targetApi for Cognito is not defined")
     }
 }

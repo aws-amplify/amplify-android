@@ -5,7 +5,7 @@
         "state": "SignedOut_Configured.json",
         "mockedResponses": [
             {
-                "type": "cognito",
+                "type": "cognitoIdentityProvider",
                 "apiName": "initiateAuth",
                 "responseType": "success",
                 "response": {
@@ -20,7 +20,7 @@
                 }
             },
             {
-                "type": "cognito",
+                "type": "cognitoIdentityProvider",
                 "apiName": "respondToAuthChallenge",
                 "responseType": "success",
                 "response": {
@@ -56,8 +56,7 @@
                     },
                     "codeDeliveryDetails": {
                         "destination": "+12345678900",
-                        "deliveryMedium": "SMS",
-                        "attributeName": null
+                        "deliveryMedium": "SMS"
                     }
                 }
             }

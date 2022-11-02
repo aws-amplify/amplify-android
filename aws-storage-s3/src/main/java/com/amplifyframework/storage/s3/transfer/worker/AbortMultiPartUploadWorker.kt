@@ -18,6 +18,7 @@ import android.content.Context
 import androidx.work.WorkerParameters
 import aws.sdk.kotlin.services.s3.S3Client
 import aws.sdk.kotlin.services.s3.abortMultipartUpload
+import com.amplifyframework.storage.TransferState
 import com.amplifyframework.storage.s3.transfer.TransferDB
 import com.amplifyframework.storage.s3.transfer.TransferStatusUpdater
 
@@ -38,6 +39,12 @@ internal class AbortMultiPartUploadWorker(
             key = transferRecord.key
             uploadId = transferRecord.multipartId
         }.let {
+            val currentStatus = transferRecord.state
+            if (currentStatus == TransferState.PENDING_CANCEL) {
+                transferStatusUpdater.updateTransferState(transferRecord.id, TransferState.CANCELED)
+            } else {
+                transferStatusUpdater.updateTransferState(transferRecord.id, TransferState.FAILED)
+            }
             Result.success(outputData)
         }
     }

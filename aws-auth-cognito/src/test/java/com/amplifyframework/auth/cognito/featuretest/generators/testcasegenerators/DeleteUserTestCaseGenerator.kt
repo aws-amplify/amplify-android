@@ -18,6 +18,7 @@ package com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerat
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.NotAuthorizedException
 import com.amplifyframework.auth.cognito.featuretest.API
 import com.amplifyframework.auth.cognito.featuretest.AuthAPI
+import com.amplifyframework.auth.cognito.featuretest.CognitoType
 import com.amplifyframework.auth.cognito.featuretest.ExpectationShapes
 import com.amplifyframework.auth.cognito.featuretest.FeatureTestCase
 import com.amplifyframework.auth.cognito.featuretest.MockResponse
@@ -29,7 +30,7 @@ import kotlinx.serialization.json.JsonObject
 
 object DeleteUserTestCaseGenerator : SerializableProvider {
     private val mockCognitoResponse = MockResponse(
-        "cognito",
+        CognitoType.CognitoIdentityProvider,
         "deleteUser",
         ResponseType.Success,
         JsonObject(emptyMap())
@@ -64,13 +65,13 @@ object DeleteUserTestCaseGenerator : SerializableProvider {
 
     private val errorCase: FeatureTestCase
         get() {
-            val errorResponse = NotAuthorizedException.invoke { message = "Failed since user is not authorized." }
+            val errorResponse = NotAuthorizedException.invoke {}
             return baseCase.copy(
                 description = "AuthException is thrown when deleteUser API call fails",
                 preConditions = baseCase.preConditions.copy(
                     mockedResponses = listOf(
                         MockResponse(
-                            "cognito",
+                            CognitoType.CognitoIdentityProvider,
                             "deleteUser",
                             ResponseType.Failure,
                             errorResponse.toJsonElement()
@@ -82,7 +83,6 @@ object DeleteUserTestCaseGenerator : SerializableProvider {
                         AuthAPI.deleteUser,
                         ResponseType.Failure,
                         com.amplifyframework.auth.exceptions.NotAuthorizedException(
-                            message = errorResponse.message.toString(),
                             cause = errorResponse
                         ).toJsonElement(),
                     )
