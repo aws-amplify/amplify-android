@@ -382,7 +382,7 @@ class PinpointAnalyticsInstrumentationTest {
             @RawRes val resourceId = Resources.getRawResourceId(context, CONFIGURATION_NAME)
             appId = readAppIdFromResource(context, resourceId)
             preferences = context.getSharedPreferences(
-                "${appId}${PREFERENCES_AND_FILE_MANAGER_SUFFIX}",
+                "${appId}$PREFERENCES_AND_FILE_MANAGER_SUFFIX",
                 Context.MODE_PRIVATE
             )
             setUniqueId()
