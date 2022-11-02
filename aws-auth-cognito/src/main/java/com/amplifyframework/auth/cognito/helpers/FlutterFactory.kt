@@ -6,8 +6,8 @@ import com.amplifyframework.auth.cognito.AWSCognitoUserPoolTokens
 import com.amplifyframework.auth.result.AuthSessionResult
 
 /**
- * Helper class that allows Amplify Flutter to create necessary return types with internal constructors.
- * This class should not be consumed outside of Amplify Flutter and should not be considered
+ * Although this has public access, it is intended for internal use and should not be used directly by host
+ * applications. The behavior of this may change without warning.
  */
 object FlutterFactory {
 
