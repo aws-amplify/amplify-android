@@ -54,6 +54,7 @@ internal class CredentialStoreClient(configuration: AuthConfiguration, context: 
         onSuccess: (Result<AmplifyCredential>) -> Unit,
         onError: (Exception) -> Unit
     ) {
+        credentialStoreStateMachine.send(event)
         var token: StateChangeListenerToken? = null
         token = credentialStoreStateMachine.listen(
             { storeState ->
@@ -72,7 +73,6 @@ internal class CredentialStoreClient(configuration: AuthConfiguration, context: 
                 }
             },
             {
-                credentialStoreStateMachine.send(event)
             }
         )
     }
