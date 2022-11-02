@@ -9,6 +9,7 @@ import com.amplifyframework.auth.cognito.featuretest.AuthAPI.signUp
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
+import com.amplifyframework.auth.options.AuthFetchSessionOptions
 import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions
 import com.amplifyframework.auth.options.AuthResendUserAttributeConfirmationCodeOptions
 import com.amplifyframework.auth.options.AuthResetPasswordOptions
@@ -33,7 +34,7 @@ object AuthOptionsFactory {
         AuthAPI.confirmSignUp -> AuthConfirmSignUpOptions.defaults()
         AuthAPI.confirmUserAttribute -> null
         AuthAPI.deleteUser -> null
-        AuthAPI.fetchAuthSession -> null
+        AuthAPI.fetchAuthSession -> getFetchAuthSessionOptions(optionsData)
         AuthAPI.fetchDevices -> null
         AuthAPI.fetchUserAttributes -> TODO()
         AuthAPI.forgetDevice -> TODO()
@@ -63,4 +64,18 @@ object AuthOptionsFactory {
                 AuthUserAttribute(AuthUserAttributeKey.custom(it.key), (it.value as JsonPrimitive).content)
             }
         ).build()
+
+    private fun getSignOutOptions(optionsData: JsonObject): AuthSignOutOptions {
+        val globalSignOutData = (optionsData["globalSignOut"] as JsonPrimitive).booleanOrNull ?: false
+        return AuthSignOutOptions.builder()
+            .globalSignOut(globalSignOutData)
+            .build()
+    }
+
+    private fun getFetchAuthSessionOptions(optionsData: JsonObject): AuthFetchSessionOptions {
+        val refresh = (optionsData["forceRefresh"] as JsonPrimitive).booleanOrNull ?: false
+        return AuthFetchSessionOptions.builder()
+            .forceRefresh(refresh)
+            .build()
+    }
 }
