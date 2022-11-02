@@ -39,7 +39,6 @@ public final class ModelMetadata implements Model {
     private final @ModelField(targetType = "Boolean") Boolean _deleted;
     private final @ModelField(targetType = "Int") Integer _version;
     private final @ModelField(targetType = "AWSTimestamp") Temporal.Timestamp _lastChangedAt;
-    private final @ModelField(targetType = "String") String __typename;
 
     /**
      * Constructor for this metadata model.
@@ -47,19 +46,16 @@ public final class ModelMetadata implements Model {
      * @param deleted Whether this object was deleted since the last sync time specified
      * @param version What version this object was last seen at
      * @param lastChangedAt When was this object last changed
-     * @param typename The type name of the model.
      */
     public ModelMetadata(
             @NonNull String id,
             @Nullable Boolean deleted,
             @Nullable Integer version,
-            @Nullable Temporal.Timestamp lastChangedAt,
-            @Nullable String typename) {
+            @Nullable Temporal.Timestamp lastChangedAt) {
         this.id = Objects.requireNonNull(id);
         this._deleted = deleted;
         this._version = version;
         this._lastChangedAt = lastChangedAt;
-        this.__typename = typename;
     }
 
     /**
@@ -90,21 +86,21 @@ public final class ModelMetadata implements Model {
     }
 
     /**
-     * Gets the type of the model.
-     * @return Type of the Model.
-     */
-    @Nullable
-    public String getTypename() {
-        return __typename;
-    }
-
-    /**
      * Gets last changed at time.
      * @return last changed at time
      */
     @Nullable
     public Temporal.Timestamp getLastChangedAt() {
         return _lastChangedAt;
+    }
+
+    /**
+     * Gets the model name.
+     * @return modelName
+     */
+    @Nullable
+    public String getModelName() {
+        return id.split("\\|")[0];
     }
 
     @Override
@@ -136,7 +132,6 @@ public final class ModelMetadata implements Model {
         result = 31 * result + (_deleted != null ? _deleted.hashCode() : 0);
         result = 31 * result + (_version != null ? _version.hashCode() : 0);
         result = 31 * result + (_lastChangedAt != null ? _lastChangedAt.hashCode() : 0);
-        result = 31 * result + (__typename != null ? __typename.hashCode() : 0);
         return result;
     }
 
@@ -147,7 +142,6 @@ public final class ModelMetadata implements Model {
             ", _deleted=" + _deleted +
             ", _version=" + _version +
             ", _lastChangedAt=" + _lastChangedAt +
-            ",  __typename=" + __typename +
             '}';
     }
 }
