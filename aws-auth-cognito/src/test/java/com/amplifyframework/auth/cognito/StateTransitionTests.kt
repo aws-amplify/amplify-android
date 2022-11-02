@@ -110,7 +110,7 @@ class StateTransitionTests : StateTransitionTestBase() {
                 ),
                 mockAuthActions
             ),
-            AuthEnvironment(configuration, cognitoAuthService, storeClient, null, null, mockk())
+            AuthEnvironment(mockk(), configuration, cognitoAuthService, storeClient, null, null, mockk())
         )
     }
 

@@ -83,6 +83,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
             val configuration = AuthConfiguration.fromJson(pluginConfiguration)
             val credentialStoreClient = CredentialStoreClient(configuration, context, logger)
             val authEnvironment = AuthEnvironment(
+                context,
                 configuration,
                 AWSCognitoAuthServiceBehavior.fromConfiguration(configuration),
                 credentialStoreClient,
