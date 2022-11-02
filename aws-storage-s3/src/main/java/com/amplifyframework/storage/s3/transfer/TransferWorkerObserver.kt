@@ -41,26 +41,18 @@ internal class TransferWorkerObserver private constructor(
 
     private val coroutineScope =
         CoroutineScope(Executors.newSingleThreadExecutor().asCoroutineDispatcher())
-    private val workManagerToAmplifyStatesMap = mapOf(
-        WorkInfo.State.ENQUEUED to TransferState.WAITING,
-        WorkInfo.State.BLOCKED to TransferState.WAITING,
-        WorkInfo.State.RUNNING to TransferState.IN_PROGRESS,
-        WorkInfo.State.CANCELLED to TransferState.CANCELED,
-        WorkInfo.State.FAILED to TransferState.FAILED,
-        WorkInfo.State.SUCCEEDED to TransferState.COMPLETED
-    )
-
-    init {
-        attachObserverForPendingTransfer()
-    }
 
     private val logger =
         Amplify.Logging.forNamespace(
             AWSS3StoragePlugin.AWS_S3_STORAGE_LOG_NAMESPACE.format(this::class.java.simpleName)
         )
 
+    init {
+        attachObserverForPendingTransfer()
+    }
+
     companion object {
-        private val INSTANCE: TransferWorkerObserver? = null
+        private var INSTANCE: TransferWorkerObserver? = null
 
         @JvmStatic
         fun getInstance(
@@ -70,13 +62,17 @@ internal class TransferWorkerObserver private constructor(
             transferStatusUpdater: TransferStatusUpdater,
             transferDB: TransferDB
         ): TransferWorkerObserver {
-            return TransferWorkerObserver.INSTANCE ?: TransferWorkerObserver(
-                context,
-                pluginKey,
-                workManager,
-                transferStatusUpdater,
-                transferDB
-            )
+            return TransferWorkerObserver.INSTANCE ?: run {
+                val transferWorkerObserver = TransferWorkerObserver(
+                    context,
+                    pluginKey,
+                    workManager,
+                    transferStatusUpdater,
+                    transferDB
+                )
+                INSTANCE = transferWorkerObserver
+                transferWorkerObserver
+            }
         }
     }
 
@@ -85,14 +81,17 @@ internal class TransferWorkerObserver private constructor(
             workInfoList?.forEach { workInfo ->
                 val transferRecordId =
                     transferStatusUpdater.getTransferRecordIdForWorkInfo(workInfo.id.toString())
+                        ?: workInfo.outputData.getInt(BaseTransferWorker.OUTPUT_TRANSFER_RECORD_ID, -1)
+
                 transferRecordId.takeIf { it != -1 }?.let {
                     val transferRecord = transferStatusUpdater.activeTransferMap[transferRecordId]
                     transferRecord?.let {
-                        // logger.debug("onChanged for ${workInfo.id} to ${workInfo.state}")
-                        if (workInfo.tags.contains(BaseTransferWorker.MULTIPART_UPLOAD)) {
-                            handleMultipartUploadStatusUpdate(workInfo, it)
-                        } else {
-                            handleTransferStatusUpdate(workInfo, it)
+                        if (!TransferState.isInTerminalState(transferRecord.state)) {
+                            if (workInfo.tags.contains(BaseTransferWorker.MULTIPART_UPLOAD)) {
+                                handleMultipartUploadStatusUpdate(workInfo, it)
+                            } else {
+                                handleTransferStatusUpdate(workInfo, it)
+                            }
                         }
                     }
                 }
@@ -104,7 +103,15 @@ internal class TransferWorkerObserver private constructor(
         workInfo: WorkInfo,
         transferRecord: TransferRecord
     ) {
-        updateTransferState(transferRecord, workInfo.state, workInfo.id.toString())
+        val workManagerToAmplifyStatesMap = mapOf(
+            WorkInfo.State.ENQUEUED to TransferState.WAITING,
+            WorkInfo.State.BLOCKED to TransferState.WAITING,
+            WorkInfo.State.RUNNING to TransferState.IN_PROGRESS,
+            WorkInfo.State.CANCELLED to TransferState.CANCELED,
+            WorkInfo.State.FAILED to TransferState.FAILED,
+            WorkInfo.State.SUCCEEDED to TransferState.COMPLETED
+        )
+        updateTransferState(transferRecord, workManagerToAmplifyStatesMap[workInfo.state], workInfo.id.toString())
         if (workInfo.state.isFinished || transferRecord.state == TransferState.PAUSED) {
             logger.debug("remove observer for ${transferRecord.id}")
             removeObserver(transferRecord.id.toString())
@@ -115,29 +122,36 @@ internal class TransferWorkerObserver private constructor(
         workInfo: WorkInfo,
         transferRecord: TransferRecord
     ) {
+        val workManagerToAmplifyStatesMap = mapOf(
+            WorkInfo.State.ENQUEUED to TransferState.WAITING,
+            WorkInfo.State.BLOCKED to TransferState.WAITING,
+            WorkInfo.State.RUNNING to TransferState.IN_PROGRESS,
+            WorkInfo.State.CANCELLED to TransferState.PENDING_CANCEL,
+            WorkInfo.State.FAILED to TransferState.PENDING_FAILED,
+            WorkInfo.State.SUCCEEDED to TransferState.COMPLETED
+        )
         val initializationTag =
             BaseTransferWorker.initiationRequestTag.format(transferRecord.id)
         val completionTag = BaseTransferWorker.completionRequestTag.format(transferRecord.id)
-        if (workInfo.tags.contains(initializationTag)) {
-            if (listOf(WorkInfo.State.SUCCEEDED, WorkInfo.State.RUNNING).contains(workInfo.state)) {
-                updateTransferState(transferRecord, WorkInfo.State.RUNNING, workInfo.id.toString())
-                return
-            }
-        } else if (workInfo.tags.contains(completionTag)) {
+        if (workInfo.tags.contains(completionTag)) {
             if (abortRequest(transferRecord, workInfo.state)) {
                 TransferOperations.abortMultipartUploadRequest(transferRecord, pluginKey, workManager)
             }
             if (workInfo.state.isFinished) {
-                updateTransferState(transferRecord, workInfo.state, workInfo.id.toString())
+                updateTransferState(
+                    transferRecord,
+                    workManagerToAmplifyStatesMap[workInfo.state],
+                    workInfo.id.toString()
+                )
                 logger.debug("remove observer for ${transferRecord.id}")
                 removeObserver(transferRecord.id.toString())
             }
         }
     }
 
-    private fun updateTransferState(transferRecord: TransferRecord, workInfoState: WorkInfo.State, workInfoId: String) {
+    private fun updateTransferState(transferRecord: TransferRecord, transferState: TransferState?, workInfoId: String) {
         transferRecord.state?.let {
-            var nextState = workManagerToAmplifyStatesMap[workInfoState]!!
+            var nextState = transferState ?: TransferState.UNKNOWN
             transferRecord.state?.let { state ->
                 if (TransferState.isPaused(state)) {
                     nextState = TransferState.PAUSED
@@ -173,7 +187,6 @@ internal class TransferWorkerObserver private constructor(
             )?.use {
                 while (it.moveToNext()) {
                     val id = it.getInt(it.getColumnIndexOrThrow(TransferTable.COLUMN_ID))
-                    // observer should be attached on main thread
                     attachObserver(id.toString())
                 }
             }
@@ -182,8 +195,8 @@ internal class TransferWorkerObserver private constructor(
 
     private suspend fun attachObserver(tag: String) {
         withContext(Dispatchers.Main) {
-            workManager.getWorkInfosByTagLiveData(tag)
-                .observeForever(this@TransferWorkerObserver)
+            val liveData = workManager.getWorkInfosByTagLiveData(tag)
+            liveData.observeForever(this@TransferWorkerObserver)
         }
     }
 
