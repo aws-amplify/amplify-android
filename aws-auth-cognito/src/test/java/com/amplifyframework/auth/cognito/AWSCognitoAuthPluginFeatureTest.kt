@@ -25,6 +25,7 @@ import com.amplifyframework.auth.cognito.featuretest.ExpectationShapes.Cognito.C
 import com.amplifyframework.auth.cognito.featuretest.FeatureTestCase
 import com.amplifyframework.auth.cognito.featuretest.generators.toJsonElement
 import com.amplifyframework.auth.cognito.featuretest.serializers.deserializeToAuthState
+import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.logging.Logger
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
@@ -39,6 +40,8 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkObject
+import io.mockk.mockkStatic
 import io.mockk.slot
 import java.io.File
 import java.util.concurrent.CountDownLatch
@@ -88,7 +91,7 @@ class AWSCognitoAuthPluginFeatureTest(private val testCase: FeatureTestCase) {
         private const val configurationFilesBasePath = "/feature-test/configuration"
 
         // TODO: Fix delete user test cases
-        private val apisToSkip: List<AuthAPI> = listOf(AuthAPI.deleteUser)
+        private val apisToSkip: List<AuthAPI> = listOf()
 
         @JvmStatic
         @Parameterized.Parameters(name = "{0}")
@@ -122,6 +125,7 @@ class AWSCognitoAuthPluginFeatureTest(private val testCase: FeatureTestCase) {
     @Test
     fun api_feature_test() {
         // GIVEN
+        mockAndroidAPIs()
         feature.preConditions.mockedResponses.forEach(cognitoMockFactory::mock)
 
         // WHEN
@@ -129,6 +133,15 @@ class AWSCognitoAuthPluginFeatureTest(private val testCase: FeatureTestCase) {
 
         // THEN
         feature.validations.forEach(this::verify)
+    }
+
+    /**
+     * Mock Android APIs as per need basis.
+     * This is cheaper than using Robolectric.
+     */
+    private fun mockAndroidAPIs() {
+        mockkObject(AuthHelper)
+        coEvery { AuthHelper.getSecretHash(any(), any(), any()) } returns "a hash"
     }
 
     private fun readConfiguration(configuration: String): RealAWSCognitoAuthPlugin {
@@ -144,6 +157,13 @@ class AWSCognitoAuthPluginFeatureTest(private val testCase: FeatureTestCase) {
             every { cognitoIdentityProviderClient } returns mockCognitoIPClient
             every { cognitoIdentityClient } returns mockCognitoIdClient
         }
+
+        /**
+         * Always consider amplify credential is valid. This will need to be mocked otherwise
+         * when we test the expiration based test cases.
+         */
+        mockkStatic("com.amplifyframework.auth.cognito.AWSCognitoAuthSessionKt")
+        every { any<AmplifyCredential>().isValid() } returns true
 
         val credentialStoreClient = mockk<CredentialStoreClient>(relaxed = true)
         coEvery { credentialStoreClient.loadCredentials(capture(slot<CredentialType.Device>())) } coAnswers {
