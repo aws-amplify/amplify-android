@@ -153,6 +153,7 @@ class AWSCognitoAuthPluginFeatureTest(private val testCase: FeatureTestCase) {
         val logger = mockk<Logger>(relaxed = true)
 
         val authEnvironment = AuthEnvironment(
+            mockk(),
             authConfiguration,
             authService,
             credentialStoreClient,
