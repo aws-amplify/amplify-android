@@ -73,12 +73,17 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
     @VisibleForTesting
     internal lateinit var realPlugin: RealAWSCognitoAuthPlugin
 
+    override fun initialize(context: Context) {
+        realPlugin.initialize()
+    }
+
     @Throws(AmplifyException::class)
     override fun configure(pluginConfiguration: JSONObject, context: Context) {
         try {
             val configuration = AuthConfiguration.fromJson(pluginConfiguration)
             val credentialStoreClient = CredentialStoreClient(configuration, context, logger)
             val authEnvironment = AuthEnvironment(
+                context,
                 configuration,
                 AWSCognitoAuthServiceBehavior.fromConfiguration(configuration),
                 credentialStoreClient,

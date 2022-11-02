@@ -46,12 +46,26 @@ internal class PinpointManager constructor(
 
     companion object {
         private val SDK_NAME = Platform.ANDROID.libraryName
+        /*
+        Auth plugin needs to read from Pinpoint shared preferences, but we don't currently have an architecture
+        that allows the plugins to pass data between each other. If the storage mechanism of UniqueId changes, we
+        must also refactor AuthEnvironment from the Cognito Auth Plugin.
+         */
+        private const val PINPOINT_SHARED_PREFS_SUFFIX = "515d6767-01b7-49e5-8273-c8d11b0f331d"
     }
 
     init {
         val pinpointDatabase = PinpointDatabase(context)
-        val sharedPrefs =
-            context.getSharedPreferences(awsPinpointConfiguration.appId, Context.MODE_PRIVATE)
+
+        /*
+        Auth plugin needs to read from Pinpoint shared preferences, but we don't currently have an architecture
+        that allows the plugins to pass data between each other. If the storage mechanism of UniqueId changes, we
+        must also refactor AuthEnvironment from the Cognito Auth Plugin.
+         */
+        val sharedPrefs = context.getSharedPreferences(
+            "${awsPinpointConfiguration.appId}$PINPOINT_SHARED_PREFS_SUFFIX",
+            Context.MODE_PRIVATE
+        )
         val sharedPrefsUniqueIdService = SharedPrefsUniqueIdService(sharedPrefs)
         val androidAppDetails = AndroidAppDetails(context, awsPinpointConfiguration.appId)
         val androidDeviceDetails = AndroidDeviceDetails(getCarrier(context))

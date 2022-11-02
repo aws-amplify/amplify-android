@@ -16,6 +16,7 @@
 package com.amplifyframework.auth.cognito
 
 import aws.sdk.kotlin.services.cognitoidentityprovider.CognitoIdentityProviderClient
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.AnalyticsMetadataType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AttributeType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChangePasswordRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChangePasswordResponse
@@ -113,6 +114,7 @@ class RealAWSCognitoAuthPluginTest {
     private var authConfiguration = mockk<AuthConfiguration> {
         every { userPool } returns UserPoolConfiguration.invoke {
             this.appClientId = this@RealAWSCognitoAuthPluginTest.appClientId
+            this.pinpointAppId = null
         }
     }
 
@@ -131,10 +133,14 @@ class RealAWSCognitoAuthPluginTest {
         every { cognitoIdentityProviderClient } returns mockCognitoIPClient
     }
 
+    private val expectedEndpointId = "test-endpoint-id"
+
     private var authEnvironment = mockk<AuthEnvironment> {
+        every { context } returns mockk()
         every { configuration } returns authConfiguration
         every { logger } returns this@RealAWSCognitoAuthPluginTest.logger
         every { cognitoAuthService } returns authService
+        every { getPinpointEndpointId() } returns expectedEndpointId
     }
 
     private var currentState: AuthenticationState = AuthenticationState.Configured()
@@ -390,18 +396,23 @@ class RealAWSCognitoAuthPluginTest {
         val onError = mockk<Consumer<AuthException>>()
         val options = mockk<AuthResetPasswordOptions>()
         val username = "user"
+        val pinpointAppId = "abc"
 
         mockkConstructor(ResetPasswordUseCase::class)
 
         every { authService.cognitoIdentityProviderClient } returns mockk()
         every { authConfiguration.userPool } returns UserPoolConfiguration.invoke { appClientId = "app Client Id" }
-        coJustRun { anyConstructed<ResetPasswordUseCase>().execute(username, options, any(), onSuccess, onError) }
+        coJustRun {
+            anyConstructed<ResetPasswordUseCase>().execute(username, options, any(), pinpointAppId, onSuccess, onError)
+        }
 
         // WHEN
         plugin.resetPassword(username, options, onSuccess, onError)
 
         // THEN
-        coVerify { anyConstructed<ResetPasswordUseCase>().execute(username, options, any(), onSuccess, onError) }
+        coVerify {
+            anyConstructed<ResetPasswordUseCase>().execute(username, options, any(), pinpointAppId, onSuccess, onError)
+        }
     }
 
     @Test
@@ -523,6 +534,7 @@ class RealAWSCognitoAuthPluginTest {
             clientMetadata = mapOf()
             clientId = appClientId
             userContextData = null
+            analyticsMetadata = AnalyticsMetadataType.invoke { analyticsEndpointId = expectedEndpointId }
         }
 
         // WHEN
@@ -637,6 +649,7 @@ class RealAWSCognitoAuthPluginTest {
             )
             secretHash = "dummy Hash"
             userContextData = null
+            analyticsMetadata = AnalyticsMetadataType.invoke { analyticsEndpointId = expectedEndpointId }
         }
 
         // WHEN
@@ -737,6 +750,7 @@ class RealAWSCognitoAuthPluginTest {
             this.confirmationCode = confirmationCode
             secretHash = "dummy Hash"
             userContextData = null
+            analyticsMetadata = AnalyticsMetadataType.invoke { analyticsEndpointId = expectedEndpointId }
         }
 
         // WHEN
@@ -812,6 +826,7 @@ class RealAWSCognitoAuthPluginTest {
             clientId = "app Client Id"
             this.username = username
             secretHash = "dummy Hash"
+            analyticsMetadata = AnalyticsMetadataType.invoke { analyticsEndpointId = expectedEndpointId }
         }
 
         // WHEN

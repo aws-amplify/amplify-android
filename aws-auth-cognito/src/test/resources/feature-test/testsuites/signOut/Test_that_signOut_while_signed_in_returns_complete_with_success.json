@@ -5,7 +5,7 @@
         "state": "SignedIn_SessionEstablished.json",
         "mockedResponses": [
             {
-                "type": "cognito",
+                "type": "cognitoIdentityProvider",
                 "apiName": "revokeToken",
                 "responseType": "success",
                 "response": {
@@ -27,7 +27,6 @@
             "apiName": "signOut",
             "responseType": "complete",
             "response": {
-                "type": "CompleteSignOut"
             }
         }
     ]
