@@ -17,6 +17,9 @@ package com.amplifyframework.auth.cognito.featuretest.generators
 
 import aws.sdk.kotlin.services.cognitoidentity.model.CognitoIdentityException
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.CognitoIdentityProviderException
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeliveryMediumType
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.OAuthFlowType
+import aws.smithy.kotlin.runtime.time.Instant
 import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.cognito.featuretest.FeatureTestCase
 import com.amplifyframework.auth.cognito.featuretest.serializers.CognitoIdentityExceptionSerializer
@@ -24,6 +27,7 @@ import com.amplifyframework.auth.cognito.featuretest.serializers.CognitoIdentity
 import com.amplifyframework.auth.cognito.featuretest.serializers.deserializeToAuthState
 import com.amplifyframework.auth.cognito.featuretest.serializers.serialize
 import com.amplifyframework.statemachine.codegen.states.AuthState
+import com.amplifyframework.testutils.random.RandomString
 import com.google.gson.Gson
 import java.io.BufferedWriter
 import java.io.File
@@ -36,6 +40,12 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlin.reflect.KClass
+import kotlin.reflect.KType
+import kotlin.reflect.KVisibility
+import kotlin.reflect.full.declaredFunctions
+import kotlin.reflect.full.declaredMemberProperties
+import kotlin.reflect.full.memberProperties
 
 const val basePath = "aws-auth-cognito/src/test/resources/feature-test"
 
@@ -79,69 +89,6 @@ internal fun AuthState.exportJson() {
     writeFile(result, dirName, fileName)
     println("Json exported:\n $result")
     println("Serialized can be reversed = ${reverse.serialize() == result}")
-}
-
-/**
- * Generates a md file with all the test cases formatted.
- */
-internal fun List<FeatureTestCase>.exportToMd() {
-    val outputStream = FileOutputStream("testSuite.md")
-    val writer = outputStream.bufferedWriter()
-    val jsonFormat = Json { prettyPrint = true }
-
-    groupBy { it.api.name }
-        .forEach {
-            with(writer) {
-                newLine()
-                write("# ${it.key.name}") // Header 1
-                newLine()
-                it.value.forEach {
-                    newLine()
-                    write("## Case: *${it.description}*")
-                    newLine()
-                    // Preconditions (GIVEN)
-                    write("### Preconditions") // Header 2
-                    newLine()
-                    write("- **Amplify Configuration**: ${it.preConditions.`amplify-configuration`}")
-                    newLine()
-                    write("- **Initial State:** ${it.preConditions.state}")
-                    newLine()
-                    write("- **Mock Responses:** ")
-                    printCodeBlock {
-                        if (it.preConditions.mockedResponses.isEmpty()) "[]" else
-                            jsonFormat.encodeToString(it.preConditions.mockedResponses)
-                    }
-
-                    // Parameters (WHEN)
-                    write("### Input")
-                    newLine()
-                    write("- **params:**")
-                    printCodeBlock {
-                        jsonFormat.encodeToString(it.api.params)
-                    }
-                    write("- **options:**")
-                    printCodeBlock { jsonFormat.encodeToString(it.api.options) }
-
-                    // Then
-                    write("### Validations")
-                    newLine()
-                    it.validations.forEach {
-                        printCodeBlock { jsonFormat.encodeToString(it) }
-                    }
-                }
-            }
-        }
-    writer.flush()
-}
-
-private fun BufferedWriter.printCodeBlock(blob: () -> String) {
-    newLine()
-    write("```json")
-    newLine()
-    write(blob.invoke())
-    newLine()
-    write("```")
-    newLine()
 }
 
 /**
@@ -259,6 +206,19 @@ fun gsonBasedSerializer(value: Any): JsonElement {
     return try {
         gson.fromJson(gson.toJson(value).toString(), Map::class.java).toJsonElement()
     } catch (ex: Exception) {
-        JsonPrimitive(value.toString())
+        reflectionBasedSerializer(value)
     }
+}
+
+/**
+ * Final fallback to serialize by using reflection, traversing the object members and converting it to Map.
+ * Note that this method is similar to what Gson does. But Gson fails when there is name collision in parent and child
+ * classes.
+ */
+fun reflectionBasedSerializer(value: Any): JsonElement {
+    return (value::class as KClass<*>).declaredMemberProperties.filter {
+        it.visibility == KVisibility.PUBLIC
+    }.associate {
+        it.name to it.getter.call(value)
+    }.toMap().toJsonElement()
 }
