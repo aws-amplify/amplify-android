@@ -114,12 +114,11 @@ internal object TransferOperations {
         workManager: WorkManager
     ): Boolean {
         if (!TransferState.isInTerminalState(transferRecord.state)) {
-            var nextState: TransferState = TransferState.PENDING_CANCEL
+            val nextState: TransferState = TransferState.PENDING_CANCEL
             if (TransferState.isPaused(transferRecord.state)) {
                 if (transferRecord.isMultipart == 1) {
                     abortMultipartUploadRequest(transferRecord, pluginKey, workManager)
                 }
-                nextState = TransferState.CANCELED
             } else {
                 workManager.cancelUniqueWork(transferRecord.id.toString())
             }
@@ -143,7 +142,7 @@ internal object TransferOperations {
                     BaseTransferWorker.WORKER_ID to pluginKey
                 )
             ).build(),
-            listOf(transferRecord.id.toString(), pluginKey)
+            listOf(transferRecord.id.toString(), pluginKey, AbortMultiPartUploadWorker::class.java.simpleName)
         )
         workManager.enqueue(abortRequest)
     }

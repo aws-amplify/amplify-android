@@ -44,6 +44,7 @@ internal class PartUploadTransferWorker(
         if (isStopped) {
             return Result.retry()
         }
+        transferStatusUpdater.updateTransferState(transferRecord.mainUploadId, TransferState.IN_PROGRESS)
         multiPartUploadId = inputData.keyValueMap[MULTI_PART_UPLOAD_ID] as String
         partUploadProgressListener = PartUploadProgressListener(transferRecord, transferStatusUpdater)
         return s3.uploadPart {
