@@ -20,40 +20,62 @@ import com.amplifyframework.auth.cognito.helpers.SRPHelper
 import com.amplifyframework.logging.Logger
 import com.amplifyframework.statemachine.Environment
 import com.amplifyframework.statemachine.StateMachineEvent
+import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
+import com.amplifyframework.statemachine.codegen.data.CredentialType
+import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.events.AuthEvent
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
 import com.amplifyframework.statemachine.codegen.events.DeleteUserEvent
 import com.amplifyframework.statemachine.codegen.events.SignOutEvent
+import java.util.Date
+import java.util.UUID
 
 internal class AuthEnvironment internal constructor(
     val configuration: AuthConfiguration,
     val cognitoAuthService: AWSCognitoAuthServiceBehavior,
     val credentialStoreClient: StoreClientBehavior,
-    val userContextDataProvider: UserContextDataProvider? = null,
+    private val userContextDataProvider: UserContextDataProvider? = null,
     val hostedUIClient: HostedUIClient?,
     val logger: Logger
 ) : Environment {
     internal lateinit var srpHelper: SRPHelper
+
+    suspend fun getUserContextData(username: String): String? {
+        val asfDevice = credentialStoreClient.loadCredentials(CredentialType.ASF) as? AmplifyCredential.ASFDevice
+        val deviceId = if (asfDevice?.id == null) {
+            val newDeviceId = "${UUID.randomUUID()}:${Date().time}"
+            val newASFDevice = AmplifyCredential.ASFDevice(newDeviceId)
+            credentialStoreClient.storeCredentials(CredentialType.ASF, newASFDevice)
+            newDeviceId
+        } else asfDevice.id
+
+        return userContextDataProvider?.getEncodedContextData(username, deviceId)
+    }
+
+    suspend fun getDeviceMetadata(username: String): DeviceMetadata.Metadata? {
+        val deviceCredentials = credentialStoreClient.loadCredentials(CredentialType.Device(username))
+        return (deviceCredentials as AmplifyCredential.DeviceData).deviceMetadata as? DeviceMetadata.Metadata
+    }
 }
 
-fun StateMachineEvent.isAuthEvent(): AuthEvent.EventType? {
+internal fun StateMachineEvent.isAuthEvent(): AuthEvent.EventType? {
     return (this as? AuthEvent)?.eventType
 }
 
-fun StateMachineEvent.isAuthenticationEvent(): AuthenticationEvent.EventType? {
+internal fun StateMachineEvent.isAuthenticationEvent(): AuthenticationEvent.EventType? {
     return (this as? AuthenticationEvent)?.eventType
 }
 
-fun StateMachineEvent.isAuthorizationEvent(): AuthorizationEvent.EventType? {
+internal fun StateMachineEvent.isAuthorizationEvent(): AuthorizationEvent.EventType? {
     return (this as? AuthorizationEvent)?.eventType
 }
 
-fun StateMachineEvent.isSignOutEvent(): SignOutEvent.EventType? {
+internal fun StateMachineEvent.isSignOutEvent(): SignOutEvent.EventType? {
     return (this as? SignOutEvent)?.eventType
 }
 
-fun StateMachineEvent.isDeleteUserEvent(): DeleteUserEvent.EventType? {
+internal fun StateMachineEvent.isDeleteUserEvent(): DeleteUserEvent.EventType? {
     return (this as? DeleteUserEvent)?.eventType
 }

@@ -26,14 +26,13 @@ import com.amplifyframework.auth.cognito.helpers.SignInChallengeHelper
 import com.amplifyframework.auth.exceptions.ServiceException
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.DeviceSRPSignInActions
-import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.CredentialType
-import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.data.SignInMethod
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.DeviceSRPSignInEvent
+import com.amplifyframework.statemachine.codegen.events.SignInEvent
 
-object DeviceSRPCognitoSignInActions : DeviceSRPSignInActions {
+internal object DeviceSRPCognitoSignInActions : DeviceSRPSignInActions {
 
     private const val KEY_PASSWORD_CLAIM_SECRET_BLOCK = "PASSWORD_CLAIM_SECRET_BLOCK"
     private const val KEY_PASSWORD_CLAIM_SIGNATURE = "PASSWORD_CLAIM_SIGNATURE"
@@ -51,11 +50,8 @@ object DeviceSRPCognitoSignInActions : DeviceSRPSignInActions {
             logger.verbose("$id Starting execution")
             val username = event.username
             val evt = try {
-                val encodedContextData = userContextDataProvider?.getEncodedContextData(username)
-
-                val deviceCredentials = credentialStoreClient.loadCredentials(CredentialType.Device(username))
-                val deviceMetadata = (deviceCredentials as AmplifyCredential.DeviceData)
-                    .deviceMetadata as? DeviceMetadata.Metadata
+                val encodedContextData = getUserContextData(username)
+                val deviceMetadata = getDeviceMetadata(username)
 
                 srpHelper = SRPHelper(deviceMetadata?.deviceSecret ?: "")
 
@@ -95,6 +91,9 @@ object DeviceSRPCognitoSignInActions : DeviceSRPSignInActions {
                 val errorEvent = DeviceSRPSignInEvent(DeviceSRPSignInEvent.EventType.ThrowAuthError(exception))
                 logger.verbose("$id Sending event ${errorEvent.type}")
                 dispatcher.send(errorEvent)
+                val errorEvent2 = SignInEvent(SignInEvent.EventType.ThrowError(exception))
+                logger.verbose("$id Sending event ${errorEvent.type}")
+                dispatcher.send(errorEvent2)
                 AuthenticationEvent(AuthenticationEvent.EventType.CancelSignIn())
             }
             logger.verbose("$id Sending event ${evt.type}")
@@ -114,7 +113,8 @@ object DeviceSRPCognitoSignInActions : DeviceSRPSignInActions {
                 val srpB = params.getValue(KEY_SRP_B)
                 val deviceKey = params.getValue(KEY_DEVICE_KEY)
                 val deviceGroupKey = params.getValue(KEY_DEVICE_GROUP_KEY)
-                val encodedContextData = userContextDataProvider?.getEncodedContextData(username)
+
+                val encodedContextData = getUserContextData(username)
 
                 srpHelper.setUserPoolParams(deviceKey, deviceGroupKey)
 
@@ -153,6 +153,9 @@ object DeviceSRPCognitoSignInActions : DeviceSRPSignInActions {
                 )
                 logger.verbose("$id Sending event ${errorEvent.type}")
                 dispatcher.send(errorEvent)
+                val errorEvent2 = SignInEvent(SignInEvent.EventType.ThrowError(exception))
+                logger.verbose("$id Sending event ${errorEvent.type}")
+                dispatcher.send(errorEvent2)
                 AuthenticationEvent(AuthenticationEvent.EventType.CancelSignIn())
             }
             logger.verbose("$id Sending event ${evt.type}")

@@ -58,7 +58,7 @@ internal object HostedUIHttpHelper {
             val responseCode = connection.responseCode
 
             if (responseCode >= HttpURLConnection.HTTP_OK && responseCode < HttpURLConnection.HTTP_INTERNAL_ERROR) {
-                val responseStream = if (responseCode < HttpURLConnection.HTTP_BAD_REQUEST) {
+                val responseStream = if (responseCode < HttpURLConnection.HTTP_MULT_CHOICE) {
                     connection.inputStream
                 } else {
                     connection.errorStream
@@ -107,7 +107,7 @@ internal object HostedUIHttpHelper {
 }
 
 @Serializable
-class FetchTokenResponse(
+internal class FetchTokenResponse(
     @SerialName("access_token") val accessToken: String? = null,
     @SerialName("id_token") val idToken: String? = null,
     @SerialName("refresh_token") val refreshToken: String? = null,

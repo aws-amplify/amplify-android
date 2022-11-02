@@ -23,7 +23,7 @@ import org.json.JSONObject
 /**
  * Utility class for all operations on JWT.
  */
-object JWTParser {
+internal object JWTParser {
     private const val HEADER = 0
     private const val PAYLOAD = 1
     private const val SIGNATURE = 2

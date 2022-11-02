@@ -82,7 +82,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
                 configuration,
                 AWSCognitoAuthServiceBehavior.fromConfiguration(configuration),
                 credentialStoreClient,
-                configuration.userPool?.let { UserContextDataProvider(context, it) },
+                configuration.userPool?.let { UserContextDataProvider(context, it.poolId!!, it.appClient!!) },
                 HostedUIClient.create(context, configuration.oauth, logger),
                 logger
             )
@@ -308,7 +308,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
     }
 
     override fun fetchUserAttributes(
-        onSuccess: Consumer<MutableList<AuthUserAttribute>>,
+        onSuccess: Consumer<List<AuthUserAttribute>>,
         onError: Consumer<AuthException>
     ) {
         realPlugin.fetchUserAttributes(onSuccess, onError)

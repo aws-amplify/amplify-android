@@ -22,7 +22,7 @@ import com.amplifyframework.statemachine.codegen.data.SignInData
 import com.amplifyframework.statemachine.codegen.data.SignedInData
 import java.util.Date
 
-class SignInEvent(val eventType: EventType, override val time: Date? = null) : StateMachineEvent {
+internal class SignInEvent(val eventType: EventType, override val time: Date? = null) : StateMachineEvent {
     sealed class EventType {
         data class InitiateSignInWithSRP(
             val username: String,
@@ -37,6 +37,7 @@ class SignInEvent(val eventType: EventType, override val time: Date? = null) : S
 
         data class InitiateCustomSignInWithSRP(
             val username: String,
+            val password: String,
             val metadata: Map<String, String>
         ) : EventType()
 

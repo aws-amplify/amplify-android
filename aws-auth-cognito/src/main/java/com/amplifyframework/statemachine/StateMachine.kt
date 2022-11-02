@@ -24,8 +24,8 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.newFixedThreadPoolContext
 
-typealias StateChangeListenerToken = UUID
-typealias OnSubscribedCallback = () -> Unit
+internal typealias StateChangeListenerToken = UUID
+internal typealias OnSubscribedCallback = () -> Unit
 
 /**
  * Model, mutate and process effects of a system as a finite state automaton. It consists of:

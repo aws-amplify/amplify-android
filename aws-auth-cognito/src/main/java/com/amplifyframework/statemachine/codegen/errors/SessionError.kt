@@ -13,19 +13,11 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.statemachine.codegen.actions
+package com.amplifyframework.statemachine.codegen.errors
 
-import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
-import com.amplifyframework.statemachine.codegen.data.CredentialType
 
-interface StoreActions {
-    fun migrateLegacyCredentialStoreAction(): Action
-    fun clearCredentialStoreAction(credentialType: CredentialType): Action
-    fun loadCredentialStoreAction(credentialType: CredentialType): Action
-    fun storeCredentialsAction(
-        credentialType: CredentialType,
-        credentials: AmplifyCredential
-    ): Action
-    fun moveToIdleStateAction(): Action
-}
+internal data class SessionError(val exception: Exception, val amplifyCredential: AmplifyCredential) : Exception(
+    exception.message,
+    exception.cause
+)

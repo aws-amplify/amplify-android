@@ -23,7 +23,7 @@ import com.amplifyframework.statemachine.codegen.actions.HostedUIActions
 import com.amplifyframework.statemachine.codegen.data.HostedUIOptions
 import com.amplifyframework.statemachine.codegen.events.HostedUIEvent
 
-sealed class HostedUISignInState : State {
+internal sealed class HostedUISignInState : State {
     data class NotStarted(val id: String = "") : HostedUISignInState()
     data class ShowingUI(val hostedUIOptions: HostedUIOptions) : HostedUISignInState()
     data class FetchingToken(val id: String = "") : HostedUISignInState()

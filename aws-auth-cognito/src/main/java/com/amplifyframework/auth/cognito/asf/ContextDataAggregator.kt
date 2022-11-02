@@ -20,11 +20,11 @@ import android.content.Context
 /**
  * Collect all the user context data.
  */
-object ContextDataAggregator {
+internal class ContextDataAggregator(deviceId: String) {
     private var dataCollectors = listOf(
         ApplicationDataCollector(),
         BuildDataCollector(),
-        DeviceDataCollector()
+        DeviceDataCollector(deviceId)
     )
 
     /**

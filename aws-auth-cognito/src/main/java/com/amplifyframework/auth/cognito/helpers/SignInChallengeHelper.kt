@@ -36,14 +36,13 @@ import com.amplifyframework.statemachine.codegen.events.SignInEvent
 import java.util.Date
 import kotlin.time.Duration.Companion.seconds
 
-object SignInChallengeHelper {
+internal object SignInChallengeHelper {
     fun evaluateNextStep(
         username: String,
         challengeNameType: ChallengeNameType?,
         session: String?,
         challengeParameters: Map<String, String>?,
         authenticationResult: AuthenticationResultType?,
-        // TODO: remove once we are able to get this from the configuration
         signInMethod: SignInMethod = SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH)
     ): StateMachineEvent {
         return when {

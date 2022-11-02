@@ -35,7 +35,7 @@ import com.amplifyframework.statemachine.codegen.events.SRPEvent
 import com.amplifyframework.statemachine.codegen.events.SignInChallengeEvent
 import com.amplifyframework.statemachine.codegen.events.SignInEvent
 
-object SignInCognitoActions : SignInActions {
+internal object SignInCognitoActions : SignInActions {
     override fun startSRPAuthAction(event: SignInEvent.EventType.InitiateSignInWithSRP) =
         Action<AuthEnvironment>("StartSRPAuth") { id, dispatcher ->
             logger.verbose("$id Starting execution")
@@ -67,7 +67,7 @@ object SignInCognitoActions : SignInActions {
     override fun startCustomAuthWithSRPAction(event: SignInEvent.EventType.InitiateCustomSignInWithSRP): Action =
         Action<AuthEnvironment>("StartCustomSRPAuth") { id, dispatcher ->
             logger.verbose("$id Starting execution")
-            val evt = SRPEvent(SRPEvent.EventType.InitiateSRPWithCustom(event.username, event.metadata))
+            val evt = SRPEvent(SRPEvent.EventType.InitiateSRPWithCustom(event.username, event.password, event.metadata))
             logger.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
         }

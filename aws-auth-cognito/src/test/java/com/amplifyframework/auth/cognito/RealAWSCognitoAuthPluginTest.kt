@@ -169,7 +169,7 @@ class RealAWSCognitoAuthPluginTest {
             appClientSecret = "app Client Secret"
         }
 
-        coEvery { authEnvironment.userContextDataProvider?.getEncodedContextData(any()) } returns null
+        coEvery { authEnvironment.getUserContextData(any()) } returns null
 
         // set up SRP helper
         mockkObject(SRPHelper)
@@ -407,7 +407,7 @@ class RealAWSCognitoAuthPluginTest {
     @Test
     fun `fetch user attributes with success`() {
         // GIVEN
-        val onSuccess = mockk<Consumer<MutableList<AuthUserAttribute>>>(relaxed = true)
+        val onSuccess = mockk<Consumer<List<AuthUserAttribute>>>(relaxed = true)
         val onError = mockk<Consumer<AuthException>>(relaxed = true)
         val listenLatch = CountDownLatch(1)
 
@@ -462,7 +462,7 @@ class RealAWSCognitoAuthPluginTest {
     @Test
     fun `fetch user attributes fails when not in SignedIn state`() {
         // GIVEN
-        val onSuccess = mockk<Consumer<MutableList<AuthUserAttribute>>>(relaxed = true)
+        val onSuccess = mockk<Consumer<List<AuthUserAttribute>>>(relaxed = true)
         val onError = mockk<Consumer<AuthException>>(relaxed = true)
         val listenLatch = CountDownLatch(1)
 

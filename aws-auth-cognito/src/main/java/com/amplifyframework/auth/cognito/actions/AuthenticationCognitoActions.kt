@@ -21,6 +21,7 @@ import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.AuthenticationActions
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.CredentialType
+import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.data.SignInData
 import com.amplifyframework.statemachine.codegen.data.SignInMethod
 import com.amplifyframework.statemachine.codegen.data.SignedInData
@@ -30,7 +31,7 @@ import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.SignInEvent
 import com.amplifyframework.statemachine.codegen.events.SignOutEvent
 
-object AuthenticationCognitoActions : AuthenticationActions {
+internal object AuthenticationCognitoActions : AuthenticationActions {
     override fun configureAuthenticationAction(event: AuthenticationEvent.EventType.Configure) =
         Action<AuthEnvironment>("ConfigureAuthN") { id, dispatcher ->
             logger.verbose("$id Starting execution")
@@ -39,8 +40,8 @@ object AuthenticationCognitoActions : AuthenticationActions {
                     val deviceDataCredentials = (
                         credentialStoreClient.loadCredentials(
                             CredentialType.Device(credentials.signedInData.username)
-                        ) as AmplifyCredential.DeviceData
-                        ).deviceMetadata
+                        ) as? AmplifyCredential.DeviceData
+                        )?.deviceMetadata ?: DeviceMetadata.Empty
                     AuthenticationEvent(
                         AuthenticationEvent.EventType.InitializedSignedIn(
                             credentials.signedInData,
@@ -95,9 +96,13 @@ object AuthenticationCognitoActions : AuthenticationActions {
                     }
                 }
                 is SignInData.CustomSRPAuthSignInData -> {
-                    if (data.username != null) {
+                    if (data.username != null && data.password != null) {
                         SignInEvent(
-                            SignInEvent.EventType.InitiateCustomSignInWithSRP(data.username, data.metadata)
+                            SignInEvent.EventType.InitiateCustomSignInWithSRP(
+                                data.username,
+                                data.password,
+                                data.metadata
+                            )
                         )
                     } else {
                         AuthenticationEvent(

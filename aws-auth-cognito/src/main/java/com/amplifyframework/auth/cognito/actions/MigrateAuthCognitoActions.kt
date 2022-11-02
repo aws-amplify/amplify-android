@@ -27,15 +27,14 @@ import com.amplifyframework.statemachine.codegen.actions.MigrateAuthActions
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.SignInEvent
 
-object MigrateAuthCognitoActions : MigrateAuthActions {
+internal object MigrateAuthCognitoActions : MigrateAuthActions {
     private const val KEY_USERNAME = "USERNAME"
     private const val KEY_PASSWORD = "PASSWORD"
     private const val KEY_SECRET_HASH = "SECRET_HASH"
-    private const val KEY_DEVICE_KEY = "DEVICE_KEY"
 
     override fun initiateMigrateAuthAction(event: SignInEvent.EventType.InitiateMigrateAuth) =
         Action<AuthEnvironment>("InitMigrateAuth") { id, dispatcher ->
-            logger?.verbose("$id Starting execution")
+            logger.verbose("$id Starting execution")
             val evt = try {
                 val secretHash = AuthHelper.getSecretHash(
                     event.username,
@@ -45,10 +44,8 @@ object MigrateAuthCognitoActions : MigrateAuthActions {
 
                 val authParams = mutableMapOf(KEY_USERNAME to event.username, KEY_PASSWORD to event.password)
                 secretHash?.let { authParams[KEY_SECRET_HASH] = it }
-                val encodedContextData = userContextDataProvider?.getEncodedContextData(event.username)
 
-                val deviceKey = event.metadata[KEY_DEVICE_KEY]
-                deviceKey?.let { authParams[KEY_DEVICE_KEY] = it }
+                val encodedContextData = getUserContextData(event.username)
 
                 val response = cognitoAuthService.cognitoIdentityProviderClient?.initiateAuth {
                     authFlow = AuthFlowType.UserPasswordAuth
@@ -71,12 +68,12 @@ object MigrateAuthCognitoActions : MigrateAuthActions {
                 }
             } catch (e: Exception) {
                 val errorEvent = SignInEvent(SignInEvent.EventType.ThrowError(e))
-                logger?.verbose("$id Sending event ${errorEvent.type}")
+                logger.verbose("$id Sending event ${errorEvent.type}")
                 dispatcher.send(errorEvent)
 
                 AuthenticationEvent(AuthenticationEvent.EventType.CancelSignIn())
             }
-            logger?.verbose("$id Sending event ${evt.type}")
+            logger.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
         }
 }

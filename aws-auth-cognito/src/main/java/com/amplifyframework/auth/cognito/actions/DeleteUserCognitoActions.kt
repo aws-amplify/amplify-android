@@ -24,7 +24,7 @@ import com.amplifyframework.statemachine.codegen.data.SignOutData
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.DeleteUserEvent
 
-object DeleteUserActions : DeleteUserActions {
+internal object DeleteUserCognitoActions : DeleteUserActions {
     override fun initDeleteUserAction(accessToken: String): Action =
         Action<AuthEnvironment>("DeleteUser") { id, dispatcher ->
             logger.verbose("$id Starting execution")
@@ -32,7 +32,7 @@ object DeleteUserActions : DeleteUserActions {
                 cognitoAuthService.cognitoIdentityProviderClient?.deleteUser(
                     DeleteUserRequest.invoke { this.accessToken = accessToken }
                 )
-                AuthenticationEvent(AuthenticationEvent.EventType.SignOutRequested(SignOutData(globalSignOut = true)))
+                AuthenticationEvent(AuthenticationEvent.EventType.SignOutRequested(SignOutData(globalSignOut = false)))
             } catch (e: Exception) {
                 logger.warn("Failed to delete user.", e)
                 if (e is UserNotFoundException) {
