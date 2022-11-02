@@ -48,7 +48,9 @@ import com.amplifyframework.storage.s3.transfer.TransferDB
 import com.amplifyframework.storage.s3.transfer.TransferRecord
 import com.amplifyframework.storage.s3.transfer.TransferStatusUpdater
 import java.io.File
+import java.lang.Exception
 import java.nio.ByteBuffer
+import kotlinx.coroutines.CancellationException
 
 /**
  * Base worker to perform transfer file task.
@@ -62,7 +64,7 @@ internal abstract class BaseTransferWorker(
 
     internal lateinit var transferRecord: TransferRecord
     internal lateinit var outputData: Data
-    internal val logger =
+    private val logger =
         Amplify.Logging.forNamespace(
             AWSS3StoragePlugin.AWS_S3_STORAGE_LOG_NAMESPACE.format(this::class.java.simpleName)
         )
@@ -94,7 +96,7 @@ internal abstract class BaseTransferWorker(
         val result = runCatching {
             val transferRecordId =
                 inputData.keyValueMap[PART_RECORD_ID] as? Int ?: inputData.keyValueMap[TRANSFER_RECORD_ID] as Int
-            outputData = workDataOf(OUTPUT_TRANSFER_RECORD_ID to transferRecordId)
+            outputData = workDataOf(OUTPUT_TRANSFER_RECORD_ID to inputData.keyValueMap[TRANSFER_RECORD_ID] as Int)
             transferDB.getTransferRecordById(transferRecordId)?.let { tr ->
                 transferRecord = tr
                 performWork()
@@ -109,8 +111,8 @@ internal abstract class BaseTransferWorker(
             }
             else -> {
                 val ex = result.exceptionOrNull()
-                logger.error("TransferWorker failed with exception: $ex")
-                if (isRetryableError()) {
+                logger.error("${this.javaClass.simpleName} failed with exception: $ex")
+                if (isRetryableError(ex)) {
                     Result.retry()
                 } else {
                     transferStatusUpdater.updateOnError(transferRecord.id, Exception(ex))
@@ -145,11 +147,11 @@ internal abstract class BaseTransferWorker(
         )
     }
 
-    private fun isRetryableError(): Boolean {
-        if (isStopped || !isNetworkAvailable(applicationContext) || runAttemptCount < maxRetryCount) {
-            return true
-        }
-        return false
+    private fun isRetryableError(e: Throwable?): Boolean {
+        return isStopped ||
+            !isNetworkAvailable(applicationContext) ||
+            runAttemptCount < maxRetryCount ||
+            e is CancellationException
     }
 
     @RequiresApi(Build.VERSION_CODES.O)

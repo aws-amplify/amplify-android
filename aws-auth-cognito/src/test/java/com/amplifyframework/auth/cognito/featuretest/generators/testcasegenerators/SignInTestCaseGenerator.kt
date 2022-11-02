@@ -18,6 +18,7 @@ package com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerat
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
 import com.amplifyframework.auth.cognito.featuretest.API
 import com.amplifyframework.auth.cognito.featuretest.AuthAPI
+import com.amplifyframework.auth.cognito.featuretest.CognitoType
 import com.amplifyframework.auth.cognito.featuretest.ExpectationShapes
 import com.amplifyframework.auth.cognito.featuretest.FeatureTestCase
 import com.amplifyframework.auth.cognito.featuretest.MockResponse
@@ -35,11 +36,11 @@ object SignInTestCaseGenerator : SerializableProvider {
     private const val phone = "+12345678900"
 
     private val mockedInitiateAuthResponse = MockResponse(
-        "cognito",
+        CognitoType.CognitoIdentityProvider,
         "initiateAuth",
         ResponseType.Success,
         mapOf(
-            "challengeName" to ChallengeNameType.PasswordVerifier,
+            "challengeName" to ChallengeNameType.PasswordVerifier.toString(),
             "challengeParameters" to mapOf(
                 "SALT" to "abc",
                 "SECRET_BLOCK" to "secretBlock",
@@ -51,7 +52,7 @@ object SignInTestCaseGenerator : SerializableProvider {
     )
 
     private val mockedRespondToAuthChallengeResponse = MockResponse(
-        "cognito",
+        CognitoType.CognitoIdentityProvider,
         "respondToAuthChallenge",
         ResponseType.Success,
         mapOf(
@@ -65,7 +66,7 @@ object SignInTestCaseGenerator : SerializableProvider {
     )
 
     private val mockedRespondToAuthChallengeWithDeviceMetadataResponse = MockResponse(
-        "cognito",
+        CognitoType.CognitoIdentityProvider,
         "respondToAuthChallenge",
         ResponseType.Success,
         mapOf(
@@ -83,7 +84,7 @@ object SignInTestCaseGenerator : SerializableProvider {
     )
 
     private val mockedSMSChallengeResponse = MockResponse(
-        "cognito",
+        CognitoType.CognitoIdentityProvider,
         "respondToAuthChallenge",
         ResponseType.Success,
         mapOf(
@@ -97,14 +98,14 @@ object SignInTestCaseGenerator : SerializableProvider {
     )
 
     private val mockedIdentityIdResponse = MockResponse(
-        "cognito",
+        CognitoType.CognitoIdentity,
         "getId",
         ResponseType.Success,
         mapOf("identityId" to "someIdentityId").toJsonElement()
     )
 
     private val mockedAWSCredentialsResponse = MockResponse(
-        "cognito",
+        CognitoType.CognitoIdentity,
         "getCredentialsForIdentity",
         ResponseType.Success,
         mapOf(
@@ -125,7 +126,6 @@ object SignInTestCaseGenerator : SerializableProvider {
             "nextStep" to mapOf(
                 "signInStep" to "DONE",
                 "additionalInfo" to JsonObject(emptyMap()),
-                "codeDeliveryDetails" to null
             )
         ).toJsonElement()
     )
@@ -141,14 +141,13 @@ object SignInTestCaseGenerator : SerializableProvider {
                 "codeDeliveryDetails" to mapOf(
                     "destination" to phone,
                     "deliveryMedium" to "SMS",
-                    "attributeName" to null
                 )
             )
         ).toJsonElement()
     )
 
     private val mockConfirmDeviceResponse = MockResponse(
-        "cognito",
+        CognitoType.CognitoIdentityProvider,
         "confirmDevice",
         ResponseType.Success,
         JsonObject(emptyMap())
