@@ -50,6 +50,13 @@ fun writeFile(json: String, dirName: String, fileName: String) {
     println("File written in ${directory.absolutePath}")
 }
 
+fun cleanDirectory() {
+    val directory = File("$basePath")
+    if (directory.exists()) {
+        directory.deleteRecursively()
+    }
+}
+
 internal fun FeatureTestCase.exportJson() {
     val format = Json {
         prettyPrint = true
