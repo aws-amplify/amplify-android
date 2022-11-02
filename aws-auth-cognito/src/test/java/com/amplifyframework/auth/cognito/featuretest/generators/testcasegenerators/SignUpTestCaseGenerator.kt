@@ -15,9 +15,11 @@
 
 package com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerators
 
+import com.amplifyframework.auth.AuthCodeDeliveryDetails
 import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.cognito.featuretest.API
 import com.amplifyframework.auth.cognito.featuretest.AuthAPI
+import com.amplifyframework.auth.cognito.featuretest.CognitoType
 import com.amplifyframework.auth.cognito.featuretest.ExpectationShapes
 import com.amplifyframework.auth.cognito.featuretest.FeatureTestCase
 import com.amplifyframework.auth.cognito.featuretest.MockResponse
@@ -25,6 +27,8 @@ import com.amplifyframework.auth.cognito.featuretest.PreConditions
 import com.amplifyframework.auth.cognito.featuretest.ResponseType
 import com.amplifyframework.auth.cognito.featuretest.generators.SerializableProvider
 import com.amplifyframework.auth.cognito.featuretest.generators.toJsonElement
+import com.amplifyframework.auth.result.AuthSignUpResult
+import com.amplifyframework.auth.result.step.AuthNextSignUpStep
 import com.amplifyframework.auth.result.step.AuthSignUpStep
 
 object SignUpTestCaseGenerator : SerializableProvider {
@@ -45,7 +49,7 @@ object SignUpTestCaseGenerator : SerializableProvider {
             "SignedOut_Configured.json",
             mockedResponses = listOf(
                 MockResponse(
-                    "cognito",
+                    CognitoType.CognitoIdentityProvider,
                     "signUp",
                     ResponseType.Success,
                     mapOf("codeDeliveryDetails" to codeDeliveryDetails).toJsonElement()
@@ -63,7 +67,7 @@ object SignUpTestCaseGenerator : SerializableProvider {
             ).toJsonElement()
         ),
         validations = listOf(
-            ExpectationShapes.Cognito(
+            ExpectationShapes.Cognito.CognitoIdentityProvider(
                 apiName = "signUp",
                 // see [https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_SignUp.html]
                 request = mapOf(
@@ -76,22 +80,20 @@ object SignUpTestCaseGenerator : SerializableProvider {
             ExpectationShapes.Amplify(
                 apiName = AuthAPI.signUp,
                 responseType = ResponseType.Success,
-                response = mapOf(
-                    "isSignUpComplete" to false,
-                    "nextStep" to mapOf(
-                        "signUpStep" to AuthSignUpStep.CONFIRM_SIGN_UP_STEP,
-                        "additionalInfo" to emptyMap<String, String>(),
-                        "codeDeliveryDetails" to mapOf(
-                            "destination" to email,
-                            "deliveryMedium" to "EMAIL",
-                            "attributeName" to "attributeName"
-                        )
-                    ),
-                    "user" to mapOf(
-                        "userId" to "",
-                        "username" to username
-                    )
-                ).toJsonElement()
+                response =
+                    AuthSignUpResult(
+                        false,
+                        AuthNextSignUpStep(
+                            AuthSignUpStep.CONFIRM_SIGN_UP_STEP,
+                            emptyMap(),
+                            AuthCodeDeliveryDetails(
+                                email,
+                                AuthCodeDeliveryDetails.DeliveryMedium.EMAIL,
+                                "attributeName"
+                            )
+                        ),
+                        null
+                    ).toJsonElement()
             )
         )
     )
