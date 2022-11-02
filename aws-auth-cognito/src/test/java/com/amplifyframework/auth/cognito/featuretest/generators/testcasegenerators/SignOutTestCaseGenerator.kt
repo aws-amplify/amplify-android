@@ -16,6 +16,7 @@ package com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerat
 
 import com.amplifyframework.auth.cognito.featuretest.API
 import com.amplifyframework.auth.cognito.featuretest.AuthAPI
+import com.amplifyframework.auth.cognito.featuretest.CognitoType
 import com.amplifyframework.auth.cognito.featuretest.ExpectationShapes
 import com.amplifyframework.auth.cognito.featuretest.FeatureTestCase
 import com.amplifyframework.auth.cognito.featuretest.MockResponse
@@ -29,14 +30,14 @@ import kotlinx.serialization.json.JsonObject
 object SignOutTestCaseGenerator : SerializableProvider {
 
     private val mockedGlobalSignOutSuccessResponse = MockResponse(
-        "cognito",
+        CognitoType.CognitoIdentityProvider,
         "globalSignOut",
         ResponseType.Success,
         JsonObject(emptyMap())
     )
 
     private val mockedRevokeTokenSignOutSuccessResponse = MockResponse(
-        "cognito",
+        CognitoType.CognitoIdentityProvider,
         "revokeToken",
         ResponseType.Success,
         JsonObject(emptyMap())
