@@ -104,7 +104,7 @@ public final class ConflictResolverTest {
             .name("Remote Susan")
             .build();
         Temporal.Timestamp now = Temporal.Timestamp.now();
-        ModelMetadata modelMetadata = new ModelMetadata(serverSusan.getId(), false, 2, now, "BlogOwner");
+        ModelMetadata modelMetadata = new ModelMetadata(serverSusan.getId(), false, 2, now);
         ModelWithMetadata<BlogOwner> serverData = new ModelWithMetadata<>(serverSusan, modelMetadata);
 
         // Arrange a conflict error that we could hypothetically get from AppSync
@@ -151,7 +151,7 @@ public final class ConflictResolverTest {
             .name("Server Blogger")
             .build();
         Temporal.Timestamp now = Temporal.Timestamp.now();
-        ModelMetadata metadata = new ModelMetadata(serverModel.getId(), false, 4, now, "BlogOwner");
+        ModelMetadata metadata = new ModelMetadata(serverModel.getId(), false, 4, now);
         ModelWithMetadata<BlogOwner> serverData = new ModelWithMetadata<>(serverModel, metadata);
 
         // Arrange a hypothetical conflict error from AppSync
@@ -212,7 +212,7 @@ public final class ConflictResolverTest {
                 .name("Server Blogger")
                 .build();
         Temporal.Timestamp now = Temporal.Timestamp.now();
-        ModelMetadata metadata = new ModelMetadata(serverModel.getId(), false, 4, now, "BlogOwner");
+        ModelMetadata metadata = new ModelMetadata(serverModel.getId(), false, 4, now);
         ModelWithMetadata<SerializedModel> serverData = new ModelWithMetadata<>(serializedOwner, metadata);
 
         // Arrange a hypothetical conflict error from AppSync
@@ -270,7 +270,7 @@ public final class ConflictResolverTest {
                 .build();
 
         Temporal.Timestamp now = Temporal.Timestamp.now();
-        ModelMetadata metadata = new ModelMetadata(serverModel.getPrimaryKeyString(), false, 4, now, "BlogOwner");
+        ModelMetadata metadata = new ModelMetadata(serverModel.getPrimaryKeyString(), false, 4, now);
         ModelWithMetadata<SerializedModel> serverData = new ModelWithMetadata<>(serializedOwner, metadata);
 
         // Arrange a hypothetical conflict error from AppSync
@@ -312,7 +312,7 @@ public final class ConflictResolverTest {
             .name("Remote model")
             .build();
         Temporal.Timestamp now = Temporal.Timestamp.now();
-        ModelMetadata remoteMetadata = new ModelMetadata(remoteModel.getPrimaryKeyString(), false, 4, now, "BlogOwner");
+        ModelMetadata remoteMetadata = new ModelMetadata(remoteModel.getPrimaryKeyString(), false, 4, now);
         ModelWithMetadata<BlogOwner> remoteData = new ModelWithMetadata<>(remoteModel, remoteMetadata);
         // Arrange an unhandled conflict error based on the server data
         AppSyncConflictUnhandledError<BlogOwner> unhandledConflictError =
@@ -330,7 +330,7 @@ public final class ConflictResolverTest {
 
         // When the AppSync update API is called, return a mock response
         ModelMetadata metadata = new ModelMetadata(customModel.getPrimaryKeyString(), false,
-                remoteMetadata.getVersion(), now, "BlogOwner");
+                remoteMetadata.getVersion(), now);
         ModelWithMetadata<BlogOwner> responseData = new ModelWithMetadata<>(customModel, metadata);
         AppSyncMocking.update(appSync)
             .mockSuccessResponse(customModel, remoteMetadata.getVersion(), responseData);
