@@ -6,16 +6,22 @@ package com.amplifyframework.auth.cognito.featuretest
  * something like `resetPassword` instead of `RESET_PASSWORD`
  */
 enum class AuthAPI {
+    clearFederationToIdentityPool,
+    configure,
     confirmResetPassword,
     confirmSignIn,
     confirmSignUp,
     confirmUserAttribute,
     deleteUser,
+    federateToIdentityPool,
     fetchAuthSession,
     fetchDevices,
     fetchUserAttributes,
     forgetDevice,
     getCurrentUser,
+    getEscapeHatch,
+    getPluginKey,
+    getVersion,
     handleWebUISignInResponse,
     rememberDevice,
     resendSignUpCode,

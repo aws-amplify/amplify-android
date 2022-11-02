@@ -5,12 +5,12 @@
         "state": "SignedIn_SessionEstablished.json",
         "mockedResponses": [
             {
-                "type": "cognito",
+                "type": "cognitoIdentityProvider",
                 "apiName": "deleteUser",
                 "responseType": "failure",
                 "response": {
                     "errorType": "NotAuthorizedException",
-                    "errorMessage": "Failed since user is not authorized."
+                    "errorMessage": null
                 }
             }
         ]
@@ -33,7 +33,7 @@
                 "recoverySuggestion": "Check whether the given values are correct and the user is authorized to perform the operation.",
                 "cause": {
                     "errorType": "NotAuthorizedException",
-                    "errorMessage": "Failed since user is not authorized."
+                    "errorMessage": null
                 }
             }
         }
