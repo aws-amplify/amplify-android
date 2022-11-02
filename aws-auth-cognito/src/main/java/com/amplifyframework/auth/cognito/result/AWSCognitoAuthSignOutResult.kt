@@ -82,6 +82,11 @@ sealed class AWSCognitoAuthSignOutResult : AuthSignOutResult() {
 class HostedUIError internal constructor(hostedUIErrorData: HostedUIErrorData) {
 
     /**
+     * Url that can be opened in Custom Tab to re-attempt HostedUI browser session sign out.
+     */
+    val url = hostedUIErrorData.url
+
+    /**
      * Error containing information about hosted ui sign out failure
      */
     val error = hostedUIErrorData.error

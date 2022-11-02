@@ -300,13 +300,14 @@ internal class AWSCognitoLegacyCredentialStore(
         In almost all cases, federation will be enabled making "1" the most common value. Due to how mobile client
         stores credentials, it is difficult to determine the sign in method. If the stored provider matches a
         federateToIdentityPool provider, we return null so we can store the Federated Token. Otherwise, we will return
-        SRP, with the understanding we may not have the correct sign in method (ex: hosted ui)
+        ApiBased with an UNKNOWN method. We will use additional logic in the sign out check to determine if we should
+        attempt hosted ui based sign out.
          */
         "1" -> {
             if (retrieveFederateToIdentityPoolToken() != null) {
                 null
             } else {
-                SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH)
+                SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.UNKNOWN)
             }
         }
         // This is an unlikely as hosted ui with federation will automatically change to "1".
