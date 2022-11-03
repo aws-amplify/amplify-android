@@ -19,7 +19,7 @@ import java.util.concurrent.ConcurrentHashMap
 import kotlinx.serialization.Serializable
 
 @Serializable
-class EndpointProfileUser {
+internal class EndpointProfileUser {
     private var userId: String? = null
     private var userAttributes: MutableMap<String, List<String>> = ConcurrentHashMap()
     fun getUserId(): String? {

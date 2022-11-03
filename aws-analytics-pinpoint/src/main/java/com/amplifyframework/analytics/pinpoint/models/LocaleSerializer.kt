@@ -24,7 +24,7 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 
 @Serializer(forClass = LocaleSerializer::class)
-object LocaleSerializer : KSerializer<Locale> {
+internal object LocaleSerializer : KSerializer<Locale> {
     override fun deserialize(decoder: Decoder): Locale {
         return Locale.forLanguageTag(decoder.decodeString())
     }
