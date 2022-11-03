@@ -22,7 +22,7 @@ import java.util.TimeZone
 import kotlinx.serialization.Serializable
 
 @Serializable
-class EndpointProfileDemographic {
+internal class EndpointProfileDemographic {
     internal constructor(versionName: String?, make: String, locale: String) {
         this.appVersion = versionName
         this.make = make

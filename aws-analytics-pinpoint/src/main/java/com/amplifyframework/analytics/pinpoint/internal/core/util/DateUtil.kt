@@ -19,10 +19,10 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
-val outFormatter: DateTimeFormatter = DateTimeFormatter
+internal val outFormatter: DateTimeFormatter = DateTimeFormatter
     .ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'") // millisecond precision
     .withZone(ZoneId.of("UTC"))
 
-fun Long.millisToIsoDate(): String {
+internal fun Long.millisToIsoDate(): String {
     return outFormatter.format(Instant.ofEpochMilli(this))
 }

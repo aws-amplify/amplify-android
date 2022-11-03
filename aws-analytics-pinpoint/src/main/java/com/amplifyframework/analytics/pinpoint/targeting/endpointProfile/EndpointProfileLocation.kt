@@ -23,7 +23,7 @@ import kotlinx.serialization.Serializable
  * @param context the Android context, which we use to get the locale
  */
 @Serializable
-data class EndpointProfileLocation internal constructor(internal var country: String) {
+internal data class EndpointProfileLocation internal constructor(internal var country: String) {
     internal var latitude: Double? = null
     fun getLatitude() = latitude
     fun setLatitude(latitude: Double) = latitude.also { this.latitude = it }
