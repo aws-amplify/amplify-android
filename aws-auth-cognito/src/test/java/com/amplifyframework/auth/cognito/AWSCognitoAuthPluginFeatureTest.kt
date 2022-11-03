@@ -90,7 +90,6 @@ class AWSCognitoAuthPluginFeatureTest(private val testCase: FeatureTestCase) {
         private const val statesFilesBasePath = "/feature-test/states"
         private const val configurationFilesBasePath = "/feature-test/configuration"
 
-        // TODO: Fix delete user test cases
         private val apisToSkip: List<AuthAPI> = listOf()
 
         @JvmStatic
