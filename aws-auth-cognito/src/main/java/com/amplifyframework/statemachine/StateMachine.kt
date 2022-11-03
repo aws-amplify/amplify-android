@@ -18,11 +18,13 @@ package com.amplifyframework.statemachine
 import java.util.UUID
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.newFixedThreadPoolContext
+import kotlinx.coroutines.newSingleThreadContext
 
 internal typealias StateChangeListenerToken = UUID
 internal typealias OnSubscribedCallback = () -> Unit
@@ -57,7 +59,7 @@ internal open class StateMachine<StateType : State, EnvironmentType : Environmen
     /**
      * Manage consistency of internal state machine state and limits invocation of listeners to a minimum of one at a time.
      */
-    private val operationQueue = newFixedThreadPoolContext(1, "Single threaded dispatcher")
+    private val operationQueue = newSingleThreadContext("State machine single thread dispatcher")
     private val exceptionHandler = CoroutineExceptionHandler { _, exception ->
         println("CoroutineExceptionHandler got $exception")
     }
@@ -65,21 +67,22 @@ internal open class StateMachine<StateType : State, EnvironmentType : Environmen
     /**
      * TODO: add coroutine exception handler if required.
      */
-    private val stateMachineScope = Job() + operationQueue // + exceptionHandler
+    private val stateMachineParentJob = Job()
+    private val stateMachineScope = CoroutineScope(stateMachineParentJob + operationQueue) // + exceptionHandler
 
     // weak wrapper ??
-    private val subscribers: MutableMap<StateChangeListenerToken, (StateType) -> Unit>
+    private val subscribers: MutableMap<StateChangeListenerToken, suspend (StateType) -> Unit> = mutableMapOf()
+    private val channelSubscribers: MutableList<Channel<StateType>> = mutableListOf()
 
     // atomic value ??
-    private val pendingCancellations: MutableSet<StateChangeListenerToken>
+    private val pendingCancellations: MutableSet<StateChangeListenerToken> = mutableSetOf()
 
     init {
         val resolvedQueue = concurrentQueue ?: Dispatchers.Default
         dispatcherQueue = resolvedQueue
-        this.executor = executor ?: ConcurrentEffectExecutor(resolvedQueue)
 
-        subscribers = mutableMapOf()
-        pendingCancellations = mutableSetOf()
+        val effectExecutorScope = CoroutineScope(stateMachineParentJob + resolvedQueue)
+        this.executor = executor ?: ConcurrentEffectExecutor(effectExecutorScope)
     }
 
     /**
@@ -89,12 +92,22 @@ internal open class StateMachine<StateType : State, EnvironmentType : Environmen
      * @param onSubscribe callback to invoke when subscription is complete
      * @return token that can be used to unsubscribe the listener
      */
+    @Deprecated("Use listenAsync instead.", ReplaceWith("listenAsync"))
     fun listen(listener: (StateType) -> Unit, onSubscribe: OnSubscribedCallback?): StateChangeListenerToken {
         val token = UUID.randomUUID()
-        GlobalScope.launch(stateMachineScope) {
+        stateMachineScope.launch {
             addSubscription(token, listener, onSubscribe)
         }
         return token
+    }
+
+    fun listenAsync(): Channel<StateType> {
+        val channel = Channel<StateType>()
+        stateMachineScope.launch {
+            channel.send(currentState)
+        }
+        channelSubscribers.add(channel)
+        return channel
     }
 
     /**
@@ -104,7 +117,7 @@ internal open class StateMachine<StateType : State, EnvironmentType : Environmen
      */
     fun cancel(token: StateChangeListenerToken) {
         pendingCancellations.add(token)
-        GlobalScope.launch(stateMachineScope) {
+        stateMachineScope.launch {
             removeSubscription(token)
         }
     }
@@ -113,10 +126,15 @@ internal open class StateMachine<StateType : State, EnvironmentType : Environmen
      * Invoke `completion` with the current state
      * @param completion callback to invoke with the current state
      */
+    @Deprecated("Use getCurrentStateAsync instead.", ReplaceWith("getCurrentStateAsync"))
     fun getCurrentState(completion: (StateType) -> Unit) {
-        GlobalScope.launch(stateMachineScope) {
-            completion(currentState)
+        stateMachineScope.launch {
+            completion.invoke(currentState)
         }
+    }
+
+    fun getCurrentStateAsync() = stateMachineScope.async {
+        currentState
     }
 
     /**
@@ -125,16 +143,16 @@ internal open class StateMachine<StateType : State, EnvironmentType : Environmen
      * @param listener listener to invoke when the state has changed
      * @param onSubscribe callback to invoke when subscription is complete
      */
-    private fun addSubscription(
+    private suspend fun addSubscription(
         token: StateChangeListenerToken,
-        listener: (StateType) -> Unit,
+        listener: suspend (StateType) -> Unit,
         onSubscribe: OnSubscribedCallback?
     ) {
         if (pendingCancellations.contains(token)) return
         val currentState = this.currentState
         subscribers[token] = listener
         onSubscribe?.invoke()
-        GlobalScope.launch(dispatcherQueue) {
+        stateMachineScope.launch {
             listener.invoke(currentState)
         }
     }
@@ -143,7 +161,7 @@ internal open class StateMachine<StateType : State, EnvironmentType : Environmen
      * Unregister a listener.
      * @param token token of the listener to remove
      */
-    private fun removeSubscription(token: StateChangeListenerToken) {
+    private suspend fun removeSubscription(token: StateChangeListenerToken) {
         pendingCancellations.remove(token)
         subscribers.remove(token)
     }
@@ -153,7 +171,7 @@ internal open class StateMachine<StateType : State, EnvironmentType : Environmen
      * @param event event to send to the system
      */
     override fun send(event: StateMachineEvent) {
-        GlobalScope.launch(stateMachineScope) {
+        stateMachineScope.launch {
             process(event)
         }
     }
@@ -164,13 +182,13 @@ internal open class StateMachine<StateType : State, EnvironmentType : Environmen
      * @param newState new state to be sent
      * @return true if the subscriber was notified, false if the token was null or a cancellation was pending
      */
-    private fun notifySubscribers(
-        subscriber: Map.Entry<StateChangeListenerToken, (StateType) -> Unit>,
+    private suspend fun notifySubscribers(
+        subscriber: Map.Entry<StateChangeListenerToken, suspend (StateType) -> Unit>,
         newState: StateType
     ): Boolean {
         val token = subscriber.key
         if (pendingCancellations.contains(token)) return false
-        subscriber.value(newState)
+        subscriber.value.invoke(newState)
         return true
     }
 
@@ -181,12 +199,15 @@ internal open class StateMachine<StateType : State, EnvironmentType : Environmen
      * the state machine will execute any effects from the event resolution process.
      * @param event event to apply on current state for resolution
      */
-    private fun process(event: StateMachineEvent) {
+    private suspend fun process(event: StateMachineEvent) {
         val resolution = resolver.resolve(currentState, event)
         if (currentState != resolution.newState) {
             currentState = resolution.newState
             val subscribersToRemove = subscribers.filter { !notifySubscribers(it, resolution.newState) }
             subscribersToRemove.forEach { subscribers.remove(it.key) }
+            channelSubscribers.forEach { channel ->
+                if (!channel.isClosedForReceive) channel.send(resolution.newState)
+            }
         }
         execute(resolution.actions)
     }

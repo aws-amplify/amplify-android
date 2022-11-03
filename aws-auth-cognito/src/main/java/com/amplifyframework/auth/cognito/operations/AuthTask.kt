@@ -13,17 +13,10 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.statemachine
+package com.amplifyframework.auth.cognito.operations
 
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
-
-internal class ConcurrentEffectExecutor(private val coroutineScope: CoroutineScope) : EffectExecutor {
-    override fun execute(actions: List<Action>, eventDispatcher: EventDispatcher, environment: Environment) {
-        actions.forEach { action ->
-            coroutineScope.launch {
-                action.execute(eventDispatcher, environment)
-            }
-        }
-    }
+interface AuthTask<T> : Task<T> {
+    suspend fun validateStates(): T
+    suspend fun execute(): T
+    override suspend operator fun invoke(): T
 }
