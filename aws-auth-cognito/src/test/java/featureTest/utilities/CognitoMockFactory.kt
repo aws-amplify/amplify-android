@@ -38,9 +38,7 @@ import com.amplifyframework.auth.cognito.featuretest.MockResponse
 import com.amplifyframework.auth.cognito.featuretest.ResponseType
 import com.amplifyframework.auth.cognito.featuretest.serializers.CognitoIdentityExceptionSerializer
 import com.amplifyframework.auth.cognito.featuretest.serializers.CognitoIdentityProviderExceptionSerializer
-import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import io.mockk.coEvery
-import io.mockk.mockkObject
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -65,9 +63,6 @@ class CognitoMockFactory(
                 }
             }
             "signUp" -> {
-                mockkObject(AuthHelper)
-                coEvery { AuthHelper.getSecretHash(any(), any(), any()) } returns "a hash"
-
                 coEvery { mockCognitoIPClient.signUp(any()) } coAnswers {
                     setupError(mockResponse, responseObject)
                     SignUpResponse.invoke {
@@ -76,9 +71,6 @@ class CognitoMockFactory(
                 }
             }
             "initiateAuth" -> {
-                mockkObject(AuthHelper)
-                coEvery { AuthHelper.getSecretHash(any(), any(), any()) } returns "a hash"
-
                 coEvery { mockCognitoIPClient.initiateAuth(any()) } coAnswers {
                     setupError(mockResponse, responseObject)
                     InitiateAuthResponse.invoke {
@@ -93,9 +85,6 @@ class CognitoMockFactory(
                 }
             }
             "respondToAuthChallenge" -> {
-                mockkObject(AuthHelper)
-                coEvery { AuthHelper.getSecretHash(any(), any(), any()) } returns "a hash"
-
                 coEvery { mockCognitoIPClient.respondToAuthChallenge(any()) } coAnswers {
                     setupError(mockResponse, responseObject)
                     RespondToAuthChallengeResponse.invoke {
@@ -135,9 +124,6 @@ class CognitoMockFactory(
                 }
             }
             "deleteUser" -> {
-                mockkObject(AuthHelper)
-                coEvery { AuthHelper.getSecretHash(any(), any(), any()) } returns "a hash"
-
                 coEvery { mockCognitoIPClient.deleteUser(any()) } coAnswers {
                     setupError(mockResponse, responseObject)
                     DeleteUserResponse.invoke {}
