@@ -123,13 +123,6 @@ class AWSCognitoAuthPluginFeatureTest(private val testCase: FeatureTestCase) {
 
     @Test
     fun api_feature_test() {
-
-        mockkObject(AuthHelper)
-        coEvery { AuthHelper.getSecretHash(any(), any(), any()) } returns "a hash"
-
-        mockkStatic("com.amplifyframework.auth.cognito.AWSCognitoAuthSessionKt")
-        every { any<AmplifyCredential>().isValid() } returns true
-
         // GIVEN
         mockAndroidAPIs()
         feature.preConditions.mockedResponses.forEach(cognitoMockFactory::mock)

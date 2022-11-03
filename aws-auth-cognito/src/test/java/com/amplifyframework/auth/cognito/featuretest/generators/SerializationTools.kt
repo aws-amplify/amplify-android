@@ -17,8 +17,6 @@ package com.amplifyframework.auth.cognito.featuretest.generators
 
 import aws.sdk.kotlin.services.cognitoidentity.model.CognitoIdentityException
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.CognitoIdentityProviderException
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeliveryMediumType
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.OAuthFlowType
 import aws.smithy.kotlin.runtime.time.Instant
 import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.cognito.featuretest.FeatureTestCase
@@ -26,13 +24,16 @@ import com.amplifyframework.auth.cognito.featuretest.serializers.CognitoIdentity
 import com.amplifyframework.auth.cognito.featuretest.serializers.CognitoIdentityProviderExceptionSerializer
 import com.amplifyframework.auth.cognito.featuretest.serializers.deserializeToAuthState
 import com.amplifyframework.auth.cognito.featuretest.serializers.serialize
+import com.amplifyframework.auth.result.AuthSessionResult
 import com.amplifyframework.statemachine.codegen.states.AuthState
-import com.amplifyframework.testutils.random.RandomString
 import com.google.gson.Gson
 import java.io.BufferedWriter
 import java.io.File
 import java.io.FileOutputStream
 import java.io.FileWriter
+import kotlin.reflect.KClass
+import kotlin.reflect.KVisibility
+import kotlin.reflect.full.declaredMemberProperties
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
@@ -40,12 +41,6 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
-import kotlin.reflect.KClass
-import kotlin.reflect.KType
-import kotlin.reflect.KVisibility
-import kotlin.reflect.full.declaredFunctions
-import kotlin.reflect.full.declaredMemberProperties
-import kotlin.reflect.full.memberProperties
 
 const val basePath = "aws-auth-cognito/src/test/resources/feature-test"
 
@@ -176,11 +171,13 @@ fun Any?.toJsonElement(): JsonElement {
         is Boolean -> JsonPrimitive(this)
         is Number -> JsonPrimitive(this)
         is String -> JsonPrimitive(this)
+        is Instant -> JsonPrimitive(this.epochSeconds)
         is AuthException -> toJsonElement()
         is CognitoIdentityProviderException -> Json.encodeToJsonElement(
             CognitoIdentityProviderExceptionSerializer,
             this
         )
+        is AuthSessionResult<*> -> toJsonElement()
         is CognitoIdentityException -> Json.encodeToJsonElement(CognitoIdentityExceptionSerializer, this)
         else -> gsonBasedSerializer(this)
     }
@@ -195,6 +192,10 @@ fun AuthException.toJsonElement(): JsonElement {
     )
 
     return responseMap.toJsonElement()
+}
+
+fun AuthSessionResult<*>.toJsonElement(): JsonElement {
+    return (if (type == AuthSessionResult.Type.SUCCESS) value else error).toJsonElement()
 }
 
 /**
