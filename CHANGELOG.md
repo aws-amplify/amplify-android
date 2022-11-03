@@ -1,3 +1,11 @@
+## [Release 1.37.6](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.37.6)
+
+### Miscellaneous
+- Add clientMetadata to signIn
+- Update build.gradle (#2045)
+
+[See all changes between 1.37.5 and 1.37.6](https://github.com/aws-amplify/amplify-android/compare/release_v1.37.5...release_v1.37.6)
+
 ## [Release 1.37.5](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.37.5)
 
 ### Miscellaneous
