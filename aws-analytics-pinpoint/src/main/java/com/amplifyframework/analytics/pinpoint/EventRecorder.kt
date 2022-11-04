@@ -28,7 +28,6 @@ import aws.sdk.kotlin.services.pinpoint.model.EventsBatch
 import aws.sdk.kotlin.services.pinpoint.model.EventsRequest
 import aws.sdk.kotlin.services.pinpoint.model.PublicEndpoint
 import aws.sdk.kotlin.services.pinpoint.model.PutEventsRequest
-import aws.sdk.kotlin.services.pinpoint.model.PutEventsResponse
 import aws.sdk.kotlin.services.pinpoint.model.Session
 import com.amplifyframework.analytics.AnalyticsEvent
 import com.amplifyframework.analytics.pinpoint.database.EventTable
@@ -170,7 +169,7 @@ internal class EventRecorder(
                         if (isRetryableError(message)) {
                             logger.error(
                                 "Failed to deliver event with ${pinpointEvent.eventId}," +
-                                        " will be re-delivered later"
+                                    " will be re-delivered later"
                             )
                         } else {
                             logger.error("Failed to deliver event with ${pinpointEvent.eventId}, response: $message")
@@ -185,10 +184,10 @@ internal class EventRecorder(
 
     private fun isRetryableError(responseCode: String): Boolean {
         return !(
-                responseCode.equals("ValidationException", ignoreCase = true) ||
-                        responseCode.equals("SerializationException", ignoreCase = true) ||
-                        responseCode.equals("BadRequestException", ignoreCase = true)
-                )
+            responseCode.equals("ValidationException", ignoreCase = true) ||
+                responseCode.equals("SerializationException", ignoreCase = true) ||
+                responseCode.equals("BadRequestException", ignoreCase = true)
+            )
     }
 
     private fun processEndpointResponse(endpointResponse: EndpointItemResponse?) {
