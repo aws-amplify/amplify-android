@@ -1709,7 +1709,7 @@ internal class RealAWSCognitoAuthPlugin(
                         )
                     )
 
-                    _federateToIdentityPool(providerToken, authProvider, options, onSuccess, onError)
+                    _federateToIdentityPool(onSuccess, onError)
                 }
                 else -> onError.accept(
                     InvalidStateException("Federation could not be completed.")
@@ -1719,9 +1719,6 @@ internal class RealAWSCognitoAuthPlugin(
     }
 
     private fun _federateToIdentityPool(
-        providerToken: String,
-        authProvider: AuthProvider,
-        options: FederateToIdentityPoolOptions?,
         onSuccess: Consumer<FederateToIdentityPoolResult>,
         onError: Consumer<AuthException>
     ) {
