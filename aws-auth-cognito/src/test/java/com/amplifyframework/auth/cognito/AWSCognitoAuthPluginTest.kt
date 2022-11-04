@@ -339,7 +339,7 @@ class AWSCognitoAuthPluginTest {
 
     @Test
     fun verifyFetchDevices() {
-        val expectedOnSuccess = Consumer<MutableList<AuthDevice>> { }
+        val expectedOnSuccess = Consumer<List<AuthDevice>> { }
         val expectedOnError = Consumer<AuthException> { }
 
         authPlugin.fetchDevices(expectedOnSuccess, expectedOnError)
@@ -479,7 +479,7 @@ class AWSCognitoAuthPluginTest {
     @Test
     fun verifyUpdateUserAttributes() {
         val expectedAttributes = mutableListOf(AuthUserAttribute(AuthUserAttributeKey.name(), "John"))
-        val expectedOnSuccess = Consumer<MutableMap<AuthUserAttributeKey, AuthUpdateAttributeResult>> { }
+        val expectedOnSuccess = Consumer<Map<AuthUserAttributeKey, AuthUpdateAttributeResult>> { }
         val expectedOnError = Consumer<AuthException> { }
 
         authPlugin.updateUserAttributes(expectedAttributes, expectedOnSuccess, expectedOnError)
@@ -491,7 +491,7 @@ class AWSCognitoAuthPluginTest {
     fun verifyOverloadedUpdateUserAttributes() {
         val expectedAttributes = mutableListOf(AuthUserAttribute(AuthUserAttributeKey.name(), "John"))
         val expectedOptions = AuthUpdateUserAttributesOptions.defaults()
-        val expectedOnSuccess = Consumer<MutableMap<AuthUserAttributeKey, AuthUpdateAttributeResult>> { }
+        val expectedOnSuccess = Consumer<Map<AuthUserAttributeKey, AuthUpdateAttributeResult>> { }
         val expectedOnError = Consumer<AuthException> { }
 
         authPlugin.updateUserAttributes(expectedAttributes, expectedOptions, expectedOnSuccess, expectedOnError)

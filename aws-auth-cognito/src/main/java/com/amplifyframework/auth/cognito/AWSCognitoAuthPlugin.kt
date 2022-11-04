@@ -33,6 +33,7 @@ import com.amplifyframework.auth.cognito.asf.UserContextDataProvider
 import com.amplifyframework.auth.cognito.options.FederateToIdentityPoolOptions
 import com.amplifyframework.auth.cognito.result.FederateToIdentityPoolResult
 import com.amplifyframework.auth.exceptions.ConfigurationException
+import com.amplifyframework.auth.exceptions.UnknownException
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
@@ -55,6 +56,12 @@ import com.amplifyframework.core.Action
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.consumeEach
+import kotlinx.coroutines.launch
 import org.json.JSONException
 import org.json.JSONObject
 
@@ -72,9 +79,25 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
 
     @VisibleForTesting
     internal lateinit var realPlugin: RealAWSCognitoAuthPlugin
+    private lateinit var queueFacade: KotlinAuthFacadeInternal
+
+    private val queueChannel = Channel<Job>(capacity = Channel.UNLIMITED).apply {
+        GlobalScope.launch {
+            consumeEach { it.join() }
+        }
+    }
+
+    private fun Exception.toAuthException(): AuthException {
+        return if (this is AuthException) {
+            this
+        } else {
+            UnknownException(cause = this)
+        }
+    }
 
     override fun initialize(context: Context) {
         realPlugin.initialize()
+        queueFacade = KotlinAuthFacadeInternal(realPlugin)
     }
 
     @Throws(AmplifyException::class)
@@ -115,7 +138,16 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         onSuccess: Consumer<AuthSignUpResult>,
         onError: Consumer<AuthException>
     ) {
-        realPlugin.signUp(username, password, options, onSuccess, onError)
+        queueChannel.trySend(
+            GlobalScope.launch(start = CoroutineStart.LAZY) {
+                try {
+                    val result = queueFacade.signUp(username, password, options)
+                    onSuccess.accept(result)
+                } catch (e: Exception) {
+                    onError.accept(e.toAuthException())
+                }
+            }
+        )
     }
 
     override fun confirmSignUp(
@@ -124,7 +156,16 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         onSuccess: Consumer<AuthSignUpResult>,
         onError: Consumer<AuthException>
     ) {
-        realPlugin.confirmSignUp(username, confirmationCode, onSuccess, onError)
+        queueChannel.trySend(
+            GlobalScope.launch(start = CoroutineStart.LAZY) {
+                try {
+                    val result = queueFacade.confirmSignUp(username, confirmationCode)
+                    onSuccess.accept(result)
+                } catch (e: Exception) {
+                    onError.accept(e.toAuthException())
+                }
+            }
+        )
     }
 
     override fun confirmSignUp(
@@ -134,7 +175,16 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         onSuccess: Consumer<AuthSignUpResult>,
         onError: Consumer<AuthException>
     ) {
-        realPlugin.confirmSignUp(username, confirmationCode, options, onSuccess, onError)
+        queueChannel.trySend(
+            GlobalScope.launch(start = CoroutineStart.LAZY) {
+                try {
+                    val result = queueFacade.confirmSignUp(username, confirmationCode, options)
+                    onSuccess.accept(result)
+                } catch (e: Exception) {
+                    onError.accept(e.toAuthException())
+                }
+            }
+        )
     }
 
     override fun resendSignUpCode(
@@ -142,7 +192,16 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         onSuccess: Consumer<AuthCodeDeliveryDetails>,
         onError: Consumer<AuthException>
     ) {
-        realPlugin.resendSignUpCode(username, onSuccess, onError)
+        queueChannel.trySend(
+            GlobalScope.launch(start = CoroutineStart.LAZY) {
+                try {
+                    val result = queueFacade.resendSignUpCode(username)
+                    onSuccess.accept(result)
+                } catch (e: Exception) {
+                    onError.accept(e.toAuthException())
+                }
+            }
+        )
     }
 
     override fun resendSignUpCode(
@@ -151,7 +210,16 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         onSuccess: Consumer<AuthCodeDeliveryDetails>,
         onError: Consumer<AuthException>
     ) {
-        realPlugin.resendSignUpCode(username, options, onSuccess, onError)
+        queueChannel.trySend(
+            GlobalScope.launch(start = CoroutineStart.LAZY) {
+                try {
+                    val result = queueFacade.resendSignUpCode(username, options)
+                    onSuccess.accept(result)
+                } catch (e: Exception) {
+                    onError.accept(e.toAuthException())
+                }
+            }
+        )
     }
 
     override fun signIn(
@@ -160,7 +228,16 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
     ) {
-        realPlugin.signIn(username, password, onSuccess, onError)
+        queueChannel.trySend(
+            GlobalScope.launch(start = CoroutineStart.LAZY) {
+                try {
+                    val result = queueFacade.signIn(username, password)
+                    onSuccess.accept(result)
+                } catch (e: Exception) {
+                    onError.accept(e.toAuthException())
+                }
+            }
+        )
     }
 
     override fun signIn(
@@ -170,7 +247,16 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
     ) {
-        realPlugin.signIn(username, password, options, onSuccess, onError)
+        queueChannel.trySend(
+            GlobalScope.launch(start = CoroutineStart.LAZY) {
+                try {
+                    val result = queueFacade.signIn(username, password, options)
+                    onSuccess.accept(result)
+                } catch (e: Exception) {
+                    onError.accept(e.toAuthException())
+                }
+            }
+        )
     }
 
     override fun confirmSignIn(
@@ -178,7 +264,16 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
     ) {
-        realPlugin.confirmSignIn(challengeResponse, onSuccess, onError)
+        queueChannel.trySend(
+            GlobalScope.launch(start = CoroutineStart.LAZY) {
+                try {
+                    val result = queueFacade.confirmSignIn(challengeResponse)
+                    onSuccess.accept(result)
+                } catch (e: Exception) {
+                    onError.accept(e.toAuthException())
+                }
+            }
+        )
     }
 
     override fun confirmSignIn(
@@ -187,7 +282,16 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
     ) {
-        realPlugin.confirmSignIn(challengeResponse, options, onSuccess, onError)
+        queueChannel.trySend(
+            GlobalScope.launch(start = CoroutineStart.LAZY) {
+                try {
+                    val result = queueFacade.confirmSignIn(challengeResponse, options)
+                    onSuccess.accept(result)
+                } catch (e: Exception) {
+                    onError.accept(e.toAuthException())
+                }
+            }
+        )
     }
 
     override fun signInWithSocialWebUI(
@@ -196,7 +300,16 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
     ) {
-        realPlugin.signInWithSocialWebUI(provider, callingActivity, onSuccess, onError)
+        queueChannel.trySend(
+            GlobalScope.launch(start = CoroutineStart.LAZY) {
+                try {
+                    val result = queueFacade.signInWithSocialWebUI(provider, callingActivity)
+                    onSuccess.accept(result)
+                } catch (e: Exception) {
+                    onError.accept(e.toAuthException())
+                }
+            }
+        )
     }
 
     override fun signInWithSocialWebUI(
@@ -206,7 +319,16 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
     ) {
-        realPlugin.signInWithSocialWebUI(provider, callingActivity, options, onSuccess, onError)
+        queueChannel.trySend(
+            GlobalScope.launch(start = CoroutineStart.LAZY) {
+                try {
+                    val result = queueFacade.signInWithSocialWebUI(provider, callingActivity, options)
+                    onSuccess.accept(result)
+                } catch (e: Exception) {
+                    onError.accept(e.toAuthException())
+                }
+            }
+        )
     }
 
     override fun signInWithWebUI(
@@ -214,7 +336,16 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
     ) {
-        realPlugin.signInWithWebUI(callingActivity, onSuccess, onError)
+        queueChannel.trySend(
+            GlobalScope.launch(start = CoroutineStart.LAZY) {
+                try {
+                    val result = queueFacade.signInWithWebUI(callingActivity)
+                    onSuccess.accept(result)
+                } catch (e: Exception) {
+                    onError.accept(e.toAuthException())
+                }
+            }
+        )
     }
 
     override fun signInWithWebUI(
@@ -223,11 +354,20 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
     ) {
-        realPlugin.signInWithWebUI(callingActivity, options, onSuccess, onError)
+        queueChannel.trySend(
+            GlobalScope.launch(start = CoroutineStart.LAZY) {
+                try {
+                    val result = queueFacade.signInWithWebUI(callingActivity, options)
+                    onSuccess.accept(result)
+                } catch (e: Exception) {
+                    onError.accept(e.toAuthException())
+                }
+            }
+        )
     }
 
     override fun handleWebUISignInResponse(intent: Intent?) {
-        realPlugin.handleWebUISignInResponse(intent)
+        queueFacade.handleWebUISignInResponse(intent)
     }
 
     override fun fetchAuthSession(
@@ -235,19 +375,55 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         onSuccess: Consumer<AuthSession>,
         onError: Consumer<AuthException>
     ) {
-        realPlugin.fetchAuthSession(options, onSuccess, onError)
+        queueChannel.trySend(
+            GlobalScope.launch(start = CoroutineStart.LAZY) {
+                try {
+                    val result = queueFacade.fetchAuthSession(options)
+                    onSuccess.accept(result)
+                } catch (e: Exception) {
+                    onError.accept(e.toAuthException())
+                }
+            }
+        )
     }
 
     override fun fetchAuthSession(onSuccess: Consumer<AuthSession>, onError: Consumer<AuthException>) {
-        realPlugin.fetchAuthSession(onSuccess, onError)
+        queueChannel.trySend(
+            GlobalScope.launch(start = CoroutineStart.LAZY) {
+                try {
+                    val result = queueFacade.fetchAuthSession()
+                    onSuccess.accept(result)
+                } catch (e: Exception) {
+                    onError.accept(e.toAuthException())
+                }
+            }
+        )
     }
 
     override fun rememberDevice(onSuccess: Action, onError: Consumer<AuthException>) {
-        realPlugin.rememberDevice(onSuccess, onError)
+        queueChannel.trySend(
+            GlobalScope.launch(start = CoroutineStart.LAZY) {
+                try {
+                    queueFacade.rememberDevice()
+                    onSuccess.call()
+                } catch (e: Exception) {
+                    onError.accept(e.toAuthException())
+                }
+            }
+        )
     }
 
     override fun forgetDevice(onSuccess: Action, onError: Consumer<AuthException>) {
-        realPlugin.forgetDevice(onSuccess, onError)
+        queueChannel.trySend(
+            GlobalScope.launch(start = CoroutineStart.LAZY) {
+                try {
+                    queueFacade.forgetDevice()
+                    onSuccess.call()
+                } catch (e: Exception) {
+                    onError.accept(e.toAuthException())
+                }
+            }
+        )
     }
 
     override fun forgetDevice(
@@ -255,14 +431,32 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         onSuccess: Action,
         onError: Consumer<AuthException>
     ) {
-        realPlugin.forgetDevice(device, onSuccess, onError)
+        queueChannel.trySend(
+            GlobalScope.launch(start = CoroutineStart.LAZY) {
+                try {
+                    queueFacade.forgetDevice()
+                    onSuccess.call()
+                } catch (e: Exception) {
+                    onError.accept(e.toAuthException())
+                }
+            }
+        )
     }
 
     override fun fetchDevices(
-        onSuccess: Consumer<MutableList<AuthDevice>>,
+        onSuccess: Consumer<List<AuthDevice>>,
         onError: Consumer<AuthException>
     ) {
-        realPlugin.fetchDevices(onSuccess, onError)
+        queueChannel.trySend(
+            GlobalScope.launch(start = CoroutineStart.LAZY) {
+                try {
+                    val result = queueFacade.fetchDevices()
+                    onSuccess.accept(result)
+                } catch (e: Exception) {
+                    onError.accept(e.toAuthException())
+                }
+            }
+        )
     }
 
     override fun resetPassword(
@@ -271,7 +465,16 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         onSuccess: Consumer<AuthResetPasswordResult>,
         onError: Consumer<AuthException>
     ) {
-        realPlugin.resetPassword(username, options, onSuccess, onError)
+        queueChannel.trySend(
+            GlobalScope.launch(start = CoroutineStart.LAZY) {
+                try {
+                    val result = queueFacade.resetPassword(username, options)
+                    onSuccess.accept(result)
+                } catch (e: Exception) {
+                    onError.accept(e.toAuthException())
+                }
+            }
+        )
     }
 
     override fun resetPassword(
@@ -279,7 +482,16 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         onSuccess: Consumer<AuthResetPasswordResult>,
         onError: Consumer<AuthException>
     ) {
-        realPlugin.resetPassword(username, onSuccess, onError)
+        queueChannel.trySend(
+            GlobalScope.launch(start = CoroutineStart.LAZY) {
+                try {
+                    val result = queueFacade.resetPassword(username)
+                    onSuccess.accept(result)
+                } catch (e: Exception) {
+                    onError.accept(e.toAuthException())
+                }
+            }
+        )
     }
 
     override fun confirmResetPassword(
@@ -290,7 +502,16 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         onSuccess: Action,
         onError: Consumer<AuthException>
     ) {
-        realPlugin.confirmResetPassword(username, newPassword, confirmationCode, options, onSuccess, onError)
+        queueChannel.trySend(
+            GlobalScope.launch(start = CoroutineStart.LAZY) {
+                try {
+                    queueFacade.confirmResetPassword(username, newPassword, confirmationCode, options)
+                    onSuccess.call()
+                } catch (e: Exception) {
+                    onError.accept(e.toAuthException())
+                }
+            }
+        )
     }
 
     override fun confirmResetPassword(
@@ -300,7 +521,16 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         onSuccess: Action,
         onError: Consumer<AuthException>
     ) {
-        realPlugin.confirmResetPassword(username, newPassword, confirmationCode, onSuccess, onError)
+        queueChannel.trySend(
+            GlobalScope.launch(start = CoroutineStart.LAZY) {
+                try {
+                    queueFacade.confirmResetPassword(username, newPassword, confirmationCode)
+                    onSuccess.call()
+                } catch (e: Exception) {
+                    onError.accept(e.toAuthException())
+                }
+            }
+        )
     }
 
     override fun updatePassword(
@@ -309,14 +539,32 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         onSuccess: Action,
         onError: Consumer<AuthException>
     ) {
-        realPlugin.updatePassword(oldPassword, newPassword, onSuccess, onError)
+        queueChannel.trySend(
+            GlobalScope.launch(start = CoroutineStart.LAZY) {
+                try {
+                    queueFacade.updatePassword(oldPassword, newPassword)
+                    onSuccess.call()
+                } catch (e: Exception) {
+                    onError.accept(e.toAuthException())
+                }
+            }
+        )
     }
 
     override fun fetchUserAttributes(
         onSuccess: Consumer<List<AuthUserAttribute>>,
         onError: Consumer<AuthException>
     ) {
-        realPlugin.fetchUserAttributes(onSuccess, onError)
+        queueChannel.trySend(
+            GlobalScope.launch(start = CoroutineStart.LAZY) {
+                try {
+                    val result = queueFacade.fetchUserAttributes()
+                    onSuccess.accept(result)
+                } catch (e: Exception) {
+                    onError.accept(e.toAuthException())
+                }
+            }
+        )
     }
 
     override fun updateUserAttribute(
@@ -325,7 +573,16 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         onSuccess: Consumer<AuthUpdateAttributeResult>,
         onError: Consumer<AuthException>
     ) {
-        realPlugin.updateUserAttribute(attribute, options, onSuccess, onError)
+        queueChannel.trySend(
+            GlobalScope.launch(start = CoroutineStart.LAZY) {
+                try {
+                    val result = queueFacade.updateUserAttribute(attribute, options)
+                    onSuccess.accept(result)
+                } catch (e: Exception) {
+                    onError.accept(e.toAuthException())
+                }
+            }
+        )
     }
 
     override fun updateUserAttribute(
@@ -333,24 +590,51 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         onSuccess: Consumer<AuthUpdateAttributeResult>,
         onError: Consumer<AuthException>
     ) {
-        realPlugin.updateUserAttribute(attribute, onSuccess, onError)
+        queueChannel.trySend(
+            GlobalScope.launch(start = CoroutineStart.LAZY) {
+                try {
+                    val result = queueFacade.updateUserAttribute(attribute)
+                    onSuccess.accept(result)
+                } catch (e: Exception) {
+                    onError.accept(e.toAuthException())
+                }
+            }
+        )
     }
 
     override fun updateUserAttributes(
-        attributes: MutableList<AuthUserAttribute>,
+        attributes: List<AuthUserAttribute>,
         options: AuthUpdateUserAttributesOptions,
-        onSuccess: Consumer<MutableMap<AuthUserAttributeKey, AuthUpdateAttributeResult>>,
+        onSuccess: Consumer<Map<AuthUserAttributeKey, AuthUpdateAttributeResult>>,
         onError: Consumer<AuthException>
     ) {
-        realPlugin.updateUserAttributes(attributes, options, onSuccess, onError)
+        queueChannel.trySend(
+            GlobalScope.launch(start = CoroutineStart.LAZY) {
+                try {
+                    val result = queueFacade.updateUserAttributes(attributes, options)
+                    onSuccess.accept(result)
+                } catch (e: Exception) {
+                    onError.accept(e.toAuthException())
+                }
+            }
+        )
     }
 
     override fun updateUserAttributes(
-        attributes: MutableList<AuthUserAttribute>,
-        onSuccess: Consumer<MutableMap<AuthUserAttributeKey, AuthUpdateAttributeResult>>,
+        attributes: List<AuthUserAttribute>,
+        onSuccess: Consumer<Map<AuthUserAttributeKey, AuthUpdateAttributeResult>>,
         onError: Consumer<AuthException>
     ) {
-        realPlugin.updateUserAttributes(attributes, onSuccess, onError)
+        queueChannel.trySend(
+            GlobalScope.launch(start = CoroutineStart.LAZY) {
+                try {
+                    val result = queueFacade.updateUserAttributes(attributes)
+                    onSuccess.accept(result)
+                } catch (e: Exception) {
+                    onError.accept(e.toAuthException())
+                }
+            }
+        )
     }
 
     override fun resendUserAttributeConfirmationCode(
@@ -359,7 +643,16 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         onSuccess: Consumer<AuthCodeDeliveryDetails>,
         onError: Consumer<AuthException>
     ) {
-        realPlugin.resendUserAttributeConfirmationCode(attributeKey, options, onSuccess, onError)
+        queueChannel.trySend(
+            GlobalScope.launch(start = CoroutineStart.LAZY) {
+                try {
+                    val result = queueFacade.resendUserAttributeConfirmationCode(attributeKey, options)
+                    onSuccess.accept(result)
+                } catch (e: Exception) {
+                    onError.accept(e.toAuthException())
+                }
+            }
+        )
     }
 
     override fun resendUserAttributeConfirmationCode(
@@ -367,7 +660,16 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         onSuccess: Consumer<AuthCodeDeliveryDetails>,
         onError: Consumer<AuthException>
     ) {
-        realPlugin.resendUserAttributeConfirmationCode(attributeKey, onSuccess, onError)
+        queueChannel.trySend(
+            GlobalScope.launch(start = CoroutineStart.LAZY) {
+                try {
+                    val result = queueFacade.resendUserAttributeConfirmationCode(attributeKey)
+                    onSuccess.accept(result)
+                } catch (e: Exception) {
+                    onError.accept(e.toAuthException())
+                }
+            }
+        )
     }
 
     override fun confirmUserAttribute(
@@ -376,26 +678,61 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         onSuccess: Action,
         onError: Consumer<AuthException>
     ) {
-        realPlugin.confirmUserAttribute(attributeKey, confirmationCode, onSuccess, onError)
+        queueChannel.trySend(
+            GlobalScope.launch(start = CoroutineStart.LAZY) {
+                try {
+                    queueFacade.confirmUserAttribute(attributeKey, confirmationCode)
+                    onSuccess.call()
+                } catch (e: Exception) {
+                    onError.accept(e.toAuthException())
+                }
+            }
+        )
     }
 
     override fun getCurrentUser(
         onSuccess: Consumer<AuthUser>,
         onError: Consumer<AuthException>
     ) {
-        realPlugin.getCurrentUser(onSuccess, onError)
+        queueChannel.trySend(
+            GlobalScope.launch(start = CoroutineStart.LAZY) {
+                try {
+                    val result = queueFacade.getCurrentUser()
+                    onSuccess.accept(result)
+                } catch (e: Exception) {
+                    onError.accept(e.toAuthException())
+                }
+            }
+        )
     }
 
     override fun signOut(onComplete: Consumer<AuthSignOutResult>) {
-        realPlugin.signOut(onComplete)
+        queueChannel.trySend(
+            GlobalScope.launch(start = CoroutineStart.LAZY) {
+                queueFacade.signOut()
+            }
+        )
     }
 
     override fun signOut(options: AuthSignOutOptions, onComplete: Consumer<AuthSignOutResult>) {
-        realPlugin.signOut(options, onComplete)
+        queueChannel.trySend(
+            GlobalScope.launch(start = CoroutineStart.LAZY) {
+                queueFacade.signOut(options)
+            }
+        )
     }
 
     override fun deleteUser(onSuccess: Action, onError: Consumer<AuthException>) {
-        realPlugin.deleteUser(onSuccess, onError)
+        queueChannel.trySend(
+            GlobalScope.launch(start = CoroutineStart.LAZY) {
+                try {
+                    queueFacade.deleteUser()
+                    onSuccess.call()
+                } catch (e: Exception) {
+                    onError.accept(e.toAuthException())
+                }
+            }
+        )
     }
 
     override fun getEscapeHatch() = realPlugin.escapeHatch()
@@ -416,12 +753,19 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         onSuccess: Consumer<FederateToIdentityPoolResult>,
         onError: Consumer<AuthException>
     ) {
-        realPlugin.federateToIdentityPool(
-            providerToken,
-            authProvider,
-            FederateToIdentityPoolOptions.builder().build(),
-            onSuccess,
-            onError
+        queueChannel.trySend(
+            GlobalScope.launch(start = CoroutineStart.LAZY) {
+                try {
+                    val result = queueFacade.federateToIdentityPool(
+                        providerToken,
+                        authProvider,
+                        FederateToIdentityPoolOptions.builder().build()
+                    )
+                    onSuccess.accept(result)
+                } catch (e: Exception) {
+                    onError.accept(e.toAuthException())
+                }
+            }
         )
     }
 
@@ -439,7 +783,20 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         onSuccess: Consumer<FederateToIdentityPoolResult>,
         onError: Consumer<AuthException>
     ) {
-        realPlugin.federateToIdentityPool(providerToken, authProvider, options, onSuccess, onError)
+        queueChannel.trySend(
+            GlobalScope.launch(start = CoroutineStart.LAZY) {
+                try {
+                    val result = queueFacade.federateToIdentityPool(
+                        providerToken,
+                        authProvider,
+                        options
+                    )
+                    onSuccess.accept(result)
+                } catch (e: Exception) {
+                    onError.accept(e.toAuthException())
+                }
+            }
+        )
     }
 
     /**
@@ -451,6 +808,15 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         onSuccess: Action,
         onError: Consumer<AuthException>
     ) {
-        realPlugin.clearFederationToIdentityPool(onSuccess, onError)
+        queueChannel.trySend(
+            GlobalScope.launch(start = CoroutineStart.LAZY) {
+                try {
+                    queueFacade.clearFederationToIdentityPool()
+                    onSuccess.call()
+                } catch (e: Exception) {
+                    onError.accept(e.toAuthException())
+                }
+            }
+        )
     }
 }
