@@ -50,6 +50,10 @@ import com.amplifyframework.core.Consumer
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.newSingleThreadContext
+import kotlinx.coroutines.test.setMain
+import org.junit.After
 import kotlin.test.assertEquals
 import org.junit.Before
 import org.junit.Test
@@ -59,10 +63,20 @@ class AWSCognitoAuthPluginTest {
     private lateinit var authPlugin: AWSCognitoAuthPlugin
     private val realPlugin: RealAWSCognitoAuthPlugin = mockk(relaxed = true)
 
+    // Used to execute a test in situations where the platform Main dispatcher is not available
+    // see [https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-test/]
+    private val mainThreadSurrogate = newSingleThreadContext("Main thread")
+
     @Before
     fun setup() {
+        Dispatchers.setMain(mainThreadSurrogate)
         authPlugin = AWSCognitoAuthPlugin()
         authPlugin.realPlugin = realPlugin
+    }
+
+    @After
+    fun tearDown() {
+        mainThreadSurrogate.close()
     }
 
     @Test
