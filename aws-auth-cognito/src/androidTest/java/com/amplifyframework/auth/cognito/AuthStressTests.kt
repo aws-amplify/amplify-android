@@ -58,16 +58,12 @@ class AuthStressTests {
         val successLatch = CountDownLatch(1)
         val errorLatch = CountDownLatch(49)
 
-        repeat(50) { _ ->
+        repeat(50) {
             Amplify.Auth.signIn(
                 "username2",
                 "User@123",
-                {
-                    if (it.isSignedIn) successLatch.countDown() else fail()
-                },
-                {
-                    errorLatch.countDown()
-                }
+                { if (it.isSignedIn) successLatch.countDown() else fail() },
+                { errorLatch.countDown() }
             )
         }
 
@@ -79,7 +75,7 @@ class AuthStressTests {
     fun testMultipleSignOut() {
         val latch = CountDownLatch(50)
 
-        repeat(50) { _ ->
+        repeat(50) {
             Amplify.Auth.signOut {
                 if ((it as AWSCognitoAuthSignOutResult).signedOutLocally) latch.countDown() else fail()
             }
@@ -92,15 +88,8 @@ class AuthStressTests {
     fun testMultipleFAS_WhenSignedOut() {
         val latch = CountDownLatch(100)
 
-        repeat(100) { _ ->
-            Amplify.Auth.fetchAuthSession(
-                {
-                    if (!it.isSignedIn) latch.countDown() else fail()
-                },
-                {
-                    fail()
-                }
-            )
+        repeat(100) {
+            Amplify.Auth.fetchAuthSession({ if (!it.isSignedIn) latch.countDown() else fail() }, { fail() })
         }
 
         assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
@@ -113,23 +102,12 @@ class AuthStressTests {
         Amplify.Auth.signIn(
             "username2",
             "User@123",
-            {
-                if (it.isSignedIn) latch.countDown() else fail()
-            },
-            {
-                fail()
-            }
+            { if (it.isSignedIn) latch.countDown() else fail() },
+            { fail() }
         )
 
-        repeat(100) { _ ->
-            Amplify.Auth.fetchAuthSession(
-                {
-                    if (it.isSignedIn) latch.countDown() else fail()
-                },
-                {
-                    fail()
-                }
-            )
+        repeat(100) {
+            Amplify.Auth.fetchAuthSession({ if (it.isSignedIn) latch.countDown() else fail() }, { fail() })
         }
 
         assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
@@ -142,12 +120,8 @@ class AuthStressTests {
         Amplify.Auth.signIn(
             "username2",
             "User@123",
-            {
-                if (it.isSignedIn) latch.countDown() else fail()
-            },
-            {
-                fail()
-            }
+            { if (it.isSignedIn) latch.countDown() else fail() },
+            { fail() }
         )
 
         Amplify.Auth.signOut { if ((it as AWSCognitoAuthSignOutResult).signedOutLocally) latch.countDown() else fail() }
@@ -162,23 +136,12 @@ class AuthStressTests {
         Amplify.Auth.signIn(
             "username2",
             "User@123",
-            {
-                if (it.isSignedIn) latch.countDown() else fail()
-            },
-            {
-                fail()
-            }
+            { if (it.isSignedIn) latch.countDown() else fail() },
+            { fail() }
         )
 
-        repeat(100) { _ ->
-            Amplify.Auth.fetchAuthSession(
-                {
-                    latch.countDown()
-                },
-                {
-                    fail()
-                }
-            )
+        repeat(100) {
+            Amplify.Auth.fetchAuthSession({ latch.countDown() }, { fail() })
         }
 
         Amplify.Auth.signOut { if ((it as AWSCognitoAuthSignOutResult).signedOutLocally) latch.countDown() else fail() }
@@ -193,12 +156,8 @@ class AuthStressTests {
         Amplify.Auth.signIn(
             "username2",
             "User@123",
-            {
-                if (it.isSignedIn) latch.countDown() else fail()
-            },
-            {
-                fail()
-            }
+            { if (it.isSignedIn) latch.countDown() else fail() },
+            { fail() }
         )
 
         val random = (Math.random() * 100).toInt()
@@ -209,14 +168,7 @@ class AuthStressTests {
                 }
             }
 
-            Amplify.Auth.fetchAuthSession(
-                {
-                    latch.countDown()
-                },
-                {
-                    fail()
-                }
-            )
+            Amplify.Auth.fetchAuthSession({ latch.countDown() }, { fail() })
         }
 
         assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
@@ -229,12 +181,8 @@ class AuthStressTests {
         Amplify.Auth.signIn(
             "username2",
             "User@123",
-            {
-                if (it.isSignedIn) latch.countDown()
-            },
-            {
-                fail()
-            }
+            { if (it.isSignedIn) latch.countDown() },
+            { fail() }
         )
 
         val random = List(2) { (Math.random() * 100).toInt() }
@@ -243,13 +191,38 @@ class AuthStressTests {
 
             Amplify.Auth.fetchAuthSession(
                 options,
-                {
-                    if (it.isSignedIn) latch.countDown() else fail()
-                },
-                {
-                    fail()
-                }
+                { if (it.isSignedIn) latch.countDown() else fail() },
+                { fail() }
             )
+        }
+
+        assertTrue(latch.await(TIMEOUT_S, TimeUnit.MINUTES))
+    }
+
+    @Test
+    fun testRandomMultipleAPIs() {
+        val latch = CountDownLatch(20)
+
+        val random = List(20) { (1..4).random() }
+        random.forEach { idx ->
+            when (idx) {
+                1 -> Amplify.Auth.fetchAuthSession({ latch.countDown() }, { fail() })
+                2 -> {
+                    Amplify.Auth.signIn(
+                        "username2",
+                        "User@123",
+                        { if (it.isSignedIn) latch.countDown() },
+                        { latch.countDown() }
+                    )
+                }
+                3 -> {
+                    val options = AuthFetchSessionOptions.builder().forceRefresh(true).build()
+                    Amplify.Auth.fetchAuthSession(options, { latch.countDown() }, { fail() })
+                }
+                4 -> Amplify.Auth.signOut {
+                    if ((it as AWSCognitoAuthSignOutResult).signedOutLocally) latch.countDown() else fail()
+                }
+            }
         }
 
         assertTrue(latch.await(TIMEOUT_S, TimeUnit.MINUTES))
