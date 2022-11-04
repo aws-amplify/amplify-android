@@ -91,5 +91,5 @@ object FetchAuthSessionTestCaseGenerator : SerializableProvider {
         }
 
     // TODO : Fix error case and refresh session case
-    override val serializables: List<Any> = listOf(baseCase)
+    override val serializables: List<Any> = listOf(baseCase,refreshSuccessCase)
 }
