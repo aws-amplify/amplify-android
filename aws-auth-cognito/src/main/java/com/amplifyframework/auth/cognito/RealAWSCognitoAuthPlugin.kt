@@ -997,7 +997,7 @@ internal class RealAWSCognitoAuthPlugin(
     }
 
     override fun fetchDevices(
-        onSuccess: Consumer<MutableList<AuthDevice>>,
+        onSuccess: Consumer<List<AuthDevice>>,
         onError: Consumer<AuthException>
     ) {
         authStateMachine.getCurrentState { authState ->
@@ -1012,7 +1012,7 @@ internal class RealAWSCognitoAuthPlugin(
         }
     }
 
-    private fun _fetchDevices(onSuccess: Consumer<MutableList<AuthDevice>>, onError: Consumer<AuthException>) {
+    private fun _fetchDevices(onSuccess: Consumer<List<AuthDevice>>, onError: Consumer<AuthException>) {
         GlobalScope.async {
             try {
                 val tokens = getSession().userPoolTokensResult
@@ -1243,9 +1243,9 @@ internal class RealAWSCognitoAuthPlugin(
     }
 
     override fun updateUserAttributes(
-        attributes: MutableList<AuthUserAttribute>,
+        attributes: List<AuthUserAttribute>,
         options: AuthUpdateUserAttributesOptions,
-        onSuccess: Consumer<MutableMap<AuthUserAttributeKey, AuthUpdateAttributeResult>>,
+        onSuccess: Consumer<Map<AuthUserAttributeKey, AuthUpdateAttributeResult>>,
         onError: Consumer<AuthException>
     ) {
         GlobalScope.launch {
@@ -1261,15 +1261,15 @@ internal class RealAWSCognitoAuthPlugin(
     }
 
     override fun updateUserAttributes(
-        attributes: MutableList<AuthUserAttribute>,
-        onSuccess: Consumer<MutableMap<AuthUserAttributeKey, AuthUpdateAttributeResult>>,
+        attributes: List<AuthUserAttribute>,
+        onSuccess: Consumer<Map<AuthUserAttributeKey, AuthUpdateAttributeResult>>,
         onError: Consumer<AuthException>
     ) {
         updateUserAttributes(attributes, AuthUpdateUserAttributesOptions.defaults(), onSuccess, onError)
     }
 
     private suspend fun updateUserAttributes(
-        attributes: MutableList<AuthUserAttribute>,
+        attributes: List<AuthUserAttribute>,
         userAttributesOptionsMetadata: Map<String, String>?,
     ): MutableMap<AuthUserAttributeKey, AuthUpdateAttributeResult> {
 
@@ -1709,7 +1709,7 @@ internal class RealAWSCognitoAuthPlugin(
                         )
                     )
 
-                    _federateToIdentityPool(providerToken, authProvider, options, onSuccess, onError)
+                    _federateToIdentityPool(onSuccess, onError)
                 }
                 else -> onError.accept(
                     InvalidStateException("Federation could not be completed.")
@@ -1719,9 +1719,6 @@ internal class RealAWSCognitoAuthPlugin(
     }
 
     private fun _federateToIdentityPool(
-        providerToken: String,
-        authProvider: AuthProvider,
-        options: FederateToIdentityPoolOptions?,
         onSuccess: Consumer<FederateToIdentityPoolResult>,
         onError: Consumer<AuthException>
     ) {

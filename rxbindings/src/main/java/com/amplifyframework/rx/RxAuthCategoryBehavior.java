@@ -32,6 +32,7 @@ import com.amplifyframework.auth.AuthUserAttributeKey;
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions;
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions;
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions;
+import com.amplifyframework.auth.options.AuthFetchSessionOptions;
 import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions;
 import com.amplifyframework.auth.options.AuthResendUserAttributeConfirmationCodeOptions;
 import com.amplifyframework.auth.options.AuthResetPasswordOptions;
@@ -233,6 +234,18 @@ public interface RxAuthCategoryBehavior {
      *         {@link AuthException} on failure
      */
     Single<AuthSession> fetchAuthSession();
+
+    /**
+     * Retrieve the user's current session information - by default just whether they are signed out or in.
+     * Depending on how a plugin implements this, the resulting AuthSession can also be cast to a type specific
+     * to that plugin which contains the various security tokens and other identifying information if you want to
+     * manually use them outside the plugin. Within Amplify this should not be needed as the other categories will
+     * automatically work as long as you are signed in.
+     * @param options Advanced options for fetching auth session.
+     * @return An Rx {@link Single} which emits {@link AuthSession} on success,
+     *         {@link AuthException} on failure
+     */
+    Single<AuthSession> fetchAuthSession(@NonNull AuthFetchSessionOptions options);
 
     /**
      * Remember the user device that is currently being used.

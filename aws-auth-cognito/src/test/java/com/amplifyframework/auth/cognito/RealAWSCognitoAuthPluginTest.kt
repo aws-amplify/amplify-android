@@ -915,7 +915,7 @@ class RealAWSCognitoAuthPluginTest {
     @Test
     fun `update user attributes fails when not in SignedIn state`() {
         // GIVEN
-        val onSuccess = mockk<Consumer<MutableMap<AuthUserAttributeKey, AuthUpdateAttributeResult>>>(relaxed = true)
+        val onSuccess = mockk<Consumer<Map<AuthUserAttributeKey, AuthUpdateAttributeResult>>>(relaxed = true)
         val onError = mockk<Consumer<AuthException>>(relaxed = true)
         val listenLatch = CountDownLatch(1)
 
@@ -1043,7 +1043,7 @@ class RealAWSCognitoAuthPluginTest {
     @Test
     fun `update user attributes with delivery code success`() {
         // GIVEN
-        val onSuccess = mockk<Consumer<MutableMap<AuthUserAttributeKey, AuthUpdateAttributeResult>>>(relaxed = true)
+        val onSuccess = mockk<Consumer<Map<AuthUserAttributeKey, AuthUpdateAttributeResult>>>(relaxed = true)
         val onError = mockk<Consumer<AuthException>>(relaxed = true)
         val listenLatch = CountDownLatch(1)
 
