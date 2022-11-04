@@ -79,7 +79,9 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
 
     @VisibleForTesting
     internal lateinit var realPlugin: RealAWSCognitoAuthPlugin
-    private lateinit var queueFacade: KotlinAuthFacadeInternal
+    private val queueFacade: KotlinAuthFacadeInternal by lazy {
+        KotlinAuthFacadeInternal(realPlugin)
+    }
 
     private val queueChannel = Channel<Job>(capacity = Channel.UNLIMITED).apply {
         GlobalScope.launch {
@@ -97,7 +99,6 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
 
     override fun initialize(context: Context) {
         realPlugin.initialize()
-        queueFacade = KotlinAuthFacadeInternal(realPlugin)
     }
 
     @Throws(AmplifyException::class)
@@ -434,7 +435,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
         queueChannel.trySend(
             GlobalScope.launch(start = CoroutineStart.LAZY) {
                 try {
-                    queueFacade.forgetDevice()
+                    queueFacade.forgetDevice(device)
                     onSuccess.call()
                 } catch (e: Exception) {
                     onError.accept(e.toAuthException())

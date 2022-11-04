@@ -104,7 +104,6 @@ import org.junit.Before
 import org.junit.Ignore
 import org.junit.Test
 
-@Ignore
 class RealAWSCognitoAuthPluginTest {
 
     private val dummyToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IkpvaG4gRG9lIiwiZXhwIjoxNTE2Mj" +
