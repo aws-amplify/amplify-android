@@ -57,15 +57,33 @@ internal class EventRecorder(
     private val defaultMaxSubmissionAllowed = 3
     private val defaultMaxSubmissionSize = 1024 * 100
     private val serviceDefinedMaxEventsPerBatch: Int = 100
-    internal suspend fun recordEvent(pinpointEvent: PinpointEvent): Uri {
+    internal suspend fun recordEvent(pinpointEvent: PinpointEvent): Uri? {
         return withContext(coroutineDispatcher) {
-            pinpointDatabase.saveEvent(pinpointEvent)
+            val result = runCatching {
+                pinpointDatabase.saveEvent(pinpointEvent)
+            }
+            when {
+                result.isSuccess -> result.getOrNull()
+                else -> {
+                    logger.error("Failed to record event ${result.exceptionOrNull()}")
+                    null
+                }
+            }
         }
     }
 
     internal suspend fun submitEvents(): List<AnalyticsEvent> {
         return withContext(coroutineDispatcher) {
-            processEvents()
+            val result = runCatching {
+                processEvents()
+            }
+            when {
+                result.isSuccess -> result.getOrNull() ?: emptyList()
+                else -> {
+                    logger.error("Failed to submit events ${result.exceptionOrNull()}")
+                    emptyList()
+                }
+            }
         }
     }
 
@@ -122,13 +140,7 @@ internal class EventRecorder(
         endpointProfile: EndpointProfile
     ): List<PinpointEvent> {
         val putEventRequest = createPutEventsRequest(events, endpointProfile)
-        val response: PutEventsResponse
-        try {
-            // This could fail if credentials are no longer stored due to sign out before this call is processed
-            response = pinpointClient.putEvents(putEventRequest)
-        } catch (e: Exception) {
-            return emptyList()
-        }
+        val response = pinpointClient.putEvents(putEventRequest)
         val eventIdsToBeDeleted = mutableListOf<PinpointEvent>()
         response.eventsResponse?.results?.let { result ->
             processEndpointResponse(result[endpointProfile.endpointId]?.endpointItemResponse)
@@ -158,7 +170,7 @@ internal class EventRecorder(
                         if (isRetryableError(message)) {
                             logger.error(
                                 "Failed to deliver event with ${pinpointEvent.eventId}," +
-                                    " will be re-delivered later"
+                                        " will be re-delivered later"
                             )
                         } else {
                             logger.error("Failed to deliver event with ${pinpointEvent.eventId}, response: $message")
@@ -173,10 +185,10 @@ internal class EventRecorder(
 
     private fun isRetryableError(responseCode: String): Boolean {
         return !(
-            responseCode.equals("ValidationException", ignoreCase = true) ||
-                responseCode.equals("SerializationException", ignoreCase = true) ||
-                responseCode.equals("BadRequestException", ignoreCase = true)
-            )
+                responseCode.equals("ValidationException", ignoreCase = true) ||
+                        responseCode.equals("SerializationException", ignoreCase = true) ||
+                        responseCode.equals("BadRequestException", ignoreCase = true)
+                )
     }
 
     private fun processEndpointResponse(endpointResponse: EndpointItemResponse?) {
