@@ -348,9 +348,9 @@ class KotlinAuthFacadeTest {
     fun fetchAuthSessionSucceeds() = runBlocking {
         val session = AuthSession(true)
         every {
-            delegate.fetchAuthSession(any(), any())
+            delegate.fetchAuthSession(any(), any(), any())
         } answers {
-            val indexOfResultConsumer = 0
+            val indexOfResultConsumer = 1
             val onResult = it.invocation.args[indexOfResultConsumer] as Consumer<AuthSession>
             onResult.accept(session)
         }
@@ -365,9 +365,9 @@ class KotlinAuthFacadeTest {
     fun fetchAuthSessionThrows(): Unit = runBlocking {
         val error = AuthException("uh", "oh")
         every {
-            delegate.fetchAuthSession(any(), any())
+            delegate.fetchAuthSession(any(), any(), any())
         } answers {
-            val indexOfErrorConsumer = 1
+            val indexOfErrorConsumer = 2
             val onError = it.invocation.args[indexOfErrorConsumer] as Consumer<AuthException>
             onError.accept(error)
         }
@@ -382,9 +382,9 @@ class KotlinAuthFacadeTest {
     fun fetchAuthSessionThrowsSessionExpired(): Unit = runBlocking {
         val error = SessionExpiredException() as AuthException
         every {
-            delegate.fetchAuthSession(any(), any())
+            delegate.fetchAuthSession(any(), any(), any())
         } answers {
-            val indexOfErrorConsumer = 1
+            val indexOfErrorConsumer = 2
             val onError = it.invocation.args[indexOfErrorConsumer] as Consumer<AuthException>
             onError.accept(error)
         }
