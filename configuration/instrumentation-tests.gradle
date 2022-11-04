@@ -11,7 +11,8 @@ def module_backends = [
     'aws-analytics-pinpoint': 'NONE',
     'aws-predictions': 'NONE',
     'core':'NONE',
-    'aws-auth-cognito': 'AuthIntegrationTests']
+    'aws-auth-cognito': 'AuthIntegrationTests'
+]
 
 subprojects {
     afterEvaluate { project ->
