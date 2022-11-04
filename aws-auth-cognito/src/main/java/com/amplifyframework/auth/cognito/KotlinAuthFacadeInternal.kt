@@ -13,11 +13,10 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.kotlin.auth
+package com.amplifyframework.auth.cognito
 
 import android.app.Activity
 import android.content.Intent
-import com.amplifyframework.auth.AuthCategoryBehavior as Delegate
 import com.amplifyframework.auth.AuthCodeDeliveryDetails
 import com.amplifyframework.auth.AuthDevice
 import com.amplifyframework.auth.AuthProvider
@@ -25,6 +24,8 @@ import com.amplifyframework.auth.AuthSession
 import com.amplifyframework.auth.AuthUser
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
+import com.amplifyframework.auth.cognito.options.FederateToIdentityPoolOptions
+import com.amplifyframework.auth.cognito.result.FederateToIdentityPoolResult
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
@@ -43,13 +44,13 @@ import com.amplifyframework.auth.result.AuthSignInResult
 import com.amplifyframework.auth.result.AuthSignOutResult
 import com.amplifyframework.auth.result.AuthSignUpResult
 import com.amplifyframework.auth.result.AuthUpdateAttributeResult
-import com.amplifyframework.core.Amplify
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
-class KotlinAuthFacade(private val delegate: Delegate = Amplify.Auth) : Auth {
-    override suspend fun signUp(
+internal class KotlinAuthFacadeInternal(private val delegate: RealAWSCognitoAuthPlugin) {
+
+    suspend fun signUp(
         username: String,
         password: String,
         options: AuthSignUpOptions
@@ -65,7 +66,21 @@ class KotlinAuthFacade(private val delegate: Delegate = Amplify.Auth) : Auth {
         }
     }
 
-    override suspend fun confirmSignUp(
+    suspend fun confirmSignUp(
+        username: String,
+        confirmationCode: String
+    ): AuthSignUpResult {
+        return suspendCoroutine { continuation ->
+            delegate.confirmSignUp(
+                username,
+                confirmationCode,
+                { continuation.resume(it) },
+                { continuation.resumeWithException(it) }
+            )
+        }
+    }
+
+    suspend fun confirmSignUp(
         username: String,
         confirmationCode: String,
         options: AuthConfirmSignUpOptions
@@ -81,7 +96,19 @@ class KotlinAuthFacade(private val delegate: Delegate = Amplify.Auth) : Auth {
         }
     }
 
-    override suspend fun resendSignUpCode(
+    suspend fun resendSignUpCode(
+        username: String
+    ): AuthCodeDeliveryDetails {
+        return suspendCoroutine { continuation ->
+            delegate.resendSignUpCode(
+                username,
+                { continuation.resume(it) },
+                { continuation.resumeWithException(it) }
+            )
+        }
+    }
+
+    suspend fun resendSignUpCode(
         username: String,
         options: AuthResendSignUpCodeOptions
     ): AuthCodeDeliveryDetails {
@@ -95,7 +122,21 @@ class KotlinAuthFacade(private val delegate: Delegate = Amplify.Auth) : Auth {
         }
     }
 
-    override suspend fun signIn(
+    suspend fun signIn(
+        username: String?,
+        password: String?
+    ): AuthSignInResult {
+        return suspendCoroutine { continuation ->
+            delegate.signIn(
+                username,
+                password,
+                { continuation.resume(it) },
+                { continuation.resumeWithException(it) }
+            )
+        }
+    }
+
+    suspend fun signIn(
         username: String?,
         password: String?,
         options: AuthSignInOptions
@@ -111,7 +152,19 @@ class KotlinAuthFacade(private val delegate: Delegate = Amplify.Auth) : Auth {
         }
     }
 
-    override suspend fun confirmSignIn(
+    suspend fun confirmSignIn(
+        challengeResponse: String
+    ): AuthSignInResult {
+        return suspendCoroutine { continuation ->
+            delegate.confirmSignIn(
+                challengeResponse,
+                { continuation.resume(it) },
+                { continuation.resumeWithException(it) }
+            )
+        }
+    }
+
+    suspend fun confirmSignIn(
         challengeResponse: String,
         options: AuthConfirmSignInOptions
     ): AuthSignInResult {
@@ -125,7 +178,22 @@ class KotlinAuthFacade(private val delegate: Delegate = Amplify.Auth) : Auth {
         }
     }
 
-    override suspend fun signInWithSocialWebUI(
+    suspend fun signInWithSocialWebUI(
+        provider: AuthProvider,
+        callingActivity: Activity
+    ):
+        AuthSignInResult {
+            return suspendCoroutine { continuation ->
+                delegate.signInWithSocialWebUI(
+                    provider,
+                    callingActivity,
+                    { continuation.resume(it) },
+                    { continuation.resumeWithException(it) }
+                )
+            }
+        }
+
+    suspend fun signInWithSocialWebUI(
         provider: AuthProvider,
         callingActivity: Activity,
         options: AuthWebUISignInOptions
@@ -142,7 +210,19 @@ class KotlinAuthFacade(private val delegate: Delegate = Amplify.Auth) : Auth {
             }
         }
 
-    override suspend fun signInWithWebUI(
+    suspend fun signInWithWebUI(
+        callingActivity: Activity
+    ): AuthSignInResult {
+        return suspendCoroutine { continuation ->
+            delegate.signInWithWebUI(
+                callingActivity,
+                { continuation.resume(it) },
+                { continuation.resumeWithException(it) }
+            )
+        }
+    }
+
+    suspend fun signInWithWebUI(
         callingActivity: Activity,
         options: AuthWebUISignInOptions
     ): AuthSignInResult {
@@ -156,21 +236,30 @@ class KotlinAuthFacade(private val delegate: Delegate = Amplify.Auth) : Auth {
         }
     }
 
-    override fun handleWebUISignInResponse(intent: Intent) {
+    fun handleWebUISignInResponse(intent: Intent?) {
         delegate.handleWebUISignInResponse(intent)
     }
 
-    override suspend fun fetchAuthSession(options: AuthFetchSessionOptions): AuthSession {
+    suspend fun fetchAuthSession(): AuthSession {
         return suspendCoroutine { continuation ->
             delegate.fetchAuthSession(
-                AuthFetchSessionOptions.defaults(),
                 { continuation.resume(it) },
                 { continuation.resumeWithException(it) }
             )
         }
     }
 
-    override suspend fun rememberDevice() {
+    suspend fun fetchAuthSession(options: AuthFetchSessionOptions): AuthSession {
+        return suspendCoroutine { continuation ->
+            delegate.fetchAuthSession(
+                options,
+                { continuation.resume(it) },
+                { continuation.resumeWithException(it) }
+            )
+        }
+    }
+
+    suspend fun rememberDevice() {
         return suspendCoroutine { continuation ->
             delegate.rememberDevice(
                 { continuation.resume(Unit) },
@@ -179,24 +268,26 @@ class KotlinAuthFacade(private val delegate: Delegate = Amplify.Auth) : Auth {
         }
     }
 
-    override suspend fun forgetDevice(device: AuthDevice?) {
+    suspend fun forgetDevice() {
         return suspendCoroutine { continuation ->
-            if (device == null) {
-                delegate.forgetDevice(
-                    { continuation.resume(Unit) },
-                    { continuation.resumeWithException(it) }
-                )
-            } else {
-                delegate.forgetDevice(
-                    device,
-                    { continuation.resume(Unit) },
-                    { continuation.resumeWithException(it) }
-                )
-            }
+            delegate.forgetDevice(
+                { continuation.resume(Unit) },
+                { continuation.resumeWithException(it) }
+            )
         }
     }
 
-    override suspend fun fetchDevices(): List<AuthDevice> {
+    suspend fun forgetDevice(device: AuthDevice) {
+        return suspendCoroutine { continuation ->
+            delegate.forgetDevice(
+                device,
+                { continuation.resume(Unit) },
+                { continuation.resumeWithException(it) }
+            )
+        }
+    }
+
+    suspend fun fetchDevices(): List<AuthDevice> {
         return suspendCoroutine { continuation ->
             delegate.fetchDevices(
                 { continuation.resume(it) },
@@ -205,7 +296,19 @@ class KotlinAuthFacade(private val delegate: Delegate = Amplify.Auth) : Auth {
         }
     }
 
-    override suspend fun resetPassword(
+    suspend fun resetPassword(
+        username: String
+    ): AuthResetPasswordResult {
+        return suspendCoroutine { continuation ->
+            delegate.resetPassword(
+                username,
+                { continuation.resume(it) },
+                { continuation.resumeWithException(it) }
+            )
+        }
+    }
+
+    suspend fun resetPassword(
         username: String,
         options: AuthResetPasswordOptions
     ): AuthResetPasswordResult {
@@ -219,7 +322,23 @@ class KotlinAuthFacade(private val delegate: Delegate = Amplify.Auth) : Auth {
         }
     }
 
-    override suspend fun confirmResetPassword(
+    suspend fun confirmResetPassword(
+        username: String,
+        newPassword: String,
+        confirmationCode: String
+    ) {
+        return suspendCoroutine { continuation ->
+            delegate.confirmResetPassword(
+                username,
+                newPassword,
+                confirmationCode,
+                { continuation.resume(Unit) },
+                { continuation.resumeWithException(it) }
+            )
+        }
+    }
+
+    suspend fun confirmResetPassword(
         username: String,
         newPassword: String,
         confirmationCode: String,
@@ -237,7 +356,7 @@ class KotlinAuthFacade(private val delegate: Delegate = Amplify.Auth) : Auth {
         }
     }
 
-    override suspend fun updatePassword(oldPassword: String, newPassword: String) {
+    suspend fun updatePassword(oldPassword: String, newPassword: String) {
         return suspendCoroutine { continuation ->
             delegate.updatePassword(
                 oldPassword,
@@ -248,7 +367,7 @@ class KotlinAuthFacade(private val delegate: Delegate = Amplify.Auth) : Auth {
         }
     }
 
-    override suspend fun fetchUserAttributes(): List<AuthUserAttribute> {
+    suspend fun fetchUserAttributes(): List<AuthUserAttribute> {
         return suspendCoroutine { continuation ->
             delegate.fetchUserAttributes(
                 { continuation.resume(it) },
@@ -257,7 +376,19 @@ class KotlinAuthFacade(private val delegate: Delegate = Amplify.Auth) : Auth {
         }
     }
 
-    override suspend fun updateUserAttribute(
+    suspend fun updateUserAttribute(
+        attribute: AuthUserAttribute
+    ): AuthUpdateAttributeResult {
+        return suspendCoroutine { continuation ->
+            delegate.updateUserAttribute(
+                attribute,
+                { continuation.resume(it) },
+                { continuation.resumeWithException(it) }
+            )
+        }
+    }
+
+    suspend fun updateUserAttribute(
         attribute: AuthUserAttribute,
         options: AuthUpdateUserAttributeOptions
     ): AuthUpdateAttributeResult {
@@ -271,7 +402,19 @@ class KotlinAuthFacade(private val delegate: Delegate = Amplify.Auth) : Auth {
         }
     }
 
-    override suspend fun updateUserAttributes(
+    suspend fun updateUserAttributes(
+        attributes: List<AuthUserAttribute>
+    ): Map<AuthUserAttributeKey, AuthUpdateAttributeResult> {
+        return suspendCoroutine { continuation ->
+            delegate.updateUserAttributes(
+                attributes,
+                { continuation.resume(it) },
+                { continuation.resumeWithException(it) }
+            )
+        }
+    }
+
+    suspend fun updateUserAttributes(
         attributes: List<AuthUserAttribute>,
         options: AuthUpdateUserAttributesOptions
     ): Map<AuthUserAttributeKey, AuthUpdateAttributeResult> {
@@ -285,7 +428,19 @@ class KotlinAuthFacade(private val delegate: Delegate = Amplify.Auth) : Auth {
         }
     }
 
-    override suspend fun resendUserAttributeConfirmationCode(
+    suspend fun resendUserAttributeConfirmationCode(
+        attributeKey: AuthUserAttributeKey
+    ): AuthCodeDeliveryDetails {
+        return suspendCoroutine { continuation ->
+            delegate.resendUserAttributeConfirmationCode(
+                attributeKey,
+                { continuation.resume(it) },
+                { continuation.resumeWithException(it) }
+            )
+        }
+    }
+
+    suspend fun resendUserAttributeConfirmationCode(
         attributeKey: AuthUserAttributeKey,
         options: AuthResendUserAttributeConfirmationCodeOptions
     ): AuthCodeDeliveryDetails {
@@ -299,7 +454,7 @@ class KotlinAuthFacade(private val delegate: Delegate = Amplify.Auth) : Auth {
         }
     }
 
-    override suspend fun confirmUserAttribute(
+    suspend fun confirmUserAttribute(
         attributeKey: AuthUserAttributeKey,
         confirmationCode: String
     ) {
@@ -313,7 +468,7 @@ class KotlinAuthFacade(private val delegate: Delegate = Amplify.Auth) : Auth {
         }
     }
 
-    override suspend fun getCurrentUser(): AuthUser {
+    suspend fun getCurrentUser(): AuthUser {
         return suspendCoroutine { continuation ->
             delegate.getCurrentUser(
                 { continuation.resume(it) },
@@ -322,15 +477,46 @@ class KotlinAuthFacade(private val delegate: Delegate = Amplify.Auth) : Auth {
         }
     }
 
-    override suspend fun signOut(options: AuthSignOutOptions): AuthSignOutResult {
+    suspend fun signOut(): AuthSignOutResult {
+        return suspendCoroutine { continuation ->
+            delegate.signOut { continuation.resume(it) }
+        }
+    }
+
+    suspend fun signOut(options: AuthSignOutOptions): AuthSignOutResult {
         return suspendCoroutine { continuation ->
             delegate.signOut(options) { continuation.resume(it) }
         }
     }
 
-    override suspend fun deleteUser() {
+    suspend fun deleteUser() {
         return suspendCoroutine { continuation ->
             delegate.deleteUser(
+                { continuation.resume(Unit) },
+                { continuation.resumeWithException(it) }
+            )
+        }
+    }
+
+    suspend fun federateToIdentityPool(
+        providerToken: String,
+        authProvider: AuthProvider,
+        options: FederateToIdentityPoolOptions?
+    ): FederateToIdentityPoolResult {
+        return suspendCoroutine { continuation ->
+            delegate.federateToIdentityPool(
+                providerToken,
+                authProvider,
+                options,
+                { continuation.resume(it) },
+                { continuation.resumeWithException(it) }
+            )
+        }
+    }
+
+    suspend fun clearFederationToIdentityPool() {
+        return suspendCoroutine { continuation ->
+            delegate.clearFederationToIdentityPool(
                 { continuation.resume(Unit) },
                 { continuation.resumeWithException(it) }
             )

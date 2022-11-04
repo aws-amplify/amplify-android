@@ -56,6 +56,10 @@ import org.junit.Test
 
 class AWSCognitoAuthPluginTest {
 
+    companion object {
+        const val CHANNEL_TIMEOUT = 1000L
+    }
+
     private lateinit var authPlugin: AWSCognitoAuthPlugin
     private val realPlugin: RealAWSCognitoAuthPlugin = mockk(relaxed = true)
 
@@ -75,8 +79,8 @@ class AWSCognitoAuthPluginTest {
 
         authPlugin.signUp(expectedUsername, expectedPassword, expectedOptions, expectedOnSuccess, expectedOnError)
 
-        verify {
-            realPlugin.signUp(expectedUsername, expectedPassword, expectedOptions, expectedOnSuccess, expectedOnError)
+        verify(timeout = CHANNEL_TIMEOUT) {
+            realPlugin.signUp(expectedUsername, expectedPassword, expectedOptions, any(), any())
         }
     }
 
@@ -89,12 +93,12 @@ class AWSCognitoAuthPluginTest {
 
         authPlugin.confirmSignUp(expectedUsername, expectedConfirmationCode, expectedOnSuccess, expectedOnError)
 
-        verify {
+        verify(timeout = CHANNEL_TIMEOUT) {
             realPlugin.confirmSignUp(
                 expectedUsername,
                 expectedConfirmationCode,
-                expectedOnSuccess,
-                expectedOnError
+                any(),
+                any()
             )
         }
     }
@@ -115,13 +119,13 @@ class AWSCognitoAuthPluginTest {
             expectedOnError
         )
 
-        verify {
+        verify(timeout = CHANNEL_TIMEOUT) {
             realPlugin.confirmSignUp(
                 expectedUsername,
                 expectedConfirmationCode,
                 expectedOptions,
-                expectedOnSuccess,
-                expectedOnError
+                any(),
+                any()
             )
         }
     }
@@ -134,7 +138,7 @@ class AWSCognitoAuthPluginTest {
 
         authPlugin.resendSignUpCode(expectedUsername, expectedOnSuccess, expectedOnError)
 
-        verify { realPlugin.resendSignUpCode(expectedUsername, expectedOnSuccess, expectedOnError) }
+        verify(timeout = CHANNEL_TIMEOUT) { realPlugin.resendSignUpCode(expectedUsername, any(), any()) }
     }
 
     @Test
@@ -146,7 +150,9 @@ class AWSCognitoAuthPluginTest {
 
         authPlugin.resendSignUpCode(expectedUsername, expectedOptions, expectedOnSuccess, expectedOnError)
 
-        verify { realPlugin.resendSignUpCode(expectedUsername, expectedOptions, expectedOnSuccess, expectedOnError) }
+        verify(timeout = CHANNEL_TIMEOUT) {
+            realPlugin.resendSignUpCode(expectedUsername, expectedOptions, any(), any())
+        }
     }
 
     @Test
@@ -158,7 +164,7 @@ class AWSCognitoAuthPluginTest {
 
         authPlugin.signIn(expectedUsername, expectedPassword, expectedOnSuccess, expectedOnError)
 
-        verify { realPlugin.signIn(expectedUsername, expectedPassword, expectedOnSuccess, expectedOnError) }
+        verify(timeout = CHANNEL_TIMEOUT) { realPlugin.signIn(expectedUsername, expectedPassword, any(), any()) }
     }
 
     @Test
@@ -171,13 +177,13 @@ class AWSCognitoAuthPluginTest {
 
         authPlugin.signIn(expectedUsername, expectedPassword, expectedOptions, expectedOnSuccess, expectedOnError)
 
-        verify {
+        verify(timeout = CHANNEL_TIMEOUT) {
             realPlugin.signIn(
                 expectedUsername,
                 expectedPassword,
                 expectedOptions,
-                expectedOnSuccess,
-                expectedOnError
+                any(),
+                any()
             )
         }
     }
@@ -190,7 +196,7 @@ class AWSCognitoAuthPluginTest {
 
         authPlugin.confirmSignIn(expectedChallengeResponse, expectedOnSuccess, expectedOnError)
 
-        verify { realPlugin.confirmSignIn(expectedChallengeResponse, expectedOnSuccess, expectedOnError) }
+        verify(timeout = CHANNEL_TIMEOUT) { realPlugin.confirmSignIn(expectedChallengeResponse, any(), any()) }
     }
 
     @Test
@@ -202,8 +208,8 @@ class AWSCognitoAuthPluginTest {
 
         authPlugin.confirmSignIn(expectedConfirmationCode, expectedOptions, expectedOnSuccess, expectedOnError)
 
-        verify {
-            realPlugin.confirmSignIn(expectedConfirmationCode, expectedOptions, expectedOnSuccess, expectedOnError)
+        verify(timeout = CHANNEL_TIMEOUT) {
+            realPlugin.confirmSignIn(expectedConfirmationCode, expectedOptions, any(), any())
         }
     }
 
@@ -216,12 +222,12 @@ class AWSCognitoAuthPluginTest {
 
         authPlugin.signInWithSocialWebUI(expectedProvider, expectedActivity, expectedOnSuccess, expectedOnError)
 
-        verify {
+        verify(timeout = CHANNEL_TIMEOUT) {
             realPlugin.signInWithSocialWebUI(
                 expectedProvider,
                 expectedActivity,
-                expectedOnSuccess,
-                expectedOnError
+                any(),
+                any()
             )
         }
     }
@@ -242,13 +248,13 @@ class AWSCognitoAuthPluginTest {
             expectedOnError
         )
 
-        verify {
+        verify(timeout = CHANNEL_TIMEOUT) {
             realPlugin.signInWithSocialWebUI(
                 expectedProvider,
                 expectedActivity,
                 expectedOptions,
-                expectedOnSuccess,
-                expectedOnError
+                any(),
+                any()
             )
         }
     }
@@ -261,7 +267,7 @@ class AWSCognitoAuthPluginTest {
 
         authPlugin.signInWithWebUI(expectedActivity, expectedOnSuccess, expectedOnError)
 
-        verify { realPlugin.signInWithWebUI(expectedActivity, expectedOnSuccess, expectedOnError) }
+        verify(timeout = CHANNEL_TIMEOUT) { realPlugin.signInWithWebUI(expectedActivity, any(), any()) }
     }
 
     @Test
@@ -273,7 +279,9 @@ class AWSCognitoAuthPluginTest {
 
         authPlugin.signInWithWebUI(expectedActivity, expectedOptions, expectedOnSuccess, expectedOnError)
 
-        verify { realPlugin.signInWithWebUI(expectedActivity, expectedOptions, expectedOnSuccess, expectedOnError) }
+        verify(timeout = CHANNEL_TIMEOUT) {
+            realPlugin.signInWithWebUI(expectedActivity, expectedOptions, any(), any())
+        }
     }
 
     @Test
@@ -282,7 +290,7 @@ class AWSCognitoAuthPluginTest {
 
         authPlugin.handleWebUISignInResponse(expectedIntent)
 
-        verify { realPlugin.handleWebUISignInResponse(expectedIntent) }
+        verify(timeout = CHANNEL_TIMEOUT) { realPlugin.handleWebUISignInResponse(expectedIntent) }
     }
 
     @Test
@@ -293,7 +301,7 @@ class AWSCognitoAuthPluginTest {
 
         authPlugin.fetchAuthSession(expectedOptions, expectedOnSuccess, expectedOnError)
 
-        verify { realPlugin.fetchAuthSession(expectedOptions, expectedOnSuccess, expectedOnError) }
+        verify(timeout = CHANNEL_TIMEOUT) { realPlugin.fetchAuthSession(expectedOptions, any(), any()) }
     }
 
     @Test
@@ -303,7 +311,7 @@ class AWSCognitoAuthPluginTest {
 
         authPlugin.fetchAuthSession(expectedOnSuccess, expectedOnError)
 
-        verify { realPlugin.fetchAuthSession(expectedOnSuccess, expectedOnError) }
+        verify(timeout = CHANNEL_TIMEOUT) { realPlugin.fetchAuthSession(any(), any()) }
     }
 
     @Test
@@ -313,7 +321,7 @@ class AWSCognitoAuthPluginTest {
 
         authPlugin.rememberDevice(expectedOnSuccess, expectedOnError)
 
-        verify { realPlugin.rememberDevice(expectedOnSuccess, expectedOnError) }
+        verify(timeout = CHANNEL_TIMEOUT) { realPlugin.rememberDevice(any(), any()) }
     }
 
     @Test
@@ -323,7 +331,7 @@ class AWSCognitoAuthPluginTest {
 
         authPlugin.forgetDevice(expectedOnSuccess, expectedOnError)
 
-        verify { realPlugin.forgetDevice(expectedOnSuccess, expectedOnError) }
+        verify(timeout = CHANNEL_TIMEOUT) { realPlugin.forgetDevice(any(), any()) }
     }
 
     @Test
@@ -334,17 +342,17 @@ class AWSCognitoAuthPluginTest {
 
         authPlugin.forgetDevice(expectedDevice, expectedOnSuccess, expectedOnError)
 
-        verify { realPlugin.forgetDevice(expectedDevice, expectedOnSuccess, expectedOnError) }
+        verify(timeout = CHANNEL_TIMEOUT) { realPlugin.forgetDevice(expectedDevice, any(), any()) }
     }
 
     @Test
     fun verifyFetchDevices() {
-        val expectedOnSuccess = Consumer<MutableList<AuthDevice>> { }
+        val expectedOnSuccess = Consumer<List<AuthDevice>> { }
         val expectedOnError = Consumer<AuthException> { }
 
         authPlugin.fetchDevices(expectedOnSuccess, expectedOnError)
 
-        verify { realPlugin.fetchDevices(expectedOnSuccess, expectedOnError) }
+        verify(timeout = CHANNEL_TIMEOUT) { realPlugin.fetchDevices(any(), any()) }
     }
 
     @Test
@@ -355,7 +363,7 @@ class AWSCognitoAuthPluginTest {
 
         authPlugin.resetPassword(expectedUsername, expectedOnSuccess, expectedOnError)
 
-        verify { realPlugin.resetPassword(expectedUsername, expectedOnSuccess, expectedOnError) }
+        verify(timeout = CHANNEL_TIMEOUT) { realPlugin.resetPassword(expectedUsername, any(), any()) }
     }
 
     @Test
@@ -367,7 +375,7 @@ class AWSCognitoAuthPluginTest {
 
         authPlugin.resetPassword(expectedUsername, expectedOptions, expectedOnSuccess, expectedOnError)
 
-        verify { realPlugin.resetPassword(expectedUsername, expectedOptions, expectedOnSuccess, expectedOnError) }
+        verify(timeout = CHANNEL_TIMEOUT) { realPlugin.resetPassword(expectedUsername, expectedOptions, any(), any()) }
     }
 
     @Test
@@ -386,13 +394,13 @@ class AWSCognitoAuthPluginTest {
             expectedOnError
         )
 
-        verify {
+        verify(timeout = CHANNEL_TIMEOUT) {
             realPlugin.confirmResetPassword(
                 expectedUsername,
                 expectedPassword,
                 expectedCode,
-                expectedOnSuccess,
-                expectedOnError
+                any(),
+                any()
             )
         }
     }
@@ -415,14 +423,14 @@ class AWSCognitoAuthPluginTest {
             expectedOnError
         )
 
-        verify {
+        verify(timeout = CHANNEL_TIMEOUT) {
             realPlugin.confirmResetPassword(
                 expectedUsername,
                 expectedPassword,
                 expectedCode,
                 expectedOptions,
-                expectedOnSuccess,
-                expectedOnError
+                any(),
+                any()
             )
         }
     }
@@ -436,8 +444,8 @@ class AWSCognitoAuthPluginTest {
 
         authPlugin.updatePassword(expectedOldPassword, expectedNewPassword, expectedOnSuccess, expectedOnError)
 
-        verify {
-            realPlugin.updatePassword(expectedOldPassword, expectedNewPassword, expectedOnSuccess, expectedOnError)
+        verify(timeout = CHANNEL_TIMEOUT) {
+            realPlugin.updatePassword(expectedOldPassword, expectedNewPassword, any(), any())
         }
     }
 
@@ -448,7 +456,7 @@ class AWSCognitoAuthPluginTest {
 
         authPlugin.fetchUserAttributes(expectedOnSuccess, expectedOnError)
 
-        verify { realPlugin.fetchUserAttributes(expectedOnSuccess, expectedOnError) }
+        verify(timeout = CHANNEL_TIMEOUT) { realPlugin.fetchUserAttributes(any(), any()) }
     }
 
     @Test
@@ -459,7 +467,7 @@ class AWSCognitoAuthPluginTest {
 
         authPlugin.updateUserAttribute(expectedAttribute, expectedOnSuccess, expectedOnError)
 
-        verify { realPlugin.updateUserAttribute(expectedAttribute, expectedOnSuccess, expectedOnError) }
+        verify(timeout = CHANNEL_TIMEOUT) { realPlugin.updateUserAttribute(expectedAttribute, any(), any()) }
     }
 
     @Test
@@ -471,37 +479,37 @@ class AWSCognitoAuthPluginTest {
 
         authPlugin.updateUserAttribute(expectedAttribute, expectedOptions, expectedOnSuccess, expectedOnError)
 
-        verify {
-            realPlugin.updateUserAttribute(expectedAttribute, expectedOptions, expectedOnSuccess, expectedOnError)
+        verify(timeout = CHANNEL_TIMEOUT) {
+            realPlugin.updateUserAttribute(expectedAttribute, expectedOptions, any(), any())
         }
     }
 
     @Test
     fun verifyUpdateUserAttributes() {
         val expectedAttributes = mutableListOf(AuthUserAttribute(AuthUserAttributeKey.name(), "John"))
-        val expectedOnSuccess = Consumer<MutableMap<AuthUserAttributeKey, AuthUpdateAttributeResult>> { }
+        val expectedOnSuccess = Consumer<Map<AuthUserAttributeKey, AuthUpdateAttributeResult>> { }
         val expectedOnError = Consumer<AuthException> { }
 
         authPlugin.updateUserAttributes(expectedAttributes, expectedOnSuccess, expectedOnError)
 
-        verify { realPlugin.updateUserAttributes(expectedAttributes, expectedOnSuccess, expectedOnError) }
+        verify(timeout = CHANNEL_TIMEOUT) { realPlugin.updateUserAttributes(expectedAttributes, any(), any()) }
     }
 
     @Test
     fun verifyOverloadedUpdateUserAttributes() {
         val expectedAttributes = mutableListOf(AuthUserAttribute(AuthUserAttributeKey.name(), "John"))
         val expectedOptions = AuthUpdateUserAttributesOptions.defaults()
-        val expectedOnSuccess = Consumer<MutableMap<AuthUserAttributeKey, AuthUpdateAttributeResult>> { }
+        val expectedOnSuccess = Consumer<Map<AuthUserAttributeKey, AuthUpdateAttributeResult>> { }
         val expectedOnError = Consumer<AuthException> { }
 
         authPlugin.updateUserAttributes(expectedAttributes, expectedOptions, expectedOnSuccess, expectedOnError)
 
-        verify {
+        verify(timeout = CHANNEL_TIMEOUT) {
             realPlugin.updateUserAttributes(
                 expectedAttributes,
                 expectedOptions,
-                expectedOnSuccess,
-                expectedOnError
+                any(),
+                any()
             )
         }
     }
@@ -522,11 +530,11 @@ class AWSCognitoAuthPluginTest {
 
         authPlugin.resendUserAttributeConfirmationCode(expectedAttributeKey, expectedOnSuccess, expectedOnError)
 
-        verify {
+        verify(timeout = CHANNEL_TIMEOUT) {
             realPlugin.resendUserAttributeConfirmationCode(
                 expectedAttributeKey,
-                expectedOnSuccess,
-                expectedOnError
+                any(),
+                any()
             )
         }
     }
@@ -545,12 +553,12 @@ class AWSCognitoAuthPluginTest {
             expectedOnError
         )
 
-        verify {
+        verify(timeout = CHANNEL_TIMEOUT) {
             realPlugin.resendUserAttributeConfirmationCode(
                 expectedAttributeKey,
                 expectedOptions,
-                expectedOnSuccess,
-                expectedOnError
+                any(),
+                any()
             )
         }
     }
@@ -569,12 +577,12 @@ class AWSCognitoAuthPluginTest {
             expectedOnError
         )
 
-        verify {
+        verify(timeout = CHANNEL_TIMEOUT) {
             realPlugin.confirmUserAttribute(
                 expectedAttributeKey,
                 expectedConfirmationCode,
-                expectedOnSuccess,
-                expectedOnError
+                any(),
+                any()
             )
         }
     }
@@ -586,7 +594,7 @@ class AWSCognitoAuthPluginTest {
 
         authPlugin.getCurrentUser(expectedOnSuccess, expectedOnError)
 
-        verify { realPlugin.getCurrentUser(expectedOnSuccess, expectedOnError) }
+        verify(timeout = CHANNEL_TIMEOUT) { realPlugin.getCurrentUser(any(), any()) }
     }
 
     @Test
@@ -595,7 +603,7 @@ class AWSCognitoAuthPluginTest {
 
         authPlugin.signOut(expectedOnComplete)
 
-        verify { realPlugin.signOut(expectedOnComplete) }
+        verify(timeout = CHANNEL_TIMEOUT) { realPlugin.signOut(any()) }
     }
 
     @Test
@@ -605,7 +613,7 @@ class AWSCognitoAuthPluginTest {
 
         authPlugin.signOut(expectedOptions, expectedOnComplete)
 
-        verify { realPlugin.signOut(expectedOptions, expectedOnComplete) }
+        verify(timeout = CHANNEL_TIMEOUT) { realPlugin.signOut(expectedOptions, any()) }
     }
 
     @Test
@@ -615,7 +623,7 @@ class AWSCognitoAuthPluginTest {
 
         authPlugin.deleteUser(expectedOnSuccess, expectedOnError)
 
-        verify { realPlugin.deleteUser(expectedOnSuccess, expectedOnError) }
+        verify(timeout = CHANNEL_TIMEOUT) { realPlugin.deleteUser(any(), any()) }
     }
 
     @Test
@@ -628,13 +636,13 @@ class AWSCognitoAuthPluginTest {
 
         authPlugin.federateToIdentityPool(expectedToken, expectedProvider, expectedOnSuccess, expectedOnError)
 
-        verify {
+        verify(timeout = CHANNEL_TIMEOUT) {
             realPlugin.federateToIdentityPool(
                 expectedToken,
                 expectedProvider,
                 options,
-                expectedOnSuccess,
-                expectedOnError
+                any(),
+                any()
             )
         }
     }
@@ -652,13 +660,13 @@ class AWSCognitoAuthPluginTest {
 
         authPlugin.federateToIdentityPool(expectedToken, expectedProvider, options, expectedOnSuccess, expectedOnError)
 
-        verify {
+        verify(timeout = CHANNEL_TIMEOUT) {
             realPlugin.federateToIdentityPool(
                 expectedToken,
                 expectedProvider,
                 options,
-                expectedOnSuccess,
-                expectedOnError
+                any(),
+                any()
             )
         }
     }
@@ -670,7 +678,7 @@ class AWSCognitoAuthPluginTest {
 
         authPlugin.clearFederationToIdentityPool(expectedOnSuccess, expectedOnError)
 
-        verify { realPlugin.clearFederationToIdentityPool(expectedOnSuccess, expectedOnError) }
+        verify(timeout = CHANNEL_TIMEOUT) { realPlugin.clearFederationToIdentityPool(any(), any()) }
     }
 
     @Test
