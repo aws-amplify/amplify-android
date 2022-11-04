@@ -1,22 +1,42 @@
 package com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerators
 
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.NotAuthorizedException
 import com.amplifyframework.auth.AWSCredentials
 import com.amplifyframework.auth.cognito.AWSCognitoAuthSession
 import com.amplifyframework.auth.cognito.AWSCognitoUserPoolTokens
 import com.amplifyframework.auth.cognito.featuretest.API
 import com.amplifyframework.auth.cognito.featuretest.AuthAPI
+import com.amplifyframework.auth.cognito.featuretest.CognitoType
 import com.amplifyframework.auth.cognito.featuretest.ExpectationShapes
 import com.amplifyframework.auth.cognito.featuretest.FeatureTestCase
+import com.amplifyframework.auth.cognito.featuretest.MockResponse
 import com.amplifyframework.auth.cognito.featuretest.PreConditions
 import com.amplifyframework.auth.cognito.featuretest.ResponseType
 import com.amplifyframework.auth.cognito.featuretest.generators.SerializableProvider
 import com.amplifyframework.auth.cognito.featuretest.generators.authstategenerators.AuthStateJsonGenerator
 import com.amplifyframework.auth.cognito.featuretest.generators.toJsonElement
+import com.amplifyframework.auth.exceptions.ConfigurationException
+import com.amplifyframework.auth.exceptions.InvalidStateException
+import com.amplifyframework.auth.exceptions.SignedOutException
 import com.amplifyframework.auth.result.AuthSessionResult
 import kotlinx.serialization.json.JsonObject
 
 object FetchAuthSessionTestCaseGenerator : SerializableProvider {
+
+    private val mockedInitiateAuthResponse = MockResponse(
+        CognitoType.CognitoIdentityProvider,
+        "initiateAuth",
+        ResponseType.Success,
+        mapOf(
+            "authenticationResult" to mapOf(
+                "idToken" to AuthStateJsonGenerator.dummyToken,
+                "accessToken" to AuthStateJsonGenerator.dummyToken,
+                "refreshToken" to AuthStateJsonGenerator.dummyToken,
+                "expiresIn" to 300
+            )
+        ).toJsonElement()
+    )
 
     private val expectedSuccess = AWSCognitoAuthSession(
         isSignedIn = true,
@@ -46,7 +66,7 @@ object FetchAuthSessionTestCaseGenerator : SerializableProvider {
     )
 
     private val baseCase = FeatureTestCase(
-        description = "Test that API is called with given payload and returns successful data",
+        description = "AuthSession object is successfully returned for UserAndIdentity Pool",
         preConditions = PreConditions(
             "authconfiguration.json",
             "SignedIn_SessionEstablished.json",
@@ -62,7 +82,9 @@ object FetchAuthSessionTestCaseGenerator : SerializableProvider {
 
     private val refreshSuccessCase: FeatureTestCase = baseCase.copy(
         description = "AuthSession object is successfully returned after refresh",
-        preConditions = baseCase.preConditions,
+        preConditions = baseCase.preConditions.copy(
+            mockedResponses = listOf(mockedInitiateAuthResponse)
+        ),
         api = API(
             name = AuthAPI.fetchAuthSession,
             params = JsonObject(emptyMap()),
@@ -70,6 +92,73 @@ object FetchAuthSessionTestCaseGenerator : SerializableProvider {
         ),
         validations = baseCase.validations
     )
+
+    private val identityPoolCase: FeatureTestCase = baseCase.copy(
+        description = "AuthSession object is successfully returned for Identity Pool",
+        preConditions = baseCase.preConditions.copy(
+            state = "SignedOut_IdentityPool.json"
+        ),
+        api = baseCase.api,
+        validations = listOf(ExpectationShapes.Amplify(
+            AuthAPI.fetchAuthSession,
+            ResponseType.Success,
+            AWSCognitoAuthSession(
+                isSignedIn = false,
+                identityIdResult = AWSCognitoAuthSession.getIdentityIdResult("someIdentityId"),
+                awsCredentialsResult = AuthSessionResult.success(
+                    AWSCredentials.createAWSCredentials(
+                        AuthStateJsonGenerator.accessKeyId,
+                        AuthStateJsonGenerator.secretAccessKey,
+                        AuthStateJsonGenerator.dummyToken,
+                        AuthStateJsonGenerator.expiration
+                    )
+                ),
+                userSubResult = AuthSessionResult.failure(SignedOutException()),
+                userPoolTokensResult = AuthSessionResult.failure(SignedOutException())
+            ).toJsonElement()
+        ))
+    )
+
+    val userPoolException = InvalidStateException(
+        message = "Users Federated to Identity Pool do not have User Pool access.",
+        recoverySuggestion = "To access User Pool data, you must use a Sign In method."
+    )
+
+    private val userPoolCase: FeatureTestCase = baseCase.copy(
+        description = "AuthSession object is successfully returned for User Pool",
+        preConditions = baseCase.preConditions.copy(
+            state = "SignedIn_UserPoolSessionEstablished.json"
+        ),
+        api = baseCase.api,
+        validations = listOf(ExpectationShapes.Amplify(
+            AuthAPI.fetchAuthSession,
+            ResponseType.Success,
+            AWSCognitoAuthSession(
+                isSignedIn = true,
+                identityIdResult = AuthSessionResult.failure(
+                    ConfigurationException(
+                        "Could not retrieve Identity ID",
+                        "Cognito Identity not configured. Please check amplifyconfiguration.json file."
+                    )
+                ),
+                awsCredentialsResult = AuthSessionResult.failure(
+                    ConfigurationException(
+                        "Could not fetch AWS Cognito credentials",
+                        "Cognito Identity not configured. Please check amplifyconfiguration.json file."
+                    )
+                ),
+                userSubResult = AuthSessionResult.success(AuthStateJsonGenerator.userId),
+                userPoolTokensResult = AuthSessionResult.success(
+                    AWSCognitoUserPoolTokens(
+                        accessToken = AuthStateJsonGenerator.dummyToken,
+                        idToken = AuthStateJsonGenerator.dummyToken,
+                        refreshToken = AuthStateJsonGenerator.dummyToken
+                    )
+                )
+            ).toJsonElement()
+        ))
+    )
+
     private val errorCase: FeatureTestCase
         get() {
             val notAuthorizedErrorResponse = NotAuthorizedException.invoke { }
@@ -91,5 +180,5 @@ object FetchAuthSessionTestCaseGenerator : SerializableProvider {
         }
 
     // TODO : Fix error case and refresh session case
-    override val serializables: List<Any> = listOf(baseCase,refreshSuccessCase)
+    override val serializables: List<Any> = listOf(baseCase,refreshSuccessCase,identityPoolCase, userPoolCase)
 }
