@@ -190,7 +190,7 @@ interface Auth {
      * @return Information about the current authenticated session, where applicable
      */
     @Throws(AuthException::class)
-    suspend fun fetchAuthSession(options: AuthFetchSessionOptions): AuthSession
+    suspend fun fetchAuthSession(options: AuthFetchSessionOptions = AuthFetchSessionOptions.defaults()): AuthSession
 
     /**
      * Remember the user device that is currently being used.
