@@ -57,12 +57,11 @@ internal class TaskQueue {
         }
     }
 
-    companion object {
-        operator fun invoke() {
-        }
+    suspend fun <T> sync(block: suspend () -> T): T {
+        return syncTask { Task { block() } }
     }
 
-    suspend fun <T> sync(task: () -> Task<T>): T {
+    suspend fun <T> syncTask(task: () -> Task<T>): T {
         val job = CompletableDeferred<T>(this.job)
         channel.send(Message(task.invoke(), job))
         return job.await()

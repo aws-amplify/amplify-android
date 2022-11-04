@@ -62,7 +62,6 @@ import com.amplifyframework.auth.cognito.operations.AWSCognitoAuthSignOutRequest
 import com.amplifyframework.auth.cognito.operations.AWSCognitoAuthSignOutTask
 import com.amplifyframework.auth.cognito.operations.AWSCognitoFetchAuthSessionRequest
 import com.amplifyframework.auth.cognito.operations.AWSCognitoFetchAuthSessionTask
-import com.amplifyframework.auth.cognito.operations.Task
 import com.amplifyframework.auth.cognito.operations.TaskQueue
 import com.amplifyframework.auth.cognito.options.AWSAuthResendUserAttributeConfirmationCodeOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthConfirmSignInOptions
@@ -146,6 +145,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 internal class RealAWSCognitoAuthPlugin(
     private val configuration: AuthConfiguration,
@@ -154,7 +154,7 @@ internal class RealAWSCognitoAuthPlugin(
     private val logger: Logger
 ) : AuthCategoryBehavior {
 
-    val taskQueue = TaskQueue()
+    private val taskQueue = TaskQueue()
 
     private val pluginScope = CoroutineScope(Job() + Dispatchers.Default)
 
@@ -441,18 +441,16 @@ internal class RealAWSCognitoAuthPlugin(
         val request = AWSCognitoAuthSignInRequest(username, password, options)
 
         pluginScope.launch {
-            async {
+            withContext(Dispatchers.Default) {
                 taskQueue.sync {
-                    Task {
-                        try {
-                            val result = AWSCognitoAuthSignInTask(authStateMachine, configuration, request)()
-                            onSuccess.accept(result)
-                        } catch (e: AuthException) {
-                            onError.accept(e)
-                        }
+                    try {
+                        val result = AWSCognitoAuthSignInTask(authStateMachine, configuration, request)()
+                        onSuccess.accept(result)
+                    } catch (e: AuthException) {
+                        onError.accept(e)
                     }
                 }
-            }.await()
+            }
         }
     }
 
@@ -760,18 +758,16 @@ internal class RealAWSCognitoAuthPlugin(
     ) {
         val request = AWSCognitoFetchAuthSessionRequest(options)
         pluginScope.launch {
-            async {
+            withContext(Dispatchers.Default) {
                 taskQueue.sync {
-                    Task {
-                        try {
-                            val result = AWSCognitoFetchAuthSessionTask(authStateMachine, configuration, request)()
-                            onSuccess.accept(result)
-                        } catch (e: AuthException) {
-                            onError.accept(e)
-                        }
+                    try {
+                        val result = AWSCognitoFetchAuthSessionTask(authStateMachine, configuration, request)()
+                        onSuccess.accept(result)
+                    } catch (e: AuthException) {
+                        onError.accept(e)
                     }
                 }
-            }.await()
+            }
         }
     }
 
@@ -1340,14 +1336,12 @@ internal class RealAWSCognitoAuthPlugin(
         val request = AWSCognitoAuthSignOutRequest(options)
 
         pluginScope.launch {
-            async {
+            withContext(Dispatchers.Default) {
                 taskQueue.sync {
-                    Task {
-                        val result = AWSCognitoAuthSignOutTask(authStateMachine, configuration, request)()
-                        onComplete.accept(result)
-                    }
+                    val result = AWSCognitoAuthSignOutTask(authStateMachine, configuration, request)()
+                    onComplete.accept(result)
                 }
-            }.await()
+            }
         }
     }
 
@@ -1540,8 +1534,7 @@ internal class RealAWSCognitoAuthPlugin(
                     }
                 }
             },
-            {
-            }
+            null
         )
     }
 
@@ -1578,27 +1571,25 @@ internal class RealAWSCognitoAuthPlugin(
         val request = AWSCognitoAuthSignOutRequest(AuthSignOutOptions.builder().build(), false)
 
         pluginScope.launch {
-            async {
+            withContext(Dispatchers.Default) {
                 taskQueue.sync {
-                    Task {
-                        val result = AWSCognitoAuthSignOutTask(
-                            authStateMachine,
-                            configuration,
-                            request
-                        ).listenAndComplete()
+                    val result = AWSCognitoAuthSignOutTask(
+                        authStateMachine,
+                        configuration,
+                        request
+                    ).listenAndComplete()
 
-                        when (result) {
-                            is AWSCognitoAuthSignOutResult.FailedSignOut -> onError.accept(result.error)
-                            else -> {
-                                onSuccess.call()
-                                sendHubEvent(
-                                    AWSCognitoAuthChannelEventName.FEDERATION_TO_IDENTITY_POOL_CLEARED.toString()
-                                )
-                            }
+                    when (result) {
+                        is AWSCognitoAuthSignOutResult.FailedSignOut -> onError.accept(result.error)
+                        else -> {
+                            onSuccess.call()
+                            sendHubEvent(
+                                AWSCognitoAuthChannelEventName.FEDERATION_TO_IDENTITY_POOL_CLEARED.toString()
+                            )
                         }
                     }
                 }
-            }.await()
+            }
         }
     }
 
