@@ -164,7 +164,7 @@ final class RxAuthBinding implements RxAuthCategoryBehavior {
     }
 
     @Override
-    public Single<AuthSession> fetchAuthSession(AuthFetchSessionOptions options) {
+    public Single<AuthSession> fetchAuthSession(@NonNull AuthFetchSessionOptions options) {
         return toSingle((onResult, onError) ->
             delegate.fetchAuthSession(options, onResult, onError));
     }
