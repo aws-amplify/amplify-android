@@ -709,7 +709,8 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
     override fun signOut(onComplete: Consumer<AuthSignOutResult>) {
         queueChannel.trySend(
             GlobalScope.launch(start = CoroutineStart.LAZY) {
-                queueFacade.signOut()
+                val result = queueFacade.signOut()
+                onComplete.accept(result)
             }
         )
     }
@@ -717,7 +718,8 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
     override fun signOut(options: AuthSignOutOptions, onComplete: Consumer<AuthSignOutResult>) {
         queueChannel.trySend(
             GlobalScope.launch(start = CoroutineStart.LAZY) {
-                queueFacade.signOut(options)
+                val result = queueFacade.signOut(options)
+                onComplete.accept(result)
             }
         )
     }
