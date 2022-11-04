@@ -15,8 +15,16 @@
 
 package com.amplifyframework.auth.cognito.operations
 
-interface AuthTask<T> : Task<T> {
-    suspend fun validateStates(): T
-    suspend fun execute(): T
-    override suspend operator fun invoke(): T
+import com.amplifyframework.auth.cognito.AuthStateMachine
+import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
+
+internal abstract class AuthTask<T>(
+    val authStateMachine: AuthStateMachine,
+    val configuration: AuthConfiguration
+) : Task<T> {
+    abstract suspend fun validateStates(): T
+    abstract suspend fun listenAndComplete(): T
+    abstract override suspend operator fun invoke(): T
+    fun sendHubEvent(hubEvent: String) {
+    }
 }

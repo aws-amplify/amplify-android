@@ -23,7 +23,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-interface Task<T> {
+internal interface Task<T> {
     suspend operator fun invoke(): T
 
     companion object {
@@ -35,14 +35,14 @@ interface Task<T> {
 
 private data class Message<T>(val task: Task<T>, val job: CompletableDeferred<T>)
 
-class Actor {
+internal class TaskQueue {
     private val job = Job()
     private val scope = CoroutineScope(job)
-    private val queue = Channel<Message<*>>()
+    private val channel = Channel<Message<*>>()
 
     init {
         scope.launch {
-            for (msg in queue) {
+            for (msg in channel) {
                 if (isActive) {
                     if (msg.job.isCompleted) continue
 
@@ -64,7 +64,7 @@ class Actor {
 
     suspend fun <T> sync(task: () -> Task<T>): T {
         val job = CompletableDeferred<T>(this.job)
-        queue.send(Message(task.invoke(), job))
+        channel.send(Message(task.invoke(), job))
         return job.await()
     }
 }

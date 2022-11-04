@@ -15,10 +15,12 @@
 
 package com.amplifyframework.auth.cognito.operations
 
+import com.amplifyframework.auth.AuthChannelEventName
 import com.amplifyframework.auth.cognito.AuthStateMachine
 import com.amplifyframework.auth.cognito.CognitoAuthExceptionConverter
 import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidUserPoolConfigurationException
 import com.amplifyframework.auth.cognito.exceptions.invalidstate.SignedInException
+import com.amplifyframework.auth.cognito.helpers.SignInChallengeHelper
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions
 import com.amplifyframework.auth.cognito.options.AuthFlowType
 import com.amplifyframework.auth.exceptions.InvalidStateException
@@ -35,49 +37,35 @@ import com.amplifyframework.statemachine.codegen.states.SRPSignInState
 import com.amplifyframework.statemachine.codegen.states.SignInChallengeState
 import com.amplifyframework.statemachine.codegen.states.SignInState
 
-internal class SignInRequest(
-    val username: String?,
-    val password: String?,
-    val options: AuthSignInOptions,
-)
+internal class AWSCognitoAuthSignInRequest(val username: String?, val password: String?, val options: AuthSignInOptions)
 
-internal class SignInAuthTask(
-    private val authStateMachine: AuthStateMachine,
-    val configuration: AuthConfiguration,
-    val request: SignInRequest,
-) : AuthTask<AuthSignInResult> {
+internal class AWSCognitoAuthSignInTask(
+    authStateMachine: AuthStateMachine,
+    configuration: AuthConfiguration,
+    val request: AWSCognitoAuthSignInRequest,
+) : AuthTask<AuthSignInResult>(authStateMachine, configuration) {
 
     override suspend fun validateStates(): AuthSignInResult {
         val authState = authStateMachine.getCurrentStateAsync().await()
-        when (val authNState = authState.authNState) {
-            is AuthenticationState.NotConfigured ->
-                throw InvalidUserPoolConfigurationException()
-            // Continue sign in
+        return when (authState.authNState) {
+            is AuthenticationState.NotConfigured -> throw InvalidUserPoolConfigurationException()
             is AuthenticationState.SignedOut, is AuthenticationState.Configured -> {
-                return execute()
+                // Send event and continue sign in
+                sendSignInEvent()
+                listenAndComplete()
             }
-            is AuthenticationState.SignedIn -> {
-                if (request.username == authNState.signedInData.username) {
-                    return AuthSignInResult(
-                        true,
-                        AuthNextSignInStep(AuthSignInStep.DONE, mapOf(), null)
-                    )
-//                    onSuccess.accept(authSignInResult)
-                } else {
-                    throw SignedInException()
-                }
-            }
+            is AuthenticationState.SignedIn -> throw SignedInException()
             else -> throw InvalidStateException()
         }
     }
 
-    fun sendEvent() {
+    private fun sendSignInEvent() {
         val signInOptions =
             request.options as? AWSCognitoAuthSignInOptions ?: AWSCognitoAuthSignInOptions.builder()
                 .authFlowType(configuration.authFlowType)
                 .build()
 
-        val flowType = signInOptions.authFlowType ?: AuthFlowType.USER_SRP_AUTH
+        val flowType = signInOptions.authFlowType ?: configuration.authFlowType
 
         val signInData = when (flowType) {
             AuthFlowType.USER_SRP_AUTH -> {
@@ -97,11 +85,8 @@ internal class SignInAuthTask(
         authStateMachine.send(event)
     }
 
-    override suspend fun execute(): AuthSignInResult {
-        sendEvent()
-
+    override suspend fun listenAndComplete(): AuthSignInResult {
         val channel = authStateMachine.listenAsync()
-
         for (authState in channel) {
             val authNState = authState.authNState
             val authZState = authState.authZState
@@ -118,18 +103,17 @@ internal class SignInAuthTask(
                             throw CognitoAuthExceptionConverter.lookup(signInState.exception, "Sign in failed.")
                         }
                         challengeState is SignInChallengeState.WaitingForAnswer -> {
-//                            SignInChallengeHelper.getNextStep(challengeState.challenge, onSuccess, onError)
-                            throw InvalidStateException()
+                            return SignInChallengeHelper.getNextSignInStepResult(challengeState.challenge)
                         }
                     }
                 }
                 authNState is AuthenticationState.SignedIn && authZState is AuthorizationState.SessionEstablished -> {
                     channel.close()
+                    sendHubEvent(AuthChannelEventName.SIGNED_IN.toString())
                     return AuthSignInResult(
                         true,
                         AuthNextSignInStep(AuthSignInStep.DONE, mapOf(), null)
                     )
-//                    sendHubEvent(AuthChannelEventName.SIGNED_IN.toString())
                 }
             }
         }

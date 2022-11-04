@@ -56,14 +56,14 @@ import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.auth.cognito.helpers.HostedUIHelper
 import com.amplifyframework.auth.cognito.helpers.SessionHelper
 import com.amplifyframework.auth.cognito.helpers.identityProviderName
-import com.amplifyframework.auth.cognito.operations.Actor
-import com.amplifyframework.auth.cognito.operations.FetchAuthSessionRequest
-import com.amplifyframework.auth.cognito.operations.FetchAuthSessionTask
-import com.amplifyframework.auth.cognito.operations.SignInAuthTask
-import com.amplifyframework.auth.cognito.operations.SignInRequest
-import com.amplifyframework.auth.cognito.operations.SignOutRequest
-import com.amplifyframework.auth.cognito.operations.SignOutTask
+import com.amplifyframework.auth.cognito.operations.AWSCognitoAuthSignInRequest
+import com.amplifyframework.auth.cognito.operations.AWSCognitoAuthSignInTask
+import com.amplifyframework.auth.cognito.operations.AWSCognitoAuthSignOutRequest
+import com.amplifyframework.auth.cognito.operations.AWSCognitoAuthSignOutTask
+import com.amplifyframework.auth.cognito.operations.AWSCognitoFetchAuthSessionRequest
+import com.amplifyframework.auth.cognito.operations.AWSCognitoFetchAuthSessionTask
 import com.amplifyframework.auth.cognito.operations.Task
+import com.amplifyframework.auth.cognito.operations.TaskQueue
 import com.amplifyframework.auth.cognito.options.AWSAuthResendUserAttributeConfirmationCodeOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthConfirmSignInOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthResendSignUpCodeOptions
@@ -71,6 +71,7 @@ import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttribu
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttributesOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthWebUISignInOptions
 import com.amplifyframework.auth.cognito.options.FederateToIdentityPoolOptions
+import com.amplifyframework.auth.cognito.result.AWSCognitoAuthSignOutResult
 import com.amplifyframework.auth.cognito.result.FederateToIdentityPoolResult
 import com.amplifyframework.auth.cognito.usecases.ResetPasswordUseCase
 import com.amplifyframework.auth.exceptions.ConfigurationException
@@ -153,7 +154,7 @@ internal class RealAWSCognitoAuthPlugin(
     private val logger: Logger
 ) : AuthCategoryBehavior {
 
-    val actor = Actor()
+    val taskQueue = TaskQueue()
 
     private val pluginScope = CoroutineScope(Job() + Dispatchers.Default)
 
@@ -437,14 +438,14 @@ internal class RealAWSCognitoAuthPlugin(
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
     ) {
-        val request = SignInRequest(username, password, options)
+        val request = AWSCognitoAuthSignInRequest(username, password, options)
 
         pluginScope.launch {
             async {
-                actor.sync {
+                taskQueue.sync {
                     Task {
                         try {
-                            val result = SignInAuthTask(authStateMachine, configuration, request).invoke()
+                            val result = AWSCognitoAuthSignInTask(authStateMachine, configuration, request)()
                             onSuccess.accept(result)
                         } catch (e: AuthException) {
                             onError.accept(e)
@@ -757,13 +758,13 @@ internal class RealAWSCognitoAuthPlugin(
         onSuccess: Consumer<AuthSession>,
         onError: Consumer<AuthException>
     ) {
-        val request = FetchAuthSessionRequest(options)
+        val request = AWSCognitoFetchAuthSessionRequest(options)
         pluginScope.launch {
             async {
-                actor.sync {
+                taskQueue.sync {
                     Task {
                         try {
-                            val result = FetchAuthSessionTask(authStateMachine, configuration, request).invoke()
+                            val result = AWSCognitoFetchAuthSessionTask(authStateMachine, configuration, request)()
                             onSuccess.accept(result)
                         } catch (e: AuthException) {
                             onError.accept(e)
@@ -1336,13 +1337,13 @@ internal class RealAWSCognitoAuthPlugin(
     }
 
     override fun signOut(options: AuthSignOutOptions, onComplete: Consumer<AuthSignOutResult>) {
-        val request = SignOutRequest(options)
+        val request = AWSCognitoAuthSignOutRequest(options)
 
         pluginScope.launch {
             async {
-                actor.sync {
+                taskQueue.sync {
                     Task {
-                        val result = SignOutTask(authStateMachine, configuration, request).invoke()
+                        val result = AWSCognitoAuthSignOutTask(authStateMachine, configuration, request)()
                         onComplete.accept(result)
                     }
                 }
@@ -1573,19 +1574,32 @@ internal class RealAWSCognitoAuthPlugin(
         }
     }
 
-    // TODO: fix API
     private fun _clearFederationToIdentityPool(onSuccess: Action, onError: Consumer<AuthException>) {
-//        _signOut(sendHubEvent = false) {
-//            when (it) {
-//                is AWSCognitoAuthSignOutResult.FailedSignOut -> {
-//                    onError.accept(it.error)
-//                }
-//                else -> {
-//                    onSuccess.call()
-//                    sendHubEvent(AWSCognitoAuthChannelEventName.FEDERATION_TO_IDENTITY_POOL_CLEARED.toString())
-//                }
-//            }
-//        }
+        val request = AWSCognitoAuthSignOutRequest(AuthSignOutOptions.builder().build(), false)
+
+        pluginScope.launch {
+            async {
+                taskQueue.sync {
+                    Task {
+                        val result = AWSCognitoAuthSignOutTask(
+                            authStateMachine,
+                            configuration,
+                            request
+                        ).listenAndComplete()
+
+                        when (result) {
+                            is AWSCognitoAuthSignOutResult.FailedSignOut -> onError.accept(result.error)
+                            else -> {
+                                onSuccess.call()
+                                sendHubEvent(
+                                    AWSCognitoAuthChannelEventName.FEDERATION_TO_IDENTITY_POOL_CLEARED.toString()
+                                )
+                            }
+                        }
+                    }
+                }
+            }.await()
+        }
     }
 
     private fun sendHubEvent(eventName: String) {

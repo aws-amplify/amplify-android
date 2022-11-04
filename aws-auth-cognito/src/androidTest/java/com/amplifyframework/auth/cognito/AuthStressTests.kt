@@ -55,22 +55,24 @@ class AuthStressTests {
 
     @Test
     fun testMultipleSignIn() {
-        val latch = CountDownLatch(50)
+        val successLatch = CountDownLatch(1)
+        val errorLatch = CountDownLatch(49)
 
         repeat(50) { _ ->
             Amplify.Auth.signIn(
-                "username",
+                "username2",
                 "User@123",
                 {
-                    if (it.isSignedIn) latch.countDown() else fail()
+                    if (it.isSignedIn) successLatch.countDown() else fail()
                 },
                 {
-                    fail()
+                    errorLatch.countDown()
                 }
             )
         }
 
-        assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
+        assertTrue(successLatch.await(TIMEOUT_S, TimeUnit.SECONDS))
+        assertTrue(errorLatch.await(TIMEOUT_S, TimeUnit.SECONDS))
     }
 
     @Test

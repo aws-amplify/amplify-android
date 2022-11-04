@@ -15,6 +15,7 @@
 
 package com.amplifyframework.auth.cognito.operations
 
+import com.amplifyframework.auth.AuthChannelEventName
 import com.amplifyframework.auth.AuthSession
 import com.amplifyframework.auth.cognito.AuthStateMachine
 import com.amplifyframework.auth.cognito.exceptions.service.InvalidAccountTypeException
@@ -32,62 +33,31 @@ import com.amplifyframework.statemachine.codegen.errors.SessionError
 import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
 import com.amplifyframework.statemachine.codegen.states.AuthorizationState
 
-internal class FetchAuthSessionRequest(val options: AuthFetchSessionOptions)
+internal class AWSCognitoFetchAuthSessionRequest(val options: AuthFetchSessionOptions)
 
-internal class FetchAuthSessionTask(
-    private val authStateMachine: AuthStateMachine,
-    val configuration: AuthConfiguration,
-    val request: FetchAuthSessionRequest
-) : AuthTask<AuthSession> {
+internal class AWSCognitoFetchAuthSessionTask(
+    authStateMachine: AuthStateMachine,
+    configuration: AuthConfiguration,
+    val request: AWSCognitoFetchAuthSessionRequest
+) : AuthTask<AuthSession>(authStateMachine, configuration) {
     override suspend fun validateStates(): AuthSession {
         val forceRefresh = request.options.forceRefresh
         val authState = authStateMachine.getCurrentStateAsync().await()
-        when (val authZState = authState.authZState) {
+        return when (val authZState = authState.authZState) {
             is AuthorizationState.Configured -> {
-                authStateMachine.send(AuthorizationEvent(AuthorizationEvent.EventType.FetchUnAuthSession))
-                return execute()
+                sendFetchUnAuthSessionEvent()
+                listenAndComplete()
             }
             is AuthorizationState.SessionEstablished -> {
                 val credential = authZState.amplifyCredential
                 if (!credential.isValid() || forceRefresh) {
-                    if (credential is AmplifyCredential.IdentityPoolFederated) {
-                        authStateMachine.send(
-                            AuthorizationEvent(
-                                AuthorizationEvent.EventType.StartFederationToIdentityPool(
-                                    credential.federatedToken,
-                                    credential.identityId,
-                                    credential
-                                )
-                            )
-                        )
-                    } else {
-                        authStateMachine.send(
-                            AuthorizationEvent(AuthorizationEvent.EventType.RefreshSession(credential))
-                        )
-                    }
-                    return execute()
-                } else return credential.getCognitoSession()
+                    refreshSession(credential)
+                } else credential.getCognitoSession()
             }
             is AuthorizationState.Error -> {
                 val error = authZState.exception
                 if (error is SessionError) {
-                    val amplifyCredential = error.amplifyCredential
-                    if (amplifyCredential is AmplifyCredential.IdentityPoolFederated) {
-                        authStateMachine.send(
-                            AuthorizationEvent(
-                                AuthorizationEvent.EventType.StartFederationToIdentityPool(
-                                    amplifyCredential.federatedToken,
-                                    amplifyCredential.identityId,
-                                    amplifyCredential
-                                )
-                            )
-                        )
-                    } else {
-                        authStateMachine.send(
-                            AuthorizationEvent(AuthorizationEvent.EventType.RefreshSession(amplifyCredential))
-                        )
-                    }
-                    return execute()
+                    return recoverFromAuthZSessionError(error.amplifyCredential)
                 } else {
                     throw InvalidStateException()
                 }
@@ -96,9 +66,46 @@ internal class FetchAuthSessionTask(
         }
     }
 
-    override suspend fun execute(): AuthSession {
-        val channel = authStateMachine.listenAsync()
+    private fun sendFetchUnAuthSessionEvent() {
+        authStateMachine.send(AuthorizationEvent(AuthorizationEvent.EventType.FetchUnAuthSession))
+    }
 
+    private suspend fun refreshSession(credential: AmplifyCredential): AuthSession {
+        if (credential is AmplifyCredential.IdentityPoolFederated) {
+            authStateMachine.send(
+                AuthorizationEvent(
+                    AuthorizationEvent.EventType.StartFederationToIdentityPool(
+                        credential.federatedToken,
+                        credential.identityId,
+                        credential
+                    )
+                )
+            )
+        } else {
+            authStateMachine.send(AuthorizationEvent(AuthorizationEvent.EventType.RefreshSession(credential)))
+        }
+        return listenAndComplete()
+    }
+
+    private suspend fun recoverFromAuthZSessionError(amplifyCredential: AmplifyCredential): AuthSession {
+        if (amplifyCredential is AmplifyCredential.IdentityPoolFederated) {
+            authStateMachine.send(
+                AuthorizationEvent(
+                    AuthorizationEvent.EventType.StartFederationToIdentityPool(
+                        amplifyCredential.federatedToken,
+                        amplifyCredential.identityId,
+                        amplifyCredential
+                    )
+                )
+            )
+        } else {
+            authStateMachine.send(AuthorizationEvent(AuthorizationEvent.EventType.RefreshSession(amplifyCredential)))
+        }
+        return listenAndComplete()
+    }
+
+    override suspend fun listenAndComplete(): AuthSession {
+        val channel = authStateMachine.listenAsync()
         for (authState in channel) {
             when (val authZState = authState.authZState) {
                 is AuthorizationState.SessionEstablished -> {
@@ -110,12 +117,10 @@ internal class FetchAuthSessionTask(
                     return when (val error = authZState.exception) {
                         is SessionError -> {
                             when (error.exception) {
-                                is SignedOutException -> {
-                                    error.amplifyCredential.getCognitoSession(error.exception)
-                                }
+                                is SignedOutException -> error.amplifyCredential.getCognitoSession(error.exception)
                                 is SessionExpiredException -> {
+                                    sendHubEvent(AuthChannelEventName.SESSION_EXPIRED.toString())
                                     AmplifyCredential.Empty.getCognitoSession(error.exception)
-                                    //                                        sendHubEvent(AuthChannelEventName.SESSION_EXPIRED.toString())
                                 }
                                 else -> {
                                     val errorResult = UnknownException("Fetch auth session failed.", error)
