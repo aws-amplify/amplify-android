@@ -55,4 +55,5 @@ dependencies {
     androidTestImplementation dependency.androidx.test.runner
     androidTestImplementation dependency.androidx.test.junit
     androidTestImplementation project(path: ':testutils')
+    androidTestImplementation project(path: ':aws-auth-cognito')
 }
