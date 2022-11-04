@@ -15,10 +15,12 @@
 
 package com.amplifyframework.auth.cognito
 
+import android.content.Context
 import android.util.Log
 import androidx.test.core.app.ApplicationProvider
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.auth.cognito.result.AWSCognitoAuthSignOutResult
+import com.amplifyframework.auth.cognito.testutils.Credentials
 import com.amplifyframework.auth.options.AuthFetchSessionOptions
 import com.amplifyframework.core.Amplify
 import java.util.concurrent.CountDownLatch
@@ -47,10 +49,21 @@ class AuthStressTests {
         }
     }
 
+    lateinit var username: String
+    lateinit var password: String
+
     @Before
     fun resetAuth() {
-        Amplify.Auth.signOut { }
-        Thread.sleep(1000)
+        val latch = CountDownLatch(1)
+        Amplify.Auth.signOut {
+            latch.countDown()
+        }
+        latch.await(TIMEOUT_S, TimeUnit.SECONDS)
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        Credentials.load(context).let {
+            username = it.first
+            password = it.second
+        }
     }
 
     @Test
@@ -60,8 +73,8 @@ class AuthStressTests {
 
         repeat(50) {
             Amplify.Auth.signIn(
-                "username2",
-                "User@123",
+                username,
+                password,
                 { if (it.isSignedIn) successLatch.countDown() else fail() },
                 { errorLatch.countDown() }
             )
@@ -100,8 +113,8 @@ class AuthStressTests {
         val latch = CountDownLatch(101)
 
         Amplify.Auth.signIn(
-            "username2",
-            "User@123",
+            username,
+            password,
             { if (it.isSignedIn) latch.countDown() else fail() },
             { fail() }
         )
@@ -118,8 +131,8 @@ class AuthStressTests {
         val latch = CountDownLatch(2)
 
         Amplify.Auth.signIn(
-            "username2",
-            "User@123",
+            username,
+            password,
             { if (it.isSignedIn) latch.countDown() else fail() },
             { fail() }
         )
@@ -134,8 +147,8 @@ class AuthStressTests {
         val latch = CountDownLatch(102)
 
         Amplify.Auth.signIn(
-            "username2",
-            "User@123",
+            username,
+            password,
             { if (it.isSignedIn) latch.countDown() else fail() },
             { fail() }
         )
@@ -154,8 +167,8 @@ class AuthStressTests {
         val latch = CountDownLatch(102)
 
         Amplify.Auth.signIn(
-            "username2",
-            "User@123",
+            username,
+            password,
             { if (it.isSignedIn) latch.countDown() else fail() },
             { fail() }
         )
@@ -179,8 +192,8 @@ class AuthStressTests {
         val latch = CountDownLatch(101)
 
         Amplify.Auth.signIn(
-            "username2",
-            "User@123",
+            username,
+            password,
             { if (it.isSignedIn) latch.countDown() },
             { fail() }
         )
@@ -209,8 +222,8 @@ class AuthStressTests {
                 1 -> Amplify.Auth.fetchAuthSession({ latch.countDown() }, { fail() })
                 2 -> {
                     Amplify.Auth.signIn(
-                        "username2",
-                        "User@123",
+                        username,
+                        password,
                         { if (it.isSignedIn) latch.countDown() },
                         { latch.countDown() }
                     )
