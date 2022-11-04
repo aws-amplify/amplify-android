@@ -28,6 +28,7 @@ import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
+import com.amplifyframework.auth.options.AuthFetchSessionOptions
 import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions
 import com.amplifyframework.auth.options.AuthResendUserAttributeConfirmationCodeOptions
 import com.amplifyframework.auth.options.AuthResetPasswordOptions
@@ -184,10 +185,12 @@ interface Auth {
      * to that plugin which contains the various security tokens and other identifying information if you want to
      * manually use them outside the plugin. Within Amplify this should not be needed as the other categories will
      * automatically work as long as you are signed in.
+     * * @param options Advanced options for fetching auth session.
+     *                If not provided, default options will be used.
      * @return Information about the current authenticated session, where applicable
      */
     @Throws(AuthException::class)
-    suspend fun fetchAuthSession(): AuthSession
+    suspend fun fetchAuthSession(options: AuthFetchSessionOptions): AuthSession
 
     /**
      * Remember the user device that is currently being used.

@@ -28,6 +28,7 @@ import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
+import com.amplifyframework.auth.options.AuthFetchSessionOptions
 import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions
 import com.amplifyframework.auth.options.AuthResendUserAttributeConfirmationCodeOptions
 import com.amplifyframework.auth.options.AuthResetPasswordOptions
@@ -159,9 +160,10 @@ class KotlinAuthFacade(private val delegate: Delegate = Amplify.Auth) : Auth {
         delegate.handleWebUISignInResponse(intent)
     }
 
-    override suspend fun fetchAuthSession(): AuthSession {
+    override suspend fun fetchAuthSession(options: AuthFetchSessionOptions): AuthSession {
         return suspendCoroutine { continuation ->
             delegate.fetchAuthSession(
+                AuthFetchSessionOptions.defaults(),
                 { continuation.resume(it) },
                 { continuation.resumeWithException(it) }
             )
