@@ -50,10 +50,6 @@ import com.amplifyframework.core.Consumer
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.newSingleThreadContext
-import kotlinx.coroutines.test.setMain
-import org.junit.After
 import kotlin.test.assertEquals
 import org.junit.Before
 import org.junit.Test
@@ -63,20 +59,10 @@ class AWSCognitoAuthPluginTest {
     private lateinit var authPlugin: AWSCognitoAuthPlugin
     private val realPlugin: RealAWSCognitoAuthPlugin = mockk(relaxed = true)
 
-    // Used to execute a test in situations where the platform Main dispatcher is not available
-    // see [https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-test/]
-    private val mainThreadSurrogate = newSingleThreadContext("Main thread")
-
     @Before
     fun setup() {
-        Dispatchers.setMain(mainThreadSurrogate)
         authPlugin = AWSCognitoAuthPlugin()
         authPlugin.realPlugin = realPlugin
-    }
-
-    @After
-    fun tearDown() {
-        mainThreadSurrogate.close()
     }
 
     @Test
@@ -89,7 +75,7 @@ class AWSCognitoAuthPluginTest {
 
         authPlugin.signUp(expectedUsername, expectedPassword, expectedOptions, expectedOnSuccess, expectedOnError)
 
-        verify {
+        verify(timeout = 1000) {
             realPlugin.signUp(expectedUsername, expectedPassword, expectedOptions, any(), any())
         }
     }
@@ -103,7 +89,7 @@ class AWSCognitoAuthPluginTest {
 
         authPlugin.confirmSignUp(expectedUsername, expectedConfirmationCode, expectedOnSuccess, expectedOnError)
 
-        verify {
+        verify(timeout = 1000) {
             realPlugin.confirmSignUp(
                 expectedUsername,
                 expectedConfirmationCode,
@@ -129,7 +115,7 @@ class AWSCognitoAuthPluginTest {
             expectedOnError
         )
 
-        verify {
+        verify(timeout = 1000) {
             realPlugin.confirmSignUp(
                 expectedUsername,
                 expectedConfirmationCode,
@@ -148,7 +134,7 @@ class AWSCognitoAuthPluginTest {
 
         authPlugin.resendSignUpCode(expectedUsername, expectedOnSuccess, expectedOnError)
 
-        verify { realPlugin.resendSignUpCode(expectedUsername, any(), any()) }
+        verify(timeout = 1000) { realPlugin.resendSignUpCode(expectedUsername, any(), any()) }
     }
 
     @Test
@@ -160,7 +146,7 @@ class AWSCognitoAuthPluginTest {
 
         authPlugin.resendSignUpCode(expectedUsername, expectedOptions, expectedOnSuccess, expectedOnError)
 
-        verify { realPlugin.resendSignUpCode(expectedUsername, expectedOptions, any(), any()) }
+        verify(timeout = 1000) { realPlugin.resendSignUpCode(expectedUsername, expectedOptions, any(), any()) }
     }
 
     @Test
@@ -172,7 +158,7 @@ class AWSCognitoAuthPluginTest {
 
         authPlugin.signIn(expectedUsername, expectedPassword, expectedOnSuccess, expectedOnError)
 
-        verify { realPlugin.signIn(expectedUsername, expectedPassword, any(), any()) }
+        verify(timeout = 1000) { realPlugin.signIn(expectedUsername, expectedPassword, any(), any()) }
     }
 
     @Test
@@ -185,7 +171,7 @@ class AWSCognitoAuthPluginTest {
 
         authPlugin.signIn(expectedUsername, expectedPassword, expectedOptions, expectedOnSuccess, expectedOnError)
 
-        verify {
+        verify(timeout = 1000) {
             realPlugin.signIn(
                 expectedUsername,
                 expectedPassword,
@@ -204,7 +190,7 @@ class AWSCognitoAuthPluginTest {
 
         authPlugin.confirmSignIn(expectedChallengeResponse, expectedOnSuccess, expectedOnError)
 
-        verify { realPlugin.confirmSignIn(expectedChallengeResponse, any(), any()) }
+        verify(timeout = 1000) { realPlugin.confirmSignIn(expectedChallengeResponse, any(), any()) }
     }
 
     @Test
@@ -216,7 +202,7 @@ class AWSCognitoAuthPluginTest {
 
         authPlugin.confirmSignIn(expectedConfirmationCode, expectedOptions, expectedOnSuccess, expectedOnError)
 
-        verify {
+        verify(timeout = 1000) {
             realPlugin.confirmSignIn(expectedConfirmationCode, expectedOptions, any(), any())
         }
     }
@@ -230,7 +216,7 @@ class AWSCognitoAuthPluginTest {
 
         authPlugin.signInWithSocialWebUI(expectedProvider, expectedActivity, expectedOnSuccess, expectedOnError)
 
-        verify {
+        verify(timeout = 1000) {
             realPlugin.signInWithSocialWebUI(
                 expectedProvider,
                 expectedActivity,
@@ -256,7 +242,7 @@ class AWSCognitoAuthPluginTest {
             expectedOnError
         )
 
-        verify {
+        verify(timeout = 1000) {
             realPlugin.signInWithSocialWebUI(
                 expectedProvider,
                 expectedActivity,
@@ -275,7 +261,7 @@ class AWSCognitoAuthPluginTest {
 
         authPlugin.signInWithWebUI(expectedActivity, expectedOnSuccess, expectedOnError)
 
-        verify { realPlugin.signInWithWebUI(expectedActivity, any(), any()) }
+        verify(timeout = 1000) { realPlugin.signInWithWebUI(expectedActivity, any(), any()) }
     }
 
     @Test
@@ -287,7 +273,7 @@ class AWSCognitoAuthPluginTest {
 
         authPlugin.signInWithWebUI(expectedActivity, expectedOptions, expectedOnSuccess, expectedOnError)
 
-        verify { realPlugin.signInWithWebUI(expectedActivity, expectedOptions, any(), any()) }
+        verify(timeout = 1000) { realPlugin.signInWithWebUI(expectedActivity, expectedOptions, any(), any()) }
     }
 
     @Test
@@ -296,7 +282,7 @@ class AWSCognitoAuthPluginTest {
 
         authPlugin.handleWebUISignInResponse(expectedIntent)
 
-        verify { realPlugin.handleWebUISignInResponse(expectedIntent) }
+        verify(timeout = 1000) { realPlugin.handleWebUISignInResponse(expectedIntent) }
     }
 
     @Test
@@ -307,7 +293,7 @@ class AWSCognitoAuthPluginTest {
 
         authPlugin.fetchAuthSession(expectedOptions, expectedOnSuccess, expectedOnError)
 
-        verify { realPlugin.fetchAuthSession(expectedOptions, any(), any()) }
+        verify(timeout = 1000) { realPlugin.fetchAuthSession(expectedOptions, any(), any()) }
     }
 
     @Test
@@ -317,7 +303,7 @@ class AWSCognitoAuthPluginTest {
 
         authPlugin.fetchAuthSession(expectedOnSuccess, expectedOnError)
 
-        verify { realPlugin.fetchAuthSession(any(), any()) }
+        verify(timeout = 1000) { realPlugin.fetchAuthSession(any(), any()) }
     }
 
     @Test
@@ -327,7 +313,7 @@ class AWSCognitoAuthPluginTest {
 
         authPlugin.rememberDevice(expectedOnSuccess, expectedOnError)
 
-        verify { realPlugin.rememberDevice(any(), any()) }
+        verify(timeout = 1000) { realPlugin.rememberDevice(any(), any()) }
     }
 
     @Test
@@ -337,7 +323,7 @@ class AWSCognitoAuthPluginTest {
 
         authPlugin.forgetDevice(expectedOnSuccess, expectedOnError)
 
-        verify { realPlugin.forgetDevice(any(), any()) }
+        verify(timeout = 1000) { realPlugin.forgetDevice(any(), any()) }
     }
 
     @Test
@@ -348,7 +334,7 @@ class AWSCognitoAuthPluginTest {
 
         authPlugin.forgetDevice(expectedDevice, expectedOnSuccess, expectedOnError)
 
-        verify { realPlugin.forgetDevice(expectedDevice, any(), any()) }
+        verify(timeout = 1000) { realPlugin.forgetDevice(expectedDevice, any(), any()) }
     }
 
     @Test
@@ -358,7 +344,7 @@ class AWSCognitoAuthPluginTest {
 
         authPlugin.fetchDevices(expectedOnSuccess, expectedOnError)
 
-        verify { realPlugin.fetchDevices(any(), any()) }
+        verify(timeout = 1000) { realPlugin.fetchDevices(any(), any()) }
     }
 
     @Test
@@ -369,7 +355,7 @@ class AWSCognitoAuthPluginTest {
 
         authPlugin.resetPassword(expectedUsername, expectedOnSuccess, expectedOnError)
 
-        verify { realPlugin.resetPassword(expectedUsername, any(), any()) }
+        verify(timeout = 1000) { realPlugin.resetPassword(expectedUsername, any(), any()) }
     }
 
     @Test
@@ -381,7 +367,7 @@ class AWSCognitoAuthPluginTest {
 
         authPlugin.resetPassword(expectedUsername, expectedOptions, expectedOnSuccess, expectedOnError)
 
-        verify { realPlugin.resetPassword(expectedUsername, expectedOptions, any(), any()) }
+        verify(timeout = 1000) { realPlugin.resetPassword(expectedUsername, expectedOptions, any(), any()) }
     }
 
     @Test
@@ -400,7 +386,7 @@ class AWSCognitoAuthPluginTest {
             expectedOnError
         )
 
-        verify {
+        verify(timeout = 1000) {
             realPlugin.confirmResetPassword(
                 expectedUsername,
                 expectedPassword,
@@ -429,7 +415,7 @@ class AWSCognitoAuthPluginTest {
             expectedOnError
         )
 
-        verify {
+        verify(timeout = 1000) {
             realPlugin.confirmResetPassword(
                 expectedUsername,
                 expectedPassword,
@@ -450,7 +436,7 @@ class AWSCognitoAuthPluginTest {
 
         authPlugin.updatePassword(expectedOldPassword, expectedNewPassword, expectedOnSuccess, expectedOnError)
 
-        verify {
+        verify(timeout = 1000) {
             realPlugin.updatePassword(expectedOldPassword, expectedNewPassword, any(), any())
         }
     }
@@ -462,7 +448,7 @@ class AWSCognitoAuthPluginTest {
 
         authPlugin.fetchUserAttributes(expectedOnSuccess, expectedOnError)
 
-        verify { realPlugin.fetchUserAttributes(any(), any()) }
+        verify(timeout = 1000) { realPlugin.fetchUserAttributes(any(), any()) }
     }
 
     @Test
@@ -473,7 +459,7 @@ class AWSCognitoAuthPluginTest {
 
         authPlugin.updateUserAttribute(expectedAttribute, expectedOnSuccess, expectedOnError)
 
-        verify { realPlugin.updateUserAttribute(expectedAttribute, any(), any()) }
+        verify(timeout = 1000) { realPlugin.updateUserAttribute(expectedAttribute, any(), any()) }
     }
 
     @Test
@@ -485,7 +471,7 @@ class AWSCognitoAuthPluginTest {
 
         authPlugin.updateUserAttribute(expectedAttribute, expectedOptions, expectedOnSuccess, expectedOnError)
 
-        verify {
+        verify(timeout = 1000) {
             realPlugin.updateUserAttribute(expectedAttribute, expectedOptions, any(), any())
         }
     }
@@ -498,7 +484,7 @@ class AWSCognitoAuthPluginTest {
 
         authPlugin.updateUserAttributes(expectedAttributes, expectedOnSuccess, expectedOnError)
 
-        verify { realPlugin.updateUserAttributes(expectedAttributes, any(), any()) }
+        verify(timeout = 1000) { realPlugin.updateUserAttributes(expectedAttributes, any(), any()) }
     }
 
     @Test
@@ -510,7 +496,7 @@ class AWSCognitoAuthPluginTest {
 
         authPlugin.updateUserAttributes(expectedAttributes, expectedOptions, expectedOnSuccess, expectedOnError)
 
-        verify {
+        verify(timeout = 1000) {
             realPlugin.updateUserAttributes(
                 expectedAttributes,
                 expectedOptions,
@@ -536,7 +522,7 @@ class AWSCognitoAuthPluginTest {
 
         authPlugin.resendUserAttributeConfirmationCode(expectedAttributeKey, expectedOnSuccess, expectedOnError)
 
-        verify {
+        verify(timeout = 1000) {
             realPlugin.resendUserAttributeConfirmationCode(
                 expectedAttributeKey,
                 any(),
@@ -559,7 +545,7 @@ class AWSCognitoAuthPluginTest {
             expectedOnError
         )
 
-        verify {
+        verify(timeout = 1000) {
             realPlugin.resendUserAttributeConfirmationCode(
                 expectedAttributeKey,
                 expectedOptions,
@@ -583,7 +569,7 @@ class AWSCognitoAuthPluginTest {
             expectedOnError
         )
 
-        verify {
+        verify(timeout = 1000) {
             realPlugin.confirmUserAttribute(
                 expectedAttributeKey,
                 expectedConfirmationCode,
@@ -600,7 +586,7 @@ class AWSCognitoAuthPluginTest {
 
         authPlugin.getCurrentUser(expectedOnSuccess, expectedOnError)
 
-        verify { realPlugin.getCurrentUser(any(), any()) }
+        verify(timeout = 1000) { realPlugin.getCurrentUser(any(), any()) }
     }
 
     @Test
@@ -609,7 +595,7 @@ class AWSCognitoAuthPluginTest {
 
         authPlugin.signOut(expectedOnComplete)
 
-        verify { realPlugin.signOut(any()) }
+        verify(timeout = 1000) { realPlugin.signOut(any()) }
     }
 
     @Test
@@ -619,7 +605,7 @@ class AWSCognitoAuthPluginTest {
 
         authPlugin.signOut(expectedOptions, expectedOnComplete)
 
-        verify { realPlugin.signOut(expectedOptions, any()) }
+        verify(timeout = 1000) { realPlugin.signOut(expectedOptions, any()) }
     }
 
     @Test
@@ -629,7 +615,7 @@ class AWSCognitoAuthPluginTest {
 
         authPlugin.deleteUser(expectedOnSuccess, expectedOnError)
 
-        verify { realPlugin.deleteUser(any(), any()) }
+        verify(timeout = 1000) { realPlugin.deleteUser(any(), any()) }
     }
 
     @Test
@@ -642,7 +628,7 @@ class AWSCognitoAuthPluginTest {
 
         authPlugin.federateToIdentityPool(expectedToken, expectedProvider, expectedOnSuccess, expectedOnError)
 
-        verify {
+        verify(timeout = 1000) {
             realPlugin.federateToIdentityPool(
                 expectedToken,
                 expectedProvider,
@@ -666,7 +652,7 @@ class AWSCognitoAuthPluginTest {
 
         authPlugin.federateToIdentityPool(expectedToken, expectedProvider, options, expectedOnSuccess, expectedOnError)
 
-        verify {
+        verify(timeout = 1000) {
             realPlugin.federateToIdentityPool(
                 expectedToken,
                 expectedProvider,
@@ -684,7 +670,7 @@ class AWSCognitoAuthPluginTest {
 
         authPlugin.clearFederationToIdentityPool(expectedOnSuccess, expectedOnError)
 
-        verify { realPlugin.clearFederationToIdentityPool(any(), any()) }
+        verify(timeout = 1000) { realPlugin.clearFederationToIdentityPool(any(), any()) }
     }
 
     @Test
