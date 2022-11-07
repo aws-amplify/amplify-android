@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import androidx.annotation.Nullable;
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions;
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions;
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions;
+import com.amplifyframework.auth.options.AuthFetchSessionOptions;
 import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions;
 import com.amplifyframework.auth.options.AuthResendUserAttributeConfirmationCodeOptions;
 import com.amplifyframework.auth.options.AuthResetPasswordOptions;
@@ -34,6 +35,7 @@ import com.amplifyframework.auth.options.AuthUpdateUserAttributesOptions;
 import com.amplifyframework.auth.options.AuthWebUISignInOptions;
 import com.amplifyframework.auth.result.AuthResetPasswordResult;
 import com.amplifyframework.auth.result.AuthSignInResult;
+import com.amplifyframework.auth.result.AuthSignOutResult;
 import com.amplifyframework.auth.result.AuthSignUpResult;
 import com.amplifyframework.auth.result.AuthUpdateAttributeResult;
 import com.amplifyframework.core.Action;
@@ -105,7 +107,7 @@ public interface AuthCategoryBehavior {
     void resendSignUpCode(
             @NonNull String username,
             @NonNull AuthResendSignUpCodeOptions options,
-            @NonNull Consumer<AuthSignUpResult> onSuccess,
+            @NonNull Consumer<AuthCodeDeliveryDetails> onSuccess,
             @NonNull Consumer<AuthException> onError);
 
     /**
@@ -117,7 +119,7 @@ public interface AuthCategoryBehavior {
      */
     void resendSignUpCode(
             @NonNull String username,
-            @NonNull Consumer<AuthSignUpResult> onSuccess,
+            @NonNull Consumer<AuthCodeDeliveryDetails> onSuccess,
             @NonNull Consumer<AuthException> onError);
 
     /**
@@ -151,25 +153,25 @@ public interface AuthCategoryBehavior {
 
     /**
      * Submit the confirmation code received as part of multi-factor Authentication during sign in.
-     * @param confirmationCode The code received as part of the multi-factor authentication process
+     * @param challengeResponse The code received as part of the multi-factor authentication process
      * @param options Advanced options such as a map of auth information for custom auth
      * @param onSuccess Success callback
      * @param onError Error callback
      */
     void confirmSignIn(
-            @NonNull String confirmationCode,
+            @NonNull String challengeResponse,
             @NonNull AuthConfirmSignInOptions options,
             @NonNull Consumer<AuthSignInResult> onSuccess,
             @NonNull Consumer<AuthException> onError);
 
     /**
      * Submit the confirmation code received as part of multi-factor Authentication during sign in.
-     * @param confirmationCode The code received as part of the multi-factor authentication process
+     * @param challengeResponse The code received as part of the multi-factor authentication process
      * @param onSuccess Success callback
      * @param onError Error callback
      */
     void confirmSignIn(
-            @NonNull String confirmationCode,
+            @NonNull String challengeResponse,
             @NonNull Consumer<AuthSignInResult> onSuccess,
             @NonNull Consumer<AuthException> onError);
 
@@ -251,6 +253,21 @@ public interface AuthCategoryBehavior {
             @NonNull Consumer<AuthException> onError);
 
     /**
+     * Retrieve the user's current session information - by default just whether they are signed out or in.
+     * Depending on how a plugin implements this, the resulting AuthSession can also be cast to a type specific
+     * to that plugin which contains the various security tokens and other identifying information if you want to
+     * manually use them outside the plugin. Within Amplify this should not be needed as the other categories will
+     * automatically work as long as you are signed in.
+     * @param options Advanced options for force refresh session.
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     */
+    void fetchAuthSession(
+            @NonNull AuthFetchSessionOptions options,
+            @NonNull Consumer<AuthSession> onSuccess,
+            @NonNull Consumer<AuthException> onError);
+
+    /**
      * Remember the user device that is currently being used.
      * @param onSuccess Success callback
      * @param onError Error callback
@@ -315,6 +332,7 @@ public interface AuthCategoryBehavior {
 
     /**
      * Complete password recovery process by inputting user's desired new password and confirmation code.
+     * @param username A login identifier e.g. `superdog22`; or an email/phone number, depending on configuration
      * @param newPassword The user's desired new password
      * @param confirmationCode The confirmation code the user received after starting the forgotPassword process
      * @param options Advanced options such as a map of auth information for custom auth
@@ -322,6 +340,7 @@ public interface AuthCategoryBehavior {
      * @param onError Error callback
      */
     void confirmResetPassword(
+            @NonNull String username,
             @NonNull String newPassword,
             @NonNull String confirmationCode,
             @NonNull AuthConfirmResetPasswordOptions options,
@@ -330,12 +349,14 @@ public interface AuthCategoryBehavior {
 
     /**
      * Complete password recovery process by inputting user's desired new password and confirmation code.
+     * @param username A login identifier e.g. `superdog22`; or an email/phone number, depending on configuration
      * @param newPassword The user's desired new password
      * @param confirmationCode The confirmation code the user received after starting the forgotPassword process
      * @param onSuccess Success callback
      * @param onError Error callback
      */
     void confirmResetPassword(
+            @NonNull String username,
             @NonNull String newPassword,
             @NonNull String confirmationCode,
             @NonNull Action onSuccess,
@@ -460,29 +481,29 @@ public interface AuthCategoryBehavior {
 
     /**
      * Gets the currently logged in User.
-     * @return the currently logged in user with basic info and methods for fetching/updating user attributes
-     */
-    AuthUser getCurrentUser();
-
-    /**
-     * Sign out of the current device.
      * @param onSuccess Success callback
      * @param onError Error callback
      */
-    void signOut(
-            @NonNull Action onSuccess,
-            @NonNull Consumer<AuthException> onError);
+    void getCurrentUser(
+            @NonNull Consumer<AuthUser> onSuccess,
+            @NonNull Consumer<AuthException> onError
+    );
+
+    /**
+     * Sign out of the current device.
+     * @param onComplete Complete callback
+     */
+    void signOut(@NonNull Consumer<AuthSignOutResult> onComplete);
 
     /**
      * Sign out with advanced options.
      * @param options Advanced options for sign out (e.g. whether to sign out of all devices globally)
-     * @param onSuccess Success callback
-     * @param onError Error callback
+     * @param onComplete Complete callback
      */
     void signOut(
             @NonNull AuthSignOutOptions options,
-            @NonNull Action onSuccess,
-            @NonNull Consumer<AuthException> onError);
+            @NonNull Consumer<AuthSignOutResult> onComplete
+    );
 
     /**
      * Delete the account of the currently signed in user.

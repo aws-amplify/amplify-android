@@ -17,27 +17,33 @@ apply plugin: 'com.android.library'
 apply from: rootProject.file("configuration/checkstyle.gradle")
 apply from: rootProject.file("configuration/publishing.gradle")
 apply plugin: 'kotlin-android'
-apply plugin: 'org.jlleitschuh.gradle.ktlint'
 
 dependencies {
     implementation project(path: ':core')
+    implementation project(path: ':aws-auth-cognito')
+
     implementation dependency.androidx.appcompat
     implementation dependency.aws.s3
-    implementation dependency.aws.mobileclient
+    implementation dependency.androidx.workmanager
+    implementation dependency.kotlin.futures
+    implementation dependency.gson
 
     testImplementation project(path: ':testutils')
     testImplementation dependency.junit
     testImplementation dependency.mockito
+    testImplementation dependency.mockitoinline
     testImplementation dependency.robolectric
     testImplementation dependency.androidx.test.core
+    testImplementation dependency.mockk
+    testImplementation dependency.androidx.test.workmanager
+    testImplementation dependency.kotlin.test.coroutines
+    testImplementation project(path: ':aws-storage-s3')
 
     androidTestImplementation project(path: ':testutils')
     androidTestImplementation dependency.androidx.annotation
     androidTestImplementation dependency.androidx.test.runner
     androidTestImplementation dependency.androidx.test.junit
-}
-
-ktlint {
-    android.set(true)
+    androidTestImplementation dependency.androidx.test.workmanager
+    androidTestImplementation project(path: ':aws-storage-s3')
 }
 

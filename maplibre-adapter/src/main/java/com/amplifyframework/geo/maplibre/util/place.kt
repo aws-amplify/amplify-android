@@ -56,7 +56,6 @@ fun JsonElement.toPlace(): AmazonLocationPlace {
     )
 }
 
-
 fun AmazonLocationPlace.toJsonElement(): JsonElement {
     val place = JsonObject()
     place.addStringProperty(this, AmazonLocationPlace::addressNumber)
@@ -68,10 +67,13 @@ fun AmazonLocationPlace.toJsonElement(): JsonElement {
     place.addStringProperty(this, AmazonLocationPlace::region)
     place.addStringProperty(this, AmazonLocationPlace::street)
     place.addStringProperty(this, AmazonLocationPlace::subRegion)
-    place.add(AmazonLocationPlace::coordinates.name, JsonObject().apply {
-        addProperty("latitude", coordinates.latitude)
-        addProperty("longitude", coordinates.longitude)
-    })
+    place.add(
+        AmazonLocationPlace::coordinates.name,
+        JsonObject().apply {
+            addProperty("latitude", coordinates.latitude)
+            addProperty("longitude", coordinates.longitude)
+        }
+    )
     return place
 }
 

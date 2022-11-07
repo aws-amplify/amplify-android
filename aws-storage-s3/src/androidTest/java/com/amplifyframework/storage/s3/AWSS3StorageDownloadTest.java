@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -17,6 +17,8 @@ package com.amplifyframework.storage.s3;
 
 import android.content.Context;
 
+import com.amplifyframework.auth.AuthPlugin;
+import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.async.Resumable;
@@ -26,17 +28,17 @@ import com.amplifyframework.hub.SubscriptionToken;
 import com.amplifyframework.storage.StorageAccessLevel;
 import com.amplifyframework.storage.StorageCategory;
 import com.amplifyframework.storage.StorageChannelEventName;
+import com.amplifyframework.storage.TransferState;
 import com.amplifyframework.storage.operation.StorageDownloadFileOperation;
 import com.amplifyframework.storage.options.StorageDownloadFileOptions;
 import com.amplifyframework.storage.options.StorageUploadFileOptions;
-import com.amplifyframework.storage.s3.helper.AmplifyTransferServiceTestHelper;
 import com.amplifyframework.storage.s3.test.R;
+import com.amplifyframework.storage.s3.util.WorkmanagerTestUtils;
 import com.amplifyframework.testutils.FileAssert;
 import com.amplifyframework.testutils.random.RandomTempFile;
-import com.amplifyframework.testutils.sync.SynchronousMobileClient;
+import com.amplifyframework.testutils.sync.SynchronousAuth;
 import com.amplifyframework.testutils.sync.SynchronousStorage;
 
-import com.amazonaws.mobileconnectors.s3.transferutility.TransferState;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -84,11 +86,8 @@ public final class AWSS3StorageDownloadTest {
     @BeforeClass
     public static void setUpOnce() throws Exception {
         Context context = getApplicationContext();
-
-        AmplifyTransferServiceTestHelper.stopForegroundAndUnbind(getApplicationContext());
-
-        // Init auth stuff
-        SynchronousMobileClient.instance().initialize();
+        WorkmanagerTestUtils.INSTANCE.initializeWorkmanagerTestUtil(context);
+        SynchronousAuth.delegatingToCognito(context, (AuthPlugin) new AWSCognitoAuthPlugin());
 
         // Get a handle to storage
         storageCategory = TestStorageCategory.create(context, R.raw.amplifyconfiguration);
@@ -128,8 +127,6 @@ public final class AWSS3StorageDownloadTest {
 
         // Create a file to download to
         downloadFile = new RandomTempFile();
-
-        AmplifyTransferServiceTestHelper.stopForegroundAndUnbind(getApplicationContext());
     }
 
     /**
@@ -141,8 +138,6 @@ public final class AWSS3StorageDownloadTest {
         for (SubscriptionToken token : subscriptions) {
             Amplify.Hub.unsubscribe(token);
         }
-
-        AmplifyTransferServiceTestHelper.stopForegroundAndUnbind(getApplicationContext());
     }
 
     /**
@@ -247,6 +242,7 @@ public final class AWSS3StorageDownloadTest {
             downloadFile,
             options,
             progress -> {
+                //Log.i("DOWNLOAD TEST", "received "+progress.getFractionCompleted());
                 if (progress.getCurrentBytes() > 0 && resumed.getCount() > 0) {
                     opContainer.get().pause();
                 }
@@ -255,6 +251,65 @@ public final class AWSS3StorageDownloadTest {
             errorContainer::set
         );
         opContainer.set(op);
+
+        // Assert that all the required conditions have been met
+        assertTrue(resumed.await(EXTENDED_TIMEOUT_MS, TimeUnit.MILLISECONDS));
+        assertTrue(completed.await(EXTENDED_TIMEOUT_MS, TimeUnit.MILLISECONDS));
+        assertNull(errorContainer.get());
+        FileAssert.assertEquals(largeFile, downloadFile);
+    }
+
+    /**
+     * Tests that a pause operation could be resumed using get transferAPI.
+     *
+     * @throws Exception if download is not paused, resumed, and
+     *                   completed successfully before timeout
+     */
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testGetTransferOnPause() throws Exception {
+        final CountDownLatch completed = new CountDownLatch(1);
+        final CountDownLatch resumed = new CountDownLatch(1);
+        final AtomicReference<StorageDownloadFileOperation<?>> opContainer = new AtomicReference<>();
+        final AtomicReference<String> transferId = new AtomicReference<>();
+        final AtomicReference<Throwable> errorContainer = new AtomicReference<>();
+            // Listen to Hub events to resume when operation has been paused
+        SubscriptionToken resumeToken = Amplify.Hub.subscribe(HubChannel.STORAGE, hubEvent -> {
+            if (StorageChannelEventName.DOWNLOAD_STATE.toString().equals(hubEvent.getName())) {
+                HubEvent<String> stateEvent = (HubEvent<String>) hubEvent;
+                TransferState state = TransferState.getState(stateEvent.getData());
+                if (TransferState.PAUSED.equals(state)) {
+                    opContainer.get().clearAllListeners();
+                    storageCategory.getTransfer(transferId.get(), operation -> {
+                        StorageDownloadFileOperation<?> getOp = (StorageDownloadFileOperation) operation;
+                        getOp.resume();
+                        resumed.countDown();
+                        getOp.setOnSuccess(result -> {
+                            completed.countDown();
+                        });
+                    }, errorContainer::set);
+                }
+            }
+        });
+        subscriptions.add(resumeToken);
+
+        // Begin downloading a large file
+        StorageDownloadFileOperation<?> op = storageCategory.downloadFile(
+            LARGE_FILE_NAME,
+            downloadFile,
+            options,
+            progress -> {
+                if (progress.getCurrentBytes() > 0 && resumed.getCount() > 0) {
+                    opContainer.get().pause();
+                }
+            },
+            result -> {
+
+            },
+            errorContainer::set
+        );
+        opContainer.set(op);
+        transferId.set(op.getTransferId());
 
         // Assert that all the required conditions have been met
         assertTrue(resumed.await(EXTENDED_TIMEOUT_MS, TimeUnit.MILLISECONDS));

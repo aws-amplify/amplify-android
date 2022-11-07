@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -27,8 +27,11 @@ import com.amplifyframework.auth.AuthSession
 import com.amplifyframework.auth.AuthUser
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
+import com.amplifyframework.auth.exceptions.SessionExpiredException
+import com.amplifyframework.auth.exceptions.SignedOutException
 import com.amplifyframework.auth.result.AuthResetPasswordResult
 import com.amplifyframework.auth.result.AuthSignInResult
+import com.amplifyframework.auth.result.AuthSignOutResult
 import com.amplifyframework.auth.result.AuthSignUpResult
 import com.amplifyframework.auth.result.AuthUpdateAttributeResult
 import com.amplifyframework.core.Action
@@ -38,6 +41,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Test
 
 /**
@@ -132,15 +136,15 @@ class KotlinAuthFacadeTest {
     @Test
     fun resendSignUpCodeSucceeds() = runBlocking {
         val username = "tony"
-        val signUpResult = mockk<AuthSignUpResult>()
+        val codeDeliveryDetails = mockk<AuthCodeDeliveryDetails>()
         every {
             delegate.resendSignUpCode(eq(username), any(), any(), any())
         } answers {
             val indexOfResultConsumer = 2
-            val onResult = it.invocation.args[indexOfResultConsumer] as Consumer<AuthSignUpResult>
-            onResult.accept(signUpResult)
+            val onResult = it.invocation.args[indexOfResultConsumer] as Consumer<AuthCodeDeliveryDetails>
+            onResult.accept(codeDeliveryDetails)
         }
-        assertEquals(signUpResult, auth.resendSignUpCode(username))
+        assertEquals(codeDeliveryDetails, auth.resendSignUpCode(username))
     }
 
     /**
@@ -344,9 +348,9 @@ class KotlinAuthFacadeTest {
     fun fetchAuthSessionSucceeds() = runBlocking {
         val session = AuthSession(true)
         every {
-            delegate.fetchAuthSession(any(), any())
+            delegate.fetchAuthSession(any(), any(), any())
         } answers {
-            val indexOfResultConsumer = 0
+            val indexOfResultConsumer = 1
             val onResult = it.invocation.args[indexOfResultConsumer] as Consumer<AuthSession>
             onResult.accept(session)
         }
@@ -361,9 +365,9 @@ class KotlinAuthFacadeTest {
     fun fetchAuthSessionThrows(): Unit = runBlocking {
         val error = AuthException("uh", "oh")
         every {
-            delegate.fetchAuthSession(any(), any())
+            delegate.fetchAuthSession(any(), any(), any())
         } answers {
-            val indexOfErrorConsumer = 1
+            val indexOfErrorConsumer = 2
             val onError = it.invocation.args[indexOfErrorConsumer] as Consumer<AuthException>
             onError.accept(error)
         }
@@ -374,13 +378,13 @@ class KotlinAuthFacadeTest {
      * When the fetchAuthSession() delegate emits an error, it should
      * be surfaced by the coroutine API, too.
      */
-    @Test(expected = AuthException.SessionExpiredException::class)
+    @Test(expected = SessionExpiredException::class)
     fun fetchAuthSessionThrowsSessionExpired(): Unit = runBlocking {
-        val error = AuthException.SessionExpiredException() as AuthException
+        val error = SessionExpiredException() as AuthException
         every {
-            delegate.fetchAuthSession(any(), any())
+            delegate.fetchAuthSession(any(), any(), any())
         } answers {
-            val indexOfErrorConsumer = 1
+            val indexOfErrorConsumer = 2
             val onError = it.invocation.args[indexOfErrorConsumer] as Consumer<AuthException>
             onError.accept(error)
         }
@@ -531,10 +535,12 @@ class KotlinAuthFacadeTest {
      */
     @Test
     fun confirmResetPasswordSucceeds(): Unit = runBlocking {
+        val username = "TonyDaniels6989"
         val newPassword = "VerySecurePassword=VSPBaby"
         val confirmationCode = "LegitConfirmation"
         every {
             delegate.confirmResetPassword(
+                eq(username),
                 eq(newPassword),
                 eq(confirmationCode),
                 any(),
@@ -542,13 +548,14 @@ class KotlinAuthFacadeTest {
                 any()
             )
         } answers {
-            val indexOfCompletionAction = 3
+            val indexOfCompletionAction = 4
             val onComplete = it.invocation.args[indexOfCompletionAction] as Action
             onComplete.call()
         }
-        auth.confirmResetPassword(newPassword, confirmationCode)
+        auth.confirmResetPassword(username, newPassword, confirmationCode)
         verify {
             delegate.confirmResetPassword(
+                eq(username),
                 eq(newPassword),
                 eq(confirmationCode),
                 any(),
@@ -563,11 +570,13 @@ class KotlinAuthFacadeTest {
      */
     @Test(expected = AuthException::class)
     fun confirmResetPasswordThrows(): Unit = runBlocking {
+        val username = "TonyDaniels6989"
         val newPassword = "SuperSecurePass911"
         val confirmationCode = "ConfirmationCode4u"
         val error = AuthException("uh", "oh")
         every {
             delegate.confirmResetPassword(
+                eq(username),
                 eq(newPassword),
                 eq(confirmationCode),
                 any(),
@@ -575,11 +584,11 @@ class KotlinAuthFacadeTest {
                 any()
             )
         } answers {
-            val indexOfErrorConsumer = 4
+            val indexOfErrorConsumer = 5
             val onError = it.invocation.args[indexOfErrorConsumer] as Consumer<AuthException>
             onError.accept(error)
         }
-        auth.confirmResetPassword(newPassword, confirmationCode)
+        auth.confirmResetPassword(username, newPassword, confirmationCode)
     }
 
     @Test
@@ -809,21 +818,33 @@ class KotlinAuthFacadeTest {
      * have any suspending functions, this is a straight pass through verification.
      */
     @Test
-    fun getCurrentUserSucceeds() {
-        val expectedAuthUser = AuthUser("userId", "username")
-        every { delegate.currentUser } returns expectedAuthUser
-        assertEquals(expectedAuthUser, auth.getCurrentUser())
+    fun getCurrentUserSucceeds(): Unit = runBlocking {
+        val authUser = AuthUser("testUserID", "testUsername")
+        every {
+            delegate.getCurrentUser(any(), any())
+        } answers {
+            val indexOfResultConsumer = 0
+            val onResult = it.invocation.args[indexOfResultConsumer] as Consumer<AuthUser>
+            onResult.accept(authUser)
+        }
+        auth.getCurrentUser()
     }
 
     /**
-     * When the getCurrentUser() delegate return null, the proxy API in the
-     * Kotlin facade should, too.  Essentially, the AuthUser returned is nullable.
+     * When the getCurrentUser() has null values an Auth Exception should be sent in the onError
+     * which should be captured in the Kotlin facade too
      */
-    @Test
-    fun getCurrentUserSucceedsWhenSignedOut() {
-        val expectedAuthUser = null
-        every { delegate.currentUser } returns expectedAuthUser
-        assertEquals(expectedAuthUser, auth.getCurrentUser())
+    @Test(expected = SignedOutException::class)
+    fun getCurrentUserThrowsWhenSignedOut(): Unit = runBlocking {
+        val expectedException = SignedOutException()
+        every {
+            delegate.getCurrentUser(any(), any())
+        } answers {
+            val indexOfResultConsumer = 1
+            val onResult = it.invocation.args[indexOfResultConsumer] as Consumer<AuthException>
+            onResult.accept(expectedException)
+        }
+        auth.getCurrentUser()
     }
 
     /**
@@ -832,9 +853,33 @@ class KotlinAuthFacadeTest {
      * have any suspending functions, this is a straight pass through verification.
      */
     @Test(expected = AuthException::class)
-    fun getCurrentUserThrows() {
+    fun getCurrentUserThrows(): Unit = runBlocking {
         val expectedException = AuthException("uh", "oh")
-        every { delegate.currentUser } throws expectedException
+        every {
+            delegate.getCurrentUser(any(), any())
+        } answers {
+            val indexOfErrorConsumer = 1
+            val onResult = it.invocation.args[indexOfErrorConsumer] as Consumer<AuthException>
+            onResult.accept(expectedException)
+        }
+        auth.getCurrentUser()
+    }
+
+    /**
+     * When the getCurrentUser() delegate throws an error, the proxy
+     * API in the Kotlin facade should, too. Note that this API doesn't
+     * have any suspending functions, this is a straight pass through verification.
+     */
+    @Test(expected = AuthException::class)
+    fun getCurrentUserWhenUserNameIsEmpty(): Unit = runBlocking {
+        val expectedException = AuthException("uh", "oh")
+        every {
+            delegate.getCurrentUser(any(), any())
+        } answers {
+            val indexOfErrorConsumer = 1
+            val onResult = it.invocation.args[indexOfErrorConsumer] as Consumer<AuthException>
+            onResult.accept(expectedException)
+        }
         auth.getCurrentUser()
     }
 
@@ -844,35 +889,21 @@ class KotlinAuthFacadeTest {
      */
     @Test
     fun signOutSucceeds() = runBlocking {
+        val expected = AuthSignOutResult()
+        var onCompleteConsumer: Consumer<AuthSignOutResult>? = null
         every {
-            delegate.signOut(any(), any(), any())
+            delegate.signOut(any(), any())
         } answers {
             val indexOfCompletionAction = 1
-            val onComplete = it.invocation.args[indexOfCompletionAction] as Action
-            onComplete.call()
+            onCompleteConsumer = it.invocation.args[indexOfCompletionAction] as Consumer<AuthSignOutResult>
+            onCompleteConsumer?.accept(expected)
         }
         auth.signOut()
         // Since nothing returned, just verify it called through.
+        assertNotNull(onCompleteConsumer)
         verify {
-            delegate.signOut(any(), any(), any())
+            delegate.signOut(any(), onCompleteConsumer!!)
         }
-    }
-
-    /**
-     * The signOut() call falls through to the delegate. If the delegate
-     * renders an error, it should be bubbled out through the coroutine API.
-     */
-    @Test(expected = AuthException::class)
-    fun signOutThrows(): Unit = runBlocking {
-        val expectedException = AuthException("uh", "oh")
-        every {
-            delegate.signOut(any(), any(), any())
-        } answers {
-            val indexOfErrorConsumer = 2
-            val onError = it.invocation.args[indexOfErrorConsumer] as Consumer<AuthException>
-            onError.accept(expectedException)
-        }
-        auth.signOut()
     }
 
     /**

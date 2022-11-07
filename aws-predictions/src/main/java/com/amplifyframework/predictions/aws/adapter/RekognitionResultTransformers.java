@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -30,16 +30,16 @@ import com.amplifyframework.predictions.models.Polygon;
 import com.amplifyframework.predictions.models.Pose;
 import com.amplifyframework.util.Empty;
 
-import com.amazonaws.services.rekognition.model.BoundingBox;
-import com.amazonaws.services.rekognition.model.FaceDetail;
-import com.amazonaws.services.rekognition.model.Point;
-import com.amazonaws.services.rekognition.model.TextDetection;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import aws.sdk.kotlin.services.rekognition.model.BoundingBox;
+import aws.sdk.kotlin.services.rekognition.model.FaceDetail;
+import aws.sdk.kotlin.services.rekognition.model.Point;
+import aws.sdk.kotlin.services.rekognition.model.TextDetection;
 
 /**
  * Utility class to transform Amazon Rekognition service-specific
@@ -92,13 +92,13 @@ public final class RekognitionResultTransformers {
 
 
     /**
-     * Converts {@link com.amazonaws.services.rekognition.model.Pose}
+     * Converts {@link aws.sdk.kotlin.services.rekognition.model.Pose}
      * from Amazon Rekognition into Amplify-compatible pose data.
      * @param pose the pose provided by Amazon Rekognition
      * @return the Amplify pose with same orientation
      */
     @Nullable
-    public static Pose fromRekognitionPose(@Nullable com.amazonaws.services.rekognition.model.Pose pose) {
+    public static Pose fromRekognitionPose(@Nullable aws.sdk.kotlin.services.rekognition.model.Pose pose) {
         if (pose == null) {
             return null;
         }
@@ -106,13 +106,13 @@ public final class RekognitionResultTransformers {
     }
 
     /**
-     * Converts {@link com.amazonaws.services.rekognition.model.AgeRange}
+     * Converts {@link aws.sdk.kotlin.services.rekognition.model.AgeRange}
      * from Amazon Rekognition into Amplify-compatible age range data.
      * @param range the age range provided by Amazon Rekognition
      * @return the Amplify age range with same low and high
      */
     @Nullable
-    public static AgeRange fromRekognitionAgeRange(@Nullable com.amazonaws.services.rekognition.model.AgeRange range) {
+    public static AgeRange fromRekognitionAgeRange(@Nullable aws.sdk.kotlin.services.rekognition.model.AgeRange range) {
         if (range == null) {
             return null;
         }
@@ -139,7 +139,7 @@ public final class RekognitionResultTransformers {
     }
 
     /**
-     * Converts a list of {@link com.amazonaws.services.rekognition.model.Landmark}
+     * Converts a list of {@link aws.sdk.kotlin.services.rekognition.model.Landmark}
      * from Amazon Rekognition into Amplify-compatible list of
      * {@link Landmark} objects.
      * @param landmarks the list of Amazon Rekognition landmark objects
@@ -147,7 +147,7 @@ public final class RekognitionResultTransformers {
      */
     @NonNull
     public static List<Landmark> fromLandmarks(
-            @Nullable List<com.amazonaws.services.rekognition.model.Landmark> landmarks
+            @Nullable List<aws.sdk.kotlin.services.rekognition.model.Landmark> landmarks
     ) {
         List<Landmark> amplifyLandmarks = new ArrayList<>();
         if (Empty.check(landmarks)) {
@@ -158,8 +158,8 @@ public final class RekognitionResultTransformers {
         Map<LandmarkType, List<PointF>> landmarkMap = new HashMap<>();
 
         // Pre-process all of the landmarks into a map of type -> matching points
-        for (com.amazonaws.services.rekognition.model.Landmark landmark : landmarks) {
-            LandmarkType type = LandmarkTypeAdapter.fromRekognition(landmark.getType());
+        for (aws.sdk.kotlin.services.rekognition.model.Landmark landmark : landmarks) {
+            LandmarkType type = LandmarkTypeAdapter.fromRekognition(landmark.getType().getValue());
             PointF point = new PointF(landmark.getX(), landmark.getY());
             List<PointF> points = landmarkMap.get(type);
             if (points == null) {

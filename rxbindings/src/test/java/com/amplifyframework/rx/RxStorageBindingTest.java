@@ -28,6 +28,7 @@ import com.amplifyframework.storage.operation.StorageDownloadFileOperation;
 import com.amplifyframework.storage.operation.StorageGetUrlOperation;
 import com.amplifyframework.storage.operation.StorageListOperation;
 import com.amplifyframework.storage.operation.StorageRemoveOperation;
+import com.amplifyframework.storage.operation.StorageTransferOperation;
 import com.amplifyframework.storage.operation.StorageUploadFileOperation;
 import com.amplifyframework.storage.operation.StorageUploadInputStreamOperation;
 import com.amplifyframework.storage.options.StorageDownloadFileOptions;
@@ -39,6 +40,7 @@ import com.amplifyframework.storage.result.StorageGetUrlResult;
 import com.amplifyframework.storage.result.StorageListResult;
 import com.amplifyframework.storage.result.StorageRemoveResult;
 import com.amplifyframework.storage.result.StorageTransferProgress;
+import com.amplifyframework.storage.result.StorageTransferResult;
 import com.amplifyframework.storage.result.StorageUploadFileResult;
 import com.amplifyframework.storage.result.StorageUploadInputStreamResult;
 import com.amplifyframework.testutils.random.RandomBytes;
@@ -46,6 +48,8 @@ import com.amplifyframework.testutils.random.RandomString;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.robolectric.RobolectricTestRunner;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -70,6 +74,7 @@ import static org.mockito.Mockito.when;
 /**
  * Tests the {@link RxStorageBinding}.
  */
+@RunWith(RobolectricTestRunner.class)
 public final class RxStorageBindingTest {
     private static final long TIMEOUT_MS = TimeUnit.SECONDS.toMillis(5);
     private RxStorageCategoryBehavior rxStorage;
@@ -446,6 +451,54 @@ public final class RxStorageBindingTest {
 
         rxStorage
             .remove(remoteKey)
+            .test()
+            .assertError(error);
+    }
+
+    /**
+     * When {@link StorageCategoryBehavior#getTransfer(String, Consumer, Consumer)} emits a result,
+     * then the {@link Single} returned by {@link RxStorageCategoryBehavior#getTransfer(String)}
+     * should emit an {@link com.amplifyframework.storage.operation.StorageTransferOperation}.
+     */
+    @Test
+    public void getTransferReturnsResult() {
+        StorageTransferOperation<?, ? extends StorageTransferResult> result =
+            (StorageTransferOperation<?, ? extends StorageTransferResult>) mock(StorageTransferOperation.class);
+        doAnswer(invocation -> {
+            final int indexOfResultConsumer = 1; // 0 transferId, 1 onResult, 2 onError
+            Consumer<StorageTransferOperation<?, ? extends StorageTransferResult>> resultConsumer =
+                invocation.getArgument(indexOfResultConsumer);
+            resultConsumer.accept(result);
+            return result;
+        })
+            .when(delegate)
+            .getTransfer(eq(remoteKey), anyConsumer(), anyConsumer());
+
+        rxStorage
+            .getTransfer(remoteKey)
+            .test()
+            .assertResult(result);
+    }
+
+    /**
+     * When {@link StorageCategoryBehavior#getTransfer(String, Consumer, Consumer)}calls its
+     * error consumer, then the {@link Single} returned by {@link RxStorageCategoryBehavior#getTransfer(String)}
+     * should emit an error.
+     */
+    @Test
+    public void getTransferReturnsError() {
+        StorageException error = new StorageException("Error removing item.", "Expected.");
+        doAnswer(invocation -> {
+            final int indexOfErrorConsumer = 2; // 0 remoteKey, 1 onResult, 2 onError
+            Consumer<StorageException> errorConsumer = invocation.getArgument(indexOfErrorConsumer);
+            errorConsumer.accept(error);
+            return error;
+        })
+            .when(delegate)
+            .getTransfer(eq(remoteKey), anyConsumer(), anyConsumer());
+
+        rxStorage
+            .getTransfer(remoteKey)
             .test()
             .assertError(error);
     }

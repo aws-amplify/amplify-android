@@ -21,9 +21,8 @@ import com.amplifyframework.hub.HubChannel
 import com.amplifyframework.hub.HubEvent
 import com.amplifyframework.hub.HubEventFilter
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.channels.sendBlocking
+import kotlinx.coroutines.channels.trySendBlocking
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 
@@ -32,11 +31,10 @@ class KotlinHubFacade(private val delegate: Delegate = Amplify.Hub) : Hub {
         delegate.publish(channel, event)
     }
 
-    @FlowPreview
-    @ExperimentalCoroutinesApi
+    @OptIn(ExperimentalCoroutinesApi::class)
     override fun subscribe(channel: HubChannel, filter: HubEventFilter): Flow<HubEvent<*>> =
         callbackFlow {
-            val token = delegate.subscribe(channel, filter) { sendBlocking(it) }
+            val token = delegate.subscribe(channel, filter) { trySendBlocking(it) }
             awaitClose { delegate.unsubscribe(token) }
         }
 }
