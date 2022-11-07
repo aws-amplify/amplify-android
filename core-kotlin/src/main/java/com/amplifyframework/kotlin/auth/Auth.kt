@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -28,6 +28,7 @@ import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
+import com.amplifyframework.auth.options.AuthFetchSessionOptions
 import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions
 import com.amplifyframework.auth.options.AuthResendUserAttributeConfirmationCodeOptions
 import com.amplifyframework.auth.options.AuthResetPasswordOptions
@@ -39,6 +40,7 @@ import com.amplifyframework.auth.options.AuthUpdateUserAttributesOptions
 import com.amplifyframework.auth.options.AuthWebUISignInOptions
 import com.amplifyframework.auth.result.AuthResetPasswordResult
 import com.amplifyframework.auth.result.AuthSignInResult
+import com.amplifyframework.auth.result.AuthSignOutResult
 import com.amplifyframework.auth.result.AuthSignUpResult
 import com.amplifyframework.auth.result.AuthUpdateAttributeResult
 
@@ -94,14 +96,14 @@ interface Auth {
      *                 depending on configuration
      * @param options Advanced options such as a map of auth information for custom auth,
      *                If not provided, default options will be used
-     * @return A sign-up result; if the code is requested, typically the result will
+     * @return A code delivery result; if the code is requested, typically the result will
      *         include a next step requiring confirmation of the re-sent code.
      */
     @Throws(AuthException::class)
     suspend fun resendSignUpCode(
         username: String,
         options: AuthResendSignUpCodeOptions = AuthResendSignUpCodeOptions.defaults()
-    ): AuthSignUpResult
+    ): AuthCodeDeliveryDetails
 
     /**
      * Basic authentication to the app with a username and password or, if custom auth is setup,
@@ -126,14 +128,14 @@ interface Auth {
 
     /**
      * Submit the confirmation code received as part of multi-factor Authentication during sign in.
-     * @param confirmationCode The code received as part of the multi-factor authentication process
+     * @param challengeResponse The code received as part of the multi-factor authentication process
      * @param options Advanced options such as a map of auth information for custom auth,
      *                If not provided, default options will be used
      * @return A sign-in result; check the nextStep field for cues on additional sign-in challenges
      */
     @Throws(AuthException::class)
     suspend fun confirmSignIn(
-        confirmationCode: String,
+        challengeResponse: String,
         options: AuthConfirmSignInOptions = AuthConfirmSignInOptions.defaults()
     ):
         AuthSignInResult
@@ -183,10 +185,12 @@ interface Auth {
      * to that plugin which contains the various security tokens and other identifying information if you want to
      * manually use them outside the plugin. Within Amplify this should not be needed as the other categories will
      * automatically work as long as you are signed in.
+     * * @param options Advanced options for fetching auth session.
+     *                If not provided, default options will be used.
      * @return Information about the current authenticated session, where applicable
      */
     @Throws(AuthException::class)
-    suspend fun fetchAuthSession(): AuthSession
+    suspend fun fetchAuthSession(options: AuthFetchSessionOptions = AuthFetchSessionOptions.defaults()): AuthSession
 
     /**
      * Remember the user device that is currently being used.
@@ -225,6 +229,7 @@ interface Auth {
 
     /**
      * Complete password recovery process by inputting user's desired new password and confirmation code.
+     * @param username A login identifier e.g. `superdog22`; or an email/phone number, depending on configuration
      * @param newPassword The user's desired new password
      * @param confirmationCode The confirmation code the user received after starting the forgotPassword process
      * @param options Advanced options such as a map of auth information for custom auth,
@@ -232,6 +237,7 @@ interface Auth {
      */
     @Throws(AuthException::class)
     suspend fun confirmResetPassword(
+        username: String,
         newPassword: String,
         confirmationCode: String,
         options: AuthConfirmResetPasswordOptions = AuthConfirmResetPasswordOptions.defaults()
@@ -306,15 +312,15 @@ interface Auth {
      * @return the currently logged in user with basic info and methods for fetching/updating user attributes
      * @return Information about the current user
      */
-    fun getCurrentUser(): AuthUser?
+    suspend fun getCurrentUser(): AuthUser
 
     /**
      * Sign out with advanced options.
-     * @param options Advanced options for sign out (e.g. whether to sign out of all devices globally).
+     * @param options Advanced options for sign out (e.g. whether to sign out of all devices globally)
      *                If not provided, default options are used.
+     * @return A sign-out result; Check result types for next steps
      */
-    @Throws(AuthException::class)
-    suspend fun signOut(options: AuthSignOutOptions = AuthSignOutOptions.builder().build())
+    suspend fun signOut(options: AuthSignOutOptions = AuthSignOutOptions.builder().build()): AuthSignOutResult
 
     /**
      * Delete the account of the currently signed in user.

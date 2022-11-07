@@ -15,11 +15,12 @@
 
 package com.amplifyframework.storage.s3.configuration
 
+import com.amplifyframework.auth.AuthCredentialsProvider
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.storage.StorageAccessLevel
 import com.amplifyframework.storage.StorageException
-import com.amplifyframework.storage.s3.CognitoAuthProvider
 import com.amplifyframework.storage.s3.utils.S3Keys
+import kotlinx.coroutines.runBlocking
 
 /**
  * Resolves the final prefix prepended to the S3 key for a given request.
@@ -37,7 +38,7 @@ interface AWSS3PluginPrefixResolver {
         accessLevel: StorageAccessLevel,
         targetIdentity: String?,
         onSuccess: Consumer<String>,
-        onError: Consumer<StorageException>
+        onError: Consumer<StorageException>?
     )
 }
 
@@ -45,18 +46,19 @@ interface AWSS3PluginPrefixResolver {
  * Default prefix resolver based on the storage access level.
  **/
 internal class StorageAccessLevelAwarePrefixResolver(
-    private val cognitoAuthProvider: CognitoAuthProvider
-) :
-    AWSS3PluginPrefixResolver {
+    private val authCredentialsProvider: AuthCredentialsProvider
+) : AWSS3PluginPrefixResolver {
 
     override fun resolvePrefix(
         accessLevel: StorageAccessLevel,
         targetIdentity: String?,
         onSuccess: Consumer<String>,
-        onError: Consumer<StorageException>
+        onError: Consumer<StorageException>?
     ) {
         val identityId = runCatching {
-            cognitoAuthProvider.identityId
+            runBlocking {
+                authCredentialsProvider.getIdentityId()
+            }
         }
         when {
             identityId.isSuccess -> {
@@ -64,7 +66,9 @@ internal class StorageAccessLevelAwarePrefixResolver(
                 onSuccess.accept(S3Keys.getAccessLevelPrefix(accessLevel, resultIdentityId))
             }
             else -> {
-                onError.accept(identityId.exceptionOrNull() as StorageException)
+                onError?.accept(
+                    StorageException("Failed to fetch identity ID", identityId.exceptionOrNull().toString())
+                )
             }
         }
     }

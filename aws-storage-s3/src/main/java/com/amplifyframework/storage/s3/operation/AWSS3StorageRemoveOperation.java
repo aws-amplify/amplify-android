@@ -17,11 +17,11 @@ package com.amplifyframework.storage.s3.operation;
 
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.auth.AuthCredentialsProvider;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.operation.StorageRemoveOperation;
 import com.amplifyframework.storage.result.StorageRemoveResult;
-import com.amplifyframework.storage.s3.CognitoAuthProvider;
 import com.amplifyframework.storage.s3.configuration.AWSS3StoragePluginConfiguration;
 import com.amplifyframework.storage.s3.request.AWSS3StorageRemoveRequest;
 import com.amplifyframework.storage.s3.service.StorageService;
@@ -35,7 +35,7 @@ import java.util.concurrent.ExecutorService;
 public final class AWSS3StorageRemoveOperation extends StorageRemoveOperation<AWSS3StorageRemoveRequest> {
     private final StorageService storageService;
     private final ExecutorService executorService;
-    private final CognitoAuthProvider cognitoAuthProvider;
+    private final AuthCredentialsProvider authCredentialsProvider;
     private final Consumer<StorageRemoveResult> onSuccess;
     private final Consumer<StorageException> onError;
     private final AWSS3StoragePluginConfiguration awsS3StoragePluginConfiguration;
@@ -46,7 +46,7 @@ public final class AWSS3StorageRemoveOperation extends StorageRemoveOperation<AW
      * @param storageService      S3 client wrapper
      * @param executorService     Executor service used for running blocking operations on a
      *                            separate thread
-     * @param cognitoAuthProvider Interface to retrieve AWS specific auth information
+     * @param authCredentialsProvider Interface to retrieve AWS specific auth information
      * @param request             remove request parameters
      * @param awsS3StoragePluginConfiguration s3Plugin configuration
      * @param onSuccess           notified when remove operation results available
@@ -55,7 +55,7 @@ public final class AWSS3StorageRemoveOperation extends StorageRemoveOperation<AW
     public AWSS3StorageRemoveOperation(
             @NonNull StorageService storageService,
             @NonNull ExecutorService executorService,
-            @NonNull CognitoAuthProvider cognitoAuthProvider,
+            @NonNull AuthCredentialsProvider authCredentialsProvider,
             @NonNull AWSS3StorageRemoveRequest request,
             AWSS3StoragePluginConfiguration awsS3StoragePluginConfiguration,
             @NonNull Consumer<StorageRemoveResult> onSuccess,
@@ -64,7 +64,7 @@ public final class AWSS3StorageRemoveOperation extends StorageRemoveOperation<AW
         super(Objects.requireNonNull(request));
         this.storageService = Objects.requireNonNull(storageService);
         this.executorService = Objects.requireNonNull(executorService);
-        this.cognitoAuthProvider = cognitoAuthProvider;
+        this.authCredentialsProvider = authCredentialsProvider;
         this.onSuccess = Objects.requireNonNull(onSuccess);
         this.onError = Objects.requireNonNull(onError);
         this.awsS3StoragePluginConfiguration = awsS3StoragePluginConfiguration;
@@ -74,7 +74,7 @@ public final class AWSS3StorageRemoveOperation extends StorageRemoveOperation<AW
     @Override
     public void start() {
         executorService.submit(() -> {
-            awsS3StoragePluginConfiguration.getAWSS3PluginPrefixResolver(cognitoAuthProvider).
+            awsS3StoragePluginConfiguration.getAWSS3PluginPrefixResolver(authCredentialsProvider).
                 resolvePrefix(getRequest().getAccessLevel(),
                     getRequest().getTargetIdentityId(),
                     prefix -> {

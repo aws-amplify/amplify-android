@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -25,8 +25,8 @@ import com.amplifyframework.api.aws.AWSApiPlugin;
 import com.amplifyframework.api.aws.ApiAuthProviders;
 import com.amplifyframework.api.aws.AuthModeStrategyType;
 import com.amplifyframework.api.aws.AuthorizationType;
+import com.amplifyframework.api.aws.auth.CognitoJWTParser;
 import com.amplifyframework.api.aws.sigv4.DefaultCognitoUserPoolsAuthProvider;
-import com.amplifyframework.auth.AuthCategory;
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin;
 import com.amplifyframework.auth.options.AuthSignOutOptions;
 import com.amplifyframework.auth.result.AuthSignInResult;
@@ -42,9 +42,8 @@ import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter;
 import com.amplifyframework.datastore.storage.sqlite.TestStorageAdapter;
 import com.amplifyframework.hub.HubChannel;
-import com.amplifyframework.logging.AndroidLoggingPlugin;
-import com.amplifyframework.logging.LogLevel;
 import com.amplifyframework.logging.Logger;
+import com.amplifyframework.testmodels.commentsblog.Author;
 import com.amplifyframework.testmodels.multiauth.GroupPrivatePublicUPIAMAPIPost;
 import com.amplifyframework.testmodels.multiauth.GroupPrivateUPIAMPost;
 import com.amplifyframework.testmodels.multiauth.GroupPublicUPAPIPost;
@@ -76,13 +75,14 @@ import com.amplifyframework.testutils.sync.SynchronousApi;
 import com.amplifyframework.testutils.sync.SynchronousAuth;
 import com.amplifyframework.testutils.sync.SynchronousDataStore;
 
-import com.amazonaws.mobileconnectors.cognitoidentityprovider.util.CognitoJWTParser;
 import com.google.auth.oauth2.IdToken;
 import com.google.auth.oauth2.ServiceAccountCredentials;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -117,15 +117,47 @@ public final class MultiAuthSyncEngineInstrumentationTest {
     private static final int TIMEOUT_SECONDS = 20;
     private static final String AUDIENCE = "integtest";
     private static final String GOOGLE_ISS_CLAIM = "https://accounts.google.com";
+    private static SynchronousAuth auth;
 
     private SynchronousApi api;
     private SynchronousDataStore dataStore;
-    private SynchronousAuth auth;
     private String cognitoUser;
     private String cognitoPassword;
     private final AtomicReference<String> token = new AtomicReference<>();
     private ServiceAccountCredentials googleServiceAccount;
     private HttpRequestInterceptor requestInterceptor;
+
+    /**
+     * Sets up fields which are required to be configured only once while running whole test suite.
+     * This is suited for things which cannot be called twice during applications lifecycle such as
+     * Amplify configuration.
+     *
+     * @throws AmplifyException     if setup fails
+     * @throws InterruptedException if setup fails
+     */
+    @BeforeClass
+    public static void setup() throws AmplifyException, InterruptedException {
+        auth = SynchronousAuth.delegatingToCognito(getApplicationContext(),
+                new AWSCognitoAuthPlugin());
+    }
+
+    /**
+     * Class name: Author.
+     * Signed in with user pools: false.
+     * Signed in with OIDC: false.
+     * Expected result: AuthorizationType.API_KEY.
+     * @throws AmplifyException Not expected.
+     * @throws IOException Not expected.
+     */
+    @Test
+    @Ignore("fix on dev-preview")
+    public void testAuthorAnonymous() throws IOException, AmplifyException {
+        verifyScenario(Author.class,
+                      false,
+                      false,
+                      AuthorizationType.API_KEY
+        );
+    }
 
     /**
      * Class name: OwnerUPPost.
@@ -719,7 +751,6 @@ public final class MultiAuthSyncEngineInstrumentationTest {
                              boolean signInWithOidc,
                              AuthorizationType expectedAuthType)
         throws AmplifyException, IOException {
-        Amplify.addPlugin(new AndroidLoggingPlugin(LogLevel.VERBOSE));
         String tag = modelType.getSimpleName();
 
         MultiAuthTestModelProvider modelProvider =
@@ -736,28 +767,10 @@ public final class MultiAuthSyncEngineInstrumentationTest {
 
         readCredsFromConfig(context);
 
-        // Setup an auth plugin
-        CategoryConfiguration authCategoryConfiguration = amplifyConfiguration.forCategoryType(CategoryType.AUTH);
-        // Turn off persistence so the mobile client's state for one test does not interfere with the others.
-        try {
-            authCategoryConfiguration.getPluginConfig("awsCognitoAuthPlugin")
-                                     .getJSONObject("Auth")
-                                     .getJSONObject("Default")
-                                     .put("Persistence", false);
-        } catch (JSONException exception) {
-            exception.printStackTrace();
-            fail();
-            return;
-        }
-        AuthCategory authCategory = new AuthCategory();
-        AWSCognitoAuthPlugin authPlugin = new AWSCognitoAuthPlugin();
-        authCategory.addPlugin(authPlugin);
-        authCategory.configure(authCategoryConfiguration, context);
-        auth = SynchronousAuth.delegatingTo(authCategory);
         if (signInToCognito) {
             Log.v(tag, "Test requires signIn.");
             AuthSignInResult authSignInResult = auth.signIn(cognitoUser, cognitoPassword);
-            if (!authSignInResult.isSignInComplete()) {
+            if (!authSignInResult.isSignedIn()) {
                 fail("Unable to complete initial sign-in");
             }
         }
@@ -771,13 +784,13 @@ public final class MultiAuthSyncEngineInstrumentationTest {
 
         // Setup an API
         DefaultCognitoUserPoolsAuthProvider cognitoProvider =
-            new DefaultCognitoUserPoolsAuthProvider(authPlugin.getEscapeHatch());
+            new DefaultCognitoUserPoolsAuthProvider();
         CategoryConfiguration apiCategoryConfiguration = amplifyConfiguration.forCategoryType(CategoryType.API);
         ApiAuthProviders apiAuthProviders = ApiAuthProviders.builder()
-                                                            .cognitoUserPoolsAuthProvider(cognitoProvider)
-                                                            .awsCredentialsProvider(authPlugin.getEscapeHatch())
-                                                            .oidcAuthProvider(token::get)
-                                                            .build();
+            .cognitoUserPoolsAuthProvider(cognitoProvider)
+            .oidcAuthProvider(token::get)
+            .build();
+
         ApiCategory apiCategory = new ApiCategory();
         requestInterceptor = new HttpRequestInterceptor(expectedAuthType);
         apiCategory.addPlugin(AWSApiPlugin.builder()
@@ -849,6 +862,7 @@ public final class MultiAuthSyncEngineInstrumentationTest {
             getApplicationContext().deleteDatabase(db);
             Log.i("TearDown", db + " removed");
         }
+        auth = null;
         Log.i("TearDown", "Cleanup completed.");
     }
 
@@ -946,7 +960,7 @@ public final class MultiAuthSyncEngineInstrumentationTest {
         if (authHeaderValue.startsWith("AWS4-HMAC-SHA256")) {
             return AuthorizationType.AWS_IAM;
         }
-        String iss = CognitoJWTParser.getClaim(authHeaderValue, "iss");
+        String iss = CognitoJWTParser.Companion.getClaim(authHeaderValue, "iss");
         if (iss == null) {
             throw new IllegalStateException("Could not find any valid auth headers");
         }

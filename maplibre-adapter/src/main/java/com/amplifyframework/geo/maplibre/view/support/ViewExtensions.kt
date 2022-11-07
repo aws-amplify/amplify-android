@@ -45,11 +45,13 @@ fun View.fadeIn() {
 fun View.fadeOut() {
     animate()
         .alpha(0f)
-        .setListener(object : AnimatorListenerAdapter() {
-            override fun onAnimationEnd(animation: Animator?) {
-                visibility = FrameLayout.GONE
+        .setListener(
+            object : AnimatorListenerAdapter() {
+                override fun onAnimationEnd(animation: Animator?) {
+                    visibility = FrameLayout.GONE
+                }
             }
-        })
+        )
 }
 
 /**

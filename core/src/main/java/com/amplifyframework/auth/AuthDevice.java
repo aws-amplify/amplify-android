@@ -25,32 +25,35 @@ import java.util.Objects;
  * Stores device information such as name and ID.
  */
 public final class AuthDevice {
-    private final String deviceId;
-    private final String deviceName;
+    private final String id;
+    private final String name;
 
-    private AuthDevice(String deviceId, String deviceName) {
-        this.deviceId = deviceId;
-        this.deviceName = deviceName;
+    @SuppressWarnings("checkstyle:ParameterName")
+    private AuthDevice(String id, String name) {
+        this.id = id;
+        this.name = name;
     }
 
     /**
      * Constructs an {@link AuthDevice} with just the ID.
-     * @param deviceId ID to assign to this device
+     * @param id ID to assign to this device
      * @return Auth device with just the ID
      */
-    public static AuthDevice fromId(@NonNull String deviceId) {
-        return fromId(deviceId, null);
+    @SuppressWarnings("checkstyle:ParameterName")
+    public static AuthDevice fromId(@NonNull String id) {
+        return fromId(id, null);
     }
 
     /**
      * Constructs an {@link AuthDevice} with both the name and ID.
-     * @param deviceId ID to assign to this device
-     * @param deviceName user-friendly name to assign to this device
+     * @param id ID to assign to this device
+     * @param name user-friendly name to assign to this device
      * @return Auth device with both the name and ID
      */
-    public static AuthDevice fromId(@NonNull String deviceId,
-                                    @Nullable String deviceName) {
-        return new AuthDevice(Objects.requireNonNull(deviceId), deviceName);
+    @SuppressWarnings("checkstyle:ParameterName")
+    public static AuthDevice fromId(@NonNull String id,
+                                    @Nullable String name) {
+        return new AuthDevice(Objects.requireNonNull(id), name);
     }
 
     /**
@@ -58,8 +61,8 @@ public final class AuthDevice {
      * @return the device ID
      */
     @NonNull
-    public String getDeviceId() {
-        return deviceId;
+    public String getId() {
+        return id;
     }
 
     /**
@@ -67,15 +70,15 @@ public final class AuthDevice {
      * @return the device name
      */
     @Nullable
-    public String getDeviceName() {
-        return deviceName;
+    public String getName() {
+        return name;
     }
 
     @Override
     public int hashCode() {
         return ObjectsCompat.hash(
-                getDeviceId(),
-                getDeviceName()
+                getId(),
+                getName()
         );
     }
 
@@ -87,16 +90,16 @@ public final class AuthDevice {
             return false;
         } else {
             AuthDevice authDevice = (AuthDevice) obj;
-            return ObjectsCompat.equals(getDeviceId(), authDevice.getDeviceId()) &&
-                    ObjectsCompat.equals(getDeviceName(), authDevice.getDeviceName());
+            return ObjectsCompat.equals(getId(), authDevice.getId()) &&
+                    ObjectsCompat.equals(getName(), authDevice.getName());
         }
     }
 
     @Override
     public String toString() {
         return "AuthDevice{" +
-                "deviceId='" + deviceId + '\'' +
-                ", deviceName='" + deviceName + '\'' +
+                "id='" + id + '\'' +
+                ", name='" + name + '\'' +
                 '}';
     }
 }
