@@ -24,7 +24,6 @@ import com.amplifyframework.auth.AuthException
  */
 open class InvalidStateException(
     message: String = "Auth state is an invalid state, cannot process the request.",
-    recoverySuggestion: String = "There may be another operation in progress. Please wait for the current " +
-        "operation to complete, and try again.",
+    recoverySuggestion: String = "Operation performed is not a valid operation for the current auth state.",
     cause: Throwable? = null
 ) : AuthException(message, recoverySuggestion, cause)
