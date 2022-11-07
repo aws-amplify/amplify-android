@@ -106,7 +106,7 @@ internal class AuthEnvironment internal constructor(
         val deviceCredentials =
             credentialStoreClient.loadCredentials(CredentialType.Device(username)) as? AmplifyCredential.DeviceData
         if (deviceCredentials == null) {
-            logger.error("loadCredentials returned unexpected AmplifyCredential Type.")
+            logger.warn("loadCredentials returned unexpected AmplifyCredential Type.")
         }
         return (deviceCredentials as AmplifyCredential.DeviceData).deviceMetadata as? DeviceMetadata.Metadata
     }
