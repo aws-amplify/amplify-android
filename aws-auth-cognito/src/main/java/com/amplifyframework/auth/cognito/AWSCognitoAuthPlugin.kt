@@ -63,7 +63,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.launch
-import org.json.JSONException
 import org.json.JSONObject
 
 /**
@@ -126,7 +125,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
                 authStateMachine,
                 logger
             )
-        } catch (exception: JSONException) {
+        } catch (exception: Exception) {
             throw ConfigurationException(
                 "Failed to configure AWSCognitoAuthPlugin.",
                 "Make sure your amplifyconfiguration.json is valid.",

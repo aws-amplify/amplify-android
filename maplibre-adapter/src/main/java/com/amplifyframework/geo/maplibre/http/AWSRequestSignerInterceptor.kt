@@ -35,7 +35,7 @@ import okhttp3.RequestBody
 import okhttp3.Response
 import okio.Buffer
 
-const val AMAZON_HOST = "amazonaws.com"
+internal const val AMAZON_HOST = "amazonaws.com"
 
 /**
  * Interceptor that can authorize requests using AWS Signature V4 signer.

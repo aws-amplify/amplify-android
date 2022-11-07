@@ -1,5 +1,3 @@
-package com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerators
-
 /*
  * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
@@ -14,6 +12,8 @@ package com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerat
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
+
+package com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerators
 
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.NotAuthorizedException
 import com.amplifyframework.auth.cognito.featuretest.API

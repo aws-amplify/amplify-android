@@ -1,4 +1,17 @@
-@file:Suppress("IMPLICIT_CAST_TO_ANY")
+/*
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
 
 package featureTest.utilities
 
@@ -29,7 +42,6 @@ import kotlinx.serialization.json.booleanOrNull
  * Factory to create specialized options object for the top level APIs
  */
 object AuthOptionsFactory {
-    @Suppress("UNCHECKED_CAST")
     fun <T> create(apiName: AuthAPI, optionsData: JsonObject): T = when (apiName) {
         AuthAPI.confirmResetPassword -> AuthConfirmResetPasswordOptions.defaults()
         resetPassword -> AuthResetPasswordOptions.defaults()
