@@ -13,7 +13,9 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.auth.options
+package com.amplifyframework.auth.cognito.options
+
+import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 
 /**
  * Cognito extension of confirm reset password options to add the platform specific fields.

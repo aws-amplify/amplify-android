@@ -59,10 +59,13 @@ import com.amplifyframework.auth.cognito.helpers.SessionHelper
 import com.amplifyframework.auth.cognito.helpers.SignInChallengeHelper
 import com.amplifyframework.auth.cognito.helpers.identityProviderName
 import com.amplifyframework.auth.cognito.options.AWSAuthResendUserAttributeConfirmationCodeOptions
+import com.amplifyframework.auth.cognito.options.AWSCognitoAuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthConfirmSignInOptions
+import com.amplifyframework.auth.cognito.options.AWSCognitoAuthConfirmSignUpOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthResendSignUpCodeOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignOutOptions
+import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignUpOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttributeOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttributesOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthWebUISignInOptions
@@ -79,7 +82,6 @@ import com.amplifyframework.auth.exceptions.InvalidStateException
 import com.amplifyframework.auth.exceptions.SessionExpiredException
 import com.amplifyframework.auth.exceptions.SignedOutException
 import com.amplifyframework.auth.exceptions.UnknownException
-import com.amplifyframework.auth.options.AWSCognitoAuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
@@ -240,6 +242,16 @@ internal class RealAWSCognitoAuthPlugin(
                     this.analyticsMetadata = AnalyticsMetadataType.invoke { analyticsEndpointId = it }
                 }
                 encodedContextData?.let { this.userContextData { encodedData = it } }
+
+                (options as? AWSCognitoAuthSignUpOptions)?.let {
+                    this.validationData = it.validationData.mapNotNull { option ->
+                        AttributeType {
+                            name = option.key
+                            value = option.value
+                        }
+                    }
+                    this.clientMetadata = it.clientMetadata
+                }
             }
 
             val deliveryDetails = response?.codeDeliveryDetails?.let { details ->
@@ -326,6 +338,10 @@ internal class RealAWSCognitoAuthPlugin(
                     this.analyticsMetadata = AnalyticsMetadataType.invoke { analyticsEndpointId = it }
                 }
                 encodedContextData?.let { this.userContextData { encodedData = it } }
+
+                (options as? AWSCognitoAuthConfirmSignUpOptions)?.let {
+                    this.clientMetadata = it.clientMetadata
+                }
             }
 
             val authSignUpResult = AuthSignUpResult(
