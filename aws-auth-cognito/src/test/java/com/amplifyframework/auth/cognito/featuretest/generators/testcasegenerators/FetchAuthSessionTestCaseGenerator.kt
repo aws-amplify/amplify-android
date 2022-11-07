@@ -159,26 +159,6 @@ object FetchAuthSessionTestCaseGenerator : SerializableProvider {
         ))
     )
 
-    private val errorCase: FeatureTestCase
-        get() {
-            val notAuthorizedErrorResponse = NotAuthorizedException.invoke { }
-            return baseCase.copy(
-                description = "AuthException is thrown when fetchAuthSession API call fails",
-                preConditions = baseCase.preConditions.copy(
-                    state = "SignedOut_Configured.json"
-                ),
-                validations = listOf(
-                    ExpectationShapes.Amplify(
-                        AuthAPI.fetchAuthSession,
-                        ResponseType.Failure,
-                        com.amplifyframework.auth.exceptions.NotAuthorizedException(
-                            cause = notAuthorizedErrorResponse
-                        ).toJsonElement()
-                    )
-                )
-            )
-        }
-
     // TODO : Fix error case and refresh session case
     override val serializables: List<Any> = listOf(baseCase,refreshSuccessCase,identityPoolCase, userPoolCase)
 }
