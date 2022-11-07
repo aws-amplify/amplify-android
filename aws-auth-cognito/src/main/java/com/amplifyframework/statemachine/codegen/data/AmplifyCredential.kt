@@ -113,11 +113,10 @@ internal data class CognitoUserPoolTokens(
     override fun equals(other: Any?): Boolean {
         return if (super.equals(other)) {
             true
-        } else if (other == null || javaClass != other.javaClass) {
+        } else if (other == null || javaClass != other.javaClass || other !is CognitoUserPoolTokens) {
             false
         } else {
-            val tokens = other as CognitoUserPoolTokens
-            idToken == tokens.idToken && accessToken == tokens.accessToken && refreshToken == tokens.refreshToken
+            idToken == other.idToken && accessToken == other.accessToken && refreshToken == other.refreshToken
         }
     }
 }
