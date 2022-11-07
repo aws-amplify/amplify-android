@@ -90,7 +90,7 @@ internal class AuthEnvironment internal constructor(
     suspend fun getUserContextData(username: String): String? {
         val asfDevice = credentialStoreClient.loadCredentials(CredentialType.ASF) as? AmplifyCredential.ASFDevice
         if (asfDevice == null) {
-            logger.error("loadCredentials returned unexpected AmplifyCredential Type.")
+            logger.warn("loadCredentials returned unexpected AmplifyCredential Type.")
         }
         val deviceId = if (asfDevice?.id == null) {
             val newDeviceId = "${UUID.randomUUID()}:${Date().time}"
