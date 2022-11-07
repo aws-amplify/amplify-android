@@ -46,12 +46,11 @@ open class AWSCognitoAuthConfirmSignInOptions protected constructor(
     override fun equals(obj: Any?): Boolean {
         return if (this === obj) {
             true
-        } else if (obj == null || javaClass != obj.javaClass) {
+        } else if (obj == null || javaClass != obj.javaClass || obj !is AWSCognitoAuthConfirmSignInOptions) {
             false
         } else {
-            val authConfirmSignInOptions = obj as AWSCognitoAuthConfirmSignInOptions
-            ObjectsCompat.equals(metadata, authConfirmSignInOptions.metadata) &&
-                ObjectsCompat.equals(userAttributes, authConfirmSignInOptions.userAttributes)
+            ObjectsCompat.equals(metadata, obj.metadata) &&
+                ObjectsCompat.equals(userAttributes, obj.userAttributes)
         }
     }
 

@@ -22,7 +22,7 @@ import com.amplifyframework.storage.ObjectMetadata
  * Options used to configure the upload of an object using {@link TransferManager}.
  */
 
-data class UploadOptions @JvmOverloads constructor(
+internal data class UploadOptions @JvmOverloads constructor(
     val bucket: String,
     val objectMetadata: ObjectMetadata = ObjectMetadata(),
     val cannedAcl: ObjectCannedAcl? = null,

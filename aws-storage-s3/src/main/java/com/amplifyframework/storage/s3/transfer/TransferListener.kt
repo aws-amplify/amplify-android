@@ -21,7 +21,7 @@ import com.amplifyframework.storage.TransferState
  * Listener interface for transfer state and progress changes. All callbacks
  * will be invoked on the main thread.
  */
-interface TransferListener {
+internal interface TransferListener {
     /**
      * Called when the state of the transfer is changed.
      *
