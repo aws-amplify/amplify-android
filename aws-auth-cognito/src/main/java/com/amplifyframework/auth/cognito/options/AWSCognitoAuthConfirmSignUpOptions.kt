@@ -14,63 +14,18 @@
  */
 package com.amplifyframework.auth.cognito.options
 
-import com.amplifyframework.auth.options.AuthResetPasswordOptions
+import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
 import com.amplifyframework.util.Immutable
 
 /**
- * Cognito extension of reset password options to add the platform specific fields.
+ * Cognito extension of confirm sign up options to add the platform specific fields.
  */
-data class AWSCognitoAuthResetPasswordOptions
+data class AWSCognitoAuthConfirmSignUpOptions
 /**
- * Advanced options for reset password.
- * @param metadata Additional custom attributes to be sent to the service such as information about the client
+ * Advanced options for confirming sign up.
+ * @param clientMetadata Additional custom attributes to be sent to the service such as information about the client
  */
-internal constructor(
-    val metadata: Map<String, String>
-) : AuthResetPasswordOptions() {
-
-    /**
-     * The builder for this class.
-     */
-    class CognitoBuilder : Builder<CognitoBuilder?>() {
-        private val metadata: MutableMap<String, String>
-
-        /**
-         * Returns the type of builder this is to support proper flow with it being an extended class.
-         * @return the type of builder this is to support proper flow with it being an extended class.
-         */
-        override fun getThis(): CognitoBuilder {
-            return this
-        }
-
-        /**
-         * Set the metadata field for the object being built.
-         * @param metadata Custom user metadata to be sent with the reset password request.
-         * @return The builder object to continue building.
-         */
-        fun metadata(metadata: Map<String, String>): CognitoBuilder {
-            this.metadata.clear()
-            this.metadata.putAll(metadata)
-            return getThis()
-        }
-
-        /**
-         * Construct and return the object with the values set in the builder.
-         * @return a new instance of AWSCognitoAuthResetPasswordOptions with the values specified in the builder.
-         */
-        override fun build(): AWSCognitoAuthResetPasswordOptions {
-            return AWSCognitoAuthResetPasswordOptions(
-                Immutable.of(metadata)
-            )
-        }
-
-        /**
-         * Constructor for the builder.
-         */
-        init {
-            metadata = HashMap()
-        }
-    }
+internal constructor(val clientMetadata: Map<String, String>) : AuthConfirmSignUpOptions() {
 
     companion object {
         /**
@@ -82,7 +37,51 @@ internal constructor(
             return CognitoBuilder()
         }
 
-        inline operator fun invoke(block: CognitoBuilder.() -> Unit) = CognitoBuilder()
-            .apply(block).build()
+        inline operator fun invoke(block: CognitoBuilder.() -> Unit) =
+            CognitoBuilder()
+                .apply(block).build()
+    }
+
+    /**
+     * The builder for this class.
+     */
+    class CognitoBuilder : Builder<CognitoBuilder?>() {
+        private val clientMetadata: MutableMap<String, String>
+
+        /**
+         * Returns the type of builder this is to support proper flow with it being an extended class.
+         * @return the type of builder this is to support proper flow with it being an extended class.
+         */
+        override fun getThis(): CognitoBuilder {
+            return this
+        }
+
+        /**
+         * Set the metadata field for the object being built.
+         * @param clientMetadata Custom user metadata to be sent with the sign up request.
+         * @return The builder object to continue building.
+         */
+        fun clientMetadata(clientMetadata: Map<String, String>): CognitoBuilder {
+            this.clientMetadata.clear()
+            this.clientMetadata.putAll(clientMetadata)
+            return getThis()
+        }
+
+        /**
+         * Construct and return the object with the values set in the builder.
+         * @return a new instance of AWSCognitoAuthConfirmSignUpOptions with the values specified in the builder.
+         */
+        override fun build(): AWSCognitoAuthConfirmSignUpOptions {
+            return AWSCognitoAuthConfirmSignUpOptions(
+                Immutable.of(clientMetadata)
+            )
+        }
+
+        /**
+         * Constructor for the builder.
+         */
+        init {
+            clientMetadata = HashMap()
+        }
     }
 }
