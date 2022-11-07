@@ -89,6 +89,9 @@ internal class AuthEnvironment internal constructor(
 
     suspend fun getUserContextData(username: String): String? {
         val asfDevice = credentialStoreClient.loadCredentials(CredentialType.ASF) as? AmplifyCredential.ASFDevice
+        if (asfDevice == null) {
+            logger.error("loadCredentials returned unexpected AmplifyCredential Type.")
+        }
         val deviceId = if (asfDevice?.id == null) {
             val newDeviceId = "${UUID.randomUUID()}:${Date().time}"
             val newASFDevice = AmplifyCredential.ASFDevice(newDeviceId)
@@ -100,7 +103,11 @@ internal class AuthEnvironment internal constructor(
     }
 
     suspend fun getDeviceMetadata(username: String): DeviceMetadata.Metadata? {
-        val deviceCredentials = credentialStoreClient.loadCredentials(CredentialType.Device(username))
+        val deviceCredentials =
+            credentialStoreClient.loadCredentials(CredentialType.Device(username)) as? AmplifyCredential.DeviceData
+        if (deviceCredentials == null) {
+            logger.error("loadCredentials returned unexpected AmplifyCredential Type.")
+        }
         return (deviceCredentials as AmplifyCredential.DeviceData).deviceMetadata as? DeviceMetadata.Metadata
     }
 }

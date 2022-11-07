@@ -810,7 +810,17 @@ internal class RealAWSCognitoAuthPlugin(
     private suspend fun getSession(): AWSCognitoAuthSession {
         return suspendCoroutine { continuation ->
             fetchAuthSession(
-                { continuation.resume(it as AWSCognitoAuthSession) },
+                { authSession ->
+                    if (authSession is AWSCognitoAuthSession) {
+                        continuation.resume(authSession)
+                    } else {
+                        continuation.resumeWithException(
+                            UnknownException(
+                                message = "fetchAuthSession did not return a type of AWSCognitoAuthSession"
+                            )
+                        )
+                    }
+                },
                 { continuation.resumeWithException(it) }
             )
         }
