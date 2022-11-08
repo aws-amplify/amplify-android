@@ -86,7 +86,7 @@ object AuthStateJsonGenerator : SerializableProvider {
                         session = "someSession",
                         parameters = mapOf(
                             "CODE_DELIVERY_DELIVERY_MEDIUM" to "SMS",
-                            "CODE_DELIVERY_DESTINATION" to "+12345678900"
+                            "CODE_DELIVERY_DESTINATION" to "+12345678911"
                         )
                     )
                 )
@@ -95,5 +95,26 @@ object AuthStateJsonGenerator : SerializableProvider {
         AuthorizationState.SigningIn()
     )
 
-    override val serializables: List<Any> = listOf(signedInState, signedOutState, receivedChallengeState)
+    private val receivedCustomChallengeState = AuthState.Configured(
+        AuthenticationState.SigningIn(
+            SignInState.ResolvingChallenge(
+                SignInChallengeState.WaitingForAnswer(
+                    AuthChallenge(
+                        challengeName = "CUSTOM_CHALLENGE",
+                        username = username,
+                        session = "someSession",
+                        parameters = mapOf(
+                            "SALT" to "abc",
+                            "SECRET_BLOCK" to "secretBlock",
+                            "SRP_B" to "def",
+                            "USERNAME" to "username"
+                        )
+                    )
+                )
+            )
+        ),
+        AuthorizationState.SigningIn()
+    )
+
+    override val serializables: List<Any> = listOf(signedInState, signedOutState, receivedChallengeState, receivedCustomChallengeState)
 }

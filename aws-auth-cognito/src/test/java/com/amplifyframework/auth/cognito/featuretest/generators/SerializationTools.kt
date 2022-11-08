@@ -23,12 +23,9 @@ import com.amplifyframework.auth.cognito.featuretest.serializers.CognitoIdentity
 import com.amplifyframework.auth.cognito.featuretest.serializers.CognitoIdentityProviderExceptionSerializer
 import com.amplifyframework.auth.cognito.featuretest.serializers.deserializeToAuthState
 import com.amplifyframework.auth.cognito.featuretest.serializers.serialize
+import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions
 import com.amplifyframework.statemachine.codegen.states.AuthState
 import com.google.gson.Gson
-import java.io.BufferedWriter
-import java.io.File
-import java.io.FileOutputStream
-import java.io.FileWriter
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
@@ -36,6 +33,10 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import java.io.BufferedWriter
+import java.io.File
+import java.io.FileOutputStream
+import java.io.FileWriter
 
 const val basePath = "aws-auth-cognito/src/test/resources/feature-test"
 
@@ -51,7 +52,7 @@ fun writeFile(json: String, dirName: String, fileName: String) {
 }
 
 fun cleanDirectory() {
-    val directory = File("$basePath")
+    val directory = File(basePath)
     if (directory.exists()) {
         directory.deleteRecursively()
     }
@@ -167,6 +168,7 @@ fun Any?.toJsonElement(): JsonElement {
         is Number -> JsonPrimitive(this)
         is String -> JsonPrimitive(this)
         is AuthException -> toJsonElement()
+        is AWSCognitoAuthSignInOptions -> toJsonElement()
         is CognitoIdentityProviderException -> Json.encodeToJsonElement(
             CognitoIdentityProviderExceptionSerializer,
             this
@@ -174,6 +176,15 @@ fun Any?.toJsonElement(): JsonElement {
         is CognitoIdentityException -> Json.encodeToJsonElement(CognitoIdentityExceptionSerializer, this)
         else -> gsonBasedSerializer(this)
     }
+}
+
+fun AWSCognitoAuthSignInOptions.toJsonElement(): JsonElement{
+    val responseMap = mutableMapOf<String, Any?>(
+        "metadata" to metadata,
+        "authFlowType" to authFlowType
+    )
+
+    return responseMap.toJsonElement()
 }
 
 fun AuthException.toJsonElement(): JsonElement {

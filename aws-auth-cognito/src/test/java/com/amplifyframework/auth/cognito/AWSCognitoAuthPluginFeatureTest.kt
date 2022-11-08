@@ -43,12 +43,6 @@ import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.slot
-import java.io.File
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
-import kotlin.reflect.full.callSuspend
-import kotlin.reflect.full.declaredFunctions
-import kotlin.test.assertEquals
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.newSingleThreadContext
 import kotlinx.coroutines.test.resetMain
@@ -61,6 +55,12 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
+import java.io.File
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+import kotlin.reflect.full.callSuspend
+import kotlin.reflect.full.declaredFunctions
+import kotlin.test.assertEquals
 
 @RunWith(Parameterized::class)
 class AWSCognitoAuthPluginFeatureTest(private val testCase: FeatureTestCase) {
@@ -201,7 +201,7 @@ class AWSCognitoAuthPluginFeatureTest(private val testCase: FeatureTestCase) {
                     assertEquals(getState(validation.expectedState), authState)
                     getStateLatch.countDown()
                 }
-                getStateLatch.await(10, TimeUnit.SECONDS)
+                getStateLatch.await(10, TimeUnit.MINUTES)
             }
         }
     }
