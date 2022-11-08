@@ -115,7 +115,7 @@ internal class EventRecorder(
                     }
                 }
                 currentSubmissions++
-            } while (currentSubmissions < maxSubmissionsAllowed && cursor.moveToNext())
+            } while (currentSubmissions < maxSubmissionsAllowed && !cursor.isClosed && cursor.moveToNext())
         }
         syncedPinpointEvents.forEach { pinpointEvent ->
             syncedAnalyticsEvents.add(convertPinpointEventToAnalyticsEvent(pinpointEvent))
