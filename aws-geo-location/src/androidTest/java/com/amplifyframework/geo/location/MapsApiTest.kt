@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -17,8 +17,6 @@ package com.amplifyframework.geo.location
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
-
-import com.amplifyframework.auth.AuthCategory
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
 import com.amplifyframework.geo.GeoCategory
 import com.amplifyframework.geo.GeoException
@@ -27,33 +25,34 @@ import com.amplifyframework.testutils.sync.SynchronousAuth
 import com.amplifyframework.testutils.sync.SynchronousGeo
 import com.amplifyframework.testutils.sync.TestCategory
 import org.json.JSONObject
-
+import org.junit.After
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.BeforeClass
 import org.junit.Test
 
 /**
  * Tests various functionalities related to Maps API in [AWSLocationGeoPlugin].
  */
 class MapsApiTest {
-    private var auth: SynchronousAuth? = null
     private var geo: SynchronousGeo? = null
 
     /**
      * Set up test categories to be used for testing.
      */
     @Before
-    fun setUp() {
+    fun setUpBeforeTest() {
         // Auth plugin uses default configuration
-        val authPlugin = AWSCognitoAuthPlugin()
-        val authCategory = TestCategory.forPlugin(authPlugin) as AuthCategory
-        auth = SynchronousAuth.delegatingTo(authCategory)
-
         // Geo plugin uses above auth category to authenticate users
-        val geoPlugin = AWSLocationGeoPlugin(authProvider = authCategory)
+        val geoPlugin = AWSLocationGeoPlugin()
         val geoCategory = TestCategory.forPlugin(geoPlugin) as GeoCategory
         geo = SynchronousGeo.delegatingTo(geoCategory)
+    }
+
+    @After
+    fun tearDown() {
+        signOutFromCognito()
     }
 
     /**
@@ -86,7 +85,6 @@ class MapsApiTest {
      */
     @Test(expected = GeoException::class)
     fun cannotFetchStyleWithoutAuth() {
-        signOutFromCognito()
         // should not be authorized to fetch map resource from Amazon Location Service
         geo?.getMapStyleDescriptor(GetMapStyleDescriptorOptions.defaults())
     }
@@ -99,5 +97,20 @@ class MapsApiTest {
 
     private fun signOutFromCognito() {
         auth?.signOut()
+    }
+
+    companion object {
+        lateinit var auth: SynchronousAuth
+
+        /**
+         * Set up test categories to be used for testing.
+         */
+        @BeforeClass
+        @JvmStatic
+        fun setUp() {
+            // Auth plugin uses default configuration
+            auth =
+                SynchronousAuth.delegatingToCognito(ApplicationProvider.getApplicationContext(), AWSCognitoAuthPlugin())
+        }
     }
 }
