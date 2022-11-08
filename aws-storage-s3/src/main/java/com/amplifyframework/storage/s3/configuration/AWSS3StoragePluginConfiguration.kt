@@ -15,7 +15,7 @@
 
 package com.amplifyframework.storage.s3.configuration
 
-import com.amplifyframework.storage.s3.CognitoAuthProvider
+import com.amplifyframework.auth.AuthCredentialsProvider
 
 class AWSS3StoragePluginConfiguration private constructor(builder: Builder) {
 
@@ -28,10 +28,10 @@ class AWSS3StoragePluginConfiguration private constructor(builder: Builder) {
                 .build()
     }
 
-    fun getAWSS3PluginPrefixResolver(cognitoAuthProvider: CognitoAuthProvider):
+    fun getAWSS3PluginPrefixResolver(authCredentialsProvider: AuthCredentialsProvider):
         AWSS3PluginPrefixResolver {
             return awsS3PluginPrefixResolver ?: StorageAccessLevelAwarePrefixResolver(
-                cognitoAuthProvider
+                authCredentialsProvider
             )
         }
 

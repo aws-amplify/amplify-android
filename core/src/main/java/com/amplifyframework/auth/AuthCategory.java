@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import androidx.annotation.Nullable;
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions;
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions;
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions;
+import com.amplifyframework.auth.options.AuthFetchSessionOptions;
 import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions;
 import com.amplifyframework.auth.options.AuthResendUserAttributeConfirmationCodeOptions;
 import com.amplifyframework.auth.options.AuthResetPasswordOptions;
@@ -34,6 +35,7 @@ import com.amplifyframework.auth.options.AuthUpdateUserAttributesOptions;
 import com.amplifyframework.auth.options.AuthWebUISignInOptions;
 import com.amplifyframework.auth.result.AuthResetPasswordResult;
 import com.amplifyframework.auth.result.AuthSignInResult;
+import com.amplifyframework.auth.result.AuthSignOutResult;
 import com.amplifyframework.auth.result.AuthSignUpResult;
 import com.amplifyframework.auth.result.AuthUpdateAttributeResult;
 import com.amplifyframework.core.Action;
@@ -93,7 +95,7 @@ public final class AuthCategory extends Category<AuthPlugin<?>> implements AuthC
     public void resendSignUpCode(
             @NonNull String username,
             @NonNull AuthResendSignUpCodeOptions options,
-            @NonNull Consumer<AuthSignUpResult> onSuccess,
+            @NonNull Consumer<AuthCodeDeliveryDetails> onSuccess,
             @NonNull Consumer<AuthException> onError
     ) {
         getSelectedPlugin().resendSignUpCode(username, options, onSuccess, onError);
@@ -102,7 +104,7 @@ public final class AuthCategory extends Category<AuthPlugin<?>> implements AuthC
     @Override
     public void resendSignUpCode(
             @NonNull String username,
-            @NonNull Consumer<AuthSignUpResult> onSuccess,
+            @NonNull Consumer<AuthCodeDeliveryDetails> onSuccess,
             @NonNull Consumer<AuthException> onError
     ) {
         getSelectedPlugin().resendSignUpCode(username, onSuccess, onError);
@@ -131,21 +133,21 @@ public final class AuthCategory extends Category<AuthPlugin<?>> implements AuthC
 
     @Override
     public void confirmSignIn(
-            @NonNull String confirmationCode,
+            @NonNull String challengeResponse,
             @NonNull AuthConfirmSignInOptions options,
             @NonNull Consumer<AuthSignInResult> onSuccess,
             @NonNull Consumer<AuthException> onError
     ) {
-        getSelectedPlugin().confirmSignIn(confirmationCode, options, onSuccess, onError);
+        getSelectedPlugin().confirmSignIn(challengeResponse, options, onSuccess, onError);
     }
 
     @Override
     public void confirmSignIn(
-            @NonNull String confirmationCode,
+            @NonNull String challengeResponse,
             @NonNull Consumer<AuthSignInResult> onSuccess,
             @NonNull Consumer<AuthException> onError
     ) {
-        getSelectedPlugin().confirmSignIn(confirmationCode, onSuccess, onError);
+        getSelectedPlugin().confirmSignIn(challengeResponse, onSuccess, onError);
     }
 
     @Override
@@ -191,6 +193,15 @@ public final class AuthCategory extends Category<AuthPlugin<?>> implements AuthC
     @Override
     public void handleWebUISignInResponse(Intent intent) {
         getSelectedPlugin().handleWebUISignInResponse(intent);
+    }
+
+    @Override
+    public void fetchAuthSession(
+            @NonNull AuthFetchSessionOptions options,
+            @NonNull Consumer<AuthSession> onSuccess,
+            @NonNull Consumer<AuthException> onError
+    ) {
+        getSelectedPlugin().fetchAuthSession(options, onSuccess, onError);
     }
 
     @Override
@@ -255,23 +266,24 @@ public final class AuthCategory extends Category<AuthPlugin<?>> implements AuthC
 
     @Override
     public void confirmResetPassword(
+            @NonNull String username,
             @NonNull String newPassword,
             @NonNull String confirmationCode,
             @NonNull AuthConfirmResetPasswordOptions options,
             @NonNull Action onSuccess,
             @NonNull Consumer<AuthException> onError
     ) {
-        getSelectedPlugin().confirmResetPassword(newPassword, confirmationCode, options, onSuccess, onError);
+        getSelectedPlugin().confirmResetPassword(username, newPassword, confirmationCode, options, onSuccess, onError);
     }
 
     @Override
     public void confirmResetPassword(
-            @NonNull String newPassword,
+            String username, @NonNull String newPassword,
             @NonNull String confirmationCode,
             @NonNull Action onSuccess,
             @NonNull Consumer<AuthException> onError
     ) {
-        getSelectedPlugin().confirmResetPassword(newPassword, confirmationCode, onSuccess, onError);
+        getSelectedPlugin().confirmResetPassword(username, newPassword, confirmationCode, onSuccess, onError);
     }
 
     @Override
@@ -360,21 +372,20 @@ public final class AuthCategory extends Category<AuthPlugin<?>> implements AuthC
     }
 
     @Override
-    public AuthUser getCurrentUser() {
-        return getSelectedPlugin().getCurrentUser();
+    public void getCurrentUser(@NonNull Consumer<AuthUser> onSuccess, @NonNull Consumer<AuthException> onError) {
+        getSelectedPlugin().getCurrentUser(onSuccess, onError);
     }
 
     @Override
-    public void signOut(@NonNull Action onSuccess, @NonNull Consumer<AuthException> onError) {
-        getSelectedPlugin().signOut(onSuccess, onError);
+    public void signOut(@NonNull Consumer<AuthSignOutResult> onComplete) {
+        getSelectedPlugin().signOut(onComplete);
     }
 
-    @Override
-    public void signOut(
+    @Override public void signOut(
             @NonNull AuthSignOutOptions options,
-            @NonNull Action onSuccess,
-            @NonNull Consumer<AuthException> onError) {
-        getSelectedPlugin().signOut(options, onSuccess, onError);
+            @NonNull Consumer<AuthSignOutResult> onComplete
+    ) {
+        getSelectedPlugin().signOut(options, onComplete);
     }
     
     @Override

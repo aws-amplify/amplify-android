@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -44,7 +44,7 @@ final class TestStorageCategory {
 
         final StorageCategory storageCategory = new StorageCategory();
         try {
-            storageCategory.addPlugin(new AWSS3StoragePlugin(new TestCognitoAuthProvider()));
+            storageCategory.addPlugin(new AWSS3StoragePlugin());
             CategoryConfiguration storageConfiguration = AmplifyConfiguration.fromConfigFile(context, resourceId)
                 .forCategoryType(CategoryType.STORAGE);
             storageCategory.configure(storageConfiguration, context);

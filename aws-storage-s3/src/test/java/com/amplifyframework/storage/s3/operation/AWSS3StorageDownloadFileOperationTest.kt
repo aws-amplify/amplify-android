@@ -15,29 +15,35 @@
 
 package com.amplifyframework.storage.s3.operation
 
+import com.amplifyframework.auth.AuthCredentialsProvider
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.storage.StorageAccessLevel
 import com.amplifyframework.storage.StorageException
-import com.amplifyframework.storage.s3.CognitoAuthProvider
 import com.amplifyframework.storage.s3.configuration.AWSS3PluginPrefixResolver
 import com.amplifyframework.storage.s3.configuration.AWSS3StoragePluginConfiguration
 import com.amplifyframework.storage.s3.request.AWSS3StorageDownloadFileRequest
 import com.amplifyframework.storage.s3.service.StorageService
+import com.google.common.util.concurrent.MoreExecutors
+import io.mockk.coEvery
+import io.mockk.mockk
 import java.io.File
 import org.junit.Before
 import org.junit.Test
+import org.junit.runner.RunWith
 import org.mockito.Mockito
+import org.robolectric.RobolectricTestRunner
 
+@RunWith(RobolectricTestRunner::class)
 class AWSS3StorageDownloadFileOperationTest {
 
     private lateinit var awsS3StorageDownloadFileOperation: AWSS3StorageDownloadFileOperation
     private lateinit var storageService: StorageService
-    private lateinit var cognitoAuthProvider: CognitoAuthProvider
+    private lateinit var authCredentialsProvider: AuthCredentialsProvider
 
     @Before
     fun setup() {
         storageService = Mockito.spy(StorageService::class.java)
-        cognitoAuthProvider = Mockito.mock(CognitoAuthProvider::class.java)
+        authCredentialsProvider = mockk()
     }
 
     @Test
@@ -51,10 +57,11 @@ class AWSS3StorageDownloadFileOperationTest {
             StorageAccessLevel.PUBLIC,
             null
         )
-        Mockito.`when`(cognitoAuthProvider.identityId).thenReturn("abc")
+        coEvery { authCredentialsProvider.getIdentityId() } returns "abc"
         awsS3StorageDownloadFileOperation = AWSS3StorageDownloadFileOperation(
             storageService,
-            cognitoAuthProvider,
+            MoreExecutors.newDirectExecutorService(),
+            authCredentialsProvider,
             request,
             AWSS3StoragePluginConfiguration {},
             {},
@@ -62,7 +69,11 @@ class AWSS3StorageDownloadFileOperationTest {
             {}
         )
         awsS3StorageDownloadFileOperation.start()
-        Mockito.verify(storageService).downloadToFile(expectedKey, tempFile)
+        Mockito.verify(storageService).downloadToFile(
+            awsS3StorageDownloadFileOperation.transferId,
+            expectedKey,
+            tempFile
+        )
     }
 
     @Test
@@ -76,10 +87,11 @@ class AWSS3StorageDownloadFileOperationTest {
             StorageAccessLevel.PUBLIC,
             null
         )
-        Mockito.`when`(cognitoAuthProvider.identityId).thenReturn("abc")
+        coEvery { authCredentialsProvider.getIdentityId() } returns "abc"
         awsS3StorageDownloadFileOperation = AWSS3StorageDownloadFileOperation(
             storageService,
-            cognitoAuthProvider,
+            MoreExecutors.newDirectExecutorService(),
+            authCredentialsProvider,
             request,
             AWSS3StoragePluginConfiguration {
                 awsS3PluginPrefixResolver = object : AWSS3PluginPrefixResolver {
@@ -87,7 +99,7 @@ class AWSS3StorageDownloadFileOperationTest {
                         accessLevel: StorageAccessLevel,
                         targetIdentity: String?,
                         onSuccess: Consumer<String>,
-                        onError: Consumer<StorageException>
+                        onError: Consumer<StorageException>?
                     ) {
                         onSuccess.accept("")
                     }
@@ -98,7 +110,11 @@ class AWSS3StorageDownloadFileOperationTest {
             {}
         )
         awsS3StorageDownloadFileOperation.start()
-        Mockito.verify(storageService).downloadToFile(expectedKey, tempFile)
+        Mockito.verify(storageService).downloadToFile(
+            awsS3StorageDownloadFileOperation.transferId,
+            expectedKey,
+            tempFile
+        )
     }
 
     @Test
@@ -112,10 +128,11 @@ class AWSS3StorageDownloadFileOperationTest {
             StorageAccessLevel.PUBLIC,
             null
         )
-        Mockito.`when`(cognitoAuthProvider.identityId).thenReturn("abc")
+        coEvery { authCredentialsProvider.getIdentityId() } returns "abc"
         awsS3StorageDownloadFileOperation = AWSS3StorageDownloadFileOperation(
             storageService,
-            cognitoAuthProvider,
+            MoreExecutors.newDirectExecutorService(),
+            authCredentialsProvider,
             request,
             AWSS3StoragePluginConfiguration {
                 awsS3PluginPrefixResolver = object : AWSS3PluginPrefixResolver {
@@ -123,7 +140,7 @@ class AWSS3StorageDownloadFileOperationTest {
                         accessLevel: StorageAccessLevel,
                         targetIdentity: String?,
                         onSuccess: Consumer<String>,
-                        onError: Consumer<StorageException>
+                        onError: Consumer<StorageException>?
                     ) {
                         onSuccess.accept("customPublic/")
                     }
@@ -134,6 +151,10 @@ class AWSS3StorageDownloadFileOperationTest {
             {}
         )
         awsS3StorageDownloadFileOperation.start()
-        Mockito.verify(storageService).downloadToFile(expectedKey, tempFile)
+        Mockito.verify(storageService).downloadToFile(
+            awsS3StorageDownloadFileOperation.transferId,
+            expectedKey,
+            tempFile
+        )
     }
 }

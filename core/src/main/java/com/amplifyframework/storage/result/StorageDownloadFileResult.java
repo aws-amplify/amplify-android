@@ -23,7 +23,7 @@ import java.util.Objects;
 /**
  * The result of a call to get an item from the Storage category.
  */
-public final class StorageDownloadFileResult {
+public final class StorageDownloadFileResult extends StorageTransferResult {
     private final File file;
 
     private StorageDownloadFileResult(File file) {

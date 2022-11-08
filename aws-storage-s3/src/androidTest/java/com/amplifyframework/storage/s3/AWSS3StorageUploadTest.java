@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -17,6 +17,8 @@ package com.amplifyframework.storage.s3;
 
 import android.content.Context;
 
+import com.amplifyframework.auth.AuthPlugin;
+import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.async.Resumable;
@@ -26,15 +28,15 @@ import com.amplifyframework.hub.SubscriptionToken;
 import com.amplifyframework.storage.StorageAccessLevel;
 import com.amplifyframework.storage.StorageCategory;
 import com.amplifyframework.storage.StorageChannelEventName;
+import com.amplifyframework.storage.TransferState;
 import com.amplifyframework.storage.operation.StorageUploadFileOperation;
 import com.amplifyframework.storage.options.StorageUploadFileOptions;
-import com.amplifyframework.storage.s3.helper.AmplifyTransferServiceTestHelper;
 import com.amplifyframework.storage.s3.test.R;
+import com.amplifyframework.storage.s3.util.WorkmanagerTestUtils;
 import com.amplifyframework.testutils.random.RandomTempFile;
-import com.amplifyframework.testutils.sync.SynchronousMobileClient;
+import com.amplifyframework.testutils.sync.SynchronousAuth;
 import com.amplifyframework.testutils.sync.SynchronousStorage;
 
-import com.amazonaws.mobileconnectors.s3.transferutility.TransferState;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -75,10 +77,8 @@ public final class AWSS3StorageUploadTest {
     public static void setUpOnce() throws Exception {
         Context context = getApplicationContext();
 
-        AmplifyTransferServiceTestHelper.stopForegroundAndUnbind(getApplicationContext());
-
-        // Init auth stuff
-        SynchronousMobileClient.instance().initialize();
+        WorkmanagerTestUtils.INSTANCE.initializeWorkmanagerTestUtil(context);
+        SynchronousAuth.delegatingToCognito(context, (AuthPlugin) new AWSCognitoAuthPlugin());
 
         // Get a handle to storage
         storageCategory = TestStorageCategory.create(context, R.raw.amplifyconfiguration);
@@ -97,8 +97,6 @@ public final class AWSS3StorageUploadTest {
 
         // Create a set to remember all the subscriptions
         subscriptions = new HashSet<>();
-
-        AmplifyTransferServiceTestHelper.stopForegroundAndUnbind(getApplicationContext());
     }
 
     /**
@@ -110,8 +108,6 @@ public final class AWSS3StorageUploadTest {
         for (SubscriptionToken token : subscriptions) {
             Amplify.Hub.unsubscribe(token);
         }
-
-        AmplifyTransferServiceTestHelper.stopForegroundAndUnbind(getApplicationContext());
     }
 
     /**

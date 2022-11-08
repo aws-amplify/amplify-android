@@ -20,6 +20,7 @@ import com.amplifyframework.storage.StorageCategoryBehavior
 import com.amplifyframework.storage.StorageException
 import com.amplifyframework.storage.StorageItem
 import com.amplifyframework.storage.operation.StorageDownloadFileOperation
+import com.amplifyframework.storage.operation.StorageTransferOperation
 import com.amplifyframework.storage.operation.StorageUploadFileOperation
 import com.amplifyframework.storage.operation.StorageUploadInputStreamOperation
 import com.amplifyframework.storage.result.StorageDownloadFileResult
@@ -27,6 +28,7 @@ import com.amplifyframework.storage.result.StorageGetUrlResult
 import com.amplifyframework.storage.result.StorageListResult
 import com.amplifyframework.storage.result.StorageRemoveResult
 import com.amplifyframework.storage.result.StorageTransferProgress
+import com.amplifyframework.storage.result.StorageTransferResult
 import com.amplifyframework.storage.result.StorageUploadFileResult
 import com.amplifyframework.storage.result.StorageUploadInputStreamResult
 import io.mockk.every
@@ -35,6 +37,7 @@ import java.io.File
 import java.io.InputStream
 import java.net.URL
 import java.util.Date
+import java.util.UUID
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.GlobalScope
@@ -43,6 +46,7 @@ import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -359,5 +363,37 @@ class KotlinStorageFacadeTest {
             mockk()
         }
         storage.list(path)
+    }
+
+    @Test
+    fun getTransferSucceeds() = runTest {
+        val transferId = UUID.randomUUID().toString()
+        val result = mockk<StorageTransferOperation<*, StorageTransferResult>>()
+        every {
+            delegate.getTransfer(transferId, any(), any())
+        } answers {
+            val indexOfResultConsumer = 1
+            val arg = it.invocation.args[indexOfResultConsumer]
+            val onResult = arg as Consumer<StorageTransferOperation<*, StorageTransferResult>>
+            onResult.accept(result)
+            mockk()
+        }
+        assertEquals(result, storage.getTransfer(transferId))
+    }
+
+    @Test(expected = StorageException::class)
+    fun getTransferErrors() = runTest {
+        val transferId = UUID.randomUUID().toString()
+        val error = StorageException("Transfer invalid", "Suggestion")
+        every {
+            delegate.getTransfer(transferId, any(), any())
+        } answers {
+            val indexOfResultConsumer = 2
+            val arg = it.invocation.args[indexOfResultConsumer]
+            val onError = arg as Consumer<StorageException>
+            onError.accept(error)
+            mockk()
+        }
+        storage.getTransfer(transferId)
     }
 }
