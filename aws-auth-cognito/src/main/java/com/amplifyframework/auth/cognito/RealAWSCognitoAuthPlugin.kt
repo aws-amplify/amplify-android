@@ -1173,6 +1173,7 @@ internal class RealAWSCognitoAuthPlugin(
                 is AuthenticationState.SignedIn -> {
                     _updatePassword(oldPassword, newPassword, onSuccess, onError)
                 }
+                is AuthenticationState.SignedOut -> onError.accept(SignedOutException())
                 else -> onError.accept(InvalidStateException())
             }
         }
@@ -1235,6 +1236,7 @@ internal class RealAWSCognitoAuthPlugin(
                         }
                     }
                 }
+                is AuthenticationState.SignedOut -> onError.accept(SignedOutException())
                 else -> onError.accept(InvalidStateException())
             }
         }
@@ -1336,6 +1338,7 @@ internal class RealAWSCognitoAuthPlugin(
                             }
                         }
                     }
+                    is AuthenticationState.SignedOut -> continuation.resumeWithException(SignedOutException())
                     else -> continuation.resumeWithException(InvalidStateException())
                 }
             }
@@ -1438,6 +1441,7 @@ internal class RealAWSCognitoAuthPlugin(
                         }
                     }
                 }
+                is AuthenticationState.SignedOut -> onError.accept(SignedOutException())
                 else -> onError.accept(InvalidStateException())
             }
         }
@@ -1486,6 +1490,7 @@ internal class RealAWSCognitoAuthPlugin(
                         }
                     }
                 }
+                is AuthenticationState.SignedOut -> onError.accept(SignedOutException())
                 else -> onError.accept(InvalidStateException())
             }
         }
