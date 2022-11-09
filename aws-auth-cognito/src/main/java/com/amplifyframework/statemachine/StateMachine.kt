@@ -26,9 +26,10 @@ import kotlinx.coroutines.newFixedThreadPoolContext
 
 internal typealias OnSubscribedCallback = () -> Unit
 
-@JvmInline
-internal value class StateChangeListenerToken private constructor(val uuid: UUID) {
-    constructor(): this(UUID.randomUUID())
+internal class StateChangeListenerToken private constructor(val uuid: UUID) {
+    constructor() : this(UUID.randomUUID())
+    override fun equals(other: Any?) = other is StateChangeListenerToken && other.uuid == uuid
+    override fun hashCode() = uuid.hashCode()
 }
 
 /**

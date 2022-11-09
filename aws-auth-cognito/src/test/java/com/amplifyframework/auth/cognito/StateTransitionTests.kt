@@ -421,7 +421,8 @@ class StateTransitionTests : StateTransitionTestBase() {
         val configureLatch = CountDownLatch(1)
         val subscribeLatch = CountDownLatch(1)
         val token = StateChangeListenerToken()
-        stateMachine.listen(token,
+        stateMachine.listen(
+            token,
             {
                 val authState =
                     it.takeIf { it is AuthState.Configured && it.authNState is AuthenticationState.SignedIn }
@@ -466,7 +467,8 @@ class StateTransitionTests : StateTransitionTestBase() {
         val configureLatch = CountDownLatch(1)
         val subscribeLatch = CountDownLatch(1)
         val token = StateChangeListenerToken()
-        stateMachine.listen(token,
+        stateMachine.listen(
+            token,
             {
                 val authState =
                     it.takeIf { it is AuthState.Configured && it.authNState is AuthenticationState.SignedIn }

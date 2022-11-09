@@ -168,7 +168,7 @@ internal class RealAWSCognitoAuthPlugin(
     @WorkerThread
     @Throws(AmplifyException::class)
     fun initialize() {
-        val token= StateChangeListenerToken()
+        val token = StateChangeListenerToken()
         val latch = CountDownLatch(1)
         authStateMachine.listen(
             token,
