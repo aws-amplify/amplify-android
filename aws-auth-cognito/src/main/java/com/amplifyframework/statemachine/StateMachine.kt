@@ -28,9 +28,7 @@ internal typealias OnSubscribedCallback = () -> Unit
 
 @JvmInline
 internal value class StateChangeListenerToken private constructor(val uuid: UUID) {
-    companion object {
-        fun create() = StateChangeListenerToken(UUID.randomUUID())
-    }
+    constructor(): this(UUID.randomUUID())
 }
 
 /**

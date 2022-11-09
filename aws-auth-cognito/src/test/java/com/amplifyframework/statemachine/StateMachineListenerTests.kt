@@ -55,7 +55,7 @@ class StateMachineListenerTests {
         stateMachine.send(Counter.Event("1", eventType = Increment))
         val testLatch = CountDownLatch(2)
         stateMachine.listen(
-            StateChangeListenerToken.create(),
+            StateChangeListenerToken(),
             {
                 assertEquals(1, it.value)
                 testLatch.countDown()
@@ -73,7 +73,7 @@ class StateMachineListenerTests {
         val listenLatch = CountDownLatch(2)
         val subscribeLatch = CountDownLatch(1)
         stateMachine.listen(
-            StateChangeListenerToken.create(),
+            StateChangeListenerToken(),
             {
                 listenLatch.countDown()
             },
@@ -93,7 +93,7 @@ class StateMachineListenerTests {
         val listenLatch = CountDownLatch(1)
         val subscribeLatch = CountDownLatch(1)
         stateMachine.listen(
-            StateChangeListenerToken.create(),
+            StateChangeListenerToken(),
             {
                 listenLatch.countDown()
             },
@@ -112,7 +112,7 @@ class StateMachineListenerTests {
         stateMachine.send(Counter.Event("1", eventType = Increment))
         val listenLatch = CountDownLatch(1)
         val subscribeLatch = CountDownLatch(1)
-        val token = StateChangeListenerToken.create()
+        val token = StateChangeListenerToken()
         stateMachine.listen(
             token,
             {
@@ -133,7 +133,7 @@ class StateMachineListenerTests {
     fun testNoNotifyImmediateCancel() {
         stateMachine.send(Counter.Event("1", eventType = Increment))
         val listenLatch = CountDownLatch(1)
-        val token = StateChangeListenerToken.create()
+        val token = StateChangeListenerToken()
         stateMachine.listen(
             token,
             {

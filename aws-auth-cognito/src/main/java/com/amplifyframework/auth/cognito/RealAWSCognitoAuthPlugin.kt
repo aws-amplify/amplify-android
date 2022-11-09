@@ -168,7 +168,7 @@ internal class RealAWSCognitoAuthPlugin(
     @WorkerThread
     @Throws(AmplifyException::class)
     fun initialize() {
-        val token= StateChangeListenerToken.create()
+        val token= StateChangeListenerToken()
         val latch = CountDownLatch(1)
         authStateMachine.listen(
             token,
@@ -477,7 +477,7 @@ internal class RealAWSCognitoAuthPlugin(
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
     ) {
-        val token = StateChangeListenerToken.create()
+        val token = StateChangeListenerToken()
         authStateMachine.listen(
             token,
             { authState ->
@@ -573,7 +573,7 @@ internal class RealAWSCognitoAuthPlugin(
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
     ) {
-        val token = StateChangeListenerToken.create()
+        val token = StateChangeListenerToken()
         authStateMachine.listen(
             token,
             { authState ->
@@ -706,7 +706,7 @@ internal class RealAWSCognitoAuthPlugin(
         onError: Consumer<AuthException>,
         provider: AuthProvider? = null
     ) {
-        val token = StateChangeListenerToken.create()
+        val token = StateChangeListenerToken()
         authStateMachine.listen(
             token,
             { authState ->
@@ -916,7 +916,7 @@ internal class RealAWSCognitoAuthPlugin(
         onSuccess: Consumer<AuthSession>,
         onError: Consumer<AuthException>
     ) {
-        val token = StateChangeListenerToken.create()
+        val token = StateChangeListenerToken()
         authStateMachine.listen(
             token,
             { authState ->
@@ -1564,7 +1564,7 @@ internal class RealAWSCognitoAuthPlugin(
     }
 
     private fun _signOut(sendHubEvent: Boolean = true, onComplete: Consumer<AuthSignOutResult>) {
-        val token = StateChangeListenerToken.create()
+        val token = StateChangeListenerToken()
         authStateMachine.listen(
             token,
             { authState ->
@@ -1639,7 +1639,7 @@ internal class RealAWSCognitoAuthPlugin(
     }
 
     private fun _deleteUser(token: String, onSuccess: Action, onError: Consumer<AuthException>) {
-        val listenerToken = StateChangeListenerToken.create()
+        val listenerToken = StateChangeListenerToken()
         authStateMachine.listen(
             listenerToken,
             { authState ->
@@ -1686,14 +1686,14 @@ internal class RealAWSCognitoAuthPlugin(
 
     private fun addAuthStateChangeListener() {
         authStateMachine.listen(
-            StateChangeListenerToken.create(),
+            StateChangeListenerToken(),
             { authState -> logger.verbose("Auth State Change: $authState") },
             null
         )
     }
 
     private fun configureAuthStates() {
-        val token = StateChangeListenerToken.create()
+        val token = StateChangeListenerToken()
         authStateMachine.listen(
             token,
             { authState ->
@@ -1765,7 +1765,7 @@ internal class RealAWSCognitoAuthPlugin(
         onSuccess: Consumer<FederateToIdentityPoolResult>,
         onError: Consumer<AuthException>
     ) {
-        val token = StateChangeListenerToken.create()
+        val token = StateChangeListenerToken()
         authStateMachine.listen(
             token,
             { authState ->

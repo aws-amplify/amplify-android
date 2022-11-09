@@ -56,7 +56,7 @@ internal class CredentialStoreClient(configuration: AuthConfiguration, context: 
     ) {
         var capturedSuccess: Result<AmplifyCredential>? = null
         var capturedError: Exception? = null
-        val token = StateChangeListenerToken.create()
+        val token = StateChangeListenerToken()
         credentialStoreStateMachine.listen(
             token,
             { storeState ->

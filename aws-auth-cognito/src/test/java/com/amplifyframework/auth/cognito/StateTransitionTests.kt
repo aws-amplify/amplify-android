@@ -217,7 +217,7 @@ class StateTransitionTests : StateTransitionTestBase() {
         setupConfigureSignedOut()
         val listenLatch = CountDownLatch(1)
         val subscribeLatch = CountDownLatch(1)
-        val token = StateChangeListenerToken.create()
+        val token = StateChangeListenerToken()
         stateMachine.listen(
             token,
             {
@@ -247,7 +247,7 @@ class StateTransitionTests : StateTransitionTestBase() {
 
         val listenLatch = CountDownLatch(1)
         val subscribeLatch = CountDownLatch(1)
-        val token = StateChangeListenerToken.create()
+        val token = StateChangeListenerToken()
         stateMachine.listen(
             token,
             {
@@ -290,7 +290,7 @@ class StateTransitionTests : StateTransitionTestBase() {
         val testLatch = CountDownLatch(1)
         val configureLatch = CountDownLatch(1)
         val subscribeLatch = CountDownLatch(1)
-        val token = StateChangeListenerToken.create()
+        val token = StateChangeListenerToken()
         stateMachine.listen(
             token,
             {
@@ -356,7 +356,7 @@ class StateTransitionTests : StateTransitionTestBase() {
         val testLatch = CountDownLatch(1)
         val configureLatch = CountDownLatch(1)
         val subscribeLatch = CountDownLatch(1)
-        val token = StateChangeListenerToken.create()
+        val token = StateChangeListenerToken()
         stateMachine.listen(
             token,
             {
@@ -420,7 +420,7 @@ class StateTransitionTests : StateTransitionTestBase() {
         val testLatch = CountDownLatch(1)
         val configureLatch = CountDownLatch(1)
         val subscribeLatch = CountDownLatch(1)
-        val token = StateChangeListenerToken.create()
+        val token = StateChangeListenerToken()
         stateMachine.listen(token,
             {
                 val authState =
@@ -465,7 +465,7 @@ class StateTransitionTests : StateTransitionTestBase() {
         val testLatch = CountDownLatch(1)
         val configureLatch = CountDownLatch(1)
         val subscribeLatch = CountDownLatch(1)
-        val token = StateChangeListenerToken.create()
+        val token = StateChangeListenerToken()
         stateMachine.listen(token,
             {
                 val authState =
@@ -509,7 +509,7 @@ class StateTransitionTests : StateTransitionTestBase() {
         val testLatch = CountDownLatch(1)
         val configureLatch = CountDownLatch(1)
         val subscribeLatch = CountDownLatch(1)
-        val token = StateChangeListenerToken.create()
+        val token = StateChangeListenerToken()
         stateMachine.listen(
             token,
             {
@@ -554,7 +554,7 @@ class StateTransitionTests : StateTransitionTestBase() {
         val testLatch = CountDownLatch(1)
         val subscribeLatch = CountDownLatch(1)
         configureLatch.countDown()
-        val token = StateChangeListenerToken.create()
+        val token = StateChangeListenerToken()
         stateMachine.listen(
             token,
             { it ->
@@ -596,7 +596,7 @@ class StateTransitionTests : StateTransitionTestBase() {
         val testLatch = CountDownLatch(1)
         val subscribeLatch = CountDownLatch(1)
         configureLatch.countDown()
-        val token = StateChangeListenerToken.create()
+        val token = StateChangeListenerToken()
         stateMachine.listen(
             token,
             { it ->
@@ -637,7 +637,7 @@ class StateTransitionTests : StateTransitionTestBase() {
         val configureLatch = CountDownLatch(1)
         val subscribeLatch = CountDownLatch(1)
         val testLatch = CountDownLatch(1)
-        val token = StateChangeListenerToken.create()
+        val token = StateChangeListenerToken()
         stateMachine.listen(
             token,
             { it ->
@@ -650,7 +650,7 @@ class StateTransitionTests : StateTransitionTestBase() {
 
                     stateMachine.send(AuthorizationEvent(AuthorizationEvent.EventType.RefreshSession(credentials)))
                     stateMachine.listen(
-                        StateChangeListenerToken.create(),
+                        StateChangeListenerToken(),
                         { it2 ->
                             val authNState = it2.takeIf {
                                 it2 is AuthState.Configured &&
@@ -687,7 +687,7 @@ class StateTransitionTests : StateTransitionTestBase() {
         val configureLatch = CountDownLatch(1)
         val subscribeLatch = CountDownLatch(1)
         val testLatch = CountDownLatch(1)
-        val token = StateChangeListenerToken.create()
+        val token = StateChangeListenerToken()
         stateMachine.listen(
             token,
             { it ->
