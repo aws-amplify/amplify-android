@@ -15,7 +15,6 @@
 
 package com.amplifyframework.statemachine
 
-import android.util.Log
 import java.util.UUID
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineExceptionHandler
@@ -108,7 +107,6 @@ internal open class StateMachine<StateType : State, EnvironmentType : Environmen
      * @param token identifies the listener to be removed
      */
     fun cancel(token: StateChangeListenerToken) {
-        Log.w("StateMachine", "canceling token: $token")
         pendingCancellations.add(token)
         GlobalScope.launch(stateMachineScope) {
             removeSubscription(token)
@@ -176,7 +174,6 @@ internal open class StateMachine<StateType : State, EnvironmentType : Environmen
     ): Boolean {
         val token = subscriber.key
         if (pendingCancellations.contains(token)) return false
-        Log.w("StateMachine", "notifying token: $token of state $newState")
         subscriber.value(newState)
         return true
     }
