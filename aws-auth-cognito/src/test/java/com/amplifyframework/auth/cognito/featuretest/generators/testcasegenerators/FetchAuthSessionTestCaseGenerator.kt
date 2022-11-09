@@ -96,7 +96,7 @@ object FetchAuthSessionTestCaseGenerator : SerializableProvider {
     private val identityPoolCase: FeatureTestCase = baseCase.copy(
         description = "AuthSession object is successfully returned for Identity Pool",
         preConditions = baseCase.preConditions.copy(
-            state = "SignedOut_IdentityPool.json"
+            state = "SignedOut_IdentityPoolConfigured.json"
         ),
         api = baseCase.api,
         validations = listOf(ExpectationShapes.Amplify(
@@ -117,11 +117,6 @@ object FetchAuthSessionTestCaseGenerator : SerializableProvider {
                 userPoolTokensResult = AuthSessionResult.failure(SignedOutException())
             ).toJsonElement()
         ))
-    )
-
-    val userPoolException = InvalidStateException(
-        message = "Users Federated to Identity Pool do not have User Pool access.",
-        recoverySuggestion = "To access User Pool data, you must use a Sign In method."
     )
 
     private val userPoolCase: FeatureTestCase = baseCase.copy(
@@ -159,6 +154,5 @@ object FetchAuthSessionTestCaseGenerator : SerializableProvider {
         ))
     )
 
-    // TODO : Fix error case and refresh session case
     override val serializables: List<Any> = listOf(baseCase,refreshSuccessCase,identityPoolCase, userPoolCase)
 }
