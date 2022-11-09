@@ -1,8 +1,6 @@
 version: 0.2
 env:
   shell: /bin/sh
-  variables:
-    ORG_GRADLE_PROJECT_useAwsSdkReleaseBuild: true
   secrets-manager:
     ORG_GRADLE_PROJECT_SONATYPE_NEXUS_USERNAME: awsmobilesdk/android/sonatype:username
     ORG_GRADLE_PROJECT_SONATYPE_NEXUS_PASSWORD: awsmobilesdk/android/sonatype:password
@@ -11,35 +9,18 @@ env:
     ORG_GRADLE_PROJECT_signingInMemoryKey: awsmobilesdk/android/signing:inMemoryKey
 phases:
   install:
-    runtime-versions:
-      android: 29
-      nodejs: 12
-      python: 3.8
     commands:
       - echo 'Install phase starting'
-      - npm install -g xunit-viewer
-      - pip3 install junit-xml
     finally:
       - echo 'Install phase completed.'
   pre_build:
     commands:
       - echo 'Pre-build phase starting'
-      - mkdir -p build/allTests
-      - |
-        if [[ -z "${CONFIG_SOURCE_BUCKET}" ]]; then
-          echo 'Pulling config files from Amplify'
-          JAVA_HOME=$JDK_8_HOME ./gradlew pullBackendConfigFromAmplify
-        else
-          echo 'Pulling config files from S3'
-          ./scripts/pull_backend_config_from_s3 ${CONFIG_SOURCE_BUCKET}
-        fi
     finally:
       - echo 'Pre-build phase completed.'
   build:
     commands:
       - echo 'Build phase starting.'
-      - JAVA_HOME=$JDK_8_HOME ./gradlew assembleAndroidTest
-      - JAVA_HOME=$JDK_8_HOME ./gradlew runTestsInDeviceFarm
       - |
         # List all available gradle tasks, grep for the uploadArchive tasks, and then use cut to strip the
         # task description and just return the name of the task, one for each module (e.g. aws-api:uploadArchives)
@@ -53,26 +34,5 @@ phases:
   post_build:
     commands:
       - echo 'Post-build phase starting'
-      - mkdir -p build/reports/instrumented
-      - xunit-viewer -r build/allTests -o build/reports/instrumented/${CODEBUILD_RESOLVED_SOURCE_VERSION}.html
     finally:
       - echo 'Post-build phase completed.'
-reports:
-  amplify-android-devicefarm-tests:
-    files:
-      - '**/*'
-    base-directory: 'build/allTests'
-    discard-paths: no
-    file-format: JUNITXML
-artifacts:
-  files:
-    - '**/*.apk'
-  name: AmplifyAndroidCatApks
-  discard-paths: yes
-  secondary-artifacts:
-    reports:
-      files:
-        - '**/*'
-      name: DevicefarmTestRunReport
-      base-directory: 'build/reports/instrumented'
-      discard-paths: no
