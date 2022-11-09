@@ -1848,7 +1848,7 @@ internal class RealAWSCognitoAuthPlugin(
         _signOut(sendHubEvent = false) {
             when (it) {
                 is AWSCognitoAuthSignOutResult.FailedSignOut -> {
-                    onError.accept(it.error)
+                    onError.accept(it.exception)
                 }
                 else -> {
                     onSuccess.call()
