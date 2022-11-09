@@ -15,6 +15,7 @@
 
 package com.amplifyframework.statemachine
 
+import android.util.Log
 import java.util.UUID
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineExceptionHandler
@@ -24,8 +25,14 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.newFixedThreadPoolContext
 
-internal typealias StateChangeListenerToken = UUID
 internal typealias OnSubscribedCallback = () -> Unit
+
+@JvmInline
+internal value class StateChangeListenerToken private constructor(val uuid: UUID) {
+    companion object {
+        fun create() = StateChangeListenerToken(UUID.randomUUID())
+    }
+}
 
 /**
  * Model, mutate and process effects of a system as a finite state automaton. It consists of:
@@ -89,12 +96,10 @@ internal open class StateMachine<StateType : State, EnvironmentType : Environmen
      * @param onSubscribe callback to invoke when subscription is complete
      * @return token that can be used to unsubscribe the listener
      */
-    fun listen(listener: (StateType) -> Unit, onSubscribe: OnSubscribedCallback?): StateChangeListenerToken {
-        val token = UUID.randomUUID()
+    fun listen(token: StateChangeListenerToken, listener: (StateType) -> Unit, onSubscribe: OnSubscribedCallback?) {
         GlobalScope.launch(stateMachineScope) {
             addSubscription(token, listener, onSubscribe)
         }
-        return token
     }
 
     /**
@@ -103,6 +108,7 @@ internal open class StateMachine<StateType : State, EnvironmentType : Environmen
      * @param token identifies the listener to be removed
      */
     fun cancel(token: StateChangeListenerToken) {
+        Log.w("StateMachine", "canceling token: $token")
         pendingCancellations.add(token)
         GlobalScope.launch(stateMachineScope) {
             removeSubscription(token)
@@ -170,6 +176,7 @@ internal open class StateMachine<StateType : State, EnvironmentType : Environmen
     ): Boolean {
         val token = subscriber.key
         if (pendingCancellations.contains(token)) return false
+        Log.w("StateMachine", "notifying token: $token of state $newState")
         subscriber.value(newState)
         return true
     }

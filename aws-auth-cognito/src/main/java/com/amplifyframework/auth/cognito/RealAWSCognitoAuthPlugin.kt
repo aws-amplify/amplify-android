@@ -168,12 +168,13 @@ internal class RealAWSCognitoAuthPlugin(
     @WorkerThread
     @Throws(AmplifyException::class)
     fun initialize() {
-        var token: StateChangeListenerToken? = null
+        val token= StateChangeListenerToken.create()
         val latch = CountDownLatch(1)
-        token = authStateMachine.listen(
+        authStateMachine.listen(
+            token,
             { authState ->
                 if (authState is AuthState.Configured) {
-                    token?.let(authStateMachine::cancel)
+                    authStateMachine.cancel(token)
                     latch.countDown()
                 }
             },
@@ -476,8 +477,9 @@ internal class RealAWSCognitoAuthPlugin(
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
     ) {
-        var token: StateChangeListenerToken? = null
-        token = authStateMachine.listen(
+        val token = StateChangeListenerToken.create()
+        authStateMachine.listen(
+            token,
             { authState ->
                 val authNState = authState.authNState
                 val authZState = authState.authZState
@@ -488,26 +490,26 @@ internal class RealAWSCognitoAuthPlugin(
                         val challengeState = (signInState as? SignInState.ResolvingChallenge)?.challengeState
                         when {
                             srpSignInState is SRPSignInState.Error -> {
-                                token?.let(authStateMachine::cancel)
+                                authStateMachine.cancel(token)
                                 onError.accept(
                                     CognitoAuthExceptionConverter.lookup(srpSignInState.exception, "Sign in failed.")
                                 )
                             }
                             signInState is SignInState.Error -> {
-                                token?.let(authStateMachine::cancel)
+                                authStateMachine.cancel(token)
                                 onError.accept(
                                     CognitoAuthExceptionConverter.lookup(signInState.exception, "Sign in failed.")
                                 )
                             }
                             challengeState is SignInChallengeState.WaitingForAnswer -> {
-                                token?.let(authStateMachine::cancel)
+                                authStateMachine.cancel(token)
                                 SignInChallengeHelper.getNextStep(challengeState.challenge, onSuccess, onError)
                             }
                         }
                     }
                     authNState is AuthenticationState.SignedIn
                         && authZState is AuthorizationState.SessionEstablished -> {
-                        token?.let(authStateMachine::cancel)
+                        authStateMachine.cancel(token)
                         val authSignInResult = AuthSignInResult(
                             true,
                             AuthNextSignInStep(AuthSignInStep.DONE, mapOf(), null)
@@ -571,8 +573,9 @@ internal class RealAWSCognitoAuthPlugin(
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
     ) {
-        var token: StateChangeListenerToken? = null
-        token = authStateMachine.listen(
+        val token = StateChangeListenerToken.create()
+        authStateMachine.listen(
+            token,
             { authState ->
                 val authNState = authState.authNState
                 val authZState = authState.authZState
@@ -581,7 +584,7 @@ internal class RealAWSCognitoAuthPlugin(
                 when {
                     authNState is AuthenticationState.SignedIn
                         && authZState is AuthorizationState.SessionEstablished -> {
-                        token?.let(authStateMachine::cancel)
+                        authStateMachine.cancel(token)
                         val authSignInResult = AuthSignInResult(
                             true,
                             AuthNextSignInStep(AuthSignInStep.DONE, mapOf(), null)
@@ -590,7 +593,7 @@ internal class RealAWSCognitoAuthPlugin(
                         sendHubEvent(AuthChannelEventName.SIGNED_IN.toString())
                     }
                     signInState is SignInState.Error -> {
-                        token?.let(authStateMachine::cancel)
+                        authStateMachine.cancel(token)
                         onError.accept(
                             CognitoAuthExceptionConverter.lookup(signInState.exception, "Confirm Sign in failed.")
                         )
@@ -703,8 +706,9 @@ internal class RealAWSCognitoAuthPlugin(
         onError: Consumer<AuthException>,
         provider: AuthProvider? = null
     ) {
-        var token: StateChangeListenerToken? = null
-        token = authStateMachine.listen(
+        val token = StateChangeListenerToken.create()
+        authStateMachine.listen(
+            token,
             { authState ->
                 val authNState = authState.authNState
                 val authZState = authState.authZState
@@ -712,7 +716,7 @@ internal class RealAWSCognitoAuthPlugin(
                     authNState is AuthenticationState.SigningIn -> {
                         val hostedUISignInState = authNState.signInState.hostedUISignInState
                         if (hostedUISignInState is HostedUISignInState.Error) {
-                            token?.let(authStateMachine::cancel)
+                            authStateMachine.cancel(token)
                             val exception = hostedUISignInState.exception
                             onError.accept(
                                 if (exception is AuthException) {
@@ -726,7 +730,7 @@ internal class RealAWSCognitoAuthPlugin(
                     }
                     authNState is AuthenticationState.SignedIn
                         && authZState is AuthorizationState.SessionEstablished -> {
-                        token?.let(authStateMachine::cancel)
+                        authStateMachine.cancel(token)
                         val authSignInResult =
                             AuthSignInResult(
                                 true,
@@ -912,16 +916,17 @@ internal class RealAWSCognitoAuthPlugin(
         onSuccess: Consumer<AuthSession>,
         onError: Consumer<AuthException>
     ) {
-        var token: StateChangeListenerToken? = null
-        token = authStateMachine.listen(
+        val token = StateChangeListenerToken.create()
+        authStateMachine.listen(
+            token,
             { authState ->
                 when (val authZState = authState.authZState) {
                     is AuthorizationState.SessionEstablished -> {
-                        token?.let(authStateMachine::cancel)
+                        authStateMachine.cancel(token)
                         onSuccess.accept(authZState.amplifyCredential.getCognitoSession())
                     }
                     is AuthorizationState.Error -> {
-                        token?.let(authStateMachine::cancel)
+                        authStateMachine.cancel(token)
                         when (val error = authZState.exception) {
                             is SessionError -> {
                                 when (error.exception) {
@@ -1559,14 +1564,15 @@ internal class RealAWSCognitoAuthPlugin(
     }
 
     private fun _signOut(sendHubEvent: Boolean = true, onComplete: Consumer<AuthSignOutResult>) {
-        var token: StateChangeListenerToken? = null
-        token = authStateMachine.listen(
+        val token = StateChangeListenerToken.create()
+        authStateMachine.listen(
+            token,
             { authState ->
                 if (authState is AuthState.Configured) {
                     val (authNState, authZState) = authState
                     when {
                         authNState is AuthenticationState.SignedOut && authZState is AuthorizationState.Configured -> {
-                            token?.let(authStateMachine::cancel)
+                            authStateMachine.cancel(token)
                             if (authNState.signedOutData.hasError) {
                                 val signedOutData = authNState.signedOutData
                                 onComplete.accept(
@@ -1593,7 +1599,7 @@ internal class RealAWSCognitoAuthPlugin(
                             }
                         }
                         authNState is AuthenticationState.Error -> {
-                            token?.let(authStateMachine::cancel)
+                            authStateMachine.cancel(token)
                             onComplete.accept(
                                 AWSCognitoAuthSignOutResult.FailedSignOut(
                                     CognitoAuthExceptionConverter.lookup(authNState.exception, "Sign out failed.")
@@ -1633,8 +1639,9 @@ internal class RealAWSCognitoAuthPlugin(
     }
 
     private fun _deleteUser(token: String, onSuccess: Action, onError: Consumer<AuthException>) {
-        var listenerToken: StateChangeListenerToken? = null
-        listenerToken = authStateMachine.listen(
+        val listenerToken = StateChangeListenerToken.create()
+        authStateMachine.listen(
+            listenerToken,
             { authState ->
                 when (val authNState = authState.authNState) {
                     is AuthenticationState.SignedOut -> {
@@ -1654,10 +1661,10 @@ internal class RealAWSCognitoAuthPlugin(
                     is DeleteUserState.UserDeleted -> {
                         onSuccess.call()
                         sendHubEvent(AuthChannelEventName.USER_DELETED.toString())
-                        listenerToken?.let(authStateMachine::cancel)
+                        authStateMachine.cancel(listenerToken)
                     }
                     is DeleteUserState.Error -> {
-                        listenerToken?.let(authStateMachine::cancel)
+                        authStateMachine.cancel(listenerToken)
                         onError.accept(
                             CognitoAuthExceptionConverter.lookup(
                                 deleteUserState.exception,
@@ -1678,16 +1685,21 @@ internal class RealAWSCognitoAuthPlugin(
     }
 
     private fun addAuthStateChangeListener() {
-        authStateMachine.listen({ authState -> logger.verbose("Auth State Change: $authState") }, null)
+        authStateMachine.listen(
+            StateChangeListenerToken.create(),
+            { authState -> logger.verbose("Auth State Change: $authState") },
+            null
+        )
     }
 
     private fun configureAuthStates() {
-        var token: StateChangeListenerToken? = null
-        token = authStateMachine.listen(
+        val token = StateChangeListenerToken.create()
+        authStateMachine.listen(
+            token,
             { authState ->
                 when (authState) {
                     is AuthState.Configured -> {
-                        token?.let(authStateMachine::cancel)
+                        authStateMachine.cancel(token)
                     }
                     else -> Unit // handle errors
                 }
@@ -1753,15 +1765,16 @@ internal class RealAWSCognitoAuthPlugin(
         onSuccess: Consumer<FederateToIdentityPoolResult>,
         onError: Consumer<AuthException>
     ) {
-        var token: StateChangeListenerToken? = null
-        token = authStateMachine.listen(
+        val token = StateChangeListenerToken.create()
+        authStateMachine.listen(
+            token,
             { authState ->
                 val authNState = authState.authNState
                 val authZState = authState.authZState
                 when {
                     authNState is AuthenticationState.FederatedToIdentityPool
                         && authZState is AuthorizationState.SessionEstablished -> {
-                        token?.let(authStateMachine::cancel)
+                        authStateMachine.cancel(token)
                         val credential = authZState.amplifyCredential as? AmplifyCredential.IdentityPoolFederated
                         val identityId = credential?.identityId
                         val awsCredentials = credential?.credentials
@@ -1787,7 +1800,7 @@ internal class RealAWSCognitoAuthPlugin(
                         }
                     }
                     authNState is AuthenticationState.Error && authZState is AuthorizationState.Error -> {
-                        token?.let(authStateMachine::cancel)
+                        authStateMachine.cancel(token)
                         onError.accept(
                             CognitoAuthExceptionConverter.lookup(
                                 authZState.exception,
