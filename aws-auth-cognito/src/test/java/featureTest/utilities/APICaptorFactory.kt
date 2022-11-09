@@ -17,6 +17,7 @@ package featureTest.utilities
 
 import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.AuthSession
+import com.amplifyframework.auth.AuthUser
 import com.amplifyframework.auth.cognito.featuretest.AuthAPI
 import com.amplifyframework.auth.cognito.featuretest.ExpectationShapes
 import com.amplifyframework.auth.cognito.featuretest.ResponseType
@@ -45,7 +46,8 @@ class APICaptorFactory(
             AuthAPI.signUp to mockk<Consumer<AuthSignUpResult>>(),
             AuthAPI.signIn to mockk<Consumer<AuthSignInResult>>(),
             AuthAPI.deleteUser to mockk<Action>(),
-            AuthAPI.fetchAuthSession to mockk<AuthSession>()
+            AuthAPI.fetchAuthSession to mockk<AuthSession>(),
+            AuthAPI.getCurrentUser to mockk<AuthUser>()
         )
         val onError = mockk<Consumer<AuthException>>()
         val onComplete = mapOf(
@@ -94,6 +96,11 @@ class APICaptorFactory(
                 successCaptors[apiName] = actionCaptor
             }
             AuthAPI.fetchAuthSession -> {
+                val consumer = onSuccess[apiName] as Action
+                every { consumer.call() } answers { latch.countDown() }
+                successCaptors[apiName] = actionCaptor
+            }
+            AuthAPI.getCurrentUser -> {
                 val consumer = onSuccess[apiName] as Action
                 every { consumer.call() } answers { latch.countDown() }
                 successCaptors[apiName] = actionCaptor
