@@ -23,6 +23,9 @@ import com.amplifyframework.auth.cognito.featuretest.serializers.CognitoIdentity
 import com.amplifyframework.auth.cognito.featuretest.serializers.CognitoIdentityProviderExceptionSerializer
 import com.amplifyframework.auth.cognito.featuretest.serializers.deserializeToAuthState
 import com.amplifyframework.auth.cognito.featuretest.serializers.serialize
+import com.amplifyframework.auth.cognito.result.AWSCognitoAuthSignOutResult
+import com.amplifyframework.auth.cognito.result.GlobalSignOutError
+import com.amplifyframework.auth.cognito.result.RevokeTokenError
 import com.amplifyframework.statemachine.codegen.states.AuthState
 import com.google.gson.Gson
 import java.io.BufferedWriter
@@ -167,6 +170,7 @@ fun Any?.toJsonElement(): JsonElement {
         is Number -> JsonPrimitive(this)
         is String -> JsonPrimitive(this)
         is AuthException -> toJsonElement()
+        is AWSCognitoAuthSignOutResult.PartialSignOut -> toJsonElement()
         is CognitoIdentityProviderException -> Json.encodeToJsonElement(
             CognitoIdentityProviderExceptionSerializer,
             this
@@ -185,6 +189,28 @@ fun AuthException.toJsonElement(): JsonElement {
     )
 
     return responseMap.toJsonElement()
+}
+
+fun AWSCognitoAuthSignOutResult.PartialSignOut.toJsonElement(): JsonElement {
+    return mutableMapOf<String, Any?> (
+        "hostedUIError" to hostedUIError?.toJsonElement(),
+        "globalSignOutError" to globalSignOutError?.toJsonElement(),
+        "revokeTokenError" to revokeTokenError?.toJsonElement()
+    ).toJsonElement()
+}
+
+fun GlobalSignOutError.toJsonElement(): JsonElement {
+    return mutableMapOf<String, Any?>(
+        "accessToken" to accessToken,
+        "error" to exception
+    ).toJsonElement()
+}
+
+fun RevokeTokenError.toJsonElement(): JsonElement {
+    return mutableMapOf<String, Any?>(
+        "refreshToken" to refreshToken,
+        "error" to exception
+    ).toJsonElement()
 }
 
 /**
