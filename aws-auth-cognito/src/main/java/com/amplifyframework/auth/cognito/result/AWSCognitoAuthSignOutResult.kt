@@ -46,9 +46,9 @@ sealed class AWSCognitoAuthSignOutResult : AuthSignOutResult() {
 
     /**
      * Indicates a failed sign out that did not complete. The user will remain signed in
-     * @param error that occurred during sign out
+     * @param exception that occurred during sign out
      */
-    data class FailedSignOut internal constructor(val error: AuthException) : AWSCognitoAuthSignOutResult() {
+    data class FailedSignOut internal constructor(val exception: AuthException) : AWSCognitoAuthSignOutResult() {
 
         /**
          * Indicates if credentials have been cleared from local device
@@ -89,7 +89,7 @@ class HostedUIError internal constructor(hostedUIErrorData: HostedUIErrorData) {
     /**
      * Error containing information about hosted ui sign out failure
      */
-    val error = hostedUIErrorData.error
+    val exception = hostedUIErrorData.error
 }
 
 /**
@@ -105,7 +105,7 @@ class GlobalSignOutError internal constructor(globalSignOutErrorData: GlobalSign
     /**
      * Error containing information about global sign out failure
      */
-    val error = GlobalSignOutException(globalSignOutErrorData.error)
+    val exception = GlobalSignOutException(globalSignOutErrorData.error)
 }
 
 /**
@@ -122,5 +122,5 @@ class RevokeTokenError internal constructor(revokeTokenErrorData: RevokeTokenErr
     /**
      * Error containing information about revoke token failure
      */
-    val error = RevokeTokenException(revokeTokenErrorData.error)
+    val exception = RevokeTokenException(revokeTokenErrorData.error)
 }
