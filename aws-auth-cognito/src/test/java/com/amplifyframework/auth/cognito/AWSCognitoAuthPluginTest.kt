@@ -516,7 +516,7 @@ class AWSCognitoAuthPluginTest {
 
     @Test
     fun verifyEscapeHatch() {
-        val expectedEscapeHatch = mockk<AWSCognitoAuthServiceBehavior>()
+        val expectedEscapeHatch = mockk<AWSCognitoAuthService>()
         every { realPlugin.escapeHatch() } returns expectedEscapeHatch
 
         assertEquals(expectedEscapeHatch, authPlugin.escapeHatch)

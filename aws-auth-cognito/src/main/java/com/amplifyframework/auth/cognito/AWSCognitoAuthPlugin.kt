@@ -68,7 +68,7 @@ import org.json.JSONObject
 /**
  * A Cognito implementation of the Auth Plugin.
  */
-class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
+class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
     companion object {
         const val AWS_COGNITO_AUTH_LOG_NAMESPACE = "amplify:aws-cognito-auth:%s"
         private const val AWS_COGNITO_AUTH_PLUGIN_KEY = "awsCognitoAuthPlugin"
@@ -111,7 +111,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthServiceBehavior>() {
             val authEnvironment = AuthEnvironment(
                 context,
                 configuration,
-                AWSCognitoAuthServiceBehavior.fromConfiguration(configuration),
+                AWSCognitoAuthService.fromConfiguration(configuration),
                 credentialStoreClient,
                 configuration.userPool?.let { UserContextDataProvider(context, it.poolId!!, it.appClient!!) },
                 HostedUIClient.create(context, configuration.oauth, logger),

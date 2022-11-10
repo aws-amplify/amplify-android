@@ -37,7 +37,7 @@ import java.util.UUID
 internal class AuthEnvironment internal constructor(
     val context: Context,
     val configuration: AuthConfiguration,
-    val cognitoAuthService: AWSCognitoAuthServiceBehavior,
+    val cognitoAuthService: AWSCognitoAuthService,
     val credentialStoreClient: StoreClientBehavior,
     private val userContextDataProvider: UserContextDataProvider? = null,
     val hostedUIClient: HostedUIClient?,
