@@ -9,13 +9,12 @@ import com.amplifyframework.auth.cognito.featuretest.FeatureTestCase
 import com.amplifyframework.auth.cognito.featuretest.PreConditions
 import com.amplifyframework.auth.cognito.featuretest.ResponseType
 import com.amplifyframework.auth.cognito.featuretest.generators.SerializableProvider
-import com.amplifyframework.auth.cognito.featuretest.generators.authstategenerators.AuthStateJsonGenerator
 import com.amplifyframework.auth.cognito.featuretest.generators.toJsonElement
 import kotlinx.serialization.json.JsonObject
 
 object GetCurrentUserTestCaseGenerator : SerializableProvider {
 
-    private val expectedSuccess = AuthUser("userId","username").toJsonElement()
+    private val expectedSuccess = AuthUser("userId", "username").toJsonElement()
 
     private val apiReturnValidation = ExpectationShapes.Amplify(
         AuthAPI.getCurrentUser,
@@ -57,6 +56,7 @@ object GetCurrentUserTestCaseGenerator : SerializableProvider {
         }
 
     override val serializables: List<Any> = listOf(
-        baseCase, errorCase
+        baseCase,
+        errorCase
     )
 }
