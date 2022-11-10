@@ -29,36 +29,21 @@
             "apiName": "signOut",
             "responseType": "complete",
             "response": {
-                "hostedUIError": null,
                 "globalSignOutError": null,
+                "hostedUIError": null,
                 "revokeTokenError": {
-                    "refreshToken": {
-                        "isString": true,
-                        "content": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNTE2MjM5MDIyLCJvcmlnaW5fanRpIjoib3JpZ2luX2p0aSJ9.Xqa-vjJe5wwwsqeRAdHf8kTBn_rYSkDn2lB7xj9Z1xU"
-                    },
-                    "error": {
-                        "errorType": {
-                            "isString": true,
-                            "content": "RevokeTokenException"
-                        },
-                        "errorMessage": {
-                            "isString": true,
-                            "content": "Failed to revoke token"
-                        },
-                        "recoverySuggestion": {
-                            "isString": true,
-                            "content": "See attached exception for more details. RevokeToken can be retried using the CognitoIdentityProviderClient accessible from the escape hatch."
-                        },
+                    "exception": {
+                        "errorType": "RevokeTokenException",
+                        "errorMessage": "Failed to revoke token",
+                        "recoverySuggestion": "See attached exception for more details. RevokeToken can be retried using the CognitoIdentityProviderClient accessible from the escape hatch.",
                         "cause": {
-                            "errorType": {
-                                "isString": true,
-                                "content": "NotAuthorizedException"
-                            },
-                            "errorMessage": {
-                            }
+                            "errorType": "NotAuthorizedException",
+                            "errorMessage": null
                         }
-                    }
-                }
+                    },
+                    "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNTE2MjM5MDIyLCJvcmlnaW5fanRpIjoib3JpZ2luX2p0aSJ9.Xqa-vjJe5wwwsqeRAdHf8kTBn_rYSkDn2lB7xj9Z1xU"
+                },
+                "signedOutLocally": true
             }
         }
     ]

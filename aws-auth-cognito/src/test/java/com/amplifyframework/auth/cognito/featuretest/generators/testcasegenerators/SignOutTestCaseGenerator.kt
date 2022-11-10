@@ -49,7 +49,6 @@ object SignOutTestCaseGenerator : SerializableProvider {
         NotAuthorizedException.invoke {}.toJsonElement()
     )
 
-
     private val mockedRevokeTokenSuccessResponse = MockResponse(
         CognitoType.CognitoIdentityProvider,
         "revokeToken",
@@ -125,7 +124,7 @@ object SignOutTestCaseGenerator : SerializableProvider {
                     revokeTokenError = RevokeTokenError(
                         RevokeTokenErrorData(
                             refreshToken = AuthStateJsonGenerator.dummyToken,
-                            error = NotAuthorizedException.invoke {  }
+                            error = NotAuthorizedException.invoke { }
                         )
                     )
                 ).toJsonElement()
@@ -173,7 +172,7 @@ object SignOutTestCaseGenerator : SerializableProvider {
                     globalSignOutError = GlobalSignOutError(
                         GlobalSignOutErrorData(
                             accessToken = AuthStateJsonGenerator.dummyToken,
-                            error = NotAuthorizedException.invoke {  }
+                            error = NotAuthorizedException.invoke { }
                         )
                     ),
                     revokeTokenError = RevokeTokenError(
