@@ -87,12 +87,13 @@ internal class DownloadWorkerTest {
             )
         }.coAnswers { secondArg<suspend (GetObjectResponse) -> ListenableWorker.Result>().invoke(response) }
         every { transferDB.getTransferRecordById(any()) }.answers { transferRecord }
-        every { transferStatusUpdater.updateProgress(1, any(), any(), true) }.answers { }
+        every { transferStatusUpdater.updateProgress(1, any(), any(), true, false) }.answers { }
+        every { transferStatusUpdater.updateProgress(1, any(), any(), true, true) }.answers { }
 
         val worker = DownloadWorker(s3Client, transferDB, transferStatusUpdater, context, workerParameters)
         val result = worker.doWork()
 
-        verify(atLeast = 1) { transferStatusUpdater.updateProgress(1, 1000, 1000, true) }
+        verify(atLeast = 1) { transferStatusUpdater.updateProgress(1, 1000, 1000, true, true) }
         val expectedResult =
             ListenableWorker.Result.success(workDataOf(BaseTransferWorker.OUTPUT_TRANSFER_RECORD_ID to 1))
         assertEquals(expectedResult, result)
