@@ -56,8 +56,9 @@ internal class CredentialStoreClient(configuration: AuthConfiguration, context: 
     ) {
         var capturedSuccess: Result<AmplifyCredential>? = null
         var capturedError: Exception? = null
-        var token: StateChangeListenerToken? = null
-        token = credentialStoreStateMachine.listen(
+        val token = StateChangeListenerToken()
+        credentialStoreStateMachine.listen(
+            token,
             { storeState ->
                 logger.verbose("Credential Store State Change: $storeState")
 
@@ -72,10 +73,10 @@ internal class CredentialStoreClient(configuration: AuthConfiguration, context: 
                         val success = capturedSuccess
                         val error = capturedError
                         if (success != null) {
-                            token?.let(credentialStoreStateMachine::cancel)
+                            credentialStoreStateMachine.cancel(token)
                             onSuccess(success)
                         } else if (error != null) {
-                            token?.let(credentialStoreStateMachine::cancel)
+                            credentialStoreStateMachine.cancel(token)
                             onError(error)
                         }
                     }
