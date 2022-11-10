@@ -53,6 +53,7 @@ internal class EventRecorder(
             AWS_PINPOINT_ANALYTICS_LOG_NAMESPACE.format(EventRecorder::class.java.simpleName)
         )
 ) {
+    private var isSyncInProgress = false
     private val defaultMaxSubmissionAllowed = 3
     private val defaultMaxSubmissionSize = 1024 * 100
     private val serviceDefinedMaxEventsPerBatch: Int = 100
@@ -71,14 +72,25 @@ internal class EventRecorder(
         }
     }
 
+    @Synchronized
     internal suspend fun submitEvents(): List<AnalyticsEvent> {
         return withContext(coroutineDispatcher) {
             val result = runCatching {
-                processEvents()
+                if (!isSyncInProgress) {
+                    isSyncInProgress = true
+                    processEvents()
+                } else {
+                    logger.info("Sync is already in progress, skipping")
+                    emptyList()
+                }
             }
             when {
-                result.isSuccess -> result.getOrNull() ?: emptyList()
+                result.isSuccess -> {
+                    isSyncInProgress = false
+                    result.getOrNull() ?: emptyList()
+                }
                 else -> {
+                    isSyncInProgress = false
                     logger.error("Failed to submit events ${result.exceptionOrNull()}")
                     emptyList()
                 }

@@ -43,19 +43,19 @@ internal class DownloadWorker(
 
     @OptIn(InternalApi::class)
     override suspend fun performWork(): Result {
-        downloadProgressListener = DownloadProgressListener(transferRecord, transferStatusUpdater)
         val file = File(transferRecord.file)
         val downloadedBytes = file.length()
         val getObjectRequest = GetObjectRequest {
             key = transferRecord.key
             bucket = transferRecord.bucketName
-            range = downloadedBytes.toString()
+            range = "bytes=$downloadedBytes-"
         }
         return s3.getObject(getObjectRequest) { response ->
-            val totalBytes = response.contentLength
+            val totalBytes = response.contentLength + downloadedBytes
             transferRecord.bytesTotal = totalBytes
             transferRecord.bytesCurrent = downloadedBytes
             file.parentFile?.takeIf { !it.exists() }?.mkdirs()
+            downloadProgressListener = DownloadProgressListener(transferRecord, transferStatusUpdater)
             writeToFileWithProgressUpdates(response.body as ByteStream.OneShotStream, file, downloadProgressListener)
             transferStatusUpdater.updateProgress(
                 transferRecord.id,
