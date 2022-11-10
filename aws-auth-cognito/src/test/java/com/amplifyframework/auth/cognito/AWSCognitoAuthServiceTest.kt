@@ -25,7 +25,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
-class AWSCognitoAuthServiceBehaviorTest {
+class AWSCognitoAuthServiceTest {
 
     // Robolectric needed due to internals of AWSCognitoAuthServiceBehavior initialization
     @Test
@@ -45,7 +45,7 @@ class AWSCognitoAuthServiceBehaviorTest {
             authFlowType = AuthFlowType.USER_SRP_AUTH
         )
 
-        val testObject = AWSCognitoAuthServiceBehavior.fromConfiguration(config)
+        val testObject = AWSCognitoAuthService.fromConfiguration(config)
 
         assertEquals(expectedIdentityPoolConfigRegion, testObject.cognitoIdentityClient!!.config.region)
         assertEquals(expectedUserPoolRegion, testObject.cognitoIdentityProviderClient!!.config.region)
