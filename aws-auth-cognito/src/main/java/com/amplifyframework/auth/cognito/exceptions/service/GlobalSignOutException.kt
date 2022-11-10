@@ -23,6 +23,6 @@ import com.amplifyframework.auth.exceptions.ServiceException
 open class GlobalSignOutException(cause: Throwable) : ServiceException(
     "Failed to sign out globally",
     "See attached exception for more details. GlobalSignOut can be retried using the " +
-        "CognitoIdentityProviderClient is accessible from the escape hatch.",
+        "CognitoIdentityProviderClient accessible from the escape hatch.",
     cause
 )

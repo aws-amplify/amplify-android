@@ -29,6 +29,9 @@ import java.io.BufferedWriter
 import java.io.File
 import java.io.FileOutputStream
 import java.io.FileWriter
+import kotlin.reflect.KClass
+import kotlin.reflect.KVisibility
+import kotlin.reflect.full.declaredMemberProperties
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
@@ -196,6 +199,19 @@ fun gsonBasedSerializer(value: Any): JsonElement {
     return try {
         gson.fromJson(gson.toJson(value).toString(), Map::class.java).toJsonElement()
     } catch (ex: Exception) {
-        JsonPrimitive(value.toString())
+        reflectionBasedSerializer(value)
     }
+}
+
+/**
+ * Final fallback to serialize by using reflection, traversing the object members and converting it to Map.
+ * Note that this method is similar to what Gson does. But Gson fails when there is name collision in parent and child
+ * classes.
+ */
+fun reflectionBasedSerializer(value: Any): JsonElement {
+    return (value::class as KClass<*>).declaredMemberProperties.filter {
+        it.visibility == KVisibility.PUBLIC
+    }.associate {
+        it.name to it.getter.call(value)
+    }.toMap().toJsonElement()
 }
