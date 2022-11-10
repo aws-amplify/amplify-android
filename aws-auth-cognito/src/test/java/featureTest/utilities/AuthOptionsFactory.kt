@@ -18,15 +18,13 @@ package featureTest.utilities
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.cognito.featuretest.AuthAPI
-import com.amplifyframework.auth.cognito.featuretest.AuthAPI.confirmSignIn
-import com.amplifyframework.auth.cognito.featuretest.AuthAPI.deleteUser
 import com.amplifyframework.auth.cognito.featuretest.AuthAPI.resetPassword
 import com.amplifyframework.auth.cognito.featuretest.AuthAPI.signIn
-import com.amplifyframework.auth.cognito.featuretest.AuthAPI.signOut
 import com.amplifyframework.auth.cognito.featuretest.AuthAPI.signUp
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
+import com.amplifyframework.auth.options.AuthFetchSessionOptions
 import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions
 import com.amplifyframework.auth.options.AuthResendUserAttributeConfirmationCodeOptions
 import com.amplifyframework.auth.options.AuthResetPasswordOptions
@@ -52,11 +50,11 @@ object AuthOptionsFactory {
         AuthAPI.confirmSignUp -> AuthConfirmSignUpOptions.defaults()
         AuthAPI.confirmUserAttribute -> null
         AuthAPI.deleteUser -> null
-        AuthAPI.fetchAuthSession -> null
+        AuthAPI.fetchAuthSession -> getFetchAuthSessionOptions(optionsData)
         AuthAPI.fetchDevices -> null
         AuthAPI.fetchUserAttributes -> TODO()
         AuthAPI.forgetDevice -> TODO()
-        AuthAPI.getCurrentUser -> TODO()
+        AuthAPI.getCurrentUser -> null
         AuthAPI.handleWebUISignInResponse -> TODO()
         AuthAPI.rememberDevice -> TODO()
         AuthAPI.resendSignUpCode -> AuthResendSignUpCodeOptions.defaults()
@@ -87,6 +85,13 @@ object AuthOptionsFactory {
         val globalSignOutData = (optionsData["globalSignOut"] as JsonPrimitive).booleanOrNull ?: false
         return AuthSignOutOptions.builder()
             .globalSignOut(globalSignOutData)
+            .build()
+    }
+
+    private fun getFetchAuthSessionOptions(optionsData: JsonObject): AuthFetchSessionOptions {
+        val refresh = (optionsData["forceRefresh"] as? JsonPrimitive)?.booleanOrNull ?: false
+        return AuthFetchSessionOptions.builder()
+            .forceRefresh(refresh)
             .build()
     }
 }

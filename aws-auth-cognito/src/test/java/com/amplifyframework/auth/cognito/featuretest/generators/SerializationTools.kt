@@ -17,12 +17,14 @@ package com.amplifyframework.auth.cognito.featuretest.generators
 
 import aws.sdk.kotlin.services.cognitoidentity.model.CognitoIdentityException
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.CognitoIdentityProviderException
+import aws.smithy.kotlin.runtime.time.Instant
 import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.cognito.featuretest.FeatureTestCase
 import com.amplifyframework.auth.cognito.featuretest.serializers.CognitoIdentityExceptionSerializer
 import com.amplifyframework.auth.cognito.featuretest.serializers.CognitoIdentityProviderExceptionSerializer
 import com.amplifyframework.auth.cognito.featuretest.serializers.deserializeToAuthState
 import com.amplifyframework.auth.cognito.featuretest.serializers.serialize
+import com.amplifyframework.auth.result.AuthSessionResult
 import com.amplifyframework.statemachine.codegen.states.AuthState
 import com.google.gson.Gson
 import java.io.BufferedWriter
@@ -169,11 +171,13 @@ fun Any?.toJsonElement(): JsonElement {
         is Boolean -> JsonPrimitive(this)
         is Number -> JsonPrimitive(this)
         is String -> JsonPrimitive(this)
+        is Instant -> JsonPrimitive(this.epochSeconds)
         is AuthException -> toJsonElement()
         is CognitoIdentityProviderException -> Json.encodeToJsonElement(
             CognitoIdentityProviderExceptionSerializer,
             this
         )
+        is AuthSessionResult<*> -> toJsonElement()
         is CognitoIdentityException -> Json.encodeToJsonElement(CognitoIdentityExceptionSerializer, this)
         else -> gsonBasedSerializer(this)
     }
@@ -188,6 +192,10 @@ fun AuthException.toJsonElement(): JsonElement {
     )
 
     return responseMap.toJsonElement()
+}
+
+fun AuthSessionResult<*>.toJsonElement(): JsonElement {
+    return (if (type == AuthSessionResult.Type.SUCCESS) value else error).toJsonElement()
 }
 
 /**
