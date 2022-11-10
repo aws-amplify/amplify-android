@@ -24,8 +24,13 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.newFixedThreadPoolContext
 
-internal typealias StateChangeListenerToken = UUID
 internal typealias OnSubscribedCallback = () -> Unit
+
+internal class StateChangeListenerToken private constructor(val uuid: UUID) {
+    constructor() : this(UUID.randomUUID())
+    override fun equals(other: Any?) = other is StateChangeListenerToken && other.uuid == uuid
+    override fun hashCode() = uuid.hashCode()
+}
 
 /**
  * Model, mutate and process effects of a system as a finite state automaton. It consists of:
@@ -89,12 +94,10 @@ internal open class StateMachine<StateType : State, EnvironmentType : Environmen
      * @param onSubscribe callback to invoke when subscription is complete
      * @return token that can be used to unsubscribe the listener
      */
-    fun listen(listener: (StateType) -> Unit, onSubscribe: OnSubscribedCallback?): StateChangeListenerToken {
-        val token = UUID.randomUUID()
+    fun listen(token: StateChangeListenerToken, listener: (StateType) -> Unit, onSubscribe: OnSubscribedCallback?) {
         GlobalScope.launch(stateMachineScope) {
             addSubscription(token, listener, onSubscribe)
         }
-        return token
     }
 
     /**
