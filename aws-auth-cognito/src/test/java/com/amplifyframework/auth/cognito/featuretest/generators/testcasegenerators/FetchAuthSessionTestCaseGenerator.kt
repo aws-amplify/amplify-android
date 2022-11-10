@@ -1,7 +1,5 @@
 package com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerators
 
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.NotAuthorizedException
 import com.amplifyframework.auth.AWSCredentials
 import com.amplifyframework.auth.cognito.AWSCognitoAuthSession
 import com.amplifyframework.auth.cognito.AWSCognitoUserPoolTokens
@@ -17,7 +15,6 @@ import com.amplifyframework.auth.cognito.featuretest.generators.SerializableProv
 import com.amplifyframework.auth.cognito.featuretest.generators.authstategenerators.AuthStateJsonGenerator
 import com.amplifyframework.auth.cognito.featuretest.generators.toJsonElement
 import com.amplifyframework.auth.exceptions.ConfigurationException
-import com.amplifyframework.auth.exceptions.InvalidStateException
 import com.amplifyframework.auth.exceptions.SignedOutException
 import com.amplifyframework.auth.result.AuthSessionResult
 import kotlinx.serialization.json.JsonObject
@@ -99,24 +96,26 @@ object FetchAuthSessionTestCaseGenerator : SerializableProvider {
             state = "SignedOut_IdentityPoolConfigured.json"
         ),
         api = baseCase.api,
-        validations = listOf(ExpectationShapes.Amplify(
-            AuthAPI.fetchAuthSession,
-            ResponseType.Success,
-            AWSCognitoAuthSession(
-                isSignedIn = false,
-                identityIdResult = AWSCognitoAuthSession.getIdentityIdResult("someIdentityId"),
-                awsCredentialsResult = AuthSessionResult.success(
-                    AWSCredentials.createAWSCredentials(
-                        AuthStateJsonGenerator.accessKeyId,
-                        AuthStateJsonGenerator.secretAccessKey,
-                        AuthStateJsonGenerator.dummyToken,
-                        AuthStateJsonGenerator.expiration
-                    )
-                ),
-                userSubResult = AuthSessionResult.failure(SignedOutException()),
-                userPoolTokensResult = AuthSessionResult.failure(SignedOutException())
-            ).toJsonElement()
-        ))
+        validations = listOf(
+            ExpectationShapes.Amplify(
+                AuthAPI.fetchAuthSession,
+                ResponseType.Success,
+                AWSCognitoAuthSession(
+                    isSignedIn = false,
+                    identityIdResult = AWSCognitoAuthSession.getIdentityIdResult("someIdentityId"),
+                    awsCredentialsResult = AuthSessionResult.success(
+                        AWSCredentials.createAWSCredentials(
+                            AuthStateJsonGenerator.accessKeyId,
+                            AuthStateJsonGenerator.secretAccessKey,
+                            AuthStateJsonGenerator.dummyToken,
+                            AuthStateJsonGenerator.expiration
+                        )
+                    ),
+                    userSubResult = AuthSessionResult.failure(SignedOutException()),
+                    userPoolTokensResult = AuthSessionResult.failure(SignedOutException())
+                ).toJsonElement()
+            )
+        )
     )
 
     private val userPoolCase: FeatureTestCase = baseCase.copy(
@@ -125,34 +124,36 @@ object FetchAuthSessionTestCaseGenerator : SerializableProvider {
             state = "SignedIn_UserPoolSessionEstablished.json"
         ),
         api = baseCase.api,
-        validations = listOf(ExpectationShapes.Amplify(
-            AuthAPI.fetchAuthSession,
-            ResponseType.Success,
-            AWSCognitoAuthSession(
-                isSignedIn = true,
-                identityIdResult = AuthSessionResult.failure(
-                    ConfigurationException(
-                        "Could not retrieve Identity ID",
-                        "Cognito Identity not configured. Please check amplifyconfiguration.json file."
+        validations = listOf(
+            ExpectationShapes.Amplify(
+                AuthAPI.fetchAuthSession,
+                ResponseType.Success,
+                AWSCognitoAuthSession(
+                    isSignedIn = true,
+                    identityIdResult = AuthSessionResult.failure(
+                        ConfigurationException(
+                            "Could not retrieve Identity ID",
+                            "Cognito Identity not configured. Please check amplifyconfiguration.json file."
+                        )
+                    ),
+                    awsCredentialsResult = AuthSessionResult.failure(
+                        ConfigurationException(
+                            "Could not fetch AWS Cognito credentials",
+                            "Cognito Identity not configured. Please check amplifyconfiguration.json file."
+                        )
+                    ),
+                    userSubResult = AuthSessionResult.success(AuthStateJsonGenerator.userId),
+                    userPoolTokensResult = AuthSessionResult.success(
+                        AWSCognitoUserPoolTokens(
+                            accessToken = AuthStateJsonGenerator.dummyToken,
+                            idToken = AuthStateJsonGenerator.dummyToken,
+                            refreshToken = AuthStateJsonGenerator.dummyToken
+                        )
                     )
-                ),
-                awsCredentialsResult = AuthSessionResult.failure(
-                    ConfigurationException(
-                        "Could not fetch AWS Cognito credentials",
-                        "Cognito Identity not configured. Please check amplifyconfiguration.json file."
-                    )
-                ),
-                userSubResult = AuthSessionResult.success(AuthStateJsonGenerator.userId),
-                userPoolTokensResult = AuthSessionResult.success(
-                    AWSCognitoUserPoolTokens(
-                        accessToken = AuthStateJsonGenerator.dummyToken,
-                        idToken = AuthStateJsonGenerator.dummyToken,
-                        refreshToken = AuthStateJsonGenerator.dummyToken
-                    )
-                )
-            ).toJsonElement()
-        ))
+                ).toJsonElement()
+            )
+        )
     )
 
-    override val serializables: List<Any> = listOf(baseCase,refreshSuccessCase,identityPoolCase, userPoolCase)
+    override val serializables: List<Any> = listOf(baseCase, refreshSuccessCase, identityPoolCase, userPoolCase)
 }
