@@ -20,12 +20,14 @@ import androidx.work.WorkerParameters
 import aws.sdk.kotlin.services.s3.S3Client
 import aws.sdk.kotlin.services.s3.model.GetObjectRequest
 import aws.smithy.kotlin.runtime.content.ByteStream
-import aws.smithy.kotlin.runtime.io.writeChannel
 import aws.smithy.kotlin.runtime.util.InternalApi
 import com.amplifyframework.storage.s3.transfer.DownloadProgressListener
 import com.amplifyframework.storage.s3.transfer.TransferDB
 import com.amplifyframework.storage.s3.transfer.TransferStatusUpdater
+import java.io.BufferedOutputStream
 import java.io.File
+import java.io.FileOutputStream
+import kotlinx.coroutines.runBlocking
 
 /**
  * Worker to perform download file task.
@@ -39,23 +41,26 @@ internal class DownloadWorker(
 ) : BaseTransferWorker(transferStatusUpdater, transferDB, context, workerParameters) {
 
     private lateinit var downloadProgressListener: DownloadProgressListener
-    private val defaultBufferSize = 16 * 1024
+    private val defaultBufferSize = 4096
 
     @OptIn(InternalApi::class)
     override suspend fun performWork(): Result {
-        downloadProgressListener = DownloadProgressListener(transferRecord, transferStatusUpdater)
         val file = File(transferRecord.file)
         val downloadedBytes = file.length()
+        if (downloadedBytes > 0 && transferRecord.bytesTotal == downloadedBytes) {
+            return Result.success(outputData)
+        }
         val getObjectRequest = GetObjectRequest {
             key = transferRecord.key
             bucket = transferRecord.bucketName
-            range = downloadedBytes.toString()
+            range = "bytes=$downloadedBytes-"
         }
         return s3.getObject(getObjectRequest) { response ->
-            val totalBytes = response.contentLength
+            val totalBytes = (response.body?.contentLength ?: 0L) + downloadedBytes
             transferRecord.bytesTotal = totalBytes
             transferRecord.bytesCurrent = downloadedBytes
             file.parentFile?.takeIf { !it.exists() }?.mkdirs()
+            downloadProgressListener = DownloadProgressListener(transferRecord, transferStatusUpdater)
             writeToFileWithProgressUpdates(response.body as ByteStream.OneShotStream, file, downloadProgressListener)
             transferStatusUpdater.updateProgress(
                 transferRecord.id,
@@ -68,29 +73,36 @@ internal class DownloadWorker(
     }
 
     @OptIn(InternalApi::class)
-    private suspend fun writeToFileWithProgressUpdates(
+    private fun writeToFileWithProgressUpdates(
         stream: ByteStream.OneShotStream,
         file: File,
         progressListener: DownloadProgressListener
     ) {
-        val limit = stream.contentLength ?: 0L
-        val buffer = ByteArray(defaultBufferSize)
+        var outputStream: BufferedOutputStream? = null
         val sdkByteReadChannel = stream.readFrom()
-        file.writeChannel().use { destination ->
-            val flushDst = !destination.autoFlush
-            val copied = 0L
-            while (true) {
-                val remaining = limit - copied
-                if (remaining == 0L) break
-                val readBytes =
-                    sdkByteReadChannel.readAvailable(buffer, 0, minOf(buffer.size.toLong(), remaining).toInt())
-                if (readBytes == -1) break
-                if (readBytes > 0) {
-                    progressListener.progressChanged(readBytes.toLong())
-                }
-                destination.writeFully(buffer, 0, readBytes)
-                if (flushDst && stream.readFrom().availableForRead == 0) {
-                    destination.flush()
+        runBlocking {
+            val limit = stream.contentLength ?: 0L
+            val buffer = ByteArray(defaultBufferSize)
+            val append = file.length() > 0
+            val fileOutputStream = FileOutputStream(file, append)
+            outputStream = BufferedOutputStream(fileOutputStream)
+            var totalRead = 0L
+            outputStream?.use { fileOutput ->
+                val copied = 0L
+                while (!isStopped) {
+                    val remaining = limit - copied
+                    if (remaining == 0L) break
+                    val readBytes =
+                        sdkByteReadChannel.readAvailable(buffer, 0, minOf(buffer.size.toLong(), remaining).toInt())
+                    if (readBytes == -1) break
+                    if (readBytes > 0) {
+                        totalRead += readBytes
+                        progressListener.progressChanged(readBytes.toLong())
+                    }
+                    fileOutput.write(buffer, 0, readBytes)
+                    if (sdkByteReadChannel.availableForRead == 0) {
+                        fileOutput.flush()
+                    }
                 }
             }
         }

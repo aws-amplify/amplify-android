@@ -639,7 +639,7 @@ internal class TransferDB private constructor(context: Context) {
             null,
             selection = TransferTable.COLUMN_STATE + "!=?",
             arrayOf(
-                TransferState.COMPLETED.toString()
+                TransferState.PART_COMPLETED.toString()
             ),
             null
         )
