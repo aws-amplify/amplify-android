@@ -111,7 +111,7 @@ internal class TransferWorkerObserver private constructor(
             WorkInfo.State.FAILED to TransferState.FAILED,
             WorkInfo.State.SUCCEEDED to TransferState.COMPLETED
         )
-        updateTransferState(transferRecord, workManagerToAmplifyStatesMap[workInfo.state], workInfo.id.toString())
+        updateTransferState(transferRecord.id, workManagerToAmplifyStatesMap[workInfo.state], workInfo.id.toString())
         if (workInfo.state.isFinished || transferRecord.state == TransferState.PAUSED) {
             logger.debug("remove observer for ${transferRecord.id}")
             removeObserver(transferRecord.id.toString())
@@ -139,7 +139,7 @@ internal class TransferWorkerObserver private constructor(
             }
             if (workInfo.state.isFinished) {
                 updateTransferState(
-                    transferRecord,
+                    transferRecord.id,
                     workManagerToAmplifyStatesMap[workInfo.state],
                     workInfo.id.toString()
                 )
@@ -149,21 +149,19 @@ internal class TransferWorkerObserver private constructor(
         }
     }
 
-    private fun updateTransferState(transferRecord: TransferRecord, transferState: TransferState?, workInfoId: String) {
-        transferRecord.state?.let {
+    private fun updateTransferState(transferRecordId: Int, transferState: TransferState?, workInfoId: String) {
+        transferStatusUpdater.activeTransferMap[transferRecordId]?.state?.let { state ->
             var nextState = transferState ?: TransferState.UNKNOWN
-            transferRecord.state?.let { state ->
-                if (TransferState.isPaused(state)) {
-                    nextState = TransferState.PAUSED
-                    transferStatusUpdater.removeWorkInfoId(workInfoId)
-                }
-                if (TransferState.isCancelled(state)) {
-                    nextState = TransferState.CANCELED
-                    transferStatusUpdater.removeWorkInfoId(workInfoId)
-                }
+            if (TransferState.isPaused(state)) {
+                nextState = TransferState.PAUSED
+                transferStatusUpdater.removeWorkInfoId(workInfoId)
             }
-            if (!TransferState.isInTerminalState(transferRecord.state)) {
-                transferStatusUpdater.updateTransferState(transferRecord.id, nextState)
+            if (TransferState.isCancelled(state)) {
+                nextState = TransferState.CANCELED
+                transferStatusUpdater.removeWorkInfoId(workInfoId)
+            }
+            if (!TransferState.isInTerminalState(state)) {
+                transferStatusUpdater.updateTransferState(transferRecordId, nextState)
             }
         }
     }

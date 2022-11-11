@@ -110,7 +110,7 @@ class GlobalSignOutError internal constructor(globalSignOutErrorData: GlobalSign
 
 /**
  * Revoke Token Error
- * @param revokeTokenErrorData Information about failed global sign out.
+ * @param revokeTokenErrorData Information about failed token revocation.
  */
 class RevokeTokenError internal constructor(revokeTokenErrorData: RevokeTokenErrorData) {
 

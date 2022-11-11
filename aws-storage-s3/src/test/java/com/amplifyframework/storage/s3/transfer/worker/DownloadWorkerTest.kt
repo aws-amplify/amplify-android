@@ -77,8 +77,8 @@ internal class DownloadWorkerTest {
         )
 
         val response = GetObjectResponse {
-            contentLength = 1000
-            body = ByteStream.readAsOneShotStream(createFile(1000))
+            contentLength = 10
+            body = ByteStream.readAsOneShotStream(createFile(10))
         }
         coEvery {
             s3Client.getObject(
@@ -87,12 +87,13 @@ internal class DownloadWorkerTest {
             )
         }.coAnswers { secondArg<suspend (GetObjectResponse) -> ListenableWorker.Result>().invoke(response) }
         every { transferDB.getTransferRecordById(any()) }.answers { transferRecord }
-        every { transferStatusUpdater.updateProgress(1, any(), any(), true) }.answers { }
+        every { transferStatusUpdater.updateProgress(1, any(), any(), true, false) }.answers { }
+        every { transferStatusUpdater.updateProgress(1, any(), any(), true, true) }.answers { }
 
         val worker = DownloadWorker(s3Client, transferDB, transferStatusUpdater, context, workerParameters)
         val result = worker.doWork()
 
-        verify(atLeast = 1) { transferStatusUpdater.updateProgress(1, 1000, 1000, true) }
+        verify(atLeast = 1) { transferStatusUpdater.updateProgress(1, 10 * 1024 * 1024, 10 * 1024 * 1024, true, true) }
         val expectedResult =
             ListenableWorker.Result.success(workDataOf(BaseTransferWorker.OUTPUT_TRANSFER_RECORD_ID to 1))
         assertEquals(expectedResult, result)
@@ -121,7 +122,15 @@ internal class DownloadWorkerTest {
         val worker = DownloadWorker(s3Client, transferDB, transferStatusUpdater, context, workerParameters)
         val result = worker.doWork()
 
-        verify(exactly = 0) { transferStatusUpdater.updateProgress(1, 1000, 1000, true) }
+        verify(exactly = 0) {
+            transferStatusUpdater.updateProgress(
+                1,
+                1000,
+                1000,
+                notifyListener = true,
+                updateDB = true
+            )
+        }
         val expectedResult =
             ListenableWorker.Result.failure(workDataOf(BaseTransferWorker.OUTPUT_TRANSFER_RECORD_ID to 1))
         assertEquals(expectedResult, result)

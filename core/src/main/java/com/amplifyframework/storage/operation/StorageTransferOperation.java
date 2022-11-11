@@ -236,7 +236,9 @@ public abstract class StorageTransferOperation<R, T extends StorageTransferResul
         @Override
         public void accept(@NonNull StorageException value) {
             setError(value);
-            onError.accept(value);
+            if (onError != null) {
+                onError.accept(value);
+            }
         }
     }
 }
