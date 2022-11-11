@@ -107,7 +107,7 @@ internal class TransferWorkerObserver private constructor(
             WorkInfo.State.ENQUEUED to TransferState.WAITING,
             WorkInfo.State.BLOCKED to TransferState.WAITING,
             WorkInfo.State.RUNNING to TransferState.IN_PROGRESS,
-            WorkInfo.State.CANCELLED to TransferState.CANCELED,
+            WorkInfo.State.CANCELLED to TransferState.PAUSED,
             WorkInfo.State.FAILED to TransferState.FAILED,
             WorkInfo.State.SUCCEEDED to TransferState.COMPLETED
         )
@@ -153,6 +153,7 @@ internal class TransferWorkerObserver private constructor(
         transferRecord.state?.let {
             var nextState = transferState ?: TransferState.UNKNOWN
             transferRecord.state?.let { state ->
+                logger.info("Current State is $state")
                 if (TransferState.isPaused(state)) {
                     nextState = TransferState.PAUSED
                     transferStatusUpdater.removeWorkInfoId(workInfoId)
