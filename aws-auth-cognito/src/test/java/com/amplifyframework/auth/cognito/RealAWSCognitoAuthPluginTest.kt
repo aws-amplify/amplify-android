@@ -129,7 +129,7 @@ class RealAWSCognitoAuthPluginTest {
     )
 
     private val mockCognitoIPClient = mockk<CognitoIdentityProviderClient>()
-    private var authService = mockk<AWSCognitoAuthServiceBehavior> {
+    private var authService = mockk<AWSCognitoAuthService> {
         every { cognitoIdentityProviderClient } returns mockCognitoIPClient
     }
 
