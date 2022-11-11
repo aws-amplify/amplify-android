@@ -111,7 +111,7 @@ internal abstract class BaseTransferWorker(
             }
             else -> {
                 val ex = result.exceptionOrNull()
-                logger.error("${this.javaClass.simpleName} failed with exception: $ex")
+                logger.error("${this.javaClass.simpleName} failed with exception: $ex, stacktrace: ${ex?.stackTrace}")
                 if (isRetryableError(ex)) {
                     Result.retry()
                 } else {
