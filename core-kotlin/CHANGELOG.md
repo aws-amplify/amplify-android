@@ -1,3 +1,15 @@
+## [Release 0.21.7](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.21.7)
+
+### Bug Fixes
+- **amplify-tools:** use projectDir for project.file relative paths (#2011)
+
+### Miscellaneous
+- replace jcenter with mavenCentral
+- Update build.gradle (#2101)
+- Update release_pr.yml (#2106)
+
+[See all changes between 0.21.6 and 0.21.7](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.21.6...release-kotlin_v0.21.7)
+
 ## [Release 0.21.6](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.21.6)
 
 ### Miscellaneous

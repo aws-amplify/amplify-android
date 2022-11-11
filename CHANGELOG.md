@@ -1,3 +1,15 @@
+## [Release 1.37.7](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.37.7)
+
+### Bug Fixes
+- **amplify-tools:** use projectDir for project.file relative paths (#2011)
+
+### Miscellaneous
+- replace jcenter with mavenCentral
+- Update build.gradle (#2101)
+- Update release_pr.yml (#2106)
+
+[See all changes between 1.37.6 and 1.37.7](https://github.com/aws-amplify/amplify-android/compare/release_v1.37.6...release_v1.37.7)
+
 ## [Release 1.37.6](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.37.6)
 
 ### Miscellaneous
