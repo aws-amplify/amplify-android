@@ -89,7 +89,6 @@ public final class MutationProcessorRetryTest {
     @Before
     public void setup() throws AmplifyException {
         this.context = getApplicationContext();
-        modelProvider = spy(AmplifyCliGeneratedModelProvider.singletonInstance());
         this.modelProvider = spy(AmplifyCliGeneratedModelProvider.singletonInstance());
     }
 
