@@ -49,9 +49,10 @@ import com.amplifyframework.testutils.sync.SynchronousDataStore;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
-import org.junit.Ignore;
+import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.junit.runners.MethodSorters;
 import org.mockito.ArgumentMatcher;
 import org.robolectric.RobolectricTestRunner;
 
@@ -75,6 +76,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @RunWith(RobolectricTestRunner.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public final class MutationProcessorRetryTest {
     private static final String MOCK_API_PLUGIN_NAME = "MockApiPlugin";
     private Context context;
@@ -100,8 +102,7 @@ public final class MutationProcessorRetryTest {
      */
     @SuppressWarnings("unchecked") // Varied types in Observable.fromArray(...).
     @Test
-    @Ignore("fsadfsadfsadf")
-    public void testMutationProcessorRetriesFailedRequestsBecauseOfARecoverableError()
+    public void test1MutationProcessorRetriesFailedRequestsBecauseOfARecoverableError()
             throws AmplifyException, JSONException, InterruptedException {
         CountDownLatch latch = new CountDownLatch(4);
         // Setup Mock Api
@@ -125,7 +126,7 @@ public final class MutationProcessorRetryTest {
      */
     @SuppressWarnings("unchecked") // Varied types in Observable.fromArray(...).
     @Test
-    public void testMutationProcessorMovesOnAnIrRecoverableError()
+    public void test2MutationProcessorMovesOnOnAnIrrecoverableError()
             throws AmplifyException, JSONException, InterruptedException {
         CountDownLatch latch = new CountDownLatch(4);
         // Setup Mock Api
