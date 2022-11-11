@@ -27,6 +27,7 @@ buildscript {
         classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.7.10'
         classpath "org.jetbrains.dokka:dokka-gradle-plugin:1.7.10"
         classpath 'org.jlleitschuh.gradle:ktlint-gradle:9.4.1'
+        classpath "org.gradle:test-retry-gradle-plugin:1.4.1"
     }
 }
 
@@ -179,6 +180,16 @@ subprojects { project ->
                     jdkVersion.set(8)
                 }
             }
+        }
+    }
+
+    apply plugin: 'org.gradle.test-retry'
+
+    tasks.withType(Test).configureEach {
+        retry {
+            maxRetries = 9
+            maxFailures = 100
+            failOnPassedAfterRetry = true
         }
     }
 }

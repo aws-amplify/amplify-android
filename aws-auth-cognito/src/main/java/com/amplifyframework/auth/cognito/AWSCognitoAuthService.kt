@@ -20,12 +20,12 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.CognitoIdentityProviderCl
 import aws.smithy.kotlin.runtime.http.endpoints.Endpoint
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 
-interface AWSCognitoAuthServiceBehavior {
+interface AWSCognitoAuthService {
     var cognitoIdentityProviderClient: CognitoIdentityProviderClient?
     var cognitoIdentityClient: CognitoIdentityClient?
 
     companion object {
-        internal fun fromConfiguration(configuration: AuthConfiguration): AWSCognitoAuthServiceBehavior {
+        internal fun fromConfiguration(configuration: AuthConfiguration): AWSCognitoAuthService {
             val cognitoIdentityProviderClient = configuration.userPool?.let { it ->
 
                 CognitoIdentityProviderClient {
@@ -40,7 +40,7 @@ interface AWSCognitoAuthServiceBehavior {
                 CognitoIdentityClient { this.region = it.region }
             }
 
-            return object : AWSCognitoAuthServiceBehavior {
+            return object : AWSCognitoAuthService {
                 override var cognitoIdentityProviderClient = cognitoIdentityProviderClient
                 override var cognitoIdentityClient = cognitoIdentityClient
             }
