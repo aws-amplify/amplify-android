@@ -521,7 +521,7 @@ internal class RealAWSCognitoAuthPlugin(
                 }
             },
             {
-                val signInData = when (options.authFlowType) {
+                val signInData = when (options.authFlowType ?: configuration.authFlowType) {
                     AuthFlowType.USER_SRP_AUTH -> {
                         SignInData.SRPSignInData(username, password, options.metadata)
                     }
