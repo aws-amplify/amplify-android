@@ -14,6 +14,7 @@
  */
 package com.amplifyframework.auth.cognito.options
 
+import androidx.core.util.ObjectsCompat
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.options.AuthSignUpOptions
 import com.amplifyframework.util.Immutable
@@ -21,7 +22,7 @@ import com.amplifyframework.util.Immutable
 /**
  * Cognito extension of sign up options to add the platform specific fields.
  */
-data class AWSCognitoAuthSignUpOptions
+class AWSCognitoAuthSignUpOptions
 /**
  * Advanced options for signing in.
  * @param userAttributes Additional user attributes which should be associated with this user on registration
@@ -29,7 +30,7 @@ data class AWSCognitoAuthSignUpOptions
  * @param clientMetadata Additional custom attributes to be sent to the service such as information about the client
  */
 internal constructor(
-    val attributes: List<AuthUserAttribute>,
+    userAttributes: List<AuthUserAttribute>,
     /**
      * Get a map of custom key/values to be sent as part of the sign up process.
      * @return a map of custom key/values to be sent as part of the sign up process
@@ -40,7 +41,7 @@ internal constructor(
      * @return a map of additional custom attributes to be sent to the service such as information about the client
      */
     val clientMetadata: Map<String, String>
-) : AuthSignUpOptions(attributes) {
+) : AuthSignUpOptions(userAttributes) {
 
     /**
      * The builder for this class.
@@ -114,5 +115,32 @@ internal constructor(
         inline operator fun invoke(block: CognitoBuilder.() -> Unit) =
             CognitoBuilder()
                 .apply(block).build()
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass || other !is AWSCognitoAuthSignUpOptions) return false
+        if (!super.equals(other)) return false
+
+        if (validationData != other.validationData) return false
+        if (clientMetadata != other.clientMetadata) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return ObjectsCompat.hash(
+            userAttributes,
+            validationData,
+            clientMetadata
+        )
+    }
+
+    override fun toString(): String {
+        return "AuthSignUpOptions{" +
+            "userAttributes=" + userAttributes +
+            "validationData=" + validationData +
+            "clientMetaData=" + clientMetadata +
+            '}'
     }
 }
