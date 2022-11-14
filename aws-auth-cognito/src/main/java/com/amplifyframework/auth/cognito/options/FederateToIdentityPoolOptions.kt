@@ -28,11 +28,11 @@ data class FederateToIdentityPoolOptions internal constructor(val developerProvi
 
         /**
          * Set the developerProvidedIdentityId field for the object being built.
-         * @param _developerProvidedIdentityId Provide identity id for federation to Cognito Identity Provider
+         * @param developerProvidedIdentityId Provide identity id for federation to Cognito Identity Provider
          * @return The builder object to continue building.
          */
-        fun developerProvidedIdentityId(_developerProvidedIdentityId: String): Builder {
-            this.developerProvidedIdentityId = _developerProvidedIdentityId
+        fun developerProvidedIdentityId(developerProvidedIdentityId: String): Builder {
+            this.developerProvidedIdentityId = developerProvidedIdentityId
             return this
         }
 

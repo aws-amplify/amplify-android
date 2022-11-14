@@ -51,14 +51,14 @@ internal data class AuthConfiguration internal constructor(
                     ?.optJSONObject("OAuth")?.let {
                         OauthConfiguration.fromJson(it)
                     },
-                authFlowType = getAutheticationFlowType(
+                authFlowType = getAuthenticationFlowType(
                     pluginJson.optJSONObject("Auth")
                         ?.optJSONObject(configName)
                         ?.optString("authenticationFlowType")
                 )
             )
         }
-        private fun getAutheticationFlowType(authType: String?): AuthFlowType {
+        private fun getAuthenticationFlowType(authType: String?): AuthFlowType {
             return if (!authType.isNullOrEmpty() && AuthFlowType.values().any { it.name == authType })
                 AuthFlowType.valueOf(authType)
             else
