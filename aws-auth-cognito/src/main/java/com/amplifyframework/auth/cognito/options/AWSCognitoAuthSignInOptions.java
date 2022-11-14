@@ -16,6 +16,7 @@
 package com.amplifyframework.auth.cognito.options;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.auth.options.AuthSignInOptions;
@@ -61,7 +62,7 @@ public final class AWSCognitoAuthSignInOptions extends AuthSignInOptions {
      *
      * @return authFlowType to be sent to the signIn api
      */
-    @NonNull
+    @Nullable
     public AuthFlowType getAuthFlowType() {
         return authFlowType;
     }
