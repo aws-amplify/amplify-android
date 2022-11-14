@@ -40,8 +40,8 @@ public final class AWSCognitoAuthSignInOptions extends AuthSignInOptions {
      * @param authFlowType AuthFlowType to be used by signIn API
      */
     protected AWSCognitoAuthSignInOptions(
-            Map<String, String> metadata,
-            AuthFlowType authFlowType
+            @NonNull Map<String, String> metadata,
+            @NonNull AuthFlowType authFlowType
     ) {
         this.metadata = metadata;
         this.authFlowType = authFlowType;
