@@ -15,15 +15,13 @@
 
 package com.amplifyframework.auth.cognito.options
 
-import androidx.core.util.ObjectsCompat
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions
-import com.amplifyframework.util.Immutable
 
 /**
  * Cognito extension of confirm sign in options to add the platform specific fields.
  */
-open class AWSCognitoAuthConfirmSignInOptions protected constructor(
+data class AWSCognitoAuthConfirmSignInOptions internal constructor(
     /**
      * Get custom attributes to be sent to the service such as information about the client.
      * @return custom attributes to be sent to the service such as information about the client
@@ -33,7 +31,7 @@ open class AWSCognitoAuthConfirmSignInOptions protected constructor(
      * Get additional user attributes which should be associated with this user on confirmSignIn.
      * @return additional user attributes which should be associated with this user on confirmSignIn
      */
-    var userAttributes: List<AuthUserAttribute>
+    val userAttributes: List<AuthUserAttribute>
 ) : AuthConfirmSignInOptions() {
 
     companion object {
@@ -41,42 +39,20 @@ open class AWSCognitoAuthConfirmSignInOptions protected constructor(
          * Get a builder object.
          * @return a builder object.
          */
+        @JvmStatic
         fun builder(): CognitoBuilder {
             return CognitoBuilder()
         }
-    }
 
-    override fun hashCode(): Int {
-        return ObjectsCompat.hash(
-            metadata,
-            userAttributes
-        )
-    }
-
-    override fun equals(obj: Any?): Boolean {
-        return if (this === obj) {
-            true
-        } else if (obj == null || javaClass != obj.javaClass || obj !is AWSCognitoAuthConfirmSignInOptions) {
-            false
-        } else {
-            ObjectsCompat.equals(metadata, obj.metadata) &&
-                ObjectsCompat.equals(userAttributes, obj.userAttributes)
-        }
-    }
-
-    override fun toString(): String {
-        return "AWSCognitoAuthConfirmSignInOptions{" +
-            "userAttributes=" + userAttributes +
-            ", metadata=" + metadata +
-            '}'
+        inline operator fun invoke(block: CognitoBuilder.() -> Unit) = CognitoBuilder().apply(block).build()
     }
 
     /**
      * The builder for this class.
      */
     class CognitoBuilder : Builder<CognitoBuilder?>() {
-        private val metadata: MutableMap<String, String> = mutableMapOf()
-        private val userAttributes: MutableList<AuthUserAttribute> = mutableListOf()
+        private var metadata: Map<String, String> = mapOf()
+        private var userAttributes: List<AuthUserAttribute> = listOf()
 
         /**
          * Returns the type of builder this is to support proper flow with it being an extended class.
@@ -88,36 +64,23 @@ open class AWSCognitoAuthConfirmSignInOptions protected constructor(
 
         /**
          * Set the metadata field for the object being built.
-         * @param _metadata Custom user metadata to be sent with the sign in request.
+         * @param metadata Custom user metadata to be sent with the sign in request.
          * @return The builder object to continue building.
          */
-        fun metadata(_metadata: Map<String, String>): CognitoBuilder {
-            this.metadata.clear()
-            this.metadata.putAll(_metadata)
-            return getThis()
-        }
+        fun metadata(metadata: Map<String, String>) = apply { this.metadata = metadata }
 
         /**
          * Set the userAttributes field for the object being built.
-         * @param _userAttributes A list of additional user attributes which should be
+         * @param userAttributes A list of additional user attributes which should be
          * * associated with this user on confirmSignIn.
          * @return the instance of the builder.
          */
-        fun userAttributes(_userAttributes: List<AuthUserAttribute>): CognitoBuilder {
-            this.userAttributes.clear()
-            this.userAttributes.addAll(_userAttributes)
-            return getThis()
-        }
+        fun userAttributes(userAttributes: List<AuthUserAttribute>) = apply { this.userAttributes = userAttributes }
 
         /**
          * Construct and return the object with the values set in the builder.
          * @return a new instance of AWSCognitoAuthConfirmSignInOptions with the values specified in the builder.
          */
-        override fun build(): AuthConfirmSignInOptions {
-            return AWSCognitoAuthConfirmSignInOptions(
-                Immutable.of(metadata),
-                Immutable.of(userAttributes)
-            )
-        }
+        override fun build() = AWSCognitoAuthConfirmSignInOptions(metadata, userAttributes)
     }
 }

@@ -16,7 +16,6 @@
 package com.amplifyframework.auth.cognito.options
 
 import com.amplifyframework.auth.options.AuthUpdateUserAttributesOptions
-import com.amplifyframework.util.Immutable
 
 /**
  * Cognito extension of update user attributes options to add the platform specific fields.
@@ -30,11 +29,22 @@ internal constructor(
     val metadata: Map<String, String>
 ) : AuthUpdateUserAttributesOptions() {
 
+    companion object {
+        /**
+         * Get a builder object.
+         * @return a builder object.
+         */
+        @JvmStatic
+        fun builder(): CognitoBuilder {
+            return CognitoBuilder()
+        }
+    }
+
     /**
      * The builder for this class.
      */
     class CognitoBuilder : Builder<CognitoBuilder>() {
-        private val metadata: MutableMap<String, String> = HashMap()
+        private var metadata: Map<String, String> = mapOf()
 
         /**
          * Returns the type of builder this is to support proper flow with it being an extended class.
@@ -49,30 +59,12 @@ internal constructor(
          * @param metadata Custom user metadata to be sent with the update user attributes request.
          * @return The builder object to continue building.
          */
-        fun metadata(metadata: Map<String, String>): CognitoBuilder {
-            this.metadata.clear()
-            this.metadata.putAll(metadata)
-            return getThis()
-        }
+        fun metadata(metadata: Map<String, String>) = apply { this.metadata = metadata }
 
         /**
          * Construct and return the object with the values set in the builder.
          * @return a new instance of AWSCognitoAuthUpdateUserAttributesOptions with the values specified in the builder.
          */
-        override fun build(): AuthUpdateUserAttributesOptions {
-            return AWSCognitoAuthUpdateUserAttributesOptions(
-                Immutable.of(metadata)
-            )
-        }
-    }
-
-    companion object {
-        /**
-         * Get a builder object.
-         * @return a builder object.
-         */
-        fun builder(): CognitoBuilder {
-            return CognitoBuilder()
-        }
+        override fun build() = AWSCognitoAuthUpdateUserAttributesOptions(metadata)
     }
 }

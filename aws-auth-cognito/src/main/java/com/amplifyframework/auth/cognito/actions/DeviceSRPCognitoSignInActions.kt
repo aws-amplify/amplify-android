@@ -80,7 +80,10 @@ internal object DeviceSRPCognitoSignInActions : DeviceSRPSignInActions {
                         }
 
                         DeviceSRPSignInEvent(
-                            DeviceSRPSignInEvent.EventType.RespondDevicePasswordVerifier(challengeParams, event.metadata)
+                            DeviceSRPSignInEvent.EventType.RespondDevicePasswordVerifier(
+                                challengeParams,
+                                event.metadata
+                            )
                         )
                     } ?: throw ServiceException(
                         "Challenge params are empty.",

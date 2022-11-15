@@ -44,7 +44,7 @@ internal constructor(val metadata: Map<String, String>) : AuthResendSignUpCodeOp
      * The builder for this class.
      */
     class CognitoBuilder : Builder<CognitoBuilder>() {
-        var metadata: Map<String, String> = mapOf()
+        private var metadata: Map<String, String> = mapOf()
 
         /**
          * Returns the type of builder this is to support proper flow with it being an extended class.
