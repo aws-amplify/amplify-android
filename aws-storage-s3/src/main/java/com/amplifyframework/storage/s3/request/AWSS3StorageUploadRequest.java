@@ -70,6 +70,20 @@ public final class AWSS3StorageUploadRequest<L> {
     }
 
     /**
+     * Constructs a new AWSS3StorageUploadRequest.
+     * @param key key for item to upload
+     */
+    public AWSS3StorageUploadRequest(@NonNull String key) {
+        this.key = key;
+        this.local = null;
+        this.accessLevel = null;
+        this.targetIdentityId = null;
+        this.contentType = null;
+        this.serverSideEncryption = null;
+        this.metadata = new HashMap<>();
+    }
+
+    /**
      * Gets the storage key.
      * @return key
      */

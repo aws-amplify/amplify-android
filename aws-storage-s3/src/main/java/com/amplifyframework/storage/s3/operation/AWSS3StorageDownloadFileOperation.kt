@@ -14,7 +14,6 @@
  */
 package com.amplifyframework.storage.s3.operation
 
-import android.util.Log
 import com.amplifyframework.auth.AuthCredentialsProvider
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
@@ -53,14 +52,7 @@ class AWSS3StorageDownloadFileOperation @JvmOverloads internal constructor(
 ) : StorageDownloadFileOperation<AWSS3StorageDownloadFileRequest>(request, transferId, onProgress, onSuccess, onError) {
 
     init {
-        transferObserver?.let {
-            val listener = DownloadTransferListener()
-            Log.d(
-                "AWSS3StorageDownloadFileOperation",
-                "Setting up new transfer listener ${listener.hashCode()} for operation ${hashCode()}"
-            )
-            it.setTransferListener(listener)
-        }
+        transferObserver?.setTransferListener(DownloadTransferListener())
     }
 
     constructor(

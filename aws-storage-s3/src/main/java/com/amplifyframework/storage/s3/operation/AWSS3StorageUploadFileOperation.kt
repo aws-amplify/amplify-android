@@ -74,6 +74,10 @@ class AWSS3StorageUploadFileOperation @JvmOverloads internal constructor(
         onError
     )
 
+    init {
+        transferObserver?.setTransferListener(UploadTransferListener())
+    }
+
     override fun start() {
         // Only start if it hasn't already been started
         if (transferObserver != null || request == null) {
