@@ -76,6 +76,7 @@ public abstract class StorageUploadOperation<R, T extends StorageUploadResult>
      * @return the request object
      */
     @Override
+    @Nullable
     public R getRequest() {
         return super.getRequest();
     }

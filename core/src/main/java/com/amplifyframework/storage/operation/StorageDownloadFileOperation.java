@@ -75,6 +75,7 @@ public abstract class StorageDownloadFileOperation<R> extends StorageTransferOpe
      * @return the request object
      */
     @Override
+    @Nullable
     public R getRequest() {
         return super.getRequest();
     }
