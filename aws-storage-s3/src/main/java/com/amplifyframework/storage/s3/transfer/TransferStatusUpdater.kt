@@ -110,7 +110,15 @@ internal class TransferStatusUpdater private constructor(
             }
 
             transferStatusListenerMap[transferRecord.id]?.forEach { listener ->
-                mainHandler.post { listener.onStateChanged(transferRecord.id, newState) }
+                mainHandler.post {
+                    transferRecord.key?.let { key ->
+                        listener.onStateChanged(
+                            transferRecord.id,
+                            newState,
+                            key
+                        )
+                    }
+                }
             }
 
             if (TransferState.isInTerminalState(newState)) {
