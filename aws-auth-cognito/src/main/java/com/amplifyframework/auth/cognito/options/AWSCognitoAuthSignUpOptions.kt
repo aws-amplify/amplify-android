@@ -15,7 +15,6 @@
 
 package com.amplifyframework.auth.cognito.options
 
-import androidx.core.util.ObjectsCompat
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.options.AuthSignUpOptions
 
@@ -42,7 +41,7 @@ internal constructor(
      * @return a map of additional custom attributes to be sent to the service such as information about the client
      */
     val clientMetadata: Map<String, String>
-) : AuthSignUpOptions(userAttributes) {
+) : AuthSignUpOptions(attributes) {
 
     companion object {
         /**
