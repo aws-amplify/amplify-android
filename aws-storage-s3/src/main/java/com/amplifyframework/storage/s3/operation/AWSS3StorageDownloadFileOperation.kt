@@ -80,18 +80,19 @@ class AWSS3StorageDownloadFileOperation @JvmOverloads internal constructor(
 
     override fun start() {
         // Only start if it hasn't already been started
-        if (transferObserver != null || request == null) {
+        if (transferObserver != null) {
             return
         }
+        val downloadRequest = request ?: return
         executorService.submit(
             Runnable {
                 awsS3StoragePluginConfiguration.getAWSS3PluginPrefixResolver(authCredentialsProvider).resolvePrefix(
-                    request.accessLevel,
-                    request.targetIdentityId,
+                    downloadRequest.accessLevel,
+                    downloadRequest.targetIdentityId,
                     Consumer { prefix: String ->
                         try {
-                            val serviceKey = prefix + request.key
-                            this.file = request.local
+                            val serviceKey = prefix + downloadRequest.key
+                            this.file = downloadRequest.local
                             transferObserver = storageService.downloadToFile(transferId, serviceKey, file)
                             transferObserver?.setTransferListener(DownloadTransferListener())
                         } catch (exception: Exception) {

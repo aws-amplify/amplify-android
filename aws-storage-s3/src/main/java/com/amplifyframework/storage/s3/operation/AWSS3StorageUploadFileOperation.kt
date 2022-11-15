@@ -80,26 +80,27 @@ class AWSS3StorageUploadFileOperation @JvmOverloads internal constructor(
 
     override fun start() {
         // Only start if it hasn't already been started
-        if (transferObserver != null || request == null) {
+        if (transferObserver != null) {
             return
         }
+        val uploadRequest = request ?: return
         executorService.submit(
             Runnable {
                 awsS3StoragePluginConfiguration.getAWSS3PluginPrefixResolver(authCredentialsProvider).resolvePrefix(
-                    request.accessLevel,
-                    request.targetIdentityId,
+                    uploadRequest.accessLevel,
+                    uploadRequest.targetIdentityId,
                     Consumer { prefix: String ->
                         try {
-                            val serviceKey = prefix + request.key
+                            val serviceKey = prefix + uploadRequest.key
                             // Grab the file to upload...
-                            val file = request.local
+                            val file = uploadRequest.local
 
                             // Set up the metadata
                             val objectMetadata = ObjectMetadata()
-                            objectMetadata.userMetadata = request.metadata
-                            objectMetadata.metaData[ObjectMetadata.CONTENT_TYPE] = request.contentType
+                            objectMetadata.userMetadata = uploadRequest.metadata
+                            objectMetadata.metaData[ObjectMetadata.CONTENT_TYPE] = uploadRequest.contentType
                             val storageServerSideEncryption =
-                                request.serverSideEncryption
+                                uploadRequest.serverSideEncryption
                             if (ServerSideEncryption.NONE != storageServerSideEncryption) {
                                 objectMetadata.metaData[ObjectMetadata.SERVER_SIDE_ENCRYPTION] =
                                     storageServerSideEncryption.getName()
@@ -185,8 +186,10 @@ class AWSS3StorageUploadFileOperation @JvmOverloads internal constructor(
 
     override fun setOnSuccess(onSuccess: Consumer<StorageUploadFileResult>?) {
         super.setOnSuccess(onSuccess)
-        if (transferState == TransferState.COMPLETED) {
-            onSuccess?.accept(StorageUploadFileResult.fromKey(request.key))
+        request?.let {
+            if (transferState == TransferState.COMPLETED) {
+                onSuccess?.accept(StorageUploadFileResult.fromKey(it.key))
+            }
         }
     }
 
