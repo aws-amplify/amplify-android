@@ -198,7 +198,8 @@ internal class EventRecorder(
         return !(
             responseCode.equals("ValidationException", ignoreCase = true) ||
                 responseCode.equals("SerializationException", ignoreCase = true) ||
-                responseCode.equals("BadRequestException", ignoreCase = true)
+                responseCode.equals("BadRequestException", ignoreCase = true) ||
+                responseCode.startsWith("Number of attributes")
             )
     }
 
