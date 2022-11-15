@@ -49,8 +49,8 @@ class EncryptedKeyValueRepositoryTest {
 
     @Before
     fun setup() {
-        Mockito.`when`(repository.getSharedPreferences()).thenReturn(mockPrefs)
-        Mockito.`when`(mockPrefs.edit()).thenReturn(mockPrefsEditor)
+        Mockito.`when`(repository.sharedPreferences).thenReturn(mockPrefs)
+        Mockito.`when`(repository.editor).thenReturn(mockPrefsEditor)
     }
 
     @Test
