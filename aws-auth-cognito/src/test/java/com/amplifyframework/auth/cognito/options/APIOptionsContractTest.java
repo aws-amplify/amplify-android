@@ -27,12 +27,16 @@ import java.util.HashMap;
 import java.util.List;
 
 public class APIOptionsContractTest {
-    @Test
-    void testCognitoOptions() {
-        HashMap<String, String> metadata = new HashMap<String, String>() {{
-            put("testKey", "testValue");
-        }};
 
+    @SuppressWarnings("serial")
+    HashMap<String, String> metadata = new HashMap<String, String>() {
+        {
+            put("testKey", "testValue");
+        }
+    };
+
+    @Test
+    public void testCognitoOptions() {
         AWSCognitoAuthResendUserAttributeConfirmationCodeOptions
                 resendUserAttributeConfirmationCodeOptions =
                 AWSCognitoAuthResendUserAttributeConfirmationCodeOptions.builder()
