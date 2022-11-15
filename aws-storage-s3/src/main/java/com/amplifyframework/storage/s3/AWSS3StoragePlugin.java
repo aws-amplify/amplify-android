@@ -25,6 +25,7 @@ import com.amplifyframework.core.NoOpConsumer;
 import com.amplifyframework.storage.StorageAccessLevel;
 import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.StoragePlugin;
+import com.amplifyframework.storage.TransferState;
 import com.amplifyframework.storage.operation.StorageDownloadFileOperation;
 import com.amplifyframework.storage.operation.StorageGetUrlOperation;
 import com.amplifyframework.storage.operation.StorageListOperation;
@@ -520,7 +521,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
                             transferRecord.getKey(),
                             transferRecord.getFile(),
                             null,
-                            transferRecord.getState());
+                            transferRecord.getState() != null ? transferRecord.getState() : TransferState.UNKNOWN);
                     TransferType transferType = transferRecord.getType();
                     switch (Objects.requireNonNull(transferType)) {
                         case UPLOAD:
