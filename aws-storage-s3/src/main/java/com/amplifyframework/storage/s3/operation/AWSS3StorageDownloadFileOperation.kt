@@ -180,7 +180,7 @@ class AWSS3StorageDownloadFileOperation @JvmOverloads internal constructor(
     }
 
     inner class DownloadTransferListener : TransferListener {
-        override fun onStateChanged(transferId: Int, state: TransferState) {
+        override fun onStateChanged(transferId: Int, state: TransferState, key: String) {
             Amplify.Hub.publish(
                 HubChannel.STORAGE,
                 HubEvent.create(StorageChannelEventName.DOWNLOAD_STATE, state.name)

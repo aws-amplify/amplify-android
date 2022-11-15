@@ -191,14 +191,14 @@ class AWSS3StorageUploadFileOperation @JvmOverloads internal constructor(
     }
 
     private inner class UploadTransferListener : TransferListener {
-        override fun onStateChanged(transferId: Int, state: TransferState) {
+        override fun onStateChanged(transferId: Int, state: TransferState, key: String) {
             Amplify.Hub.publish(
                 HubChannel.STORAGE,
                 HubEvent.create(StorageChannelEventName.UPLOAD_STATE, state.name)
             )
             when (state) {
                 TransferState.COMPLETED -> {
-                    onSuccess?.accept(StorageUploadFileResult.fromKey(request.key))
+                    onSuccess?.accept(StorageUploadFileResult.fromKey(key))
                     return
                 }
                 TransferState.FAILED -> {}

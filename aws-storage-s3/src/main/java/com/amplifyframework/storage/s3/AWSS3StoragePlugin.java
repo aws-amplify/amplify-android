@@ -525,8 +525,6 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
                     switch (Objects.requireNonNull(transferType)) {
                         case UPLOAD:
                             if (transferRecord.getFile().startsWith(TransferStatusUpdater.TEMP_FILE_PREFIX)) {
-                                AWSS3StorageUploadRequest<InputStream> request =
-                                    new AWSS3StorageUploadRequest<>(Objects.requireNonNull(transferRecord.getKey()));
                                 AWSS3StorageUploadInputStreamOperation operation =
                                     new AWSS3StorageUploadInputStreamOperation(
                                         transferId,
@@ -534,13 +532,10 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
                                         executorService,
                                         authCredentialsProvider,
                                         awsS3StoragePluginConfiguration,
-                                        request,
+                                        null,
                                         transferObserver);
                                 onReceived.accept(operation);
                             } else {
-                                File file = new File(transferRecord.getFile());
-                                AWSS3StorageUploadRequest<File> request =
-                                    new AWSS3StorageUploadRequest<>(Objects.requireNonNull(transferRecord.getKey()));
                                 AWSS3StorageUploadFileOperation operation =
                                     new AWSS3StorageUploadFileOperation(
                                         transferId,
@@ -548,7 +543,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
                                         executorService,
                                         authCredentialsProvider,
                                         awsS3StoragePluginConfiguration,
-                                        request,
+                                        null,
                                         transferObserver);
                                 onReceived.accept(operation);
                             }

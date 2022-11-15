@@ -179,7 +179,7 @@ public final class StorageComponentTest {
         // callback, as part of our "happy path" test.
         doAnswer(invocation -> {
             TransferListener listener = invocation.getArgument(0);
-            listener.onStateChanged(0, TransferState.COMPLETED);
+            listener.onStateChanged(0, TransferState.COMPLETED, fromRemoteKey);
             return null;
         }).when(observer)
                 .setTransferListener(any(TransferListener.class));
@@ -256,7 +256,7 @@ public final class StorageComponentTest {
 
         doAnswer(invocation -> {
             TransferListener listener = invocation.getArgument(0);
-            listener.onStateChanged(0, TransferState.COMPLETED);
+            listener.onStateChanged(0, TransferState.COMPLETED, toRemoteKey);
             return null;
         }).when(observer)
                 .setTransferListener(any(com.amplifyframework.storage.s3.transfer.TransferListener.class));
@@ -297,7 +297,7 @@ public final class StorageComponentTest {
 
         doAnswer(invocation -> {
             TransferListener listener = invocation.getArgument(0);
-            listener.onStateChanged(0, TransferState.COMPLETED);
+            listener.onStateChanged(0, TransferState.COMPLETED, toRemoteKey);
             return null;
         }).when(observer)
                 .setTransferListener(any(TransferListener.class));

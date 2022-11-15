@@ -39,13 +39,13 @@ import com.amplifyframework.testutils.random.RandomTempFile;
 import com.amplifyframework.testutils.sync.SynchronousAuth;
 import com.amplifyframework.testutils.sync.SynchronousStorage;
 
-import java.io.FileInputStream;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
@@ -123,6 +123,21 @@ public final class AWSS3StorageUploadTest {
         File uploadFile = new RandomTempFile(SMALL_FILE_SIZE);
         String fileName = uploadFile.getName();
         synchronousStorage.uploadFile(fileName, uploadFile, options);
+    }
+
+    /**
+     * Tests that small file (single-part) uploads using input stream successfully.
+     *
+     * @throws Exception if upload fails
+     */
+    @Test
+    public void testUploadSmallFileStream() throws Exception {
+        File uploadFile = new RandomTempFile(4 * 1024 * 1024);
+        String fileName = uploadFile.getName();
+        StorageUploadInputStreamOptions options = StorageUploadInputStreamOptions.builder()
+            .accessLevel(TESTING_ACCESS_LEVEL)
+            .build();
+        synchronousStorage.uploadInputStream(fileName, new FileInputStream(uploadFile), options);
     }
 
     /**
@@ -266,13 +281,13 @@ public final class AWSS3StorageUploadTest {
                     opContainer.get().clearAllListeners();
                     storageCategory.getTransfer(transferId.get(),
                         operation -> {
-                        StorageUploadFileOperation<?> getOp = (StorageUploadFileOperation<?>) operation;
-                        getOp.resume();
-                        resumed.countDown();
-                        getOp.setOnSuccess( result -> {
-                            completed.countDown();
-                        });
-                    }, errorContainer::set);
+                            StorageUploadFileOperation<?> getOp = (StorageUploadFileOperation<?>) operation;
+                            getOp.resume();
+                            resumed.countDown();
+                            getOp.setOnSuccess(result -> {
+                                completed.countDown();
+                            });
+                        }, errorContainer::set);
                 }
             }
         });
@@ -288,7 +303,7 @@ public final class AWSS3StorageUploadTest {
                     opContainer.get().pause();
                 }
             },
-            result -> {},
+            result -> { },
             errorContainer::set
         );
         opContainer.set(op);
@@ -331,7 +346,7 @@ public final class AWSS3StorageUploadTest {
                             StorageUploadFileOperation<?> getOp = (StorageUploadFileOperation<?>) operation;
                             getOp.resume();
                             resumed.countDown();
-                            getOp.setOnSuccess( result -> {
+                            getOp.setOnSuccess(result -> {
                                 completed.countDown();
                             });
                         }, errorContainer::set);
@@ -352,7 +367,7 @@ public final class AWSS3StorageUploadTest {
                     opContainer.get().pause();
                 }
             },
-            result -> {},
+            result -> { },
             errorContainer::set
         );
         opContainer.set(op);
