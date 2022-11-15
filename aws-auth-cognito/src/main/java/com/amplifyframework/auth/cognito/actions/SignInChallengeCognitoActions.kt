@@ -59,12 +59,15 @@ internal object SignInChallengeCognitoActions : SignInChallengeActions {
             secretHash?.let { challengeResponses[KEY_SECRET_HASH] = it }
 
             val encodedContextData = username?.let { getUserContextData(it) }
+            val pinpointEndpointId = getPinpointEndpointId()
 
             val response = cognitoAuthService.cognitoIdentityProviderClient?.respondToAuthChallenge {
                 clientId = configuration.userPool?.appClient
                 challengeName = ChallengeNameType.fromValue(challenge.challengeName)
                 this.challengeResponses = challengeResponses
                 session = challenge.session
+//                clientMetadata = event.metadata
+                pinpointEndpointId?.let { analyticsMetadata { analyticsEndpointId = it } }
                 encodedContextData?.let { this.userContextData { encodedData = it } }
             }
             response?.let {

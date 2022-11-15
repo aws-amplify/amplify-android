@@ -71,9 +71,7 @@ internal object FetchAuthSessionCognitoActions : FetchAuthSessionActions {
                     authFlow = AuthFlowType.RefreshToken
                     clientId = configuration.userPool?.appClient
                     this.authParameters = authParameters
-                    pinpointEndpointId?.let {
-                        this.analyticsMetadata = AnalyticsMetadataType.invoke { analyticsEndpointId = it }
-                    }
+                    pinpointEndpointId?.let { analyticsMetadata { analyticsEndpointId = it } }
                     encodedContextData?.let { userContextData { encodedData = it } }
                 }
 

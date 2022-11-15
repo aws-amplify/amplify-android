@@ -20,8 +20,8 @@ import java.util.Date
 
 internal class DeviceSRPSignInEvent(val eventType: EventType, override val time: Date? = null) : StateMachineEvent {
     sealed class EventType {
-        data class RespondDeviceSRPChallenge(val username: String) : EventType()
-        data class RespondDevicePasswordVerifier(val challengeParameters: Map<String, String>) : EventType()
+        data class RespondDeviceSRPChallenge(val username: String, val metadata: Map<String, String>) : EventType()
+        data class RespondDevicePasswordVerifier(val challengeParameters: Map<String, String>, val metadata: Map<String, String>) : EventType()
         data class FinalizeSignIn(val id: String = "") : EventType()
         data class ThrowPasswordVerifiedError(val exception: Exception) : EventType()
         data class ThrowAuthError(val exception: Exception) : EventType()

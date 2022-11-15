@@ -16,6 +16,7 @@
 package com.amplifyframework.auth.cognito.actions
 
 import aws.sdk.kotlin.services.cognitoidentityprovider.initiateAuth
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.AnalyticsMetadataType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AuthFlowType
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.auth.cognito.AuthEnvironment
@@ -46,12 +47,14 @@ internal object MigrateAuthCognitoActions : MigrateAuthActions {
                 secretHash?.let { authParams[KEY_SECRET_HASH] = it }
 
                 val encodedContextData = getUserContextData(event.username)
+                val pinpointEndpointId = getPinpointEndpointId()
 
                 val response = cognitoAuthService.cognitoIdentityProviderClient?.initiateAuth {
                     authFlow = AuthFlowType.UserPasswordAuth
                     clientId = configuration.userPool?.appClient
                     authParameters = authParams
                     clientMetadata = event.metadata
+                    pinpointEndpointId?.let { analyticsMetadata { analyticsEndpointId = it } }
                     encodedContextData?.let { userContextData { encodedData = it } }
                 }
 

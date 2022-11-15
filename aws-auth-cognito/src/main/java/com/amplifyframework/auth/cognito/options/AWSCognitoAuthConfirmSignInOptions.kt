@@ -36,6 +36,16 @@ open class AWSCognitoAuthConfirmSignInOptions protected constructor(
     var userAttributes: List<AuthUserAttribute>
 ) : AuthConfirmSignInOptions() {
 
+    companion object {
+        /**
+         * Get a builder object.
+         * @return a builder object.
+         */
+        fun builder(): CognitoBuilder {
+            return CognitoBuilder()
+        }
+    }
+
     override fun hashCode(): Int {
         return ObjectsCompat.hash(
             metadata,
@@ -65,8 +75,8 @@ open class AWSCognitoAuthConfirmSignInOptions protected constructor(
      * The builder for this class.
      */
     class CognitoBuilder : Builder<CognitoBuilder?>() {
-        private val metadata: MutableMap<String, String>
-        private val userAttributes: MutableList<AuthUserAttribute>
+        private val metadata: MutableMap<String, String> = mutableMapOf()
+        private val userAttributes: MutableList<AuthUserAttribute> = mutableListOf()
 
         /**
          * Returns the type of builder this is to support proper flow with it being an extended class.
@@ -109,33 +119,5 @@ open class AWSCognitoAuthConfirmSignInOptions protected constructor(
                 Immutable.of(userAttributes)
             )
         }
-
-        /**
-         * Constructor for the builder.
-         */
-        init {
-            metadata = HashMap()
-            userAttributes = ArrayList()
-        }
-    }
-
-    companion object {
-        /**
-         * Get a builder object.
-         * @return a builder object.
-         */
-        fun builder(): CognitoBuilder {
-            return CognitoBuilder()
-        }
-    }
-
-    /**
-     * Advanced options for confirming sign in.
-     * @param metadata Additional custom attributes to be sent to the service such as information about the client
-     * @param userAttributes A list of additional user attributes which should be
-     * associated with this user on confirmSignIn.
-     */
-    init {
-        userAttributes = userAttributes
     }
 }
