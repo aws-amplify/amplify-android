@@ -57,6 +57,7 @@ internal class EventRecorder(
     private val defaultMaxSubmissionAllowed = 3
     private val defaultMaxSubmissionSize = 1024 * 100
     private val serviceDefinedMaxEventsPerBatch: Int = 100
+    private val badRequestCode = 400
     internal suspend fun recordEvent(pinpointEvent: PinpointEvent): Uri? {
         return withContext(coroutineDispatcher) {
             val result = runCatching {
@@ -178,7 +179,7 @@ internal class EventRecorder(
                         logger.info("Successfully submitted event with eventId ${pinpointEvent.eventId}")
                         eventIdToDelete.add(pinpointEvent)
                     } else {
-                        if (isRetryableError(message)) {
+                        if (isRetryableError(message, pinpointEventResponse.statusCode)) {
                             logger.error(
                                 "Failed to deliver event with ${pinpointEvent.eventId}," +
                                     " will be re-delivered later"
@@ -194,13 +195,13 @@ internal class EventRecorder(
         return eventIdToDelete
     }
 
-    private fun isRetryableError(responseCode: String): Boolean {
+    private fun isRetryableError(message: String, code: Int): Boolean {
         return !(
-            responseCode.equals("ValidationException", ignoreCase = true) ||
-                responseCode.equals("SerializationException", ignoreCase = true) ||
-                responseCode.equals("BadRequestException", ignoreCase = true) ||
-                responseCode.startsWith("Number of attributes")
-            )
+            message.equals("ValidationException", ignoreCase = true) ||
+            message.equals("SerializationException", ignoreCase = true) ||
+            message.equals("BadRequestException", ignoreCase = true) ||
+            code == badRequestCode
+        )
     }
 
     private fun processEndpointResponse(endpointResponse: EndpointItemResponse?) {
