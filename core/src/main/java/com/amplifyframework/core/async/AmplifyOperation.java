@@ -62,6 +62,9 @@ public abstract class AmplifyOperation<R> {
 
     /**
      * Gets the request object.
+     * Request will be null if the operation is returned by
+     * {@link com.amplifyframework.storage.s3.AWSS3StoragePlugin} getTransfer api
+     *
      * @return the request object
      */
     public R getRequest() {
