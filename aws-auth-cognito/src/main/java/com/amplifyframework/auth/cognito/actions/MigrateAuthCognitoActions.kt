@@ -46,12 +46,14 @@ internal object MigrateAuthCognitoActions : MigrateAuthActions {
                 secretHash?.let { authParams[KEY_SECRET_HASH] = it }
 
                 val encodedContextData = getUserContextData(event.username)
+                val pinpointEndpointId = getPinpointEndpointId()
 
                 val response = cognitoAuthService.cognitoIdentityProviderClient?.initiateAuth {
                     authFlow = AuthFlowType.UserPasswordAuth
                     clientId = configuration.userPool?.appClient
                     authParameters = authParams
                     clientMetadata = event.metadata
+                    pinpointEndpointId?.let { analyticsMetadata { analyticsEndpointId = it } }
                     encodedContextData?.let { userContextData { encodedData = it } }
                 }
 

@@ -79,9 +79,7 @@ public final class AWSCognitoAuthSignInOptions extends AuthSignInOptions {
 
     @Override
     public int hashCode() {
-        return ObjectsCompat.hash(
-                getMetadata()
-        );
+        return ObjectsCompat.hash(getMetadata(), getAuthFlowType());
     }
 
     @Override
@@ -92,14 +90,16 @@ public final class AWSCognitoAuthSignInOptions extends AuthSignInOptions {
             return false;
         } else {
             AWSCognitoAuthSignInOptions authSignInOptions = (AWSCognitoAuthSignInOptions) obj;
-            return ObjectsCompat.equals(getMetadata(), authSignInOptions.getMetadata());
+            return ObjectsCompat.equals(getMetadata(), authSignInOptions.getMetadata()) &&
+                    ObjectsCompat.equals(getAuthFlowType(), authSignInOptions.getAuthFlowType());
         }
     }
 
     @Override
     public String toString() {
         return "AWSCognitoAuthSignInOptions{" +
-                "metadata=" + metadata +
+                "metadata=" + getMetadata() +
+                ", authFlowType=" + getAuthFlowType() +
                 '}';
     }
 
@@ -107,7 +107,7 @@ public final class AWSCognitoAuthSignInOptions extends AuthSignInOptions {
      * The builder for this class.
      */
     public static final class CognitoBuilder extends Builder<CognitoBuilder> {
-        private Map<String, String> metadata;
+        private final Map<String, String> metadata;
         private AuthFlowType authFlowType;
 
         /**
@@ -161,10 +161,7 @@ public final class AWSCognitoAuthSignInOptions extends AuthSignInOptions {
          */
         @NonNull
         public AWSCognitoAuthSignInOptions build() {
-            return new AWSCognitoAuthSignInOptions(
-                    Immutable.of(metadata),
-                    authFlowType
-            );
+            return new AWSCognitoAuthSignInOptions(Immutable.of(metadata), authFlowType);
         }
     }
 }

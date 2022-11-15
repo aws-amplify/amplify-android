@@ -52,6 +52,7 @@ internal object DeviceSRPCognitoSignInActions : DeviceSRPSignInActions {
             val evt = try {
                 val encodedContextData = getUserContextData(username)
                 val deviceMetadata = getDeviceMetadata(username)
+                val pinpointEndpointId = getPinpointEndpointId()
 
                 srpHelper = SRPHelper(deviceMetadata?.deviceSecret ?: "")
 
@@ -65,6 +66,8 @@ internal object DeviceSRPCognitoSignInActions : DeviceSRPSignInActions {
                                 KEY_DEVICE_KEY to (deviceMetadata?.deviceKey ?: ""),
                                 KEY_SRP_A to srpHelper.getPublicA()
                             )
+                            clientMetadata = event.metadata
+                            pinpointEndpointId?.let { analyticsMetadata { analyticsEndpointId = it } }
                             encodedContextData?.let { userContextData { encodedData = it } }
                         }
                     )
@@ -77,7 +80,10 @@ internal object DeviceSRPCognitoSignInActions : DeviceSRPSignInActions {
                         }
 
                         DeviceSRPSignInEvent(
-                            DeviceSRPSignInEvent.EventType.RespondDevicePasswordVerifier(challengeParams)
+                            DeviceSRPSignInEvent.EventType.RespondDevicePasswordVerifier(
+                                challengeParams,
+                                event.metadata
+                            )
                         )
                     } ?: throw ServiceException(
                         "Challenge params are empty.",
@@ -115,6 +121,7 @@ internal object DeviceSRPCognitoSignInActions : DeviceSRPSignInActions {
                 val deviceGroupKey = params.getValue(KEY_DEVICE_GROUP_KEY)
 
                 val encodedContextData = getUserContextData(username)
+                val pinpointEndpointId = getPinpointEndpointId()
 
                 srpHelper.setUserPoolParams(deviceKey, deviceGroupKey)
 
@@ -123,6 +130,7 @@ internal object DeviceSRPCognitoSignInActions : DeviceSRPSignInActions {
                         RespondToAuthChallengeRequest.invoke {
                             challengeName = ChallengeNameType.DevicePasswordVerifier
                             clientId = configuration.userPool?.appClient
+
                             challengeResponses = mapOf(
                                 KEY_USERNAME to username,
                                 KEY_PASSWORD_CLAIM_SECRET_BLOCK to secretBlock,
@@ -130,6 +138,8 @@ internal object DeviceSRPCognitoSignInActions : DeviceSRPSignInActions {
                                 KEY_PASSWORD_CLAIM_SIGNATURE to srpHelper.getSignature(salt, srpB, secretBlock),
                                 KEY_DEVICE_KEY to deviceKey
                             )
+                            clientMetadata = event.metadata
+                            pinpointEndpointId?.let { analyticsMetadata { analyticsEndpointId = it } }
                             encodedContextData?.let { userContextData { encodedData = it } }
                         }
                     )
