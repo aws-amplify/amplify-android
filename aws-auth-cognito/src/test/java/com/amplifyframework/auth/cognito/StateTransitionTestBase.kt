@@ -344,7 +344,7 @@ open class StateTransitionTestBase {
         Mockito.`when`(mockSRPActions.initiateSRPAuthAction(MockitoHelper.anyObject()))
             .thenReturn(
                 Action { dispatcher, _ ->
-                    dispatcher.send(SRPEvent(SRPEvent.EventType.RespondPasswordVerifier(mapOf())))
+                    dispatcher.send(SRPEvent(SRPEvent.EventType.RespondPasswordVerifier(mapOf(), mapOf())))
                 }
             )
 

@@ -16,7 +16,6 @@
 package com.amplifyframework.auth.cognito.actions
 
 import aws.sdk.kotlin.services.cognitoidentityprovider.initiateAuth
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.AnalyticsMetadataType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AuthFlowType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
 import aws.sdk.kotlin.services.cognitoidentityprovider.respondToAuthChallenge
@@ -71,9 +70,8 @@ internal object SRPCognitoActions : SRPActions {
                     authFlow = AuthFlowType.UserSrpAuth
                     clientId = configuration.userPool?.appClient
                     authParameters = authParams
-                    pinpointEndpointId?.let {
-                        this.analyticsMetadata = AnalyticsMetadataType.invoke { analyticsEndpointId = it }
-                    }
+                    clientMetadata = event.metadata
+                    pinpointEndpointId?.let { analyticsMetadata { analyticsEndpointId = it } }
                     encodedContextData?.let { userContextData { encodedData = it } }
                 }
 
@@ -83,7 +81,7 @@ internal object SRPCognitoActions : SRPActions {
                             params.plus(KEY_DEVICE_KEY to it)
                         } ?: params
 
-                        SRPEvent(SRPEvent.EventType.RespondPasswordVerifier(challengeParams))
+                        SRPEvent(SRPEvent.EventType.RespondPasswordVerifier(challengeParams, event.metadata))
                     } ?: throw Exception("Auth challenge parameters are empty.")
                     else -> throw Exception("Not yet implemented.")
                 }
@@ -126,9 +124,8 @@ internal object SRPCognitoActions : SRPActions {
                     authFlow = AuthFlowType.CustomAuth
                     clientId = configuration.userPool?.appClient
                     authParameters = authParams
-                    pinpointEndpointId?.let {
-                        this.analyticsMetadata = AnalyticsMetadataType.invoke { analyticsEndpointId = it }
-                    }
+                    clientMetadata = event.metadata
+                    pinpointEndpointId?.let { analyticsMetadata { analyticsEndpointId = it } }
                     encodedContextData?.let { userContextData { encodedData = it } }
                 }
 
@@ -139,7 +136,7 @@ internal object SRPCognitoActions : SRPActions {
                                 params.plus(KEY_DEVICE_KEY to it)
                             } ?: params
 
-                            SRPEvent(SRPEvent.EventType.RespondPasswordVerifier(challengeParams))
+                            SRPEvent(SRPEvent.EventType.RespondPasswordVerifier(challengeParams, event.metadata))
                         } ?: throw ServiceException(
                             "Auth challenge parameters are empty.",
                             AmplifyException.TODO_RECOVERY_SUGGESTION
@@ -189,11 +186,14 @@ internal object SRPCognitoActions : SRPActions {
                 challengeParams[KEY_DEVICE_KEY] = deviceKey
 
                 val encodedContextData = getUserContextData(username)
+                val pinpointEndpointId = getPinpointEndpointId()
 
                 val response = cognitoAuthService.cognitoIdentityProviderClient?.respondToAuthChallenge {
                     challengeName = ChallengeNameType.PasswordVerifier
                     clientId = configuration.userPool.appClient
                     challengeResponses = challengeParams
+                    clientMetadata = event.metadata
+                    pinpointEndpointId?.let { analyticsMetadata { analyticsEndpointId = it } }
                     encodedContextData?.let { userContextData { encodedData = it } }
                 }
                 if (response != null) {
