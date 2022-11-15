@@ -31,12 +31,13 @@ internal class SRPEvent(val eventType: EventType, override val time: Date? = nul
             val password: String,
             val metadata: Map<String, String>
         ) : EventType()
-        data class RespondPasswordVerifier(val challengeParameters: Map<String, String>) :
-            EventType()
+        data class RespondPasswordVerifier(
+            val challengeParameters: Map<String, String>,
+            val metadata: Map<String, String>
+        ) : EventType()
 
         data class ThrowAuthError(val exception: Exception) : EventType()
         data class CancelSRPSignIn(val id: String = "") : EventType()
-        data class RespondNextAuthChallenge(val id: String = "") : EventType()
         data class ThrowPasswordVerifierError(val exception: Exception) : EventType()
         data class Reset(val id: String = "") : EventType()
     }

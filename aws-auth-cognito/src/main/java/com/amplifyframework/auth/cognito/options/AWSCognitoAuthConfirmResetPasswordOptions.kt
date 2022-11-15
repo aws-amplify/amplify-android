@@ -21,9 +21,7 @@ import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
  * Cognito extension of confirm reset password options to add the platform specific fields.
  */
 data class AWSCognitoAuthConfirmResetPasswordOptions
-
-internal constructor(val metadata: Map<String, String>) :
-    AuthConfirmResetPasswordOptions() {
+internal constructor(val metadata: Map<String, String>) : AuthConfirmResetPasswordOptions() {
 
     companion object {
         /**
@@ -45,7 +43,7 @@ internal constructor(val metadata: Map<String, String>) :
         /**
          * Custom attributes to be sent to the service such as information about the client.
          */
-        var metadata: Map<String, String> = mapOf()
+        private var metadata: Map<String, String> = mapOf()
 
         /**
          * Returns the type of builder this is to support proper flow with it being an extended class.

@@ -16,12 +16,11 @@
 package com.amplifyframework.auth.cognito.options
 
 import com.amplifyframework.auth.options.AuthResendUserAttributeConfirmationCodeOptions
-import com.amplifyframework.util.Immutable
 
 /**
  * Cognito extension of resend user attributes confirmation code options to add the platform specific fields.
  */
-data class AWSAuthResendUserAttributeConfirmationCodeOptions
+data class AWSCognitoAuthResendUserAttributeConfirmationCodeOptions
 /**
  * Advanced options for update user attributes.
  * @param metadata Additional custom attributes to be sent to the service such as information about the client
@@ -30,11 +29,24 @@ internal constructor(
     val metadata: Map<String, String>
 ) : AuthResendUserAttributeConfirmationCodeOptions() {
 
+    companion object {
+        /**
+         * Get a builder object.
+         * @return a builder object.
+         */
+        @JvmStatic
+        fun builder(): CognitoBuilder {
+            return CognitoBuilder()
+        }
+
+        inline operator fun invoke(block: CognitoBuilder.() -> Unit) = CognitoBuilder().apply(block).build()
+    }
+
     /**
      * The builder for this class.
      */
     class CognitoBuilder : Builder<CognitoBuilder>() {
-        private val metadata: MutableMap<String, String> = HashMap()
+        private var metadata: Map<String, String> = mapOf()
 
         /**
          * Returns the type of builder this is to support proper flow with it being an extended class.
@@ -49,30 +61,12 @@ internal constructor(
          * @param metadata Custom user metadata to be sent with the update user attributes request.
          * @return The builder object to continue building.
          */
-        fun metadata(metadata: Map<String, String>): CognitoBuilder {
-            this.metadata.clear()
-            this.metadata.putAll(metadata)
-            return getThis()
-        }
+        fun metadata(metadata: Map<String, String>) = apply { this.metadata = metadata }
 
         /**
          * Construct and return the object with the values set in the builder.
          * @return a new instance of AWSAuthResendUserAttributeConfirmationCodeOptions with the values specified in the builder.
          */
-        override fun build(): AuthResendUserAttributeConfirmationCodeOptions {
-            return AWSAuthResendUserAttributeConfirmationCodeOptions(
-                Immutable.of(metadata)
-            )
-        }
-    }
-
-    companion object {
-        /**
-         * Get a builder object.
-         * @return a builder object.
-         */
-        fun builder(): CognitoBuilder {
-            return CognitoBuilder()
-        }
+        override fun build() = AWSCognitoAuthResendUserAttributeConfirmationCodeOptions(metadata)
     }
 }
