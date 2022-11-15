@@ -36,6 +36,8 @@ internal constructor(val metadata: Map<String, String>) : AuthUpdateUserAttribut
         fun builder(): CognitoBuilder {
             return CognitoBuilder()
         }
+
+        inline operator fun invoke(block: CognitoBuilder.() -> Unit) = CognitoBuilder().apply(block).build()
     }
 
     /**

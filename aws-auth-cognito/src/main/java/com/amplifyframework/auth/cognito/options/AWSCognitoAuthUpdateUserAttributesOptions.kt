@@ -38,6 +38,8 @@ internal constructor(
         fun builder(): CognitoBuilder {
             return CognitoBuilder()
         }
+
+        inline operator fun invoke(block: CognitoBuilder.() -> Unit) = CognitoBuilder().apply(block).build()
     }
 
     /**

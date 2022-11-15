@@ -29,12 +29,15 @@ import java.util.List;
 public class APIOptionsContractTest {
 
     @SuppressWarnings("serial")
-    HashMap<String, String> metadata = new HashMap<String, String>() {
+    private HashMap<String, String> metadata = new HashMap<String, String>() {
         {
             put("testKey", "testValue");
         }
     };
 
+    /**
+     * test java cognito auth options builders.
+     */
     @Test
     public void testCognitoOptions() {
         AWSCognitoAuthResendUserAttributeConfirmationCodeOptions
