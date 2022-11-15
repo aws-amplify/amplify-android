@@ -114,10 +114,13 @@ internal object TransferOperations {
         workManager: WorkManager
     ): Boolean {
         if (!TransferState.isInTerminalState(transferRecord.state)) {
-            val nextState: TransferState = TransferState.PENDING_CANCEL
+            var nextState: TransferState = TransferState.PENDING_CANCEL
             if (TransferState.isPaused(transferRecord.state)) {
                 if (transferRecord.isMultipart == 1) {
                     abortMultipartUploadRequest(transferRecord, pluginKey, workManager)
+                } else {
+                    // transfer is paused so directly mark it as canceled
+                    nextState = TransferState.CANCELED
                 }
             } else {
                 workManager.cancelUniqueWork(transferRecord.id.toString())

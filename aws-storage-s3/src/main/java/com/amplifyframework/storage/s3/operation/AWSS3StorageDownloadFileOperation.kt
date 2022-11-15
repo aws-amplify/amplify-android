@@ -14,7 +14,6 @@
  */
 package com.amplifyframework.storage.s3.operation
 
-import android.util.Log
 import com.amplifyframework.auth.AuthCredentialsProvider
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
@@ -53,14 +52,7 @@ class AWSS3StorageDownloadFileOperation @JvmOverloads internal constructor(
 ) : StorageDownloadFileOperation<AWSS3StorageDownloadFileRequest>(request, transferId, onProgress, onSuccess, onError) {
 
     init {
-        transferObserver?.let {
-            val listener = DownloadTransferListener()
-            Log.d(
-                "AWSS3StorageDownloadFileOperation",
-                "Setting up new transfer listener ${listener.hashCode()} for operation ${hashCode()}"
-            )
-            it.setTransferListener(listener)
-        }
+        transferObserver?.setTransferListener(DownloadTransferListener())
     }
 
     constructor(
@@ -88,18 +80,19 @@ class AWSS3StorageDownloadFileOperation @JvmOverloads internal constructor(
 
     override fun start() {
         // Only start if it hasn't already been started
-        if (transferObserver != null || request == null) {
+        if (transferObserver != null) {
             return
         }
+        val downloadRequest = request ?: return
         executorService.submit(
             Runnable {
                 awsS3StoragePluginConfiguration.getAWSS3PluginPrefixResolver(authCredentialsProvider).resolvePrefix(
-                    request.accessLevel,
-                    request.targetIdentityId,
+                    downloadRequest.accessLevel,
+                    downloadRequest.targetIdentityId,
                     Consumer { prefix: String ->
                         try {
-                            val serviceKey = prefix + request.key
-                            this.file = request.local
+                            val serviceKey = prefix + downloadRequest.key
+                            this.file = downloadRequest.local
                             transferObserver = storageService.downloadToFile(transferId, serviceKey, file)
                             transferObserver?.setTransferListener(DownloadTransferListener())
                         } catch (exception: Exception) {
@@ -188,7 +181,7 @@ class AWSS3StorageDownloadFileOperation @JvmOverloads internal constructor(
     }
 
     inner class DownloadTransferListener : TransferListener {
-        override fun onStateChanged(transferId: Int, state: TransferState) {
+        override fun onStateChanged(transferId: Int, state: TransferState, key: String) {
             Amplify.Hub.publish(
                 HubChannel.STORAGE,
                 HubEvent.create(StorageChannelEventName.DOWNLOAD_STATE, state.name)

@@ -81,29 +81,33 @@ class AWSS3StorageUploadInputStreamOperation @JvmOverloads internal constructor(
         onError
     )
 
+    init {
+        transferObserver?.setTransferListener(UploadTransferListener())
+    }
+
     override fun start() {
         // Only start if it hasn't already been started
-
-        // Only start if it hasn't already been started
-        if (transferObserver != null || request == null) {
+        if (transferObserver != null) {
             return
         }
+
+        val uploadRequest = request ?: return
         executorService.submit(
             Runnable {
                 awsS3StoragePluginConfiguration.getAWSS3PluginPrefixResolver(authCredentialsProvider).resolvePrefix(
-                    request.accessLevel,
-                    request.targetIdentityId,
+                    uploadRequest.accessLevel,
+                    uploadRequest.targetIdentityId,
                     Consumer { prefix: String ->
                         try {
-                            val serviceKey = prefix + request.key
+                            val serviceKey = prefix + uploadRequest.key
                             // Grab the inputStream to upload...
-                            val inputStream = request.local
+                            val inputStream = uploadRequest.local
                             // Set up the metadata
                             val objectMetadata = ObjectMetadata()
-                            objectMetadata.userMetadata = request.metadata
-                            objectMetadata.metaData[ObjectMetadata.CONTENT_TYPE] = request.contentType
+                            objectMetadata.userMetadata = uploadRequest.metadata
+                            objectMetadata.metaData[ObjectMetadata.CONTENT_TYPE] = uploadRequest.contentType
                             val storageServerSideEncryption =
-                                request.serverSideEncryption
+                                uploadRequest.serverSideEncryption
                             if (ServerSideEncryption.NONE != storageServerSideEncryption) {
                                 objectMetadata.metaData[ObjectMetadata.SERVER_SIDE_ENCRYPTION] =
                                     storageServerSideEncryption.getName()
@@ -194,20 +198,22 @@ class AWSS3StorageUploadInputStreamOperation @JvmOverloads internal constructor(
 
     override fun setOnSuccess(onSuccess: Consumer<StorageUploadInputStreamResult>?) {
         super.setOnSuccess(onSuccess)
-        if (transferState == TransferState.COMPLETED) {
-            onSuccess?.accept(StorageUploadInputStreamResult.fromKey(request.key))
+        request?.let {
+            if (transferState == TransferState.COMPLETED) {
+                onSuccess?.accept(StorageUploadInputStreamResult.fromKey(it.key))
+            }
         }
     }
 
     private inner class UploadTransferListener : TransferListener {
-        override fun onStateChanged(transferId: Int, state: TransferState) {
+        override fun onStateChanged(transferId: Int, state: TransferState, key: String) {
             Amplify.Hub.publish(
                 HubChannel.STORAGE,
                 HubEvent.create(StorageChannelEventName.UPLOAD_STATE, state.name)
             )
             when (state) {
                 TransferState.COMPLETED -> {
-                    onSuccess?.accept(StorageUploadInputStreamResult.fromKey(request.key))
+                    onSuccess?.accept(StorageUploadInputStreamResult.fromKey(key))
                     return
                 }
                 TransferState.FAILED -> {

@@ -34,15 +34,15 @@ internal object CredentialStoreCognitoActions : CredentialStoreActions {
                     // migrate credentials
                     credentialStore.saveCredential(credentials)
                     legacyCredentialStore.deleteCredential()
+                }
 
-                    // migrate device data
-                    if (credentials is AmplifyCredential.UserPoolTypeCredential) {
-                        val username = credentials.signedInData.username
-                        val deviceMetaData = legacyCredentialStore.retrieveDeviceMetadata(username)
-                        if (deviceMetaData != DeviceMetadata.Empty) {
-                            credentialStore.saveDeviceMetadata(username, deviceMetaData)
-                            legacyCredentialStore.deleteDeviceKeyCredential(username)
-                        }
+                // migrate device data
+                val lastAuthUserId = legacyCredentialStore.retrieveLastAuthUserId()
+                lastAuthUserId?.let {
+                    val deviceMetaData = legacyCredentialStore.retrieveDeviceMetadata(lastAuthUserId)
+                    if (deviceMetaData != DeviceMetadata.Empty) {
+                        credentialStore.saveDeviceMetadata(lastAuthUserId, deviceMetaData)
+                        legacyCredentialStore.deleteDeviceKeyCredential(lastAuthUserId)
                     }
                 }
 
