@@ -49,11 +49,14 @@ internal object SignInCustomCognitoActions : CustomSignInActions {
                 val encodedContextData = getUserContextData(event.username)
                 val deviceMetadata = getDeviceMetadata(event.username)
                 deviceMetadata?.let { authParams[KEY_DEVICE_KEY] = it.deviceKey }
+                val pinpointEndpointId = getPinpointEndpointId()
 
                 val initiateAuthResponse = cognitoAuthService.cognitoIdentityProviderClient?.initiateAuth {
                     authFlow = AuthFlowType.CustomAuth
                     clientId = configuration.userPool?.appClient
                     authParameters = authParams
+                    clientMetadata = event.metadata
+                    pinpointEndpointId?.let { analyticsMetadata { analyticsEndpointId = it } }
                     encodedContextData?.let { userContextData { encodedData = it } }
                 }
 
