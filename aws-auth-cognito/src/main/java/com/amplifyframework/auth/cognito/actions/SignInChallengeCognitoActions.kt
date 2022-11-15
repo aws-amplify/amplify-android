@@ -47,9 +47,6 @@ internal object SignInChallengeCognitoActions : SignInChallengeActions {
             getChallengeResponseKey(challenge.challengeName)?.also { responseKey ->
                 challengeResponses[responseKey] = event.answer
             }
-            event.options.forEach { (key, value) ->
-                challengeResponses[key] = value
-            }
 
             val secretHash = AuthHelper.getSecretHash(
                 username,
@@ -66,7 +63,7 @@ internal object SignInChallengeCognitoActions : SignInChallengeActions {
                 challengeName = ChallengeNameType.fromValue(challenge.challengeName)
                 this.challengeResponses = challengeResponses
                 session = challenge.session
-//                clientMetadata = event.metadata
+                clientMetadata = event.metadata
                 pinpointEndpointId?.let { analyticsMetadata { analyticsEndpointId = it } }
                 encodedContextData?.let { this.userContextData { encodedData = it } }
             }
