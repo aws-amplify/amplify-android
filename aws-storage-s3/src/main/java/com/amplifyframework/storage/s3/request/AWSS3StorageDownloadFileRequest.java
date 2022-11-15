@@ -34,6 +34,9 @@ public final class AWSS3StorageDownloadFileRequest {
 
     /**
      * Constructs a new AWSS3StorageDownloadFileRequest.
+     * Although this has public access, it is intended for internal use and should not be used directly by host
+     * applications. The behavior of this may change without warning.
+     *
      * @param key key for item to download
      * @param local Target file for the downloaded file to be saved to
      * @param accessLevel Storage access level

@@ -71,7 +71,7 @@ internal data class TransferObserver @JvmOverloads constructor(
             totalBytes = bytesTotal
         }
 
-        override fun onStateChanged(id: Int, state: TransferState) {
+        override fun onStateChanged(id: Int, state: TransferState, key: String) {
             transferState = state
         }
     }

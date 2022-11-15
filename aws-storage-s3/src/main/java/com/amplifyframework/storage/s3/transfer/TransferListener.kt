@@ -27,8 +27,9 @@ internal interface TransferListener {
      *
      * @param id The id of the transfer record.
      * @param state The new state of the transfer.
+     * @param key The key of the transfer
      */
-    fun onStateChanged(id: Int, state: TransferState)
+    fun onStateChanged(id: Int, state: TransferState, key: String)
 
     /**
      * Called when more bytes are transferred.
