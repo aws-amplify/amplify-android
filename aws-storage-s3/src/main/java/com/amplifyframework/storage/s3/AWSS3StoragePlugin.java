@@ -25,6 +25,7 @@ import com.amplifyframework.core.NoOpConsumer;
 import com.amplifyframework.storage.StorageAccessLevel;
 import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.StoragePlugin;
+import com.amplifyframework.storage.TransferState;
 import com.amplifyframework.storage.operation.StorageDownloadFileOperation;
 import com.amplifyframework.storage.operation.StorageGetUrlOperation;
 import com.amplifyframework.storage.operation.StorageListOperation;
@@ -509,61 +510,67 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
         @NonNull Consumer<StorageTransferOperation<?, ? extends StorageTransferResult>> onReceived,
         @NonNull Consumer<StorageException> onError) {
         executorService.submit(() -> {
-            TransferRecord transferRecord = storageService.getTransfer(transferId);
-            if (transferRecord != null) {
-                TransferObserver transferObserver =
-                    new TransferObserver(
-                        transferRecord.getId(),
-                        storageService.getTransferManager().getTransferStatusUpdater(),
-                        transferRecord.getBucketName(),
-                        transferRecord.getKey(),
-                        transferRecord.getFile(),
-                        null,
-                        transferRecord.getState());
-                TransferType transferType = transferRecord.getType();
-                switch (Objects.requireNonNull(transferType)) {
-                    case UPLOAD:
-                        if (transferRecord.getFile().startsWith(TransferStatusUpdater.TEMP_FILE_PREFIX)) {
-                            AWSS3StorageUploadInputStreamOperation operation =
-                                new AWSS3StorageUploadInputStreamOperation(
-                                    transferId,
-                                    storageService,
-                                    executorService,
-                                    authCredentialsProvider,
-                                    awsS3StoragePluginConfiguration,
-                                    null,
-                                    transferObserver);
-                            onReceived.accept(operation);
-                        } else {
-                            AWSS3StorageUploadFileOperation operation =
-                                new AWSS3StorageUploadFileOperation(
-                                    transferId,
-                                    storageService,
-                                    executorService,
-                                    authCredentialsProvider,
-                                    awsS3StoragePluginConfiguration,
-                                    null,
-                                    transferObserver);
-                            onReceived.accept(operation);
-                        }
-                        break;
-                    case DOWNLOAD:
-                        AWSS3StorageDownloadFileOperation
-                            downloadFileOperation = new AWSS3StorageDownloadFileOperation(
-                            transferId,
-                            new File(transferRecord.getFile()),
-                            storageService,
-                            executorService,
-                            authCredentialsProvider,
-                            awsS3StoragePluginConfiguration,
+            try {
+                TransferRecord transferRecord = storageService.getTransfer(transferId);
+                if (transferRecord != null) {
+                    TransferObserver transferObserver =
+                        new TransferObserver(
+                            transferRecord.getId(),
+                            storageService.getTransferManager().getTransferStatusUpdater(),
+                            transferRecord.getBucketName(),
+                            transferRecord.getKey(),
+                            transferRecord.getFile(),
                             null,
-                            transferObserver);
-                        onReceived.accept(downloadFileOperation);
-                        break;
-                    default:
+                            transferRecord.getState() != null ? transferRecord.getState() : TransferState.UNKNOWN);
+                    TransferType transferType = transferRecord.getType();
+                    switch (Objects.requireNonNull(transferType)) {
+                        case UPLOAD:
+                            if (transferRecord.getFile().startsWith(TransferStatusUpdater.TEMP_FILE_PREFIX)) {
+                                AWSS3StorageUploadInputStreamOperation operation =
+                                    new AWSS3StorageUploadInputStreamOperation(
+                                        transferId,
+                                        storageService,
+                                        executorService,
+                                        authCredentialsProvider,
+                                        awsS3StoragePluginConfiguration,
+                                        null,
+                                        transferObserver);
+                                onReceived.accept(operation);
+                            } else {
+                                AWSS3StorageUploadFileOperation operation =
+                                    new AWSS3StorageUploadFileOperation(
+                                        transferId,
+                                        storageService,
+                                        executorService,
+                                        authCredentialsProvider,
+                                        awsS3StoragePluginConfiguration,
+                                        null,
+                                        transferObserver);
+                                onReceived.accept(operation);
+                            }
+                            break;
+                        case DOWNLOAD:
+                            AWSS3StorageDownloadFileOperation
+                                downloadFileOperation = new AWSS3StorageDownloadFileOperation(
+                                transferId,
+                                new File(transferRecord.getFile()),
+                                storageService,
+                                executorService,
+                                authCredentialsProvider,
+                                awsS3StoragePluginConfiguration,
+                                null,
+                                transferObserver);
+                            onReceived.accept(downloadFileOperation);
+                            break;
+                        default:
+                    }
+                } else {
+                    onError.accept(new StorageException("Get transfer failed",
+                        "Please verify that the transfer id is valid and the transfer is not completed"));
                 }
-            } else {
+            } catch (Exception exception) {
                 onError.accept(new StorageException("Get transfer failed",
+                    exception,
                     "Please verify that the transfer id is valid and the transfer is not completed"));
             }
         });

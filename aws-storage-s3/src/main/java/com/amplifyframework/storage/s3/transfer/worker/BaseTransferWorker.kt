@@ -49,6 +49,7 @@ import com.amplifyframework.storage.s3.transfer.TransferRecord
 import com.amplifyframework.storage.s3.transfer.TransferStatusUpdater
 import java.io.File
 import java.lang.Exception
+import java.net.SocketException
 import java.nio.ByteBuffer
 import kotlinx.coroutines.CancellationException
 
@@ -111,7 +112,7 @@ internal abstract class BaseTransferWorker(
             }
             else -> {
                 val ex = result.exceptionOrNull()
-                logger.error("${this.javaClass.simpleName} failed with exception: $ex, stacktrace: ${ex?.stackTrace}")
+                logger.error("${this.javaClass.simpleName} failed with exception: $ex")
                 if (isRetryableError(ex)) {
                     Result.retry()
                 } else {
@@ -151,7 +152,9 @@ internal abstract class BaseTransferWorker(
         return isStopped ||
             !isNetworkAvailable(applicationContext) ||
             runAttemptCount < maxRetryCount ||
-            e is CancellationException
+            e is CancellationException ||
+            // SocketException is thrown when download is terminated due to network disconnection.
+            e is SocketException
     }
 
     @RequiresApi(Build.VERSION_CODES.O)

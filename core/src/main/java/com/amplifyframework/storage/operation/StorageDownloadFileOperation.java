@@ -67,5 +67,17 @@ public abstract class StorageDownloadFileOperation<R> extends StorageTransferOpe
     public void setOnSuccess(@Nullable Consumer<StorageDownloadFileResult> onSuccess) {
         super.setOnSuccess(onSuccess);
     }
+
+    /**
+     * Request will be null if the operation is returned by
+     * {@link com.amplifyframework.storage.s3.AWSS3StoragePlugin} getTransfer api.
+     *
+     * @return the request object
+     */
+    @Override
+    @Nullable
+    public R getRequest() {
+        return super.getRequest();
+    }
 }
 
