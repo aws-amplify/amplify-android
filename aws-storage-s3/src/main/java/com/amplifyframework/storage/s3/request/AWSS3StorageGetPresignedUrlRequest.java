@@ -32,6 +32,9 @@ public final class AWSS3StorageGetPresignedUrlRequest {
 
     /**
      * Constructs a new AWSS3StorageGetUrlRequest.
+     * Although this has public access, it is intended for internal use and should not be used directly by host
+     * applications. The behavior of this may change without warning.
+     *
      * @param key key for item to obtain URL for
      * @param accessLevel Storage access level
      * @param targetIdentityId If set, this should override the current user's identity ID.

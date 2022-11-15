@@ -30,6 +30,9 @@ public final class AWSS3StorageListRequest {
 
     /**
      * Constructs a new AWSS3StorageListRequest.
+     * Although this has public access, it is intended for internal use and should not be used directly by host
+     * applications. The behavior of this may change without warning.
+     *
      * @param path the path in S3 to list items from
      * @param accessLevel Storage access level
      * @param targetIdentityId If set, this should override the current user's identity ID.
