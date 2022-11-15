@@ -197,7 +197,7 @@ internal class EventRecorder(
 
     private fun isRetryableError(message: String, code: Int): Boolean {
         return !(
-                message.equals("ValidationException", ignoreCase = true) ||
+            message.equals("ValidationException", ignoreCase = true) ||
                 message.equals("SerializationException", ignoreCase = true) ||
                 message.equals("BadRequestException", ignoreCase = true) ||
                 code == badRequestCode
