@@ -1,3 +1,10 @@
+## [Release 2.0.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.0.0)
+
+### Miscellaneous
+- core-kotlin module release is combined with Amplify release.  
+
+[See all changes between 0.21.6 and 2.0.0](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.21.5...release_v2.0.0)
+
 ## [Release 0.21.6](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.21.6)
 
 ### Miscellaneous
