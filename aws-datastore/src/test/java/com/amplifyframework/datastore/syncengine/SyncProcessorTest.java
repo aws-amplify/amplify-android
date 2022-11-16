@@ -111,8 +111,6 @@ public final class SyncProcessorTest {
     private int errorHandlerCallCount;
     private int modelCount;
     private RetryHandler requestRetry;
-    private boolean isSyncRetryEnabled = true;
-
 
     /**
      * Wire up dependencies for the SyncProcessor, and build one for testing.
@@ -168,7 +166,6 @@ public final class SyncProcessorTest {
             .dataStoreConfigurationProvider(dataStoreConfigurationProvider)
             .queryPredicateProvider(queryPredicateProvider)
             .retryHandler(requestRetry)
-            .isSyncRetryEnabled(isSyncRetryEnabled)
             .build();
     }
 
@@ -632,31 +629,6 @@ public final class SyncProcessorTest {
                 .test(false)
                 .assertNotComplete();
         verify(requestRetry, times(1)).retry(any(), any());
-
-    }
-
-    /**
-     * Verify that retry is called on appsync failure when syncRetry is set to true.
-     *
-     * @throws AmplifyException On failure to build GraphQLRequest for sync query.
-     */
-    @Test
-    public void shouldNotRetryOnAppSyncFailureWhenSynRetryIsSetToFalse() throws AmplifyException {
-        // Arrange: mock failure when invoking hydrate on the mock object.
-        requestRetry = mock(RetryHandler.class);
-        isSyncRetryEnabled = false;
-        when(requestRetry.retry(any(), any())).thenReturn(Single.error(
-                new DataStoreException("PaginatedResult<ModelWithMetadata<BlogOwner>>", "")));
-
-        initSyncProcessor(10_000);
-        AppSyncMocking.sync(appSync)
-                .mockFailure(new DataStoreException("Something timed out during sync.", ""));
-
-        // Act: call hydrate.
-        syncProcessor.hydrate()
-                .test(false)
-                .assertNotComplete();
-        verify(requestRetry, times(0)).retry(any(), any());
 
     }
 
