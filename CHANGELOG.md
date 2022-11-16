@@ -92,7 +92,7 @@ Replace underlying AWS SDK with AWS SDK for Kotlin.
 - **datastore**: Implemented support for custom primary key (#1650)
 
 ### Bug Fixes
-- **api:*- allow post request with empty body (#1864)
+- **api:** allow post request with empty body (#1864)
 
 [See all changes between 1.36.5 and 1.37.0](https://github.com/aws-amplify/amplify-android/compare/release_v1.36.5...release_v1.37.0)
 
