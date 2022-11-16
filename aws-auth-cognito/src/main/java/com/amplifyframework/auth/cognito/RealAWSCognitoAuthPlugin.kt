@@ -971,8 +971,11 @@ internal class RealAWSCognitoAuthPlugin(
                         onError
                     )
                 }
-                else -> {
+                is AuthenticationState.SignedOut -> {
                     onError.accept(SignedOutException())
+                }
+                else -> {
+                    onError.accept(InvalidStateException())
                 }
             }
         }
@@ -1020,8 +1023,11 @@ internal class RealAWSCognitoAuthPlugin(
                         updateDevice(device.id, DeviceRememberedStatusType.NotRemembered, onSuccess, onError)
                     }
                 }
-                else -> {
+                is AuthenticationState.SignedOut -> {
                     onError.accept(SignedOutException())
+                }
+                else -> {
+                    onError.accept(InvalidStateException())
                 }
             }
         }
@@ -1036,8 +1042,11 @@ internal class RealAWSCognitoAuthPlugin(
                 is AuthenticationState.SignedIn -> {
                     _fetchDevices(onSuccess, onError)
                 }
-                else -> {
+                is AuthenticationState.SignedOut -> {
                     onError.accept(SignedOutException())
+                }
+                else -> {
+                    onError.accept(InvalidStateException())
                 }
             }
         }
@@ -1506,18 +1515,23 @@ internal class RealAWSCognitoAuthPlugin(
         onError: Consumer<AuthException>
     ) {
         authStateMachine.getCurrentState { authState ->
-            if (authState.authNState !is AuthenticationState.SignedIn) {
-                onError.accept(SignedOutException())
-                return@getCurrentState
-            }
-
-            GlobalScope.async {
-                val accessToken = getSession().userPoolTokensResult.value?.accessToken
-                accessToken?.run {
-                    val userid = SessionHelper.getUserSub(accessToken) ?: ""
-                    val username = SessionHelper.getUsername(accessToken) ?: ""
-                    onSuccess.accept(AuthUser(userid, username))
-                } ?: onError.accept(InvalidUserPoolConfigurationException())
+            when (authState.authNState) {
+                is AuthenticationState.SignedIn -> {
+                    GlobalScope.async {
+                        val accessToken = getSession().userPoolTokensResult.value?.accessToken
+                        accessToken?.run {
+                            val userid = SessionHelper.getUserSub(accessToken) ?: ""
+                            val username = SessionHelper.getUsername(accessToken) ?: ""
+                            onSuccess.accept(AuthUser(userid, username))
+                        } ?: onError.accept(InvalidUserPoolConfigurationException())
+                    }
+                }
+                is AuthenticationState.SignedOut -> {
+                    onError.accept(SignedOutException())
+                }
+                else -> {
+                    onError.accept(InvalidStateException())
+                }
             }
         }
     }
