@@ -8,9 +8,6 @@
 #### Escape Hatches
 - Escape Hatches provide access to AWS SDK for Kotlin instead of `AWSMobileClient` from AWS SDK for Android.
 
-#### Analytics
-- No support for push notifications.
-
 #### Auth
 - `signIn` now returns result with `isSignedIn` instead of `isSignInComplete`
 - `confirmResetPassword` API takes additional `username` parameter.
