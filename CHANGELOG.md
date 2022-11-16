@@ -1,3 +1,19 @@
+## [Release 2.0.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.0.0)
+
+### Breaking Changes
+- Support for **Android SDK API 24: Android 7.0 (Nougat) and higher**
+- Escape Hatches provides access to AWS SDK for Kotlin
+- Auth API changes
+
+### Features
+- Replace underlying AWS SDK with AWS SDK for Kotlin
+- API changes in Auth and Storage
+
+### Miscelaneous
+- All the categories use same version number
+
+[See all changes between 2.0.0 and 1.37.6](https://github.com/aws-amplify/amplify-android/compare/release_v1.37.6...release_v2.0.0)
+
 ## [Release 1.37.6](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.37.6)
 
 ### Miscellaneous
