@@ -1,3 +1,41 @@
+## [Release 2.0.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.0.0)
+
+###Breaking Changes
+
+#### Android SDK
+- Support for **Android SDK API 24: Android 7.0 (Nougat) and higher**
+
+#### Escape Hatches
+- Escape Hatches provide access to AWS SDK for Kotlin instead of `AWSMobileClient` from AWS SDK for Android.
+
+#### Auth
+- `signIn` now returns result with `isSignedIn` instead of `isSignInComplete`
+- `confirmResetPassword` API takes additional `username` parameter.
+- `signOut` now takes single `onComplete` parameter instead of `onSuccess` and `onError`.
+- `fetchAuthSession` now returns `identityIdResult` instead of `identityId`.
+- `getCurrentUser` API is now asynchronous and requires `onSuccess` and `onError` parameters. `AuthUser` is returned in `onSuccess`
+- The escape hatch now provides access to the underlying `CognitoIdentityProviderClient` and `CognitoIdentityClient` instance.
+- Parameters `signInQueryParameters`, `signOutQueryParameters`, and `tokenQueryParameters` are dropped from `AuthWebUISignInOptions`.
+- `federationProviderName` has been dropped from `AWSCognitoAuthWebUISignInOptions`.
+- `signIn` will now return an error if you attempt to call sign in, while already signed in.
+
+### Features
+Replace underlying AWS SDK with AWS SDK for Kotlin.
+
+#### Auth
+- Federate to Identity Pool
+- Custom auth flow now supports without SRP flow
+- Supports user migration flow
+- Force refresh token.
+
+#### Storage
+- Add support to query local enqueued transfers.
+
+### Miscellaneous
+- All the categories use the same version number
+
+[See all changes between 2.0.0 and 1.37.6](https://github.com/aws-amplify/amplify-android/compare/release_v1.37.6...release_v2.0.0)
+
 ## [Release 1.37.6](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.37.6)
 
 ### Miscellaneous
