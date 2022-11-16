@@ -19,9 +19,14 @@ import android.content.Context
 import android.util.Log
 import androidx.test.core.app.ApplicationProvider
 import com.amplifyframework.AmplifyException
+import com.amplifyframework.auth.AuthException
+import com.amplifyframework.auth.AuthUser
+import com.amplifyframework.auth.AuthUserAttribute
+import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.cognito.result.AWSCognitoAuthSignOutResult
 import com.amplifyframework.auth.cognito.testutils.Credentials
 import com.amplifyframework.auth.options.AuthFetchSessionOptions
+import com.amplifyframework.auth.options.AuthSignUpOptions
 import com.amplifyframework.core.Amplify
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -30,10 +35,19 @@ import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.BeforeClass
 import org.junit.Test
+import java.time.LocalDateTime
 
 class AuthStressTests {
     companion object {
         private const val TIMEOUT_S = 20L
+        val attributes = listOf(
+            (AuthUserAttribute(AuthUserAttributeKey.address(), "Sesame Street")),
+            (AuthUserAttribute(AuthUserAttributeKey.name(), "Elmo")),
+            (AuthUserAttribute(AuthUserAttributeKey.gender(), "Male")),
+            (AuthUserAttribute(AuthUserAttributeKey.birthdate(), "February 3")),
+            (AuthUserAttribute(AuthUserAttributeKey.phoneNumber(), "+16268319333")),
+            (AuthUserAttribute(AuthUserAttributeKey.updatedAt(), "${System.currentTimeMillis()}"))
+        )
 
         @BeforeClass
         @JvmStatic
@@ -236,6 +250,67 @@ class AuthStressTests {
                     if ((it as AWSCognitoAuthSignOutResult).signedOutLocally) latch.countDown() else fail()
                 }
             }
+        }
+
+        assertTrue(latch.await(TIMEOUT_S, TimeUnit.MINUTES))
+    }
+
+    @Test
+    fun testSignIn_GetCurrentUser() {
+        val latch = CountDownLatch(101)
+        Amplify.Auth.signIn(
+            username,
+            password,
+            { if (it.isSignedIn) latch.countDown() else fail() },
+            { fail() }
+        )
+
+        repeat(100) {
+            Amplify.Auth.getCurrentUser(
+                { if (it.username == username) latch.countDown() else fail() },
+                { fail() }
+            )
+        }
+
+        assertTrue(latch.await(TIMEOUT_S, TimeUnit.MINUTES))
+    }
+
+    @Test
+    fun testSignIn_FetchAttributes() {
+        val latch = CountDownLatch(101)
+        Amplify.Auth.signIn(
+            username,
+            password,
+            { if (it.isSignedIn) latch.countDown() else fail() },
+            { fail() }
+        )
+
+        repeat(100) {
+            Amplify.Auth.fetchUserAttributes(
+                { latch.countDown() },
+                { fail() }
+            )
+        }
+
+        assertTrue(latch.await(TIMEOUT_S, TimeUnit.MINUTES))
+    }
+
+    @Test
+    fun testSignIn_UpdateAttributes() {
+        val latch = CountDownLatch(101)
+        Amplify.Auth.signIn(
+            username,
+            password,
+            { if (it.isSignedIn) latch.countDown() else fail() },
+            { fail() }
+        )
+
+        repeat(100) {
+            Amplify.Auth.updateUserAttributes(
+                attributes,
+                { latch.countDown() },
+                { fail() }
+            )
         }
 
         assertTrue(latch.await(TIMEOUT_S, TimeUnit.MINUTES))
