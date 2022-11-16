@@ -1,16 +1,41 @@
 ## [Release 2.0.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.0.0)
 
-### Breaking Changes
+###Breaking Changes
+
+#### Android SDK
 - Support for **Android SDK API 24: Android 7.0 (Nougat) and higher**
-- Escape Hatches provides access to AWS SDK for Kotlin
-- Auth API changes
+
+#### Escape Hatches
+- Escape Hatches provide access to AWS SDK for Kotlin instead of `AWSMobileClient` from AWS SDK for Android.
+
+#### Analytics
+- No support for push notifications.
+
+#### Auth
+- `signIn` now returns result with `isSignedIn` instead of `isSignInComplete`
+- `confirmResetPassword` API takes additional `username` parameter.
+- `signOut` now takes single `onComplete` parameter instead of `onSuccess` and `onError`.
+- `fetchAuthSession` now returns `identityIdResult` instead of `identityId`.
+- `getCurrentUser` API is now asynchronous and requires `onSuccess` and `onError` parameters. `AuthUser` is returned in `onSuccess`
+- The escape hatch now provides access to the underlying `CognitoIdentityProviderClient` and `CognitoIdentityClient` instance.
+- Parameters `signInQueryParameters`, `signOutQueryParameters`, and `tokenQueryParameters` are dropped from `AuthWebUISignInOptions`.
+- `federationProviderName` has been dropped from `AWSCognitoAuthWebUISignInOptions`.
+- `signIn` will now return an error if you attempt to call sign in, while already signed in.
 
 ### Features
-- Replace underlying AWS SDK with AWS SDK for Kotlin
-- API changes in Auth and Storage
+Replace underlying AWS SDK with AWS SDK for Kotlin.
 
-### Miscelaneous
-- All the categories use same version number
+#### Auth
+- Federate to Identity Pool
+- Custom auth flow now supports without SRP flow
+- Supports user migration flow
+- Force refresh token.
+
+#### Storage
+- Add support to query local enqueued transfers.
+
+### Miscellaneous
+- All the categories use the same version number
 
 [See all changes between 2.0.0 and 1.37.6](https://github.com/aws-amplify/amplify-android/compare/release_v1.37.6...release_v2.0.0)
 
@@ -67,7 +92,7 @@
 - **datastore**: Implemented support for custom primary key (#1650)
 
 ### Bug Fixes
-- **api:** allow post request with empty body (#1864)
+- **api:*- allow post request with empty body (#1864)
 
 [See all changes between 1.36.5 and 1.37.0](https://github.com/aws-amplify/amplify-android/compare/release_v1.36.5...release_v1.37.0)
 
