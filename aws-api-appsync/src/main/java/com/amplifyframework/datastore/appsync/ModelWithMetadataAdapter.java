@@ -124,7 +124,11 @@ public final class ModelWithMetadataAdapter implements
             result.add(entry.getKey(), entry.getValue());
         }
         // Additionally serialize the stored model name as the typename, mirroring the deserialization process.
+<<<<<<< HEAD
         result.addProperty(TYPE_NAME, modelMetadata.getTypename());
+=======
+        result.addProperty(TYPE_NAME, modelMetadata.getUnderlyingModelName());
+>>>>>>> eae9cb06 (Test a potential fix)
 
         JsonObject serializedModel = (JsonObject) context.serialize(src.getModel());
         for (Map.Entry<java.lang.String, JsonElement> entry : serializedModel.entrySet()) {

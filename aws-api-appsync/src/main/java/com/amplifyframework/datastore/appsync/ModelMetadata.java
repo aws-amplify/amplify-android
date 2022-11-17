@@ -99,7 +99,11 @@ public final class ModelMetadata implements Model {
      * @return modelName
      */
     @Nullable
+<<<<<<< HEAD
     public String getTypename() {
+=======
+    public String getUnderlyingModelName() {
+>>>>>>> eae9cb06 (Test a potential fix)
         return id.split("\\|")[0];
     }
 
