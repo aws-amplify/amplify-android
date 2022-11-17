@@ -19,6 +19,7 @@ import com.amplifyframework.core.Amplify;
 import com.amplifyframework.datastore.utils.ErrorInspector;
 import com.amplifyframework.logging.Logger;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -31,41 +32,36 @@ import io.reactivex.rxjava3.core.SingleEmitter;
 public class RetryHandler {
 
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
-    private static final int MAX_EXPONENT_VALUE = 8;
-    private static final int JITTER_FACTOR_VALUE = 100;
+    private static final long JITTER_MS_VALUE = 100;
     private static final int MAX_ATTEMPTS_VALUE = 3;
-    private static final int MAX_DELAY_S_VALUE = 5 * 60;
-    private final int maxExponent;
-    private final int jitterFactor;
+    @SuppressWarnings("checkstyle:magicnumber")
+    private static final long MAX_DELAY_MS_VALUE = Duration.ofMinutes(5).toMillis();
+    private final long jitterMs;
     private final int maxAttempts;
-    private final int maxDelayS;
+    private final long maxDelayMs;
 
     /**
      * Constructor to inject constants for unit testing.
-     * @param maxExponent maxExponent backoff can go to.
-     * @param jitterFactor jitterFactor for backoff.
+     * @param jitterMs jitterMs for backoff.
      * @param maxAttempts max attempt for retrying.
-     * @param maxDelayS max delay for retrying.
+     * @param maxDelayMs max delay for retrying.
      */
-    public RetryHandler(int maxExponent,
-                        int jitterFactor,
+    public RetryHandler(long jitterMs,
                         int maxAttempts,
-                        int maxDelayS) {
+                        long maxDelayMs) {
 
-        this.maxExponent = maxExponent;
-        this.jitterFactor = jitterFactor;
+        this.jitterMs = jitterMs;
         this.maxAttempts = maxAttempts;
-        this.maxDelayS = maxDelayS;
+        this.maxDelayMs = maxDelayMs;
     }
 
     /**
      * Parameter less constructor.
      */
     public RetryHandler() {
-        maxExponent = MAX_EXPONENT_VALUE;
-        jitterFactor = JITTER_FACTOR_VALUE;
+        jitterMs = JITTER_MS_VALUE;
         maxAttempts = MAX_ATTEMPTS_VALUE;
-        maxDelayS = MAX_DELAY_S_VALUE;
+        maxDelayMs = MAX_DELAY_MS_VALUE;
     }
 
     /**
@@ -83,17 +79,17 @@ public class RetryHandler {
     private <T> void call(
             Single<T> single,
             SingleEmitter<T> emitter,
-            Long delayInSeconds,
+            long delayInMilliseconds,
             int attemptsLeft,
             List<Class<? extends Throwable>> skipExceptions) {
-        single.delaySubscription(delayInSeconds, TimeUnit.SECONDS)
+        single.delaySubscription(delayInMilliseconds, TimeUnit.SECONDS)
                 .subscribe(emitter::onSuccess, error -> {
                     if (!emitter.isDisposed()) {
                         LOG.verbose("Retry attempts left " + attemptsLeft + ". exception type:" + error.getClass());
                         if (attemptsLeft == 0 || ErrorInspector.contains(error, skipExceptions)) {
                             emitter.onError(error);
                         } else {
-                            call(single, emitter, jitteredDelaySec(attemptsLeft),
+                            call(single, emitter, jitteredDelayMillis(attemptsLeft),
                                     attemptsLeft - 1, skipExceptions);
                         }
                     } else {
@@ -104,16 +100,21 @@ public class RetryHandler {
 
 
     /**
-     * Method returns jittered delay time in seconds.
+     * Method returns jittered delay time in milliseconds.
+     *
      * @param attemptsLeft number of attempts left.
-     * @return delay in seconds.
+     * @return delay in milliseconds.
      */
-    long jitteredDelaySec(int attemptsLeft) {
+    long jitteredDelayMillis(int attemptsLeft) {
         int numAttempt = maxAttempts - (maxAttempts - attemptsLeft);
-        double waitTimeSeconds =
-                Math.min(maxDelayS, Math.pow(2, ((numAttempt) % maxExponent))
-                        + jitterFactor * Math.random());
-        LOG.debug("Wait time is " + waitTimeSeconds + " seconds before retrying");
-        return (long) waitTimeSeconds;
+
+        long waitTimeMilliseconds = (long) Math.min(
+                maxDelayMs,
+                Duration.ofSeconds((long) Math.pow(2, numAttempt)).toMillis() + (jitterMs * Math.random())
+        );
+
+        LOG.debug("Wait time is " + waitTimeMilliseconds + " milliseconds before retrying");
+
+        return waitTimeMilliseconds;
     }
 }
