@@ -99,7 +99,7 @@ public final class MutationProcessorTest {
         this.appSync = mock(AppSync.class);
         this.configurationProvider = mock(DataStoreConfigurationProvider.class);
         ConflictResolver conflictResolver = new ConflictResolver(configurationProvider, appSync);
-        RetryHandler retryHandler = new RetryHandler(1, 1, 2, 1);
+        RetryHandler retryHandler = new RetryHandler(1, 2, 1);
         schemaRegistry = SchemaRegistry.instance();
         schemaRegistry.register(Collections.singleton(BlogOwner.class));
         this.mutationProcessor = MutationProcessor.builder()
@@ -360,16 +360,18 @@ public final class MutationProcessorTest {
             ModelMetadata modelMetadata = new ModelMetadata(model.getId(), false, 1,
                     Temporal.Timestamp.now(),
                     "BlogOwner");
-            ModelWithMetadata<BlogOwner> modelWithMetadata = new ModelWithMetadata<BlogOwner>(model,
+            ModelWithMetadata<BlogOwner> modelWithMetadata = new ModelWithMetadata<>(model,
                     modelMetadata);
             retryHandlerInvocationCount.countDown();
             onResponse.accept(new GraphQLResponse<>(modelWithMetadata, Collections.emptyList()));
             // latch makes sure success response is returned.
             return mock(GraphQLOperation.class);
-        }).when(appSync).update(ArgumentMatchers.<BlogOwner>any(),any(ModelSchema.class), anyInt(),
+        }).when(appSync).update(ArgumentMatchers.any(),
+                any(ModelSchema.class),
+                anyInt(),
                 any(QueryPredicate.class),
                 ArgumentMatchers.<Consumer<GraphQLResponse<ModelWithMetadata<BlogOwner>>>>any(),
-                ArgumentMatchers.<Consumer<DataStoreException>>any());
+                ArgumentMatchers.any());
 
         ModelSchema schema = schemaRegistry.getModelSchemaForModelClass(BlogOwner.class);
         LastSyncMetadata lastSyncMetadata = LastSyncMetadata.baseSyncedAt(schema.getName(),

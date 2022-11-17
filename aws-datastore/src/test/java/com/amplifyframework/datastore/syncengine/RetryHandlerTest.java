@@ -19,9 +19,11 @@ import com.amplifyframework.datastore.DataStoreException;
 
 import org.junit.Test;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.IntStream;
 
 import io.reactivex.rxjava3.core.Single;
 
@@ -76,7 +78,7 @@ public class RetryHandlerTest {
     @Test
     public void testRetryOnRecoverableError() {
         //arrange
-        RetryHandler subject = new RetryHandler(8, 0, 1, 1);
+        RetryHandler subject = new RetryHandler(0, 1, 1);
         DataStoreException expectedException =
                 new DataStoreException("PaginatedResult<ModelWithMetadata<BlogOwner>>", "");
         AtomicInteger count = new AtomicInteger(0);
@@ -100,11 +102,11 @@ public class RetryHandlerTest {
     @Test
     public void testJitteredDelaySec() {
         //arrange
-        RetryHandler subject = new RetryHandler(8, 0, 1, 5);
+        RetryHandler subject = new RetryHandler(0, 1, Duration.ofSeconds(5).toMillis());
         //act
-        long delay = subject.jitteredDelaySec(2);
+        long delay = subject.jitteredDelayMillis(2);
         //assert
-        assertEquals(4, delay);
+        assertEquals(Duration.ofSeconds(4).toMillis(), delay);
     }
 
     /**
@@ -113,11 +115,50 @@ public class RetryHandlerTest {
     @Test
     public void testJitteredDelaySecReturnsNoMoreThanMaxValue() {
         //arrange
-        RetryHandler subject = new RetryHandler(8, 0, 1, 1);
+        long maxDelayMs = Duration.ofSeconds(1).toMillis();
+        RetryHandler subject = new RetryHandler(0, Integer.MAX_VALUE, maxDelayMs);
         //act
-        long delay = subject.jitteredDelaySec(2);
+        long delay = subject.jitteredDelayMillis(2);
         //assert
-        assertEquals(1, delay);
+        assertEquals(maxDelayMs, delay);
+    }
+
+    /**
+     * test jittered delay method returns powers of 2 when there's no jitter.
+     */
+    @Test
+    public void testExponentialDelaysNoJitter() {
+        int jitterFactor = 0;
+
+        //arrange
+        RetryHandler subject = new RetryHandler(jitterFactor, Integer.MAX_VALUE, Integer.MAX_VALUE);
+
+        IntStream.rangeClosed(0, 10).forEach(attempt -> {
+            //act
+            long delay = subject.jitteredDelayMillis(attempt);
+
+            //assert
+            assertEquals(Duration.ofSeconds((long) Math.pow(2, attempt)).toMillis(), delay, jitterFactor);
+        });
+    }
+
+    /**
+     * test jittered delay method returns powers of 2 plus a random amount of miliseconds between 0 and jitterFactor.
+     */
+    @Test
+    public void testExponentialDelaysWithJitterIsWithinDelta() {
+        int jitterFactor = 100;
+
+        //arrange
+        RetryHandler subject = new RetryHandler(jitterFactor, Integer.MAX_VALUE, Integer.MAX_VALUE);
+
+        IntStream.rangeClosed(0, 10).forEach(attempt -> {
+            //act
+            long delay = subject.jitteredDelayMillis(attempt);
+
+            //assert
+            assertEquals(Duration.ofSeconds((long) Math.pow(2, attempt)).toMillis(), delay, jitterFactor);
+        });
     }
 
 }
