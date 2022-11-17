@@ -484,7 +484,9 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
         final Map<String, ModelField> modelFields = schema.getFields();
         final List<Object> bindings = new ArrayList<>();
         Object fieldValue;
+        System.out.println("Extract field value: model = " + model);
         for (SQLiteColumn column : table.getSortedColumns()) {
+            System.out.println("extract field value: column = " + column);
             if (column.getName().equals(SQLiteTable.PRIMARY_KEY_FIELD_NAME)) {
                 fieldValue = model.getPrimaryKeyString();
             } else if (column.isForeignKey()) {

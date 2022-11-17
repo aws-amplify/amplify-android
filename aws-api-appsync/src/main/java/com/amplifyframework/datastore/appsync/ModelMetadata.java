@@ -99,7 +99,7 @@ public final class ModelMetadata implements Model {
      * @return modelName
      */
     @Nullable
-    public String getModelName() {
+    public String getUnderlyingModelName() {
         return id.split("\\|")[0];
     }
 
