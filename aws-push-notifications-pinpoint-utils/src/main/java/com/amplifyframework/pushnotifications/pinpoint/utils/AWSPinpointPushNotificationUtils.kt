@@ -16,7 +16,6 @@ import androidx.core.content.ContextCompat
 import com.amplifyframework.notifications.pushnotifications.PushNotificationsDetails
 import kotlin.random.Random
 
-
 class AWSPinpointPushNotificationUtils(private val context: Context) {
 
     private val channel: NotificationChannel? by lazy {

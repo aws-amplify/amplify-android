@@ -32,6 +32,7 @@ open class NotificationsCategory : Category<NotificationsPlugin<*>>(), Notificat
                     val categoryConfiguration: CategoryConfiguration = configuration.forCategoryType(categoryType)
                     PushNotifications.configure(categoryConfiguration, context)
                 }
+                else -> Unit
             }
         }
         return result

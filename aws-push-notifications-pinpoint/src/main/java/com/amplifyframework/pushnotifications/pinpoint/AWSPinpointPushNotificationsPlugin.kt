@@ -14,7 +14,6 @@ import com.amplifyframework.notifications.pushnotifications.PushNotificationsExc
 import com.amplifyframework.notifications.pushnotifications.PushNotificationsPlugin
 import com.amplifyframework.notifications.pushnotifications.PushResultType
 import com.amplifyframework.pushnotifications.pinpoint.utils.AWSPinpointPushNotificationUtils
-import kotlin.random.Random
 import org.json.JSONObject
 
 class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClient>() {

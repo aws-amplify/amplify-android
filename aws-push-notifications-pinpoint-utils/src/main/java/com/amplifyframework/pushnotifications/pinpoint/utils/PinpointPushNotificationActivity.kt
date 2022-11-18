@@ -19,9 +19,9 @@ class PinpointPushNotificationActivity : Activity() {
 //                extras
 //            )
 //        } else {
-            val launchIntent = packageManager.getLaunchIntentForPackage(intent.getPackage()!!)
-            launchIntent!!.putExtras(extras!!)
-            startActivity(launchIntent)
+        val launchIntent = packageManager.getLaunchIntentForPackage(intent.getPackage()!!)
+        launchIntent!!.putExtras(extras!!)
+        startActivity(launchIntent)
 //        }
         finish()
     }

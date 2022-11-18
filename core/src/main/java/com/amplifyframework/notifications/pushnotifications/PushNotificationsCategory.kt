@@ -5,7 +5,9 @@ import com.amplifyframework.core.Consumer
 import com.amplifyframework.core.category.Category
 import com.amplifyframework.notifications.NotificationsCategoryBehavior
 
-class PushNotificationsCategory : Category<PushNotificationsPlugin<*>>(), PushNotificationsCategoryBehavior,
+class PushNotificationsCategory :
+    Category<PushNotificationsPlugin<*>>(),
+    PushNotificationsCategoryBehavior,
     NotificationsCategoryBehavior {
 
     override fun getCategoryType() = selectedPlugin.categoryType
