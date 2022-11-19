@@ -86,6 +86,15 @@ public final class ModelMetadata implements Model {
     }
 
     /**
+     * Gets the name of the model this meta-model represents.
+     * @return modelName
+     */
+    @Nullable
+    public String getTypename() {
+        return id.split("\\|")[0];
+    }
+
+    /**
      * Gets last changed at time.
      * @return last changed at time
      */
@@ -94,20 +103,7 @@ public final class ModelMetadata implements Model {
         return _lastChangedAt;
     }
 
-    /**
-     * Gets the name of the model this meta-model represents.
-     * @return modelName
-     */
-    @Nullable
-<<<<<<< HEAD
-    public String getTypename() {
-=======
-    public String getUnderlyingModelName() {
->>>>>>> eae9cb06 (Test a potential fix)
-        return id.split("\\|")[0];
-    }
-
-    @Override
+   @Override
     public boolean equals(Object thatObject) {
         if (this == thatObject) {
             return true;
