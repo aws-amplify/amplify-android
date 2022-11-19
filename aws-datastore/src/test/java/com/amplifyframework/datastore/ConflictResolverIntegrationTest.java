@@ -184,7 +184,6 @@ public final class ConflictResolverIntegrationTest {
                                                         extensions));
             onResponse.accept(new GraphQLResponse<>(null, errorList));
             // latch makes sure conflict unhandled response is returned.
-            System.out.println("LATCH 1");
             latch.countDown();
             return mock(GraphQLOperation.class);
         }).doAnswer(invocation -> {
@@ -199,7 +198,6 @@ public final class ConflictResolverIntegrationTest {
                     any(),
                     any());
             // latch makes sure success response is returned.
-            System.out.println("LATCH 2");
             latch.countDown();
             return mock(GraphQLOperation.class);
         }).when(mockApiCategory).mutate(any(), any(), any());
@@ -216,7 +214,6 @@ public final class ConflictResolverIntegrationTest {
             PaginatedResult<ModelWithMetadata<Person>> data =
                     new PaginatedResult<>(Collections.singletonList(modelWithMetadata), null);
             onResponse.accept(new GraphQLResponse<>(data, Collections.emptyList()));
-            System.out.println("LATCH 3");
             latch.countDown();
             return mock(GraphQLOperation.class);
 
@@ -230,7 +227,6 @@ public final class ConflictResolverIntegrationTest {
             PaginatedResult<ModelWithMetadata<Car>> data =
                     new PaginatedResult<>(Collections.singletonList(modelWithMetadata), null);
             onResponse.accept(new GraphQLResponse<>(data, Collections.emptyList()));
-            System.out.println("LATCH 4");
             latch.countDown();
             return mock(GraphQLOperation.class);
         }).when(mockApiCategory).query(any(), any(), any());

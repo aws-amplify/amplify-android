@@ -95,7 +95,7 @@ public final class ModelMetadata implements Model {
     }
 
     /**
-     * Gets the model name.
+     * Gets the name of the model this meta-model represents.
      * @return modelName
      */
     @Nullable
