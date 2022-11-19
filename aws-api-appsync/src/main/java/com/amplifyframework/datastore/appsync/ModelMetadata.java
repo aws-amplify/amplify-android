@@ -86,21 +86,21 @@ public final class ModelMetadata implements Model {
     }
 
     /**
+     * Gets the name of the model this meta-model represents.
+     * @return modelName
+     */
+    @Nullable
+    public String getTypename() {
+        return id.split("\\|")[0];
+    }
+
+    /**
      * Gets last changed at time.
      * @return last changed at time
      */
     @Nullable
     public Temporal.Timestamp getLastChangedAt() {
         return _lastChangedAt;
-    }
-
-    /**
-     * Gets the name of the model this meta-model represents.
-     * @return modelName
-     */
-    @Nullable
-    public String getUnderlyingModelName() {
-        return id.split("\\|")[0];
     }
 
     @Override
