@@ -19,7 +19,6 @@ import android.util.Range;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.graphql.GraphQLRequest;
-import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.PaginatedResult;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
@@ -593,8 +592,7 @@ public final class SyncProcessorTest {
         // Arrange: mock failure when invoking hydrate on the mock object.
         AppSyncMocking.sync(appSync)
             .mockFailure(new DataStoreException
-                    .GraphQLResponseException("Something timed out during sync.",
-                    new ArrayList<GraphQLResponse.Error>()));
+                    .IrRecoverableException("Something timed out during sync.", "This was intentional"));
 
         // Act: call hydrate.
         assertTrue(
