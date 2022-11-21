@@ -288,6 +288,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
         return Completable.fromAction(() -> categoryInitializationsPending.await())
             .timeout(LIFECYCLE_TIMEOUT_MS, TimeUnit.MILLISECONDS)
             .subscribeOn(Schedulers.io())
+            .doOnComplete(() -> LOG.info("DataStore plugin initialized."))
             .doOnError(error -> LOG.error("DataStore initialization timed out.", error));
     }
 

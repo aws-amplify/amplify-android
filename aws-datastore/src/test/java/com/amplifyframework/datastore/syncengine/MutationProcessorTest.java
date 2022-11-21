@@ -99,7 +99,7 @@ public final class MutationProcessorTest {
         this.appSync = mock(AppSync.class);
         this.configurationProvider = mock(DataStoreConfigurationProvider.class);
         ConflictResolver conflictResolver = new ConflictResolver(configurationProvider, appSync);
-        RetryHandler retryHandler = new RetryHandler(1, 2, 1);
+        RetryHandler retryHandler = new RetryHandler(0, 1);
         schemaRegistry = SchemaRegistry.instance();
         schemaRegistry.register(Collections.singleton(BlogOwner.class));
         this.mutationProcessor = MutationProcessor.builder()
