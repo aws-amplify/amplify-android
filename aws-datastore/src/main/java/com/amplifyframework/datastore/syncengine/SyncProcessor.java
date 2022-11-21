@@ -270,9 +270,9 @@ final class SyncProcessor {
      */
     private <T extends Model> Single<PaginatedResult<ModelWithMetadata<T>>> syncPage(
             GraphQLRequest<PaginatedResult<ModelWithMetadata<T>>> request) {
-        List<Class<? extends Throwable>> skipException = new ArrayList<>();
-        skipException.add(DataStoreException.GraphQLResponseException.class);
-        skipException.add(ApiException.NonRetryableException.class);
+        List<Class<? extends Throwable>> nonRetryableExceptions = new ArrayList<>();
+        nonRetryableExceptions.add(DataStoreException.IrRecoverableException.class);
+        nonRetryableExceptions.add(ApiException.NonRetryableException.class);
 
         return requestRetry.retry(Single.create(emitter -> {
             Cancelable cancelable = appSync.sync(request, result -> {
@@ -290,7 +290,7 @@ final class SyncProcessor {
                 }
             }, emitter::onError);
             emitter.setDisposable(AmplifyDisposables.fromCancelable(cancelable));
-        }), skipException);
+        }), nonRetryableExceptions);
     }
 
     /**
