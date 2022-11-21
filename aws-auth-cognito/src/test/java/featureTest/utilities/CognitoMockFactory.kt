@@ -42,6 +42,7 @@ import io.mockk.coEvery
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.boolean
 
 /**
  * Factory to mock aws sdk's cognito API calls and responses.
@@ -67,6 +68,7 @@ class CognitoMockFactory(
                     setupError(mockResponse, responseObject)
                     SignUpResponse.invoke {
                         this.codeDeliveryDetails = parseCodeDeliveryDetails(responseObject)
+                        this.userConfirmed = if(responseObject.containsKey("userConfirmed")){(responseObject["userConfirmed"] as JsonPrimitive).boolean} else false
                     }
                 }
             }
