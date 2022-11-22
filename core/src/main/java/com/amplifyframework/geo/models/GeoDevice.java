@@ -49,17 +49,17 @@ public class GeoDevice {
     }
 
     public static GeoDevice createIdTiedToUser(Consumer<GeoDevice> onResult, Consumer<GeoException> onError) {
-        TODO("Blocked by ALS not allowing colons in ids")
+        // TODO("Blocked by ALS not allowing colons in ids");
         return new GeoDevice("id");
     }
 
     public static GeoDevice createIdTiedToUserAndDevice(Consumer<GeoDevice> onResult, Consumer<GeoException> onError) {
-        TODO("Blocked by ALS not allowing colons in ids")
+        // TODO("Blocked by ALS not allowing colons in ids");
         return new GeoDevice("id");
     }
 
     public static GeoDevice createIdTiedToDevice(Consumer<GeoDevice> onResult, Consumer<GeoException> onError) {
-        TODO("Not finished")
+        // TODO("Not finished");
         return new GeoDevice("id");
     }
 }
