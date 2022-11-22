@@ -1,3 +1,10 @@
+## [Release 1.37.9](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.37.9)
+
+### Features
+- Update build.gradle (#2134)
+
+[See all changes between 1.37.8 and 1.37.9](https://github.com/aws-amplify/amplify-android/compare/release_v1.37.8...release_v1.37.9)
+
 ## [Release 1.37.8](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.37.8)
 
 ### Miscellaneous
