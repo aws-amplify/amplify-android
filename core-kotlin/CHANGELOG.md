@@ -1,3 +1,10 @@
+## [Release 0.21.9](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.21.9)
+
+### Miscellaneous
+- Update build.gradle (#2134)
+
+[See all changes between 0.21.8 and 0.21.9](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.21.8...release-kotlin_v0.21.9)
+
 ## [Release 0.21.8](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.21.8)
 
 ### Miscellaneous
