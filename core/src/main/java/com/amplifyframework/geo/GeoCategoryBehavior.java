@@ -17,12 +17,16 @@ package com.amplifyframework.geo;
 
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.geo.models.Coordinates;
+import com.amplifyframework.geo.models.GeoDevice;
+import com.amplifyframework.geo.models.GeoLocation;
 import com.amplifyframework.geo.models.MapStyle;
 import com.amplifyframework.geo.models.MapStyleDescriptor;
 import com.amplifyframework.geo.options.GeoSearchByCoordinatesOptions;
 import com.amplifyframework.geo.options.GeoSearchByTextOptions;
+import com.amplifyframework.geo.options.GeoUpdateLocationOptions;
 import com.amplifyframework.geo.options.GetMapStyleDescriptorOptions;
 import com.amplifyframework.geo.result.GeoSearchResult;
 
@@ -132,6 +136,38 @@ public interface GeoCategoryBehavior {
             @NonNull Coordinates position,
             @NonNull GeoSearchByCoordinatesOptions options,
             @NonNull Consumer<GeoSearchResult> onResult,
+            @NonNull Consumer<GeoException> onError
+    );
+
+    /**
+     * Updates a device's location for the default tracker.
+     *
+     * @param device The device that this location update will be applied to.
+     * @param location The location being updated for this device.
+     * @param onResult Called upon successful update.
+     * @param onError Called upon failure to update.
+     */
+    void updateLocation(
+            @NonNull GeoDevice device,
+            @NonNull GeoLocation location,
+            @NonNull Action onResult,
+            @NonNull Consumer<GeoException> onError
+    );
+
+    /**
+     * Updates a device's location with the given options.
+     *
+     * @param device The device that this location update will be applied to.
+     * @param location The location being updated for this device.
+     * @param options The options for updating the device location.
+     * @param onResult Called upon successful update.
+     * @param onError Called upon failure to update.
+     */
+    void updateLocation(
+            @NonNull GeoDevice device,
+            @NonNull GeoLocation location,
+            @NonNull GeoUpdateLocationOptions options,
+            @NonNull Action onResult,
             @NonNull Consumer<GeoException> onError
     );
 }

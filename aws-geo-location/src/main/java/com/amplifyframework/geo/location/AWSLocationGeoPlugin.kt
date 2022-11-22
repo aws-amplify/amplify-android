@@ -20,6 +20,7 @@ import aws.sdk.kotlin.services.location.LocationClient
 import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.auth.AuthCategory
+import com.amplifyframework.core.Action
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.geo.GeoCategoryPlugin
@@ -31,10 +32,13 @@ import com.amplifyframework.geo.location.options.AmazonLocationSearchByTextOptio
 import com.amplifyframework.geo.location.service.AmazonLocationService
 import com.amplifyframework.geo.location.service.GeoService
 import com.amplifyframework.geo.models.Coordinates
+import com.amplifyframework.geo.models.GeoDevice
+import com.amplifyframework.geo.models.GeoLocation
 import com.amplifyframework.geo.models.MapStyle
 import com.amplifyframework.geo.models.MapStyleDescriptor
 import com.amplifyframework.geo.options.GeoSearchByCoordinatesOptions
 import com.amplifyframework.geo.options.GeoSearchByTextOptions
+import com.amplifyframework.geo.options.GeoUpdateLocationOptions
 import com.amplifyframework.geo.options.GetMapStyleDescriptorOptions
 import com.amplifyframework.geo.result.GeoSearchResult
 import java.util.concurrent.Executors
@@ -208,6 +212,53 @@ class AWSLocationGeoPlugin(
             onResult,
             onError
         )
+    }
+
+    override fun updateLocation(
+        device: GeoDevice,
+        location: GeoLocation,
+        onResult: Action,
+        onError: Consumer<GeoException>
+    ) {
+        val options = GeoUpdateLocationOptions("TEMP_TRACKER", emptyMap())
+        updateLocation(device, location, options, onResult, onError)
+    }
+
+    override fun updateLocation(
+        device: GeoDevice,
+        location: GeoLocation,
+        options: GeoUpdateLocationOptions,
+        onResult: Action,
+        onError: Consumer<GeoException>
+    ) {
+        execute (
+            {
+                TODO("Not yet implemented")
+            },
+            Errors::searchError,
+            onResult,
+            onError
+        )
+    }
+
+    // Helper method that launches given task on a new worker thread.
+    private fun <T : Any> execute(
+        runnableTask: suspend () -> T,
+        errorTransformer: (Throwable) -> GeoException,
+        onResult: Action,
+        onError: Consumer<GeoException>
+    ) {
+        executor.execute {
+            try {
+                runBlocking {
+                    val result = runnableTask()
+                    onResult.call()
+                }
+            } catch (error: Throwable) {
+                val geoException = errorTransformer.invoke(error)
+                onError.accept(geoException)
+            }
+        }
     }
 
     // Helper method that launches given task on a new worker thread.

@@ -17,14 +17,18 @@ package com.amplifyframework.geo;
 
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.geo.models.Coordinates;
+import com.amplifyframework.geo.models.GeoDevice;
+import com.amplifyframework.geo.models.GeoLocation;
 import com.amplifyframework.geo.models.MapStyle;
 import com.amplifyframework.geo.models.MapStyleDescriptor;
 import com.amplifyframework.geo.options.GeoSearchByCoordinatesOptions;
 import com.amplifyframework.geo.options.GeoSearchByTextOptions;
+import com.amplifyframework.geo.options.GeoUpdateLocationOptions;
 import com.amplifyframework.geo.options.GetMapStyleDescriptorOptions;
 import com.amplifyframework.geo.result.GeoSearchResult;
 
@@ -140,5 +144,32 @@ public final class GeoCategory
             @NonNull Consumer<GeoException> onError
     ) {
         getSelectedPlugin().searchByCoordinates(position, options, onResult, onError);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void updateLocation(
+            @NonNull GeoDevice device,
+            @NonNull GeoLocation location,
+            @NonNull Action onResult,
+            @NonNull Consumer<GeoException> onError
+    ) {
+        getSelectedPlugin().updateLocation(device, location, onResult, onError);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void updateLocation(
+            @NonNull GeoDevice device,
+            @NonNull GeoLocation location,
+            @NonNull GeoUpdateLocationOptions options,
+            @NonNull Action onResult,
+            @NonNull Consumer<GeoException> onError
+    ) {
+        getSelectedPlugin().updateLocation(device, location, options, onResult, onError);
     }
 }
