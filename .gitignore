@@ -111,4 +111,5 @@ build-artifacts.tar.gz
 
 # sample app resources
 sample*
-.graphqlconfig.ymlaws-datastore/src/androidTest/res/raw/amplifyconfigurationupdated.json
+.graphqlconfig.yml
+aws-datastore/src/androidTest/res/raw/amplifyconfigurationupdated.json
