@@ -27,7 +27,7 @@ dependencies {
     implementation project(path: ':aws-auth-cognito')
 
     implementation dependency.androidx.appcompat
-    implementation dependency.aws.pinpointKotlin
+    implementation dependency.aws.pinpoint
     implementation dependency.kotlin.serializationJson
 
     testImplementation dependency.junit

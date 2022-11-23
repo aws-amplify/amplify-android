@@ -117,7 +117,7 @@ ext {
             comprehend: "aws.sdk.kotlin:comprehend:$awsKotlinSdkVersion",
             location: "aws.sdk.kotlin:location:$awsKotlinSdkVersion",
             s3: "aws.sdk.kotlin:s3:$awsKotlinSdkVersion",
-            pinpointKotlin: "aws.sdk.kotlin:pinpoint:$awsKotlinSdkVersion",
+            pinpoint: "aws.sdk.kotlin:pinpoint:$awsKotlinSdkVersion",
             polly: "aws.sdk.kotlin:polly:$awsKotlinSdkVersion",
             rekognition: "aws.sdk.kotlin:rekognition:$awsKotlinSdkVersion",
             textract: "aws.sdk.kotlin:textract:$awsKotlinSdkVersion",
