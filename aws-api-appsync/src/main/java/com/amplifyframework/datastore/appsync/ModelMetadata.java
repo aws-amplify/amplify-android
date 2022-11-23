@@ -103,7 +103,7 @@ public final class ModelMetadata implements Model {
         return _lastChangedAt;
     }
 
-   @Override
+    @Override
     public boolean equals(Object thatObject) {
         if (this == thatObject) {
             return true;
