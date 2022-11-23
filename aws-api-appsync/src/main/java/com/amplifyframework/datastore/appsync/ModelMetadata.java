@@ -86,8 +86,8 @@ public final class ModelMetadata implements Model {
     }
 
     /**
-     * Gets the name of the model this meta-model represents.
-     * @return modelName
+     * Gets the type of the model.
+     * @return Type of the Model.
      */
     @Nullable
     public String getTypename() {
