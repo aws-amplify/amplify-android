@@ -24,7 +24,6 @@ dependencies {
     implementation dependency.androidx.nav.fragmentktx
     implementation dependency.androidx.nav.ui
     implementation dependency.androidx.nav.uiktx
-    implementation dependency.androidx.nav.dynamicfeatures
 
     testImplementation project(path: ':aws-api-appsync') // Used to reference Temporal types in tests.
     testImplementation project(path: ':testmodels')
