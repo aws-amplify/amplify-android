@@ -224,6 +224,8 @@ private void configureAndroidLibrary(Project project) {
                     includeAndroidResources = true
                 }
             }
+
+            buildConfigField "String", "VERSION_NAME", "\"${project.ext.VERSION_NAME}\""
         }
 
         lintOptions {
