@@ -14,27 +14,27 @@
  */
 
 plugins {
-    id "org.jetbrains.kotlin.plugin.serialization" version "1.6.10"
+    id("org.jetbrains.kotlin.plugin.serialization") version "1.6.10"
+    id("com.android.library")
+    id("kotlin-android")
 }
 
-apply plugin: 'com.android.library'
-apply from: rootProject.file("configuration/checkstyle.gradle")
-apply plugin: 'kotlin-android'
+apply(from = rootProject.file("configuration/checkstyle.gradle"))
 
 dependencies {
-    implementation project(path: ':core')
-    implementation dependency.junit
-    implementation dependency.mockito
-    implementation dependency.androidx.test.core
-    implementation dependency.rxjava
+    implementation(project(":core"))
+    implementation(testDependency.junit)
+    implementation(testDependency.mockito)
+    implementation(testDependency.androidx.test.core)
+    implementation(dependency.rxjava)
 
-    implementation dependency.kotlin.serializationJson
-    implementation dependency.aws.cognitoidentity
-    implementation dependency.aws.cognitoidentityprovider
+    implementation(dependency.kotlin.serializationJson)
+    implementation(dependency.aws.cognitoidentity)
+    implementation(dependency.aws.cognitoidentityprovider)
 
-    implementation project(path: ':aws-auth-cognito')
+    implementation(project(":aws-auth-cognito"))
 
     // dependency on Model/GraphQL integration classes
     // remove when modules are re-organized to provide better isolation
-    compileOnly project(path: ':aws-api')
+    compileOnly(project(":aws-api"))
 }

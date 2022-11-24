@@ -13,18 +13,21 @@
  * permissions and limitations under the License.
  */
 
-apply plugin: 'com.android.library'
-apply from: rootProject.file("configuration/checkstyle.gradle")
-apply from: rootProject.file("configuration/publishing.gradle")
+plugins {
+    id("com.android.library")
+}
 
-group = POM_GROUP
+apply(from = rootProject.file("configuration/checkstyle.gradle"))
+apply(from = rootProject.file("configuration/publishing.gradle"))
+
+group = properties["POM_GROUP"].toString()
 
 dependencies {
-    implementation project(':core')
-    implementation dependency.androidx.appcompat
-    implementation dependency.tensorflow
+    implementation(project(":core"))
+    implementation(dependency.androidx.appcompat)
+    implementation(dependency.tensorflow)
 
-    testImplementation project(':testutils')
-    testImplementation dependency.junit
-    testImplementation dependency.mockito
+    testImplementation(project(":testutils"))
+    testImplementation(testDependency.junit)
+    testImplementation(testDependency.mockito)
 }
