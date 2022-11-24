@@ -80,20 +80,19 @@ object SignUpTestCaseGenerator : SerializableProvider {
             ExpectationShapes.Amplify(
                 apiName = AuthAPI.signUp,
                 responseType = ResponseType.Success,
-                response =
-                    AuthSignUpResult(
-                        false,
-                        AuthNextSignUpStep(
-                            AuthSignUpStep.CONFIRM_SIGN_UP_STEP,
-                            emptyMap(),
-                            AuthCodeDeliveryDetails(
-                                email,
-                                AuthCodeDeliveryDetails.DeliveryMedium.EMAIL,
-                                "attributeName"
-                            )
-                        ),
-                        null
-                    ).toJsonElement()
+                response = AuthSignUpResult(
+                    false,
+                    AuthNextSignUpStep(
+                        AuthSignUpStep.CONFIRM_SIGN_UP_STEP,
+                        emptyMap(),
+                        AuthCodeDeliveryDetails(
+                            email,
+                            AuthCodeDeliveryDetails.DeliveryMedium.EMAIL,
+                            "attributeName"
+                        )
+                    ),
+                    null
+                ).toJsonElement()
             )
         )
     )
