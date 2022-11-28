@@ -39,7 +39,6 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -66,7 +65,6 @@ public final class DataStoreConfigurationTest {
         assertTrue(dataStoreConfiguration.getConflictHandler() instanceof AlwaysApplyRemoteHandler);
         assertTrue(dataStoreConfiguration.getErrorHandler() instanceof DefaultDataStoreErrorHandler);
         assertEquals(Collections.emptyMap(), dataStoreConfiguration.getSyncExpressions());
-        assertFalse(dataStoreConfiguration.getDoSyncRetry());
     }
 
     /**
@@ -119,7 +117,6 @@ public final class DataStoreConfigurationTest {
             .errorHandler(errorHandler)
             .syncExpression(BlogOwner.class, ownerSyncExpression)
             .syncExpression("Post", postSyncExpression)
-                .doSyncRetry(true)
             .build();
 
         JSONObject jsonConfigFromFile = new JSONObject()
@@ -132,7 +129,6 @@ public final class DataStoreConfigurationTest {
         assertEquals(expectedSyncMaxRecords, dataStoreConfiguration.getSyncMaxRecords());
         assertEquals(DataStoreConfiguration.DEFAULT_SYNC_PAGE_SIZE,
             dataStoreConfiguration.getSyncPageSize().longValue());
-        assertTrue(dataStoreConfiguration.getDoSyncRetry());
 
         assertEquals(dummyConflictHandler, dataStoreConfiguration.getConflictHandler());
         assertEquals(errorHandler, dataStoreConfiguration.getErrorHandler());

@@ -52,7 +52,6 @@ public final class DataStoreConfiguration {
     private final DataStoreConflictHandler conflictHandler;
     private final Integer syncMaxRecords;
     private final Integer syncPageSize;
-    private final boolean doSyncRetry;
     private final Map<String, DataStoreSyncExpression> syncExpressions;
     private final Long syncIntervalInMinutes;
     private final Long maxTimeLapseForObserveQuery;
@@ -65,7 +64,6 @@ public final class DataStoreConfiguration {
         this.syncPageSize = builder.syncPageSize;
         this.syncIntervalInMinutes = builder.syncIntervalInMinutes;
         this.syncExpressions = builder.syncExpressions;
-        this.doSyncRetry = builder.doSyncRetry;
         this.maxTimeLapseForObserveQuery = builder.maxTimeLapseForObserveQuery;
         this.observeQueryMaxRecords = builder.observeQueryMaxRecords;
     }
@@ -121,7 +119,6 @@ public final class DataStoreConfiguration {
             .syncInterval(DEFAULT_SYNC_INTERVAL_MINUTES, TimeUnit.MINUTES)
             .syncPageSize(DEFAULT_SYNC_PAGE_SIZE)
             .syncMaxRecords(DEFAULT_SYNC_MAX_RECORDS)
-                .doSyncRetry(DEFAULT_DO_SYNC_RETRY)
                 .observeQueryMaxTime(MAX_TIME_SEC)
                 .observeQueryMaxRecords(MAX_RECORDS)
             .build();
@@ -188,15 +185,6 @@ public final class DataStoreConfiguration {
     }
 
     /**
-     * Gets the boolean for enabling retry on sync failure
-     * a sync operation.
-     * @return Desired size of a page of results from an AppSync sync response
-     */
-    public Boolean getDoSyncRetry() {
-        return this.doSyncRetry;
-    }
-
-    /**
      * Returns the Map of all {@link DataStoreSyncExpression}s used to filter data received from AppSync, either during
      * a sync or over the real-time subscription.
      * @return the Map of all {@link DataStoreSyncExpression}s.
@@ -233,9 +221,6 @@ public final class DataStoreConfiguration {
         if (!ObjectsCompat.equals(getSyncExpressions(), that.getSyncExpressions())) {
             return false;
         }
-        if (!ObjectsCompat.equals(getDoSyncRetry(), that.getDoSyncRetry())) {
-            return false;
-        }
         if (!ObjectsCompat.equals(getMaxTimeLapseForObserveQuery(), that.getMaxTimeLapseForObserveQuery())) {
             return false;
         }
@@ -253,7 +238,6 @@ public final class DataStoreConfiguration {
         result = 31 * result + (getSyncPageSize() != null ? getSyncPageSize().hashCode() : 0);
         result = 31 * result + (getSyncIntervalInMinutes() != null ? getSyncIntervalInMinutes().hashCode() : 0);
         result = 31 * result + (getSyncExpressions() != null ? getSyncExpressions().hashCode() : 0);
-        result = 31 * result + getDoSyncRetry().hashCode();
         result = 31 * result + (getObserveQueryMaxRecords() != null ? getObserveQueryMaxRecords().hashCode() : 0);
         result = 31 * result + getMaxTimeLapseForObserveQuery().hashCode();
         return result;
@@ -268,7 +252,6 @@ public final class DataStoreConfiguration {
             ", syncPageSize=" + syncPageSize +
             ", syncIntervalInMinutes=" + syncIntervalInMinutes +
             ", syncExpressions=" + syncExpressions +
-                ", doSyncRetry=" + doSyncRetry +
                 ", maxTimeRelapseForObserveQuery=" + maxTimeLapseForObserveQuery +
                 ", observeQueryMaxRecords=" + observeQueryMaxRecords +
             '}';
@@ -303,7 +286,6 @@ public final class DataStoreConfiguration {
         private Long syncIntervalInMinutes;
         private Integer syncMaxRecords;
         private Integer syncPageSize;
-        private boolean doSyncRetry;
         private Map<String, DataStoreSyncExpression> syncExpressions;
         private boolean ensureDefaults;
         private JSONObject pluginJson;
@@ -394,17 +376,6 @@ public final class DataStoreConfiguration {
         @NonNull
         public Builder syncMaxRecords(@IntRange(from = 0) Integer syncMaxRecords) {
             this.syncMaxRecords = syncMaxRecords;
-            return Builder.this;
-        }
-
-        /**
-         * Sets the retry enabled on datastore sync.
-         * @param doSyncRetry Is retry enabled on datastore sync
-         * @return Current builder instance
-         */
-        @NonNull
-        public Builder doSyncRetry(boolean doSyncRetry) {
-            this.doSyncRetry = doSyncRetry;
             return Builder.this;
         }
 
@@ -507,7 +478,6 @@ public final class DataStoreConfiguration {
             syncMaxRecords = getValueOrDefault(userProvidedConfiguration.getSyncMaxRecords(), syncMaxRecords);
             syncPageSize = getValueOrDefault(userProvidedConfiguration.getSyncPageSize(), syncPageSize);
             syncExpressions = userProvidedConfiguration.getSyncExpressions();
-            doSyncRetry = getValueOrDefault(userProvidedConfiguration.getDoSyncRetry(), doSyncRetry);
             observeQueryMaxRecords = getValueOrDefault(userProvidedConfiguration.getObserveQueryMaxRecords(),
                     observeQueryMaxRecords);
             maxTimeLapseForObserveQuery = userProvidedConfiguration.getMaxTimeLapseForObserveQuery()

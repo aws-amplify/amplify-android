@@ -339,7 +339,6 @@ final class MutationProcessor {
             @NonNull PendingMutation<T> mutation) {
         List<Class<? extends Throwable>> skipException = new ArrayList<>();
         skipException.add(DataStoreException.GraphQLResponseException.class);
-        skipException.add(ApiException.NonRetryableException.class);
         LOG.info("Started Publish with retry: " + mutation);
         return retryHandler.retry(publishToNetwork(mutation), skipException);
     }

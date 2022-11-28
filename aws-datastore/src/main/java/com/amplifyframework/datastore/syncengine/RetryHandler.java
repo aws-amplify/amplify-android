@@ -105,7 +105,7 @@ public class RetryHandler {
                     LOG.warn("Attempt #" + (numAttempt.get() + 1) + " failed.", error);
 
                     return Observable.timer(delay, TimeUnit.MILLISECONDS, scheduler).doOnSubscribe(ignore -> {
-                        LOG.info("Retrying in " + delay + " milliseconds.");
+                        LOG.debug("Retrying in " + delay + " milliseconds.");
 
                         numAttempt.getAndIncrement();
                     });
