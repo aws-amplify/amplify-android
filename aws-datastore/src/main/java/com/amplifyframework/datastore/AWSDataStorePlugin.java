@@ -89,8 +89,6 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
 
     private final AuthModeStrategyType authModeStrategy;
 
-    private final boolean isSyncRetryEnabled;
-
     private final ReachabilityMonitor reachabilityMonitor;
 
     private AWSDataStorePlugin(
@@ -102,7 +100,6 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
         this.categoryInitializationsPending = new CountDownLatch(1);
         this.authModeStrategy = AuthModeStrategyType.DEFAULT;
         this.userProvidedConfiguration = userProvidedConfiguration;
-        this.isSyncRetryEnabled = userProvidedConfiguration != null && userProvidedConfiguration.getDoSyncRetry();
         this.reachabilityMonitor = ReachabilityMonitor.Companion.create();
         // Used to interrogate plugins, to understand if sync should be automatically turned on
         this.orchestrator = new Orchestrator(
@@ -111,8 +108,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             sqliteStorageAdapter,
             AppSyncClient.via(api),
             () -> pluginConfiguration,
-            () -> api.getPlugins().isEmpty() ? Orchestrator.State.LOCAL_ONLY : Orchestrator.State.SYNC_VIA_API,
-                isSyncRetryEnabled
+            () -> api.getPlugins().isEmpty() ? Orchestrator.State.LOCAL_ONLY : Orchestrator.State.SYNC_VIA_API
         );
 
     }
@@ -127,7 +123,6 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
         this.authModeStrategy = builder.authModeStrategy == null ?
             AuthModeStrategyType.DEFAULT :
             builder.authModeStrategy;
-        this.isSyncRetryEnabled = builder.isSyncRetryEnabled;
         ApiCategory api = builder.apiCategory == null ? Amplify.API : builder.apiCategory;
         this.userProvidedConfiguration = builder.dataStoreConfiguration;
         this.sqliteStorageAdapter = builder.storageAdapter == null ?
@@ -145,8 +140,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             sqliteStorageAdapter,
             AppSyncClient.via(api, this.authModeStrategy),
             () -> pluginConfiguration,
-            () -> api.getPlugins().isEmpty() ? Orchestrator.State.LOCAL_ONLY : Orchestrator.State.SYNC_VIA_API,
-            isSyncRetryEnabled
+            () -> api.getPlugins().isEmpty() ? Orchestrator.State.LOCAL_ONLY : Orchestrator.State.SYNC_VIA_API
         );
     }
 
@@ -693,7 +687,6 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
         private AuthModeStrategyType authModeStrategy;
         private LocalStorageAdapter storageAdapter;
         private ReachabilityMonitor reachabilityMonitor;
-        private boolean isSyncRetryEnabled;
 
         private Builder() {}
 
@@ -769,16 +762,6 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
          */
         public Builder authModeStrategy(AuthModeStrategyType authModeStrategy) {
             this.authModeStrategy = authModeStrategy;
-            return this;
-        }
-
-        /**
-         * Enables Retry on DataStore sync engine.
-         * @param isSyncRetryEnabled is sync retry enabled.
-         * @return An implementation of the {@link ModelProvider} interface.
-         */
-        public Builder isSyncRetryEnabled(Boolean isSyncRetryEnabled) {
-            this.isSyncRetryEnabled = isSyncRetryEnabled;
             return this;
         }
 
