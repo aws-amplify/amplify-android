@@ -36,6 +36,7 @@ import com.amplifyframework.hub.HubEvent
 import com.amplifyframework.testutils.HubAccumulator
 import com.amplifyframework.testutils.Resources
 import com.amplifyframework.testutils.Sleep
+import com.amplifyframework.testutils.junitcategories.StressTests
 import com.amplifyframework.testutils.sync.SynchronousAuth
 import java.util.UUID
 import java.util.concurrent.TimeUnit
@@ -45,8 +46,80 @@ import org.junit.Assert
 import org.junit.Before
 import org.junit.BeforeClass
 import org.junit.Test
+import org.junit.experimental.categories.Category
 
+@Category(StressTests::class)
 class PinpointAnalyticsStressTest {
+
+    companion object {
+        private const val CREDENTIALS_RESOURCE_NAME = "credentials"
+        private const val CONFIGURATION_NAME = "amplifyconfiguration"
+        private const val COGNITO_CONFIGURATION_TIMEOUT = 5 * 1000L
+        private const val PINPOINT_ROUNDTRIP_TIMEOUT = 1 * 1000L
+        private const val FLUSH_TIMEOUT = 1 * 500L
+        private const val RECORD_INSERTION_TIMEOUT = 1 * 1000L
+        private const val UNIQUE_ID_KEY = "UniqueId"
+        private const val PREFERENCES_AND_FILE_MANAGER_SUFFIX = "515d6767-01b7-49e5-8273-c8d11b0f331d"
+        private lateinit var synchronousAuth: SynchronousAuth
+        private lateinit var preferences: SharedPreferences
+        private lateinit var appId: String
+        private lateinit var uniqueId: String
+        private lateinit var pinpointClient: PinpointClient
+
+        @BeforeClass
+        @JvmStatic
+        fun setupBefore() {
+            val context = ApplicationProvider.getApplicationContext<Context>()
+            @RawRes val resourceId = Resources.getRawResourceId(context, CONFIGURATION_NAME)
+            appId = readAppIdFromResource(context, resourceId)
+            preferences = context.getSharedPreferences(
+                "${appId}$PREFERENCES_AND_FILE_MANAGER_SUFFIX",
+                Context.MODE_PRIVATE
+            )
+            setUniqueId()
+            Amplify.Auth.addPlugin(AWSCognitoAuthPlugin() as AuthPlugin<*>)
+            Amplify.addPlugin(AWSPinpointAnalyticsPlugin())
+            Amplify.configure(context)
+            Sleep.milliseconds(COGNITO_CONFIGURATION_TIMEOUT)
+            synchronousAuth = SynchronousAuth.delegatingTo(Amplify.Auth)
+        }
+
+        private fun setUniqueId() {
+            uniqueId = UUID.randomUUID().toString()
+            preferences.edit().putString(UNIQUE_ID_KEY, uniqueId).commit()
+        }
+
+        private fun readCredentialsFromResource(context: Context, @RawRes resourceId: Int): Pair<String, String>? {
+            val resource = Resources.readAsJson(context, resourceId)
+            var userCredentials: Pair<String, String>? = null
+            return try {
+                val credentials = resource.getJSONArray("credentials")
+                for (index in 0 until credentials.length()) {
+                    val credential = credentials.getJSONObject(index)
+                    val username = credential.getString("username")
+                    val password = credential.getString("password")
+                    userCredentials = Pair(username, password)
+                }
+                userCredentials
+            } catch (jsonReadingFailure: JSONException) {
+                throw RuntimeException(jsonReadingFailure)
+            }
+        }
+
+        private fun readAppIdFromResource(context: Context, @RawRes resourceId: Int): String {
+            val resource = Resources.readAsJson(context, resourceId)
+            return try {
+                val analyticsJson = resource.getJSONObject("analytics")
+                val pluginsJson = analyticsJson.getJSONObject("plugins")
+                val pluginJson = pluginsJson.getJSONObject("awsPinpointAnalyticsPlugin")
+                val pinpointJson = pluginJson.getJSONObject("pinpointAnalytics")
+                pinpointJson.getString("appId")
+            } catch (jsonReadingFailure: JSONException) {
+                throw RuntimeException(jsonReadingFailure)
+            }
+        }
+    }
+
     @Before
     fun flushEvents() {
         val context = ApplicationProvider.getApplicationContext<Context>()
@@ -68,7 +141,7 @@ class PinpointAnalyticsStressTest {
     }
 
     /**
-     * Calls Analytics.recordEvent on an event with 5 attributes 100 times
+     * Calls Analytics.recordEvent on an event with 5 attributes 50 times
      */
     @Test
     fun testMultipleRecordEvent() {
@@ -76,8 +149,8 @@ class PinpointAnalyticsStressTest {
         val hubAccumulator =
             HubAccumulator.create(HubChannel.ANALYTICS, AnalyticsChannelEventName.FLUSH_EVENTS, 2).start()
 
-        for (i in 1..50) {
-            eventName = "Amplify-event$i"
+        repeat(50) {
+            eventName = "Amplify-event" + UUID.randomUUID().toString()
             val event = AnalyticsEvent.builder()
                 .name(eventName)
                 .addProperty("AnalyticsStringProperty", "Pancakes")
@@ -104,8 +177,8 @@ class PinpointAnalyticsStressTest {
         val hubAccumulator =
             HubAccumulator.create(HubChannel.ANALYTICS, AnalyticsChannelEventName.FLUSH_EVENTS, 2).start()
 
-        for (i in 1..50) {
-            eventName = "Amplify-event$i"
+        repeat(50) {
+            eventName = "Amplify-event" + UUID.randomUUID().toString()
             val event = AnalyticsEvent.builder()
                 .name(eventName)
                 .addProperty("AnalyticsStringProperty1", "Pancakes")
@@ -167,7 +240,7 @@ class PinpointAnalyticsStressTest {
         val analyticsHubEventAccumulator =
             HubAccumulator.create(HubChannel.ANALYTICS, AnalyticsChannelEventName.FLUSH_EVENTS, 50)
                 .start()
-        val eventName = "Amplify-event"
+        val eventName = "Amplify-event" + UUID.randomUUID().toString()
         val event = AnalyticsEvent.builder()
             .name(eventName)
             .addProperty("AnalyticsStringProperty", "Pancakes")
@@ -186,7 +259,7 @@ class PinpointAnalyticsStressTest {
     }
 
     /**
-     * calls Analytics.recordEvent, then calls Analytics.flushEvent; 50 times
+     * calls Analytics.recordEvent, then calls Analytics.flushEvent; 30 times
      */
     @Test
     fun testFlushEvent_AfterRecordEvent() {
@@ -195,8 +268,8 @@ class PinpointAnalyticsStressTest {
             HubAccumulator.create(HubChannel.ANALYTICS, AnalyticsChannelEventName.FLUSH_EVENTS, 35)
                 .start()
 
-        for (i in 1..30) {
-            eventName = "Amplify-event$i"
+        repeat(30) {
+            eventName = "Amplify-event" + UUID.randomUUID().toString()
             val event = AnalyticsEvent.builder()
                 .name(eventName)
                 .addProperty("AnalyticsStringProperty", "Pancakes")
@@ -424,73 +497,5 @@ class PinpointAnalyticsStressTest {
             }
         }
         return result
-    }
-
-    companion object {
-        private const val CREDENTIALS_RESOURCE_NAME = "credentials"
-        private const val CONFIGURATION_NAME = "amplifyconfiguration"
-        private const val COGNITO_CONFIGURATION_TIMEOUT = 5 * 1000L
-        private const val PINPOINT_ROUNDTRIP_TIMEOUT = 1 * 1000L
-        private const val FLUSH_TIMEOUT = 1 * 500L
-        private const val RECORD_INSERTION_TIMEOUT = 1 * 1000L
-        private const val UNIQUE_ID_KEY = "UniqueId"
-        private const val PREFERENCES_AND_FILE_MANAGER_SUFFIX = "515d6767-01b7-49e5-8273-c8d11b0f331d"
-        private lateinit var synchronousAuth: SynchronousAuth
-        private lateinit var preferences: SharedPreferences
-        private lateinit var appId: String
-        private lateinit var uniqueId: String
-        private lateinit var pinpointClient: PinpointClient
-        @BeforeClass
-        @JvmStatic
-        fun setupBefore() {
-            val context = ApplicationProvider.getApplicationContext<Context>()
-            @RawRes val resourceId = Resources.getRawResourceId(context, CONFIGURATION_NAME)
-            appId = readAppIdFromResource(context, resourceId)
-            preferences = context.getSharedPreferences(
-                "${appId}$PREFERENCES_AND_FILE_MANAGER_SUFFIX",
-                Context.MODE_PRIVATE
-            )
-            setUniqueId()
-            Amplify.Auth.addPlugin(AWSCognitoAuthPlugin() as AuthPlugin<*>)
-            Amplify.addPlugin(AWSPinpointAnalyticsPlugin())
-            Amplify.configure(context)
-            Sleep.milliseconds(COGNITO_CONFIGURATION_TIMEOUT)
-            synchronousAuth = SynchronousAuth.delegatingTo(Amplify.Auth)
-        }
-
-        private fun setUniqueId() {
-            uniqueId = UUID.randomUUID().toString()
-            preferences.edit().putString(UNIQUE_ID_KEY, uniqueId).commit()
-        }
-
-        private fun readCredentialsFromResource(context: Context, @RawRes resourceId: Int): Pair<String, String>? {
-            val resource = Resources.readAsJson(context, resourceId)
-            var userCredentials: Pair<String, String>? = null
-            return try {
-                val credentials = resource.getJSONArray("credentials")
-                for (index in 0 until credentials.length()) {
-                    val credential = credentials.getJSONObject(index)
-                    val username = credential.getString("username")
-                    val password = credential.getString("password")
-                    userCredentials = Pair(username, password)
-                }
-                userCredentials
-            } catch (jsonReadingFailure: JSONException) {
-                throw RuntimeException(jsonReadingFailure)
-            }
-        }
-
-        private fun readAppIdFromResource(context: Context, @RawRes resourceId: Int): String {
-            val resource = Resources.readAsJson(context, resourceId)
-            return try {
-                val analyticsJson = resource.getJSONObject("analytics")
-                val pluginsJson = analyticsJson.getJSONObject("plugins")
-                val pluginJson = pluginsJson.getJSONObject("awsPinpointAnalyticsPlugin")
-                val pinpointJson = pluginJson.getJSONObject("pinpointAnalytics")
-                pinpointJson.getString("appId")
-            } catch (jsonReadingFailure: JSONException) {
-                throw RuntimeException(jsonReadingFailure)
-            }
-        }
     }
 }
