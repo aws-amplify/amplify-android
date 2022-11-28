@@ -17,6 +17,7 @@ package com.amplifyframework.geo.location.service
 
 import com.amplifyframework.geo.models.Coordinates
 import com.amplifyframework.geo.models.CountryCode
+import com.amplifyframework.geo.models.GeoLocation
 import com.amplifyframework.geo.models.Place
 import com.amplifyframework.geo.models.SearchArea
 import com.amplifyframework.geo.options.GeoUpdateLocationOptions
