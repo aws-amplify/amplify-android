@@ -18,8 +18,6 @@
 
 package com.amplifyframework.geo.options;
 
-import java.util.Map;
-
 public class GeoUpdateLocationOptions {
     // Name of tracker resource. Set to default tracker if no tracker is passed in.
     String tracker;
@@ -29,10 +27,38 @@ public class GeoUpdateLocationOptions {
     // this map, an exception is thrown for a debug build and a warning is logged
     // for a release (production) build. The keys in the map are truncated to be
     // at most length 20 and the values are truncated to be at most length 40.
-    Map<String, String> metadata;
+    GeoPositionProperties positionProperties;
 
-    public GeoUpdateLocationOptions(String tracker, Map<String, String> metadata) {
-        this.tracker = tracker;
-        this.metadata = metadata;
+    protected GeoUpdateLocationOptions(Builder builder) {
+        this.tracker = builder.tracker;
+        this.positionProperties = builder.positionProperties;
+    }
+
+    public String getTracker() {
+        return tracker;
+    }
+
+    public GeoPositionProperties getPositionProperties() {
+        return positionProperties;
+    }
+
+    public static final class Builder {
+        // TODO: use default tracker
+        String tracker = "";
+        GeoPositionProperties positionProperties = new GeoPositionProperties();
+
+        public Builder withTracker(String tracker) {
+            this.tracker = tracker;
+            return this;
+        }
+
+        public Builder withPositionProperties(GeoPositionProperties positionProperties) {
+            this.positionProperties = positionProperties;
+            return this;
+        }
+
+        public GeoUpdateLocationOptions build() {
+            return new GeoUpdateLocationOptions(this);
+        }
     }
 }

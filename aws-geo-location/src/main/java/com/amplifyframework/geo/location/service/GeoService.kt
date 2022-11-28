@@ -19,6 +19,7 @@ import com.amplifyframework.geo.models.Coordinates
 import com.amplifyframework.geo.models.CountryCode
 import com.amplifyframework.geo.models.Place
 import com.amplifyframework.geo.models.SearchArea
+import com.amplifyframework.geo.options.GeoUpdateLocationOptions
 
 /**
  * Backend provider for Geo Amazon Location Geo plugin.
@@ -55,4 +56,13 @@ internal interface GeoService<T> {
         position: Coordinates,
         limit: Int
     ): List<Place>
+
+    /**
+     * Sends an update that the device with this ID is in this location.
+     */
+    suspend fun updateLocation(
+        deviceId: String,
+        location: GeoLocation,
+        options: GeoUpdateLocationOptions,
+    )
 }

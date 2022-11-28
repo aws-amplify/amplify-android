@@ -24,6 +24,14 @@ package com.amplifyframework.geo.models;
 public final class GeoLocation {
     double latitude, longitude;
 
+    public double getLatitude() {
+        return latitude;
+    }
+
+    public double getLongitude() {
+        return longitude;
+    }
+
     GeoLocation(double latitude, double longitude) {
         this.latitude = latitude;
         this.longitude = longitude;

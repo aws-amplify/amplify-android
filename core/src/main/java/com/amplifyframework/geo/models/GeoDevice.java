@@ -40,6 +40,10 @@ import com.amplifyframework.geo.GeoException;
 public class GeoDevice {
     String id;
 
+    public String getId() {
+        return id;
+    }
+
     private GeoDevice (String id) {
         this.id = id;
     }

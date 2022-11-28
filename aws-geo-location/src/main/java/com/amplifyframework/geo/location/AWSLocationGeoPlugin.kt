@@ -36,6 +36,7 @@ import com.amplifyframework.geo.models.GeoDevice
 import com.amplifyframework.geo.models.GeoLocation
 import com.amplifyframework.geo.models.MapStyle
 import com.amplifyframework.geo.models.MapStyleDescriptor
+import com.amplifyframework.geo.options.GeoPositionProperties
 import com.amplifyframework.geo.options.GeoSearchByCoordinatesOptions
 import com.amplifyframework.geo.options.GeoSearchByTextOptions
 import com.amplifyframework.geo.options.GeoUpdateLocationOptions
@@ -220,7 +221,12 @@ class AWSLocationGeoPlugin(
         onResult: Action,
         onError: Consumer<GeoException>
     ) {
-        val options = GeoUpdateLocationOptions("TEMP_TRACKER", emptyMap())
+        val options = GeoUpdateLocationOptions
+            .Builder()
+                // TODO: pass correct tracker
+            .withTracker("TEMP_TRACKER")
+            .withPositionProperties(GeoPositionProperties())
+            .build()
         updateLocation(device, location, options, onResult, onError)
     }
 
@@ -233,9 +239,9 @@ class AWSLocationGeoPlugin(
     ) {
         execute (
             {
-                TODO("Not yet implemented")
+                geoService.updateLocation(device.id, location, options)
             },
-            Errors::searchError,
+            Errors::deviceTrackingError,
             onResult,
             onError
         )

@@ -16,16 +16,23 @@
 package com.amplifyframework.geo.location.service
 
 import aws.sdk.kotlin.services.location.LocationClient
+import aws.sdk.kotlin.services.location.model.BatchUpdateDevicePositionRequest
+import aws.sdk.kotlin.services.location.model.DevicePositionUpdate
 import aws.sdk.kotlin.services.location.model.GetMapStyleDescriptorRequest
 import aws.sdk.kotlin.services.location.model.SearchPlaceIndexForPositionRequest
 import aws.sdk.kotlin.services.location.model.SearchPlaceIndexForTextRequest
+import aws.smithy.kotlin.runtime.ClientException
 import aws.smithy.kotlin.runtime.ServiceException
 import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider
+import aws.smithy.kotlin.runtime.time.Instant
+import com.amplifyframework.geo.GeoException
 import com.amplifyframework.geo.location.models.AmazonLocationPlace
 import com.amplifyframework.geo.models.Coordinates
 import com.amplifyframework.geo.models.CountryCode
+import com.amplifyframework.geo.models.GeoLocation
 import com.amplifyframework.geo.models.Place
 import com.amplifyframework.geo.models.SearchArea
+import com.amplifyframework.geo.options.GeoUpdateLocationOptions
 
 /**
  * Implements the backend provider for the location plugin using
@@ -98,5 +105,35 @@ internal class AmazonLocationService(
             ?.map {
                 AmazonLocationPlace(it)
             } ?: listOf()
+    }
+
+    override suspend fun updateLocation(
+        deviceId: String,
+        location: GeoLocation,
+        options: GeoUpdateLocationOptions,
+    ) {
+        val devicePositionUpdate = DevicePositionUpdate.invoke {
+            this.deviceId = deviceId
+            // Amazon Location Service uses [longitude, latitude]
+            this.position = listOf(location.longitude, location.latitude)
+            this.sampleTime = Instant.now()
+            this.positionProperties = options.positionProperties.properties
+        }
+
+        val request = BatchUpdateDevicePositionRequest.invoke {
+            trackerName = options.tracker
+            updates = listOf(devicePositionUpdate)
+        }
+        val response = provider.batchUpdateDevicePosition(request)
+        if (!response.errors.isNullOrEmpty()) {
+            response.errors?.first()?.error?.let {
+                if (it.message != null) {
+                    throw GeoException(it.message!!, "Please ensure that you have a stable internet connection.")
+                }
+                else {
+                    throw ClientException()
+                }
+            }
+        }
     }
 }
