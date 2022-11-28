@@ -89,7 +89,7 @@ public final class OrchestratorTest {
         ModelMetadata metadata = new ModelMetadata(susan.getId(),
                                                    false,
                                                    1,
-                                                   Temporal.Timestamp.now(), susan.getModelName());
+                                                   Temporal.Timestamp.now());
         ModelWithMetadata<BlogOwner> modelWithMetadata = new ModelWithMetadata<>(susan, metadata);
         // Mock behaviors from for the API category
         mockApi = mock(GraphQLBehavior.class);
