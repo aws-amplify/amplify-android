@@ -19,6 +19,7 @@ phases:
       android: 29
       nodejs: 12
       python: 3.8
+      java: corretto11
     commands:
       - echo 'Install phase starting'
       - npm install -g xunit-viewer
@@ -32,7 +33,7 @@ phases:
       - |
         if [[ -z "${CONFIG_SOURCE_BUCKET}" ]]; then
           echo 'Pulling config files from Amplify'
-          JAVA_HOME=$JDK_8_HOME ./gradlew pullBackendConfigFromAmplify
+          JAVA_HOME=$JDK_11_HOME ./gradlew pullBackendConfigFromAmplify
         else
           echo 'Pulling config files from S3'
           ./scripts/pull_backend_config_from_s3 ${CONFIG_SOURCE_BUCKET}
@@ -42,8 +43,8 @@ phases:
   build:
     commands:
       - echo 'Build phase starting.'
-      - JAVA_HOME=$JDK_8_HOME ./gradlew assembleAndroidTest
-      - JAVA_HOME=$JDK_8_HOME ./gradlew runTestsInDeviceFarm
+      - JAVA_HOME=$JDK_11_HOME ./gradlew assembleAndroidTest
+      - JAVA_HOME=$JDK_11_HOME ./gradlew runTestsInDeviceFarm
     finally:
       - echo 'Build phase completed.'
   post_build:
