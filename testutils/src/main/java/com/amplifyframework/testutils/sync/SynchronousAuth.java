@@ -49,6 +49,7 @@ import com.amplifyframework.auth.result.AuthSignUpResult;
 import com.amplifyframework.auth.result.AuthUpdateAttributeResult;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.plugin.Plugin;
+import com.amplifyframework.logging.AndroidLoggingPlugin;
 import com.amplifyframework.testutils.Await;
 import com.amplifyframework.testutils.VoidResult;
 
@@ -107,6 +108,7 @@ public final class SynchronousAuth {
         throws AmplifyException, InterruptedException {
         try {
             Amplify.Auth.addPlugin((AuthPlugin<?>) authPlugin);
+            Amplify.Logging.addPlugin(new AndroidLoggingPlugin());
             Amplify.configure(context);
         } catch (Exception exception) {
             Log.i("SynchronousAuth", "Amplify already called", exception);
