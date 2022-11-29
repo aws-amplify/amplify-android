@@ -37,8 +37,10 @@ subprojects {
             task runTestsExcludeStressTests {
                 dependsOn(assembleAndroidTest)
                 doLast {
-                    useJUnit {
-                        excludeCategories 'com.amplifyframework.testutils.junitcategories.StressTests'
+                    tasks.withType(Test){
+                        useJUnit {
+                            excludeCategories 'com.amplifyframework.testutils.junitcategories.StressTests'
+                        }
                     }
                     exec {
                         commandLine("$rootDir.path/scripts/run_tests_in_devicefarm_pool.sh")
