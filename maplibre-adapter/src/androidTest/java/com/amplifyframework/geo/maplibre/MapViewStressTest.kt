@@ -1,25 +1,22 @@
 package com.amplifyframework.geo.maplibre
 
-import android.graphics.Color
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import com.amplifyframework.geo.GeoCategory
-import com.amplifyframework.geo.GeoCategoryBehavior
 import com.amplifyframework.geo.location.AWSLocationGeoPlugin
-import com.amplifyframework.geo.maplibre.view.ClusteringOptions
-import com.amplifyframework.geo.maplibre.view.MapLibreView
+import com.amplifyframework.testutils.junitcategories.StressTests
 import com.amplifyframework.testutils.sync.SynchronousGeo
 import com.amplifyframework.testutils.sync.TestCategory
-import com.mapbox.mapboxsdk.maps.MapboxMap
-import com.mapbox.mapboxsdk.maps.Style
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import org.junit.*
+import org.junit.experimental.categories.Category
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
+@Category(StressTests::class)
 class MapViewStressTest {
     @get:Rule
     var rule = ActivityScenarioRule(MapViewTestActivity::class.java)

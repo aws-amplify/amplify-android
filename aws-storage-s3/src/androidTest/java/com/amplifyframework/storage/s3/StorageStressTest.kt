@@ -16,8 +16,6 @@
 package com.amplifyframework.storage.s3
 
 import android.content.Context
-import android.os.Handler
-import android.os.Looper
 import android.util.Log
 import androidx.test.core.app.ApplicationProvider.getApplicationContext
 import com.amplifyframework.auth.AuthPlugin
@@ -30,15 +28,18 @@ import com.amplifyframework.storage.s3.test.R
 import com.amplifyframework.storage.s3.util.WorkmanagerTestUtils.initializeWorkmanagerTestUtil
 import com.amplifyframework.testutils.FileAssert
 import com.amplifyframework.testutils.Sleep
+import com.amplifyframework.testutils.junitcategories.StressTests
 import com.amplifyframework.testutils.random.RandomTempFile
 import com.amplifyframework.testutils.sync.SynchronousAuth
 import com.amplifyframework.testutils.sync.SynchronousStorage
 import org.junit.BeforeClass
 import org.junit.Test
+import org.junit.experimental.categories.Category
 import java.io.File
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
+@Category(StressTests::class)
 class StorageStressTest {
     companion object {
         private lateinit var storageCategory: StorageCategory
@@ -143,7 +144,7 @@ class StorageStressTest {
     }
 
     /**
-     * Calls Storage.uploadFile with a random temporary file of size 1GB
+     * Calls Storage.uploadFile with a random temporary file of size .5GB
      */
     @Test
     fun testUploadLargeFile() {
@@ -156,7 +157,7 @@ class StorageStressTest {
     }
 
     /**
-     * Calls Storage.downloadFile with a random temporary file of size 1GB
+     * Calls Storage.downloadFile with a random temporary file of size .5GB
      */
     @Test
     fun testDownloadLargeFile() {
