@@ -110,6 +110,7 @@ internal class AmazonLocationService(
     override suspend fun updateLocation(
         deviceId: String,
         location: GeoLocation,
+        tracker: String,
         options: GeoUpdateLocationOptions,
     ) {
         val devicePositionUpdate = DevicePositionUpdate.invoke {
@@ -121,7 +122,7 @@ internal class AmazonLocationService(
         }
 
         val request = BatchUpdateDevicePositionRequest.invoke {
-            trackerName = options.tracker
+            trackerName = tracker
             updates = listOf(devicePositionUpdate)
         }
         val response = provider.batchUpdateDevicePosition(request)

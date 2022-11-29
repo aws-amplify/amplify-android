@@ -18,22 +18,9 @@
 
 package com.amplifyframework.geo.models;
 
-/*
- * Stores latitude and longitude for a location
- */
-public final class GeoLocation {
-    double latitude, longitude;
-
-    public double getLatitude() {
-        return latitude;
-    }
-
-    public double getLongitude() {
-        return longitude;
-    }
-
-    public GeoLocation(double latitude, double longitude) {
-        this.latitude = latitude;
-        this.longitude = longitude;
-    }
+public enum GeoDeviceType {
+    UNCHECKED,
+    USER,
+    USER_AND_DEVICE,
+    DEVICE
 }

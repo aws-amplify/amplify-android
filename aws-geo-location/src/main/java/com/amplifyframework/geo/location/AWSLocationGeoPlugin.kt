@@ -16,6 +16,8 @@
 package com.amplifyframework.geo.location
 
 import android.content.Context
+import android.content.Context.MODE_PRIVATE
+import android.content.SharedPreferences
 import aws.sdk.kotlin.services.location.LocationClient
 import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider
 import com.amplifyframework.AmplifyException
@@ -31,8 +33,10 @@ import com.amplifyframework.geo.location.options.AmazonLocationSearchByCoordinat
 import com.amplifyframework.geo.location.options.AmazonLocationSearchByTextOptions
 import com.amplifyframework.geo.location.service.AmazonLocationService
 import com.amplifyframework.geo.location.service.GeoService
+import com.amplifyframework.geo.location.util.getId
 import com.amplifyframework.geo.models.Coordinates
 import com.amplifyframework.geo.models.GeoDevice
+import com.amplifyframework.geo.models.GeoDeviceType
 import com.amplifyframework.geo.models.GeoLocation
 import com.amplifyframework.geo.models.MapStyle
 import com.amplifyframework.geo.models.MapStyleDescriptor
@@ -60,6 +64,7 @@ class AWSLocationGeoPlugin(
 
     private lateinit var configuration: GeoConfiguration
     private lateinit var geoService: GeoService<LocationClient>
+    private lateinit var sharedPreferences: SharedPreferences
 
     private val executor = Executors.newCachedThreadPool()
     private val defaultMapName: String by lazy {
@@ -67,6 +72,9 @@ class AWSLocationGeoPlugin(
     }
     private val defaultSearchIndexName: String by lazy {
         configuration.searchIndices!!.default
+    }
+    private val defaultTracker: String by lazy {
+        configuration.trackers!!.default
     }
 
     val credentialsProvider: CredentialsProvider by lazy {
@@ -83,6 +91,7 @@ class AWSLocationGeoPlugin(
             this.configuration =
                 userConfiguration ?: GeoConfiguration.fromJson(pluginConfiguration).build()
             this.geoService = AmazonLocationService(credentialsProvider, configuration.region)
+            this.sharedPreferences = context.getSharedPreferences(GEO_PLUGIN_KEY, MODE_PRIVATE)
         } catch (error: Exception) {
             throw GeoException(
                 "Failed to configure AWSLocationGeoPlugin.",
@@ -221,12 +230,7 @@ class AWSLocationGeoPlugin(
         onResult: Action,
         onError: Consumer<GeoException>
     ) {
-        val options = GeoUpdateLocationOptions
-            .Builder()
-                // TODO: pass correct tracker
-            .withTracker("TEMP_TRACKER")
-            .withPositionProperties(GeoPositionProperties())
-            .build()
+        val options = GeoUpdateLocationOptions.defaults()
         updateLocation(device, location, options, onResult, onError)
     }
 
@@ -239,7 +243,21 @@ class AWSLocationGeoPlugin(
     ) {
         execute (
             {
-                geoService.updateLocation(device.id, location, options)
+                var tracker = options.tracker
+                if (options.tracker.isEmpty()) {
+                    tracker = defaultTracker
+                }
+                val id = when(device.type) {
+                    GeoDeviceType.UNCHECKED -> device.id
+                    // TODO: Blocked by ALS not allowing colons in ids
+                    GeoDeviceType.USER_AND_DEVICE -> (credentialsProvider as CognitoCredentialsProvider).
+                        getIdentityId() + " - " + sharedPreferences.getId()
+                    GeoDeviceType.DEVICE -> sharedPreferences.getId()
+                    else -> // GeoDeviceType.USER
+                        (credentialsProvider as CognitoCredentialsProvider).getIdentityId() + " - " +
+                                sharedPreferences.getId()
+                }
+                geoService.updateLocation(id, location, tracker, options)
             },
             Errors::deviceTrackingError,
             onResult,

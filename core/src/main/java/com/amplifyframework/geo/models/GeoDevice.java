@@ -39,32 +39,34 @@ import com.amplifyframework.geo.GeoException;
  */
 public class GeoDevice {
     String id;
+    GeoDeviceType type;
 
     public String getId() {
         return id;
     }
 
-    private GeoDevice (String id) {
+    public GeoDeviceType getType() {
+        return type;
+    }
+
+    private GeoDevice (String id, GeoDeviceType type) {
         this.id = id;
+        this.type = type;
     }
 
     public static GeoDevice createUncheckedId(String id) {
-        return new GeoDevice(id);
+        return new GeoDevice(id, GeoDeviceType.UNCHECKED);
     }
 
-    public static GeoDevice createIdTiedToUser(Consumer<GeoDevice> onResult, Consumer<GeoException> onError) {
-        // TODO("Blocked by ALS not allowing colons in ids");
-        return new GeoDevice("id");
+    public static GeoDevice createIdTiedToUser() {
+        return new GeoDevice("", GeoDeviceType.USER);
     }
 
-    public static GeoDevice createIdTiedToUserAndDevice(Consumer<GeoDevice> onResult, Consumer<GeoException> onError) {
-        // TODO("Blocked by ALS not allowing colons in ids");
-        return new GeoDevice("id");
+    public static GeoDevice createIdTiedToUserAndDevice() {
+        return new GeoDevice("", GeoDeviceType.USER_AND_DEVICE);
     }
 
-    public static GeoDevice createIdTiedToDevice(Consumer<GeoDevice> onResult, Consumer<GeoException> onError) {
-        // TODO("Not finished");
-        return new GeoDevice("id");
+    public static GeoDevice createIdTiedToDevice() {
+        return new GeoDevice("", GeoDeviceType.DEVICE);
     }
 }
-

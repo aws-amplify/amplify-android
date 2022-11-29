@@ -17,21 +17,28 @@ package com.amplifyframework.testutils.sync;
 
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.core.NoOpAction;
 import com.amplifyframework.geo.GeoCategory;
 import com.amplifyframework.geo.GeoCategoryBehavior;
 import com.amplifyframework.geo.GeoException;
 import com.amplifyframework.geo.models.Coordinates;
+import com.amplifyframework.geo.models.GeoDevice;
+import com.amplifyframework.geo.models.GeoLocation;
 import com.amplifyframework.geo.models.MapStyle;
 import com.amplifyframework.geo.models.MapStyleDescriptor;
 import com.amplifyframework.geo.options.GeoSearchByCoordinatesOptions;
 import com.amplifyframework.geo.options.GeoSearchByTextOptions;
+import com.amplifyframework.geo.options.GeoUpdateLocationOptions;
 import com.amplifyframework.geo.options.GetMapStyleDescriptorOptions;
 import com.amplifyframework.geo.result.GeoSearchResult;
 import com.amplifyframework.testutils.Await;
 
 import java.util.Collection;
 import java.util.Objects;
+
+import kotlin.Unit;
 
 /**
  * A utility to perform synchronous calls to the {@link GeoCategory}.
@@ -133,5 +140,48 @@ public final class SynchronousGeo {
     ) throws GeoException {
         return Await.<GeoSearchResult, GeoException>result((onResult, onError) ->
                 asyncDelegate.searchByCoordinates(coordinates, options, onResult, onError));
+    }
+
+    /**
+     * Updates a device's location for the default tracker.
+     *
+     * @param device The device that this location update will be applied to.
+     * @param location The location being updated for this device.
+     */
+    public Unit updateLocation(
+            GeoDevice device,
+            GeoLocation location
+    ) throws GeoException {
+        class GeoAction implements Action {
+            @Override
+            public void call() {}
+        }
+
+        return Await.<Unit, GeoException>result((onResult, onError) ->
+                asyncDelegate.updateLocation(device, location, new GeoAction(), onError));
+    }
+
+    /**
+     * Updates a device's location for the default tracker.
+     *
+     * @param device The device that this location update will be applied to.
+     * @param location The location being updated for this device.
+     */
+    public Unit updateLocation(
+            GeoDevice device,
+            GeoLocation location,
+            GeoUpdateLocationOptions options
+    ) throws GeoException {
+
+        return Await.<Unit, GeoException>result((onResult, onError) -> {
+            // for type conversion; test times out if onResult isn't called
+            class GeoAction implements Action {
+                @Override
+                public void call() {
+                    onResult.accept(Unit.INSTANCE);
+                }
+            }
+            asyncDelegate.updateLocation(device, location, options, new GeoAction(), onError);
+        });
     }
 }

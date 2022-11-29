@@ -24,7 +24,8 @@ import org.json.JSONObject
 data class GeoConfiguration internal constructor(
     val region: String,
     val maps: MapsConfiguration?,
-    val searchIndices: SearchIndicesConfiguration?
+    val searchIndices: SearchIndicesConfiguration?,
+    val trackers: TrackersConfiguration?
 ) {
     companion object {
         private const val DEFAULT_REGION = "us-east-1"
@@ -56,6 +57,7 @@ data class GeoConfiguration internal constructor(
         private var region: String = DEFAULT_REGION
         private var maps: MapsConfiguration? = null
         private var searchIndices: SearchIndicesConfiguration? = null
+        private var trackers: TrackersConfiguration? = null
 
         init {
             configJson?.run {
@@ -71,6 +73,10 @@ data class GeoConfiguration internal constructor(
                 optJSONObject(Config.SEARCH_INDICES.key)?.let {
                     searchIndices = SearchIndicesConfiguration.fromJson(it).build()
                 }
+
+                optJSONObject(Config.TRACKERS.key)?.let {
+                    trackers = TrackersConfiguration.fromJson(it).build()
+                }
             }
         }
 
@@ -79,7 +85,10 @@ data class GeoConfiguration internal constructor(
         fun searchIndices(searchIndices: SearchIndicesConfiguration) = apply {
             this.searchIndices = searchIndices
         }
-        fun build() = GeoConfiguration(region, maps, searchIndices)
+        fun trackers(trackers: TrackersConfiguration) = apply {
+            this.trackers = trackers
+        }
+        fun build() = GeoConfiguration(region, maps, searchIndices, trackers)
     }
 
     private enum class Config(val key: String) {
@@ -96,6 +105,11 @@ data class GeoConfiguration internal constructor(
         /**
          * Amazon Location Service endpoint region.
          */
-        REGION("region")
+        REGION("region"),
+
+        /**
+         * Amazon Location Service trackers for device tracking
+         */
+        TRACKERS("trackers")
     }
 }

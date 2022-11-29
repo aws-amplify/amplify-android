@@ -18,6 +18,8 @@
 
 package com.amplifyframework.geo.options;
 
+import androidx.annotation.NonNull;
+
 public class GeoUpdateLocationOptions {
     // Name of tracker resource. Set to default tracker if no tracker is passed in.
     String tracker;
@@ -34,12 +36,28 @@ public class GeoUpdateLocationOptions {
         this.positionProperties = builder.positionProperties;
     }
 
+    @NonNull
     public String getTracker() {
         return tracker;
     }
 
     public GeoPositionProperties getPositionProperties() {
         return positionProperties;
+    }
+
+    @NonNull
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    /**
+     * Returns a new {@link GeoUpdateLocationOptions} instance with default values.
+     *
+     * @return a default instance.
+     */
+    @NonNull
+    public static GeoUpdateLocationOptions defaults() {
+        return builder().build();
     }
 
     public static final class Builder {

@@ -48,6 +48,26 @@ internal class CognitoCredentialsProvider(private val authCategory: AuthCategory
             )
         }
     }
+
+    suspend fun getIdentityId(): String {
+        return suspendCancellableCoroutine { continuation ->
+            authCategory.fetchAuthSession(
+                { authSession ->
+                    (authSession as? AWSCognitoAuthSession)?.identityIdResult?.value?.let {
+                        continuation.resume(it)
+                    } ?: continuation.resumeWithException(
+                        Exception(
+                            "Failed to get credentials. " +
+                                    "Check if you are signed in and configured identity pools correctly."
+                        )
+                    )
+                },
+                {
+                    continuation.resumeWithException(it)
+                }
+            )
+        }
+    }
 }
 
 private fun AWSCredentials.toCredentials(): Credentials {

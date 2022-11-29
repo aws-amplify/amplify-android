@@ -64,6 +64,7 @@ internal interface GeoService<T> {
     suspend fun updateLocation(
         deviceId: String,
         location: GeoLocation,
+        tracker: String,
         options: GeoUpdateLocationOptions,
     )
 }

@@ -16,24 +16,15 @@
  *
  */
 
-package com.amplifyframework.geo.models;
+package com.amplifyframework.geo.location.util
 
-/*
- * Stores latitude and longitude for a location
- */
-public final class GeoLocation {
-    double latitude, longitude;
+import android.content.SharedPreferences
+import java.util.UUID
 
-    public double getLatitude() {
-        return latitude;
-    }
-
-    public double getLongitude() {
-        return longitude;
-    }
-
-    public GeoLocation(double latitude, double longitude) {
-        this.latitude = latitude;
-        this.longitude = longitude;
+fun SharedPreferences.getId(): String {
+    return this.getString("id", null) ?: run {
+        val uuid = UUID.randomUUID().toString()
+        this.edit().putString("id", uuid).apply()
+        return uuid
     }
 }
