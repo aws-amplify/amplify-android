@@ -39,7 +39,7 @@ subprojects {
                 doLast {
                     tasks.withType(Test){
                         useJUnit {
-                            excludeCategories 'com.amplifyframework.testutils.junitcategories.StressTests'
+                            excludeCategories 'StressTests'
                         }
                     }
                     exec {
