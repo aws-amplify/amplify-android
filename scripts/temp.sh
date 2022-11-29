@@ -1,0 +1,1 @@
+./gradlew :aws-analytics-pinpoint:connectedAndroidTest
