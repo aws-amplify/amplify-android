@@ -67,4 +67,12 @@ internal interface GeoService<T> {
         tracker: String,
         options: GeoUpdateLocationOptions,
     )
+
+    /**
+     * Deletes any stored location history for the given device.
+     */
+    suspend fun deleteLocationHistory(
+        deviceId: String,
+        tracker: String
+    )
 }
