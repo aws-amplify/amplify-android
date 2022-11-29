@@ -24,6 +24,7 @@ import com.amplifyframework.geo.models.GeoDevice;
 import com.amplifyframework.geo.models.GeoLocation;
 import com.amplifyframework.geo.models.MapStyle;
 import com.amplifyframework.geo.models.MapStyleDescriptor;
+import com.amplifyframework.geo.options.GeoDeleteLocationHistoryOptions;
 import com.amplifyframework.geo.options.GeoSearchByCoordinatesOptions;
 import com.amplifyframework.geo.options.GeoSearchByTextOptions;
 import com.amplifyframework.geo.options.GeoUpdateLocationOptions;
@@ -142,10 +143,10 @@ public interface GeoCategoryBehavior {
     /**
      * Updates a device's location for the default tracker.
      *
-     * @param device The device that this location update will be applied to.
+     * @param device   The device that this location update will be applied to.
      * @param location The location being updated for this device.
      * @param onResult Called upon successful update.
-     * @param onError Called upon failure to update.
+     * @param onError  Called upon failure to update.
      */
     void updateLocation(
             @NonNull GeoDevice device,
@@ -157,16 +158,50 @@ public interface GeoCategoryBehavior {
     /**
      * Updates a device's location with the given options.
      *
-     * @param device The device that this location update will be applied to.
+     * @param device   The device that this location update will be applied to.
      * @param location The location being updated for this device.
-     * @param options The options for updating the device location.
+     * @param options  The options for updating the device location.
      * @param onResult Called upon successful update.
-     * @param onError Called upon failure to update.
+     * @param onError  Called upon failure to update.
      */
     void updateLocation(
             @NonNull GeoDevice device,
             @NonNull GeoLocation location,
             @NonNull GeoUpdateLocationOptions options,
+            @NonNull Action onResult,
+            @NonNull Consumer<GeoException> onError
+    );
+
+    /**
+     * Delete this device's location history from the default tracker. The location
+     * history for this device remotely and locally (if applicable) will be permanently
+     * deleted. This makes a best effort to delete location history.
+     *
+     * @param device   The device that this delete request will be applied to.
+     * @param onResult Called upon successful deletion.
+     * @param onError  Called upon failure to completely delete (e.g., a service
+     *                 exception occurs or the device is offline).
+     */
+    void deleteLocationHistory(
+            @NonNull GeoDevice device,
+            @NonNull Action onResult,
+            @NonNull Consumer<GeoException> onError
+    );
+
+    /**
+     * Delete this device's location history with the given options. The location
+     * history for this device remotely and locally (if applicable) will be permanently
+     * deleted.
+     *
+     * @param device   The device that this delete request will be applied to.
+     * @param options  The options for deleting the location history.
+     * @param onResult Called upon successful deletion.
+     * @param onError  Called upon failure to completely delete (e.g., a service
+     *                 exception occurs or the device is offline).
+     */
+    void deleteLocationHistory(
+            @NonNull GeoDevice device,
+            @NonNull GeoDeleteLocationHistoryOptions options,
             @NonNull Action onResult,
             @NonNull Consumer<GeoException> onError
     );

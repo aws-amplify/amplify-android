@@ -40,15 +40,15 @@ import com.amplifyframework.geo.models.GeoDeviceType
 import com.amplifyframework.geo.models.GeoLocation
 import com.amplifyframework.geo.models.MapStyle
 import com.amplifyframework.geo.models.MapStyleDescriptor
-import com.amplifyframework.geo.options.GeoPositionProperties
+import com.amplifyframework.geo.options.GeoDeleteLocationHistoryOptions
 import com.amplifyframework.geo.options.GeoSearchByCoordinatesOptions
 import com.amplifyframework.geo.options.GeoSearchByTextOptions
 import com.amplifyframework.geo.options.GeoUpdateLocationOptions
 import com.amplifyframework.geo.options.GetMapStyleDescriptorOptions
 import com.amplifyframework.geo.result.GeoSearchResult
-import java.util.concurrent.Executors
 import kotlinx.coroutines.runBlocking
 import org.json.JSONObject
+import java.util.concurrent.Executors
 
 /**
  * A plugin for the Geo category to interact with Amazon Location Service.
@@ -241,25 +241,39 @@ class AWSLocationGeoPlugin(
         onResult: Action,
         onError: Consumer<GeoException>
     ) {
-        execute (
+        execute(
             {
                 var tracker = options.tracker
                 if (options.tracker.isEmpty()) {
                     tracker = defaultTracker
                 }
-                val id = when(device.type) {
-                    GeoDeviceType.UNCHECKED -> device.id
-                    // TODO: Blocked by ALS not allowing colons in ids
-                    GeoDeviceType.USER_AND_DEVICE -> (credentialsProvider as CognitoCredentialsProvider).
-                        getIdentityId() + " - " + sharedPreferences.getId()
-                    GeoDeviceType.DEVICE -> sharedPreferences.getId()
-                    else -> // GeoDeviceType.USER
-                        (credentialsProvider as CognitoCredentialsProvider).getIdentityId() + " - " +
-                                sharedPreferences.getId()
-                }
-                geoService.updateLocation(id, location, tracker, options)
+                geoService.updateLocation(device.resolvedId(), location, tracker, options)
             },
             Errors::deviceTrackingError,
+            onResult,
+            onError
+        )
+    }
+
+    override fun deleteLocationHistory(
+        device: GeoDevice,
+        onResult: Action,
+        onError: Consumer<GeoException>
+    ) {
+        val options = GeoDeleteLocationHistoryOptions.defaults()
+        deleteLocationHistory(device, options, onResult, onError)
+    }
+
+    override fun deleteLocationHistory(
+        device: GeoDevice,
+        options: GeoDeleteLocationHistoryOptions,
+        onResult: Action,
+        onError: Consumer<GeoException>
+    ) {
+        val tracker = options.tracker ?: defaultTracker
+        execute(
+            { geoService.deleteLocationHistory(device.resolvedId(), tracker) },
+            Errors::deleteHistoryError,
             onResult,
             onError
         )
@@ -303,5 +317,15 @@ class AWSLocationGeoPlugin(
                 onError.accept(geoException)
             }
         }
+    }
+
+    private suspend fun GeoDevice.resolvedId() = when (type) {
+        GeoDeviceType.UNCHECKED -> id
+        // TODO: Blocked by ALS not allowing colons in ids
+        GeoDeviceType.USER_AND_DEVICE -> (credentialsProvider as CognitoCredentialsProvider).getIdentityId() + " - " + sharedPreferences.getId()
+        GeoDeviceType.DEVICE -> sharedPreferences.getId()
+        else -> // GeoDeviceType.USER
+            (credentialsProvider as CognitoCredentialsProvider).getIdentityId() + " - " +
+                    sharedPreferences.getId()
     }
 }

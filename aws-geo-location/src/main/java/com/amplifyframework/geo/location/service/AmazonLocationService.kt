@@ -16,6 +16,7 @@
 package com.amplifyframework.geo.location.service
 
 import aws.sdk.kotlin.services.location.LocationClient
+import aws.sdk.kotlin.services.location.model.BatchDeleteDevicePositionHistoryRequest
 import aws.sdk.kotlin.services.location.model.BatchUpdateDevicePositionRequest
 import aws.sdk.kotlin.services.location.model.DevicePositionUpdate
 import aws.sdk.kotlin.services.location.model.GetMapStyleDescriptorRequest
@@ -130,10 +131,25 @@ internal class AmazonLocationService(
             response.errors?.first()?.error?.let {
                 if (it.message != null) {
                     throw GeoException(it.message!!, "Please ensure that you have a stable internet connection.")
-                }
-                else {
+                } else {
                     throw ClientException()
                 }
+            }
+        }
+    }
+
+    override suspend fun deleteLocationHistory(
+        deviceId: String,
+        tracker: String
+    ) {
+        val request = BatchDeleteDevicePositionHistoryRequest.invoke {
+            trackerName = tracker
+            deviceIds = listOf(deviceId)
+        }
+        val response = provider.batchDeleteDevicePositionHistory(request)
+        if (!response.errors.isNullOrEmpty()) {
+            response.errors?.first()?.error?.let {
+                throw ServiceException(message = it.message)
             }
         }
     }
