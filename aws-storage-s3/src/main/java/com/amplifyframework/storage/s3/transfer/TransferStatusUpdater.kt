@@ -100,11 +100,8 @@ internal class TransferStatusUpdater private constructor(
             if (transferRecord.state == newState || TransferState.isInTerminalState(transferRecord.state)) {
                 return
             }
-
-            transferDB.updateState(transferRecord.id, newState)
-
             transferRecord.state = newState
-
+            transferDB.updateState(transferRecord.id, newState)
             if (TransferState.COMPLETED == newState) {
                 removeTransferRecord(transferRecord.id)
             }
