@@ -819,8 +819,7 @@ public final class SyncProcessorTest {
                 .build();
         Temporal.Timestamp randomTimestamp = new Temporal.Timestamp(new Random().nextLong(), TimeUnit.SECONDS);
         return new ModelWithMetadata<>(blogOwner,
-                new ModelMetadata(blogOwner.getId(), null, new Random().nextInt(), randomTimestamp,
-                        blogOwner.getModelName())
+                new ModelMetadata(blogOwner.getId(), null, new Random().nextInt(), randomTimestamp)
         );
     }
 
