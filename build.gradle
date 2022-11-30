@@ -20,14 +20,23 @@ buildscript {
         maven {
             url "https://plugins.gradle.org/m2/"
         }
+        maven {
+            name "GitHubPackages"
+            url "https://maven.pkg.github.com/AtlasXV/android-libs"
+            credentials {
+                username project.findProperty("GPR_USR")
+                password project.findProperty("GPR_KEY")
+            }
+        }
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:4.0.2'
+        classpath 'com.android.tools.build:gradle:7.2.2'
         classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.7.10'
         classpath "org.jetbrains.dokka:dokka-gradle-plugin:1.7.10"
         classpath 'org.jlleitschuh.gradle:ktlint-gradle:9.4.1'
         classpath "org.gradle:test-retry-gradle-plugin:1.4.1"
+        classpath("com.atlasv.android.plugin:publishlib:1.1.1")
     }
 }
 
@@ -217,6 +226,7 @@ private void configureAndroidLibrary(Project project) {
             testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
             testInstrumentationRunnerArguments clearPackageData: 'true'
             consumerProguardFiles rootProject.file('configuration/consumer-rules.pro')
+            buildConfigField("String", "VERSION_NAME", "\"" + project.ext.VERSION_NAME + "\"")
 
             testOptions {
                 animationsDisabled = true
