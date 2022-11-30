@@ -38,7 +38,7 @@ public final class AppSyncConflictUnhandledErrorFactoryTest {
             .name("Blogger Tony")
             .build();
         Temporal.Timestamp lastChangedAt = new Temporal.Timestamp(1602732606L, TimeUnit.SECONDS);
-        ModelMetadata metadata = new ModelMetadata(model.getPrimaryKeyString(), true, 6, lastChangedAt, "BlogOwner");
+        ModelMetadata metadata = new ModelMetadata(model.getPrimaryKeyString(), true, 6, lastChangedAt);
         ModelWithMetadata<BlogOwner> serverData = new ModelWithMetadata<>(model, metadata);
         AppSyncConflictUnhandledError<BlogOwner> error =
             AppSyncConflictUnhandledErrorFactory.createUnhandledConflictError(serverData);

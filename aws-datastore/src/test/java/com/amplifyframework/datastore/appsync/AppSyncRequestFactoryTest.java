@@ -422,8 +422,6 @@ public final class AppSyncRequestFactoryTest {
         ModelSchema schema = ModelSchema.fromModelClass(OtherBlog.class);
         String expected = Resources.readAsString("create-other-blog.txt");
         String actual = AppSyncRequestFactory.buildCreationRequest(schema, blog, DEFAULT_STRATEGY).getContent();
-        System.out.println("  Actual: " + actual);
-        System.out.println("Expected: " + expected);
         JSONAssert.assertEquals(
                 expected,
                 actual,
