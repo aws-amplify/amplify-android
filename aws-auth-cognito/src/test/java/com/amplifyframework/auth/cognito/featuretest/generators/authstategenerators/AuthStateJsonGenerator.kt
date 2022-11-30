@@ -40,10 +40,16 @@ object AuthStateJsonGenerator : SerializableProvider {
     const val dummyToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1l" +
         "IiwiZXhwIjoxNTE2MjM5MDIyLCJvcmlnaW5fanRpIjoib3JpZ2luX2p0aSJ9.Xqa-vjJe5wwwsqeRAdHf8kTBn_rYSkDn2lB7xj9Z1xU"
 
+    const val accessKeyId = "someAccessKey"
+    const val secretAccessKey = "someSecretKey"
+    const val identityId = "someIdentityId"
+    const val expiration: Long = 2342134
+    const val userId = "userId"
+
     private const val username = "username"
 
     private val signedInData = SignedInData(
-        userId = "userId",
+        userId = userId,
         username = username,
         signedInDate = Date.from(Instant.ofEpochSecond(0)),
         signInMethod = SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH),
@@ -60,12 +66,12 @@ object AuthStateJsonGenerator : SerializableProvider {
         AuthorizationState.SessionEstablished(
             AmplifyCredential.UserAndIdentityPool(
                 signedInData,
-                identityId = "someIdentityId",
+                identityId = identityId,
                 AWSCredentials(
-                    accessKeyId = "someAccessKey",
-                    secretAccessKey = "someSecretKey",
+                    accessKeyId = accessKeyId,
+                    secretAccessKey = secretAccessKey,
                     sessionToken = dummyToken,
-                    expiration = 2342134
+                    expiration = expiration
                 )
             )
         )

@@ -1,3 +1,18 @@
+/*
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
 package featureTest.utilities
 
 import com.amplifyframework.auth.AuthUserAttribute
@@ -11,6 +26,7 @@ import com.amplifyframework.auth.cognito.options.AuthFlowType
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
+import com.amplifyframework.auth.options.AuthFetchSessionOptions
 import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions
 import com.amplifyframework.auth.options.AuthResendUserAttributeConfirmationCodeOptions
 import com.amplifyframework.auth.options.AuthResetPasswordOptions
@@ -36,11 +52,11 @@ object AuthOptionsFactory {
         AuthAPI.confirmSignUp -> AuthConfirmSignUpOptions.defaults()
         AuthAPI.confirmUserAttribute -> null
         AuthAPI.deleteUser -> null
-        AuthAPI.fetchAuthSession -> null
+        AuthAPI.fetchAuthSession -> getFetchAuthSessionOptions(optionsData)
         AuthAPI.fetchDevices -> null
         AuthAPI.fetchUserAttributes -> TODO()
         AuthAPI.forgetDevice -> TODO()
-        AuthAPI.getCurrentUser -> TODO()
+        AuthAPI.getCurrentUser -> null
         AuthAPI.handleWebUISignInResponse -> TODO()
         AuthAPI.rememberDevice -> TODO()
         AuthAPI.resendSignUpCode -> AuthResendSignUpCodeOptions.defaults()
@@ -80,6 +96,13 @@ object AuthOptionsFactory {
         val globalSignOutData = (optionsData["globalSignOut"] as JsonPrimitive).booleanOrNull ?: false
         return AuthSignOutOptions.builder()
             .globalSignOut(globalSignOutData)
+            .build()
+    }
+
+    private fun getFetchAuthSessionOptions(optionsData: JsonObject): AuthFetchSessionOptions {
+        val refresh = (optionsData["forceRefresh"] as? JsonPrimitive)?.booleanOrNull ?: false
+        return AuthFetchSessionOptions.builder()
+            .forceRefresh(refresh)
             .build()
     }
 }

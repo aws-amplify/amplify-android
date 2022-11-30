@@ -18,6 +18,12 @@ apply from: rootProject.file("configuration/checkstyle.gradle")
 apply from: rootProject.file("configuration/publishing.gradle")
 apply plugin: 'kotlin-android'
 
+android {
+    kotlinOptions{
+        moduleName = "com.amplifyframework.core"
+    }
+}
+
 dependencies {
     implementation dependency.androidx.v4support
     implementation dependency.androidx.annotation
@@ -25,7 +31,6 @@ dependencies {
     implementation dependency.androidx.nav.fragmentktx
     implementation dependency.androidx.nav.ui
     implementation dependency.androidx.nav.uiktx
-    implementation dependency.androidx.nav.dynamicfeatures
     implementation dependency.kotlin.serializationJson
 
     implementation dependency.aws.credentials

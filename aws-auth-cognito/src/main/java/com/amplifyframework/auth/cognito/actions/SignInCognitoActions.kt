@@ -75,7 +75,9 @@ internal object SignInCognitoActions : SignInActions {
     override fun startDeviceSRPAuthAction(event: SignInEvent.EventType.InitiateSignInWithDeviceSRP) =
         Action<AuthEnvironment>("StartDeviceSRPAuth") { id, dispatcher ->
             logger.verbose("$id Starting execution")
-            val evt = DeviceSRPSignInEvent(DeviceSRPSignInEvent.EventType.RespondDeviceSRPChallenge(event.username))
+            val evt = DeviceSRPSignInEvent(
+                DeviceSRPSignInEvent.EventType.RespondDeviceSRPChallenge(event.username, event.metadata)
+            )
             logger.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
         }

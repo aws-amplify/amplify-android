@@ -60,4 +60,6 @@ data class AmazonLocationPlace(
         place.neighborhood,
         place.postalCode
     )
+
+    val id = "$label:${coordinates.latitude}:${coordinates.longitude}"
 }

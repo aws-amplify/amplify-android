@@ -81,7 +81,7 @@ open class StateTransitionTestBase {
     internal lateinit var configuration: AuthConfiguration
 
     @Mock
-    internal lateinit var cognitoAuthService: AWSCognitoAuthServiceBehavior
+    internal lateinit var cognitoAuthService: AWSCognitoAuthService
 
     @Mock
     internal lateinit var mockAuthActions: AuthActions
@@ -344,7 +344,7 @@ open class StateTransitionTestBase {
         Mockito.`when`(mockSRPActions.initiateSRPAuthAction(MockitoHelper.anyObject()))
             .thenReturn(
                 Action { dispatcher, _ ->
-                    dispatcher.send(SRPEvent(SRPEvent.EventType.RespondPasswordVerifier(mapOf())))
+                    dispatcher.send(SRPEvent(SRPEvent.EventType.RespondPasswordVerifier(mapOf(), mapOf())))
                 }
             )
 

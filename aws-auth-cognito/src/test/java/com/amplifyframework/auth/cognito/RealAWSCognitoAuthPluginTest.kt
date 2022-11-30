@@ -47,7 +47,7 @@ import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidUserPoo
 import com.amplifyframework.auth.cognito.exceptions.invalidstate.SignedInException
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.auth.cognito.helpers.SRPHelper
-import com.amplifyframework.auth.cognito.options.AWSAuthResendUserAttributeConfirmationCodeOptions
+import com.amplifyframework.auth.cognito.options.AWSCognitoAuthResendUserAttributeConfirmationCodeOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttributeOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttributesOptions
 import com.amplifyframework.auth.cognito.options.AuthFlowType
@@ -129,7 +129,7 @@ class RealAWSCognitoAuthPluginTest {
     )
 
     private val mockCognitoIPClient = mockk<CognitoIdentityProviderClient>()
-    private var authService = mockk<AWSCognitoAuthServiceBehavior> {
+    private var authService = mockk<AWSCognitoAuthService> {
         every { cognitoIdentityProviderClient } returns mockCognitoIPClient
     }
 
@@ -1430,7 +1430,7 @@ class RealAWSCognitoAuthPluginTest {
             listenLatch.countDown()
         }
 
-        val builder = AWSAuthResendUserAttributeConfirmationCodeOptions.builder().metadata(
+        val builder = AWSCognitoAuthResendUserAttributeConfirmationCodeOptions.builder().metadata(
             mapOf("x" to "x", "y" to "y", "z" to "z")
         )
 

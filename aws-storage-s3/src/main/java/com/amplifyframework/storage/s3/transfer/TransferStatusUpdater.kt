@@ -44,7 +44,7 @@ internal class TransferStatusUpdater private constructor(
     }
     val activeTransferMap = object : AbstractMutableMap<Int, TransferRecord>() {
 
-        val transferRecordMap = mutableMapOf<Int, TransferRecord>()
+        val transferRecordMap = ConcurrentHashMap<Int, TransferRecord>()
 
         override fun put(key: Int, value: TransferRecord): TransferRecord? {
             return transferRecordMap.put(key, value)
@@ -100,17 +100,22 @@ internal class TransferStatusUpdater private constructor(
             if (transferRecord.state == newState || TransferState.isInTerminalState(transferRecord.state)) {
                 return
             }
-
-            transferDB.updateState(transferRecord.id, newState)
-
             transferRecord.state = newState
-
+            transferDB.updateState(transferRecord.id, newState)
             if (TransferState.COMPLETED == newState) {
                 removeTransferRecord(transferRecord.id)
             }
 
             transferStatusListenerMap[transferRecord.id]?.forEach { listener ->
-                mainHandler.post { listener.onStateChanged(transferRecord.id, newState) }
+                mainHandler.post {
+                    transferRecord.key?.let { key ->
+                        listener.onStateChanged(
+                            transferRecord.id,
+                            newState,
+                            key
+                        )
+                    }
+                }
             }
 
             if (TransferState.isInTerminalState(newState)) {
@@ -124,13 +129,16 @@ internal class TransferStatusUpdater private constructor(
         transferRecordId: Int,
         bytesCurrent: Long,
         bytesTotal: Long,
-        notifyListener: Boolean
+        notifyListener: Boolean,
+        updateDB: Boolean = true
     ) {
         activeTransferMap[transferRecordId]?.let {
             it.bytesCurrent = bytesCurrent
             it.bytesTotal = bytesTotal
         }
-        transferDB.updateBytesTransferred(transferRecordId, bytesCurrent, bytesTotal)
+        if (updateDB) {
+            transferDB.updateBytesTransferred(transferRecordId, bytesCurrent, bytesTotal)
+        }
         if (notifyListener) {
             transferStatusListenerMap[transferRecordId]?.forEach {
                 mainHandler.post {
@@ -174,9 +182,7 @@ internal class TransferStatusUpdater private constructor(
         transferRecordId: Int,
         transferListener: MultiPartUploadTaskListener
     ) {
-        if (!multiPartTransferStatusListener.containsKey(transferRecordId)) {
-            multiPartTransferStatusListener[transferRecordId] = transferListener
-        }
+        multiPartTransferStatusListener[transferRecordId] = transferListener
     }
 
     fun getMultiPartTransferListener(transferRecordId: Int): MultiPartUploadTaskListener? {

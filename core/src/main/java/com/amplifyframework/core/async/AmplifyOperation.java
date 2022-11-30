@@ -62,6 +62,7 @@ public abstract class AmplifyOperation<R> {
 
     /**
      * Gets the request object.
+     *
      * @return the request object
      */
     public R getRequest() {

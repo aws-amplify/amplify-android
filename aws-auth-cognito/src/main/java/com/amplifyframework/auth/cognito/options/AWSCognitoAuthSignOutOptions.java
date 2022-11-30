@@ -59,10 +59,7 @@ public final class AWSCognitoAuthSignOutOptions extends AuthSignOutOptions {
 
     @Override
     public int hashCode() {
-        return ObjectsCompat.hash(
-            isGlobalSignOut(),
-            getBrowserPackage()
-        );
+        return ObjectsCompat.hash(isGlobalSignOut(), getBrowserPackage());
     }
 
     @Override
@@ -120,10 +117,7 @@ public final class AWSCognitoAuthSignOutOptions extends AuthSignOutOptions {
          */
         @NonNull
         public AWSCognitoAuthSignOutOptions build() {
-            return new AWSCognitoAuthSignOutOptions(
-                    super.isGlobalSignOut(),
-            browserPackage
-            );
+            return new AWSCognitoAuthSignOutOptions(super.isGlobalSignOut(), browserPackage);
         }
     }
 }

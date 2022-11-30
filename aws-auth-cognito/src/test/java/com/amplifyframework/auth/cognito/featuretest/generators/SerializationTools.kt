@@ -17,6 +17,7 @@ package com.amplifyframework.auth.cognito.featuretest.generators
 
 import aws.sdk.kotlin.services.cognitoidentity.model.CognitoIdentityException
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.CognitoIdentityProviderException
+import aws.smithy.kotlin.runtime.time.Instant
 import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.cognito.featuretest.FeatureTestCase
 import com.amplifyframework.auth.cognito.featuretest.serializers.CognitoIdentityExceptionSerializer
@@ -24,8 +25,16 @@ import com.amplifyframework.auth.cognito.featuretest.serializers.CognitoIdentity
 import com.amplifyframework.auth.cognito.featuretest.serializers.deserializeToAuthState
 import com.amplifyframework.auth.cognito.featuretest.serializers.serialize
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions
+import com.amplifyframework.auth.result.AuthSessionResult
 import com.amplifyframework.statemachine.codegen.states.AuthState
 import com.google.gson.Gson
+import java.io.BufferedWriter
+import java.io.File
+import java.io.FileOutputStream
+import java.io.FileWriter
+import kotlin.reflect.KClass
+import kotlin.reflect.KVisibility
+import kotlin.reflect.full.declaredMemberProperties
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
@@ -33,10 +42,6 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
-import java.io.BufferedWriter
-import java.io.File
-import java.io.FileOutputStream
-import java.io.FileWriter
 
 const val basePath = "aws-auth-cognito/src/test/resources/feature-test"
 
@@ -167,12 +172,14 @@ fun Any?.toJsonElement(): JsonElement {
         is Boolean -> JsonPrimitive(this)
         is Number -> JsonPrimitive(this)
         is String -> JsonPrimitive(this)
+        is Instant -> JsonPrimitive(this.epochSeconds)
         is AuthException -> toJsonElement()
         is AWSCognitoAuthSignInOptions -> toJsonElement()
         is CognitoIdentityProviderException -> Json.encodeToJsonElement(
             CognitoIdentityProviderExceptionSerializer,
             this
         )
+        is AuthSessionResult<*> -> toJsonElement()
         is CognitoIdentityException -> Json.encodeToJsonElement(CognitoIdentityExceptionSerializer, this)
         else -> gsonBasedSerializer(this)
     }
@@ -198,6 +205,10 @@ fun AuthException.toJsonElement(): JsonElement {
     return responseMap.toJsonElement()
 }
 
+fun AuthSessionResult<*>.toJsonElement(): JsonElement {
+    return (if (type == AuthSessionResult.Type.SUCCESS) value else error).toJsonElement()
+}
+
 /**
  * Uses Gson to convert objects which cannot be serialized,
  * tries to convert to map of params to vals
@@ -207,6 +218,19 @@ fun gsonBasedSerializer(value: Any): JsonElement {
     return try {
         gson.fromJson(gson.toJson(value).toString(), Map::class.java).toJsonElement()
     } catch (ex: Exception) {
-        JsonPrimitive(value.toString())
+        reflectionBasedSerializer(value)
     }
+}
+
+/**
+ * Final fallback to serialize by using reflection, traversing the object members and converting it to Map.
+ * Note that this method is similar to what Gson does. But Gson fails when there is name collision in parent and child
+ * classes.
+ */
+fun reflectionBasedSerializer(value: Any): JsonElement {
+    return (value::class as KClass<*>).declaredMemberProperties.filter {
+        it.visibility == KVisibility.PUBLIC
+    }.associate {
+        it.name to it.getter.call(value)
+    }.toMap().toJsonElement()
 }

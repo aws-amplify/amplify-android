@@ -152,7 +152,7 @@ class AWSCognitoAuthPluginFeatureTest(private val testCase: FeatureTestCase) {
                 .getJSONObject("awsCognitoAuthPlugin")
         val authConfiguration = AuthConfiguration.fromJson(configJSONObject)
 
-        val authService = mockk<AWSCognitoAuthServiceBehavior> {
+        val authService = mockk<AWSCognitoAuthService> {
             every { cognitoIdentityProviderClient } returns mockCognitoIPClient
             every { cognitoIdentityClient } returns mockCognitoIdClient
         }

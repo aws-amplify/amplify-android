@@ -92,6 +92,12 @@ internal class AWSCognitoLegacyCredentialStore(
     override fun saveASFDevice(device: AmplifyCredential.ASFDevice) = Unit
 
     @Synchronized
+    fun retrieveLastAuthUserId(): String? {
+        val keys = getTokenKeys()
+        return keys[APP_LAST_AUTH_USER]?.let { tokensKeyValue.get(it) }
+    }
+
+    @Synchronized
     override fun retrieveCredential(): AmplifyCredential {
         val signedInData = retrieveSignedInData()
         val awsCredentials = retrieveAWSCredentials()
@@ -133,6 +139,9 @@ internal class AWSCognitoLegacyCredentialStore(
     }
 
     override fun deleteDeviceKeyCredential(username: String) {
+        val keys = getTokenKeys()
+        keys[APP_LAST_AUTH_USER]?.let { tokensKeyValue.remove(it) }
+
         deviceKeyValue.apply {
             remove(DEVICE_KEY)
             remove(DEVICE_GROUP_KEY)
@@ -147,7 +156,6 @@ internal class AWSCognitoLegacyCredentialStore(
 
     private fun deleteCognitoUserPoolTokens() {
         val keys = getTokenKeys()
-        keys[APP_LAST_AUTH_USER]?.let { tokensKeyValue.remove(it) }
         keys[TOKEN_TYPE_ID]?.let { tokensKeyValue.remove(it) }
         keys[TOKEN_TYPE_ACCESS]?.let { tokensKeyValue.remove(it) }
         keys[TOKEN_TYPE_REFRESH]?.let { tokensKeyValue.remove(it) }

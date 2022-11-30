@@ -39,6 +39,9 @@ public final class AWSS3StorageUploadRequest<L> {
 
     /**
      * Constructs a new AWSS3StorageUploadRequest.
+     * Although this has public access, it is intended for internal use and should not be used directly by host
+     * applications. The behavior of this may change without warning.
+     *
      * @param key key for item to upload
      * @param local object to upload (e.g. File or InputStream)
      * @param accessLevel Storage access level

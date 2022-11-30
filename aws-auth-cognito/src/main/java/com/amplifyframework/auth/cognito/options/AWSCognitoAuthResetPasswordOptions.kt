@@ -15,7 +15,6 @@
 package com.amplifyframework.auth.cognito.options
 
 import com.amplifyframework.auth.options.AuthResetPasswordOptions
-import com.amplifyframework.util.Immutable
 
 /**
  * Cognito extension of reset password options to add the platform specific fields.
@@ -29,11 +28,24 @@ internal constructor(
     val metadata: Map<String, String>
 ) : AuthResetPasswordOptions() {
 
+    companion object {
+        /**
+         * Get a builder object.
+         * @return a builder object.
+         */
+        @JvmStatic
+        fun builder(): CognitoBuilder {
+            return CognitoBuilder()
+        }
+
+        inline operator fun invoke(block: CognitoBuilder.() -> Unit) = CognitoBuilder().apply(block).build()
+    }
+
     /**
      * The builder for this class.
      */
     class CognitoBuilder : Builder<CognitoBuilder?>() {
-        private val metadata: MutableMap<String, String>
+        private var metadata: Map<String, String> = mapOf()
 
         /**
          * Returns the type of builder this is to support proper flow with it being an extended class.
@@ -48,41 +60,12 @@ internal constructor(
          * @param metadata Custom user metadata to be sent with the reset password request.
          * @return The builder object to continue building.
          */
-        fun metadata(metadata: Map<String, String>): CognitoBuilder {
-            this.metadata.clear()
-            this.metadata.putAll(metadata)
-            return getThis()
-        }
+        fun metadata(metadata: Map<String, String>) = apply { this.metadata = metadata }
 
         /**
          * Construct and return the object with the values set in the builder.
          * @return a new instance of AWSCognitoAuthResetPasswordOptions with the values specified in the builder.
          */
-        override fun build(): AWSCognitoAuthResetPasswordOptions {
-            return AWSCognitoAuthResetPasswordOptions(
-                Immutable.of(metadata)
-            )
-        }
-
-        /**
-         * Constructor for the builder.
-         */
-        init {
-            metadata = HashMap()
-        }
-    }
-
-    companion object {
-        /**
-         * Get a builder object.
-         * @return a builder object.
-         */
-        @JvmStatic
-        fun builder(): CognitoBuilder {
-            return CognitoBuilder()
-        }
-
-        inline operator fun invoke(block: CognitoBuilder.() -> Unit) = CognitoBuilder()
-            .apply(block).build()
+        override fun build() = AWSCognitoAuthResetPasswordOptions(metadata)
     }
 }

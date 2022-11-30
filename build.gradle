@@ -27,6 +27,7 @@ buildscript {
         classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.7.10'
         classpath "org.jetbrains.dokka:dokka-gradle-plugin:1.7.10"
         classpath 'org.jlleitschuh.gradle:ktlint-gradle:9.4.1'
+        classpath "org.gradle:test-retry-gradle-plugin:1.4.1"
     }
 }
 
@@ -68,7 +69,7 @@ ext {
     compileSdkVersion = 30
     minSdkVersion = 24
     targetSdkVersion = 30
-    awsKotlinSdkVersion = '0.17.10-beta'
+    awsKotlinSdkVersion = '0.17.12-beta'
     fragmentVersion = '1.3.1'
     navigationVersion = '2.3.4'
     dependency = [
@@ -88,8 +89,7 @@ ext {
                 fragment: "androidx.navigation:navigation-fragment:$navigationVersion",
                 fragmentktx: "androidx.navigation:navigation-fragment-ktx:$navigationVersion",
                 ui: "androidx.navigation:navigation-ui:$navigationVersion",
-                uiktx: "androidx.navigation:navigation-ui-ktx:$navigationVersion",
-                dynamicfeatures: "androidx.navigation:navigation-dynamic-features-fragment:$navigationVersion"
+                uiktx: "androidx.navigation:navigation-ui-ktx:$navigationVersion"
             ],
             multidex: 'androidx.multidex:multidex:2.0.1',
             test: [
@@ -179,6 +179,16 @@ subprojects { project ->
                     jdkVersion.set(8)
                 }
             }
+        }
+    }
+
+    apply plugin: 'org.gradle.test-retry'
+
+    tasks.withType(Test).configureEach {
+        retry {
+            maxRetries = 9
+            maxFailures = 100
+            failOnPassedAfterRetry = true
         }
     }
 }
