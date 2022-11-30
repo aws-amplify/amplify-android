@@ -324,7 +324,7 @@ public final class AWSDataStorePluginTest {
             Consumer<GraphQLResponse<ModelWithMetadata<Person>>> onResponse =
                     invocation.getArgument(indexOfResponseConsumer);
             ModelMetadata modelMetadata = new ModelMetadata(person1.getPrimaryKeyString(), false, 1,
-                    Temporal.Timestamp.now(), "Person");
+                    Temporal.Timestamp.now());
             ModelWithMetadata<Person> modelWithMetadata = new ModelWithMetadata<>(person1, modelMetadata);
             onResponse.accept(new GraphQLResponse<>(modelWithMetadata, Collections.emptyList()));
             return mock(GraphQLOperation.class);
