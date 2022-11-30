@@ -576,13 +576,13 @@ final class SubscriptionEndpoint {
                 switch (subscriptionMessageType) {
                     case CONNECTION_ACK:
                         timeoutWatchdog.start(() -> {
-                                    LOG.warn("WebSocket closed due to timeout.");
+                            LOG.warn("WebSocket closed due to timeout.");
 
-                                    webSocket.close(
-                                            NORMAL_CLOSURE_STATUS,
-                                            "WebSocket closed due to timeout."
-                                    );
-                                },
+                            webSocket.close(
+                                    NORMAL_CLOSURE_STATUS,
+                                    "WebSocket closed due to timeout."
+                            );
+                        },
                             Integer.parseInt(
                                 jsonMessage.getJSONObject("payload").getString("connectionTimeoutMs")
                             )
