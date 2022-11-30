@@ -40,7 +40,7 @@ public final class TestModelWithMetadataInstances {
             new ModelMetadata("d5b44350-b8e9-4deb-94c2-7fe986d6a0e1",
                     null,
                     3,
-                    new Temporal.Timestamp(223344L, TimeUnit.SECONDS))
+                    new Temporal.Timestamp(223344L, TimeUnit.SECONDS), "BlogOwner")
         );
     public static final ModelWithMetadata<BlogOwner> BLOGGER_ISLA =
         new ModelWithMetadata<>(
@@ -51,7 +51,7 @@ public final class TestModelWithMetadataInstances {
             new ModelMetadata("c0601168-2931-4bc0-bf13-5963cd31f828",
                     null,
                     11,
-                    new Temporal.Timestamp(998877L, TimeUnit.SECONDS))
+                    new Temporal.Timestamp(998877L, TimeUnit.SECONDS), "BlogOwner")
         );
     public static final ModelWithMetadata<Post> DRUM_POST =
         new ModelWithMetadata<>(
@@ -64,7 +64,7 @@ public final class TestModelWithMetadataInstances {
             new ModelMetadata("83ceb757-c8c8-4b6a-bee0-a43afb53a73a",
                     null,
                     5,
-                    new Temporal.Timestamp(123123L, TimeUnit.SECONDS))
+                    new Temporal.Timestamp(123123L, TimeUnit.SECONDS), "Post")
         );
     public static final ModelWithMetadata<Post> DELETED_DRUM_POST =
         new ModelWithMetadata<>(
@@ -72,7 +72,7 @@ public final class TestModelWithMetadataInstances {
             new ModelMetadata("83ceb757-c8c8-4b6a-bee0-a43afb53a73a",
                     Boolean.TRUE,
                     5,
-                    new Temporal.Timestamp(123123L, TimeUnit.SECONDS))
+                    new Temporal.Timestamp(123123L, TimeUnit.SECONDS), "Post")
         );
 
     private TestModelWithMetadataInstances() {}

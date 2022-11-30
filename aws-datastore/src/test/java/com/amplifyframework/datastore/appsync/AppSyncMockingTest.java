@@ -170,7 +170,7 @@ public final class AppSyncMockingTest {
     public void mockSuccessResponseForUpdate() {
         ModelMetadata updatedMetadata =
             new ModelMetadata(StrawMen.TONY_MODEL.getPrimaryKeyString(), false, 2, StrawMen.JOE_METADATA
-                    .getLastChangedAt());
+                    .getLastChangedAt(), StrawMen.TONY_MODEL.getModelName());
         ModelWithMetadata<BlogOwner> tonyWithUpdatedMetadata =
             new ModelWithMetadata<>(StrawMen.TONY_MODEL, updatedMetadata);
         AppSyncMocking.update(appSync)
@@ -218,7 +218,7 @@ public final class AppSyncMockingTest {
     public void mockSuccessResponseForDelete() {
         ModelMetadata deletedMetadata =
             new ModelMetadata(StrawMen.TONY_MODEL.getPrimaryKeyString(), true, 2,
-                    StrawMen.JOE_METADATA.getLastChangedAt());
+                    StrawMen.JOE_METADATA.getLastChangedAt(), StrawMen.TONY_MODEL.getModelName());
         ModelWithMetadata<BlogOwner> tonyWithDeleteMetadata =
             new ModelWithMetadata<>(StrawMen.TONY_MODEL, deletedMetadata);
         AppSyncMocking.delete(appSync)
@@ -335,7 +335,8 @@ public final class AppSyncMockingTest {
             .name("Joe")
             .build();
         static final ModelMetadata JOE_METADATA =
-            new ModelMetadata(JOE_MODEL.getPrimaryKeyString(), false, 1, Temporal.Timestamp.now());
+            new ModelMetadata(JOE_MODEL.getPrimaryKeyString(), false, 1, Temporal.Timestamp.now(),
+                    JOE_MODEL.getModelName());
         static final ModelWithMetadata<BlogOwner> JOE =
             new ModelWithMetadata<>(JOE_MODEL, JOE_METADATA);
 
@@ -343,7 +344,8 @@ public final class AppSyncMockingTest {
             .name("Tony")
             .build();
         static final ModelMetadata TONY_METADATA =
-            new ModelMetadata(TONY_MODEL.getPrimaryKeyString(), false, 1, Temporal.Timestamp.now());
+            new ModelMetadata(TONY_MODEL.getPrimaryKeyString(), false, 1, Temporal.Timestamp.now(),
+                    TONY_MODEL.getModelName());
         static final ModelWithMetadata<BlogOwner> TONY =
             new ModelWithMetadata<>(TONY_MODEL, TONY_METADATA);
 

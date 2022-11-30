@@ -117,14 +117,10 @@ public final class ModelWithMetadataAdapter implements
         // Flatten out the fields of the model and its metadata into a flat key-value map.
         // To do this, serialize each individually, and then add the key/value pairs for each
         // object into a new container.
-        ModelMetadata modelMetadata = src.getSyncMetadata();
-        JsonObject serializedMetadata = (JsonObject) context.serialize(modelMetadata);
+        JsonObject serializedMetadata = (JsonObject) context.serialize(src.getSyncMetadata());
         for (Map.Entry<java.lang.String, JsonElement> entry : serializedMetadata.entrySet()) {
             result.add(entry.getKey(), entry.getValue());
         }
-        // Additionally serialize the stored model name as the typename, mirroring the deserialization process.
-        result.addProperty(TYPE_NAME, modelMetadata.getTypename());
-
         JsonObject serializedModel = (JsonObject) context.serialize(src.getModel());
         for (Map.Entry<java.lang.String, JsonElement> entry : serializedModel.entrySet()) {
             result.add(entry.getKey(), entry.getValue());

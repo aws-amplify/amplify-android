@@ -167,7 +167,8 @@ public final class MutationProcessorRetryTest {
             int indexOfResponseConsumer = 1;
             Consumer<GraphQLResponse<ModelWithMetadata<Person>>> onResponse =
                     invocation.getArgument(indexOfResponseConsumer);
-            ModelMetadata modelMetadata = new ModelMetadata(person1.getId(), false, 1, Temporal.Timestamp.now());
+            ModelMetadata modelMetadata = new ModelMetadata(person1.getId(), false, 1, Temporal.Timestamp.now(),
+                    "Person");
             ModelWithMetadata<Person> modelWithMetadata = new ModelWithMetadata<>(person1, modelMetadata);
             onResponse.accept(new GraphQLResponse<>(modelWithMetadata, Collections.emptyList()));
             verify(mockApiCategory, atLeast(2)).mutate(argThat(getMatcherFor(person1)),
@@ -182,7 +183,7 @@ public final class MutationProcessorRetryTest {
         doAnswer(invocation -> {
             int indexOfResponseConsumer = 1;
             ModelMetadata modelMetadata = new ModelMetadata(person1.getId(), false, 1,
-                    Temporal.Timestamp.now());
+                    Temporal.Timestamp.now(), "Person");
             ModelWithMetadata<Person> modelWithMetadata = new ModelWithMetadata<>(person1, modelMetadata);
             // Mock the API emitting an ApiEndpointStatusChangeEvent event.
             Consumer<GraphQLResponse<PaginatedResult<ModelWithMetadata<Person>>>> onResponse =
@@ -196,7 +197,7 @@ public final class MutationProcessorRetryTest {
         }).doAnswer(invocation -> {
             int indexOfResponseConsumer = 1;
             Car car = Car.builder().build();
-            ModelMetadata modelMetadata = new ModelMetadata(car.getId(), false, 1, Temporal.Timestamp.now());
+            ModelMetadata modelMetadata = new ModelMetadata(car.getId(), false, 1, Temporal.Timestamp.now(), "Person");
             ModelWithMetadata<Car> modelWithMetadata = new ModelWithMetadata<>(car, modelMetadata);
             Consumer<GraphQLResponse<PaginatedResult<ModelWithMetadata<Car>>>> onResponse =
                     invocation.getArgument(indexOfResponseConsumer);
