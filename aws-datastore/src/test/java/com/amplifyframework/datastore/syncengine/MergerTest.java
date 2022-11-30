@@ -184,8 +184,7 @@ public final class MergerTest {
                 originalModel.getModelName() + "|" + originalModel.getId(),
                 false,
                 1,
-                Temporal.Timestamp.now(),
-                originalModel.getModelName());
+                Temporal.Timestamp.now());
         storageAdapter.save(originalModel, originalMetadata);
 
         // Act: merge a save.
@@ -193,8 +192,7 @@ public final class MergerTest {
             .name("Jameson The New and Improved")
             .build();
         ModelMetadata updatedMetadata =
-            new ModelMetadata(originalMetadata.resolveIdentifier(), false, 2, Temporal.Timestamp.now(),
-                    updatedModel.getModelName());
+            new ModelMetadata(originalMetadata.resolveIdentifier(), false, 2, Temporal.Timestamp.now());
         TestObserver<Void> observer = merger.merge(new ModelWithMetadata<>(updatedModel, updatedMetadata)).test();
         assertTrue(observer.await(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS));
         observer.assertComplete().assertNoErrors();
@@ -222,8 +220,7 @@ public final class MergerTest {
             .id(knownId)
             .build();
         ModelMetadata localMetadata =
-            new ModelMetadata(blogOwner.getId(), false, 1, Temporal.Timestamp.now(),
-                    blogOwner.getModelName());
+            new ModelMetadata(blogOwner.getId(), false, 1, Temporal.Timestamp.now());
         storageAdapter.save(blogOwner, localMetadata);
 
         ModelSchema schema = ModelSchema.fromModelClass(BlogOwner.class);
@@ -237,8 +234,7 @@ public final class MergerTest {
         // Act: now, cloud sync happens, and the sync engine tries to apply an update
         // for the same model ID, into the store. According to the cloud, this same
         // item should be DELETED.
-        ModelMetadata cloudMetadata = new ModelMetadata(knownId, true, 2, Temporal.Timestamp.now(),
-                blogOwner.getModelName());
+        ModelMetadata cloudMetadata = new ModelMetadata(knownId, true, 2, Temporal.Timestamp.now());
         TestObserver<Void> mergeObserver = merger.merge(new ModelWithMetadata<>(blogOwner, cloudMetadata)).test();
         mergeObserver.await(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS);
         mergeObserver.assertNoErrors().assertComplete();
@@ -267,8 +263,7 @@ public final class MergerTest {
                 .id(knownId)
                 .build();
         ModelMetadata localMetadata =
-                new ModelMetadata(blogOwner.getId(), false, 1, Temporal.Timestamp.now(),
-                        blogOwner.getModelName());
+                new ModelMetadata(blogOwner.getId(), false, 1, Temporal.Timestamp.now());
         storageAdapter.save(blogOwner, localMetadata);
 
         ModelSchema schema = ModelSchema.fromModelClass(BlogOwner.class);
@@ -283,8 +278,7 @@ public final class MergerTest {
         // Act: now, cloud sync happens, and the sync engine tries to apply an update
         // for the same model ID, into the store. According to the cloud, this same
         // item should be DELETED.
-        ModelMetadata cloudMetadata = new ModelMetadata(knownId, true, 2, Temporal.Timestamp.now(),
-                blogOwner.getModelName());
+        ModelMetadata cloudMetadata = new ModelMetadata(knownId, true, 2, Temporal.Timestamp.now());
         TestObserver<Void> observer =
             mutationOutbox.remove(pendingMutation.getMutationId())
                 .andThen(merger.merge(new ModelWithMetadata<>(blogOwner, cloudMetadata)))
@@ -312,7 +306,7 @@ public final class MergerTest {
             .name("Cornelius Daniels")
             .build();
         ModelMetadata existingMetadata = new ModelMetadata(existingModel.getId(), false, 55,
-                Temporal.Timestamp.now(), existingModel.getModelName());
+                Temporal.Timestamp.now());
         storageAdapter.save(existingModel, existingMetadata);
 
         // Act: try to merge, but specify a LOWER version.
@@ -320,8 +314,7 @@ public final class MergerTest {
             .name("Cornelius Daniels, but woke af, now.")
             .build();
         ModelMetadata lowerVersionMetadata =
-            new ModelMetadata(incomingModel.getId(), false, 33, Temporal.Timestamp.now(),
-                    incomingModel.getModelName());
+            new ModelMetadata(incomingModel.getId(), false, 33, Temporal.Timestamp.now());
         ModelWithMetadata<BlogOwner> modelWithLowerVersionMetadata =
             new ModelWithMetadata<>(existingModel, lowerVersionMetadata);
         TestObserver<Void> mergeObserver = merger.merge(modelWithLowerVersionMetadata).test();
@@ -358,8 +351,7 @@ public final class MergerTest {
                 existingModel.getModelName() + "|" + existingModel.getId(),
                 false,
                 55,
-                Temporal.Timestamp.now(),
-                    existingModel.getModelName());
+                Temporal.Timestamp.now());
         storageAdapter.save(existingModel, existingMetadata);
 
         // Act: try to merge, but specify a LOWER version.
@@ -367,8 +359,7 @@ public final class MergerTest {
             .name("Cornelius Daniels, but woke af, now.")
             .build();
         ModelMetadata lowerVersionMetadata =
-            new ModelMetadata(incomingModel.getId(), false, 33, Temporal.Timestamp.now(),
-                    incomingModel.getModelName());
+            new ModelMetadata(incomingModel.getId(), false, 33, Temporal.Timestamp.now());
         ModelWithMetadata<BlogOwner> modelWithLowerVersionMetadata =
             new ModelWithMetadata<>(incomingModel, lowerVersionMetadata);
         TestObserver<Void> mergeObserver = merger.merge(modelWithLowerVersionMetadata).test();
@@ -405,7 +396,7 @@ public final class MergerTest {
             .name("Cornelius Daniels")
             .build();
         ModelMetadata existingMetadata = new ModelMetadata(existingModel.getId(), false,
-                1, Temporal.Timestamp.now(), existingModel.getModelName());
+                1, Temporal.Timestamp.now());
         storageAdapter.save(existingModel, existingMetadata);
 
         // Act: try to merge, but don't specify a version in the metadata being used to merge.
@@ -413,7 +404,7 @@ public final class MergerTest {
             .name("Cornelius Daniels, but woke af, now.")
             .build();
         ModelMetadata metadataWithoutVersion = new ModelMetadata(incomingModel.getId(), null, null,
-                null, incomingModel.getModelName());
+                null);
         ModelWithMetadata<BlogOwner> incomingModelWithMetadata =
             new ModelWithMetadata<>(existingModel, metadataWithoutVersion);
         TestObserver<Void> mergeObserver = merger.merge(incomingModelWithMetadata).test();

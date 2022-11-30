@@ -260,7 +260,7 @@ public final class MutationProcessorTest {
                 .build();
         ModelMetadata metadata =
                 new ModelMetadata(model.getModelName() + "|" + model.getPrimaryKeyString(), false, 1,
-                        Temporal.Timestamp.now(), model.getModelName());
+                        Temporal.Timestamp.now());
         ModelSchema schema = schemaRegistry.getModelSchemaForModelClass(BlogOwner.class);
         synchronousStorageAdapter.save(model, metadata);
 
