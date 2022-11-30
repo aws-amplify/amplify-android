@@ -29,6 +29,7 @@ import com.amplifyframework.geo.models.MapStyleDescriptor;
 import com.amplifyframework.geo.options.GeoDeleteLocationHistoryOptions;
 import com.amplifyframework.geo.options.GeoSearchByCoordinatesOptions;
 import com.amplifyframework.geo.options.GeoSearchByTextOptions;
+import com.amplifyframework.geo.options.GeoTrackingSessionOptions;
 import com.amplifyframework.geo.options.GeoUpdateLocationOptions;
 import com.amplifyframework.geo.options.GetMapStyleDescriptorOptions;
 import com.amplifyframework.geo.result.GeoSearchResult;
@@ -188,5 +189,29 @@ public final class GeoCategory
     @Override
     public void deleteLocationHistory(@NonNull GeoDevice device, @NonNull GeoDeleteLocationHistoryOptions options, @NonNull Action onResult, @NonNull Consumer<GeoException> onError) {
         getSelectedPlugin().deleteLocationHistory(device, options, onResult, onError);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void startTracking(@NonNull GeoDevice device, @NonNull Action onResult, @NonNull Consumer<GeoException> onError) {
+        startTracking(device, GeoTrackingSessionOptions.defaults(), onResult, onError);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void startTracking(@NonNull GeoDevice device, @NonNull GeoTrackingSessionOptions options, @NonNull Action onResult, @NonNull Consumer<GeoException> onError) {
+        getSelectedPlugin().startTracking(device, options, onResult, onError);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void stopTracking(@NonNull Action onResult, @NonNull Consumer<GeoException> onError) {
+        getSelectedPlugin().stopTracking(onResult, onError);
     }
 }

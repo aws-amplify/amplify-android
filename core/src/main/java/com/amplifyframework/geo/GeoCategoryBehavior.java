@@ -27,6 +27,7 @@ import com.amplifyframework.geo.models.MapStyleDescriptor;
 import com.amplifyframework.geo.options.GeoDeleteLocationHistoryOptions;
 import com.amplifyframework.geo.options.GeoSearchByCoordinatesOptions;
 import com.amplifyframework.geo.options.GeoSearchByTextOptions;
+import com.amplifyframework.geo.options.GeoTrackingSessionOptions;
 import com.amplifyframework.geo.options.GeoUpdateLocationOptions;
 import com.amplifyframework.geo.options.GetMapStyleDescriptorOptions;
 import com.amplifyframework.geo.result.GeoSearchResult;
@@ -202,6 +203,51 @@ public interface GeoCategoryBehavior {
     void deleteLocationHistory(
             @NonNull GeoDevice device,
             @NonNull GeoDeleteLocationHistoryOptions options,
+            @NonNull Action onResult,
+            @NonNull Consumer<GeoException> onError
+    );
+
+    /**
+     * Start a new tracking session. Throws a GeoException if there is already a
+     * tracking session started that has not been stopped.
+     *
+     * @param device The device whose location this tracking session will be applied to.
+     * @param onResult Called upon successfully initiated tracking session.
+     * @param onError Called upon failure to initiate tracking session.
+     */
+    void startTracking(
+            @NonNull GeoDevice device,
+            @NonNull Action onResult,
+            @NonNull Consumer<GeoException> onError
+    );
+
+    /**
+     * Start a new tracking session with the given options. Throws a GeoException if
+     * there is already a tracking session started that has not been stopped.
+     *
+     * @param device The device whose location this tracking session will be applied to.
+     * @param options The options for this tracking session.
+     * @param onResult Called upon successfully initiated tracking session.
+     * @param onError Called upon failure to initiate tracking session.
+     */
+    void startTracking(
+            @NonNull GeoDevice device,
+            @NonNull GeoTrackingSessionOptions options,
+            @NonNull Action onResult,
+            @NonNull Consumer<GeoException> onError
+    );
+
+    /**
+     * Stop an existing tracking session. Any updates stored locally will be
+     * saved (e.g., to Amazon Location Service). If there are updates stored locally,
+     * the device is offline, and the tracking session is configured to persist location
+     * updates when offline, then the location updates stored locally will be saved
+     * (e.g., to Amazon Location Service) when the device comes back online.
+     *
+     * @param onResult Called when tracking session successfully stopped.
+     * @param onError Called when tracking session failed to stop.
+     */
+    void stopTracking(
             @NonNull Action onResult,
             @NonNull Consumer<GeoException> onError
     );

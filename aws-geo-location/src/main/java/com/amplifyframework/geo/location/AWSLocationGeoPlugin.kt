@@ -43,6 +43,7 @@ import com.amplifyframework.geo.models.MapStyleDescriptor
 import com.amplifyframework.geo.options.GeoDeleteLocationHistoryOptions
 import com.amplifyframework.geo.options.GeoSearchByCoordinatesOptions
 import com.amplifyframework.geo.options.GeoSearchByTextOptions
+import com.amplifyframework.geo.options.GeoTrackingSessionOptions
 import com.amplifyframework.geo.options.GeoUpdateLocationOptions
 import com.amplifyframework.geo.options.GetMapStyleDescriptorOptions
 import com.amplifyframework.geo.result.GeoSearchResult
@@ -277,6 +278,23 @@ class AWSLocationGeoPlugin(
             onResult,
             onError
         )
+    }
+
+    override fun startTracking(device: GeoDevice, onResult: Action, onError: Consumer<GeoException>) {
+        startTracking(device, GeoTrackingSessionOptions.defaults(), onResult, onError)
+    }
+
+    override fun startTracking(
+        device: GeoDevice,
+        options: GeoTrackingSessionOptions,
+        onResult: Action,
+        onError: Consumer<GeoException>
+    ) {
+        TODO("Not yet implemented")
+    }
+
+    override fun stopTracking(onResult: Action, onError: Consumer<GeoException>) {
+        TODO("Not yet implemented")
     }
 
     // Helper method that launches given task on a new worker thread.
