@@ -124,7 +124,7 @@ public final class AppSyncConflictUnhandledErrorTest {
         assertEquals(
             new ModelWithMetadata<>(
                 new Note("KoolId22", "Resurecting the dataz"),
-                new ModelMetadata("KoolId22", true, 7, lastChangedAt)
+                new ModelMetadata("KoolId22", true, 7, lastChangedAt, "Note")
             ),
             conflictUnhandledError.getServerVersion()
         );

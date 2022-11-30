@@ -105,7 +105,7 @@ public final class VersionRepositoryTest {
             .build();
         ModelMetadata metadata =
                 new ModelMetadata(blogOwner.getModelName() + "|" + blogOwner.getId(), null,
-                        null, null);
+                        null, null, blogOwner.getModelName());
         storageAdapter.save(blogOwner, metadata);
 
         // Act: try to get the version.
@@ -141,7 +141,8 @@ public final class VersionRepositoryTest {
             owner.getModelName() + "|" + owner.getId(),
             false,
             expectedVersion,
-            Temporal.Timestamp.now()));
+            Temporal.Timestamp.now(),
+                owner.getModelName()));
 
         // Act! Try to obtain it via the Versioning Repository.
         TestObserver<Integer> observer = versionRepository.findModelVersion(owner).test();
