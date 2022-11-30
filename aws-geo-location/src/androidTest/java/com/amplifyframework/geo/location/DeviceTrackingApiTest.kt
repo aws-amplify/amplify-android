@@ -38,6 +38,7 @@ import org.junit.Test
  */
 class DeviceTrackingApiTest {
     lateinit var geo: SynchronousGeo
+
     @Before
     fun setup() {
         val geoPlugin = AWSLocationGeoPlugin()

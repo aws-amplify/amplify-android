@@ -33,6 +33,7 @@ import com.amplifyframework.geo.location.options.AmazonLocationSearchByCoordinat
 import com.amplifyframework.geo.location.options.AmazonLocationSearchByTextOptions
 import com.amplifyframework.geo.location.service.AmazonLocationService
 import com.amplifyframework.geo.location.service.GeoService
+import com.amplifyframework.geo.location.tracking.LocationTracker
 import com.amplifyframework.geo.location.util.getId
 import com.amplifyframework.geo.models.Coordinates
 import com.amplifyframework.geo.models.GeoDevice
@@ -66,6 +67,7 @@ class AWSLocationGeoPlugin(
     private lateinit var configuration: GeoConfiguration
     private lateinit var geoService: GeoService<LocationClient>
     private lateinit var sharedPreferences: SharedPreferences
+    private lateinit var locationTracker: LocationTracker
 
     private val executor = Executors.newCachedThreadPool()
     private val defaultMapName: String by lazy {
@@ -93,6 +95,7 @@ class AWSLocationGeoPlugin(
                 userConfiguration ?: GeoConfiguration.fromJson(pluginConfiguration).build()
             this.geoService = AmazonLocationService(credentialsProvider, configuration.region)
             this.sharedPreferences = context.getSharedPreferences(GEO_PLUGIN_KEY, MODE_PRIVATE)
+            locationTracker = LocationTracker(context)
         } catch (error: Exception) {
             throw GeoException(
                 "Failed to configure AWSLocationGeoPlugin.",
@@ -290,11 +293,11 @@ class AWSLocationGeoPlugin(
         onResult: Action,
         onError: Consumer<GeoException>
     ) {
-        TODO("Not yet implemented")
+        locationTracker.start()
     }
 
     override fun stopTracking(onResult: Action, onError: Consumer<GeoException>) {
-        TODO("Not yet implemented")
+        locationTracker.stop()
     }
 
     // Helper method that launches given task on a new worker thread.
