@@ -18,6 +18,7 @@ package com.amplifyframework.datastore.syncengine;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.api.graphql.GraphQLResponse;
+import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.SchemaRegistry;
@@ -31,6 +32,7 @@ import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.appsync.AppSyncConflictUnhandledError;
 import com.amplifyframework.datastore.appsync.ModelMetadata;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
+import com.amplifyframework.logging.Logger;
 import com.amplifyframework.util.GsonFactory;
 
 import com.google.gson.Gson;
@@ -60,6 +62,8 @@ import io.reactivex.rxjava3.core.Single;
  * {@link ModelWithMetadata} into the local store, unconditionally.
  */
 final class ConflictResolver {
+    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
+
     private final DataStoreConfigurationProvider configurationProvider;
     private final AppSync appSync;
 
@@ -86,10 +90,12 @@ final class ConflictResolver {
         ConflictData<T> conflictData = ConflictData.create(local, remote);
 
         return Single
-            .<ConflictResolutionDecision<? extends Model>>create(emitter ->
-                conflictHandler.onConflictDetected(conflictData, emitter::onSuccess)
-            )
+            .<ConflictResolutionDecision<? extends Model>>create(emitter -> {
+                LOG.debug("Invoking conflict handler");
+                conflictHandler.onConflictDetected(conflictData, emitter::onSuccess);
+            })
             .flatMap(decision -> {
+                LOG.debug(String.format("Conflict handler decision: %s", decision));
                 @SuppressWarnings("unchecked")
                 ConflictResolutionDecision<T> typedDecision = (ConflictResolutionDecision<T>) decision;
                 return resolveModelAndMetadata(conflictData, metadata, typedDecision);

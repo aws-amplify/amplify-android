@@ -270,6 +270,10 @@ final class SyncProcessor {
      */
     private <T extends Model> Single<PaginatedResult<ModelWithMetadata<T>>> syncPage(
             GraphQLRequest<PaginatedResult<ModelWithMetadata<T>>> request) {
+
+        // We don't want to treat DataStoreException.GraphQLResponseException as non retryable here because we want to
+        // support merging the applicable data if any.
+        // TODO: Merge applicable data if any, and log errors
         List<Class<? extends Throwable>> nonRetryableExceptions = new ArrayList<>();
         nonRetryableExceptions.add(DataStoreException.IrRecoverableException.class);
         nonRetryableExceptions.add(ApiException.NonRetryableException.class);
@@ -277,7 +281,10 @@ final class SyncProcessor {
         return requestRetry.retry(Single.create(emitter -> {
             Cancelable cancelable = appSync.sync(request, result -> {
                 if (result.hasErrors()) {
-                    emitter.onError(new DataStoreException(
+                    // TODO: Check if there is applicable data, if so, emit it but also log the errors.
+                    //  For now, we treat any error as irrecoverable
+
+                    emitter.onError(new DataStoreException.IrRecoverableException(
                             String.format("A model sync failed: %s", result.getErrors()),
                             "Check your schema."
                     ));

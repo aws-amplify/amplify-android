@@ -337,10 +337,12 @@ final class MutationProcessor {
 
     private <T extends Model> Single<ModelWithMetadata<T>> publishWithRetry(
             @NonNull PendingMutation<T> mutation) {
-        List<Class<? extends Throwable>> skipException = new ArrayList<>();
-        skipException.add(DataStoreException.GraphQLResponseException.class);
+        List<Class<? extends Throwable>> nonRetryableExceptions = new ArrayList<>();
+        nonRetryableExceptions.add(DataStoreException.GraphQLResponseException.class);
+        nonRetryableExceptions.add(ApiException.NonRetryableException.class);
+
         LOG.info("Started Publish with retry: " + mutation);
-        return retryHandler.retry(publishToNetwork(mutation), skipException);
+        return retryHandler.retry(publishToNetwork(mutation), nonRetryableExceptions);
     }
 
     /**
@@ -362,6 +364,7 @@ final class MutationProcessor {
         AppSyncConflictUnhandledError<T> unhandledConflict =
             AppSyncConflictUnhandledError.findFirst(modelClazz, errors);
         if (unhandledConflict != null) {
+            LOG.warn(String.format("Unhandled conflict: %s", unhandledConflict));
             return conflictResolver.resolve(pendingMutation, unhandledConflict);
         }
 

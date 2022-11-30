@@ -36,8 +36,10 @@ public final class ApiKeyRequestDecorator implements RequestDecorator {
 
     @Override
     public okhttp3.Request decorate(okhttp3.Request request) {
+        String apiKey = apiKeyProvider.getAPIKey();
+
         return request.newBuilder()
-                      .addHeader(X_API_KEY, apiKeyProvider.getAPIKey())
+                      .addHeader(X_API_KEY, apiKey)
                       .build();
     }
 }
