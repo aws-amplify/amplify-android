@@ -106,7 +106,7 @@ object SignUpTestCaseGenerator : SerializableProvider {
 
     val signupSuccessCase = baseCase.copy(
         description = "Sign up finishes if user is confirmed in the first step",
-        preConditions = baseCase.preConditions.copy (
+        preConditions = baseCase.preConditions.copy(
             mockedResponses = listOf(
                 MockResponse(
                     CognitoType.CognitoIdentityProvider,
@@ -131,15 +131,15 @@ object SignUpTestCaseGenerator : SerializableProvider {
                 apiName = AuthAPI.signUp,
                 responseType = ResponseType.Success,
                 response =
-                AuthSignUpResult(
-                    true,
-                    AuthNextSignUpStep(
-                        AuthSignUpStep.DONE,
-                        emptyMap(),
+                    AuthSignUpResult(
+                        true,
+                        AuthNextSignUpStep(
+                            AuthSignUpStep.DONE,
+                            emptyMap(),
+                            null
+                        ),
                         null
-                    ),
-                    null
-                ).toJsonElement()
+                    ).toJsonElement()
             )
         )
     )

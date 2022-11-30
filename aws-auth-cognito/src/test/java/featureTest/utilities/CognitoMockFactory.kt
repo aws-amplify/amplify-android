@@ -68,7 +68,9 @@ class CognitoMockFactory(
                     setupError(mockResponse, responseObject)
                     SignUpResponse.invoke {
                         this.codeDeliveryDetails = parseCodeDeliveryDetails(responseObject)
-                        this.userConfirmed = if(responseObject.containsKey("userConfirmed")){(responseObject["userConfirmed"] as JsonPrimitive).boolean} else false
+                        this.userConfirmed = if (responseObject.containsKey("userConfirmed")) {
+                            (responseObject["userConfirmed"] as? JsonPrimitive)?.boolean ?: false
+                        } else false
                     }
                 }
             }
