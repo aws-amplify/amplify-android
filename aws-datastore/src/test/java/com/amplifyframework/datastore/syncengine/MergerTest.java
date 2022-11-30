@@ -92,16 +92,14 @@ public final class MergerTest {
             .name("Jameson")
             .build();
         ModelMetadata originalMetadata =
-            new ModelMetadata(blogOwner.getId(), false, 1, Temporal.Timestamp.now(),
-                    blogOwner.getModelName());
+            new ModelMetadata(blogOwner.getId(), false, 1, Temporal.Timestamp.now());
         storageAdapter.save(blogOwner, originalMetadata);
         // Just to be sure, our arrangement worked, and that thing is in there, right? Good.
         assertEquals(Collections.singletonList(blogOwner), storageAdapter.query(BlogOwner.class));
 
         // Act: merge a model deletion.
         ModelMetadata deletionMetadata =
-            new ModelMetadata(blogOwner.getId(), true, 2, Temporal.Timestamp.now(),
-                    blogOwner.getModelName());
+            new ModelMetadata(blogOwner.getId(), true, 2, Temporal.Timestamp.now());
         TestObserver<Void> observer =
             merger.merge(new ModelWithMetadata<>(blogOwner, deletionMetadata)).test();
         assertTrue(observer.await(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS));
@@ -130,8 +128,7 @@ public final class MergerTest {
 
         // Act: try to merge a deletion that refers to an item not in the store
         ModelMetadata deletionMetadata =
-            new ModelMetadata(blogOwner.getId(), true, 1, Temporal.Timestamp.now(),
-                    blogOwner.getModelName());
+            new ModelMetadata(blogOwner.getId(), true, 1, Temporal.Timestamp.now());
         TestObserver<Void> observer =
             merger.merge(new ModelWithMetadata<>(blogOwner, deletionMetadata)).test();
         assertTrue(observer.await(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS));
@@ -155,7 +152,7 @@ public final class MergerTest {
             .build();
         ModelMetadata metadata =
             new ModelMetadata(blogOwner.getModelName() + "|" + blogOwner.getId(), false, 1,
-                    Temporal.Timestamp.now(), blogOwner.getModelName());
+                    Temporal.Timestamp.now());
         // Note that storageAdapter.save(...) is NOT called!
         // storageAdapter.save(blogOwner, metadata);
 
@@ -452,7 +449,7 @@ public final class MergerTest {
                 .owner(badOwner)
                 .build();
         ModelMetadata metadata = new ModelMetadata(orphanedBlog.getId(), false, 1,
-                Temporal.Timestamp.now(), orphanedBlog.getModelName());
+                Temporal.Timestamp.now());
 
         // Enforce foreign key constraint on in-memory storage adapter
         doThrow(SQLiteConstraintException.class)

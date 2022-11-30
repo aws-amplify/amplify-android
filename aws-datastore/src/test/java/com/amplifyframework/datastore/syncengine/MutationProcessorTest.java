@@ -207,7 +207,7 @@ public final class MutationProcessorTest {
             .build();
         ModelMetadata metadata =
             new ModelMetadata(model.getModelName() + "|" + model.getPrimaryKeyString(), false, 1,
-                    Temporal.Timestamp.now(), model.getModelName());
+                    Temporal.Timestamp.now());
         ModelSchema schema = schemaRegistry.getModelSchemaForModelClass(BlogOwner.class);
         LastSyncMetadata lastSyncMetadata = LastSyncMetadata.baseSyncedAt(schema.getName(), 1_000L);
         synchronousStorageAdapter.save(model, metadata, lastSyncMetadata);
@@ -344,7 +344,7 @@ public final class MutationProcessorTest {
                 .build();
         ModelMetadata metadata =
                 new ModelMetadata(model.getModelName() + "|" + model.getPrimaryKeyString(), false, 1,
-                        Temporal.Timestamp.now(), model.getModelName());
+                        Temporal.Timestamp.now());
         doAnswer(invocation -> {
             int indexOfResponseConsumer = 5;
             Consumer<DataStoreException> onError =
@@ -358,8 +358,7 @@ public final class MutationProcessorTest {
             Consumer<GraphQLResponse<ModelWithMetadata<BlogOwner>>> onResponse =
                     invocation.getArgument(indexOfResponseConsumer);
             ModelMetadata modelMetadata = new ModelMetadata(model.getId(), false, 1,
-                    Temporal.Timestamp.now(),
-                    "BlogOwner");
+                    Temporal.Timestamp.now());
             ModelWithMetadata<BlogOwner> modelWithMetadata = new ModelWithMetadata<BlogOwner>(model,
                     modelMetadata);
             retryHandlerInvocationCount.countDown();
