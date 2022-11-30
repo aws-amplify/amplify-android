@@ -46,9 +46,9 @@ import com.amplifyframework.geo.options.GeoSearchByTextOptions
 import com.amplifyframework.geo.options.GeoUpdateLocationOptions
 import com.amplifyframework.geo.options.GetMapStyleDescriptorOptions
 import com.amplifyframework.geo.result.GeoSearchResult
+import java.util.concurrent.Executors
 import kotlinx.coroutines.runBlocking
 import org.json.JSONObject
-import java.util.concurrent.Executors
 
 /**
  * A plugin for the Geo category to interact with Amazon Location Service.
@@ -289,7 +289,7 @@ class AWSLocationGeoPlugin(
         executor.execute {
             try {
                 runBlocking {
-                    val result = runnableTask()
+                    runnableTask()
                     onResult.call()
                 }
             } catch (error: Throwable) {
@@ -321,11 +321,12 @@ class AWSLocationGeoPlugin(
 
     private suspend fun GeoDevice.resolvedId() = when (type) {
         GeoDeviceType.UNCHECKED -> id
-        // TODO: Blocked by ALS not allowing colons in ids
-        GeoDeviceType.USER_AND_DEVICE -> (credentialsProvider as CognitoCredentialsProvider).getIdentityId() + " - " + sharedPreferences.getId()
+        GeoDeviceType.USER_AND_DEVICE ->
+            (credentialsProvider as CognitoCredentialsProvider).getIdentityId() + " - " +
+                sharedPreferences.getId()
         GeoDeviceType.DEVICE -> sharedPreferences.getId()
         else -> // GeoDeviceType.USER
             (credentialsProvider as CognitoCredentialsProvider).getIdentityId() + " - " +
-                    sharedPreferences.getId()
+                sharedPreferences.getId()
     }
 }

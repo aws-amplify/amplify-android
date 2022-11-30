@@ -83,16 +83,16 @@ internal object Errors {
         val (message, suggestion) = when (error) {
             is UninitializedPropertyAccessException ->
                 "AWSLocationGeoPlugin is not configured." to
-                        "Please verify that Geo plugin has been properly configured."
+                    "Please verify that Geo plugin has been properly configured."
             is ServiceException ->
                 "There was a problem with the data in the request." to
-                        "Please verify that your provided location, tracker and id are correct."
+                    "Please verify that your provided location, tracker and id are correct."
             is ClientException ->
                 "Amplify failed to send a request to Amazon Location Service." to
-                        "Please ensure that you have a stable internet connection."
+                    "Please ensure that you have a stable internet connection."
             else ->
                 "Unexpected error. Failed to process location request." to
-                        AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION
+                    AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION
         }
         return GeoException(message, error, suggestion)
     }
@@ -104,16 +104,16 @@ internal object Errors {
         val (message, suggestion) = when (error) {
             is UninitializedPropertyAccessException ->
                 "AWSLocationGeoPlugin is not configured." to
-                        "Please verify that Geo plugin has been properly configured."
+                    "Please verify that Geo plugin has been properly configured."
             is ServiceException ->
                 "There was a problem with the data in the request." to
-                        "Please verify that your tracker and id are correct."
+                    "Please verify that your tracker and id are correct."
             is ClientException ->
                 "Amplify failed to send a request to Amazon Location Service." to
-                        "Please ensure that you have a stable internet connection."
+                    "Please ensure that you have a stable internet connection."
             else ->
                 "Unexpected error. Failed to delete location history." to
-                        AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION
+                    AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION
         }
         return GeoException(message, error, suggestion)
     }

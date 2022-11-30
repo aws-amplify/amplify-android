@@ -29,7 +29,6 @@ import com.amplifyframework.geo.options.GeoUpdateLocationOptions
 import com.amplifyframework.testutils.sync.SynchronousAuth
 import com.amplifyframework.testutils.sync.SynchronousGeo
 import com.amplifyframework.testutils.sync.TestCategory
-import org.junit.After
 import org.junit.Before
 import org.junit.BeforeClass
 import org.junit.Test
@@ -44,10 +43,7 @@ class DeviceTrackingApiTest {
         val geoPlugin = AWSLocationGeoPlugin()
         val geoCategory = TestCategory.forPlugin(geoPlugin) as GeoCategory
         geo = SynchronousGeo.delegatingTo(geoCategory)
-    }
 
-    @After
-    fun tearDown() {
         signOutFromCognito()
     }
 
@@ -84,6 +80,41 @@ class DeviceTrackingApiTest {
             GeoLocation(0.0, 0.0),
             GeoUpdateLocationOptions.Builder().withTracker("android_tracker").build()
         )
+    }
+
+    @Test
+    fun testUpdateLocationWithUserId() {
+        signInWithCognito()
+
+        // TODO: doesn't work due to ALS not supporting non-colon characters
+//        geo.updateLocation(
+//            GeoDevice.createIdTiedToUser(),
+//            GeoLocation(0.0, 0.0),
+//            GeoUpdateLocationOptions.Builder().withTracker("android_tracker").build()
+//        )
+    }
+
+    @Test
+    fun testUpdateLocationWithDeviceId() {
+        signInWithCognito()
+
+        geo.updateLocation(
+            GeoDevice.createIdTiedToDevice(),
+            GeoLocation(0.0, 0.0),
+            GeoUpdateLocationOptions.Builder().withTracker("android_tracker").build()
+        )
+    }
+
+    @Test
+    fun testUpdateLocationWithUserAndDevice() {
+        signInWithCognito()
+
+        // TODO: doesn't work due to ALS not supporting non-colon characters
+//        geo.updateLocation(
+//            GeoDevice.createIdTiedToUserAndDevice(),
+//            GeoLocation(0.0, 0.0),
+//            GeoUpdateLocationOptions.Builder().withTracker("android_tracker").build()
+//        )
     }
 
     private fun signInWithCognito() {

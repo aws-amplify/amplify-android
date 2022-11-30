@@ -158,7 +158,9 @@ public final class SynchronousGeo {
         }
 
         return Await.<Unit, GeoException>result((onResult, onError) ->
-                asyncDelegate.updateLocation(device, location, new GeoAction(), onError));
+            asyncDelegate.updateLocation(device, location,
+                    () -> onResult.accept(Unit.INSTANCE), onError)
+        );
     }
 
     /**
@@ -172,16 +174,9 @@ public final class SynchronousGeo {
             GeoLocation location,
             GeoUpdateLocationOptions options
     ) throws GeoException {
-
-        return Await.<Unit, GeoException>result((onResult, onError) -> {
-            // for type conversion; test times out if onResult isn't called
-            class GeoAction implements Action {
-                @Override
-                public void call() {
-                    onResult.accept(Unit.INSTANCE);
-                }
-            }
-            asyncDelegate.updateLocation(device, location, options, new GeoAction(), onError);
-        });
+        return Await.<Unit, GeoException>result((onResult, onError) ->
+                asyncDelegate.updateLocation(device, location, options,
+                        () -> onResult.accept(Unit.INSTANCE), onError)
+        );
     }
 }

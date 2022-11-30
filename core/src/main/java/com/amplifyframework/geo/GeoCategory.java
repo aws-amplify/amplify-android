@@ -26,6 +26,7 @@ import com.amplifyframework.geo.models.GeoDevice;
 import com.amplifyframework.geo.models.GeoLocation;
 import com.amplifyframework.geo.models.MapStyle;
 import com.amplifyframework.geo.models.MapStyleDescriptor;
+import com.amplifyframework.geo.options.GeoDeleteLocationHistoryOptions;
 import com.amplifyframework.geo.options.GeoSearchByCoordinatesOptions;
 import com.amplifyframework.geo.options.GeoSearchByTextOptions;
 import com.amplifyframework.geo.options.GeoUpdateLocationOptions;
@@ -171,5 +172,21 @@ public final class GeoCategory
             @NonNull Consumer<GeoException> onError
     ) {
         getSelectedPlugin().updateLocation(device, location, options, onResult, onError);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void deleteLocationHistory(@NonNull GeoDevice device, @NonNull Action onResult, @NonNull Consumer<GeoException> onError) {
+        deleteLocationHistory(device, GeoDeleteLocationHistoryOptions.defaults(), onResult, onError);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void deleteLocationHistory(@NonNull GeoDevice device, @NonNull GeoDeleteLocationHistoryOptions options, @NonNull Action onResult, @NonNull Consumer<GeoException> onError) {
+        getSelectedPlugin().deleteLocationHistory(device, options, onResult, onError);
     }
 }
