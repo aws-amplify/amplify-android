@@ -36,7 +36,6 @@ import com.amplifyframework.hub.HubEvent
 import com.amplifyframework.testutils.HubAccumulator
 import com.amplifyframework.testutils.Resources
 import com.amplifyframework.testutils.Sleep
-import com.amplifyframework.testutils.junitcategories.StressTests
 import com.amplifyframework.testutils.sync.SynchronousAuth
 import java.util.UUID
 import java.util.concurrent.TimeUnit
@@ -48,7 +47,6 @@ import org.junit.BeforeClass
 import org.junit.Test
 import org.junit.experimental.categories.Category
 
-@Category(StressTests::class)
 class PinpointAnalyticsStressTest {
 
     companion object {

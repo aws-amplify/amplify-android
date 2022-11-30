@@ -19,16 +19,12 @@ import android.content.Context
 import android.util.Log
 import androidx.test.core.app.ApplicationProvider
 import com.amplifyframework.AmplifyException
-import com.amplifyframework.auth.AuthException
-import com.amplifyframework.auth.AuthUser
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.cognito.result.AWSCognitoAuthSignOutResult
 import com.amplifyframework.auth.cognito.testutils.Credentials
 import com.amplifyframework.auth.options.AuthFetchSessionOptions
-import com.amplifyframework.auth.options.AuthSignUpOptions
 import com.amplifyframework.core.Amplify
-import com.amplifyframework.testutils.junitcategories.StressTests
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import org.junit.Assert.assertTrue
@@ -36,10 +32,7 @@ import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.BeforeClass
 import org.junit.Test
-import org.junit.experimental.categories.Category
-import java.time.LocalDateTime
 
-@Category(StressTests::class)
 class AuthStressTests {
     companion object {
         private const val TIMEOUT_S = 20L

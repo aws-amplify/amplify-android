@@ -1,36 +1,19 @@
 package com.amplifyframework.datastore
 
-import android.content.Context
 import android.util.Log
-import androidx.annotation.RawRes
 import androidx.test.core.app.ApplicationProvider.getApplicationContext
 import com.amplifyframework.AmplifyException
-import com.amplifyframework.api.ApiCategory
-import com.amplifyframework.api.aws.AWSApiPlugin
 import com.amplifyframework.core.Amplify
-import com.amplifyframework.core.AmplifyConfiguration
-import com.amplifyframework.core.category.CategoryType
 import com.amplifyframework.core.model.query.Page
 import com.amplifyframework.core.model.query.Where
-import com.amplifyframework.core.model.temporal.Temporal
-import com.amplifyframework.datastore.appsync.AppSyncClient
-import com.amplifyframework.datastore.appsync.SynchronousAppSync
-import com.amplifyframework.hub.HubChannel
 import com.amplifyframework.testmodels.commentsblog.*
-import com.amplifyframework.testutils.HubAccumulator
-import com.amplifyframework.testutils.Resources
-import com.amplifyframework.testutils.junitcategories.StressTests
-import com.amplifyframework.testutils.sync.SynchronousApi
-import com.amplifyframework.testutils.sync.SynchronousDataStore
 import org.junit.*
 import org.junit.Assert.*
-import org.junit.experimental.categories.Category
 import java.lang.Thread.sleep
 import java.util.*
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
-@Category(StressTests::class)
 class DataStoreStressTest {
     companion object {
         private const val TIMEOUT_SECONDS = 60
@@ -47,9 +30,9 @@ class DataStoreStressTest {
                     .modelProvider(AmplifyModelProvider.getInstance())
                     .build())
                 Amplify.configure(getApplicationContext())
-                Log.i("MyAmplifyApp", "Initialized Amplify")
+                Log.i("DataStoreStressTest", "Initialized Amplify")
             } catch (error: AmplifyException) {
-                Log.e("MyAmplifyApp", "Could not initialize Amplify", error)
+                Log.e("DataStoreStressTest", "Could not initialize Amplify", error)
             }
             sleep(5000)
         }
@@ -68,10 +51,10 @@ class DataStoreStressTest {
             Amplify.DataStore.clear(
                 {
                     latch.countDown()
-                    Log.i("MyAmplifyApp", "DataStore cleared") },
+                    Log.i("DataStoreStressTest", "DataStore cleared") },
                 {
                     latch.countDown()
-                    Log.e("MyAmplifyApp", "Error clearing DataStore", it) }
+                    Log.e("DataStoreStressTest", "Error clearing DataStore", it) }
             )
             latch.await(TIMEOUT_SECONDS.toLong(), TimeUnit.SECONDS)
         } catch (error: Exception) {
