@@ -94,7 +94,7 @@ class StorageStressTest {
                 smallFiles.add(smallFile)
             }
             uploadLatch.await(STRESS_TEST_TIMEOUT, TimeUnit.MILLISECONDS)
-
+            Sleep.milliseconds(500)
             // Upload 1 large test file
             Log.i("STORAGE_STRESS_TEST","@BeforeClass Large Upload Started")
             key = "${LARGE_FILE_NAME}${UUID.randomUUID()}"
