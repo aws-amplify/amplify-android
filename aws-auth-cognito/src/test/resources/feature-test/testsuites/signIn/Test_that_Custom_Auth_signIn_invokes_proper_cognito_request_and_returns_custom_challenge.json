@@ -64,7 +64,7 @@
         },
         {
             "type": "state",
-            "expectedState": "CustomSignin_SigningIn.json"
+            "expectedState": "CustomSignIn_SigningIn.json"
         }
     ]
 }
