@@ -83,7 +83,7 @@ class StorageStressTest {
             smallFiles = mutableListOf()
             val uploadLatch = CountDownLatch(50)
             repeat(50) {
-                Sleep.milliseconds(500)
+                Sleep.milliseconds(1000)
                 key = "${SMALL_FILE_NAME}${UUID.randomUUID()}"
                 val smallFile = RandomTempFile(key, SMALL_FILE_SIZE)
                 Thread {
@@ -94,7 +94,7 @@ class StorageStressTest {
                 smallFiles.add(smallFile)
             }
             uploadLatch.await(STRESS_TEST_TIMEOUT, TimeUnit.MILLISECONDS)
-            Sleep.milliseconds(500)
+            Sleep.milliseconds(1000)
             // Upload 1 large test file
             Log.i("STORAGE_STRESS_TEST","@BeforeClass Large Upload Started")
             key = "${LARGE_FILE_NAME}${UUID.randomUUID()}"
