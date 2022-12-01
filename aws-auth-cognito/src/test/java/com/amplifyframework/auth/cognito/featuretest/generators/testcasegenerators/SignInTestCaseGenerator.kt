@@ -284,7 +284,10 @@ object SignInTestCaseGenerator : SerializableProvider {
                 "username" to username,
                 "password" to "",
             ).toJsonElement(),
-            options = mapOf("signInOptions" to mapOf("authFlow" to AuthFlowType.CUSTOM_AUTH_WITHOUT_SRP.toString())).toJsonElement()
+            options = mapOf(
+                "signInOptions" to
+                    mapOf("authFlow" to AuthFlowType.CUSTOM_AUTH_WITHOUT_SRP.toString())
+            ).toJsonElement()
         ),
         validations = listOf(
             mockedSignInCustomAuthChallengeExpectation,

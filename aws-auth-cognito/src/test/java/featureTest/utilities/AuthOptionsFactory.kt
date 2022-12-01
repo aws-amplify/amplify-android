@@ -77,8 +77,10 @@ object AuthOptionsFactory {
     } as T
 
     private fun getSignInOptions(optionsData: JsonObject): AuthSignInOptions {
-        return if(optionsData.containsKey("signInOptions")) {
-            val authFlowType = AuthFlowType.valueOf(((optionsData["signInOptions"] as Map<String, String>)["authFlow"] as JsonPrimitive).content)
+        return if (optionsData.containsKey("signInOptions")) {
+            val authFlowType = AuthFlowType.valueOf(
+                ((optionsData["signInOptions"] as Map<String, String>)["authFlow"] as JsonPrimitive).content
+            )
             AWSCognitoAuthSignInOptions.builder().authFlowType(authFlowType).build()
         } else {
             AuthSignInOptions.defaults()
