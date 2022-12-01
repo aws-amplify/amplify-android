@@ -92,7 +92,7 @@ object AuthStateJsonGenerator : SerializableProvider {
                         session = "someSession",
                         parameters = mapOf(
                             "CODE_DELIVERY_DELIVERY_MEDIUM" to "SMS",
-                            "CODE_DELIVERY_DESTINATION" to "+12345678911"
+                            "CODE_DELIVERY_DESTINATION" to "+12345678900"
                         )
                     )
                 )

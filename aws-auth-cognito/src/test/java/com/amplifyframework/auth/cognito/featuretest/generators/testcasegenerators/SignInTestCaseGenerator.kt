@@ -34,7 +34,7 @@ object SignInTestCaseGenerator : SerializableProvider {
     private const val userId = "userId"
     private const val username = "username"
     private const val password = "password"
-    private const val phone = "+12345678911"
+    private const val phone = "+12345678900"
 
     private val mockedInitiateAuthResponse = MockResponse(
         CognitoType.CognitoIdentityProvider,

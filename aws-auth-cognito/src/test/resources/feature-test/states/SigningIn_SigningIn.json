@@ -12,7 +12,7 @@
                     "session": "someSession",
                     "parameters": {
                         "CODE_DELIVERY_DELIVERY_MEDIUM": "SMS",
-                        "CODE_DELIVERY_DESTINATION": "+12345678911"
+                        "CODE_DELIVERY_DESTINATION": "+12345678900"
                     }
                 }
             }
