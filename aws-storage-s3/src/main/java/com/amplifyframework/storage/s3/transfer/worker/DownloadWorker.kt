@@ -27,7 +27,8 @@ import com.amplifyframework.storage.s3.transfer.TransferStatusUpdater
 import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileOutputStream
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 /**
  * Worker to perform download file task.
@@ -73,21 +74,19 @@ internal class DownloadWorker(
     }
 
     @OptIn(InternalApi::class)
-    private fun writeToFileWithProgressUpdates(
+    private suspend fun writeToFileWithProgressUpdates(
         stream: ByteStream.OneShotStream,
         file: File,
         progressListener: DownloadProgressListener
     ) {
-        var outputStream: BufferedOutputStream? = null
-        val sdkByteReadChannel = stream.readFrom()
-        runBlocking {
+        withContext(Dispatchers.IO) {
+            val sdkByteReadChannel = stream.readFrom()
             val limit = stream.contentLength ?: 0L
             val buffer = ByteArray(defaultBufferSize)
             val append = file.length() > 0
             val fileOutputStream = FileOutputStream(file, append)
-            outputStream = BufferedOutputStream(fileOutputStream)
             var totalRead = 0L
-            outputStream?.use { fileOutput ->
+            BufferedOutputStream(fileOutputStream).use { fileOutput ->
                 val copied = 0L
                 while (!isStopped) {
                     val remaining = limit - copied
