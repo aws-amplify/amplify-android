@@ -28,7 +28,7 @@ import com.amplifyframework.notifications.pushnotifications.PushNotificationsPlu
 open class NotificationsCategory : Category<NotificationsPlugin<*>>(), NotificationsCategoryBehavior {
     @Suppress("PropertyName")
     @JvmField
-    var PushNotifications: PushNotificationsCategory = PushNotificationsCategory()
+    var Push: PushNotificationsCategory = PushNotificationsCategory()
 
     override fun getCategoryType(): CategoryType = CategoryType.NOTIFICATIONS
 
@@ -42,10 +42,10 @@ open class NotificationsCategory : Category<NotificationsPlugin<*>>(), Notificat
         plugins.forEach { plugin ->
             when (plugin.getSubCategoryType()) {
                 SubCategoryType.PUSH_NOTIFICATIONS -> {
-                    PushNotifications.addPlugin(plugin as PushNotificationsPlugin<*>)
+                    Push.addPlugin(plugin as PushNotificationsPlugin<*>)
                     val configuration = AmplifyConfiguration.fromConfigFile(context)
                     val categoryConfiguration: CategoryConfiguration = configuration.forCategoryType(categoryType)
-                    PushNotifications.configure(categoryConfiguration, context)
+                    Push.configure(categoryConfiguration, context)
                 }
                 else -> Unit
             }

@@ -20,19 +20,15 @@ import com.amplifyframework.core.Consumer
 
 interface PushNotificationsCategoryBehavior {
 
-    fun onNewToken(token: String, onSuccess: Action, onError: Consumer<PushNotificationsException>)
-
     fun onForegroundNotificationReceived(listener: NotificationReceivedListener)
 
     fun onBackgroundNotificationReceived(listener: NotificationReceivedListener)
 
     fun onNotificationOpened(onSuccess: Action, onError: Consumer<PushNotificationsException>)
 
-    fun registerForRemoteNotifications(
-        details: PushNotificationsDetails,
-        onSuccess: Consumer<PushNotificationResult>,
-        onError: Consumer<PushNotificationsException>
-    )
+    fun handleNotificationReceived(details: PushNotificationsDetails): PushNotificationResult
+
+    fun registerDevice(token: String)
 
     fun getInitialNotification(onSuccess: Action, onError: Consumer<PushNotificationsException>)
 

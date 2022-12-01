@@ -13,10 +13,8 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.notifications.pushnotifications
+package com.amplifyframework.pushnotifications.pinpoint
 
-import java.util.UUID
+import android.app.Activity
 
-class PushNotificationsDetails(val title: String?, val body: String?, val imageUrl: String?) {
-    val notificationId = UUID.randomUUID().hashCode()
-}
+class AWSPinpointPushNotificationsActivity : Activity()

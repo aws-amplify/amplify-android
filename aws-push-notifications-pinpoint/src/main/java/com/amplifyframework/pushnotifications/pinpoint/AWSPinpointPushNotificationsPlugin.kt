@@ -28,7 +28,7 @@ import com.amplifyframework.notifications.pushnotifications.PushNotificationsDet
 import com.amplifyframework.notifications.pushnotifications.PushNotificationsException
 import com.amplifyframework.notifications.pushnotifications.PushNotificationsPlugin
 import com.amplifyframework.notifications.pushnotifications.PushResultType
-import com.amplifyframework.pushnotifications.pinpoint.utils.AWSPinpointPushNotificationUtils
+import com.amplifyframework.pushnotifications.pinpoint.utils.PushNotificationsUtils
 import org.json.JSONObject
 
 class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClient>() {
@@ -46,14 +46,14 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
 
     private lateinit var context: Context
 
-    private lateinit var pushNotificationUtils: AWSPinpointPushNotificationUtils
+    private lateinit var pushNotificationsUtils: PushNotificationsUtils
 
     private lateinit var foregroundNotificationListener: NotificationReceivedListener
     private lateinit var backgroundNotificationListener: NotificationReceivedListener
 
     override fun configure(pluginConfiguration: JSONObject?, context: Context) {
         this.context = context
-        pushNotificationUtils = AWSPinpointPushNotificationUtils(context)
+        pushNotificationsUtils = PushNotificationsUtils(context)
         val preferencesKey = "appID" + "515d6767-01b7-49e5-8273-c8d11b0f331d"
         preferences = context.getSharedPreferences(preferencesKey, Context.MODE_PRIVATE)
     }
@@ -64,15 +64,15 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
         } catch (illegalStateException: IllegalStateException) {
             logger.warn("Failed to identify user, Analytics plugin not configured.")
             // TODO: update user profile endpoint
-            println("Identity User: $userId")
         } catch (exception: Exception) {
             throw PushNotificationsException.default()
         }
     }
 
-    override fun onNewToken(token: String, onSuccess: Action, onError: Consumer<PushNotificationsException>) {
+    override fun registerDevice(token: String) {
         // TODO: use credentials store instead of SharedPreferences
         putString("FCM_TOKEN", token)
+        // TODO: update pinpoint endpoint
     }
 
     override fun onForegroundNotificationReceived(listener: NotificationReceivedListener) {
@@ -87,25 +87,16 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
         TODO("Not yet implemented")
     }
 
-    override fun registerForRemoteNotifications(
-        details: PushNotificationsDetails,
-        onSuccess: Consumer<PushNotificationResult>,
-        onError: Consumer<PushNotificationsException>
-    ) {
-        try {
-            val result = if (pushNotificationUtils.isAppInForeground()) {
-                tryAnalyticsRecordEvent("foreground_event")
-                foregroundNotificationListener.invoke(details)
-                PushNotificationResult(PushResultType.AppInForeground())
-            } else {
-                pushNotificationUtils.showNotification(details)
-                tryAnalyticsRecordEvent("background_event")
-                backgroundNotificationListener.invoke(details)
-                PushNotificationResult(PushResultType.NotificationPosted())
-            }
-            onSuccess.accept(result)
-        } catch (exception: Exception) {
-            onError.accept(PushNotificationsException.default())
+    override fun handleNotificationReceived(details: PushNotificationsDetails): PushNotificationResult {
+        return if (pushNotificationsUtils.isAppInForeground()) {
+            tryAnalyticsRecordEvent("foreground_event")
+            foregroundNotificationListener.invoke(details)
+            PushNotificationResult(PushResultType.AppInForeground())
+        } else {
+            pushNotificationsUtils.showNotification(details)
+            tryAnalyticsRecordEvent("background_event")
+            backgroundNotificationListener.invoke(details)
+            PushNotificationResult(PushResultType.NotificationPosted())
         }
     }
 

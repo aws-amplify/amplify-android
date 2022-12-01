@@ -16,5 +16,21 @@
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.amplifyframework.notifications.pinpoint">
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+
+    <application android:name="com.amplifyframework.pushnotifications.pinpoint.AWSPinpointPushNotificationsApplication">
+<!--        <activity-->
+<!--            android:name="com.amplifyframework.pushnotifications.pinpoint.AWSPinpointPushNotificationsActivity"-->
+<!--            android:launchMode="singleInstance"-->
+<!--            android:exported="false" />-->
+
+        <service
+            android:name="com.amplifyframework.pushnotifications.pinpoint.utils.PushNotificationsService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+    </application>
 
 </manifest>

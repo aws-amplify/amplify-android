@@ -20,6 +20,8 @@ import com.amplifyframework.core.Consumer
 import com.amplifyframework.core.category.Category
 import com.amplifyframework.notifications.NotificationsCategoryBehavior
 
+typealias NotificationReceivedListener = (PushNotificationsDetails) -> Unit
+
 class PushNotificationsCategory :
     Category<PushNotificationsPlugin<*>>(),
     PushNotificationsCategoryBehavior,
@@ -29,8 +31,7 @@ class PushNotificationsCategory :
 
     override fun identifyUser(userId: String) = selectedPlugin.identifyUser(userId)
 
-    override fun onNewToken(token: String, onSuccess: Action, onError: Consumer<PushNotificationsException>) =
-        selectedPlugin.onNewToken(token, onSuccess, onError)
+    override fun registerDevice(token: String) = selectedPlugin.registerDevice(token)
 
     override fun onForegroundNotificationReceived(listener: NotificationReceivedListener) =
         selectedPlugin.onForegroundNotificationReceived(listener)
@@ -41,11 +42,8 @@ class PushNotificationsCategory :
     override fun onNotificationOpened(onSuccess: Action, onError: Consumer<PushNotificationsException>) =
         selectedPlugin.onNotificationOpened(onSuccess, onError)
 
-    override fun registerForRemoteNotifications(
-        details: PushNotificationsDetails,
-        onSuccess: Consumer<PushNotificationResult>,
-        onError: Consumer<PushNotificationsException>
-    ) = selectedPlugin.registerForRemoteNotifications(details, onSuccess, onError)
+    override fun handleNotificationReceived(details: PushNotificationsDetails): PushNotificationResult =
+        selectedPlugin.handleNotificationReceived(details)
 
     override fun getInitialNotification(onSuccess: Action, onError: Consumer<PushNotificationsException>) =
         selectedPlugin.getInitialNotification(onSuccess, onError)

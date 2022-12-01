@@ -26,7 +26,7 @@ buildscript {
         classpath 'com.android.tools.build:gradle:4.0.2'
         classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.7.10'
         classpath "org.jetbrains.dokka:dokka-gradle-plugin:1.7.10"
-        classpath 'com.google.gms:google-services:4.3.13'
+        classpath 'com.google.gms:google-services:4.3.14'
         classpath 'org.jlleitschuh.gradle:ktlint-gradle:9.4.1'
         classpath "org.gradle:test-retry-gradle-plugin:1.4.1"
     }
@@ -136,7 +136,7 @@ ext {
                 kotlinTest: 'org.jetbrains.kotlin:kotlin-test:1.7.10'
             ]
         ],
-
+        firebasemessaging: 'com.google.firebase:firebase-messaging-ktx:23.1.0',
         oauth2: 'com.google.auth:google-auth-library-oauth2-http:0.26.0',
         okhttp: 'com.squareup.okhttp3:okhttp:5.0.0-alpha.9',
         gson: 'com.google.code.gson:gson:2.8.9',

@@ -25,6 +25,7 @@ dependencies {
 
     implementation dependency.aws.pinpoint
 
+    implementation dependency.firebasemessaging
     implementation dependency.androidx.core_ktx
     implementation dependency.androidx.appcompat
 

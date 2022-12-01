@@ -15,9 +15,12 @@
 
 package com.amplifyframework.pushnotifications.pinpoint.utils
 
-class AWSPinpointPushNotificationsConstants {
+class PushNotificationsConstants {
     companion object {
+        const val AWS_PINPOINT_NOTIFICATION_CHANNEL = "pinpoint.notification.channel"
+
         const val AWS_PINPOINT_NOTIFICATION_TITLE = "pinpoint.notification.title"
         const val AWS_PINPOINT_NOTIFICATION_BODY = "pinpoint.notification.body"
+        const val AWS_PINPOINT_NOTIFICATION_IMAGE = "pinpoint.notification.imageUrl"
     }
 }
