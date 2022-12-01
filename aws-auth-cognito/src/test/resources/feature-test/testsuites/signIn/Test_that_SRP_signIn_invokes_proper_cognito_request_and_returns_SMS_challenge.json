@@ -28,7 +28,7 @@
                     "challengeName": "SMS_MFA",
                     "challengeParameters": {
                         "CODE_DELIVERY_DELIVERY_MEDIUM": "SMS",
-                        "CODE_DELIVERY_DESTINATION": "+12345678900"
+                        "CODE_DELIVERY_DESTINATION": "+12345678911"
                     }
                 }
             }
@@ -55,7 +55,7 @@
                     "additionalInfo": {
                     },
                     "codeDeliveryDetails": {
-                        "destination": "+12345678900",
+                        "destination": "+12345678911",
                         "deliveryMedium": "SMS"
                     }
                 }

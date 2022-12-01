@@ -7,14 +7,12 @@
             "SignInChallengeState": {
                 "type": "SignInChallengeState.WaitingForAnswer",
                 "authChallenge": {
-                    "challengeName": "CUSTOM_CHALLENGE",
+                    "challengeName": "SMS_MFA",
                     "username": "username",
                     "session": "someSession",
                     "parameters": {
-                        "SALT": "abc",
-                        "SECRET_BLOCK": "secretBlock",
-                        "SRP_B": "def",
-                        "USERNAME": "username"
+                        "CODE_DELIVERY_DELIVERY_MEDIUM": "SMS",
+                        "CODE_DELIVERY_DESTINATION": "+12345678911"
                     }
                 }
             }

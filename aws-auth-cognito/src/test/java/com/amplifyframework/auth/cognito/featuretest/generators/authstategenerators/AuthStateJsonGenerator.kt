@@ -122,5 +122,5 @@ object AuthStateJsonGenerator : SerializableProvider {
         AuthorizationState.SigningIn()
     )
 
-    override val serializables: List<Any> = listOf(signedInState, signedOutState, receivedChallengeState, receivedCustomChallengeState)
+    override val serializables: List<Any> = listOf(signedInState, signedOutState, receivedChallengeState)
 }
