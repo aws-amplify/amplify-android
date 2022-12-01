@@ -293,7 +293,15 @@ class AWSLocationGeoPlugin(
         onResult: Action,
         onError: Consumer<GeoException>
     ) {
-        locationTracker.start()
+        val tracker = options.tracker ?: defaultTracker
+        execute(
+            {
+                locationTracker.start(device.resolvedId(), tracker, options)
+            },
+            Errors::deviceTrackingError,
+            onResult,
+            onError
+        )
     }
 
     override fun stopTracking(onResult: Action, onError: Consumer<GeoException>) {

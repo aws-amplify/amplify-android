@@ -18,10 +18,10 @@ package com.amplifyframework.geo.location.database
 import android.content.ContentValues
 import android.database.sqlite.SQLiteDatabase
 import com.amplifyframework.geo.location.database.LocationTable.Column
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import java.time.Instant
 import kotlin.coroutines.CoroutineContext
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 internal data class LocationEntity(
     val locationId: Long = -1,

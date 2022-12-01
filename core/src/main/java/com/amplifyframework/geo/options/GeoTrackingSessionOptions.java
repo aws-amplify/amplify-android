@@ -95,6 +95,7 @@ public class GeoTrackingSessionOptions {
         void updateLocations(List<GeoPosition> positions, Action onResult,
                              Consumer<GeoException> onError);
     }
+
     /**
      * Returns a new builder instance for constructing {@link GeoTrackingSessionOptions}.
      *
@@ -107,6 +108,38 @@ public class GeoTrackingSessionOptions {
 
     public static GeoTrackingSessionOptions defaults() {
         return new Builder().build();
+    }
+
+    public long getMinUpdatesInterval() {
+        return minUpdatesInterval;
+    }
+
+    public float getMinUpdateDistanceMeters() {
+        return minUpdateDistanceMeters;
+    }
+
+    public Power getPowerRequired() {
+        return powerRequired;
+    }
+
+    public Accuracy getDesiredAccuracy() {
+        return desiredAccuracy;
+    }
+
+    public boolean getDisregardLocationUpdatesWhenOffline() {
+        return disregardLocationUpdatesWhenOffline;
+    }
+
+    public int getMaxUpdates() {
+        return maxUpdates;
+    }
+
+    public Date getTrackUntil() {
+        return trackUntil;
+    }
+
+    public String getTracker() {
+        return tracker;
     }
 
     private GeoTrackingSessionOptions(Builder b) {
@@ -239,16 +272,15 @@ public class GeoTrackingSessionOptions {
             return new GeoTrackingSessionOptions(this);
         }
     }
-}
 
-enum Power {
-    LOW,
-    MEDIUM,
-    HIGH
-}
+    public enum Power {
+        LOW,
+        MEDIUM,
+        HIGH
+    }
 
-enum Accuracy {
-    COARSE, // approximate location
-    FINE // precise location
+    public enum Accuracy {
+        COARSE, // approximate location
+        FINE // precise location
+    }
 }
-

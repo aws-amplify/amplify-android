@@ -15,67 +15,115 @@
 
 package com.amplifyframework.geo.location.tracking
 
+import android.Manifest
 import android.app.Service
-import android.content.Context
 import android.content.Intent
-import android.os.IBinder
+import android.content.pm.PackageManager
+import android.location.Criteria
+import android.location.Location
+import android.location.LocationListener
+import android.location.LocationManager
+import android.os.Binder
+import android.os.Looper
+import com.amplifyframework.geo.GeoException
 import com.amplifyframework.geo.location.database.GeoDatabase
 import com.amplifyframework.geo.location.database.LocationDao
 import com.amplifyframework.geo.location.database.LocationEntity
+import com.amplifyframework.geo.options.GeoTrackingSessionOptions
+import com.amplifyframework.geo.options.GeoTrackingSessionOptions.Accuracy
+import com.amplifyframework.geo.options.GeoTrackingSessionOptions.Power
 import java.time.Instant
-import kotlin.random.Random
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-internal class LocationTracker(private val context: Context) {
-    fun start() {
-        context.startService(Intent(context, LocationTrackingService::class.java))
-    }
-
-    fun stop() {
-        context.stopService(Intent(context, LocationTrackingService::class.java))
-    }
-}
-
-internal class LocationTrackingService() : Service() {
+internal class LocationTrackingService : Service() {
     private lateinit var locationDao: LocationDao
+    private lateinit var locationManager: LocationManager
+
     private val coroutineScope = CoroutineScope(SupervisorJob())
+    private val listener = Listener()
+    private var trackingData: TrackingData? = null
 
-    // Service binding is not supported
-    override fun onBind(intent: Intent?): IBinder? = null
-
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        // Do not restart the service if the process is killed
-        return START_NOT_STICKY
-    }
+    override fun onBind(intent: Intent?) = LocationServiceBinder(this)
 
     override fun onCreate() {
         locationDao = GeoDatabase(this).locationDao
-        startTracking()
+        locationManager = getSystemService(LocationManager::class.java)
     }
 
-    fun startTracking() {
-        coroutineScope.launch {
-            // For testing purposes let's add one location a second to the database for as long as the service is
-            // running
-            while (true) {
-                val entity = LocationEntity(
-                    deviceId = "someId",
-                    tracker = "someTracker",
-                    datetime = Instant.now(),
-                    latitude = Random.nextDouble(),
-                    longitude = Random.nextDouble()
-                )
+    fun startTracking(trackingData: TrackingData) {
+        val isPermissionGranted =
+            checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+                checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+
+        if (!isPermissionGranted) {
+            throw GeoException(
+                "Missing Permissions",
+                "Ensure that the user has granted ACCESS_FINE_LOCATION or ACCESS_COARSE_LOCATION prior to starting " +
+                    "device location tracking"
+            )
+        }
+
+        this.trackingData = trackingData
+
+        locationManager.requestLocationUpdates(
+            trackingData.options.minUpdatesInterval,
+            trackingData.options.minUpdateDistanceMeters,
+            trackingData.options.criteria,
+            listener,
+            Looper.myLooper()
+        )
+    }
+
+    fun stopTracking() {
+        coroutineScope.cancel()
+        locationManager.removeUpdates(listener)
+        trackingData = null
+    }
+
+    override fun onDestroy() {
+        stopTracking()
+    }
+
+    private fun uploadOrSaveLocation(location: Location) {
+        val data = trackingData ?: return
+
+        // todo: attempt to upload first
+
+        if (!data.options.disregardLocationUpdatesWhenOffline) {
+            val entity = LocationEntity(
+                deviceId = data.deviceId,
+                tracker = data.tracker,
+                datetime = Instant.now(),
+                longitude = location.longitude,
+                latitude = location.latitude
+            )
+            coroutineScope.launch {
                 locationDao.insert(entity)
-                delay(1000)
             }
         }
     }
 
-    override fun onDestroy() {
-        coroutineScope.cancel()
+    private val GeoTrackingSessionOptions.criteria: Criteria
+        get() = Criteria().apply {
+            powerRequirement = when (powerRequired) {
+                Power.MEDIUM -> Criteria.POWER_MEDIUM
+                Power.HIGH -> Criteria.POWER_HIGH
+                else -> Criteria.POWER_LOW
+            }
+            accuracy = when (desiredAccuracy) {
+                Accuracy.FINE -> Criteria.ACCURACY_FINE
+                else -> Criteria.ACCURACY_COARSE
+            }
+        }
+
+    inner class Listener : LocationListener {
+        override fun onLocationChanged(location: Location) {
+            uploadOrSaveLocation(location)
+        }
     }
+
+    class LocationServiceBinder(val service: LocationTrackingService) : Binder()
 }
