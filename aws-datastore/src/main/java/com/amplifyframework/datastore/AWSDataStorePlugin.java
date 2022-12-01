@@ -16,6 +16,11 @@
 package com.amplifyframework.datastore;
 
 import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.Network;
+import android.os.Handler;
+import android.os.Looper;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
@@ -255,6 +260,22 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             event -> InitializationStatus.SUCCEEDED.toString().equals(event.getName()),
             event -> categoryInitializationsPending.countDown()
         );
+
+        configureNetworkMonitor(context);
+    }
+
+    private void configureNetworkMonitor(Context context) {
+        context.getSystemService(ConnectivityManager.class).registerDefaultNetworkCallback(
+                new ConnectivityManager.NetworkCallback() {
+            @Override
+            public void onAvailable(Network network) {
+                LOG.error("The network has been connected: " + network + " Restarting DataStore after 3 secs.");
+                new Handler(Looper.getMainLooper()).postDelayed(() -> start(
+                    () -> LOG.error("restart after network succeeded"),
+                    (item) -> LOG.error("restart after network failed: " + item)
+                ), 3000);
+            }
+        });
     }
 
     @WorkerThread
