@@ -82,8 +82,8 @@ internal object TransferOperations {
         workManager: WorkManager
     ): Boolean {
         if (TransferState.isStarted(transferRecord.state) && !TransferState.isInTerminalState(transferRecord.state)) {
-            workManager.cancelUniqueWork(transferRecord.id.toString())
             transferStatusUpdater.updateTransferState(transferRecord.id, TransferState.PENDING_PAUSE)
+            workManager.cancelUniqueWork(transferRecord.id.toString())
             return true
         }
         return false
@@ -122,10 +122,11 @@ internal object TransferOperations {
                     // transfer is paused so directly mark it as canceled
                     nextState = TransferState.CANCELED
                 }
+                transferStatusUpdater.updateTransferState(transferRecord.id, nextState)
             } else {
+                transferStatusUpdater.updateTransferState(transferRecord.id, nextState)
                 workManager.cancelUniqueWork(transferRecord.id.toString())
             }
-            transferStatusUpdater.updateTransferState(transferRecord.id, nextState)
             return true
         }
         return false
