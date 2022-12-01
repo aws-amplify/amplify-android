@@ -97,7 +97,7 @@ class StorageStressTest {
 
             // Upload 1 large test file
             Log.i("STORAGE_STRESS_TEST","@BeforeClass Large Upload Started")
-            key = "${LARGE_FILE_NAME}${System.currentTimeMillis()}"
+            key = "${LARGE_FILE_NAME}${UUID.randomUUID()}"
             largeFile = RandomTempFile(key, LARGE_FILE_SIZE)
             synchronousStorage.uploadFile(key, largeFile, uploadOptions, TRANSFER_TIMEOUT)
             Log.i("STORAGE_STRESS_TEST","@BeforeClass Large Upload Complete")
