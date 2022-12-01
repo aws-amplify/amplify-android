@@ -34,6 +34,7 @@ import com.amplifyframework.testutils.sync.SynchronousStorage
 import org.junit.BeforeClass
 import org.junit.Test
 import java.io.File
+import java.util.*
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
@@ -77,13 +78,13 @@ class StorageStressTest {
                 .accessLevel(TESTING_ACCESS_LEVEL)
                 .build()
 
-//            // Upload 25 small test files
+            // Upload 25 small test files
             var key: String
             smallFiles = mutableListOf()
             val uploadLatch = CountDownLatch(50)
             repeat(50) {
                 Sleep.milliseconds(500)
-                key = "${SMALL_FILE_NAME}${System.currentTimeMillis()}"
+                key = "${SMALL_FILE_NAME}${UUID.randomUUID()}"
                 val smallFile = RandomTempFile(key, SMALL_FILE_SIZE)
                 Thread {
                     synchronousStorage.uploadFile(key, smallFile, uploadOptions, TRANSFER_TIMEOUT)
@@ -129,7 +130,7 @@ class StorageStressTest {
         val uploadLatch = CountDownLatch(50)
             repeat(50) {
                 Sleep.milliseconds(500)
-                val key = "${SMALL_FILE_NAME}${System.currentTimeMillis()}"
+                val key = "${SMALL_FILE_NAME}${UUID.randomUUID()}"
                 val smallFile = RandomTempFile(key, SMALL_FILE_SIZE)
                 Thread {
                     synchronousStorage.uploadFile(key, smallFile, uploadOptions, TRANSFER_TIMEOUT)
@@ -146,7 +147,7 @@ class StorageStressTest {
     @Test
     fun testUploadLargeFile() {
         val uploadLatch = CountDownLatch(1)
-        val fileName = LARGE_FILE_NAME + System.currentTimeMillis()
+        val fileName = LARGE_FILE_NAME + UUID.randomUUID().toString()
         val largeFile = RandomTempFile(fileName, LARGE_FILE_SIZE)
         synchronousStorage.uploadFile(fileName, largeFile, uploadOptions, TRANSFER_TIMEOUT)
         uploadLatch.countDown()
