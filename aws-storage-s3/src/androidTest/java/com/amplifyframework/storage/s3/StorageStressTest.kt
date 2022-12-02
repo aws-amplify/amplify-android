@@ -80,17 +80,16 @@ class StorageStressTest {
             // Upload 25 small test files
             var key: String
             smallFiles = mutableListOf()
-
+            val uploadLatch = CountDownLatch(50)
             repeat(50) {
-                val uploadLatch = CountDownLatch(50)
                 key = "${SMALL_FILE_NAME}${UUID.randomUUID()}"
                 val smallFile = RandomTempFile(key, SMALL_FILE_SIZE)
                 synchronousStorage.uploadFile(key, smallFile, uploadOptions, TRANSFER_TIMEOUT)
                 uploadLatch.countDown()
                 Log.i("STORAGE_STRESS_TEST", "@BeforeClass Small Uploads Left: ${uploadLatch.count}")
                 smallFiles.add(smallFile)
-                uploadLatch.await(STRESS_TEST_TIMEOUT, TimeUnit.MILLISECONDS)
             }
+            uploadLatch.await(STRESS_TEST_TIMEOUT, TimeUnit.MILLISECONDS)
 
             Sleep.milliseconds(1000)
             // Upload 1 large test file
@@ -125,15 +124,15 @@ class StorageStressTest {
      */
     @Test
     fun testUploadManyFiles() {
+        val uploadLatch = CountDownLatch(50)
         repeat(50) {
-            val uploadLatch = CountDownLatch(1)
             val key = "${SMALL_FILE_NAME}${UUID.randomUUID()}"
             val smallFile = RandomTempFile(key, SMALL_FILE_SIZE)
             synchronousStorage.uploadFile(key, smallFile, uploadOptions, TRANSFER_TIMEOUT)
             uploadLatch.countDown()
             Log.i("STORAGE_STRESS_TEST", "Small Uploads Left: ${uploadLatch.count}")
-            uploadLatch.await(STRESS_TEST_TIMEOUT, TimeUnit.MILLISECONDS)
         }
+        uploadLatch.await(STRESS_TEST_TIMEOUT, TimeUnit.MILLISECONDS)
     }
 
     /**
