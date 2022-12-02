@@ -15,7 +15,7 @@
 
 package com.amplifyframework.geo.location.database
 
-import android.database.sqlite.SQLiteDatabase
+import net.zetetic.database.sqlcipher.SQLiteDatabase
 
 internal class LocationTable {
 

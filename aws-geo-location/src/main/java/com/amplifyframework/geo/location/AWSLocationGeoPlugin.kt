@@ -91,6 +91,7 @@ class AWSLocationGeoPlugin(
     @Throws(AmplifyException::class)
     override fun configure(pluginConfiguration: JSONObject, context: Context) {
         try {
+            System.loadLibrary("sqlcipher")
             this.configuration =
                 userConfiguration ?: GeoConfiguration.fromJson(pluginConfiguration).build()
             this.geoService = AmazonLocationService(credentialsProvider, configuration.region)

@@ -24,6 +24,11 @@ dependencies {
     implementation project(':aws-auth-cognito')
     implementation dependency.aws.location
 
+    // Dependencies for encrypting the locations database
+    implementation dependency.androidx.security
+    implementation dependency.sqlcipher
+    implementation dependency.androidx.sqlite
+
     testImplementation project(':testutils')
     testImplementation dependency.junit
     testImplementation dependency.robolectric
@@ -40,4 +45,3 @@ dependencies {
 afterEvaluate {
     it.android.kotlinOptions.jvmTarget = JavaVersion.VERSION_1_8.toString()
 }
-

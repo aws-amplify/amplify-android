@@ -16,10 +16,66 @@
 package com.amplifyframework.geo.location.database
 
 import android.content.Context
+import android.content.SharedPreferences
+import androidx.security.crypto.EncryptedSharedPreferences
+import androidx.security.crypto.EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV
+import androidx.security.crypto.EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+import androidx.security.crypto.MasterKeys
+import net.zetetic.database.sqlcipher.SQLiteDatabase
+import java.io.File
+import java.util.*
 
-internal class GeoDatabase(context: Context) {
-    private val helper = GeoDatabaseHelper(context)
-    private val database = helper.writableDatabase
+const val passphraseKey = "passphrase"
+
+internal class GeoDatabase(private val context: Context) {
+
+    internal val sharedPreferences: SharedPreferences by lazy {
+        EncryptedSharedPreferences.create(
+            "geodb.${getInstallationIdentifier(context)}",
+            MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC),
+            context,
+            AES256_SIV,
+            AES256_GCM
+        )
+    }
+
+    private val database by lazy {
+        val path = context.getDatabasePath("awsgeo.db")
+        val db = SQLiteDatabase.openOrCreateDatabase(path, getDatabasePassphrase(), null, null)
+        LocationTable.onCreate(db, 1)
+        db
+    }
 
     val locationDao by lazy { LocationDao(database) }
+
+    private fun getInstallationIdentifier(context: Context): String {
+        val identifierFile = File(context.noBackupFilesDir, "geodb.installationIdentifier")
+        val previousIdentifier = getExistingInstallationIdentifier(identifierFile)
+        return previousIdentifier ?: createInstallationIdentifier(identifierFile)
+    }
+
+    private fun getExistingInstallationIdentifier(identifierFile: File): String? {
+        return if (identifierFile.exists()) {
+            val identifier = identifierFile.readText()
+            identifier.ifBlank { null }
+        } else {
+            null
+        }
+    }
+
+    private fun createInstallationIdentifier(identifierFile: File): String {
+        val newIdentifier = UUID.randomUUID().toString()
+        try {
+            identifierFile.writeText(newIdentifier)
+        } catch (e: Exception) {
+            // Failed to write identifier to file, session will be forced to be in memory
+        }
+        return newIdentifier
+    }
+
+    private fun getDatabasePassphrase(): String {
+        return sharedPreferences.getString(passphraseKey, null) ?: UUID.randomUUID().toString().also { passphrase ->
+            sharedPreferences.edit().putString(passphraseKey, passphrase).apply()
+        }
+    }
 }
