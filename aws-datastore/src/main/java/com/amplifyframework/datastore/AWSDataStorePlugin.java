@@ -52,6 +52,7 @@ import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter;
 import com.amplifyframework.datastore.syncengine.Orchestrator;
+import com.amplifyframework.datastore.syncengine.ReachabilityMonitor;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.logging.Logger;
 
@@ -95,6 +96,8 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
 
     private final boolean isSyncRetryEnabled;
 
+    private final ReachabilityMonitor reachabilityMonitor;
+
     private AWSDataStorePlugin(
             @NonNull ModelProvider modelProvider,
             @NonNull SchemaRegistry schemaRegistry,
@@ -105,6 +108,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
         this.authModeStrategy = AuthModeStrategyType.DEFAULT;
         this.userProvidedConfiguration = userProvidedConfiguration;
         this.isSyncRetryEnabled = userProvidedConfiguration != null && userProvidedConfiguration.getDoSyncRetry();
+        this.reachabilityMonitor = new ReachabilityMonitor();
         // Used to interrogate plugins, to understand if sync should be automatically turned on
         this.orchestrator = new Orchestrator(
             modelProvider,
@@ -135,6 +139,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             SQLiteStorageAdapter.forModels(schemaRegistry, modelProvider) :
             builder.storageAdapter;
         this.categoryInitializationsPending = new CountDownLatch(1);
+        this.reachabilityMonitor = new ReachabilityMonitor();
 
         // Used to interrogate plugins, to understand if sync should be automatically turned on
         this.orchestrator = new Orchestrator(
@@ -261,21 +266,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             event -> categoryInitializationsPending.countDown()
         );
 
-        configureNetworkMonitor(context);
-    }
-
-    private void configureNetworkMonitor(Context context) {
-        context.getSystemService(ConnectivityManager.class).registerDefaultNetworkCallback(
-                new ConnectivityManager.NetworkCallback() {
-            @Override
-            public void onAvailable(Network network) {
-                LOG.error("The network has been connected: " + network + " Restarting DataStore after 3 secs.");
-                new Handler(Looper.getMainLooper()).postDelayed(() -> start(
-                    () -> LOG.error("restart after network succeeded"),
-                    (item) -> LOG.error("restart after network failed: " + item)
-                ), 3000);
-            }
-        });
+        reachabilityMonitor.configure(context);
     }
 
     @WorkerThread
