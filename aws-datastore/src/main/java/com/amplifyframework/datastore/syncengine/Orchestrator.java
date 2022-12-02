@@ -32,6 +32,7 @@ import com.amplifyframework.datastore.events.NetworkStatusEvent;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
+import com.amplifyframework.hub.HubEventFilter;
 import com.amplifyframework.logging.Logger;
 
 import org.json.JSONObject;
@@ -138,6 +139,7 @@ public final class Orchestrator {
 
         this.startStopSemaphore = new Semaphore(1);
 
+        observeNetworkStatus();
     }
 
     /**
@@ -167,6 +169,19 @@ public final class Orchestrator {
      */
     public synchronized Completable stop() {
         return performSynchronized(this::transitionToStopped);
+    }
+
+    private void observeNetworkStatus() {
+        Amplify.Hub.subscribe(HubChannel.DATASTORE,
+                hubEvent -> hubEvent.getData() instanceof NetworkStatusEvent,
+                hubEvent -> {
+                    if (((NetworkStatusEvent) hubEvent.getData()).getActive()) {
+                        start();
+                    } else {
+                        stop();
+                    }
+                }
+        );
     }
 
     private Completable performSynchronized(Action action) {
@@ -311,7 +326,6 @@ public final class Orchestrator {
                     }
                     return;
                 }
-                publishNetworkStatusEvent(true);
 
                 long startTime = System.currentTimeMillis();
                 LOG.debug("About to hydrate...");
@@ -350,11 +364,6 @@ public final class Orchestrator {
         );
     }
 
-    private void publishNetworkStatusEvent(boolean active) {
-        Amplify.Hub.publish(HubChannel.DATASTORE,
-                HubEvent.create(DataStoreChannelEventName.NETWORK_STATUS, new NetworkStatusEvent(active)));
-    }
-
     private void publishReadyEvent() {
         Amplify.Hub.publish(HubChannel.DATASTORE, HubEvent.create(DataStoreChannelEventName.READY));
     }
@@ -365,7 +374,6 @@ public final class Orchestrator {
             return;
         }
         LOG.warn("API sync failed - transitioning to LOCAL_ONLY.", exception);
-        publishNetworkStatusEvent(false);
         Completable.fromAction(this::transitionToLocalOnly)
             .doOnError(error -> LOG.warn("Transition to LOCAL_ONLY failed.", error))
             .subscribe();
