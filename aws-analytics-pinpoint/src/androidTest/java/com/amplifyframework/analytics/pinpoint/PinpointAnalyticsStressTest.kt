@@ -45,7 +45,6 @@ import org.junit.Assert
 import org.junit.Before
 import org.junit.BeforeClass
 import org.junit.Test
-import org.junit.experimental.categories.Category
 
 class PinpointAnalyticsStressTest {
 
@@ -125,17 +124,17 @@ class PinpointAnalyticsStressTest {
         val userAndPasswordPair = readCredentialsFromResource(context, resourceId)
         synchronousAuth.signOut()
         synchronousAuth.signIn(
-                userAndPasswordPair!!.first,
-                userAndPasswordPair.second
+            userAndPasswordPair!!.first,
+            userAndPasswordPair.second
         )
         val hubAccumulator =
-                HubAccumulator.create(HubChannel.ANALYTICS, AnalyticsChannelEventName.FLUSH_EVENTS, 1).start()
+            HubAccumulator.create(HubChannel.ANALYTICS, AnalyticsChannelEventName.FLUSH_EVENTS, 1).start()
         Amplify.Analytics.flushEvents()
         hubAccumulator.await(10, TimeUnit.SECONDS)
         pinpointClient = Amplify.Analytics.getPlugin("awsPinpointAnalyticsPlugin").escapeHatch as
-                PinpointClient
+            PinpointClient
         uniqueId = preferences.getString(UNIQUE_ID_KEY, "error-no-unique-id")!!
-                Assert.assertNotEquals(uniqueId, "error-no-unique-id")
+        Assert.assertNotEquals(uniqueId, "error-no-unique-id")
     }
 
     /**
@@ -180,7 +179,7 @@ class PinpointAnalyticsStressTest {
             val event = AnalyticsEvent.builder()
             event.name(eventName)
             for (i in 1..50) {
-                event.addProperty("AnalyticsStringProperty${i}", "Pancakes");
+                event.addProperty("AnalyticsStringProperty$i", "Pancakes")
             }
 
             Amplify.Analytics.recordEvent(event.build())
@@ -243,7 +242,6 @@ class PinpointAnalyticsStressTest {
         val submittedEvents = combineAndFilterEvents(hubEvents)
         Assert.assertEquals(30, submittedEvents.size.toLong())
     }
-
 
     /**
      * Calls Analytics.identifyUser on a user with few attributes 20 times
@@ -308,11 +306,11 @@ class PinpointAnalyticsStressTest {
     private fun assertCommonEndpointResponseProperties(endpointResponse: EndpointResponse) {
         Log.i("DEBUG", endpointResponse.toString())
         val attributes = endpointResponse.attributes!!
-                Assert.assertEquals("user@test.com", attributes["email"]!![0])
+        Assert.assertEquals("user@test.com", attributes["email"]!![0])
         Assert.assertEquals("test-user", attributes["name"]!![0])
         Assert.assertEquals("test-plan", attributes["plan"]!![0])
         val endpointProfileLocation: EndpointLocation = endpointResponse.location!!
-                Assert.assertEquals(47.6154086, endpointProfileLocation.latitude, 0.1)
+        Assert.assertEquals(47.6154086, endpointProfileLocation.latitude, 0.1)
         Assert.assertEquals((-122.3349685), endpointProfileLocation.longitude, 0.1)
         Assert.assertEquals("98122", endpointProfileLocation.postalCode)
         Assert.assertEquals("Seattle", endpointProfileLocation.city)
@@ -326,7 +324,7 @@ class PinpointAnalyticsStressTest {
         get() {
             val analyticsProperties = AnalyticsProperties.builder()
             for (i in 1..100) {
-                analyticsProperties.add("SomeUserAttribute${i}", "User attribute value");
+                analyticsProperties.add("SomeUserAttribute$i", "User attribute value")
             }
             return analyticsProperties.build()
         }

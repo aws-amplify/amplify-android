@@ -6,13 +6,19 @@ import com.amplifyframework.AmplifyException
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.model.query.Page
 import com.amplifyframework.core.model.query.Where
-import com.amplifyframework.testmodels.commentsblog.*
-import org.junit.*
-import org.junit.Assert.*
+import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider
+import com.amplifyframework.testmodels.commentsblog.Blog
+import com.amplifyframework.testmodels.commentsblog.BlogOwner
+import com.amplifyframework.testmodels.commentsblog.Post
+import com.amplifyframework.testmodels.commentsblog.PostStatus
 import java.lang.Thread.sleep
-import java.util.*
+import java.util.UUID
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
+import org.junit.After
+import org.junit.Assert.assertTrue
+import org.junit.BeforeClass
+import org.junit.Test
 
 class DataStoreStressTest {
     companion object {
@@ -26,9 +32,11 @@ class DataStoreStressTest {
         fun setupOnce() {
             // Init Amplify
             try {
-                Amplify.addPlugin(AWSDataStorePlugin.builder()
-                    .modelProvider(AmplifyModelProvider.getInstance())
-                    .build())
+                Amplify.addPlugin(
+                    AWSDataStorePlugin.builder()
+                        .modelProvider(AmplifyModelProvider.getInstance())
+                        .build()
+                )
                 Amplify.configure(getApplicationContext())
                 Log.i("DataStoreStressTest", "Initialized Amplify")
             } catch (error: AmplifyException) {
@@ -51,10 +59,12 @@ class DataStoreStressTest {
             Amplify.DataStore.clear(
                 {
                     latch.countDown()
-                    Log.i("DataStoreStressTest", "DataStore cleared") },
+                    Log.i("DataStoreStressTest", "DataStore cleared")
+                },
                 {
                     latch.countDown()
-                    Log.e("DataStoreStressTest", "Error clearing DataStore", it) }
+                    Log.e("DataStoreStressTest", "Error clearing DataStore", it)
+                }
             )
             latch.await(TIMEOUT_SECONDS.toLong(), TimeUnit.SECONDS)
         } catch (error: Exception) {
@@ -82,13 +92,16 @@ class DataStoreStressTest {
                 .rating(1)
                 .blog(blog)
                 .build()
-            Amplify.DataStore.save(blogOwner,
+            Amplify.DataStore.save(
+                blogOwner,
                 {
                     Log.i("DataStoreStressTest", "Post saved")
-                    Amplify.DataStore.save(blog,
+                    Amplify.DataStore.save(
+                        blog,
                         {
                             Log.i("DataStoreStressTest", "Blog saved")
-                            Amplify.DataStore.save(post,
+                            Amplify.DataStore.save(
+                                post,
                                 {
                                     Log.i("DataStoreStressTest", "BlogOwner saved")
                                     latch.countDown()
@@ -128,13 +141,16 @@ class DataStoreStressTest {
                 .rating(1)
                 .blog(blog)
                 .build()
-            Amplify.DataStore.save(blogOwner,
+            Amplify.DataStore.save(
+                blogOwner,
                 {
                     Log.i("DataStoreStressTest", "Post saved")
-                    Amplify.DataStore.save(blog,
+                    Amplify.DataStore.save(
+                        blog,
                         {
                             Log.i("DataStoreStressTest", "Blog saved")
-                            Amplify.DataStore.save(post,
+                            Amplify.DataStore.save(
+                                post,
                                 {
                                     Log.i("DataStoreStressTest", "BlogOwner saved")
                                     latch.countDown()
@@ -148,13 +164,16 @@ class DataStoreStressTest {
                 { Log.e("DataStoreStressTest", "Post not saved", it) }
             )
             sleep(OP_WAIT)
-            Amplify.DataStore.delete(blogOwner,
+            Amplify.DataStore.delete(
+                blogOwner,
                 {
                     Log.i("DataStoreStressTest", "Post deleted")
-                    Amplify.DataStore.delete(blog,
+                    Amplify.DataStore.delete(
+                        blog,
                         {
                             Log.i("DataStoreStressTest", "Blog deleted")
-                            Amplify.DataStore.delete(post,
+                            Amplify.DataStore.delete(
+                                post,
                                 {
                                     Log.i("DataStoreStressTest", "BlogOwner deleted")
                                     latch.countDown()
@@ -181,7 +200,8 @@ class DataStoreStressTest {
         saveToLaterQuery()
         val remote = mutableListOf<BlogOwner>()
         repeat(50) {
-            Amplify.DataStore.query(BlogOwner::class.java,
+            Amplify.DataStore.query(
+                BlogOwner::class.java,
                 { query ->
                     while (query.hasNext()) {
                         val q = query.next()
@@ -207,7 +227,8 @@ class DataStoreStressTest {
         saveToLaterQuery()
         val remote = mutableListOf<BlogOwner>()
         repeat(50) {
-            Amplify.DataStore.query(BlogOwner::class.java,
+            Amplify.DataStore.query(
+                BlogOwner::class.java,
                 Where.matches(BlogOwner.NAME.contains("BlogOwner")),
                 { query ->
                     while (query.hasNext()) {
@@ -234,7 +255,8 @@ class DataStoreStressTest {
         saveToLaterQuery()
         val remote = mutableListOf<BlogOwner>()
         repeat(50) {
-            Amplify.DataStore.query(BlogOwner::class.java,
+            Amplify.DataStore.query(
+                BlogOwner::class.java,
                 Where.sorted(BlogOwner.NAME.ascending()),
                 { queries ->
                     while (queries.hasNext()) {
@@ -259,7 +281,8 @@ class DataStoreStressTest {
         saveToLaterQuery()
         val remote = mutableListOf<BlogOwner>()
         repeat(50) {
-            Amplify.DataStore.query(BlogOwner::class.java,
+            Amplify.DataStore.query(
+                BlogOwner::class.java,
                 Where.matchesAll().paginated(Page.startingAt(0).withLimit(PAGINATION_LIMIT)),
                 { queries ->
                     while (queries.hasNext()) {
@@ -288,7 +311,8 @@ class DataStoreStressTest {
                 { Log.e("DataStoreStressTest", it.toString()) }
             )
 
-            Amplify.DataStore.observe(BlogOwner::class.java,
+            Amplify.DataStore.observe(
+                BlogOwner::class.java,
                 {
                     latch.countDown()
                     Log.i("DataStoreStressTest", "Observation began")
@@ -347,8 +371,8 @@ class DataStoreStressTest {
         blogOwners = mutableListOf()
         val saveLatch = CountDownLatch(50)
 
-       repeat(50) {
-            val blogOwner: BlogOwner= BlogOwner.builder()
+        repeat(50) {
+            val blogOwner: BlogOwner = BlogOwner.builder()
                 .name("BlogOwner" + UUID.randomUUID().toString())
                 .build()
             val blog: Blog = Blog.builder()
@@ -361,13 +385,16 @@ class DataStoreStressTest {
                 .rating(1)
                 .blog(blog)
                 .build()
-            Amplify.DataStore.save(blogOwner,
+            Amplify.DataStore.save(
+                blogOwner,
                 {
                     Log.i("DataStoreStressTest", "Post saved")
-                    Amplify.DataStore.save(blog,
+                    Amplify.DataStore.save(
+                        blog,
                         {
                             Log.i("DataStoreStressTest", "Blog saved")
-                            Amplify.DataStore.save(post,
+                            Amplify.DataStore.save(
+                                post,
                                 {
                                     Log.i("DataStoreStressTest", "BlogOwner saved")
                                     saveLatch.countDown()
