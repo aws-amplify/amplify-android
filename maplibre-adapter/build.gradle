@@ -32,6 +32,7 @@ android {
 }
 
 dependencies {
+    androidTestImplementation project(path: ':maplibre-adapter')
     def lifecycleVersion = "2.4.1"
 
     implementation project(":aws-auth-cognito")
