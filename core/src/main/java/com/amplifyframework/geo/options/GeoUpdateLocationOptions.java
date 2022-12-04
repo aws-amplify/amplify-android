@@ -40,6 +40,9 @@ public class GeoUpdateLocationOptions {
     public String getTracker() {
         return tracker;
     }
+    public void setTracker(@NonNull String tracker) {
+        this.tracker = tracker;
+    }
 
     public GeoPositionProperties getPositionProperties() {
         return positionProperties;
@@ -61,7 +64,6 @@ public class GeoUpdateLocationOptions {
     }
 
     public static final class Builder {
-        // TODO: use default tracker
         String tracker = "";
         GeoPositionProperties positionProperties = new GeoPositionProperties();
 

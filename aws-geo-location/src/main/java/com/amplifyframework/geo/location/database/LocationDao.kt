@@ -23,7 +23,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import net.zetetic.database.sqlcipher.SQLiteDatabase
 
-
 internal data class LocationEntity(
     val locationId: Long = -1,
     val deviceId: String,

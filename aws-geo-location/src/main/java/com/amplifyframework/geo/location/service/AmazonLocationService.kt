@@ -30,7 +30,7 @@ import com.amplifyframework.geo.GeoException
 import com.amplifyframework.geo.location.models.AmazonLocationPlace
 import com.amplifyframework.geo.models.Coordinates
 import com.amplifyframework.geo.models.CountryCode
-import com.amplifyframework.geo.models.GeoLocation
+import com.amplifyframework.geo.models.GeoPosition
 import com.amplifyframework.geo.models.Place
 import com.amplifyframework.geo.models.SearchArea
 import com.amplifyframework.geo.options.GeoUpdateLocationOptions
@@ -110,21 +110,32 @@ internal class AmazonLocationService(
 
     override suspend fun updateLocation(
         deviceId: String,
-        location: GeoLocation,
-        tracker: String,
+        position: GeoPosition,
         options: GeoUpdateLocationOptions,
     ) {
-        val devicePositionUpdate = DevicePositionUpdate.invoke {
-            this.deviceId = deviceId
-            // Amazon Location Service uses [longitude, latitude]
-            this.position = listOf(location.longitude, location.latitude)
-            this.sampleTime = Instant.now()
-            this.positionProperties = options.positionProperties.properties
+        updateLocations(deviceId, listOf(position), options)
+    }
+
+    override suspend fun updateLocations(
+        deviceId: String,
+        positions: List<GeoPosition>,
+        options: GeoUpdateLocationOptions
+    ) {
+        val updateList: MutableList<DevicePositionUpdate> = mutableListOf()
+        for (position in positions) {
+            val devicePositionUpdate = DevicePositionUpdate.invoke {
+                this.deviceId = deviceId
+                // Amazon Location Service uses [longitude, latitude]
+                this.position = listOf(position.location.longitude, position.location.latitude)
+                this.sampleTime = Instant.fromEpochSeconds(position.timeStamp.time)
+                this.positionProperties = options.positionProperties.properties
+            }
+            updateList.add(devicePositionUpdate)
         }
 
         val request = BatchUpdateDevicePositionRequest.invoke {
-            trackerName = tracker
-            updates = listOf(devicePositionUpdate)
+            trackerName = options.tracker
+            updates = updateList
         }
         val response = provider.batchUpdateDevicePosition(request)
         if (!response.errors.isNullOrEmpty()) {

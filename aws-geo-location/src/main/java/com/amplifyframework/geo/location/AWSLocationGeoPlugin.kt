@@ -18,6 +18,10 @@ package com.amplifyframework.geo.location
 import android.content.Context
 import android.content.Context.MODE_PRIVATE
 import android.content.SharedPreferences
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.PeriodicWorkRequest
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
 import aws.sdk.kotlin.services.location.LocationClient
 import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider
 import com.amplifyframework.AmplifyException
@@ -29,6 +33,7 @@ import com.amplifyframework.geo.GeoCategoryPlugin
 import com.amplifyframework.geo.GeoException
 import com.amplifyframework.geo.location.auth.CognitoCredentialsProvider
 import com.amplifyframework.geo.location.configuration.GeoConfiguration
+import com.amplifyframework.geo.location.database.worker.UploadWorker
 import com.amplifyframework.geo.location.options.AmazonLocationSearchByCoordinatesOptions
 import com.amplifyframework.geo.location.options.AmazonLocationSearchByTextOptions
 import com.amplifyframework.geo.location.service.AmazonLocationService
@@ -39,6 +44,7 @@ import com.amplifyframework.geo.models.Coordinates
 import com.amplifyframework.geo.models.GeoDevice
 import com.amplifyframework.geo.models.GeoDeviceType
 import com.amplifyframework.geo.models.GeoLocation
+import com.amplifyframework.geo.models.GeoPosition
 import com.amplifyframework.geo.models.MapStyle
 import com.amplifyframework.geo.models.MapStyleDescriptor
 import com.amplifyframework.geo.options.GeoDeleteLocationHistoryOptions
@@ -49,6 +55,7 @@ import com.amplifyframework.geo.options.GeoUpdateLocationOptions
 import com.amplifyframework.geo.options.GetMapStyleDescriptorOptions
 import com.amplifyframework.geo.result.GeoSearchResult
 import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.runBlocking
 import org.json.JSONObject
 
@@ -96,6 +103,17 @@ class AWSLocationGeoPlugin(
                 userConfiguration ?: GeoConfiguration.fromJson(pluginConfiguration).build()
             this.geoService = AmazonLocationService(credentialsProvider, configuration.region)
             this.sharedPreferences = context.getSharedPreferences(GEO_PLUGIN_KEY, MODE_PRIVATE)
+            val uploadWorkRequest: PeriodicWorkRequest = PeriodicWorkRequestBuilder<UploadWorker>(
+                15,
+                TimeUnit.MINUTES
+            ).build()
+            val workManager = WorkManager.getInstance(context)
+            workManager.enqueueUniquePeriodicWork(
+                "Amplify upload device tracking",
+                ExistingPeriodicWorkPolicy.KEEP,
+                uploadWorkRequest
+            )
+            UploadWorker.geoService = geoService as AmazonLocationService
             locationTracker = LocationTracker(context)
         } catch (error: Exception) {
             throw GeoException(
@@ -248,11 +266,12 @@ class AWSLocationGeoPlugin(
     ) {
         execute(
             {
-                var tracker = options.tracker
                 if (options.tracker.isEmpty()) {
-                    tracker = defaultTracker
+                    options.tracker = defaultTracker
                 }
-                geoService.updateLocation(device.resolvedId(), location, tracker, options)
+                val position = GeoPosition()
+                position.location = location
+                geoService.updateLocation(device.resolvedId(), position, options)
             },
             Errors::deviceTrackingError,
             onResult,
@@ -294,10 +313,14 @@ class AWSLocationGeoPlugin(
         onResult: Action,
         onError: Consumer<GeoException>
     ) {
-        val tracker = options.tracker ?: defaultTracker
+        if (options.tracker == null) {
+            options.tracker = defaultTracker
+        }
         execute(
             {
-                locationTracker.start(device.resolvedId(), tracker, options)
+                locationTracker.start(device.resolvedId(), options.tracker, options)
+                UploadWorker.options = options
+                UploadWorker.deviceId = device.resolvedId()
             },
             Errors::deviceTrackingError,
             onResult,

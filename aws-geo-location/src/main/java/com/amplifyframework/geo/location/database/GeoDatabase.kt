@@ -21,9 +21,9 @@ import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV
 import androidx.security.crypto.EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
 import androidx.security.crypto.MasterKeys
-import net.zetetic.database.sqlcipher.SQLiteDatabase
 import java.io.File
-import java.util.*
+import java.util.UUID
+import net.zetetic.database.sqlcipher.SQLiteDatabase
 
 const val passphraseKey = "passphrase"
 

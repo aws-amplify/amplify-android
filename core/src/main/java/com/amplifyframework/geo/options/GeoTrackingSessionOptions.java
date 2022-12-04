@@ -20,9 +20,6 @@ package com.amplifyframework.geo.options;
 
 import androidx.annotation.NonNull;
 
-import com.amplifyframework.core.Action;
-import com.amplifyframework.core.Consumer;
-import com.amplifyframework.geo.GeoException;
 import com.amplifyframework.geo.models.GeoPosition;
 
 import java.util.Date;
@@ -84,16 +81,21 @@ public class GeoTrackingSessionOptions {
      * Options for sending location updates in batches. Default is no batching.
      */
     BatchingOptions batchingOptions;
+    public BatchingOptions getBatchingOptions() {
+        return batchingOptions;
+    }
 
     /**
      * Receives location updates. Default implementation is to save location
      * updates to Amazon Location service.
      */
     LocationProxyDelegate proxyDelegate;
+    public LocationProxyDelegate getProxyDelegate() {
+        return proxyDelegate;
+    }
 
-    interface LocationProxyDelegate {
-        void updateLocations(List<GeoPosition> positions, Action onResult,
-                             Consumer<GeoException> onError);
+    public interface LocationProxyDelegate {
+        void updatePositions(List<GeoPosition> positions);
     }
 
     /**
@@ -140,6 +142,9 @@ public class GeoTrackingSessionOptions {
 
     public String getTracker() {
         return tracker;
+    }
+    public void setTracker(String tracker) {
+        this.tracker = tracker;
     }
 
     private GeoTrackingSessionOptions(Builder b) {

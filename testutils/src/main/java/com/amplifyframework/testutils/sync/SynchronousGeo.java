@@ -19,7 +19,6 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Amplify;
-import com.amplifyframework.core.NoOpAction;
 import com.amplifyframework.geo.GeoCategory;
 import com.amplifyframework.geo.GeoCategoryBehavior;
 import com.amplifyframework.geo.GeoException;
@@ -30,6 +29,7 @@ import com.amplifyframework.geo.models.MapStyle;
 import com.amplifyframework.geo.models.MapStyleDescriptor;
 import com.amplifyframework.geo.options.GeoSearchByCoordinatesOptions;
 import com.amplifyframework.geo.options.GeoSearchByTextOptions;
+import com.amplifyframework.geo.options.GeoTrackingSessionOptions;
 import com.amplifyframework.geo.options.GeoUpdateLocationOptions;
 import com.amplifyframework.geo.options.GetMapStyleDescriptorOptions;
 import com.amplifyframework.geo.result.GeoSearchResult;
@@ -178,5 +178,45 @@ public final class SynchronousGeo {
                 asyncDelegate.updateLocation(device, location, options,
                         () -> onResult.accept(Unit.INSTANCE), onError)
         );
+    }
+
+    /**
+     * Start a new tracking session with the given options. Throws a GeoException if
+     * there is already a tracking session started that has not been stopped.
+     *
+     * @param device The device whose location this tracking session will be applied to.
+     */
+    public Unit startTracking(
+            @NonNull GeoDevice device
+    ) throws GeoException {
+        return Await.<Unit, GeoException>result((onResult, onError) ->
+                asyncDelegate.startTracking(device, () -> onResult.accept(Unit.INSTANCE), onError));
+    }
+
+    /**
+     * Start a new tracking session with the given options. Throws a GeoException if
+     * there is already a tracking session started that has not been stopped.
+     *
+     * @param device The device whose location this tracking session will be applied to.
+     * @param options The options for this tracking session.
+     */
+    public Unit startTracking(
+            @NonNull GeoDevice device,
+            @NonNull GeoTrackingSessionOptions options
+    ) throws GeoException {
+        return Await.<Unit, GeoException>result((onResult, onError) ->
+                asyncDelegate.startTracking(device, options, () -> onResult.accept(Unit.INSTANCE), onError));
+    }
+
+    /**
+     * Stop an existing tracking session. Any updates stored locally will be
+     * saved (e.g., to Amazon Location Service). If there are updates stored locally,
+     * the device is offline, and the tracking session is configured to persist location
+     * updates when offline, then the location updates stored locally will be saved
+     * (e.g., to Amazon Location Service) when the device comes back online.
+     */
+    public Unit stopTracking() throws GeoException {
+        return Await.<Unit, GeoException>result((onResult, onError) ->
+                asyncDelegate.stopTracking(() -> onResult.accept(Unit.INSTANCE), onError));
     }
 }

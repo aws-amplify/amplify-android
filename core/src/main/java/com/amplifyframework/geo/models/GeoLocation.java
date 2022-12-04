@@ -32,6 +32,14 @@ public final class GeoLocation {
         return longitude;
     }
 
+    public double getDistance(GeoLocation other) {
+        // Haversine method implementation
+        java.util.function.Function<Double, Double> haversine = (angle) -> Math.pow(Math.sin(angle/2), 2);
+        double latDiff = Math.toRadians(latitude - other.latitude);
+        double longDiff = Math.toRadians(longitude - other.longitude);
+        return 0.0;
+    }
+
     public GeoLocation(double latitude, double longitude) {
         this.latitude = latitude;
         this.longitude = longitude;

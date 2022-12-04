@@ -29,6 +29,7 @@ import com.amplifyframework.geo.GeoException
 import com.amplifyframework.geo.location.database.GeoDatabase
 import com.amplifyframework.geo.location.database.LocationDao
 import com.amplifyframework.geo.location.database.LocationEntity
+import com.amplifyframework.geo.location.database.worker.UploadWorker
 import com.amplifyframework.geo.options.GeoTrackingSessionOptions
 import com.amplifyframework.geo.options.GeoTrackingSessionOptions.Accuracy
 import com.amplifyframework.geo.options.GeoTrackingSessionOptions.Power
@@ -51,6 +52,7 @@ internal class LocationTrackingService : Service() {
     override fun onCreate() {
         locationDao = GeoDatabase(this).locationDao
         locationManager = getSystemService(LocationManager::class.java)
+        UploadWorker.locationDao = locationDao
     }
 
     fun startTracking(trackingData: TrackingData) {

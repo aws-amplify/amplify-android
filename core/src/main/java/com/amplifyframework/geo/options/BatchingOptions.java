@@ -18,6 +18,8 @@
 
 package com.amplifyframework.geo.options;
 
+import com.amplifyframework.geo.models.GeoPosition;
+
 import java.util.OptionalInt;
 
 public class BatchingOptions {
@@ -43,6 +45,18 @@ public class BatchingOptions {
 
     public OptionalInt getDistanceTravelled() {
         return distanceTravelled;
+    }
+
+    // would this position exceed the batch?
+    public boolean thresholdReached(GeoPosition first, GeoPosition last) {
+        if (secondsElapsed.isPresent() &&
+                secondsElapsed.getAsInt() < last.timeStamp.getTime() - first.timeStamp.getTime()) {
+            return true;
+        }
+        // TODO: distance batching
+//        if (distanceTravelled.isPresent() &&
+//                distanceTravelled.getAsInt() < last.location.)
+        return false;
     }
 
     private BatchingOptions() {}

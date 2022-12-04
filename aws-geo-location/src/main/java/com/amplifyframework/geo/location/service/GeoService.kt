@@ -17,7 +17,7 @@ package com.amplifyframework.geo.location.service
 
 import com.amplifyframework.geo.models.Coordinates
 import com.amplifyframework.geo.models.CountryCode
-import com.amplifyframework.geo.models.GeoLocation
+import com.amplifyframework.geo.models.GeoPosition
 import com.amplifyframework.geo.models.Place
 import com.amplifyframework.geo.models.SearchArea
 import com.amplifyframework.geo.options.GeoUpdateLocationOptions
@@ -63,8 +63,16 @@ internal interface GeoService<T> {
      */
     suspend fun updateLocation(
         deviceId: String,
-        location: GeoLocation,
-        tracker: String,
+        position: GeoPosition,
+        options: GeoUpdateLocationOptions,
+    )
+
+    /**
+     * Sends an update that the device with this ID has been in these locations (at these times).
+     */
+    suspend fun updateLocations(
+        deviceId: String,
+        positions: List<GeoPosition>,
         options: GeoUpdateLocationOptions,
     )
 
