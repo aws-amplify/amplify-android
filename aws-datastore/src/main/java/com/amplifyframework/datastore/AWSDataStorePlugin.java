@@ -278,7 +278,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
                     );
                 } else {
                     LOG.info("Network lost");
-                    start(
+                    stop(
                             (Action) () -> { },
                             ((e) -> LOG.error("Error stopping datastore plugin after network event: " + e))
                     );
