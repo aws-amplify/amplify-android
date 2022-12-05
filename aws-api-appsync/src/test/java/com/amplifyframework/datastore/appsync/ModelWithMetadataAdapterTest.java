@@ -140,7 +140,7 @@ public final class ModelWithMetadataAdapterTest {
         String json = Resources.readAsString("serialized-model-with-metadata.json");
         Type type = TypeMaker.getParameterizedType(ModelWithMetadata.class, SerializedModel.class);
         ModelWithMetadata<SerializedModel> actual = gson.fromJson(json, type);
-        
+
         // Assert that the deserialized output matches out expected value
         Assert.assertEquals(expected, actual);
     }
