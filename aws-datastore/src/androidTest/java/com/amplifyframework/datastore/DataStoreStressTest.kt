@@ -6,11 +6,11 @@ import com.amplifyframework.AmplifyException
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.model.query.Page
 import com.amplifyframework.core.model.query.Where
-import com.amplifyframework.testmodels.commentsblog.PostStatus
 import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider
 import com.amplifyframework.testmodels.commentsblog.Blog
 import com.amplifyframework.testmodels.commentsblog.BlogOwner
 import com.amplifyframework.testmodels.commentsblog.Post
+import com.amplifyframework.testmodels.commentsblog.PostStatus
 import java.lang.Thread.sleep
 import java.util.UUID
 import java.util.concurrent.CountDownLatch
