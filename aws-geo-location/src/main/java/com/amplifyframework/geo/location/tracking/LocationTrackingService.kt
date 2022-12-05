@@ -34,6 +34,7 @@ import com.amplifyframework.geo.options.GeoTrackingSessionOptions
 import com.amplifyframework.geo.options.GeoTrackingSessionOptions.Accuracy
 import com.amplifyframework.geo.options.GeoTrackingSessionOptions.Power
 import java.time.Instant
+import java.util.Date
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
@@ -46,6 +47,7 @@ internal class LocationTrackingService : Service() {
     private val coroutineScope = CoroutineScope(SupervisorJob())
     private val listener = Listener()
     private var trackingData: TrackingData? = null
+    private var numUpdates = 0
 
     override fun onBind(intent: Intent?) = LocationServiceBinder(this)
 
@@ -83,10 +85,25 @@ internal class LocationTrackingService : Service() {
         coroutineScope.cancel()
         locationManager.removeUpdates(listener)
         trackingData = null
+        numUpdates = 0
     }
 
     override fun onDestroy() {
         stopTracking()
+    }
+
+    private fun handleNewLocation(location: Location) {
+        val data = trackingData ?: return
+
+        val trackUntil = data.options.trackUntil
+        val abortTracking = ++numUpdates > data.options.maxUpdates ||
+            (trackUntil != null && Date().after(trackUntil))
+
+        if (abortTracking) {
+            stopTracking()
+        } else {
+            uploadOrSaveLocation(location)
+        }
     }
 
     private fun uploadOrSaveLocation(location: Location) {
@@ -123,7 +140,7 @@ internal class LocationTrackingService : Service() {
 
     inner class Listener : LocationListener {
         override fun onLocationChanged(location: Location) {
-            uploadOrSaveLocation(location)
+            handleNewLocation(location)
         }
     }
 

@@ -296,7 +296,13 @@ class AWSLocationGeoPlugin(
     ) {
         val tracker = options.tracker ?: defaultTracker
         execute(
-            { geoService.deleteLocationHistory(device.resolvedId(), tracker) },
+            {
+                val id = device.resolvedId()
+                // Remove any updates that have been saved to the local database
+                locationTracker.clearSavedLocations(id, tracker)
+                // Remove any updates that have already been sent to the back end
+                geoService.deleteLocationHistory(id, tracker)
+            },
             Errors::deleteHistoryError,
             onResult,
             onError
@@ -329,7 +335,14 @@ class AWSLocationGeoPlugin(
     }
 
     override fun stopTracking(onResult: Action, onError: Consumer<GeoException>) {
-        locationTracker.stop()
+        execute(
+            {
+                locationTracker.stop()
+            },
+            Errors::deviceTrackingError,
+            onResult,
+            onError
+        )
     }
 
     // Helper method that launches given task on a new worker thread.

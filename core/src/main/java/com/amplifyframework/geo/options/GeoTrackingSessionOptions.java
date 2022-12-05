@@ -19,6 +19,7 @@
 package com.amplifyframework.geo.options;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.amplifyframework.geo.models.GeoPosition;
 
@@ -81,6 +82,7 @@ public class GeoTrackingSessionOptions {
      * Options for sending location updates in batches. Default is no batching.
      */
     BatchingOptions batchingOptions;
+
     public BatchingOptions getBatchingOptions() {
         return batchingOptions;
     }
@@ -90,6 +92,7 @@ public class GeoTrackingSessionOptions {
      * updates to Amazon Location service.
      */
     LocationProxyDelegate proxyDelegate;
+
     public LocationProxyDelegate getProxyDelegate() {
         return proxyDelegate;
     }
@@ -136,13 +139,16 @@ public class GeoTrackingSessionOptions {
         return maxUpdates;
     }
 
+    @Nullable
     public Date getTrackUntil() {
         return trackUntil;
     }
 
+    @Nullable
     public String getTracker() {
         return tracker;
     }
+
     public void setTracker(String tracker) {
         this.tracker = tracker;
     }
