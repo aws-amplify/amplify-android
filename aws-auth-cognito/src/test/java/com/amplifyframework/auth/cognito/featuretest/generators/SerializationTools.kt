@@ -28,13 +28,6 @@ import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions
 import com.amplifyframework.auth.result.AuthSessionResult
 import com.amplifyframework.statemachine.codegen.states.AuthState
 import com.google.gson.Gson
-import java.io.BufferedWriter
-import java.io.File
-import java.io.FileOutputStream
-import java.io.FileWriter
-import kotlin.reflect.KClass
-import kotlin.reflect.KVisibility
-import kotlin.reflect.full.declaredMemberProperties
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
@@ -42,6 +35,13 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import java.io.BufferedWriter
+import java.io.File
+import java.io.FileOutputStream
+import java.io.FileWriter
+import kotlin.reflect.KClass
+import kotlin.reflect.KVisibility
+import kotlin.reflect.full.declaredMemberProperties
 
 const val basePath = "aws-auth-cognito/src/test/resources/feature-test"
 
@@ -183,15 +183,6 @@ fun Any?.toJsonElement(): JsonElement {
         is CognitoIdentityException -> Json.encodeToJsonElement(CognitoIdentityExceptionSerializer, this)
         else -> gsonBasedSerializer(this)
     }
-}
-
-fun AWSCognitoAuthSignInOptions.toJsonElement(): JsonElement {
-    val responseMap = mutableMapOf<String, Any?>(
-        "metadata" to metadata,
-        "authFlowType" to authFlowType
-    )
-
-    return responseMap.toJsonElement()
 }
 
 fun AuthException.toJsonElement(): JsonElement {
