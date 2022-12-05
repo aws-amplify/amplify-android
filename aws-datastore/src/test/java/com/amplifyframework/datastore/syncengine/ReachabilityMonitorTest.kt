@@ -1,16 +1,11 @@
 package com.amplifyframework.datastore.syncengine
 
-import com.amplifyframework.core.Amplify
-import com.amplifyframework.datastore.DataStoreChannelEventName
 import com.amplifyframework.datastore.events.NetworkStatusEvent
 import com.amplifyframework.hub.HubChannel
-import com.amplifyframework.hub.HubEvent
 import com.amplifyframework.testutils.HubAccumulator
-import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.core.ObservableOnSubscribe
 import org.junit.Assert
 import org.junit.Test
-
 
 class ReachabilityMonitorTest {
 
@@ -41,6 +36,7 @@ class ReachabilityMonitorTest {
 
         Assert.assertEquals(
             events.map { (it.data as NetworkStatusEvent).active },
-            listOf<Boolean>(false, true, true))
+            listOf<Boolean>(false, true, true)
+        )
     }
 }

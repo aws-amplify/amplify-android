@@ -16,11 +16,6 @@
 package com.amplifyframework.datastore;
 
 import android.content.Context;
-import android.net.ConnectivityManager;
-import android.net.Network;
-import android.os.Handler;
-import android.os.Looper;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
@@ -46,6 +41,7 @@ import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.appsync.AppSyncClient;
+import com.amplifyframework.datastore.events.NetworkStatusEvent;
 import com.amplifyframework.datastore.model.ModelProviderLocator;
 import com.amplifyframework.datastore.storage.ItemChangeMapper;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
@@ -267,6 +263,28 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
         );
 
         reachabilityMonitor.configure(context);
+        observeNetworkStatus();
+    }
+
+    private void observeNetworkStatus() {
+        Amplify.Hub.subscribe(HubChannel.DATASTORE,
+            hubEvent -> hubEvent.getData() instanceof NetworkStatusEvent,
+            hubEvent -> {
+                if (((NetworkStatusEvent) hubEvent.getData()).getActive()) {
+                    LOG.info("Network gained");
+                    start(
+                        (Action) () -> { },
+                        ((e) -> LOG.error("Error starting datastore plugin after network event: " + e))
+                    );
+                } else {
+                    LOG.info("Network lost");
+                    start(
+                            (Action) () -> { },
+                            ((e) -> LOG.error("Error stopping datastore plugin after network event: " + e))
+                    );
+                }
+            }
+        );
     }
 
     @WorkerThread
