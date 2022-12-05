@@ -104,6 +104,11 @@ public class RetryHandler {
 
                     LOG.warn("Attempt #" + (numAttempt.get() + 1) + " failed.", error);
 
+                    if (delay > maxDelayMs) {
+                        LOG.warn("No more attempts left.");
+                        return Observable.error(error);
+                    }
+
                     return Observable.timer(delay, TimeUnit.MILLISECONDS, scheduler).doOnSubscribe(ignore -> {
                         LOG.debug("Retrying in " + delay + " milliseconds.");
 
@@ -131,10 +136,7 @@ public class RetryHandler {
      * @return delay in milliseconds.
      */
     long jitteredDelayMillis(int numAttempt) {
-        return (long) Math.min(
-                maxDelayMs,
-                Duration.ofSeconds((long) Math.pow(2, numAttempt)).toMillis() + (jitterMs * Math.random())
-        );
+        return (long) (Duration.ofSeconds((long) Math.pow(2, numAttempt)).toMillis() + (jitterMs * Math.random()));
     }
 
 }
