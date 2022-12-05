@@ -51,9 +51,7 @@ class ReachabilityMonitor {
     }
 
     internal fun getObservable(observable: ObservableOnSubscribe<Boolean>): Observable<Boolean> {
-        LOG.error("REACHER AAA  LOCAL33")
         return Observable.create(observable)
-//            .skip(1)
             .debounce(250, TimeUnit.MILLISECONDS)
             .doOnEach {
                 publishNetworkStatusEvent(it.value!!)
