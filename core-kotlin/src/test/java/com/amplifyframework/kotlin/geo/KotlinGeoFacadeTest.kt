@@ -21,6 +21,9 @@ import com.amplifyframework.geo.GeoException
 import com.amplifyframework.geo.models.Coordinates
 import com.amplifyframework.geo.models.MapStyle
 import com.amplifyframework.geo.models.MapStyleDescriptor
+import com.amplifyframework.geo.options.GeoSearchByCoordinatesOptions
+import com.amplifyframework.geo.options.GeoSearchByTextOptions
+import com.amplifyframework.geo.options.GetMapStyleDescriptorOptions
 import com.amplifyframework.geo.result.GeoSearchResult
 import io.mockk.every
 import io.mockk.mockk
@@ -91,6 +94,18 @@ internal class KotlinGeoFacadeTest {
         assertSame(descriptor, result)
     }
 
+    @Test
+    fun `returns map style descriptor with options`() = runBlocking {
+        val descriptor = MapStyleDescriptor("")
+        val options = GetMapStyleDescriptorOptions.builder().mapName("map").build()
+        every { delegate.getMapStyleDescriptor(options, any(), any()) } answers {
+            val callback = secondArg<Consumer<MapStyleDescriptor>>()
+            callback.accept(descriptor)
+        }
+        val result = geo.getMapStyleDescriptor(options)
+        assertSame(descriptor, result)
+    }
+
     @Test(expected = GeoException::class)
     fun `throws map style descriptor error`(): Unit = runBlocking {
         val error = GeoException("message", "suggestion")
@@ -110,6 +125,19 @@ internal class KotlinGeoFacadeTest {
             callback.accept(searchResult)
         }
         val result = geo.searchByText(query)
+        assertSame(searchResult, result)
+    }
+
+    @Test
+    fun `returns search by text result with options`() = runBlocking {
+        val query = "query"
+        val options = GeoSearchByTextOptions.builder().maxResults(4).build()
+        val searchResult = GeoSearchResult.withPlaces(emptyList())
+        every { delegate.searchByText(query, options, any(), any()) } answers {
+            val callback = thirdArg<Consumer<GeoSearchResult>>()
+            callback.accept(searchResult)
+        }
+        val result = geo.searchByText(query, options)
         assertSame(searchResult, result)
     }
 
@@ -133,6 +161,19 @@ internal class KotlinGeoFacadeTest {
             callback.accept(searchResult)
         }
         val result = geo.searchByCoordinates(position)
+        assertSame(searchResult, result)
+    }
+
+    @Test
+    fun `returns search by coordinates result with options`() = runBlocking {
+        val position = Coordinates()
+        val options = GeoSearchByCoordinatesOptions.builder().maxResults(3).build()
+        val searchResult = GeoSearchResult.withPlaces(emptyList())
+        every { delegate.searchByCoordinates(position, options, any(), any()) } answers {
+            val callback = thirdArg<Consumer<GeoSearchResult>>()
+            callback.accept(searchResult)
+        }
+        val result = geo.searchByCoordinates(position, options)
         assertSame(searchResult, result)
     }
 
