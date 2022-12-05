@@ -26,11 +26,15 @@ import com.amplifyframework.geo.result.GeoSearchResult
 interface Geo {
     /**
      * Gets a collection of maps and their corresponding styles.
+     *
+     * @return A collection of all available [MapStyle].
      */
     suspend fun getAvailableMaps(): Collection<MapStyle>
 
     /**
      * Gets the default map and style from available maps.
+     *
+     * @return The default [MapStyle].
      */
     suspend fun getDefaultMap(): MapStyle
 
@@ -38,6 +42,7 @@ interface Geo {
      * Uses given options to get map style descriptor JSON.
      *
      * @param options  Options to specify for this operation.
+     * @return The [MapStyleDescriptor] matching the given options.
      */
     suspend fun getMapStyleDescriptor(
         options: GetMapStyleDescriptorOptions = GetMapStyleDescriptorOptions.defaults()
@@ -48,6 +53,7 @@ interface Geo {
      *
      * @param query    Search query text.
      * @param options  Search options to use.
+     * @return The [GeoSearchResult] for the query and options.
      */
     suspend fun searchByText(
         query: String,
@@ -59,6 +65,7 @@ interface Geo {
      *
      * @param position Coordinates to look-up.
      * @param options  Search options to use.
+     * @return The [GeoSearchResult] for the position and options.
      */
     suspend fun searchByCoordinates(
         position: Coordinates,
