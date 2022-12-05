@@ -14,7 +14,6 @@ import io.reactivex.rxjava3.core.ObservableEmitter
 import io.reactivex.rxjava3.core.ObservableOnSubscribe
 import java.util.concurrent.TimeUnit
 
-
 /*
  * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
@@ -52,7 +51,9 @@ class ReachabilityMonitor {
     }
 
     internal fun getObservable(observable: ObservableOnSubscribe<Boolean>): Observable<Boolean> {
-        return Observable.create (observable)
+        LOG.error("REACHER AAA  LOCAL33")
+        return Observable.create(observable)
+//            .skip(1)
             .debounce(250, TimeUnit.MILLISECONDS)
             .doOnEach {
                 publishNetworkStatusEvent(it.value!!)
@@ -62,11 +63,9 @@ class ReachabilityMonitor {
     internal fun getCallback(emitter: ObservableEmitter<Boolean>): NetworkCallback {
         return object : NetworkCallback() {
             override fun onAvailable(network: Network) {
-                LOG.info("Network available: $network")
                 emitter.onNext(true)
             }
             override fun onLost(network: Network) {
-                LOG.info("Network lost: $network")
                 emitter.onNext(false)
             }
         }
