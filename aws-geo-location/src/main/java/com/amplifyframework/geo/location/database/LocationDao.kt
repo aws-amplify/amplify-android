@@ -60,8 +60,8 @@ internal class LocationDao(
      */
     suspend fun removeAll(locations: Collection<LocationEntity>) = withContext(coroutineContext) {
         val ids = locations.map { it.locationId }.joinToString(",")
-        val clause = "${Column.LocationId} IN (?)"
-        database.delete(LocationTable.TABLE_NAME, clause, arrayOf(ids))
+        val clause = "${Column.LocationId} IN ($ids)"
+        database.delete(LocationTable.TABLE_NAME, clause, null)
     }
 
     /**
