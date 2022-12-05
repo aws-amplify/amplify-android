@@ -15,6 +15,7 @@
 
 package com.amplifyframework.pushnotifications.pinpoint
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.SharedPreferences
 import aws.sdk.kotlin.services.pinpoint.PinpointClient
@@ -27,8 +28,9 @@ import com.amplifyframework.notifications.pushnotifications.PushNotificationResu
 import com.amplifyframework.notifications.pushnotifications.PushNotificationsDetails
 import com.amplifyframework.notifications.pushnotifications.PushNotificationsException
 import com.amplifyframework.notifications.pushnotifications.PushNotificationsPlugin
-import com.amplifyframework.notifications.pushnotifications.PushResultType
+import com.amplifyframework.pushnotifications.pinpoint.utils.PushNotificationsService
 import com.amplifyframework.pushnotifications.pinpoint.utils.PushNotificationsUtils
+import com.google.firebase.messaging.FirebaseMessaging
 import org.json.JSONObject
 
 class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClient>() {
@@ -38,6 +40,9 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
 
         private const val AWS_PINPOINT_PUSHNOTIFICATIONS_PLUGIN_KEY = "awsPinpointPushNotifications"
     }
+
+    @SuppressLint("MissingFirebaseInstanceTokenRefresh")
+    class ServiceExtension : PushNotificationsService()
 
     private val logger =
         Amplify.Logging.forNamespace(AWS_PINPOINT_PUSHNOTIFICATIONS_LOG_NAMESPACE.format(this::class.java.simpleName))
@@ -56,9 +61,18 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
         pushNotificationsUtils = PushNotificationsUtils(context)
         val preferencesKey = "appID" + "515d6767-01b7-49e5-8273-c8d11b0f331d"
         preferences = context.getSharedPreferences(preferencesKey, Context.MODE_PRIVATE)
+
+        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+            if (!task.isSuccessful) {
+                logger.info("Fetching FCM registration token failed: ${task.exception}")
+            }
+            val token = task.result
+            registerDevice(token, { }, { })
+            logger.info("Registering push notifications token: $token")
+        }
     }
 
-    override fun identifyUser(userId: String) {
+    override fun identifyUser(userId: String, onSuccess: Action, onError: Consumer<PushNotificationsException>) {
         try {
             Amplify.Analytics.identifyUser(userId, null)
         } catch (illegalStateException: IllegalStateException) {
@@ -69,7 +83,7 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
         }
     }
 
-    override fun registerDevice(token: String) {
+    override fun registerDevice(token: String, onSuccess: Action, onError: Consumer<PushNotificationsException>) {
         // TODO: use credentials store instead of SharedPreferences
         putString("FCM_TOKEN", token)
         // TODO: update pinpoint endpoint
@@ -87,16 +101,25 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
         TODO("Not yet implemented")
     }
 
-    override fun handleNotificationReceived(details: PushNotificationsDetails): PushNotificationResult {
-        return if (pushNotificationsUtils.isAppInForeground()) {
-            tryAnalyticsRecordEvent("foreground_event")
-            foregroundNotificationListener.invoke(details)
-            PushNotificationResult(PushResultType.AppInForeground())
-        } else {
-            pushNotificationsUtils.showNotification(details)
-            tryAnalyticsRecordEvent("background_event")
-            backgroundNotificationListener.invoke(details)
-            PushNotificationResult(PushResultType.NotificationPosted())
+    override fun handleNotificationReceived(
+        details: PushNotificationsDetails,
+        onSuccess: Consumer<PushNotificationResult>,
+        onError: Consumer<PushNotificationsException>
+    ) {
+        try {
+            val result = if (pushNotificationsUtils.isAppInForeground()) {
+                tryAnalyticsRecordEvent("foreground_event")
+                foregroundNotificationListener.invoke(details)
+                PushNotificationResult.AppInForeground()
+            } else {
+                pushNotificationsUtils.showNotification(details)
+                tryAnalyticsRecordEvent("background_event")
+                backgroundNotificationListener.invoke(details)
+                PushNotificationResult.NotificationPosted()
+            }
+            onSuccess.accept(result)
+        } catch (exception: Exception) {
+            onError.accept(PushNotificationsException.default())
         }
     }
 

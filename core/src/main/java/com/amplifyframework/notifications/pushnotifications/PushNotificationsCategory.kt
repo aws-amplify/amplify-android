@@ -29,9 +29,11 @@ class PushNotificationsCategory :
 
     override fun getCategoryType() = selectedPlugin.categoryType
 
-    override fun identifyUser(userId: String) = selectedPlugin.identifyUser(userId)
+    override fun identifyUser(userId: String, onSuccess: Action, onError: Consumer<PushNotificationsException>) =
+        selectedPlugin.identifyUser(userId, onSuccess, onError)
 
-    override fun registerDevice(token: String) = selectedPlugin.registerDevice(token)
+    override fun registerDevice(token: String, onSuccess: Action, onError: Consumer<PushNotificationsException>) =
+        selectedPlugin.registerDevice(token, onSuccess, onError)
 
     override fun onForegroundNotificationReceived(listener: NotificationReceivedListener) =
         selectedPlugin.onForegroundNotificationReceived(listener)
@@ -42,8 +44,11 @@ class PushNotificationsCategory :
     override fun onNotificationOpened(onSuccess: Action, onError: Consumer<PushNotificationsException>) =
         selectedPlugin.onNotificationOpened(onSuccess, onError)
 
-    override fun handleNotificationReceived(details: PushNotificationsDetails): PushNotificationResult =
-        selectedPlugin.handleNotificationReceived(details)
+    override fun handleNotificationReceived(
+        details: PushNotificationsDetails,
+        onSuccess: Consumer<PushNotificationResult>,
+        onError: Consumer<PushNotificationsException>
+    ) = selectedPlugin.handleNotificationReceived(details, onSuccess, onError)
 
     override fun getInitialNotification(onSuccess: Action, onError: Consumer<PushNotificationsException>) =
         selectedPlugin.getInitialNotification(onSuccess, onError)

@@ -18,14 +18,13 @@
     package="com.amplifyframework.notifications.pinpoint">
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
 
-    <application android:name="com.amplifyframework.pushnotifications.pinpoint.AWSPinpointPushNotificationsApplication">
+    <application>
 <!--        <activity-->
 <!--            android:name="com.amplifyframework.pushnotifications.pinpoint.AWSPinpointPushNotificationsActivity"-->
 <!--            android:launchMode="singleInstance"-->
 <!--            android:exported="false" />-->
-
         <service
-            android:name="com.amplifyframework.pushnotifications.pinpoint.utils.PushNotificationsService"
+            android:name="com.amplifyframework.pushnotifications.pinpoint.AWSPinpointPushNotificationsPlugin$ServiceExtension"
             android:exported="false">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />

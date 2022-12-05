@@ -26,9 +26,13 @@ interface PushNotificationsCategoryBehavior {
 
     fun onNotificationOpened(onSuccess: Action, onError: Consumer<PushNotificationsException>)
 
-    fun handleNotificationReceived(details: PushNotificationsDetails): PushNotificationResult
+    fun handleNotificationReceived(
+        details: PushNotificationsDetails,
+        onSuccess: Consumer<PushNotificationResult>,
+        onError: Consumer<PushNotificationsException>
+    )
 
-    fun registerDevice(token: String)
+    fun registerDevice(token: String, onSuccess: Action, onError: Consumer<PushNotificationsException>)
 
     fun getInitialNotification(onSuccess: Action, onError: Consumer<PushNotificationsException>)
 

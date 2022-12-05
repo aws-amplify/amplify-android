@@ -15,43 +15,41 @@
 
 package com.amplifyframework.notifications.pushnotifications
 
-class PushNotificationResult(val type: PushResultType)
-
 /**
  * Result values of handling a Pinpoint push message.
  */
-sealed class PushResultType {
+sealed class PushNotificationResult {
     /**
      * The message wasn't for pinpoint.
      */
-    data class NotHandled(val id: String = "") : PushResultType()
+    data class NotHandled(val id: String = "") : PushNotificationResult()
 
     /**
      * The SDK handled the message and posted a local notification.
      */
-    data class NotificationPosted(val id: String = "") : PushResultType()
+    data class NotificationPosted(val id: String = "") : PushNotificationResult()
 
     /**
      * The SDK handled the message, but no notification was posted, since
      * the app was in the foreground.
      */
-    data class AppInForeground(val id: String = "") : PushResultType()
+    data class AppInForeground(val id: String = "") : PushNotificationResult()
 
     /**
      * The SDK handled the message, but no notification was posted, since
      * the app was opted out.
      */
-    data class OptedOut(val id: String = "") : PushResultType()
+    data class OptedOut(val id: String = "") : PushNotificationResult()
 
     /**
      * The SDK handled the message that indicated the local campaign
      * notification was opened.
      */
-    data class NotificationOpened(val id: String = "") : PushResultType()
+    data class NotificationOpened(val id: String = "") : PushNotificationResult()
 
     /**
      * The SDK handled the message that indicated the local campaign
      * notification was opened.
      */
-    data class Silent(val id: String = "") : PushResultType()
+    data class Silent(val id: String = "") : PushNotificationResult()
 }

@@ -15,6 +15,10 @@
 
 package com.amplifyframework.notifications
 
+import com.amplifyframework.core.Action
+import com.amplifyframework.core.Consumer
+import com.amplifyframework.notifications.pushnotifications.PushNotificationsException
+
 interface NotificationsCategoryBehavior {
-    fun identifyUser(userId: String)
+    fun identifyUser(userId: String, onSuccess: Action, onError: Consumer<PushNotificationsException>)
 }

@@ -21,11 +21,11 @@ import com.amplifyframework.notifications.pushnotifications.PushNotificationsDet
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 
-class PushNotificationsService : FirebaseMessagingService() {
+open class PushNotificationsService : FirebaseMessagingService() {
 
     override fun onNewToken(token: String) {
         super.onNewToken(token)
-        Amplify.Notifications.Push.registerDevice(token)
+        Amplify.Notifications.Push.registerDevice(token, { }, { })
     }
 
     fun processRemoteMessage(remoteMessage: RemoteMessage): PushNotificationsDetails {
@@ -42,6 +42,6 @@ class PushNotificationsService : FirebaseMessagingService() {
 
         // handle payload and show notification
         val details = processRemoteMessage(remoteMessage)
-        Amplify.Notifications.Push.handleNotificationReceived(details)
+        Amplify.Notifications.Push.handleNotificationReceived(details, { }, { })
     }
 }

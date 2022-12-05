@@ -16,13 +16,16 @@
 package com.amplifyframework.notifications
 
 import android.content.Context
+import com.amplifyframework.core.Action
 import com.amplifyframework.core.AmplifyConfiguration
+import com.amplifyframework.core.Consumer
 import com.amplifyframework.core.category.Category
 import com.amplifyframework.core.category.CategoryConfiguration
 import com.amplifyframework.core.category.CategoryInitializationResult
 import com.amplifyframework.core.category.CategoryType
 import com.amplifyframework.core.category.SubCategoryType
 import com.amplifyframework.notifications.pushnotifications.PushNotificationsCategory
+import com.amplifyframework.notifications.pushnotifications.PushNotificationsException
 import com.amplifyframework.notifications.pushnotifications.PushNotificationsPlugin
 
 open class NotificationsCategory : Category<NotificationsPlugin<*>>(), NotificationsCategoryBehavior {
@@ -53,9 +56,9 @@ open class NotificationsCategory : Category<NotificationsPlugin<*>>(), Notificat
         return result
     }
 
-    override fun identifyUser(userId: String) {
+    override fun identifyUser(userId: String, onSuccess: Action, onError: Consumer<PushNotificationsException>) {
         plugins.forEach { plugin ->
-            plugin.identifyUser(userId)
+            plugin.identifyUser(userId, onSuccess, onError)
         }
     }
 }
