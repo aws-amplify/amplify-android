@@ -148,6 +148,32 @@ public class RetryHandlerTest {
     }
 
     /**
+     * Test it won't retry beyond the maxDelay.
+     */
+    @Test
+    public void testDoesNotGoBeyondMaxDelay() {
+        //arrange
+        TestScheduler scheduler = new TestScheduler();
+        RetryHandler subject = new RetryHandler(0, Duration.ofMinutes(5).toMillis());
+        DataStoreException expectedException =
+                new DataStoreException("PaginatedResult<ModelWithMetadata<BlogOwner>>", "");
+        AtomicInteger count = new AtomicInteger(0);
+
+        Single<Object> mockSingle = Single.create(emitter -> {
+            emitter.onError(expectedException);
+            scheduler.advanceTimeBy(subject.jitteredDelayMillis(count.incrementAndGet()), TimeUnit.MILLISECONDS);
+        });
+
+        //act and assert
+        subject.retry(mockSingle, new ArrayList<>(), scheduler)
+                .test()
+                .awaitDone(10, TimeUnit.SECONDS)
+                .assertError(expectedException);
+
+        assertEquals(10, count.get());
+    }
+
+    /**
      * test jittered delay method return the correct delay time.
      */
     @Test
