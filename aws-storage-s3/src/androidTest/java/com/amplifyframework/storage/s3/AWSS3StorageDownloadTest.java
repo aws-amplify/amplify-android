@@ -42,7 +42,6 @@ import com.amplifyframework.testutils.sync.SynchronousStorage;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
@@ -146,7 +145,6 @@ public final class AWSS3StorageDownloadTest {
      *
      * @throws Exception if download fails
      */
-    @Ignore("Test Failure")
     @Test
     public void testDownloadSmallFile() throws Exception {
         synchronousStorage.downloadFile(SMALL_FILE_NAME, downloadFile, options);
@@ -158,7 +156,6 @@ public final class AWSS3StorageDownloadTest {
      *
      * @throws Exception if download fails
      */
-    @Ignore("Test Failure")
     @Test
     public void testDownloadLargeFile() throws Exception {
         synchronousStorage.downloadFile(LARGE_FILE_NAME, downloadFile, options, EXTENDED_TIMEOUT_MS);
@@ -173,7 +170,6 @@ public final class AWSS3StorageDownloadTest {
      *                   before timeout
      */
     @SuppressWarnings("unchecked")
-    @Ignore("Test Failure")
     @Test
     public void testDownloadFileIsCancelable() throws Exception {
         final CountDownLatch canceled = new CountDownLatch(1);
@@ -220,7 +216,6 @@ public final class AWSS3StorageDownloadTest {
      *                   completed successfully before timeout
      */
     @SuppressWarnings("unchecked")
-    @Ignore("Test Failure")
     @Test
     public void testDownloadFileIsResumable() throws Exception {
         final CountDownLatch completed = new CountDownLatch(1);
@@ -271,7 +266,6 @@ public final class AWSS3StorageDownloadTest {
      *                   completed successfully before timeout
      */
     @SuppressWarnings("unchecked")
-    @Ignore("Test Failure")
     @Test
     public void testGetTransferOnPause() throws Exception {
         final CountDownLatch completed = new CountDownLatch(1);
