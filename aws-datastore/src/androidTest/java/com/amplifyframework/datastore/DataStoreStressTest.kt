@@ -11,7 +11,6 @@ import com.amplifyframework.testmodels.commentsblog.Blog
 import com.amplifyframework.testmodels.commentsblog.BlogOwner
 import com.amplifyframework.testmodels.commentsblog.Post
 import com.amplifyframework.testmodels.commentsblog.PostStatus
-import java.lang.Thread.sleep
 import java.util.UUID
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -24,7 +23,6 @@ class DataStoreStressTest {
     companion object {
         private const val TIMEOUT_SECONDS = 60
         private const val PAGINATION_LIMIT = 10
-        private const val OP_WAIT = 1000L
         private lateinit var blogOwners: MutableList<BlogOwner>
 
         @BeforeClass
@@ -42,7 +40,6 @@ class DataStoreStressTest {
             } catch (error: AmplifyException) {
                 Log.e("DataStoreStressTest", "Could not initialize Amplify", error)
             }
-            sleep(5000)
         }
     }
 
@@ -79,6 +76,7 @@ class DataStoreStressTest {
     fun testMultipleSave() {
         val latch = CountDownLatch(50)
         repeat(50) {
+            val saveLatch = CountDownLatch(1)
             val blogOwner: BlogOwner = BlogOwner.builder()
                 .name("BlogOwner" + UUID.randomUUID().toString())
                 .build()
@@ -114,7 +112,7 @@ class DataStoreStressTest {
                 },
                 { Log.e("DataStoreStressTest", "Post not saved", it) }
             )
-            sleep(OP_WAIT)
+            saveLatch.await(1, TimeUnit.SECONDS)
         }
 
         assertTrue(latch.await(TIMEOUT_SECONDS.toLong(), TimeUnit.SECONDS))
@@ -125,9 +123,11 @@ class DataStoreStressTest {
      */
     @Test
     fun testMultipleDelete_AfterMultipleSave() {
-        val latch = CountDownLatch(100)
+        val latch = CountDownLatch(50)
 
         repeat(50) {
+            val saveLatch = CountDownLatch(1)
+            val deleteLatch = CountDownLatch(1)
             val blogOwner: BlogOwner = BlogOwner.builder()
                 .name("BlogOwner" + UUID.randomUUID().toString())
                 .build()
@@ -163,7 +163,8 @@ class DataStoreStressTest {
                 },
                 { Log.e("DataStoreStressTest", "Post not saved", it) }
             )
-            sleep(OP_WAIT)
+            saveLatch.await(1, TimeUnit.SECONDS)
+
             Amplify.DataStore.delete(
                 blogOwner,
                 {
@@ -186,7 +187,7 @@ class DataStoreStressTest {
                 },
                 { Log.e("DataStoreStressTest", "Post not deleted", it) }
             )
-            sleep(OP_WAIT)
+            deleteLatch.await(1, TimeUnit.SECONDS)
         }
 
         assertTrue(latch.await(TIMEOUT_SECONDS.toLong(), TimeUnit.SECONDS))
@@ -200,6 +201,7 @@ class DataStoreStressTest {
         saveToLaterQuery()
         val remote = mutableListOf<BlogOwner>()
         repeat(50) {
+            val queryLatch = CountDownLatch(1)
             Amplify.DataStore.query(
                 BlogOwner::class.java,
                 { query ->
@@ -210,7 +212,7 @@ class DataStoreStressTest {
                 },
                 { Log.e("DataStoreStressTest", it.toString()) }
             )
-            sleep(OP_WAIT)
+            queryLatch.await(1, TimeUnit.SECONDS)
 
             // Make sure all queries are present
             assertTrue(remote.size == blogOwners.size)
@@ -227,6 +229,7 @@ class DataStoreStressTest {
         saveToLaterQuery()
         val remote = mutableListOf<BlogOwner>()
         repeat(50) {
+            val queryLatch = CountDownLatch(1)
             Amplify.DataStore.query(
                 BlogOwner::class.java,
                 Where.matches(BlogOwner.NAME.contains("BlogOwner")),
@@ -238,12 +241,11 @@ class DataStoreStressTest {
                 },
                 { Log.e("DataStoreStressTest", it.toString()) }
             )
-            sleep(OP_WAIT)
+            queryLatch.await(1, TimeUnit.SECONDS)
 
             // Make sure all queries are present
             assertTrue(remote.size == blogOwners.size)
             remote.clear()
-            sleep(OP_WAIT)
         }
     }
 
@@ -255,6 +257,7 @@ class DataStoreStressTest {
         saveToLaterQuery()
         val remote = mutableListOf<BlogOwner>()
         repeat(50) {
+            val queryLatch = CountDownLatch(1)
             Amplify.DataStore.query(
                 BlogOwner::class.java,
                 Where.sorted(BlogOwner.NAME.ascending()),
@@ -265,7 +268,7 @@ class DataStoreStressTest {
                 },
                 { Log.e("DataStoreStressTest", it.toString()) }
             )
-            sleep(OP_WAIT)
+            queryLatch.await(1, TimeUnit.SECONDS)
 
             // Make sure all queries are present
             assertTrue(remote.size == blogOwners.size)
@@ -281,6 +284,7 @@ class DataStoreStressTest {
         saveToLaterQuery()
         val remote = mutableListOf<BlogOwner>()
         repeat(50) {
+            val queryLatch = CountDownLatch(1)
             Amplify.DataStore.query(
                 BlogOwner::class.java,
                 Where.matchesAll().paginated(Page.startingAt(0).withLimit(PAGINATION_LIMIT)),
@@ -291,7 +295,7 @@ class DataStoreStressTest {
                 },
                 { Log.e("DataStoreStressTest", it.toString()) }
             )
-            sleep(OP_WAIT)
+            queryLatch.await(1, TimeUnit.SECONDS)
 
             // Make sure all queries are present
             assertTrue(remote.size == PAGINATION_LIMIT)
@@ -333,11 +337,12 @@ class DataStoreStressTest {
     fun testMultipleStart_AfterMultipleClear() {
         val latch = CountDownLatch(100)
         repeat(50) {
+            val clearLatch = CountDownLatch(1)
             Amplify.DataStore.clear(
                 { latch.countDown() },
                 { Log.e("DataStoreStressTest", it.toString()) }
             )
-            sleep(OP_WAIT)
+            clearLatch.await(1, TimeUnit.SECONDS)
             Amplify.DataStore.start(
                 { latch.countDown() },
                 { Log.e("DataStoreStressTest", it.toString()) }
@@ -369,9 +374,10 @@ class DataStoreStressTest {
     // Save a model 50 times to be queried later
     private fun saveToLaterQuery() {
         blogOwners = mutableListOf()
-        val saveLatch = CountDownLatch(50)
+        val latch = CountDownLatch(50)
 
         repeat(50) {
+            val saveLatch = CountDownLatch(1)
             val blogOwner: BlogOwner = BlogOwner.builder()
                 .name("BlogOwner" + UUID.randomUUID().toString())
                 .build()
@@ -407,10 +413,9 @@ class DataStoreStressTest {
                 },
                 { Log.e("DataStoreStressTest", "Post not saved", it) }
             )
-
             blogOwners.add(blogOwner)
-            sleep(OP_WAIT)
+            saveLatch.await(TIMEOUT_SECONDS.toLong(), TimeUnit.SECONDS)
         }
-        saveLatch.await(TIMEOUT_SECONDS.toLong(), TimeUnit.SECONDS)
+        latch.await(TIMEOUT_SECONDS.toLong(), TimeUnit.SECONDS)
     }
 }
