@@ -18,6 +18,7 @@
 
 package com.amplifyframework.geo.options;
 
+import com.amplifyframework.geo.models.Coordinates;
 import com.amplifyframework.geo.models.GeoPosition;
 
 import java.util.OptionalInt;
@@ -47,16 +48,20 @@ public class BatchingOptions {
         return distanceTravelled;
     }
 
+    private double distance(GeoPosition a, GeoPosition b) {
+        Coordinates ca = new Coordinates(a.location.getLatitude(), a.location.getLongitude());
+        Coordinates cb = new Coordinates(b.location.getLatitude(), b.location.getLongitude());
+        return ca.centralAngle(cb) * 6378160; // scale up by Earth's radius in meters
+    }
+
     // would this position exceed the batch?
     public boolean thresholdReached(GeoPosition first, GeoPosition last) {
         if (secondsElapsed.isPresent() &&
                 secondsElapsed.getAsInt() < last.timeStamp.getTime() - first.timeStamp.getTime()) {
             return true;
         }
-        // TODO: distance batching
-//        if (distanceTravelled.isPresent() &&
-//                distanceTravelled.getAsInt() < last.location.)
-        return false;
+        return distanceTravelled.isPresent() &&
+                distanceTravelled.getAsInt() < distance(first, last);
     }
 
     private BatchingOptions() {}
