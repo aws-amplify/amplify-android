@@ -38,10 +38,12 @@ import java.util.concurrent.TimeUnit
  * The network changes are debounced with a 250 ms delay to allow some time for one network to connect after another
  * network has disconnected.
  */
-class ReachabilityMonitor {
-    private val LOG = Amplify.Logging.forNamespace("amplify:datastore")
+interface ReachabilityMonitor {
+    fun configure(context: Context)
+}
 
-    fun configure(context: Context) {
+class ReachabilityMonitorImpl: ReachabilityMonitor {
+    override fun configure(context: Context) {
         val emitter = ObservableOnSubscribe { emitter ->
             val callback = getCallback(emitter)
             context.getSystemService(ConnectivityManager::class.java).registerDefaultNetworkCallback(callback)

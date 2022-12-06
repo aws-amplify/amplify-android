@@ -49,6 +49,7 @@ import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter;
 import com.amplifyframework.datastore.syncengine.Orchestrator;
 import com.amplifyframework.datastore.syncengine.ReachabilityMonitor;
+import com.amplifyframework.datastore.syncengine.ReachabilityMonitorImpl;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.logging.Logger;
 
@@ -104,7 +105,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
         this.authModeStrategy = AuthModeStrategyType.DEFAULT;
         this.userProvidedConfiguration = userProvidedConfiguration;
         this.isSyncRetryEnabled = userProvidedConfiguration != null && userProvidedConfiguration.getDoSyncRetry();
-        this.reachabilityMonitor = new ReachabilityMonitor();
+        this.reachabilityMonitor = new ReachabilityMonitorImpl();
         // Used to interrogate plugins, to understand if sync should be automatically turned on
         this.orchestrator = new Orchestrator(
             modelProvider,
@@ -135,7 +136,9 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             SQLiteStorageAdapter.forModels(schemaRegistry, modelProvider) :
             builder.storageAdapter;
         this.categoryInitializationsPending = new CountDownLatch(1);
-        this.reachabilityMonitor = new ReachabilityMonitor();
+        this.reachabilityMonitor = builder.reachabilityMonitor == null ?
+            new ReachabilityMonitorImpl() :
+            builder.reachabilityMonitor;
 
         // Used to interrogate plugins, to understand if sync should be automatically turned on
         this.orchestrator = new Orchestrator(
@@ -687,6 +690,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
         private ApiCategory apiCategory;
         private AuthModeStrategyType authModeStrategy;
         private LocalStorageAdapter storageAdapter;
+        private ReachabilityMonitor reachabilityMonitor;
         private boolean isSyncRetryEnabled;
 
         private Builder() {}
@@ -741,6 +745,17 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
         @VisibleForTesting
         Builder storageAdapter(LocalStorageAdapter storageAdapter) {
             this.storageAdapter = storageAdapter;
+            return this;
+        }
+
+        /**
+         * Package-private method to allow for injection of a ReachabilityMonitor for testing purposes.
+         * @param reachabilityMonitor An instance that implements LocalStorageAdapter.
+         * @return Current builder instance, for fluent construction of plugin.
+         */
+        @VisibleForTesting
+        Builder reachabilityMonitor(ReachabilityMonitor reachabilityMonitor) {
+            this.reachabilityMonitor = reachabilityMonitor;
             return this;
         }
 
