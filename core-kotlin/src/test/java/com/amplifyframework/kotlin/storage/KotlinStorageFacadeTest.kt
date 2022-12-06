@@ -227,6 +227,7 @@ class KotlinStorageFacadeTest {
         }
 
         val upload = storage.uploadFile(toRemoteKey, fromLocalFile)
+        assertEquals(transferId, upload.transferId)
         val receivedProgressEvents = upload.progress().take(3).toList()
         assertEquals(transferId, upload.transferId)
         assertEquals(progressEvents, receivedProgressEvents)
@@ -323,6 +324,7 @@ class KotlinStorageFacadeTest {
         }
 
         val upload = storage.uploadInputStream(toRemoteKey, fromStream)
+        assertEquals(transferId, upload.transferId)
         val receivedProgressEvents = upload.progress().take(3).toList()
         assertEquals(progressEvents, receivedProgressEvents)
         assertEquals(toRemoteKey, upload.result().key)
