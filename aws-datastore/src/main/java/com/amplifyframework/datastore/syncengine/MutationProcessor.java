@@ -17,7 +17,6 @@ package com.amplifyframework.datastore.syncengine;
 
 import androidx.annotation.NonNull;
 
-import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
@@ -34,9 +33,9 @@ import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.logging.Logger;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Single;
@@ -50,6 +49,7 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
  */
 final class MutationProcessor {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
+    private static final long ITEM_PROCESSING_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(10);
 
     private final Merger merger;
     private final VersionRepository versionRepository;
@@ -58,7 +58,6 @@ final class MutationProcessor {
     private final AppSync appSync;
     private final ConflictResolver conflictResolver;
     private final CompositeDisposable ongoingOperationsDisposable;
-    private final RetryHandler retryHandler;
 
     private MutationProcessor(Builder builder) {
         this.merger = Objects.requireNonNull(builder.merger);
@@ -67,7 +66,6 @@ final class MutationProcessor {
         this.mutationOutbox = Objects.requireNonNull(builder.mutationOutbox);
         this.appSync = Objects.requireNonNull(builder.appSync);
         this.conflictResolver = Objects.requireNonNull(builder.conflictResolver);
-        this.retryHandler = Objects.requireNonNull(builder.retryHandler);
         this.ongoingOperationsDisposable = new CompositeDisposable();
     }
 
@@ -116,8 +114,13 @@ final class MutationProcessor {
                 return Completable.complete();
             }
             try {
-                processOutboxItem(next)
-                    .blockingAwait();
+                boolean itemFailedToProcess = !processOutboxItem(next)
+                    .blockingAwait(ITEM_PROCESSING_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+                if (itemFailedToProcess) {
+                    return Completable.error(new DataStoreException(
+                        "Timeout processing " + next, "Check your internet connection."
+                    ));
+                }
             } catch (RuntimeException error) {
                 return Completable.error(new DataStoreException(
                         "Failed to process " + error, "Check your internet connection."
@@ -136,7 +139,7 @@ final class MutationProcessor {
         // First, mark the item as in-flight.
         return mutationOutbox.markInFlight(mutationOutboxItem.getMutationId())
             // Then, put it "into flight"
-            .andThen(publishWithRetry(mutationOutboxItem)
+            .andThen(publishToNetwork(mutationOutboxItem)
                 .map(modelWithMetadata -> ensureModelHasSchema(mutationOutboxItem, modelWithMetadata))
                 .flatMapCompletable(modelWithMetadata ->
                             // Once the server knows about it, it's safe to remove from the outbox.
@@ -335,16 +338,6 @@ final class MutationProcessor {
             });
     }
 
-    private <T extends Model> Single<ModelWithMetadata<T>> publishWithRetry(
-            @NonNull PendingMutation<T> mutation) {
-        List<Class<? extends Throwable>> nonRetryableExceptions = new ArrayList<>();
-        nonRetryableExceptions.add(DataStoreException.GraphQLResponseException.class);
-        nonRetryableExceptions.add(ApiException.NonRetryableException.class);
-
-        LOG.info("Started Publish with retry: " + mutation);
-        return retryHandler.retry(publishToNetwork(mutation), nonRetryableExceptions);
-    }
-
     /**
      * Handle errors that come back from AppSync while attempting to publish a mutation.
      * @param <T> Type of model for which a publication had response errors
@@ -402,7 +395,6 @@ final class MutationProcessor {
             BuilderSteps.MutationOutboxStep,
             BuilderSteps.AppSyncStep,
             BuilderSteps.ConflictResolverStep,
-            BuilderSteps.RetryHandlerStep,
             BuilderSteps.BuildStep {
         private Merger merger;
         private VersionRepository versionRepository;
@@ -410,7 +402,6 @@ final class MutationProcessor {
         private MutationOutbox mutationOutbox;
         private AppSync appSync;
         private ConflictResolver conflictResolver;
-        private RetryHandler retryHandler;
 
         @NonNull
         @Override
@@ -449,15 +440,8 @@ final class MutationProcessor {
 
         @NonNull
         @Override
-        public BuilderSteps.RetryHandlerStep conflictResolver(@NonNull ConflictResolver conflictResolver) {
+        public BuilderSteps.BuildStep conflictResolver(@NonNull ConflictResolver conflictResolver) {
             this.conflictResolver = Objects.requireNonNull(conflictResolver);
-            return Builder.this;
-        }
-
-        @NonNull
-        @Override
-        public BuilderSteps.BuildStep retryHandler(@NonNull RetryHandler retryHandler) {
-            this.retryHandler = retryHandler;
             return Builder.this;
         }
 
@@ -496,12 +480,7 @@ final class MutationProcessor {
 
         interface ConflictResolverStep {
             @NonNull
-            RetryHandlerStep conflictResolver(@NonNull ConflictResolver conflictResolver);
-        }
-
-        interface RetryHandlerStep {
-            @NonNull
-            BuildStep retryHandler(@NonNull RetryHandler retryHandler);
+            BuildStep conflictResolver(@NonNull ConflictResolver conflictResolver);
         }
 
         interface BuildStep {
