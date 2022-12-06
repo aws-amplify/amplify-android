@@ -198,6 +198,11 @@ public final class RxStorageBinding implements RxStorageCategoryBehavior {
                                                 resultSubject::onError);
         }
 
+        /**
+         * Return the transfer ID for this operation.
+         *
+         * @return unique transferId for this operation
+         */
         @NonNull
         public String getTransferId() {
             return amplifyOperation.getTransferId();
@@ -209,7 +214,9 @@ public final class RxStorageBinding implements RxStorageCategoryBehavior {
         }
 
         @Override
-        public void pause() { amplifyOperation.pause();}
+        public void pause() {
+            amplifyOperation.pause();
+        }
 
         @Override
         public void cancel() {
