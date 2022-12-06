@@ -175,19 +175,6 @@ internal class TransferDB private constructor(context: Context) {
     }
 
     /**
-     * Updates the total bytes of a download record.
-     *
-     * @param id The id of the transfer
-     * @param bytes The total bytes of the download.
-     * @return Number of rows updated.
-     */
-    fun updateBytesTotalForDownload(id: Int, bytes: Long): Int {
-        val values = ContentValues()
-        values.put(TransferTable.COLUMN_BYTES_TOTAL, bytes)
-        return transferDBHelper.update(getRecordUri(id), values, null, null)
-    }
-
-    /**
      * Updates the state but do not notify TransferService to refresh its
      * transfer record list. Therefore, only TransferObserver knows the state
      * change of the transfer record. If the new state is STATE_FAILED, we need
@@ -380,7 +367,7 @@ internal class TransferDB private constructor(context: Context) {
      * @param id The id of the transfer.
      * @return The result Cursor of the query.
      */
-    fun queryTransferById(id: Int): Cursor? {
+    private fun queryTransferById(id: Int): Cursor {
         return transferDBHelper.query(getRecordUri(id))
     }
 
@@ -395,7 +382,7 @@ internal class TransferDB private constructor(context: Context) {
         var c: Cursor? = null
         try {
             c = queryTransferById(id)
-            c?.use {
+            c.use {
                 if (it.moveToFirst()) {
                     transferRecord = TransferRecord.updateFromDB(c)
                 }

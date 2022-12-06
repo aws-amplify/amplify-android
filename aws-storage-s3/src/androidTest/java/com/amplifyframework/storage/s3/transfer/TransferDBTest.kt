@@ -19,6 +19,7 @@ import android.content.ContentValues
 import android.content.Context
 import android.net.Uri
 import androidx.test.core.app.ApplicationProvider
+import com.amplifyframework.storage.TransferState
 import java.io.File
 import java.util.UUID
 import org.junit.After
@@ -58,13 +59,13 @@ open class TransferDBTest {
             null
         )
 
-        getInsertedRecord(uri)?.run {
-            Assert.assertEquals(transferId, this.transferId)
-            Assert.assertEquals(TransferType.UPLOAD, this.type)
-            Assert.assertEquals(tempFile, File(this.file!!))
-            Assert.assertEquals(fileKey, this.key)
-            Assert.assertEquals(bucketName, this.bucketName)
-        } ?: Assert.fail("InsertedRecord is null")
+        assertOnTransferRecord(uri) {
+            Assert.assertEquals(transferId, it.transferId)
+            Assert.assertEquals(TransferType.UPLOAD, it.type)
+            Assert.assertEquals(tempFile, File(it.file))
+            Assert.assertEquals(fileKey, it.key)
+            Assert.assertEquals(bucketName, it.bucketName)
+        }
     }
 
     @Test
@@ -82,13 +83,13 @@ open class TransferDBTest {
             1
         )
 
-        getInsertedRecord(uri)?.run {
-            Assert.assertEquals(TransferType.UPLOAD, this.type)
-            Assert.assertEquals(tempFile, File(this.file!!))
-            Assert.assertEquals(fileKey, this.key)
-            Assert.assertEquals(bucketName, this.bucketName)
-            Assert.assertEquals(uploadID, this.multipartId)
-        } ?: Assert.fail("InsertedRecord is null")
+        assertOnTransferRecord(uri) {
+            Assert.assertEquals(TransferType.UPLOAD, it.type)
+            Assert.assertEquals(tempFile, File(it.file))
+            Assert.assertEquals(fileKey, it.key)
+            Assert.assertEquals(bucketName, it.bucketName)
+            Assert.assertEquals(uploadID, it.multipartId)
+        }
     }
 
     @Test
@@ -140,14 +141,109 @@ open class TransferDBTest {
         Assert.assertEquals(result, 2)
     }
 
-    private fun getInsertedRecord(uri: Uri): TransferRecord? {
-        val queryResult = transferDB.queryTransferById(uri.lastPathSegment?.toInt() ?: 0)
-        var resultRecord: TransferRecord? = null
-        queryResult?.let {
-            while (it.moveToNext()) {
-                resultRecord = TransferRecord.updateFromDB(it)
-            }
+    @Test
+    fun testUpdateBytesTransferred() {
+        val transferId = UUID.randomUUID().toString()
+        val uri = transferDB.insertSingleTransferRecord(
+            transferId,
+            TransferType.UPLOAD,
+            bucketName,
+            fileKey,
+            tempFile,
+            null,
+            null
+        )
+        uri.lastPathSegment?.let { id ->
+            transferDB.updateBytesTransferred(id.toInt(), 100L, 1000L)
         }
-        return resultRecord
+
+        assertOnTransferRecord(uri) {
+            Assert.assertEquals(100L, it.bytesCurrent)
+            Assert.assertEquals(1000L, it.bytesTotal)
+        }
+    }
+
+    @Test
+    fun testUpdateWorkManagerRequestId() {
+        val transferId = UUID.randomUUID().toString()
+        val uri = transferDB.insertSingleTransferRecord(
+            transferId,
+            TransferType.UPLOAD,
+            bucketName,
+            fileKey,
+            tempFile,
+            null,
+            null
+        )
+        val workManagerRequestId = UUID.randomUUID().toString()
+        uri.lastPathSegment?.let { id ->
+            transferDB.updateWorkManagerRequestId(id.toInt(), workManagerRequestId)
+        }
+
+        assertOnTransferRecord(uri) {
+            Assert.assertEquals(100L, it.bytesCurrent)
+            Assert.assertEquals(1000L, it.bytesTotal)
+        }
+    }
+
+    @Test
+    fun testQueryBytesTransferredByMainUploadId() {
+        val key = UUID.randomUUID().toString()
+        val contentValues = arrayOfNulls<ContentValues>(3)
+        contentValues[0] = transferDB.generateContentValuesForMultiPartUpload(
+            key,
+            bucketName,
+            key,
+            tempFile,
+            0L,
+            0,
+            null,
+            200L,
+            0,
+            null,
+            null
+        )
+        contentValues[1] = transferDB.generateContentValuesForMultiPartUpload(
+            key,
+            bucketName,
+            key,
+            tempFile,
+            0L,
+            1,
+            null,
+            100L,
+            0,
+            null,
+            null
+        )
+        contentValues[2] = transferDB.generateContentValuesForMultiPartUpload(
+            key,
+            bucketName,
+            key,
+            tempFile,
+            0L,
+            2,
+            null,
+            100L,
+            1,
+            null,
+            null
+        )
+        val bulkInsertUri = transferDB.bulkInsertTransferRecords(contentValues)
+
+        val parts = transferDB.getNonCompletedPartRequestsFromDB(bulkInsertUri)
+        // mark first part as completed
+        transferDB.updateState(parts[0], TransferState.PART_COMPLETED)
+        Assert.assertEquals(100L, transferDB.queryBytesTransferredByMainUploadId(bulkInsertUri))
+    }
+
+    private fun assertOnTransferRecord(uri: Uri, block: (TransferRecord) -> Unit) {
+        getInsertedRecord(uri)?.run {
+            block
+        } ?: Assert.fail("InsertedRecord is null")
+    }
+
+    private fun getInsertedRecord(uri: Uri): TransferRecord? {
+        return transferDB.getTransferRecordById(uri.lastPathSegment?.toInt() ?: 0)
     }
 }

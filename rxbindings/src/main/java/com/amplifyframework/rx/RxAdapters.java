@@ -19,6 +19,7 @@ import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.NoOpConsumer;
 import com.amplifyframework.core.async.Cancelable;
+import com.amplifyframework.core.async.Resumable;
 
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Observable;
@@ -168,7 +169,7 @@ final class RxAdapters {
      * wishing to return a {@link Single} as its result.
      * @param <T> The type that represents the result of a given operation.
      */
-    interface RxSingleOperation<T> extends Cancelable {
+    interface RxSingleOperation<T> extends Cancelable, Resumable {
         /**
          * Maps the result of a callback-style operation to a {@link Single}.
          * @return A {@link Single} that emits a result or an error.

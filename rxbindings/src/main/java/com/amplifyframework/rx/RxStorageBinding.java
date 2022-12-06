@@ -20,7 +20,6 @@ import androidx.annotation.VisibleForTesting;
 
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
-import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.async.NoOpCancelable;
 import com.amplifyframework.rx.RxAdapters.CancelableBehaviors;
 import com.amplifyframework.storage.StorageCategory;
@@ -189,7 +188,7 @@ public final class RxStorageBinding implements RxStorageCategoryBehavior {
     public static final class RxProgressAwareSingleOperation<T> implements RxAdapters.RxSingleOperation<T> {
         private final PublishSubject<StorageTransferProgress> progressSubject;
         private final ReplaySubject<T> resultSubject;
-        private final Cancelable amplifyOperation;
+        private final StorageTransferOperation<?, ?> amplifyOperation;
 
         RxProgressAwareSingleOperation(RxStorageTransferCallbackMapper<T> callbacks) {
             progressSubject = PublishSubject.create();
@@ -198,6 +197,19 @@ public final class RxStorageBinding implements RxStorageCategoryBehavior {
                                                 resultSubject::onNext,
                                                 resultSubject::onError);
         }
+
+        @NonNull
+        public String getTransferId() {
+            return amplifyOperation.getTransferId();
+        }
+
+        @Override
+        public void resume() {
+            amplifyOperation.resume();
+        }
+
+        @Override
+        public void pause() { amplifyOperation.pause();}
 
         @Override
         public void cancel() {
@@ -235,7 +247,7 @@ public final class RxStorageBinding implements RxStorageCategoryBehavior {
      * @param <T> The type that represents the result of a given operation.
      */
     interface RxStorageTransferCallbackMapper<T> {
-        Cancelable emitTo(
+        StorageTransferOperation<?, ?> emitTo(
                 Consumer<StorageTransferProgress> onProgress,
                 Consumer<T> onItem,
                 Consumer<StorageException> onError

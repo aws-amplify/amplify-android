@@ -73,7 +73,6 @@ internal class EventRecorder(
         }
     }
 
-    @Synchronized
     internal suspend fun submitEvents(): List<AnalyticsEvent> {
         return withContext(coroutineDispatcher) {
             val result = runCatching {
