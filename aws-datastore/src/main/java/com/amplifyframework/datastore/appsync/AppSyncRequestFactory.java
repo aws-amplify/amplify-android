@@ -77,8 +77,6 @@ import java.util.Map;
  * and AppSync-specific field names (`_version`, `_deleted`, etc.)
  */
 final class AppSyncRequestFactory {
-    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
-
     private AppSyncRequestFactory() {}
 
     /**
@@ -489,8 +487,6 @@ final class AppSyncRequestFactory {
         } else if (modelField.isModel() && fieldValue instanceof Map) {
             return ((Map<?, ?>) fieldValue).get("id");
         } else {
-            LOG.warn(String.format("Can't extract identifier: modelField=%s, isModel=%s, fieldValue=%s",
-                    modelField.getName(), modelField.isModel(), fieldValue));
             throw new IllegalStateException("Associated data is not Model or Map.");
         }
     }
