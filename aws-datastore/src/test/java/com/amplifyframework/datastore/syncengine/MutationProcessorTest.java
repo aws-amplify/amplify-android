@@ -29,7 +29,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.amplifyframework.AmplifyException;
-import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLLocation;
 import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLPathSegment;
@@ -329,9 +328,9 @@ public final class MutationProcessorTest {
 
     /**
      * If the AppSync response to the mutation contains a retryable
-     * error in the GraphQLResponse error list, then the request is retried until successful
+     * error in the GraphQLResponse error list, then the request is retried until successful.
      *
-     * @throws DataStoreException On failure to obtain configuration from the provider
+     * @throws InterruptedException On failure to obtain configuration from the provider
      * @throws AmplifyException   On failure to build {@link ModelSchema}
      */
     @Test

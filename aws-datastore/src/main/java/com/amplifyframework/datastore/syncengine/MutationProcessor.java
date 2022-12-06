@@ -117,7 +117,7 @@ final class MutationProcessor {
             }
             try {
                 processOutboxItem(next)
-                   .blockingAwait();
+                    .blockingAwait();
             } catch (RuntimeException error) {
                 return Completable.error(new DataStoreException(
                         "Failed to process " + error, "Check your internet connection."
