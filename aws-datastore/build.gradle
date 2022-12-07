@@ -30,6 +30,7 @@ dependencies {
 
     testImplementation project(path: ':testmodels')
     testImplementation project(path: ':testutils')
+    testImplementation project(path: ':aws-datastore')
     testImplementation dependency.jsonassert
     testImplementation dependency.junit
     testImplementation dependency.mockito

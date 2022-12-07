@@ -154,6 +154,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
      */
     public AWSDataStorePlugin() throws DataStoreException {
         this(AWSDataStorePlugin.builder());
+        LOG.error("LOCAL 100");
     }
 
     /**
@@ -291,6 +292,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
      */
     @Override
     public void start(@NonNull Action onComplete, @NonNull Consumer<DataStoreException> onError) {
+        LOG.error("LOCALSTART:DATASTORE");
         waitForInitialization()
             .andThen(orchestrator.start())
             .subscribeOn(Schedulers.io())
