@@ -161,4 +161,3 @@ class StorageStressTest {
         downloadLatch.await(STRESS_TEST_TIMEOUT, TimeUnit.MILLISECONDS)
     }
 }
-
