@@ -28,8 +28,8 @@ data class NotificationsPayload internal constructor(val notificationId:Int, val
     constructor(title: String?, body: String?, imageUrl: String?):this(UUID.randomUUID().hashCode(), title, body, imageUrl)
 
     fun bundle(): Bundle {
-        val payloadString = toString()
-        return Bundle().apply { putString("payload", Json.encodeToString(payloadString)) }
+        val payloadString = Json.encodeToString(this)
+        return Bundle().apply { putString("payload", payloadString) }
     }
 }
 
