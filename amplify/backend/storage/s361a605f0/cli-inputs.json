@@ -1,0 +1,21 @@
+{
+  "resourceName": "s361a605f0",
+  "bucketName": "richman3b718945d27f4bf6a1bf6cea6356b3fb",
+  "policyUUID": "32b1dc77",
+  "storageAccess": "authAndGuest",
+  "guestAccess": [
+    "READ"
+  ],
+  "authAccess": [
+    "CREATE_AND_UPDATE",
+    "READ"
+  ],
+  "groupAccess": {
+    "Editor": [
+      "CREATE_AND_UPDATE",
+      "READ",
+      "DELETE"
+    ]
+  },
+  "triggerFunction": "S3Triggercb76b4d1"
+}
