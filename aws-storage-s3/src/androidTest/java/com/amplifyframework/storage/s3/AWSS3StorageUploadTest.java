@@ -42,7 +42,6 @@ import com.amplifyframework.testutils.sync.SynchronousStorage;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
@@ -61,7 +60,7 @@ import static org.junit.Assert.assertTrue;
  * Instrumentation test for operational work on upload.
  */
 public final class AWSS3StorageUploadTest {
-    private static final long EXTENDED_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(20);
+    private static final long EXTENDED_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(60);
 
     private static final StorageAccessLevel TESTING_ACCESS_LEVEL = StorageAccessLevel.PUBLIC;
     private static final long LARGE_FILE_SIZE = 10 * 1024 * 1024L; // 10 MB
@@ -146,7 +145,6 @@ public final class AWSS3StorageUploadTest {
      *
      * @throws Exception if upload fails
      */
-    @Ignore("Test Failure")
     @Test
     public void testUploadLargeFile() throws Exception {
         File uploadFile = new RandomTempFile(LARGE_FILE_SIZE);
@@ -211,7 +209,6 @@ public final class AWSS3StorageUploadTest {
      *         completed successfully before timeout
      */
     @SuppressWarnings("unchecked")
-    @Ignore("Test Failure")
     @Test
     public void testUploadFileIsResumable() throws Exception {
         final CountDownLatch completed = new CountDownLatch(1);
@@ -264,7 +261,6 @@ public final class AWSS3StorageUploadTest {
      *         completed successfully before timeout
      */
     @SuppressWarnings("unchecked")
-    @Ignore("Test Failure")
     @Test
     public void testUploadFileGetTransferOnPause() throws Exception {
         final CountDownLatch completed = new CountDownLatch(1);
@@ -327,7 +323,6 @@ public final class AWSS3StorageUploadTest {
      *         completed successfully before timeout
      */
     @SuppressWarnings("unchecked")
-    @Ignore("Test Failure")
     @Test
     public void testUploadInputStreamGetTransferOnPause() throws Exception {
         final CountDownLatch completed = new CountDownLatch(1);

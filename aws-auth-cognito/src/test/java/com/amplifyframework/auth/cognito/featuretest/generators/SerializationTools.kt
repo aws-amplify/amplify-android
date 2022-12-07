@@ -24,6 +24,7 @@ import com.amplifyframework.auth.cognito.featuretest.serializers.CognitoIdentity
 import com.amplifyframework.auth.cognito.featuretest.serializers.CognitoIdentityProviderExceptionSerializer
 import com.amplifyframework.auth.cognito.featuretest.serializers.deserializeToAuthState
 import com.amplifyframework.auth.cognito.featuretest.serializers.serialize
+import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions
 import com.amplifyframework.auth.result.AuthSessionResult
 import com.amplifyframework.statemachine.codegen.states.AuthState
 import com.google.gson.Gson
@@ -56,7 +57,7 @@ fun writeFile(json: String, dirName: String, fileName: String) {
 }
 
 fun cleanDirectory() {
-    val directory = File("$basePath")
+    val directory = File(basePath)
     if (directory.exists()) {
         directory.deleteRecursively()
     }
@@ -173,6 +174,7 @@ fun Any?.toJsonElement(): JsonElement {
         is String -> JsonPrimitive(this)
         is Instant -> JsonPrimitive(this.epochSeconds)
         is AuthException -> toJsonElement()
+        is AWSCognitoAuthSignInOptions -> toJsonElement()
         is CognitoIdentityProviderException -> Json.encodeToJsonElement(
             CognitoIdentityProviderExceptionSerializer,
             this
