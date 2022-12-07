@@ -45,7 +45,7 @@ class StorageStressTest {
         lateinit var smallFiles: MutableList<File>
         lateinit var largeFile: File
         private val TESTING_ACCESS_LEVEL = StorageAccessLevel.PUBLIC
-        private const val LARGE_FILE_SIZE = 512 * 1024 * 1024L // .5 GB
+        private const val LARGE_FILE_SIZE = 100 * 1024 * 1024L // 100MB
         private const val SMALL_FILE_SIZE = 1024 * 1024L // 1MB
         const val LARGE_FILE_NAME = "large-"
         const val SMALL_FILE_NAME = "small-"
