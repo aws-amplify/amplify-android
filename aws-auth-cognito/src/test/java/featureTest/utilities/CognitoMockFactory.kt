@@ -32,6 +32,7 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.InitiateAuthRespons
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.RespondToAuthChallengeResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.RevokeTokenResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.SignUpResponse
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.UpdateDeviceStatusResponse
 import aws.smithy.kotlin.runtime.time.Instant
 import com.amplifyframework.auth.cognito.featuretest.CognitoType
 import com.amplifyframework.auth.cognito.featuretest.MockResponse
@@ -139,6 +140,12 @@ class CognitoMockFactory(
                 coEvery { mockCognitoIPClient.globalSignOut(any()) } coAnswers {
                     setupError(mockResponse, responseObject)
                     GlobalSignOutResponse.invoke {}
+                }
+            }
+            "updateDeviceStatus" -> {
+                coEvery { mockCognitoIPClient.updateDeviceStatus(any()) } coAnswers {
+                    setupError(mockResponse, responseObject)
+                    UpdateDeviceStatusResponse.invoke {  }
                 }
             }
             else -> throw Error("mock for ${mockResponse.apiName} not defined!")

@@ -20,6 +20,8 @@ import com.amplifyframework.auth.cognito.featuretest.generators.authstategenerat
 import com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerators.ConfirmSignInTestCaseGenerator
 import com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerators.DeleteUserTestCaseGenerator
 import com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerators.FetchAuthSessionTestCaseGenerator
+import com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerators.ForgetDeviceTestCaseGenerator
+import com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerators.RememberDeviceTestCaseGenerator
 import com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerators.ResetPasswordTestCaseGenerator
 import com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerators.SignInTestCaseGenerator
 import com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerators.SignOutTestCaseGenerator
@@ -43,6 +45,8 @@ object JsonGenerator {
         ConfirmSignInTestCaseGenerator,
         DeleteUserTestCaseGenerator,
         FetchAuthSessionTestCaseGenerator,
+        RememberDeviceTestCaseGenerator,
+        ForgetDeviceTestCaseGenerator,
     )
 
     fun generate() {
@@ -61,6 +65,6 @@ object JsonGenerator {
 }
 
 fun main() {
-    cleanDirectory()
+    //cleanDirectory()
     JsonGenerator.generate()
 }
