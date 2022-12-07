@@ -26,7 +26,6 @@ import java.time.Instant
 import java.util.UUID
 import org.junit.After
 import org.junit.Assert
-import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 
@@ -125,7 +124,7 @@ open class TransferDBTest {
         )
         val uri = transferDB.bulkInsertTransferRecords(contentValues)
         transferDB.getTransferRecordById(uri).run {
-            assertEquals(mapOf("key1" to "value1"), this?.userMetadata)
+            Assert.assertEquals(mapOf("key1" to "value1"), this?.userMetadata)
         }
     }
 
