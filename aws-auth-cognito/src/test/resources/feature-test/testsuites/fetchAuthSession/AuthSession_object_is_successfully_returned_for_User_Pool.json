@@ -1,8 +1,8 @@
 {
-    "description": "Test that API is called with given payload and returns successful data",
+    "description": "AuthSession object is successfully returned for User Pool",
     "preConditions": {
         "amplify-configuration": "authconfiguration.json",
-        "state": "SignedIn_SessionEstablished.json",
+        "state": "SignedIn_UserPoolSessionEstablished.json",
         "mockedResponses": [
         ]
     },
@@ -20,12 +20,17 @@
             "responseType": "success",
             "response": {
                 "awsCredentialsResult": {
-                    "accessKeyId": "someAccessKey",
-                    "expiration": 2342134,
-                    "secretAccessKey": "someSecretKey",
-                    "sessionToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNTE2MjM5MDIyLCJvcmlnaW5fanRpIjoib3JpZ2luX2p0aSJ9.Xqa-vjJe5wwwsqeRAdHf8kTBn_rYSkDn2lB7xj9Z1xU"
+                    "errorType": "ConfigurationException",
+                    "errorMessage": "Could not fetch AWS Cognito credentials",
+                    "recoverySuggestion": "Cognito Identity not configured. Please check amplifyconfiguration.json file.",
+                    "cause": null
                 },
-                "identityIdResult": "someIdentityId",
+                "identityIdResult": {
+                    "errorType": "ConfigurationException",
+                    "errorMessage": "Could not retrieve Identity ID",
+                    "recoverySuggestion": "Cognito Identity not configured. Please check amplifyconfiguration.json file.",
+                    "cause": null
+                },
                 "isSignedIn": true,
                 "userPoolTokensResult": {
                     "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNTE2MjM5MDIyLCJvcmlnaW5fanRpIjoib3JpZ2luX2p0aSJ9.Xqa-vjJe5wwwsqeRAdHf8kTBn_rYSkDn2lB7xj9Z1xU",

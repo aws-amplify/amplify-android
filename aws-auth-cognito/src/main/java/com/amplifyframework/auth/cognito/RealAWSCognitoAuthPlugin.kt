@@ -263,21 +263,33 @@ internal class RealAWSCognitoAuthPlugin(
                 )
             }
 
-            val authSignUpResult = AuthSignUpResult(
-                false,
-                AuthNextSignUpStep(
-                    AuthSignUpStep.CONFIRM_SIGN_UP_STEP,
-                    mapOf(),
-                    AuthCodeDeliveryDetails(
-                        deliveryDetails?.getValue("DESTINATION") ?: "",
-                        AuthCodeDeliveryDetails.DeliveryMedium.fromString(
-                            deliveryDetails?.getValue("MEDIUM")
-                        ),
-                        deliveryDetails?.getValue("ATTRIBUTE")
-                    )
-                ),
-                response?.userSub
-            )
+            val authSignUpResult = if (response?.userConfirmed == true) {
+                AuthSignUpResult(
+                    true,
+                    AuthNextSignUpStep(
+                        AuthSignUpStep.DONE,
+                        mapOf(),
+                        null
+                    ),
+                    response.userSub
+                )
+            } else {
+                AuthSignUpResult(
+                    false,
+                    AuthNextSignUpStep(
+                        AuthSignUpStep.CONFIRM_SIGN_UP_STEP,
+                        mapOf(),
+                        AuthCodeDeliveryDetails(
+                            deliveryDetails?.getValue("DESTINATION") ?: "",
+                            AuthCodeDeliveryDetails.DeliveryMedium.fromString(
+                                deliveryDetails?.getValue("MEDIUM")
+                            ),
+                            deliveryDetails?.getValue("ATTRIBUTE")
+                        )
+                    ),
+                    response?.userSub
+                )
+            }
             onSuccess.accept(authSignUpResult)
             logger.verbose("SignUp Execution complete")
         } catch (exception: Exception) {
