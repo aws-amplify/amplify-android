@@ -24,6 +24,7 @@ import com.amplifyframework.core.plugin.Plugin
 import com.amplifyframework.kotlin.api.KotlinApiFacade
 import com.amplifyframework.kotlin.auth.KotlinAuthFacade
 import com.amplifyframework.kotlin.datastore.KotlinDataStoreFacade
+import com.amplifyframework.kotlin.geo.KotlinGeoFacade
 import com.amplifyframework.kotlin.hub.KotlinHubFacade
 import com.amplifyframework.kotlin.predictions.KotlinPredictionsFacade
 import com.amplifyframework.kotlin.storage.KotlinStorageFacade
@@ -41,6 +42,7 @@ class Amplify {
         val Analytics = AnalyticsCategory()
         val API = KotlinApiFacade()
         val Auth = KotlinAuthFacade()
+        val Geo = KotlinGeoFacade()
         val Logging = LoggingCategory()
         val Storage = KotlinStorageFacade()
         val Hub = KotlinHubFacade()
