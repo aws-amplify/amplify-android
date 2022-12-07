@@ -15,19 +15,18 @@
 
 package com.amplifyframework.notifications.pushnotifications
 
+import android.os.Bundle
 import com.amplifyframework.core.Action
 import com.amplifyframework.core.Consumer
 
 interface PushNotificationsCategoryBehavior {
 
-    fun onForegroundNotificationReceived(listener: NotificationReceivedListener)
+    fun recordNotificationReceived(data: Map<String, String>, onSuccess: Action, onError: Consumer<PushNotificationsException>)
 
-    fun onBackgroundNotificationReceived(listener: NotificationReceivedListener)
-
-    fun onNotificationOpened(onSuccess: Action, onError: Consumer<PushNotificationsException>)
+    fun recordNotificationOpened(data: Map<String, String>, onSuccess: Action, onError: Consumer<PushNotificationsException>)
 
     fun handleNotificationReceived(
-        details: PushNotificationsDetails,
+        details: Bundle,
         onSuccess: Consumer<PushNotificationResult>,
         onError: Consumer<PushNotificationsException>
     )

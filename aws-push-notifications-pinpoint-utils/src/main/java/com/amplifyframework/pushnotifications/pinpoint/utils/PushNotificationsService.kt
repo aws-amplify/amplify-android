@@ -17,7 +17,6 @@ package com.amplifyframework.pushnotifications.pinpoint.utils
 
 import android.util.Log
 import com.amplifyframework.core.Amplify
-import com.amplifyframework.notifications.pushnotifications.PushNotificationsDetails
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 
@@ -28,12 +27,12 @@ open class PushNotificationsService : FirebaseMessagingService() {
         Amplify.Notifications.Push.registerDevice(token, { }, { })
     }
 
-    fun processRemoteMessage(remoteMessage: RemoteMessage): PushNotificationsDetails {
+    fun processRemoteMessage(remoteMessage: RemoteMessage): NotificationsPayload {
         val data = remoteMessage.data
         val title = data[PushNotificationsConstants.AWS_PINPOINT_NOTIFICATION_TITLE]
         val body = data[PushNotificationsConstants.AWS_PINPOINT_NOTIFICATION_BODY]
         val imageUrl = data[PushNotificationsConstants.AWS_PINPOINT_NOTIFICATION_IMAGE]
-        return PushNotificationsDetails(title, body, imageUrl)
+        return NotificationsPayload(title, body, imageUrl)
     }
 
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
@@ -41,7 +40,7 @@ open class PushNotificationsService : FirebaseMessagingService() {
         Log.d("TAG", "Message: " + remoteMessage.data + "," + remoteMessage.notification)
 
         // handle payload and show notification
-        val details = processRemoteMessage(remoteMessage)
-        Amplify.Notifications.Push.handleNotificationReceived(details, { }, { })
+        val payload = processRemoteMessage(remoteMessage).bundle()
+        Amplify.Notifications.Push.handleNotificationReceived(payload, { }, { })
     }
 }

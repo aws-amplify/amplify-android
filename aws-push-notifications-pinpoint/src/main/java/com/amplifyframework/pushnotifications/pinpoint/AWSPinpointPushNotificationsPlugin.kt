@@ -18,18 +18,18 @@ package com.amplifyframework.pushnotifications.pinpoint
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.SharedPreferences
+import android.os.Bundle
 import aws.sdk.kotlin.services.pinpoint.PinpointClient
 import com.amplifyframework.auth.cognito.BuildConfig
 import com.amplifyframework.core.Action
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
-import com.amplifyframework.notifications.pushnotifications.NotificationReceivedListener
 import com.amplifyframework.notifications.pushnotifications.PushNotificationResult
-import com.amplifyframework.notifications.pushnotifications.PushNotificationsDetails
 import com.amplifyframework.notifications.pushnotifications.PushNotificationsException
 import com.amplifyframework.notifications.pushnotifications.PushNotificationsPlugin
 import com.amplifyframework.pushnotifications.pinpoint.utils.PushNotificationsService
 import com.amplifyframework.pushnotifications.pinpoint.utils.PushNotificationsUtils
+import com.amplifyframework.pushnotifications.pinpoint.utils.toNotificationsPayload
 import com.google.firebase.messaging.FirebaseMessaging
 import org.json.JSONObject
 
@@ -52,9 +52,6 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
     private lateinit var context: Context
 
     private lateinit var pushNotificationsUtils: PushNotificationsUtils
-
-    private lateinit var foregroundNotificationListener: NotificationReceivedListener
-    private lateinit var backgroundNotificationListener: NotificationReceivedListener
 
     override fun configure(pluginConfiguration: JSONObject?, context: Context) {
         this.context = context
@@ -89,32 +86,42 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
         // TODO: update pinpoint endpoint
     }
 
-    override fun onForegroundNotificationReceived(listener: NotificationReceivedListener) {
-        foregroundNotificationListener = listener
+    override fun recordNotificationReceived(
+        data: Map<String, String>,
+        onSuccess: Action,
+        onError: Consumer<PushNotificationsException>
+    ) {
+        if (pushNotificationsUtils.isAppInForeground()) {
+            tryAnalyticsRecordEvent("foreground_event")
+            PushNotificationResult.AppInForeground()
+        } else {
+            tryAnalyticsRecordEvent("background_event")
+            PushNotificationResult.NotificationPosted()
+        }
+        onSuccess.call()
     }
 
-    override fun onBackgroundNotificationReceived(listener: NotificationReceivedListener) {
-        backgroundNotificationListener = listener
-    }
-
-    override fun onNotificationOpened(onSuccess: Action, onError: Consumer<PushNotificationsException>) {
+    override fun recordNotificationOpened(
+        data: Map<String, String>,
+        onSuccess: Action,
+        onError: Consumer<PushNotificationsException>
+    ) {
         TODO("Not yet implemented")
     }
 
     override fun handleNotificationReceived(
-        details: PushNotificationsDetails,
+        details: Bundle,
         onSuccess: Consumer<PushNotificationResult>,
         onError: Consumer<PushNotificationsException>
     ) {
         try {
+            val payload = details.toNotificationsPayload()
             val result = if (pushNotificationsUtils.isAppInForeground()) {
                 tryAnalyticsRecordEvent("foreground_event")
-                foregroundNotificationListener.invoke(details)
                 PushNotificationResult.AppInForeground()
             } else {
-                pushNotificationsUtils.showNotification(details)
+                pushNotificationsUtils.showNotification(payload)
                 tryAnalyticsRecordEvent("background_event")
-                backgroundNotificationListener.invoke(details)
                 PushNotificationResult.NotificationPosted()
             }
             onSuccess.accept(result)

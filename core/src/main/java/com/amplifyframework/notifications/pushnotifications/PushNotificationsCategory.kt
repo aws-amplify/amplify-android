@@ -15,12 +15,11 @@
 
 package com.amplifyframework.notifications.pushnotifications
 
+import android.os.Bundle
 import com.amplifyframework.core.Action
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.core.category.Category
 import com.amplifyframework.notifications.NotificationsCategoryBehavior
-
-typealias NotificationReceivedListener = (PushNotificationsDetails) -> Unit
 
 class PushNotificationsCategory :
     Category<PushNotificationsPlugin<*>>(),
@@ -35,17 +34,20 @@ class PushNotificationsCategory :
     override fun registerDevice(token: String, onSuccess: Action, onError: Consumer<PushNotificationsException>) =
         selectedPlugin.registerDevice(token, onSuccess, onError)
 
-    override fun onForegroundNotificationReceived(listener: NotificationReceivedListener) =
-        selectedPlugin.onForegroundNotificationReceived(listener)
+    override fun recordNotificationReceived(
+        data: Map<String, String>,
+        onSuccess: Action,
+        onError: Consumer<PushNotificationsException>
+    ) = selectedPlugin.recordNotificationReceived(data, onSuccess, onError)
 
-    override fun onBackgroundNotificationReceived(listener: NotificationReceivedListener) =
-        selectedPlugin.onBackgroundNotificationReceived(listener)
-
-    override fun onNotificationOpened(onSuccess: Action, onError: Consumer<PushNotificationsException>) =
-        selectedPlugin.onNotificationOpened(onSuccess, onError)
+    override fun recordNotificationOpened(
+        data: Map<String, String>,
+        onSuccess: Action,
+        onError: Consumer<PushNotificationsException>
+    ) = selectedPlugin.recordNotificationOpened(data, onSuccess, onError)
 
     override fun handleNotificationReceived(
-        details: PushNotificationsDetails,
+        details: Bundle,
         onSuccess: Consumer<PushNotificationResult>,
         onError: Consumer<PushNotificationsException>
     ) = selectedPlugin.handleNotificationReceived(details, onSuccess, onError)

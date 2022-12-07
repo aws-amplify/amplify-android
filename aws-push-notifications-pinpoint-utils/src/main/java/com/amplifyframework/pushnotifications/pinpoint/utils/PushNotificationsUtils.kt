@@ -28,7 +28,6 @@ import androidx.annotation.ChecksSdkIntAtLeast
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
-import com.amplifyframework.notifications.pushnotifications.PushNotificationsDetails
 import java.net.URL
 
 class PushNotificationsUtils(
@@ -93,7 +92,7 @@ class PushNotificationsUtils(
     }
 
     @SuppressLint("NewApi")
-    fun showNotification(details: PushNotificationsDetails) {
+    fun showNotification(details: NotificationsPayload) {
         val largeImageIcon = details.imageUrl?.let { downloadImage(it) }
 
 //        val notificationIntent = Intent(context, com.amplifyframework.pushnotifications.pinpoint.PushNotificationsApplication::class.java).apply {
