@@ -1,0 +1,22 @@
+[
+  {
+    "Key": "user:Stack",
+    "Value": "{project-env}"
+  },
+  {
+    "Key": "user:Application",
+    "Value": "{project-name}"
+  },
+  {
+    "Key": "LOB",
+    "Value": "{project-name}"
+  },
+  {
+    "Key": "access-project",
+    "Value": "{project-name}"
+  },
+  {
+    "Key": "access-team",
+    "Value": "{project-env}"
+  }
+]

@@ -42,10 +42,10 @@ import java.util.List;
 /**
  * Converts JSON strings into models of a given type, using Gson.
  */
-final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
+public final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
     private final Gson gson;
 
-    GsonGraphQLResponseFactory() {
+    public GsonGraphQLResponseFactory() {
         this(GsonFactory.instance());
     }
 

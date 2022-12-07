@@ -141,7 +141,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     // re-initialize the adapter after deleting the file in the clear() method
     private Context context;
 
-    private SqlQueryProcessor sqlQueryProcessor;
+    public SqlQueryProcessor sqlQueryProcessor;
 
     private DataStoreConfiguration dataStoreConfiguration;
     private SyncStatus syncStatus;
@@ -752,7 +752,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         return new CreateSqlCommands(createTableCommands, createIndexCommands);
     }
 
-    private <T extends Model> void writeData(
+    public  <T extends Model> void writeData(
             T item,
             StorageItemChange.Type writeType
     ) throws DataStoreException {

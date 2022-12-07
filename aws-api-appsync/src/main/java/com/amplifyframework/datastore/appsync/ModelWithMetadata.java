@@ -94,4 +94,8 @@ public final class ModelWithMetadata<M extends Model> {
             ", syncMetadata=" + syncMetadata +
             '}';
     }
+
+    public boolean isDeleted() {
+        return syncMetadata != null && Boolean.TRUE.equals(syncMetadata.isDeleted());
+    }
 }

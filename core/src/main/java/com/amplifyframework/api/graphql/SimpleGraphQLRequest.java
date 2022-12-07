@@ -25,7 +25,7 @@ import java.util.Map;
  * A basic implementation of GraphQLRequest, which takes a document String, and variables Map.
  * @param <R> Type of R, the data contained in the GraphQLResponse expected from this request
  */
-public final class SimpleGraphQLRequest<R> extends GraphQLRequest<R> {
+public class SimpleGraphQLRequest<R> extends GraphQLRequest<R> {
     private final String document;
     private final Map<String, Object> variables;
 

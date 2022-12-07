@@ -1,0 +1,492 @@
+type VFXCategoryLocale @model @key(name: "byVFXCategory", fields: ["materialID"]) @auth(rules: [{allow: public, operations: [read], provider: iam}, {allow: groups, groups: ["Editor"], operations: [read, create, update, delete]}, {allow: private, provider: iam}]) {
+  id: ID!
+  name: String
+  sort: Int
+  updatedAt: AWSDateTime
+  locale: String
+  materialID: ID
+}
+
+type TextTemplateLocale @model @key(name: "byTextTemplate", fields: ["materialID"]) @auth(rules: [{allow: public, operations: [read], provider: iam}, {allow: groups, groups: ["Editor"], operations: [read, create, update, delete]}, {allow: private, provider: iam}]) {
+  id: ID!
+  locale: String
+  materialID: ID
+  name: String
+  sort: Int
+  online: Int
+  updatedAt: AWSDateTime
+}
+
+type TransitionVFXCategoryLocale @model @key(name: "byTransitionVFXCategory", fields: ["materialID"]) @auth(rules: [{allow: public, operations: [read], provider: iam}, {allow: groups, groups: ["Editor"], operations: [read, create, update, delete]}, {allow: private, provider: iam}]) {
+  id: ID!
+  locale: String
+  materialID: ID
+  name: String
+  sort: Int
+  online: Int
+  updatedAt: AWSDateTime
+}
+
+type TransitionVFXLocale @model @key(name: "byTransitionVFX", fields: ["materialID"]) @auth(rules: [{allow: public, operations: [read], provider: iam}, {allow: groups, groups: ["Editor"], operations: [read, create, update, delete]}, {allow: private, provider: iam}]) {
+  id: ID!
+  locale: String
+  materialID: ID
+  name: String
+  sort: Int
+  online: Int
+  updatedAt: AWSDateTime
+}
+
+type VideoFilterCategoryLocale @model @key(name: "byVideoFilterCategory", fields: ["materialID"]) @auth(rules: [{allow: public, operations: [read], provider: iam}, {allow: groups, groups: ["Editor"], operations: [read, create, update, delete]}, {allow: private, provider: iam}]) {
+  id: ID!
+  locale: String
+  name: String
+  updatedAt: AWSDateTime
+  materialID: ID
+  sort: Int
+}
+
+type VideoFilterLocale @model @key(name: "byVideoFilter", fields: ["materialID"]) @auth(rules: [{allow: public, operations: [read], provider: iam}, {allow: groups, groups: ["Editor"], operations: [read, create, update, delete]}, {allow: private, provider: iam}]) {
+  id: ID!
+  name: String
+  locale: String
+  updatedAt: AWSDateTime
+  materialID: ID
+  online: Int
+  sort: Int
+}
+
+type TextTemplateCategoryLocale @model @key(name: "byTextTemplateCategory", fields: ["materialID"]) @auth(rules: [{allow: public, operations: [read], provider: iam}, {allow: groups, groups: ["Editor"], operations: [read, create, update, delete]}, {allow: private, provider: iam}]) {
+  id: ID!
+  name: String
+  locale: String
+  updatedAt: AWSDateTime
+  materialID: ID
+  sort: Int
+}
+
+type ClipAnimLocale @model @key(name: "byClipAnim", fields: ["materialID"]) @auth(rules: [{allow: public, operations: [read], provider: iam}, {allow: groups, groups: ["Editor"], operations: [read, create, update, delete]}, {allow: private, provider: iam}]) {
+  id: ID!
+  name: String
+  updatedAt: AWSDateTime
+  locale: String
+  materialID: ID
+}
+
+type ClipAnimCategoryLocale @model @key(name: "byClipAnimCategory", fields: ["materialID"]) @auth(rules: [{allow: public, operations: [read], provider: iam}, {allow: groups, groups: ["Editor"], operations: [read, create, update, delete]}, {allow: private, provider: iam}]) {
+  id: ID!
+  name: String
+  updatedAt: AWSDateTime
+  locale: String
+  materialID: ID
+}
+
+type OverlayMediaCategoryLocale @model @key(name: "byOverlayMediaCategory", fields: ["materialID"]) @auth(rules: [{allow: private, provider: iam}, {allow: public, operations: [read], provider: iam}]) {
+  id: ID!
+  name: String
+  locale: String
+  updatedAt: AWSDateTime
+  materialID: ID
+}
+
+type MSVariantMaterials @model @key(name: "byMSABTestVariant", fields: ["variantID"]) @auth(rules: [{allow: public, operations: [read], provider: iam}, {allow: groups, groups: ["Editor"], operations: [read, create, update, delete]}, {allow: private, provider: iam}]) {
+  id: ID!
+  variantID: ID!
+  materialName: String
+  displayRate: Float
+  usageRate: Float
+}
+
+type MSABTestVariant @model @key(name: "byMSABTestRecord", fields: ["ABTestID"]) @auth(rules: [{allow: public, operations: [read], provider: iam}, {allow: groups, groups: ["Editor"], operations: [read, create, update, delete]}, {allow: private, provider: iam}]) {
+  id: ID!
+  variantType: String
+  jsonConfig: String
+  ABTestID: ID!
+  MSVariantMaterials: [MSVariantMaterials] @connection(keyName: "byMSABTestVariant", fields: ["id"])
+}
+
+type MSABTestRecord @model @auth(rules: [{allow: public, operations: [read], provider: iam}, {allow: groups, groups: ["Editor"], operations: [read, create, update, delete]}, {allow: private, provider: iam}]) {
+  id: ID!
+  name: String
+  testObj: String
+  testType: String
+  updatedAt: AWSDateTime!
+  startAt: AWSTimestamp
+  endAt: AWSTimestamp
+  testID: String
+  MSABTestVariants: [MSABTestVariant] @connection(keyName: "byMSABTestRecord", fields: ["id"])
+}
+
+type VFXLocale @model @key(name: "byVFX", fields: ["vfxID"]) @auth(rules: [{allow: public, operations: [read], provider: iam}, {allow: groups, groups: ["Editor"], operations: [read, create, update, delete]}, {allow: private, provider: iam}]) {
+  id: ID!
+  locale: String
+  name: String
+  sort: Int
+  vfxID: ID!
+  updatedAt: AWSDateTime!
+  online: Int
+}
+
+enum MSOperateNameEnum {
+  ONLINE
+  OFFLINE
+  MANUALONLINE
+  MANUALOFFLINE
+}
+
+type MSOnlineHistory @model @auth(rules: [{allow: public, operations: [read], provider: iam}, {allow: groups, groups: ["Editor"], operations: [read, create, update, delete]}, {allow: private, provider: iam}]) {
+  id: ID!
+  operateUser: String
+  operateType: MSOperateNameEnum
+  scheduleTs: AWSTimestamp
+  materialType: String
+  materialID: String
+  status: Int
+  createdAt: AWSDateTime
+}
+
+type MSMaterialGroupRecords @model @auth(rules: [{allow: public, operations: [read], provider: iam}, {allow: groups, groups: ["Editor"], operations: [read, create, update, delete]}, {allow: private, provider: iam}]) {
+  id: ID!
+  materialGroupType: String
+  materialGroupCategoryID: String
+  language: String
+  onlineAt: AWSDateTime
+  offlineAt: AWSDateTime
+  materialGroupDisplayName: String
+}
+
+type MSMaterialRecords @model @auth(rules: [{allow: public, operations: [read], provider: iam}, {allow: groups, groups: ["Editor"], operations: [read, create, update, delete]}, {allow: private, provider: iam}]) {
+  id: ID!
+  materialType: String
+  materialID: String
+  language: String
+  onlineAt: AWSDateTime
+  offlineAt: AWSDateTime
+}
+
+type ClipAnim @model @key(name: "byClipAnimCategory", fields: ["categoryID"]) @auth(rules: [{allow: public, operations: [read], provider: iam}, {allow: groups, groups: ["Editor"], operations: [read, create, update, delete]}, {allow: private, provider: iam}]) {
+  id: ID!
+  name: String
+  coverUrl: String
+  downloadUrl: String
+  sort: Int
+  targetVersionCode: Int
+  online: Int
+  categoryID: ID
+  stagedRollout: String
+  updatedAt: AWSDateTime!
+  testTag: String
+  getMethod: Int
+  ClipAnimLocales: [ClipAnimLocale] @connection(keyName: "byClipAnim", fields: ["id"])
+}
+
+type ClipAnimCategory @model @auth(rules: [{allow: public, operations: [read], provider: iam}, {allow: groups, groups: ["Editor"], operations: [read, create, update, delete]}, {allow: private, provider: iam}]) {
+  id: ID!
+  name: String
+  coverUrl: String
+  sort: Int
+  online: Int
+  clipAnimSet: [ClipAnim] @connection(keyName: "byClipAnimCategory", fields: ["id"])
+  updatedAt: AWSDateTime!
+  animType: Int
+  ClipAnimCategoryLocales: [ClipAnimCategoryLocale] @connection(keyName: "byClipAnimCategory", fields: ["id"])
+}
+
+type VideoFilter @model @key(name: "byVideoFilterCategory", fields: ["categoryID"]) @auth(rules: [{allow: public, operations: [read], provider: iam}, {allow: groups, groups: ["Editor"], operations: [read, create, update, delete]}, {allow: private, provider: iam}]) {
+  id: ID!
+  name: String
+  coverUrl: String
+  downloadUrl: String
+  sort: Int
+  vfxEngineMinVersionCode: Int
+  categoryID: ID
+  stagedRollout: String
+  online: Int
+  getMethod: Int
+  updatedAt: AWSDateTime!
+  testTag: String
+  deployFlag: String
+  maskColor: String
+  VideoFilterLocales: [VideoFilterLocale] @connection(keyName: "byVideoFilter", fields: ["id"])
+}
+
+type VideoFilterCategory @model @auth(rules: [{allow: public, operations: [read], provider: iam}, {allow: groups, groups: ["Editor"], operations: [read, create, update, delete]}, {allow: private, provider: iam}]) {
+  id: ID!
+  name: String
+  coverUrl: String
+  sort: Int
+  videoFilterSet: [VideoFilter] @connection(keyName: "byVideoFilterCategory", fields: ["id"])
+  updatedAt: AWSDateTime!
+  online: Int
+  testTag: String
+  maskColor: String
+  getMethod: Int
+  label: String
+  VideoFilterCategoryLocales: [VideoFilterCategoryLocale] @connection(keyName: "byVideoFilterCategory", fields: ["id"])
+}
+
+type Recommend @model @key(name: "byRecommendCategory", fields: ["recommendCategoryID"]) @auth(rules: [{allow: public, operations: [read], provider: iam}, {allow: private, provider: iam}]) {
+  id: ID!
+  name: String
+  coverUrl: String
+  sort: Int
+  downloadUrl: String
+  previewVideoUrl: String
+  updatedAt: AWSDateTime
+  country: String
+  recommendCategoryID: ID!
+  resourceName: String
+  testTag: String
+  online: Int
+  label: String
+  getMethod: Int
+}
+
+type RecommendCategory @model @auth(rules: [{allow: public, operations: [read], provider: iam}, {allow: private, provider: iam}]) {
+  id: ID!
+  name: String
+  sort: Int
+  updatedAt: AWSDateTime
+  Recommends: [Recommend] @connection(keyName: "byRecommendCategory", fields: ["id"])
+  coverUrl: String
+}
+
+type OverlayMediaCategory @model @auth(rules: [{allow: public, operations: [read], provider: iam}, {allow: private, provider: iam}]) {
+  id: ID!
+  name: String
+  sort: Int
+  OverlayMedias: [OverlayMedia] @connection(keyName: "byOverlayMediaCategory", fields: ["id"])
+  updatedAt: AWSDateTime
+  OverlayMediaCategoryLocales: [OverlayMediaCategoryLocale] @connection(keyName: "byOverlayMediaCategory", fields: ["id"])
+}
+
+type OverlayMedia @model @key(name: "byOverlayMediaCategory", fields: ["overlaymediacategoryID"]) @auth(rules: [{allow: public, operations: [read], provider: iam}, {allow: private, provider: iam}]) {
+  id: ID!
+  name: String
+  coverUrl: String
+  sort: Int
+  downloadUrl: String
+  duration: Int
+  overlaymediacategoryID: ID
+  updatedAt: AWSDateTime
+}
+
+type TextTemplateCategory @model @auth(rules: [{allow: public, operations: [read], provider: iam}, {allow: groups, groups: ["Editor"], operations: [read, create, update, delete]}, {allow: private, provider: iam}]) {
+  id: ID!
+  name: String
+  coverUrl: String
+  sort: Int
+  online: Int
+  updatedAt: AWSDateTime
+  textTemplates: [TextTemplate] @connection(keyName: "byTextTemplateCategory", fields: ["id"])
+  TextTemplateCategoryLocales: [TextTemplateCategoryLocale] @connection(keyName: "byTextTemplateCategory", fields: ["id"])
+}
+
+type TextTemplate @model @key(name: "byTextTemplateCategory", fields: ["categoryID"]) @auth(rules: [{allow: public, operations: [read], provider: iam}, {allow: groups, groups: ["Editor"], operations: [read, create, update, delete]}, {allow: private, provider: iam}]) {
+  id: ID!
+  name: String
+  coverUrl: String
+  downloadUrl: String
+  sort: Int
+  targetVersionCode: Int
+  online: Int
+  stagedRollout: String
+  updatedAt: AWSDateTime
+  testTag: String
+  categoryID: ID
+  fontName: String
+  fontUrl: String
+  getMethod: Int
+  TextTemplateLocales: [TextTemplateLocale] @connection(keyName: "byTextTemplate", fields: ["id"])
+}
+
+type Font2 @model @auth(rules: [{allow: public, operations: [read], provider: iam}, {allow: groups, groups: ["Editor"], operations: [read, create, update, delete]}, {allow: private, provider: iam}]) {
+  id: ID!
+  name: String!
+  downloadUrl: String!
+  sort: Int
+  coverUrl: String
+  updatedAt: AWSDateTime
+  language: String
+  buildIn: Int
+  online: Int
+  category: String
+  langCode: String
+}
+
+type TransitionVFX @model @key(name: "byTransitionVFXCategory", fields: ["transitionVfxCategoryID"]) @auth(rules: [{allow: public, operations: [read], provider: iam}, {allow: groups, groups: ["Editor"], operations: [read, create, update, delete]}, {allow: private, provider: iam}]) {
+  id: ID!
+  name: String
+  coverUrl: String
+  downloadUrl: String
+  sort: Int
+  vfxEngineMinVersionCode: Int
+  online: Int
+  transitionVfxCategoryID: ID
+  stagedRollout: String
+  updatedAt: AWSDateTime!
+  testTag: String
+  getMethod: Int
+  TransitionVFXLocales: [TransitionVFXLocale] @connection(keyName: "byTransitionVFX", fields: ["id"])
+}
+
+type TransitionVFXCategory @model @auth(rules: [{allow: public, operations: [read], provider: iam}, {allow: groups, groups: ["Editor"], operations: [read, create, update, delete]}, {allow: private, provider: iam}]) {
+  id: ID!
+  name: String
+  coverUrl: String
+  sort: Int
+  online: Int
+  TransitionVFXSet: [TransitionVFX] @connection(keyName: "byTransitionVFXCategory", fields: ["id"])
+  updatedAt: AWSDateTime!
+  getMethod: Int
+  TransitionVFXCategoryLocales: [TransitionVFXCategoryLocale] @connection(keyName: "byTransitionVFXCategory", fields: ["id"])
+}
+
+type FilterVFX @model @key(name: "byFilterVFXCategory", fields: ["filterVfxCategoryID"]) @auth(rules: [{allow: public, operations: [read], provider: iam}, {allow: private, provider: iam}]) {
+  id: ID!
+  name: String
+  coverUrl: String
+  downloadUrl: String
+  sort: Int
+  vfxEngineMinVersionCode: Int
+  filterVfxCategoryID: ID
+  stagedRollout: String
+  online: Int
+  updatedAt: AWSDateTime!
+  testTag: String
+}
+
+type FilterVFXCategory @model @auth(rules: [{allow: public, operations: [read], provider: iam}, {allow: private, provider: iam}]) {
+  id: ID!
+  name: String
+  coverUrl: String
+  sort: Int
+  filterVFXSet: [FilterVFX] @connection(keyName: "byFilterVFXCategory", fields: ["id"])
+  updatedAt: AWSDateTime!
+  online: Int
+  maskColor: String
+}
+
+type FontVFXCategory @model @auth(rules: [{allow: public, operations: [read], provider: iam}, {allow: groups, groups: ["Editor"], operations: [read, create, update, delete]}, {allow: private, provider: iam}]) {
+  id: ID!
+  name: String
+  coverUrl: String
+  sort: Int
+  fontVFXSets: [FontVFX] @connection(keyName: "byFontVFXCategory", fields: ["id"])
+  updatedAt: AWSDateTime!
+  online: Int
+}
+
+type FontVFX @model @key(name: "byFontVFXCategory", fields: ["fontvfxcategoryID"]) @auth(rules: [{allow: public, operations: [read], provider: iam}, {allow: groups, groups: ["Editor"], operations: [read, create, update, delete]}, {allow: private, provider: iam}]) {
+  id: ID!
+  name: String
+  coverUrl: String
+  downloadUrl: String
+  sort: Int
+  vfxEngineMinVersionCode: Int
+  fontvfxcategoryID: ID
+  online: Int
+  stagedRollout: String
+  updatedAt: AWSDateTime!
+  testTag: String
+  getMethod: Int
+}
+
+type VFXCategory @model @auth(rules: [{allow: public, operations: [read], provider: iam}, {allow: groups, groups: ["Editor"], operations: [read, create, update, delete]}, {allow: private, provider: iam}]) {
+  id: ID!
+  name: String
+  coverUrl: String
+  sort: Int
+  VfxSet: [VFX] @connection(keyName: "byVFXCategory", fields: ["id"])
+  updatedAt: AWSDateTime!
+  online: Int
+  VFXCategoryLocales: [VFXCategoryLocale] @connection(keyName: "byVFXCategory", fields: ["id"])
+}
+
+type VFX @model @key(name: "byVFXCategory", fields: ["vfxCategoryID"]) @auth(rules: [{allow: public, operations: [read], provider: iam}, {allow: groups, groups: ["Editor"], operations: [read, create, update, delete]}, {allow: private, provider: iam}]) {
+  id: ID!
+  name: String
+  coverUrl: String
+  downloadUrl: String
+  sort: Int
+  vfxEngineMinVersionCode: Int
+  vfxCategoryID: ID
+  stagedRollout: String
+  online: Int
+  updatedAt: AWSDateTime!
+  testTag: String
+  getMethod: Int
+  langCode: String
+  VFXLocales: [VFXLocale] @connection(keyName: "byVFX", fields: ["id"])
+}
+
+type AudioCategory @model @auth(rules: [{allow: public, operations: [read], provider: iam}, {allow: groups, groups: ["Editor"], operations: [read, create, update, delete]}, {allow: private, provider: iam}]) {
+  id: ID!
+  name: String
+  coverUrl: String
+  sort: Int
+  AudioSet: [Audio] @connection(keyName: "byAudioCategory", fields: ["id"])
+  updatedAt: AWSDateTime!
+}
+
+type Audio @model @key(name: "byAudioCategory", fields: ["audioCategoryID"]) @auth(rules: [{allow: public, operations: [read], provider: iam}, {allow: groups, groups: ["Editor"], operations: [read, create, update, delete]}, {allow: private, provider: iam}]) {
+  id: ID!
+  name: String
+  coverUrl: String
+  downloadUrl: String
+  author: String
+  genre: String
+  mood: String
+  sort: Int
+  tag: String
+  audioCategoryID: ID
+  duration: Int
+  wave: String
+  stagedRollout: String
+  online: Int
+  updatedAt: AWSDateTime!
+}
+
+type TextAnim @model @key(name: "byTextAnimCategory", fields: ["categoryID"]) @auth(rules: [{allow: public, operations: [read], provider: iam}, {allow: groups, groups: ["Editor"], operations: [read, create, update, delete]}, {allow: private, provider: iam}]) {
+  id: ID!
+  name: String
+  coverUrl: String
+  downloadUrl: String
+  sort: Int
+  targetVersionCode: Int
+  online: Int
+  categoryID: ID
+  updatedAt: AWSDateTime!
+  getMethod: Int
+  TextAnimLocales: [TextAnimLocale] @connection(keyName: "byTextAnim", fields: ["id"])
+}
+
+type TextAnimCategory @model @auth(rules: [{allow: public, operations: [read], provider: iam}, {allow: groups, groups: ["Editor"], operations: [read, create, update, delete]}, {allow: private, provider: iam}]) {
+  id: ID!
+  name: String
+  coverUrl: String
+  sort: Int
+  online: Int
+  TextAnimSet: [TextAnim] @connection(keyName: "byTextAnimCategory", fields: ["id"])
+  updatedAt: AWSDateTime!
+  animType: Int
+  TextAnimCategoryLocales: [TextAnimCategoryLocale] @connection(keyName: "byTextAnimCategory", fields: ["id"])
+}
+
+type TextAnimLocale @model @key(name: "byTextAnim", fields: ["materialID"]) @auth(rules: [{allow: public, operations: [read], provider: iam}, {allow: groups, groups: ["Editor"], operations: [read, create, update, delete]}, {allow: private, provider: iam}]) {
+  id: ID!
+  name: String
+  updatedAt: AWSDateTime
+  locale: String
+  materialID: ID
+  sort: Int
+  online: Int
+}
+
+type TextAnimCategoryLocale @model @key(name: "byTextAnimCategory", fields: ["materialID"]) @auth(rules: [{allow: public, operations: [read], provider: iam}, {allow: groups, groups: ["Editor"], operations: [read, create, update, delete]}, {allow: private, provider: iam}]) {
+  id: ID!
+  name: String
+  updatedAt: AWSDateTime
+  locale: String
+  materialID: ID
+}

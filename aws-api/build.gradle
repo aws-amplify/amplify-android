@@ -38,8 +38,8 @@ dependencies {
     testImplementation dependency.rxjava
     testImplementation dependency.robolectric
 
-    androidTestImplementation project(path: ':testutils')
-    androidTestImplementation project(path: ':testmodels')
+//    androidTestImplementation project(path: ':testutils')
+//    androidTestImplementation project(path: ':testmodels')
     androidTestImplementation dependency.androidx.test.core
     androidTestImplementation dependency.androidx.test.runner
     androidTestImplementation dependency.androidx.test.junit

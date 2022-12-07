@@ -51,7 +51,9 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
     private final Map<String, String> variableTypes;
     private final AuthorizationType authorizationType;
     private final AuthModeStrategyType authModeStrategyType;
-
+    public String inputTypeString = "";
+    public String inputParameterString = "";
+    public String operationString = "";
     /**
      * Constructor for AppSyncGraphQLRequest.
      */
@@ -64,6 +66,7 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
         this.variableTypes = Immutable.of(builder.variableTypes);
         this.authorizationType = builder.authorizationType;
         this.authModeStrategyType = builder.authModeStrategyType;
+        getQuery();
     }
 
     /**
@@ -138,8 +141,6 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
      */
     @Override
     public String getQuery() {
-        String inputTypeString = "";
-        String inputParameterString = "";
         if (variableTypes.size() > 0) {
             List<String> inputKeys = new ArrayList<>(variableTypes.keySet());
             Collections.sort(inputKeys);
@@ -171,7 +172,7 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
                     : Casing.capitalizeFirst(modelSchema.getPluralName());
         }
 
-        String operationString =
+        operationString =
                 Casing.from(Casing.CaseType.SCREAMING_SNAKE_CASE)
                     .to(Casing.CaseType.CAMEL_CASE)
                     .convert(operation.toString()) +

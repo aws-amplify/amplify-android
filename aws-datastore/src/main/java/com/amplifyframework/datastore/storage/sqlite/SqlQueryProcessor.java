@@ -38,7 +38,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-class SqlQueryProcessor {
+public class SqlQueryProcessor {
 
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
     private final SchemaRegistry modelSchemaRegistry;
@@ -55,7 +55,7 @@ class SqlQueryProcessor {
         this.gson = GsonFactory.instance();
     }
 
-    <T extends Model> List<T> queryOfflineData(@NonNull Class<T> itemClass,
+    public <T extends Model> List<T> queryOfflineData(@NonNull Class<T> itemClass,
                                                @NonNull QueryOptions options,
                                                @NonNull Consumer<DataStoreException> onError) {
         final ModelSchema modelSchema = modelSchemaRegistry.getModelSchemaForModelClass(itemClass.getSimpleName());
@@ -87,7 +87,7 @@ class SqlQueryProcessor {
         return models;
     }
 
-    boolean modelExists(Model model, QueryPredicate predicate) throws DataStoreException {
+    public boolean modelExists(Model model, QueryPredicate predicate) throws DataStoreException {
         final String modelName = model.getModelName();
         final ModelSchema schema = modelSchemaRegistry.getModelSchemaForModelClass(modelName);
         final SQLiteTable table = SQLiteTable.fromSchema(schema);

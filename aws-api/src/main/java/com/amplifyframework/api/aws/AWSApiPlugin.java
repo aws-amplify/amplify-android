@@ -100,7 +100,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
 
     private AWSApiPlugin(@NonNull Builder builder) {
         this.apiDetails = new HashMap<>();
-        this.gqlResponseFactory = new GsonGraphQLResponseFactory();
+        this.gqlResponseFactory = builder.responseFactory;
         this.authProvider = builder.apiAuthProviders;
         this.restApis = new HashSet<>();
         this.gqlApis = new HashSet<>();
@@ -868,6 +868,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
      * Builds an {@link AWSApiPlugin}.
      */
     public static final class Builder {
+        public GraphQLResponse.Factory responseFactory = new GsonGraphQLResponseFactory();
         private ApiAuthProviders apiAuthProviders;
         private final Map<String, OkHttpConfigurator> apiConfigurators;
 
@@ -901,6 +902,11 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         public Builder configureClient(
                 @NonNull String forApiName, @NonNull OkHttpConfigurator byConfigurator) {
             this.apiConfigurators.put(forApiName, byConfigurator);
+            return this;
+        }
+
+        public Builder responseFactory(GraphQLResponse.Factory factory) {
+            this.responseFactory = factory;
             return this;
         }
 

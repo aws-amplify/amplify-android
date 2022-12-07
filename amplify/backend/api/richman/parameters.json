@@ -1,0 +1,12 @@
+{
+  "AppSyncApiName": "richman",
+  "DynamoDBBillingMode": "PAY_PER_REQUEST",
+  "DynamoDBEnableServerSideEncryption": false,
+  "AuthCognitoUserPoolId": {
+    "Fn::GetAtt": [
+      "authrichmanb41e5adfb41e5adf",
+      "Outputs.UserPoolId"
+    ]
+  },
+  "AuthModeLastUpdated": "2022-05-31T09:08:37.907Z"
+}

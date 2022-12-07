@@ -1,0 +1,24 @@
+{
+  "environmentVariableList": [
+    {
+      "cloudFormationParameterName": "spaceBucket",
+      "environmentVariableName": "SPACE_BUCKET"
+    },
+    {
+      "cloudFormationParameterName": "spaceEndpoint",
+      "environmentVariableName": "SPACE_ENDPOINT"
+    },
+    {
+      "cloudFormationParameterName": "spaceRegion",
+      "environmentVariableName": "SPACE_REGION"
+    },
+    {
+      "cloudFormationParameterName": "objectPrefixes",
+      "environmentVariableName": "OBJECT_PREFIXES"
+    }
+  ],
+  "secretNames": [
+    "space_key",
+    "space_secret"
+  ]
+}
