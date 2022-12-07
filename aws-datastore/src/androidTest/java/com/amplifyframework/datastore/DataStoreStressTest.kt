@@ -70,12 +70,12 @@ class DataStoreStressTest {
     }
 
     /**
-     * Calls DataStore.save 50 times
+     * Calls DataStore.save 30 times
      */
     @Test
     fun testMultipleSave() {
-        val latch = CountDownLatch(50)
-        repeat(50) {
+        val latch = CountDownLatch(30)
+        repeat(30) {
             val saveLatch = CountDownLatch(1)
             val blogOwner: BlogOwner = BlogOwner.builder()
                 .name("BlogOwner" + UUID.randomUUID().toString())
@@ -119,13 +119,13 @@ class DataStoreStressTest {
     }
 
     /**
-     * Call DataStore.save, then call DataStore.delete ; 30 times
+     * Call DataStore.save, then call DataStore.delete ; 20 times
      */
     @Test
     fun testMultipleDelete_AfterMultipleSave() {
-        val latch = CountDownLatch(30)
+        val latch = CountDownLatch(20)
 
-        repeat(30) {
+        repeat(20) {
             val saveLatch = CountDownLatch(1)
             val deleteLatch = CountDownLatch(1)
             val blogOwner: BlogOwner = BlogOwner.builder()
@@ -194,13 +194,13 @@ class DataStoreStressTest {
     }
 
     /**
-     * Call DataStore.query 30 times
+     * Call DataStore.query 10 times
      */
     @Test
     fun testMultipleQuery() {
         saveToLaterQuery()
         val remote = mutableListOf<BlogOwner>()
-        repeat(30) {
+        repeat(10) {
             val queryLatch = CountDownLatch(1)
             Amplify.DataStore.query(
                 BlogOwner::class.java,
@@ -222,13 +222,13 @@ class DataStoreStressTest {
 
     /**
      *
-     * Call DataStore.query with a predicate 30 times
+     * Call DataStore.query with a predicate 10 times
      */
     @Test
     fun testMultipleQueryPredicate() {
         saveToLaterQuery()
         val remote = mutableListOf<BlogOwner>()
-        repeat(30) {
+        repeat(10) {
             val queryLatch = CountDownLatch(1)
             Amplify.DataStore.query(
                 BlogOwner::class.java,
@@ -250,13 +250,13 @@ class DataStoreStressTest {
     }
 
     /**
-     * Call DataStore.query with sort 30 times
+     * Call DataStore.query with sort 10 times
      */
     @Test
     fun testMultipleQuerySort() {
         saveToLaterQuery()
         val remote = mutableListOf<BlogOwner>()
-        repeat(30) {
+        repeat(10) {
             val queryLatch = CountDownLatch(1)
             Amplify.DataStore.query(
                 BlogOwner::class.java,
@@ -277,13 +277,13 @@ class DataStoreStressTest {
     }
 
     /**
-     * Call DataStore.query with pagination 30 times
+     * Call DataStore.query with pagination 10 times
      */
     @Test
     fun testMultipleQueryPagination() {
         saveToLaterQuery()
         val remote = mutableListOf<BlogOwner>()
-        repeat(30) {
+        repeat(10) {
             val queryLatch = CountDownLatch(1)
             Amplify.DataStore.query(
                 BlogOwner::class.java,
@@ -331,12 +331,12 @@ class DataStoreStressTest {
     }
 
     /**
-     * Call DataStore.clear, then call DataStore.start ; 50 times
+     * Call DataStore.clear, then call DataStore.start ; 30 times
      */
     @Test
     fun testMultipleStart_AfterMultipleClear() {
-        val latch = CountDownLatch(100)
-        repeat(50) {
+        val latch = CountDownLatch(60)
+        repeat(30) {
             val clearLatch = CountDownLatch(1)
             Amplify.DataStore.clear(
                 { latch.countDown() },
@@ -371,12 +371,12 @@ class DataStoreStressTest {
         assertTrue(latch.await(TIMEOUT_SECONDS.toLong(), TimeUnit.SECONDS))
     }
 
-    // Save a model 30 times to be queried later
+    // Save a model 10 times to be queried later
     private fun saveToLaterQuery() {
         blogOwners = mutableListOf()
-        val latch = CountDownLatch(30)
+        val latch = CountDownLatch(10)
 
-        repeat(30) {
+        repeat(10) {
             val saveLatch = CountDownLatch(1)
             val blogOwner: BlogOwner = BlogOwner.builder()
                 .name("BlogOwner" + UUID.randomUUID().toString())
