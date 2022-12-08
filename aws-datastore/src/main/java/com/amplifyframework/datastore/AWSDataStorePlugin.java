@@ -268,31 +268,27 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
         observeNetworkStatus();
     }
 
+    /**
+     * Start the datastore when the network is available, and stop the datastore when it is not
+     * available.
+     */
     private void observeNetworkStatus() {
         reachabilityMonitor.getObservable()
-            .doOnNext(status -> {
-                LOG.error("NETWORK STATUS: " + status);
+            .doOnNext(networkIsAvailable -> {
+                LOG.info("Network is available: " + networkIsAvailable);
+                if (networkIsAvailable) {
+                    start(
+                        (Action) () -> { },
+                        ((e) -> LOG.error("Error starting datastore plugin after network event: " + e))
+                    );
+                } else {
+                    stop(
+                        (Action) () -> { },
+                        ((e) -> LOG.error("Error stopping datastore plugin after network event: " + e))
+                    );
+                }
             })
             .subscribe();
-//        Amplify.Hub.subscribe(HubChannel.DATASTORE,
-//            hubEvent -> hubEvent.getData() instanceof NetworkStatusEvent,
-//            hubEvent -> {
-//                if (((NetworkStatusEvent) hubEvent.getData()).getActive()) {
-//                    LOG.info("Network gained");
-//                    start(
-//                        (Action) () -> { },
-//                        ((e) -> LOG.error("Error starting datastore plugin after network event: " + e))
-//                    );
-//                } else {
-//                    LOG.info("Network lost");
-//                    stop(
-//                            (Action) () -> { },
-//                            ((e) -> LOG.error("Error stopping datastore plugin after network event: " + e))
-//                    );
-//                }
-//            }
-//        );
-
     }
 
     @WorkerThread
