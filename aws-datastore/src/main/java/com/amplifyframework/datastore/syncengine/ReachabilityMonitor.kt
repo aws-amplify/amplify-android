@@ -26,7 +26,6 @@ import io.reactivex.rxjava3.core.ObservableEmitter
 import io.reactivex.rxjava3.core.ObservableOnSubscribe
 import java.util.concurrent.TimeUnit
 
-
 /**
  * The ReachabilityMonitor is responsible for watching the network status as provided by the OS.
  * It returns an observable that publishes "true" when the network becomes available and "false" when
@@ -84,6 +83,7 @@ private class ReachabilityMonitorImpl constructor(val schedulerProvider: Schedul
     }
 
     private fun getCallback(emitter: ObservableEmitter<Boolean>): NetworkCallback {
+
         return object : NetworkCallback() {
             override fun onAvailable(network: Network) {
                 emitter.onNext(true)
@@ -120,4 +120,3 @@ private class DefaultConnectivityProvider : ConnectivityProvider {
     }
 
 }
-

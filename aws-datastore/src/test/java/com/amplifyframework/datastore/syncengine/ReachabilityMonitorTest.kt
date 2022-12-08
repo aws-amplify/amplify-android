@@ -19,6 +19,7 @@ class ReachabilityMonitorTest {
         ReachabilityMonitor.create().getObservable()
     }
 
+
     // Test that the debounce and the event publishing in ReachabilityMonitor works as expected.
     // Events that occur within 250 ms of each other should be debounced so that only the last event
     // of the sequence is published.

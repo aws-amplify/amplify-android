@@ -292,6 +292,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
 //                }
 //            }
 //        );
+
     }
 
     @WorkerThread
