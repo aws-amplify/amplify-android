@@ -16,6 +16,7 @@ package com.amplifyframework.analytics.pinpoint.targeting
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.util.Log
 import aws.sdk.kotlin.services.pinpoint.PinpointClient
 import aws.sdk.kotlin.services.pinpoint.model.EndpointDemographic
 import aws.sdk.kotlin.services.pinpoint.model.EndpointLocation
@@ -149,6 +150,9 @@ internal class TargetingClient(
                 endpointId = endpointProfile.endpointId
                 this.endpointRequest = endpointRequest
             }
+
+        Log.i("REQUEST!", updateEndpointRequest.toString())
+        Log.i("REQUEST!", location.toString())
 
         coroutineScope.launch {
             try {
