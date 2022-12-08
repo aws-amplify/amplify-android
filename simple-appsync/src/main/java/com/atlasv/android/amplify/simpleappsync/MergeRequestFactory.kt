@@ -107,9 +107,12 @@ object DefaultMergeRequestFactory : MergeRequestFactory {
         grayRelease: Int
     ): GraphQLRequest<PaginatedResult<ModelWithMetadata<T>>> {
         val pageLimit = ModelPagination.limit(Int.MAX_VALUE)
-        var targetPredicate = if (lastSync <= 0) predicate else predicate.and(
-            modelClass.queryField("updatedAt")?.gt(Temporal.DateTime(Date(lastSync), 0))
-        )
+        var targetPredicate = predicate
+        if (lastSync > 0) {
+            targetPredicate = predicate.andIfNotNull(
+                modelClass.queryField("updatedAt")?.gt(Temporal.DateTime(Date(lastSync), 0))
+            )
+        }
         targetPredicate = targetPredicate.andIfNotNull(
             modelClass.queryField("grayRelease")?.gt(grayRelease)
         )
