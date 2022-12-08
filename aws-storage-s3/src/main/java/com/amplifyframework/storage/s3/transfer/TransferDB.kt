@@ -745,30 +745,41 @@ internal class TransferDB private constructor(context: Context) {
      * with
      * @return the ContentValues
      */
-    private fun generateContentValuesForObjectMetadata(metadata: ObjectMetadata?): ContentValues? {
+    private fun generateContentValuesForObjectMetadata(metadata: ObjectMetadata?): ContentValues {
         val values = ContentValues()
         metadata?.let {
             values.apply {
                 put(TransferTable.COLUMN_USER_METADATA, JsonUtils.mapToString(it.userMetadata))
-                put(TransferTable.COLUMN_HEADER_CONTENT_TYPE, it.metaData[ObjectMetadata.CONTENT_TYPE].toString())
-                put(
-                    TransferTable.COLUMN_HEADER_CONTENT_ENCODING,
-                    it.metaData[ObjectMetadata.CONTENT_ENCODING].toString()
-                )
-                put(TransferTable.COLUMN_HEADER_CACHE_CONTROL, it.metaData[ObjectMetadata.CACHE_CONTROL].toString())
-                put(TransferTable.COLUMN_CONTENT_MD5, it.metaData[ObjectMetadata.CONTENT_MD5].toString())
-                put(
-                    TransferTable.COLUMN_HEADER_CONTENT_DISPOSITION,
-                    it.metaData[ObjectMetadata.CONTENT_DISPOSITION].toString()
-                )
-                put(TransferTable.COLUMN_SSE_ALGORITHM, it.metaData[ObjectMetadata.SERVER_SIDE_ENCRYPTION].toString())
-                put(
-                    TransferTable.COLUMN_SSE_KMS_KEY,
-                    it.metaData[ObjectMetadata.SERVER_SIDE_ENCRYPTION_KMS_KEY_ID].toString()
-                )
-                put(TransferTable.COLUMN_EXPIRATION_TIME_RULE_ID, it.expirationTimeRuleId)
-                put(TransferTable.COLUMN_HTTP_EXPIRES_DATE, it.httpExpiresDate?.time)
-                put(TransferTable.COLUMN_HEADER_STORAGE_CLASS, it.metaData[ObjectMetadata.STORAGE_CLASS].toString())
+                it.metaData[ObjectMetadata.CONTENT_TYPE]?.let {
+                    put(TransferTable.COLUMN_HEADER_CONTENT_TYPE, it.toString())
+                }
+                it.metaData[ObjectMetadata.CONTENT_ENCODING]?.let {
+                    put(TransferTable.COLUMN_HEADER_CONTENT_ENCODING, it.toString())
+                }
+                it.metaData[ObjectMetadata.CACHE_CONTROL]?.let {
+                    put(TransferTable.COLUMN_HEADER_CACHE_CONTROL, it.toString())
+                }
+                it.metaData[ObjectMetadata.CONTENT_MD5]?.let {
+                    put(TransferTable.COLUMN_CONTENT_MD5, it.toString())
+                }
+                it.metaData[ObjectMetadata.CONTENT_DISPOSITION]?.let {
+                    put(TransferTable.COLUMN_HEADER_CONTENT_DISPOSITION, it.toString())
+                }
+                it.metaData[ObjectMetadata.SERVER_SIDE_ENCRYPTION]?.let {
+                    put(TransferTable.COLUMN_SSE_ALGORITHM, it.toString())
+                }
+                it.metaData[ObjectMetadata.SERVER_SIDE_ENCRYPTION_KMS_KEY_ID]?.let {
+                    put(TransferTable.COLUMN_SSE_KMS_KEY, it.toString())
+                }
+                it.expirationTimeRuleId?.let {
+                    put(TransferTable.COLUMN_EXPIRATION_TIME_RULE_ID, it)
+                }
+                it.httpExpiresDate?.let {
+                    put(TransferTable.COLUMN_HTTP_EXPIRES_DATE, it.time)
+                }
+                it.metaData[ObjectMetadata.STORAGE_CLASS]?.let {
+                    put(TransferTable.COLUMN_HEADER_STORAGE_CLASS, it.toString())
+                }
             }
         }
         return values

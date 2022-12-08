@@ -125,6 +125,7 @@ open class TransferDBTest {
         val uri = transferDB.bulkInsertTransferRecords(contentValues)
         transferDB.getTransferRecordById(uri).run {
             Assert.assertEquals(mapOf("key1" to "value1"), this?.userMetadata)
+            Assert.assertNull(this?.headerStorageClass)
         }
     }
 
