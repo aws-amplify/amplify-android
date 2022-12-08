@@ -94,7 +94,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     private static final int THREAD_POOL_SIZE_MULTIPLIER = 20;
 
     @VisibleForTesting @SuppressWarnings("checkstyle:all") // Keep logger first
-    static final String DEFAULT_DATABASE_NAME = "AmplifyDatastore.db";
+    public static final String DEFAULT_DATABASE_NAME = "AmplifyDatastore.db";
 
     private final String databaseName;
 

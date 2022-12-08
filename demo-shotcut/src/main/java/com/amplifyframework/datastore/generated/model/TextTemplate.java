@@ -58,7 +58,6 @@ public final class TextTemplate implements Model {
   private final @ModelField(targetType="String") String fontUrl;
   private final @ModelField(targetType="Int") Integer getMethod;
   private final @ModelField(targetType="TextTemplateLocale") @HasMany(associatedWith = "materialID", type = TextTemplateLocale.class) List<TextTemplateLocale> TextTemplateLocales = null;
-  private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
   public String getId() {
       return id;
   }
@@ -119,10 +118,6 @@ public final class TextTemplate implements Model {
       return TextTemplateLocales;
   }
   
-  public Temporal.DateTime getCreatedAt() {
-      return createdAt;
-  }
-  
   private TextTemplate(String id, String name, String coverUrl, String downloadUrl, Integer sort, Integer targetVersionCode, Integer online, String stagedRollout, Temporal.DateTime updatedAt, String testTag, String categoryID, String fontName, String fontUrl, Integer getMethod) {
     this.id = id;
     this.name = name;
@@ -161,8 +156,7 @@ public final class TextTemplate implements Model {
               ObjectsCompat.equals(getCategoryId(), textTemplate.getCategoryId()) &&
               ObjectsCompat.equals(getFontName(), textTemplate.getFontName()) &&
               ObjectsCompat.equals(getFontUrl(), textTemplate.getFontUrl()) &&
-              ObjectsCompat.equals(getGetMethod(), textTemplate.getGetMethod()) &&
-              ObjectsCompat.equals(getCreatedAt(), textTemplate.getCreatedAt());
+              ObjectsCompat.equals(getGetMethod(), textTemplate.getGetMethod());
       }
   }
   
@@ -183,7 +177,6 @@ public final class TextTemplate implements Model {
       .append(getFontName())
       .append(getFontUrl())
       .append(getGetMethod())
-      .append(getCreatedAt())
       .toString()
       .hashCode();
   }
@@ -205,8 +198,7 @@ public final class TextTemplate implements Model {
       .append("categoryID=" + String.valueOf(getCategoryId()) + ", ")
       .append("fontName=" + String.valueOf(getFontName()) + ", ")
       .append("fontUrl=" + String.valueOf(getFontUrl()) + ", ")
-      .append("getMethod=" + String.valueOf(getGetMethod()) + ", ")
-      .append("createdAt=" + String.valueOf(getCreatedAt()))
+      .append("getMethod=" + String.valueOf(getGetMethod()))
       .append("}")
       .toString();
   }

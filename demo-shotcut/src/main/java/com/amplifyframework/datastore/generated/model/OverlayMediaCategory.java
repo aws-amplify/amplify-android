@@ -37,7 +37,6 @@ public final class OverlayMediaCategory implements Model {
   private final @ModelField(targetType="OverlayMedia") @HasMany(associatedWith = "overlaymediacategoryID", type = OverlayMedia.class) List<OverlayMedia> OverlayMedias = null;
   private final @ModelField(targetType="AWSDateTime") Temporal.DateTime updatedAt;
   private final @ModelField(targetType="OverlayMediaCategoryLocale") @HasMany(associatedWith = "materialID", type = OverlayMediaCategoryLocale.class) List<OverlayMediaCategoryLocale> OverlayMediaCategoryLocales = null;
-  private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
   public String getId() {
       return id;
   }
@@ -62,10 +61,6 @@ public final class OverlayMediaCategory implements Model {
       return OverlayMediaCategoryLocales;
   }
   
-  public Temporal.DateTime getCreatedAt() {
-      return createdAt;
-  }
-  
   private OverlayMediaCategory(String id, String name, Integer sort, Temporal.DateTime updatedAt) {
     this.id = id;
     this.name = name;
@@ -84,8 +79,7 @@ public final class OverlayMediaCategory implements Model {
       return ObjectsCompat.equals(getId(), overlayMediaCategory.getId()) &&
               ObjectsCompat.equals(getName(), overlayMediaCategory.getName()) &&
               ObjectsCompat.equals(getSort(), overlayMediaCategory.getSort()) &&
-              ObjectsCompat.equals(getUpdatedAt(), overlayMediaCategory.getUpdatedAt()) &&
-              ObjectsCompat.equals(getCreatedAt(), overlayMediaCategory.getCreatedAt());
+              ObjectsCompat.equals(getUpdatedAt(), overlayMediaCategory.getUpdatedAt());
       }
   }
   
@@ -96,7 +90,6 @@ public final class OverlayMediaCategory implements Model {
       .append(getName())
       .append(getSort())
       .append(getUpdatedAt())
-      .append(getCreatedAt())
       .toString()
       .hashCode();
   }
@@ -108,8 +101,7 @@ public final class OverlayMediaCategory implements Model {
       .append("id=" + String.valueOf(getId()) + ", ")
       .append("name=" + String.valueOf(getName()) + ", ")
       .append("sort=" + String.valueOf(getSort()) + ", ")
-      .append("updatedAt=" + String.valueOf(getUpdatedAt()) + ", ")
-      .append("createdAt=" + String.valueOf(getCreatedAt()))
+      .append("updatedAt=" + String.valueOf(getUpdatedAt()))
       .append("}")
       .toString();
   }

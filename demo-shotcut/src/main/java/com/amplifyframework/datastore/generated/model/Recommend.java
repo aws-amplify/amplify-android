@@ -55,7 +55,6 @@ public final class Recommend implements Model {
   private final @ModelField(targetType="Int") Integer online;
   private final @ModelField(targetType="String") String label;
   private final @ModelField(targetType="Int") Integer getMethod;
-  private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
   public String getId() {
       return id;
   }
@@ -112,10 +111,6 @@ public final class Recommend implements Model {
       return getMethod;
   }
   
-  public Temporal.DateTime getCreatedAt() {
-      return createdAt;
-  }
-  
   private Recommend(String id, String name, String coverUrl, Integer sort, String downloadUrl, String previewVideoUrl, Temporal.DateTime updatedAt, String country, String recommendCategoryID, String resourceName, String testTag, Integer online, String label, Integer getMethod) {
     this.id = id;
     this.name = name;
@@ -154,8 +149,7 @@ public final class Recommend implements Model {
               ObjectsCompat.equals(getTestTag(), recommend.getTestTag()) &&
               ObjectsCompat.equals(getOnline(), recommend.getOnline()) &&
               ObjectsCompat.equals(getLabel(), recommend.getLabel()) &&
-              ObjectsCompat.equals(getGetMethod(), recommend.getGetMethod()) &&
-              ObjectsCompat.equals(getCreatedAt(), recommend.getCreatedAt());
+              ObjectsCompat.equals(getGetMethod(), recommend.getGetMethod());
       }
   }
   
@@ -176,7 +170,6 @@ public final class Recommend implements Model {
       .append(getOnline())
       .append(getLabel())
       .append(getGetMethod())
-      .append(getCreatedAt())
       .toString()
       .hashCode();
   }
@@ -198,8 +191,7 @@ public final class Recommend implements Model {
       .append("testTag=" + String.valueOf(getTestTag()) + ", ")
       .append("online=" + String.valueOf(getOnline()) + ", ")
       .append("label=" + String.valueOf(getLabel()) + ", ")
-      .append("getMethod=" + String.valueOf(getGetMethod()) + ", ")
-      .append("createdAt=" + String.valueOf(getCreatedAt()))
+      .append("getMethod=" + String.valueOf(getGetMethod()))
       .append("}")
       .toString();
   }

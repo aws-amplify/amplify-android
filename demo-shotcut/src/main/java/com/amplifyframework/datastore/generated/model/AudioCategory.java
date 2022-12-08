@@ -39,7 +39,6 @@ public final class AudioCategory implements Model {
   private final @ModelField(targetType="Int") Integer sort;
   private final @ModelField(targetType="Audio") @HasMany(associatedWith = "audioCategoryID", type = Audio.class) List<Audio> AudioSet = null;
   private final @ModelField(targetType="AWSDateTime", isRequired = true) Temporal.DateTime updatedAt;
-  private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
   public String getId() {
       return id;
   }
@@ -64,10 +63,6 @@ public final class AudioCategory implements Model {
       return updatedAt;
   }
   
-  public Temporal.DateTime getCreatedAt() {
-      return createdAt;
-  }
-  
   private AudioCategory(String id, String name, String coverUrl, Integer sort, Temporal.DateTime updatedAt) {
     this.id = id;
     this.name = name;
@@ -88,8 +83,7 @@ public final class AudioCategory implements Model {
               ObjectsCompat.equals(getName(), audioCategory.getName()) &&
               ObjectsCompat.equals(getCoverUrl(), audioCategory.getCoverUrl()) &&
               ObjectsCompat.equals(getSort(), audioCategory.getSort()) &&
-              ObjectsCompat.equals(getUpdatedAt(), audioCategory.getUpdatedAt()) &&
-              ObjectsCompat.equals(getCreatedAt(), audioCategory.getCreatedAt());
+              ObjectsCompat.equals(getUpdatedAt(), audioCategory.getUpdatedAt());
       }
   }
   
@@ -101,7 +95,6 @@ public final class AudioCategory implements Model {
       .append(getCoverUrl())
       .append(getSort())
       .append(getUpdatedAt())
-      .append(getCreatedAt())
       .toString()
       .hashCode();
   }
@@ -114,8 +107,7 @@ public final class AudioCategory implements Model {
       .append("name=" + String.valueOf(getName()) + ", ")
       .append("coverUrl=" + String.valueOf(getCoverUrl()) + ", ")
       .append("sort=" + String.valueOf(getSort()) + ", ")
-      .append("updatedAt=" + String.valueOf(getUpdatedAt()) + ", ")
-      .append("createdAt=" + String.valueOf(getCreatedAt()))
+      .append("updatedAt=" + String.valueOf(getUpdatedAt()))
       .append("}")
       .toString();
   }

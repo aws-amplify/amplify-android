@@ -58,7 +58,6 @@ public final class VideoFilter implements Model {
   private final @ModelField(targetType="String") String deployFlag;
   private final @ModelField(targetType="String") String maskColor;
   private final @ModelField(targetType="VideoFilterLocale") @HasMany(associatedWith = "materialID", type = VideoFilterLocale.class) List<VideoFilterLocale> VideoFilterLocales = null;
-  private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
   public String getId() {
       return id;
   }
@@ -119,10 +118,6 @@ public final class VideoFilter implements Model {
       return VideoFilterLocales;
   }
   
-  public Temporal.DateTime getCreatedAt() {
-      return createdAt;
-  }
-  
   private VideoFilter(String id, String name, String coverUrl, String downloadUrl, Integer sort, Integer vfxEngineMinVersionCode, String categoryID, String stagedRollout, Integer online, Integer getMethod, Temporal.DateTime updatedAt, String testTag, String deployFlag, String maskColor) {
     this.id = id;
     this.name = name;
@@ -161,8 +156,7 @@ public final class VideoFilter implements Model {
               ObjectsCompat.equals(getUpdatedAt(), videoFilter.getUpdatedAt()) &&
               ObjectsCompat.equals(getTestTag(), videoFilter.getTestTag()) &&
               ObjectsCompat.equals(getDeployFlag(), videoFilter.getDeployFlag()) &&
-              ObjectsCompat.equals(getMaskColor(), videoFilter.getMaskColor()) &&
-              ObjectsCompat.equals(getCreatedAt(), videoFilter.getCreatedAt());
+              ObjectsCompat.equals(getMaskColor(), videoFilter.getMaskColor());
       }
   }
   
@@ -183,7 +177,6 @@ public final class VideoFilter implements Model {
       .append(getTestTag())
       .append(getDeployFlag())
       .append(getMaskColor())
-      .append(getCreatedAt())
       .toString()
       .hashCode();
   }
@@ -205,8 +198,7 @@ public final class VideoFilter implements Model {
       .append("updatedAt=" + String.valueOf(getUpdatedAt()) + ", ")
       .append("testTag=" + String.valueOf(getTestTag()) + ", ")
       .append("deployFlag=" + String.valueOf(getDeployFlag()) + ", ")
-      .append("maskColor=" + String.valueOf(getMaskColor()) + ", ")
-      .append("createdAt=" + String.valueOf(getCreatedAt()))
+      .append("maskColor=" + String.valueOf(getMaskColor()))
       .append("}")
       .toString();
   }

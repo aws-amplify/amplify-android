@@ -42,7 +42,6 @@ public final class TextAnimLocale implements Model {
   private final @ModelField(targetType="ID") String materialID;
   private final @ModelField(targetType="Int") Integer sort;
   private final @ModelField(targetType="Int") Integer online;
-  private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
   public String getId() {
       return id;
   }
@@ -71,10 +70,6 @@ public final class TextAnimLocale implements Model {
       return online;
   }
   
-  public Temporal.DateTime getCreatedAt() {
-      return createdAt;
-  }
-  
   private TextAnimLocale(String id, String name, Temporal.DateTime updatedAt, String locale, String materialID, Integer sort, Integer online) {
     this.id = id;
     this.name = name;
@@ -99,8 +94,7 @@ public final class TextAnimLocale implements Model {
               ObjectsCompat.equals(getLocale(), textAnimLocale.getLocale()) &&
               ObjectsCompat.equals(getMaterialId(), textAnimLocale.getMaterialId()) &&
               ObjectsCompat.equals(getSort(), textAnimLocale.getSort()) &&
-              ObjectsCompat.equals(getOnline(), textAnimLocale.getOnline()) &&
-              ObjectsCompat.equals(getCreatedAt(), textAnimLocale.getCreatedAt());
+              ObjectsCompat.equals(getOnline(), textAnimLocale.getOnline());
       }
   }
   
@@ -114,7 +108,6 @@ public final class TextAnimLocale implements Model {
       .append(getMaterialId())
       .append(getSort())
       .append(getOnline())
-      .append(getCreatedAt())
       .toString()
       .hashCode();
   }
@@ -129,8 +122,7 @@ public final class TextAnimLocale implements Model {
       .append("locale=" + String.valueOf(getLocale()) + ", ")
       .append("materialID=" + String.valueOf(getMaterialId()) + ", ")
       .append("sort=" + String.valueOf(getSort()) + ", ")
-      .append("online=" + String.valueOf(getOnline()) + ", ")
-      .append("createdAt=" + String.valueOf(getCreatedAt()))
+      .append("online=" + String.valueOf(getOnline()))
       .append("}")
       .toString();
   }

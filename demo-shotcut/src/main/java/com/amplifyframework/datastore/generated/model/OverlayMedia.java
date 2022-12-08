@@ -43,7 +43,6 @@ public final class OverlayMedia implements Model {
   private final @ModelField(targetType="Int") Integer duration;
   private final @ModelField(targetType="ID") String overlaymediacategoryID;
   private final @ModelField(targetType="AWSDateTime") Temporal.DateTime updatedAt;
-  private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
   public String getId() {
       return id;
   }
@@ -76,10 +75,6 @@ public final class OverlayMedia implements Model {
       return updatedAt;
   }
   
-  public Temporal.DateTime getCreatedAt() {
-      return createdAt;
-  }
-  
   private OverlayMedia(String id, String name, String coverUrl, Integer sort, String downloadUrl, Integer duration, String overlaymediacategoryID, Temporal.DateTime updatedAt) {
     this.id = id;
     this.name = name;
@@ -106,8 +101,7 @@ public final class OverlayMedia implements Model {
               ObjectsCompat.equals(getDownloadUrl(), overlayMedia.getDownloadUrl()) &&
               ObjectsCompat.equals(getDuration(), overlayMedia.getDuration()) &&
               ObjectsCompat.equals(getOverlaymediacategoryId(), overlayMedia.getOverlaymediacategoryId()) &&
-              ObjectsCompat.equals(getUpdatedAt(), overlayMedia.getUpdatedAt()) &&
-              ObjectsCompat.equals(getCreatedAt(), overlayMedia.getCreatedAt());
+              ObjectsCompat.equals(getUpdatedAt(), overlayMedia.getUpdatedAt());
       }
   }
   
@@ -122,7 +116,6 @@ public final class OverlayMedia implements Model {
       .append(getDuration())
       .append(getOverlaymediacategoryId())
       .append(getUpdatedAt())
-      .append(getCreatedAt())
       .toString()
       .hashCode();
   }
@@ -138,8 +131,7 @@ public final class OverlayMedia implements Model {
       .append("downloadUrl=" + String.valueOf(getDownloadUrl()) + ", ")
       .append("duration=" + String.valueOf(getDuration()) + ", ")
       .append("overlaymediacategoryID=" + String.valueOf(getOverlaymediacategoryId()) + ", ")
-      .append("updatedAt=" + String.valueOf(getUpdatedAt()) + ", ")
-      .append("createdAt=" + String.valueOf(getCreatedAt()))
+      .append("updatedAt=" + String.valueOf(getUpdatedAt()))
       .append("}")
       .toString();
   }

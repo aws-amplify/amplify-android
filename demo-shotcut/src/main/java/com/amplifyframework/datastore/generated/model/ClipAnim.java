@@ -54,7 +54,6 @@ public final class ClipAnim implements Model {
   private final @ModelField(targetType="String") String testTag;
   private final @ModelField(targetType="Int") Integer getMethod;
   private final @ModelField(targetType="ClipAnimLocale") @HasMany(associatedWith = "materialID", type = ClipAnimLocale.class) List<ClipAnimLocale> ClipAnimLocales = null;
-  private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
   public String getId() {
       return id;
   }
@@ -107,10 +106,6 @@ public final class ClipAnim implements Model {
       return ClipAnimLocales;
   }
   
-  public Temporal.DateTime getCreatedAt() {
-      return createdAt;
-  }
-  
   private ClipAnim(String id, String name, String coverUrl, String downloadUrl, Integer sort, Integer targetVersionCode, Integer online, String categoryID, String stagedRollout, Temporal.DateTime updatedAt, String testTag, Integer getMethod) {
     this.id = id;
     this.name = name;
@@ -145,8 +140,7 @@ public final class ClipAnim implements Model {
               ObjectsCompat.equals(getStagedRollout(), clipAnim.getStagedRollout()) &&
               ObjectsCompat.equals(getUpdatedAt(), clipAnim.getUpdatedAt()) &&
               ObjectsCompat.equals(getTestTag(), clipAnim.getTestTag()) &&
-              ObjectsCompat.equals(getGetMethod(), clipAnim.getGetMethod()) &&
-              ObjectsCompat.equals(getCreatedAt(), clipAnim.getCreatedAt());
+              ObjectsCompat.equals(getGetMethod(), clipAnim.getGetMethod());
       }
   }
   
@@ -165,7 +159,6 @@ public final class ClipAnim implements Model {
       .append(getUpdatedAt())
       .append(getTestTag())
       .append(getGetMethod())
-      .append(getCreatedAt())
       .toString()
       .hashCode();
   }
@@ -185,8 +178,7 @@ public final class ClipAnim implements Model {
       .append("stagedRollout=" + String.valueOf(getStagedRollout()) + ", ")
       .append("updatedAt=" + String.valueOf(getUpdatedAt()) + ", ")
       .append("testTag=" + String.valueOf(getTestTag()) + ", ")
-      .append("getMethod=" + String.valueOf(getGetMethod()) + ", ")
-      .append("createdAt=" + String.valueOf(getCreatedAt()))
+      .append("getMethod=" + String.valueOf(getGetMethod()))
       .append("}")
       .toString();
   }

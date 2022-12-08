@@ -40,7 +40,6 @@ public final class TextTemplateCategoryLocale implements Model {
   private final @ModelField(targetType="AWSDateTime") Temporal.DateTime updatedAt;
   private final @ModelField(targetType="ID") String materialID;
   private final @ModelField(targetType="Int") Integer sort;
-  private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
   public String getId() {
       return id;
   }
@@ -65,10 +64,6 @@ public final class TextTemplateCategoryLocale implements Model {
       return sort;
   }
   
-  public Temporal.DateTime getCreatedAt() {
-      return createdAt;
-  }
-  
   private TextTemplateCategoryLocale(String id, String name, String locale, Temporal.DateTime updatedAt, String materialID, Integer sort) {
     this.id = id;
     this.name = name;
@@ -91,8 +86,7 @@ public final class TextTemplateCategoryLocale implements Model {
               ObjectsCompat.equals(getLocale(), textTemplateCategoryLocale.getLocale()) &&
               ObjectsCompat.equals(getUpdatedAt(), textTemplateCategoryLocale.getUpdatedAt()) &&
               ObjectsCompat.equals(getMaterialId(), textTemplateCategoryLocale.getMaterialId()) &&
-              ObjectsCompat.equals(getSort(), textTemplateCategoryLocale.getSort()) &&
-              ObjectsCompat.equals(getCreatedAt(), textTemplateCategoryLocale.getCreatedAt());
+              ObjectsCompat.equals(getSort(), textTemplateCategoryLocale.getSort());
       }
   }
   
@@ -105,7 +99,6 @@ public final class TextTemplateCategoryLocale implements Model {
       .append(getUpdatedAt())
       .append(getMaterialId())
       .append(getSort())
-      .append(getCreatedAt())
       .toString()
       .hashCode();
   }
@@ -119,8 +112,7 @@ public final class TextTemplateCategoryLocale implements Model {
       .append("locale=" + String.valueOf(getLocale()) + ", ")
       .append("updatedAt=" + String.valueOf(getUpdatedAt()) + ", ")
       .append("materialID=" + String.valueOf(getMaterialId()) + ", ")
-      .append("sort=" + String.valueOf(getSort()) + ", ")
-      .append("createdAt=" + String.valueOf(getCreatedAt()))
+      .append("sort=" + String.valueOf(getSort()))
       .append("}")
       .toString();
   }

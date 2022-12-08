@@ -42,6 +42,7 @@ public final class VFX implements Model {
   public static final QueryField TEST_TAG = field("VFX", "testTag");
   public static final QueryField GET_METHOD = field("VFX", "getMethod");
   public static final QueryField LANG_CODE = field("VFX", "langCode");
+  public static final QueryField GRAY_RELEASE = field("VFX", "grayRelease");
   private final @ModelField(targetType="ID", isRequired = true) String id;
   private final @ModelField(targetType="String") String name;
   private final @ModelField(targetType="String") String coverUrl;
@@ -56,7 +57,7 @@ public final class VFX implements Model {
   private final @ModelField(targetType="Int") Integer getMethod;
   private final @ModelField(targetType="String") String langCode;
   private final @ModelField(targetType="VFXLocale") @HasMany(associatedWith = "vfxID", type = VFXLocale.class) List<VFXLocale> VFXLocales = null;
-  private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
+  private final @ModelField(targetType="Int") Integer grayRelease;
   public String getId() {
       return id;
   }
@@ -113,11 +114,11 @@ public final class VFX implements Model {
       return VFXLocales;
   }
   
-  public Temporal.DateTime getCreatedAt() {
-      return createdAt;
+  public Integer getGrayRelease() {
+      return grayRelease;
   }
   
-  private VFX(String id, String name, String coverUrl, String downloadUrl, Integer sort, Integer vfxEngineMinVersionCode, String vfxCategoryID, String stagedRollout, Integer online, Temporal.DateTime updatedAt, String testTag, Integer getMethod, String langCode) {
+  private VFX(String id, String name, String coverUrl, String downloadUrl, Integer sort, Integer vfxEngineMinVersionCode, String vfxCategoryID, String stagedRollout, Integer online, Temporal.DateTime updatedAt, String testTag, Integer getMethod, String langCode, Integer grayRelease) {
     this.id = id;
     this.name = name;
     this.coverUrl = coverUrl;
@@ -131,6 +132,7 @@ public final class VFX implements Model {
     this.testTag = testTag;
     this.getMethod = getMethod;
     this.langCode = langCode;
+    this.grayRelease = grayRelease;
   }
   
   @Override
@@ -154,7 +156,7 @@ public final class VFX implements Model {
               ObjectsCompat.equals(getTestTag(), vfx.getTestTag()) &&
               ObjectsCompat.equals(getGetMethod(), vfx.getGetMethod()) &&
               ObjectsCompat.equals(getLangCode(), vfx.getLangCode()) &&
-              ObjectsCompat.equals(getCreatedAt(), vfx.getCreatedAt());
+              ObjectsCompat.equals(getGrayRelease(), vfx.getGrayRelease());
       }
   }
   
@@ -174,7 +176,7 @@ public final class VFX implements Model {
       .append(getTestTag())
       .append(getGetMethod())
       .append(getLangCode())
-      .append(getCreatedAt())
+      .append(getGrayRelease())
       .toString()
       .hashCode();
   }
@@ -196,7 +198,7 @@ public final class VFX implements Model {
       .append("testTag=" + String.valueOf(getTestTag()) + ", ")
       .append("getMethod=" + String.valueOf(getGetMethod()) + ", ")
       .append("langCode=" + String.valueOf(getLangCode()) + ", ")
-      .append("createdAt=" + String.valueOf(getCreatedAt()))
+      .append("grayRelease=" + String.valueOf(getGrayRelease()))
       .append("}")
       .toString();
   }
@@ -227,6 +229,7 @@ public final class VFX implements Model {
       null,
       null,
       null,
+      null,
       null
     );
   }
@@ -244,7 +247,8 @@ public final class VFX implements Model {
       updatedAt,
       testTag,
       getMethod,
-      langCode);
+      langCode,
+      grayRelease);
   }
   public interface UpdatedAtStep {
     BuildStep updatedAt(Temporal.DateTime updatedAt);
@@ -265,6 +269,7 @@ public final class VFX implements Model {
     BuildStep testTag(String testTag);
     BuildStep getMethod(Integer getMethod);
     BuildStep langCode(String langCode);
+    BuildStep grayRelease(Integer grayRelease);
   }
   
 
@@ -282,6 +287,7 @@ public final class VFX implements Model {
     private String testTag;
     private Integer getMethod;
     private String langCode;
+    private Integer grayRelease;
     @Override
      public VFX build() {
         String id = this.id != null ? this.id : UUID.randomUUID().toString();
@@ -299,7 +305,8 @@ public final class VFX implements Model {
           updatedAt,
           testTag,
           getMethod,
-          langCode);
+          langCode,
+          grayRelease);
     }
     
     @Override
@@ -375,6 +382,12 @@ public final class VFX implements Model {
         return this;
     }
     
+    @Override
+     public BuildStep grayRelease(Integer grayRelease) {
+        this.grayRelease = grayRelease;
+        return this;
+    }
+    
     /**
      * @param id id
      * @return Current Builder instance, for fluent method chaining
@@ -387,7 +400,7 @@ public final class VFX implements Model {
   
 
   public final class CopyOfBuilder extends Builder {
-    private CopyOfBuilder(String id, String name, String coverUrl, String downloadUrl, Integer sort, Integer vfxEngineMinVersionCode, String vfxCategoryId, String stagedRollout, Integer online, Temporal.DateTime updatedAt, String testTag, Integer getMethod, String langCode) {
+    private CopyOfBuilder(String id, String name, String coverUrl, String downloadUrl, Integer sort, Integer vfxEngineMinVersionCode, String vfxCategoryId, String stagedRollout, Integer online, Temporal.DateTime updatedAt, String testTag, Integer getMethod, String langCode, Integer grayRelease) {
       super.id(id);
       super.updatedAt(updatedAt)
         .name(name)
@@ -400,7 +413,8 @@ public final class VFX implements Model {
         .online(online)
         .testTag(testTag)
         .getMethod(getMethod)
-        .langCode(langCode);
+        .langCode(langCode)
+        .grayRelease(grayRelease);
     }
     
     @Override
@@ -461,6 +475,11 @@ public final class VFX implements Model {
     @Override
      public CopyOfBuilder langCode(String langCode) {
       return (CopyOfBuilder) super.langCode(langCode);
+    }
+    
+    @Override
+     public CopyOfBuilder grayRelease(Integer grayRelease) {
+      return (CopyOfBuilder) super.grayRelease(grayRelease);
     }
   }
   

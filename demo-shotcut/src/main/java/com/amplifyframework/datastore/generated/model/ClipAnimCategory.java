@@ -44,7 +44,6 @@ public final class ClipAnimCategory implements Model {
   private final @ModelField(targetType="AWSDateTime", isRequired = true) Temporal.DateTime updatedAt;
   private final @ModelField(targetType="Int") Integer animType;
   private final @ModelField(targetType="ClipAnimCategoryLocale") @HasMany(associatedWith = "materialID", type = ClipAnimCategoryLocale.class) List<ClipAnimCategoryLocale> ClipAnimCategoryLocales = null;
-  private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
   public String getId() {
       return id;
   }
@@ -81,10 +80,6 @@ public final class ClipAnimCategory implements Model {
       return ClipAnimCategoryLocales;
   }
   
-  public Temporal.DateTime getCreatedAt() {
-      return createdAt;
-  }
-  
   private ClipAnimCategory(String id, String name, String coverUrl, Integer sort, Integer online, Temporal.DateTime updatedAt, Integer animType) {
     this.id = id;
     this.name = name;
@@ -109,8 +104,7 @@ public final class ClipAnimCategory implements Model {
               ObjectsCompat.equals(getSort(), clipAnimCategory.getSort()) &&
               ObjectsCompat.equals(getOnline(), clipAnimCategory.getOnline()) &&
               ObjectsCompat.equals(getUpdatedAt(), clipAnimCategory.getUpdatedAt()) &&
-              ObjectsCompat.equals(getAnimType(), clipAnimCategory.getAnimType()) &&
-              ObjectsCompat.equals(getCreatedAt(), clipAnimCategory.getCreatedAt());
+              ObjectsCompat.equals(getAnimType(), clipAnimCategory.getAnimType());
       }
   }
   
@@ -124,7 +118,6 @@ public final class ClipAnimCategory implements Model {
       .append(getOnline())
       .append(getUpdatedAt())
       .append(getAnimType())
-      .append(getCreatedAt())
       .toString()
       .hashCode();
   }
@@ -139,8 +132,7 @@ public final class ClipAnimCategory implements Model {
       .append("sort=" + String.valueOf(getSort()) + ", ")
       .append("online=" + String.valueOf(getOnline()) + ", ")
       .append("updatedAt=" + String.valueOf(getUpdatedAt()) + ", ")
-      .append("animType=" + String.valueOf(getAnimType()) + ", ")
-      .append("createdAt=" + String.valueOf(getCreatedAt()))
+      .append("animType=" + String.valueOf(getAnimType()))
       .append("}")
       .toString();
   }

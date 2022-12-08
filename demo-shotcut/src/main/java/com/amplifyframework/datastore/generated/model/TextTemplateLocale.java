@@ -42,7 +42,6 @@ public final class TextTemplateLocale implements Model {
   private final @ModelField(targetType="Int") Integer sort;
   private final @ModelField(targetType="Int") Integer online;
   private final @ModelField(targetType="AWSDateTime") Temporal.DateTime updatedAt;
-  private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
   public String getId() {
       return id;
   }
@@ -71,10 +70,6 @@ public final class TextTemplateLocale implements Model {
       return updatedAt;
   }
   
-  public Temporal.DateTime getCreatedAt() {
-      return createdAt;
-  }
-  
   private TextTemplateLocale(String id, String locale, String materialID, String name, Integer sort, Integer online, Temporal.DateTime updatedAt) {
     this.id = id;
     this.locale = locale;
@@ -99,8 +94,7 @@ public final class TextTemplateLocale implements Model {
               ObjectsCompat.equals(getName(), textTemplateLocale.getName()) &&
               ObjectsCompat.equals(getSort(), textTemplateLocale.getSort()) &&
               ObjectsCompat.equals(getOnline(), textTemplateLocale.getOnline()) &&
-              ObjectsCompat.equals(getUpdatedAt(), textTemplateLocale.getUpdatedAt()) &&
-              ObjectsCompat.equals(getCreatedAt(), textTemplateLocale.getCreatedAt());
+              ObjectsCompat.equals(getUpdatedAt(), textTemplateLocale.getUpdatedAt());
       }
   }
   
@@ -114,7 +108,6 @@ public final class TextTemplateLocale implements Model {
       .append(getSort())
       .append(getOnline())
       .append(getUpdatedAt())
-      .append(getCreatedAt())
       .toString()
       .hashCode();
   }
@@ -129,8 +122,7 @@ public final class TextTemplateLocale implements Model {
       .append("name=" + String.valueOf(getName()) + ", ")
       .append("sort=" + String.valueOf(getSort()) + ", ")
       .append("online=" + String.valueOf(getOnline()) + ", ")
-      .append("updatedAt=" + String.valueOf(getUpdatedAt()) + ", ")
-      .append("createdAt=" + String.valueOf(getCreatedAt()))
+      .append("updatedAt=" + String.valueOf(getUpdatedAt()))
       .append("}")
       .toString();
   }

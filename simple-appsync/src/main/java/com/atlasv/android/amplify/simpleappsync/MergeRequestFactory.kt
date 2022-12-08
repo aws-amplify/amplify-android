@@ -11,7 +11,6 @@ import com.amplifyframework.api.graphql.model.ModelPagination
 import com.amplifyframework.core.model.Model
 import com.amplifyframework.core.model.ModelProvider
 import com.amplifyframework.core.model.SchemaRegistry
-import com.amplifyframework.core.model.query.predicate.QueryField
 import com.amplifyframework.core.model.query.predicate.QueryPredicate
 import com.amplifyframework.core.model.query.predicate.QueryPredicates
 import com.amplifyframework.core.model.temporal.Temporal
@@ -23,6 +22,7 @@ import com.amplifyframework.util.Wrap
 import java.util.*
 
 /**
+ * [灰度发布说明](https://cwtus1pn64.feishu.cn/docs/doccnDayF0ZErCLnMyySPGJchOg#9m94LF)
  * weiping@atlasv.com
  * 2022/12/7
  */
@@ -32,7 +32,8 @@ interface MergeRequestFactory {
         dataStoreConfiguration: DataStoreConfiguration,
         modelProvider: ModelProvider,
         schemaRegistry: SchemaRegistry,
-        lastSync: Long
+        lastSync: Long,
+        grayRelease: Int
     ): GraphQLRequest<List<GraphQLResponse<PaginatedResult<ModelWithMetadata<Model>>>>>
 }
 
@@ -46,13 +47,14 @@ object DefaultMergeRequestFactory : MergeRequestFactory {
         dataStoreConfiguration: DataStoreConfiguration,
         modelProvider: ModelProvider,
         schemaRegistry: SchemaRegistry,
-        lastSync: Long
+        lastSync: Long,
+        grayRelease: Int
     ): GraphQLRequest<List<GraphQLResponse<PaginatedResult<ModelWithMetadata<Model>>>>> {
         val requests = modelProvider.models().map {
             val predicate =
                 dataStoreConfiguration.syncExpressions[it.simpleName]?.resolvePredicate()
                     ?: QueryPredicates.all()
-            getModelRequest(it, predicate, lastSync) as AppSyncGraphQLRequest<Any>
+            getModelRequest(it, predicate, lastSync, grayRelease) as AppSyncGraphQLRequest<Any>
         }
 
         val inputTypeString = createInputTypeString(requests)
@@ -101,11 +103,15 @@ object DefaultMergeRequestFactory : MergeRequestFactory {
     private fun <T : Model> getModelRequest(
         modelClass: Class<T>,
         predicate: QueryPredicate,
-        lastSync: Long
+        lastSync: Long,
+        grayRelease: Int
     ): GraphQLRequest<PaginatedResult<ModelWithMetadata<T>>> {
         val pageLimit = ModelPagination.limit(Int.MAX_VALUE)
-        val targetPredicate = if (lastSync <= 0) predicate else predicate.and(
-            QueryField.field("updatedAt").gt(Temporal.DateTime(Date(lastSync), 0))
+        var targetPredicate = if (lastSync <= 0) predicate else predicate.and(
+            modelClass.queryField("updatedAt")?.gt(Temporal.DateTime(Date(lastSync), 0))
+        )
+        targetPredicate = targetPredicate.andIfNotNull(
+            modelClass.queryField("grayRelease")?.gt(grayRelease)
         )
         return AppSyncGraphQLRequestFactory.buildQuery(
             modelClass, targetPredicate, pageLimit.limit, TypeMaker.getParameterizedType(

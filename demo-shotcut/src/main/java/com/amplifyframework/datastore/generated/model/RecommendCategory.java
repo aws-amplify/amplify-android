@@ -38,7 +38,6 @@ public final class RecommendCategory implements Model {
   private final @ModelField(targetType="AWSDateTime") Temporal.DateTime updatedAt;
   private final @ModelField(targetType="Recommend") @HasMany(associatedWith = "recommendCategoryID", type = Recommend.class) List<Recommend> Recommends = null;
   private final @ModelField(targetType="String") String coverUrl;
-  private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
   public String getId() {
       return id;
   }
@@ -63,10 +62,6 @@ public final class RecommendCategory implements Model {
       return coverUrl;
   }
   
-  public Temporal.DateTime getCreatedAt() {
-      return createdAt;
-  }
-  
   private RecommendCategory(String id, String name, Integer sort, Temporal.DateTime updatedAt, String coverUrl) {
     this.id = id;
     this.name = name;
@@ -87,8 +82,7 @@ public final class RecommendCategory implements Model {
               ObjectsCompat.equals(getName(), recommendCategory.getName()) &&
               ObjectsCompat.equals(getSort(), recommendCategory.getSort()) &&
               ObjectsCompat.equals(getUpdatedAt(), recommendCategory.getUpdatedAt()) &&
-              ObjectsCompat.equals(getCoverUrl(), recommendCategory.getCoverUrl()) &&
-              ObjectsCompat.equals(getCreatedAt(), recommendCategory.getCreatedAt());
+              ObjectsCompat.equals(getCoverUrl(), recommendCategory.getCoverUrl());
       }
   }
   
@@ -100,7 +94,6 @@ public final class RecommendCategory implements Model {
       .append(getSort())
       .append(getUpdatedAt())
       .append(getCoverUrl())
-      .append(getCreatedAt())
       .toString()
       .hashCode();
   }
@@ -113,8 +106,7 @@ public final class RecommendCategory implements Model {
       .append("name=" + String.valueOf(getName()) + ", ")
       .append("sort=" + String.valueOf(getSort()) + ", ")
       .append("updatedAt=" + String.valueOf(getUpdatedAt()) + ", ")
-      .append("coverUrl=" + String.valueOf(getCoverUrl()) + ", ")
-      .append("createdAt=" + String.valueOf(getCreatedAt()))
+      .append("coverUrl=" + String.valueOf(getCoverUrl()))
       .append("}")
       .toString();
   }

@@ -52,7 +52,6 @@ public final class FontVFX implements Model {
   private final @ModelField(targetType="AWSDateTime", isRequired = true) Temporal.DateTime updatedAt;
   private final @ModelField(targetType="String") String testTag;
   private final @ModelField(targetType="Int") Integer getMethod;
-  private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
   public String getId() {
       return id;
   }
@@ -101,10 +100,6 @@ public final class FontVFX implements Model {
       return getMethod;
   }
   
-  public Temporal.DateTime getCreatedAt() {
-      return createdAt;
-  }
-  
   private FontVFX(String id, String name, String coverUrl, String downloadUrl, Integer sort, Integer vfxEngineMinVersionCode, String fontvfxcategoryID, Integer online, String stagedRollout, Temporal.DateTime updatedAt, String testTag, Integer getMethod) {
     this.id = id;
     this.name = name;
@@ -139,8 +134,7 @@ public final class FontVFX implements Model {
               ObjectsCompat.equals(getStagedRollout(), fontVfx.getStagedRollout()) &&
               ObjectsCompat.equals(getUpdatedAt(), fontVfx.getUpdatedAt()) &&
               ObjectsCompat.equals(getTestTag(), fontVfx.getTestTag()) &&
-              ObjectsCompat.equals(getGetMethod(), fontVfx.getGetMethod()) &&
-              ObjectsCompat.equals(getCreatedAt(), fontVfx.getCreatedAt());
+              ObjectsCompat.equals(getGetMethod(), fontVfx.getGetMethod());
       }
   }
   
@@ -159,7 +153,6 @@ public final class FontVFX implements Model {
       .append(getUpdatedAt())
       .append(getTestTag())
       .append(getGetMethod())
-      .append(getCreatedAt())
       .toString()
       .hashCode();
   }
@@ -179,8 +172,7 @@ public final class FontVFX implements Model {
       .append("stagedRollout=" + String.valueOf(getStagedRollout()) + ", ")
       .append("updatedAt=" + String.valueOf(getUpdatedAt()) + ", ")
       .append("testTag=" + String.valueOf(getTestTag()) + ", ")
-      .append("getMethod=" + String.valueOf(getGetMethod()) + ", ")
-      .append("createdAt=" + String.valueOf(getCreatedAt()))
+      .append("getMethod=" + String.valueOf(getGetMethod()))
       .append("}")
       .toString();
   }

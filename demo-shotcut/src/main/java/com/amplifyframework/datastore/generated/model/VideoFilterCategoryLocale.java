@@ -40,7 +40,6 @@ public final class VideoFilterCategoryLocale implements Model {
   private final @ModelField(targetType="AWSDateTime") Temporal.DateTime updatedAt;
   private final @ModelField(targetType="ID") String materialID;
   private final @ModelField(targetType="Int") Integer sort;
-  private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
   public String getId() {
       return id;
   }
@@ -65,10 +64,6 @@ public final class VideoFilterCategoryLocale implements Model {
       return sort;
   }
   
-  public Temporal.DateTime getCreatedAt() {
-      return createdAt;
-  }
-  
   private VideoFilterCategoryLocale(String id, String locale, String name, Temporal.DateTime updatedAt, String materialID, Integer sort) {
     this.id = id;
     this.locale = locale;
@@ -91,8 +86,7 @@ public final class VideoFilterCategoryLocale implements Model {
               ObjectsCompat.equals(getName(), videoFilterCategoryLocale.getName()) &&
               ObjectsCompat.equals(getUpdatedAt(), videoFilterCategoryLocale.getUpdatedAt()) &&
               ObjectsCompat.equals(getMaterialId(), videoFilterCategoryLocale.getMaterialId()) &&
-              ObjectsCompat.equals(getSort(), videoFilterCategoryLocale.getSort()) &&
-              ObjectsCompat.equals(getCreatedAt(), videoFilterCategoryLocale.getCreatedAt());
+              ObjectsCompat.equals(getSort(), videoFilterCategoryLocale.getSort());
       }
   }
   
@@ -105,7 +99,6 @@ public final class VideoFilterCategoryLocale implements Model {
       .append(getUpdatedAt())
       .append(getMaterialId())
       .append(getSort())
-      .append(getCreatedAt())
       .toString()
       .hashCode();
   }
@@ -119,8 +112,7 @@ public final class VideoFilterCategoryLocale implements Model {
       .append("name=" + String.valueOf(getName()) + ", ")
       .append("updatedAt=" + String.valueOf(getUpdatedAt()) + ", ")
       .append("materialID=" + String.valueOf(getMaterialId()) + ", ")
-      .append("sort=" + String.valueOf(getSort()) + ", ")
-      .append("createdAt=" + String.valueOf(getCreatedAt()))
+      .append("sort=" + String.valueOf(getSort()))
       .append("}")
       .toString();
   }

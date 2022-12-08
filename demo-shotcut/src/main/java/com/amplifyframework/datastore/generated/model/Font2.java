@@ -49,7 +49,6 @@ public final class Font2 implements Model {
   private final @ModelField(targetType="Int") Integer online;
   private final @ModelField(targetType="String") String category;
   private final @ModelField(targetType="String") String langCode;
-  private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
   public String getId() {
       return id;
   }
@@ -94,10 +93,6 @@ public final class Font2 implements Model {
       return langCode;
   }
   
-  public Temporal.DateTime getCreatedAt() {
-      return createdAt;
-  }
-  
   private Font2(String id, String name, String downloadUrl, Integer sort, String coverUrl, Temporal.DateTime updatedAt, String language, Integer buildIn, Integer online, String category, String langCode) {
     this.id = id;
     this.name = name;
@@ -130,8 +125,7 @@ public final class Font2 implements Model {
               ObjectsCompat.equals(getBuildIn(), font2.getBuildIn()) &&
               ObjectsCompat.equals(getOnline(), font2.getOnline()) &&
               ObjectsCompat.equals(getCategory(), font2.getCategory()) &&
-              ObjectsCompat.equals(getLangCode(), font2.getLangCode()) &&
-              ObjectsCompat.equals(getCreatedAt(), font2.getCreatedAt());
+              ObjectsCompat.equals(getLangCode(), font2.getLangCode());
       }
   }
   
@@ -149,7 +143,6 @@ public final class Font2 implements Model {
       .append(getOnline())
       .append(getCategory())
       .append(getLangCode())
-      .append(getCreatedAt())
       .toString()
       .hashCode();
   }
@@ -168,8 +161,7 @@ public final class Font2 implements Model {
       .append("buildIn=" + String.valueOf(getBuildIn()) + ", ")
       .append("online=" + String.valueOf(getOnline()) + ", ")
       .append("category=" + String.valueOf(getCategory()) + ", ")
-      .append("langCode=" + String.valueOf(getLangCode()) + ", ")
-      .append("createdAt=" + String.valueOf(getCreatedAt()))
+      .append("langCode=" + String.valueOf(getLangCode()))
       .append("}")
       .toString();
   }

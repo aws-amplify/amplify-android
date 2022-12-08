@@ -38,7 +38,6 @@ public final class ClipAnimCategoryLocale implements Model {
   private final @ModelField(targetType="AWSDateTime") Temporal.DateTime updatedAt;
   private final @ModelField(targetType="String") String locale;
   private final @ModelField(targetType="ID") String materialID;
-  private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
   public String getId() {
       return id;
   }
@@ -57,10 +56,6 @@ public final class ClipAnimCategoryLocale implements Model {
   
   public String getMaterialId() {
       return materialID;
-  }
-  
-  public Temporal.DateTime getCreatedAt() {
-      return createdAt;
   }
   
   private ClipAnimCategoryLocale(String id, String name, Temporal.DateTime updatedAt, String locale, String materialID) {
@@ -83,8 +78,7 @@ public final class ClipAnimCategoryLocale implements Model {
               ObjectsCompat.equals(getName(), clipAnimCategoryLocale.getName()) &&
               ObjectsCompat.equals(getUpdatedAt(), clipAnimCategoryLocale.getUpdatedAt()) &&
               ObjectsCompat.equals(getLocale(), clipAnimCategoryLocale.getLocale()) &&
-              ObjectsCompat.equals(getMaterialId(), clipAnimCategoryLocale.getMaterialId()) &&
-              ObjectsCompat.equals(getCreatedAt(), clipAnimCategoryLocale.getCreatedAt());
+              ObjectsCompat.equals(getMaterialId(), clipAnimCategoryLocale.getMaterialId());
       }
   }
   
@@ -96,7 +90,6 @@ public final class ClipAnimCategoryLocale implements Model {
       .append(getUpdatedAt())
       .append(getLocale())
       .append(getMaterialId())
-      .append(getCreatedAt())
       .toString()
       .hashCode();
   }
@@ -109,8 +102,7 @@ public final class ClipAnimCategoryLocale implements Model {
       .append("name=" + String.valueOf(getName()) + ", ")
       .append("updatedAt=" + String.valueOf(getUpdatedAt()) + ", ")
       .append("locale=" + String.valueOf(getLocale()) + ", ")
-      .append("materialID=" + String.valueOf(getMaterialId()) + ", ")
-      .append("createdAt=" + String.valueOf(getCreatedAt()))
+      .append("materialID=" + String.valueOf(getMaterialId()))
       .append("}")
       .toString();
   }

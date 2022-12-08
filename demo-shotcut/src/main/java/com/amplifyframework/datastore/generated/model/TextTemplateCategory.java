@@ -42,7 +42,6 @@ public final class TextTemplateCategory implements Model {
   private final @ModelField(targetType="AWSDateTime") Temporal.DateTime updatedAt;
   private final @ModelField(targetType="TextTemplate") @HasMany(associatedWith = "categoryID", type = TextTemplate.class) List<TextTemplate> textTemplates = null;
   private final @ModelField(targetType="TextTemplateCategoryLocale") @HasMany(associatedWith = "materialID", type = TextTemplateCategoryLocale.class) List<TextTemplateCategoryLocale> TextTemplateCategoryLocales = null;
-  private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
   public String getId() {
       return id;
   }
@@ -75,10 +74,6 @@ public final class TextTemplateCategory implements Model {
       return TextTemplateCategoryLocales;
   }
   
-  public Temporal.DateTime getCreatedAt() {
-      return createdAt;
-  }
-  
   private TextTemplateCategory(String id, String name, String coverUrl, Integer sort, Integer online, Temporal.DateTime updatedAt) {
     this.id = id;
     this.name = name;
@@ -101,8 +96,7 @@ public final class TextTemplateCategory implements Model {
               ObjectsCompat.equals(getCoverUrl(), textTemplateCategory.getCoverUrl()) &&
               ObjectsCompat.equals(getSort(), textTemplateCategory.getSort()) &&
               ObjectsCompat.equals(getOnline(), textTemplateCategory.getOnline()) &&
-              ObjectsCompat.equals(getUpdatedAt(), textTemplateCategory.getUpdatedAt()) &&
-              ObjectsCompat.equals(getCreatedAt(), textTemplateCategory.getCreatedAt());
+              ObjectsCompat.equals(getUpdatedAt(), textTemplateCategory.getUpdatedAt());
       }
   }
   
@@ -115,7 +109,6 @@ public final class TextTemplateCategory implements Model {
       .append(getSort())
       .append(getOnline())
       .append(getUpdatedAt())
-      .append(getCreatedAt())
       .toString()
       .hashCode();
   }
@@ -129,8 +122,7 @@ public final class TextTemplateCategory implements Model {
       .append("coverUrl=" + String.valueOf(getCoverUrl()) + ", ")
       .append("sort=" + String.valueOf(getSort()) + ", ")
       .append("online=" + String.valueOf(getOnline()) + ", ")
-      .append("updatedAt=" + String.valueOf(getUpdatedAt()) + ", ")
-      .append("createdAt=" + String.valueOf(getCreatedAt()))
+      .append("updatedAt=" + String.valueOf(getUpdatedAt()))
       .append("}")
       .toString();
   }

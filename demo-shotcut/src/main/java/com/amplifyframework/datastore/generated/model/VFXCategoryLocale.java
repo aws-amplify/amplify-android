@@ -40,7 +40,6 @@ public final class VFXCategoryLocale implements Model {
   private final @ModelField(targetType="AWSDateTime") Temporal.DateTime updatedAt;
   private final @ModelField(targetType="String") String locale;
   private final @ModelField(targetType="ID") String materialID;
-  private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
   public String getId() {
       return id;
   }
@@ -65,10 +64,6 @@ public final class VFXCategoryLocale implements Model {
       return materialID;
   }
   
-  public Temporal.DateTime getCreatedAt() {
-      return createdAt;
-  }
-  
   private VFXCategoryLocale(String id, String name, Integer sort, Temporal.DateTime updatedAt, String locale, String materialID) {
     this.id = id;
     this.name = name;
@@ -91,8 +86,7 @@ public final class VFXCategoryLocale implements Model {
               ObjectsCompat.equals(getSort(), vfxCategoryLocale.getSort()) &&
               ObjectsCompat.equals(getUpdatedAt(), vfxCategoryLocale.getUpdatedAt()) &&
               ObjectsCompat.equals(getLocale(), vfxCategoryLocale.getLocale()) &&
-              ObjectsCompat.equals(getMaterialId(), vfxCategoryLocale.getMaterialId()) &&
-              ObjectsCompat.equals(getCreatedAt(), vfxCategoryLocale.getCreatedAt());
+              ObjectsCompat.equals(getMaterialId(), vfxCategoryLocale.getMaterialId());
       }
   }
   
@@ -105,7 +99,6 @@ public final class VFXCategoryLocale implements Model {
       .append(getUpdatedAt())
       .append(getLocale())
       .append(getMaterialId())
-      .append(getCreatedAt())
       .toString()
       .hashCode();
   }
@@ -119,8 +112,7 @@ public final class VFXCategoryLocale implements Model {
       .append("sort=" + String.valueOf(getSort()) + ", ")
       .append("updatedAt=" + String.valueOf(getUpdatedAt()) + ", ")
       .append("locale=" + String.valueOf(getLocale()) + ", ")
-      .append("materialID=" + String.valueOf(getMaterialId()) + ", ")
-      .append("createdAt=" + String.valueOf(getCreatedAt()))
+      .append("materialID=" + String.valueOf(getMaterialId()))
       .append("}")
       .toString();
   }

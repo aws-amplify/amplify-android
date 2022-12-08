@@ -58,7 +58,6 @@ public final class Audio implements Model {
   private final @ModelField(targetType="String") String stagedRollout;
   private final @ModelField(targetType="Int") Integer online;
   private final @ModelField(targetType="AWSDateTime", isRequired = true) Temporal.DateTime updatedAt;
-  private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
   public String getId() {
       return id;
   }
@@ -119,10 +118,6 @@ public final class Audio implements Model {
       return updatedAt;
   }
   
-  public Temporal.DateTime getCreatedAt() {
-      return createdAt;
-  }
-  
   private Audio(String id, String name, String coverUrl, String downloadUrl, String author, String genre, String mood, Integer sort, String tag, String audioCategoryID, Integer duration, String wave, String stagedRollout, Integer online, Temporal.DateTime updatedAt) {
     this.id = id;
     this.name = name;
@@ -163,8 +158,7 @@ public final class Audio implements Model {
               ObjectsCompat.equals(getWave(), audio.getWave()) &&
               ObjectsCompat.equals(getStagedRollout(), audio.getStagedRollout()) &&
               ObjectsCompat.equals(getOnline(), audio.getOnline()) &&
-              ObjectsCompat.equals(getUpdatedAt(), audio.getUpdatedAt()) &&
-              ObjectsCompat.equals(getCreatedAt(), audio.getCreatedAt());
+              ObjectsCompat.equals(getUpdatedAt(), audio.getUpdatedAt());
       }
   }
   
@@ -186,7 +180,6 @@ public final class Audio implements Model {
       .append(getStagedRollout())
       .append(getOnline())
       .append(getUpdatedAt())
-      .append(getCreatedAt())
       .toString()
       .hashCode();
   }
@@ -209,8 +202,7 @@ public final class Audio implements Model {
       .append("wave=" + String.valueOf(getWave()) + ", ")
       .append("stagedRollout=" + String.valueOf(getStagedRollout()) + ", ")
       .append("online=" + String.valueOf(getOnline()) + ", ")
-      .append("updatedAt=" + String.valueOf(getUpdatedAt()) + ", ")
-      .append("createdAt=" + String.valueOf(getCreatedAt()))
+      .append("updatedAt=" + String.valueOf(getUpdatedAt()))
       .append("}")
       .toString();
   }

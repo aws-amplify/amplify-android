@@ -42,7 +42,6 @@ public final class VFXCategory implements Model {
   private final @ModelField(targetType="AWSDateTime", isRequired = true) Temporal.DateTime updatedAt;
   private final @ModelField(targetType="Int") Integer online;
   private final @ModelField(targetType="VFXCategoryLocale") @HasMany(associatedWith = "materialID", type = VFXCategoryLocale.class) List<VFXCategoryLocale> VFXCategoryLocales = null;
-  private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
   public String getId() {
       return id;
   }
@@ -75,10 +74,6 @@ public final class VFXCategory implements Model {
       return VFXCategoryLocales;
   }
   
-  public Temporal.DateTime getCreatedAt() {
-      return createdAt;
-  }
-  
   private VFXCategory(String id, String name, String coverUrl, Integer sort, Temporal.DateTime updatedAt, Integer online) {
     this.id = id;
     this.name = name;
@@ -101,8 +96,7 @@ public final class VFXCategory implements Model {
               ObjectsCompat.equals(getCoverUrl(), vfxCategory.getCoverUrl()) &&
               ObjectsCompat.equals(getSort(), vfxCategory.getSort()) &&
               ObjectsCompat.equals(getUpdatedAt(), vfxCategory.getUpdatedAt()) &&
-              ObjectsCompat.equals(getOnline(), vfxCategory.getOnline()) &&
-              ObjectsCompat.equals(getCreatedAt(), vfxCategory.getCreatedAt());
+              ObjectsCompat.equals(getOnline(), vfxCategory.getOnline());
       }
   }
   
@@ -115,7 +109,6 @@ public final class VFXCategory implements Model {
       .append(getSort())
       .append(getUpdatedAt())
       .append(getOnline())
-      .append(getCreatedAt())
       .toString()
       .hashCode();
   }
@@ -129,8 +122,7 @@ public final class VFXCategory implements Model {
       .append("coverUrl=" + String.valueOf(getCoverUrl()) + ", ")
       .append("sort=" + String.valueOf(getSort()) + ", ")
       .append("updatedAt=" + String.valueOf(getUpdatedAt()) + ", ")
-      .append("online=" + String.valueOf(getOnline()) + ", ")
-      .append("createdAt=" + String.valueOf(getCreatedAt()))
+      .append("online=" + String.valueOf(getOnline()))
       .append("}")
       .toString();
   }

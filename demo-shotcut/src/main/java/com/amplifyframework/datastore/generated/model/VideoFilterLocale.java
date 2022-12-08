@@ -42,7 +42,6 @@ public final class VideoFilterLocale implements Model {
   private final @ModelField(targetType="ID") String materialID;
   private final @ModelField(targetType="Int") Integer online;
   private final @ModelField(targetType="Int") Integer sort;
-  private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
   public String getId() {
       return id;
   }
@@ -71,10 +70,6 @@ public final class VideoFilterLocale implements Model {
       return sort;
   }
   
-  public Temporal.DateTime getCreatedAt() {
-      return createdAt;
-  }
-  
   private VideoFilterLocale(String id, String name, String locale, Temporal.DateTime updatedAt, String materialID, Integer online, Integer sort) {
     this.id = id;
     this.name = name;
@@ -99,8 +94,7 @@ public final class VideoFilterLocale implements Model {
               ObjectsCompat.equals(getUpdatedAt(), videoFilterLocale.getUpdatedAt()) &&
               ObjectsCompat.equals(getMaterialId(), videoFilterLocale.getMaterialId()) &&
               ObjectsCompat.equals(getOnline(), videoFilterLocale.getOnline()) &&
-              ObjectsCompat.equals(getSort(), videoFilterLocale.getSort()) &&
-              ObjectsCompat.equals(getCreatedAt(), videoFilterLocale.getCreatedAt());
+              ObjectsCompat.equals(getSort(), videoFilterLocale.getSort());
       }
   }
   
@@ -114,7 +108,6 @@ public final class VideoFilterLocale implements Model {
       .append(getMaterialId())
       .append(getOnline())
       .append(getSort())
-      .append(getCreatedAt())
       .toString()
       .hashCode();
   }
@@ -129,8 +122,7 @@ public final class VideoFilterLocale implements Model {
       .append("updatedAt=" + String.valueOf(getUpdatedAt()) + ", ")
       .append("materialID=" + String.valueOf(getMaterialId()) + ", ")
       .append("online=" + String.valueOf(getOnline()) + ", ")
-      .append("sort=" + String.valueOf(getSort()) + ", ")
-      .append("createdAt=" + String.valueOf(getCreatedAt()))
+      .append("sort=" + String.valueOf(getSort()))
       .append("}")
       .toString();
   }

@@ -54,7 +54,6 @@ public final class TransitionVFX implements Model {
   private final @ModelField(targetType="String") String testTag;
   private final @ModelField(targetType="Int") Integer getMethod;
   private final @ModelField(targetType="TransitionVFXLocale") @HasMany(associatedWith = "materialID", type = TransitionVFXLocale.class) List<TransitionVFXLocale> TransitionVFXLocales = null;
-  private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
   public String getId() {
       return id;
   }
@@ -107,10 +106,6 @@ public final class TransitionVFX implements Model {
       return TransitionVFXLocales;
   }
   
-  public Temporal.DateTime getCreatedAt() {
-      return createdAt;
-  }
-  
   private TransitionVFX(String id, String name, String coverUrl, String downloadUrl, Integer sort, Integer vfxEngineMinVersionCode, Integer online, String transitionVfxCategoryID, String stagedRollout, Temporal.DateTime updatedAt, String testTag, Integer getMethod) {
     this.id = id;
     this.name = name;
@@ -145,8 +140,7 @@ public final class TransitionVFX implements Model {
               ObjectsCompat.equals(getStagedRollout(), transitionVfx.getStagedRollout()) &&
               ObjectsCompat.equals(getUpdatedAt(), transitionVfx.getUpdatedAt()) &&
               ObjectsCompat.equals(getTestTag(), transitionVfx.getTestTag()) &&
-              ObjectsCompat.equals(getGetMethod(), transitionVfx.getGetMethod()) &&
-              ObjectsCompat.equals(getCreatedAt(), transitionVfx.getCreatedAt());
+              ObjectsCompat.equals(getGetMethod(), transitionVfx.getGetMethod());
       }
   }
   
@@ -165,7 +159,6 @@ public final class TransitionVFX implements Model {
       .append(getUpdatedAt())
       .append(getTestTag())
       .append(getGetMethod())
-      .append(getCreatedAt())
       .toString()
       .hashCode();
   }
@@ -185,8 +178,7 @@ public final class TransitionVFX implements Model {
       .append("stagedRollout=" + String.valueOf(getStagedRollout()) + ", ")
       .append("updatedAt=" + String.valueOf(getUpdatedAt()) + ", ")
       .append("testTag=" + String.valueOf(getTestTag()) + ", ")
-      .append("getMethod=" + String.valueOf(getGetMethod()) + ", ")
-      .append("createdAt=" + String.valueOf(getCreatedAt()))
+      .append("getMethod=" + String.valueOf(getGetMethod()))
       .append("}")
       .toString();
   }

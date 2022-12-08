@@ -7,7 +7,6 @@ import com.amplifyframework.datastore.DataStoreConfiguration
 import com.amplifyframework.datastore.generated.model.*
 import com.atlasv.android.amplify.simpleappsync.AmplifySimpleSyncComponent
 import com.atlasv.android.appcontext.AppContextHolder
-import java.util.concurrent.TimeUnit
 
 /**
  * weiping@atlasv.com
@@ -71,9 +70,7 @@ object AmplifyHelper {
             AppContextHolder.appContext,
             dataStoreConfiguration,
             modelProvider,
-            SchemaRegistry.instance(),
-            System.currentTimeMillis() - TimeUnit.DAYS.toMillis(1)
-//            0
+            SchemaRegistry.instance()
         )
     }
 }

@@ -44,7 +44,6 @@ public final class TransitionVFXCategory implements Model {
   private final @ModelField(targetType="AWSDateTime", isRequired = true) Temporal.DateTime updatedAt;
   private final @ModelField(targetType="Int") Integer getMethod;
   private final @ModelField(targetType="TransitionVFXCategoryLocale") @HasMany(associatedWith = "materialID", type = TransitionVFXCategoryLocale.class) List<TransitionVFXCategoryLocale> TransitionVFXCategoryLocales = null;
-  private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
   public String getId() {
       return id;
   }
@@ -81,10 +80,6 @@ public final class TransitionVFXCategory implements Model {
       return TransitionVFXCategoryLocales;
   }
   
-  public Temporal.DateTime getCreatedAt() {
-      return createdAt;
-  }
-  
   private TransitionVFXCategory(String id, String name, String coverUrl, Integer sort, Integer online, Temporal.DateTime updatedAt, Integer getMethod) {
     this.id = id;
     this.name = name;
@@ -109,8 +104,7 @@ public final class TransitionVFXCategory implements Model {
               ObjectsCompat.equals(getSort(), transitionVfxCategory.getSort()) &&
               ObjectsCompat.equals(getOnline(), transitionVfxCategory.getOnline()) &&
               ObjectsCompat.equals(getUpdatedAt(), transitionVfxCategory.getUpdatedAt()) &&
-              ObjectsCompat.equals(getGetMethod(), transitionVfxCategory.getGetMethod()) &&
-              ObjectsCompat.equals(getCreatedAt(), transitionVfxCategory.getCreatedAt());
+              ObjectsCompat.equals(getGetMethod(), transitionVfxCategory.getGetMethod());
       }
   }
   
@@ -124,7 +118,6 @@ public final class TransitionVFXCategory implements Model {
       .append(getOnline())
       .append(getUpdatedAt())
       .append(getGetMethod())
-      .append(getCreatedAt())
       .toString()
       .hashCode();
   }
@@ -139,8 +132,7 @@ public final class TransitionVFXCategory implements Model {
       .append("sort=" + String.valueOf(getSort()) + ", ")
       .append("online=" + String.valueOf(getOnline()) + ", ")
       .append("updatedAt=" + String.valueOf(getUpdatedAt()) + ", ")
-      .append("getMethod=" + String.valueOf(getGetMethod()) + ", ")
-      .append("createdAt=" + String.valueOf(getCreatedAt()))
+      .append("getMethod=" + String.valueOf(getGetMethod()))
       .append("}")
       .toString();
   }

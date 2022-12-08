@@ -42,7 +42,6 @@ public final class VFXLocale implements Model {
   private final @ModelField(targetType="ID", isRequired = true) String vfxID;
   private final @ModelField(targetType="AWSDateTime", isRequired = true) Temporal.DateTime updatedAt;
   private final @ModelField(targetType="Int") Integer online;
-  private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
   public String getId() {
       return id;
   }
@@ -71,10 +70,6 @@ public final class VFXLocale implements Model {
       return online;
   }
   
-  public Temporal.DateTime getCreatedAt() {
-      return createdAt;
-  }
-  
   private VFXLocale(String id, String locale, String name, Integer sort, String vfxID, Temporal.DateTime updatedAt, Integer online) {
     this.id = id;
     this.locale = locale;
@@ -99,8 +94,7 @@ public final class VFXLocale implements Model {
               ObjectsCompat.equals(getSort(), vfxLocale.getSort()) &&
               ObjectsCompat.equals(getVfxId(), vfxLocale.getVfxId()) &&
               ObjectsCompat.equals(getUpdatedAt(), vfxLocale.getUpdatedAt()) &&
-              ObjectsCompat.equals(getOnline(), vfxLocale.getOnline()) &&
-              ObjectsCompat.equals(getCreatedAt(), vfxLocale.getCreatedAt());
+              ObjectsCompat.equals(getOnline(), vfxLocale.getOnline());
       }
   }
   
@@ -114,7 +108,6 @@ public final class VFXLocale implements Model {
       .append(getVfxId())
       .append(getUpdatedAt())
       .append(getOnline())
-      .append(getCreatedAt())
       .toString()
       .hashCode();
   }
@@ -129,8 +122,7 @@ public final class VFXLocale implements Model {
       .append("sort=" + String.valueOf(getSort()) + ", ")
       .append("vfxID=" + String.valueOf(getVfxId()) + ", ")
       .append("updatedAt=" + String.valueOf(getUpdatedAt()) + ", ")
-      .append("online=" + String.valueOf(getOnline()) + ", ")
-      .append("createdAt=" + String.valueOf(getCreatedAt()))
+      .append("online=" + String.valueOf(getOnline()))
       .append("}")
       .toString();
   }

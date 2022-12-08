@@ -50,7 +50,6 @@ public final class TextAnim implements Model {
   private final @ModelField(targetType="AWSDateTime", isRequired = true) Temporal.DateTime updatedAt;
   private final @ModelField(targetType="Int") Integer getMethod;
   private final @ModelField(targetType="TextAnimLocale") @HasMany(associatedWith = "materialID", type = TextAnimLocale.class) List<TextAnimLocale> TextAnimLocales = null;
-  private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
   public String getId() {
       return id;
   }
@@ -95,10 +94,6 @@ public final class TextAnim implements Model {
       return TextAnimLocales;
   }
   
-  public Temporal.DateTime getCreatedAt() {
-      return createdAt;
-  }
-  
   private TextAnim(String id, String name, String coverUrl, String downloadUrl, Integer sort, Integer targetVersionCode, Integer online, String categoryID, Temporal.DateTime updatedAt, Integer getMethod) {
     this.id = id;
     this.name = name;
@@ -129,8 +124,7 @@ public final class TextAnim implements Model {
               ObjectsCompat.equals(getOnline(), textAnim.getOnline()) &&
               ObjectsCompat.equals(getCategoryId(), textAnim.getCategoryId()) &&
               ObjectsCompat.equals(getUpdatedAt(), textAnim.getUpdatedAt()) &&
-              ObjectsCompat.equals(getGetMethod(), textAnim.getGetMethod()) &&
-              ObjectsCompat.equals(getCreatedAt(), textAnim.getCreatedAt());
+              ObjectsCompat.equals(getGetMethod(), textAnim.getGetMethod());
       }
   }
   
@@ -147,7 +141,6 @@ public final class TextAnim implements Model {
       .append(getCategoryId())
       .append(getUpdatedAt())
       .append(getGetMethod())
-      .append(getCreatedAt())
       .toString()
       .hashCode();
   }
@@ -165,8 +158,7 @@ public final class TextAnim implements Model {
       .append("online=" + String.valueOf(getOnline()) + ", ")
       .append("categoryID=" + String.valueOf(getCategoryId()) + ", ")
       .append("updatedAt=" + String.valueOf(getUpdatedAt()) + ", ")
-      .append("getMethod=" + String.valueOf(getGetMethod()) + ", ")
-      .append("createdAt=" + String.valueOf(getCreatedAt()))
+      .append("getMethod=" + String.valueOf(getGetMethod()))
       .append("}")
       .toString();
   }

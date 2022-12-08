@@ -50,7 +50,6 @@ public final class VideoFilterCategory implements Model {
   private final @ModelField(targetType="Int") Integer getMethod;
   private final @ModelField(targetType="String") String label;
   private final @ModelField(targetType="VideoFilterCategoryLocale") @HasMany(associatedWith = "materialID", type = VideoFilterCategoryLocale.class) List<VideoFilterCategoryLocale> VideoFilterCategoryLocales = null;
-  private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
   public String getId() {
       return id;
   }
@@ -99,10 +98,6 @@ public final class VideoFilterCategory implements Model {
       return VideoFilterCategoryLocales;
   }
   
-  public Temporal.DateTime getCreatedAt() {
-      return createdAt;
-  }
-  
   private VideoFilterCategory(String id, String name, String coverUrl, Integer sort, Temporal.DateTime updatedAt, Integer online, String testTag, String maskColor, Integer getMethod, String label) {
     this.id = id;
     this.name = name;
@@ -133,8 +128,7 @@ public final class VideoFilterCategory implements Model {
               ObjectsCompat.equals(getTestTag(), videoFilterCategory.getTestTag()) &&
               ObjectsCompat.equals(getMaskColor(), videoFilterCategory.getMaskColor()) &&
               ObjectsCompat.equals(getGetMethod(), videoFilterCategory.getGetMethod()) &&
-              ObjectsCompat.equals(getLabel(), videoFilterCategory.getLabel()) &&
-              ObjectsCompat.equals(getCreatedAt(), videoFilterCategory.getCreatedAt());
+              ObjectsCompat.equals(getLabel(), videoFilterCategory.getLabel());
       }
   }
   
@@ -151,7 +145,6 @@ public final class VideoFilterCategory implements Model {
       .append(getMaskColor())
       .append(getGetMethod())
       .append(getLabel())
-      .append(getCreatedAt())
       .toString()
       .hashCode();
   }
@@ -169,8 +162,7 @@ public final class VideoFilterCategory implements Model {
       .append("testTag=" + String.valueOf(getTestTag()) + ", ")
       .append("maskColor=" + String.valueOf(getMaskColor()) + ", ")
       .append("getMethod=" + String.valueOf(getGetMethod()) + ", ")
-      .append("label=" + String.valueOf(getLabel()) + ", ")
-      .append("createdAt=" + String.valueOf(getCreatedAt()))
+      .append("label=" + String.valueOf(getLabel()))
       .append("}")
       .toString();
   }

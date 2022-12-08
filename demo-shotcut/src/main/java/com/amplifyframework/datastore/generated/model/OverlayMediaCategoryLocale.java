@@ -37,7 +37,6 @@ public final class OverlayMediaCategoryLocale implements Model {
   private final @ModelField(targetType="String") String locale;
   private final @ModelField(targetType="AWSDateTime") Temporal.DateTime updatedAt;
   private final @ModelField(targetType="ID") String materialID;
-  private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
   public String getId() {
       return id;
   }
@@ -56,10 +55,6 @@ public final class OverlayMediaCategoryLocale implements Model {
   
   public String getMaterialId() {
       return materialID;
-  }
-  
-  public Temporal.DateTime getCreatedAt() {
-      return createdAt;
   }
   
   private OverlayMediaCategoryLocale(String id, String name, String locale, Temporal.DateTime updatedAt, String materialID) {
@@ -82,8 +77,7 @@ public final class OverlayMediaCategoryLocale implements Model {
               ObjectsCompat.equals(getName(), overlayMediaCategoryLocale.getName()) &&
               ObjectsCompat.equals(getLocale(), overlayMediaCategoryLocale.getLocale()) &&
               ObjectsCompat.equals(getUpdatedAt(), overlayMediaCategoryLocale.getUpdatedAt()) &&
-              ObjectsCompat.equals(getMaterialId(), overlayMediaCategoryLocale.getMaterialId()) &&
-              ObjectsCompat.equals(getCreatedAt(), overlayMediaCategoryLocale.getCreatedAt());
+              ObjectsCompat.equals(getMaterialId(), overlayMediaCategoryLocale.getMaterialId());
       }
   }
   
@@ -95,7 +89,6 @@ public final class OverlayMediaCategoryLocale implements Model {
       .append(getLocale())
       .append(getUpdatedAt())
       .append(getMaterialId())
-      .append(getCreatedAt())
       .toString()
       .hashCode();
   }
@@ -108,8 +101,7 @@ public final class OverlayMediaCategoryLocale implements Model {
       .append("name=" + String.valueOf(getName()) + ", ")
       .append("locale=" + String.valueOf(getLocale()) + ", ")
       .append("updatedAt=" + String.valueOf(getUpdatedAt()) + ", ")
-      .append("materialID=" + String.valueOf(getMaterialId()) + ", ")
-      .append("createdAt=" + String.valueOf(getCreatedAt()))
+      .append("materialID=" + String.valueOf(getMaterialId()))
       .append("}")
       .toString();
   }

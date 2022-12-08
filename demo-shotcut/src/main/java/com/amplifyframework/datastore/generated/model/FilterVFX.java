@@ -49,7 +49,6 @@ public final class FilterVFX implements Model {
   private final @ModelField(targetType="Int") Integer online;
   private final @ModelField(targetType="AWSDateTime", isRequired = true) Temporal.DateTime updatedAt;
   private final @ModelField(targetType="String") String testTag;
-  private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
   public String getId() {
       return id;
   }
@@ -94,10 +93,6 @@ public final class FilterVFX implements Model {
       return testTag;
   }
   
-  public Temporal.DateTime getCreatedAt() {
-      return createdAt;
-  }
-  
   private FilterVFX(String id, String name, String coverUrl, String downloadUrl, Integer sort, Integer vfxEngineMinVersionCode, String filterVfxCategoryID, String stagedRollout, Integer online, Temporal.DateTime updatedAt, String testTag) {
     this.id = id;
     this.name = name;
@@ -130,8 +125,7 @@ public final class FilterVFX implements Model {
               ObjectsCompat.equals(getStagedRollout(), filterVfx.getStagedRollout()) &&
               ObjectsCompat.equals(getOnline(), filterVfx.getOnline()) &&
               ObjectsCompat.equals(getUpdatedAt(), filterVfx.getUpdatedAt()) &&
-              ObjectsCompat.equals(getTestTag(), filterVfx.getTestTag()) &&
-              ObjectsCompat.equals(getCreatedAt(), filterVfx.getCreatedAt());
+              ObjectsCompat.equals(getTestTag(), filterVfx.getTestTag());
       }
   }
   
@@ -149,7 +143,6 @@ public final class FilterVFX implements Model {
       .append(getOnline())
       .append(getUpdatedAt())
       .append(getTestTag())
-      .append(getCreatedAt())
       .toString()
       .hashCode();
   }
@@ -168,8 +161,7 @@ public final class FilterVFX implements Model {
       .append("stagedRollout=" + String.valueOf(getStagedRollout()) + ", ")
       .append("online=" + String.valueOf(getOnline()) + ", ")
       .append("updatedAt=" + String.valueOf(getUpdatedAt()) + ", ")
-      .append("testTag=" + String.valueOf(getTestTag()) + ", ")
-      .append("createdAt=" + String.valueOf(getCreatedAt()))
+      .append("testTag=" + String.valueOf(getTestTag()))
       .append("}")
       .toString();
   }

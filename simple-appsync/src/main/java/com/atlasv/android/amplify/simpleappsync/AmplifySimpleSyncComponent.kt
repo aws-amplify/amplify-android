@@ -15,7 +15,6 @@ class AmplifySimpleSyncComponent(
     private val dataStoreConfiguration: DataStoreConfiguration,
     private val modelProvider: ModelProvider,
     private val schemaRegistry: SchemaRegistry,
-    private val lastSync: Long,
     private val mergeListFactory: MergeRequestFactory = DefaultMergeRequestFactory
 ) {
 
@@ -27,10 +26,11 @@ class AmplifySimpleSyncComponent(
         AmplifyModelMerger(storage)
     }
 
-    suspend fun syncFromRemote() {
+    suspend fun syncFromRemote(grayRelease: Int, lastSync: Long) {
         try {
             val request = mergeListFactory.create(
-                appContext, dataStoreConfiguration, modelProvider, schemaRegistry, lastSync
+                appContext, dataStoreConfiguration, modelProvider, schemaRegistry, lastSync,
+                grayRelease
             )
             Amplify.API.query(request).data.forEach {
                 merger.mergeAll(it.data.items)

@@ -42,7 +42,6 @@ public final class FilterVFXCategory implements Model {
   private final @ModelField(targetType="AWSDateTime", isRequired = true) Temporal.DateTime updatedAt;
   private final @ModelField(targetType="Int") Integer online;
   private final @ModelField(targetType="String") String maskColor;
-  private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
   public String getId() {
       return id;
   }
@@ -75,10 +74,6 @@ public final class FilterVFXCategory implements Model {
       return maskColor;
   }
   
-  public Temporal.DateTime getCreatedAt() {
-      return createdAt;
-  }
-  
   private FilterVFXCategory(String id, String name, String coverUrl, Integer sort, Temporal.DateTime updatedAt, Integer online, String maskColor) {
     this.id = id;
     this.name = name;
@@ -103,8 +98,7 @@ public final class FilterVFXCategory implements Model {
               ObjectsCompat.equals(getSort(), filterVfxCategory.getSort()) &&
               ObjectsCompat.equals(getUpdatedAt(), filterVfxCategory.getUpdatedAt()) &&
               ObjectsCompat.equals(getOnline(), filterVfxCategory.getOnline()) &&
-              ObjectsCompat.equals(getMaskColor(), filterVfxCategory.getMaskColor()) &&
-              ObjectsCompat.equals(getCreatedAt(), filterVfxCategory.getCreatedAt());
+              ObjectsCompat.equals(getMaskColor(), filterVfxCategory.getMaskColor());
       }
   }
   
@@ -118,7 +112,6 @@ public final class FilterVFXCategory implements Model {
       .append(getUpdatedAt())
       .append(getOnline())
       .append(getMaskColor())
-      .append(getCreatedAt())
       .toString()
       .hashCode();
   }
@@ -133,8 +126,7 @@ public final class FilterVFXCategory implements Model {
       .append("sort=" + String.valueOf(getSort()) + ", ")
       .append("updatedAt=" + String.valueOf(getUpdatedAt()) + ", ")
       .append("online=" + String.valueOf(getOnline()) + ", ")
-      .append("maskColor=" + String.valueOf(getMaskColor()) + ", ")
-      .append("createdAt=" + String.valueOf(getCreatedAt()))
+      .append("maskColor=" + String.valueOf(getMaskColor()))
       .append("}")
       .toString();
   }

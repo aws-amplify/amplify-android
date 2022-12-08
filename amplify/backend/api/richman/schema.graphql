@@ -418,6 +418,7 @@ type VFX @model @key(name: "byVFXCategory", fields: ["vfxCategoryID"]) @auth(rul
   getMethod: Int
   langCode: String
   VFXLocales: [VFXLocale] @connection(keyName: "byVFX", fields: ["id"])
+  grayRelease: Int
 }
 
 type AudioCategory @model @auth(rules: [{allow: public, operations: [read], provider: iam}, {allow: groups, groups: ["Editor"], operations: [read, create, update, delete]}, {allow: private, provider: iam}]) {
