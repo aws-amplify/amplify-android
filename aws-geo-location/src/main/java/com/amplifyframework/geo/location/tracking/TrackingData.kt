@@ -17,7 +17,7 @@ package com.amplifyframework.geo.location.tracking
 
 import com.amplifyframework.geo.options.GeoTrackingSessionOptions
 
-internal class TrackingData(
+internal data class TrackingData(
     val deviceId: String,
     val tracker: String,
     val options: GeoTrackingSessionOptions

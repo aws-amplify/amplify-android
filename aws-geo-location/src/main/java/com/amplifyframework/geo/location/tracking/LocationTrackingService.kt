@@ -25,6 +25,7 @@ import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Binder
 import android.os.Looper
+import androidx.annotation.VisibleForTesting
 import com.amplifyframework.geo.GeoException
 import com.amplifyframework.geo.location.database.GeoDatabase
 import com.amplifyframework.geo.location.database.LocationDao
@@ -41,15 +42,22 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 
 internal class LocationTrackingService : Service() {
-    private lateinit var locationDao: LocationDao
-    private lateinit var locationManager: LocationManager
+    @VisibleForTesting
+    internal lateinit var locationDao: LocationDao
+
+    @VisibleForTesting
+    internal lateinit var locationManager: LocationManager
 
     private val coroutineScope = CoroutineScope(SupervisorJob())
-    private val listener = Listener()
+    private var listener: Listener? = null
     private var trackingData: TrackingData? = null
     private var numUpdates = 0
 
     override fun onBind(intent: Intent?) = LocationServiceBinder(this)
+    override fun onUnbind(intent: Intent?): Boolean {
+        stopTracking()
+        return super.onUnbind(intent)
+    }
 
     override fun onCreate() {
         locationDao = GeoDatabase(this).locationDao
@@ -70,20 +78,22 @@ internal class LocationTrackingService : Service() {
             )
         }
 
+        val locationListener = Listener().also { listener = it }
         this.trackingData = trackingData
 
         locationManager.requestLocationUpdates(
             trackingData.options.minUpdatesInterval,
             trackingData.options.minUpdateDistanceMeters,
             trackingData.options.criteria,
-            listener,
+            locationListener,
             Looper.myLooper()
         )
     }
 
     fun stopTracking() {
         coroutineScope.cancel()
-        locationManager.removeUpdates(listener)
+        listener?.let(locationManager::removeUpdates)
+        listener = null
         trackingData = null
         numUpdates = 0
     }

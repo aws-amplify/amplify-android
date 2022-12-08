@@ -20,6 +20,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
 import android.os.IBinder
+import androidx.annotation.VisibleForTesting
 import com.amplifyframework.geo.GeoException
 import com.amplifyframework.geo.location.database.GeoDatabase
 import com.amplifyframework.geo.location.tracking.LocationTrackingService.LocationServiceBinder
@@ -61,6 +62,7 @@ internal class LocationTracker(private val context: Context) {
             // Cancel the prior tracking and start tracking again with the new data
             existingConnection.binder?.service?.stopTracking()
             existingConnection.binder?.service?.startTracking(trackingData)
+            continuation.resume(Unit)
         }
     }
 
@@ -77,10 +79,11 @@ internal class LocationTracker(private val context: Context) {
         database.locationDao.removeAll(deviceId, tracker)
     }
 
-    private class LocationServiceConnection(
-        val trackingData: TrackingData,
-        val onStarted: () -> Unit,
-        val onError: (GeoException) -> Unit
+    @VisibleForTesting
+    internal class LocationServiceConnection(
+        private val trackingData: TrackingData,
+        private val onStarted: () -> Unit,
+        private val onError: (GeoException) -> Unit
     ) : ServiceConnection {
         var binder: LocationServiceBinder? = null
 

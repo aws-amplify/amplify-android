@@ -18,6 +18,16 @@ apply plugin: 'kotlin-android'
 apply from: rootProject.file('configuration/checkstyle.gradle')
 apply from: rootProject.file('configuration/publishing.gradle')
 
+android {
+    testOptions.unitTests.returnDefaultValues = true
+}
+
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+    kotlinOptions {
+        freeCompilerArgs += ["-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",]
+    }
+}
+
 dependencies {
     implementation project(':core')
     // ToDo: Remove fixed dependency to cognito and abstract it to core
@@ -33,6 +43,9 @@ dependencies {
     testImplementation project(':testutils')
     testImplementation dependency.junit
     testImplementation dependency.robolectric
+    testImplementation dependency.mockk
+    testImplementation dependency.kotlin.test.coroutines
+    testImplementation project(path: ':aws-geo-location')
 
     androidTestImplementation project(':testutils')
     androidTestImplementation project(':aws-auth-cognito')

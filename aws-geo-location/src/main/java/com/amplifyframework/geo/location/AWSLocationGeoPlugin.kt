@@ -319,12 +319,10 @@ class AWSLocationGeoPlugin(
         onResult: Action,
         onError: Consumer<GeoException>
     ) {
-        if (options.tracker == null) {
-            options.tracker = defaultTracker
-        }
+        val tracker = options.tracker ?: defaultTracker
         execute(
             {
-                locationTracker.start(device.resolvedId(), options.tracker, options)
+                locationTracker.start(device.resolvedId(), tracker, options)
                 UploadWorker.options = options
                 UploadWorker.deviceId = device.resolvedId()
             },
