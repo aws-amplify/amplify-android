@@ -49,7 +49,6 @@ import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter;
 import com.amplifyframework.datastore.syncengine.Orchestrator;
 import com.amplifyframework.datastore.syncengine.ReachabilityMonitor;
-import com.amplifyframework.datastore.syncengine.ReachabilityMonitorImpl;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.logging.Logger;
 
@@ -105,7 +104,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
         this.authModeStrategy = AuthModeStrategyType.DEFAULT;
         this.userProvidedConfiguration = userProvidedConfiguration;
         this.isSyncRetryEnabled = userProvidedConfiguration != null && userProvidedConfiguration.getDoSyncRetry();
-        this.reachabilityMonitor = new ReachabilityMonitorImpl();
+        this.reachabilityMonitor = ReachabilityMonitor.Companion.create();
         // Used to interrogate plugins, to understand if sync should be automatically turned on
         this.orchestrator = new Orchestrator(
             modelProvider,
@@ -137,7 +136,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             builder.storageAdapter;
         this.categoryInitializationsPending = new CountDownLatch(1);
         this.reachabilityMonitor = builder.reachabilityMonitor == null ?
-            new ReachabilityMonitorImpl() :
+            ReachabilityMonitor.Companion.create() :
             builder.reachabilityMonitor;
 
         // Used to interrogate plugins, to understand if sync should be automatically turned on

@@ -1,19 +1,3 @@
-package com.amplifyframework.datastore.syncengine
-
-import android.content.Context
-import android.net.ConnectivityManager
-import android.net.ConnectivityManager.NetworkCallback
-import android.net.Network
-import com.amplifyframework.core.Amplify
-import com.amplifyframework.datastore.DataStoreChannelEventName
-import com.amplifyframework.datastore.events.NetworkStatusEvent
-import com.amplifyframework.hub.HubChannel
-import com.amplifyframework.hub.HubEvent
-import io.reactivex.rxjava3.core.Observable
-import io.reactivex.rxjava3.core.ObservableEmitter
-import io.reactivex.rxjava3.core.ObservableOnSubscribe
-import java.util.concurrent.TimeUnit
-
 /*
  * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
@@ -29,38 +13,80 @@ import java.util.concurrent.TimeUnit
  * permissions and limitations under the License.
  */
 
+package com.amplifyframework.datastore.syncengine
+
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.ConnectivityManager.NetworkCallback
+import android.net.Network
+import androidx.annotation.VisibleForTesting
+import com.amplifyframework.core.Amplify
+import com.amplifyframework.datastore.DataStoreChannelEventName
+import com.amplifyframework.datastore.DataStoreException
+import com.amplifyframework.datastore.events.NetworkStatusEvent
+import com.amplifyframework.hub.HubChannel
+import com.amplifyframework.hub.HubEvent
+import io.reactivex.rxjava3.core.Observable
+import io.reactivex.rxjava3.core.ObservableEmitter
+import io.reactivex.rxjava3.core.ObservableOnSubscribe
+import java.util.concurrent.TimeUnit
+
+
 /**
- * The ReachabilityMonitor is responsible for watching the network status as provided by the OS,
- * and publishing the {@link DataStoreChannelEventName.NETWORK_STATUS} event on the {@link Hub}. NETWORK_STATUS=true
- * indicates the network has come online, and NETWORK_STATUS=false indicates the network has gone offline. The
+ * The ReachabilityMonitor is responsible for watching the network status as provided by the OS.
+ * It returns an observable that publishes "true" when the network becomes available and "false" when
+ * the network is lost.  It publishes the current status on subscription.
+ *
  * ReachabilityMonitor does not try to monitor the DataStore websockets or the status of the AppSync service.
  *
  * The network changes are debounced with a 250 ms delay to allow some time for one network to connect after another
- * network has disconnected.
+ * network has disconnected (for example, wifi is lost, then cellular connects) to reduce thrashing.
  */
 interface ReachabilityMonitor {
     fun configure(context: Context)
+
+    companion object {
+        fun create() : ReachabilityMonitor {
+            return ReachabilityMonitorImpl(ProdSchedulerProvider())
+        }
+
+        fun createForTesting(baseSchedulerProvider: SchedulerProvider): ReachabilityMonitor {
+            return ReachabilityMonitorImpl(baseSchedulerProvider)
+        }
+    }
+    fun getObservable(): Observable<Boolean>
+    @VisibleForTesting
+    fun getObservable(emitter: ObservableOnSubscribe<Boolean>): Observable<Boolean>
 }
 
-class ReachabilityMonitorImpl: ReachabilityMonitor {
+private class ReachabilityMonitorImpl constructor(val schedulerProvider: SchedulerProvider)
+    : ReachabilityMonitor {
+
+    var emitter: ObservableOnSubscribe<Boolean>? = null
+
     override fun configure(context: Context) {
-        val emitter = ObservableOnSubscribe { emitter ->
+        emitter = ObservableOnSubscribe { emitter ->
             val callback = getCallback(emitter)
             context.getSystemService(ConnectivityManager::class.java).registerDefaultNetworkCallback(callback)
         }
-        getObservable(emitter)
-            .subscribe()
     }
 
-    internal fun getObservable(observable: ObservableOnSubscribe<Boolean>): Observable<Boolean> {
-        return Observable.create(observable)
-            .debounce(250, TimeUnit.MILLISECONDS)
-            .doOnEach {
-                publishNetworkStatusEvent(it.value!!)
-            }
+    override fun getObservable(): Observable<Boolean> {
+        emitter?.let { emitter ->
+            return getObservable(emitter)
+        } ?: run { throw DataStoreException(
+            "ReachabilityMonitor has not been configured.",
+            "Call ReachabilityMonitor.configure() before calling ReachabilityMonitor.getObservable()") }
     }
 
-    internal fun getCallback(emitter: ObservableEmitter<Boolean>): NetworkCallback {
+    override fun getObservable(emitter: ObservableOnSubscribe<Boolean>): Observable<Boolean> {
+        return Observable.create(emitter)
+            .subscribeOn(schedulerProvider.computation())
+            .debounce(250, TimeUnit.MILLISECONDS, schedulerProvider.computation())
+            .doOnNext { println("value: $it") }
+    }
+
+    private fun getCallback(emitter: ObservableEmitter<Boolean>): NetworkCallback {
         return object : NetworkCallback() {
             override fun onAvailable(network: Network) {
                 emitter.onNext(true)
@@ -71,10 +97,10 @@ class ReachabilityMonitorImpl: ReachabilityMonitor {
         }
     }
 
-    private fun publishNetworkStatusEvent(active: Boolean) {
-        Amplify.Hub.publish(
-            HubChannel.DATASTORE,
-            HubEvent.create(DataStoreChannelEventName.NETWORK_STATUS, NetworkStatusEvent(active))
-        )
-    }
+//    private fun publishNetworkStatusEvent(active: Boolean) {
+//        Amplify.Hub.publish(
+//            HubChannel.DATASTORE,
+//            HubEvent.create(DataStoreChannelEventName.NETWORK_STATUS, NetworkStatusEvent(active))
+//        )
+//    }
 }
