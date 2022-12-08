@@ -1,58 +1,72 @@
 package com.amplifyframework.datastore.syncengine
 
-import com.amplifyframework.datastore.events.NetworkStatusEvent
-import com.amplifyframework.hub.HubChannel
-import com.amplifyframework.testutils.HubAccumulator
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.Network
+import com.amplifyframework.datastore.DataStoreException
 import io.reactivex.rxjava3.core.BackpressureStrategy
-import io.reactivex.rxjava3.core.ObservableOnSubscribe
 import io.reactivex.rxjava3.schedulers.TestScheduler
 import io.reactivex.rxjava3.subscribers.TestSubscriber
-import org.junit.Assert
 import org.junit.Test
+import org.mockito.Mockito.mock
 import java.util.concurrent.TimeUnit
 
 class ReachabilityMonitorTest {
+
+    // Test that calling getObservable() without calling configure() first throws a DataStoreException
+    @Test(expected = DataStoreException::class)
+    fun testReachabilityConfigThrowsException() {
+        ReachabilityMonitor.create().getObservable()
+    }
 
     // Test that the debounce and the event publishing in ReachabilityMonitor works as expected.
     // Events that occur within 250 ms of each other should be debounced so that only the last event
     // of the sequence is published.
     @Test
     fun testReachabilityDebounce() {
-//        val accumulator = HubAccumulator.create(HubChannel.DATASTORE, 3)
-//        accumulator.start()
+        var callback : ConnectivityManager.NetworkCallback? = null
 
-        val testScheduler = TestScheduler()
-
-        val reachabilityMonitor = ReachabilityMonitor.createForTesting(TestSchedulerProvider(testScheduler))
-
-        val emitter = ObservableOnSubscribe { emitter ->
-            println("HELLO")
-            emitter.onNext(true)
-            println("HELLO")
-            emitter.onNext(false)
-            println("HELLO")
-            testScheduler.advanceTimeBy(500, TimeUnit.MILLISECONDS)
-            println("HELLO")
-            emitter.onNext(true)
-            println("HELLO")
-            testScheduler.advanceTimeBy(500, TimeUnit.MILLISECONDS)
-            println("HELLO")
-            emitter.onNext(false)
-            println("HELLO")
-            emitter.onNext(true)
-            println("HELLO")
-            testScheduler.advanceTimeBy(500, TimeUnit.MILLISECONDS)
+        val connectivityProvider = object : ConnectivityProvider {
+            override val hasActiveNetwork: Boolean
+                get() = run  {
+                    return true
+                }
+            override fun registerDefaultNetworkCallback(
+                    context: Context,
+                    callback2: ConnectivityManager.NetworkCallback
+                ) {
+                    callback = callback2
+                }
         }
 
-        val testSubscriber = TestSubscriber<Boolean>()
+        val mockContext = mock(Context::class.java)
+        // TestScheduler allows the virtual time to be advanced by exact amounts, to allow for repeatable tests
+        val testScheduler = TestScheduler()
+        val reachabilityMonitor = ReachabilityMonitor.createForTesting(TestSchedulerProvider(testScheduler))
+        reachabilityMonitor.configure(mockContext, connectivityProvider)
 
-        reachabilityMonitor.getObservable(emitter)
+        // TestSubscriber allows for assertions and awaits on the items it observes
+        val testSubscriber = TestSubscriber<Boolean>()
+        reachabilityMonitor.getObservable()
+            // TestSubscriber requires a Flowable
             .toFlowable(BackpressureStrategy.BUFFER)
             .subscribe(testSubscriber)
 
-        testScheduler.advanceTimeBy(1, TimeUnit.MILLISECONDS)
-        testSubscriber.request(3)
-        testSubscriber.awaitCount(3)
-        testSubscriber.assertValues(false, true, true)
+        val network = mock(Network::class.java)
+        // Should provide initial network state (true) upon subscription (after debounce)
+        testScheduler.advanceTimeBy(251, TimeUnit.MILLISECONDS)
+        callback!!.onAvailable(network)
+        callback!!.onAvailable(network)
+        callback!!.onLost(network)
+        // Should provide false after debounce
+        testScheduler.advanceTimeBy(251, TimeUnit.MILLISECONDS)
+        callback!!.onAvailable(network)
+        // Should provide true after debounce
+        testScheduler.advanceTimeBy(251, TimeUnit.MILLISECONDS)
+        callback!!.onAvailable(network)
+        // Should provide true after debounce
+        testScheduler.advanceTimeBy(251, TimeUnit.MILLISECONDS)
+
+        testSubscriber.assertValues(true, false, true, true)
     }
 }
