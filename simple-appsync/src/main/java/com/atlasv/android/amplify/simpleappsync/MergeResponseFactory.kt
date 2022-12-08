@@ -16,26 +16,41 @@ class MergeResponseFactory : GraphQLResponse.Factory {
     }
 
     override fun <R : Any?> buildResponse(request: GraphQLRequest<R>?, apiResponseJson: String?): GraphQLResponse<R> {
-        if (request !is MergeListRequest) {
-            return gqlResponseFactory.buildResponse(request, apiResponseJson)
-        }
+        try {
+            if (request !is MergeListRequest) {
+                return gqlResponseFactory.buildResponse(request, apiResponseJson)
+            }
 
-        apiResponseJson ?: error("Empty apiResponseJson")
-        val resObj = JSONObject(apiResponseJson)
-        val dataObj = resObj.optJSONObject("data") ?: error("No data in apiResponseJson")
-        val keys = dataObj.keys()
+            apiResponseJson ?: error("Empty apiResponseJson")
+            val resObj = JSONObject(apiResponseJson)
+            val dataObj = resObj.optJSONObject("data")
+                ?: error("No data in apiResponseJson, message=${getDataErrorMessage(resObj)}")
+            val keys = dataObj.keys()
 
-        val result = arrayListOf<Any>()
-        for (k in keys) {
-            val modelObj = dataObj.opt(k)
-            val singleObj = JSONObject()
-            singleObj.put("data", JSONObject().apply {
-                put(k, modelObj)
-            })
-            val childRequest = request.children.find { k == "list${it.modelSchema.name}s" }
-            result.add(gqlResponseFactory.buildResponse(childRequest, singleObj.toString()))
+            val result = arrayListOf<Any>()
+            for (k in keys) {
+                val modelObj = dataObj.opt(k)
+                val singleObj = JSONObject()
+                singleObj.put("data", JSONObject().apply {
+                    put(k, modelObj)
+                })
+                val childRequest = request.children.find { k == "list${it.modelSchema.name}s" }
+                result.add(gqlResponseFactory.buildResponse(childRequest, singleObj.toString()))
+            }
+            LOG.info("Build merge response finish")
+            return GraphQLResponse(result as R, emptyList())
+        } catch (cause: Throwable) {
+            LOG.error("buildResponse failed", cause)
+            return GraphQLResponse(emptyList<Any>() as R, emptyList())
         }
-        LOG.info("Build merge response finish")
-        return GraphQLResponse(result as R, emptyList())
+    }
+
+    private fun getDataErrorMessage(resObj: JSONObject): String {
+        val errors = resObj.optJSONArray("errors")?.takeIf { it.length() > 0 } ?: return ""
+        val messageBuilder = StringBuilder()
+        for (i in 0 until errors.length()) {
+            messageBuilder.append(errors.optJSONObject(i).optString("message")).append("\n")
+        }
+        return messageBuilder.toString()
     }
 }
