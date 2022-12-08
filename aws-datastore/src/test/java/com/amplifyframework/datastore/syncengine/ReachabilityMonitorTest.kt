@@ -17,7 +17,7 @@ class ReachabilityMonitorTest {
         val accumulator = HubAccumulator.create(HubChannel.DATASTORE, 3)
         accumulator.start()
 
-        val reachabilityMonitor = ReachabilityMonitor()
+        val reachabilityMonitor = ReachabilityMonitorImpl()
 
         val emitter = ObservableOnSubscribe { emitter ->
             emitter.onNext(true)
