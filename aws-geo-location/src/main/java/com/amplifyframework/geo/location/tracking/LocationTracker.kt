@@ -59,10 +59,11 @@ internal class LocationTracker(private val context: Context) {
             val intent = Intent(context, LocationTrackingService::class.java)
             context.bindService(intent, connection, Context.BIND_AUTO_CREATE)
         } else {
-            // Cancel the prior tracking and start tracking again with the new data
-            existingConnection.binder?.service?.stopTracking()
-            existingConnection.binder?.service?.startTracking(trackingData)
-            continuation.resume(Unit)
+            val error = GeoException(
+                "Tracking session is already active",
+                "Ensure you are using stopTracking to end the prior session"
+            )
+            continuation.resumeWithException(error)
         }
     }
 

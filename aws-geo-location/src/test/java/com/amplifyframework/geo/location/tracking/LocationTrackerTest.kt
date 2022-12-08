@@ -8,7 +8,6 @@ import io.mockk.Called
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import io.mockk.verifyOrder
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 
@@ -50,22 +49,16 @@ internal class LocationTrackerTest {
         }
     }
 
-    @Test
-    fun `start function stops and restarts the tracking when called multiple times`() = runTest {
+    @Test(expected = GeoException::class)
+    fun `start function throws a GeoException if session is already active`() = runTest {
         val deviceId = "device"
         val tracker = "tracker"
         val options = GeoTrackingSessionOptions.builder()
             .withPowerRequired(GeoTrackingSessionOptions.Power.MEDIUM)
             .build()
 
-        locationTracker.start("first", "second", options)
         locationTracker.start(deviceId, tracker, options)
-
-        verifyOrder {
-            trackerService.startTracking(TrackingData("first", "second", options))
-            trackerService.stopTracking()
-            trackerService.startTracking(TrackingData(deviceId, tracker, options))
-        }
+        locationTracker.start(deviceId, tracker, options)
     }
 
     @Test(expected = GeoException::class)
