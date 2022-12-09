@@ -295,8 +295,8 @@ class PinpointAnalyticsInstrumentationTest {
 
     private fun fetchEndpointResponse(): EndpointResponse {
         var endpointResponse: EndpointResponse? = null
-        Log.i("IDs", appId);
-        Log.i("IDs", uniqueId);
+        Log.i("IDs", appId)
+        Log.i("IDs", uniqueId)
         runBlocking {
             endpointResponse = pinpointClient.getEndpoint(
                 GetEndpointRequest.invoke {
