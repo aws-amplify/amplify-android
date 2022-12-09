@@ -42,7 +42,7 @@ public final class ModelWithMetadata<M extends Model> {
         this.syncMetadata = new ModelMetadata(model.getModelName() + "|" + model.getPrimaryKeyString(),
                 syncMetadata.isDeleted(),
                 syncMetadata.getVersion(),
-                syncMetadata.getLastChangedAt(), syncMetadata.getTypename());
+                syncMetadata.getLastChangedAt());
     }
 
     /**

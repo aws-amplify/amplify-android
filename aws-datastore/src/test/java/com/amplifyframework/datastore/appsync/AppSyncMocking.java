@@ -204,8 +204,7 @@ public final class AppSyncMocking {
          */
         @NonNull
         public <T extends Model> CreateConfigurator mockSuccessResponse(@NonNull T model) {
-            ModelMetadata metadata = new ModelMetadata(model.getPrimaryKeyString(), false, 1, Temporal.Timestamp.now(),
-                    model.getModelName());
+            ModelMetadata metadata = new ModelMetadata(model.getPrimaryKeyString(), false, 1, Temporal.Timestamp.now());
             ModelWithMetadata<T> modelWithMetadata = new ModelWithMetadata<>(model, metadata);
             return mockSuccessResponse(model, modelWithMetadata);
         }
@@ -313,7 +312,7 @@ public final class AppSyncMocking {
         public <T extends Model> UpdateConfigurator mockSuccessResponse(@NonNull T model, int version) {
             Temporal.Timestamp lastChangedAt = Temporal.Timestamp.now();
             ModelMetadata metadata = new ModelMetadata(model.getPrimaryKeyString(), false, version + 1,
-                    lastChangedAt, model.getModelName());
+                    lastChangedAt);
             ModelWithMetadata<T> modelWithMetadata = new ModelWithMetadata<>(model, metadata);
             return mockSuccessResponse(model, version, modelWithMetadata);
         }
@@ -426,7 +425,7 @@ public final class AppSyncMocking {
         public <T extends Model> DeleteConfigurator mockSuccessResponse(@NonNull T model, int version) {
             Temporal.Timestamp lastChangedAt = Temporal.Timestamp.now();
             ModelMetadata metadata = new ModelMetadata(model.getPrimaryKeyString(), true, version + 1,
-                    lastChangedAt, model.getModelName());
+                    lastChangedAt);
             ModelWithMetadata<T> modelWithMetadata = new ModelWithMetadata<>(model, metadata);
             return mockSuccessResponse(model, version, modelWithMetadata);
         }
