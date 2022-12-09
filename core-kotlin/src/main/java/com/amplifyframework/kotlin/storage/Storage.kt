@@ -16,6 +16,7 @@
 package com.amplifyframework.kotlin.storage
 
 import com.amplifyframework.core.async.Cancelable
+import com.amplifyframework.core.async.Resumable
 import com.amplifyframework.storage.StorageException
 import com.amplifyframework.storage.operation.StorageTransferOperation
 import com.amplifyframework.storage.options.StorageDownloadFileOptions
@@ -91,11 +92,12 @@ interface Storage {
 
     @FlowPreview
     data class InProgressStorageOperation<T>(
+        val transferId: String,
         private val results: Flow<T>,
         private val progress: Flow<StorageTransferProgress>,
         private val errors: Flow<StorageException>,
-        private val delegate: Cancelable?
-    ) : Cancelable {
+        private val delegate: StorageTransferOperation<*, *>?
+    ) : Cancelable, Resumable {
 
         override fun cancel() {
             delegate?.cancel()
@@ -119,6 +121,14 @@ interface Storage {
                 }
                 .map { it as T }
                 .first()
+        }
+
+        override fun pause() {
+            delegate?.pause()
+        }
+
+        override fun resume() {
+            delegate?.resume()
         }
     }
 }
