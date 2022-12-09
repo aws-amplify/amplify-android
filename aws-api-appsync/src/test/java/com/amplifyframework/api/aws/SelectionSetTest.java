@@ -15,6 +15,9 @@
 
 package com.amplifyframework.api.aws;
 
+import static com.amplifyframework.api.aws.SelectionSetDepth.defaultDepth;
+import static org.junit.Assert.assertEquals;
+
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.graphql.QueryType;
 import com.amplifyframework.core.model.AuthRule;
@@ -42,8 +45,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
-
 @RunWith(RobolectricTestRunner.class)
 public class SelectionSetTest {
     /**
@@ -55,7 +56,7 @@ public class SelectionSetTest {
         SelectionSet selectionSet = SelectionSet.builder()
                 .modelClass(Post.class)
                 .operation(QueryType.GET)
-                .requestOptions(new DefaultGraphQLRequestOptions())
+                .requestOptions(defaultDepth())
                 .build();
         assertEquals(Resources.readAsString("selection-set-post.txt"), selectionSet.toString() + "\n");
     }
@@ -69,7 +70,7 @@ public class SelectionSetTest {
         SelectionSet selectionSet = SelectionSet.builder()
                 .modelClass(Parent.class)
                 .operation(QueryType.GET)
-                .requestOptions(new DefaultGraphQLRequestOptions())
+                .requestOptions(defaultDepth())
                 .build();
         assertEquals(Resources.readAsString("selection-set-parent.txt"), selectionSet.toString() + "\n");
     }
@@ -83,7 +84,7 @@ public class SelectionSetTest {
         SelectionSet selectionSet = SelectionSet.builder()
                 .modelClass(OwnerAuth.class)
                 .operation(QueryType.GET)
-                .requestOptions(new DefaultGraphQLRequestOptions())
+                .requestOptions(defaultDepth())
                 .build();
         assertEquals(Resources.readAsString("selection-set-ownerauth.txt"), selectionSet.toString() + "\n");
     }
@@ -134,7 +135,7 @@ public class SelectionSetTest {
             .modelClass(SerializedModel.class) // Note: this is different from the above test.
             .modelSchema(schema) // Note: this test passes an explicit schema, instead of relying on modelClass().
             .operation(QueryType.GET)
-            .requestOptions(new DefaultGraphQLRequestOptions())
+            .requestOptions(defaultDepth())
             .build();
         assertEquals(Resources.readAsString("selection-set-ownerauth.txt"), selectionSet.toString() + "\n");
     }
@@ -148,7 +149,7 @@ public class SelectionSetTest {
         SelectionSet selectionSet = SelectionSet.builder()
                 .modelClass(OwnerAuthExplicit.class)
                 .operation(QueryType.GET)
-                .requestOptions(new DefaultGraphQLRequestOptions())
+                .requestOptions(defaultDepth())
                 .build();
         assertEquals(Resources.readAsString("selection-set-ownerauth.txt"), selectionSet.toString() + "\n");
     }
@@ -262,7 +263,7 @@ public class SelectionSetTest {
                 .modelClass(SerializedModel.class)
                 .modelSchema(personSchema)
                 .operation(QueryType.GET)
-                .requestOptions(new DefaultGraphQLRequestOptions())
+                .requestOptions(defaultDepth())
                 .build();
         String result = selectionSet.toString();
         assertEquals(Resources.readAsString("selection-set-nested-serialized-model-serialized-custom-type.txt"),

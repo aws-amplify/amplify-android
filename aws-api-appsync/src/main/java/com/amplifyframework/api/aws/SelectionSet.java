@@ -17,6 +17,7 @@ package com.amplifyframework.api.aws;
 
 import android.text.TextUtils;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.AmplifyException;
@@ -30,6 +31,7 @@ import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelAssociation;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.PropertyContainerPath;
 import com.amplifyframework.core.model.SchemaRegistry;
 import com.amplifyframework.core.model.SerializedModel;
 import com.amplifyframework.core.model.types.JavaFieldType;
@@ -40,6 +42,7 @@ import com.amplifyframework.util.Wrap;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -84,6 +87,15 @@ public final class SelectionSet {
     public SelectionSet(String value, @NonNull Set<SelectionSet> nodes) {
         this.value = value;
         this.nodes = Objects.requireNonNull(nodes);
+    }
+
+    /**
+     * Returns node value.
+     * @return node value
+     */
+    @Nullable
+    public String getValue() {
+        return value;
     }
 
     /**
@@ -172,12 +184,19 @@ public final class SelectionSet {
      * Factory class for creating and serializing a selection set within a GraphQL document.
      */
     static final class Builder {
+        private String value;
         private Class<? extends Model> modelClass;
         private Operation operation;
         private GraphQLRequestOptions requestOptions;
         private ModelSchema modelSchema;
+        private List<PropertyContainerPath> includeAssociations = Collections.emptyList();
 
         Builder() { }
+
+        public Builder value(@Nullable String value) {
+            this.value = value;
+            return Builder.this;
+        }
 
         public Builder modelClass(@NonNull Class<? extends Model> modelClass) {
             this.modelClass = Objects.requireNonNull(modelClass);
@@ -199,6 +218,11 @@ public final class SelectionSet {
             return Builder.this;
         }
 
+        public Builder includeAssociations(@NonNull PropertyContainerPath... associations) {
+            this.includeAssociations = Arrays.asList(associations);
+            return Builder.this;
+        }
+
         /**
          * Builds the SelectionSet containing all of the fields of the provided model class.
          * @return selection set
@@ -210,12 +234,17 @@ public final class SelectionSet {
                         "Provide either a modelClass or a modelSchema to build the selection set");
             }
             Objects.requireNonNull(this.operation);
-            SelectionSet node = new SelectionSet(null,
+            SelectionSet node = new SelectionSet(value,
                     SerializedModel.class == modelClass
                             ? getModelFields(modelSchema, requestOptions.maxDepth(), operation)
-                            : getModelFields(modelClass, requestOptions.maxDepth(), operation));
+                            : getModelFields(modelClass, requestOptions.maxDepth(), operation, false));
             if (QueryType.LIST.equals(operation) || QueryType.SYNC.equals(operation)) {
                 node = wrapPagination(node);
+            }
+
+            for (PropertyContainerPath association : includeAssociations) {
+                SelectionSet included = SelectionSetUtils.asSelectionSet(association, false);
+                SelectionSetUtils.merge(node, included);
             }
             return node;
         }
@@ -253,21 +282,25 @@ public final class SelectionSet {
          * @throws AmplifyException On failure to build selection set
          */
         @SuppressWarnings("unchecked") // Cast to Class<Model>
-        private Set<SelectionSet> getModelFields(Class<? extends Model> clazz, int depth, Operation operation)
-                throws AmplifyException {
-            if (depth < 0) {
+        private Set<SelectionSet> getModelFields(
+                Class<? extends Model> clazz,
+                int depth,
+                Operation operation,
+                boolean includeAssociationId
+        ) throws AmplifyException {
+            if (depth < 0 && !includeAssociationId) {
                 return new HashSet<>();
             }
 
             Set<SelectionSet> result = new HashSet<>();
             ModelSchema schema = ModelSchema.fromModelClass(clazz);
 
-            if (depth == 0
-                    && LeafSerializationBehavior.JUST_ID.equals(requestOptions.leafSerializationBehavior())
-                    && operation != QueryType.SYNC
-            ) {
-                for (String s : schema.getPrimaryIndexFields()) {
-                    result.add(new SelectionSet(s));
+            boolean serializeLeafOnly = LeafSerializationBehavior.JUST_ID.equals(
+                    requestOptions.leafSerializationBehavior());
+            if (includeAssociationId || (
+                    depth == 0 && serializeLeafOnly && operation != QueryType.SYNC)) {
+                for (String identifierField : schema.getPrimaryIndexFields()) {
+                    result.add(new SelectionSet(identifierField));
                 }
                 return result;
             }
@@ -275,17 +308,20 @@ public final class SelectionSet {
             for (Field field : FieldFinder.findModelFieldsIn(clazz)) {
                 String fieldName = field.getName();
                 if (schema.getAssociations().containsKey(fieldName)) {
+                    final boolean isAssociationOwner = schema.getAssociations().get(fieldName).isOwner();
                     if (List.class.isAssignableFrom(field.getType())) {
                         if (depth >= 1) {
                             ParameterizedType listType = (ParameterizedType) field.getGenericType();
                             Class<Model> listTypeClass = (Class<Model>) listType.getActualTypeArguments()[0];
                             Set<SelectionSet> fields = wrapPagination(getModelFields(listTypeClass,
-                                                                depth - 1,
-                                                                operation));
+                                    depth - 1,
+                                    operation,
+                                    false));
                             result.add(new SelectionSet(fieldName, fields));
                         }
-                    } else if (depth >= 1) {
-                        Set<SelectionSet> fields = getModelFields((Class<Model>) field.getType(), depth - 1, operation);
+                    } else if (depth >= 1 || isAssociationOwner) {
+                        Set<SelectionSet> fields = getModelFields((Class<Model>) field.getType(),
+                                depth - 1, operation, true);
                         result.add(new SelectionSet(fieldName, fields));
                     }
                 } else if (isCustomType(field)) {
@@ -365,8 +401,7 @@ public final class SelectionSet {
                 return new HashSet<>();
             }
             Set<SelectionSet> result = new HashSet<>();
-            if (
-                    depth == 0
+            if (depth == 0
                     && LeafSerializationBehavior.JUST_ID.equals(requestOptions.leafSerializationBehavior())
                     && operation != QueryType.SYNC
             ) {
