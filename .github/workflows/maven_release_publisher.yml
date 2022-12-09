@@ -20,9 +20,11 @@ jobs:
         with:
           project-name: AmplifyAndroid-IntegrationTest
           env-vars-for-codebuild: |
-            ORG_GRADLE_PROJECT_useAwsSdkReleaseBuild
+            ORG_GRADLE_PROJECT_useAwsSdkReleaseBuild,
+            NUMBER_OF_DEVICES_TO_TEST
         env:
           ORG_GRADLE_PROJECT_useAwsSdkReleaseBuild: true
+          NUMBER_OF_DEVICES_TO_TEST: 3
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:

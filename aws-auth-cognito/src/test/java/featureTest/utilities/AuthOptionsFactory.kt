@@ -21,6 +21,8 @@ import com.amplifyframework.auth.cognito.featuretest.AuthAPI
 import com.amplifyframework.auth.cognito.featuretest.AuthAPI.resetPassword
 import com.amplifyframework.auth.cognito.featuretest.AuthAPI.signIn
 import com.amplifyframework.auth.cognito.featuretest.AuthAPI.signUp
+import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions
+import com.amplifyframework.auth.cognito.options.AuthFlowType
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
@@ -59,7 +61,7 @@ object AuthOptionsFactory {
         AuthAPI.rememberDevice -> TODO()
         AuthAPI.resendSignUpCode -> AuthResendSignUpCodeOptions.defaults()
         AuthAPI.resendUserAttributeConfirmationCode -> AuthResendUserAttributeConfirmationCodeOptions.defaults()
-        signIn -> AuthSignInOptions.defaults()
+        signIn -> getSignInOptions(optionsData)
         AuthAPI.signInWithSocialWebUI -> AuthWebUISignInOptions.builder().build()
         AuthAPI.signInWithWebUI -> AuthWebUISignInOptions.builder().build()
         AuthAPI.signOut -> getSignOutOptions(optionsData)
@@ -73,6 +75,17 @@ object AuthOptionsFactory {
         AuthAPI.getPluginKey -> TODO()
         AuthAPI.getVersion -> TODO()
     } as T
+
+    private fun getSignInOptions(optionsData: JsonObject): AuthSignInOptions {
+        return if (optionsData.containsKey("signInOptions")) {
+            val authFlowType = AuthFlowType.valueOf(
+                ((optionsData["signInOptions"] as Map<String, String>)["authFlow"] as JsonPrimitive).content
+            )
+            AWSCognitoAuthSignInOptions.builder().authFlowType(authFlowType).build()
+        } else {
+            AuthSignInOptions.defaults()
+        }
+    }
 
     private fun getSignUpOptions(optionsData: JsonObject): AuthSignUpOptions =
         AuthSignUpOptions.builder().userAttributes(

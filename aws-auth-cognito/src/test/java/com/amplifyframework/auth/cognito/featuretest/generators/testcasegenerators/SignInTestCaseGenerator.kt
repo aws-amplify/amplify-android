@@ -27,6 +27,7 @@ import com.amplifyframework.auth.cognito.featuretest.ResponseType
 import com.amplifyframework.auth.cognito.featuretest.generators.SerializableProvider
 import com.amplifyframework.auth.cognito.featuretest.generators.authstategenerators.AuthStateJsonGenerator
 import com.amplifyframework.auth.cognito.featuretest.generators.toJsonElement
+import com.amplifyframework.auth.cognito.options.AuthFlowType
 import kotlinx.serialization.json.JsonObject
 
 object SignInTestCaseGenerator : SerializableProvider {
@@ -47,6 +48,21 @@ object SignInTestCaseGenerator : SerializableProvider {
                 "SRP_B" to "def",
                 "USERNAME" to username,
                 "USER_ID_FOR_SRP" to userId
+            )
+        ).toJsonElement()
+    )
+
+    private val mockedInitiateAuthForCustomAuthWithoutSRPResponse = MockResponse(
+        CognitoType.CognitoIdentityProvider,
+        "initiateAuth",
+        ResponseType.Success,
+        mapOf(
+            "challengeName" to ChallengeNameType.CustomChallenge.toString(),
+            "challengeParameters" to mapOf(
+                "SALT" to "abc",
+                "SECRET_BLOCK" to "secretBlock",
+                "SRP_B" to "def",
+                "USERNAME" to username,
             )
         ).toJsonElement()
     )
@@ -93,6 +109,19 @@ object SignInTestCaseGenerator : SerializableProvider {
             "challengeParameters" to mapOf(
                 "CODE_DELIVERY_DELIVERY_MEDIUM" to "SMS",
                 "CODE_DELIVERY_DESTINATION" to phone
+            )
+        ).toJsonElement()
+    )
+
+    private val mockedCustomChallengeResponse = MockResponse(
+        CognitoType.CognitoIdentityProvider,
+        "respondToAuthChallenge",
+        ResponseType.Success,
+        mapOf(
+            "session" to "someSession",
+            "challengeName" to "CUSTOM_CHALLENGE",
+            "challengeParameters" to mapOf(
+                "Code" to "1234"
             )
         ).toJsonElement()
     )
@@ -146,6 +175,23 @@ object SignInTestCaseGenerator : SerializableProvider {
         ).toJsonElement()
     )
 
+    private val mockedSignInCustomAuthChallengeExpectation = ExpectationShapes.Amplify(
+        apiName = AuthAPI.signIn,
+        responseType = ResponseType.Success,
+        response = mapOf(
+            "isSignedIn" to false,
+            "nextStep" to mapOf(
+                "signInStep" to "CONFIRM_SIGN_IN_WITH_CUSTOM_CHALLENGE",
+                "additionalInfo" to mapOf(
+                    "SALT" to "abc",
+                    "SECRET_BLOCK" to "secretBlock",
+                    "USERNAME" to "username",
+                    "SRP_B" to "def"
+                )
+            )
+        ).toJsonElement()
+    )
+
     private val mockConfirmDeviceResponse = MockResponse(
         CognitoType.CognitoIdentityProvider,
         "confirmDevice",
@@ -174,16 +220,6 @@ object SignInTestCaseGenerator : SerializableProvider {
             options = JsonObject(emptyMap())
         ),
         validations = listOf(
-//            ExpectationShapes.Cognito(
-//                apiName = "signIn",
-//                // see [https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_InitiateAuth.html]
-//                // see [https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_RespondToAuthChallenge.html]
-//                request = mapOf(
-//                    "clientId" to "testAppClientId", // This should be pulled from configuration
-//                    "authFlow" to AuthFlowType.UserSrpAuth,
-//                    "authParameters" to mapOf("username" to username, "SRP_A" to "123")
-//                ).toJsonElement()
-//            ),
             mockedSignInSuccessExpectation,
             ExpectationShapes.State("SignedIn_SessionEstablished.json")
         )
@@ -232,5 +268,32 @@ object SignInTestCaseGenerator : SerializableProvider {
         )
     )
 
-    override val serializables: List<Any> = listOf(baseCase, challengeCase, deviceSRPTestCase)
+    private val customAuthCase = FeatureTestCase(
+        description = "Test that Custom Auth signIn invokes proper cognito request and returns custom challenge",
+        preConditions = PreConditions(
+            "authconfiguration.json",
+            "SignedOut_Configured.json",
+            mockedResponses = listOf(
+                mockedInitiateAuthForCustomAuthWithoutSRPResponse,
+                mockedCustomChallengeResponse
+            )
+        ),
+        api = API(
+            AuthAPI.signIn,
+            params = mapOf(
+                "username" to username,
+                "password" to "",
+            ).toJsonElement(),
+            options = mapOf(
+                "signInOptions" to
+                    mapOf("authFlow" to AuthFlowType.CUSTOM_AUTH_WITHOUT_SRP.toString())
+            ).toJsonElement()
+        ),
+        validations = listOf(
+            mockedSignInCustomAuthChallengeExpectation,
+            ExpectationShapes.State("CustomSignIn_SigningIn.json")
+        )
+    )
+
+    override val serializables: List<Any> = listOf(baseCase, challengeCase, deviceSRPTestCase, customAuthCase)
 }
