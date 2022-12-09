@@ -16,11 +16,23 @@ env:
 phases:
   install:
     runtime-versions:
-      android: 29
       nodejs: 12
       java: corretto11
     commands:
       - echo 'Install phase starting'
+      ### INSTALL ANDROID 31
+      - export ANDROID_TOOLS_FILENAME="commandlinetools-linux-9123335_latest.zip"
+      - wget https://dl.google.com/android/repository/$ANDROID_TOOLS_FILENAME -P ~ > /dev/null
+      - unzip ~/$ANDROID_TOOLS_FILENAME -d ~ > /dev/null 2>&1
+      - mkdir -p /usr/local/android-sdk-linux/cmdline-tools
+      - mv ~/cmdline-tools /usr/local/android-sdk-linux/cmdline-tools/latest
+      - export PATH=/usr/local/android-sdk-linux/cmdline-tools/latest:/usr/local/android-sdk-linux/cmdline-tools/latest/bin:/usr/local/android-sdk-linux/platform-tools:$PATH
+      - export ANDROID_SDK_ROOT=/usr/local/android-sdk-linux
+      - which sdkmanager
+      - yes | sdkmanager --licenses > /dev/null
+      - sdkmanager "platform-tools" "platforms;android-31" > /dev/null
+      - sdkmanager "build-tools;31.0.0" > /dev/null
+      ### END INSTALL ANDROID 31
     finally:
       - echo 'Install phase completed.'
   pre_build:
