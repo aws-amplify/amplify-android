@@ -16,6 +16,9 @@
 package com.amplifyframework.datastore;
 
 import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.Network;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
@@ -275,13 +278,14 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     private void observeNetworkStatus() {
         reachabilityMonitor.getObservable()
             .doOnNext(networkIsAvailable -> {
-                LOG.info("Network is available: " + networkIsAvailable);
                 if (networkIsAvailable) {
+                    LOG.info("Network available, start datastore");
                     start(
                         (Action) () -> { },
                         ((e) -> LOG.error("Error starting datastore plugin after network event: " + e))
                     );
                 } else {
+                    LOG.info("Network lost, stop datastore");
                     stop(
                         (Action) () -> { },
                         ((e) -> LOG.error("Error stopping datastore plugin after network event: " + e))

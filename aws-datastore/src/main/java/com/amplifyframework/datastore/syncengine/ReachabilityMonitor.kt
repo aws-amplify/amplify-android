@@ -20,6 +20,7 @@ import android.net.ConnectivityManager
 import android.net.ConnectivityManager.NetworkCallback
 import android.net.Network
 import androidx.annotation.VisibleForTesting
+import com.amplifyframework.core.Amplify
 import com.amplifyframework.datastore.DataStoreException
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.core.ObservableEmitter
@@ -55,8 +56,7 @@ internal interface ReachabilityMonitor {
 
 private class ReachabilityMonitorImpl constructor(val schedulerProvider: SchedulerProvider)
     : ReachabilityMonitor {
-
-    var emitter: ObservableOnSubscribe<Boolean>? = null
+    private var emitter: ObservableOnSubscribe<Boolean>? = null
 
     override fun configure(context: Context) {
         return configure(context, DefaultConnectivityProvider())
@@ -74,21 +74,21 @@ private class ReachabilityMonitorImpl constructor(val schedulerProvider: Schedul
     override fun getObservable(): Observable<Boolean> {
         emitter?.let { emitter ->
             return Observable.create(emitter)
-                .subscribeOn(schedulerProvider.computation())
+                .subscribeOn(schedulerProvider.io())
                 .debounce(250, TimeUnit.MILLISECONDS, schedulerProvider.computation())
-                .doOnNext { println("value: $it") }
         } ?: run { throw DataStoreException(
             "ReachabilityMonitor has not been configured.",
             "Call ReachabilityMonitor.configure() before calling ReachabilityMonitor.getObservable()") }
     }
 
     private fun getCallback(emitter: ObservableEmitter<Boolean>): NetworkCallback {
-
         return object : NetworkCallback() {
             override fun onAvailable(network: Network) {
+                print("Network Available: $network")
                 emitter.onNext(true)
             }
             override fun onLost(network: Network) {
+                print("Network Lost: $network")
                 emitter.onNext(false)
             }
         }
@@ -110,13 +110,13 @@ private class DefaultConnectivityProvider : ConnectivityProvider {
     private var connectivityManager: ConnectivityManager? = null
 
     override val hasActiveNetwork: Boolean
-        get() = connectivityManager?.let { it.activeNetwork == null } ?: run { throw DataStoreException(
+        get() = connectivityManager?.let { it.activeNetwork != null } ?: run { throw DataStoreException(
             "ReachabilityMonitor has not been configured.",
             "Call ReachabilityMonitor.configure() before calling ReachabilityMonitor.getObservable()")
         }
 
     override fun registerDefaultNetworkCallback(context: Context, callback: NetworkCallback) {
         connectivityManager = context.getSystemService(ConnectivityManager::class.java)
+        connectivityManager?.registerDefaultNetworkCallback(callback)
     }
-
 }
