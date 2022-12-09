@@ -25,11 +25,11 @@ subprojects {
                     }
                 }
             }
-            task runTestsInDeviceFarmPool {
+            task runNightlyTestsInDeviceFarmPool {
                 dependsOn(assembleAndroidTest)
                 doLast {
                     exec {
-                        commandLine("$rootDir.path/scripts/run_tests_in_devicefarm_pool.sh")
+                        commandLine("$rootDir.path/scripts/run_nightly_tests_in_devicefarm_pool.sh")
                         args([project.name])
                     }
                 }
