@@ -368,7 +368,7 @@ class PinpointAnalyticsInstrumentationTest {
         private const val CREDENTIALS_RESOURCE_NAME = "credentials"
         private const val CONFIGURATION_NAME = "amplifyconfiguration"
         private const val COGNITO_CONFIGURATION_TIMEOUT = 10 * 1000L
-        private const val PINPOINT_ROUNDTRIP_TIMEOUT = 20 * 1000L
+        private const val PINPOINT_ROUNDTRIP_TIMEOUT = 1 * 1000L
         private const val RECORD_INSERTION_TIMEOUT = 5 * 1000L
         private const val UNIQUE_ID_KEY = "UniqueId"
         private const val PREFERENCES_AND_FILE_MANAGER_SUFFIX = "515d6767-01b7-49e5-8273-c8d11b0f331d"
