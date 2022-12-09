@@ -130,15 +130,15 @@ object SignUpTestCaseGenerator : SerializableProvider {
                 apiName = AuthAPI.signUp,
                 responseType = ResponseType.Success,
                 response =
-                    AuthSignUpResult(
-                        true,
-                        AuthNextSignUpStep(
-                            AuthSignUpStep.DONE,
-                            emptyMap(),
-                            null
-                        ),
+                AuthSignUpResult(
+                    true,
+                    AuthNextSignUpStep(
+                        AuthSignUpStep.DONE,
+                        emptyMap(),
                         null
-                    ).toJsonElement()
+                    ),
+                    null
+                ).toJsonElement()
             )
         )
     )
