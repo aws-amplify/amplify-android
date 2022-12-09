@@ -4,6 +4,8 @@ import android.app.Application
 import com.amplifyframework.api.aws.AWSApiPlugin
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
 import com.amplifyframework.kotlin.core.Amplify
+import com.amplifyframework.logging.LogLevel
+import com.amplifyframework.logging.LoggingCategory
 import com.atlasv.android.amplify.simpleappsync.MergeResponseFactory
 import com.atlasv.android.log.HyperLogger
 import timber.log.Timber
@@ -23,6 +25,7 @@ class App : Application() {
             it.enableLogcat = BuildConfig.DEBUG
         }
         val AMPLIFY_ENV = "staging"
+        LoggingCategory.LOG_LEVEL = LogLevel.DEBUG
         Amplify.addPlugin(AWSCognitoAuthPlugin())
         Amplify.addPlugin(AWSApiPlugin.builder()
             .responseFactory(MergeResponseFactory())

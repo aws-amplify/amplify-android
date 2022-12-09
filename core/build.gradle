@@ -35,6 +35,8 @@ dependencies {
 
     implementation dependency.aws.credentials
 
+    api "com.atlasv.android:timber:5.0.2"
+
     testImplementation project(path: ':aws-api-appsync') // Used to reference Temporal types in tests.
     testImplementation project(path: ':testmodels')
     testImplementation(project(path: ':testutils')) {

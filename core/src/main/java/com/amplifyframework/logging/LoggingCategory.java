@@ -23,11 +23,6 @@ import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.util.Environment;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 /**
  * The LoggingCategory is a collection of zero or more plugin
  * implementations which implement the logging category behavior. The
@@ -36,7 +31,7 @@ import java.util.Set;
  */
 public final class LoggingCategory extends Category<LoggingPlugin<?>> implements LoggingCategoryBehavior {
     private final LoggingPlugin<?> defaultPlugin;
-
+    public static LogLevel LOG_LEVEL = LogLevel.NONE;
     /**
      * Constructs a logging category.
      *
@@ -65,13 +60,8 @@ public final class LoggingCategory extends Category<LoggingPlugin<?>> implements
     @NonNull
     @Override
     public Logger forNamespace(@Nullable String namespace) {
-        Set<LoggingPlugin<?>> loggingPlugins = new HashSet<>(getPlugins());
-        loggingPlugins.add(defaultPlugin);
-        List<Logger> delegates = new ArrayList<>();
-        for (LoggingPlugin<?> plugin : loggingPlugins) {
-            delegates.add(plugin.forNamespace(namespace));
-        }
-        return new BroadcastLogger(delegates);
+        String usedNamespace = namespace == null ? "amplify:" : namespace;
+        return new TimberLogger(usedNamespace, LOG_LEVEL);
     }
 
     @NonNull

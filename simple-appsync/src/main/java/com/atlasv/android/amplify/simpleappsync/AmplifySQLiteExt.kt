@@ -12,12 +12,12 @@ import com.atlasv.android.amplify.simpleappsync.AmplifySimpleSyncComponent.Compa
  */
 fun <T : Model> SQLiteStorageAdapter.deleteList(items: List<T>) {
     for (item in items) {
-        val modelName: String = item.modelName
         if (!sqlQueryProcessor.modelExists(item, QueryPredicates.all())) {
-            LOG.verbose(modelName + " model with id = " + item.primaryKeyString + " does not exist.")
-            return
+            LOG.debug(item.modelName + " model with id = " + item.primaryKeyString + " does not exist.")
+            continue
         }
         writeData(item, StorageItemChange.Type.DELETE)
+        LOG.debug("Delete $item")
     }
 }
 

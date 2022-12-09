@@ -32,7 +32,7 @@ class MainActivity : AppCompatActivity() {
             CoroutineScope(Dispatchers.IO).launch {
                 AmplifyHelper.component.syncFromRemote(
                     grayRelease = 9,
-                    lastSync = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(1)
+                    lastSync = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(30)
                 )
             }
         }
