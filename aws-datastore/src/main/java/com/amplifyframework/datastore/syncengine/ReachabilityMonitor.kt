@@ -110,13 +110,17 @@ private class DefaultConnectivityProvider : ConnectivityProvider {
     private var connectivityManager: ConnectivityManager? = null
 
     override val hasActiveNetwork: Boolean
-        get() = connectivityManager?.let { it.activeNetwork != null } ?: run { throw DataStoreException(
-            "ReachabilityMonitor has not been configured.",
-            "Call ReachabilityMonitor.configure() before calling ReachabilityMonitor.getObservable()")
+        get() = connectivityManager?.let { it.activeNetwork != null } ?:
+            run { throw DataStoreException(
+                "ReachabilityMonitor has not been configured.",
+                "Call ReachabilityMonitor.configure() before calling ReachabilityMonitor.getObservable()")
         }
 
     override fun registerDefaultNetworkCallback(context: Context, callback: NetworkCallback) {
         connectivityManager = context.getSystemService(ConnectivityManager::class.java)
-        connectivityManager?.registerDefaultNetworkCallback(callback)
+        connectivityManager?.let { it.registerDefaultNetworkCallback(callback) } ?:
+            run { throw DataStoreException(
+                "ConnectivityManager not available",
+                "No recovery suggestion is available")}
     }
 }
