@@ -17,7 +17,6 @@ package com.amplifyframework.datastore.syncengine
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Scheduler
 import io.reactivex.rxjava3.schedulers.Schedulers
-import io.reactivex.rxjava3.schedulers.TestScheduler
 
 /**
  * This interface provides a way to give custom schedulers to RX observables for testing.
@@ -32,16 +31,4 @@ class ProdSchedulerProvider : SchedulerProvider {
     override fun computation() = Schedulers.computation()
     override fun ui() = AndroidSchedulers.mainThread()
     override fun io() = Schedulers.io()
-}
-
-class TrampolineSchedulerProvider : SchedulerProvider {
-    override fun computation() = Schedulers.trampoline()
-    override fun ui() = Schedulers.trampoline()
-    override fun io() = Schedulers.trampoline()
-}
-
-class TestSchedulerProvider(private val scheduler: TestScheduler) : SchedulerProvider {
-    override fun computation() = scheduler
-    override fun ui() = scheduler
-    override fun io() = scheduler
 }

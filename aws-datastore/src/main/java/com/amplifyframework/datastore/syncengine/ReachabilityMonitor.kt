@@ -20,7 +20,6 @@ import android.net.ConnectivityManager
 import android.net.ConnectivityManager.NetworkCallback
 import android.net.Network
 import androidx.annotation.VisibleForTesting
-import com.amplifyframework.core.Amplify
 import com.amplifyframework.datastore.DataStoreException
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.core.ObservableEmitter
@@ -43,7 +42,7 @@ internal interface ReachabilityMonitor {
     fun configure(context: Context, connectivityProvider: ConnectivityProvider)
 
     companion object {
-        fun create() : ReachabilityMonitor {
+        fun create(): ReachabilityMonitor {
             return ReachabilityMonitorImpl(ProdSchedulerProvider())
         }
 
@@ -54,8 +53,7 @@ internal interface ReachabilityMonitor {
     fun getObservable(): Observable<Boolean>
 }
 
-private class ReachabilityMonitorImpl constructor(val schedulerProvider: SchedulerProvider)
-    : ReachabilityMonitor {
+private class ReachabilityMonitorImpl constructor(val schedulerProvider: SchedulerProvider) : ReachabilityMonitor {
     private var emitter: ObservableOnSubscribe<Boolean>? = null
 
     override fun configure(context: Context) {
@@ -76,9 +74,12 @@ private class ReachabilityMonitorImpl constructor(val schedulerProvider: Schedul
             return Observable.create(emitter)
                 .subscribeOn(schedulerProvider.io())
                 .debounce(250, TimeUnit.MILLISECONDS, schedulerProvider.computation())
-        } ?: run { throw DataStoreException(
-            "ReachabilityMonitor has not been configured.",
-            "Call ReachabilityMonitor.configure() before calling ReachabilityMonitor.getObservable()") }
+        } ?: run {
+            throw DataStoreException(
+                "ReachabilityMonitor has not been configured.",
+                "Call ReachabilityMonitor.configure() before calling ReachabilityMonitor.getObservable()"
+            )
+        }
     }
 
     private fun getCallback(emitter: ObservableEmitter<Boolean>): NetworkCallback {
@@ -108,17 +109,22 @@ private class DefaultConnectivityProvider : ConnectivityProvider {
     private var connectivityManager: ConnectivityManager? = null
 
     override val hasActiveNetwork: Boolean
-        get() = connectivityManager?.let { it.activeNetwork != null } ?:
-            run { throw DataStoreException(
-                "ReachabilityMonitor has not been configured.",
-                "Call ReachabilityMonitor.configure() before calling ReachabilityMonitor.getObservable()")
-        }
+        get() = connectivityManager?.let { it.activeNetwork != null }
+            ?: run {
+                throw DataStoreException(
+                    "ReachabilityMonitor has not been configured.",
+                    "Call ReachabilityMonitor.configure() before calling ReachabilityMonitor.getObservable()"
+                )
+            }
 
     override fun registerDefaultNetworkCallback(context: Context, callback: NetworkCallback) {
         connectivityManager = context.getSystemService(ConnectivityManager::class.java)
-        connectivityManager?.let { it.registerDefaultNetworkCallback(callback) } ?:
-            run { throw DataStoreException(
-                "ConnectivityManager not available",
-                "No recovery suggestion is available")}
+        connectivityManager?.let { it.registerDefaultNetworkCallback(callback) }
+            ?: run {
+                throw DataStoreException(
+                    "ConnectivityManager not available",
+                    "No recovery suggestion is available"
+                )
+            }
     }
 }
