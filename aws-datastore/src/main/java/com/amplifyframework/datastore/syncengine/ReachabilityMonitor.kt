@@ -84,11 +84,9 @@ private class ReachabilityMonitorImpl constructor(val schedulerProvider: Schedul
     private fun getCallback(emitter: ObservableEmitter<Boolean>): NetworkCallback {
         return object : NetworkCallback() {
             override fun onAvailable(network: Network) {
-                print("Network Available: $network")
                 emitter.onNext(true)
             }
             override fun onLost(network: Network) {
-                print("Network Lost: $network")
                 emitter.onNext(false)
             }
         }
