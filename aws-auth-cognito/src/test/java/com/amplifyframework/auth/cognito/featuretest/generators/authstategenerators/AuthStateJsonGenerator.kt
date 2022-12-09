@@ -101,5 +101,26 @@ object AuthStateJsonGenerator : SerializableProvider {
         AuthorizationState.SigningIn()
     )
 
+    private val receivedCustomChallengeState = AuthState.Configured(
+        AuthenticationState.SigningIn(
+            SignInState.ResolvingChallenge(
+                SignInChallengeState.WaitingForAnswer(
+                    AuthChallenge(
+                        challengeName = "CUSTOM_CHALLENGE",
+                        username = username,
+                        session = "someSession",
+                        parameters = mapOf(
+                            "SALT" to "abc",
+                            "SECRET_BLOCK" to "secretBlock",
+                            "SRP_B" to "def",
+                            "USERNAME" to "username"
+                        )
+                    )
+                )
+            )
+        ),
+        AuthorizationState.SigningIn()
+    )
+
     override val serializables: List<Any> = listOf(signedInState, signedOutState, receivedChallengeState)
 }
