@@ -28,7 +28,6 @@ phases:
       - mv ~/cmdline-tools /usr/local/android-sdk-linux/cmdline-tools/latest
       - export PATH=/usr/local/android-sdk-linux/cmdline-tools/latest:/usr/local/android-sdk-linux/cmdline-tools/latest/bin:/usr/local/android-sdk-linux/platform-tools:$PATH
       - export ANDROID_SDK_ROOT=/usr/local/android-sdk-linux
-      - which sdkmanager
       - yes | sdkmanager --licenses > /dev/null
       - sdkmanager "platform-tools" "platforms;android-31" > /dev/null
       - sdkmanager "build-tools;31.0.0" > /dev/null
