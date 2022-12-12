@@ -59,7 +59,7 @@ import static org.junit.Assert.assertTrue;
  * Instrumentation test for operational work on download.
  */
 public final class AWSS3StorageDownloadTest {
-    private static final long EXTENDED_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(20);
+    private static final long EXTENDED_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(60);
 
     private static final StorageAccessLevel TESTING_ACCESS_LEVEL = StorageAccessLevel.PUBLIC;
     private static final long LARGE_FILE_SIZE = 10 * 1024 * 1024L; // 10 MB

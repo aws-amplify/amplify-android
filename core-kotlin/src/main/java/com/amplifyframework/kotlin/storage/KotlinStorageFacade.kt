@@ -16,7 +16,6 @@
 package com.amplifyframework.kotlin.storage
 
 import com.amplifyframework.core.Amplify
-import com.amplifyframework.core.async.Cancelable
 import com.amplifyframework.kotlin.storage.Storage.InProgressStorageOperation
 import com.amplifyframework.storage.StorageCategoryBehavior as Delegate
 import com.amplifyframework.storage.StorageException
@@ -75,10 +74,11 @@ class KotlinStorageFacade(private val delegate: Delegate = Amplify.Storage) : St
                 { errors.tryEmit(it) }
             )
             return InProgressStorageOperation(
+                operation.transferId,
                 results.asSharedFlow(),
                 progress.asSharedFlow(),
                 errors.asSharedFlow(),
-                operation as Cancelable
+                operation
             )
         }
 
@@ -98,10 +98,11 @@ class KotlinStorageFacade(private val delegate: Delegate = Amplify.Storage) : St
                 { errors.tryEmit(it) }
             )
             return InProgressStorageOperation(
+                operation.transferId,
                 results.asSharedFlow(),
                 progress.asSharedFlow(),
                 errors.asSharedFlow(),
-                operation as Cancelable
+                operation
             )
         }
 
@@ -125,10 +126,11 @@ class KotlinStorageFacade(private val delegate: Delegate = Amplify.Storage) : St
                 { errors.tryEmit(it) }
             )
             return InProgressStorageOperation(
+                cancelable.transferId,
                 results.asSharedFlow(),
                 progress.asSharedFlow(),
                 errors.asSharedFlow(),
-                cancelable as Cancelable
+                cancelable
             )
         }
 

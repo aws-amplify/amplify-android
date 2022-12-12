@@ -19,7 +19,10 @@ import android.content.ContentValues
 import android.content.Context
 import android.net.Uri
 import androidx.test.core.app.ApplicationProvider
+import com.amplifyframework.storage.ObjectMetadata
 import java.io.File
+import java.sql.Date
+import java.time.Instant
 import java.util.UUID
 import org.junit.After
 import org.junit.Assert
@@ -89,6 +92,41 @@ open class TransferDBTest {
             Assert.assertEquals(bucketName, this.bucketName)
             Assert.assertEquals(uploadID, this.multipartId)
         } ?: Assert.fail("InsertedRecord is null")
+    }
+
+    @Test
+    fun generateContentValuesForMultiPartUploadWithMetadata() {
+        val key = UUID.randomUUID().toString()
+        val expectedHttpExpiresDate = Date.from(Instant.now())
+        val expectedExpirationDate = Date.from(Instant.EPOCH)
+        val restoreExpirationTime = Date.from(Instant.EPOCH)
+        val contentValues = arrayOfNulls<ContentValues>(1)
+        contentValues[0] = transferDB.generateContentValuesForMultiPartUpload(
+            key,
+            bucketName,
+            key,
+            tempFile,
+            0L,
+            0,
+            null,
+            1L,
+            0,
+            ObjectMetadata(
+                userMetadata = mapOf("key1" to "value1"),
+                metaData = mutableMapOf("key1" to "value1"),
+                httpExpiresDate = expectedHttpExpiresDate,
+                expirationTime = expectedExpirationDate,
+                expirationTimeRuleId = "ruleId",
+                ongoingRestore = false,
+                restoreExpirationTime = restoreExpirationTime
+            ),
+            null
+        )
+        val uri = transferDB.bulkInsertTransferRecords(contentValues)
+        transferDB.getTransferRecordById(uri).run {
+            Assert.assertEquals(mapOf("key1" to "value1"), this?.userMetadata)
+            Assert.assertNull(this?.headerStorageClass)
+        }
     }
 
     @Test
