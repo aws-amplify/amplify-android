@@ -1,3 +1,15 @@
+## [Release 0.21.10](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.21.10)
+
+### Bug Fixes
+- **core:** remove unused dynamic nav dependency (#2131)
+- **datastore:** remove typename from ModelMetadata (#2122) (#2166)
+
+### Miscellaneous
+- Update DeviceFarm build config (#2169)
+- bump sdk version (#2175)
+
+[See all changes between 0.21.9 and 0.21.10](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.21.9...release-kotlin_v0.21.10)
+
 ## [Release 0.21.9](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.21.9)
 
 ### Miscellaneous
