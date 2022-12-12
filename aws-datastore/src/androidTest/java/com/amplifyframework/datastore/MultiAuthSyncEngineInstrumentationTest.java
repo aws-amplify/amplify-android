@@ -355,7 +355,6 @@ public final class MultiAuthSyncEngineInstrumentationTest {
      * @throws IOException Not expected.
      */
     @Test
-    /***************/
     public void testGroupPrivateUPIAMPostAnonymous() throws IOException, AmplifyException {
         verifyScenario(GroupPrivateUPIAMPost.class,
                       false,
@@ -458,7 +457,6 @@ public final class MultiAuthSyncEngineInstrumentationTest {
      * @throws IOException Not expected.
      */
     @Test
-    /****** failing *******/
     public void testPrivatePrivateUPIAMPostAnonymous() throws IOException, AmplifyException {
         verifyScenario(PrivatePrivateUPIAMPost.class,
                       false,

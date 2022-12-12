@@ -45,7 +45,6 @@ import org.json.JSONException
 import org.junit.Assert
 import org.junit.Before
 import org.junit.BeforeClass
-import org.junit.Ignore
 import org.junit.Test
 
 class PinpointAnalyticsInstrumentationTest {
@@ -269,7 +268,6 @@ class PinpointAnalyticsInstrumentationTest {
      * to the endpoint attributes.
      */
     @Test
-    @Ignore("Auth issue causing inconsistency in this test")
     fun testIdentifyUserWithUserAttributes() {
         val location = testLocation
         val properties = endpointProperties
