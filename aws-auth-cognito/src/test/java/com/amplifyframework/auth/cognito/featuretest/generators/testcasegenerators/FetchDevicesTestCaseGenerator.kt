@@ -1,6 +1,9 @@
 package com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerators
 
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.NotAuthorizedException
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.AttributeType
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeviceType
+import aws.smithy.kotlin.runtime.time.Instant
+import com.amplifyframework.auth.AuthDevice
 import com.amplifyframework.auth.cognito.featuretest.API
 import com.amplifyframework.auth.cognito.featuretest.AuthAPI
 import com.amplifyframework.auth.cognito.featuretest.CognitoType
@@ -11,20 +14,39 @@ import com.amplifyframework.auth.cognito.featuretest.PreConditions
 import com.amplifyframework.auth.cognito.featuretest.ResponseType
 import com.amplifyframework.auth.cognito.featuretest.generators.SerializableProvider
 import com.amplifyframework.auth.cognito.featuretest.generators.toJsonElement
+import com.amplifyframework.auth.exceptions.SignedOutException
 import kotlinx.serialization.json.JsonObject
 
-object RememberDeviceTestCaseGenerator : SerializableProvider {
+object FetchDevicesTestCaseGenerator : SerializableProvider {
+
+    private val expectedSuccess = listOf<AuthDevice>(AuthDevice.fromId("deviceKey")).toJsonElement()
+
     private val mockCognitoResponse = MockResponse(
         CognitoType.CognitoIdentityProvider,
-        "updateDeviceStatus",
+        "listDevices",
         ResponseType.Success,
-        JsonObject(emptyMap())
+        mapOf(
+            "devices" to listOf<DeviceType>(
+                DeviceType.invoke {
+                    deviceAttributes = listOf<AttributeType>(
+                        AttributeType.invoke {
+                            name = "name"
+                            value = "value"
+                        }
+                    )
+                    deviceKey = "deviceKey"
+                    deviceCreateDate = Instant.now()
+                    deviceLastAuthenticatedDate = Instant.now()
+                    deviceLastModifiedDate = Instant.now()
+                }
+            )
+        ).toJsonElement()
     )
 
     private val apiReturnValidation = ExpectationShapes.Amplify(
-        AuthAPI.rememberDevice,
+        AuthAPI.fetchDevices,
         ResponseType.Success,
-        JsonObject(emptyMap()),
+        expectedSuccess,
     )
 
     private val baseCase = FeatureTestCase(
@@ -35,30 +57,38 @@ object RememberDeviceTestCaseGenerator : SerializableProvider {
             mockedResponses = listOf(mockCognitoResponse)
         ),
         api = API(
-            AuthAPI.rememberDevice,
+            AuthAPI.fetchDevices,
             JsonObject(emptyMap()),
-            JsonObject(emptyMap())
+            JsonObject(emptyMap()),
         ),
         validations = listOf(apiReturnValidation)
     )
 
     private val successCase: FeatureTestCase = baseCase.copy(
-        description = "Nothing is returned when remember device succeeds",
+        description = "List of devices returned when fetch devices API succeeds",
         preConditions = baseCase.preConditions.copy(mockedResponses = listOf(mockCognitoResponse)),
         validations = baseCase.validations.plus(apiReturnValidation)
     )
 
     private val errorCase: FeatureTestCase
         get() {
-            val errorResponse = NotAuthorizedException.invoke {}
+            val errorResponse = SignedOutException()
             return baseCase.copy(
-                description = "AuthException is thrown when rememberDevice API is called without signing in",
+                description = "AuthException is thrown when forgetDevice API is called without signing in",
                 preConditions = baseCase.preConditions.copy(
-                    state = "SignedOut_Configured.json"
+                    state = "SignedOut_Configured.json",
+                    mockedResponses = listOf(
+                        MockResponse(
+                            CognitoType.CognitoIdentityProvider,
+                            "forgetDevice",
+                            ResponseType.Failure,
+                            errorResponse.toJsonElement()
+                        )
+                    )
                 ),
                 validations = listOf(
                     ExpectationShapes.Amplify(
-                        AuthAPI.rememberDevice,
+                        AuthAPI.forgetDevice,
                         ResponseType.Failure,
                         com.amplifyframework.auth.exceptions.SignedOutException().toJsonElement(),
                     )

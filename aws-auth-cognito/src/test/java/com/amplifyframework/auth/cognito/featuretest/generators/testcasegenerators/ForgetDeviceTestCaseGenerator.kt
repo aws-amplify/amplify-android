@@ -1,6 +1,6 @@
 package com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerators
 
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.NotAuthorizedException
+import com.amplifyframework.auth.AuthDevice
 import com.amplifyframework.auth.cognito.featuretest.API
 import com.amplifyframework.auth.cognito.featuretest.AuthAPI
 import com.amplifyframework.auth.cognito.featuretest.CognitoType
@@ -11,6 +11,7 @@ import com.amplifyframework.auth.cognito.featuretest.PreConditions
 import com.amplifyframework.auth.cognito.featuretest.ResponseType
 import com.amplifyframework.auth.cognito.featuretest.generators.SerializableProvider
 import com.amplifyframework.auth.cognito.featuretest.generators.toJsonElement
+import com.amplifyframework.auth.exceptions.SignedOutException
 import kotlinx.serialization.json.JsonObject
 
 object ForgetDeviceTestCaseGenerator : SerializableProvider {
@@ -36,8 +37,10 @@ object ForgetDeviceTestCaseGenerator : SerializableProvider {
         ),
         api = API(
             AuthAPI.forgetDevice,
+            mapOf(
+                "device" to AuthDevice.fromId("id", "test")
+            ).toJsonElement(),
             JsonObject(emptyMap()),
-            JsonObject(emptyMap())
         ),
         validations = listOf(apiReturnValidation)
     )
@@ -50,10 +53,11 @@ object ForgetDeviceTestCaseGenerator : SerializableProvider {
 
     private val errorCase: FeatureTestCase
         get() {
-            val errorResponse = NotAuthorizedException.invoke {}
+            val errorResponse = SignedOutException()
             return baseCase.copy(
-                description = "AuthException is thrown when forgetDevice API call fails",
+                description = "AuthException is thrown when forgetDevice API is called without signing in",
                 preConditions = baseCase.preConditions.copy(
+                    state = "SignedOut_Configured.json",
                     mockedResponses = listOf(
                         MockResponse(
                             CognitoType.CognitoIdentityProvider,
@@ -67,9 +71,7 @@ object ForgetDeviceTestCaseGenerator : SerializableProvider {
                     ExpectationShapes.Amplify(
                         AuthAPI.forgetDevice,
                         ResponseType.Failure,
-                        com.amplifyframework.auth.exceptions.NotAuthorizedException(
-                            cause = errorResponse
-                        ).toJsonElement(),
+                        SignedOutException().toJsonElement(),
                     )
                 )
             )
