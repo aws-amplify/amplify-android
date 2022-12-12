@@ -40,8 +40,8 @@ import java.util.Objects;
  * performing various operations.
  */
 public final class SynchronousGeo {
+    private static final int TIMEOUT = 20 * 1000;
     private final GeoCategoryBehavior asyncDelegate;
-    private final int TIMEOUT = 20 * 1000;
 
     private SynchronousGeo(GeoCategoryBehavior asyncDelegate) {
         this.asyncDelegate = asyncDelegate;
