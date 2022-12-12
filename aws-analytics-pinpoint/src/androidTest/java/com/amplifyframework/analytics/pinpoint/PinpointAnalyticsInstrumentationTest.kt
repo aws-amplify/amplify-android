@@ -42,7 +42,11 @@ import java.util.UUID
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.runBlocking
 import org.json.JSONException
-import org.junit.*
+import org.junit.Assert
+import org.junit.Before
+import org.junit.BeforeClass
+import org.junit.Ignore
+import org.junit.Test
 
 class PinpointAnalyticsInstrumentationTest {
     @Before
