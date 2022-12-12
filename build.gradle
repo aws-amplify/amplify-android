@@ -74,7 +74,7 @@ ext {
     navigationVersion = '2.3.4'
     dependency = [
         android: [
-            desugartools: 'com.android.tools:desugar_jdk_libs:1.0.9',
+            desugartools: 'com.android.tools:desugar_jdk_libs:1.2.0',
         ],
         androidx: [
             v4support: 'androidx.legacy:legacy-support-v4:1.0.0',
