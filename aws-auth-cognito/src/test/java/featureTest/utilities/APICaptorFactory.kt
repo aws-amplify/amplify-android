@@ -117,6 +117,16 @@ class APICaptorFactory(
                 every { consumer.call() } answers { latch.countDown() }
                 successCaptors[apiName] = actionCaptor
             }
+            AuthAPI.fetchDevices -> {
+                val consumer = onSuccess[apiName] as Action
+                every { consumer.call() } answers { latch.countDown() }
+                successCaptors[apiName] = actionCaptor
+            }
+            AuthAPI.fetchUserAttributes -> {
+                val consumer = onSuccess[apiName] as Action
+                every { consumer.call() } answers { latch.countDown() }
+                successCaptors[apiName] = actionCaptor
+            }
             else -> throw Error("onSuccess for $authApi is not defined!")
         }
     }
