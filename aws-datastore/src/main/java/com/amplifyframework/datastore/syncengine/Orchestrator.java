@@ -354,6 +354,7 @@ public final class Orchestrator {
         Amplify.Hub.publish(HubChannel.DATASTORE,
                 HubEvent.create(DataStoreChannelEventName.NETWORK_STATUS, new NetworkStatusEvent(active)));
     }
+
     private void publishReadyEvent() {
         Amplify.Hub.publish(HubChannel.DATASTORE, HubEvent.create(DataStoreChannelEventName.READY));
     }
