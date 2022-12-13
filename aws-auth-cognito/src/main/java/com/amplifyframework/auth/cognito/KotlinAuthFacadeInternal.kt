@@ -181,34 +181,32 @@ internal class KotlinAuthFacadeInternal(private val delegate: RealAWSCognitoAuth
     suspend fun signInWithSocialWebUI(
         provider: AuthProvider,
         callingActivity: Activity
-    ):
-        AuthSignInResult {
-            return suspendCoroutine { continuation ->
-                delegate.signInWithSocialWebUI(
-                    provider,
-                    callingActivity,
-                    { continuation.resume(it) },
-                    { continuation.resumeWithException(it) }
-                )
-            }
+    ): AuthSignInResult {
+        return suspendCoroutine { continuation ->
+            delegate.signInWithSocialWebUI(
+                provider,
+                callingActivity,
+                { continuation.resume(it) },
+                { continuation.resumeWithException(it) }
+            )
         }
+    }
 
     suspend fun signInWithSocialWebUI(
         provider: AuthProvider,
         callingActivity: Activity,
         options: AuthWebUISignInOptions
-    ):
-        AuthSignInResult {
-            return suspendCoroutine { continuation ->
-                delegate.signInWithSocialWebUI(
-                    provider,
-                    callingActivity,
-                    options,
-                    { continuation.resume(it) },
-                    { continuation.resumeWithException(it) }
-                )
-            }
+    ): AuthSignInResult {
+        return suspendCoroutine { continuation ->
+            delegate.signInWithSocialWebUI(
+                provider,
+                callingActivity,
+                options,
+                { continuation.resume(it) },
+                { continuation.resumeWithException(it) }
+            )
         }
+    }
 
     suspend fun signInWithWebUI(
         callingActivity: Activity

@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!--
+<?xml version="1.0" encoding="utf-8"?><!--
    Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 
    Licensed under the Apache License, Version 2.0 (the "License").
@@ -22,6 +21,4 @@
     <color name="map_controls_background">#ffffff</color>
     <color name="map_controls_border">#bcbcbc</color>
     <color name="map_controls_foreground">#646464</color>
-
-    <color name="map_loadingBackground">#4dffffff</color>
 </resources>

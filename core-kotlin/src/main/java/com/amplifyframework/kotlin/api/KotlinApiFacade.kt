@@ -42,46 +42,46 @@ class KotlinApiFacade(private val delegate: Delegate = Amplify.API) : Api {
     @Throws(ApiException::class)
     override suspend fun <R> query(request: GraphQLRequest<R>, apiName: String?):
         GraphQLResponse<R> {
-            return suspendCancellableCoroutine { continuation ->
-                val operation = if (apiName != null) {
-                    delegate.query(
-                        apiName,
-                        request,
-                        { continuation.resume(it) },
-                        { continuation.resumeWithException(it) }
-                    )
-                } else {
-                    delegate.query(
-                        request,
-                        { continuation.resume(it) },
-                        { continuation.resumeWithException(it) }
-                    )
-                }
-                continuation.invokeOnCancellation { operation?.cancel() }
+        return suspendCancellableCoroutine { continuation ->
+            val operation = if (apiName != null) {
+                delegate.query(
+                    apiName,
+                    request,
+                    { continuation.resume(it) },
+                    { continuation.resumeWithException(it) }
+                )
+            } else {
+                delegate.query(
+                    request,
+                    { continuation.resume(it) },
+                    { continuation.resumeWithException(it) }
+                )
             }
+            continuation.invokeOnCancellation { operation?.cancel() }
         }
+    }
 
     @Throws(ApiException::class)
     override suspend fun <T> mutate(request: GraphQLRequest<T>, apiName: String?):
         GraphQLResponse<T> {
-            return suspendCancellableCoroutine { continuation ->
-                val operation = if (apiName != null) {
-                    delegate.mutate(
-                        apiName,
-                        request,
-                        { continuation.resume(it) },
-                        { continuation.resumeWithException(it) }
-                    )
-                } else {
-                    delegate.mutate(
-                        request,
-                        { continuation.resume(it) },
-                        { continuation.resumeWithException(it) }
-                    )
-                }
-                continuation.invokeOnCancellation { operation?.cancel() }
+        return suspendCancellableCoroutine { continuation ->
+            val operation = if (apiName != null) {
+                delegate.mutate(
+                    apiName,
+                    request,
+                    { continuation.resume(it) },
+                    { continuation.resumeWithException(it) }
+                )
+            } else {
+                delegate.mutate(
+                    request,
+                    { continuation.resume(it) },
+                    { continuation.resumeWithException(it) }
+                )
             }
+            continuation.invokeOnCancellation { operation?.cancel() }
         }
+    }
 
     @ExperimentalCoroutinesApi
     @FlowPreview
