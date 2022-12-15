@@ -1,7 +1,6 @@
 ## [Release 2.1.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.1.0)
 
 ### Features
-- Feat(Auth Test): Custom party testing for Custom Test without SRP (#2149)
 - feat(Geo): Add Kotlin Geo Facade (#2155)
 
 ### Miscellaneous
@@ -9,6 +8,7 @@
 - chore: Remove Javadoc tasks (#2139)
 - Update README.md (#2120)
 - Dengdan stress test (#2153)
+- Feat(Auth Test): Custom party testing for Custom Test without SRP (#2149)
 - Unignore storage and pinpoint tests (#2156)
 - Update DeviceFarm build config (#2168)
 - Add Geo Rx Bindings (#2159)
