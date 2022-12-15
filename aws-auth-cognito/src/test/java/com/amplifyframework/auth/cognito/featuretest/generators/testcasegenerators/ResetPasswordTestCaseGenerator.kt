@@ -15,6 +15,7 @@
 
 package com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerators
 
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.NotAuthorizedException
 import com.amplifyframework.auth.cognito.featuretest.API
 import com.amplifyframework.auth.cognito.featuretest.AuthAPI
 import com.amplifyframework.auth.cognito.featuretest.CognitoType
@@ -95,5 +96,32 @@ object ResetPasswordTestCaseGenerator : SerializableProvider {
         validations = baseCase.validations.plus(apiReturnValidation)
     )
 
-    override val serializables: List<Any> = listOf(baseCase, successCase)
+    private val errorCase: FeatureTestCase
+        get() {
+            val errorResponse = NotAuthorizedException.invoke { message = "Cognito error message" }
+            return baseCase.copy(
+                description = "AuthException is thrown when forgotPassword API call fails",
+                preConditions = baseCase.preConditions.copy(
+                    mockedResponses = listOf(
+                        MockResponse(
+                            CognitoType.CognitoIdentityProvider,
+                            "forgotPassword",
+                            ResponseType.Failure,
+                            errorResponse.toJsonElement()
+                        )
+                    )
+                ),
+                validations = listOf(
+                    ExpectationShapes.Amplify(
+                        AuthAPI.resetPassword,
+                        ResponseType.Failure,
+                        com.amplifyframework.auth.exceptions.NotAuthorizedException(
+                            cause = errorResponse
+                        ).toJsonElement(),
+                    )
+                )
+            )
+        }
+
+    override val serializables: List<Any> = listOf(baseCase, errorCase, successCase)
 }
