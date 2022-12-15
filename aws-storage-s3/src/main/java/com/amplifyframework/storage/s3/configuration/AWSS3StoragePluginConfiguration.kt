@@ -28,12 +28,11 @@ class AWSS3StoragePluginConfiguration private constructor(builder: Builder) {
                 .build()
     }
 
-    fun getAWSS3PluginPrefixResolver(authCredentialsProvider: AuthCredentialsProvider):
-        AWSS3PluginPrefixResolver {
-            return awsS3PluginPrefixResolver ?: StorageAccessLevelAwarePrefixResolver(
-                authCredentialsProvider
-            )
-        }
+    fun getAWSS3PluginPrefixResolver(authCredentialsProvider: AuthCredentialsProvider): AWSS3PluginPrefixResolver {
+        return awsS3PluginPrefixResolver ?: StorageAccessLevelAwarePrefixResolver(
+            authCredentialsProvider
+        )
+    }
 
     class Builder {
         var awsS3PluginPrefixResolver: AWSS3PluginPrefixResolver? = null

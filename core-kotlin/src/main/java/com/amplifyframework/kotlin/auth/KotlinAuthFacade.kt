@@ -131,16 +131,16 @@ class KotlinAuthFacade(private val delegate: Delegate = Amplify.Auth) : Auth {
         options: AuthWebUISignInOptions
     ):
         AuthSignInResult {
-            return suspendCoroutine { continuation ->
-                delegate.signInWithSocialWebUI(
-                    provider,
-                    callingActivity,
-                    options,
-                    { continuation.resume(it) },
-                    { continuation.resumeWithException(it) }
-                )
-            }
+        return suspendCoroutine { continuation ->
+            delegate.signInWithSocialWebUI(
+                provider,
+                callingActivity,
+                options,
+                { continuation.resume(it) },
+                { continuation.resumeWithException(it) }
+            )
         }
+    }
 
     override suspend fun signInWithWebUI(
         callingActivity: Activity,
