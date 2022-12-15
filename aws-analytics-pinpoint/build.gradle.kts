@@ -39,6 +39,7 @@ dependencies {
     testImplementation(testDependency.mockitoinline)
     testImplementation(testDependency.robolectric)
     testImplementation(testDependency.androidx.test.core)
+    testImplementation(testDependency.androidx.test.junit)
     testImplementation(testDependency.kotlin.test.coroutines)
     testImplementation(project(":aws-analytics-pinpoint"))
 
