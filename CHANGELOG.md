@@ -2,6 +2,7 @@
 
 ### Features
 - feat(Geo): Add Kotlin Geo Facade (#2155)
+- Add a network status listener to restart DataStore after the network comes back online. (#2148)
 
 ### Miscellaneous
 - chore: Remove deprecated maven plugin (#2137)
@@ -13,7 +14,6 @@
 - Update DeviceFarm build config (#2168)
 - Add Geo Rx Bindings (#2159)
 - chore: Re-add storage tests (#2163)
-- Add a network status listener to restart DataStore after the network comes back online. (#2148)
 - chore: Upgrade Gradle, AGP, and KtLint (#2172)
 - Add a buildspec file for nightly tests (#2180)
 - Chore(Auth): Implementation of the custom auth with SRP parity testing use case (#2167)
@@ -28,6 +28,8 @@
 - fix: Add missing apis in storage Kotlin & RxJava facade (#2160)
 - fix: user metadata was persisted empty in the database (#2165)
 - fix(geo): Increase Geo timeout so that it runs successfully on a Pixel 3a XL (#2177)
+
+[See all changes between 2.1.0 and 2.0.0](https://github.com/aws-amplify/amplify-android/compare/release_v2.0.0...release_v2.1.0)
 
 ## [Release 2.0.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.0.0)
 
