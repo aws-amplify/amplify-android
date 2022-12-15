@@ -315,8 +315,7 @@ object SignInTestCaseGenerator : SerializableProvider {
                 "password" to "",
             ).toJsonElement(),
             options = mapOf(
-                "signInOptions" to
-                        mapOf("authFlow" to AuthFlowType.CUSTOM_AUTH_WITH_SRP.toString())
+                "signInOptions" to mapOf("authFlow" to AuthFlowType.CUSTOM_AUTH_WITH_SRP.toString())
             ).toJsonElement()
         ),
         validations = listOf(
@@ -325,5 +324,7 @@ object SignInTestCaseGenerator : SerializableProvider {
         )
     )
 
-    override val serializables: List<Any> = listOf(baseCase, challengeCase, deviceSRPTestCase, customAuthCase, customAuthWithSRPCase)
+    override val serializables: List<Any> = listOf(
+        baseCase, challengeCase, deviceSRPTestCase, customAuthCase, customAuthWithSRPCase
+    )
 }
