@@ -17,9 +17,12 @@ phases:
   install:
     runtime-versions:
       nodejs: 12
+      python: 3.8
       java: corretto11
     commands:
       - echo 'Install phase starting'
+      - npm install -g xunit-viewer
+      - pip3 install junit-xml
       ### INSTALL ANDROID 31
       - export ANDROID_TOOLS_FILENAME="commandlinetools-linux-9123335_latest.zip"
       - wget https://dl.google.com/android/repository/$ANDROID_TOOLS_FILENAME -P ~ > /dev/null
@@ -37,25 +40,46 @@ phases:
   pre_build:
     commands:
       - echo 'Pre-build phase starting'
+      - mkdir -p build/allTests
+      - |
+        if [[ -z "${CONFIG_SOURCE_BUCKET}" ]]; then
+          echo 'Pulling config files from Amplify'
+          JAVA_HOME=$JDK_11_HOME ./gradlew pullBackendConfigFromAmplify
+        else
+          echo 'Pulling config files from S3'
+          ./scripts/pull_backend_config_from_s3 ${CONFIG_SOURCE_BUCKET}
+        fi
     finally:
       - echo 'Pre-build phase completed.'
   build:
     commands:
       - echo 'Build phase starting.'
-      - JAVA_HOME=$JDK_11_HOME ./gradlew build
+      - JAVA_HOME=$JDK_11_HOME ./gradlew runNightlyTestsInDeviceFarmPool
     finally:
       - echo 'Build phase completed.'
   post_build:
     commands:
       - echo 'Post-build phase starting'
-      - pwd
-      - mkdir -p build/allTests
-      - cp -f ./*/build/test-results/testDebugUnitTest/*.xml ./build/allTests
+      - mkdir -p build/reports/instrumented
+      - xunit-viewer -r build/allTests -o build/reports/instrumented/${CODEBUILD_RESOLVED_SOURCE_VERSION}.html
     finally:
       - echo 'Post-build phase completed.'
 reports:
-  amplify-android-unit-tests:
+  amplify-android-devicefarm-tests:
     files:
-      - build/allTests/*
-    discard-paths: yes
+      - '**/*'
+    base-directory: 'build/allTests'
+    discard-paths: no
     file-format: JUNITXML
+artifacts:
+  files:
+    - '**/*.apk'
+  name: AmplifyAndroidCatApks
+  discard-paths: yes
+  secondary-artifacts:
+    reports:
+      files:
+        - '**/*'
+      name: DevicefarmTestRunReport
+      base-directory: 'build/reports/instrumented'
+      discard-paths: no

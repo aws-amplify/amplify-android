@@ -1,5 +1,6 @@
 #!/bin/bash
 project_arn=$DEVICEFARM_PROJECT_ARN
+max_devices=$NUMBER_OF_DEVICES_TO_TEST
 module_name=$1
 file_name="$module_name-debug-androidTest.apk"
 full_path="$module_name/build/outputs/apk/androidTest/debug/$file_name"
@@ -7,6 +8,11 @@ full_path="$module_name/build/outputs/apk/androidTest/debug/$file_name"
 if [[ -z "${project_arn}" ]]; then
   echo "DEVICEFARM_PROJECT_ARN environment variable not set."
   exit 1
+fi
+
+if [[ -z "${max_devices}" ]]; then
+  echo "NUMBER_OF_DEVICES_TO_TEST not set. Defaulting to 1."
+  max_devices=1
 fi
 
 # Function to setup the app uploads in device farm
@@ -110,7 +116,7 @@ run_arn=`aws devicefarm schedule-run --project-arn=$project_arn \
                                 "filters": [
                                   {"attribute": "ARN", "operator":"IN", "values":["'$minDevice'", "'$middleDevice'", "'$latestDevice'"]}
                                 ],
-                                "maxDevices": 3
+                                "maxDevices": '$max_devices'
                             }' \
                             --name="$file_name-$CODEBUILD_SOURCE_VERSION" \
                             --test="type=INSTRUMENTATION,testPackageArn=$test_package_upload_arn" \

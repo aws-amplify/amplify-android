@@ -118,17 +118,17 @@ class KotlinDataStoreFacade(private val delegate: Delegate = Amplify.DataStore) 
     @Throws(DataStoreException::class)
     override suspend fun <T : Model> observe(itemClass: KClass<T>, itemId: String):
         Flow<DataStoreItemChange<T>> {
-            val observation = Observation<DataStoreItemChange<T>>()
-            delegate.observe(
-                itemClass.java,
-                itemId,
-                { observation.starts.tryEmit(it) },
-                { observation.changes.tryEmit(it) },
-                { observation.failures.tryEmit(it) },
-                { observation.completions.tryEmit(Unit) }
-            )
-            return observation.waitForStart()
-        }
+        val observation = Observation<DataStoreItemChange<T>>()
+        delegate.observe(
+            itemClass.java,
+            itemId,
+            { observation.starts.tryEmit(it) },
+            { observation.changes.tryEmit(it) },
+            { observation.failures.tryEmit(it) },
+            { observation.completions.tryEmit(Unit) }
+        )
+        return observation.waitForStart()
+    }
 
     @OptIn(FlowPreview::class)
     @ExperimentalCoroutinesApi

@@ -49,6 +49,7 @@ import com.amplifyframework.testutils.random.RandomString;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.InOrder;
 import org.robolectric.RobolectricTestRunner;
 
 import java.io.ByteArrayInputStream;
@@ -58,6 +59,7 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collections;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.rxjava3.core.Observable;
@@ -65,9 +67,11 @@ import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.observers.TestObserver;
 
 import static com.amplifyframework.rx.Matchers.anyConsumer;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -203,6 +207,42 @@ public final class RxStorageBindingTest {
     }
 
     /**
+     * When {@link StorageCategoryBehavior#downloadFile(String, File, StorageDownloadFileOptions,
+     * Consumer, Consumer, Consumer)} invokes its pause, resume and cancel operation, the {@link
+     * StorageDownloadFileOperation}
+     * should invoke corresponding api.
+     *
+     * @throws InterruptedException not expected.
+     */
+    @Test
+    public void performActionOnDownloadFile() throws InterruptedException {
+        StorageDownloadFileResult result = StorageDownloadFileResult.fromFile(mock(File.class));
+        String transferId = UUID.randomUUID().toString();
+        StorageDownloadFileOperation<?> storageDownloadFileOperationMock = mock(StorageDownloadFileOperation.class);
+        when(storageDownloadFileOperationMock.getTransferId()).thenReturn(transferId);
+        doAnswer(invocation -> {
+            return storageDownloadFileOperationMock;
+        }).when(delegate).downloadFile(eq(remoteKey),
+            eq(localFile),
+            any(StorageDownloadFileOptions.class),
+            anyConsumer(),
+            anyConsumer(),
+            anyConsumer());
+
+        RxStorageBinding.RxProgressAwareSingleOperation<StorageDownloadFileResult> rxOperation =
+            rxStorage.downloadFile(remoteKey, localFile, StorageDownloadFileOptions.defaultInstance());
+        assertEquals(transferId, rxOperation.getTransferId());
+        InOrder inOrder = inOrder(storageDownloadFileOperationMock);
+
+        rxOperation.pause();
+        rxOperation.resume();
+        rxOperation.cancel();
+        inOrder.verify(storageDownloadFileOperationMock).pause();
+        inOrder.verify(storageDownloadFileOperationMock).resume();
+        inOrder.verify(storageDownloadFileOperationMock).cancel();
+    }
+
+    /**
      * When {@link StorageCategoryBehavior#downloadFile(String, File, Consumer, Consumer)} invokes
      * its error callback, the {@link StorageException} is communicated via the {@link Single}
      * returned by {@link RxStorageCategoryBehavior#downloadFile(String, File)}.
@@ -269,6 +309,40 @@ public final class RxStorageBindingTest {
     }
 
     /**
+     * When {@link StorageCategoryBehavior#uploadFile(String, File, Consumer, Consumer)} returns
+     * a {@link RxStorageBinding.RxProgressAwareSingleOperation}, then the pause, resume and cancel action
+     * performed on the rxOperation should invoke corresponding api in {@link StorageUploadFileOperation}.
+     *
+     * @throws InterruptedException Not expected.
+     */
+    @Test
+    public void performActionOnUploadFile() throws InterruptedException {
+        StorageUploadFileResult result = StorageUploadFileResult.fromKey(remoteKey);
+        String transferId = UUID.randomUUID().toString();
+        StorageUploadFileOperation<?> storageUploadFileOperationMock = mock(StorageUploadFileOperation.class);
+        when(storageUploadFileOperationMock.getTransferId()).thenReturn(transferId);
+        doAnswer(invocation -> {
+            return storageUploadFileOperationMock;
+        }).when(delegate).uploadFile(eq(remoteKey),
+            eq(localFile),
+            any(StorageUploadFileOptions.class),
+            anyConsumer(),
+            anyConsumer(),
+            anyConsumer());
+
+        RxStorageBinding.RxProgressAwareSingleOperation<StorageUploadFileResult> rxOperation =
+            rxStorage.uploadFile(remoteKey, localFile);
+        assertEquals(transferId, rxOperation.getTransferId());
+        InOrder inOrder = inOrder(storageUploadFileOperationMock);
+        rxOperation.pause();
+        rxOperation.resume();
+        rxOperation.cancel();
+        inOrder.verify(storageUploadFileOperationMock).pause();
+        inOrder.verify(storageUploadFileOperationMock).resume();
+        inOrder.verify(storageUploadFileOperationMock).cancel();
+    }
+
+    /**
      * When {@link StorageCategoryBehavior#uploadInputStream(String, InputStream, Consumer, Consumer)} returns
      * a {@link StorageUploadInputStreamResult}, then the {@link Single} returned by
      * {@link RxStorageCategoryBehavior#uploadInputStream(String, InputStream)} should emit that result.
@@ -305,6 +379,42 @@ public final class RxStorageBindingTest {
         testObserver.assertValues(result);
         testProgressObserver.awaitCount(5);
         testProgressObserver.assertValueCount(5);
+    }
+
+    /**
+     * When {@link StorageCategoryBehavior#uploadInputStream(String, InputStream, Consumer, Consumer)} returns
+     * a {@link StorageUploadInputStreamResult}, then the {@link Single} returned by
+     * {@link RxStorageCategoryBehavior#uploadInputStream(String, InputStream)} should invoke corresponding API in
+     * {@link StorageUploadInputStreamOperation}.
+     *
+     * @throws InterruptedException Not expected.
+     */
+    @Test
+    public void performActionOnUploadInputStream() throws InterruptedException {
+        StorageUploadInputStreamResult result = StorageUploadInputStreamResult.fromKey(remoteKey);
+        String transferId = UUID.randomUUID().toString();
+        StorageUploadInputStreamOperation<?> storageUploadInputStreamOperationMock =
+            mock(StorageUploadInputStreamOperation.class);
+        when(storageUploadInputStreamOperationMock.getTransferId()).thenReturn(transferId);
+        doAnswer(invocation -> {
+            return storageUploadInputStreamOperationMock;
+        }).when(delegate).uploadInputStream(eq(remoteKey),
+            eq(localInputStream),
+            any(StorageUploadInputStreamOptions.class),
+            anyConsumer(),
+            anyConsumer(),
+            anyConsumer());
+
+        RxStorageBinding.RxProgressAwareSingleOperation<StorageUploadInputStreamResult> rxOperation =
+            rxStorage.uploadInputStream(remoteKey, localInputStream);
+        assertEquals(transferId, rxOperation.getTransferId());
+        InOrder inOrder = inOrder(storageUploadInputStreamOperationMock);
+        rxOperation.pause();
+        rxOperation.resume();
+        rxOperation.cancel();
+        inOrder.verify(storageUploadInputStreamOperationMock).pause();
+        inOrder.verify(storageUploadInputStreamOperationMock).resume();
+        inOrder.verify(storageUploadInputStreamOperationMock).cancel();
     }
 
     /**

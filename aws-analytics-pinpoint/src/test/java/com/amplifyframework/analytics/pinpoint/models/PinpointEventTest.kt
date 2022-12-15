@@ -14,6 +14,7 @@
  */
 package com.amplifyframework.analytics.pinpoint.models
 
+import java.util.Locale
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -41,7 +42,7 @@ class PinpointEventTest {
             eventTimestamp = 1657035956917L,
             uniqueId = "UNIQUE_ID",
             androidAppDetails = AndroidAppDetails("appId", "appTitle", "packageName", "versionCode", "versionName"),
-            androidDeviceDetails = AndroidDeviceDetails()
+            androidDeviceDetails = AndroidDeviceDetails(locale = Locale.US)
         )
         assertEquals(expectedOutput, pinpointEvent.toJsonString())
     }
@@ -58,7 +59,7 @@ class PinpointEventTest {
             eventTimestamp = 1657035956917L,
             uniqueId = "UNIQUE_ID",
             androidAppDetails = AndroidAppDetails("appId", "appTitle", "packageName", "versionCode", "versionName"),
-            androidDeviceDetails = AndroidDeviceDetails()
+            androidDeviceDetails = AndroidDeviceDetails(locale = Locale.US)
         )
 
         val pinpointEventJson =
