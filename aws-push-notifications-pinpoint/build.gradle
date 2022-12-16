@@ -21,11 +21,11 @@ apply from: rootProject.file('configuration/publishing.gradle')
 dependencies {
     implementation project(path: ':core')
     implementation project(path: ':aws-auth-cognito')
-    implementation project(path: ':aws-push-notifications-pinpoint-utils')
+    api project(path: ':aws-push-notifications-pinpoint-utils')
 
     implementation dependency.aws.pinpoint
 
-    implementation dependency.firebasemessaging
+    api dependency.firebasemessaging
     implementation dependency.androidx.core_ktx
     implementation dependency.androidx.appcompat
 

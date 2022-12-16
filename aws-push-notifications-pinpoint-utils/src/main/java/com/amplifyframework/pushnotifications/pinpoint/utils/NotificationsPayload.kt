@@ -16,16 +16,26 @@
 package com.amplifyframework.pushnotifications.pinpoint.utils
 
 import android.os.Bundle
+import java.util.UUID
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import java.util.UUID
 
 @Serializable
-data class NotificationsPayload internal constructor(val notificationId:Int, val title: String?, val body: String?, val imageUrl: String?) {
+data class NotificationsPayload internal constructor(
+    val notificationId: Int,
+    val title: String?,
+    val body: String?,
+    val imageUrl: String?
+) {
 
-    constructor(title: String?, body: String?, imageUrl: String?):this(UUID.randomUUID().hashCode(), title, body, imageUrl)
+    constructor(title: String?, body: String?, imageUrl: String?) : this(
+        UUID.randomUUID().hashCode(),
+        title,
+        body,
+        imageUrl
+    )
 
     fun bundle(): Bundle {
         val payloadString = Json.encodeToString(this)

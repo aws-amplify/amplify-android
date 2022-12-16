@@ -15,19 +15,35 @@
 
 package com.amplifyframework.pushnotifications.pinpoint.utils
 
+import android.content.Intent
+import android.os.Bundle
 import android.util.Log
 import com.amplifyframework.core.Amplify
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 
-open class PushNotificationsService : FirebaseMessagingService() {
+abstract class PushNotificationsService : FirebaseMessagingService() {
 
     override fun onNewToken(token: String) {
         super.onNewToken(token)
         Amplify.Notifications.Push.registerDevice(token, { }, { })
     }
 
-    fun processRemoteMessage(remoteMessage: RemoteMessage): NotificationsPayload {
+    override fun handleIntent(intent: Intent?) {
+        val data = intent?.extras ?: Bundle()
+        // First remove any parameters that shouldn't be passed to the app
+        // * The wakelock ID set by the WakefulBroadcastReceiver
+        data.remove("androidx.content.wakelockid")
+
+        // TODO: handle pinpoint push
+        if ("pinpoint" == "Direct") {
+            onMessageReceived(RemoteMessage(data))
+        } else {
+            super.handleIntent(intent)
+        }
+    }
+
+    open fun processRemoteMessage(remoteMessage: RemoteMessage): NotificationsPayload {
         val data = remoteMessage.data
         val title = data[PushNotificationsConstants.AWS_PINPOINT_NOTIFICATION_TITLE]
         val body = data[PushNotificationsConstants.AWS_PINPOINT_NOTIFICATION_BODY]
