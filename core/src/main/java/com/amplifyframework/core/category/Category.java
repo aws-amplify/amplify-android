@@ -73,7 +73,7 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
      * @param context An Android Context
      * @throws AmplifyException if already configured
      */
-    public final synchronized void configure(
+    public synchronized void configure(
             @NonNull CategoryConfiguration configuration, @NonNull Context context)
             throws AmplifyException {
         synchronized (state) {

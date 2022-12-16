@@ -17,13 +17,12 @@ package com.amplifyframework.notifications
 
 import android.content.Context
 import com.amplifyframework.core.Action
-import com.amplifyframework.core.AmplifyConfiguration
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.core.category.Category
 import com.amplifyframework.core.category.CategoryConfiguration
-import com.amplifyframework.core.category.CategoryInitializationResult
 import com.amplifyframework.core.category.CategoryType
-import com.amplifyframework.core.category.SubCategoryType
+import com.amplifyframework.core.category.EmptyCategoryConfiguration
+import com.amplifyframework.core.category.SubCategoryType.PUSH_NOTIFICATIONS
 import com.amplifyframework.notifications.pushnotifications.PushNotificationsCategory
 import com.amplifyframework.notifications.pushnotifications.PushNotificationsException
 import com.amplifyframework.notifications.pushnotifications.PushNotificationsPlugin
@@ -36,29 +35,36 @@ open class NotificationsCategory : Category<NotificationsPlugin<*>>(), Notificat
     override fun getCategoryType(): CategoryType = CategoryType.NOTIFICATIONS
 
     /**
-     * Category plugins are already configured and initialized.
-     * Add plugins to appropriate subcategories and configure.
-     * TODO: fix - plugin is configured twice, once for category and once for subcategory.
+     * Plugins are added to both category and subcategory. Plugins are configured only once during
+     * subcategory configure call. Subcategory config is required to extract plugin from subcategory
+     * JSON object.
+     *
+     * Note: Plugins are initialized only once during category initialization. Subcategory initialization
+     * in not required as the plugins are already initialized as category level.
      */
-    override fun initialize(context: Context): CategoryInitializationResult {
-        val result = super.initialize(context)
+    override fun configure(configuration: CategoryConfiguration, context: Context) {
         plugins.forEach { plugin ->
-            when (plugin.getSubCategoryType()) {
-                SubCategoryType.PUSH_NOTIFICATIONS -> {
+            when (val subCategoryType = plugin.getSubCategoryType()) {
+                PUSH_NOTIFICATIONS -> {
                     Push.addPlugin(plugin as PushNotificationsPlugin<*>)
-                    val configuration = AmplifyConfiguration.fromConfigFile(context)
-                    val categoryConfiguration: CategoryConfiguration = configuration.forCategoryType(categoryType)
-                    Push.configure(categoryConfiguration, context)
+
+                    val notificationsConfiguration = configuration as? NotificationsCategoryConfiguration
+                    val subCategoryConfiguration = notificationsConfiguration?.subCategoryConfigs?.get(subCategoryType)
+                    Push.configure(
+                        subCategoryConfiguration ?: EmptyCategoryConfiguration.forCategoryType(categoryType),
+                        context
+                    )
                 }
                 else -> Unit
             }
         }
-        return result
     }
 
+    /**
+     * Defer to subcategories for top level APIs.
+     * Ex: subCategories.forEach { it.identifyUser(userId, onSuccess, onError) }
+     */
     override fun identifyUser(userId: String, onSuccess: Action, onError: Consumer<PushNotificationsException>) {
-        plugins.forEach { plugin ->
-            plugin.identifyUser(userId, onSuccess, onError)
-        }
+        Push.identifyUser(userId, onSuccess, onError)
     }
 }

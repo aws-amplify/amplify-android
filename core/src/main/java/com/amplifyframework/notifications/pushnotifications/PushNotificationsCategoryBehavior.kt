@@ -21,9 +21,17 @@ import com.amplifyframework.core.Consumer
 
 interface PushNotificationsCategoryBehavior {
 
-    fun recordNotificationReceived(data: Map<String, String>, onSuccess: Action, onError: Consumer<PushNotificationsException>)
+    fun recordNotificationReceived(
+        data: Map<String, String>,
+        onSuccess: Action,
+        onError: Consumer<PushNotificationsException>
+    )
 
-    fun recordNotificationOpened(data: Map<String, String>, onSuccess: Action, onError: Consumer<PushNotificationsException>)
+    fun recordNotificationOpened(
+        data: Map<String, String>,
+        onSuccess: Action,
+        onError: Consumer<PushNotificationsException>
+    )
 
     fun handleNotificationReceived(
         details: Bundle,

@@ -27,7 +27,7 @@ public enum SubCategoryType {
     /**
      * Push notifications.
      */
-    PUSH_NOTIFICATIONS("push_notifications"),
+    PUSH_NOTIFICATIONS("push"),
 
     /**
      * In-App messaging.
