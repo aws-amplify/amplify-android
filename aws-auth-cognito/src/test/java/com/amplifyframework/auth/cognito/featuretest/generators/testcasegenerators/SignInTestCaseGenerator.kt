@@ -113,7 +113,7 @@ object SignInTestCaseGenerator : SerializableProvider {
         ).toJsonElement()
     )
 
-    private val mockedCustomChallengeResponse = MockResponse(
+    private val mockedRespondToAuthCustomChallengeResponse = MockResponse(
         CognitoType.CognitoIdentityProvider,
         "respondToAuthChallenge",
         ResponseType.Success,
@@ -121,7 +121,10 @@ object SignInTestCaseGenerator : SerializableProvider {
             "session" to "someSession",
             "challengeName" to "CUSTOM_CHALLENGE",
             "challengeParameters" to mapOf(
-                "Code" to "1234"
+                "SALT" to "abc",
+                "SECRET_BLOCK" to "secretBlock",
+                "SRP_B" to "def",
+                "USERNAME" to username
             )
         ).toJsonElement()
     )
@@ -185,8 +188,8 @@ object SignInTestCaseGenerator : SerializableProvider {
                 "additionalInfo" to mapOf(
                     "SALT" to "abc",
                     "SECRET_BLOCK" to "secretBlock",
-                    "USERNAME" to "username",
-                    "SRP_B" to "def"
+                    "SRP_B" to "def",
+                    "USERNAME" to username
                 )
             )
         ).toJsonElement()
@@ -299,7 +302,7 @@ object SignInTestCaseGenerator : SerializableProvider {
             "SignedOut_Configured.json",
             mockedResponses = listOf(
                 mockedInitiateAuthForCustomAuthWithoutSRPResponse,
-                mockedCustomChallengeResponse
+                mockedRespondToAuthCustomChallengeResponse
             )
         ),
         api = API(
@@ -311,6 +314,32 @@ object SignInTestCaseGenerator : SerializableProvider {
             options = mapOf(
                 "signInOptions" to
                     mapOf("authFlow" to AuthFlowType.CUSTOM_AUTH_WITHOUT_SRP.toString())
+            ).toJsonElement()
+        ),
+        validations = listOf(
+            mockedSignInCustomAuthChallengeExpectation,
+            ExpectationShapes.State("CustomSignIn_SigningIn.json")
+        )
+    )
+
+    private val customAuthWithSRPCase = FeatureTestCase(
+        description = "Test that Custom Auth signIn invokes proper cognito request and returns password challenge",
+        preConditions = PreConditions(
+            "authconfiguration.json",
+            "SignedOut_Configured.json",
+            mockedResponses = listOf(
+                mockedInitiateAuthResponse,
+                mockedRespondToAuthCustomChallengeResponse
+            )
+        ),
+        api = API(
+            AuthAPI.signIn,
+            params = mapOf(
+                "username" to username,
+                "password" to "",
+            ).toJsonElement(),
+            options = mapOf(
+                "signInOptions" to mapOf("authFlow" to AuthFlowType.CUSTOM_AUTH_WITH_SRP.toString())
             ).toJsonElement()
         ),
         validations = listOf(
