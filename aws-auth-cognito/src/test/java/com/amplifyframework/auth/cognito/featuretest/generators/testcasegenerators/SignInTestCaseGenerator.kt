@@ -349,6 +349,6 @@ object SignInTestCaseGenerator : SerializableProvider {
     )
 
     override val serializables: List<Any> = listOf(
-        baseCase, challengeCase, deviceSRPTestCase, customAuthCase, signInWhenAlreadySigningInAuthCase
+        baseCase, challengeCase, deviceSRPTestCase, customAuthCase, customAuthWithSRPCase, signInWhenAlreadySigningInAuthCase
     )
 }
