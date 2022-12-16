@@ -17,9 +17,6 @@
 apply plugin: 'signing'
 apply plugin: 'maven-publish'
 
-version = project.ext.VERSION_NAME
-group = POM_GROUP
-
 def isReleaseBuild() {
     return VERSION_NAME.contains("SNAPSHOT") == false
 }
