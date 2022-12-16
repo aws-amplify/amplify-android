@@ -470,8 +470,7 @@ internal class RealAWSCognitoAuthPlugin(
                 )
                 // Continue sign in
                 is AuthenticationState.SignedOut,
-                is AuthenticationState.Configured,
-                is AuthenticationState.SigningIn -> {
+                is AuthenticationState.Configured -> {
                     val signInOptions = options as? AWSCognitoAuthSignInOptions ?: AWSCognitoAuthSignInOptions.builder()
                         .authFlowType(configuration.authFlowType)
                         .build()
@@ -479,6 +478,30 @@ internal class RealAWSCognitoAuthPlugin(
                     _signIn(username, password, signInOptions, onSuccess, onError)
                 }
                 is AuthenticationState.SignedIn -> onError.accept(SignedInException())
+                is AuthenticationState.SigningIn -> {
+                    val token = StateChangeListenerToken()
+                    authStateMachine.listen(
+                        token,
+                        { authState ->
+                            when (authState.authNState) {
+                                is AuthenticationState.SignedOut -> {
+                                    authStateMachine.cancel(token)
+                                    val signInOptions = options as?
+                                        AWSCognitoAuthSignInOptions ?: AWSCognitoAuthSignInOptions.builder()
+                                        .authFlowType(configuration.authFlowType)
+                                        .build()
+                                    _signIn(username, password, signInOptions, onSuccess, onError)
+                                }
+                                else -> {
+                                    onError.accept(InvalidStateException())
+                                }
+                            }
+                        },
+                        {
+                            authStateMachine.send(AuthenticationEvent(AuthenticationEvent.EventType.CancelSignIn()))
+                        }
+                    )
+                }
                 else -> onError.accept(InvalidStateException())
             }
         }
@@ -708,6 +731,32 @@ internal class RealAWSCognitoAuthPlugin(
                     )
                 }
                 is AuthenticationState.SignedIn -> onError.accept(SignedInException())
+                is AuthenticationState.SigningIn -> {
+                    val token = StateChangeListenerToken()
+                    authStateMachine.listen(
+                        token,
+                        { authState ->
+                            when (authState.authNState) {
+                                is AuthenticationState.SignedOut -> {
+                                    authStateMachine.cancel(token)
+                                    _signInWithHostedUI(
+                                        callingActivity = callingActivity,
+                                        options = options,
+                                        onSuccess = onSuccess,
+                                        onError = onError,
+                                        provider = provider
+                                    )
+                                }
+                                else -> {
+                                    onError.accept(InvalidStateException())
+                                }
+                            }
+                        },
+                        {
+                            authStateMachine.send(AuthenticationEvent(AuthenticationEvent.EventType.CancelSignIn()))
+                        }
+                    )
+                }
                 else -> onError.accept(InvalidStateException())
             }
         }
