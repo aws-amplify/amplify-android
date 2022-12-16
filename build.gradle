@@ -31,10 +31,10 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.2.2'
+        classpath 'com.android.tools.build:gradle:7.3.1'
         classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.7.10'
         classpath "org.jetbrains.dokka:dokka-gradle-plugin:1.7.10"
-        classpath 'org.jlleitschuh.gradle:ktlint-gradle:9.4.1'
+        classpath 'org.jlleitschuh.gradle:ktlint-gradle:11.0.0'
         classpath "org.gradle:test-retry-gradle-plugin:1.4.1"
         classpath("com.atlasv.android.plugin:publishlib:1.1.2")
     }
@@ -90,7 +90,7 @@ ext {
     navigationVersion = '2.3.4'
     dependency = [
         android: [
-            desugartools: 'com.android.tools:desugar_jdk_libs:1.1.5',
+            desugartools: 'com.android.tools:desugar_jdk_libs:1.2.0',
         ],
         androidx: [
             v4support: 'androidx.legacy:legacy-support-v4:1.0.0',
@@ -169,7 +169,7 @@ ext {
         mockkandroid: 'io.mockk:mockk-android:1.12.3',
         mockwebserver: 'com.squareup.okhttp3:mockwebserver:5.0.0-alpha.9',
         mockitoinline: 'org.mockito:mockito-inline:3.11.2',
-        robolectric: 'org.robolectric:robolectric:4.5.1',
+        robolectric: 'org.robolectric:robolectric:4.7',
         jsonassert: 'org.skyscreamer:jsonassert:1.5.0'
     ]
 }
@@ -240,6 +240,8 @@ private void configureAndroidLibrary(Project project) {
                     includeAndroidResources = true
                 }
             }
+
+            buildConfigField "String", "VERSION_NAME", "\"${project.ext.VERSION_NAME}\""
         }
 
         lintOptions {

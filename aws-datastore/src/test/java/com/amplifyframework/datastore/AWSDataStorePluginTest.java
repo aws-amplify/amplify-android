@@ -192,7 +192,6 @@ public final class AWSDataStorePluginTest {
 
         dataStoreReadyObserver.await();
         subscriptionsEstablishedObserver.await();
-        networkStatusObserver.await();
 
         assertRemoteSubscriptionsStarted();
     }
