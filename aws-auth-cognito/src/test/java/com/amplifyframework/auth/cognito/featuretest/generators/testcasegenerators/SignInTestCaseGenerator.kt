@@ -292,7 +292,6 @@ object SignInTestCaseGenerator : SerializableProvider {
         )
     )
 
-
     private val customAuthCase = FeatureTestCase(
         description = "Test that Custom Auth signIn invokes proper cognito request and returns custom challenge",
         preConditions = PreConditions(
@@ -320,5 +319,7 @@ object SignInTestCaseGenerator : SerializableProvider {
         )
     )
 
-    override val serializables: List<Any> = listOf(baseCase, challengeCase, deviceSRPTestCase, customAuthCase, signInWhenAlreadySigningInAuthCase)
+    override val serializables: List<Any> = listOf(
+        baseCase, challengeCase, deviceSRPTestCase, customAuthCase, signInWhenAlreadySigningInAuthCase
+    )
 }
