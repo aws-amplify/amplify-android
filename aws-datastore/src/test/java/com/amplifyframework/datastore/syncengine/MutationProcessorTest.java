@@ -48,6 +48,7 @@ import org.mockito.ArgumentMatchers;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.shadows.ShadowLog;
 
+import java.time.Duration;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -99,7 +100,7 @@ public final class MutationProcessorTest {
         this.appSync = mock(AppSync.class);
         this.configurationProvider = mock(DataStoreConfigurationProvider.class);
         ConflictResolver conflictResolver = new ConflictResolver(configurationProvider, appSync);
-        RetryHandler retryHandler = new RetryHandler(0, 1);
+        RetryHandler retryHandler = new RetryHandler(0, Duration.ofMinutes(1).toMillis());
         schemaRegistry = SchemaRegistry.instance();
         schemaRegistry.register(Collections.singleton(BlogOwner.class));
         this.mutationProcessor = MutationProcessor.builder()
