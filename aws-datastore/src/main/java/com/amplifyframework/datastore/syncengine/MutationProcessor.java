@@ -25,6 +25,7 @@ import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.SchemaRegistry;
 import com.amplifyframework.core.model.SerializedModel;
+import com.amplifyframework.datastore.DataStoreConfigurationProvider;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.appsync.AppSyncConflictUnhandledError;
@@ -56,6 +57,7 @@ final class MutationProcessor {
     private final SchemaRegistry schemaRegistry;
     private final MutationOutbox mutationOutbox;
     private final AppSync appSync;
+    private final DataStoreConfigurationProvider dataStoreConfiguration;
     private final ConflictResolver conflictResolver;
     private final CompositeDisposable ongoingOperationsDisposable;
     private final RetryHandler retryHandler;
@@ -66,7 +68,8 @@ final class MutationProcessor {
         this.schemaRegistry = Objects.requireNonNull(builder.schemaRegistry);
         this.mutationOutbox = Objects.requireNonNull(builder.mutationOutbox);
         this.appSync = Objects.requireNonNull(builder.appSync);
-        this.conflictResolver = Objects.requireNonNull(builder.conflictResolver);
+        this.dataStoreConfiguration = Objects.requireNonNull(builder.dataStoreConfiguration);
+        this.conflictResolver = new ConflictResolver(this.dataStoreConfiguration, this.appSync);
         this.retryHandler = Objects.requireNonNull(builder.retryHandler);
         this.ongoingOperationsDisposable = new CompositeDisposable();
     }
@@ -401,7 +404,7 @@ final class MutationProcessor {
             BuilderSteps.ModelSchemaRegistryStep,
             BuilderSteps.MutationOutboxStep,
             BuilderSteps.AppSyncStep,
-            BuilderSteps.ConflictResolverStep,
+            BuilderSteps.DataStoreConfigurationProviderStep,
             BuilderSteps.RetryHandlerStep,
             BuilderSteps.BuildStep {
         private Merger merger;
@@ -409,7 +412,7 @@ final class MutationProcessor {
         private SchemaRegistry schemaRegistry;
         private MutationOutbox mutationOutbox;
         private AppSync appSync;
-        private ConflictResolver conflictResolver;
+        private DataStoreConfigurationProvider dataStoreConfiguration;
         private RetryHandler retryHandler;
 
         @NonNull
@@ -442,15 +445,15 @@ final class MutationProcessor {
 
         @NonNull
         @Override
-        public BuilderSteps.ConflictResolverStep appSync(@NonNull AppSync appSync) {
+        public BuilderSteps.DataStoreConfigurationProviderStep appSync(@NonNull AppSync appSync) {
             Builder.this.appSync = Objects.requireNonNull(appSync);
             return Builder.this;
         }
 
         @NonNull
         @Override
-        public BuilderSteps.RetryHandlerStep conflictResolver(@NonNull ConflictResolver conflictResolver) {
-            this.conflictResolver = Objects.requireNonNull(conflictResolver);
+        public BuilderSteps.RetryHandlerStep dataStoreConfigurationProvider(@NonNull DataStoreConfigurationProvider dataStoreConfiguration) {
+            Builder.this.dataStoreConfiguration = Objects.requireNonNull(dataStoreConfiguration);
             return Builder.this;
         }
 
@@ -491,12 +494,13 @@ final class MutationProcessor {
 
         interface AppSyncStep {
             @NonNull
-            ConflictResolverStep appSync(@NonNull AppSync appSync);
+            DataStoreConfigurationProviderStep appSync(@NonNull AppSync appSync);
         }
 
-        interface ConflictResolverStep {
+        interface DataStoreConfigurationProviderStep {
             @NonNull
-            RetryHandlerStep conflictResolver(@NonNull ConflictResolver conflictResolver);
+            RetryHandlerStep dataStoreConfigurationProvider(
+                    DataStoreConfigurationProvider dataStoreConfiguration);
         }
 
         interface RetryHandlerStep {

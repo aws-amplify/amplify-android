@@ -99,7 +99,6 @@ public final class MutationProcessorTest {
         Merger merger = new Merger(mutationOutbox, versionRepository, localStorageAdapter);
         this.appSync = mock(AppSync.class);
         this.configurationProvider = mock(DataStoreConfigurationProvider.class);
-        ConflictResolver conflictResolver = new ConflictResolver(configurationProvider, appSync);
         RetryHandler retryHandler = new RetryHandler(0, Duration.ofMinutes(1).toMillis());
         schemaRegistry = SchemaRegistry.instance();
         schemaRegistry.register(Collections.singleton(BlogOwner.class));
@@ -109,7 +108,7 @@ public final class MutationProcessorTest {
                 .schemaRegistry(schemaRegistry)
                 .mutationOutbox(mutationOutbox)
                 .appSync(appSync)
-                .conflictResolver(conflictResolver)
+                .dataStoreConfigurationProvider(configurationProvider)
                 .retryHandler(retryHandler)
                 .build();
     }
