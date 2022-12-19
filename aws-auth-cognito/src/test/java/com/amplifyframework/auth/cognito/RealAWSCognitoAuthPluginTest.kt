@@ -43,7 +43,6 @@ import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidUserPoolConfigurationException
-import com.amplifyframework.auth.cognito.exceptions.invalidstate.SignedInException
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.auth.cognito.helpers.SRPHelper
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthResendUserAttributeConfirmationCodeOptions
@@ -90,6 +89,10 @@ import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.slot
 import io.mockk.verify
+import org.json.JSONObject
+import org.junit.Before
+import org.junit.Ignore
+import org.junit.Test
 import java.util.Date
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -98,10 +101,6 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
-import org.json.JSONObject
-import org.junit.Before
-import org.junit.Ignore
-import org.junit.Test
 
 class RealAWSCognitoAuthPluginTest {
 
@@ -222,6 +221,7 @@ class RealAWSCognitoAuthPluginTest {
         val expectedAuthError = InvalidUserPoolConfigurationException()
         currentState = AuthenticationState.NotConfigured()
 
+        coEvery { authConfiguration.authFlowType } returns AuthFlowType.USER_SRP_AUTH
         // WHEN
         plugin.signIn("user", "password", AuthSignInOptions.defaults(), onSuccess, onError)
 
@@ -235,7 +235,7 @@ class RealAWSCognitoAuthPluginTest {
         // GIVEN
         val onSuccess = mockk<Consumer<AuthSignInResult>>()
         val onError = mockk<Consumer<AuthException>>(relaxed = true)
-        val expectedAuthError = SignedInException()
+        coEvery { authConfiguration.authFlowType } returns AuthFlowType.USER_SRP_AUTH
         currentState = AuthenticationState.SignedIn(
             SignedInData(
                 "userId",
@@ -252,7 +252,7 @@ class RealAWSCognitoAuthPluginTest {
 
         // THEN
         verify(exactly = 0) { onSuccess.accept(any()) }
-        verify { onError.accept(expectedAuthError) }
+        verify { onError.accept(any()) }
     }
 
     @Test
@@ -261,12 +261,13 @@ class RealAWSCognitoAuthPluginTest {
         val onSuccess = mockk<Consumer<AuthSignInResult>>()
         val onError = mockk<Consumer<AuthException>>(relaxed = true)
         currentState = AuthenticationState.SigningIn()
+        coEvery { authConfiguration.authFlowType } returns AuthFlowType.USER_SRP_AUTH
 
         // WHEN
         plugin.signIn("user", "password", AuthSignInOptions.defaults(), onSuccess, onError)
 
         // THEN
-        verify(exactly = 0) { onSuccess.accept(any()) }
+        verify { onSuccess.accept(any()) }
     }
 
     @Test
