@@ -89,6 +89,10 @@ import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.slot
 import io.mockk.verify
+import org.json.JSONObject
+import org.junit.Before
+import org.junit.Ignore
+import org.junit.Test
 import java.util.Date
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -97,10 +101,6 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
-import org.json.JSONObject
-import org.junit.Before
-import org.junit.Ignore
-import org.junit.Test
 
 class RealAWSCognitoAuthPluginTest {
 
@@ -253,21 +253,6 @@ class RealAWSCognitoAuthPluginTest {
         // THEN
         verify(exactly = 0) { onSuccess.accept(any()) }
         verify { onError.accept(any()) }
-    }
-
-    @Test
-    fun testSignInSucceedsIfAlreadySigningIn() {
-        // GIVEN
-        val onSuccess = mockk<Consumer<AuthSignInResult>>()
-        val onError = mockk<Consumer<AuthException>>(relaxed = true)
-        currentState = AuthenticationState.SigningIn()
-        coEvery { authConfiguration.authFlowType } returns AuthFlowType.USER_SRP_AUTH
-
-        // WHEN
-        plugin.signIn("user", "password", AuthSignInOptions.defaults(), onSuccess, onError)
-
-        // THEN
-        verify { onSuccess.accept(any()) }
     }
 
     @Test
