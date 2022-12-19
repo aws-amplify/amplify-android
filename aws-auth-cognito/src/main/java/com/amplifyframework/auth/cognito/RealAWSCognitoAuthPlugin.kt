@@ -138,16 +138,16 @@ import com.amplifyframework.statemachine.codegen.states.SRPSignInState
 import com.amplifyframework.statemachine.codegen.states.SignInChallengeState
 import com.amplifyframework.statemachine.codegen.states.SignInState
 import com.amplifyframework.statemachine.codegen.states.SignOutState
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.async
-import kotlinx.coroutines.launch
 
 internal class RealAWSCognitoAuthPlugin(
     private val configuration: AuthConfiguration,
@@ -464,6 +464,9 @@ internal class RealAWSCognitoAuthPlugin(
         onError: Consumer<AuthException>
     ) {
         authStateMachine.getCurrentState { authState ->
+            val signInOptions = options as? AWSCognitoAuthSignInOptions ?: AWSCognitoAuthSignInOptions.builder()
+                .authFlowType(configuration.authFlowType)
+                .build()
             when (authState.authNState) {
                 is AuthenticationState.NotConfigured -> onError.accept(
                     InvalidUserPoolConfigurationException()
@@ -471,10 +474,6 @@ internal class RealAWSCognitoAuthPlugin(
                 // Continue sign in
                 is AuthenticationState.SignedOut,
                 is AuthenticationState.Configured -> {
-                    val signInOptions = options as? AWSCognitoAuthSignInOptions ?: AWSCognitoAuthSignInOptions.builder()
-                        .authFlowType(configuration.authFlowType)
-                        .build()
-
                     _signIn(username, password, signInOptions, onSuccess, onError)
                 }
                 is AuthenticationState.SignedIn -> onError.accept(SignedInException())
@@ -486,10 +485,6 @@ internal class RealAWSCognitoAuthPlugin(
                             when (authState.authNState) {
                                 is AuthenticationState.SignedOut -> {
                                     authStateMachine.cancel(token)
-                                    val signInOptions = options as?
-                                        AWSCognitoAuthSignInOptions ?: AWSCognitoAuthSignInOptions.builder()
-                                        .authFlowType(configuration.authFlowType)
-                                        .build()
                                     _signIn(username, password, signInOptions, onSuccess, onError)
                                 }
                                 else -> Unit
