@@ -40,14 +40,14 @@ import com.amplifyframework.testutils.HubAccumulator
 import com.amplifyframework.testutils.Resources
 import com.amplifyframework.testutils.Sleep
 import com.amplifyframework.testutils.sync.SynchronousAuth
+import java.util.UUID
+import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.runBlocking
 import org.json.JSONException
 import org.junit.Assert
 import org.junit.Before
 import org.junit.BeforeClass
 import org.junit.Test
-import java.util.UUID
-import java.util.concurrent.TimeUnit
 
 class PinpointAnalyticsInstrumentationTest {
     @Before
@@ -394,7 +394,6 @@ class PinpointAnalyticsInstrumentationTest {
             Amplify.configure(context)
             Sleep.milliseconds(COGNITO_CONFIGURATION_TIMEOUT)
             synchronousAuth = SynchronousAuth.delegatingTo(Amplify.Auth)
-
         }
 
         private fun setUniqueId() {
