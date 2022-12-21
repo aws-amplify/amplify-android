@@ -287,7 +287,7 @@ class PinpointAnalyticsInstrumentationTest {
         Amplify.Analytics.identifyUser(uuid, pinpointUserProfile)
         Sleep.milliseconds(PINPOINT_ROUNDTRIP_TIMEOUT)
         var endpointResponse = fetchEndpointResponse()
-        while (endpointResponse.attributes == null) {
+        while (endpointResponse.attributes == null || endpointResponse.attributes?.size == 0) {
             Sleep.milliseconds(5 * 1000L)
             endpointResponse = fetchEndpointResponse()
         }
