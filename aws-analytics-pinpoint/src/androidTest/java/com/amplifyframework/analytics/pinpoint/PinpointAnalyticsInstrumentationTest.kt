@@ -283,7 +283,6 @@ class PinpointAnalyticsInstrumentationTest {
             .userAttributes(userAttributes)
             .build()
         val uuid = UUID.randomUUID().toString()
-        Log.d("PinpointAnalyticsInstrumentationTest", "identify user with endpoint id: $uuid")
         Amplify.Analytics.identifyUser(uuid, pinpointUserProfile)
         Sleep.milliseconds(PINPOINT_ROUNDTRIP_TIMEOUT)
         var endpointResponse = fetchEndpointResponse()
@@ -318,7 +317,7 @@ class PinpointAnalyticsInstrumentationTest {
     }
 
     private fun assertCommonEndpointResponseProperties(endpointResponse: EndpointResponse) {
-        Log.i("DEBUG", endpointResponse.toString())
+        Log.d("PinpointAnalyticsInstrumentationTest", endpointResponse.toString())
         val attributes = endpointResponse.attributes!!
         Assert.assertEquals("user@test.com", attributes["email"]!![0])
         Assert.assertEquals("test-user", attributes["name"]!![0])
