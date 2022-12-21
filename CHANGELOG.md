@@ -17,6 +17,8 @@
 - chore: Upgrade Gradle, AGP, and KtLint (#2172)
 - Add a buildspec file for nightly tests (#2180)
 - Chore(Auth): Implementation of the custom auth with SRP parity testing use case (#2167)
+- chore: Add PR checker workflow (#2188)
+- fix(auth): Fix for when loading credentials the success/error is fired twice (#2184)
 
 ### Bug fixes
 - fix(core): remove unused dynamic nav dependency (#2132)
