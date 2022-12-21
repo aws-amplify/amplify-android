@@ -283,6 +283,7 @@ class PinpointAnalyticsInstrumentationTest {
             .userAttributes(userAttributes)
             .build()
         val uuid = UUID.randomUUID().toString()
+        Log.d("PinpointAnalyticsInstrumentationTest", "identify user with endpoint id: $uuid")
         Amplify.Analytics.identifyUser(uuid, pinpointUserProfile)
         Sleep.milliseconds(PINPOINT_ROUNDTRIP_TIMEOUT)
         var endpointResponse = fetchEndpointResponse()
