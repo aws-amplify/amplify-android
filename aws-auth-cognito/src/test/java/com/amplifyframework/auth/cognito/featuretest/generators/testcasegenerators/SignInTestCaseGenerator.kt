@@ -271,6 +271,30 @@ object SignInTestCaseGenerator : SerializableProvider {
         )
     )
 
+    private val signInWhenAlreadySigningInAuthCase = FeatureTestCase(
+        description = "Test that overriding signIn when already signing in returns success",
+        preConditions = PreConditions(
+            "authconfiguration.json",
+            "SigningIn_SigningIn.json",
+            mockedResponses = listOf(
+                mockedInitiateAuthResponse,
+                mockedSMSChallengeResponse,
+            )
+        ),
+        api = API(
+            AuthAPI.signIn,
+            params = mapOf(
+                "username" to username,
+                "password" to password
+            ).toJsonElement(),
+            options = JsonObject(emptyMap())
+        ),
+        validations = listOf(
+            mockedSignInSMSChallengeExpectation,
+            ExpectationShapes.State("SigningIn_SigningIn.json")
+        )
+    )
+
     private val customAuthCase = FeatureTestCase(
         description = "Test that Custom Auth signIn invokes proper cognito request and returns custom challenge",
         preConditions = PreConditions(
@@ -325,6 +349,11 @@ object SignInTestCaseGenerator : SerializableProvider {
     )
 
     override val serializables: List<Any> = listOf(
-        baseCase, challengeCase, deviceSRPTestCase, customAuthCase, customAuthWithSRPCase
+        baseCase,
+        challengeCase,
+        deviceSRPTestCase,
+        customAuthCase,
+        customAuthWithSRPCase,
+        signInWhenAlreadySigningInAuthCase
     )
 }
