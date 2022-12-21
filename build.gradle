@@ -23,11 +23,11 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:4.0.2'
+        classpath 'com.android.tools.build:gradle:7.3.1'
         classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.7.10'
         classpath "org.jetbrains.dokka:dokka-gradle-plugin:1.7.10"
         classpath 'com.google.gms:google-services:4.3.14'
-        classpath 'org.jlleitschuh.gradle:ktlint-gradle:9.4.1'
+        classpath 'org.jlleitschuh.gradle:ktlint-gradle:11.0.0'
         classpath "org.gradle:test-retry-gradle-plugin:1.4.1"
     }
 }
@@ -67,7 +67,7 @@ task clean(type: Delete) {
 
 ext {
     buildToolsVersion = "30.0.2"
-    compileSdkVersion = 30
+    compileSdkVersion = 31
     minSdkVersion = 24
     targetSdkVersion = 30
     awsKotlinSdkVersion = '0.17.12-beta'
@@ -75,7 +75,7 @@ ext {
     navigationVersion = '2.3.4'
     dependency = [
         android: [
-            desugartools: 'com.android.tools:desugar_jdk_libs:1.0.9',
+            desugartools: 'com.android.tools:desugar_jdk_libs:1.2.0',
         ],
         androidx: [
             v4support: 'androidx.legacy:legacy-support-v4:1.0.0',
@@ -90,8 +90,7 @@ ext {
                 fragment: "androidx.navigation:navigation-fragment:$navigationVersion",
                 fragmentktx: "androidx.navigation:navigation-fragment-ktx:$navigationVersion",
                 ui: "androidx.navigation:navigation-ui:$navigationVersion",
-                uiktx: "androidx.navigation:navigation-ui-ktx:$navigationVersion",
-                dynamicfeatures: "androidx.navigation:navigation-dynamic-features-fragment:$navigationVersion"
+                uiktx: "androidx.navigation:navigation-ui-ktx:$navigationVersion"
             ],
             multidex: 'androidx.multidex:multidex:2.0.1',
             test: [
@@ -155,7 +154,7 @@ ext {
         mockkandroid: 'io.mockk:mockk-android:1.12.3',
         mockwebserver: 'com.squareup.okhttp3:mockwebserver:5.0.0-alpha.9',
         mockitoinline: 'org.mockito:mockito-inline:3.11.2',
-        robolectric: 'org.robolectric:robolectric:4.5.1',
+        robolectric: 'org.robolectric:robolectric:4.7',
         jsonassert: 'org.skyscreamer:jsonassert:1.5.0'
     ]
 }
@@ -226,6 +225,8 @@ private void configureAndroidLibrary(Project project) {
                     includeAndroidResources = true
                 }
             }
+
+            buildConfigField "String", "VERSION_NAME", "\"${project.ext.VERSION_NAME}\""
         }
 
         lintOptions {

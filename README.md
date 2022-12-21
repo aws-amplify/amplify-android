@@ -24,7 +24,7 @@ Guide](https://docs.amplify.aws/start/q/integration/android).
 
 | Category                                                                                        | AWS Provider | Description                                |
 |-------------------------------------------------------------------------------------------------|--------------|--------------------------------------------|
-| **[Authentication](https://docs.amplify.aws/lib/devpreview/getting-started/q/platform/android/)**      | Cognito      | Building blocks to create auth experiences <br> *Note: Authentication category only supports **Sign Up**, **Sign In**, **Sign Out**, **Fetch Auth Session** and **getCurrentUser** API's.* |
+| **[Authentication](https://docs.amplify.aws/lib/devpreview/getting-started/q/platform/android/)**      | Cognito      | Building blocks to create auth experiences |
 | **[Storage](https://docs.amplify.aws/lib/storage/getting-started/q/platform/android)**          | S3           | Manages content in public, protected, private storage buckets |
 | **[DataStore](https://docs.amplify.aws/lib/datastore/getting-started/q/platform/android)**      | AppSync      | Programming model for shared and distributed data, with simple online/offline synchronization |
 | **[API (GraphQL)](https://docs.amplify.aws/lib/graphqlapi/getting-started/q/platform/android)** | AppSync      | Interact with your GraphQL or AppSync endpoint |
@@ -69,12 +69,12 @@ dependencies section:
 ```groovy
 dependencies {
     // Only specify modules that provide functionality your app will use
-    implementation 'com.amplifyframework:aws-analytics-pinpoint:2.0.0'
-    implementation 'com.amplifyframework:aws-api:2.0.0'
-    implementation 'com.amplifyframework:aws-auth-cognito:2.0.0'
-    implementation 'com.amplifyframework:aws-datastore:2.0.0'
-    implementation 'com.amplifyframework:aws-predictions:2.0.0'
-    implementation 'com.amplifyframework:aws-storage-s3:2.0.0'
+    implementation 'com.amplifyframework:aws-analytics-pinpoint:2.1.0'
+    implementation 'com.amplifyframework:aws-api:2.1.0'
+    implementation 'com.amplifyframework:aws-auth-cognito:2.1.0'
+    implementation 'com.amplifyframework:aws-datastore:2.1.0'
+    implementation 'com.amplifyframework:aws-predictions:2.1.0'
+    implementation 'com.amplifyframework:aws-storage-s3:2.1.0'
 }
 ```
 

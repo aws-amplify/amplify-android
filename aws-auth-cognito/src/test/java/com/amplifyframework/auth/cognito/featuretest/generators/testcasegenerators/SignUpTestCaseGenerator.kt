@@ -42,6 +42,12 @@ object SignUpTestCaseGenerator : SerializableProvider {
         "attributeName" to "attributeName"
     )
 
+    private val emptyCodeDeliveryDetails = mapOf(
+        "destination" to "",
+        "deliveryMedium" to "",
+        "attributeName" to ""
+    )
+
     val baseCase = FeatureTestCase(
         description = "Test that signup invokes proper cognito request and returns success",
         preConditions = PreConditions(
@@ -80,23 +86,62 @@ object SignUpTestCaseGenerator : SerializableProvider {
             ExpectationShapes.Amplify(
                 apiName = AuthAPI.signUp,
                 responseType = ResponseType.Success,
-                response =
-                    AuthSignUpResult(
-                        false,
-                        AuthNextSignUpStep(
-                            AuthSignUpStep.CONFIRM_SIGN_UP_STEP,
-                            emptyMap(),
-                            AuthCodeDeliveryDetails(
-                                email,
-                                AuthCodeDeliveryDetails.DeliveryMedium.EMAIL,
-                                "attributeName"
-                            )
-                        ),
-                        null
-                    ).toJsonElement()
+                response = AuthSignUpResult(
+                    false,
+                    AuthNextSignUpStep(
+                        AuthSignUpStep.CONFIRM_SIGN_UP_STEP,
+                        emptyMap(),
+                        AuthCodeDeliveryDetails(
+                            email,
+                            AuthCodeDeliveryDetails.DeliveryMedium.EMAIL,
+                            "attributeName"
+                        )
+                    ),
+                    null
+                ).toJsonElement()
             )
         )
     )
 
-    override val serializables: List<Any> = listOf(baseCase)
+    val signupSuccessCase = baseCase.copy(
+        description = "Sign up finishes if user is confirmed in the first step",
+        preConditions = baseCase.preConditions.copy(
+            mockedResponses = listOf(
+                MockResponse(
+                    CognitoType.CognitoIdentityProvider,
+                    "signUp",
+                    ResponseType.Success,
+                    mapOf("codeDeliveryDetails" to emptyCodeDeliveryDetails, "userConfirmed" to true).toJsonElement()
+                )
+            )
+        ),
+        validations = listOf(
+            ExpectationShapes.Cognito.CognitoIdentityProvider(
+                apiName = "signUp",
+                // see [https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_SignUp.html]
+                request = mapOf(
+                    "clientId" to "testAppClientId", // This should be pulled from configuration
+                    "username" to username,
+                    "password" to password,
+                    "userAttributes" to listOf(mapOf("name" to "email", "value" to email))
+                ).toJsonElement()
+            ),
+            ExpectationShapes.Amplify(
+                apiName = AuthAPI.signUp,
+                responseType = ResponseType.Success,
+                response =
+                AuthSignUpResult(
+                    true,
+                    AuthNextSignUpStep(
+                        AuthSignUpStep.DONE,
+                        emptyMap(),
+                        null
+                    ),
+                    null
+                ).toJsonElement()
+            )
+        )
+    )
+
+    override val serializables: List<Any> = listOf(baseCase, signupSuccessCase)
 }

@@ -1,0 +1,26 @@
+{
+  "type": "AuthState.Configured",
+  "AuthenticationState": {
+    "type": "AuthenticationState.SigningIn",
+    "SignInState": {
+      "type": "SignInState.ResolvingChallenge",
+      "SignInChallengeState": {
+        "type": "SignInChallengeState.WaitingForAnswer",
+        "authChallenge": {
+          "challengeName": "CUSTOM_CHALLENGE",
+          "username": "username",
+          "session": "someSession",
+          "parameters": {
+            "SALT": "abc",
+            "SECRET_BLOCK": "secretBlock",
+            "SRP_B": "def",
+            "USERNAME": "username"
+          }
+        }
+      }
+    }
+  },
+  "AuthorizationState": {
+    "type": "AuthorizationState.SigningIn"
+  }
+}

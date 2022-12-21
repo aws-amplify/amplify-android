@@ -263,21 +263,33 @@ internal class RealAWSCognitoAuthPlugin(
                 )
             }
 
-            val authSignUpResult = AuthSignUpResult(
-                false,
-                AuthNextSignUpStep(
-                    AuthSignUpStep.CONFIRM_SIGN_UP_STEP,
-                    mapOf(),
-                    AuthCodeDeliveryDetails(
-                        deliveryDetails?.getValue("DESTINATION") ?: "",
-                        AuthCodeDeliveryDetails.DeliveryMedium.fromString(
-                            deliveryDetails?.getValue("MEDIUM")
-                        ),
-                        deliveryDetails?.getValue("ATTRIBUTE")
-                    )
-                ),
-                response?.userSub
-            )
+            val authSignUpResult = if (response?.userConfirmed == true) {
+                AuthSignUpResult(
+                    true,
+                    AuthNextSignUpStep(
+                        AuthSignUpStep.DONE,
+                        mapOf(),
+                        null
+                    ),
+                    response.userSub
+                )
+            } else {
+                AuthSignUpResult(
+                    false,
+                    AuthNextSignUpStep(
+                        AuthSignUpStep.CONFIRM_SIGN_UP_STEP,
+                        mapOf(),
+                        AuthCodeDeliveryDetails(
+                            deliveryDetails?.getValue("DESTINATION") ?: "",
+                            AuthCodeDeliveryDetails.DeliveryMedium.fromString(
+                                deliveryDetails?.getValue("MEDIUM")
+                            ),
+                            deliveryDetails?.getValue("ATTRIBUTE")
+                        )
+                    ),
+                    response?.userSub
+                )
+            }
             onSuccess.accept(authSignUpResult)
             logger.verbose("SignUp Execution complete")
         } catch (exception: Exception) {
@@ -507,8 +519,8 @@ internal class RealAWSCognitoAuthPlugin(
                             }
                         }
                     }
-                    authNState is AuthenticationState.SignedIn
-                        && authZState is AuthorizationState.SessionEstablished -> {
+                    authNState is AuthenticationState.SignedIn &&
+                        authZState is AuthorizationState.SessionEstablished -> {
                         authStateMachine.cancel(token)
                         val authSignInResult = AuthSignInResult(
                             true,
@@ -582,8 +594,8 @@ internal class RealAWSCognitoAuthPlugin(
                 val signInState = (authNState as? AuthenticationState.SigningIn)?.signInState
                 val challengeState = (signInState as? SignInState.ResolvingChallenge)?.challengeState
                 when {
-                    authNState is AuthenticationState.SignedIn
-                        && authZState is AuthorizationState.SessionEstablished -> {
+                    authNState is AuthenticationState.SignedIn &&
+                        authZState is AuthorizationState.SessionEstablished -> {
                         authStateMachine.cancel(token)
                         val authSignInResult = AuthSignInResult(
                             true,
@@ -728,8 +740,8 @@ internal class RealAWSCognitoAuthPlugin(
                             authStateMachine.send(AuthenticationEvent(AuthenticationEvent.EventType.CancelSignIn()))
                         }
                     }
-                    authNState is AuthenticationState.SignedIn
-                        && authZState is AuthorizationState.SessionEstablished -> {
+                    authNState is AuthenticationState.SignedIn &&
+                        authZState is AuthorizationState.SessionEstablished -> {
                         authStateMachine.cancel(token)
                         val authSignInResult =
                             AuthSignInResult(
@@ -1786,8 +1798,8 @@ internal class RealAWSCognitoAuthPlugin(
                 val authNState = authState.authNState
                 val authZState = authState.authZState
                 when {
-                    authNState is AuthenticationState.FederatedToIdentityPool
-                        && authZState is AuthorizationState.SessionEstablished -> {
+                    authNState is AuthenticationState.FederatedToIdentityPool &&
+                        authZState is AuthorizationState.SessionEstablished -> {
                         authStateMachine.cancel(token)
                         val credential = authZState.amplifyCredential as? AmplifyCredential.IdentityPoolFederated
                         val identityId = credential?.identityId
@@ -1841,12 +1853,11 @@ internal class RealAWSCognitoAuthPlugin(
                     (
                         authNState is AuthenticationState.FederatedToIdentityPool &&
                             authZState is AuthorizationState.SessionEstablished
-                        ) ||
-                    (
-                        authZState is AuthorizationState.Error &&
-                            authZState.exception is SessionError &&
-                            authZState.exception.amplifyCredential is AmplifyCredential.IdentityPoolFederated
-                        ) -> {
+                        ) || (
+                    authZState is AuthorizationState.Error &&
+                        authZState.exception is SessionError &&
+                        authZState.exception.amplifyCredential is AmplifyCredential.IdentityPoolFederated
+                    ) -> {
                     val event = AuthenticationEvent(AuthenticationEvent.EventType.ClearFederationToIdentityPool())
                     authStateMachine.send(event)
                     _clearFederationToIdentityPool(onSuccess, onError)
