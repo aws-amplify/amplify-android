@@ -27,7 +27,7 @@ dependencies {
     implementation dependency.androidx.appcompat
     implementation dependency.rxjava
 
-    testImplementation project(path: ':testutils')
+//    testImplementation project(path: ':testutils')
     testImplementation dependency.junit
     testImplementation dependency.mockito
     testImplementation dependency.mockk

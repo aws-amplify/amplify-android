@@ -53,10 +53,11 @@ object AmplifyHelper {
     val modelProvider by lazy {
         object : ModelProvider {
             override fun models(): MutableSet<Class<out Model>> {
-                return AmplifyModelProvider.getInstance().models()
-                    .filterNot {
-                        it in syncExcludeModels || it.simpleName.startsWith("MS")
-                    }.toMutableSet()
+//                return AmplifyModelProvider.getInstance().models()
+//                    .filterNot {
+//                        it in syncExcludeModels || it.simpleName.startsWith("MS")
+//                    }.toMutableSet()
+                return mutableSetOf(VFX::class.java, VFXLocale::class.java)
             }
 
             override fun version(): String {

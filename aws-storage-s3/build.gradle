@@ -28,7 +28,7 @@ dependencies {
     implementation dependency.kotlin.futures
     implementation dependency.gson
 
-    testImplementation project(path: ':testutils')
+//    testImplementation project(path: ':testutils')
     testImplementation dependency.junit
     testImplementation dependency.mockito
     testImplementation dependency.mockitoinline
@@ -39,7 +39,7 @@ dependencies {
     testImplementation dependency.kotlin.test.coroutines
     testImplementation project(path: ':aws-storage-s3')
 
-    androidTestImplementation project(path: ':testutils')
+//    androidTestImplementation project(path: ':testutils')
     androidTestImplementation dependency.androidx.annotation
     androidTestImplementation dependency.androidx.test.runner
     androidTestImplementation dependency.androidx.test.junit

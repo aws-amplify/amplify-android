@@ -38,10 +38,10 @@ dependencies {
     api "com.atlasv.android:timber:5.0.2"
 
     testImplementation project(path: ':aws-api-appsync') // Used to reference Temporal types in tests.
-    testImplementation project(path: ':testmodels')
-    testImplementation(project(path: ':testutils')) {
-        transitive = false
-    }
+//    testImplementation project(path: ':testmodels')
+//    testImplementation(project(path: ':testutils')) {
+//        transitive = false
+//    }
     testImplementation dependency.junit
     testImplementation dependency.mockito
     testImplementation dependency.robolectric
@@ -50,9 +50,9 @@ dependencies {
     testImplementation dependency.jsonassert
     testImplementation dependency.gson
 
-    androidTestImplementation (project(path: ':testutils')) {
-        transitive = false
-    }
+//    androidTestImplementation (project(path: ':testutils')) {
+//        transitive = false
+//    }
     androidTestImplementation dependency.androidx.annotation
     androidTestImplementation dependency.androidx.test.core
     androidTestImplementation dependency.androidx.test.runner

@@ -7,6 +7,7 @@ import com.amplifyframework.kotlin.core.Amplify
 import com.amplifyframework.logging.LogLevel
 import com.amplifyframework.logging.LoggingCategory
 import com.atlasv.android.amplify.simpleappsync.MergeResponseFactory
+import com.atlasv.android.amplify.simpleappsync.response.ResponseLocalizeTransformer
 import com.atlasv.android.log.HyperLogger
 import timber.log.Timber
 
@@ -24,11 +25,13 @@ class App : Application() {
         HyperLogger.config {
             it.enableLogcat = BuildConfig.DEBUG
         }
-        val AMPLIFY_ENV = "staging"
+//        val AMPLIFY_ENV = "staging"
+        val AMPLIFY_ENV = "dev"
         LoggingCategory.LOG_LEVEL = LogLevel.DEBUG
         Amplify.addPlugin(AWSCognitoAuthPlugin())
-        Amplify.addPlugin(AWSApiPlugin.builder()
-            .responseFactory(MergeResponseFactory())
+        Amplify.addPlugin(
+            AWSApiPlugin.builder()
+                .responseFactory(MergeResponseFactory(ResponseLocalizeTransformer()))
             .configureClient("richman") { builder ->
                 builder.addInterceptor { chain ->
                     val originRequest = chain.request()

@@ -72,4 +72,4 @@
     "hostedUIProviderCreds": "[{\"ProviderName\":\"Google\"}]",
     "oAuthMetadata": "{\"AllowedOAuthFlows\":[\"code\"],\"AllowedOAuthScopes\":[\"phone\",\"email\",\"openid\",\"profile\",\"aws.cognito.signin.user.admin\"],\"CallbackURLs\":[\"https://develop.d26jydjnwjjlvk.amplifyapp.com/\",\"https://main.d26jydjnwjjlvk.amplifyapp.com/\"],\"LogoutURLs\":[\"https://develop.d26jydjnwjjlvk.amplifyapp.com/\",\"https://main.d26jydjnwjjlvk.amplifyapp.com/\"]}"
   }
-}
+} 

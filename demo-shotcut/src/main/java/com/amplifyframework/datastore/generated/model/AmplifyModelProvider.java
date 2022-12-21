@@ -13,7 +13,7 @@ import java.util.Set;
  */
 
 public final class AmplifyModelProvider implements ModelProvider {
-  private static final String AMPLIFY_MODEL_VERSION = "5ed409db39caa7ed961b7410f872dc44";
+  private static final String AMPLIFY_MODEL_VERSION = "328e31d34b3639c86c7aaa3f6955e2d6";
   private static AmplifyModelProvider amplifyGeneratedModelInstance;
   private AmplifyModelProvider() {
     
@@ -34,7 +34,7 @@ public final class AmplifyModelProvider implements ModelProvider {
   @Override
    public Set<Class<? extends Model>> models() {
     final Set<Class<? extends Model>> modifiableSet = new HashSet<>(
-          Arrays.<Class<? extends Model>>asList(VFXCategoryLocale.class, TextTemplateLocale.class, TransitionVFXCategoryLocale.class, TransitionVFXLocale.class, VideoFilterCategoryLocale.class, VideoFilterLocale.class, TextTemplateCategoryLocale.class, ClipAnimLocale.class, ClipAnimCategoryLocale.class, OverlayMediaCategoryLocale.class, VFXLocale.class, ClipAnim.class, ClipAnimCategory.class, VideoFilter.class, VideoFilterCategory.class, Recommend.class, RecommendCategory.class, OverlayMediaCategory.class, OverlayMedia.class, TextTemplateCategory.class, TextTemplate.class, Font2.class, TransitionVFX.class, TransitionVFXCategory.class, FilterVFX.class, FilterVFXCategory.class, FontVFXCategory.class, FontVFX.class, VFXCategory.class, VFX.class, AudioCategory.class, Audio.class, TextAnim.class, TextAnimLocale.class, TextAnimCategory.class, TextAnimCategoryLocale.class)
+          Arrays.<Class<? extends Model>>asList(CreatorPlus.class, VFXCategoryLocale.class, TextTemplateLocale.class, TransitionVFXCategoryLocale.class, TransitionVFXLocale.class, VideoFilterCategoryLocale.class, VideoFilterLocale.class, TextTemplateCategoryLocale.class, ClipAnimLocale.class, ClipAnimCategoryLocale.class, OverlayMediaCategoryLocale.class, VFXLocale.class, ClipAnim.class, ClipAnimCategory.class, VideoFilter.class, VideoFilterCategory.class, Recommend.class, RecommendCategory.class, OverlayMediaCategory.class, OverlayMedia.class, TextTemplateCategory.class, TextTemplate.class, Font2.class, TransitionVFX.class, TransitionVFXCategory.class, FilterVFX.class, FilterVFXCategory.class, FontVFXCategory.class, FontVFX.class, VFXCategory.class, VFX.class, AudioCategory.class, Audio.class, TextAnim.class, TextAnimLocale.class, TextAnimCategory.class, TextAnimCategoryLocale.class)
         );
     
         return Immutable.of(modifiableSet);

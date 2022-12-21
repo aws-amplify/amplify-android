@@ -28,12 +28,12 @@ dependencies {
     implementation dependency.aws.textract
     implementation dependency.aws.translate
 
-    testImplementation project(path: ':testutils')
+//    testImplementation project(path: ':testutils')
     testImplementation dependency.junit
     testImplementation dependency.robolectric
     testImplementation dependency.rxjava
 
-    androidTestImplementation project(path: ':testutils')
+//    androidTestImplementation project(path: ':testutils')
     androidTestImplementation dependency.androidx.test.core
     androidTestImplementation dependency.androidx.test.runner
     androidTestImplementation dependency.mockkandroid

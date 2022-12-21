@@ -27,6 +27,6 @@ dependencies {
     testImplementation dependency.junit
     testImplementation dependency.robolectric
     testImplementation dependency.jsonassert
-    testImplementation project(path: ':testmodels')
-    testImplementation project(path: ':testutils')
+//    testImplementation project(path: ':testmodels')
+//    testImplementation project(path: ':testutils')
 }

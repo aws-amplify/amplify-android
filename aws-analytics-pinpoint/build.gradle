@@ -39,7 +39,7 @@ dependencies {
     testImplementation dependency.kotlin.test.coroutines
     testImplementation project(path: ':aws-analytics-pinpoint')
 
-    androidTestImplementation project(path: ':testutils')
+//    androidTestImplementation project(path: ':testutils')
     androidTestImplementation dependency.androidx.test.core
     androidTestImplementation dependency.androidx.test.runner
     androidTestImplementation dependency.kotlin.test.coroutines

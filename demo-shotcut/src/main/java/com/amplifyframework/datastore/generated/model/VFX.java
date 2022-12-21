@@ -36,13 +36,15 @@ public final class VFX implements Model {
   public static final QueryField SORT = field("VFX", "sort");
   public static final QueryField VFX_ENGINE_MIN_VERSION_CODE = field("VFX", "vfxEngineMinVersionCode");
   public static final QueryField VFX_CATEGORY_ID = field("VFX", "vfxCategoryID");
-  public static final QueryField STAGED_ROLLOUT = field("VFX", "stagedRollout");
   public static final QueryField ONLINE = field("VFX", "online");
   public static final QueryField UPDATED_AT = field("VFX", "updatedAt");
-  public static final QueryField TEST_TAG = field("VFX", "testTag");
   public static final QueryField GET_METHOD = field("VFX", "getMethod");
   public static final QueryField LANG_CODE = field("VFX", "langCode");
   public static final QueryField GRAY_RELEASE = field("VFX", "grayRelease");
+  public static final QueryField REQUIRE_GPU_SCORE = field("VFX", "requireGPUScore");
+  public static final QueryField REQUIRE_CPU_SCORE = field("VFX", "requireCPUScore");
+  public static final QueryField REQUIRE_MEM_SCORE = field("VFX", "requireMemScore");
+  public static final QueryField DISPLAY_NAME = field("VFX", "displayName");
   private final @ModelField(targetType="ID", isRequired = true) String id;
   private final @ModelField(targetType="String") String name;
   private final @ModelField(targetType="String") String coverUrl;
@@ -50,14 +52,16 @@ public final class VFX implements Model {
   private final @ModelField(targetType="Int") Integer sort;
   private final @ModelField(targetType="Int") Integer vfxEngineMinVersionCode;
   private final @ModelField(targetType="ID") String vfxCategoryID;
-  private final @ModelField(targetType="String") String stagedRollout;
   private final @ModelField(targetType="Int") Integer online;
   private final @ModelField(targetType="AWSDateTime", isRequired = true) Temporal.DateTime updatedAt;
-  private final @ModelField(targetType="String") String testTag;
   private final @ModelField(targetType="Int") Integer getMethod;
   private final @ModelField(targetType="String") String langCode;
   private final @ModelField(targetType="VFXLocale") @HasMany(associatedWith = "vfxID", type = VFXLocale.class) List<VFXLocale> VFXLocales = null;
   private final @ModelField(targetType="Int") Integer grayRelease;
+  private final @ModelField(targetType="Int") Integer requireGPUScore;
+  private final @ModelField(targetType="Int") Integer requireCPUScore;
+  private final @ModelField(targetType="Int") Integer requireMemScore;
+  private final @ModelField(targetType="String") String displayName;
   public String getId() {
       return id;
   }
@@ -86,20 +90,12 @@ public final class VFX implements Model {
       return vfxCategoryID;
   }
   
-  public String getStagedRollout() {
-      return stagedRollout;
-  }
-  
   public Integer getOnline() {
       return online;
   }
   
   public Temporal.DateTime getUpdatedAt() {
       return updatedAt;
-  }
-  
-  public String getTestTag() {
-      return testTag;
   }
   
   public Integer getGetMethod() {
@@ -118,7 +114,23 @@ public final class VFX implements Model {
       return grayRelease;
   }
   
-  private VFX(String id, String name, String coverUrl, String downloadUrl, Integer sort, Integer vfxEngineMinVersionCode, String vfxCategoryID, String stagedRollout, Integer online, Temporal.DateTime updatedAt, String testTag, Integer getMethod, String langCode, Integer grayRelease) {
+  public Integer getRequireGpuScore() {
+      return requireGPUScore;
+  }
+  
+  public Integer getRequireCpuScore() {
+      return requireCPUScore;
+  }
+  
+  public Integer getRequireMemScore() {
+      return requireMemScore;
+  }
+  
+  public String getDisplayName() {
+      return displayName;
+  }
+  
+  private VFX(String id, String name, String coverUrl, String downloadUrl, Integer sort, Integer vfxEngineMinVersionCode, String vfxCategoryID, Integer online, Temporal.DateTime updatedAt, Integer getMethod, String langCode, Integer grayRelease, Integer requireGPUScore, Integer requireCPUScore, Integer requireMemScore, String displayName) {
     this.id = id;
     this.name = name;
     this.coverUrl = coverUrl;
@@ -126,13 +138,15 @@ public final class VFX implements Model {
     this.sort = sort;
     this.vfxEngineMinVersionCode = vfxEngineMinVersionCode;
     this.vfxCategoryID = vfxCategoryID;
-    this.stagedRollout = stagedRollout;
     this.online = online;
     this.updatedAt = updatedAt;
-    this.testTag = testTag;
     this.getMethod = getMethod;
     this.langCode = langCode;
     this.grayRelease = grayRelease;
+    this.requireGPUScore = requireGPUScore;
+    this.requireCPUScore = requireCPUScore;
+    this.requireMemScore = requireMemScore;
+    this.displayName = displayName;
   }
   
   @Override
@@ -150,13 +164,15 @@ public final class VFX implements Model {
               ObjectsCompat.equals(getSort(), vfx.getSort()) &&
               ObjectsCompat.equals(getVfxEngineMinVersionCode(), vfx.getVfxEngineMinVersionCode()) &&
               ObjectsCompat.equals(getVfxCategoryId(), vfx.getVfxCategoryId()) &&
-              ObjectsCompat.equals(getStagedRollout(), vfx.getStagedRollout()) &&
               ObjectsCompat.equals(getOnline(), vfx.getOnline()) &&
               ObjectsCompat.equals(getUpdatedAt(), vfx.getUpdatedAt()) &&
-              ObjectsCompat.equals(getTestTag(), vfx.getTestTag()) &&
               ObjectsCompat.equals(getGetMethod(), vfx.getGetMethod()) &&
               ObjectsCompat.equals(getLangCode(), vfx.getLangCode()) &&
-              ObjectsCompat.equals(getGrayRelease(), vfx.getGrayRelease());
+              ObjectsCompat.equals(getGrayRelease(), vfx.getGrayRelease()) &&
+              ObjectsCompat.equals(getRequireGpuScore(), vfx.getRequireGpuScore()) &&
+              ObjectsCompat.equals(getRequireCpuScore(), vfx.getRequireCpuScore()) &&
+              ObjectsCompat.equals(getRequireMemScore(), vfx.getRequireMemScore()) &&
+              ObjectsCompat.equals(getDisplayName(), vfx.getDisplayName());
       }
   }
   
@@ -170,13 +186,15 @@ public final class VFX implements Model {
       .append(getSort())
       .append(getVfxEngineMinVersionCode())
       .append(getVfxCategoryId())
-      .append(getStagedRollout())
       .append(getOnline())
       .append(getUpdatedAt())
-      .append(getTestTag())
       .append(getGetMethod())
       .append(getLangCode())
       .append(getGrayRelease())
+      .append(getRequireGpuScore())
+      .append(getRequireCpuScore())
+      .append(getRequireMemScore())
+      .append(getDisplayName())
       .toString()
       .hashCode();
   }
@@ -192,13 +210,15 @@ public final class VFX implements Model {
       .append("sort=" + String.valueOf(getSort()) + ", ")
       .append("vfxEngineMinVersionCode=" + String.valueOf(getVfxEngineMinVersionCode()) + ", ")
       .append("vfxCategoryID=" + String.valueOf(getVfxCategoryId()) + ", ")
-      .append("stagedRollout=" + String.valueOf(getStagedRollout()) + ", ")
       .append("online=" + String.valueOf(getOnline()) + ", ")
       .append("updatedAt=" + String.valueOf(getUpdatedAt()) + ", ")
-      .append("testTag=" + String.valueOf(getTestTag()) + ", ")
       .append("getMethod=" + String.valueOf(getGetMethod()) + ", ")
       .append("langCode=" + String.valueOf(getLangCode()) + ", ")
-      .append("grayRelease=" + String.valueOf(getGrayRelease()))
+      .append("grayRelease=" + String.valueOf(getGrayRelease()) + ", ")
+      .append("requireGPUScore=" + String.valueOf(getRequireGpuScore()) + ", ")
+      .append("requireCPUScore=" + String.valueOf(getRequireCpuScore()) + ", ")
+      .append("requireMemScore=" + String.valueOf(getRequireMemScore()) + ", ")
+      .append("displayName=" + String.valueOf(getDisplayName()))
       .append("}")
       .toString();
   }
@@ -230,6 +250,8 @@ public final class VFX implements Model {
       null,
       null,
       null,
+      null,
+      null,
       null
     );
   }
@@ -242,13 +264,15 @@ public final class VFX implements Model {
       sort,
       vfxEngineMinVersionCode,
       vfxCategoryID,
-      stagedRollout,
       online,
       updatedAt,
-      testTag,
       getMethod,
       langCode,
-      grayRelease);
+      grayRelease,
+      requireGPUScore,
+      requireCPUScore,
+      requireMemScore,
+      displayName);
   }
   public interface UpdatedAtStep {
     BuildStep updatedAt(Temporal.DateTime updatedAt);
@@ -264,12 +288,14 @@ public final class VFX implements Model {
     BuildStep sort(Integer sort);
     BuildStep vfxEngineMinVersionCode(Integer vfxEngineMinVersionCode);
     BuildStep vfxCategoryId(String vfxCategoryId);
-    BuildStep stagedRollout(String stagedRollout);
     BuildStep online(Integer online);
-    BuildStep testTag(String testTag);
     BuildStep getMethod(Integer getMethod);
     BuildStep langCode(String langCode);
     BuildStep grayRelease(Integer grayRelease);
+    BuildStep requireGpuScore(Integer requireGpuScore);
+    BuildStep requireCpuScore(Integer requireCpuScore);
+    BuildStep requireMemScore(Integer requireMemScore);
+    BuildStep displayName(String displayName);
   }
   
 
@@ -282,12 +308,14 @@ public final class VFX implements Model {
     private Integer sort;
     private Integer vfxEngineMinVersionCode;
     private String vfxCategoryID;
-    private String stagedRollout;
     private Integer online;
-    private String testTag;
     private Integer getMethod;
     private String langCode;
     private Integer grayRelease;
+    private Integer requireGPUScore;
+    private Integer requireCPUScore;
+    private Integer requireMemScore;
+    private String displayName;
     @Override
      public VFX build() {
         String id = this.id != null ? this.id : UUID.randomUUID().toString();
@@ -300,13 +328,15 @@ public final class VFX implements Model {
           sort,
           vfxEngineMinVersionCode,
           vfxCategoryID,
-          stagedRollout,
           online,
           updatedAt,
-          testTag,
           getMethod,
           langCode,
-          grayRelease);
+          grayRelease,
+          requireGPUScore,
+          requireCPUScore,
+          requireMemScore,
+          displayName);
     }
     
     @Override
@@ -353,20 +383,8 @@ public final class VFX implements Model {
     }
     
     @Override
-     public BuildStep stagedRollout(String stagedRollout) {
-        this.stagedRollout = stagedRollout;
-        return this;
-    }
-    
-    @Override
      public BuildStep online(Integer online) {
         this.online = online;
-        return this;
-    }
-    
-    @Override
-     public BuildStep testTag(String testTag) {
-        this.testTag = testTag;
         return this;
     }
     
@@ -388,6 +406,30 @@ public final class VFX implements Model {
         return this;
     }
     
+    @Override
+     public BuildStep requireGpuScore(Integer requireGpuScore) {
+        this.requireGPUScore = requireGpuScore;
+        return this;
+    }
+    
+    @Override
+     public BuildStep requireCpuScore(Integer requireCpuScore) {
+        this.requireCPUScore = requireCpuScore;
+        return this;
+    }
+    
+    @Override
+     public BuildStep requireMemScore(Integer requireMemScore) {
+        this.requireMemScore = requireMemScore;
+        return this;
+    }
+    
+    @Override
+     public BuildStep displayName(String displayName) {
+        this.displayName = displayName;
+        return this;
+    }
+    
     /**
      * @param id id
      * @return Current Builder instance, for fluent method chaining
@@ -400,7 +442,7 @@ public final class VFX implements Model {
   
 
   public final class CopyOfBuilder extends Builder {
-    private CopyOfBuilder(String id, String name, String coverUrl, String downloadUrl, Integer sort, Integer vfxEngineMinVersionCode, String vfxCategoryId, String stagedRollout, Integer online, Temporal.DateTime updatedAt, String testTag, Integer getMethod, String langCode, Integer grayRelease) {
+    private CopyOfBuilder(String id, String name, String coverUrl, String downloadUrl, Integer sort, Integer vfxEngineMinVersionCode, String vfxCategoryId, Integer online, Temporal.DateTime updatedAt, Integer getMethod, String langCode, Integer grayRelease, Integer requireGpuScore, Integer requireCpuScore, Integer requireMemScore, String displayName) {
       super.id(id);
       super.updatedAt(updatedAt)
         .name(name)
@@ -409,12 +451,14 @@ public final class VFX implements Model {
         .sort(sort)
         .vfxEngineMinVersionCode(vfxEngineMinVersionCode)
         .vfxCategoryId(vfxCategoryId)
-        .stagedRollout(stagedRollout)
         .online(online)
-        .testTag(testTag)
         .getMethod(getMethod)
         .langCode(langCode)
-        .grayRelease(grayRelease);
+        .grayRelease(grayRelease)
+        .requireGpuScore(requireGpuScore)
+        .requireCpuScore(requireCpuScore)
+        .requireMemScore(requireMemScore)
+        .displayName(displayName);
     }
     
     @Override
@@ -453,18 +497,8 @@ public final class VFX implements Model {
     }
     
     @Override
-     public CopyOfBuilder stagedRollout(String stagedRollout) {
-      return (CopyOfBuilder) super.stagedRollout(stagedRollout);
-    }
-    
-    @Override
      public CopyOfBuilder online(Integer online) {
       return (CopyOfBuilder) super.online(online);
-    }
-    
-    @Override
-     public CopyOfBuilder testTag(String testTag) {
-      return (CopyOfBuilder) super.testTag(testTag);
     }
     
     @Override
@@ -480,6 +514,26 @@ public final class VFX implements Model {
     @Override
      public CopyOfBuilder grayRelease(Integer grayRelease) {
       return (CopyOfBuilder) super.grayRelease(grayRelease);
+    }
+    
+    @Override
+     public CopyOfBuilder requireGpuScore(Integer requireGpuScore) {
+      return (CopyOfBuilder) super.requireGpuScore(requireGpuScore);
+    }
+    
+    @Override
+     public CopyOfBuilder requireCpuScore(Integer requireCpuScore) {
+      return (CopyOfBuilder) super.requireCpuScore(requireCpuScore);
+    }
+    
+    @Override
+     public CopyOfBuilder requireMemScore(Integer requireMemScore) {
+      return (CopyOfBuilder) super.requireMemScore(requireMemScore);
+    }
+    
+    @Override
+     public CopyOfBuilder displayName(String displayName) {
+      return (CopyOfBuilder) super.displayName(displayName);
     }
   }
   

@@ -21,7 +21,7 @@ dependencies {
     implementation project(path: ':aws-api-appsync')
     implementation dependency.androidx.core
 
-    testImplementation project(path: ':testutils')
+//    testImplementation project(path: ':testutils')
     testImplementation dependency.junit
 }
 

@@ -1,3 +1,10 @@
+type CreatorPlus @model @auth(rules: [{allow: private, provider: iam}, {allow: public, operations: [read], provider: iam}]) {
+  entitlement_id: String
+  updatedAt: AWSDateTime
+  entitlements: String
+  id: ID!
+}
+
 type VFXCategoryLocale @model @key(name: "byVFXCategory", fields: ["materialID"]) @auth(rules: [{allow: public, operations: [read], provider: iam}, {allow: groups, groups: ["Editor"], operations: [read, create, update, delete]}, {allow: private, provider: iam}]) {
   id: ID!
   name: String
@@ -411,14 +418,16 @@ type VFX @model @key(name: "byVFXCategory", fields: ["vfxCategoryID"]) @auth(rul
   sort: Int
   vfxEngineMinVersionCode: Int
   vfxCategoryID: ID
-  stagedRollout: String
   online: Int
   updatedAt: AWSDateTime!
-  testTag: String
   getMethod: Int
   langCode: String
   VFXLocales: [VFXLocale] @connection(keyName: "byVFX", fields: ["id"])
   grayRelease: Int
+  requireGPUScore: Int
+  requireCPUScore: Int
+  requireMemScore: Int
+  displayName: String
 }
 
 type AudioCategory @model @auth(rules: [{allow: public, operations: [read], provider: iam}, {allow: groups, groups: ["Editor"], operations: [read, create, update, delete]}, {allow: private, provider: iam}]) {
