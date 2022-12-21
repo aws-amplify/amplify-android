@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -15,25 +15,20 @@
 
 package com.amplifyframework.api.aws.auth;
 
-import android.net.Uri;
-import androidx.annotation.NonNull;
-
 import com.amplifyframework.api.ApiException.ApiAuthException;
-import com.amplifyframework.api.aws.sigv4.AppSyncV4Signer;
+import com.amplifyframework.api.aws.sigv4.AWS4Signer;
 
-import com.amazonaws.DefaultRequest;
-import com.amazonaws.auth.AWS4Signer;
-import com.amazonaws.auth.AWSCredentialsProvider;
-import com.amazonaws.http.HttpMethodName;
-import com.amazonaws.util.IOUtils;
-
-import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.net.URL;
-import java.net.URLDecoder;
-import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
+import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider;
+import aws.smithy.kotlin.runtime.http.Headers;
+import aws.smithy.kotlin.runtime.http.HttpMethod;
+import aws.smithy.kotlin.runtime.http.Url;
+import aws.smithy.kotlin.runtime.http.content.ByteArrayContent;
+import aws.smithy.kotlin.runtime.http.request.HttpRequest;
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
 import okio.Buffer;
@@ -44,81 +39,64 @@ import okio.Buffer;
 public class IamRequestDecorator implements RequestDecorator {
     private static final String CONTENT_TYPE = "application/json";
     private static final MediaType JSON_MEDIA_TYPE = MediaType.parse(CONTENT_TYPE);
-    private final AWSCredentialsProvider credentialsProvider;
+    private final CredentialsProvider credentialsProvider;
     private final AWS4Signer v4Signer;
     private final String serviceName;
 
     /**
      * Constructor that takes in the necessary dependencies used to sign the requests.
-     * @param v4Signer An instance of the {@link AppSyncV4Signer}.
+     *
+     * @param signer              Signer used to sign the request.
      * @param credentialsProvider The AWS credentials provider to use when retrieving AWS credentials.
-     * @param serviceName the name of the AWS service for which the request is being decorated.
+     * @param serviceName         the name of the AWS service for which the request is being decorated.
      */
-    public IamRequestDecorator(AWS4Signer v4Signer, AWSCredentialsProvider credentialsProvider, String serviceName) {
-        this.v4Signer = v4Signer;
+    public IamRequestDecorator(AWS4Signer signer, CredentialsProvider credentialsProvider, String serviceName) {
+        this.v4Signer = signer;
         this.credentialsProvider = credentialsProvider;
         this.serviceName = serviceName;
     }
 
     /**
      * Adds the appropriate header to the provided HTTP request.
+     *
      * @param req The request to be signed.
      * @return A new instance of the request containing the signature headers.
      * @throws ApiAuthException If the signing process fails.
      */
     public final okhttp3.Request decorate(okhttp3.Request req) throws ApiAuthException {
-        //Clone the request into a new DefaultRequest object and populate it with credentials
-        final DefaultRequest<?> dr = new DefaultRequest<>(serviceName);
-
-        //set the endpoint
-        dr.setEndpoint(req.url().uri());
-        //copy all the headers
-        for (String headerName : req.headers().names()) {
-            dr.addHeader(headerName, req.header(headerName));
-        }
-        //set the http method
-        dr.setHttpMethod(HttpMethodName.valueOf(req.method()));
-
         //set the request body
-        final byte[] bodyBytes;
-        RequestBody body = req.body();
-        boolean isEmptyRequestBody = false;
-        try {
-            if (body != null && body.contentLength() > 0) {
-                //write the body to a byte array.
-                final Buffer buffer = new Buffer();
-                body.writeTo(buffer);
-                bodyBytes = IOUtils.toByteArray(buffer.inputStream());
-            } else {
-                isEmptyRequestBody = true;
-                bodyBytes = "".getBytes();
-            }
-            dr.setParameters(splitQuery(req.url().url()));
-        } catch (IOException exception) {
-            throw new ApiAuthException("Unable to calculate SigV4 signature for the request",
-                                                    exception,
-                                                    "Check your application logs for details.");
-        }
-        dr.setContent(new ByteArrayInputStream(bodyBytes));
+        final byte[] bodyBytes = getBytes(req.body());
+        ByteArrayContent body2 = new ByteArrayContent(bodyBytes);
 
-        //set the query string parameters
-        v4Signer.sign(dr, credentialsProvider.getCredentials());
+        HttpMethod method = HttpMethod.Companion.parse(req.method());
+        Url url = Url.Companion.parse(req.url().uri().toString());
+        Headers headers = Headers.Companion.invoke((builder) -> {
+            for (String headerName : req.headers().names()) {
+                builder.set(headerName, req.header(headerName));
+            }
+
+            builder.set("Host", req.url().url().getHost());
+            return null;
+        });
+
+        HttpRequest req2 = new HttpRequest(method, url, headers, body2);
+
+        HttpRequest request = v4Signer.signBlocking(req2, credentialsProvider, serviceName).getOutput();
 
         //Copy the signed/credentialed request back into an OKHTTP Request object.
         okhttp3.Request.Builder okReqBuilder = new okhttp3.Request.Builder();
 
-        //set the headers from default request, since it contains the signed headers as well.
-        for (Map.Entry<String, String> e : dr.getHeaders().entrySet()) {
-            okReqBuilder.addHeader(e.getKey(), e.getValue());
+        for (Map.Entry<String, List<String>> e : request.getHeaders().entries()) {
+            okReqBuilder.addHeader(e.getKey(), e.getValue().get(0));
         }
 
         //Set the URL and Method
         okReqBuilder.url(req.url());
         final RequestBody requestBody;
-        if (!isEmptyRequestBody) {
-            requestBody = RequestBody.create(bodyBytes, JSON_MEDIA_TYPE);
-        } else {
+        if (req.body() == null) {
             requestBody = null;
+        } else {
+            requestBody = RequestBody.create(bodyBytes, JSON_MEDIA_TYPE);
         }
 
         okReqBuilder.method(req.method(), requestBody);
@@ -127,14 +105,27 @@ public class IamRequestDecorator implements RequestDecorator {
         return okReqBuilder.build();
     }
 
-    // Extracts query string parameters from a URL.
-    @NonNull
-    private static Map<String, String> splitQuery(URL url) throws IOException {
-        Map<String, String> queryPairs = new LinkedHashMap<>();
-        Uri uri = Uri.parse(url.toString());
-        for (String paramName : uri.getQueryParameterNames()) {
-            queryPairs.put(paramName, URLDecoder.decode(uri.getQueryParameter(paramName), "UTF8"));
+    private byte[] getBytes(RequestBody body) throws ApiAuthException {
+        if (body == null) {
+            return "".getBytes();
         }
-        return queryPairs;
+
+        final int BUFFER_SIZE = 1024 * 4;
+        try (ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+            //write the body to a byte array.
+            final Buffer buffer = new Buffer();
+            body.writeTo(buffer);
+
+            final byte[] bytes = new byte[BUFFER_SIZE];
+            int n = 0;
+            while ((n = buffer.inputStream().read(bytes)) != -1) {
+                output.write(bytes, 0, n);
+            }
+            return output.toByteArray();
+        } catch (IOException exception) {
+            throw new ApiAuthException("Unable to calculate SigV4 signature for the request",
+                    exception,
+                    "Check your application logs for details.");
+        }
     }
 }

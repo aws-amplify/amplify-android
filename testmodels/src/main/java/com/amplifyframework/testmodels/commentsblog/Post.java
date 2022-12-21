@@ -1,3 +1,18 @@
+/*
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
 package com.amplifyframework.testmodels.commentsblog;
 
 import com.amplifyframework.core.model.annotations.BelongsTo;
@@ -24,18 +39,20 @@ import static com.amplifyframework.core.model.query.predicate.QueryField.field;
 public final class Post implements Model {
   public static final QueryField ID = field("Post", "id");
   public static final QueryField TITLE = field("Post", "title");
-  public static final QueryField BLOG = field("Post", "postBlogId");
+  public static final QueryField BLOG = field("Post", "blogPostsId");
+  public static final QueryField AUTHOR = field("Post", "authorPostsId");
   public static final QueryField STATUS = field("Post", "status");
   public static final QueryField RATING = field("Post", "rating");
   public static final QueryField CREATED_AT = field("Post", "createdAt");
   private final @ModelField(targetType="ID", isRequired = true) String id;
   private final @ModelField(targetType="String", isRequired = true) String title;
-  private final @ModelField(targetType="Blog") @BelongsTo(targetName = "postBlogId", type = Blog.class) Blog blog;
+  private final @ModelField(targetType="Blog") @BelongsTo(targetName = "blogPostsId", type = Blog.class) Blog blog;
   private final @ModelField(targetType="Comment") @HasMany(associatedWith = "post", type = Comment.class) List<Comment> comments = null;
-  private final @ModelField(targetType="PostAuthorJoin") @HasMany(associatedWith = "post", type = PostAuthorJoin.class) List<PostAuthorJoin> authors = null;
+  private final @ModelField(targetType="Author") @BelongsTo(targetName = "authorPostsId", type = Author.class) Author author;
   private final @ModelField(targetType="PostStatus", isRequired = true) PostStatus status;
   private final @ModelField(targetType="Int", isRequired = true) Integer rating;
   private final @ModelField(targetType="AWSDateTime") Temporal.DateTime createdAt;
+  private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime updatedAt;
   public String getId() {
       return id;
   }
@@ -52,8 +69,8 @@ public final class Post implements Model {
       return comments;
   }
   
-  public List<PostAuthorJoin> getAuthors() {
-      return authors;
+  public Author getAuthor() {
+      return author;
   }
   
   public PostStatus getStatus() {
@@ -68,10 +85,15 @@ public final class Post implements Model {
       return createdAt;
   }
   
-  private Post(String id, String title, Blog blog, PostStatus status, Integer rating, Temporal.DateTime createdAt) {
+  public Temporal.DateTime getUpdatedAt() {
+      return updatedAt;
+  }
+  
+  private Post(String id, String title, Blog blog, Author author, PostStatus status, Integer rating, Temporal.DateTime createdAt) {
     this.id = id;
     this.title = title;
     this.blog = blog;
+    this.author = author;
     this.status = status;
     this.rating = rating;
     this.createdAt = createdAt;
@@ -88,9 +110,11 @@ public final class Post implements Model {
       return ObjectsCompat.equals(getId(), post.getId()) &&
               ObjectsCompat.equals(getTitle(), post.getTitle()) &&
               ObjectsCompat.equals(getBlog(), post.getBlog()) &&
+              ObjectsCompat.equals(getAuthor(), post.getAuthor()) &&
               ObjectsCompat.equals(getStatus(), post.getStatus()) &&
               ObjectsCompat.equals(getRating(), post.getRating()) &&
-              ObjectsCompat.equals(getCreatedAt(), post.getCreatedAt());
+              ObjectsCompat.equals(getCreatedAt(), post.getCreatedAt()) &&
+              ObjectsCompat.equals(getUpdatedAt(), post.getUpdatedAt());
       }
   }
   
@@ -100,9 +124,11 @@ public final class Post implements Model {
       .append(getId())
       .append(getTitle())
       .append(getBlog())
+      .append(getAuthor())
       .append(getStatus())
       .append(getRating())
       .append(getCreatedAt())
+      .append(getUpdatedAt())
       .toString()
       .hashCode();
   }
@@ -114,9 +140,11 @@ public final class Post implements Model {
       .append("id=" + String.valueOf(getId()) + ", ")
       .append("title=" + String.valueOf(getTitle()) + ", ")
       .append("blog=" + String.valueOf(getBlog()) + ", ")
+      .append("author=" + String.valueOf(getAuthor()) + ", ")
       .append("status=" + String.valueOf(getStatus()) + ", ")
       .append("rating=" + String.valueOf(getRating()) + ", ")
-      .append("createdAt=" + String.valueOf(getCreatedAt()))
+      .append("createdAt=" + String.valueOf(getCreatedAt()) + ", ")
+      .append("updatedAt=" + String.valueOf(getUpdatedAt()))
       .append("}")
       .toString();
   }
@@ -132,20 +160,11 @@ public final class Post implements Model {
    * in a relationship.
    * @param id the id of the existing item this instance will represent
    * @return an instance of this model with only ID populated
-   * @throws IllegalArgumentException Checks that ID is in the proper format
    */
   public static Post justId(String id) {
-    try {
-      UUID.fromString(id); // Check that ID is in the UUID format - if not an exception is thrown
-    } catch (Exception exception) {
-      throw new IllegalArgumentException(
-              "Model IDs must be unique in the format of UUID. This method is for creating instances " +
-              "of an existing object with only its ID field for sending as a mutation parameter. When " +
-              "creating a new object, use the standard builder method and leave the ID field blank."
-      );
-    }
     return new Post(
       id,
+      null,
       null,
       null,
       null,
@@ -158,6 +177,7 @@ public final class Post implements Model {
     return new CopyOfBuilder(id,
       title,
       blog,
+      author,
       status,
       rating,
       createdAt);
@@ -179,8 +199,9 @@ public final class Post implements Model {
 
   public interface BuildStep {
     Post build();
-    BuildStep id(String id) throws IllegalArgumentException;
+    BuildStep id(String id);
     BuildStep blog(Blog blog);
+    BuildStep author(Author author);
     BuildStep createdAt(Temporal.DateTime createdAt);
   }
   
@@ -191,6 +212,7 @@ public final class Post implements Model {
     private PostStatus status;
     private Integer rating;
     private Blog blog;
+    private Author author;
     private Temporal.DateTime createdAt;
     @Override
      public Post build() {
@@ -200,6 +222,7 @@ public final class Post implements Model {
           id,
           title,
           blog,
+          author,
           status,
           rating,
           createdAt);
@@ -233,40 +256,36 @@ public final class Post implements Model {
     }
     
     @Override
+     public BuildStep author(Author author) {
+        this.author = author;
+        return this;
+    }
+    
+    @Override
      public BuildStep createdAt(Temporal.DateTime createdAt) {
         this.createdAt = createdAt;
         return this;
     }
     
     /** 
-     * WARNING: Do not set ID when creating a new object. Leave this blank and one will be auto generated for you.
-     * This should only be set when referring to an already existing object.
      * @param id id
      * @return Current Builder instance, for fluent method chaining
-     * @throws IllegalArgumentException Checks that ID is in the proper format
      */
-    public BuildStep id(String id) throws IllegalArgumentException {
+    public BuildStep id(String id) {
         this.id = id;
-        
-        try {
-            UUID.fromString(id); // Check that ID is in the UUID format - if not an exception is thrown
-        } catch (Exception exception) {
-          throw new IllegalArgumentException("Model IDs must be unique in the format of UUID.",
-                    exception);
-        }
-        
         return this;
     }
   }
   
 
   public final class CopyOfBuilder extends Builder {
-    private CopyOfBuilder(String id, String title, Blog blog, PostStatus status, Integer rating, Temporal.DateTime createdAt) {
+    private CopyOfBuilder(String id, String title, Blog blog, Author author, PostStatus status, Integer rating, Temporal.DateTime createdAt) {
       super.id(id);
       super.title(title)
         .status(status)
         .rating(rating)
         .blog(blog)
+        .author(author)
         .createdAt(createdAt);
     }
     
@@ -288,6 +307,11 @@ public final class Post implements Model {
     @Override
      public CopyOfBuilder blog(Blog blog) {
       return (CopyOfBuilder) super.blog(blog);
+    }
+    
+    @Override
+     public CopyOfBuilder author(Author author) {
+      return (CopyOfBuilder) super.author(author);
     }
     
     @Override

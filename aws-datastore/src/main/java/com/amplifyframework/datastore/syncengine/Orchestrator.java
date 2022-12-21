@@ -51,7 +51,7 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
  */
 public final class Orchestrator {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
-    private static final long LOCAL_OP_TIMEOUT_SECONDS = 5;
+    private static final long LOCAL_OP_TIMEOUT_SECONDS = 7;
 
     private final SubscriptionProcessor subscriptionProcessor;
     private final SyncProcessor syncProcessor;
@@ -101,6 +101,7 @@ public final class Orchestrator {
         SyncTimeRegistry syncTimeRegistry = new SyncTimeRegistry(localStorageAdapter);
         ConflictResolver conflictResolver = new ConflictResolver(dataStoreConfigurationProvider, appSync);
         this.queryPredicateProvider = new QueryPredicateProvider(dataStoreConfigurationProvider);
+        RetryHandler retryHandler = new RetryHandler();
 
         this.mutationProcessor = MutationProcessor.builder()
             .merger(merger)
@@ -109,6 +110,7 @@ public final class Orchestrator {
             .mutationOutbox(mutationOutbox)
             .appSync(appSync)
             .conflictResolver(conflictResolver)
+            .retryHandler(retryHandler)
             .build();
         this.syncProcessor = SyncProcessor.builder()
             .modelProvider(modelProvider)
@@ -297,7 +299,18 @@ public final class Orchestrator {
                 // are then used to filter data received from AppSync.
                 queryPredicateProvider.resolvePredicates();
 
-                subscriptionProcessor.startSubscriptions();
+                try {
+                    subscriptionProcessor.startSubscriptions();
+                } catch (Throwable failure) {
+                    if (!emitter.tryOnError(
+                            new DataStoreException("DataStore subscriptionProcessor failed to start.",
+                                    failure, "Check your internet."))) {
+                        LOG.warn("DataStore failed to start after emitter was disposed.",
+                                failure);
+                        emitter.onComplete();
+                    }
+                    return;
+                }
                 publishNetworkStatusEvent(true);
 
                 long startTime = System.currentTimeMillis();

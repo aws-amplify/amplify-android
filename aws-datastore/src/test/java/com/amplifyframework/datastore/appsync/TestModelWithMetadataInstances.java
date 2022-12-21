@@ -92,11 +92,11 @@ public final class TestModelWithMetadataInstances {
 
         final Set<String> actualModelIds = new HashSet<>();
         for (final ModelWithMetadata<? extends Model> modelWithMetadata : actual) {
-            actualModelIds.add(modelWithMetadata.getModel().getId());
+            actualModelIds.add(modelWithMetadata.getModel().getPrimaryKeyString());
         }
         final Set<String> expectedModelIds = new HashSet<>();
         for (final ModelWithMetadata<? extends Model> modelWithMetadata : expected) {
-            expectedModelIds.add(modelWithMetadata.getModel().getId());
+            expectedModelIds.add(modelWithMetadata.getModel().getPrimaryKeyString());
         }
         org.junit.Assert.assertEquals(expectedModelIds, actualModelIds);
     }

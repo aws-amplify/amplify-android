@@ -21,6 +21,7 @@ import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.SchemaRegistry;
 import com.amplifyframework.core.model.SerializedModel;
 import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.datastore.DataStoreConfiguration;
@@ -33,13 +34,16 @@ import com.amplifyframework.datastore.appsync.AppSyncConflictUnhandledErrorFacto
 import com.amplifyframework.datastore.appsync.AppSyncMocking;
 import com.amplifyframework.datastore.appsync.ModelMetadata;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
+import com.amplifyframework.datastore.appsync.ModelWithMetadataAdapter;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.util.GsonFactory;
 
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -192,12 +196,14 @@ public final class ConflictResolverTest {
         BlogOwner localModel = BlogOwner.builder()
                 .name("Local Blogger")
                 .build();
+        SchemaRegistry.instance().register(new HashSet<>(Arrays.asList(BlogOwner.class)));
         Map<String, Object> ownerData = new HashMap<>();
         ownerData.put("id", localModel.getId());
         ownerData.put("name", localModel.getName());
+        ownerData.put(ModelWithMetadataAdapter.TYPE_NAME, localModel.getModelName());
         SerializedModel serializedOwner = SerializedModel.builder()
-                .serializedData(ownerData)
                 .modelSchema(ModelSchema.fromModelClass(BlogOwner.class))
+                .serializedData(ownerData)
                 .build();
         PendingMutation<SerializedModel> mutation = PendingMutation.update(serializedOwner, schema);
 
@@ -248,24 +254,23 @@ public final class ConflictResolverTest {
         Map<String, Object> blogOwnerData = new HashMap<>();
         blogOwnerData.put("name", "A seasoned writer");
         blogOwnerData.put("id", "e50ffa8f-783b-4780-89b4-27043ffc35be");
-
         SerializedModel serializedOwner = SerializedModel.builder()
-                .serializedData(blogOwnerData)
                 .modelSchema(schemaFrom())
+                .serializedData(blogOwnerData)
                 .build();
         PendingMutation<SerializedModel> mutation = PendingMutation.update(serializedOwner, schema);
-
+        SchemaRegistry.instance().register(new HashSet<>(Arrays.asList(BlogOwner.class)));
         // Arrange server state for the model, in conflict to local data
         Map<String, Object> serverBlogOwnerData = new HashMap<>();
         serverBlogOwnerData.put("name", "A seasoned writer");
         serverBlogOwnerData.put("id", "e50ffa8f-783b-4780-89b4-27043ffc35be");
         SerializedModel serverModel = SerializedModel.builder()
+                .modelSchema(schemaFrom())
                 .serializedData(serverBlogOwnerData)
-                .modelSchema(null)
                 .build();
 
         Temporal.Timestamp now = Temporal.Timestamp.now();
-        ModelMetadata metadata = new ModelMetadata(serverModel.getId(), false, 4, now);
+        ModelMetadata metadata = new ModelMetadata(serverModel.getPrimaryKeyString(), false, 4, now);
         ModelWithMetadata<SerializedModel> serverData = new ModelWithMetadata<>(serializedOwner, metadata);
 
         // Arrange a hypothetical conflict error from AppSync
@@ -307,7 +312,7 @@ public final class ConflictResolverTest {
             .name("Remote model")
             .build();
         Temporal.Timestamp now = Temporal.Timestamp.now();
-        ModelMetadata remoteMetadata = new ModelMetadata(remoteModel.getId(), false, 4, now);
+        ModelMetadata remoteMetadata = new ModelMetadata(remoteModel.getPrimaryKeyString(), false, 4, now);
         ModelWithMetadata<BlogOwner> remoteData = new ModelWithMetadata<>(remoteModel, remoteMetadata);
         // Arrange an unhandled conflict error based on the server data
         AppSyncConflictUnhandledError<BlogOwner> unhandledConflictError =
@@ -324,7 +329,8 @@ public final class ConflictResolverTest {
             );
 
         // When the AppSync update API is called, return a mock response
-        ModelMetadata metadata = new ModelMetadata(customModel.getId(), false, remoteMetadata.getVersion(), now);
+        ModelMetadata metadata = new ModelMetadata(customModel.getPrimaryKeyString(), false,
+                remoteMetadata.getVersion(), now);
         ModelWithMetadata<BlogOwner> responseData = new ModelWithMetadata<>(customModel, metadata);
         AppSyncMocking.update(appSync)
             .mockSuccessResponse(customModel, remoteMetadata.getVersion(), responseData);

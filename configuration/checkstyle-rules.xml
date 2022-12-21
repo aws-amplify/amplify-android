@@ -120,7 +120,10 @@
         </module>
 
         <!-- Disallow methods from having too many parameters. -->
-        <module name="ParameterNumber" />
+        <module name="ParameterNumber">
+            <property name="id" value="paramNum"/>
+            <property name="max" value="8"/>
+        </module>
 
         <!--
             If your method gets too long, you should refactor it into
@@ -183,7 +186,7 @@
         <!-- Use a standard ordering of Java language modifiers. -->
         <module name="ModifierOrder" />
         <module name="RedundantModifier" />
-    
+
         <!--
             Java imports are an important part of the documentation of the
             structure of a code base. They should help the reader understand
@@ -199,7 +202,7 @@
             <property name="separated" value="true" />
             <property name="sortStaticImportsAlphabetically" value="true" />
         </module>
-    
+
         <!-- Miscellaneous / General code quality checks. -->
         <module name="StringLiteralEquality" />
         <module name="SimplifyBooleanReturn" />

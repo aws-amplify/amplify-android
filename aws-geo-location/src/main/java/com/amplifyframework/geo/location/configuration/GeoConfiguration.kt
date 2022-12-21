@@ -76,7 +76,9 @@ data class GeoConfiguration internal constructor(
 
         fun region(region: String) = apply { this.region = region }
         fun maps(maps: MapsConfiguration) = apply { this.maps = maps }
-        fun searchIndices(searchIndices: SearchIndicesConfiguration) = apply { this.searchIndices = searchIndices }
+        fun searchIndices(searchIndices: SearchIndicesConfiguration) = apply {
+            this.searchIndices = searchIndices
+        }
         fun build() = GeoConfiguration(region, maps, searchIndices)
     }
 

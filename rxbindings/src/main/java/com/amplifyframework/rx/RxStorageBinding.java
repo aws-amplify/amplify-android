@@ -20,12 +20,13 @@ import androidx.annotation.VisibleForTesting;
 
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
-import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.async.NoOpCancelable;
+import com.amplifyframework.core.async.Resumable;
 import com.amplifyframework.rx.RxAdapters.CancelableBehaviors;
 import com.amplifyframework.storage.StorageCategory;
 import com.amplifyframework.storage.StorageCategoryBehavior;
 import com.amplifyframework.storage.StorageException;
+import com.amplifyframework.storage.operation.StorageTransferOperation;
 import com.amplifyframework.storage.options.StorageDownloadFileOptions;
 import com.amplifyframework.storage.options.StorageGetUrlOptions;
 import com.amplifyframework.storage.options.StorageListOptions;
@@ -37,6 +38,7 @@ import com.amplifyframework.storage.result.StorageGetUrlResult;
 import com.amplifyframework.storage.result.StorageListResult;
 import com.amplifyframework.storage.result.StorageRemoveResult;
 import com.amplifyframework.storage.result.StorageTransferProgress;
+import com.amplifyframework.storage.result.StorageTransferResult;
 import com.amplifyframework.storage.result.StorageUploadFileResult;
 import com.amplifyframework.storage.result.StorageUploadInputStreamResult;
 
@@ -165,6 +167,16 @@ public final class RxStorageBinding implements RxStorageCategoryBehavior {
         });
     }
 
+    @NonNull
+    @Override
+    public Single<StorageTransferOperation<?, ? extends StorageTransferResult>> getTransfer(
+        @NonNull String transferId) {
+        return toSingle(((onResult, onError) -> {
+            storage.getTransfer(transferId, onResult, onError);
+            return new NoOpCancelable();
+        }));
+    }
+
     private <T> Single<T> toSingle(CancelableBehaviors.ResultEmitter<T, StorageException> method) {
         return CancelableBehaviors.toSingle(method);
     }
@@ -174,10 +186,10 @@ public final class RxStorageBinding implements RxStorageCategoryBehavior {
      * progress information and returns a single.
      * @param <T> The type that represents the result of a given operation.
      */
-    public static final class RxProgressAwareSingleOperation<T> implements RxAdapters.RxSingleOperation<T> {
+    public static final class RxProgressAwareSingleOperation<T> implements RxAdapters.RxSingleOperation<T>, Resumable {
         private final PublishSubject<StorageTransferProgress> progressSubject;
         private final ReplaySubject<T> resultSubject;
-        private final Cancelable amplifyOperation;
+        private final StorageTransferOperation<?, ?> amplifyOperation;
 
         RxProgressAwareSingleOperation(RxStorageTransferCallbackMapper<T> callbacks) {
             progressSubject = PublishSubject.create();
@@ -185,6 +197,26 @@ public final class RxStorageBinding implements RxStorageCategoryBehavior {
             amplifyOperation = callbacks.emitTo(progressSubject::onNext,
                                                 resultSubject::onNext,
                                                 resultSubject::onError);
+        }
+
+        /**
+         * Return the transfer ID for this operation.
+         *
+         * @return unique transferId for this operation
+         */
+        @NonNull
+        public String getTransferId() {
+            return amplifyOperation.getTransferId();
+        }
+
+        @Override
+        public void resume() {
+            amplifyOperation.resume();
+        }
+
+        @Override
+        public void pause() {
+            amplifyOperation.pause();
         }
 
         @Override
@@ -223,7 +255,7 @@ public final class RxStorageBinding implements RxStorageCategoryBehavior {
      * @param <T> The type that represents the result of a given operation.
      */
     interface RxStorageTransferCallbackMapper<T> {
-        Cancelable emitTo(
+        StorageTransferOperation<?, ?> emitTo(
                 Consumer<StorageTransferProgress> onProgress,
                 Consumer<T> onItem,
                 Consumer<StorageException> onError

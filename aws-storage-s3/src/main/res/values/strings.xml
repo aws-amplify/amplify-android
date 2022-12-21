@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-   Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+   Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 
    Licensed under the Apache License, Version 2.0 (the "License").
    You may not use this file except in compliance with the License.
@@ -17,5 +17,5 @@
 <resources>
     <string name="amplify_storage_notification_channel_id">Transfer Channel</string>
     <string name="amplify_storage_notification_channel_name">Amplify Transfer Channel</string>
-    <string name="amplify_storage_notification_title">Amplify transfer service is running</string>
+    <string name="amplify_storage_notification_title">File transfer in progress</string>
 </resources>

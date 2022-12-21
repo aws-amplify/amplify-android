@@ -31,6 +31,7 @@ import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.InitializationStatus;
 import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.ModelIdentifier;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.SchemaRegistry;
 import com.amplifyframework.core.model.SerializedModel;
@@ -46,11 +47,13 @@ import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter;
 import com.amplifyframework.datastore.syncengine.Orchestrator;
+import com.amplifyframework.datastore.syncengine.ReachabilityMonitor;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.logging.Logger;
 
 import org.json.JSONObject;
 
+import java.io.Serializable;
 import java.util.Iterator;
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
@@ -88,6 +91,8 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
 
     private final boolean isSyncRetryEnabled;
 
+    private final ReachabilityMonitor reachabilityMonitor;
+
     private AWSDataStorePlugin(
             @NonNull ModelProvider modelProvider,
             @NonNull SchemaRegistry schemaRegistry,
@@ -98,6 +103,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
         this.authModeStrategy = AuthModeStrategyType.DEFAULT;
         this.userProvidedConfiguration = userProvidedConfiguration;
         this.isSyncRetryEnabled = userProvidedConfiguration != null && userProvidedConfiguration.getDoSyncRetry();
+        this.reachabilityMonitor = ReachabilityMonitor.Companion.create();
         // Used to interrogate plugins, to understand if sync should be automatically turned on
         this.orchestrator = new Orchestrator(
             modelProvider,
@@ -128,6 +134,9 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             SQLiteStorageAdapter.forModels(schemaRegistry, modelProvider) :
             builder.storageAdapter;
         this.categoryInitializationsPending = new CountDownLatch(1);
+        this.reachabilityMonitor = builder.reachabilityMonitor == null ?
+            ReachabilityMonitor.Companion.create() :
+            builder.reachabilityMonitor;
 
         // Used to interrogate plugins, to understand if sync should be automatically turned on
         this.orchestrator = new Orchestrator(
@@ -253,6 +262,33 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             event -> InitializationStatus.SUCCEEDED.toString().equals(event.getName()),
             event -> categoryInitializationsPending.countDown()
         );
+
+        reachabilityMonitor.configure(context);
+        observeNetworkStatus();
+    }
+
+    /**
+     * Start the datastore when the network is available, and stop the datastore when it is not
+     * available.
+     */
+    private void observeNetworkStatus() {
+        reachabilityMonitor.getObservable()
+            .doOnNext(networkIsAvailable -> {
+                if (networkIsAvailable) {
+                    LOG.info("Network available, start datastore");
+                    start(
+                        (Action) () -> { },
+                        ((e) -> LOG.error("Error starting datastore plugin after network event: " + e))
+                    );
+                } else {
+                    LOG.info("Network lost, stop datastore");
+                    stop(
+                        (Action) () -> { },
+                        ((e) -> LOG.error("Error stopping datastore plugin after network event: " + e))
+                    );
+                }
+            })
+            .subscribe();
     }
 
     @WorkerThread
@@ -586,7 +622,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     @Override
     public <T extends Model> void observe(
             @NonNull Class<T> itemClass,
-            @NonNull String uniqueId,
+            @NonNull Serializable uniqueId,
             @NonNull Consumer<Cancelable> onObservationStarted,
             @NonNull Consumer<DataStoreItemChange<T>> onDataStoreItemChange,
             @NonNull Consumer<DataStoreException> onObservationFailure,
@@ -595,7 +631,8 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             itemChange -> {
                 try {
                     if (itemChange.modelSchema().getName().equals(itemClass.getSimpleName()) &&
-                            itemChange.item().getId().equals(uniqueId)) {
+                            itemChange.item().getPrimaryKeyString().equals(ModelIdentifier.Helper
+                                    .getUniqueKey(uniqueId))) {
                         @SuppressWarnings("unchecked") // itemClass() was just inspected above. This is safe.
                         StorageItemChange<T> typedChange = (StorageItemChange<T>) itemChange;
                         onDataStoreItemChange.accept(ItemChangeMapper.map(typedChange));
@@ -654,6 +691,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
         private ApiCategory apiCategory;
         private AuthModeStrategyType authModeStrategy;
         private LocalStorageAdapter storageAdapter;
+        private ReachabilityMonitor reachabilityMonitor;
         private boolean isSyncRetryEnabled;
 
         private Builder() {}
@@ -708,6 +746,17 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
         @VisibleForTesting
         Builder storageAdapter(LocalStorageAdapter storageAdapter) {
             this.storageAdapter = storageAdapter;
+            return this;
+        }
+
+        /**
+         * Package-private method to allow for injection of a ReachabilityMonitor for testing purposes.
+         * @param reachabilityMonitor An instance that implements LocalStorageAdapter.
+         * @return Current builder instance, for fluent construction of plugin.
+         */
+        @VisibleForTesting
+        Builder reachabilityMonitor(ReachabilityMonitor reachabilityMonitor) {
+            this.reachabilityMonitor = reachabilityMonitor;
             return this;
         }
 

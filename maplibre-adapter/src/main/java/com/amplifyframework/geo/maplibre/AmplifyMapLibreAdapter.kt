@@ -95,5 +95,4 @@ class AmplifyMapLibreAdapter internal constructor(
             }
         )
     }
-
 }

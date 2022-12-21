@@ -2,6 +2,7 @@
   "id": "970f1b78-8786-4762-a43a-17c70f966684",
   "modelSchema": {
     "name": "Meeting",
+    "modelSchemaVersion": 0,
     "pluralName": "Meetings",
     "authRules": [],
     "fields": {
@@ -80,7 +81,8 @@
     },
     "associations": {},
     "indexes": {},
-    "modelClass": "com.amplifyframework.core.model.SerializedModel"
+    "modelClass": "com.amplifyframework.core.model.SerializedModel",
+    "modelSchemaVersion": 0
   },
   "serializedData": {
     "date": "2020-11-05Z",

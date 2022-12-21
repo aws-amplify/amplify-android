@@ -127,10 +127,17 @@ public final class ConflictResolverIntegrationTest {
         Amplify.Hub.publish(HubChannel.DATASTORE, HubEvent.create(InitializationStatus.SUCCEEDED));
 
         // Save person 1
-        synchronousDataStore.save(person1);
-        Person result1 = synchronousDataStore.get(Person.class, person1.getId());
-        assertTrue(latch.await(2, TimeUnit.SECONDS));
-        assertEquals(person1, result1);
+        Consumer<DataStoreItemChange<Person>> onSuccess = (Consumer) value -> {
+            try {
+                Person result1 = synchronousDataStore.get(Person.class, person1.getId());
+                assertTrue(latch.await(7, TimeUnit.SECONDS));
+                assertEquals(person1, result1);
+            } catch (Exception error) {
+                throw new RuntimeException(error);
+            }
+        };
+        Consumer<DataStoreException> onError = (Consumer) value -> fail("awsDataStorePlugin.save: onError");
+        awsDataStorePlugin.save(person1, onSuccess, onError);
     }
 
     @SuppressWarnings("unchecked")

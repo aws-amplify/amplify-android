@@ -1,3 +1,18 @@
+/*
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
 package com.amplifyframework.testmodels.commentsblog;
 
 import com.amplifyframework.core.model.annotations.HasMany;
@@ -26,8 +41,9 @@ public final class Author implements Model {
   public static final QueryField CREATED_AT = field("Author", "createdAt");
   private final @ModelField(targetType="ID", isRequired = true) String id;
   private final @ModelField(targetType="String", isRequired = true) String name;
-  private final @ModelField(targetType="PostAuthorJoin") @HasMany(associatedWith = "author", type = PostAuthorJoin.class) List<PostAuthorJoin> posts = null;
+  private final @ModelField(targetType="Post") @HasMany(associatedWith = "author", type = Post.class) List<Post> posts = null;
   private final @ModelField(targetType="AWSDateTime") Temporal.DateTime createdAt;
+  private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime updatedAt;
   public String getId() {
       return id;
   }
@@ -36,12 +52,16 @@ public final class Author implements Model {
       return name;
   }
   
-  public List<PostAuthorJoin> getPosts() {
+  public List<Post> getPosts() {
       return posts;
   }
   
   public Temporal.DateTime getCreatedAt() {
       return createdAt;
+  }
+  
+  public Temporal.DateTime getUpdatedAt() {
+      return updatedAt;
   }
   
   private Author(String id, String name, Temporal.DateTime createdAt) {
@@ -60,7 +80,8 @@ public final class Author implements Model {
       Author author = (Author) obj;
       return ObjectsCompat.equals(getId(), author.getId()) &&
               ObjectsCompat.equals(getName(), author.getName()) &&
-              ObjectsCompat.equals(getCreatedAt(), author.getCreatedAt());
+              ObjectsCompat.equals(getCreatedAt(), author.getCreatedAt()) &&
+              ObjectsCompat.equals(getUpdatedAt(), author.getUpdatedAt());
       }
   }
   
@@ -70,6 +91,7 @@ public final class Author implements Model {
       .append(getId())
       .append(getName())
       .append(getCreatedAt())
+      .append(getUpdatedAt())
       .toString()
       .hashCode();
   }
@@ -80,7 +102,8 @@ public final class Author implements Model {
       .append("Author {")
       .append("id=" + String.valueOf(getId()) + ", ")
       .append("name=" + String.valueOf(getName()) + ", ")
-      .append("createdAt=" + String.valueOf(getCreatedAt()))
+      .append("createdAt=" + String.valueOf(getCreatedAt()) + ", ")
+      .append("updatedAt=" + String.valueOf(getUpdatedAt()))
       .append("}")
       .toString();
   }
@@ -96,18 +119,8 @@ public final class Author implements Model {
    * in a relationship.
    * @param id the id of the existing item this instance will represent
    * @return an instance of this model with only ID populated
-   * @throws IllegalArgumentException Checks that ID is in the proper format
    */
   public static Author justId(String id) {
-    try {
-      UUID.fromString(id); // Check that ID is in the UUID format - if not an exception is thrown
-    } catch (Exception exception) {
-      throw new IllegalArgumentException(
-              "Model IDs must be unique in the format of UUID. This method is for creating instances " +
-              "of an existing object with only its ID field for sending as a mutation parameter. When " +
-              "creating a new object, use the standard builder method and leave the ID field blank."
-      );
-    }
     return new Author(
       id,
       null,
@@ -127,7 +140,7 @@ public final class Author implements Model {
 
   public interface BuildStep {
     Author build();
-    BuildStep id(String id) throws IllegalArgumentException;
+    BuildStep id(String id);
     BuildStep createdAt(Temporal.DateTime createdAt);
   }
   
@@ -160,22 +173,11 @@ public final class Author implements Model {
     }
     
     /** 
-     * WARNING: Do not set ID when creating a new object. Leave this blank and one will be auto generated for you.
-     * This should only be set when referring to an already existing object.
      * @param id id
      * @return Current Builder instance, for fluent method chaining
-     * @throws IllegalArgumentException Checks that ID is in the proper format
      */
-    public BuildStep id(String id) throws IllegalArgumentException {
+    public BuildStep id(String id) {
         this.id = id;
-        
-        try {
-            UUID.fromString(id); // Check that ID is in the UUID format - if not an exception is thrown
-        } catch (Exception exception) {
-          throw new IllegalArgumentException("Model IDs must be unique in the format of UUID.",
-                    exception);
-        }
-        
         return this;
     }
   }

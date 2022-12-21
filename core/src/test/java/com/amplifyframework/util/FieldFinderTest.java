@@ -43,8 +43,8 @@ public class FieldFinderTest {
         ModelSchema modelSchema = ModelSchema.fromModelClass(User.class);
         Map<String, Object> map = ModelConverter.toMap(user, modelSchema);
         SerializedModel serializedModel = SerializedModel.builder()
-                .serializedData(map)
                 .modelSchema(modelSchema)
+                .serializedData(map)
                 .build();
         Object extractedValue = FieldFinder.extractFieldValue(serializedModel, "username");
         Assert.assertEquals(username, extractedValue);

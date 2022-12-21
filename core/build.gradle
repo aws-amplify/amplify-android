@@ -16,6 +16,13 @@
 apply plugin: 'com.android.library'
 apply from: rootProject.file("configuration/checkstyle.gradle")
 apply from: rootProject.file("configuration/publishing.gradle")
+apply plugin: 'kotlin-android'
+
+android {
+    kotlinOptions{
+        moduleName = "com.amplifyframework.core"
+    }
+}
 
 dependencies {
     implementation dependency.androidx.v4support
@@ -24,7 +31,9 @@ dependencies {
     implementation dependency.androidx.nav.fragmentktx
     implementation dependency.androidx.nav.ui
     implementation dependency.androidx.nav.uiktx
-    implementation dependency.androidx.nav.dynamicfeatures
+    implementation dependency.kotlin.serializationJson
+
+    implementation dependency.aws.credentials
 
     testImplementation project(path: ':aws-api-appsync') // Used to reference Temporal types in tests.
     testImplementation project(path: ':testmodels')
@@ -52,11 +61,6 @@ dependencies {
 }
 
 afterEvaluate {
-    // This reduces the amount of desugaring warnings.
-    // See https://issuetracker.google.com/issues/157681341
-    // This will be fixed in AGP 4.1.0+.
-    it.android.buildTypes.debug.debuggable = false
-
     // Disables this warning:
     // warning: [classfile] MethodParameters attribute
     // introduced in version 52.0 class files is ignored in

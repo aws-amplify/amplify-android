@@ -104,7 +104,7 @@ public final class RxDataStoreBindingTest {
             Model modelFromInvocation = invocation.getArgument(indexOfModel);
             Consumer<DataStoreItemChange<Model>> resultConsumer = invocation.getArgument(indexOfResultConsumer);
             resultConsumer.accept(DataStoreItemChange.builder()
-                .uuid(modelFromInvocation.getId())
+                .uuid(modelFromInvocation.getPrimaryKeyString())
                 .type(Type.CREATE)
                 .itemClass(Model.class)
                 .initiator(Initiator.LOCAL)
@@ -170,7 +170,7 @@ public final class RxDataStoreBindingTest {
             Model invokedModel = invocation.getArgument(indexOModel);
             Consumer<DataStoreItemChange<Model>> resultConsumer = invocation.getArgument(indexOfResultConsumer);
             resultConsumer.accept(DataStoreItemChange.builder()
-                .uuid(invokedModel.getId())
+                .uuid(invokedModel.getPrimaryKeyString())
                 .item(invokedModel)
                 .initiator(Initiator.LOCAL)
                 .type(Type.DELETE)
@@ -280,7 +280,7 @@ public final class RxDataStoreBindingTest {
         // Arrange: observe(Class<?>) will spit out some values from category behavior.
         Model model = RandomModel.model();
         DataStoreItemChange<Model> changeEvent = DataStoreItemChange.builder()
-            .uuid(model.getId())
+            .uuid(model.getPrimaryKeyString())
             .itemClass(Model.class)
             .item(model)
             .type(Type.CREATE)

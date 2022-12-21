@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -17,6 +17,8 @@ package com.amplifyframework.storage.s3;
 
 import android.content.Context;
 
+import com.amplifyframework.auth.AuthPlugin;
+import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.async.Resumable;
@@ -26,20 +28,24 @@ import com.amplifyframework.hub.SubscriptionToken;
 import com.amplifyframework.storage.StorageAccessLevel;
 import com.amplifyframework.storage.StorageCategory;
 import com.amplifyframework.storage.StorageChannelEventName;
+import com.amplifyframework.storage.TransferState;
 import com.amplifyframework.storage.operation.StorageUploadFileOperation;
+import com.amplifyframework.storage.operation.StorageUploadInputStreamOperation;
 import com.amplifyframework.storage.options.StorageUploadFileOptions;
+import com.amplifyframework.storage.options.StorageUploadInputStreamOptions;
 import com.amplifyframework.storage.s3.test.R;
+import com.amplifyframework.storage.s3.util.WorkmanagerTestUtils;
 import com.amplifyframework.testutils.random.RandomTempFile;
-import com.amplifyframework.testutils.sync.SynchronousMobileClient;
+import com.amplifyframework.testutils.sync.SynchronousAuth;
 import com.amplifyframework.testutils.sync.SynchronousStorage;
 
-import com.amazonaws.mobileconnectors.s3.transferutility.TransferState;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
+import org.junit.Test;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
@@ -53,9 +59,8 @@ import static org.junit.Assert.assertTrue;
 /**
  * Instrumentation test for operational work on upload.
  */
-@Ignore("Contains test which either hang themselves, or hang the suite overall.")
 public final class AWSS3StorageUploadTest {
-    private static final long EXTENDED_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(20);
+    private static final long EXTENDED_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(60);
 
     private static final StorageAccessLevel TESTING_ACCESS_LEVEL = StorageAccessLevel.PUBLIC;
     private static final long LARGE_FILE_SIZE = 10 * 1024 * 1024L; // 10 MB
@@ -75,8 +80,8 @@ public final class AWSS3StorageUploadTest {
     public static void setUpOnce() throws Exception {
         Context context = getApplicationContext();
 
-        // Init auth stuff
-        SynchronousMobileClient.instance().initialize();
+        WorkmanagerTestUtils.INSTANCE.initializeWorkmanagerTestUtil(context);
+        SynchronousAuth.delegatingToCognito(context, (AuthPlugin) new AWSCognitoAuthPlugin());
 
         // Get a handle to storage
         storageCategory = TestStorageCategory.create(context, R.raw.amplifyconfiguration);
@@ -101,7 +106,7 @@ public final class AWSS3StorageUploadTest {
      * Unsubscribe from everything after each test.
      */
     @After
-    public void unsubscribe() {
+    public void tearDown() {
         // Unsubscribe from everything
         for (SubscriptionToken token : subscriptions) {
             Amplify.Hub.unsubscribe(token);
@@ -113,7 +118,7 @@ public final class AWSS3StorageUploadTest {
      *
      * @throws Exception if upload fails
      */
-    @Ignore("Contains test which either hang themselves, or hang the suite overall.")
+    @Test
     public void testUploadSmallFile() throws Exception {
         File uploadFile = new RandomTempFile(SMALL_FILE_SIZE);
         String fileName = uploadFile.getName();
@@ -121,11 +126,26 @@ public final class AWSS3StorageUploadTest {
     }
 
     /**
+     * Tests that small file (single-part) uploads using input stream successfully.
+     *
+     * @throws Exception if upload fails
+     */
+    @Test
+    public void testUploadSmallFileStream() throws Exception {
+        File uploadFile = new RandomTempFile(4 * 1024 * 1024);
+        String fileName = uploadFile.getName();
+        StorageUploadInputStreamOptions options = StorageUploadInputStreamOptions.builder()
+            .accessLevel(TESTING_ACCESS_LEVEL)
+            .build();
+        synchronousStorage.uploadInputStream(fileName, new FileInputStream(uploadFile), options);
+    }
+
+    /**
      * Tests that large file (multi-part) uploads successfully.
      *
      * @throws Exception if upload fails
      */
-    @Ignore("Contains test which either hang themselves, or hang the suite overall.")
+    @Test
     public void testUploadLargeFile() throws Exception {
         File uploadFile = new RandomTempFile(LARGE_FILE_SIZE);
         String fileName = uploadFile.getName();
@@ -140,7 +160,7 @@ public final class AWSS3StorageUploadTest {
      *         before timeout
      */
     @SuppressWarnings("unchecked")
-    @Ignore("Contains test which either hang themselves, or hang the suite overall.")
+    @Test
     public void testUploadFileIsCancelable() throws Exception {
         final CountDownLatch canceled = new CountDownLatch(1);
         final AtomicReference<Cancelable> opContainer = new AtomicReference<>();
@@ -189,7 +209,7 @@ public final class AWSS3StorageUploadTest {
      *         completed successfully before timeout
      */
     @SuppressWarnings("unchecked")
-    @Ignore("Contains test which either hang themselves, or hang the suite overall.")
+    @Test
     public void testUploadFileIsResumable() throws Exception {
         final CountDownLatch completed = new CountDownLatch(1);
         final CountDownLatch resumed = new CountDownLatch(1);
@@ -226,6 +246,132 @@ public final class AWSS3StorageUploadTest {
             errorContainer::set
         );
         opContainer.set(op);
+
+        // Assert that all the required conditions have been met
+        assertTrue(resumed.await(EXTENDED_TIMEOUT_MS, TimeUnit.MILLISECONDS));
+        assertTrue(completed.await(EXTENDED_TIMEOUT_MS, TimeUnit.MILLISECONDS));
+        assertNull(errorContainer.get());
+    }
+
+    /**
+     * Tests that file upload operation can be paused and resumed
+     * using getTransfer API.
+     *
+     * @throws Exception if upload is not paused, resumed, and
+     *         completed successfully before timeout
+     */
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testUploadFileGetTransferOnPause() throws Exception {
+        final CountDownLatch completed = new CountDownLatch(1);
+        final CountDownLatch resumed = new CountDownLatch(1);
+        final AtomicReference<String> transferId = new AtomicReference<>();
+        final AtomicReference<StorageUploadFileOperation<?>> opContainer = new AtomicReference<>();
+        final AtomicReference<Throwable> errorContainer = new AtomicReference<>();
+
+        // Create a file large enough that transfer won't finish before being paused
+        File uploadFile = new RandomTempFile(LARGE_FILE_SIZE);
+
+        // Listen to Hub events to resume when operation has been paused
+        SubscriptionToken resumeToken = Amplify.Hub.subscribe(HubChannel.STORAGE, hubEvent -> {
+            if (StorageChannelEventName.UPLOAD_STATE.toString().equals(hubEvent.getName())) {
+                HubEvent<String> stateEvent = (HubEvent<String>) hubEvent;
+                TransferState state = TransferState.getState(stateEvent.getData());
+                if (TransferState.PAUSED.equals(state)) {
+                    opContainer.get().clearAllListeners();
+                    storageCategory.getTransfer(transferId.get(),
+                        operation -> {
+                            StorageUploadFileOperation<?> getOp = (StorageUploadFileOperation<?>) operation;
+                            getOp.resume();
+                            resumed.countDown();
+                            getOp.setOnSuccess(result -> {
+                                completed.countDown();
+                            });
+                        }, errorContainer::set);
+                }
+            }
+        });
+        subscriptions.add(resumeToken);
+
+        // Begin uploading a large file
+        StorageUploadFileOperation<?> op = storageCategory.uploadFile(
+            uploadFile.getName(),
+            uploadFile,
+            options,
+            progress -> {
+                if (progress.getCurrentBytes() > 0 && resumed.getCount() > 0) {
+                    opContainer.get().pause();
+                }
+            },
+            result -> { },
+            errorContainer::set
+        );
+        opContainer.set(op);
+        transferId.set(op.getTransferId());
+
+        // Assert that all the required conditions have been met
+        assertTrue(resumed.await(EXTENDED_TIMEOUT_MS, TimeUnit.MILLISECONDS));
+        assertTrue(completed.await(EXTENDED_TIMEOUT_MS, TimeUnit.MILLISECONDS));
+        assertNull(errorContainer.get());
+    }
+
+    /**
+     * Tests that input stream upload operation can be paused and resumed
+     * using getTransfer API.
+     *
+     * @throws Exception if upload is not paused, resumed, and
+     *         completed successfully before timeout
+     */
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testUploadInputStreamGetTransferOnPause() throws Exception {
+        final CountDownLatch completed = new CountDownLatch(1);
+        final CountDownLatch resumed = new CountDownLatch(1);
+        final AtomicReference<String> transferId = new AtomicReference<>();
+        final AtomicReference<StorageUploadInputStreamOperation<?>> opContainer = new AtomicReference<>();
+        final AtomicReference<Throwable> errorContainer = new AtomicReference<>();
+
+        // Create a file large enough that transfer won't finish before being paused
+        File uploadFile = new RandomTempFile(LARGE_FILE_SIZE);
+
+        // Listen to Hub events to resume when operation has been paused
+        SubscriptionToken resumeToken = Amplify.Hub.subscribe(HubChannel.STORAGE, hubEvent -> {
+            if (StorageChannelEventName.UPLOAD_STATE.toString().equals(hubEvent.getName())) {
+                HubEvent<String> stateEvent = (HubEvent<String>) hubEvent;
+                TransferState state = TransferState.getState(stateEvent.getData());
+                if (TransferState.PAUSED.equals(state)) {
+                    opContainer.get().clearAllListeners();
+                    storageCategory.getTransfer(transferId.get(),
+                        operation -> {
+                            StorageUploadFileOperation<?> getOp = (StorageUploadFileOperation<?>) operation;
+                            getOp.resume();
+                            resumed.countDown();
+                            getOp.setOnSuccess(result -> {
+                                completed.countDown();
+                            });
+                        }, errorContainer::set);
+                }
+            }
+        });
+        subscriptions.add(resumeToken);
+        StorageUploadInputStreamOptions inputStreamOptions = StorageUploadInputStreamOptions.builder()
+            .accessLevel(TESTING_ACCESS_LEVEL)
+            .build();
+        // Begin uploading a large file
+        StorageUploadInputStreamOperation<?> op = storageCategory.uploadInputStream(
+            uploadFile.getName(),
+            new FileInputStream(uploadFile),
+            inputStreamOptions,
+            progress -> {
+                if (progress.getCurrentBytes() > 0 && resumed.getCount() > 0) {
+                    opContainer.get().pause();
+                }
+            },
+            result -> { },
+            errorContainer::set
+        );
+        opContainer.set(op);
+        transferId.set(op.getTransferId());
 
         // Assert that all the required conditions have been met
         assertTrue(resumed.await(EXTENDED_TIMEOUT_MS, TimeUnit.MILLISECONDS));

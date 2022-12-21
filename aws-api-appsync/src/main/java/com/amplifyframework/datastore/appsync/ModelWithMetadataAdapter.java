@@ -18,6 +18,8 @@ package com.amplifyframework.datastore.appsync;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.SchemaRegistry;
 import com.amplifyframework.core.model.SerializedModel;
 import com.amplifyframework.util.GsonObjectConverter;
 
@@ -57,6 +59,11 @@ public final class ModelWithMetadataAdapter implements
      */
     public static final String LAST_CHANGED_AT_KEY = "_lastChangedAt";
 
+    /***
+     * Type of model for the server response.
+     */
+    public static final String TYPE_NAME = "__typename";
+
     /**
      * Register this deserializer into a {@link GsonBuilder}.
      * @param builder A {@link GsonBuilder}
@@ -81,11 +88,13 @@ public final class ModelWithMetadataAdapter implements
         ModelMetadata metadata = context.deserialize(json, ModelMetadata.class);
         if (modelClassType == SerializedModel.class) {
             JsonObject jsonObject = (JsonObject) json;
+            ModelSchema schema = SchemaRegistry.instance().getModelSchemaForModelClass(jsonObject
+                    .get(TYPE_NAME).getAsString());
             // remove metadata fields from the serialized model so it matches the schema
             removeMetadataFields(jsonObject);
             model = SerializedModel.builder()
-                .serializedData(GsonObjectConverter.toMap(jsonObject))
-                .modelSchema(null)
+                .modelSchema(schema)
+                    .serializedData(GsonObjectConverter.toMap(jsonObject))
                 .build();
         } else {
             model = context.deserialize(json, modelClassType);
@@ -97,6 +106,7 @@ public final class ModelWithMetadataAdapter implements
         jsonObject.remove(DELETED_KEY);
         jsonObject.remove(VERSION_KEY);
         jsonObject.remove(LAST_CHANGED_AT_KEY);
+        jsonObject.remove(TYPE_NAME);
     }
 
     @Override
@@ -107,10 +117,14 @@ public final class ModelWithMetadataAdapter implements
         // Flatten out the fields of the model and its metadata into a flat key-value map.
         // To do this, serialize each individually, and then add the key/value pairs for each
         // object into a new container.
-        JsonObject serializedMetadata = (JsonObject) context.serialize(src.getSyncMetadata());
+        ModelMetadata modelMetadata = src.getSyncMetadata();
+        JsonObject serializedMetadata = (JsonObject) context.serialize(modelMetadata);
         for (Map.Entry<java.lang.String, JsonElement> entry : serializedMetadata.entrySet()) {
             result.add(entry.getKey(), entry.getValue());
         }
+        // Additionally serialize the stored model name as the typename, mirroring the deserialization process.
+        result.addProperty(TYPE_NAME, modelMetadata.getTypename());
+
         JsonObject serializedModel = (JsonObject) context.serialize(src.getModel());
         for (Map.Entry<java.lang.String, JsonElement> entry : serializedModel.entrySet()) {
             result.add(entry.getKey(), entry.getValue());

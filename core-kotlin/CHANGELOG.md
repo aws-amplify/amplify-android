@@ -1,3 +1,118 @@
+## [Release 2.0.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.0.0)
+
+### Miscellaneous
+- core-kotlin module release is combined with Amplify release.  
+
+[See all changes between 0.21.6 and 2.0.0](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.21.5...release_v2.0.0)
+
+## [Release 0.21.6](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.21.6)
+
+### Miscellaneous
+- Add clientMetadata to signIn
+- Update build.gradle (#2045)
+
+[See all changes between 0.21.5 and 0.21.6](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.21.5...release-kotlin_v0.21.6)
+
+## [Release 0.21.5](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.21.5)
+
+### Miscellaneous
+- Update build.gradle (#1991)
+
+[See all changes between 0.21.4 and 0.21.5](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.21.4...release-kotlin_v0.21.5)
+
+## [Release 0.21.4](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.21.4)
+
+### Miscellaneous
+- Publish Javadocs (Amplify version) (#1897)
+- Update build.gradle (#1959)
+
+[See all changes between 0.21.3 and 0.21.4](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.21.3...release-kotlin_v0.21.4)
+
+## [Release 0.21.3](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.21.3)
+
+### Bug Fixes
+- fix(data): disable failing test (#1922)
+
+[See all changes between 0.21.2 and 0.21.3](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.21.2...release-kotlin_v0.21.3)
+
+## [Release 0.21.2](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.21.2)
+
+### Bug Fixes
+- **datastore**: Fix for Flutter backtick (#1866)
+
+[See all changes between 0.21.1 and 0.21.2](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.21.1...release-kotlin_v0.21.2)
+
+## [Release 0.21.1](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.21.1)
+
+### Bug Fixes
+- **storage**: Remove startForegroundService in favor of binding service
+
+### Miscellaneous
+- Update AWS SDK for Android version
+
+[See all changes between 0.21.0 and 0.21.1](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.21.0...release-kotlin_v0.21.1)
+
+## [Release 0.21.0](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.21.0)
+
+### Features
+- **datastore**: Implemented support for custom primary key (#1650)
+
+### Bug Fixes
+- **api:** allow post request with empty body (#1864)
+
+[See all changes between 0.20.5 and 0.21.0](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.20.5...release-kotlin_v0.21.0)
+
+## [Release 0.20.5](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.20.5)
+
+### Miscellaneous
+- Updating the version to 2.50.1 for AWS SDK (#1861)
+- Reduce the importance level of transfer channel for foreground service to prevent sound/vibrate (#1860)
+
+[See all changes between 0.20.4 and 0.20.5](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.20.4...release-kotlin_v0.20.5)
+
+## [Release 0.20.4](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.20.4)
+
+### Miscellaneous
+- Call to start TransferService regardless of if it has already been started
+- Update transfer message in notification
+- Update the Delete REST API to ensure it would work with and without a body (#1842)
+- Chore(Release): Updating mobile client to the latest (#1847)
+
+[See all changes between 0.20.3 and 0.20.4](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.20.3...release-kotlin_v0.20.4)
+
+## [Release 0.20.3](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.20.3)
+
+### Bug Fixes
+- **api:** catch all exceptions when making rest request (#1827)
+
+[See all changes between 0.20.2 and 0.20.3](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.20.2...release-kotlin_v0.20.3)
+
+## [Release 0.20.2](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.20.2)
+
+### Miscellaneous
+- Expand a catch clause to catch all (#1806)
+
+[See all changes between 0.20.1 and 0.20.2](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.20.1...release-kotlin_v0.20.2)
+
+## [Release 0.20.1](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.20.1)
+
+### Miscellaneous
+- fix orchestrator failing if emitter is disposed (#1755)
+- catch exceptions from processOutboxItem (#1743)
+- ci: added canary workflow (#1770)
+
+[See all changes between 0.20.0 and 0.20.1](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.20.0...release-kotlin_v0.20.1)
+
+## [Release 0.20.0](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.20.0)
+
+### Features
+- Add flushEvents HubEvent for analytics (#1792)
+
+### Miscellaneous
+- Update build.gradle
+
+[See all changes between 0.19.7 and 0.20.0](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.19.7...release-kotlin_v0.20.0)
+
 ## [Release 0.19.7](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.19.7)
 
 ### Miscellaneous
@@ -20,6 +135,14 @@
 - Bump SDK version to 2.48.0 (#1773)
 
 [See all changes between 0.19.5 and 0.19.6](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.19.5...release-kotlin_v0.19.6)
+
+## [Release 0.20.5-dev-preview.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v0.20.5-dev-preview.0)
+
+### Miscellaneous
+
+- Dev preview update and version bump (#1752)
+
+[See all changes between 0.19.5 and 0.20.5-dev-preview.0](https://github.com/aws-amplify/amplify-android/compare/release_v0.19.5...release_v0.20.5-dev-preview.0)
 
 ## [Release 0.19.5](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.19.5)
 
@@ -46,6 +169,13 @@
 - Version bumps (#1721)
 
 [See all changes between 0.19.2 and 0.19.3](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.19.2...release-kotlin_v0.19.3)
+
+## [Release 0.20.0-dev-preview.0](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.20.0-dev-preview.0)
+
+### Miscellaneous
+- Utilizes Amplify categories based on [AWS SDK for Kotlin](https://github.com/awslabs/aws-sdk-kotlin).
+
+[See all changes between 0.19.2 and 0.20.0-dev-preview.0](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.19.2...release-kotlin_v0.20.0-dev-preview.0)
 
 ## [Release 0.19.2](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.19.2)
 

@@ -13,23 +13,37 @@
  * permissions and limitations under the License.
  */
 
+plugins {
+    id "org.jetbrains.kotlin.plugin.serialization" version "1.6.10"
+}
 apply plugin: 'com.android.library'
 apply from: rootProject.file("configuration/checkstyle.gradle")
 apply from: rootProject.file("configuration/publishing.gradle")
+apply plugin: 'kotlin-android'
+apply plugin: 'org.jlleitschuh.gradle.ktlint'
 
 dependencies {
     implementation project(path: ':core')
+    implementation project(path: ':aws-auth-cognito')
+
     implementation dependency.androidx.appcompat
-    implementation dependency.aws.pinpoint
-    implementation dependency.aws.mobileclient
+    implementation dependency.aws.pinpointKotlin
+    implementation dependency.kotlin.serializationJson
 
     testImplementation dependency.junit
+    testImplementation dependency.mockk
     testImplementation dependency.mockito
+    testImplementation dependency.mockitoinline
     testImplementation dependency.robolectric
+    implementation dependency.androidx.test.core
+    testImplementation dependency.kotlin.test.coroutines
+    testImplementation project(path: ':aws-analytics-pinpoint')
 
     androidTestImplementation project(path: ':testutils')
     androidTestImplementation dependency.androidx.test.core
     androidTestImplementation dependency.androidx.test.runner
-    androidTestImplementation dependency.androidx.test.junit
+    androidTestImplementation dependency.kotlin.test.coroutines
+    implementation dependency.androidx.test.junit
+    androidTestImplementation project(path: ':aws-analytics-pinpoint')
 }
 
