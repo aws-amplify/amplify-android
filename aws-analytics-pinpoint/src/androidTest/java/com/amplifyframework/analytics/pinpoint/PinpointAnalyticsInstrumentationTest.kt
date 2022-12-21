@@ -90,7 +90,7 @@ class PinpointAnalyticsInstrumentationTest {
 
         // Act: Record the event
         Amplify.Analytics.recordEvent(event)
-        Sleep.milliseconds(RECORD_INSERTION_TIMEOUT)
+        Sleep.milliseconds(DEFAULT_TIMEOUT)
         Amplify.Analytics.flushEvents()
         val hubEvents = hubAccumulator.await(10, TimeUnit.SECONDS)
         val submittedEvents = combineAndFilterEvents(hubEvents)
@@ -118,7 +118,7 @@ class PinpointAnalyticsInstrumentationTest {
             .addProperty("DemoDoubleProperty2", 2.0)
             .build()
         Amplify.Analytics.recordEvent(event1)
-        Sleep.milliseconds(RECORD_INSERTION_TIMEOUT)
+        Sleep.milliseconds(DEFAULT_TIMEOUT)
         val eventName2 = "Amplify-event" + UUID.randomUUID().toString()
         val event2 = AnalyticsEvent.builder()
             .name(eventName2)
@@ -126,7 +126,7 @@ class PinpointAnalyticsInstrumentationTest {
             .addProperty("DemoProperty2", 2.0)
             .build()
         Amplify.Analytics.recordEvent(event2)
-        Sleep.milliseconds(RECORD_INSERTION_TIMEOUT)
+        Sleep.milliseconds(DEFAULT_TIMEOUT)
         Amplify.Analytics.flushEvents()
         val hubEvents = analyticsHubEventAccumulator.await(10, TimeUnit.SECONDS)
         val hubEvent = analyticsHubEventAccumulator.awaitFirst()
@@ -189,9 +189,9 @@ class PinpointAnalyticsInstrumentationTest {
 
         // Act: Record two events: the one created above and another just with a key
         Amplify.Analytics.recordEvent(event)
-        Sleep.milliseconds(RECORD_INSERTION_TIMEOUT)
+        Sleep.milliseconds(DEFAULT_TIMEOUT)
         Amplify.Analytics.recordEvent("amplify-test-event")
-        Sleep.milliseconds(RECORD_INSERTION_TIMEOUT)
+        Sleep.milliseconds(DEFAULT_TIMEOUT)
         Amplify.Analytics.flushEvents()
         val hubEvents = analyticsHubEventAccumulator.await(10, TimeUnit.SECONDS)
         val submittedEvents = combineAndFilterEvents(hubEvents)
@@ -226,10 +226,10 @@ class PinpointAnalyticsInstrumentationTest {
 
         // Act: Record an event, unregister the global property, and record another event
         Amplify.Analytics.recordEvent("amplify-test-event-with-property")
-        Sleep.milliseconds(RECORD_INSERTION_TIMEOUT)
+        Sleep.milliseconds(DEFAULT_TIMEOUT)
         Amplify.Analytics.unregisterGlobalProperties("GlobalProperty")
         Amplify.Analytics.recordEvent("amplify-test-event-without-property")
-        Sleep.milliseconds(RECORD_INSERTION_TIMEOUT)
+        Sleep.milliseconds(DEFAULT_TIMEOUT)
         Amplify.Analytics.flushEvents()
         val hubEvents = analyticsHubEventAccumulator.await(10, TimeUnit.SECONDS)
         val submittedEvents = combineAndFilterEvents(hubEvents)
@@ -287,8 +287,8 @@ class PinpointAnalyticsInstrumentationTest {
         Sleep.milliseconds(PINPOINT_ROUNDTRIP_TIMEOUT)
         var endpointResponse = fetchEndpointResponse()
         var retry_count = 0
-        while (retry_count < 10 && (endpointResponse.attributes == null || endpointResponse.attributes?.size == 0)) {
-            Sleep.milliseconds(5 * 1000L)
+        while (retry_count < MAX_RETRIES && endpointResponse.attributes.isNullOrEmpty()) {
+            Sleep.milliseconds(DEFAULT_TIMEOUT)
             endpointResponse = fetchEndpointResponse()
             retry_count++
         }
@@ -376,7 +376,8 @@ class PinpointAnalyticsInstrumentationTest {
         private const val CONFIGURATION_NAME = "amplifyconfiguration"
         private const val COGNITO_CONFIGURATION_TIMEOUT = 10 * 1000L
         private const val PINPOINT_ROUNDTRIP_TIMEOUT = 10 * 1000L
-        private const val RECORD_INSERTION_TIMEOUT = 5 * 1000L
+        private const val DEFAULT_TIMEOUT = 5 * 1000L
+        private const val MAX_RETRIES = 10
         private const val UNIQUE_ID_KEY = "UniqueId"
         private const val PREFERENCES_AND_FILE_MANAGER_SUFFIX = "515d6767-01b7-49e5-8273-c8d11b0f331d"
         private lateinit var synchronousAuth: SynchronousAuth
