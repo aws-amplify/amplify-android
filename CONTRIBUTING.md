@@ -430,6 +430,7 @@ Copy-paste this, and complete the workflow in the UI. It will invite you to
 - The title of your PR must be of below format since next release version is determined from PR titles in the commit history.
     - For a bugfix: `fix(category): description of changes`
     - For a feature: `feat(catgory): add awesome feature`
+    - For a release: `release: release version`
     - Everything else: `chore: fix build script`
     - Valid categories are:
       - all
