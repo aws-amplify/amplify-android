@@ -20,12 +20,12 @@ import androidx.test.core.app.ApplicationProvider
 import aws.sdk.kotlin.services.pinpoint.PinpointClient
 import com.amplifyframework.analytics.pinpoint.database.PinpointDatabase
 import com.amplifyframework.analytics.pinpoint.internal.core.idresolver.SharedPrefsUniqueIdService
-import com.amplifyframework.analytics.pinpoint.models.AndroidAppDetails
-import com.amplifyframework.analytics.pinpoint.models.AndroidDeviceDetails
 import com.amplifyframework.analytics.pinpoint.models.PinpointEvent
 import com.amplifyframework.analytics.pinpoint.models.PinpointSession
 import com.amplifyframework.analytics.pinpoint.models.SDKInfo
 import com.amplifyframework.analytics.pinpoint.targeting.TargetingClient
+import com.amplifyframework.analytics.pinpoint.targeting.data.AndroidAppDetails
+import com.amplifyframework.analytics.pinpoint.targeting.data.AndroidDeviceDetails
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every

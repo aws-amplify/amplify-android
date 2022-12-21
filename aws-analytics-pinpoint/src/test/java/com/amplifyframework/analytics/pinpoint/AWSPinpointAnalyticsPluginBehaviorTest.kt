@@ -16,17 +16,17 @@ package com.amplifyframework.analytics.pinpoint
 
 import android.app.Application
 import android.content.Context
+import android.content.SharedPreferences
 import androidx.test.core.app.ApplicationProvider
 import com.amplifyframework.analytics.AnalyticsEvent
 import com.amplifyframework.analytics.AnalyticsProperties
-import com.amplifyframework.analytics.pinpoint.internal.core.idresolver.SharedPrefsUniqueIdService
 import com.amplifyframework.analytics.pinpoint.models.AWSPinpointUserProfile
-import com.amplifyframework.analytics.pinpoint.models.AndroidAppDetails
-import com.amplifyframework.analytics.pinpoint.models.AndroidDeviceDetails
 import com.amplifyframework.analytics.pinpoint.models.PinpointEvent
 import com.amplifyframework.analytics.pinpoint.models.PinpointSession
 import com.amplifyframework.analytics.pinpoint.models.SDKInfo
 import com.amplifyframework.analytics.pinpoint.targeting.TargetingClient
+import com.amplifyframework.analytics.pinpoint.targeting.data.AndroidAppDetails
+import com.amplifyframework.analytics.pinpoint.targeting.data.AndroidDeviceDetails
 import com.amplifyframework.analytics.pinpoint.targeting.endpointProfile.EndpointProfile
 import io.mockk.every
 import io.mockk.mockk
@@ -48,7 +48,7 @@ class AWSPinpointAnalyticsPluginBehaviorTest {
     private val autoSessionTrackerMock = mockk<AutoSessionTracker>(relaxed = true)
     private val context: Context = ApplicationProvider.getApplicationContext()
     private lateinit var awsPinpointAnalyticsPluginBehavior: AWSPinpointAnalyticsPluginBehavior
-    private val sharedPrefsUniqueIdService = mockk<SharedPrefsUniqueIdService>()
+    private val sharedPrefsUniqueIdService = mockk<SharedPreferences>()
     private val androidAppDetails = AndroidAppDetails("com.test.app", "TestApp", "com.test.app", "1.0", "test")
     private val androidDeviceDetails = AndroidDeviceDetails("test")
 

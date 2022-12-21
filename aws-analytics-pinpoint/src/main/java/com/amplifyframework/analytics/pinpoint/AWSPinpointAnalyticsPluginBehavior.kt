@@ -52,17 +52,20 @@ internal class AWSPinpointAnalyticsPluginBehavior(
             profile?.location?.let { userLocation ->
                 val country = userLocation.country
                 if (null != country) {
-                    location = EndpointProfileLocation(country)
-                    userLocation.city?.let { location.city = it }
-                    userLocation.region?.let { location.region = it }
-                    userLocation.latitude?.let { location.latitude = it }
-                    userLocation.longitude?.let { location.longitude = it }
-                    userLocation.postalCode?.let { location.postalCode = it }
+                    location = userLocation.let {
+                        EndpointProfileLocation(
+                            country,
+                            it.latitude,
+                            it.longitude,
+                            it.postalCode ?: "",
+                            it.city ?: "",
+                            it.region ?: ""
+                        )
+                    }
                 }
             }
         }
-        val endpointUser = EndpointProfileUser().apply {
-            setUserId(userId)
+        val endpointUser = EndpointProfileUser(userId).apply {
             if (profile is AWSPinpointUserProfile) {
                 profile.userAttributes?.let {
                     it.forEach { entry ->

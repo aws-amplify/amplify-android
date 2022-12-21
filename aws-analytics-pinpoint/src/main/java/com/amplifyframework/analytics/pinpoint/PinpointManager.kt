@@ -15,15 +15,14 @@
 package com.amplifyframework.analytics.pinpoint
 
 import android.content.Context
-import android.telephony.TelephonyManager
 import aws.sdk.kotlin.services.pinpoint.PinpointClient
 import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider
 import com.amplifyframework.analytics.pinpoint.database.PinpointDatabase
-import com.amplifyframework.analytics.pinpoint.internal.core.idresolver.SharedPrefsUniqueIdService
-import com.amplifyframework.analytics.pinpoint.models.AndroidAppDetails
-import com.amplifyframework.analytics.pinpoint.models.AndroidDeviceDetails
 import com.amplifyframework.analytics.pinpoint.models.SDKInfo
 import com.amplifyframework.analytics.pinpoint.targeting.TargetingClient
+import com.amplifyframework.analytics.pinpoint.targeting.data.AndroidAppDetails
+import com.amplifyframework.analytics.pinpoint.targeting.data.AndroidDeviceDetails
+import com.amplifyframework.analytics.pinpoint.targeting.util.getUniqueId
 import com.amplifyframework.core.BuildConfig
 import com.amplifyframework.util.UserAgent.Platform
 
@@ -35,7 +34,6 @@ internal class PinpointManager constructor(
     private val awsPinpointConfiguration: AWSPinpointAnalyticsPluginConfiguration,
     private val credentialsProvider: CredentialsProvider?
 ) {
-
     val analyticsClient: AnalyticsClient
     val sessionClient: SessionClient
     val targetingClient: TargetingClient
@@ -66,41 +64,29 @@ internal class PinpointManager constructor(
             "${awsPinpointConfiguration.appId}$PINPOINT_SHARED_PREFS_SUFFIX",
             Context.MODE_PRIVATE
         )
-        val sharedPrefsUniqueIdService = SharedPrefsUniqueIdService(sharedPrefs)
+
         val androidAppDetails = AndroidAppDetails(context, awsPinpointConfiguration.appId)
-        val androidDeviceDetails = AndroidDeviceDetails(getCarrier(context))
+        val androidDeviceDetails = AndroidDeviceDetails(context)
         targetingClient = TargetingClient(
+            context,
             pinpointClient,
-            sharedPrefsUniqueIdService,
             sharedPrefs,
             androidAppDetails,
             androidDeviceDetails,
-            context
         )
-        sessionClient = SessionClient(context, targetingClient, sharedPrefsUniqueIdService, analyticsClient = null)
+        sessionClient = SessionClient(context, targetingClient, sharedPrefs.getUniqueId(), analyticsClient = null)
         analyticsClient = AnalyticsClient(
             context,
             pinpointClient,
             sessionClient,
             targetingClient,
             pinpointDatabase,
-            sharedPrefsUniqueIdService,
+            sharedPrefs.getUniqueId(),
             androidAppDetails,
             androidDeviceDetails,
             SDKInfo(SDK_NAME, BuildConfig.VERSION_NAME)
         )
         sessionClient.setAnalyticsClient(analyticsClient)
         sessionClient.startSession()
-    }
-
-    private fun getCarrier(context: Context): String {
-        val telephony = context.getSystemService(Context.TELEPHONY_SERVICE) as? TelephonyManager
-        return telephony?.let {
-            if (it.networkOperatorName.isNullOrBlank()) {
-                it.networkOperatorName
-            } else {
-                "Unknown"
-            }
-        } ?: "Unknown"
     }
 }

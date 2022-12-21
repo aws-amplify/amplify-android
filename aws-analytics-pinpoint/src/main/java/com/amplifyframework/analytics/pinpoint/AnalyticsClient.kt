@@ -19,13 +19,12 @@ import android.content.Context
 import aws.sdk.kotlin.services.pinpoint.PinpointClient
 import com.amplifyframework.analytics.AnalyticsChannelEventName
 import com.amplifyframework.analytics.pinpoint.database.PinpointDatabase
-import com.amplifyframework.analytics.pinpoint.internal.core.idresolver.SharedPrefsUniqueIdService
-import com.amplifyframework.analytics.pinpoint.models.AndroidAppDetails
-import com.amplifyframework.analytics.pinpoint.models.AndroidDeviceDetails
 import com.amplifyframework.analytics.pinpoint.models.PinpointEvent
 import com.amplifyframework.analytics.pinpoint.models.PinpointSession
 import com.amplifyframework.analytics.pinpoint.models.SDKInfo
 import com.amplifyframework.analytics.pinpoint.targeting.TargetingClient
+import com.amplifyframework.analytics.pinpoint.targeting.data.AndroidAppDetails
+import com.amplifyframework.analytics.pinpoint.targeting.data.AndroidDeviceDetails
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.hub.HubChannel
 import com.amplifyframework.hub.HubEvent
@@ -42,7 +41,7 @@ internal class AnalyticsClient(
     private val sessionClient: SessionClient,
     targetingClient: TargetingClient,
     pinpointDatabase: PinpointDatabase,
-    private val sharedPrefsUniqueIdService: SharedPrefsUniqueIdService,
+    private val uniqueId: String,
     private val androidAppDetails: AndroidAppDetails,
     private val androidDeviceDetails: AndroidDeviceDetails,
     private val sdkInfo: SDKInfo,
@@ -105,7 +104,7 @@ internal class AnalyticsClient(
             sdkInfo = sdkInfo,
             pinpointSession = PinpointSession(sessionId, sessionStart, sessionEnd, sessionDuration),
             eventTimestamp = eventTimestamp,
-            uniqueId = sharedPrefsUniqueIdService.getUniqueId(),
+            uniqueId = uniqueId,
             androidAppDetails = androidAppDetails,
             androidDeviceDetails = androidDeviceDetails
         )

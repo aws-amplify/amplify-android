@@ -15,11 +15,11 @@
 package com.amplifyframework.analytics.pinpoint.database
 
 import androidx.test.core.app.ApplicationProvider
-import com.amplifyframework.analytics.pinpoint.models.AndroidAppDetails
-import com.amplifyframework.analytics.pinpoint.models.AndroidDeviceDetails
 import com.amplifyframework.analytics.pinpoint.models.PinpointEvent
 import com.amplifyframework.analytics.pinpoint.models.PinpointSession
 import com.amplifyframework.analytics.pinpoint.models.SDKInfo
+import com.amplifyframework.analytics.pinpoint.targeting.data.AndroidAppDetails
+import com.amplifyframework.analytics.pinpoint.targeting.data.AndroidDeviceDetails
 import java.util.UUID
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi

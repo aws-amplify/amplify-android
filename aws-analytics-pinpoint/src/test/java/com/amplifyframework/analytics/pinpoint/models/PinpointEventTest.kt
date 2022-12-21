@@ -15,6 +15,8 @@
 package com.amplifyframework.analytics.pinpoint.models
 
 import java.util.Locale
+import com.amplifyframework.analytics.pinpoint.targeting.data.AndroidAppDetails
+import com.amplifyframework.analytics.pinpoint.targeting.data.AndroidDeviceDetails
 import org.junit.Assert.assertEquals
 import org.junit.Test
 

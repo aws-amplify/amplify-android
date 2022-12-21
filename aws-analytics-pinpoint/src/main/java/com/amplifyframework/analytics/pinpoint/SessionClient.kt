@@ -16,7 +16,6 @@
 package com.amplifyframework.analytics.pinpoint
 
 import android.content.Context
-import com.amplifyframework.analytics.pinpoint.internal.core.idresolver.SharedPrefsUniqueIdService
 import com.amplifyframework.analytics.pinpoint.targeting.TargetingClient
 import kotlinx.serialization.ExperimentalSerializationApi
 
@@ -24,7 +23,7 @@ import kotlinx.serialization.ExperimentalSerializationApi
 internal class SessionClient(
     private val context: Context,
     val targetingClient: TargetingClient,
-    private val sharedPrefsUniqueIdService: SharedPrefsUniqueIdService,
+    private val uniqueId: String,
     var analyticsClient: AnalyticsClient? = null,
 ) {
 
@@ -68,7 +67,7 @@ internal class SessionClient(
 
     private fun executeStart() {
         targetingClient.updateEndpointProfile()
-        val newSession = Session(context, sharedPrefsUniqueIdService.getUniqueId())
+        val newSession = Session(context, uniqueId)
         session = newSession
         analyticsClient?.let {
             val pinpointEvent = it.createEvent(

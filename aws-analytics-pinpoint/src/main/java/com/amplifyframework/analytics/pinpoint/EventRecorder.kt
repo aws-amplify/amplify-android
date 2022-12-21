@@ -32,10 +32,10 @@ import aws.sdk.kotlin.services.pinpoint.model.Session
 import com.amplifyframework.analytics.AnalyticsEvent
 import com.amplifyframework.analytics.pinpoint.database.EventTable
 import com.amplifyframework.analytics.pinpoint.database.PinpointDatabase
-import com.amplifyframework.analytics.pinpoint.internal.core.util.millisToIsoDate
 import com.amplifyframework.analytics.pinpoint.models.PinpointEvent
 import com.amplifyframework.analytics.pinpoint.targeting.TargetingClient
 import com.amplifyframework.analytics.pinpoint.targeting.endpointProfile.EndpointProfile
+import com.amplifyframework.analytics.pinpoint.targeting.util.millisToIsoDate
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.logging.Logger
 import kotlinx.coroutines.CoroutineDispatcher
@@ -276,8 +276,8 @@ internal class EventRecorder(
             country = endpointProfile.location.country
         }
         val endpointUser = EndpointUser {
-            userId = endpointProfile.user.getUserId()
-            userAttributes = endpointProfile.user.getUserAttributes()
+            userId = endpointProfile.user.userId
+            userAttributes = endpointProfile.user.userAttributes
         }
 
         return PublicEndpoint {
