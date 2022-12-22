@@ -92,7 +92,7 @@ class PushNotificationsUtils(
     }
 
     @SuppressLint("NewApi")
-    fun showNotification(details: NotificationsPayload) {
+    fun showNotification(details: NotificationPayload) {
         val largeImageIcon = details.imageUrl?.let { downloadImage(it) }
 
 //        val notificationIntent = Intent(context, com.amplifyframework.pushnotifications.pinpoint.PushNotificationsApplication::class.java).apply {

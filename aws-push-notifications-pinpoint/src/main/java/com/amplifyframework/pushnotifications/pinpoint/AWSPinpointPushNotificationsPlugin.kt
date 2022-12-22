@@ -20,17 +20,24 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.os.Bundle
 import aws.sdk.kotlin.services.pinpoint.PinpointClient
+import com.amplifyframework.AmplifyException
+import com.amplifyframework.analytics.pinpoint.targeting.TargetingClient
+import com.amplifyframework.analytics.pinpoint.targeting.data.AndroidAppDetails
+import com.amplifyframework.analytics.pinpoint.targeting.data.AndroidDeviceDetails
 import com.amplifyframework.auth.cognito.BuildConfig
+import com.amplifyframework.auth.exceptions.ConfigurationException
 import com.amplifyframework.core.Action
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.notifications.pushnotifications.PushNotificationResult
 import com.amplifyframework.notifications.pushnotifications.PushNotificationsException
 import com.amplifyframework.notifications.pushnotifications.PushNotificationsPlugin
+import com.amplifyframework.pushnotifications.pinpoint.credentials.CognitoCredentialsProvider
 import com.amplifyframework.pushnotifications.pinpoint.utils.PushNotificationsService
 import com.amplifyframework.pushnotifications.pinpoint.utils.PushNotificationsUtils
 import com.amplifyframework.pushnotifications.pinpoint.utils.toNotificationsPayload
 import com.google.firebase.messaging.FirebaseMessaging
+import kotlin.jvm.Throws
 import org.json.JSONObject
 
 class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClient>() {
@@ -38,34 +45,68 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
     companion object {
         private const val AWS_PINPOINT_PUSHNOTIFICATIONS_LOG_NAMESPACE = "amplify:aws-pinpoint-pushnotifications:%s"
 
-        private const val AWS_PINPOINT_PUSHNOTIFICATIONS_PLUGIN_KEY = "awsPinpointPushNotifications"
+        private const val AWS_PINPOINT_PUSHNOTIFICATIONS_PLUGIN_KEY = "awsPinpointPushNotificationsPlugin"
     }
 
     @SuppressLint("MissingFirebaseInstanceTokenRefresh")
-    class ServiceExtension : PushNotificationsService()
+    open class ServiceExtension : PushNotificationsService()
 
     private val logger =
         Amplify.Logging.forNamespace(AWS_PINPOINT_PUSHNOTIFICATIONS_LOG_NAMESPACE.format(this::class.java.simpleName))
 
     private lateinit var preferences: SharedPreferences
 
+    private lateinit var configuration: AWSPinpointPushNotificationsConfiguration
+
     private lateinit var context: Context
 
     private lateinit var pushNotificationsUtils: PushNotificationsUtils
 
-    override fun configure(pluginConfiguration: JSONObject?, context: Context) {
-        this.context = context
-        pushNotificationsUtils = PushNotificationsUtils(context)
-        val preferencesKey = "appID" + "515d6767-01b7-49e5-8273-c8d11b0f331d"
-        preferences = context.getSharedPreferences(preferencesKey, Context.MODE_PRIVATE)
+    private lateinit var pinpointClient: PinpointClient
 
-        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
-            if (!task.isSuccessful) {
-                logger.info("Fetching FCM registration token failed: ${task.exception}")
+    private lateinit var targetingClient: TargetingClient
+
+    @Throws(AmplifyException::class)
+    override fun configure(pluginConfiguration: JSONObject?, context: Context) {
+        try {
+            this.context = context
+            configuration = AWSPinpointPushNotificationsConfiguration.fromJson(pluginConfiguration)
+            pushNotificationsUtils = PushNotificationsUtils(context)
+
+            preferences = context.getSharedPreferences(
+                configuration.appId + "515d6767-01b7-49e5-8273-c8d11b0f331d",
+                Context.MODE_PRIVATE
+            )
+
+            pinpointClient = PinpointClient {
+                region = configuration.region
+                credentialsProvider = CognitoCredentialsProvider()
             }
-            val token = task.result
-            registerDevice(token, { }, { })
-            logger.info("Registering push notifications token: $token")
+
+            val androidAppDetails = AndroidAppDetails(context, configuration.appId)
+            val androidDeviceDetails = AndroidDeviceDetails(context)
+            targetingClient = TargetingClient(
+                context,
+                pinpointClient,
+                preferences,
+                androidAppDetails,
+                androidDeviceDetails
+            )
+
+            FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+                if (!task.isSuccessful) {
+                    logger.info("Fetching FCM registration token failed: ${task.exception}")
+                }
+                val token = task.result
+                registerDevice(token, { }, { })
+                logger.info("Registering push notifications token: $token")
+            }
+        } catch (exception: Exception) {
+            throw ConfigurationException(
+                "Failed to configure AWSPinpointPushNotificationsPlugin.",
+                "Make sure your amplifyconfiguration.json is valid.",
+                exception
+            )
         }
     }
 
@@ -154,9 +195,7 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
 
     override fun getPluginKey() = AWS_PINPOINT_PUSHNOTIFICATIONS_PLUGIN_KEY
 
-    override fun getEscapeHatch(): PinpointClient? {
-        TODO("Not yet implemented")
-    }
+    override fun getEscapeHatch() = pinpointClient
 
     override fun getVersion() = BuildConfig.VERSION_NAME
 

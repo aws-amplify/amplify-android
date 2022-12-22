@@ -35,20 +35,20 @@ abstract class PushNotificationsService : FirebaseMessagingService() {
         // * The wakelock ID set by the WakefulBroadcastReceiver
         data.remove("androidx.content.wakelockid")
 
-        // TODO: handle pinpoint push
-        if ("pinpoint" == "Direct") {
-            onMessageReceived(RemoteMessage(data))
-        } else {
+        // handle pinpoint push messages
+        if (data.getString("pinpoint.campaign.campaign_id").isNullOrEmpty()) {
             super.handleIntent(intent)
+        } else {
+            onMessageReceived(RemoteMessage(data))
         }
     }
 
-    open fun processRemoteMessage(remoteMessage: RemoteMessage): NotificationsPayload {
+    open fun processRemoteMessage(remoteMessage: RemoteMessage): NotificationPayload {
         val data = remoteMessage.data
         val title = data[PushNotificationsConstants.AWS_PINPOINT_NOTIFICATION_TITLE]
         val body = data[PushNotificationsConstants.AWS_PINPOINT_NOTIFICATION_BODY]
         val imageUrl = data[PushNotificationsConstants.AWS_PINPOINT_NOTIFICATION_IMAGE]
-        return NotificationsPayload(title, body, imageUrl)
+        return NotificationPayload(title, body, imageUrl)
     }
 
     override fun onMessageReceived(remoteMessage: RemoteMessage) {

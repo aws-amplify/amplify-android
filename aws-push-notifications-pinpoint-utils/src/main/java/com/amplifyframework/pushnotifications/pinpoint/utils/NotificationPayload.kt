@@ -23,7 +23,7 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 @Serializable
-data class NotificationsPayload internal constructor(
+data class NotificationPayload internal constructor(
     val notificationId: Int,
     val title: String?,
     val body: String?,
@@ -43,6 +43,6 @@ data class NotificationsPayload internal constructor(
     }
 }
 
-fun Bundle.toNotificationsPayload(): NotificationsPayload {
+fun Bundle.toNotificationsPayload(): NotificationPayload {
     return Json.decodeFromString(getString("payload", ""))
 }
