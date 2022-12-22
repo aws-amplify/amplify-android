@@ -36,6 +36,7 @@ import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.logging.Logger;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -106,7 +107,7 @@ final class MutationProcessor {
             .flatMapCompletable(event -> drainMutationOutbox())
             .subscribe(
                 () -> LOG.warn("Observation of mutation outbox was completed."),
-                error -> LOG.warn("Error ended observation of mutation outbox: ", error)
+                error -> LOG.error("Error ended observation of mutation outbox: ", error)
             )
         );
     }
@@ -122,9 +123,7 @@ final class MutationProcessor {
                 processOutboxItem(next)
                     .blockingAwait();
             } catch (RuntimeException error) {
-                return Completable.error(new DataStoreException(
-                        "Failed to process " + error, "Check your internet connection."
-                ));
+                return Completable.error(error);
             }
         } while (true);
     }
@@ -160,17 +159,12 @@ final class MutationProcessor {
                 );
                 publishCurrentOutboxStatus();
             })
-            // If caused by an AppSync error, then publish it to hub, swallow,
-            // and then remove from the outbox to unblock the queue.
-            // Otherwise, pass it through.
+            // Errors on a mutation shouldn't halt the processing of the remaining mutations.
+            // If an error happens, it has to be announced (via Hub and the error handler) and the mutation removed from
+            // the outbox.
             .onErrorResumeNext(error -> {
-                if (error instanceof DataStoreException.GraphQLResponseException) {
-                    DataStoreException.GraphQLResponseException appSyncError =
-                        (DataStoreException.GraphQLResponseException) error;
-                    return mutationOutbox.remove(mutationOutboxItem.getMutationId())
-                        .doOnComplete(() -> announceMutationFailed(mutationOutboxItem, appSyncError));
-                }
-                return Completable.error(error);
+                return mutationOutbox.remove(mutationOutboxItem.getMutationId())
+                    .doOnComplete(() -> announceMutationFailed(mutationOutboxItem, error));
             })
             // Finally, catch all.
             .doOnError(error -> {
@@ -224,12 +218,27 @@ final class MutationProcessor {
      */
     private <T extends Model> void announceMutationFailed(
             PendingMutation<T> pendingMutation,
-            DataStoreException.GraphQLResponseException error
+            Throwable error
     ) {
-        List<GraphQLResponse.Error> errors = error.getErrors();
+        List<GraphQLResponse.Error> errors = error instanceof DataStoreException.GraphQLResponseException
+                ? ((DataStoreException.GraphQLResponseException) error).getErrors()
+                : Collections.emptyList();
+
         OutboxMutationFailedEvent<T> errorEvent =
                 OutboxMutationFailedEvent.create(pendingMutation, errors);
+
         Amplify.Hub.publish(HubChannel.DATASTORE, errorEvent.toHubEvent());
+
+        // Exceptions from customer's error handler code shouldn't prevent the processor from working.
+        try {
+            DataStoreException err = error instanceof DataStoreException.GraphQLResponseException
+                    ? (DataStoreException.GraphQLResponseException) error
+                    : new DataStoreException("Mutation failed.", error, "See underlying cause.");
+
+            this.dataStoreConfiguration.getConfiguration().getErrorHandler().accept(err);
+        } catch (Throwable err) {
+            LOG.warn("Error invoking the error handler", err);
+        }
     }
 
     /**
@@ -452,7 +461,8 @@ final class MutationProcessor {
 
         @NonNull
         @Override
-        public BuilderSteps.RetryHandlerStep dataStoreConfigurationProvider(@NonNull DataStoreConfigurationProvider dataStoreConfiguration) {
+        public BuilderSteps.RetryHandlerStep dataStoreConfigurationProvider(
+                @NonNull DataStoreConfigurationProvider dataStoreConfiguration) {
             Builder.this.dataStoreConfiguration = Objects.requireNonNull(dataStoreConfiguration);
             return Builder.this;
         }
