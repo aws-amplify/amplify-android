@@ -28,13 +28,12 @@ import com.amplifyframework.api.aws.sigv4.FunctionAuthProvider;
 import com.amplifyframework.api.aws.sigv4.OidcAuthProvider;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.util.Immutable;
 
 import com.amazonaws.DefaultRequest;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.http.HttpMethodName;
 import com.amazonaws.mobile.client.AWSMobileClient;
-import com.amplifyframework.util.Immutable;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -50,11 +49,12 @@ final class SubscriptionAuthorizer {
     private final ApiAuthProviders authProviders;
     private Map<String, String> additionalHeader;
 
-    SubscriptionAuthorizer(ApiConfiguration configuration, Map<String,String> headers) {
+    SubscriptionAuthorizer(ApiConfiguration configuration, Map<String, String> headers) {
         this(configuration, ApiAuthProviders.noProviderOverrides(), headers);
     }
 
-    SubscriptionAuthorizer(ApiConfiguration configuration, ApiAuthProviders authProviders, Map<String, String> headers) {
+    SubscriptionAuthorizer(ApiConfiguration configuration, ApiAuthProviders authProviders,
+                           Map<String, String> headers) {
         this.configuration = configuration;
         this.authProviders = authProviders;
         this.additionalHeader = Immutable.of(headers);
@@ -149,17 +149,16 @@ final class SubscriptionAuthorizer {
             JSONObject jsonObject = new JSONObject()
                     .put("host", getHost())
                     .put("Authorization", cognitoProvider.getLatestAuthToken());
-            if(additionalHeader != null)
-            {
-               additionalHeader.forEach((k,v)->{
-                   if(v != null) {
+            if (additionalHeader != null) {
+                additionalHeader.forEach((k, v) -> {
+                    if (v != null) {
                         try {
-                             jsonObject.put(k, v);
-                        } catch (JSONException e) {
-                            e.printStackTrace();
+                            jsonObject.put(k, v);
+                        } catch (JSONException jsonException) {
+                            jsonException.printStackTrace();
                         }
-                   }
-               });
+                    }
+                });
             }
             return jsonObject;
         } catch (JSONException jsonException) {

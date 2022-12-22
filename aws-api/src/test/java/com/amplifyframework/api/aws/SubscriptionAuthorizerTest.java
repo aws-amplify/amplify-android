@@ -29,6 +29,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 
+import java.util.HashMap;
+
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -42,6 +44,7 @@ public final class SubscriptionAuthorizerTest {
     private String oidcToken;
     private String functionToken;
     private ApiAuthProviders apiAuthProviders;
+    private HashMap<String, String> additionalHeaders;
 
     /**
      * Construct fake auth providers to override default behaviors for
@@ -66,6 +69,8 @@ public final class SubscriptionAuthorizerTest {
                 .oidcAuthProvider(() -> oidcToken)
                 .functionAuthProvider(() -> functionToken)
                 .build();
+        additionalHeaders = new HashMap<>();
+        additionalHeaders.put("test", "This is a test");
     }
 
     /**
@@ -81,7 +86,8 @@ public final class SubscriptionAuthorizerTest {
                 .region(RandomString.string())
                 .authorizationType(AuthorizationType.API_KEY)
                 .build();
-        SubscriptionAuthorizer authorizer = new SubscriptionAuthorizer(config, apiAuthProviders);
+
+        SubscriptionAuthorizer authorizer = new SubscriptionAuthorizer(config, apiAuthProviders, additionalHeaders);
         JSONObject header = authorizer.createHeadersForConnection(AuthorizationType.API_KEY);
         assertEquals(apiKey, header.getString("x-api-key"));
     }
@@ -99,7 +105,7 @@ public final class SubscriptionAuthorizerTest {
                 .region(RandomString.string())
                 .authorizationType(AuthorizationType.AMAZON_COGNITO_USER_POOLS)
                 .build();
-        SubscriptionAuthorizer authorizer = new SubscriptionAuthorizer(config, apiAuthProviders);
+        SubscriptionAuthorizer authorizer = new SubscriptionAuthorizer(config, apiAuthProviders, additionalHeaders);
         JSONObject header = authorizer.createHeadersForConnection(AuthorizationType.AMAZON_COGNITO_USER_POOLS);
         assertEquals(cognitoUserPoolsToken, header.getString("Authorization"));
     }
@@ -117,7 +123,7 @@ public final class SubscriptionAuthorizerTest {
                 .region(RandomString.string())
                 .authorizationType(AuthorizationType.OPENID_CONNECT)
                 .build();
-        SubscriptionAuthorizer authorizer = new SubscriptionAuthorizer(config, apiAuthProviders);
+        SubscriptionAuthorizer authorizer = new SubscriptionAuthorizer(config, apiAuthProviders, additionalHeaders);
         JSONObject header = authorizer.createHeadersForConnection(AuthorizationType.OPENID_CONNECT);
         assertEquals(oidcToken, header.getString("Authorization"));
     }
@@ -135,7 +141,7 @@ public final class SubscriptionAuthorizerTest {
                 .region(RandomString.string())
                 .authorizationType(AuthorizationType.AWS_LAMBDA)
                 .build();
-        SubscriptionAuthorizer authorizer = new SubscriptionAuthorizer(config, apiAuthProviders);
+        SubscriptionAuthorizer authorizer = new SubscriptionAuthorizer(config, apiAuthProviders, additionalHeaders);
         JSONObject header = authorizer.createHeadersForConnection(AuthorizationType.AWS_LAMBDA);
         assertEquals(functionToken, header.getString("Authorization"));
     }

@@ -908,12 +908,12 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         }
 
         /**
-         *
-          * @param headers The headers will be sent during subscription authorization
-         * @return
+         * Apply custom headers during subscription auth.
+         * @param headers The headers will be sent during subscription authorization.
+         * @return current builder instance.
          */
-        public Builder addAdditionalHeader(Map<String, String> headers)
-        {
+        @NonNull
+        public Builder addAdditionalHeader(@NonNull Map<String, String> headers) {
             this.additionalHeaders = headers;
             return this;
         }
