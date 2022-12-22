@@ -117,7 +117,7 @@ public class AmplifyException extends Exception {
     @Override
     public String toString() {
         return getClass().getSimpleName() + "{" +
-                "message=" + getMessage() +
+                "message =" + getMessage() +
                 ", cause=" + getCause() +
                 ", recoverySuggestion=" + getRecoverySuggestion() +
                 '}';
