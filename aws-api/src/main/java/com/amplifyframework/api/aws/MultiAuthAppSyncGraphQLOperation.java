@@ -55,7 +55,6 @@ import okhttp3.ResponseBody;
 public final class MultiAuthAppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-api");
     private static final String CONTENT_TYPE = "application/json";
-    private static final String UNAUTHORIZED_EXCEPTION = "UnauthorizedException";
 
     private final String endpoint;
     private final OkHttpClient client;
