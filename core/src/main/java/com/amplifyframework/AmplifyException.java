@@ -14,11 +14,9 @@
  */
 
 package com.amplifyframework;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
-
 import java.util.Objects;
 
 /**
