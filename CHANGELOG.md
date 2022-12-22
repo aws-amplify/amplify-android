@@ -3,6 +3,7 @@
 ### Features
 - feat(Geo): Add Kotlin Geo Facade (#2155)
 - Add a network status listener to restart DataStore after the network comes back online. (#2148)
+- feat(auth): Overriding sign in when the State machine is already in the signing in state (#2187)
 
 ### Miscellaneous
 - chore: Remove deprecated maven plugin (#2137)
