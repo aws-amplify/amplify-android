@@ -19,6 +19,9 @@ import com.amplifyframework.datastore.appsync.DataStoreGraphQLRequestOptions
 import com.amplifyframework.datastore.appsync.ModelWithMetadata
 import com.amplifyframework.util.TypeMaker
 import com.amplifyframework.util.Wrap
+import com.atlasv.android.amplify.simpleappsync.ext.andIfNotNull
+import com.atlasv.android.amplify.simpleappsync.ext.queryField
+import com.atlasv.android.amplify.simpleappsync.request.MergeListRequest
 import java.util.*
 
 /**
@@ -33,7 +36,9 @@ interface MergeRequestFactory {
         modelProvider: ModelProvider,
         schemaRegistry: SchemaRegistry,
         lastSync: Long,
-        grayRelease: Int
+        grayRelease: Int,
+        locale: String,
+        rebuildLocale: Boolean
     ): GraphQLRequest<List<GraphQLResponse<PaginatedResult<ModelWithMetadata<Model>>>>>
 }
 
@@ -48,13 +53,20 @@ object DefaultMergeRequestFactory : MergeRequestFactory {
         modelProvider: ModelProvider,
         schemaRegistry: SchemaRegistry,
         lastSync: Long,
-        grayRelease: Int
+        grayRelease: Int,
+        locale: String,
+        rebuildLocale: Boolean
     ): GraphQLRequest<List<GraphQLResponse<PaginatedResult<ModelWithMetadata<Model>>>>> {
         val requests = modelProvider.models().map {
             val predicate =
-                dataStoreConfiguration.syncExpressions[it.simpleName]?.resolvePredicate()
-                    ?: QueryPredicates.all()
-            getModelRequest(it, predicate, lastSync, grayRelease) as AppSyncGraphQLRequest<Any>
+                dataStoreConfiguration.syncExpressions[it.simpleName]?.resolvePredicate() ?: QueryPredicates.all()
+            getModelRequest(
+                it,
+                predicate,
+                if (rebuildLocale && it.simpleName.endsWith("Locale")) 0 else lastSync,
+                grayRelease,
+                locale
+            ) as AppSyncGraphQLRequest<Any>
         }
 
         val inputTypeString = createInputTypeString(requests)
@@ -101,10 +113,7 @@ object DefaultMergeRequestFactory : MergeRequestFactory {
     }
 
     private fun <T : Model> getModelRequest(
-        modelClass: Class<T>,
-        predicate: QueryPredicate,
-        lastSync: Long,
-        grayRelease: Int
+        modelClass: Class<T>, predicate: QueryPredicate, lastSync: Long, grayRelease: Int, locale: String
     ): GraphQLRequest<PaginatedResult<ModelWithMetadata<T>>> {
         val pageLimit = ModelPagination.limit(Int.MAX_VALUE)
         var targetPredicate = predicate
@@ -115,6 +124,9 @@ object DefaultMergeRequestFactory : MergeRequestFactory {
         }
         targetPredicate = targetPredicate.andIfNotNull(
             modelClass.queryField("grayRelease")?.gt(grayRelease)
+        )
+        targetPredicate = targetPredicate.andIfNotNull(
+            modelClass.queryField("locale")?.eq(locale)
         )
         return AppSyncGraphQLRequestFactory.buildQuery(
             modelClass, targetPredicate, pageLimit.limit, TypeMaker.getParameterizedType(

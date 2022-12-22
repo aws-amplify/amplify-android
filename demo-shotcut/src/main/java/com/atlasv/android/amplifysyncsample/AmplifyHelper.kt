@@ -19,8 +19,6 @@ object AmplifyHelper {
             //查询版本号不高于本地引擎版本号（所有功能都应向前兼容）的资源
             .syncExpression(VFX::class.java) {
                 QueryOptionFactory.vfxQueryCondition
-            }.syncExpression(VFXLocale::class.java) {
-                QueryOptionFactory.vfxLocaleCondition
             }
             .syncExpression(VideoFilter::class.java) {
                 VideoFilter.VFX_ENGINE_MIN_VERSION_CODE.le(2)
@@ -53,11 +51,10 @@ object AmplifyHelper {
     val modelProvider by lazy {
         object : ModelProvider {
             override fun models(): MutableSet<Class<out Model>> {
-//                return AmplifyModelProvider.getInstance().models()
-//                    .filterNot {
-//                        it in syncExcludeModels || it.simpleName.startsWith("MS")
-//                    }.toMutableSet()
-                return mutableSetOf(VFX::class.java, VFXLocale::class.java)
+                return AmplifyModelProvider.getInstance().models()
+                    .filterNot {
+                        it in syncExcludeModels || it.simpleName.startsWith("MS")
+                    }.toMutableSet()
             }
 
             override fun version(): String {

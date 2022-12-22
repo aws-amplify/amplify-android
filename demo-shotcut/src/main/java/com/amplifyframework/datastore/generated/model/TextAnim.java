@@ -39,6 +39,7 @@ public final class TextAnim implements Model {
   public static final QueryField CATEGORY_ID = field("TextAnim", "categoryID");
   public static final QueryField UPDATED_AT = field("TextAnim", "updatedAt");
   public static final QueryField GET_METHOD = field("TextAnim", "getMethod");
+  public static final QueryField DISPLAY_NAME = field("TextAnim", "displayName");
   private final @ModelField(targetType="ID", isRequired = true) String id;
   private final @ModelField(targetType="String") String name;
   private final @ModelField(targetType="String") String coverUrl;
@@ -50,6 +51,7 @@ public final class TextAnim implements Model {
   private final @ModelField(targetType="AWSDateTime", isRequired = true) Temporal.DateTime updatedAt;
   private final @ModelField(targetType="Int") Integer getMethod;
   private final @ModelField(targetType="TextAnimLocale") @HasMany(associatedWith = "materialID", type = TextAnimLocale.class) List<TextAnimLocale> TextAnimLocales = null;
+  private final @ModelField(targetType="String") String displayName;
   public String getId() {
       return id;
   }
@@ -94,7 +96,11 @@ public final class TextAnim implements Model {
       return TextAnimLocales;
   }
   
-  private TextAnim(String id, String name, String coverUrl, String downloadUrl, Integer sort, Integer targetVersionCode, Integer online, String categoryID, Temporal.DateTime updatedAt, Integer getMethod) {
+  public String getDisplayName() {
+      return displayName;
+  }
+  
+  private TextAnim(String id, String name, String coverUrl, String downloadUrl, Integer sort, Integer targetVersionCode, Integer online, String categoryID, Temporal.DateTime updatedAt, Integer getMethod, String displayName) {
     this.id = id;
     this.name = name;
     this.coverUrl = coverUrl;
@@ -105,6 +111,7 @@ public final class TextAnim implements Model {
     this.categoryID = categoryID;
     this.updatedAt = updatedAt;
     this.getMethod = getMethod;
+    this.displayName = displayName;
   }
   
   @Override
@@ -124,7 +131,8 @@ public final class TextAnim implements Model {
               ObjectsCompat.equals(getOnline(), textAnim.getOnline()) &&
               ObjectsCompat.equals(getCategoryId(), textAnim.getCategoryId()) &&
               ObjectsCompat.equals(getUpdatedAt(), textAnim.getUpdatedAt()) &&
-              ObjectsCompat.equals(getGetMethod(), textAnim.getGetMethod());
+              ObjectsCompat.equals(getGetMethod(), textAnim.getGetMethod()) &&
+              ObjectsCompat.equals(getDisplayName(), textAnim.getDisplayName());
       }
   }
   
@@ -141,6 +149,7 @@ public final class TextAnim implements Model {
       .append(getCategoryId())
       .append(getUpdatedAt())
       .append(getGetMethod())
+      .append(getDisplayName())
       .toString()
       .hashCode();
   }
@@ -158,7 +167,8 @@ public final class TextAnim implements Model {
       .append("online=" + String.valueOf(getOnline()) + ", ")
       .append("categoryID=" + String.valueOf(getCategoryId()) + ", ")
       .append("updatedAt=" + String.valueOf(getUpdatedAt()) + ", ")
-      .append("getMethod=" + String.valueOf(getGetMethod()))
+      .append("getMethod=" + String.valueOf(getGetMethod()) + ", ")
+      .append("displayName=" + String.valueOf(getDisplayName()))
       .append("}")
       .toString();
   }
@@ -186,6 +196,7 @@ public final class TextAnim implements Model {
       null,
       null,
       null,
+      null,
       null
     );
   }
@@ -200,7 +211,8 @@ public final class TextAnim implements Model {
       online,
       categoryID,
       updatedAt,
-      getMethod);
+      getMethod,
+      displayName);
   }
   public interface UpdatedAtStep {
     BuildStep updatedAt(Temporal.DateTime updatedAt);
@@ -218,6 +230,7 @@ public final class TextAnim implements Model {
     BuildStep online(Integer online);
     BuildStep categoryId(String categoryId);
     BuildStep getMethod(Integer getMethod);
+    BuildStep displayName(String displayName);
   }
   
 
@@ -232,6 +245,7 @@ public final class TextAnim implements Model {
     private Integer online;
     private String categoryID;
     private Integer getMethod;
+    private String displayName;
     @Override
      public TextAnim build() {
         String id = this.id != null ? this.id : UUID.randomUUID().toString();
@@ -246,7 +260,8 @@ public final class TextAnim implements Model {
           online,
           categoryID,
           updatedAt,
-          getMethod);
+          getMethod,
+          displayName);
     }
     
     @Override
@@ -304,6 +319,12 @@ public final class TextAnim implements Model {
         return this;
     }
     
+    @Override
+     public BuildStep displayName(String displayName) {
+        this.displayName = displayName;
+        return this;
+    }
+    
     /**
      * @param id id
      * @return Current Builder instance, for fluent method chaining
@@ -316,7 +337,7 @@ public final class TextAnim implements Model {
   
 
   public final class CopyOfBuilder extends Builder {
-    private CopyOfBuilder(String id, String name, String coverUrl, String downloadUrl, Integer sort, Integer targetVersionCode, Integer online, String categoryId, Temporal.DateTime updatedAt, Integer getMethod) {
+    private CopyOfBuilder(String id, String name, String coverUrl, String downloadUrl, Integer sort, Integer targetVersionCode, Integer online, String categoryId, Temporal.DateTime updatedAt, Integer getMethod, String displayName) {
       super.id(id);
       super.updatedAt(updatedAt)
         .name(name)
@@ -326,7 +347,8 @@ public final class TextAnim implements Model {
         .targetVersionCode(targetVersionCode)
         .online(online)
         .categoryId(categoryId)
-        .getMethod(getMethod);
+        .getMethod(getMethod)
+        .displayName(displayName);
     }
     
     @Override
@@ -372,6 +394,11 @@ public final class TextAnim implements Model {
     @Override
      public CopyOfBuilder getMethod(Integer getMethod) {
       return (CopyOfBuilder) super.getMethod(getMethod);
+    }
+    
+    @Override
+     public CopyOfBuilder displayName(String displayName) {
+      return (CopyOfBuilder) super.displayName(displayName);
     }
   }
   

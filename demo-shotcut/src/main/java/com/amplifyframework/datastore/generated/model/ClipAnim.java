@@ -37,10 +37,9 @@ public final class ClipAnim implements Model {
   public static final QueryField TARGET_VERSION_CODE = field("ClipAnim", "targetVersionCode");
   public static final QueryField ONLINE = field("ClipAnim", "online");
   public static final QueryField CATEGORY_ID = field("ClipAnim", "categoryID");
-  public static final QueryField STAGED_ROLLOUT = field("ClipAnim", "stagedRollout");
   public static final QueryField UPDATED_AT = field("ClipAnim", "updatedAt");
-  public static final QueryField TEST_TAG = field("ClipAnim", "testTag");
   public static final QueryField GET_METHOD = field("ClipAnim", "getMethod");
+  public static final QueryField DISPLAY_NAME = field("ClipAnim", "displayName");
   private final @ModelField(targetType="ID", isRequired = true) String id;
   private final @ModelField(targetType="String") String name;
   private final @ModelField(targetType="String") String coverUrl;
@@ -49,11 +48,10 @@ public final class ClipAnim implements Model {
   private final @ModelField(targetType="Int") Integer targetVersionCode;
   private final @ModelField(targetType="Int") Integer online;
   private final @ModelField(targetType="ID") String categoryID;
-  private final @ModelField(targetType="String") String stagedRollout;
   private final @ModelField(targetType="AWSDateTime", isRequired = true) Temporal.DateTime updatedAt;
-  private final @ModelField(targetType="String") String testTag;
   private final @ModelField(targetType="Int") Integer getMethod;
   private final @ModelField(targetType="ClipAnimLocale") @HasMany(associatedWith = "materialID", type = ClipAnimLocale.class) List<ClipAnimLocale> ClipAnimLocales = null;
+  private final @ModelField(targetType="String") String displayName;
   public String getId() {
       return id;
   }
@@ -86,16 +84,8 @@ public final class ClipAnim implements Model {
       return categoryID;
   }
   
-  public String getStagedRollout() {
-      return stagedRollout;
-  }
-  
   public Temporal.DateTime getUpdatedAt() {
       return updatedAt;
-  }
-  
-  public String getTestTag() {
-      return testTag;
   }
   
   public Integer getGetMethod() {
@@ -106,7 +96,11 @@ public final class ClipAnim implements Model {
       return ClipAnimLocales;
   }
   
-  private ClipAnim(String id, String name, String coverUrl, String downloadUrl, Integer sort, Integer targetVersionCode, Integer online, String categoryID, String stagedRollout, Temporal.DateTime updatedAt, String testTag, Integer getMethod) {
+  public String getDisplayName() {
+      return displayName;
+  }
+  
+  private ClipAnim(String id, String name, String coverUrl, String downloadUrl, Integer sort, Integer targetVersionCode, Integer online, String categoryID, Temporal.DateTime updatedAt, Integer getMethod, String displayName) {
     this.id = id;
     this.name = name;
     this.coverUrl = coverUrl;
@@ -115,10 +109,9 @@ public final class ClipAnim implements Model {
     this.targetVersionCode = targetVersionCode;
     this.online = online;
     this.categoryID = categoryID;
-    this.stagedRollout = stagedRollout;
     this.updatedAt = updatedAt;
-    this.testTag = testTag;
     this.getMethod = getMethod;
+    this.displayName = displayName;
   }
   
   @Override
@@ -137,10 +130,9 @@ public final class ClipAnim implements Model {
               ObjectsCompat.equals(getTargetVersionCode(), clipAnim.getTargetVersionCode()) &&
               ObjectsCompat.equals(getOnline(), clipAnim.getOnline()) &&
               ObjectsCompat.equals(getCategoryId(), clipAnim.getCategoryId()) &&
-              ObjectsCompat.equals(getStagedRollout(), clipAnim.getStagedRollout()) &&
               ObjectsCompat.equals(getUpdatedAt(), clipAnim.getUpdatedAt()) &&
-              ObjectsCompat.equals(getTestTag(), clipAnim.getTestTag()) &&
-              ObjectsCompat.equals(getGetMethod(), clipAnim.getGetMethod());
+              ObjectsCompat.equals(getGetMethod(), clipAnim.getGetMethod()) &&
+              ObjectsCompat.equals(getDisplayName(), clipAnim.getDisplayName());
       }
   }
   
@@ -155,10 +147,9 @@ public final class ClipAnim implements Model {
       .append(getTargetVersionCode())
       .append(getOnline())
       .append(getCategoryId())
-      .append(getStagedRollout())
       .append(getUpdatedAt())
-      .append(getTestTag())
       .append(getGetMethod())
+      .append(getDisplayName())
       .toString()
       .hashCode();
   }
@@ -175,10 +166,9 @@ public final class ClipAnim implements Model {
       .append("targetVersionCode=" + String.valueOf(getTargetVersionCode()) + ", ")
       .append("online=" + String.valueOf(getOnline()) + ", ")
       .append("categoryID=" + String.valueOf(getCategoryId()) + ", ")
-      .append("stagedRollout=" + String.valueOf(getStagedRollout()) + ", ")
       .append("updatedAt=" + String.valueOf(getUpdatedAt()) + ", ")
-      .append("testTag=" + String.valueOf(getTestTag()) + ", ")
-      .append("getMethod=" + String.valueOf(getGetMethod()))
+      .append("getMethod=" + String.valueOf(getGetMethod()) + ", ")
+      .append("displayName=" + String.valueOf(getDisplayName()))
       .append("}")
       .toString();
   }
@@ -207,7 +197,6 @@ public final class ClipAnim implements Model {
       null,
       null,
       null,
-      null,
       null
     );
   }
@@ -221,10 +210,9 @@ public final class ClipAnim implements Model {
       targetVersionCode,
       online,
       categoryID,
-      stagedRollout,
       updatedAt,
-      testTag,
-      getMethod);
+      getMethod,
+      displayName);
   }
   public interface UpdatedAtStep {
     BuildStep updatedAt(Temporal.DateTime updatedAt);
@@ -241,9 +229,8 @@ public final class ClipAnim implements Model {
     BuildStep targetVersionCode(Integer targetVersionCode);
     BuildStep online(Integer online);
     BuildStep categoryId(String categoryId);
-    BuildStep stagedRollout(String stagedRollout);
-    BuildStep testTag(String testTag);
     BuildStep getMethod(Integer getMethod);
+    BuildStep displayName(String displayName);
   }
   
 
@@ -257,9 +244,8 @@ public final class ClipAnim implements Model {
     private Integer targetVersionCode;
     private Integer online;
     private String categoryID;
-    private String stagedRollout;
-    private String testTag;
     private Integer getMethod;
+    private String displayName;
     @Override
      public ClipAnim build() {
         String id = this.id != null ? this.id : UUID.randomUUID().toString();
@@ -273,10 +259,9 @@ public final class ClipAnim implements Model {
           targetVersionCode,
           online,
           categoryID,
-          stagedRollout,
           updatedAt,
-          testTag,
-          getMethod);
+          getMethod,
+          displayName);
     }
     
     @Override
@@ -329,20 +314,14 @@ public final class ClipAnim implements Model {
     }
     
     @Override
-     public BuildStep stagedRollout(String stagedRollout) {
-        this.stagedRollout = stagedRollout;
-        return this;
-    }
-    
-    @Override
-     public BuildStep testTag(String testTag) {
-        this.testTag = testTag;
-        return this;
-    }
-    
-    @Override
      public BuildStep getMethod(Integer getMethod) {
         this.getMethod = getMethod;
+        return this;
+    }
+    
+    @Override
+     public BuildStep displayName(String displayName) {
+        this.displayName = displayName;
         return this;
     }
     
@@ -358,7 +337,7 @@ public final class ClipAnim implements Model {
   
 
   public final class CopyOfBuilder extends Builder {
-    private CopyOfBuilder(String id, String name, String coverUrl, String downloadUrl, Integer sort, Integer targetVersionCode, Integer online, String categoryId, String stagedRollout, Temporal.DateTime updatedAt, String testTag, Integer getMethod) {
+    private CopyOfBuilder(String id, String name, String coverUrl, String downloadUrl, Integer sort, Integer targetVersionCode, Integer online, String categoryId, Temporal.DateTime updatedAt, Integer getMethod, String displayName) {
       super.id(id);
       super.updatedAt(updatedAt)
         .name(name)
@@ -368,9 +347,8 @@ public final class ClipAnim implements Model {
         .targetVersionCode(targetVersionCode)
         .online(online)
         .categoryId(categoryId)
-        .stagedRollout(stagedRollout)
-        .testTag(testTag)
-        .getMethod(getMethod);
+        .getMethod(getMethod)
+        .displayName(displayName);
     }
     
     @Override
@@ -414,18 +392,13 @@ public final class ClipAnim implements Model {
     }
     
     @Override
-     public CopyOfBuilder stagedRollout(String stagedRollout) {
-      return (CopyOfBuilder) super.stagedRollout(stagedRollout);
-    }
-    
-    @Override
-     public CopyOfBuilder testTag(String testTag) {
-      return (CopyOfBuilder) super.testTag(testTag);
-    }
-    
-    @Override
      public CopyOfBuilder getMethod(Integer getMethod) {
       return (CopyOfBuilder) super.getMethod(getMethod);
+    }
+    
+    @Override
+     public CopyOfBuilder displayName(String displayName) {
+      return (CopyOfBuilder) super.displayName(displayName);
     }
   }
   

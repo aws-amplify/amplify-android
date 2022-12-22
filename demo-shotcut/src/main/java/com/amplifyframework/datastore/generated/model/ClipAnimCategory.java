@@ -35,6 +35,7 @@ public final class ClipAnimCategory implements Model {
   public static final QueryField ONLINE = field("ClipAnimCategory", "online");
   public static final QueryField UPDATED_AT = field("ClipAnimCategory", "updatedAt");
   public static final QueryField ANIM_TYPE = field("ClipAnimCategory", "animType");
+  public static final QueryField DISPLAY_NAME = field("ClipAnimCategory", "displayName");
   private final @ModelField(targetType="ID", isRequired = true) String id;
   private final @ModelField(targetType="String") String name;
   private final @ModelField(targetType="String") String coverUrl;
@@ -44,6 +45,7 @@ public final class ClipAnimCategory implements Model {
   private final @ModelField(targetType="AWSDateTime", isRequired = true) Temporal.DateTime updatedAt;
   private final @ModelField(targetType="Int") Integer animType;
   private final @ModelField(targetType="ClipAnimCategoryLocale") @HasMany(associatedWith = "materialID", type = ClipAnimCategoryLocale.class) List<ClipAnimCategoryLocale> ClipAnimCategoryLocales = null;
+  private final @ModelField(targetType="String") String displayName;
   public String getId() {
       return id;
   }
@@ -80,7 +82,11 @@ public final class ClipAnimCategory implements Model {
       return ClipAnimCategoryLocales;
   }
   
-  private ClipAnimCategory(String id, String name, String coverUrl, Integer sort, Integer online, Temporal.DateTime updatedAt, Integer animType) {
+  public String getDisplayName() {
+      return displayName;
+  }
+  
+  private ClipAnimCategory(String id, String name, String coverUrl, Integer sort, Integer online, Temporal.DateTime updatedAt, Integer animType, String displayName) {
     this.id = id;
     this.name = name;
     this.coverUrl = coverUrl;
@@ -88,6 +94,7 @@ public final class ClipAnimCategory implements Model {
     this.online = online;
     this.updatedAt = updatedAt;
     this.animType = animType;
+    this.displayName = displayName;
   }
   
   @Override
@@ -104,7 +111,8 @@ public final class ClipAnimCategory implements Model {
               ObjectsCompat.equals(getSort(), clipAnimCategory.getSort()) &&
               ObjectsCompat.equals(getOnline(), clipAnimCategory.getOnline()) &&
               ObjectsCompat.equals(getUpdatedAt(), clipAnimCategory.getUpdatedAt()) &&
-              ObjectsCompat.equals(getAnimType(), clipAnimCategory.getAnimType());
+              ObjectsCompat.equals(getAnimType(), clipAnimCategory.getAnimType()) &&
+              ObjectsCompat.equals(getDisplayName(), clipAnimCategory.getDisplayName());
       }
   }
   
@@ -118,6 +126,7 @@ public final class ClipAnimCategory implements Model {
       .append(getOnline())
       .append(getUpdatedAt())
       .append(getAnimType())
+      .append(getDisplayName())
       .toString()
       .hashCode();
   }
@@ -132,7 +141,8 @@ public final class ClipAnimCategory implements Model {
       .append("sort=" + String.valueOf(getSort()) + ", ")
       .append("online=" + String.valueOf(getOnline()) + ", ")
       .append("updatedAt=" + String.valueOf(getUpdatedAt()) + ", ")
-      .append("animType=" + String.valueOf(getAnimType()))
+      .append("animType=" + String.valueOf(getAnimType()) + ", ")
+      .append("displayName=" + String.valueOf(getDisplayName()))
       .append("}")
       .toString();
   }
@@ -157,6 +167,7 @@ public final class ClipAnimCategory implements Model {
       null,
       null,
       null,
+      null,
       null
     );
   }
@@ -168,7 +179,8 @@ public final class ClipAnimCategory implements Model {
       sort,
       online,
       updatedAt,
-      animType);
+      animType,
+      displayName);
   }
   public interface UpdatedAtStep {
     BuildStep updatedAt(Temporal.DateTime updatedAt);
@@ -183,6 +195,7 @@ public final class ClipAnimCategory implements Model {
     BuildStep sort(Integer sort);
     BuildStep online(Integer online);
     BuildStep animType(Integer animType);
+    BuildStep displayName(String displayName);
   }
   
 
@@ -194,6 +207,7 @@ public final class ClipAnimCategory implements Model {
     private Integer sort;
     private Integer online;
     private Integer animType;
+    private String displayName;
     @Override
      public ClipAnimCategory build() {
         String id = this.id != null ? this.id : UUID.randomUUID().toString();
@@ -205,7 +219,8 @@ public final class ClipAnimCategory implements Model {
           sort,
           online,
           updatedAt,
-          animType);
+          animType,
+          displayName);
     }
     
     @Override
@@ -245,6 +260,12 @@ public final class ClipAnimCategory implements Model {
         return this;
     }
     
+    @Override
+     public BuildStep displayName(String displayName) {
+        this.displayName = displayName;
+        return this;
+    }
+    
     /**
      * @param id id
      * @return Current Builder instance, for fluent method chaining
@@ -257,14 +278,15 @@ public final class ClipAnimCategory implements Model {
   
 
   public final class CopyOfBuilder extends Builder {
-    private CopyOfBuilder(String id, String name, String coverUrl, Integer sort, Integer online, Temporal.DateTime updatedAt, Integer animType) {
+    private CopyOfBuilder(String id, String name, String coverUrl, Integer sort, Integer online, Temporal.DateTime updatedAt, Integer animType, String displayName) {
       super.id(id);
       super.updatedAt(updatedAt)
         .name(name)
         .coverUrl(coverUrl)
         .sort(sort)
         .online(online)
-        .animType(animType);
+        .animType(animType)
+        .displayName(displayName);
     }
     
     @Override
@@ -295,6 +317,11 @@ public final class ClipAnimCategory implements Model {
     @Override
      public CopyOfBuilder animType(Integer animType) {
       return (CopyOfBuilder) super.animType(animType);
+    }
+    
+    @Override
+     public CopyOfBuilder displayName(String displayName) {
+      return (CopyOfBuilder) super.displayName(displayName);
     }
   }
   

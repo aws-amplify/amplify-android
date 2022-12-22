@@ -37,7 +37,6 @@ public final class Recommend implements Model {
   public static final QueryField COUNTRY = field("Recommend", "country");
   public static final QueryField RECOMMEND_CATEGORY_ID = field("Recommend", "recommendCategoryID");
   public static final QueryField RESOURCE_NAME = field("Recommend", "resourceName");
-  public static final QueryField TEST_TAG = field("Recommend", "testTag");
   public static final QueryField ONLINE = field("Recommend", "online");
   public static final QueryField LABEL = field("Recommend", "label");
   public static final QueryField GET_METHOD = field("Recommend", "getMethod");
@@ -51,7 +50,6 @@ public final class Recommend implements Model {
   private final @ModelField(targetType="String") String country;
   private final @ModelField(targetType="ID", isRequired = true) String recommendCategoryID;
   private final @ModelField(targetType="String") String resourceName;
-  private final @ModelField(targetType="String") String testTag;
   private final @ModelField(targetType="Int") Integer online;
   private final @ModelField(targetType="String") String label;
   private final @ModelField(targetType="Int") Integer getMethod;
@@ -95,10 +93,6 @@ public final class Recommend implements Model {
       return resourceName;
   }
   
-  public String getTestTag() {
-      return testTag;
-  }
-  
   public Integer getOnline() {
       return online;
   }
@@ -111,7 +105,7 @@ public final class Recommend implements Model {
       return getMethod;
   }
   
-  private Recommend(String id, String name, String coverUrl, Integer sort, String downloadUrl, String previewVideoUrl, Temporal.DateTime updatedAt, String country, String recommendCategoryID, String resourceName, String testTag, Integer online, String label, Integer getMethod) {
+  private Recommend(String id, String name, String coverUrl, Integer sort, String downloadUrl, String previewVideoUrl, Temporal.DateTime updatedAt, String country, String recommendCategoryID, String resourceName, Integer online, String label, Integer getMethod) {
     this.id = id;
     this.name = name;
     this.coverUrl = coverUrl;
@@ -122,7 +116,6 @@ public final class Recommend implements Model {
     this.country = country;
     this.recommendCategoryID = recommendCategoryID;
     this.resourceName = resourceName;
-    this.testTag = testTag;
     this.online = online;
     this.label = label;
     this.getMethod = getMethod;
@@ -146,7 +139,6 @@ public final class Recommend implements Model {
               ObjectsCompat.equals(getCountry(), recommend.getCountry()) &&
               ObjectsCompat.equals(getRecommendCategoryId(), recommend.getRecommendCategoryId()) &&
               ObjectsCompat.equals(getResourceName(), recommend.getResourceName()) &&
-              ObjectsCompat.equals(getTestTag(), recommend.getTestTag()) &&
               ObjectsCompat.equals(getOnline(), recommend.getOnline()) &&
               ObjectsCompat.equals(getLabel(), recommend.getLabel()) &&
               ObjectsCompat.equals(getGetMethod(), recommend.getGetMethod());
@@ -166,7 +158,6 @@ public final class Recommend implements Model {
       .append(getCountry())
       .append(getRecommendCategoryId())
       .append(getResourceName())
-      .append(getTestTag())
       .append(getOnline())
       .append(getLabel())
       .append(getGetMethod())
@@ -188,7 +179,6 @@ public final class Recommend implements Model {
       .append("country=" + String.valueOf(getCountry()) + ", ")
       .append("recommendCategoryID=" + String.valueOf(getRecommendCategoryId()) + ", ")
       .append("resourceName=" + String.valueOf(getResourceName()) + ", ")
-      .append("testTag=" + String.valueOf(getTestTag()) + ", ")
       .append("online=" + String.valueOf(getOnline()) + ", ")
       .append("label=" + String.valueOf(getLabel()) + ", ")
       .append("getMethod=" + String.valueOf(getGetMethod()))
@@ -222,7 +212,6 @@ public final class Recommend implements Model {
       null,
       null,
       null,
-      null,
       null
     );
   }
@@ -238,7 +227,6 @@ public final class Recommend implements Model {
       country,
       recommendCategoryID,
       resourceName,
-      testTag,
       online,
       label,
       getMethod);
@@ -259,7 +247,6 @@ public final class Recommend implements Model {
     BuildStep updatedAt(Temporal.DateTime updatedAt);
     BuildStep country(String country);
     BuildStep resourceName(String resourceName);
-    BuildStep testTag(String testTag);
     BuildStep online(Integer online);
     BuildStep label(String label);
     BuildStep getMethod(Integer getMethod);
@@ -277,7 +264,6 @@ public final class Recommend implements Model {
     private Temporal.DateTime updatedAt;
     private String country;
     private String resourceName;
-    private String testTag;
     private Integer online;
     private String label;
     private Integer getMethod;
@@ -296,7 +282,6 @@ public final class Recommend implements Model {
           country,
           recommendCategoryID,
           resourceName,
-          testTag,
           online,
           label,
           getMethod);
@@ -358,12 +343,6 @@ public final class Recommend implements Model {
     }
     
     @Override
-     public BuildStep testTag(String testTag) {
-        this.testTag = testTag;
-        return this;
-    }
-    
-    @Override
      public BuildStep online(Integer online) {
         this.online = online;
         return this;
@@ -393,7 +372,7 @@ public final class Recommend implements Model {
   
 
   public final class CopyOfBuilder extends Builder {
-    private CopyOfBuilder(String id, String name, String coverUrl, Integer sort, String downloadUrl, String previewVideoUrl, Temporal.DateTime updatedAt, String country, String recommendCategoryId, String resourceName, String testTag, Integer online, String label, Integer getMethod) {
+    private CopyOfBuilder(String id, String name, String coverUrl, Integer sort, String downloadUrl, String previewVideoUrl, Temporal.DateTime updatedAt, String country, String recommendCategoryId, String resourceName, Integer online, String label, Integer getMethod) {
       super.id(id);
       super.recommendCategoryId(recommendCategoryId)
         .name(name)
@@ -404,7 +383,6 @@ public final class Recommend implements Model {
         .updatedAt(updatedAt)
         .country(country)
         .resourceName(resourceName)
-        .testTag(testTag)
         .online(online)
         .label(label)
         .getMethod(getMethod);
@@ -453,11 +431,6 @@ public final class Recommend implements Model {
     @Override
      public CopyOfBuilder resourceName(String resourceName) {
       return (CopyOfBuilder) super.resourceName(resourceName);
-    }
-    
-    @Override
-     public CopyOfBuilder testTag(String testTag) {
-      return (CopyOfBuilder) super.testTag(testTag);
     }
     
     @Override

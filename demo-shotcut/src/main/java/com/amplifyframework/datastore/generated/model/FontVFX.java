@@ -36,9 +36,7 @@ public final class FontVFX implements Model {
   public static final QueryField VFX_ENGINE_MIN_VERSION_CODE = field("FontVFX", "vfxEngineMinVersionCode");
   public static final QueryField FONTVFXCATEGORY_ID = field("FontVFX", "fontvfxcategoryID");
   public static final QueryField ONLINE = field("FontVFX", "online");
-  public static final QueryField STAGED_ROLLOUT = field("FontVFX", "stagedRollout");
   public static final QueryField UPDATED_AT = field("FontVFX", "updatedAt");
-  public static final QueryField TEST_TAG = field("FontVFX", "testTag");
   public static final QueryField GET_METHOD = field("FontVFX", "getMethod");
   private final @ModelField(targetType="ID", isRequired = true) String id;
   private final @ModelField(targetType="String") String name;
@@ -48,9 +46,7 @@ public final class FontVFX implements Model {
   private final @ModelField(targetType="Int") Integer vfxEngineMinVersionCode;
   private final @ModelField(targetType="ID") String fontvfxcategoryID;
   private final @ModelField(targetType="Int") Integer online;
-  private final @ModelField(targetType="String") String stagedRollout;
   private final @ModelField(targetType="AWSDateTime", isRequired = true) Temporal.DateTime updatedAt;
-  private final @ModelField(targetType="String") String testTag;
   private final @ModelField(targetType="Int") Integer getMethod;
   public String getId() {
       return id;
@@ -84,23 +80,15 @@ public final class FontVFX implements Model {
       return online;
   }
   
-  public String getStagedRollout() {
-      return stagedRollout;
-  }
-  
   public Temporal.DateTime getUpdatedAt() {
       return updatedAt;
-  }
-  
-  public String getTestTag() {
-      return testTag;
   }
   
   public Integer getGetMethod() {
       return getMethod;
   }
   
-  private FontVFX(String id, String name, String coverUrl, String downloadUrl, Integer sort, Integer vfxEngineMinVersionCode, String fontvfxcategoryID, Integer online, String stagedRollout, Temporal.DateTime updatedAt, String testTag, Integer getMethod) {
+  private FontVFX(String id, String name, String coverUrl, String downloadUrl, Integer sort, Integer vfxEngineMinVersionCode, String fontvfxcategoryID, Integer online, Temporal.DateTime updatedAt, Integer getMethod) {
     this.id = id;
     this.name = name;
     this.coverUrl = coverUrl;
@@ -109,9 +97,7 @@ public final class FontVFX implements Model {
     this.vfxEngineMinVersionCode = vfxEngineMinVersionCode;
     this.fontvfxcategoryID = fontvfxcategoryID;
     this.online = online;
-    this.stagedRollout = stagedRollout;
     this.updatedAt = updatedAt;
-    this.testTag = testTag;
     this.getMethod = getMethod;
   }
   
@@ -131,9 +117,7 @@ public final class FontVFX implements Model {
               ObjectsCompat.equals(getVfxEngineMinVersionCode(), fontVfx.getVfxEngineMinVersionCode()) &&
               ObjectsCompat.equals(getFontvfxcategoryId(), fontVfx.getFontvfxcategoryId()) &&
               ObjectsCompat.equals(getOnline(), fontVfx.getOnline()) &&
-              ObjectsCompat.equals(getStagedRollout(), fontVfx.getStagedRollout()) &&
               ObjectsCompat.equals(getUpdatedAt(), fontVfx.getUpdatedAt()) &&
-              ObjectsCompat.equals(getTestTag(), fontVfx.getTestTag()) &&
               ObjectsCompat.equals(getGetMethod(), fontVfx.getGetMethod());
       }
   }
@@ -149,9 +133,7 @@ public final class FontVFX implements Model {
       .append(getVfxEngineMinVersionCode())
       .append(getFontvfxcategoryId())
       .append(getOnline())
-      .append(getStagedRollout())
       .append(getUpdatedAt())
-      .append(getTestTag())
       .append(getGetMethod())
       .toString()
       .hashCode();
@@ -169,9 +151,7 @@ public final class FontVFX implements Model {
       .append("vfxEngineMinVersionCode=" + String.valueOf(getVfxEngineMinVersionCode()) + ", ")
       .append("fontvfxcategoryID=" + String.valueOf(getFontvfxcategoryId()) + ", ")
       .append("online=" + String.valueOf(getOnline()) + ", ")
-      .append("stagedRollout=" + String.valueOf(getStagedRollout()) + ", ")
       .append("updatedAt=" + String.valueOf(getUpdatedAt()) + ", ")
-      .append("testTag=" + String.valueOf(getTestTag()) + ", ")
       .append("getMethod=" + String.valueOf(getGetMethod()))
       .append("}")
       .toString();
@@ -200,8 +180,6 @@ public final class FontVFX implements Model {
       null,
       null,
       null,
-      null,
-      null,
       null
     );
   }
@@ -215,9 +193,7 @@ public final class FontVFX implements Model {
       vfxEngineMinVersionCode,
       fontvfxcategoryID,
       online,
-      stagedRollout,
       updatedAt,
-      testTag,
       getMethod);
   }
   public interface UpdatedAtStep {
@@ -235,8 +211,6 @@ public final class FontVFX implements Model {
     BuildStep vfxEngineMinVersionCode(Integer vfxEngineMinVersionCode);
     BuildStep fontvfxcategoryId(String fontvfxcategoryId);
     BuildStep online(Integer online);
-    BuildStep stagedRollout(String stagedRollout);
-    BuildStep testTag(String testTag);
     BuildStep getMethod(Integer getMethod);
   }
   
@@ -251,8 +225,6 @@ public final class FontVFX implements Model {
     private Integer vfxEngineMinVersionCode;
     private String fontvfxcategoryID;
     private Integer online;
-    private String stagedRollout;
-    private String testTag;
     private Integer getMethod;
     @Override
      public FontVFX build() {
@@ -267,9 +239,7 @@ public final class FontVFX implements Model {
           vfxEngineMinVersionCode,
           fontvfxcategoryID,
           online,
-          stagedRollout,
           updatedAt,
-          testTag,
           getMethod);
     }
     
@@ -323,18 +293,6 @@ public final class FontVFX implements Model {
     }
     
     @Override
-     public BuildStep stagedRollout(String stagedRollout) {
-        this.stagedRollout = stagedRollout;
-        return this;
-    }
-    
-    @Override
-     public BuildStep testTag(String testTag) {
-        this.testTag = testTag;
-        return this;
-    }
-    
-    @Override
      public BuildStep getMethod(Integer getMethod) {
         this.getMethod = getMethod;
         return this;
@@ -352,7 +310,7 @@ public final class FontVFX implements Model {
   
 
   public final class CopyOfBuilder extends Builder {
-    private CopyOfBuilder(String id, String name, String coverUrl, String downloadUrl, Integer sort, Integer vfxEngineMinVersionCode, String fontvfxcategoryId, Integer online, String stagedRollout, Temporal.DateTime updatedAt, String testTag, Integer getMethod) {
+    private CopyOfBuilder(String id, String name, String coverUrl, String downloadUrl, Integer sort, Integer vfxEngineMinVersionCode, String fontvfxcategoryId, Integer online, Temporal.DateTime updatedAt, Integer getMethod) {
       super.id(id);
       super.updatedAt(updatedAt)
         .name(name)
@@ -362,8 +320,6 @@ public final class FontVFX implements Model {
         .vfxEngineMinVersionCode(vfxEngineMinVersionCode)
         .fontvfxcategoryId(fontvfxcategoryId)
         .online(online)
-        .stagedRollout(stagedRollout)
-        .testTag(testTag)
         .getMethod(getMethod);
     }
     
@@ -405,16 +361,6 @@ public final class FontVFX implements Model {
     @Override
      public CopyOfBuilder online(Integer online) {
       return (CopyOfBuilder) super.online(online);
-    }
-    
-    @Override
-     public CopyOfBuilder stagedRollout(String stagedRollout) {
-      return (CopyOfBuilder) super.stagedRollout(stagedRollout);
-    }
-    
-    @Override
-     public CopyOfBuilder testTag(String testTag) {
-      return (CopyOfBuilder) super.testTag(testTag);
     }
     
     @Override

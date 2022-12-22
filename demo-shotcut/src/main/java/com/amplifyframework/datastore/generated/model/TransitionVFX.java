@@ -37,10 +37,9 @@ public final class TransitionVFX implements Model {
   public static final QueryField VFX_ENGINE_MIN_VERSION_CODE = field("TransitionVFX", "vfxEngineMinVersionCode");
   public static final QueryField ONLINE = field("TransitionVFX", "online");
   public static final QueryField TRANSITION_VFX_CATEGORY_ID = field("TransitionVFX", "transitionVfxCategoryID");
-  public static final QueryField STAGED_ROLLOUT = field("TransitionVFX", "stagedRollout");
   public static final QueryField UPDATED_AT = field("TransitionVFX", "updatedAt");
-  public static final QueryField TEST_TAG = field("TransitionVFX", "testTag");
   public static final QueryField GET_METHOD = field("TransitionVFX", "getMethod");
+  public static final QueryField DISPLAY_NAME = field("TransitionVFX", "displayName");
   private final @ModelField(targetType="ID", isRequired = true) String id;
   private final @ModelField(targetType="String") String name;
   private final @ModelField(targetType="String") String coverUrl;
@@ -49,11 +48,10 @@ public final class TransitionVFX implements Model {
   private final @ModelField(targetType="Int") Integer vfxEngineMinVersionCode;
   private final @ModelField(targetType="Int") Integer online;
   private final @ModelField(targetType="ID") String transitionVfxCategoryID;
-  private final @ModelField(targetType="String") String stagedRollout;
   private final @ModelField(targetType="AWSDateTime", isRequired = true) Temporal.DateTime updatedAt;
-  private final @ModelField(targetType="String") String testTag;
   private final @ModelField(targetType="Int") Integer getMethod;
   private final @ModelField(targetType="TransitionVFXLocale") @HasMany(associatedWith = "materialID", type = TransitionVFXLocale.class) List<TransitionVFXLocale> TransitionVFXLocales = null;
+  private final @ModelField(targetType="String") String displayName;
   public String getId() {
       return id;
   }
@@ -86,16 +84,8 @@ public final class TransitionVFX implements Model {
       return transitionVfxCategoryID;
   }
   
-  public String getStagedRollout() {
-      return stagedRollout;
-  }
-  
   public Temporal.DateTime getUpdatedAt() {
       return updatedAt;
-  }
-  
-  public String getTestTag() {
-      return testTag;
   }
   
   public Integer getGetMethod() {
@@ -106,7 +96,11 @@ public final class TransitionVFX implements Model {
       return TransitionVFXLocales;
   }
   
-  private TransitionVFX(String id, String name, String coverUrl, String downloadUrl, Integer sort, Integer vfxEngineMinVersionCode, Integer online, String transitionVfxCategoryID, String stagedRollout, Temporal.DateTime updatedAt, String testTag, Integer getMethod) {
+  public String getDisplayName() {
+      return displayName;
+  }
+  
+  private TransitionVFX(String id, String name, String coverUrl, String downloadUrl, Integer sort, Integer vfxEngineMinVersionCode, Integer online, String transitionVfxCategoryID, Temporal.DateTime updatedAt, Integer getMethod, String displayName) {
     this.id = id;
     this.name = name;
     this.coverUrl = coverUrl;
@@ -115,10 +109,9 @@ public final class TransitionVFX implements Model {
     this.vfxEngineMinVersionCode = vfxEngineMinVersionCode;
     this.online = online;
     this.transitionVfxCategoryID = transitionVfxCategoryID;
-    this.stagedRollout = stagedRollout;
     this.updatedAt = updatedAt;
-    this.testTag = testTag;
     this.getMethod = getMethod;
+    this.displayName = displayName;
   }
   
   @Override
@@ -137,10 +130,9 @@ public final class TransitionVFX implements Model {
               ObjectsCompat.equals(getVfxEngineMinVersionCode(), transitionVfx.getVfxEngineMinVersionCode()) &&
               ObjectsCompat.equals(getOnline(), transitionVfx.getOnline()) &&
               ObjectsCompat.equals(getTransitionVfxCategoryId(), transitionVfx.getTransitionVfxCategoryId()) &&
-              ObjectsCompat.equals(getStagedRollout(), transitionVfx.getStagedRollout()) &&
               ObjectsCompat.equals(getUpdatedAt(), transitionVfx.getUpdatedAt()) &&
-              ObjectsCompat.equals(getTestTag(), transitionVfx.getTestTag()) &&
-              ObjectsCompat.equals(getGetMethod(), transitionVfx.getGetMethod());
+              ObjectsCompat.equals(getGetMethod(), transitionVfx.getGetMethod()) &&
+              ObjectsCompat.equals(getDisplayName(), transitionVfx.getDisplayName());
       }
   }
   
@@ -155,10 +147,9 @@ public final class TransitionVFX implements Model {
       .append(getVfxEngineMinVersionCode())
       .append(getOnline())
       .append(getTransitionVfxCategoryId())
-      .append(getStagedRollout())
       .append(getUpdatedAt())
-      .append(getTestTag())
       .append(getGetMethod())
+      .append(getDisplayName())
       .toString()
       .hashCode();
   }
@@ -175,10 +166,9 @@ public final class TransitionVFX implements Model {
       .append("vfxEngineMinVersionCode=" + String.valueOf(getVfxEngineMinVersionCode()) + ", ")
       .append("online=" + String.valueOf(getOnline()) + ", ")
       .append("transitionVfxCategoryID=" + String.valueOf(getTransitionVfxCategoryId()) + ", ")
-      .append("stagedRollout=" + String.valueOf(getStagedRollout()) + ", ")
       .append("updatedAt=" + String.valueOf(getUpdatedAt()) + ", ")
-      .append("testTag=" + String.valueOf(getTestTag()) + ", ")
-      .append("getMethod=" + String.valueOf(getGetMethod()))
+      .append("getMethod=" + String.valueOf(getGetMethod()) + ", ")
+      .append("displayName=" + String.valueOf(getDisplayName()))
       .append("}")
       .toString();
   }
@@ -207,7 +197,6 @@ public final class TransitionVFX implements Model {
       null,
       null,
       null,
-      null,
       null
     );
   }
@@ -221,10 +210,9 @@ public final class TransitionVFX implements Model {
       vfxEngineMinVersionCode,
       online,
       transitionVfxCategoryID,
-      stagedRollout,
       updatedAt,
-      testTag,
-      getMethod);
+      getMethod,
+      displayName);
   }
   public interface UpdatedAtStep {
     BuildStep updatedAt(Temporal.DateTime updatedAt);
@@ -241,9 +229,8 @@ public final class TransitionVFX implements Model {
     BuildStep vfxEngineMinVersionCode(Integer vfxEngineMinVersionCode);
     BuildStep online(Integer online);
     BuildStep transitionVfxCategoryId(String transitionVfxCategoryId);
-    BuildStep stagedRollout(String stagedRollout);
-    BuildStep testTag(String testTag);
     BuildStep getMethod(Integer getMethod);
+    BuildStep displayName(String displayName);
   }
   
 
@@ -257,9 +244,8 @@ public final class TransitionVFX implements Model {
     private Integer vfxEngineMinVersionCode;
     private Integer online;
     private String transitionVfxCategoryID;
-    private String stagedRollout;
-    private String testTag;
     private Integer getMethod;
+    private String displayName;
     @Override
      public TransitionVFX build() {
         String id = this.id != null ? this.id : UUID.randomUUID().toString();
@@ -273,10 +259,9 @@ public final class TransitionVFX implements Model {
           vfxEngineMinVersionCode,
           online,
           transitionVfxCategoryID,
-          stagedRollout,
           updatedAt,
-          testTag,
-          getMethod);
+          getMethod,
+          displayName);
     }
     
     @Override
@@ -329,20 +314,14 @@ public final class TransitionVFX implements Model {
     }
     
     @Override
-     public BuildStep stagedRollout(String stagedRollout) {
-        this.stagedRollout = stagedRollout;
-        return this;
-    }
-    
-    @Override
-     public BuildStep testTag(String testTag) {
-        this.testTag = testTag;
-        return this;
-    }
-    
-    @Override
      public BuildStep getMethod(Integer getMethod) {
         this.getMethod = getMethod;
+        return this;
+    }
+    
+    @Override
+     public BuildStep displayName(String displayName) {
+        this.displayName = displayName;
         return this;
     }
     
@@ -358,7 +337,7 @@ public final class TransitionVFX implements Model {
   
 
   public final class CopyOfBuilder extends Builder {
-    private CopyOfBuilder(String id, String name, String coverUrl, String downloadUrl, Integer sort, Integer vfxEngineMinVersionCode, Integer online, String transitionVfxCategoryId, String stagedRollout, Temporal.DateTime updatedAt, String testTag, Integer getMethod) {
+    private CopyOfBuilder(String id, String name, String coverUrl, String downloadUrl, Integer sort, Integer vfxEngineMinVersionCode, Integer online, String transitionVfxCategoryId, Temporal.DateTime updatedAt, Integer getMethod, String displayName) {
       super.id(id);
       super.updatedAt(updatedAt)
         .name(name)
@@ -368,9 +347,8 @@ public final class TransitionVFX implements Model {
         .vfxEngineMinVersionCode(vfxEngineMinVersionCode)
         .online(online)
         .transitionVfxCategoryId(transitionVfxCategoryId)
-        .stagedRollout(stagedRollout)
-        .testTag(testTag)
-        .getMethod(getMethod);
+        .getMethod(getMethod)
+        .displayName(displayName);
     }
     
     @Override
@@ -414,18 +392,13 @@ public final class TransitionVFX implements Model {
     }
     
     @Override
-     public CopyOfBuilder stagedRollout(String stagedRollout) {
-      return (CopyOfBuilder) super.stagedRollout(stagedRollout);
-    }
-    
-    @Override
-     public CopyOfBuilder testTag(String testTag) {
-      return (CopyOfBuilder) super.testTag(testTag);
-    }
-    
-    @Override
      public CopyOfBuilder getMethod(Integer getMethod) {
       return (CopyOfBuilder) super.getMethod(getMethod);
+    }
+    
+    @Override
+     public CopyOfBuilder displayName(String displayName) {
+      return (CopyOfBuilder) super.displayName(displayName);
     }
   }
   

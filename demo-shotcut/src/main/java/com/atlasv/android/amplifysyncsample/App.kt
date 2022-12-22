@@ -6,8 +6,7 @@ import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
 import com.amplifyframework.kotlin.core.Amplify
 import com.amplifyframework.logging.LogLevel
 import com.amplifyframework.logging.LoggingCategory
-import com.atlasv.android.amplify.simpleappsync.MergeResponseFactory
-import com.atlasv.android.amplify.simpleappsync.response.ResponseLocalizeTransformer
+import com.atlasv.android.amplify.simpleappsync.response.MergeResponseFactory
 import com.atlasv.android.log.HyperLogger
 import timber.log.Timber
 
@@ -31,7 +30,7 @@ class App : Application() {
         Amplify.addPlugin(AWSCognitoAuthPlugin())
         Amplify.addPlugin(
             AWSApiPlugin.builder()
-                .responseFactory(MergeResponseFactory(ResponseLocalizeTransformer()))
+                .responseFactory(MergeResponseFactory())
             .configureClient("richman") { builder ->
                 builder.addInterceptor { chain ->
                     val originRequest = chain.request()

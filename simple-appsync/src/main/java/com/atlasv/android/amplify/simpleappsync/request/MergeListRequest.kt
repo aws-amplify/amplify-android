@@ -1,4 +1,4 @@
-package com.atlasv.android.amplify.simpleappsync
+package com.atlasv.android.amplify.simpleappsync.request
 
 import com.amplifyframework.api.aws.AppSyncGraphQLRequest
 import com.amplifyframework.api.graphql.SimpleGraphQLRequest

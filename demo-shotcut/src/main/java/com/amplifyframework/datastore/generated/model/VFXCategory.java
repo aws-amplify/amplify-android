@@ -34,6 +34,7 @@ public final class VFXCategory implements Model {
   public static final QueryField SORT = field("VFXCategory", "sort");
   public static final QueryField UPDATED_AT = field("VFXCategory", "updatedAt");
   public static final QueryField ONLINE = field("VFXCategory", "online");
+  public static final QueryField DISPLAY_NAME = field("VFXCategory", "displayName");
   private final @ModelField(targetType="ID", isRequired = true) String id;
   private final @ModelField(targetType="String") String name;
   private final @ModelField(targetType="String") String coverUrl;
@@ -42,6 +43,7 @@ public final class VFXCategory implements Model {
   private final @ModelField(targetType="AWSDateTime", isRequired = true) Temporal.DateTime updatedAt;
   private final @ModelField(targetType="Int") Integer online;
   private final @ModelField(targetType="VFXCategoryLocale") @HasMany(associatedWith = "materialID", type = VFXCategoryLocale.class) List<VFXCategoryLocale> VFXCategoryLocales = null;
+  private final @ModelField(targetType="String") String displayName;
   public String getId() {
       return id;
   }
@@ -74,13 +76,18 @@ public final class VFXCategory implements Model {
       return VFXCategoryLocales;
   }
   
-  private VFXCategory(String id, String name, String coverUrl, Integer sort, Temporal.DateTime updatedAt, Integer online) {
+  public String getDisplayName() {
+      return displayName;
+  }
+  
+  private VFXCategory(String id, String name, String coverUrl, Integer sort, Temporal.DateTime updatedAt, Integer online, String displayName) {
     this.id = id;
     this.name = name;
     this.coverUrl = coverUrl;
     this.sort = sort;
     this.updatedAt = updatedAt;
     this.online = online;
+    this.displayName = displayName;
   }
   
   @Override
@@ -96,7 +103,8 @@ public final class VFXCategory implements Model {
               ObjectsCompat.equals(getCoverUrl(), vfxCategory.getCoverUrl()) &&
               ObjectsCompat.equals(getSort(), vfxCategory.getSort()) &&
               ObjectsCompat.equals(getUpdatedAt(), vfxCategory.getUpdatedAt()) &&
-              ObjectsCompat.equals(getOnline(), vfxCategory.getOnline());
+              ObjectsCompat.equals(getOnline(), vfxCategory.getOnline()) &&
+              ObjectsCompat.equals(getDisplayName(), vfxCategory.getDisplayName());
       }
   }
   
@@ -109,6 +117,7 @@ public final class VFXCategory implements Model {
       .append(getSort())
       .append(getUpdatedAt())
       .append(getOnline())
+      .append(getDisplayName())
       .toString()
       .hashCode();
   }
@@ -122,7 +131,8 @@ public final class VFXCategory implements Model {
       .append("coverUrl=" + String.valueOf(getCoverUrl()) + ", ")
       .append("sort=" + String.valueOf(getSort()) + ", ")
       .append("updatedAt=" + String.valueOf(getUpdatedAt()) + ", ")
-      .append("online=" + String.valueOf(getOnline()))
+      .append("online=" + String.valueOf(getOnline()) + ", ")
+      .append("displayName=" + String.valueOf(getDisplayName()))
       .append("}")
       .toString();
   }
@@ -146,6 +156,7 @@ public final class VFXCategory implements Model {
       null,
       null,
       null,
+      null,
       null
     );
   }
@@ -156,7 +167,8 @@ public final class VFXCategory implements Model {
       coverUrl,
       sort,
       updatedAt,
-      online);
+      online,
+      displayName);
   }
   public interface UpdatedAtStep {
     BuildStep updatedAt(Temporal.DateTime updatedAt);
@@ -170,6 +182,7 @@ public final class VFXCategory implements Model {
     BuildStep coverUrl(String coverUrl);
     BuildStep sort(Integer sort);
     BuildStep online(Integer online);
+    BuildStep displayName(String displayName);
   }
   
 
@@ -180,6 +193,7 @@ public final class VFXCategory implements Model {
     private String coverUrl;
     private Integer sort;
     private Integer online;
+    private String displayName;
     @Override
      public VFXCategory build() {
         String id = this.id != null ? this.id : UUID.randomUUID().toString();
@@ -190,7 +204,8 @@ public final class VFXCategory implements Model {
           coverUrl,
           sort,
           updatedAt,
-          online);
+          online,
+          displayName);
     }
     
     @Override
@@ -224,6 +239,12 @@ public final class VFXCategory implements Model {
         return this;
     }
     
+    @Override
+     public BuildStep displayName(String displayName) {
+        this.displayName = displayName;
+        return this;
+    }
+    
     /**
      * @param id id
      * @return Current Builder instance, for fluent method chaining
@@ -236,13 +257,14 @@ public final class VFXCategory implements Model {
   
 
   public final class CopyOfBuilder extends Builder {
-    private CopyOfBuilder(String id, String name, String coverUrl, Integer sort, Temporal.DateTime updatedAt, Integer online) {
+    private CopyOfBuilder(String id, String name, String coverUrl, Integer sort, Temporal.DateTime updatedAt, Integer online, String displayName) {
       super.id(id);
       super.updatedAt(updatedAt)
         .name(name)
         .coverUrl(coverUrl)
         .sort(sort)
-        .online(online);
+        .online(online)
+        .displayName(displayName);
     }
     
     @Override
@@ -268,6 +290,11 @@ public final class VFXCategory implements Model {
     @Override
      public CopyOfBuilder online(Integer online) {
       return (CopyOfBuilder) super.online(online);
+    }
+    
+    @Override
+     public CopyOfBuilder displayName(String displayName) {
+      return (CopyOfBuilder) super.displayName(displayName);
     }
   }
   

@@ -34,10 +34,10 @@ public final class VideoFilterCategory implements Model {
   public static final QueryField SORT = field("VideoFilterCategory", "sort");
   public static final QueryField UPDATED_AT = field("VideoFilterCategory", "updatedAt");
   public static final QueryField ONLINE = field("VideoFilterCategory", "online");
-  public static final QueryField TEST_TAG = field("VideoFilterCategory", "testTag");
   public static final QueryField MASK_COLOR = field("VideoFilterCategory", "maskColor");
   public static final QueryField GET_METHOD = field("VideoFilterCategory", "getMethod");
   public static final QueryField LABEL = field("VideoFilterCategory", "label");
+  public static final QueryField DISPLAY_NAME = field("VideoFilterCategory", "displayName");
   private final @ModelField(targetType="ID", isRequired = true) String id;
   private final @ModelField(targetType="String") String name;
   private final @ModelField(targetType="String") String coverUrl;
@@ -45,11 +45,11 @@ public final class VideoFilterCategory implements Model {
   private final @ModelField(targetType="VideoFilter") @HasMany(associatedWith = "categoryID", type = VideoFilter.class) List<VideoFilter> videoFilterSet = null;
   private final @ModelField(targetType="AWSDateTime", isRequired = true) Temporal.DateTime updatedAt;
   private final @ModelField(targetType="Int") Integer online;
-  private final @ModelField(targetType="String") String testTag;
   private final @ModelField(targetType="String") String maskColor;
   private final @ModelField(targetType="Int") Integer getMethod;
   private final @ModelField(targetType="String") String label;
   private final @ModelField(targetType="VideoFilterCategoryLocale") @HasMany(associatedWith = "materialID", type = VideoFilterCategoryLocale.class) List<VideoFilterCategoryLocale> VideoFilterCategoryLocales = null;
+  private final @ModelField(targetType="String") String displayName;
   public String getId() {
       return id;
   }
@@ -78,10 +78,6 @@ public final class VideoFilterCategory implements Model {
       return online;
   }
   
-  public String getTestTag() {
-      return testTag;
-  }
-  
   public String getMaskColor() {
       return maskColor;
   }
@@ -98,17 +94,21 @@ public final class VideoFilterCategory implements Model {
       return VideoFilterCategoryLocales;
   }
   
-  private VideoFilterCategory(String id, String name, String coverUrl, Integer sort, Temporal.DateTime updatedAt, Integer online, String testTag, String maskColor, Integer getMethod, String label) {
+  public String getDisplayName() {
+      return displayName;
+  }
+  
+  private VideoFilterCategory(String id, String name, String coverUrl, Integer sort, Temporal.DateTime updatedAt, Integer online, String maskColor, Integer getMethod, String label, String displayName) {
     this.id = id;
     this.name = name;
     this.coverUrl = coverUrl;
     this.sort = sort;
     this.updatedAt = updatedAt;
     this.online = online;
-    this.testTag = testTag;
     this.maskColor = maskColor;
     this.getMethod = getMethod;
     this.label = label;
+    this.displayName = displayName;
   }
   
   @Override
@@ -125,10 +125,10 @@ public final class VideoFilterCategory implements Model {
               ObjectsCompat.equals(getSort(), videoFilterCategory.getSort()) &&
               ObjectsCompat.equals(getUpdatedAt(), videoFilterCategory.getUpdatedAt()) &&
               ObjectsCompat.equals(getOnline(), videoFilterCategory.getOnline()) &&
-              ObjectsCompat.equals(getTestTag(), videoFilterCategory.getTestTag()) &&
               ObjectsCompat.equals(getMaskColor(), videoFilterCategory.getMaskColor()) &&
               ObjectsCompat.equals(getGetMethod(), videoFilterCategory.getGetMethod()) &&
-              ObjectsCompat.equals(getLabel(), videoFilterCategory.getLabel());
+              ObjectsCompat.equals(getLabel(), videoFilterCategory.getLabel()) &&
+              ObjectsCompat.equals(getDisplayName(), videoFilterCategory.getDisplayName());
       }
   }
   
@@ -141,10 +141,10 @@ public final class VideoFilterCategory implements Model {
       .append(getSort())
       .append(getUpdatedAt())
       .append(getOnline())
-      .append(getTestTag())
       .append(getMaskColor())
       .append(getGetMethod())
       .append(getLabel())
+      .append(getDisplayName())
       .toString()
       .hashCode();
   }
@@ -159,10 +159,10 @@ public final class VideoFilterCategory implements Model {
       .append("sort=" + String.valueOf(getSort()) + ", ")
       .append("updatedAt=" + String.valueOf(getUpdatedAt()) + ", ")
       .append("online=" + String.valueOf(getOnline()) + ", ")
-      .append("testTag=" + String.valueOf(getTestTag()) + ", ")
       .append("maskColor=" + String.valueOf(getMaskColor()) + ", ")
       .append("getMethod=" + String.valueOf(getGetMethod()) + ", ")
-      .append("label=" + String.valueOf(getLabel()))
+      .append("label=" + String.valueOf(getLabel()) + ", ")
+      .append("displayName=" + String.valueOf(getDisplayName()))
       .append("}")
       .toString();
   }
@@ -201,10 +201,10 @@ public final class VideoFilterCategory implements Model {
       sort,
       updatedAt,
       online,
-      testTag,
       maskColor,
       getMethod,
-      label);
+      label,
+      displayName);
   }
   public interface UpdatedAtStep {
     BuildStep updatedAt(Temporal.DateTime updatedAt);
@@ -218,10 +218,10 @@ public final class VideoFilterCategory implements Model {
     BuildStep coverUrl(String coverUrl);
     BuildStep sort(Integer sort);
     BuildStep online(Integer online);
-    BuildStep testTag(String testTag);
     BuildStep maskColor(String maskColor);
     BuildStep getMethod(Integer getMethod);
     BuildStep label(String label);
+    BuildStep displayName(String displayName);
   }
   
 
@@ -232,10 +232,10 @@ public final class VideoFilterCategory implements Model {
     private String coverUrl;
     private Integer sort;
     private Integer online;
-    private String testTag;
     private String maskColor;
     private Integer getMethod;
     private String label;
+    private String displayName;
     @Override
      public VideoFilterCategory build() {
         String id = this.id != null ? this.id : UUID.randomUUID().toString();
@@ -247,10 +247,10 @@ public final class VideoFilterCategory implements Model {
           sort,
           updatedAt,
           online,
-          testTag,
           maskColor,
           getMethod,
-          label);
+          label,
+          displayName);
     }
     
     @Override
@@ -285,12 +285,6 @@ public final class VideoFilterCategory implements Model {
     }
     
     @Override
-     public BuildStep testTag(String testTag) {
-        this.testTag = testTag;
-        return this;
-    }
-    
-    @Override
      public BuildStep maskColor(String maskColor) {
         this.maskColor = maskColor;
         return this;
@@ -308,6 +302,12 @@ public final class VideoFilterCategory implements Model {
         return this;
     }
     
+    @Override
+     public BuildStep displayName(String displayName) {
+        this.displayName = displayName;
+        return this;
+    }
+    
     /**
      * @param id id
      * @return Current Builder instance, for fluent method chaining
@@ -320,17 +320,17 @@ public final class VideoFilterCategory implements Model {
   
 
   public final class CopyOfBuilder extends Builder {
-    private CopyOfBuilder(String id, String name, String coverUrl, Integer sort, Temporal.DateTime updatedAt, Integer online, String testTag, String maskColor, Integer getMethod, String label) {
+    private CopyOfBuilder(String id, String name, String coverUrl, Integer sort, Temporal.DateTime updatedAt, Integer online, String maskColor, Integer getMethod, String label, String displayName) {
       super.id(id);
       super.updatedAt(updatedAt)
         .name(name)
         .coverUrl(coverUrl)
         .sort(sort)
         .online(online)
-        .testTag(testTag)
         .maskColor(maskColor)
         .getMethod(getMethod)
-        .label(label);
+        .label(label)
+        .displayName(displayName);
     }
     
     @Override
@@ -359,11 +359,6 @@ public final class VideoFilterCategory implements Model {
     }
     
     @Override
-     public CopyOfBuilder testTag(String testTag) {
-      return (CopyOfBuilder) super.testTag(testTag);
-    }
-    
-    @Override
      public CopyOfBuilder maskColor(String maskColor) {
       return (CopyOfBuilder) super.maskColor(maskColor);
     }
@@ -376,6 +371,11 @@ public final class VideoFilterCategory implements Model {
     @Override
      public CopyOfBuilder label(String label) {
       return (CopyOfBuilder) super.label(label);
+    }
+    
+    @Override
+     public CopyOfBuilder displayName(String displayName) {
+      return (CopyOfBuilder) super.displayName(displayName);
     }
   }
   

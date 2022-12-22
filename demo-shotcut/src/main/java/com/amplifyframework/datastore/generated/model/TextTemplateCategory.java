@@ -34,6 +34,7 @@ public final class TextTemplateCategory implements Model {
   public static final QueryField SORT = field("TextTemplateCategory", "sort");
   public static final QueryField ONLINE = field("TextTemplateCategory", "online");
   public static final QueryField UPDATED_AT = field("TextTemplateCategory", "updatedAt");
+  public static final QueryField DISPLAY_NAME = field("TextTemplateCategory", "displayName");
   private final @ModelField(targetType="ID", isRequired = true) String id;
   private final @ModelField(targetType="String") String name;
   private final @ModelField(targetType="String") String coverUrl;
@@ -42,6 +43,7 @@ public final class TextTemplateCategory implements Model {
   private final @ModelField(targetType="AWSDateTime") Temporal.DateTime updatedAt;
   private final @ModelField(targetType="TextTemplate") @HasMany(associatedWith = "categoryID", type = TextTemplate.class) List<TextTemplate> textTemplates = null;
   private final @ModelField(targetType="TextTemplateCategoryLocale") @HasMany(associatedWith = "materialID", type = TextTemplateCategoryLocale.class) List<TextTemplateCategoryLocale> TextTemplateCategoryLocales = null;
+  private final @ModelField(targetType="String") String displayName;
   public String getId() {
       return id;
   }
@@ -74,13 +76,18 @@ public final class TextTemplateCategory implements Model {
       return TextTemplateCategoryLocales;
   }
   
-  private TextTemplateCategory(String id, String name, String coverUrl, Integer sort, Integer online, Temporal.DateTime updatedAt) {
+  public String getDisplayName() {
+      return displayName;
+  }
+  
+  private TextTemplateCategory(String id, String name, String coverUrl, Integer sort, Integer online, Temporal.DateTime updatedAt, String displayName) {
     this.id = id;
     this.name = name;
     this.coverUrl = coverUrl;
     this.sort = sort;
     this.online = online;
     this.updatedAt = updatedAt;
+    this.displayName = displayName;
   }
   
   @Override
@@ -96,7 +103,8 @@ public final class TextTemplateCategory implements Model {
               ObjectsCompat.equals(getCoverUrl(), textTemplateCategory.getCoverUrl()) &&
               ObjectsCompat.equals(getSort(), textTemplateCategory.getSort()) &&
               ObjectsCompat.equals(getOnline(), textTemplateCategory.getOnline()) &&
-              ObjectsCompat.equals(getUpdatedAt(), textTemplateCategory.getUpdatedAt());
+              ObjectsCompat.equals(getUpdatedAt(), textTemplateCategory.getUpdatedAt()) &&
+              ObjectsCompat.equals(getDisplayName(), textTemplateCategory.getDisplayName());
       }
   }
   
@@ -109,6 +117,7 @@ public final class TextTemplateCategory implements Model {
       .append(getSort())
       .append(getOnline())
       .append(getUpdatedAt())
+      .append(getDisplayName())
       .toString()
       .hashCode();
   }
@@ -122,7 +131,8 @@ public final class TextTemplateCategory implements Model {
       .append("coverUrl=" + String.valueOf(getCoverUrl()) + ", ")
       .append("sort=" + String.valueOf(getSort()) + ", ")
       .append("online=" + String.valueOf(getOnline()) + ", ")
-      .append("updatedAt=" + String.valueOf(getUpdatedAt()))
+      .append("updatedAt=" + String.valueOf(getUpdatedAt()) + ", ")
+      .append("displayName=" + String.valueOf(getDisplayName()))
       .append("}")
       .toString();
   }
@@ -146,6 +156,7 @@ public final class TextTemplateCategory implements Model {
       null,
       null,
       null,
+      null,
       null
     );
   }
@@ -156,7 +167,8 @@ public final class TextTemplateCategory implements Model {
       coverUrl,
       sort,
       online,
-      updatedAt);
+      updatedAt,
+      displayName);
   }
   public interface BuildStep {
     TextTemplateCategory build();
@@ -166,6 +178,7 @@ public final class TextTemplateCategory implements Model {
     BuildStep sort(Integer sort);
     BuildStep online(Integer online);
     BuildStep updatedAt(Temporal.DateTime updatedAt);
+    BuildStep displayName(String displayName);
   }
   
 
@@ -176,6 +189,7 @@ public final class TextTemplateCategory implements Model {
     private Integer sort;
     private Integer online;
     private Temporal.DateTime updatedAt;
+    private String displayName;
     @Override
      public TextTemplateCategory build() {
         String id = this.id != null ? this.id : UUID.randomUUID().toString();
@@ -186,7 +200,8 @@ public final class TextTemplateCategory implements Model {
           coverUrl,
           sort,
           online,
-          updatedAt);
+          updatedAt,
+          displayName);
     }
     
     @Override
@@ -219,6 +234,12 @@ public final class TextTemplateCategory implements Model {
         return this;
     }
     
+    @Override
+     public BuildStep displayName(String displayName) {
+        this.displayName = displayName;
+        return this;
+    }
+    
     /**
      * @param id id
      * @return Current Builder instance, for fluent method chaining
@@ -231,13 +252,14 @@ public final class TextTemplateCategory implements Model {
   
 
   public final class CopyOfBuilder extends Builder {
-    private CopyOfBuilder(String id, String name, String coverUrl, Integer sort, Integer online, Temporal.DateTime updatedAt) {
+    private CopyOfBuilder(String id, String name, String coverUrl, Integer sort, Integer online, Temporal.DateTime updatedAt, String displayName) {
       super.id(id);
       super.name(name)
         .coverUrl(coverUrl)
         .sort(sort)
         .online(online)
-        .updatedAt(updatedAt);
+        .updatedAt(updatedAt)
+        .displayName(displayName);
     }
     
     @Override
@@ -263,6 +285,11 @@ public final class TextTemplateCategory implements Model {
     @Override
      public CopyOfBuilder updatedAt(Temporal.DateTime updatedAt) {
       return (CopyOfBuilder) super.updatedAt(updatedAt);
+    }
+    
+    @Override
+     public CopyOfBuilder displayName(String displayName) {
+      return (CopyOfBuilder) super.displayName(displayName);
     }
   }
   

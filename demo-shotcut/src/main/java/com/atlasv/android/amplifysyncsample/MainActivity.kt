@@ -11,7 +11,6 @@ import com.atlasv.android.amplifysyncsample.databinding.ActivityMainBinding
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {
 
@@ -31,8 +30,9 @@ class MainActivity : AppCompatActivity() {
         binding.buttonAll.setOnClickListener {
             CoroutineScope(Dispatchers.IO).launch {
                 AmplifyHelper.component.syncFromRemote(
-                    grayRelease = 9,
-                    lastSync = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(30)
+                    grayRelease = 0,
+                    dbInitTime = 0,
+                    "pt"
                 )
             }
         }

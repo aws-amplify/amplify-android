@@ -1,4 +1,4 @@
-package com.atlasv.android.amplify.simpleappsync
+package com.atlasv.android.amplify.simpleappsync.storage
 
 import android.content.Context
 import com.amplifyframework.core.model.Model

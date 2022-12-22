@@ -36,13 +36,12 @@ public final class VideoFilter implements Model {
   public static final QueryField SORT = field("VideoFilter", "sort");
   public static final QueryField VFX_ENGINE_MIN_VERSION_CODE = field("VideoFilter", "vfxEngineMinVersionCode");
   public static final QueryField CATEGORY_ID = field("VideoFilter", "categoryID");
-  public static final QueryField STAGED_ROLLOUT = field("VideoFilter", "stagedRollout");
   public static final QueryField ONLINE = field("VideoFilter", "online");
   public static final QueryField GET_METHOD = field("VideoFilter", "getMethod");
   public static final QueryField UPDATED_AT = field("VideoFilter", "updatedAt");
-  public static final QueryField TEST_TAG = field("VideoFilter", "testTag");
   public static final QueryField DEPLOY_FLAG = field("VideoFilter", "deployFlag");
   public static final QueryField MASK_COLOR = field("VideoFilter", "maskColor");
+  public static final QueryField DISPLAY_NAME = field("VideoFilter", "displayName");
   private final @ModelField(targetType="ID", isRequired = true) String id;
   private final @ModelField(targetType="String") String name;
   private final @ModelField(targetType="String") String coverUrl;
@@ -50,14 +49,13 @@ public final class VideoFilter implements Model {
   private final @ModelField(targetType="Int") Integer sort;
   private final @ModelField(targetType="Int") Integer vfxEngineMinVersionCode;
   private final @ModelField(targetType="ID") String categoryID;
-  private final @ModelField(targetType="String") String stagedRollout;
   private final @ModelField(targetType="Int") Integer online;
   private final @ModelField(targetType="Int") Integer getMethod;
   private final @ModelField(targetType="AWSDateTime", isRequired = true) Temporal.DateTime updatedAt;
-  private final @ModelField(targetType="String") String testTag;
   private final @ModelField(targetType="String") String deployFlag;
   private final @ModelField(targetType="String") String maskColor;
   private final @ModelField(targetType="VideoFilterLocale") @HasMany(associatedWith = "materialID", type = VideoFilterLocale.class) List<VideoFilterLocale> VideoFilterLocales = null;
+  private final @ModelField(targetType="String") String displayName;
   public String getId() {
       return id;
   }
@@ -86,10 +84,6 @@ public final class VideoFilter implements Model {
       return categoryID;
   }
   
-  public String getStagedRollout() {
-      return stagedRollout;
-  }
-  
   public Integer getOnline() {
       return online;
   }
@@ -100,10 +94,6 @@ public final class VideoFilter implements Model {
   
   public Temporal.DateTime getUpdatedAt() {
       return updatedAt;
-  }
-  
-  public String getTestTag() {
-      return testTag;
   }
   
   public String getDeployFlag() {
@@ -118,7 +108,11 @@ public final class VideoFilter implements Model {
       return VideoFilterLocales;
   }
   
-  private VideoFilter(String id, String name, String coverUrl, String downloadUrl, Integer sort, Integer vfxEngineMinVersionCode, String categoryID, String stagedRollout, Integer online, Integer getMethod, Temporal.DateTime updatedAt, String testTag, String deployFlag, String maskColor) {
+  public String getDisplayName() {
+      return displayName;
+  }
+  
+  private VideoFilter(String id, String name, String coverUrl, String downloadUrl, Integer sort, Integer vfxEngineMinVersionCode, String categoryID, Integer online, Integer getMethod, Temporal.DateTime updatedAt, String deployFlag, String maskColor, String displayName) {
     this.id = id;
     this.name = name;
     this.coverUrl = coverUrl;
@@ -126,13 +120,12 @@ public final class VideoFilter implements Model {
     this.sort = sort;
     this.vfxEngineMinVersionCode = vfxEngineMinVersionCode;
     this.categoryID = categoryID;
-    this.stagedRollout = stagedRollout;
     this.online = online;
     this.getMethod = getMethod;
     this.updatedAt = updatedAt;
-    this.testTag = testTag;
     this.deployFlag = deployFlag;
     this.maskColor = maskColor;
+    this.displayName = displayName;
   }
   
   @Override
@@ -150,13 +143,12 @@ public final class VideoFilter implements Model {
               ObjectsCompat.equals(getSort(), videoFilter.getSort()) &&
               ObjectsCompat.equals(getVfxEngineMinVersionCode(), videoFilter.getVfxEngineMinVersionCode()) &&
               ObjectsCompat.equals(getCategoryId(), videoFilter.getCategoryId()) &&
-              ObjectsCompat.equals(getStagedRollout(), videoFilter.getStagedRollout()) &&
               ObjectsCompat.equals(getOnline(), videoFilter.getOnline()) &&
               ObjectsCompat.equals(getGetMethod(), videoFilter.getGetMethod()) &&
               ObjectsCompat.equals(getUpdatedAt(), videoFilter.getUpdatedAt()) &&
-              ObjectsCompat.equals(getTestTag(), videoFilter.getTestTag()) &&
               ObjectsCompat.equals(getDeployFlag(), videoFilter.getDeployFlag()) &&
-              ObjectsCompat.equals(getMaskColor(), videoFilter.getMaskColor());
+              ObjectsCompat.equals(getMaskColor(), videoFilter.getMaskColor()) &&
+              ObjectsCompat.equals(getDisplayName(), videoFilter.getDisplayName());
       }
   }
   
@@ -170,13 +162,12 @@ public final class VideoFilter implements Model {
       .append(getSort())
       .append(getVfxEngineMinVersionCode())
       .append(getCategoryId())
-      .append(getStagedRollout())
       .append(getOnline())
       .append(getGetMethod())
       .append(getUpdatedAt())
-      .append(getTestTag())
       .append(getDeployFlag())
       .append(getMaskColor())
+      .append(getDisplayName())
       .toString()
       .hashCode();
   }
@@ -192,13 +183,12 @@ public final class VideoFilter implements Model {
       .append("sort=" + String.valueOf(getSort()) + ", ")
       .append("vfxEngineMinVersionCode=" + String.valueOf(getVfxEngineMinVersionCode()) + ", ")
       .append("categoryID=" + String.valueOf(getCategoryId()) + ", ")
-      .append("stagedRollout=" + String.valueOf(getStagedRollout()) + ", ")
       .append("online=" + String.valueOf(getOnline()) + ", ")
       .append("getMethod=" + String.valueOf(getGetMethod()) + ", ")
       .append("updatedAt=" + String.valueOf(getUpdatedAt()) + ", ")
-      .append("testTag=" + String.valueOf(getTestTag()) + ", ")
       .append("deployFlag=" + String.valueOf(getDeployFlag()) + ", ")
-      .append("maskColor=" + String.valueOf(getMaskColor()))
+      .append("maskColor=" + String.valueOf(getMaskColor()) + ", ")
+      .append("displayName=" + String.valueOf(getDisplayName()))
       .append("}")
       .toString();
   }
@@ -229,7 +219,6 @@ public final class VideoFilter implements Model {
       null,
       null,
       null,
-      null,
       null
     );
   }
@@ -242,13 +231,12 @@ public final class VideoFilter implements Model {
       sort,
       vfxEngineMinVersionCode,
       categoryID,
-      stagedRollout,
       online,
       getMethod,
       updatedAt,
-      testTag,
       deployFlag,
-      maskColor);
+      maskColor,
+      displayName);
   }
   public interface UpdatedAtStep {
     BuildStep updatedAt(Temporal.DateTime updatedAt);
@@ -264,12 +252,11 @@ public final class VideoFilter implements Model {
     BuildStep sort(Integer sort);
     BuildStep vfxEngineMinVersionCode(Integer vfxEngineMinVersionCode);
     BuildStep categoryId(String categoryId);
-    BuildStep stagedRollout(String stagedRollout);
     BuildStep online(Integer online);
     BuildStep getMethod(Integer getMethod);
-    BuildStep testTag(String testTag);
     BuildStep deployFlag(String deployFlag);
     BuildStep maskColor(String maskColor);
+    BuildStep displayName(String displayName);
   }
   
 
@@ -282,12 +269,11 @@ public final class VideoFilter implements Model {
     private Integer sort;
     private Integer vfxEngineMinVersionCode;
     private String categoryID;
-    private String stagedRollout;
     private Integer online;
     private Integer getMethod;
-    private String testTag;
     private String deployFlag;
     private String maskColor;
+    private String displayName;
     @Override
      public VideoFilter build() {
         String id = this.id != null ? this.id : UUID.randomUUID().toString();
@@ -300,13 +286,12 @@ public final class VideoFilter implements Model {
           sort,
           vfxEngineMinVersionCode,
           categoryID,
-          stagedRollout,
           online,
           getMethod,
           updatedAt,
-          testTag,
           deployFlag,
-          maskColor);
+          maskColor,
+          displayName);
     }
     
     @Override
@@ -353,12 +338,6 @@ public final class VideoFilter implements Model {
     }
     
     @Override
-     public BuildStep stagedRollout(String stagedRollout) {
-        this.stagedRollout = stagedRollout;
-        return this;
-    }
-    
-    @Override
      public BuildStep online(Integer online) {
         this.online = online;
         return this;
@@ -367,12 +346,6 @@ public final class VideoFilter implements Model {
     @Override
      public BuildStep getMethod(Integer getMethod) {
         this.getMethod = getMethod;
-        return this;
-    }
-    
-    @Override
-     public BuildStep testTag(String testTag) {
-        this.testTag = testTag;
         return this;
     }
     
@@ -388,6 +361,12 @@ public final class VideoFilter implements Model {
         return this;
     }
     
+    @Override
+     public BuildStep displayName(String displayName) {
+        this.displayName = displayName;
+        return this;
+    }
+    
     /**
      * @param id id
      * @return Current Builder instance, for fluent method chaining
@@ -400,7 +379,7 @@ public final class VideoFilter implements Model {
   
 
   public final class CopyOfBuilder extends Builder {
-    private CopyOfBuilder(String id, String name, String coverUrl, String downloadUrl, Integer sort, Integer vfxEngineMinVersionCode, String categoryId, String stagedRollout, Integer online, Integer getMethod, Temporal.DateTime updatedAt, String testTag, String deployFlag, String maskColor) {
+    private CopyOfBuilder(String id, String name, String coverUrl, String downloadUrl, Integer sort, Integer vfxEngineMinVersionCode, String categoryId, Integer online, Integer getMethod, Temporal.DateTime updatedAt, String deployFlag, String maskColor, String displayName) {
       super.id(id);
       super.updatedAt(updatedAt)
         .name(name)
@@ -409,12 +388,11 @@ public final class VideoFilter implements Model {
         .sort(sort)
         .vfxEngineMinVersionCode(vfxEngineMinVersionCode)
         .categoryId(categoryId)
-        .stagedRollout(stagedRollout)
         .online(online)
         .getMethod(getMethod)
-        .testTag(testTag)
         .deployFlag(deployFlag)
-        .maskColor(maskColor);
+        .maskColor(maskColor)
+        .displayName(displayName);
     }
     
     @Override
@@ -453,11 +431,6 @@ public final class VideoFilter implements Model {
     }
     
     @Override
-     public CopyOfBuilder stagedRollout(String stagedRollout) {
-      return (CopyOfBuilder) super.stagedRollout(stagedRollout);
-    }
-    
-    @Override
      public CopyOfBuilder online(Integer online) {
       return (CopyOfBuilder) super.online(online);
     }
@@ -468,11 +441,6 @@ public final class VideoFilter implements Model {
     }
     
     @Override
-     public CopyOfBuilder testTag(String testTag) {
-      return (CopyOfBuilder) super.testTag(testTag);
-    }
-    
-    @Override
      public CopyOfBuilder deployFlag(String deployFlag) {
       return (CopyOfBuilder) super.deployFlag(deployFlag);
     }
@@ -480,6 +448,11 @@ public final class VideoFilter implements Model {
     @Override
      public CopyOfBuilder maskColor(String maskColor) {
       return (CopyOfBuilder) super.maskColor(maskColor);
+    }
+    
+    @Override
+     public CopyOfBuilder displayName(String displayName) {
+      return (CopyOfBuilder) super.displayName(displayName);
     }
   }
   

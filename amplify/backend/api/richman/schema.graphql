@@ -180,11 +180,10 @@ type ClipAnim @model @key(name: "byClipAnimCategory", fields: ["categoryID"]) @a
   targetVersionCode: Int
   online: Int
   categoryID: ID
-  stagedRollout: String
   updatedAt: AWSDateTime!
-  testTag: String
   getMethod: Int
   ClipAnimLocales: [ClipAnimLocale] @connection(keyName: "byClipAnim", fields: ["id"])
+  displayName: String
 }
 
 type ClipAnimCategory @model @auth(rules: [{allow: public, operations: [read], provider: iam}, {allow: groups, groups: ["Editor"], operations: [read, create, update, delete]}, {allow: private, provider: iam}]) {
@@ -197,6 +196,7 @@ type ClipAnimCategory @model @auth(rules: [{allow: public, operations: [read], p
   updatedAt: AWSDateTime!
   animType: Int
   ClipAnimCategoryLocales: [ClipAnimCategoryLocale] @connection(keyName: "byClipAnimCategory", fields: ["id"])
+  displayName: String
 }
 
 type VideoFilter @model @key(name: "byVideoFilterCategory", fields: ["categoryID"]) @auth(rules: [{allow: public, operations: [read], provider: iam}, {allow: groups, groups: ["Editor"], operations: [read, create, update, delete]}, {allow: private, provider: iam}]) {
@@ -207,14 +207,13 @@ type VideoFilter @model @key(name: "byVideoFilterCategory", fields: ["categoryID
   sort: Int
   vfxEngineMinVersionCode: Int
   categoryID: ID
-  stagedRollout: String
   online: Int
   getMethod: Int
   updatedAt: AWSDateTime!
-  testTag: String
   deployFlag: String
   maskColor: String
   VideoFilterLocales: [VideoFilterLocale] @connection(keyName: "byVideoFilter", fields: ["id"])
+  displayName: String
 }
 
 type VideoFilterCategory @model @auth(rules: [{allow: public, operations: [read], provider: iam}, {allow: groups, groups: ["Editor"], operations: [read, create, update, delete]}, {allow: private, provider: iam}]) {
@@ -225,11 +224,11 @@ type VideoFilterCategory @model @auth(rules: [{allow: public, operations: [read]
   videoFilterSet: [VideoFilter] @connection(keyName: "byVideoFilterCategory", fields: ["id"])
   updatedAt: AWSDateTime!
   online: Int
-  testTag: String
   maskColor: String
   getMethod: Int
   label: String
   VideoFilterCategoryLocales: [VideoFilterCategoryLocale] @connection(keyName: "byVideoFilterCategory", fields: ["id"])
+  displayName: String
 }
 
 type Recommend @model @key(name: "byRecommendCategory", fields: ["recommendCategoryID"]) @auth(rules: [{allow: public, operations: [read], provider: iam}, {allow: private, provider: iam}]) {
@@ -243,7 +242,6 @@ type Recommend @model @key(name: "byRecommendCategory", fields: ["recommendCateg
   country: String
   recommendCategoryID: ID!
   resourceName: String
-  testTag: String
   online: Int
   label: String
   getMethod: Int
@@ -265,6 +263,7 @@ type OverlayMediaCategory @model @auth(rules: [{allow: public, operations: [read
   OverlayMedias: [OverlayMedia] @connection(keyName: "byOverlayMediaCategory", fields: ["id"])
   updatedAt: AWSDateTime
   OverlayMediaCategoryLocales: [OverlayMediaCategoryLocale] @connection(keyName: "byOverlayMediaCategory", fields: ["id"])
+  displayName: String
 }
 
 type OverlayMedia @model @key(name: "byOverlayMediaCategory", fields: ["overlaymediacategoryID"]) @auth(rules: [{allow: public, operations: [read], provider: iam}, {allow: private, provider: iam}]) {
@@ -287,6 +286,7 @@ type TextTemplateCategory @model @auth(rules: [{allow: public, operations: [read
   updatedAt: AWSDateTime
   textTemplates: [TextTemplate] @connection(keyName: "byTextTemplateCategory", fields: ["id"])
   TextTemplateCategoryLocales: [TextTemplateCategoryLocale] @connection(keyName: "byTextTemplateCategory", fields: ["id"])
+  displayName: String
 }
 
 type TextTemplate @model @key(name: "byTextTemplateCategory", fields: ["categoryID"]) @auth(rules: [{allow: public, operations: [read], provider: iam}, {allow: groups, groups: ["Editor"], operations: [read, create, update, delete]}, {allow: private, provider: iam}]) {
@@ -297,14 +297,13 @@ type TextTemplate @model @key(name: "byTextTemplateCategory", fields: ["category
   sort: Int
   targetVersionCode: Int
   online: Int
-  stagedRollout: String
   updatedAt: AWSDateTime
-  testTag: String
   categoryID: ID
   fontName: String
   fontUrl: String
   getMethod: Int
   TextTemplateLocales: [TextTemplateLocale] @connection(keyName: "byTextTemplate", fields: ["id"])
+  displayName: String
 }
 
 type Font2 @model @auth(rules: [{allow: public, operations: [read], provider: iam}, {allow: groups, groups: ["Editor"], operations: [read, create, update, delete]}, {allow: private, provider: iam}]) {
@@ -330,11 +329,10 @@ type TransitionVFX @model @key(name: "byTransitionVFXCategory", fields: ["transi
   vfxEngineMinVersionCode: Int
   online: Int
   transitionVfxCategoryID: ID
-  stagedRollout: String
   updatedAt: AWSDateTime!
-  testTag: String
   getMethod: Int
   TransitionVFXLocales: [TransitionVFXLocale] @connection(keyName: "byTransitionVFX", fields: ["id"])
+  displayName: String
 }
 
 type TransitionVFXCategory @model @auth(rules: [{allow: public, operations: [read], provider: iam}, {allow: groups, groups: ["Editor"], operations: [read, create, update, delete]}, {allow: private, provider: iam}]) {
@@ -347,6 +345,7 @@ type TransitionVFXCategory @model @auth(rules: [{allow: public, operations: [rea
   updatedAt: AWSDateTime!
   getMethod: Int
   TransitionVFXCategoryLocales: [TransitionVFXCategoryLocale] @connection(keyName: "byTransitionVFXCategory", fields: ["id"])
+  displayName: String
 }
 
 type FilterVFX @model @key(name: "byFilterVFXCategory", fields: ["filterVfxCategoryID"]) @auth(rules: [{allow: public, operations: [read], provider: iam}, {allow: private, provider: iam}]) {
@@ -357,10 +356,8 @@ type FilterVFX @model @key(name: "byFilterVFXCategory", fields: ["filterVfxCateg
   sort: Int
   vfxEngineMinVersionCode: Int
   filterVfxCategoryID: ID
-  stagedRollout: String
   online: Int
   updatedAt: AWSDateTime!
-  testTag: String
 }
 
 type FilterVFXCategory @model @auth(rules: [{allow: public, operations: [read], provider: iam}, {allow: private, provider: iam}]) {
@@ -393,9 +390,7 @@ type FontVFX @model @key(name: "byFontVFXCategory", fields: ["fontvfxcategoryID"
   vfxEngineMinVersionCode: Int
   fontvfxcategoryID: ID
   online: Int
-  stagedRollout: String
   updatedAt: AWSDateTime!
-  testTag: String
   getMethod: Int
 }
 
@@ -408,6 +403,7 @@ type VFXCategory @model @auth(rules: [{allow: public, operations: [read], provid
   updatedAt: AWSDateTime!
   online: Int
   VFXCategoryLocales: [VFXCategoryLocale] @connection(keyName: "byVFXCategory", fields: ["id"])
+  displayName: String
 }
 
 type VFX @model @key(name: "byVFXCategory", fields: ["vfxCategoryID"]) @auth(rules: [{allow: public, operations: [read], provider: iam}, {allow: groups, groups: ["Editor"], operations: [read, create, update, delete]}, {allow: private, provider: iam}]) {
@@ -452,7 +448,6 @@ type Audio @model @key(name: "byAudioCategory", fields: ["audioCategoryID"]) @au
   audioCategoryID: ID
   duration: Int
   wave: String
-  stagedRollout: String
   online: Int
   updatedAt: AWSDateTime!
 }
@@ -469,6 +464,7 @@ type TextAnim @model @key(name: "byTextAnimCategory", fields: ["categoryID"]) @a
   updatedAt: AWSDateTime!
   getMethod: Int
   TextAnimLocales: [TextAnimLocale] @connection(keyName: "byTextAnim", fields: ["id"])
+  displayName: String
 }
 
 type TextAnimCategory @model @auth(rules: [{allow: public, operations: [read], provider: iam}, {allow: groups, groups: ["Editor"], operations: [read, create, update, delete]}, {allow: private, provider: iam}]) {
@@ -481,6 +477,7 @@ type TextAnimCategory @model @auth(rules: [{allow: public, operations: [read], p
   updatedAt: AWSDateTime!
   animType: Int
   TextAnimCategoryLocales: [TextAnimCategoryLocale] @connection(keyName: "byTextAnimCategory", fields: ["id"])
+  displayName: String
 }
 
 type TextAnimLocale @model @key(name: "byTextAnim", fields: ["materialID"]) @auth(rules: [{allow: public, operations: [read], provider: iam}, {allow: groups, groups: ["Editor"], operations: [read, create, update, delete]}, {allow: private, provider: iam}]) {

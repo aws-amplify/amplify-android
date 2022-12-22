@@ -35,6 +35,7 @@ public final class TransitionVFXCategory implements Model {
   public static final QueryField ONLINE = field("TransitionVFXCategory", "online");
   public static final QueryField UPDATED_AT = field("TransitionVFXCategory", "updatedAt");
   public static final QueryField GET_METHOD = field("TransitionVFXCategory", "getMethod");
+  public static final QueryField DISPLAY_NAME = field("TransitionVFXCategory", "displayName");
   private final @ModelField(targetType="ID", isRequired = true) String id;
   private final @ModelField(targetType="String") String name;
   private final @ModelField(targetType="String") String coverUrl;
@@ -44,6 +45,7 @@ public final class TransitionVFXCategory implements Model {
   private final @ModelField(targetType="AWSDateTime", isRequired = true) Temporal.DateTime updatedAt;
   private final @ModelField(targetType="Int") Integer getMethod;
   private final @ModelField(targetType="TransitionVFXCategoryLocale") @HasMany(associatedWith = "materialID", type = TransitionVFXCategoryLocale.class) List<TransitionVFXCategoryLocale> TransitionVFXCategoryLocales = null;
+  private final @ModelField(targetType="String") String displayName;
   public String getId() {
       return id;
   }
@@ -80,7 +82,11 @@ public final class TransitionVFXCategory implements Model {
       return TransitionVFXCategoryLocales;
   }
   
-  private TransitionVFXCategory(String id, String name, String coverUrl, Integer sort, Integer online, Temporal.DateTime updatedAt, Integer getMethod) {
+  public String getDisplayName() {
+      return displayName;
+  }
+  
+  private TransitionVFXCategory(String id, String name, String coverUrl, Integer sort, Integer online, Temporal.DateTime updatedAt, Integer getMethod, String displayName) {
     this.id = id;
     this.name = name;
     this.coverUrl = coverUrl;
@@ -88,6 +94,7 @@ public final class TransitionVFXCategory implements Model {
     this.online = online;
     this.updatedAt = updatedAt;
     this.getMethod = getMethod;
+    this.displayName = displayName;
   }
   
   @Override
@@ -104,7 +111,8 @@ public final class TransitionVFXCategory implements Model {
               ObjectsCompat.equals(getSort(), transitionVfxCategory.getSort()) &&
               ObjectsCompat.equals(getOnline(), transitionVfxCategory.getOnline()) &&
               ObjectsCompat.equals(getUpdatedAt(), transitionVfxCategory.getUpdatedAt()) &&
-              ObjectsCompat.equals(getGetMethod(), transitionVfxCategory.getGetMethod());
+              ObjectsCompat.equals(getGetMethod(), transitionVfxCategory.getGetMethod()) &&
+              ObjectsCompat.equals(getDisplayName(), transitionVfxCategory.getDisplayName());
       }
   }
   
@@ -118,6 +126,7 @@ public final class TransitionVFXCategory implements Model {
       .append(getOnline())
       .append(getUpdatedAt())
       .append(getGetMethod())
+      .append(getDisplayName())
       .toString()
       .hashCode();
   }
@@ -132,7 +141,8 @@ public final class TransitionVFXCategory implements Model {
       .append("sort=" + String.valueOf(getSort()) + ", ")
       .append("online=" + String.valueOf(getOnline()) + ", ")
       .append("updatedAt=" + String.valueOf(getUpdatedAt()) + ", ")
-      .append("getMethod=" + String.valueOf(getGetMethod()))
+      .append("getMethod=" + String.valueOf(getGetMethod()) + ", ")
+      .append("displayName=" + String.valueOf(getDisplayName()))
       .append("}")
       .toString();
   }
@@ -157,6 +167,7 @@ public final class TransitionVFXCategory implements Model {
       null,
       null,
       null,
+      null,
       null
     );
   }
@@ -168,7 +179,8 @@ public final class TransitionVFXCategory implements Model {
       sort,
       online,
       updatedAt,
-      getMethod);
+      getMethod,
+      displayName);
   }
   public interface UpdatedAtStep {
     BuildStep updatedAt(Temporal.DateTime updatedAt);
@@ -183,6 +195,7 @@ public final class TransitionVFXCategory implements Model {
     BuildStep sort(Integer sort);
     BuildStep online(Integer online);
     BuildStep getMethod(Integer getMethod);
+    BuildStep displayName(String displayName);
   }
   
 
@@ -194,6 +207,7 @@ public final class TransitionVFXCategory implements Model {
     private Integer sort;
     private Integer online;
     private Integer getMethod;
+    private String displayName;
     @Override
      public TransitionVFXCategory build() {
         String id = this.id != null ? this.id : UUID.randomUUID().toString();
@@ -205,7 +219,8 @@ public final class TransitionVFXCategory implements Model {
           sort,
           online,
           updatedAt,
-          getMethod);
+          getMethod,
+          displayName);
     }
     
     @Override
@@ -245,6 +260,12 @@ public final class TransitionVFXCategory implements Model {
         return this;
     }
     
+    @Override
+     public BuildStep displayName(String displayName) {
+        this.displayName = displayName;
+        return this;
+    }
+    
     /**
      * @param id id
      * @return Current Builder instance, for fluent method chaining
@@ -257,14 +278,15 @@ public final class TransitionVFXCategory implements Model {
   
 
   public final class CopyOfBuilder extends Builder {
-    private CopyOfBuilder(String id, String name, String coverUrl, Integer sort, Integer online, Temporal.DateTime updatedAt, Integer getMethod) {
+    private CopyOfBuilder(String id, String name, String coverUrl, Integer sort, Integer online, Temporal.DateTime updatedAt, Integer getMethod, String displayName) {
       super.id(id);
       super.updatedAt(updatedAt)
         .name(name)
         .coverUrl(coverUrl)
         .sort(sort)
         .online(online)
-        .getMethod(getMethod);
+        .getMethod(getMethod)
+        .displayName(displayName);
     }
     
     @Override
@@ -295,6 +317,11 @@ public final class TransitionVFXCategory implements Model {
     @Override
      public CopyOfBuilder getMethod(Integer getMethod) {
       return (CopyOfBuilder) super.getMethod(getMethod);
+    }
+    
+    @Override
+     public CopyOfBuilder displayName(String displayName) {
+      return (CopyOfBuilder) super.displayName(displayName);
     }
   }
   

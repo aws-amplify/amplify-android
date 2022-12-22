@@ -1,9 +1,10 @@
-package com.atlasv.android.amplify.simpleappsync
+package com.atlasv.android.amplify.simpleappsync.response
 
 import com.amplifyframework.api.aws.GsonGraphQLResponseFactory
 import com.amplifyframework.api.graphql.GraphQLRequest
 import com.amplifyframework.api.graphql.GraphQLResponse
 import com.atlasv.android.amplify.simpleappsync.AmplifySimpleSyncComponent.Companion.LOG
+import com.atlasv.android.amplify.simpleappsync.request.MergeListRequest
 import org.json.JSONObject
 
 /**

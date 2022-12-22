@@ -40,7 +40,6 @@ public final class Audio implements Model {
   public static final QueryField AUDIO_CATEGORY_ID = field("Audio", "audioCategoryID");
   public static final QueryField DURATION = field("Audio", "duration");
   public static final QueryField WAVE = field("Audio", "wave");
-  public static final QueryField STAGED_ROLLOUT = field("Audio", "stagedRollout");
   public static final QueryField ONLINE = field("Audio", "online");
   public static final QueryField UPDATED_AT = field("Audio", "updatedAt");
   private final @ModelField(targetType="ID", isRequired = true) String id;
@@ -55,7 +54,6 @@ public final class Audio implements Model {
   private final @ModelField(targetType="ID") String audioCategoryID;
   private final @ModelField(targetType="Int") Integer duration;
   private final @ModelField(targetType="String") String wave;
-  private final @ModelField(targetType="String") String stagedRollout;
   private final @ModelField(targetType="Int") Integer online;
   private final @ModelField(targetType="AWSDateTime", isRequired = true) Temporal.DateTime updatedAt;
   public String getId() {
@@ -106,10 +104,6 @@ public final class Audio implements Model {
       return wave;
   }
   
-  public String getStagedRollout() {
-      return stagedRollout;
-  }
-  
   public Integer getOnline() {
       return online;
   }
@@ -118,7 +112,7 @@ public final class Audio implements Model {
       return updatedAt;
   }
   
-  private Audio(String id, String name, String coverUrl, String downloadUrl, String author, String genre, String mood, Integer sort, String tag, String audioCategoryID, Integer duration, String wave, String stagedRollout, Integer online, Temporal.DateTime updatedAt) {
+  private Audio(String id, String name, String coverUrl, String downloadUrl, String author, String genre, String mood, Integer sort, String tag, String audioCategoryID, Integer duration, String wave, Integer online, Temporal.DateTime updatedAt) {
     this.id = id;
     this.name = name;
     this.coverUrl = coverUrl;
@@ -131,7 +125,6 @@ public final class Audio implements Model {
     this.audioCategoryID = audioCategoryID;
     this.duration = duration;
     this.wave = wave;
-    this.stagedRollout = stagedRollout;
     this.online = online;
     this.updatedAt = updatedAt;
   }
@@ -156,7 +149,6 @@ public final class Audio implements Model {
               ObjectsCompat.equals(getAudioCategoryId(), audio.getAudioCategoryId()) &&
               ObjectsCompat.equals(getDuration(), audio.getDuration()) &&
               ObjectsCompat.equals(getWave(), audio.getWave()) &&
-              ObjectsCompat.equals(getStagedRollout(), audio.getStagedRollout()) &&
               ObjectsCompat.equals(getOnline(), audio.getOnline()) &&
               ObjectsCompat.equals(getUpdatedAt(), audio.getUpdatedAt());
       }
@@ -177,7 +169,6 @@ public final class Audio implements Model {
       .append(getAudioCategoryId())
       .append(getDuration())
       .append(getWave())
-      .append(getStagedRollout())
       .append(getOnline())
       .append(getUpdatedAt())
       .toString()
@@ -200,7 +191,6 @@ public final class Audio implements Model {
       .append("audioCategoryID=" + String.valueOf(getAudioCategoryId()) + ", ")
       .append("duration=" + String.valueOf(getDuration()) + ", ")
       .append("wave=" + String.valueOf(getWave()) + ", ")
-      .append("stagedRollout=" + String.valueOf(getStagedRollout()) + ", ")
       .append("online=" + String.valueOf(getOnline()) + ", ")
       .append("updatedAt=" + String.valueOf(getUpdatedAt()))
       .append("}")
@@ -234,7 +224,6 @@ public final class Audio implements Model {
       null,
       null,
       null,
-      null,
       null
     );
   }
@@ -252,7 +241,6 @@ public final class Audio implements Model {
       audioCategoryID,
       duration,
       wave,
-      stagedRollout,
       online,
       updatedAt);
   }
@@ -275,7 +263,6 @@ public final class Audio implements Model {
     BuildStep audioCategoryId(String audioCategoryId);
     BuildStep duration(Integer duration);
     BuildStep wave(String wave);
-    BuildStep stagedRollout(String stagedRollout);
     BuildStep online(Integer online);
   }
   
@@ -294,7 +281,6 @@ public final class Audio implements Model {
     private String audioCategoryID;
     private Integer duration;
     private String wave;
-    private String stagedRollout;
     private Integer online;
     @Override
      public Audio build() {
@@ -313,7 +299,6 @@ public final class Audio implements Model {
           audioCategoryID,
           duration,
           wave,
-          stagedRollout,
           online,
           updatedAt);
     }
@@ -392,12 +377,6 @@ public final class Audio implements Model {
     }
     
     @Override
-     public BuildStep stagedRollout(String stagedRollout) {
-        this.stagedRollout = stagedRollout;
-        return this;
-    }
-    
-    @Override
      public BuildStep online(Integer online) {
         this.online = online;
         return this;
@@ -415,7 +394,7 @@ public final class Audio implements Model {
   
 
   public final class CopyOfBuilder extends Builder {
-    private CopyOfBuilder(String id, String name, String coverUrl, String downloadUrl, String author, String genre, String mood, Integer sort, String tag, String audioCategoryId, Integer duration, String wave, String stagedRollout, Integer online, Temporal.DateTime updatedAt) {
+    private CopyOfBuilder(String id, String name, String coverUrl, String downloadUrl, String author, String genre, String mood, Integer sort, String tag, String audioCategoryId, Integer duration, String wave, Integer online, Temporal.DateTime updatedAt) {
       super.id(id);
       super.updatedAt(updatedAt)
         .name(name)
@@ -429,7 +408,6 @@ public final class Audio implements Model {
         .audioCategoryId(audioCategoryId)
         .duration(duration)
         .wave(wave)
-        .stagedRollout(stagedRollout)
         .online(online);
     }
     
@@ -491,11 +469,6 @@ public final class Audio implements Model {
     @Override
      public CopyOfBuilder wave(String wave) {
       return (CopyOfBuilder) super.wave(wave);
-    }
-    
-    @Override
-     public CopyOfBuilder stagedRollout(String stagedRollout) {
-      return (CopyOfBuilder) super.stagedRollout(stagedRollout);
     }
     
     @Override

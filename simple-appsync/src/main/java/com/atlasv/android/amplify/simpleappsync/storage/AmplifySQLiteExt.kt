@@ -1,4 +1,4 @@
-package com.atlasv.android.amplify.simpleappsync
+package com.atlasv.android.amplify.simpleappsync.storage
 
 import com.amplifyframework.core.model.Model
 import com.amplifyframework.core.model.query.predicate.QueryPredicates
