@@ -14,11 +14,8 @@
  */
 
 package com.amplifyframework.testutils;
-
 import androidx.annotation.NonNull;
-
 import com.amplifyframework.core.Consumer;
-
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
