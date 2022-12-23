@@ -70,7 +70,9 @@ class AmplifySimpleSyncComponent(
                 list.maxOfOrNull {
                     it.syncMetadata.lastChangedAt?.secondsSinceEpoch ?: 0L
                 } ?: 0L
-            }?.takeIf { it > lastSync }
+            }?.takeIf { it > lastSync }?.also {
+                LOG.info("newestSyncTime=$it")
+            }
             for (group in responseItemGroups) {
                 if (group.firstOrNull()?.model?.isLocaleMode == true) {
                     continue
