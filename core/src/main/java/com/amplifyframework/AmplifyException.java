@@ -14,11 +14,9 @@
  */
 
 package com.amplifyframework;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
-
 import java.util.Objects;
 
 /**
@@ -119,7 +117,7 @@ public class AmplifyException extends Exception {
     @Override
     public String toString() {
         return getClass().getSimpleName() + "{" +
-                "message=" + getMessage() +
+                "message =" + getMessage() +
                 ", cause=" + getCause() +
                 ", recoverySuggestion=" + getRecoverySuggestion() +
                 '}';
