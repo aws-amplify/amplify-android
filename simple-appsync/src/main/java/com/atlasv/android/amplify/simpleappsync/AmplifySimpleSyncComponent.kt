@@ -24,7 +24,8 @@ class AmplifySimpleSyncComponent(
     private val dataStoreConfiguration: DataStoreConfiguration,
     private val modelProvider: ModelProvider,
     private val schemaRegistry: SchemaRegistry,
-    private val mergeListFactory: MergeRequestFactory = DefaultMergeRequestFactory
+    private val mergeListFactory: MergeRequestFactory = DefaultMergeRequestFactory,
+    private val modelPreSaveAction: (Model) -> Unit = {}
 ) {
 
     val storage by lazy {
@@ -42,7 +43,7 @@ class AmplifySimpleSyncComponent(
     }
 
     val merger by lazy {
-        AmplifyModelMerger(storage)
+        AmplifyModelMerger(storage, modelPreSaveAction)
     }
 
     suspend fun syncFromRemote(
