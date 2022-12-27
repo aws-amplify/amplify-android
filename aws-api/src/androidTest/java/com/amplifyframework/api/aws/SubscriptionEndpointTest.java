@@ -32,6 +32,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -50,6 +51,7 @@ public final class SubscriptionEndpointTest {
     private SubscriptionEndpoint subscriptionEndpoint;
     private String eventId;
     private Set<String> subscriptionIdsForRelease;
+    private HashMap<String, String> additionalHeaders;
 
     /**
      * Create an {@link SubscriptionEndpoint}.
@@ -68,9 +70,11 @@ public final class SubscriptionEndpointTest {
         AWSApiPluginConfiguration pluginConfiguration = AWSApiPluginConfigurationReader.readFrom(configJson);
         ApiConfiguration apiConfiguration = pluginConfiguration.getApi(endpointConfigKey);
         assertNotNull(apiConfiguration);
+        additionalHeaders = new HashMap<>();
+        additionalHeaders.put("test", "This is a test");
 
         final GraphQLResponse.Factory responseFactory = new GsonGraphQLResponseFactory();
-        final SubscriptionAuthorizer authorizer = new SubscriptionAuthorizer(apiConfiguration);
+        final SubscriptionAuthorizer authorizer = new SubscriptionAuthorizer(apiConfiguration, additionalHeaders);
         this.subscriptionEndpoint = new SubscriptionEndpoint(apiConfiguration, responseFactory, authorizer);
 
         this.eventId = RandomString.string();
