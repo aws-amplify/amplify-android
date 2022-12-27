@@ -73,8 +73,8 @@ public final class FileAssert {
         final byte[] expectedDigest;
         final byte[] actualDigest;
         try {
-            expectedDigest = calculateMD5Digest(expectedInputStream);
-            actualDigest = calculateMD5Digest(actualInputStream);
+            expectedDigest = calculateDigest(expectedInputStream);
+            actualDigest = calculateDigest(actualInputStream);
             Assert.assertArrayEquals(expectedDigest, actualDigest);
         } finally {
             expectedInputStream.close();
@@ -83,11 +83,11 @@ public final class FileAssert {
     }
 
     @SuppressWarnings("MagicNumber") // Buffer size
-    private static byte[] calculateMD5Digest(InputStream stream) {
+    private static byte[] calculateDigest(InputStream stream) {
         final byte[] buffer = new byte[2_048];
-        final MessageDigest md5;
+        final MessageDigest digest;
         try {
-            md5 = MessageDigest.getInstance("MD5");
+            digest = MessageDigest.getInstance("SHA-256");
         } catch (NoSuchAlgorithmException noMd5AvailableError) {
             throw new RuntimeException("No MD5 algorithm available to use for hashing.", noMd5AvailableError);
         }
@@ -95,12 +95,12 @@ public final class FileAssert {
         int bytesRead;
         try {
             while ((bytesRead = stream.read(buffer)) != -1) {
-                md5.update(buffer, 0, bytesRead);
+                digest.update(buffer, 0, bytesRead);
             }
         } catch (IOException readError) {
             throw new RuntimeException("Failed to read input stream.", readError);
         }
 
-        return md5.digest();
+        return digest.digest();
     }
 }
