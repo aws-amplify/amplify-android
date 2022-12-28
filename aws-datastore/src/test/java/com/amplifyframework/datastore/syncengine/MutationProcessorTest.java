@@ -61,6 +61,7 @@ import static com.amplifyframework.datastore.syncengine.TestHubEventFilters.isPr
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doAnswer;
@@ -324,6 +325,57 @@ public final class MutationProcessorTest {
         // Start draining the outbox.
         mutationProcessor.startDrainingMutationOutbox();
         accumulator.await();
+    }
+
+    /**
+     * If an error is caused by AppSync response, then the error handler gets invoked.
+     * @throws DataStoreException On failure to save models
+     */
+    @Test
+    public void callsErrorHandlerOnError() throws DataStoreException {
+        CountDownLatch errorHandlerInvocationsLatch = new CountDownLatch(1);
+        when(configurationProvider.getConfiguration()).thenReturn(DataStoreConfiguration.builder()
+                .errorHandler(ignore -> errorHandlerInvocationsLatch.countDown())
+                .build()
+        );
+
+        ModelSchema schema = schemaRegistry.getModelSchemaForModelClass(BlogOwner.class);
+
+        BlogOwner model = BlogOwner.builder()
+            .name("Blogger #1")
+            .build();
+        synchronousStorageAdapter.save(model);
+
+        DataStoreException.GraphQLResponseException error = new DataStoreException.GraphQLResponseException(
+                "Some exception.",
+                Collections.emptyList()
+        );
+
+        AppSyncMocking.create(appSync).mockResponseFailure(model, error);
+
+        // Enqueue a creation in the mutation outbox
+        assertTrue(mutationOutbox
+            .enqueue(PendingMutation.creation(model, schema))
+            .blockingAwait(TIMEOUT_SECONDS, TimeUnit.SECONDS));
+
+        // Start listening for Outbox Mutation Failed event.
+        HubAccumulator accumulator = HubAccumulator.create(
+            HubChannel.DATASTORE,
+            DataStoreChannelEventName.OUTBOX_MUTATION_FAILED,
+            1
+        ).start();
+
+        // Start draining the outbox.
+        mutationProcessor.startDrainingMutationOutbox();
+        accumulator.await();
+
+        try {
+            assertTrue("Error handler wasn't invoked",
+                    errorHandlerInvocationsLatch.await(TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            );
+        } catch (InterruptedException exception) {
+            fail(exception.getMessage());
+        }
     }
 
 
