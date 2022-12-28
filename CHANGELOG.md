@@ -3,6 +3,7 @@
 ### Features
 - feat(Geo): Add Kotlin Geo Facade (#2155)
 - Add a network status listener to restart DataStore after the network comes back online. (#2148)
+- feat(auth): Overriding sign in when the State machine is already in the signing in state (#2187)
 
 ### Miscellaneous
 - chore: Remove deprecated maven plugin (#2137)
@@ -17,6 +18,8 @@
 - chore: Upgrade Gradle, AGP, and KtLint (#2172)
 - Add a buildspec file for nightly tests (#2180)
 - Chore(Auth): Implementation of the custom auth with SRP parity testing use case (#2167)
+- chore: Add PR checker workflow (#2188)
+- fix(auth): Fix for when loading credentials the success/error is fired twice (#2184)
 
 ### Bug fixes
 - fix(core): remove unused dynamic nav dependency (#2132)

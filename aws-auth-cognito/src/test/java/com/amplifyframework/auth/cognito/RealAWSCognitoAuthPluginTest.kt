@@ -18,7 +18,6 @@ package com.amplifyframework.auth.cognito
 import aws.sdk.kotlin.services.cognitoidentityprovider.CognitoIdentityProviderClient
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AnalyticsMetadataType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AttributeType
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChangePasswordRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChangePasswordResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.CodeDeliveryDetailsType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.CognitoIdentityProviderException
@@ -44,7 +43,6 @@ import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidUserPoolConfigurationException
-import com.amplifyframework.auth.cognito.exceptions.invalidstate.SignedInException
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.auth.cognito.helpers.SRPHelper
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthResendUserAttributeConfirmationCodeOptions
@@ -223,6 +221,7 @@ class RealAWSCognitoAuthPluginTest {
         val expectedAuthError = InvalidUserPoolConfigurationException()
         currentState = AuthenticationState.NotConfigured()
 
+        coEvery { authConfiguration.authFlowType } returns AuthFlowType.USER_SRP_AUTH
         // WHEN
         plugin.signIn("user", "password", AuthSignInOptions.defaults(), onSuccess, onError)
 
@@ -236,7 +235,7 @@ class RealAWSCognitoAuthPluginTest {
         // GIVEN
         val onSuccess = mockk<Consumer<AuthSignInResult>>()
         val onError = mockk<Consumer<AuthException>>(relaxed = true)
-        val expectedAuthError = SignedInException()
+        coEvery { authConfiguration.authFlowType } returns AuthFlowType.USER_SRP_AUTH
         currentState = AuthenticationState.SignedIn(
             SignedInData(
                 "userId",
@@ -253,7 +252,7 @@ class RealAWSCognitoAuthPluginTest {
 
         // THEN
         verify(exactly = 0) { onSuccess.accept(any()) }
-        verify { onError.accept(expectedAuthError) }
+        verify { onError.accept(any()) }
     }
 
     @Test
@@ -290,7 +289,7 @@ class RealAWSCognitoAuthPluginTest {
         }
 
         coEvery {
-            authService.cognitoIdentityProviderClient?.changePassword(any<ChangePasswordRequest>())
+            authService.cognitoIdentityProviderClient?.changePassword(any())
         } returns ChangePasswordResponse.invoke { }
 
         // WHEN
