@@ -15,10 +15,9 @@
 
 package com.amplifyframework.datastore;
 
-import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
 import android.content.Context;
-
 import androidx.annotation.RawRes;
+import androidx.test.core.app.ApplicationProvider;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiCategory;
@@ -38,21 +37,23 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Tests running DataStore.stop() and then calling DataStore.start() from within the stop() callback.
- * This is the recommended method for resetting sync expressions in the Amplify documentation but
- * previously it did not work due to a lock contention issue, so this test is added to confirm the
- * fix.
+ * This is the recommended method for resetting sync expressions in the Amplify documentation.
  */
 public final class StartStopInstrumentationTest {
     private static final int TIMEOUT_SECONDS = 60;
     private static SynchronousDataStore dataStore;
     private static DataStoreCategory dataStoreCategory;
 
+    /**
+     * Set up Datastore plugin for testing.
+     * @throws AmplifyException On failure to read config, setup API or DataStore categories
+     */
     @BeforeClass
     public static void setup() throws AmplifyException {
         Amplify.addPlugin(new AndroidLoggingPlugin(LogLevel.VERBOSE));
 
         StrictMode.enable();
-        Context context = getApplicationContext();
+        Context context = ApplicationProvider.getApplicationContext();
         @RawRes int configResourceId = Resources.getRawResourceId(context, "amplifyconfigurationupdated");
 
         ApiCategory apiCategory = new ApiCategory();
@@ -68,8 +69,11 @@ public final class StartStopInstrumentationTest {
         dataStore = SynchronousDataStore.delegatingTo(dataStoreCategory);
     }
 
+    /**
+     * Clear DataStore after testing to prevent conflict with any other test.
+     */
     @AfterClass
-    public static void teardown() throws DataStoreException {
+    public static void teardown() {
         if (dataStore != null) {
             try {
                 dataStore.clear();
@@ -79,20 +83,26 @@ public final class StartStopInstrumentationTest {
         }
     }
 
+    /**
+     * Tests running DataStore.stop() and then calling DataStore.start() from within the stop() callback.
+     * This is the recommended method for resetting sync expressions in the Amplify documentation.
+     * @throws InterruptedException when interruption occurs during await().
+     */
     @Test
     public void testStartStop() throws InterruptedException {
         CountDownLatch latch = new CountDownLatch(2);
         dataStoreCategory.stop(() -> {
-            latch.countDown();
-            dataStoreCategory.start(
+                latch.countDown();
+                dataStoreCategory.start(
                     latch::countDown,
                     (error) -> {
                         throw new RuntimeException(error);
                     }
-            );
-        }, (error) -> {
-            throw new RuntimeException(error);
-        });
+                );
+            }, (error) -> {
+                throw new RuntimeException(error);
+            }
+        );
         latch.await(10, TimeUnit.SECONDS);
     }
 }
