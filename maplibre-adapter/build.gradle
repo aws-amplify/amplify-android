@@ -45,11 +45,7 @@ dependencies {
     implementation dependency.kotlin.coroutines
 
     //noinspection GradleDependency
-    implementation "androidx.lifecycle:lifecycle-runtime-ktx:$lifecycleVersion"
-    //noinspection GradleDependency
-    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycleVersion"
-    //noinspection GradleDependency
-    implementation "androidx.lifecycle:lifecycle-livedata-ktx:$lifecycleVersion"
+    implementation "androidx.lifecycle:lifecycle-runtime:$lifecycleVersion"
     //noinspection GradleDependency
     implementation "com.google.android.material:material:1.4.0"
 
