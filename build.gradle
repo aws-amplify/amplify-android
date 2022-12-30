@@ -87,9 +87,7 @@ ext {
             security: 'androidx.security:security-crypto:1.0.0',
             nav: [
                 fragment: "androidx.navigation:navigation-fragment:$navigationVersion",
-                fragmentktx: "androidx.navigation:navigation-fragment-ktx:$navigationVersion",
                 ui: "androidx.navigation:navigation-ui:$navigationVersion",
-                uiktx: "androidx.navigation:navigation-ui-ktx:$navigationVersion"
             ],
             multidex: 'androidx.multidex:multidex:2.0.1',
             test: [
