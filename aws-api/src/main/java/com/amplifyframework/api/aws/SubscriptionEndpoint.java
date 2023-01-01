@@ -157,8 +157,6 @@ final class SubscriptionEndpoint {
                 .put("authorization", authorizer.createHeadersForSubscription(request, authType))))
                 .toString();
 
-            LOG.verbose(String.format("Outgoing WebSocket message: %s", jsonMessage));
-
             webSocket.send(jsonMessage);
         } catch (JSONException | ApiException exception) {
             // If the subscriptionId was still pending, then we can call the onSubscriptionError
@@ -273,8 +271,6 @@ final class SubscriptionEndpoint {
                     .put("type", "stop")
                     .put("id", subscriptionId)
                     .toString();
-
-                LOG.verbose(String.format("Outgoing WebSocket message: %s", jsonMessage));
 
                 webSocket.send(jsonMessage);
             } catch (JSONException jsonException) {
@@ -568,8 +564,6 @@ final class SubscriptionEndpoint {
                     .put("type", "connection_init")
                     .toString();
 
-                LOG.verbose(String.format("Outgoing WebSocket message: %s", jsonMessage));
-
                 webSocket.send(jsonMessage);
             } catch (JSONException jsonException) {
                 notifyError(jsonException);
@@ -581,8 +575,6 @@ final class SubscriptionEndpoint {
                 final JSONObject jsonMessage = new JSONObject(message);
                 final SubscriptionMessageType subscriptionMessageType =
                     SubscriptionMessageType.from(jsonMessage.getString("type"));
-
-                LOG.verbose(String.format("Incoming WebSocket message: %s", jsonMessage));
 
                 switch (subscriptionMessageType) {
                     case CONNECTION_ACK:

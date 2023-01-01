@@ -130,7 +130,7 @@ public class RetryHandler {
 
 
     /**
-     * Method returns jittered delay time in milliseconds.
+     * Method returns a jittered 2^numAttempt delay time in milliseconds.
      *
      * @param numAttempt Attempt number.
      * @return delay in milliseconds.
