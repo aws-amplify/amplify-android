@@ -18,6 +18,8 @@ apply from: rootProject.file("configuration/checkstyle.gradle")
 apply from: rootProject.file("configuration/publishing.gradle")
 apply plugin: 'kotlin-android'
 
+group = POM_GROUP
+
 dependencies {
     implementation project(path: ':core')
     implementation project(path: ':aws-auth-cognito')
@@ -46,4 +48,3 @@ dependencies {
     androidTestImplementation dependency.androidx.test.workmanager
     androidTestImplementation project(path: ':aws-storage-s3')
 }
-
