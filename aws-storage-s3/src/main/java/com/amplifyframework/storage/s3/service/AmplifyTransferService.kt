@@ -186,8 +186,6 @@ internal class AmplifyTransferService : Service() {
                 }
             }
 
-
-
             // A new call to bind will restart counter, removing potential to unbind service too early
             boundService?.startUnbindCheck()
         }
