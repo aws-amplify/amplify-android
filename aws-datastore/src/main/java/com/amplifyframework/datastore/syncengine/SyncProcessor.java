@@ -75,6 +75,12 @@ final class SyncProcessor {
     private final QueryPredicateProvider queryPredicateProvider;
     private final RetryHandler requestRetry;
 
+    /**
+     * The `isSyncRetryEnabled` value is being passed down all the way from the `AWSDataStorePlugin` or the
+     * `DataStoreConfiguration` where it's named `doSyncRetry`
+     */
+    private final boolean isSyncRetryEnabled;
+
     private SyncProcessor(Builder builder) {
         this.modelProvider = builder.modelProvider;
         this.schemaRegistry = builder.schemaRegistry;
@@ -84,6 +90,11 @@ final class SyncProcessor {
         this.dataStoreConfigurationProvider = builder.dataStoreConfigurationProvider;
         this.queryPredicateProvider = builder.queryPredicateProvider;
         this.requestRetry = builder.requestRetry;
+        this.isSyncRetryEnabled = builder.isSyncRetryEnabled;
+
+        if (!this.isSyncRetryEnabled) {
+            LOG.warn("Disabling sync retries will be deprecated in a future version.");
+        }
     }
 
     /**
@@ -226,7 +237,13 @@ final class SyncProcessor {
                 BehaviorProcessor.createDefault(
                         appSync.buildSyncRequest(schema, lastSyncTimeAsLong, syncPageSize, predicate));
 
-        return processor.concatMap(request -> syncPage(request).toFlowable())
+        return processor.concatMap(request -> {
+            if (isSyncRetryEnabled) {
+                return syncPageWithRetry(request).toFlowable();
+            } else {
+                return syncPage(request).toFlowable();
+            }
+        })
                 .doOnNext(paginatedResult -> {
                     if (paginatedResult.hasNextResult()) {
                         processor.onNext(paginatedResult.getRequestForNextResult());
@@ -271,13 +288,7 @@ final class SyncProcessor {
     private <T extends Model> Single<PaginatedResult<ModelWithMetadata<T>>> syncPage(
             GraphQLRequest<PaginatedResult<ModelWithMetadata<T>>> request) {
 
-        // We don't want to treat DataStoreException.GraphQLResponseException as non retryable here because we want to
-        // support merging the applicable data if any.
-        List<Class<? extends Throwable>> nonRetryableExceptions = new ArrayList<>();
-        nonRetryableExceptions.add(DataStoreException.IrRecoverableException.class);
-        nonRetryableExceptions.add(ApiException.NonRetryableException.class);
-
-        return requestRetry.retry(Single.create(emitter -> {
+        return Single.create(emitter -> {
             Cancelable cancelable = appSync.sync(request, result -> {
                 if (result.hasErrors()) {
                     emitter.onError(new DataStoreException.IrRecoverableException(
@@ -293,7 +304,17 @@ final class SyncProcessor {
                 }
             }, emitter::onError);
             emitter.setDisposable(AmplifyDisposables.fromCancelable(cancelable));
-        }), nonRetryableExceptions);
+        });
+    }
+
+    private <T extends Model> Single<PaginatedResult<ModelWithMetadata<T>>> syncPageWithRetry(
+            GraphQLRequest<PaginatedResult<ModelWithMetadata<T>>> request) {
+        // We don't want to treat DataStoreException.GraphQLResponseException as non retryable here because we want to
+        // support merging the applicable data if any.
+        List<Class<? extends Throwable>> skipException = new ArrayList<>();
+        skipException.add(DataStoreException.IrRecoverableException.class);
+        skipException.add(ApiException.NonRetryableException.class);
+        return requestRetry.retry(syncPage(request), skipException);
     }
 
     /**
@@ -301,7 +322,7 @@ final class SyncProcessor {
      */
     public static final class Builder implements ModelProviderStep, SchemaRegistryStep,
             SyncTimeRegistryStep, AppSyncStep, MergerStep, DataStoreConfigurationProviderStep,
-            QueryPredicateProviderStep, RetryHandlerStep, BuildStep {
+            QueryPredicateProviderStep, RetryHandlerStep, SyncRetryStep, BuildStep {
         private ModelProvider modelProvider;
         private SchemaRegistry schemaRegistry;
         private SyncTimeRegistry syncTimeRegistry;
@@ -310,6 +331,7 @@ final class SyncProcessor {
         private DataStoreConfigurationProvider dataStoreConfigurationProvider;
         private QueryPredicateProvider queryPredicateProvider;
         private RetryHandler requestRetry;
+        private boolean isSyncRetryEnabled;
 
         @NonNull
         @Override
@@ -363,13 +385,20 @@ final class SyncProcessor {
 
         @NonNull
         @Override
+        public BuildStep isSyncRetryEnabled(boolean isSyncRetryEnabled) {
+            this.isSyncRetryEnabled = isSyncRetryEnabled;
+            return Builder.this;
+        }
+
+        @NonNull
+        @Override
         public SyncProcessor build() {
             return new SyncProcessor(this);
         }
 
         @NonNull
         @Override
-        public BuildStep retryHandler(RetryHandler requestRetry) {
+        public SyncRetryStep retryHandler(RetryHandler requestRetry) {
             this.requestRetry = requestRetry;
             return Builder.this;
         }
@@ -413,7 +442,12 @@ final class SyncProcessor {
 
     interface RetryHandlerStep {
         @NonNull
-        BuildStep retryHandler(RetryHandler requestRetry);
+        SyncRetryStep retryHandler(RetryHandler requestRetry);
+    }
+
+    interface SyncRetryStep {
+        @NonNull
+        BuildStep isSyncRetryEnabled(boolean isSyncRetryEnabled);
     }
 
     interface BuildStep {

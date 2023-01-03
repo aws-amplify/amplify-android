@@ -80,6 +80,7 @@ public final class Orchestrator {
      *        The reference to the variable returned by the provider only get set after the plugin's
      *        {@link AWSDataStorePlugin#configure(JSONObject, Context)} is invoked by Amplify.
      * @param targetState The desired state of operation - online, or offline
+     * @param isSyncRetryEnabled enable or disable the SyncProcessor retry
      */
     public Orchestrator(
             @NonNull final ModelProvider modelProvider,
@@ -87,7 +88,8 @@ public final class Orchestrator {
             @NonNull final LocalStorageAdapter localStorageAdapter,
             @NonNull final AppSync appSync,
             @NonNull final DataStoreConfigurationProvider dataStoreConfigurationProvider,
-            @NonNull final Supplier<State> targetState) {
+            @NonNull final Supplier<State> targetState,
+            final boolean isSyncRetryEnabled) {
         Objects.requireNonNull(schemaRegistry);
         Objects.requireNonNull(modelProvider);
         Objects.requireNonNull(appSync);
@@ -117,6 +119,7 @@ public final class Orchestrator {
             .dataStoreConfigurationProvider(dataStoreConfigurationProvider)
             .queryPredicateProvider(queryPredicateProvider)
             .retryHandler(new RetryHandler())
+                .isSyncRetryEnabled(isSyncRetryEnabled)
             .build();
         this.subscriptionProcessor = SubscriptionProcessor.builder()
                 .appSync(appSync)

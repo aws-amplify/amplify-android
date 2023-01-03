@@ -110,7 +110,8 @@ public final class OrchestratorTest {
                 localStorageAdapter,
                 appSync,
                 DataStoreConfiguration::defaults,
-                () -> Orchestrator.State.SYNC_VIA_API
+                () -> Orchestrator.State.SYNC_VIA_API,
+                    true
             );
     }
 
