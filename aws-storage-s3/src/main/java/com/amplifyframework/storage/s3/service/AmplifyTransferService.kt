@@ -180,11 +180,13 @@ internal class AmplifyTransferService : Service() {
                         boundService = null
                     }
                 }
+
+                boundServiceConnection?.let {
+                    context.bindService(Intent(context, AmplifyTransferService::class.java), it, Context.BIND_AUTO_CREATE)
+                }
             }
 
-            boundServiceConnection?.let {
-                context.bindService(Intent(context, AmplifyTransferService::class.java), it, Context.BIND_AUTO_CREATE)
-            }
+
 
             // A new call to bind will restart counter, removing potential to unbind service too early
             boundService?.startUnbindCheck()
