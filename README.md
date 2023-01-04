@@ -1,4 +1,4 @@
-## Amplify for Android (Developer Preview)
+## Amplify for Android
 <img src="https://s3.amazonaws.com/aws-mobile-hub-images/aws-amplify-logo.png" alt="AWS Amplify" width="550">
  
 [![DiscordChat](https://img.shields.io/discord/308323056592486420?logo=discord)](https://discord.gg/jWVbPfC)
