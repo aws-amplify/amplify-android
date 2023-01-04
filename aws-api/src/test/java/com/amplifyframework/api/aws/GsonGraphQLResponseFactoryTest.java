@@ -115,6 +115,26 @@ public final class GsonGraphQLResponseFactoryTest {
     }
 
     /**
+     * Validates that an empty response throws an
+     * ApiException instead of returning a null reference.
+     * @throws ApiException From API configuration
+     */
+    @Test
+    public void emptyResponseThrowsApiException() throws ApiException {
+        // Arrange some empty string from a "server"
+        final String emptyResponse = "";
+
+        // Act! Parse it into a model.
+        Type responseType = TypeMaker.getParameterizedType(PaginatedResult.class, Todo.class);
+        GraphQLRequest<PaginatedResult<Todo>> request = buildDummyRequest(responseType);
+
+        // Assert that the appropriate exception is thrown
+        assertThrows(ApiException.class, () -> {
+            responseFactory.buildResponse(request, emptyResponse);
+        });
+    }
+
+    /**
      * Validates that the converter is able to parse a partial GraphQL
      * response into a result. In this case, the result contains some
      * data, but also a list of errors.

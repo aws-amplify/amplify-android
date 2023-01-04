@@ -38,19 +38,19 @@ import java.util.concurrent.TimeUnit;
  * Configuration options for {@link AWSDataStorePlugin}.
  */
 public final class DataStoreConfiguration {
-    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
-
     static final String PLUGIN_CONFIG_KEY = "awsDataStorePlugin";
     @VisibleForTesting
     static final long DEFAULT_SYNC_INTERVAL_MINUTES = TimeUnit.DAYS.toMinutes(1);
     @VisibleForTesting
     static final int DEFAULT_SYNC_MAX_RECORDS = 10_000;
-    @VisibleForTesting 
+    @VisibleForTesting
     static final int DEFAULT_SYNC_PAGE_SIZE = 1_000;
     @VisibleForTesting
     static final boolean DEFAULT_DO_SYNC_RETRY = false;
     static final int MAX_RECORDS = 1000;
     static final long MAX_TIME_SEC = 2;
+
+    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
 
     private final DataStoreErrorHandler errorHandler;
     private final DataStoreConflictHandler conflictHandler;
@@ -403,6 +403,8 @@ public final class DataStoreConfiguration {
 
         /**
          * Sets the retry enabled on datastore sync.
+         *
+         * @deprecated This configuration will be deprecated in a future version.
          * @param doSyncRetry Is retry enabled on datastore sync
          * @return Current builder instance
          */

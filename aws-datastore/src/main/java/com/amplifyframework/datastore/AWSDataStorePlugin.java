@@ -774,6 +774,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
 
         /**
          * Enables Retry on DataStore sync engine.
+         * @deprecated This configuration will be deprecated in a future version.
          * @param isSyncRetryEnabled is sync retry enabled.
          * @return An implementation of the {@link ModelProvider} interface.
          */

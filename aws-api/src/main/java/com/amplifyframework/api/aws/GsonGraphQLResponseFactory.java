@@ -22,6 +22,7 @@ import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.PaginatedResult;
+import com.amplifyframework.util.Empty;
 import com.amplifyframework.util.GsonFactory;
 import com.amplifyframework.util.TypeMaker;
 
@@ -56,6 +57,18 @@ final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
     @Override
     public <T> GraphQLResponse<T> buildResponse(GraphQLRequest<T> request, String responseJson)
             throws ApiException {
+
+        // On empty strings, Gson returns null instead of throwing JsonSyntaxException. See:
+        // https://github.com/google/gson/issues/457
+        // https://github.com/google/gson/issues/1697
+        if (Empty.check(responseJson)) {
+            throw new ApiException(
+                "Amplify encountered an error while deserializing an object.",
+                new JsonParseException("Empty response."),
+                AmplifyException.TODO_RECOVERY_SUGGESTION
+            );
+        }
+
         Type responseType = TypeMaker.getParameterizedType(GraphQLResponse.class, request.getResponseType());
         try {
             Gson responseGson = gson.newBuilder()

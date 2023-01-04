@@ -77,7 +77,7 @@ final class SyncProcessor {
 
     /**
      * The `isSyncRetryEnabled` value is being passed down all the way from the `AWSDataStorePlugin` or the
-     * `DataStoreConfiguration` where it's named `doSyncRetry`
+     * `DataStoreConfiguration` where it's named `doSyncRetry`.
      */
     private final boolean isSyncRetryEnabled;
 
