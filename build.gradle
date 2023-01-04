@@ -173,6 +173,12 @@ private void configureAndroidLibrary(Project project) {
                 unitTests {
                     includeAndroidResources = true
                 }
+                unitTests.all {
+                    jacoco {
+                        includeNoLocationClasses = true
+                        excludes = ['jdk.internal.*']
+                    }
+                }
             }
         }
 
