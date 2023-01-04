@@ -1,6 +1,6 @@
 ## [Release 1.37.11](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.37.11)
 
-### Features
+### Bug Fixes
 - **datastore:** Fix lock contention issue when running DataStore.start() from the callback of DataStore.stop() (#2209)
 
 ### Miscellaneous
