@@ -17,6 +17,8 @@
 apply plugin: 'signing'
 apply plugin: 'maven-publish'
 
+version = project.ext.VERSION_NAME
+
 def isReleaseBuild() {
     return VERSION_NAME.contains("SNAPSHOT") == false
 }
@@ -131,4 +133,3 @@ afterEvaluate { project ->
         }
     }
 }
-

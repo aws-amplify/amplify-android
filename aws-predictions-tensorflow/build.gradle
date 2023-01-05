@@ -17,6 +17,8 @@ apply plugin: 'com.android.library'
 apply from: rootProject.file("configuration/checkstyle.gradle")
 apply from: rootProject.file("configuration/publishing.gradle")
 
+group = POM_GROUP
+
 dependencies {
     implementation project(':core')
     implementation dependency.androidx.appcompat
@@ -26,4 +28,3 @@ dependencies {
     testImplementation dependency.junit
     testImplementation dependency.mockito
 }
-

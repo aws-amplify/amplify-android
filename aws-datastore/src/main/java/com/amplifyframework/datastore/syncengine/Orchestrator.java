@@ -183,11 +183,14 @@ public final class Orchestrator {
         }
         LOG.info("Orchestrator lock acquired.");
         return Completable.fromAction(action)
-            .doFinally(() -> {
-                startStopSemaphore.release();
-                LOG.info("Orchestrator lock released.");
-            }
-        );
+            .andThen(
+                Completable.fromAction(
+                    () -> {
+                        startStopSemaphore.release();
+                        LOG.info("Orchestrator lock released.");
+                    }
+                )
+            );
     }
 
     private void unknownState(State state) throws DataStoreException {
