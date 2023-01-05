@@ -1,3 +1,13 @@
+## [Release 0.21.11](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.21.11)
+
+### Bug Fixes
+- **datastore:** Fix lock contention issue when running DataStore.start() from the callback of DataStore.stop() (#2209)
+
+### Miscellaneous
+- Increase Geo timeout so that it runs more consistently (#2181)
+
+[See all changes between 0.21.10 and 0.21.11](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.21.10...release-kotlin_v0.21.11)
+
 ## [Release 0.21.10](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.21.10)
 
 ### Bug Fixes

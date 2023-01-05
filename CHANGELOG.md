@@ -1,3 +1,13 @@
+## [Release 1.37.11](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.37.11)
+
+### Bug Fixes
+- **datastore:** Fix lock contention issue when running DataStore.start() from the callback of DataStore.stop() (#2209)
+
+### Miscellaneous
+- Increase Geo timeout so that it runs more consistently (#2181)
+
+[See all changes between 1.37.10 and 1.37.11](https://github.com/aws-amplify/amplify-android/compare/release_v1.37.10...release_v1.37.11)
+
 ## [Release 1.37.10](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.37.10)
 
 ### Bug Fixes
