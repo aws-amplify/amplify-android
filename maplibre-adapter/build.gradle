@@ -59,6 +59,7 @@ dependencies {
     androidTestImplementation dependency.androidx.test.core
     androidTestImplementation dependency.androidx.test.core_ktx
     androidTestImplementation dependency.androidx.test.runner
+    androidTestImplementation dependency.kotlin.coroutines_android
 }
 
 afterEvaluate {
