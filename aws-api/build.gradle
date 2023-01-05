@@ -18,6 +18,8 @@ apply plugin: 'kotlin-android'
 apply from: rootProject.file("configuration/checkstyle.gradle")
 apply from: rootProject.file("configuration/publishing.gradle")
 
+group = POM_GROUP
+
 dependencies {
     api project(':core')
     implementation project(':aws-api-appsync')
@@ -45,4 +47,3 @@ dependencies {
     androidTestImplementation dependency.androidx.test.junit
     androidTestImplementation dependency.rxjava
 }
-
