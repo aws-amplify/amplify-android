@@ -182,7 +182,11 @@ internal class AmplifyTransferService : Service() {
                 }
 
                 boundServiceConnection?.let {
-                    context.bindService(Intent(context, AmplifyTransferService::class.java), it, Context.BIND_AUTO_CREATE)
+                    context.bindService(
+                        Intent(context, AmplifyTransferService::class.java),
+                        it,
+                        Context.BIND_AUTO_CREATE
+                    )
                 }
             }
 
