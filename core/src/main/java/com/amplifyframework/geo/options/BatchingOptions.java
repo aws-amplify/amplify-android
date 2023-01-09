@@ -42,10 +42,10 @@ public class BatchingOptions {
      * the batch; or 2) cumulative distance between each location in the batch.
      * Which option to choose is up for discussion.
      */
-    private OptionalInt distanceTravelled = OptionalInt.empty();
+    private OptionalInt metersTravelled = OptionalInt.empty();
 
-    public OptionalInt getDistanceTravelled() {
-        return distanceTravelled;
+    public OptionalInt getMetersTravelled() {
+        return metersTravelled;
     }
 
     private double distance(GeoPosition a, GeoPosition b) {
@@ -55,13 +55,13 @@ public class BatchingOptions {
     }
 
     // would this position exceed the batch?
-    public boolean thresholdReached(GeoPosition first, GeoPosition last) {
-        if (secondsElapsed.isPresent() &&
-                secondsElapsed.getAsInt() < last.timeStamp.getTime() - first.timeStamp.getTime()) {
+    public boolean thresholdReached(GeoPosition curr, GeoPosition first) {
+        long timeDiff = (curr.timeStamp.getTime() - first.timeStamp.getTime()) / 1000;
+        if (secondsElapsed.isPresent() && secondsElapsed.getAsInt() < timeDiff) {
             return true;
         }
-        return distanceTravelled.isPresent() &&
-                distanceTravelled.getAsInt() < distance(first, last);
+        return metersTravelled.isPresent() &&
+                metersTravelled.getAsInt() < distance(curr, first);
     }
 
     private BatchingOptions() {}
@@ -70,8 +70,8 @@ public class BatchingOptions {
         this.secondsElapsed = OptionalInt.of(secondsElapsed);
     }
 
-    private void setDistanceTravelled(int distanceTravelled) {
-        this.distanceTravelled = OptionalInt.of(distanceTravelled);
+    private void setMetersTravelled(int metersTravelled) {
+        this.metersTravelled = OptionalInt.of(metersTravelled);
     }
 
     public static BatchingOptions none() {
@@ -84,9 +84,9 @@ public class BatchingOptions {
         return options;
     }
 
-    public static BatchingOptions distanceTravelled(int distanceTravelled) {
+    public static BatchingOptions metersTravelled(int metersTravelled) {
         BatchingOptions options = new BatchingOptions();
-        options.setDistanceTravelled(distanceTravelled);
+        options.setMetersTravelled(metersTravelled);
         return options;
     }
 }

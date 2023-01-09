@@ -34,6 +34,7 @@ import com.amplifyframework.geo.options.GeoTrackingSessionOptions
 import com.amplifyframework.geo.options.GeoUpdateLocationOptions
 import com.amplifyframework.hub.HubChannel
 import com.amplifyframework.hub.HubEvent
+import kotlinx.coroutines.runBlocking
 import java.util.Date
 
 class UploadWorker(appContext: Context, workerParams: WorkerParameters) : CoroutineWorker(appContext, workerParams) {
@@ -41,7 +42,6 @@ class UploadWorker(appContext: Context, workerParams: WorkerParameters) : Corout
      * A suspending method to upload device tracking events to Amazon Location Service
      */
     override suspend fun doWork(): Result {
-        // TODO: workmanager for force-closed apps https://developer.squareup.com/blog/workmanager-for-background-work-in-libraries/
         if (locationDao == null) {
             return Result.failure()
         }
@@ -52,34 +52,39 @@ class UploadWorker(appContext: Context, workerParams: WorkerParameters) : Corout
 
         val positions: MutableList<GeoPosition> = mutableListOf()
         val toRemove: MutableList<LocationEntity> = mutableListOf()
-        run batch@{
-            var firstPosition: GeoPosition? = null
-            val locations = locationDao!!.getAll()
-            locations.forEach {
-                val position = GeoPosition()
-                position.location = GeoLocation(it.latitude, it.longitude)
-                position.timeStamp = Date(it.datetime.epochSecond)
-                position.tracker = it.tracker
-                position.deviceID = it.deviceId
-                if (firstPosition == null) {
-                    firstPosition = position
-                } else {
-                    if (options.batchingOptions.thresholdReached(position, firstPosition)) {
-                        return@batch
+
+        val submitEvents = suspend {
+            if (options.proxyDelegate == null) {
+                try {
+                    geoService!!.updateLocations(
+                        deviceId,
+                        positions,
+                        GeoUpdateLocationOptions.builder().withTracker(options.tracker).build()
+                    )
+
+                    Amplify.Hub.publish(
+                        HubChannel.GEO,
+                        HubEvent.create(GeoChannelEventName.FLUSH_TRACKING_EVENTS, positions)
+                    )
+
+                    locationDao!!.removeAll(toRemove)
+                } catch (e: GeoException) {
+                    // GeoException is thrown on internet connection issue
+                    // don't remove anything, this is retryable
+                } catch (e: ClientException) {
+                    // ClientException is thrown on issue from the Amazon Location Services client
+                    if (!e.sdkErrorMetadata.isRetryable) {
+                        // can't retry the events, they can't be submitted
+                        runBlocking {
+                            locationDao!!.removeAll(toRemove)
+                        }
+                    } else {
+                        // else block required for Kotlin syntax purposes
+                        // request is retryable, don't remove
                     }
                 }
-                positions.add(position)
-                toRemove.add(it)
-            }
-        }
-
-        if (options.proxyDelegate == null) {
-            try {
-                geoService!!.updateLocations(
-                    deviceId,
-                    positions,
-                    GeoUpdateLocationOptions.builder().withTracker(options.tracker).build()
-                )
+            } else {
+                options.proxyDelegate.updatePositions(positions)
 
                 Amplify.Hub.publish(
                     HubChannel.GEO,
@@ -87,19 +92,31 @@ class UploadWorker(appContext: Context, workerParams: WorkerParameters) : Corout
                 )
 
                 locationDao!!.removeAll(toRemove)
-            } catch (e: GeoException) {
-                // GeoException is thrown on internet connection issue
-                // don't remove anything, this is retryable
-            } catch (e: ClientException) {
-                // ClientException is thrown on issue from the Amazon Location Services client
-                if (!e.sdkErrorMetadata.isRetryable) {
-                    // can't retry the events, they can't be submitted
-                    locationDao!!.removeAll(toRemove)
+            }
+        }
+
+
+        val locations = locationDao!!.getAll()
+        var firstPosition: GeoPosition? = null
+        locations.forEach {
+            val position = GeoPosition()
+            position.location = GeoLocation(it.latitude, it.longitude)
+            position.timeStamp = Date.from(it.datetime)
+            position.tracker = it.tracker
+            position.deviceID = it.deviceId
+            if (firstPosition == null) {
+                firstPosition = position
+            } else {
+                if (options.batchingOptions.thresholdReached(position, firstPosition)) {
+                    submitEvents()
+                    firstPosition = position
+                    positions.clear()
                 }
             }
-        } else {
-            options.proxyDelegate.updatePositions(positions)
+            positions.add(position)
+            toRemove.add(it)
         }
+        submitEvents()
 
         return Result.success()
     }

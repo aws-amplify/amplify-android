@@ -41,6 +41,8 @@ dependencies {
     implementation dependency.androidx.sqlite
 
     testImplementation project(':testutils')
+    testImplementation dependency.androidx.test.core
+    testImplementation dependency.androidx.test.workmanager
     testImplementation dependency.junit
     testImplementation dependency.robolectric
     testImplementation dependency.mockk
