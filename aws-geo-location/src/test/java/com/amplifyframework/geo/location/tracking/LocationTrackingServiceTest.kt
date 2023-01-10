@@ -119,8 +119,8 @@ internal class LocationTrackingServiceTest {
         coVerify(exactly = 2) {
             dao.insert(
                 withArg { entity ->
-                    assertEquals(65.0, entity.latitude)
-                    assertEquals(75.0, entity.longitude)
+                    assertEquals(65.0, entity.latitude, 0.01)
+                    assertEquals(75.0, entity.longitude, 0.01)
                     assertEquals(data.deviceId, entity.deviceId)
                     assertEquals(data.tracker, entity.tracker)
                 }

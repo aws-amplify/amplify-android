@@ -73,7 +73,6 @@ class AWSLocationGeoPlugin(
 
     private lateinit var configuration: GeoConfiguration
     private lateinit var geoService: GeoService<LocationClient>
-    private lateinit var sharedPreferences: SharedPreferences
     private lateinit var locationTracker: LocationTracker
 
     private val executor = Executors.newCachedThreadPool()
@@ -102,7 +101,6 @@ class AWSLocationGeoPlugin(
             this.configuration =
                 userConfiguration ?: GeoConfiguration.fromJson(pluginConfiguration).build()
             this.geoService = AmazonLocationService(credentialsProvider, configuration.region)
-            this.sharedPreferences = context.getSharedPreferences(GEO_PLUGIN_KEY, MODE_PRIVATE)
             val uploadWorkRequest: PeriodicWorkRequest = PeriodicWorkRequestBuilder<UploadWorker>(
                 15,
                 TimeUnit.MINUTES
@@ -387,10 +385,10 @@ class AWSLocationGeoPlugin(
         GeoDeviceType.UNCHECKED -> id
         GeoDeviceType.USER_AND_DEVICE ->
             (credentialsProvider as CognitoCredentialsProvider).getIdentityId() + " - " +
-                sharedPreferences.getId()
-        GeoDeviceType.DEVICE -> sharedPreferences.getId()
+                locationTracker.database.sharedPreferences.getId()
+        GeoDeviceType.DEVICE -> locationTracker.database.sharedPreferences.getId()
         else -> // GeoDeviceType.USER
             (credentialsProvider as CognitoCredentialsProvider).getIdentityId() + " - " +
-                sharedPreferences.getId()
+                locationTracker.database.sharedPreferences.getId()
     }
 }

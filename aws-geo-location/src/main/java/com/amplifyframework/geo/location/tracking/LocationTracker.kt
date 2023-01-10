@@ -34,7 +34,7 @@ import kotlinx.coroutines.suspendCancellableCoroutine
  */
 internal class LocationTracker(private val context: Context) {
     private var serviceConnection: LocationServiceConnection? = null
-    private val database by lazy { GeoDatabase(context) }
+    internal val database by lazy { GeoDatabase(context) }
 
     /**
      * Start a new tracking session
