@@ -64,6 +64,7 @@ object ResetPasswordTestCaseGenerator : SerializableProvider {
         mapOf(
             "username" to "someUsername",
             "clientId" to "testAppClientId",
+            "secretHash" to "a hash",
             "clientMetadata" to emptyMap<String, String>()
         ).toJsonElement()
     )
