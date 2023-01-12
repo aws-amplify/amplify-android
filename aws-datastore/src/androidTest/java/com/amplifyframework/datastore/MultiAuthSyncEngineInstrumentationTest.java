@@ -768,6 +768,8 @@ public final class MultiAuthSyncEngineInstrumentationTest {
         readCredsFromConfig(context);
 
         if (signInToCognito) {
+            //Sign out any user that may be signed in before performing a sign in
+            auth.signOut();
             Log.v(tag, "Test requires signIn.");
             AuthSignInResult authSignInResult = auth.signIn(cognitoUser, cognitoPassword);
             if (!authSignInResult.isSignedIn()) {
