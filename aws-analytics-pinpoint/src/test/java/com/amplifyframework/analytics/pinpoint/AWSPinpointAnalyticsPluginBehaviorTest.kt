@@ -28,8 +28,10 @@ import com.amplifyframework.analytics.pinpoint.targeting.TargetingClient
 import com.amplifyframework.analytics.pinpoint.targeting.data.AndroidAppDetails
 import com.amplifyframework.analytics.pinpoint.targeting.data.AndroidDeviceDetails
 import com.amplifyframework.analytics.pinpoint.targeting.endpointProfile.EndpointProfile
+import com.amplifyframework.analytics.pinpoint.targeting.util.getUniqueId
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkStatic
 import io.mockk.slot
 import io.mockk.verify
 import java.util.UUID
@@ -48,12 +50,15 @@ class AWSPinpointAnalyticsPluginBehaviorTest {
     private val autoSessionTrackerMock = mockk<AutoSessionTracker>(relaxed = true)
     private val context: Context = ApplicationProvider.getApplicationContext()
     private lateinit var awsPinpointAnalyticsPluginBehavior: AWSPinpointAnalyticsPluginBehavior
-    private val sharedPrefsUniqueIdService = mockk<SharedPreferences>()
+    private val sharedPrefs = mockk<SharedPreferences>()
     private val androidAppDetails = AndroidAppDetails("com.test.app", "TestApp", "com.test.app", "1.0", "test")
     private val androidDeviceDetails = AndroidDeviceDetails("test")
 
     @Before
     fun setup() {
+        mockkStatic("com.amplifyframework.analytics.pinpoint.targeting.util.SharedPreferencesUtilKt")
+        every { sharedPrefs.getUniqueId() }.answers { "UNIQUE_ID" }
+
         awsPinpointAnalyticsPluginBehavior = AWSPinpointAnalyticsPluginBehavior(
             ApplicationProvider.getApplicationContext(),
             analyticsClientMock,
@@ -149,10 +154,9 @@ class AWSPinpointAnalyticsPluginBehaviorTest {
 
     @Test
     fun `test identify user`() {
-        every { sharedPrefsUniqueIdService.getUniqueId() }.answers { "UNIQUE_ID" }
         every { targetingClientMock.currentEndpoint() }.answers {
             EndpointProfile(
-                sharedPrefsUniqueIdService,
+                sharedPrefs.getUniqueId(),
                 androidAppDetails,
                 androidDeviceDetails,
                 ApplicationProvider.getApplicationContext()
@@ -184,9 +188,9 @@ class AWSPinpointAnalyticsPluginBehaviorTest {
 
         verify(exactly = 1) { targetingClientMock.updateEndpointProfile(any()) }
 
-        assertEquals(actualEndpoint.captured.user.getUserAttributes(), expectedUserAttributes)
+        assertEquals(actualEndpoint.captured.user.userAttributes, expectedUserAttributes)
         assertEquals(actualEndpoint.captured.allAttributes, expectedEndpointAttributes)
-        assertEquals(actualEndpoint.captured.user.getUserId(), "USER_ID")
+        assertEquals(actualEndpoint.captured.user.userId, "USER_ID")
     }
 
     @Test

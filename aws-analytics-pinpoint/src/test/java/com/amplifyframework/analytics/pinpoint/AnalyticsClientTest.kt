@@ -15,21 +15,23 @@
 
 package com.amplifyframework.analytics.pinpoint
 
+import android.content.SharedPreferences
 import android.net.Uri
 import androidx.test.core.app.ApplicationProvider
 import aws.sdk.kotlin.services.pinpoint.PinpointClient
 import com.amplifyframework.analytics.pinpoint.database.PinpointDatabase
-import com.amplifyframework.analytics.pinpoint.internal.core.idresolver.SharedPrefsUniqueIdService
 import com.amplifyframework.analytics.pinpoint.models.PinpointEvent
 import com.amplifyframework.analytics.pinpoint.models.PinpointSession
 import com.amplifyframework.analytics.pinpoint.models.SDKInfo
 import com.amplifyframework.analytics.pinpoint.targeting.TargetingClient
 import com.amplifyframework.analytics.pinpoint.targeting.data.AndroidAppDetails
 import com.amplifyframework.analytics.pinpoint.targeting.data.AndroidDeviceDetails
+import com.amplifyframework.analytics.pinpoint.targeting.util.getUniqueId
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkStatic
 import java.util.UUID
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -60,7 +62,7 @@ class AnalyticsClientTest {
 
     private val pinpointClient = mockk<PinpointClient>()
     private val sessionClient = mockk<SessionClient>()
-    private val sharedPrefsUniqueIdService = mockk<SharedPrefsUniqueIdService>()
+    private val sharedPrefs = mockk<SharedPreferences>()
     private val androidAppDetails = AndroidAppDetails("com.test.app", "TestApp", "com.test.app", "1.0", "test")
     private val androidDeviceDetails = AndroidDeviceDetails("test")
     private val sdkInfo = SDKInfo("test", "1.0")
@@ -71,13 +73,16 @@ class AnalyticsClientTest {
 
     @Before
     fun setup() = runTest {
+        mockkStatic("com.amplifyframework.analytics.pinpoint.targeting.util.SharedPreferencesUtilKt")
+        every { sharedPrefs.getUniqueId() } answers { "UNIQUE_ID" }
+
         analyticsClient = AnalyticsClient(
             ApplicationProvider.getApplicationContext(),
             pinpointClient,
             sessionClient,
             targetingClient,
             pinpointDatabase,
-            sharedPrefsUniqueIdService,
+            sharedPrefs.getUniqueId(),
             androidAppDetails,
             androidDeviceDetails,
             sdkInfo,
@@ -87,7 +92,6 @@ class AnalyticsClientTest {
         val sessionId = UUID.randomUUID().toString()
         val startTime = System.currentTimeMillis()
         every { sessionClient.session } answers { Session(sessionId, startTime, startTime) }
-        every { sharedPrefsUniqueIdService.getUniqueId() } answers { "UNIQUE_ID" }
         coEvery { eventRecorder.recordEvent(any()) } answers { Uri.EMPTY }
     }
 

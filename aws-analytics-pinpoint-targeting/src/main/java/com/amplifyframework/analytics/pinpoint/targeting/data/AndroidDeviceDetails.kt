@@ -23,7 +23,7 @@ import java.util.Locale
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class AndroidDeviceDetails internal constructor(
+data class AndroidDeviceDetails constructor(
     val carrier: String? = null,
     val platformVersion: String = Build.VERSION.RELEASE ?: "TEST VERSION",
     val platform: String = "ANDROID",

@@ -19,6 +19,7 @@ package com.amplifyframework.analytics.pinpoint.targeting.util
 import android.content.SharedPreferences
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkStatic
 import io.mockk.slot
 import junit.framework.TestCase
 import org.junit.Before
@@ -30,13 +31,14 @@ class SharedPrefsUniqueIdTest : TestCase() {
     @Before
     override fun setUp() {
         sharedPreferences = mockk()
+        mockkStatic("com.amplifyframework.analytics.pinpoint.targeting.util.SharedPreferencesUtilKt")
     }
 
     @Test
     fun testGetUniqueIdWhenNotStored() {
         val slot = slot<String>()
         every { sharedPreferences.getString(any(), any()) } returns null
-        every { sharedPreferences.putString(any(), capture(slot)) }
+        every { sharedPreferences.putString(any(), capture(slot)) } returns Unit
         assertEquals(sharedPreferences.getUniqueId(), slot.captured)
     }
 

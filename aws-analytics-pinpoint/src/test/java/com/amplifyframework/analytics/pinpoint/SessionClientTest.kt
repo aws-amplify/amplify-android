@@ -14,11 +14,13 @@
  */
 package com.amplifyframework.analytics.pinpoint
 
+import android.content.SharedPreferences
 import androidx.test.core.app.ApplicationProvider
-import com.amplifyframework.analytics.pinpoint.internal.core.idresolver.SharedPrefsUniqueIdService
 import com.amplifyframework.analytics.pinpoint.targeting.TargetingClient
+import com.amplifyframework.analytics.pinpoint.targeting.util.getUniqueId
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkStatic
 import io.mockk.verifyOrder
 import org.junit.Assert
 import org.junit.Before
@@ -31,18 +33,20 @@ class SessionClientTest {
 
     private val analyticsClientMock = mockk<AnalyticsClient>(relaxed = true)
     private val targetingClientMock = mockk<TargetingClient>(relaxed = true)
-    private val uniqueIdService = mockk<SharedPrefsUniqueIdService>(relaxed = true)
+    private val sharedPreferences = mockk<SharedPreferences>(relaxed = true)
     private lateinit var sessionClient: SessionClient
 
     @Before
     fun setup() {
+        mockkStatic("com.amplifyframework.analytics.pinpoint.targeting.util.SharedPreferencesUtilKt")
+        every { sharedPreferences.getUniqueId() }.answers { "UNIQUE_ID" }
+
         sessionClient = SessionClient(
             ApplicationProvider.getApplicationContext(),
             targetingClientMock,
-            uniqueIdService,
+            sharedPreferences.getUniqueId(),
             analyticsClientMock
         )
-        every { uniqueIdService.getUniqueId() }.answers { "UNIQUE_ID" }
     }
 
     @Test

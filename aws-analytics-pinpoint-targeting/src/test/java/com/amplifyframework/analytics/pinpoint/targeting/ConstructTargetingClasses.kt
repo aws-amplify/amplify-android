@@ -21,7 +21,6 @@ import android.content.SharedPreferences
 import androidx.test.core.app.ApplicationProvider
 import aws.sdk.kotlin.services.pinpoint.PinpointClient
 import com.amplifyframework.analytics.pinpoint.targeting.data.AndroidAppDetails
-import com.amplifyframework.analytics.pinpoint.targeting.data.AndroidDataProvider
 import com.amplifyframework.analytics.pinpoint.targeting.data.AndroidDeviceDetails
 import com.amplifyframework.analytics.pinpoint.targeting.endpointProfile.EndpointProfile
 import com.amplifyframework.analytics.pinpoint.targeting.util.getUniqueId
@@ -49,7 +48,6 @@ internal val country = "en_US"
 internal val effectiveDate = 0L
 
 internal val preferences = mockk<SharedPreferences>()
-internal val androidDataProvider = mockk<AndroidDataProvider>()
 internal val appDetails = AndroidAppDetails(appID, appTitle, packageName, versionCode, versionName)
 internal val deviceDetails = AndroidDeviceDetails(carrier = carrier, locale = locale)
 internal val applicationContext = mockk<Context>()
@@ -59,16 +57,14 @@ internal fun setup() {
     every { preferences.getUniqueId() }.returns(uniqueID)
     every { applicationContext.resources.configuration.locales[0].isO3Country }
         .returns(country)
-    every { androidDataProvider.appDetails }.returns(appDetails)
-    every { androidDataProvider.deviceDetails }.returns(deviceDetails)
 }
 
 internal fun constructEndpointProfile(): EndpointProfile {
     setup()
     val endpointProfile = EndpointProfile(
         preferences.getUniqueId(),
-        androidDataProvider.appDetails,
-        androidDataProvider.deviceDetails,
+        appDetails,
+        deviceDetails,
         applicationContext
     )
     endpointProfile.effectiveDate = effectiveDate
@@ -88,6 +84,7 @@ internal fun constructTargetingClient(): TargetingClient {
         applicationContext,
         pinpointClient,
         prefs,
-        androidDataProvider
+        appDetails,
+        deviceDetails
     )
 }
