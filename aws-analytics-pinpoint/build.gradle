@@ -22,6 +22,8 @@ apply from: rootProject.file("configuration/publishing.gradle")
 apply plugin: 'kotlin-android'
 apply plugin: 'org.jlleitschuh.gradle.ktlint'
 
+group = POM_GROUP
+
 dependencies {
     implementation project(path: ':core')
     implementation project(path: ':aws-auth-cognito')
@@ -46,4 +48,3 @@ dependencies {
     implementation dependency.androidx.test.junit
     androidTestImplementation project(path: ':aws-analytics-pinpoint')
 }
-
