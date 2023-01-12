@@ -19,12 +19,8 @@ import android.os.Bundle
 import com.amplifyframework.core.Action
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.core.category.Category
-import com.amplifyframework.notifications.NotificationsCategoryBehavior
 
-class PushNotificationsCategory :
-    Category<PushNotificationsPlugin<*>>(),
-    PushNotificationsCategoryBehavior,
-    NotificationsCategoryBehavior {
+class PushNotificationsCategory : Category<PushNotificationsPlugin<*>>(), PushNotificationsCategoryBehavior {
 
     override fun getCategoryType() = selectedPlugin.categoryType
 

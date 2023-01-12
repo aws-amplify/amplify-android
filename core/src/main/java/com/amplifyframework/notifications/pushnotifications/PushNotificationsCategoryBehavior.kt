@@ -18,8 +18,9 @@ package com.amplifyframework.notifications.pushnotifications
 import android.os.Bundle
 import com.amplifyframework.core.Action
 import com.amplifyframework.core.Consumer
+import com.amplifyframework.notifications.NotificationsCategoryBehavior
 
-interface PushNotificationsCategoryBehavior {
+interface PushNotificationsCategoryBehavior : NotificationsCategoryBehavior {
 
     fun recordNotificationReceived(
         data: Map<String, String>,
