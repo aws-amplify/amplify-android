@@ -388,7 +388,6 @@ class AWSLocationGeoPlugin(
                 locationTracker.database.sharedPreferences.getId()
         GeoDeviceType.DEVICE -> locationTracker.database.sharedPreferences.getId()
         else -> // GeoDeviceType.USER
-            (credentialsProvider as CognitoCredentialsProvider).getIdentityId() + " - " +
-                locationTracker.database.sharedPreferences.getId()
+            (credentialsProvider as CognitoCredentialsProvider).getIdentityId()
     }
 }
