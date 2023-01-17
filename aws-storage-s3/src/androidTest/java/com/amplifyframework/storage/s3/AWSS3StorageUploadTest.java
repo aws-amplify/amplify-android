@@ -27,6 +27,7 @@ import com.amplifyframework.storage.StorageAccessLevel;
 import com.amplifyframework.storage.StorageCategory;
 import com.amplifyframework.storage.StorageChannelEventName;
 import com.amplifyframework.storage.operation.StorageUploadFileOperation;
+import com.amplifyframework.storage.options.StorageRemoveOptions;
 import com.amplifyframework.storage.options.StorageUploadFileOptions;
 import com.amplifyframework.storage.s3.helper.AmplifyTransferServiceTestHelper;
 import com.amplifyframework.storage.s3.test.R;
@@ -136,6 +137,7 @@ public final class AWSS3StorageUploadTest {
         File uploadFile = new RandomTempFile(LARGE_FILE_SIZE);
         String fileName = uploadFile.getName();
         synchronousStorage.uploadFile(fileName, uploadFile, options, EXTENDED_TIMEOUT_MS);
+        synchronousStorage.remove("", StorageRemoveOptions.builder().targetIdentityId())
     }
 
     /**
