@@ -128,7 +128,5 @@ public class StorageRemoveOptions extends StorageOptions {
         public StorageRemoveOptions build() {
             return new StorageRemoveOptions(this);
         }
-
-
     }
 }
