@@ -1,3 +1,10 @@
+## [Release 1.37.12](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.37.12)
+
+### Bug Fixes
+- **Storage:** Prevent re-binding transferService after it is initialized (#2211)
+
+[See all changes between 1.37.11 and 1.37.12](https://github.com/aws-amplify/amplify-android/compare/release_v1.37.11...release_v1.37.12)
+
 ## [Release 1.37.11](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.37.11)
 
 ### Bug Fixes
