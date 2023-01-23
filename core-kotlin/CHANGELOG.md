@@ -1,3 +1,13 @@
+## [Release 0.21.12](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.21.12)
+
+### Bug Fixes
+- **Storage:** Prevent re-binding transferService after it is initialized (#2211)
+
+### Miscellaneous
+- Update build.gradle (#2241)
+
+[See all changes between 0.21.11 and 0.21.12](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.21.11...release-kotlin_v0.21.12)
+
 ## [Release 0.21.11](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.21.11)
 
 ### Bug Fixes
