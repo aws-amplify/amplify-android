@@ -109,9 +109,11 @@ class RealAWSCognitoAuthPluginTest {
 
     private var logger = mockk<Logger>(relaxed = true)
     private val appClientId = "app Client Id"
+    private val appClientSecret = "app Client Secret"
     private var authConfiguration = mockk<AuthConfiguration> {
         every { userPool } returns UserPoolConfiguration.invoke {
             this.appClientId = this@RealAWSCognitoAuthPluginTest.appClientId
+            this.appClientSecret = this@RealAWSCognitoAuthPluginTest.appClientSecret
             this.pinpointAppId = null
         }
     }
@@ -532,6 +534,11 @@ class RealAWSCognitoAuthPluginTest {
             confirmationCode = code
             clientMetadata = mapOf()
             clientId = appClientId
+            secretHash = AuthHelper.getSecretHash(
+                username,
+                appClientId,
+                appClientSecret
+            )
             userContextData = null
             analyticsMetadata = AnalyticsMetadataType.invoke { analyticsEndpointId = expectedEndpointId }
         }
