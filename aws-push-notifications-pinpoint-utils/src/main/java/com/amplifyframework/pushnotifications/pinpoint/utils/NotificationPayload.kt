@@ -17,6 +17,7 @@ package com.amplifyframework.pushnotifications.pinpoint.utils
 
 import android.os.Bundle
 import java.util.UUID
+import kotlin.collections.HashMap
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
@@ -27,13 +28,15 @@ data class NotificationPayload internal constructor(
     val notificationId: Int,
     val title: String?,
     val body: String?,
-    val imageUrl: String?
+    val action: HashMap<String, String>?,
+    val imageUrl: String?,
 ) {
 
-    constructor(title: String?, body: String?, imageUrl: String?) : this(
+    constructor(title: String?, body: String?, action: HashMap<String, String>?, imageUrl: String?) : this(
         UUID.randomUUID().hashCode(),
         title,
         body,
+        action,
         imageUrl
     )
 

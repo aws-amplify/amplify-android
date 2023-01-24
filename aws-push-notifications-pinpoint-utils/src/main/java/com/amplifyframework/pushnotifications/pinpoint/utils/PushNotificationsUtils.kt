@@ -20,7 +20,9 @@ import android.app.ActivityManager
 import android.app.ActivityManager.RunningAppProcessInfo
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Build
@@ -92,19 +94,17 @@ class PushNotificationsUtils(
     }
 
     @SuppressLint("NewApi")
-    fun showNotification(details: NotificationPayload) {
+    fun showNotification(details: NotificationPayload, targetClass: Class<*>?) {
+        val requestCode = 0
         val largeImageIcon = details.imageUrl?.let { downloadImage(it) }
-
-//        val notificationIntent = Intent(context, com.amplifyframework.pushnotifications.pinpoint.PushNotificationsApplication::class.java).apply {
-//            flags = (Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
-//        }
-//        val intent = PendingIntent.getActivity(
-//            context,
-//            0,
-//            notificationIntent,
-//            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-//        )
-
+        val notificationIntent = Intent(context, targetClass)
+        notificationIntent.putExtra("action", details.action)
+        val pendingIntent = PendingIntent.getActivity(
+            context,
+            requestCode,
+            notificationIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
         val notificationChannel = retrieveNotificationChannel(channelId)
         val builder = if (isNotificationChannelSupported() && notificationChannel != null) {
             NotificationCompat.Builder(context, notificationChannel.id)
@@ -116,7 +116,7 @@ class PushNotificationsUtils(
             setContentTitle(details.title)
             setContentText(details.body)
             setSmallIcon(R.drawable.ic_launcher_foreground)
-//            setContentIntent(intent)
+            setContentIntent(pendingIntent)
             setPriority(NotificationCompat.PRIORITY_DEFAULT)
             setLargeIcon(largeImageIcon)
         }

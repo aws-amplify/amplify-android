@@ -45,16 +45,25 @@ abstract class PushNotificationsService : FirebaseMessagingService() {
 
     open fun processRemoteMessage(remoteMessage: RemoteMessage): NotificationPayload {
         val data = remoteMessage.data
+        val action: HashMap<String, String> = HashMap()
+        data[PushNotificationsConstants.AWS_PINPOINT_OPENAPP]?.let {
+            action.put(PushNotificationsConstants.AWS_PINPOINT_OPENAPP, it)
+        }
+        data[PushNotificationsConstants.AWS_PINPOINT_URL]?.let {
+            action.put(PushNotificationsConstants.AWS_PINPOINT_URL, it)
+        }
+        data[PushNotificationsConstants.AWS_PINPOINT_DEEPLINK]?.let {
+            action.put(PushNotificationsConstants.AWS_PINPOINT_DEEPLINK, it)
+        }
         val title = data[PushNotificationsConstants.AWS_PINPOINT_NOTIFICATION_TITLE]
         val body = data[PushNotificationsConstants.AWS_PINPOINT_NOTIFICATION_BODY]
         val imageUrl = data[PushNotificationsConstants.AWS_PINPOINT_NOTIFICATION_IMAGE]
-        return NotificationPayload(title, body, imageUrl)
+        return NotificationPayload(title, body, action, imageUrl)
     }
 
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         super.onMessageReceived(remoteMessage)
         Log.d("TAG", "Message: " + remoteMessage.data + "," + remoteMessage.notification)
-
         // handle payload and show notification
         val payload = processRemoteMessage(remoteMessage).bundle()
         Amplify.Notifications.Push.handleNotificationReceived(payload, { }, { })

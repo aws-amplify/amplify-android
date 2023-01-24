@@ -19,6 +19,9 @@ class PushNotificationsConstants {
     companion object {
         const val AWS_PINPOINT_NOTIFICATION_CHANNEL = "pinpoint.notification.channel"
 
+        const val AWS_PINPOINT_OPENAPP = "pinpoint.openApp"
+        const val AWS_PINPOINT_URL = "pinpoint.url"
+        const val AWS_PINPOINT_DEEPLINK = "pinpoint.deeplink"
         const val AWS_PINPOINT_NOTIFICATION_TITLE = "pinpoint.notification.title"
         const val AWS_PINPOINT_NOTIFICATION_BODY = "pinpoint.notification.body"
         const val AWS_PINPOINT_NOTIFICATION_IMAGE = "pinpoint.notification.imageUrl"

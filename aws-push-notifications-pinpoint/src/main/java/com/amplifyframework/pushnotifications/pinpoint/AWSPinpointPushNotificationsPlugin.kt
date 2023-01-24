@@ -147,7 +147,9 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
         onSuccess: Action,
         onError: Consumer<PushNotificationsException>
     ) {
-        TODO("Not yet implemented")
+        tryAnalyticsRecordEvent("notification_opened")
+        PushNotificationResult.NotificationOpened()
+        onSuccess.call()
     }
 
     override fun handleNotificationReceived(
@@ -161,7 +163,7 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
                 tryAnalyticsRecordEvent("foreground_event")
                 PushNotificationResult.AppInForeground()
             } else {
-                pushNotificationsUtils.showNotification(payload)
+                pushNotificationsUtils.showNotification(payload, AWSPinpointPushNotificationsActivity::class.java)
                 tryAnalyticsRecordEvent("background_event")
                 PushNotificationResult.NotificationPosted()
             }

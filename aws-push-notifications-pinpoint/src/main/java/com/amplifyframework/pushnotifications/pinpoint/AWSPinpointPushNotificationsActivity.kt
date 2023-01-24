@@ -16,5 +16,48 @@
 package com.amplifyframework.pushnotifications.pinpoint
 
 import android.app.Activity
+import android.content.ActivityNotFoundException
+import android.content.Intent
+import android.net.Uri
+import android.os.Bundle
+import android.util.Log
+import com.amplifyframework.core.Amplify
+import com.amplifyframework.pushnotifications.pinpoint.utils.PushNotificationsConstants
 
-class AWSPinpointPushNotificationsActivity : Activity()
+class AWSPinpointPushNotificationsActivity : Activity() {
+
+    @Override
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        Amplify.Notifications.Push.recordNotificationOpened(emptyMap(), { }, { })
+        val resultIntent = intent.extras
+        @Suppress("UNCHECKED_CAST")
+        val action = resultIntent?.get("action") as HashMap<String, String>
+        val intent = processIntent(action)
+        try {
+            startActivity(intent)
+        } catch (e: ActivityNotFoundException) {
+            Log.e("TAG", "Couldn't launch intent.", e)
+        }
+        finish()
+    }
+
+    private fun processIntent(action: HashMap<String, String>): Intent {
+        // Action is open url
+        val notificationIntent: Intent = if (action.containsKey(PushNotificationsConstants.AWS_PINPOINT_URL)) {
+            val url = action[PushNotificationsConstants.AWS_PINPOINT_URL]
+            Intent(Intent.ACTION_VIEW, Uri.parse(url))
+        }
+        // Action is open deeplink
+        else if (action.containsKey(PushNotificationsConstants.AWS_PINPOINT_DEEPLINK)) {
+            val deepLink = action[PushNotificationsConstants.AWS_PINPOINT_DEEPLINK]
+            Intent(Intent.ACTION_VIEW, Uri.parse(deepLink))
+        }
+        // Default action is open app
+        else {
+            val packageName = applicationContext.packageName
+            applicationContext.packageManager.getLaunchIntentForPackage(packageName)!!
+        }
+        return notificationIntent
+    }
+}
