@@ -48,7 +48,7 @@ jobs:
         RELEASE_TAG: ${{ github.event.inputs.release_tag }}
       run: |
         cd scripts
-        bundle exec fastlane android create_next_release_pr release_tag:"$RELEASE_TAG"
+        bundle exec fastlane android create_next_release_pr release_tag:"$RELEASE_TAG" base_branch:"$BASE_BRANCH"
     - name: Check modified file content
       run: |
         cat gradle.properties
