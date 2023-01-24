@@ -38,7 +38,7 @@ jobs:
         bundle exec fastlane android configure_git_options git_user_email:$GIT_USER_EMAIL git_user_name:$GIT_USER_NAME
     - name: Create/checkout a branch for the release
       run: |
-        branch_name=bump_version
+        branch_name=bump_version_${{ env.BASE_BRANCH }}
         git fetch --all
         (git branch -D $branch_name &>/dev/null) && (echo 'Existing $branch_name branch deleted') || (echo 'No existing $branch_name branch to delete.')
         git checkout -b $branch_name
