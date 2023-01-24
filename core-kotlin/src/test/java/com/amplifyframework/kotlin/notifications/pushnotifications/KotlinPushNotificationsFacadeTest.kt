@@ -32,14 +32,14 @@ import kotlinx.coroutines.runBlocking
 import org.junit.Test
 
 class KotlinPushNotificationsFacadeTest {
-    private val notificationsDelegate = mockk<NotificationsCategoryBehavior>()
-    private val notifications = KotlinNotificationsFacade(notificationsDelegate)
-
     private val pushDelegate = mockk<PushNotificationsCategoryBehavior>()
     private val push = KotlinPushFacade(pushDelegate)
 
     @Test
     fun identifyUserCategoryLevelSucceeds() = runBlocking {
+        val notificationsDelegate = mockk<NotificationsCategoryBehavior>()
+        val notifications = KotlinNotificationsFacade(notificationsDelegate)
+
         val userId = "userId"
         coEvery {
             pushDelegate.identifyUser(eq(userId), any(), any())
