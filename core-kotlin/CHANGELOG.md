@@ -1,3 +1,10 @@
+## [Release 0.21.13](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.21.13)
+
+### Miscellaneous
+- Update build.gradle (#2246)
+
+[See all changes between 0.21.12 and 0.21.13](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.21.12...release-kotlin_v0.21.13)
+
 ## [Release 0.21.12](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.21.12)
 
 ### Bug Fixes
