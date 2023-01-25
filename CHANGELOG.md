@@ -1,3 +1,20 @@
+## [Release 1.37.13](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.37.13)
+
+### Miscellaneous
+- Update build.gradle (#2246)
+
+[See all changes between 1.37.12 and 1.37.13](https://github.com/aws-amplify/amplify-android/compare/release_v1.37.12...release_v1.37.13)
+
+## [Release 1.37.12](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.37.12)
+
+### Bug Fixes
+- **Storage:** Prevent re-binding transferService after it is initialized (#2211)
+
+### Miscellaneous
+- Update build.gradle (#2241)
+
+[See all changes between 1.37.11 and 1.37.12](https://github.com/aws-amplify/amplify-android/compare/release_v1.37.11...release_v1.37.12)
+
 ## [Release 1.37.11](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.37.11)
 
 ### Bug Fixes
