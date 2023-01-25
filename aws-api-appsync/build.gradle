@@ -16,6 +16,7 @@
 apply plugin: 'com.android.library'
 apply from: rootProject.file('configuration/checkstyle.gradle')
 apply from: rootProject.file('configuration/publishing.gradle')
+apply plugin: 'kotlin-android'
 
 group = POM_GROUP
 
@@ -31,4 +32,5 @@ dependencies {
     testImplementation dependency.jsonassert
     testImplementation project(path: ':testmodels')
     testImplementation project(path: ':testutils')
+    testImplementation project(path: ':aws-api-appsync')
 }
