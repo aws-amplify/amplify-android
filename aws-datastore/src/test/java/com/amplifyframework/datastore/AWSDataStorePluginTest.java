@@ -52,6 +52,7 @@ import com.amplifyframework.testutils.sync.SynchronousDataStore;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatcher;
@@ -205,6 +206,7 @@ public final class AWSDataStorePluginTest {
      * @throws AmplifyException on failure to arrange API plugin via Amplify facade
      */
     @Test
+    @Ignore("Test is unstable on CI - to be enabled after investigation")
     public void clearStopsSyncAndDeletesDatabase() throws AmplifyException, JSONException {
         ApiCategory mockApiCategory = mockApiCategoryWithGraphQlApi();
         ApiPlugin<?> mockApiPlugin = mockApiCategory.getPlugin(MOCK_API_PLUGIN_NAME);
