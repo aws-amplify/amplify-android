@@ -163,7 +163,9 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
                 tryAnalyticsRecordEvent("foreground_event")
                 PushNotificationResult.AppInForeground()
             } else {
-                pushNotificationsUtils.showNotification(payload, AWSPinpointPushNotificationsActivity::class.java)
+                if (canShowNotification(details)) {
+                    pushNotificationsUtils.showNotification(payload, AWSPinpointPushNotificationsActivity::class.java)
+                }
                 tryAnalyticsRecordEvent("background_event")
                 PushNotificationResult.NotificationPosted()
             }
@@ -209,5 +211,11 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
         val editor = preferences.edit()
         editor.putString(key, value)
         editor.apply()
+    }
+
+    private fun canShowNotification(details: Bundle): Boolean {
+        val silentPush = details.toNotificationsPayload().silentPush
+        val optOut = targetingClient.currentEndpoint().optOut == "ALL"
+        return !(!pushNotificationsUtils.areNotificationsEnabled() || silentPush || optOut)
     }
 }

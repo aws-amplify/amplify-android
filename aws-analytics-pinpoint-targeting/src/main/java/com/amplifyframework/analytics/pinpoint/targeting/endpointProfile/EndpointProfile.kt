@@ -46,7 +46,7 @@ class EndpointProfile(
      *
      * @return String (ALL | NONE)
      */
-    val optOut: String = "ALL" // opt out of all notifications until we add notification category
+    val optOut: String = "NONE"
 
     private val country: String = try {
         applicationContext.resources.configuration.locales[0].isO3Country

@@ -25,5 +25,6 @@ class PushNotificationsConstants {
         const val AWS_PINPOINT_NOTIFICATION_TITLE = "pinpoint.notification.title"
         const val AWS_PINPOINT_NOTIFICATION_BODY = "pinpoint.notification.body"
         const val AWS_PINPOINT_NOTIFICATION_IMAGE = "pinpoint.notification.imageUrl"
+        const val AWS_PINPOINT_NOTIFICATION_SILENTPUSH = "pinpoint.notification.silentPush"
     }
 }

@@ -58,7 +58,8 @@ abstract class PushNotificationsService : FirebaseMessagingService() {
         val title = data[PushNotificationsConstants.AWS_PINPOINT_NOTIFICATION_TITLE]
         val body = data[PushNotificationsConstants.AWS_PINPOINT_NOTIFICATION_BODY]
         val imageUrl = data[PushNotificationsConstants.AWS_PINPOINT_NOTIFICATION_IMAGE]
-        return NotificationPayload(title, body, action, imageUrl)
+        val silentPush = data[PushNotificationsConstants.AWS_PINPOINT_NOTIFICATION_SILENTPUSH].equals("1")
+        return NotificationPayload(title, body, action, imageUrl, silentPush)
     }
 
     override fun onMessageReceived(remoteMessage: RemoteMessage) {

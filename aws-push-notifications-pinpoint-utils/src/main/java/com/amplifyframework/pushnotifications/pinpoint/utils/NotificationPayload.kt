@@ -30,14 +30,16 @@ data class NotificationPayload internal constructor(
     val body: String?,
     val action: HashMap<String, String>?,
     val imageUrl: String?,
+    val silentPush: Boolean
 ) {
 
-    constructor(title: String?, body: String?, action: HashMap<String, String>?, imageUrl: String?) : this(
+    constructor(title: String?, body: String?, action: HashMap<String, String>?, imageUrl: String?, silentPush: Boolean = false) : this(
         UUID.randomUUID().hashCode(),
         title,
         body,
         action,
-        imageUrl
+        imageUrl, 
+        silentPush
     )
 
     fun bundle(): Bundle {
