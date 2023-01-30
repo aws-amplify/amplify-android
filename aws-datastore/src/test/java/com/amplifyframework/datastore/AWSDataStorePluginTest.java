@@ -207,7 +207,6 @@ public final class AWSDataStorePluginTest {
      * @throws AmplifyException on failure to arrange API plugin via Amplify facade
      */
     @Test
-    @Ignore("Test is unstable on CI - to be enabled after investigation")
     public void clearStopsSyncAndDeletesDatabase() throws AmplifyException, JSONException {
         ApiCategory mockApiCategory = mockApiCategoryWithGraphQlApi();
         ApiPlugin<?> mockApiPlugin = mockApiCategory.getPlugin(MOCK_API_PLUGIN_NAME);
