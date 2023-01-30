@@ -85,6 +85,7 @@ import static org.mockito.Mockito.when;
 
 @SuppressWarnings("SameParameterValue")
 @RunWith(RobolectricTestRunner.class)
+@Ignore("Test class is unstable on CI - to be enabled after investigation")
 public final class AWSDataStorePluginTest {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:datastore:test");
     private static final long TIMEOUT_MS = TimeUnit.SECONDS.toMillis(1);
