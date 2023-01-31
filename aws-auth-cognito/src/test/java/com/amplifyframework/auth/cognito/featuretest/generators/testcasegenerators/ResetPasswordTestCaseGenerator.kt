@@ -52,11 +52,11 @@ object ResetPasswordTestCaseGenerator : SerializableProvider {
         mapOf(
             "isPasswordReset" to false,
             "nextStep" to
-                    mapOf(
-                        "resetPasswordStep" to "CONFIRM_RESET_PASSWORD_WITH_CODE",
-                        "additionalInfo" to emptyMap<String, String>(),
-                        "codeDeliveryDetails" to codeDeliveryDetails
-                    )
+                mapOf(
+                    "resetPasswordStep" to "CONFIRM_RESET_PASSWORD_WITH_CODE",
+                    "additionalInfo" to emptyMap<String, String>(),
+                    "codeDeliveryDetails" to codeDeliveryDetails
+                )
         ).toJsonElement()
 
     private val cognitoValidation = ExpectationShapes.Cognito.CognitoIdentityProvider(
