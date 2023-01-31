@@ -38,7 +38,32 @@ public enum ModelOperation {
     DELETE,
 
     /**
-     * Relates to API queries (`get` and `list` operations).
+     * Relates to API queries (all read operations).
      */
-    READ
+    READ,
+
+    /**
+     * Relates to `get` API query.
+     */
+    GET,
+
+    /**
+     * Relates to `list` API query.
+     */
+    LIST,
+
+    /**
+     * Relates to `sync` API query.
+     */
+    SYNC,
+
+    /**
+     * Relates to `subscribe` API query.
+     */
+    LISTEN,
+
+    /**
+     * Relates to `search` API query.
+     */
+    SEARCH
 }
