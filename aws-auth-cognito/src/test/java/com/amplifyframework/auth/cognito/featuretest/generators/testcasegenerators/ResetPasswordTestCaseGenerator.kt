@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -64,6 +64,7 @@ object ResetPasswordTestCaseGenerator : SerializableProvider {
         mapOf(
             "username" to "someUsername",
             "clientId" to "testAppClientId",
+            "secretHash" to "a hash",
             "clientMetadata" to emptyMap<String, String>()
         ).toJsonElement()
     )
