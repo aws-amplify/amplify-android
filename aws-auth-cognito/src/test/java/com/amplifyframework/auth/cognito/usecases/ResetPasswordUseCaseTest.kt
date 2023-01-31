@@ -51,8 +51,8 @@ import org.junit.Test
 class ResetPasswordUseCaseTest {
 
     private val dummyClientId = "app client id"
-    private val dummyUserName = "username"
     private val dummyAppClientSecret = "app client secret"
+    private val dummyUserName = "username"
     private val expectedPinpointEndpointId = "abc123"
 
     private val mockCognitoIPClient: CognitoIdentityProviderClient = mockk()
