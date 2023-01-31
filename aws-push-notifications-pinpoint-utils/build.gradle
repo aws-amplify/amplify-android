@@ -29,6 +29,7 @@ dependencies {
     implementation dependency.androidx.core_ktx
     implementation dependency.androidx.appcompat
     implementation dependency.androidx.annotation
+    implementation dependency.androidx.activity
 
     implementation dependency.firebasemessaging
     implementation dependency.kotlin.serializationJson

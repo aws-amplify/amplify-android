@@ -17,4 +17,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.amplifyframework.pushnotifications.pinpoint.utils">
 
+    <application>
+        <activity
+            android:name=".permissions.PermissionsRequestActivity"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar"
+            android:exported="false"/>
+    </application>
+
 </manifest>
