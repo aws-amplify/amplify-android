@@ -31,6 +31,10 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import java.net.URL
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class PushNotificationsUtils(
     private val context: Context,
@@ -67,8 +71,8 @@ class PushNotificationsUtils(
         return null
     }
 
-    private fun downloadImage(url: String): Bitmap? {
-        return BitmapFactory.decodeStream(URL(url).openConnection().getInputStream())
+    private suspend fun downloadImage(url: String): Bitmap? = withContext(Dispatchers.IO) {
+        BitmapFactory.decodeStream(URL(url).openConnection().getInputStream())
     }
 
     fun isAppInForeground(): Boolean {
@@ -95,35 +99,38 @@ class PushNotificationsUtils(
 
     @SuppressLint("NewApi")
     fun showNotification(details: NotificationPayload, targetClass: Class<*>?) {
-        val requestCode = 0
-        val largeImageIcon = details.imageUrl?.let { downloadImage(it) }
-        val notificationIntent = Intent(context, targetClass)
-        notificationIntent.putExtra("action", details.action)
-        val pendingIntent = PendingIntent.getActivity(
-            context,
-            requestCode,
-            notificationIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-        val notificationChannel = retrieveNotificationChannel(channelId)
-        val builder = if (isNotificationChannelSupported() && notificationChannel != null) {
-            NotificationCompat.Builder(context, notificationChannel.id)
-        } else {
-            NotificationCompat.Builder(context)
-        }
+        CoroutineScope(Dispatchers.IO).launch {
+            val requestCode = 0
+            val largeImageIcon = details.imageUrl?.let { downloadImage(it) }
+            val notificationIntent = Intent(context, targetClass)
+            notificationIntent.putExtra("action", details.action)
+            notificationIntent.putExtra("rawData", details.rawData)
+            val pendingIntent = PendingIntent.getActivity(
+                context,
+                requestCode,
+                notificationIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            val notificationChannel = retrieveNotificationChannel(channelId)
+            val builder = if (isNotificationChannelSupported() && notificationChannel != null) {
+                NotificationCompat.Builder(context, notificationChannel.id)
+            } else {
+                NotificationCompat.Builder(context)
+            }
 
-        builder.apply {
-            setContentTitle(details.title)
-            setContentText(details.body)
-            setSmallIcon(R.drawable.ic_launcher_foreground)
-            setContentIntent(pendingIntent)
-            setPriority(NotificationCompat.PRIORITY_DEFAULT)
-            setLargeIcon(largeImageIcon)
-        }
+            builder.apply {
+                setContentTitle(details.title)
+                setContentText(details.body)
+                setSmallIcon(R.drawable.ic_launcher_foreground)
+                setContentIntent(pendingIntent)
+                setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                setLargeIcon(largeImageIcon)
+            }
 
-        with(NotificationManagerCompat.from(context)) {
-            // notificationId is a unique int for each notification that you must define
-            notify(details.notificationId, builder.build())
+            with(NotificationManagerCompat.from(context)) {
+                // notificationId is a unique int for each notification that you must define
+                notify(details.notificationId, builder.build())
+            }
         }
     }
 }

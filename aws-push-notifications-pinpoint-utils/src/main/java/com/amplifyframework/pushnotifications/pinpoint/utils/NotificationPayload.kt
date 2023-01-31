@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -28,23 +28,46 @@ data class NotificationPayload internal constructor(
     val notificationId: Int,
     val title: String?,
     val body: String?,
-    val action: HashMap<String, String>?,
     val imageUrl: String?,
-    val silentPush: Boolean
+    val action: HashMap<String, String>,
+    val silentPush: Boolean,
+    val rawData: HashMap<String, String>
 ) {
+    constructor(
+        title: String?,
+        body: String?,
+        imageUrl: String?,
+        action: HashMap<String, String>,
+        silentPush: Boolean = false,
+        rawData: HashMap<String, String>
+    ) : this(UUID.randomUUID().hashCode(), title, body, imageUrl, action, silentPush, rawData)
 
-    constructor(title: String?, body: String?, action: HashMap<String, String>?, imageUrl: String?, silentPush: Boolean = false) : this(
-        UUID.randomUUID().hashCode(),
-        title,
-        body,
-        action,
-        imageUrl, 
-        silentPush
-    )
+    companion object {
+        inline operator fun invoke(block: Builder.() -> Unit) = Builder().apply(block).build()
+    }
 
     fun bundle(): Bundle {
         val payloadString = Json.encodeToString(this)
         return Bundle().apply { putString("payload", payloadString) }
+    }
+
+    class Builder {
+        private var title: String? = null
+        private var body: String? = null
+        private var imageUrl: String? = null
+        private var action: HashMap<String, String> = hashMapOf()
+        var silentPush: Boolean = false
+        var rawData: HashMap<String, String> = hashMapOf()
+
+        fun notification(title: String?, body: String?, imageUrl: String?) = apply {
+            this.title = title
+            this.body = body
+            this.imageUrl = imageUrl
+        }
+
+        fun tapAction(action: HashMap<String, String>) = apply { this.action = action }
+
+        fun build() = NotificationPayload(title, body, imageUrl, action, silentPush, rawData)
     }
 }
 

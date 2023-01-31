@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -35,10 +35,15 @@ abstract class PushNotificationsService : FirebaseMessagingService() {
         // * The wakelock ID set by the WakefulBroadcastReceiver
         data.remove("androidx.content.wakelockid")
 
-        // handle pinpoint push messages
         if (data.getString("pinpoint.campaign.campaign_id").isNullOrEmpty()) {
+            Log.i(
+                "PushNotificationsService",
+                "Message payload does not contain pinpoint push notification message, which is not supported."
+            )
+
             super.handleIntent(intent)
         } else {
+            // message contains pinpoint push notification payload, handle the payload and show notification
             onMessageReceived(RemoteMessage(data))
         }
     }
@@ -50,7 +55,9 @@ abstract class PushNotificationsService : FirebaseMessagingService() {
             action.put(PushNotificationsConstants.AWS_PINPOINT_OPENAPP, it)
         }
         data[PushNotificationsConstants.AWS_PINPOINT_URL]?.let {
-            action.put(PushNotificationsConstants.AWS_PINPOINT_URL, it)
+            // force HTTPS URL scheme
+            val urlHttps = it.replaceFirst("http", "https")
+            action.put(PushNotificationsConstants.AWS_PINPOINT_URL, urlHttps)
         }
         data[PushNotificationsConstants.AWS_PINPOINT_DEEPLINK]?.let {
             action.put(PushNotificationsConstants.AWS_PINPOINT_DEEPLINK, it)
@@ -58,15 +65,21 @@ abstract class PushNotificationsService : FirebaseMessagingService() {
         val title = data[PushNotificationsConstants.AWS_PINPOINT_NOTIFICATION_TITLE]
         val body = data[PushNotificationsConstants.AWS_PINPOINT_NOTIFICATION_BODY]
         val imageUrl = data[PushNotificationsConstants.AWS_PINPOINT_NOTIFICATION_IMAGE]
-        val silentPush = data[PushNotificationsConstants.AWS_PINPOINT_NOTIFICATION_SILENTPUSH].equals("1")
-        return NotificationPayload(title, body, action, imageUrl, silentPush)
+
+        return NotificationPayload {
+            notification(title, body, imageUrl)
+            tapAction(action)
+            silentPush = data[PushNotificationsConstants.AWS_PINPOINT_NOTIFICATION_SILENTPUSH].equals("1")
+            rawData = HashMap(remoteMessage.data)
+        }
     }
 
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         super.onMessageReceived(remoteMessage)
         Log.d("TAG", "Message: " + remoteMessage.data + "," + remoteMessage.notification)
         // handle payload and show notification
-        val payload = processRemoteMessage(remoteMessage).bundle()
-        Amplify.Notifications.Push.handleNotificationReceived(payload, { }, { })
+        val notificationPayload = processRemoteMessage(remoteMessage)
+        val notificationDetails = notificationPayload.bundle()
+        Amplify.Notifications.Push.handleNotificationReceived(notificationDetails, { }, { })
     }
 }

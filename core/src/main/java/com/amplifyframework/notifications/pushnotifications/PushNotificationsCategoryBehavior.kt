@@ -41,12 +41,4 @@ interface PushNotificationsCategoryBehavior : NotificationsCategoryBehavior {
     )
 
     fun registerDevice(token: String, onSuccess: Action, onError: Consumer<PushNotificationsException>)
-
-    fun getInitialNotification(onSuccess: Action, onError: Consumer<PushNotificationsException>)
-
-    fun getToken(): String?
-
-    fun getBadgeCount(): Int
-
-    fun setBadgeCount(count: Int)
 }

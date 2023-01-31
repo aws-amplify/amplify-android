@@ -47,13 +47,4 @@ class PushNotificationsCategory : Category<PushNotificationsPlugin<*>>(), PushNo
         onSuccess: Consumer<PushNotificationResult>,
         onError: Consumer<PushNotificationsException>
     ) = selectedPlugin.handleNotificationReceived(details, onSuccess, onError)
-
-    override fun getInitialNotification(onSuccess: Action, onError: Consumer<PushNotificationsException>) =
-        selectedPlugin.getInitialNotification(onSuccess, onError)
-
-    override fun getToken() = selectedPlugin.getToken()
-
-    override fun getBadgeCount() = selectedPlugin.getBadgeCount()
-
-    override fun setBadgeCount(count: Int) = selectedPlugin.setBadgeCount(count)
 }

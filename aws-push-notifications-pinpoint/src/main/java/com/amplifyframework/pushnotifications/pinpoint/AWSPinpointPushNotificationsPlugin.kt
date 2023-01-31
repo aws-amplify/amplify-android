@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -181,20 +181,6 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
         } catch (illegalStateException: IllegalStateException) {
             logger.warn("Failed to record $eventName with Analytics plugin, plugin not configured.")
         }
-    }
-
-    override fun getInitialNotification(onSuccess: Action, onError: Consumer<PushNotificationsException>) {
-        TODO("Not yet implemented")
-    }
-
-    override fun getToken() = getString("FCM_TOKEN", null)
-
-    override fun getBadgeCount(): Int {
-        TODO("Not yet implemented")
-    }
-
-    override fun setBadgeCount(count: Int) {
-        TODO("Not yet implemented")
     }
 
     override fun getPluginKey() = AWS_PINPOINT_PUSHNOTIFICATIONS_PLUGIN_KEY
