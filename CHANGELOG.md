@@ -1,3 +1,16 @@
+## [Release 2.2.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.2.0)
+
+### Features
+- **auth:** add required hash param to cognito api calls (#2266)
+- **datastore:** Add recoverability improvements (#2201)
+- **auth:** Added parity test for fetchDevices,rememberDevice,forgetDevice and fetchUserAttributes (#2174)
+
+### Bug Fixes
+- **analytics:** Remove test dependencies from implementation configuration (#2253)
+- **auth:** Fix Authorization header for HostedUI fetchToken when appSecret is used (#2264)
+
+[See all changes between 2.1.1 and 2.2.0](https://github.com/aws-amplify/amplify-android/compare/release_v2.1.1...release_v2.2.0)
+
 ## [Release 2.1.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.1.1)
 
 ### Bug Fixes
