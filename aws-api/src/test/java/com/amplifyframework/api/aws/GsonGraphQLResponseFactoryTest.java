@@ -49,6 +49,7 @@ import java.util.concurrent.TimeUnit;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThrows;
 
 /**
  * Unit test for implementation of ResponseFactory.
@@ -90,6 +91,47 @@ public final class GsonGraphQLResponseFactoryTest {
         assertFalse(response.hasData());
         assertFalse(response.hasErrors());
         assertEquals(new ArrayList<>(), response.getErrors());
+    }
+
+    /**
+     * Validates that a response with non-Json content throws an
+     * ApiException instead of a RuntimeException.
+     * @throws ApiException From API configuration
+     */
+    @Test
+    public void nonJsonResponseThrowsApiException() throws ApiException {
+        // Arrange some non-JSON string from a "server"
+        final String nonJsonResponse =
+            Resources.readAsString("non-json-gql-response.json");
+
+        // Act! Parse it into a model.
+        Type responseType = TypeMaker.getParameterizedType(PaginatedResult.class, Todo.class);
+        GraphQLRequest<PaginatedResult<Todo>> request = buildDummyRequest(responseType);
+
+        // Assert that the appropriate exception is thrown
+        assertThrows(ApiException.class, () -> {
+            responseFactory.buildResponse(request, nonJsonResponse);
+        });
+    }
+
+    /**
+     * Validates that an empty response throws an
+     * ApiException instead of returning a null reference.
+     * @throws ApiException From API configuration
+     */
+    @Test
+    public void emptyResponseThrowsApiException() throws ApiException {
+        // Arrange some empty string from a "server"
+        final String emptyResponse = "";
+
+        // Act! Parse it into a model.
+        Type responseType = TypeMaker.getParameterizedType(PaginatedResult.class, Todo.class);
+        GraphQLRequest<PaginatedResult<Todo>> request = buildDummyRequest(responseType);
+
+        // Assert that the appropriate exception is thrown
+        assertThrows(ApiException.class, () -> {
+            responseFactory.buildResponse(request, emptyResponse);
+        });
     }
 
     /**
