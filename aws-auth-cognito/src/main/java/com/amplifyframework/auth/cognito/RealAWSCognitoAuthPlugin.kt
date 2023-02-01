@@ -1145,7 +1145,10 @@ internal class RealAWSCognitoAuthPlugin(
                 val encodedData = authEnvironment.getUserContextData(username)
                 val pinpointEndpointId = authEnvironment.getPinpointEndpointId()
 
-                ResetPasswordUseCase(cognitoIdentityProviderClient, appClient).execute(
+                ResetPasswordUseCase(
+                    cognitoIdentityProviderClient, appClient,
+                    configuration.userPool?.appClientSecret
+                ).execute(
                     username,
                     options,
                     encodedData,
@@ -1195,6 +1198,11 @@ internal class RealAWSCognitoAuthPlugin(
                         this.username = username
                         this.confirmationCode = confirmationCode
                         password = newPassword
+                        secretHash = AuthHelper.getSecretHash(
+                            username,
+                            configuration.userPool?.appClient,
+                            configuration.userPool?.appClientSecret
+                        )
                         clientMetadata =
                             (options as? AWSCognitoAuthConfirmResetPasswordOptions)?.metadata ?: mapOf()
                         clientId = configuration.userPool?.appClient

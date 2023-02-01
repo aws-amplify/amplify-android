@@ -38,7 +38,8 @@ dependencies {
     testImplementation dependency.mockito
     testImplementation dependency.mockitoinline
     testImplementation dependency.robolectric
-    implementation dependency.androidx.test.core
+    testImplementation dependency.androidx.test.junit
+    testImplementation dependency.androidx.test.core
     testImplementation dependency.kotlin.test.coroutines
     testImplementation project(path: ':aws-analytics-pinpoint')
 
@@ -46,6 +47,6 @@ dependencies {
     androidTestImplementation dependency.androidx.test.core
     androidTestImplementation dependency.androidx.test.runner
     androidTestImplementation dependency.kotlin.test.coroutines
-    implementation dependency.androidx.test.junit
+    androidTestImplementation dependency.androidx.test.junit
     androidTestImplementation project(path: ':aws-analytics-pinpoint')
 }
