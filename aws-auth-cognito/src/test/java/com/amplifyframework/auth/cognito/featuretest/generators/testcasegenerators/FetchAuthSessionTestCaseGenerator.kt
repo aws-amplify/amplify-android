@@ -1,8 +1,8 @@
 package com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerators
 
+import com.amplifyframework.auth.AWSCognitoAuthSession
+import com.amplifyframework.auth.AWSCognitoUserPoolTokens
 import com.amplifyframework.auth.AWSCredentials
-import com.amplifyframework.auth.cognito.AWSCognitoAuthSession
-import com.amplifyframework.auth.cognito.AWSCognitoUserPoolTokens
 import com.amplifyframework.auth.cognito.featuretest.API
 import com.amplifyframework.auth.cognito.featuretest.AuthAPI
 import com.amplifyframework.auth.cognito.featuretest.CognitoType
@@ -35,7 +35,7 @@ object FetchAuthSessionTestCaseGenerator : SerializableProvider {
         ).toJsonElement()
     )
 
-    private val expectedSuccess = AWSCognitoAuthSession(
+    private val expectedSuccess = com.amplifyframework.auth.cognito.AWSCognitoAuthSession(
         isSignedIn = true,
         identityIdResult = AWSCognitoAuthSession.getIdentityIdResult("someIdentityId"),
         awsCredentialsResult = AuthSessionResult.success(
@@ -100,7 +100,7 @@ object FetchAuthSessionTestCaseGenerator : SerializableProvider {
             ExpectationShapes.Amplify(
                 AuthAPI.fetchAuthSession,
                 ResponseType.Success,
-                AWSCognitoAuthSession(
+                com.amplifyframework.auth.cognito.AWSCognitoAuthSession(
                     isSignedIn = false,
                     identityIdResult = AWSCognitoAuthSession.getIdentityIdResult("someIdentityId"),
                     awsCredentialsResult = AuthSessionResult.success(
@@ -128,7 +128,7 @@ object FetchAuthSessionTestCaseGenerator : SerializableProvider {
             ExpectationShapes.Amplify(
                 AuthAPI.fetchAuthSession,
                 ResponseType.Success,
-                AWSCognitoAuthSession(
+                com.amplifyframework.auth.cognito.AWSCognitoAuthSession(
                     isSignedIn = true,
                     identityIdResult = AuthSessionResult.failure(
                         ConfigurationException(

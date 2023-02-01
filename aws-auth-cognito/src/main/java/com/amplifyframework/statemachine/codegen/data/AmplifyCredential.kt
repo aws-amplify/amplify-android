@@ -12,9 +12,9 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
 package com.amplifyframework.statemachine.codegen.data
 
+import com.amplifyframework.auth.CognitoCredentials
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -96,12 +96,12 @@ internal data class FederatedToken(val token: String, val providerName: String) 
  * @param expiration Auth result expiration but not token expiration
  */
 @Serializable
-internal data class CognitoUserPoolTokens(
-    val idToken: String?,
-    val accessToken: String?,
-    val refreshToken: String?,
-    val expiration: Long?,
-) {
+data class CognitoUserPoolTokens(
+    override val idToken: String?,
+    override val accessToken: String?,
+    override val refreshToken: String?,
+    override val expiration: Long?
+) : com.amplifyframework.auth.CognitoUserPoolTokens {
     override fun toString(): String {
         return "CognitoUserPoolTokens(" +
             "idToken = ${idToken?.substring(0..4)}***, " +
@@ -129,12 +129,12 @@ internal data class CognitoUserPoolTokens(
  * @param expiration session token expiration
  */
 @Serializable
-internal data class AWSCredentials(
-    val accessKeyId: String?,
-    val secretAccessKey: String?,
-    val sessionToken: String?,
-    val expiration: Long?,
-) {
+class AWSCredentials(
+    override val accessKeyId: String?,
+    override val secretAccessKey: String?,
+    override val sessionToken: String?,
+    override val expiration: Long?,
+) : CognitoCredentials {
     companion object {
         val empty = AWSCredentials(null, null, null, 0)
     }

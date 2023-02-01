@@ -1,29 +1,13 @@
-/*
- * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License").
- * You may not use this file except in compliance with the License.
- * A copy of the License is located at
- *
- *  http://aws.amazon.com/apache2.0
- *
- * or in the "license" file accompanying this file. This file is distributed
- * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
- * express or implied. See the License for the specific language governing
- * permissions and limitations under the License.
- */
-
 package com.amplifyframework.auth.cognito.helpers
 
 import android.util.Base64
 import com.amplifyframework.auth.exceptions.UnknownException
-import kotlin.text.Charsets.UTF_8
 import org.json.JSONObject
 
 /**
  * Utility class for all operations on JWT.
  */
-internal object JWTParser {
+object JWTParser {
     private const val HEADER = 0
     private const val PAYLOAD = 1
     private const val SIGNATURE = 2
@@ -40,7 +24,7 @@ internal object JWTParser {
             validateJWT(jwt)
             val sectionDecoded =
                 Base64.decode(jwt.split(".").toTypedArray()[HEADER], Base64.URL_SAFE)
-            val jwtSection = String(sectionDecoded, UTF_8)
+            val jwtSection = String(sectionDecoded, Charsets.UTF_8)
             JSONObject(jwtSection)
         } catch (e: Exception) {
             throw UnknownException("${e.localizedMessage ?: ""}, error in parsing JSON")
@@ -58,7 +42,7 @@ internal object JWTParser {
             validateJWT(jwt)
             val payload = jwt.split(".").toTypedArray()[PAYLOAD]
             val sectionDecoded = Base64.decode(payload, Base64.URL_SAFE)
-            val jwtSection = String(sectionDecoded, UTF_8)
+            val jwtSection = String(sectionDecoded, Charsets.UTF_8)
             JSONObject(jwtSection)
         } catch (e: Exception) {
             throw UnknownException("${e.localizedMessage ?: ""}, error in parsing JSON")
@@ -76,7 +60,7 @@ internal object JWTParser {
             validateJWT(jwt)
             val sectionDecoded =
                 Base64.decode(jwt.split(".").toTypedArray()[SIGNATURE], Base64.URL_SAFE)
-            String(sectionDecoded, UTF_8)
+            String(sectionDecoded, Charsets.UTF_8)
         } catch (e: Exception) {
             throw UnknownException("${e.localizedMessage ?: ""}, error in parsing JSON")
         }

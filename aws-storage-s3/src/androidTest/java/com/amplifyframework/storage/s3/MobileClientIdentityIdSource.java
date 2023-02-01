@@ -17,8 +17,8 @@ package com.amplifyframework.storage.s3;
 
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.auth.AWSCognitoAuthSession;
 import com.amplifyframework.auth.AuthException;
-import com.amplifyframework.auth.cognito.AWSCognitoAuthSession;
 import com.amplifyframework.storage.s3.UserCredentials.IdentityIdSource;
 import com.amplifyframework.testutils.sync.SynchronousAuth;
 

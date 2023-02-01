@@ -935,7 +935,7 @@ internal class RealAWSCognitoAuthPlugin(
                             )
                         }
                         _fetchAuthSession(onSuccess, onError)
-                    } else onSuccess.accept(credential.getCognitoSession())
+                    } else onSuccess.accept(credential.getCognitoSession() as AuthSession)
                 }
                 is AuthorizationState.Error -> {
                     val error = authZState.exception
@@ -977,7 +977,7 @@ internal class RealAWSCognitoAuthPlugin(
                 when (val authZState = authState.authZState) {
                     is AuthorizationState.SessionEstablished -> {
                         authStateMachine.cancel(token)
-                        onSuccess.accept(authZState.amplifyCredential.getCognitoSession())
+                        onSuccess.accept(authZState.amplifyCredential.getCognitoSession() as AuthSession)
                     }
                     is AuthorizationState.Error -> {
                         authStateMachine.cancel(token)
@@ -985,25 +985,32 @@ internal class RealAWSCognitoAuthPlugin(
                             is SessionError -> {
                                 when (error.exception) {
                                     is SignedOutException -> {
-                                        onSuccess.accept(error.amplifyCredential.getCognitoSession(error.exception))
+                                        onSuccess.accept(
+                                            error.amplifyCredential.getCognitoSession(error.exception) as AuthSession
+                                        )
                                     }
                                     is SessionExpiredException -> {
-                                        onSuccess.accept(AmplifyCredential.Empty.getCognitoSession(error.exception))
+                                        onSuccess.accept(
+                                            AmplifyCredential.Empty.getCognitoSession(error.exception)
+                                                as AuthSession
+                                        )
                                         sendHubEvent(AuthChannelEventName.SESSION_EXPIRED.toString())
                                     }
                                     else -> {
                                         val errorResult = UnknownException("Fetch auth session failed.", error)
-                                        onSuccess.accept(error.amplifyCredential.getCognitoSession(errorResult))
+                                        onSuccess.accept(
+                                            error.amplifyCredential.getCognitoSession(errorResult) as AuthSession
+                                        )
                                     }
                                 }
                             }
                             is ConfigurationException -> {
                                 val errorResult = InvalidAccountTypeException(error)
-                                onSuccess.accept(AmplifyCredential.Empty.getCognitoSession(errorResult))
+                                onSuccess.accept(AmplifyCredential.Empty.getCognitoSession(errorResult) as AuthSession)
                             }
                             else -> {
                                 val errorResult = UnknownException("Fetch auth session failed.", error)
-                                onSuccess.accept(AmplifyCredential.Empty.getCognitoSession(errorResult))
+                                onSuccess.accept(AmplifyCredential.Empty.getCognitoSession(errorResult) as AuthSession)
                             }
                         }
                     }

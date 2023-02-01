@@ -22,7 +22,6 @@ group = POM_GROUP
 
 dependencies {
     implementation project(path: ':core')
-    implementation project(path: ':aws-auth-cognito')
     implementation dependency.androidx.appcompat
     implementation dependency.aws.comprehend
     implementation dependency.aws.polly

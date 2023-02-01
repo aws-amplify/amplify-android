@@ -37,7 +37,6 @@ dependencies {
     androidTestImplementation project(path: ':maplibre-adapter')
     def lifecycleVersion = "2.4.1"
 
-    implementation project(":aws-auth-cognito")
     implementation project(":aws-geo-location")
     implementation project(":core")
     implementation dependency.aws.signing

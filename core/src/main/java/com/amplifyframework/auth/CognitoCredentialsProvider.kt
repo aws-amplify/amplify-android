@@ -13,15 +13,12 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.storage.s3.credentials
+package com.amplifyframework.auth
 
 import aws.smithy.kotlin.runtime.auth.awscredentials.Credentials
-import com.amplifyframework.auth.AWSCredentials
-import com.amplifyframework.auth.AWSTemporaryCredentials
-import com.amplifyframework.auth.AuthCredentialsProvider
-import com.amplifyframework.auth.AuthSession
-import com.amplifyframework.auth.cognito.AWSCognitoAuthSession
+import com.amplifyframework.api.ApiException
 import com.amplifyframework.core.Amplify
+import com.amplifyframework.core.Consumer
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
@@ -30,7 +27,7 @@ import kotlin.coroutines.suspendCoroutine
  * Internal implementation of cognito credentials provider.
  * This will be ported to core once it seems feasible to do so.
  */
-internal class CognitoCredentialsProvider : AuthCredentialsProvider {
+open class CognitoCredentialsProvider : AuthCredentialsProvider {
     /**
      * Request identityId from the provider.
      */
@@ -52,6 +49,24 @@ internal class CognitoCredentialsProvider : AuthCredentialsProvider {
                 }
             )
         }
+    }
+
+    fun getAccessToken(onResult: Consumer<String>, onFailure: Consumer<Exception>) {
+        Amplify.Auth.fetchAuthSession(
+            { session ->
+                val tokens = (session as? AWSCognitoAuthSession)?.userPoolTokensResult?.value?.accessToken
+                tokens?.let { onResult.accept(it) }
+                    ?: onFailure.accept(
+                        ApiException.ApiAuthException(
+                            "Token is null",
+                            "Token received but is null. Check if you are signed in"
+                        )
+                    )
+            },
+            {
+                onFailure.accept(it)
+            }
+        )
     }
 
     /**
