@@ -15,6 +15,7 @@
 
 plugins {
     id "org.jetbrains.kotlin.plugin.serialization" version "1.6.10"
+    id("org.jetbrains.kotlinx.kover") version "0.6.1"
 }
 apply plugin: 'com.android.library'
 apply from: rootProject.file("configuration/checkstyle.gradle")
