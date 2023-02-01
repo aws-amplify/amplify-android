@@ -112,6 +112,8 @@ public final class DataStoreConfigurationTest {
 
         DataStoreSyncExpression ownerSyncExpression = () -> BlogOwner.ID.beginsWith(RandomString.string());
         DataStoreSyncExpression postSyncExpression = () -> Post.ID.beginsWith(RandomString.string());
+
+        @SuppressWarnings("deprecation")
         DataStoreConfiguration configObject = DataStoreConfiguration
             .builder()
             .syncMaxRecords(expectedSyncMaxRecords)
