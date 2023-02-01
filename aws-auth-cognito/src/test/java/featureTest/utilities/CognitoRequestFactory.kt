@@ -38,6 +38,7 @@ object CognitoRequestFactory {
                 clientMetadata =
                     Json.decodeFromJsonElement<Map<String, String>>(params["clientMetadata"] as JsonObject)
                 clientId = (params["clientId"] as JsonPrimitive).content
+                secretHash = (params["secretHash"] as JsonPrimitive).content
             }
 
             ForgotPasswordRequest.invoke(expectedRequestBuilder)

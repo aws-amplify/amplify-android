@@ -14,8 +14,9 @@
  */
 
 package com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerators
-
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.NotAuthorizedException
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.AttributeType
+import com.amplifyframework.auth.AuthUserAttribute
+import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.cognito.featuretest.API
 import com.amplifyframework.auth.cognito.featuretest.AuthAPI
 import com.amplifyframework.auth.cognito.featuretest.CognitoType
@@ -26,87 +27,72 @@ import com.amplifyframework.auth.cognito.featuretest.PreConditions
 import com.amplifyframework.auth.cognito.featuretest.ResponseType
 import com.amplifyframework.auth.cognito.featuretest.generators.SerializableProvider
 import com.amplifyframework.auth.cognito.featuretest.generators.toJsonElement
+import com.amplifyframework.auth.exceptions.SignedOutException
 import kotlinx.serialization.json.JsonObject
 
-object ResetPasswordTestCaseGenerator : SerializableProvider {
+object FetchUserAttributesTestCaseGenerator : SerializableProvider {
+
+    private val expectedSuccess = listOf<AuthUserAttribute>(
+        AuthUserAttribute(AuthUserAttributeKey.email(), "email@email.com"),
+        AuthUserAttribute(AuthUserAttributeKey.phoneNumber(), "000-000-0000")
+    ).toJsonElement()
+
     private val mockCognitoResponse = MockResponse(
         CognitoType.CognitoIdentityProvider,
-        "forgotPassword",
+        "getUser",
         ResponseType.Success,
         mapOf(
-            "codeDeliveryDetails" to mapOf(
-                "destination" to "dummy destination",
-                "deliveryMedium" to "EMAIL",
-                "attributeName" to "dummy attribute"
+            "userAttributes" to listOf<AttributeType>(
+                AttributeType.invoke {
+                    name = "email"
+                    value = "email@email.com"
+                },
+                AttributeType.invoke {
+                    name = "phone"
+                    value = "000-000-0000"
+                }
             )
         ).toJsonElement()
     )
 
-    private val codeDeliveryDetails = mapOf(
-        "destination" to "dummy destination",
-        "deliveryMedium" to "EMAIL",
-        "attributeName" to "dummy attribute"
-    )
-
-    private val expectedSuccess =
-        mapOf(
-            "isPasswordReset" to false,
-            "nextStep" to
-                mapOf(
-                    "resetPasswordStep" to "CONFIRM_RESET_PASSWORD_WITH_CODE",
-                    "additionalInfo" to emptyMap<String, String>(),
-                    "codeDeliveryDetails" to codeDeliveryDetails
-                )
-        ).toJsonElement()
-
-    private val cognitoValidation = ExpectationShapes.Cognito.CognitoIdentityProvider(
-        "forgotPassword",
-        mapOf(
-            "username" to "someUsername",
-            "clientId" to "testAppClientId",
-            "secretHash" to "a hash",
-            "clientMetadata" to emptyMap<String, String>()
-        ).toJsonElement()
-    )
-
     private val apiReturnValidation = ExpectationShapes.Amplify(
-        AuthAPI.resetPassword,
+        AuthAPI.fetchUserAttributes,
         ResponseType.Success,
         expectedSuccess,
     )
-    private val finalStateValidation = ExpectationShapes.State("AuthenticationState_SignedIn.json")
 
     private val baseCase = FeatureTestCase(
         description = "Test that Cognito is called with given payload and returns successful data",
         preConditions = PreConditions(
             "authconfiguration.json",
-            "SignedOut_Configured.json",
-            mockedResponses = listOf()
+            "SignedIn_SessionEstablished.json",
+            mockedResponses = listOf(mockCognitoResponse)
         ),
         api = API(
-            AuthAPI.resetPassword,
-            mapOf("username" to "someUsername").toJsonElement(),
-            JsonObject(emptyMap())
+            AuthAPI.fetchUserAttributes,
+            JsonObject(emptyMap()),
+            JsonObject(emptyMap()),
         ),
-        validations = listOf(cognitoValidation)
+        validations = listOf(apiReturnValidation)
     )
 
     private val successCase: FeatureTestCase = baseCase.copy(
-        description = "AuthResetPasswordResult object is returned when reset password succeeds",
+        description = "List of user attributes returned when fetch user attributes API succeeds",
         preConditions = baseCase.preConditions.copy(mockedResponses = listOf(mockCognitoResponse)),
         validations = baseCase.validations.plus(apiReturnValidation)
     )
 
     private val errorCase: FeatureTestCase
         get() {
-            val errorResponse = NotAuthorizedException.invoke { message = "Cognito error message" }
+            val errorResponse = SignedOutException()
             return baseCase.copy(
-                description = "AuthException is thrown when forgotPassword API call fails",
+                description = "AuthException is thrown when fetchUserAttributes API is called without signing in",
                 preConditions = baseCase.preConditions.copy(
+                    state = "SignedOut_Configured.json",
                     mockedResponses = listOf(
                         MockResponse(
                             CognitoType.CognitoIdentityProvider,
-                            "forgotPassword",
+                            "getUser",
                             ResponseType.Failure,
                             errorResponse.toJsonElement()
                         )
@@ -114,11 +100,9 @@ object ResetPasswordTestCaseGenerator : SerializableProvider {
                 ),
                 validations = listOf(
                     ExpectationShapes.Amplify(
-                        AuthAPI.resetPassword,
+                        AuthAPI.fetchUserAttributes,
                         ResponseType.Failure,
-                        com.amplifyframework.auth.exceptions.NotAuthorizedException(
-                            cause = errorResponse
-                        ).toJsonElement(),
+                        SignedOutException().toJsonElement(),
                     )
                 )
             )

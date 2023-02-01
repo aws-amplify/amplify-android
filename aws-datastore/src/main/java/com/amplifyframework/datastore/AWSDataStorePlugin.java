@@ -322,6 +322,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
         return Completable.fromAction(() -> categoryInitializationsPending.await())
             .timeout(LIFECYCLE_TIMEOUT_MS, TimeUnit.MILLISECONDS)
             .subscribeOn(Schedulers.io())
+            .doOnComplete(() -> LOG.info("DataStore plugin initialized."))
             .doOnError(error -> LOG.error("DataStore initialization timed out.", error));
     }
 
@@ -773,10 +774,14 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
 
         /**
          * Enables Retry on DataStore sync engine.
+         * @deprecated This configuration will be deprecated in a future version.
          * @param isSyncRetryEnabled is sync retry enabled.
          * @return An implementation of the {@link ModelProvider} interface.
          */
+        @Deprecated
         public Builder isSyncRetryEnabled(Boolean isSyncRetryEnabled) {
+            LOG.warn("The isSyncRetryEnabled configuration will be deprecated in a future version."
+                    + " Please discontinue use of this API.");
             this.isSyncRetryEnabled = isSyncRetryEnabled;
             return this;
         }

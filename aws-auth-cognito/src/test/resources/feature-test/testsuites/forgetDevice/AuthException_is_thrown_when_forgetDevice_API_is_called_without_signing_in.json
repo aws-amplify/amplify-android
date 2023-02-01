@@ -1,0 +1,44 @@
+{
+    "description": "AuthException is thrown when forgetDevice API is called without signing in",
+    "preConditions": {
+        "amplify-configuration": "authconfiguration.json",
+        "state": "SignedOut_Configured.json",
+        "mockedResponses": [
+            {
+                "type": "cognitoIdentityProvider",
+                "apiName": "forgetDevice",
+                "responseType": "failure",
+                "response": {
+                    "errorType": "SignedOutException",
+                    "errorMessage": "You are currently signed out.",
+                    "recoverySuggestion": "Please sign in and reattempt the operation.",
+                    "cause": null
+                }
+            }
+        ]
+    },
+    "api": {
+        "name": "forgetDevice",
+        "params": {
+            "device": {
+                "id": "id",
+                "name": "test"
+            }
+        },
+        "options": {
+        }
+    },
+    "validations": [
+        {
+            "type": "amplify",
+            "apiName": "forgetDevice",
+            "responseType": "failure",
+            "response": {
+                "errorType": "SignedOutException",
+                "errorMessage": "You are currently signed out.",
+                "recoverySuggestion": "Please sign in and reattempt the operation.",
+                "cause": null
+            }
+        }
+    ]
+}

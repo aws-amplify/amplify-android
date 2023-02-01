@@ -25,6 +25,7 @@ import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.api.graphql.PaginatedResult;
 import com.amplifyframework.api.graphql.QueryType;
 import com.amplifyframework.api.graphql.SubscriptionType;
+import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.model.AuthRule;
 import com.amplifyframework.core.model.AuthStrategy;
 import com.amplifyframework.core.model.Model;
@@ -50,6 +51,7 @@ import com.amplifyframework.core.model.query.predicate.QueryPredicateGroup;
 import com.amplifyframework.core.model.query.predicate.QueryPredicateOperation;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.DataStoreException;
+import com.amplifyframework.logging.Logger;
 import com.amplifyframework.util.Casing;
 import com.amplifyframework.util.TypeMaker;
 
@@ -75,6 +77,8 @@ import java.util.Map;
  * and AppSync-specific field names (`_version`, `_deleted`, etc.)
  */
 final class AppSyncRequestFactory {
+    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
+
     private AppSyncRequestFactory() {}
 
     /**
@@ -485,6 +489,8 @@ final class AppSyncRequestFactory {
         } else if (modelField.isModel() && fieldValue instanceof Map) {
             return ((Map<?, ?>) fieldValue).get("id");
         } else {
+            LOG.warn(String.format("Can't extract identifier: modelField=%s, isModel=%s, fieldValue=%s",
+                    modelField.getName(), modelField.isModel(), fieldValue));
             throw new IllegalStateException("Associated data is not Model or Map.");
         }
     }
