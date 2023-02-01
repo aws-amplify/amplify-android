@@ -163,6 +163,25 @@ public final class AppSyncMocking {
             return CreateConfigurator.this;
         }
 
+        /**
+         * When the AppSync create() method is invoked with the provided model,
+         * it will respond with the provided failure.
+         * @param model When this model is seen on the AppSync create(),
+         * @param error This error is emitted on the onFailure
+         * @param <T> Type of model
+         * @return A create configurator
+         */
+        @NonNull
+        public <T extends Model> CreateConfigurator mockResponseFailure(
+                @NonNull T model, @NonNull Throwable error) {
+            Objects.requireNonNull(model);
+            Objects.requireNonNull(error);
+            callOnFailure(/* onFailure position = */ 3, error)
+                .when(appSync)
+                .create(eq(model), /* schema */ any(), /* onResponse */ any(), /* onFailure */ any());
+            return CreateConfigurator.this;
+        }
+
         @SuppressWarnings("SameParameterValue")
         private static <T extends Model> Stubber callOnSuccess(
                 int positionOfOnSuccess, GraphQLResponse<ModelWithMetadata<T>> response) {
@@ -171,6 +190,18 @@ public final class AppSyncMocking {
                 Consumer<GraphQLResponse<ModelWithMetadata<T>>> onResult =
                     invocation.getArgument(positionOfOnSuccess);
                 onResult.accept(response);
+                // Technically, create() returns a Cancelable...
+                return new NoOpCancelable();
+            });
+        }
+
+        private static <T extends Model> Stubber callOnFailure(
+                int positionOfOnFailure, Throwable error) {
+            return doAnswer(invocation -> {
+                // Simulate a failure response callback from the create() method.
+                Consumer<Throwable> onFailure =
+                    invocation.getArgument(positionOfOnFailure);
+                onFailure.accept(error);
                 // Technically, create() returns a Cancelable...
                 return new NoOpCancelable();
             });

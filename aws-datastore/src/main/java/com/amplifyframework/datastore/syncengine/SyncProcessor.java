@@ -74,6 +74,11 @@ final class SyncProcessor {
     private final DataStoreConfigurationProvider dataStoreConfigurationProvider;
     private final QueryPredicateProvider queryPredicateProvider;
     private final RetryHandler requestRetry;
+
+    /**
+     * The `isSyncRetryEnabled` value is being passed down all the way from the `AWSDataStorePlugin` or the
+     * `DataStoreConfiguration` where it's named `doSyncRetry`.
+     */
     private final boolean isSyncRetryEnabled;
 
     private SyncProcessor(Builder builder) {
@@ -86,6 +91,10 @@ final class SyncProcessor {
         this.queryPredicateProvider = builder.queryPredicateProvider;
         this.requestRetry = builder.requestRetry;
         this.isSyncRetryEnabled = builder.isSyncRetryEnabled;
+
+        if (!this.isSyncRetryEnabled) {
+            LOG.warn("Disabling sync retries will be deprecated in a future version.");
+        }
     }
 
     /**
@@ -278,10 +287,11 @@ final class SyncProcessor {
      */
     private <T extends Model> Single<PaginatedResult<ModelWithMetadata<T>>> syncPage(
             GraphQLRequest<PaginatedResult<ModelWithMetadata<T>>> request) {
+
         return Single.create(emitter -> {
             Cancelable cancelable = appSync.sync(request, result -> {
                 if (result.hasErrors()) {
-                    emitter.onError(new DataStoreException(
+                    emitter.onError(new DataStoreException.IrRecoverableException(
                             String.format("A model sync failed: %s", result.getErrors()),
                             "Check your schema."
                     ));
@@ -299,8 +309,10 @@ final class SyncProcessor {
 
     private <T extends Model> Single<PaginatedResult<ModelWithMetadata<T>>> syncPageWithRetry(
             GraphQLRequest<PaginatedResult<ModelWithMetadata<T>>> request) {
+        // We don't want to treat DataStoreException.GraphQLResponseException as non retryable here because we want to
+        // support merging the applicable data if any.
         List<Class<? extends Throwable>> skipException = new ArrayList<>();
-        skipException.add(DataStoreException.GraphQLResponseException.class);
+        skipException.add(DataStoreException.IrRecoverableException.class);
         skipException.add(ApiException.NonRetryableException.class);
         return requestRetry.retry(syncPage(request), skipException);
     }

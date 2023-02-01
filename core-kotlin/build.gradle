@@ -17,6 +17,8 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 apply from: rootProject.file("configuration/publishing.gradle")
 
+group = POM_GROUP
+
 dependencies {
     implementation dependency.kotlin.stdlib
     implementation dependency.kotlin.coroutines

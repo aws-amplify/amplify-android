@@ -1,8 +1,18 @@
+## [Release 2.1.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.1.1)
+
+### Bug Fixes
+- **datastore:** Fix lock contention issue when running DataStore.start() from the callback of DataStore.stop() (#2208)
+- **core:** Remove unused dependencies (#2207)
+- **geo:** Bump MapLibre SDK to 9.6.0 (#2254)
+
+[See all changes between 2.1.0 and 2.1.1](https://github.com/aws-amplify/amplify-android/compare/release_v2.1.0...release_v2.1.1)
+
 ## [Release 2.1.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.1.0)
 
 ### Features
 - feat(Geo): Add Kotlin Geo Facade (#2155)
 - Add a network status listener to restart DataStore after the network comes back online. (#2148)
+- feat(auth): Overriding sign in when the State machine is already in the signing in state (#2187)
 
 ### Miscellaneous
 - chore: Remove deprecated maven plugin (#2137)

@@ -22,6 +22,8 @@ apply plugin: 'kotlin-android'
 apply from: rootProject.file("configuration/publishing.gradle")
 apply from: rootProject.file("configuration/checkstyle.gradle")
 
+group = POM_GROUP
+
 dependencies {
     implementation project(path: ':core')
     implementation dependency.kotlin.coroutines

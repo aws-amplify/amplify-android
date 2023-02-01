@@ -18,6 +18,8 @@ apply plugin: 'kotlin-android'
 apply from: rootProject.file('configuration/checkstyle.gradle')
 apply from: rootProject.file('configuration/publishing.gradle')
 
+group = POM_GROUP
+
 dependencies {
     implementation project(':core')
     // ToDo: Remove fixed dependency to cognito and abstract it to core
@@ -39,4 +41,3 @@ dependencies {
 afterEvaluate {
     it.android.kotlinOptions.jvmTarget = JavaVersion.VERSION_1_8.toString()
 }
-

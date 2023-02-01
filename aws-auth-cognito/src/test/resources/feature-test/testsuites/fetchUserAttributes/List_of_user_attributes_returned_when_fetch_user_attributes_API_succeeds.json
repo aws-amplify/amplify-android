@@ -1,0 +1,73 @@
+{
+    "description": "List of user attributes returned when fetch user attributes API succeeds",
+    "preConditions": {
+        "amplify-configuration": "authconfiguration.json",
+        "state": "SignedIn_SessionEstablished.json",
+        "mockedResponses": [
+            {
+                "type": "cognitoIdentityProvider",
+                "apiName": "getUser",
+                "responseType": "success",
+                "response": {
+                    "userAttributes": [
+                        {
+                            "name": "email",
+                            "value": "email@email.com"
+                        },
+                        {
+                            "name": "phone",
+                            "value": "000-000-0000"
+                        }
+                    ]
+                }
+            }
+        ]
+    },
+    "api": {
+        "name": "fetchUserAttributes",
+        "params": {
+        },
+        "options": {
+        }
+    },
+    "validations": [
+        {
+            "type": "amplify",
+            "apiName": "fetchUserAttributes",
+            "responseType": "success",
+            "response": [
+                {
+                    "key": {
+                        "attributeKey": "email"
+                    },
+                    "value": "email@email.com"
+                },
+                {
+                    "key": {
+                        "attributeKey": "phone_number"
+                    },
+                    "value": "000-000-0000"
+                }
+            ]
+        },
+        {
+            "type": "amplify",
+            "apiName": "fetchUserAttributes",
+            "responseType": "success",
+            "response": [
+                {
+                    "key": {
+                        "attributeKey": "email"
+                    },
+                    "value": "email@email.com"
+                },
+                {
+                    "key": {
+                        "attributeKey": "phone_number"
+                    },
+                    "value": "000-000-0000"
+                }
+            ]
+        }
+    ]
+}

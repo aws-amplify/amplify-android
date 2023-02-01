@@ -47,7 +47,9 @@ class APICaptorFactory(
             AuthAPI.signIn to mockk<Consumer<AuthSignInResult>>(),
             AuthAPI.deleteUser to mockk<Action>(),
             AuthAPI.fetchAuthSession to mockk<AuthSession>(),
-            AuthAPI.getCurrentUser to mockk<AuthUser>()
+            AuthAPI.getCurrentUser to mockk<AuthUser>(),
+            AuthAPI.rememberDevice to mockk<Action>(),
+            AuthAPI.forgetDevice to mockk<Action>()
         )
         val onError = mockk<Consumer<AuthException>>()
         val onComplete = mapOf(
@@ -101,6 +103,26 @@ class APICaptorFactory(
                 successCaptors[apiName] = actionCaptor
             }
             AuthAPI.getCurrentUser -> {
+                val consumer = onSuccess[apiName] as Action
+                every { consumer.call() } answers { latch.countDown() }
+                successCaptors[apiName] = actionCaptor
+            }
+            AuthAPI.rememberDevice -> {
+                val consumer = onSuccess[apiName] as Action
+                every { consumer.call() } answers { latch.countDown() }
+                successCaptors[apiName] = actionCaptor
+            }
+            AuthAPI.forgetDevice -> {
+                val consumer = onSuccess[apiName] as Action
+                every { consumer.call() } answers { latch.countDown() }
+                successCaptors[apiName] = actionCaptor
+            }
+            AuthAPI.fetchDevices -> {
+                val consumer = onSuccess[apiName] as Action
+                every { consumer.call() } answers { latch.countDown() }
+                successCaptors[apiName] = actionCaptor
+            }
+            AuthAPI.fetchUserAttributes -> {
                 val consumer = onSuccess[apiName] as Action
                 every { consumer.call() } answers { latch.countDown() }
                 successCaptors[apiName] = actionCaptor

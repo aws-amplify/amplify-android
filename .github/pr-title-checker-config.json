@@ -4,10 +4,10 @@
     "color": "FF5733"
   },
   "CHECKS": {
-    "prefixes": ["chore: ", "refactor: ", "perf: ", "test: ", "docs: "],
+    "prefixes": ["chore: ", "refactor: ", "perf: ", "test: ", "docs: ", "release: "],
     "regexp": "(fix|feat)\\((all|analytics|api|auth|core|datastore|geo|predictions|storage)\\): ",
     "regexpFlags": "",
-    "ignoreLabels" : []
+    "ignoreLabels" : ["ignore-pr-title"]
   },
   "MESSAGES": {
     "success": "All OK",

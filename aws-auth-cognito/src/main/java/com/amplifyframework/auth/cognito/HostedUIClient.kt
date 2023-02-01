@@ -181,7 +181,7 @@ internal class HostedUIClient private constructor(
             if (configuration.appSecret != null) {
                 put(
                     "Authorization",
-                    PkceHelper.encodeBase64("${configuration.appClient}:${configuration.appSecret}")
+                    "Basic ${PkceHelper.encodeBase64("${configuration.appClient}:${configuration.appSecret}")}"
                 )
             }
         }
