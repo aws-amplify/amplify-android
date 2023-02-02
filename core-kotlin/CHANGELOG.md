@@ -1,3 +1,10 @@
+## [Release 0.22.0](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.22.0)
+
+### Features
+- **datastore:** Add recoverability improvements (v1) (#2268)
+
+[See all changes between 0.21.13 and 0.22.0](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.21.13...release-kotlin_v0.22.0)
+
 ## [Release 0.21.13](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.21.13)
 
 ### Miscellaneous
