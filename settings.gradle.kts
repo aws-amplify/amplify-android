@@ -79,13 +79,8 @@ dependencyResolutionManagement {
             library("androidx-workmanager", "androidx.work:work-runtime-ktx:2.7.1")
             library("androidx-security", "androidx.security:security-crypto:1.0.0")
             library("androidx-nav-fragment", "androidx.navigation", "navigation-fragment").versionRef(nagivation)
-            library(
-                "androidx-nav-fragmentktx",
-                "androidx.navigation",
-                "navigation-fragment-ktx"
-            ).versionRef(nagivation)
             library("androidx-nav-ui", "androidx.navigation", "navigation-ui").versionRef(nagivation)
-            library("androidx-nav-ui-ktx", "androidx.navigation", "navigation-ui-ktx").versionRef(nagivation)
+            library("androidx-lifecycle-runtime", "androidx.lifecycle:lifecycle-runtime:2.4.1")
 
             // AWS
             val awsKotlinSdk = "awsKotlinSdk"
@@ -111,6 +106,7 @@ dependencyResolutionManagement {
             // Kotlin
             library("kotlin-stdlib", "org.jetbrains.kotlin:kotlin-stdlib:1.7.10")
             library("kotlin-coroutines", "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.3")
+            library("kotlin-coroutines-android", "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.3")
             library("kotlin-serializationJson", "org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.3")
             library("kotlin-futures", "androidx.concurrent:concurrent-futures-ktx:1.1.0")
 
@@ -121,6 +117,9 @@ dependencyResolutionManagement {
             // RxJava
             library("rxandroid", "io.reactivex.rxjava3:rxandroid:3.0.0")
             library("rxjava", "io.reactivex.rxjava3:rxjava:3.0.6")
+
+            // Google
+            library("google-material", "com.google.android.material:material:1.4.0")
 
             // Misc
             library("oauth2", "com.google.auth:google-auth-library-oauth2-http:0.26.0")

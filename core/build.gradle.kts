@@ -33,9 +33,7 @@ dependencies {
     implementation(dependency.androidx.v4support)
     implementation(dependency.androidx.annotation)
     implementation(dependency.androidx.nav.fragment)
-    implementation(dependency.androidx.nav.fragmentktx)
     implementation(dependency.androidx.nav.ui)
-    implementation(dependency.androidx.nav.ui.ktx)
     implementation(dependency.kotlin.serializationJson)
 
     implementation(dependency.aws.credentials)

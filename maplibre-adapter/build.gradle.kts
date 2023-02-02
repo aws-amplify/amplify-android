@@ -44,14 +44,8 @@ dependencies {
     implementation(dependency.okhttp)
     implementation(dependency.kotlin.coroutines)
 
-    //noinspection GradleDependency
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:$lifecycleVersion")
-    //noinspection GradleDependency
-    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycleVersion")
-    //noinspection GradleDependency
-    implementation("androidx.lifecycle:lifecycle-livedata-ktx:$lifecycleVersion")
-    //noinspection GradleDependency
-    implementation("com.google.android.material:material:1.4.0")
+    implementation(dependency.androidx.lifecycle.runtime)
+    implementation(dependency.google.material)
 
     compileOnly(dependency.aws.location)
 
@@ -61,4 +55,5 @@ dependencies {
     androidTestImplementation(testDependency.androidx.test.core)
     androidTestImplementation(testDependency.androidx.test.core.ktx)
     androidTestImplementation(testDependency.androidx.test.runner)
+    androidTestImplementation(dependency.kotlin.coroutines.android)
 }
