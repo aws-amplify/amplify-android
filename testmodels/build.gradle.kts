@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -13,15 +13,16 @@
  * permissions and limitations under the License.
  */
 
-apply plugin: 'com.android.library'
-apply plugin: 'kotlin-android'
-
-dependencies {
-    implementation project(path: ':core')
-    implementation project(path: ':aws-api-appsync')
-    implementation dependency.androidx.core
-
-    testImplementation project(path: ':testutils')
-    testImplementation dependency.junit
+plugins {
+    id("com.android.library")
+    id("kotlin-android")
 }
 
+dependencies {
+    implementation(project(":core"))
+    implementation(project(":aws-api-appsync"))
+    implementation(dependency.androidx.core)
+
+    testImplementation(project(":testutils"))
+    testImplementation(testDependency.junit)
+}
