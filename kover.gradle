@@ -1,0 +1,9 @@
+apply from: '../jacoco-config.gradle'
+apply plugin: 'kover'
+
+kover{
+    instrumentation {
+        // exclude testReleaseUnitTest from instrumentation
+        excludeTasks.add "testReleaseUnitTest"
+    }
+}

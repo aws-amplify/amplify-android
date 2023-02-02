@@ -26,6 +26,7 @@ buildscript {
         classpath 'com.android.tools.build:gradle:7.3.1'
         classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.7.10'
         classpath "org.jetbrains.dokka:dokka-gradle-plugin:1.7.10"
+        classpath("org.jetbrains.kotlinx:kover:0.6.1")
         classpath 'org.jlleitschuh.gradle:ktlint-gradle:11.0.0'
         classpath "org.gradle:test-retry-gradle-plugin:1.4.1"
     }
@@ -166,7 +167,7 @@ subprojects { project ->
     }
     afterEvaluate {
         configureAndroidLibrary(project)
-        project.apply from: '../jacoco.gradle'
+        project.apply from: '../kover.gradle'
     }
     if (!project.name.contains("test")) {
         apply plugin: 'org.jetbrains.dokka'
