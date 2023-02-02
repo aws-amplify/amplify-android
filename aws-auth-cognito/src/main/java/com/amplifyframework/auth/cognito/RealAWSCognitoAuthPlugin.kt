@@ -34,6 +34,7 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.VerifyUserAttribute
 import aws.sdk.kotlin.services.cognitoidentityprovider.resendConfirmationCode
 import aws.sdk.kotlin.services.cognitoidentityprovider.signUp
 import com.amplifyframework.AmplifyException
+import com.amplifyframework.auth.AWSCognitoAuthSession
 import com.amplifyframework.auth.AWSCredentials
 import com.amplifyframework.auth.AWSTemporaryCredentials
 import com.amplifyframework.auth.AuthCategoryBehavior
