@@ -3,7 +3,22 @@ apply plugin: 'kover'
 
 kover{
     instrumentation {
-        // exclude testReleaseUnitTest from instrumentation
-        excludeTasks.add "testReleaseUnitTest"
+        // exclude jdk internals from instrumentation
+        excludeTasks.add "jdk.internal.*"
+    }
+
+    xmlReport {
+        // set to true to run koverXmlReport task during the execution of the check task (if it exists) of the current project
+        onCheck.set false
+
+        // change report file name
+        reportFile.set layout.buildDirectory.file("reports/kover/xml/${project.name}.xml")
+        overrideFilters {
+            // override common class filter
+            classes {
+                // override class exclusion rules
+                excludes.addAll jacocoIgnoreList
+            }
+        }
     }
 }
