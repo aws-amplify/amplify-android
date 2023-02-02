@@ -30,6 +30,7 @@ import com.amplifyframework.api.aws.sigv4.AppSyncV4Signer;
 import com.amplifyframework.api.aws.sigv4.CognitoUserPoolsAuthProvider;
 import com.amplifyframework.api.aws.sigv4.DefaultCognitoUserPoolsAuthProvider;
 import com.amplifyframework.api.graphql.GraphQLRequest;
+import com.amplifyframework.auth.CognitoCredentialsProvider;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.logging.Logger;
 

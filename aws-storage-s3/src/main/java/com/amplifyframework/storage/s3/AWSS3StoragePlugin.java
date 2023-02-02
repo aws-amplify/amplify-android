@@ -20,6 +20,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
 
 import com.amplifyframework.auth.AuthCredentialsProvider;
+import com.amplifyframework.auth.CognitoCredentialsProvider;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.NoOpConsumer;
 import com.amplifyframework.storage.StorageAccessLevel;
@@ -48,7 +49,6 @@ import com.amplifyframework.storage.result.StorageTransferResult;
 import com.amplifyframework.storage.result.StorageUploadFileResult;
 import com.amplifyframework.storage.result.StorageUploadInputStreamResult;
 import com.amplifyframework.storage.s3.configuration.AWSS3StoragePluginConfiguration;
-import com.amplifyframework.storage.s3.credentials.CognitoCredentialsProvider;
 import com.amplifyframework.storage.s3.operation.AWSS3StorageDownloadFileOperation;
 import com.amplifyframework.storage.s3.operation.AWSS3StorageGetPresignedUrlOperation;
 import com.amplifyframework.storage.s3.operation.AWSS3StorageListOperation;

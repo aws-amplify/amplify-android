@@ -25,7 +25,6 @@ group = properties["POM_GROUP"].toString()
 
 dependencies {
     implementation(project(":core"))
-    implementation(project(":aws-auth-cognito"))
     implementation(dependency.androidx.appcompat)
     implementation(dependency.aws.comprehend)
     implementation(dependency.aws.polly)

@@ -46,7 +46,6 @@ dependencies {
     androidTestImplementation(project(":testmodels"))
     androidTestImplementation(project(":testutils"))
     androidTestImplementation(project(":aws-api"))
-    androidTestImplementation(project(":aws-auth-cognito"))
     androidTestImplementation(project(":aws-datastore"))
     androidTestImplementation(dependency.androidx.annotation)
     androidTestImplementation(testDependency.androidx.test.core)

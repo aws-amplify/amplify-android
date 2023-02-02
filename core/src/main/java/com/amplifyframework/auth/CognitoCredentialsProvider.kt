@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -13,27 +13,24 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.api.aws.auth
+package com.amplifyframework.auth
 
 import aws.smithy.kotlin.runtime.auth.awscredentials.Credentials
 import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider
 import com.amplifyframework.api.ApiException
-import com.amplifyframework.auth.AWSCredentials
-import com.amplifyframework.auth.AWSTemporaryCredentials
-import com.amplifyframework.auth.cognito.AWSCognitoAuthSession
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
-import kotlin.coroutines.suspendCoroutine
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
 
 /**
  * Wrapper to provide credentials from Auth synchronously and asynchronously
  */
-internal open class CognitoCredentialsProvider : CredentialsProvider {
+open class CognitoCredentialsProvider : CredentialsProvider, AuthCredentialsProvider {
     /**
      * Request [Credentials] synchronously by blocking current suspend execution.
      */
@@ -68,11 +65,34 @@ internal open class CognitoCredentialsProvider : CredentialsProvider {
         }
     }
 
+    /**
+     * Request identityId from the provider.
+     */
+    override suspend fun getIdentityId(): String {
+        return suspendCoroutine { continuation ->
+            Amplify.Auth.fetchAuthSession(
+                { authSession ->
+                    authSession.toAWSCognitoAuthSession()?.identityIdResult?.value?.let {
+                        continuation.resume(it)
+                    } ?: continuation.resumeWithException(
+                        Exception(
+                            "Failed to get identity ID. " +
+                                    "Check if you are signed in and configured identity pools correctly."
+                        )
+                    )
+                },
+                {
+                    continuation.resumeWithException(it)
+                }
+            )
+        }
+    }
+
     fun getAccessToken(onResult: Consumer<String>, onFailure: Consumer<Exception>) {
         Amplify.Auth.fetchAuthSession(
             { session ->
                 val tokens = (session as? AWSCognitoAuthSession)?.userPoolTokensResult?.value?.accessToken
-                tokens?.let { onResult.accept(it) }
+                tokens?.let { onResult.accept(tokens) }
                     ?: onFailure.accept(
                         ApiException.ApiAuthException(
                             "Token is null",
@@ -85,6 +105,14 @@ internal open class CognitoCredentialsProvider : CredentialsProvider {
             }
         )
     }
+}
+
+private fun AuthSession.toAWSCognitoAuthSession(): AWSCognitoAuthSession? {
+    if (this is AWSCognitoAuthSession) {
+        return this
+    }
+
+    return null
 }
 
 private fun AWSCredentials.toCredentials(): Credentials {

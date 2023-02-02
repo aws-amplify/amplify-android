@@ -32,8 +32,6 @@ dependencies {
     implementation(dependency.aws.cognitoidentity)
     implementation(dependency.aws.cognitoidentityprovider)
 
-    implementation(project(":aws-auth-cognito"))
-
     // dependency on Model/GraphQL integration classes
     // remove when modules are re-organized to provide better isolation
     compileOnly(project(":aws-api"))

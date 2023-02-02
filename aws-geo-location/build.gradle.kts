@@ -24,8 +24,6 @@ group = properties["POM_GROUP"].toString()
 
 dependencies {
     implementation(project(":core"))
-    // ToDo: Remove fixed dependency to cognito and abstract it to core
-    implementation(project(":aws-auth-cognito"))
     implementation(dependency.aws.location)
 
     testImplementation(project(":testutils"))
@@ -33,7 +31,6 @@ dependencies {
     testImplementation(testDependency.robolectric)
 
     androidTestImplementation(project(":testutils"))
-    androidTestImplementation(project(":aws-auth-cognito"))
     androidTestImplementation(dependency.androidx.annotation)
     androidTestImplementation(testDependency.androidx.test.core)
     androidTestImplementation(testDependency.androidx.test.runner)

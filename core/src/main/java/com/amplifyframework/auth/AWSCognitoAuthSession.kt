@@ -1,3 +1,5 @@
+package com.amplifyframework.auth
+
 /*
  * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
@@ -12,15 +14,13 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
+import com.amplifyframework.auth.result.AuthSessionResult
 
-package com.amplifyframework.auth
-
-import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider
-
-interface AuthCredentialsProvider : CredentialsProvider {
-    /**
-     * Get the identity ID of the currently logged in user if they are registered in identity pools.
-     * @return identity id
-     */
-    suspend fun getIdentityId(): String
-}
+open class AWSCognitoAuthSession(
+    @get:JvmName("getSignedIn")
+    open val isSignedIn: Boolean,
+    open val identityIdResult: AuthSessionResult<String>,
+    open val awsCredentialsResult: AuthSessionResult<AWSCredentials>,
+    open val userSubResult: AuthSessionResult<String>,
+    open val userPoolTokensResult: AuthSessionResult<AWSCognitoUserPoolTokens>,
+) : AuthSession(isSignedIn)
