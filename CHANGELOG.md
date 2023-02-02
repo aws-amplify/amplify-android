@@ -1,3 +1,10 @@
+## [Release 1.38.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.38.0)
+
+### Features
+- **datastore:** Add recoverability improvements (v1) (#2268)
+
+[See all changes between 1.37.13 and 1.38.0](https://github.com/aws-amplify/amplify-android/compare/release_v1.37.13...release_v1.38.0)
+
 ## [Release 1.37.13](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.37.13)
 
 ### Miscellaneous
