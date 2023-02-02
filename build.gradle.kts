@@ -29,6 +29,7 @@ buildscript {
         classpath("org.jetbrains.dokka:dokka-gradle-plugin:1.7.10")
         classpath("org.jlleitschuh.gradle:ktlint-gradle:11.0.0")
         classpath("org.gradle:test-retry-gradle-plugin:1.4.1")
+        classpath("org.jetbrains.kotlinx:kover:0.6.1")
     }
 }
 
@@ -71,7 +72,7 @@ subprojects {
 
     afterEvaluate {
         configureAndroid()
-        apply(from = "../jacoco.gradle")
+        apply(from = "../kover.gradle")
     }
 
     if (!name.contains("test")) {
