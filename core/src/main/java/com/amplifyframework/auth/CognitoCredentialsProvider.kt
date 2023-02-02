@@ -16,7 +16,6 @@
 package com.amplifyframework.auth
 
 import aws.smithy.kotlin.runtime.auth.awscredentials.Credentials
-import com.amplifyframework.api.ApiException
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
 import kotlin.coroutines.resume
@@ -57,7 +56,7 @@ open class CognitoCredentialsProvider : AuthCredentialsProvider {
                 val tokens = (session as? AWSCognitoAuthSession)?.userPoolTokensResult?.value?.accessToken
                 tokens?.let { onResult.accept(it) }
                     ?: onFailure.accept(
-                        ApiException.ApiAuthException(
+                        AuthException(
                             "Token is null",
                             "Token received but is null. Check if you are signed in"
                         )

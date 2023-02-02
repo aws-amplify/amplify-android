@@ -1,7 +1,19 @@
+/*
+ * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
 package com.amplifyframework.auth
 
-import com.amplifyframework.auth.cognito.helpers.JWTParser
-import com.amplifyframework.auth.exceptions.UnknownException
 import com.amplifyframework.auth.result.AuthSessionResult
 
 interface AWSCognitoAuthSession {
@@ -10,37 +22,4 @@ interface AWSCognitoAuthSession {
     val awsCredentialsResult: AuthSessionResult<AWSCredentials>
     val userSubResult: AuthSessionResult<String>
     val userPoolTokensResult: AuthSessionResult<AWSCognitoUserPoolTokens>
-
-    companion object {
-        fun getCredentialsResult(awsCredentials: CognitoCredentials): AuthSessionResult<AWSCredentials> =
-            with(awsCredentials) {
-                AWSCredentials.createAWSCredentials(accessKeyId, secretAccessKey, sessionToken, expiration)
-            }?.let {
-                AuthSessionResult.success(it)
-            } ?: AuthSessionResult.failure(UnknownException("Failed to fetch AWS credentials."))
-
-        fun getIdentityIdResult(identityId: String): AuthSessionResult<String> {
-            return if (identityId.isNotEmpty()) AuthSessionResult.success(identityId)
-            else AuthSessionResult.failure(UnknownException("Failed to fetch identity id."))
-        }
-
-        fun getUserSubResult(userPoolTokens: CognitoUserPoolTokens?): AuthSessionResult<String> {
-            return try {
-                AuthSessionResult.success(userPoolTokens?.accessToken?.let { JWTParser.getClaim(it, "sub") })
-            } catch (e: Exception) {
-                AuthSessionResult.failure(UnknownException(cause = e))
-            }
-        }
-
-        fun getUserPoolTokensResult(cognitoUserPoolTokens: CognitoUserPoolTokens):
-            AuthSessionResult<AWSCognitoUserPoolTokens> {
-            return AuthSessionResult.success(
-                AWSCognitoUserPoolTokens(
-                    accessToken = cognitoUserPoolTokens.accessToken,
-                    idToken = cognitoUserPoolTokens.idToken,
-                    refreshToken = cognitoUserPoolTokens.refreshToken
-                )
-            )
-        }
-    }
 }
