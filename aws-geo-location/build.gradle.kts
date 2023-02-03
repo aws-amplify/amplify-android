@@ -31,6 +31,7 @@ dependencies {
     testImplementation(testDependency.robolectric)
 
     androidTestImplementation(project(":testutils"))
+    androidTestImplementation(project(":aws-auth-cognito"))
     androidTestImplementation(dependency.androidx.annotation)
     androidTestImplementation(testDependency.androidx.test.core)
     androidTestImplementation(testDependency.androidx.test.runner)
