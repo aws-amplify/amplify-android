@@ -89,6 +89,10 @@ import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.slot
 import io.mockk.verify
+import org.json.JSONObject
+import org.junit.Before
+import org.junit.Ignore
+import org.junit.Test
 import java.util.Date
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -97,10 +101,6 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
-import org.json.JSONObject
-import org.junit.Before
-import org.junit.Ignore
-import org.junit.Test
 
 class RealAWSCognitoAuthPluginTest {
 
@@ -1033,7 +1033,7 @@ class RealAWSCognitoAuthPluginTest {
             onError
         )
 
-        assertTrue { listenLatch.await(5, TimeUnit.MINUTES) }
+        assertTrue { listenLatch.await(5, TimeUnit.SECONDS) }
         coVerify(exactly = 1) { onSuccess.accept(slot.captured) }
         assertTrue(slot.captured.isUpdated, "attribute should be successfully updated")
         assertNotNull(slot.captured.nextStep, "next step should not be null")
