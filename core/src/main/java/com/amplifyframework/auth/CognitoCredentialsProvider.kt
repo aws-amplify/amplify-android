@@ -17,6 +17,7 @@ package com.amplifyframework.auth
 
 import aws.smithy.kotlin.runtime.auth.awscredentials.Credentials
 import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider
+import com.amplifyframework.AmplifyException
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
 import kotlin.coroutines.resume
@@ -38,9 +39,10 @@ open class CognitoCredentialsProvider : CredentialsProvider, AuthCredentialsProv
                     authSession.toAWSAuthSession()?.awsCredentialsResult?.value?.let {
                         continuation.resume(it.toCredentials())
                     } ?: continuation.resumeWithException(
-                        Exception(
+                        AuthException(
                             "Failed to get credentials. " +
-                                "Check if you are signed in and configured identity pools correctly."
+                                "Check if you are signed in and configured identity pools correctly.",
+                            AmplifyException.TODO_RECOVERY_SUGGESTION
                         )
                     )
                 },
@@ -63,7 +65,8 @@ open class CognitoCredentialsProvider : CredentialsProvider, AuthCredentialsProv
                     } ?: continuation.resumeWithException(
                         AuthException(
                             "Failed to get identity ID. " +
-                                "Check if you are signed in and configured identity pools correctly."
+                                "Check if you are signed in and configured identity pools correctly.",
+                            AmplifyException.TODO_RECOVERY_SUGGESTION
                         )
                     )
                 },
