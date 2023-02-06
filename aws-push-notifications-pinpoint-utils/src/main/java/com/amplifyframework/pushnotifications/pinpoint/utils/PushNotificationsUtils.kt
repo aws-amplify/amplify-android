@@ -38,7 +38,7 @@ import kotlinx.coroutines.withContext
 
 class PushNotificationsUtils(
     private val context: Context,
-    private var channelId: String = PushNotificationsConstants.AWS_PINPOINT_NOTIFICATION_CHANNEL
+    private var channelId: String = PushNotificationsConstants.PINPOINT_NOTIFICATION_CHANNEL
 ) {
     @ChecksSdkIntAtLeast(api = Build.VERSION_CODES.O)
     private fun isNotificationChannelSupported() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
@@ -98,7 +98,10 @@ class PushNotificationsUtils(
     }
 
     @SuppressLint("NewApi")
-    fun showNotification(details: NotificationPayload, targetClass: Class<*>?) {
+    fun showNotification(
+        details: NotificationPayload,
+        targetClass: Class<*>?
+    ) {
         CoroutineScope(Dispatchers.IO).launch {
             val requestCode = 0
             val largeImageIcon = details.imageUrl?.let { downloadImage(it) }

@@ -29,6 +29,7 @@ dependencies {
     api dependency.firebasemessaging
     implementation dependency.androidx.core_ktx
     implementation dependency.androidx.appcompat
+    implementation dependency.kotlin.serializationJson
 
     testImplementation dependency.junit
 

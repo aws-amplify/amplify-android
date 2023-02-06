@@ -51,25 +51,25 @@ abstract class PushNotificationsService : FirebaseMessagingService() {
     open fun processRemoteMessage(remoteMessage: RemoteMessage): NotificationPayload {
         val data = remoteMessage.data
         val action: HashMap<String, String> = HashMap()
-        data[PushNotificationsConstants.AWS_PINPOINT_OPENAPP]?.let {
-            action.put(PushNotificationsConstants.AWS_PINPOINT_OPENAPP, it)
+        data[PushNotificationsConstants.PINPOINT_OPENAPP]?.let {
+            action.put(PushNotificationsConstants.PINPOINT_OPENAPP, it)
         }
-        data[PushNotificationsConstants.AWS_PINPOINT_URL]?.let {
+        data[PushNotificationsConstants.PINPOINT_URL]?.let {
             // force HTTPS URL scheme
             val urlHttps = it.replaceFirst("http", "https")
-            action.put(PushNotificationsConstants.AWS_PINPOINT_URL, urlHttps)
+            action.put(PushNotificationsConstants.PINPOINT_URL, urlHttps)
         }
-        data[PushNotificationsConstants.AWS_PINPOINT_DEEPLINK]?.let {
-            action.put(PushNotificationsConstants.AWS_PINPOINT_DEEPLINK, it)
+        data[PushNotificationsConstants.PINPOINT_DEEPLINK]?.let {
+            action.put(PushNotificationsConstants.PINPOINT_DEEPLINK, it)
         }
-        val title = data[PushNotificationsConstants.AWS_PINPOINT_NOTIFICATION_TITLE]
-        val body = data[PushNotificationsConstants.AWS_PINPOINT_NOTIFICATION_BODY]
-        val imageUrl = data[PushNotificationsConstants.AWS_PINPOINT_NOTIFICATION_IMAGE]
+        val title = data[PushNotificationsConstants.PINPOINT_NOTIFICATION_TITLE]
+        val body = data[PushNotificationsConstants.PINPOINT_NOTIFICATION_BODY]
+        val imageUrl = data[PushNotificationsConstants.PINPOINT_NOTIFICATION_IMAGE]
 
         return NotificationPayload {
             notification(title, body, imageUrl)
             tapAction(action)
-            silentPush = data[PushNotificationsConstants.AWS_PINPOINT_NOTIFICATION_SILENTPUSH].equals("1")
+            silentPush = data[PushNotificationsConstants.PINPOINT_NOTIFICATION_SILENTPUSH].equals("1")
             rawData = HashMap(remoteMessage.data)
         }
     }

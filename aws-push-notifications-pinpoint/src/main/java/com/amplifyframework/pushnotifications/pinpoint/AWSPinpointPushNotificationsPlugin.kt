@@ -33,11 +33,11 @@ import com.amplifyframework.notifications.pushnotifications.PushNotificationResu
 import com.amplifyframework.notifications.pushnotifications.PushNotificationsException
 import com.amplifyframework.notifications.pushnotifications.PushNotificationsPlugin
 import com.amplifyframework.pushnotifications.pinpoint.credentials.CognitoCredentialsProvider
+import com.amplifyframework.pushnotifications.pinpoint.utils.NotificationPayload
 import com.amplifyframework.pushnotifications.pinpoint.utils.PushNotificationsService
 import com.amplifyframework.pushnotifications.pinpoint.utils.PushNotificationsUtils
 import com.amplifyframework.pushnotifications.pinpoint.utils.toNotificationsPayload
 import com.google.firebase.messaging.FirebaseMessaging
-import kotlin.jvm.Throws
 import org.json.JSONObject
 
 class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClient>() {
@@ -159,12 +159,23 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
     ) {
         try {
             val payload = details.toNotificationsPayload()
+            val eventSourceType: EventSourceType = EventSourceType.getEventSourceType(payload)
+            // campaign_id, journey_id, others
+            val eventSourceID = eventSourceType.getEventSourceIdAttributeKey()
+            // campaign_activity_id, journey_id, others
+            val eventSourceActivityID = eventSourceType.getEventSourceActivityAttributeKey()
+
+            // TODO Add analytics behavior
+            val eventSourceAttributes = eventSourceType.getAttributeParser().parseAttributes(payload)
+
             val result = if (pushNotificationsUtils.isAppInForeground()) {
                 tryAnalyticsRecordEvent("foreground_event")
                 PushNotificationResult.AppInForeground()
             } else {
-                if (canShowNotification(details)) {
-                    pushNotificationsUtils.showNotification(payload, AWSPinpointPushNotificationsActivity::class.java)
+                if (canShowNotification(payload)) {
+                    pushNotificationsUtils.showNotification(
+                        payload, AWSPinpointPushNotificationsActivity::class.java
+                    )
                 }
                 tryAnalyticsRecordEvent("background_event")
                 PushNotificationResult.NotificationPosted()
@@ -199,9 +210,10 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
         editor.apply()
     }
 
-    private fun canShowNotification(details: Bundle): Boolean {
-        val silentPush = details.toNotificationsPayload().silentPush
+    private fun canShowNotification(payload: NotificationPayload): Boolean {
+        val notificationsEnabled = pushNotificationsUtils.areNotificationsEnabled()
+        val silentPush = payload.silentPush
         val optOut = targetingClient.currentEndpoint().optOut == "ALL"
-        return !(!pushNotificationsUtils.areNotificationsEnabled() || silentPush || optOut)
+        return notificationsEnabled && !silentPush && !optOut
     }
 }
