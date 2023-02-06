@@ -38,7 +38,8 @@ dependencies {
     testImplementation(project(":testutils"))
     testImplementation(project(":aws-auth-cognito"))
     //noinspection GradleDependency
-    testImplementation("org.json:json:20210307")
+    testImplementation(testDependency.json)
+
     testImplementation(testDependency.kotlin.test.junit)
     testImplementation(testDependency.kotlin.test.kotlinTest)
     testImplementation(testDependency.kotlin.test.coroutines)
@@ -52,8 +53,7 @@ dependencies {
     testImplementation(testDependency.kotlin.reflection)
 
     androidTestImplementation(dependency.gson)
-    //noinspection GradleDependency
-    androidTestImplementation("com.amazonaws:aws-android-sdk-core:2.62.2")
+
     androidTestImplementation(testDependency.androidx.test.runner)
     androidTestImplementation(testDependency.androidx.test.junit)
     androidTestImplementation(project(":testutils"))

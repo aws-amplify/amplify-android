@@ -1,5 +1,26 @@
-apply from: '../jacoco-config.gradle'
+//apply from: '../jacoco-config.gradle'
 apply plugin: 'kover'
+
+project.ext {
+    ignoreModuleList = [
+            'testutils',
+            'testmodels'
+    ]
+
+    // Exclude file by names, packages or types. Such files will be ignored during test coverage
+    // calculation
+    ignoreFileFilter = [
+            '**/*App.*',
+            '**/*Application.*',
+            '**/*Activity.*',
+            '**/*Fragment.*',
+            '**/*View.*',
+            '**/*ViewGroup.*',
+            '**/*JsonAdapter.*',
+            '**/di/**',
+            '**/*Dagger.*'
+    ]
+}
 
 kover{
     instrumentation {
@@ -17,7 +38,7 @@ kover{
             // override common class filter
             classes {
                 // override class exclusion rules
-                excludes.addAll jacocoIgnoreList
+                excludes.addAll ignoreModuleList + ignoreFileFilter
             }
         }
     }
