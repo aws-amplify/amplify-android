@@ -15,7 +15,7 @@
 
 package com.amplifyframework.auth.cognito
 
-import com.amplifyframework.auth.AWSCognitoAuthSession
+import com.amplifyframework.auth.AWSAuthSessionInternal
 import com.amplifyframework.auth.AWSCognitoUserPoolTokens
 import com.amplifyframework.auth.AWSCredentials
 import com.amplifyframework.auth.AuthException
@@ -25,9 +25,9 @@ import com.amplifyframework.auth.exceptions.InvalidStateException
 import com.amplifyframework.auth.exceptions.SignedOutException
 import com.amplifyframework.auth.exceptions.UnknownException
 import com.amplifyframework.auth.result.AuthSessionResult
-import com.amplifyframework.statemachine.codegen.data.AWSCredentials as CognitoCredentials
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
+import com.amplifyframework.statemachine.codegen.data.AWSCredentials as CognitoCredentials
 
 /**
  * Cognito extension of AuthSession containing AWS Cognito specific tokens.
@@ -45,7 +45,7 @@ data class AWSCognitoAuthSession internal constructor(
     override val awsCredentialsResult: AuthSessionResult<AWSCredentials>,
     override val userSubResult: AuthSessionResult<String>,
     override val userPoolTokensResult: AuthSessionResult<AWSCognitoUserPoolTokens>
-) : AWSCognitoAuthSession(isSignedIn, identityIdResult, awsCredentialsResult, userSubResult, userPoolTokensResult)
+) : AWSAuthSessionInternal(isSignedIn, identityIdResult, awsCredentialsResult, userSubResult, userPoolTokensResult)
 
 internal fun AmplifyCredential.isValid(): Boolean {
     return when (this) {
@@ -59,7 +59,7 @@ internal fun AmplifyCredential.isValid(): Boolean {
 
 internal fun AmplifyCredential.getCognitoSession(
     exception: AuthException = SignedOutException()
-): AWSCognitoAuthSession {
+): AWSAuthSessionInternal {
     fun getCredentialsResult(awsCredentials: CognitoCredentials): AuthSessionResult<AWSCredentials> =
         with(awsCredentials) {
             AWSCredentials.createAWSCredentials(accessKeyId, secretAccessKey, sessionToken, expiration)

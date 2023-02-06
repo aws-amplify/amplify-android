@@ -20,9 +20,6 @@ import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider
 import com.amplifyframework.api.ApiException
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
@@ -31,16 +28,6 @@ import kotlin.coroutines.suspendCoroutine
  * Wrapper to provide credentials from Auth synchronously and asynchronously
  */
 open class CognitoCredentialsProvider : CredentialsProvider, AuthCredentialsProvider {
-    /**
-     * Request [Credentials] synchronously by blocking current suspend execution.
-     */
-    fun getCredentialsBlocking(): Credentials {
-        return runBlocking {
-            withContext(Dispatchers.IO) {
-                getCredentials()
-            }
-        }
-    }
 
     /**
      * Request [Credentials] from the provider.
@@ -49,7 +36,7 @@ open class CognitoCredentialsProvider : CredentialsProvider, AuthCredentialsProv
         return suspendCoroutine { continuation ->
             Amplify.Auth.fetchAuthSession(
                 { authSession ->
-                    (authSession as? AWSCognitoAuthSession)?.awsCredentialsResult?.value?.let {
+                    authSession.toAWSAuthSession()?.awsCredentialsResult?.value?.let {
                         continuation.resume(it.toCredentials())
                     } ?: continuation.resumeWithException(
                         Exception(
@@ -72,12 +59,12 @@ open class CognitoCredentialsProvider : CredentialsProvider, AuthCredentialsProv
         return suspendCoroutine { continuation ->
             Amplify.Auth.fetchAuthSession(
                 { authSession ->
-                    authSession.toAWSCognitoAuthSession()?.identityIdResult?.value?.let {
+                    authSession.toAWSAuthSession()?.identityIdResult?.value?.let {
                         continuation.resume(it)
                     } ?: continuation.resumeWithException(
                         Exception(
                             "Failed to get identity ID. " +
-                                    "Check if you are signed in and configured identity pools correctly."
+                                "Check if you are signed in and configured identity pools correctly."
                         )
                     )
                 },
@@ -91,7 +78,7 @@ open class CognitoCredentialsProvider : CredentialsProvider, AuthCredentialsProv
     fun getAccessToken(onResult: Consumer<String>, onFailure: Consumer<Exception>) {
         Amplify.Auth.fetchAuthSession(
             { session ->
-                val tokens = (session as? AWSCognitoAuthSession)?.userPoolTokensResult?.value?.accessToken
+                val tokens = session.toAWSAuthSession()?.userPoolTokensResult?.value?.accessToken
                 tokens?.let { onResult.accept(tokens) }
                     ?: onFailure.accept(
                         ApiException.ApiAuthException(
@@ -107,8 +94,8 @@ open class CognitoCredentialsProvider : CredentialsProvider, AuthCredentialsProv
     }
 }
 
-private fun AuthSession.toAWSCognitoAuthSession(): AWSCognitoAuthSession? {
-    if (this is AWSCognitoAuthSession) {
+private fun AuthSession.toAWSAuthSession(): AWSAuthSessionInternal? {
+    if (this is AWSAuthSessionInternal) {
         return this
     }
 

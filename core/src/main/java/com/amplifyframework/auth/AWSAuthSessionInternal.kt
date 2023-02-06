@@ -16,7 +16,7 @@ package com.amplifyframework.auth
  */
 import com.amplifyframework.auth.result.AuthSessionResult
 
-open class AWSCognitoAuthSession(
+open class AWSAuthSessionInternal(
     @get:JvmName("getSignedIn")
     open val isSignedIn: Boolean,
     open val identityIdResult: AuthSessionResult<String>,
