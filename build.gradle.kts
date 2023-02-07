@@ -107,9 +107,9 @@ fun Project.configureAndroid() {
 
     if (hasProperty("signingKeyId")) {
         println("Getting signing info from protected source.")
-        project.setProperty("signing.keyId", findProperty("signingKeyId"))
-        project.setProperty("signing.password", findProperty("signingPassword"))
-        project.setProperty("signing.inMemoryKey", findProperty("signingInMemoryKey"))
+        extra["signing.keyId"] = findProperty("signingKeyId")
+        extra["signing.password"] = findProperty("signingPassword")
+        extra["signing.inMemoryKey"] = findProperty("signingInMemoryKey")
     }
 
     configure<LibraryExtension> {
