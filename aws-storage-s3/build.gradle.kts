@@ -44,6 +44,7 @@ dependencies {
     testImplementation(project(":aws-storage-s3"))
 
     androidTestImplementation(project(":testutils"))
+    androidTestImplementation(project(":aws-auth-cognito"))
     androidTestImplementation(dependency.androidx.annotation)
     androidTestImplementation(testDependency.androidx.test.runner)
     androidTestImplementation(testDependency.androidx.test.junit)
