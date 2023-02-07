@@ -38,6 +38,7 @@ dependencies {
     testImplementation(dependency.rxjava)
 
     androidTestImplementation(project(":testutils"))
+    androidTestImplementation(project(":aws-auth-cognito"))
     androidTestImplementation(testDependency.androidx.test.core)
     androidTestImplementation(testDependency.androidx.test.runner)
     androidTestImplementation(testDependency.mockk.android)
