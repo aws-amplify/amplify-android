@@ -19,7 +19,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
 
-import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.aws.AppSyncGraphQLRequest;
 import com.amplifyframework.api.aws.AuthModeStrategyType;
 import com.amplifyframework.api.graphql.GraphQLRequest;
@@ -43,6 +42,7 @@ import org.mockito.stubbing.Stubber;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
 
 import static org.mockito.ArgumentMatchers.argThat;
@@ -539,13 +539,8 @@ public final class AppSyncMocking {
         @SafeVarargs
         public final <M extends Model> SyncConfigurator mockSuccessResponse(
                 Class<M> modelClass, ModelWithMetadata<M>... responseItems) {
-            return mockSuccessResponse(
-                    matchesRequest(modelClass, null),
-                    new GraphQLResponse<>(
-                            new PaginatedResult<>(new HashSet<>(Arrays.asList(responseItems)), null),
-                            Collections.emptyList()
-                    )
-            );
+            return mockSuccessResponse(modelClass, null, null, Arrays.asList(responseItems),
+                    Collections.emptyList());
         }
 
         /**
@@ -558,7 +553,6 @@ public final class AppSyncMocking {
          * @param responseItems The items that should be included in the mocked response, for the model class
          * @param <M> Type of models for which a response is mocked
          * @return The same Configurator instance, to enable chaining of calls
-         * @throws AmplifyException if a ModelSchema cannot be created in order to build the sync request.
          */
         @SuppressWarnings("varargs")
         @SafeVarargs
@@ -566,26 +560,52 @@ public final class AppSyncMocking {
                 Class<M> modelClass,
                 String token,
                 String nextToken,
-                ModelWithMetadata<M>... responseItems) throws AmplifyException {
-            final Iterable<ModelWithMetadata<M>> items = new HashSet<>(Arrays.asList(responseItems));
+                ModelWithMetadata<M>... responseItems) {
+            return mockSuccessResponse(modelClass, token, nextToken, Arrays.asList(responseItems),
+                    Collections.emptyList());
+        }
+
+        /**
+         * Configures an instance of an {@link AppSync} to invoke the response callback when asked to
+         * {@link AppSync#sync(GraphQLRequest, Consumer, Consumer)}, with the ability to specify a nextToken to match,
+         * a nextToken to return in the response and errors, for testing pagination.
+         * @param modelClass Class of models for which the endpoint should respond
+         * @param token nextToken to be expected on the GraphQLRequest for which the endpoint should respond.
+         * @param nextToken nextToken that should be used to build the requestForNextResult on the GraphQLResponse.
+         * @param responseItems The items that should be included in the mocked response, for the model class
+         * @param errors The errors that should be included in the mocked response.
+         * @param <M> Type of models for which a response is mocked
+         * @return The same Configurator instance, to enable chaining of calls
+         */
+        public <M extends Model> SyncConfigurator mockSuccessResponse(
+                Class<M> modelClass,
+                String token,
+                String nextToken,
+                List<ModelWithMetadata<M>> responseItems,
+                List<GraphQLResponse.Error> errors) {
+            final Iterable<ModelWithMetadata<M>> items = new HashSet<>(responseItems);
             AppSyncGraphQLRequest<PaginatedResult<ModelWithMetadata<M>>> requestForNextResult = null;
             if (nextToken != null) {
-                ModelSchema schema = ModelSchema.fromModelClass(modelClass);
-                requestForNextResult =
-                    AppSyncRequestFactory.buildSyncRequest(schema,
-                                                           null,
-                                                           null,
-                                                           QueryPredicates.all(),
-                                                           AuthModeStrategyType.DEFAULT)
-                        .newBuilder()
-                        .variable("nextToken", "String", nextToken)
-                        .build();
+                try {
+                    ModelSchema schema = ModelSchema.fromModelClass(modelClass);
+                    requestForNextResult =
+                        AppSyncRequestFactory.buildSyncRequest(schema,
+                                                               null,
+                                                               null,
+                                                               QueryPredicates.all(),
+                                                               AuthModeStrategyType.DEFAULT)
+                            .newBuilder()
+                            .variable("nextToken", "String", nextToken)
+                            .build();
+                } catch (Throwable err) {
+                    throw new RuntimeException(err);
+                }
             }
             return mockSuccessResponse(
                     matchesRequest(modelClass, token),
                     new GraphQLResponse<>(
                             new PaginatedResult<>(items, requestForNextResult),
-                            Collections.emptyList()
+                            errors
                     )
             );
         }
