@@ -66,11 +66,79 @@ function stopDuplicates {
 }
 stopDuplicates
 
+# Get oldest device we can test against.
+minDevice=$(aws devicefarm list-devices \
+                --region="us-west-2" \
+                --filters '[
+                    {"attribute":"AVAILABILITY","operator":"EQUALS","values":["HIGHLY_AVAILABLE"]},
+                    {"attribute":"PLATFORM","operator":"EQUALS","values":["ANDROID"]},
+                    {"attribute":"OS_VERSION","operator":"GREATER_THAN_OR_EQUALS","values":["7"]},
+                    {"attribute":"OS_VERSION","operator":"LESS_THAN","values":["7.1"]},
+                    {"attribute":"MANUFACTURER","operator":"IN","values":["Google", "Pixel", "Samsung"]}
+                ]' \
+                | jq -r '.devices[0].arn')
+# Get middle device we can test against.
+middleDevice1=$(aws devicefarm list-devices \
+                --region="us-west-2" \
+                --filters '[
+                    {"attribute":"AVAILABILITY","operator":"EQUALS","values":["HIGHLY_AVAILABLE"]},
+                    {"attribute":"PLATFORM","operator":"EQUALS","values":["ANDROID"]},
+                    {"attribute":"OS_VERSION","operator":"GREATER_THAN_OR_EQUALS","values":["8"]},
+                    {"attribute":"OS_VERSION","operator":"LESS_THAN","values":["11"]},
+                    {"attribute":"MANUFACTURER","operator":"IN","values":["Samsung"]}
+                ]' \
+                | jq -r '.devices[0].arn')
+# Get middle device we can test against.
+middleDevice2=$(aws devicefarm list-devices \
+                --region="us-west-2" \
+                --filters '[
+                    {"attribute":"ARN","operator":"NOT_IN","values":["'$middleDevice1'"]},
+                    {"attribute":"AVAILABILITY","operator":"EQUALS","values":["HIGHLY_AVAILABLE"]},
+                    {"attribute":"PLATFORM","operator":"EQUALS","values":["ANDROID"]},
+                    {"attribute":"OS_VERSION","operator":"GREATER_THAN_OR_EQUALS","values":["8"]},
+                    {"attribute":"OS_VERSION","operator":"LESS_THAN","values":["11"]},
+                    {"attribute":"MANUFACTURER","operator":"IN","values":["Samsung"]}
+                ]' \
+                | jq -r '.devices[0].arn')
+# Get middle device we can test against.
+middleDevice3=$(aws devicefarm list-devices \
+                --region="us-west-2" \
+                --filters '[
+                    {"attribute":"ARN","operator":"NOT_IN","values":["'$middleDevice1'", "'$middleDevice2'"]},
+                    {"attribute":"AVAILABILITY","operator":"EQUALS","values":["HIGHLY_AVAILABLE"]},
+                    {"attribute":"PLATFORM","operator":"EQUALS","values":["ANDROID"]},
+                    {"attribute":"OS_VERSION","operator":"GREATER_THAN_OR_EQUALS","values":["8"]},
+                    {"attribute":"OS_VERSION","operator":"LESS_THAN","values":["11"]},
+                    {"attribute":"MANUFACTURER","operator":"IN","values":["Samsung"]}
+                ]' \
+                | jq -r '.devices[0].arn')
+# Get latest device we can test against.
+latestDevice=$(aws devicefarm list-devices \
+                --region="us-west-2" \
+                --filters '[
+                    {"attribute":"AVAILABILITY","operator":"EQUALS","values":["HIGHLY_AVAILABLE"]},
+                    {"attribute":"PLATFORM","operator":"EQUALS","values":["ANDROID"]},
+                    {"attribute":"OS_VERSION","operator":"GREATER_THAN_OR_EQUALS","values":["12"]},
+                    {"attribute":"MANUFACTURER","operator":"IN","values":["Google", "Pixel"]}
+                ]' \
+                | jq -r '.devices[0].arn')
+
+# IF we fail to find our required test devices, fail.
+if [[ -z "${minDevice}" || -z "${middleDevice1}" || -z "${middleDevice2}" || -z "${middleDevice3}" || -z "${latestDevice}" ]]; then
+    echo "Failed to grab 5 required devices for integration tests."
+    exit 1
+fi
+
 # Schedule the test run in device farm
 echo "Scheduling test run"
 run_arn=`aws devicefarm schedule-run --project-arn=$project_arn \
                             --app-arn="$app_package_upload_arn" \
-                            --device-pool-arn=$device_pool_arn \
+                            --device-selection-configuration='{
+                                "filters": [
+                                  {"attribute": "ARN", "operator":"IN", "values":["'$minDevice'", "'$middleDevice1'", "'$middleDevice2'", "'$middleDevice3'", "'$latestDevice'"]}
+                                ],
+                                "maxDevices": '5'
+                            }' \
                             --name="$run_name" \
                             --test="type=INSTRUMENTATION,testPackageArn=$test_package_upload_arn" \
                             --execution-configuration="jobTimeoutMinutes=30,videoCapture=false" \
