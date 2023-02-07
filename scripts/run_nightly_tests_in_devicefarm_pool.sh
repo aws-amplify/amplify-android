@@ -84,7 +84,7 @@ middleDevice1=$(aws devicefarm list-devices \
                     {"attribute":"AVAILABILITY","operator":"EQUALS","values":["HIGHLY_AVAILABLE"]},
                     {"attribute":"PLATFORM","operator":"EQUALS","values":["ANDROID"]},
                     {"attribute":"OS_VERSION","operator":"GREATER_THAN_OR_EQUALS","values":["8"]},
-                    {"attribute":"OS_VERSION","operator":"LESS_THAN","values":["11"]},
+                    {"attribute":"OS_VERSION","operator":"LESS_THAN","values":["9"]},
                     {"attribute":"MANUFACTURER","operator":"IN","values":["Samsung"]}
                 ]' \
                 | jq -r '.devices[0].arn')
@@ -95,8 +95,8 @@ middleDevice2=$(aws devicefarm list-devices \
                     {"attribute":"ARN","operator":"NOT_IN","values":["'$middleDevice1'"]},
                     {"attribute":"AVAILABILITY","operator":"EQUALS","values":["HIGHLY_AVAILABLE"]},
                     {"attribute":"PLATFORM","operator":"EQUALS","values":["ANDROID"]},
-                    {"attribute":"OS_VERSION","operator":"GREATER_THAN_OR_EQUALS","values":["8"]},
-                    {"attribute":"OS_VERSION","operator":"LESS_THAN","values":["11"]},
+                    {"attribute":"OS_VERSION","operator":"GREATER_THAN_OR_EQUALS","values":["9"]},
+                    {"attribute":"OS_VERSION","operator":"LESS_THAN","values":["10"]},
                     {"attribute":"MANUFACTURER","operator":"IN","values":["Samsung"]}
                 ]' \
                 | jq -r '.devices[0].arn')
@@ -107,7 +107,7 @@ middleDevice3=$(aws devicefarm list-devices \
                     {"attribute":"ARN","operator":"NOT_IN","values":["'$middleDevice1'", "'$middleDevice2'"]},
                     {"attribute":"AVAILABILITY","operator":"EQUALS","values":["HIGHLY_AVAILABLE"]},
                     {"attribute":"PLATFORM","operator":"EQUALS","values":["ANDROID"]},
-                    {"attribute":"OS_VERSION","operator":"GREATER_THAN_OR_EQUALS","values":["8"]},
+                    {"attribute":"OS_VERSION","operator":"GREATER_THAN_OR_EQUALS","values":["10"]},
                     {"attribute":"OS_VERSION","operator":"LESS_THAN","values":["11"]},
                     {"attribute":"MANUFACTURER","operator":"IN","values":["Samsung"]}
                 ]' \
