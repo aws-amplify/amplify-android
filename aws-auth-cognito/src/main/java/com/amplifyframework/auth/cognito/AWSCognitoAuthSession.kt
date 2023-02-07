@@ -25,9 +25,9 @@ import com.amplifyframework.auth.exceptions.InvalidStateException
 import com.amplifyframework.auth.exceptions.SignedOutException
 import com.amplifyframework.auth.exceptions.UnknownException
 import com.amplifyframework.auth.result.AuthSessionResult
+import com.amplifyframework.statemachine.codegen.data.AWSCredentials as CognitoCredentials
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
-import com.amplifyframework.statemachine.codegen.data.AWSCredentials as CognitoCredentials
 
 /**
  * Cognito extension of AuthSession containing AWS Cognito specific tokens.
