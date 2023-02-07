@@ -29,6 +29,7 @@ import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.datastore.DataStoreChannelEventName;
 import com.amplifyframework.datastore.DataStoreConfiguration;
 import com.amplifyframework.datastore.DataStoreConfigurationProvider;
+import com.amplifyframework.datastore.DataStoreErrorHandler;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.appsync.AppSyncMocking;
@@ -107,10 +108,11 @@ public final class SyncProcessorTest {
     private SynchronousStorageAdapter storageAdapter;
 
     private SyncProcessor syncProcessor;
-    private int errorHandlerCallCount;
+    private DataStoreErrorHandler errorHandler;
     private int modelCount;
     private RetryHandler requestRetry;
     private boolean isSyncRetryEnabled = true;
+
 
     /**
      * Wire up dependencies for the SyncProcessor, and build one for testing.
@@ -125,7 +127,7 @@ public final class SyncProcessorTest {
         modelCount = modelProvider.models().size();
 
         this.appSync = mock(AppSync.class);
-        this.errorHandlerCallCount = 0;
+        this.errorHandler = mock(DataStoreErrorHandler.class);
         this.requestRetry = new RetryHandler();
 
         initSyncProcessor(10_000);
@@ -149,7 +151,7 @@ public final class SyncProcessorTest {
                 .syncInterval(BASE_SYNC_INTERVAL_MINUTES, TimeUnit.MINUTES)
                 .syncMaxRecords(syncMaxRecords)
                 .syncPageSize(1_000)
-                .errorHandler(dataStoreException -> errorHandlerCallCount++)
+                .errorHandler(this.errorHandler)
                 .syncExpression(BlogOwner.class, () -> BlogOwner.NAME.beginsWith("J"))
                 .syncExpression(Author.class, QueryPredicates::none)
                 .build();
@@ -604,7 +606,7 @@ public final class SyncProcessorTest {
         );
 
         // Assert: sync process failed the first time the api threw an error
-        assertEquals(1, errorHandlerCallCount);
+        verify(this.errorHandler, times(1)).accept(any());
     }
 
 
