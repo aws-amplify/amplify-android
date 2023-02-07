@@ -87,7 +87,7 @@ dependencyResolutionManagement {
             val awsKotlinSdk = "awsKotlinSdk"
             version(awsKotlinSdk, "0.17.12-beta")
 
-            library("com.amazonaws.aws.sdk.core", "com.amazonaws:aws-android-sdk-core:2.62.2")
+            library("aws-sdk-core", "com.amazonaws:aws-android-sdk-core:2.62.2")
 
             library("aws-credentials", "aws.smithy.kotlin:aws-credentials:0.12.6")
             library("aws-ktor", "aws.smithy.kotlin:http-client-engine-ktor:0.7.7")

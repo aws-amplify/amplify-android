@@ -54,7 +54,7 @@ dependencies {
 
     androidTestImplementation(dependency.gson)
     //noinspection GradleDependency
-    androidTestImplementation(dependency.com.amazonaws.aws.sdk.core)
+    androidTestImplementation(dependency.aws.sdk.core)
     androidTestImplementation(testDependency.androidx.test.runner)
     androidTestImplementation(testDependency.androidx.test.junit)
     androidTestImplementation(project(":testutils"))
