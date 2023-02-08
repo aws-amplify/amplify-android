@@ -16,6 +16,7 @@
 package com.amplifyframework.auth
 
 import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider
+import com.amplifyframework.core.Consumer
 
 interface AuthCredentialsProvider : CredentialsProvider {
     /**
@@ -23,4 +24,6 @@ interface AuthCredentialsProvider : CredentialsProvider {
      * @return identity id
      */
     suspend fun getIdentityId(): String
+
+    fun getAccessToken(onResult: Consumer<String>, onFailure: Consumer<Exception>)
 }

@@ -1,5 +1,3 @@
-package com.amplifyframework.auth
-
 /*
  * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
@@ -14,6 +12,8 @@ package com.amplifyframework.auth
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
+package com.amplifyframework.auth
+
 import com.amplifyframework.auth.result.AuthSessionResult
 
 open class AWSAuthSessionInternal(

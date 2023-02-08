@@ -16,7 +16,6 @@
 package com.amplifyframework.auth
 
 import aws.smithy.kotlin.runtime.auth.awscredentials.Credentials
-import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
@@ -27,7 +26,7 @@ import kotlin.coroutines.suspendCoroutine
 /**
  * Wrapper to provide credentials from Auth synchronously and asynchronously
  */
-open class CognitoCredentialsProvider : CredentialsProvider, AuthCredentialsProvider {
+open class CognitoCredentialsProvider : AuthCredentialsProvider {
 
     /**
      * Request [Credentials] from the provider.
@@ -77,7 +76,7 @@ open class CognitoCredentialsProvider : CredentialsProvider, AuthCredentialsProv
         }
     }
 
-    fun getAccessToken(onResult: Consumer<String>, onFailure: Consumer<Exception>) {
+    override fun getAccessToken(onResult: Consumer<String>, onFailure: Consumer<Exception>) {
         Amplify.Auth.fetchAuthSession(
             { session ->
                 val tokens = session.toAWSAuthSession()?.userPoolTokensResult?.value?.accessToken
@@ -97,11 +96,7 @@ open class CognitoCredentialsProvider : CredentialsProvider, AuthCredentialsProv
 }
 
 private fun AuthSession.toAWSAuthSession(): AWSAuthSessionInternal? {
-    if (this is AWSAuthSessionInternal) {
-        return this
-    }
-
-    return null
+    return this as? AWSAuthSessionInternal
 }
 
 private fun AWSCredentials.toCredentials(): Credentials {
