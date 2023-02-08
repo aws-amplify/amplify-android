@@ -66,7 +66,7 @@ function stopDuplicates {
 }
 stopDuplicates
 
-# Get oldest device we can test against.
+# Select range of devices from version 7 and above.
 device1=$(aws devicefarm list-devices \
                 --region="us-west-2" \
                 --filters '[
@@ -77,7 +77,7 @@ device1=$(aws devicefarm list-devices \
                     {"attribute":"MANUFACTURER","operator":"IN","values":["Google", "Pixel", "Samsung"]}
                 ]' \
                 | jq -r '.devices[0].arn')
-# Get middle device we can test against.
+
 device2=$(aws devicefarm list-devices \
                 --region="us-west-2" \
                 --filters '[
@@ -88,7 +88,7 @@ device2=$(aws devicefarm list-devices \
                     {"attribute":"MANUFACTURER","operator":"IN","values":["Samsung"]}
                 ]' \
                 | jq -r '.devices[0].arn')
-# Get middle device we can test against.
+
 device3=$(aws devicefarm list-devices \
                 --region="us-west-2" \
                 --filters '[
@@ -100,7 +100,7 @@ device3=$(aws devicefarm list-devices \
                     {"attribute":"MANUFACTURER","operator":"IN","values":["Samsung"]}
                 ]' \
                 | jq -r '.devices[0].arn')
-# Get middle device we can test against.
+
 device4=$(aws devicefarm list-devices \
                 --region="us-west-2" \
                 --filters '[
@@ -112,7 +112,7 @@ device4=$(aws devicefarm list-devices \
                     {"attribute":"MANUFACTURER","operator":"IN","values":["Samsung"]}
                 ]' \
                 | jq -r '.devices[0].arn')
-# Get latest device we can test against.
+
 device5=$(aws devicefarm list-devices \
                 --region="us-west-2" \
                 --filters '[

@@ -45,7 +45,6 @@ class RepeatRule : TestRule {
                 statement.evaluate()
             }
         }
-
     }
 
     override fun apply(
