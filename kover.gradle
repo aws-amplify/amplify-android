@@ -2,8 +2,9 @@ apply plugin: 'kover'
 
 project.ext {
     ignoreModuleList = [
-            '**/testutils/**',
-            '**/testmodels/**'
+            'com.amplifyframework.testutils.*',
+            'com.amplifyframework.testmodels.*',
+            'com.amplifyframework.geo.maplibre.*'
     ]
 
     // Exclude file by names, packages or types. Such files will be ignored during test coverage
@@ -41,4 +42,21 @@ kover{
             }
         }
     }
+
+    htmlReport {
+        // set to true to run koverMergedHtmlReport task during the execution of the check task (if it exists) of the current project
+        onCheck.set false
+
+        // change report directory
+        reportDir.set layout.buildDirectory.dir("reports/kover/html/${project.name}/")
+
+        overrideFilters {
+            // override common class filter
+            classes {
+                // override class exclusion rules
+                excludes.addAll ignoreModuleList + ignoreFileFilter
+            }
+        }
+    }
+
 }
