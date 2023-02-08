@@ -2,8 +2,8 @@ apply plugin: 'kover'
 
 project.ext {
     ignoreModuleList = [
-            'testutils',
-            'testmodels'
+            '**/testutils/**',
+            '**/testmodels/**'
     ]
 
     // Exclude file by names, packages or types. Such files will be ignored during test coverage
