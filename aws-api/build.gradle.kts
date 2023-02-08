@@ -26,7 +26,6 @@ group = properties["POM_GROUP"].toString()
 dependencies {
     api(project(":core"))
     implementation(project(":aws-api-appsync"))
-    implementation(project(":aws-auth-cognito"))
 
     implementation(dependency.androidx.appcompat)
     implementation(dependency.aws.signing)
@@ -46,6 +45,7 @@ dependencies {
     androidTestImplementation(project(":testutils"))
     androidTestImplementation(project(":testmodels"))
     androidTestImplementation(testDependency.androidx.test.core)
+    androidTestImplementation(project(":aws-auth-cognito"))
     androidTestImplementation(testDependency.androidx.test.runner)
     androidTestImplementation(testDependency.androidx.test.junit)
     androidTestImplementation(dependency.rxjava)
