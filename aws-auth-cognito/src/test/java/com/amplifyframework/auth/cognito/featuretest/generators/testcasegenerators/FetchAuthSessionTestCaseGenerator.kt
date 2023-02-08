@@ -15,9 +15,9 @@
 
 package com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerators
 
+import com.amplifyframework.auth.AWSCognitoUserPoolTokens
 import com.amplifyframework.auth.AWSCredentials
 import com.amplifyframework.auth.cognito.AWSCognitoAuthSession
-import com.amplifyframework.auth.cognito.AWSCognitoUserPoolTokens
 import com.amplifyframework.auth.cognito.featuretest.API
 import com.amplifyframework.auth.cognito.featuretest.AuthAPI
 import com.amplifyframework.auth.cognito.featuretest.CognitoType
@@ -52,7 +52,7 @@ object FetchAuthSessionTestCaseGenerator : SerializableProvider {
 
     private val expectedSuccess = AWSCognitoAuthSession(
         isSignedIn = true,
-        identityIdResult = AWSCognitoAuthSession.getIdentityIdResult("someIdentityId"),
+        identityIdResult = AuthSessionResult.success("someIdentityId"),
         awsCredentialsResult = AuthSessionResult.success(
             AWSCredentials.createAWSCredentials(
                 AuthStateJsonGenerator.accessKeyId,
@@ -117,7 +117,7 @@ object FetchAuthSessionTestCaseGenerator : SerializableProvider {
                 ResponseType.Success,
                 AWSCognitoAuthSession(
                     isSignedIn = false,
-                    identityIdResult = AWSCognitoAuthSession.getIdentityIdResult("someIdentityId"),
+                    identityIdResult = AuthSessionResult.success("someIdentityId"),
                     awsCredentialsResult = AuthSessionResult.success(
                         AWSCredentials.createAWSCredentials(
                             AuthStateJsonGenerator.accessKeyId,
