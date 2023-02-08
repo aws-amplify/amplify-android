@@ -17,11 +17,11 @@ package com.amplifyframework.api.aws;
 
 import androidx.annotation.NonNull;
 
-import com.amplifyframework.api.aws.auth.CognitoCredentialsProvider;
 import com.amplifyframework.api.aws.sigv4.ApiKeyAuthProvider;
 import com.amplifyframework.api.aws.sigv4.CognitoUserPoolsAuthProvider;
 import com.amplifyframework.api.aws.sigv4.FunctionAuthProvider;
 import com.amplifyframework.api.aws.sigv4.OidcAuthProvider;
+import com.amplifyframework.auth.CognitoCredentialsProvider;
 
 import java.util.Objects;
 

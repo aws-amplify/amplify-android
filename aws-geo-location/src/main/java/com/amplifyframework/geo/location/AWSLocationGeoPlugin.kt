@@ -20,11 +20,11 @@ import aws.sdk.kotlin.services.location.LocationClient
 import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.auth.AuthCategory
+import com.amplifyframework.auth.CognitoCredentialsProvider
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.geo.GeoCategoryPlugin
 import com.amplifyframework.geo.GeoException
-import com.amplifyframework.geo.location.auth.CognitoCredentialsProvider
 import com.amplifyframework.geo.location.configuration.GeoConfiguration
 import com.amplifyframework.geo.location.options.AmazonLocationSearchByCoordinatesOptions
 import com.amplifyframework.geo.location.options.AmazonLocationSearchByTextOptions
@@ -65,7 +65,7 @@ class AWSLocationGeoPlugin(
     }
 
     val credentialsProvider: CredentialsProvider by lazy {
-        CognitoCredentialsProvider(authCategory)
+        CognitoCredentialsProvider()
     }
 
     override fun getPluginKey(): String {
