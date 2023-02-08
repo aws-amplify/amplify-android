@@ -67,7 +67,7 @@ function stopDuplicates {
 stopDuplicates
 
 # Get oldest device we can test against.
-minDevice=$(aws devicefarm list-devices \
+device1=$(aws devicefarm list-devices \
                 --region="us-west-2" \
                 --filters '[
                     {"attribute":"AVAILABILITY","operator":"EQUALS","values":["HIGHLY_AVAILABLE"]},
@@ -78,7 +78,7 @@ minDevice=$(aws devicefarm list-devices \
                 ]' \
                 | jq -r '.devices[0].arn')
 # Get middle device we can test against.
-middleDevice1=$(aws devicefarm list-devices \
+device2=$(aws devicefarm list-devices \
                 --region="us-west-2" \
                 --filters '[
                     {"attribute":"AVAILABILITY","operator":"EQUALS","values":["HIGHLY_AVAILABLE"]},
@@ -89,10 +89,10 @@ middleDevice1=$(aws devicefarm list-devices \
                 ]' \
                 | jq -r '.devices[0].arn')
 # Get middle device we can test against.
-middleDevice2=$(aws devicefarm list-devices \
+device3=$(aws devicefarm list-devices \
                 --region="us-west-2" \
                 --filters '[
-                    {"attribute":"ARN","operator":"NOT_IN","values":["'$middleDevice1'"]},
+                    {"attribute":"ARN","operator":"NOT_IN","values":["'$device2'"]},
                     {"attribute":"AVAILABILITY","operator":"EQUALS","values":["HIGHLY_AVAILABLE"]},
                     {"attribute":"PLATFORM","operator":"EQUALS","values":["ANDROID"]},
                     {"attribute":"OS_VERSION","operator":"GREATER_THAN_OR_EQUALS","values":["9"]},
@@ -101,10 +101,10 @@ middleDevice2=$(aws devicefarm list-devices \
                 ]' \
                 | jq -r '.devices[0].arn')
 # Get middle device we can test against.
-middleDevice3=$(aws devicefarm list-devices \
+device4=$(aws devicefarm list-devices \
                 --region="us-west-2" \
                 --filters '[
-                    {"attribute":"ARN","operator":"NOT_IN","values":["'$middleDevice1'", "'$middleDevice2'"]},
+                    {"attribute":"ARN","operator":"NOT_IN","values":["'$device2'", "'$device3'"]},
                     {"attribute":"AVAILABILITY","operator":"EQUALS","values":["HIGHLY_AVAILABLE"]},
                     {"attribute":"PLATFORM","operator":"EQUALS","values":["ANDROID"]},
                     {"attribute":"OS_VERSION","operator":"GREATER_THAN_OR_EQUALS","values":["10"]},
@@ -113,7 +113,7 @@ middleDevice3=$(aws devicefarm list-devices \
                 ]' \
                 | jq -r '.devices[0].arn')
 # Get latest device we can test against.
-latestDevice=$(aws devicefarm list-devices \
+device5=$(aws devicefarm list-devices \
                 --region="us-west-2" \
                 --filters '[
                     {"attribute":"AVAILABILITY","operator":"EQUALS","values":["HIGHLY_AVAILABLE"]},
@@ -124,7 +124,7 @@ latestDevice=$(aws devicefarm list-devices \
                 | jq -r '.devices[0].arn')
 
 # IF we fail to find our required test devices, fail.
-if [[ -z "${minDevice}" || -z "${middleDevice1}" || -z "${middleDevice2}" || -z "${middleDevice3}" || -z "${latestDevice}" ]]; then
+if [[ -z "${device1}" || -z "${device2}" || -z "${device3}" || -z "${device4}" || -z "${device5}" ]]; then
     echo "Failed to grab 5 required devices for integration tests."
     exit 1
 fi
@@ -135,7 +135,7 @@ run_arn=`aws devicefarm schedule-run --project-arn=$project_arn \
                             --app-arn="$app_package_upload_arn" \
                             --device-selection-configuration='{
                                 "filters": [
-                                  {"attribute": "ARN", "operator":"IN", "values":["'$minDevice'", "'$middleDevice1'", "'$middleDevice2'", "'$middleDevice3'", "'$latestDevice'"]}
+                                  {"attribute": "ARN", "operator":"IN", "values":["'$device1'", "'$device2'", "'$device3'", "'$device4'", "'$device5'"]}
                                 ],
                                 "maxDevices": '5'
                             }' \
