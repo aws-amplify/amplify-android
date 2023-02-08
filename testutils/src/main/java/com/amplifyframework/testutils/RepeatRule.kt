@@ -20,7 +20,7 @@ import org.junit.runner.Description
 import org.junit.runners.model.Statement
 
 /**
- * Rule to repeated run a test
+ * Rule to repeatedly run a test
  * usage:
  * ```
  *   @get:Rule
