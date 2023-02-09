@@ -13,12 +13,12 @@
 * permissions and limitations under the License.
 */
 
-package com.amplifyframework.auth.cognito
+package com.amplifyframework.auth
 
 /**
  * Wraps the various Cognito User Pool tokens.
  */
-data class AWSCognitoUserPoolTokens internal constructor(
+data class AWSCognitoUserPoolTokens constructor(
     /**
      * Returns the access JWT token in its encoded string form.
      * @return the access JWT token in its encoded string form.

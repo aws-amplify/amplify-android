@@ -147,6 +147,52 @@ class EventRecorderTest {
         }
     }
 
+    @Test
+    fun `test retryable errors`() = runTest {
+        val pinpointEvent1 = getPinpointEvent("testEvent1")
+        val pinpointEvent2 = getPinpointEvent("testEvent2")
+
+        // setup database
+        val pinpointEvents = listOf(
+            arrayOf(1, pinpointEvent1.toJsonString().length, pinpointEvent1.toJsonString()),
+            arrayOf(2, pinpointEvent2.toJsonString().length, pinpointEvent2.toJsonString())
+        )
+        val matrixCursor = MatrixCursor(arrayOf(EventTable.COLUMN_ID, EventTable.COLUMN_SIZE, EventTable.COLUMN_JSON))
+        pinpointEvents.forEach {
+            matrixCursor.addRow(it)
+        }
+        coEvery { pinpointDatabaseMock.queryAllEvents() }.answers { matrixCursor }
+
+        // setup pinpoint client
+        val endpointId = UUID.randomUUID().toString()
+        coEvery { endpointProfile.endpointId }.answers { endpointId }
+        coEvery { targetingClient.currentEndpoint() }.answers { endpointProfile }
+        val itemResponse = ItemResponse {
+            eventsItemResponse = mapOf(
+                pinpointEvent1.eventId to EventItemResponse {
+                    message = "Internal Server Error"
+                    statusCode = 500
+                },
+                pinpointEvent2.eventId to EventItemResponse {
+                    message = "Not real, but 599 should be retryable as well"
+                    statusCode = 599
+                }
+            )
+        }
+        val putEventResponse = PutEventsResponse {
+            eventsResponse = EventsResponse {
+                results = mapOf(endpointId to itemResponse)
+            }
+        }
+        coEvery { pinpointClient.putEvents(any<PutEventsRequest>()) }.answers { putEventResponse }
+
+        eventRecorder.submitEvents()
+
+        coVerify(exactly = 0) {
+            pinpointDatabaseMock.deleteEventById(any())
+        }
+    }
+
     private fun getPinpointEvent(eventType: String): PinpointEvent {
         return PinpointEvent(
             eventType = eventType,

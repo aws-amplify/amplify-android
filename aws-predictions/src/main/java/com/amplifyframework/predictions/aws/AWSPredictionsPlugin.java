@@ -20,10 +20,10 @@ import android.graphics.Bitmap;
 import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
 
+import com.amplifyframework.auth.CognitoCredentialsProvider;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.predictions.PredictionsException;
 import com.amplifyframework.predictions.PredictionsPlugin;
-import com.amplifyframework.predictions.aws.auth.CognitoCredentialsProvider;
 import com.amplifyframework.predictions.aws.models.AWSVoiceType;
 import com.amplifyframework.predictions.aws.operation.AWSIdentifyOperation;
 import com.amplifyframework.predictions.aws.operation.AWSInterpretOperation;
