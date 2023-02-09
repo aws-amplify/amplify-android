@@ -15,6 +15,7 @@
 
 package com.amplifyframework.auth.cognito.actions
 
+import com.amplifyframework.AmplifyException
 import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.auth.exceptions.ConfigurationException
 import com.amplifyframework.statemachine.Action
@@ -76,12 +77,20 @@ internal object AuthorizationCognitoActions : AuthorizationActions {
                     )
                 )
                 else -> {
-                    val logins = LoginsMapProvider.CognitoUserPoolLogins(
-                        configuration.userPool.region,
-                        configuration.userPool.poolId,
-                        signedInData.cognitoUserPoolTokens.idToken!!
-                    )
-                    FetchAuthSessionEvent(FetchAuthSessionEvent.EventType.FetchIdentity(logins))
+                    signedInData.cognitoUserPoolTokens.idToken?.let{
+                        val logins = LoginsMapProvider.CognitoUserPoolLogins(
+                            configuration.userPool.region,
+                            configuration.userPool.poolId,
+                            it
+                        )
+                        FetchAuthSessionEvent(FetchAuthSessionEvent.EventType.FetchIdentity(logins))
+                    } ?:
+                    AuthorizationEvent(AuthorizationEvent.EventType.ThrowError(
+                        ConfigurationException(
+                            "Identity Token is null.",
+                            AmplifyException.TODO_RECOVERY_SUGGESTION
+                        )
+                    ))
                 }
             }
             logger.verbose("$id Sending event ${evt.type}")
