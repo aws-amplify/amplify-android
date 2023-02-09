@@ -1,11 +1,6 @@
 apply plugin: 'kover'
 
 project.ext {
-    ignoreModuleList = [
-            'com.amplifyframework.testutils.*',
-            'com.amplifyframework.testmodels.*',
-            'com.amplifyframework.geo.maplibre.*'
-    ]
 
     // Exclude file by names, packages or types. Such files will be ignored during test coverage
     // calculation
@@ -38,7 +33,7 @@ kover{
             // override common class filter
             classes {
                 // override class exclusion rules
-                excludes.addAll ignoreModuleList + ignoreFileFilter
+                excludes.addAll ignoreFileFilter
             }
         }
     }
@@ -54,9 +49,14 @@ kover{
             // override common class filter
             classes {
                 // override class exclusion rules
-                excludes.addAll ignoreModuleList + ignoreFileFilter
+                excludes.addAll ignoreFileFilter
             }
         }
     }
+}
 
+tasks.withType(Test) {
+    kover {
+        isDisabled = project.name.contains("test")
+    }
 }
