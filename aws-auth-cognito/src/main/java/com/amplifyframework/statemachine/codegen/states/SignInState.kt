@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ internal sealed class SignInState : State {
     data class ResolvingChallenge(override var challengeState: SignInChallengeState?) : SignInState()
     data class ConfirmingDevice(val id: String = "") : SignInState()
     data class Done(val id: String = "") : SignInState()
-    data class Error(val exception: Exception) : SignInState()
+    data class Error(val exception: Exception, override var challengeState: SignInChallengeState?) : SignInState()
     data class SignedIn(val id: String = "") : SignInState()
 
     open var srpSignInState: SRPSignInState? = SRPSignInState.NotStarted()
@@ -141,7 +141,7 @@ internal sealed class SignInState : State {
                         val action = signInActions.confirmDevice(signInEvent)
                         StateResolution(ConfirmingDevice(), listOf(action))
                     }
-                    is SignInEvent.EventType.ThrowError -> StateResolution(Error(signInEvent.exception))
+                    is SignInEvent.EventType.ThrowError -> StateResolution(Error(signInEvent.exception, oldState.challengeState))
                     else -> defaultResolution
                 }
                 is ResolvingChallenge -> when (signInEvent) {
@@ -149,7 +149,7 @@ internal sealed class SignInState : State {
                         val action = signInActions.confirmDevice(signInEvent)
                         StateResolution(ConfirmingDevice(), listOf(action))
                     }
-                    is SignInEvent.EventType.ThrowError -> StateResolution(Error(signInEvent.exception))
+                    is SignInEvent.EventType.ThrowError -> StateResolution(Error(signInEvent.exception, oldState.challengeState))
                     else -> defaultResolution
                 }
                 is ResolvingDeviceSRP -> when (signInEvent) {
@@ -157,19 +157,19 @@ internal sealed class SignInState : State {
                         val action = signInActions.initResolveChallenge(signInEvent)
                         StateResolution(ResolvingChallenge(oldState.challengeState), listOf(action))
                     }
-                    is SignInEvent.EventType.ThrowError -> StateResolution(Error(signInEvent.exception))
+                    is SignInEvent.EventType.ThrowError -> StateResolution(Error(signInEvent.exception, oldState.challengeState))
                     else -> defaultResolution
                 }
                 is ConfirmingDevice -> when (signInEvent) {
                     is SignInEvent.EventType.FinalizeSignIn -> {
                         StateResolution(SignedIn())
                     }
-                    is SignInEvent.EventType.ThrowError -> StateResolution(Error(signInEvent.exception))
+                    is SignInEvent.EventType.ThrowError -> StateResolution(Error(signInEvent.exception, oldState.challengeState))
                     else -> defaultResolution
                 }
                 is SigningInWithHostedUI -> when (signInEvent) {
                     is SignInEvent.EventType.SignedIn -> StateResolution(Done())
-                    is SignInEvent.EventType.ThrowError -> StateResolution(Error(signInEvent.exception))
+                    is SignInEvent.EventType.ThrowError -> StateResolution(Error(signInEvent.exception, oldState.challengeState))
                     else -> defaultResolution
                 }
                 else -> defaultResolution

@@ -138,16 +138,16 @@ import com.amplifyframework.statemachine.codegen.states.SRPSignInState
 import com.amplifyframework.statemachine.codegen.states.SignInChallengeState
 import com.amplifyframework.statemachine.codegen.states.SignInState
 import com.amplifyframework.statemachine.codegen.states.SignOutState
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.async
-import kotlinx.coroutines.launch
 
 internal class RealAWSCognitoAuthPlugin(
     private val configuration: AuthConfiguration,
@@ -588,13 +588,19 @@ internal class RealAWSCognitoAuthPlugin(
         authStateMachine.getCurrentState { authState ->
             val authNState = authState.authNState
             val signInState = (authNState as? AuthenticationState.SigningIn)?.signInState
-            when ((signInState as? SignInState.ResolvingChallenge)?.challengeState) {
-                is SignInChallengeState.WaitingForAnswer -> {
-                    _confirmSignIn(challengeResponse, options, onSuccess, onError)
+            if(signInState is SignInState.Error || signInState is SignInState.ResolvingChallenge) {
+                when (signInState.challengeState) {
+                    is SignInChallengeState.WaitingForAnswer -> {
+                        _confirmSignIn(challengeResponse, options, onSuccess, onError)
+                    }
+                    else -> onError.accept(InvalidStateException())
                 }
-                else -> onError.accept(InvalidStateException())
+            }
+            else {
+                onError.accept(InvalidStateException())
             }
         }
+
     }
 
     private fun _confirmSignIn(
@@ -610,7 +616,6 @@ internal class RealAWSCognitoAuthPlugin(
                 val authNState = authState.authNState
                 val authZState = authState.authZState
                 val signInState = (authNState as? AuthenticationState.SigningIn)?.signInState
-                val challengeState = (signInState as? SignInState.ResolvingChallenge)?.challengeState
                 when {
                     authNState is AuthenticationState.SignedIn &&
                         authZState is AuthorizationState.SessionEstablished -> {

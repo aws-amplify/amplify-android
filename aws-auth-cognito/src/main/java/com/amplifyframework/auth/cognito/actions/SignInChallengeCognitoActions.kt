@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -88,13 +88,10 @@ internal object SignInChallengeCognitoActions : SignInChallengeActions {
     }
 
     private fun getChallengeResponseKey(challengeName: String): String? {
-        val VALUE_ANSWER = "ANSWER"
-        val VALUE_SMS_MFA = "SMS_MFA_CODE"
-        val VALUE_NEW_PASSWORD = "NEW_PASSWORD"
         return when (ChallengeNameType.fromValue(challengeName)) {
-            is ChallengeNameType.SmsMfa -> VALUE_SMS_MFA
-            is ChallengeNameType.NewPasswordRequired -> VALUE_NEW_PASSWORD
-            is ChallengeNameType.CustomChallenge -> VALUE_ANSWER
+            is ChallengeNameType.SmsMfa -> "SMS_MFA_CODE"
+            is ChallengeNameType.NewPasswordRequired -> "NEW_PASSWORD"
+            is ChallengeNameType.CustomChallenge -> "ANSWER"
             else -> null
         }
     }
