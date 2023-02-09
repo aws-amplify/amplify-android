@@ -54,6 +54,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -72,7 +73,7 @@ import okhttp3.Protocol;
 @SuppressWarnings("TypeParameterHidesVisibleType") // <R> shadows >com.amplifyframework.api.aws.R
 public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     private final Map<String, ClientDetails> apiDetails;
-    private final Map<String, OkHttpConfigurator> apiConfigurators;
+    private final Map<String, OkHttpConfigurator.ForType> apiConfigurators;
     private final GraphQLResponse.Factory gqlResponseFactory;
     private final ApiAuthProviders authProvider;
     private final ExecutorService executorService;
@@ -140,10 +141,11 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             okHttpClientBuilder.addNetworkInterceptor(UserAgentInterceptor.using(UserAgent::string));
             okHttpClientBuilder.eventListener(new ApiConnectionEventListener());
 
-            OkHttpConfigurator configurator = apiConfigurators.get(apiName);
-            if (configurator != null) {
-                configurator.applyConfiguration(okHttpClientBuilder);
-            }
+            OkHttpConfigurator.ForType configurator = Optional.ofNullable(apiConfigurators.get(apiName))
+                    // If no apiConfigurator was provided, we use a noop one.
+                    .orElse((ignoreOkHttpClientBuilder, ignoreType) -> {});
+
+            configurator.applyConfiguration(okHttpClientBuilder, OkHttpConfigurator.Type.HTTP);
 
             final ApiRequestDecoratorFactory requestDecoratorFactory = new ApiRequestDecoratorFactory(authProvider,
                     apiConfiguration.getAuthorizationType(),
@@ -175,7 +177,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
                 final SubscriptionAuthorizer subscriptionAuthorizer =
                     new SubscriptionAuthorizer(apiConfiguration, authProvider);
                 final SubscriptionEndpoint subscriptionEndpoint =
-                    new SubscriptionEndpoint(apiConfiguration, gqlResponseFactory, subscriptionAuthorizer);
+                    new SubscriptionEndpoint(apiConfiguration, configurator, gqlResponseFactory, subscriptionAuthorizer);
                 clientDetails = new ClientDetails(apiConfiguration,
                                                   okHttpClientBuilder.build(),
                                                   subscriptionEndpoint,
@@ -869,7 +871,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
      */
     public static final class Builder {
         private ApiAuthProviders apiAuthProviders;
-        private final Map<String, OkHttpConfigurator> apiConfigurators;
+        private final Map<String, OkHttpConfigurator.ForType> apiConfigurators;
 
         private Builder() {
             this.apiAuthProviders = ApiAuthProviders.noProviderOverrides();
@@ -894,12 +896,34 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
          * @param forApiName The name of the API for which these customizations should apply.
                              This can be found in your `amplifyconfiguration.json` file.
          * @param byConfigurator A lambda that hands the user an OkHttpClient.Builder,
-         *                       and enables the user to set come configurations on it.
+         *                       and enables the user to set some configurations on it.
+         * @return A builder instance, to continue chaining configurations
+         * @deprecated Replaced by {@link #configureClient(String, OkHttpConfigurator.ForType)}
+         */
+        @NonNull
+        @Deprecated
+        public Builder configureClient(
+                @NonNull String forApiName, @NonNull OkHttpConfigurator byConfigurator) {
+            this.apiConfigurators.put(forApiName, (okHttpClientBuilder, type) -> {
+                if(OkHttpConfigurator.Type.HTTP.equals(type)) {
+                    byConfigurator.applyConfiguration(okHttpClientBuilder);
+                }
+            });
+            return this;
+        }
+
+        /**
+         * Apply customizations to an underlying OkHttpClient that will be used
+         * for a particular API.
+         * @param forApiName The name of the API for which these customizations should apply.
+        This can be found in your `amplifyconfiguration.json` file.
+         * @param byConfigurator A lambda that hands the user an OkHttpClient.Builder and the OkHttpConfigurator.Type it
+         *                       applies to, and enables the user to set some configurations on it.
          * @return A builder instance, to continue chaining configurations
          */
         @NonNull
         public Builder configureClient(
-                @NonNull String forApiName, @NonNull OkHttpConfigurator byConfigurator) {
+                @NonNull String forApiName, @NonNull OkHttpConfigurator.ForType byConfigurator) {
             this.apiConfigurators.put(forApiName, byConfigurator);
             return this;
         }

@@ -71,7 +71,7 @@ public final class SubscriptionEndpointTest {
 
         final GraphQLResponse.Factory responseFactory = new GsonGraphQLResponseFactory();
         final SubscriptionAuthorizer authorizer = new SubscriptionAuthorizer(apiConfiguration);
-        this.subscriptionEndpoint = new SubscriptionEndpoint(apiConfiguration, responseFactory, authorizer);
+        this.subscriptionEndpoint = new SubscriptionEndpoint(apiConfiguration, null, responseFactory, authorizer);
 
         this.eventId = RandomString.string();
         this.subscriptionIdsForRelease = new HashSet<>();

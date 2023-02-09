@@ -76,19 +76,25 @@ final class SubscriptionEndpoint {
 
     SubscriptionEndpoint(
             @NonNull ApiConfiguration apiConfiguration,
+            @NonNull OkHttpConfigurator.ForType configurator,
             @NonNull GraphQLResponse.Factory responseFactory,
             @NonNull SubscriptionAuthorizer authorizer
-    ) throws ApiException {
+    ) {
         this.apiConfiguration = Objects.requireNonNull(apiConfiguration);
         this.subscriptions = new ConcurrentHashMap<>();
         this.responseFactory = Objects.requireNonNull(responseFactory);
         this.authorizer = Objects.requireNonNull(authorizer);
         this.timeoutWatchdog = new TimeoutWatchdog();
         this.pendingSubscriptionIds = Collections.synchronizedSet(new HashSet<>());
-        this.okHttpClient = new OkHttpClient.Builder()
-            .addNetworkInterceptor(UserAgentInterceptor.using(UserAgent::string))
-            .retryOnConnectionFailure(true)
-            .build();
+
+        OkHttpClient.Builder okHttpClientBuilder = new OkHttpClient.Builder()
+                .retryOnConnectionFailure(true);
+
+        if (configurator != null) {
+            configurator.applyConfiguration(okHttpClientBuilder, OkHttpConfigurator.Type.WEBSOCKET);
+        }
+
+        this.okHttpClient = okHttpClientBuilder.build();
     }
 
     synchronized <T> void requestSubscription(
@@ -125,7 +131,8 @@ final class SubscriptionEndpoint {
             try {
                 webSocket = okHttpClient.newWebSocket(new Request.Builder()
                     .url(buildConnectionRequestUrl(authType))
-                    .addHeader("Sec-WebSocket-Protocol", "graphql-ws")
+                    .header("User-Agent", UserAgent.string())
+                    .header("Sec-WebSocket-Protocol", "graphql-ws")
                     .build(), webSocketListener);
             } catch (ApiException apiException) {
                 onSubscriptionError.accept(apiException);
@@ -332,7 +339,7 @@ final class SubscriptionEndpoint {
         return new Uri.Builder()
             .scheme("wss")
             .authority(authority)
-            .appendPath(path)
+            .path(path)
             .appendQueryParameter("header", Base64.encodeToString(rawHeader, Base64.DEFAULT))
             .appendQueryParameter("payload", "e30=")
             .build()
@@ -490,7 +497,6 @@ final class SubscriptionEndpoint {
     final class AmplifyWebSocketListener extends WebSocketListener {
         private final CountDownLatch connectionResponse;
         private final AtomicReference<EndpointStatus> endpointStatus;
-        private OkHttpClient okHttpClient;
 
         AmplifyWebSocketListener() {
             this(new CountDownLatch(1));

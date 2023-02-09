@@ -50,4 +50,14 @@ public interface OkHttpConfigurator {
      * @param okHttpClientBuilder An {@link OkHttpClient.Builder} instance
      */
     void applyConfiguration(@NonNull OkHttpClient.Builder okHttpClientBuilder);
+
+    enum Type {
+        HTTP,
+        WEBSOCKET
+    }
+
+    @FunctionalInterface
+    interface ForType {
+        void applyConfiguration(@NonNull OkHttpClient.Builder okHttpClientBuilder, Type type);
+    }
 }
