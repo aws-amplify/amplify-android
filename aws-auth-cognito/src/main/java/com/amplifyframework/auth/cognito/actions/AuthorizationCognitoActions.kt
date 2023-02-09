@@ -86,13 +86,13 @@ internal object AuthorizationCognitoActions : AuthorizationActions {
                         FetchAuthSessionEvent(FetchAuthSessionEvent.EventType.FetchIdentity(logins))
                     }
                         ?: AuthorizationEvent(
-                        AuthorizationEvent.EventType.ThrowError(
-                            ConfigurationException(
-                                "Identity token is null.",
-                                AmplifyException.TODO_RECOVERY_SUGGESTION
+                            AuthorizationEvent.EventType.ThrowError(
+                                ConfigurationException(
+                                    "Identity token is null.",
+                                    AmplifyException.TODO_RECOVERY_SUGGESTION
+                                )
                             )
                         )
-                    )
                 }
             }
             logger.verbose("$id Sending event ${evt.type}")
