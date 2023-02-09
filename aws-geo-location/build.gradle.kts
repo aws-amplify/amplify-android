@@ -24,8 +24,6 @@ group = properties["POM_GROUP"].toString()
 
 dependencies {
     implementation(project(":core"))
-    // ToDo: Remove fixed dependency to cognito and abstract it to core
-    implementation(project(":aws-auth-cognito"))
     implementation(dependency.aws.location)
 
     testImplementation(project(":testutils"))

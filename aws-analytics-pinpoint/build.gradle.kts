@@ -27,7 +27,6 @@ group = properties["POM_GROUP"].toString()
 
 dependencies {
     implementation(project(":core"))
-    implementation(project(":aws-auth-cognito"))
 
     implementation(dependency.androidx.appcompat)
     implementation(dependency.aws.pinpointKotlin)
@@ -45,6 +44,7 @@ dependencies {
 
     androidTestImplementation(project(":testutils"))
     androidTestImplementation(testDependency.androidx.test.core)
+    androidTestImplementation(project(":aws-auth-cognito"))
     androidTestImplementation(testDependency.androidx.test.runner)
     androidTestImplementation(testDependency.kotlin.test.coroutines)
     androidTestImplementation(testDependency.androidx.test.junit)

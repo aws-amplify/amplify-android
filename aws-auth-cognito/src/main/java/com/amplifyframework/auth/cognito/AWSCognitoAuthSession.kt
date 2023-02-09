@@ -15,9 +15,10 @@
 
 package com.amplifyframework.auth.cognito
 
+import com.amplifyframework.auth.AWSAuthSessionInternal
+import com.amplifyframework.auth.AWSCognitoUserPoolTokens
 import com.amplifyframework.auth.AWSCredentials
 import com.amplifyframework.auth.AuthException
-import com.amplifyframework.auth.AuthSession
 import com.amplifyframework.auth.cognito.helpers.SessionHelper
 import com.amplifyframework.auth.exceptions.ConfigurationException
 import com.amplifyframework.auth.exceptions.InvalidStateException
@@ -39,46 +40,12 @@ import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
  */
 data class AWSCognitoAuthSession internal constructor(
     @get:JvmName("getSignedIn")
-    val isSignedIn: Boolean,
-    val identityIdResult: AuthSessionResult<String>,
-    val awsCredentialsResult: AuthSessionResult<AWSCredentials>,
-    val userSubResult: AuthSessionResult<String>,
-    val userPoolTokensResult: AuthSessionResult<AWSCognitoUserPoolTokens>
-) : AuthSession(isSignedIn) {
-    internal companion object {
-        fun getCredentialsResult(awsCredentials: CognitoCredentials): AuthSessionResult<AWSCredentials> =
-            with(awsCredentials) {
-                AWSCredentials.createAWSCredentials(accessKeyId, secretAccessKey, sessionToken, expiration)
-            }?.let {
-                AuthSessionResult.success(it)
-            } ?: AuthSessionResult.failure(UnknownException("Failed to fetch AWS credentials."))
-
-        fun getIdentityIdResult(identityId: String): AuthSessionResult<String> {
-            return if (identityId.isNotEmpty()) AuthSessionResult.success(identityId)
-            else AuthSessionResult.failure(UnknownException("Failed to fetch identity id."))
-        }
-
-        fun getUserSubResult(userPoolTokens: CognitoUserPoolTokens?): AuthSessionResult<String> {
-            return try {
-                AuthSessionResult.success(userPoolTokens?.accessToken?.let(SessionHelper::getUserSub))
-            } catch (e: Exception) {
-                AuthSessionResult.failure(UnknownException(cause = e))
-            }
-        }
-
-        fun getUserPoolTokensResult(
-            cognitoUserPoolTokens: CognitoUserPoolTokens
-        ): AuthSessionResult<AWSCognitoUserPoolTokens> {
-            return AuthSessionResult.success(
-                AWSCognitoUserPoolTokens(
-                    accessToken = cognitoUserPoolTokens.accessToken,
-                    idToken = cognitoUserPoolTokens.idToken,
-                    refreshToken = cognitoUserPoolTokens.refreshToken
-                )
-            )
-        }
-    }
-}
+    override val isSignedIn: Boolean,
+    override val identityIdResult: AuthSessionResult<String>,
+    override val awsCredentialsResult: AuthSessionResult<AWSCredentials>,
+    override val userSubResult: AuthSessionResult<String>,
+    override val userPoolTokensResult: AuthSessionResult<AWSCognitoUserPoolTokens>
+) : AWSAuthSessionInternal(isSignedIn, identityIdResult, awsCredentialsResult, userSubResult, userPoolTokensResult)
 
 internal fun AmplifyCredential.isValid(): Boolean {
     return when (this) {
@@ -92,7 +59,38 @@ internal fun AmplifyCredential.isValid(): Boolean {
 
 internal fun AmplifyCredential.getCognitoSession(
     exception: AuthException = SignedOutException()
-): AWSCognitoAuthSession {
+): AWSAuthSessionInternal {
+    fun getCredentialsResult(awsCredentials: CognitoCredentials): AuthSessionResult<AWSCredentials> =
+        with(awsCredentials) {
+            AWSCredentials.createAWSCredentials(accessKeyId, secretAccessKey, sessionToken, expiration)
+        }?.let {
+            AuthSessionResult.success(it)
+        } ?: AuthSessionResult.failure(UnknownException("Failed to fetch AWS credentials."))
+
+    fun getIdentityIdResult(identityId: String): AuthSessionResult<String> {
+        return if (identityId.isNotEmpty()) AuthSessionResult.success(identityId)
+        else AuthSessionResult.failure(UnknownException("Failed to fetch identity id."))
+    }
+
+    fun getUserSubResult(userPoolTokens: CognitoUserPoolTokens?): AuthSessionResult<String> {
+        return try {
+            AuthSessionResult.success(userPoolTokens?.accessToken?.let(SessionHelper::getUserSub))
+        } catch (e: Exception) {
+            AuthSessionResult.failure(UnknownException(cause = e))
+        }
+    }
+
+    fun getUserPoolTokensResult(
+        cognitoUserPoolTokens: CognitoUserPoolTokens
+    ): AuthSessionResult<AWSCognitoUserPoolTokens> {
+        return AuthSessionResult.success(
+            AWSCognitoUserPoolTokens(
+                accessToken = cognitoUserPoolTokens.accessToken,
+                idToken = cognitoUserPoolTokens.idToken,
+                refreshToken = cognitoUserPoolTokens.refreshToken
+            )
+        )
+    }
     return when (this) {
         is AmplifyCredential.UserPool -> AWSCognitoAuthSession(
             true,
@@ -108,20 +106,20 @@ internal fun AmplifyCredential.getCognitoSession(
                     "Cognito Identity not configured. Please check amplifyconfiguration.json file."
                 )
             ),
-            userSubResult = AWSCognitoAuthSession.getUserSubResult(signedInData.cognitoUserPoolTokens),
-            userPoolTokensResult = AWSCognitoAuthSession.getUserPoolTokensResult(signedInData.cognitoUserPoolTokens)
+            userSubResult = getUserSubResult(signedInData.cognitoUserPoolTokens),
+            userPoolTokensResult = getUserPoolTokensResult(signedInData.cognitoUserPoolTokens)
         )
         is AmplifyCredential.UserAndIdentityPool -> AWSCognitoAuthSession(
             true,
-            identityIdResult = AWSCognitoAuthSession.getIdentityIdResult(identityId),
-            awsCredentialsResult = AWSCognitoAuthSession.getCredentialsResult(credentials),
-            userSubResult = AWSCognitoAuthSession.getUserSubResult(signedInData.cognitoUserPoolTokens),
-            userPoolTokensResult = AWSCognitoAuthSession.getUserPoolTokensResult(signedInData.cognitoUserPoolTokens)
+            identityIdResult = getIdentityIdResult(identityId),
+            awsCredentialsResult = getCredentialsResult(credentials),
+            userSubResult = getUserSubResult(signedInData.cognitoUserPoolTokens),
+            userPoolTokensResult = getUserPoolTokensResult(signedInData.cognitoUserPoolTokens)
         )
         is AmplifyCredential.IdentityPool -> AWSCognitoAuthSession(
             false,
-            identityIdResult = AWSCognitoAuthSession.getIdentityIdResult(identityId),
-            awsCredentialsResult = AWSCognitoAuthSession.getCredentialsResult(credentials),
+            identityIdResult = getIdentityIdResult(identityId),
+            awsCredentialsResult = getCredentialsResult(credentials),
             userSubResult = AuthSessionResult.failure(SignedOutException()),
             userPoolTokensResult = AuthSessionResult.failure(SignedOutException())
         )
@@ -132,8 +130,8 @@ internal fun AmplifyCredential.getCognitoSession(
             )
             AWSCognitoAuthSession(
                 true,
-                identityIdResult = AWSCognitoAuthSession.getIdentityIdResult(identityId),
-                awsCredentialsResult = AWSCognitoAuthSession.getCredentialsResult(credentials),
+                identityIdResult = getIdentityIdResult(identityId),
+                awsCredentialsResult = getCredentialsResult(credentials),
                 userSubResult = AuthSessionResult.failure(userPoolException),
                 userPoolTokensResult = AuthSessionResult.failure(userPoolException)
             )

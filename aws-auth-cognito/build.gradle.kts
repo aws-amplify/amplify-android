@@ -36,7 +36,6 @@ dependencies {
     implementation(dependency.aws.cognitoidentityprovider)
 
     testImplementation(project(":testutils"))
-    testImplementation(project(":aws-auth-cognito"))
     //noinspection GradleDependency
     testImplementation(testDependency.json)
 
@@ -58,5 +57,4 @@ dependencies {
     androidTestImplementation(testDependency.androidx.test.runner)
     androidTestImplementation(testDependency.androidx.test.junit)
     androidTestImplementation(project(":testutils"))
-    androidTestImplementation(project(":aws-auth-cognito"))
 }
