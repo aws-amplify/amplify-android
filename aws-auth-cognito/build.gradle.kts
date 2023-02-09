@@ -37,7 +37,8 @@ dependencies {
 
     testImplementation(project(":testutils"))
     //noinspection GradleDependency
-    testImplementation("org.json:json:20180813")
+    testImplementation(testDependency.json)
+
     testImplementation(testDependency.kotlin.test.junit)
     testImplementation(testDependency.kotlin.test.kotlinTest)
     testImplementation(testDependency.kotlin.test.coroutines)
@@ -52,7 +53,7 @@ dependencies {
 
     androidTestImplementation(dependency.gson)
     //noinspection GradleDependency
-    androidTestImplementation("com.amazonaws:aws-android-sdk-core:2.55.0")
+    androidTestImplementation(dependency.aws.sdk.core)
     androidTestImplementation(testDependency.androidx.test.runner)
     androidTestImplementation(testDependency.androidx.test.junit)
     androidTestImplementation(project(":testutils"))
