@@ -87,7 +87,7 @@ internal object AuthorizationCognitoActions : AuthorizationActions {
                     } ?:
                     AuthorizationEvent(AuthorizationEvent.EventType.ThrowError(
                         ConfigurationException(
-                            "Identity Token is null.",
+                            "Identity token is null.",
                             AmplifyException.TODO_RECOVERY_SUGGESTION
                         )
                     ))
