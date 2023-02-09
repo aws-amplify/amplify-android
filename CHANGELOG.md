@@ -1,12 +1,9 @@
-## [Release 2.3.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.3.0)
-
-### Features
-- **auth:** added kover plugin for coverage (#2267)
+## [Release 2.2.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.2.1)
 
 ### Bug Fixes
 - **auth:** Moving credential provider to main (#2273)
 
-[See all changes between 2.2.0 and 2.3.0](https://github.com/aws-amplify/amplify-android/compare/release_v2.2.0...release_v2.3.0)
+[See all changes between 2.2.0 and 2.2.1](https://github.com/aws-amplify/amplify-android/compare/release_v2.2.0...release_v2.2.1)
 
 ## [Release 2.2.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.2.0)
 
