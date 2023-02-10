@@ -61,6 +61,7 @@ dependencyResolutionManagement {
             library("mockwebserver", "com.squareup.okhttp3:mockwebserver:5.0.0-alpha.9")
             library("robolectric", "org.robolectric:robolectric:4.7")
             library("jsonassert", "org.skyscreamer:jsonassert:1.5.0")
+            library("json", "org.json:json:20210307")
         }
         // Library dependencies
         create("dependency") {
@@ -85,6 +86,9 @@ dependencyResolutionManagement {
             // AWS
             val awsKotlinSdk = "awsKotlinSdk"
             version(awsKotlinSdk, "0.17.12-beta")
+
+            library("aws-sdk-core", "com.amazonaws:aws-android-sdk-core:2.62.2")
+
             library("aws-credentials", "aws.smithy.kotlin:aws-credentials:0.12.6")
             library("aws-ktor", "aws.smithy.kotlin:http-client-engine-ktor:0.7.7")
             library("aws-signing", "aws.smithy.kotlin:aws-signing-default:0.12.6")
