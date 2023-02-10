@@ -76,23 +76,21 @@ internal object AuthorizationCognitoActions : AuthorizationActions {
                         )
                     )
                 )
+                signedInData.cognitoUserPoolTokens.idToken == null -> AuthorizationEvent(
+                    AuthorizationEvent.EventType.ThrowError(
+                        ConfigurationException(
+                            "Identity token is null.",
+                            AmplifyException.TODO_RECOVERY_SUGGESTION
+                        )
+                    )
+                )
                 else -> {
-                    signedInData.cognitoUserPoolTokens.idToken?.let {
-                        val logins = LoginsMapProvider.CognitoUserPoolLogins(
-                            configuration.userPool.region,
-                            configuration.userPool.poolId,
-                            it
-                        )
-                        FetchAuthSessionEvent(FetchAuthSessionEvent.EventType.FetchIdentity(logins))
-                    }
-                        ?: AuthorizationEvent(
-                            AuthorizationEvent.EventType.ThrowError(
-                                ConfigurationException(
-                                    "Identity token is null.",
-                                    AmplifyException.TODO_RECOVERY_SUGGESTION
-                                )
-                            )
-                        )
+                    val logins = LoginsMapProvider.CognitoUserPoolLogins(
+                        configuration.userPool.region,
+                        configuration.userPool.poolId,
+                        signedInData.cognitoUserPoolTokens.idToken
+                    )
+                    FetchAuthSessionEvent(FetchAuthSessionEvent.EventType.FetchIdentity(logins))
                 }
             }
             logger.verbose("$id Sending event ${evt.type}")
