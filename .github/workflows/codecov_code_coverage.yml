@@ -29,17 +29,17 @@ jobs:
       - name: Setup Java
         uses: actions/setup-java@v3
         with:
-          java-version: '8'
+          java-version: '11'
           distribution: 'corretto'
 
-      - name: Run test and generate jacoco report
-        run: ./gradlew jacocoTestReport
+      - name: Run test and generate kover report
+        run: ./gradlew koverReport
 
       - name: create temp directory
         run: mkdir /home/runner/work/amplify-android/amplify-android/code-coverage
 
-      - name: copy jacoco test report to temp directory
-        run: cp -r /home/runner/work/amplify-android/amplify-android/**/build/coverage-report/*.xml /home/runner/work/amplify-android/amplify-android/code-coverage/
+      - name: copy kover test report to temp directory
+        run: cp -r /home/runner/work/amplify-android/amplify-android/**/build/reports/kover/xml/*.xml /home/runner/work/amplify-android/amplify-android/code-coverage/
 
       - name: Upload Test Report
         uses: codecov/codecov-action@v3

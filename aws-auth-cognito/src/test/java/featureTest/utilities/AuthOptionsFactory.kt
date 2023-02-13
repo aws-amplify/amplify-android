@@ -55,10 +55,10 @@ object AuthOptionsFactory {
         AuthAPI.fetchAuthSession -> getFetchAuthSessionOptions(optionsData)
         AuthAPI.fetchDevices -> null
         AuthAPI.fetchUserAttributes -> TODO()
-        AuthAPI.forgetDevice -> TODO()
+        AuthAPI.forgetDevice -> null
         AuthAPI.getCurrentUser -> null
         AuthAPI.handleWebUISignInResponse -> TODO()
-        AuthAPI.rememberDevice -> TODO()
+        AuthAPI.rememberDevice -> null
         AuthAPI.resendSignUpCode -> AuthResendSignUpCodeOptions.defaults()
         AuthAPI.resendUserAttributeConfirmationCode -> AuthResendUserAttributeConfirmationCodeOptions.defaults()
         signIn -> getSignInOptions(optionsData)

@@ -179,7 +179,7 @@ internal class EventRecorder(
                         logger.info("Successfully submitted event with eventId ${pinpointEvent.eventId}")
                         eventIdToDelete.add(pinpointEvent)
                     } else {
-                        if (isRetryableError(message, pinpointEventResponse.statusCode)) {
+                        if (isRetryableError(pinpointEventResponse.statusCode)) {
                             logger.error(
                                 "Failed to deliver event with ${pinpointEvent.eventId}," +
                                     " will be re-delivered later"
@@ -195,13 +195,8 @@ internal class EventRecorder(
         return eventIdToDelete
     }
 
-    private fun isRetryableError(message: String, code: Int): Boolean {
-        return !(
-            message.equals("ValidationException", ignoreCase = true) ||
-                message.equals("SerializationException", ignoreCase = true) ||
-                message.equals("BadRequestException", ignoreCase = true) ||
-                code == badRequestCode
-            )
+    private fun isRetryableError(code: Int): Boolean {
+        return code in 500..599
     }
 
     private fun processEndpointResponse(endpointResponse: EndpointItemResponse?) {

@@ -1,3 +1,68 @@
+## [Release 2.2.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.2.1)
+
+### Bug Fixes
+- **auth:** Moving credential provider to main (#2273)
+
+[See all changes between 2.2.0 and 2.2.1](https://github.com/aws-amplify/amplify-android/compare/release_v2.2.0...release_v2.2.1)
+
+## [Release 2.2.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.2.0)
+
+### Features
+- **auth:** add required hash param to cognito api calls (#2266)
+- **datastore:** Add recoverability improvements (#2201)
+- **auth:** Added parity test for fetchDevices,rememberDevice,forgetDevice and fetchUserAttributes (#2174)
+
+### Bug Fixes
+- **analytics:** Remove test dependencies from implementation configuration (#2253)
+- **auth:** Fix Authorization header for HostedUI fetchToken when appSecret is used (#2264)
+
+[See all changes between 2.1.1 and 2.2.0](https://github.com/aws-amplify/amplify-android/compare/release_v2.1.1...release_v2.2.0)
+
+## [Release 2.1.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.1.1)
+
+### Bug Fixes
+- **datastore:** Fix lock contention issue when running DataStore.start() from the callback of DataStore.stop() (#2208)
+- **core:** Remove unused dependencies (#2207)
+- **geo:** Bump MapLibre SDK to 9.6.0 (#2254)
+
+[See all changes between 2.1.0 and 2.1.1](https://github.com/aws-amplify/amplify-android/compare/release_v2.1.0...release_v2.1.1)
+
+## [Release 2.1.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.1.0)
+
+### Features
+- feat(Geo): Add Kotlin Geo Facade (#2155)
+- Add a network status listener to restart DataStore after the network comes back online. (#2148)
+- feat(auth): Overriding sign in when the State machine is already in the signing in state (#2187)
+
+### Miscellaneous
+- chore: Remove deprecated maven plugin (#2137)
+- chore: Remove Javadoc tasks (#2139)
+- Update README.md (#2120)
+- Dengdan stress test (#2153)
+- Feat(Auth Test): Custom party testing for Custom Test without SRP (#2149)
+- Unignore storage and pinpoint tests (#2156)
+- Update DeviceFarm build config (#2168)
+- Add Geo Rx Bindings (#2159)
+- chore: Re-add storage tests (#2163)
+- chore: Upgrade Gradle, AGP, and KtLint (#2172)
+- Add a buildspec file for nightly tests (#2180)
+- Chore(Auth): Implementation of the custom auth with SRP parity testing use case (#2167)
+- chore: Add PR checker workflow (#2188)
+- fix(auth): Fix for when loading credentials the success/error is fired twice (#2184)
+
+### Bug fixes
+- fix(core): remove unused dynamic nav dependency (#2132)
+- fix(datastore): remove typename from ModelMetadata (#2122)
+- fix: Change order of updating state in local cache (#2141)
+- fix: fix integration test and added logger to integration test (#2143)
+- Fix for when move to idle state is called twice (#2152)
+- Fix(Auth): Sign up if successful should return DONE instead of Confirm sign up (#2130)
+- fix: Add missing apis in storage Kotlin & RxJava facade (#2160)
+- fix: user metadata was persisted empty in the database (#2165)
+- fix(geo): Increase Geo timeout so that it runs successfully on a Pixel 3a XL (#2177)
+
+[See all changes between 2.1.0 and 2.0.0](https://github.com/aws-amplify/amplify-android/compare/release_v2.0.0...release_v2.1.0)
+
 ## [Release 2.0.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.0.0)
 
 ###Breaking Changes
