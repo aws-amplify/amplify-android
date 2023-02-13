@@ -21,7 +21,9 @@ import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 import androidx.core.util.ObjectsCompat;
 
+import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.logging.Logger;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -41,12 +43,14 @@ public final class DataStoreConfiguration {
     static final long DEFAULT_SYNC_INTERVAL_MINUTES = TimeUnit.DAYS.toMinutes(1);
     @VisibleForTesting
     static final int DEFAULT_SYNC_MAX_RECORDS = 10_000;
-    @VisibleForTesting 
+    @VisibleForTesting
     static final int DEFAULT_SYNC_PAGE_SIZE = 1_000;
     @VisibleForTesting
     static final boolean DEFAULT_DO_SYNC_RETRY = false;
     static final int MAX_RECORDS = 1000;
     static final long MAX_TIME_SEC = 2;
+
+    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
 
     private final DataStoreErrorHandler errorHandler;
     private final DataStoreConflictHandler conflictHandler;
@@ -399,11 +403,16 @@ public final class DataStoreConfiguration {
 
         /**
          * Sets the retry enabled on datastore sync.
+         *
+         * @deprecated This configuration will be deprecated in a future version.
          * @param doSyncRetry Is retry enabled on datastore sync
          * @return Current builder instance
          */
         @NonNull
+        @Deprecated
         public Builder doSyncRetry(boolean doSyncRetry) {
+            LOG.warn("The doSyncRetry configuration will be deprecated in a future version."
+                    + " Please discontinue use of this API.");
             this.doSyncRetry = doSyncRetry;
             return Builder.this;
         }
