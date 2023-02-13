@@ -24,6 +24,7 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.AnalyticsMetadataTy
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AttributeType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChangePasswordRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeviceRememberedStatusType
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.EventType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetUserAttributeVerificationCodeRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetUserRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ListDevicesRequest
@@ -132,6 +133,7 @@ import com.amplifyframework.statemachine.codegen.events.SignOutEvent
 import com.amplifyframework.statemachine.codegen.states.AuthState
 import com.amplifyframework.statemachine.codegen.states.AuthenticationState
 import com.amplifyframework.statemachine.codegen.states.AuthorizationState
+import com.amplifyframework.statemachine.codegen.states.CustomSignInState
 import com.amplifyframework.statemachine.codegen.states.DeleteUserState
 import com.amplifyframework.statemachine.codegen.states.HostedUISignInState
 import com.amplifyframework.statemachine.codegen.states.SRPSignInState
@@ -588,19 +590,23 @@ internal class RealAWSCognitoAuthPlugin(
         authStateMachine.getCurrentState { authState ->
             val authNState = authState.authNState
             val signInState = (authNState as? AuthenticationState.SigningIn)?.signInState
-            if(signInState is SignInState.Error || signInState is SignInState.ResolvingChallenge) {
+            if (signInState is SignInState.ResolvingChallenge) {
                 when (signInState.challengeState) {
                     is SignInChallengeState.WaitingForAnswer -> {
                         _confirmSignIn(challengeResponse, options, onSuccess, onError)
                     }
-                    else -> onError.accept(InvalidStateException())
+                    else -> {
+                        onError.accept(InvalidStateException())
+                    }
                 }
+            }
+            else if(authNState is AuthenticationState.SignedIn) {
+                onError.accept(SignedInException())
             }
             else {
                 onError.accept(InvalidStateException())
             }
         }
-
     }
 
     private fun _confirmSignIn(
@@ -633,9 +639,15 @@ internal class RealAWSCognitoAuthPlugin(
                             CognitoAuthExceptionConverter.lookup(signInState.exception, "Confirm Sign in failed.")
                         )
                     }
+                    signInState is SignInState.ResolvingChallenge && signInState.challengeState is SignInChallengeState.Error ->
+                    {
+                        authStateMachine.cancel(token)
+                        onError.accept(
+                            CognitoAuthExceptionConverter.lookup((signInState.challengeState as SignInChallengeState.Error).exception, "Confirm Sign in failed.")
+                        )
+                    }
                 }
-            },
-            {
+            }, {
                 val awsCognitoConfirmSignInOptions = options as? AWSCognitoAuthConfirmSignInOptions
                 val event = SignInChallengeEvent(
                     SignInChallengeEvent.EventType.VerifyChallengeAnswer(

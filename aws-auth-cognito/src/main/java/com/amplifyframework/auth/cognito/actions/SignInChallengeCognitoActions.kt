@@ -81,10 +81,18 @@ internal object SignInChallengeCognitoActions : SignInChallengeActions {
                 )
             )
         } catch (e: Exception) {
-            SignInEvent(SignInEvent.EventType.ThrowError(e))
+            SignInChallengeEvent(SignInChallengeEvent.EventType.ThrowError(e, challenge))
         }
         logger.verbose("$id Sending event ${evt.type}")
         dispatcher.send(evt)
+    }
+
+    override fun resetToWaitingForAnswer(
+        event: SignInChallengeEvent.EventType.ThrowError,
+        challenge: AuthChallenge
+    ): Action = Action<AuthEnvironment>("VerifySignInChallenge") { id, dispatcher ->
+        logger.verbose("$id Starting execution")
+        dispatcher.send(SignInChallengeEvent(SignInChallengeEvent.EventType.WaitForAnswer(challenge)))
     }
 
     private fun getChallengeResponseKey(challengeName: String): String? {
