@@ -38,7 +38,7 @@ import kotlinx.coroutines.withContext
 
 class PushNotificationsUtils(
     private val context: Context,
-    private var channelId: String = PushNotificationsConstants.PINPOINT_NOTIFICATION_CHANNEL
+    private var channelId: String = PushNotificationsConstants.DEFAULT_NOTIFICATION_CHANNEL_ID
 ) {
     @ChecksSdkIntAtLeast(api = Build.VERSION_CODES.O)
     private fun isNotificationChannelSupported() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
@@ -106,8 +106,7 @@ class PushNotificationsUtils(
             val requestCode = 0
             val largeImageIcon = details.imageUrl?.let { downloadImage(it) }
             val notificationIntent = Intent(context, targetClass)
-            notificationIntent.putExtra("action", details.action)
-            notificationIntent.putExtra("rawData", details.rawData)
+            notificationIntent.putExtra("payload", details.bundle())
             val pendingIntent = PendingIntent.getActivity(
                 context,
                 requestCode,
@@ -128,6 +127,7 @@ class PushNotificationsUtils(
                 setContentIntent(pendingIntent)
                 setPriority(NotificationCompat.PRIORITY_DEFAULT)
                 setLargeIcon(largeImageIcon)
+                setAutoCancel(true)
             }
 
             with(NotificationManagerCompat.from(context)) {

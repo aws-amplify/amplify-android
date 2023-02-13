@@ -49,8 +49,8 @@ class EventSourceType private constructor(
         fun getEventSourceType(payload: NotificationPayload): EventSourceType {
             return if (payload.rawData.containsKey(PushNotificationsConstants.PINPOINT_CAMPAIGN_CAMPAIGN_ACTIVITY_ID)) {
                 CAMPAIGN
-            } else if (payload.rawData.containsKey(PushNotificationsConstants.PINPOINT_ATTRIBUTE_KEY) &&
-                payload.rawData[PushNotificationsConstants.PINPOINT_ATTRIBUTE_KEY]!!.contains("\"journey\"".toRegex())
+            } else if (payload.rawData.containsKey(PushNotificationsConstants.PINPOINT_PREFIX) &&
+                payload.rawData[PushNotificationsConstants.PINPOINT_PREFIX]!!.contains("\"journey\"".toRegex())
             ) {
                 JOURNEY
             } else {
@@ -91,11 +91,11 @@ class EventSourceType private constructor(
         override fun parseAttributes(payload: NotificationPayload): Map<String, String> {
             val result: HashMap<String, String> = HashMap()
             val campaignAttributes = payload.rawData.filter {
-                it.key.contains(PushNotificationsConstants.PINPOINT_CAMPAIGN_PREFIX)
+                it.key.contains(PushNotificationsConstants.CAMPAIGN_PREFIX)
             }
             for ((key, value) in campaignAttributes) {
                 // Remove campaign prefix and include it in the attributes
-                val sanitizedKey = key.replace(PushNotificationsConstants.PINPOINT_CAMPAIGN_PREFIX, "")
+                val sanitizedKey = key.replace(PushNotificationsConstants.CAMPAIGN_PREFIX, "")
                 result[sanitizedKey] = value
             }
             return result
@@ -105,7 +105,7 @@ class EventSourceType private constructor(
     private class JourneyAttributeParser : EventSourceAttributeParser() {
         override fun parseAttributes(payload: NotificationPayload): Map<String, String> {
             val result: HashMap<String, String> = HashMap()
-            val pinpointAttribute = payload.rawData[PushNotificationsConstants.PINPOINT_ATTRIBUTE_KEY] ?: return result
+            val pinpointAttribute = payload.rawData[PushNotificationsConstants.PINPOINT_PREFIX] ?: return result
             try {
                 val journeyAttribute = Json.decodeFromString<Map<String, Map<String, String>>>(pinpointAttribute)
                 val journeyAttributes = journeyAttribute[PushNotificationsConstants.JOURNEY_ATTRIBUTE_KEY]

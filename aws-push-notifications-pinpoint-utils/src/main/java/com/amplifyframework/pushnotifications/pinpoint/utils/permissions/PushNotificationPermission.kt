@@ -7,8 +7,8 @@ import android.net.Uri
 import android.os.Build
 import android.provider.Settings
 import androidx.core.content.ContextCompat
-import kotlinx.coroutines.flow.first
 import java.util.UUID
+import kotlinx.coroutines.flow.first
 
 internal const val PermissionRequiredApiLevel = 33
 internal const val PermissionName = "android.permission.POST_NOTIFICATIONS"
@@ -44,6 +44,7 @@ class PushNotificationPermission(private val context: Context) {
         val intent = Intent(context, PermissionsRequestActivity::class.java).apply {
             putExtra(PermissionRequestId, requestId)
         }
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
         context.startActivity(intent)
 
         // Listen for the result

@@ -160,10 +160,6 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
         try {
             val payload = details.toNotificationsPayload()
             val eventSourceType: EventSourceType = EventSourceType.getEventSourceType(payload)
-            // campaign_id, journey_id, others
-            val eventSourceID = eventSourceType.getEventSourceIdAttributeKey()
-            // campaign_activity_id, journey_id, others
-            val eventSourceActivityID = eventSourceType.getEventSourceActivityAttributeKey()
 
             // TODO Add analytics behavior
             val eventSourceAttributes = eventSourceType.getAttributeParser().parseAttributes(payload)

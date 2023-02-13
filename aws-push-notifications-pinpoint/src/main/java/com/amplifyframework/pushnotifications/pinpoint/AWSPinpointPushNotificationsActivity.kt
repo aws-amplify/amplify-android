@@ -23,6 +23,7 @@ import android.os.Bundle
 import android.util.Log
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.pushnotifications.pinpoint.utils.PushNotificationsConstants
+import com.amplifyframework.pushnotifications.pinpoint.utils.toNotificationsPayload
 
 class AWSPinpointPushNotificationsActivity : Activity() {
 
@@ -30,10 +31,8 @@ class AWSPinpointPushNotificationsActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Amplify.Notifications.Push.recordNotificationOpened(emptyMap(), { }, { })
-        val resultIntent = intent.extras
-        @Suppress("UNCHECKED_CAST")
-        val action = resultIntent?.get("action") as HashMap<String, String>
-        val intent = processIntent(action)
+        val payload = (intent.extras?.get("payload") as Bundle).toNotificationsPayload()
+        val intent = processIntent(payload.action)
         try {
             startActivity(intent)
         } catch (e: ActivityNotFoundException) {
@@ -42,9 +41,9 @@ class AWSPinpointPushNotificationsActivity : Activity() {
         finish()
     }
 
-    private fun processIntent(action: HashMap<String, String>): Intent {
+    private fun processIntent(action: HashMap<String, String>): Intent? {
         // Action is open url
-        val notificationIntent: Intent = if (action.containsKey(PushNotificationsConstants.PINPOINT_URL)) {
+        val notificationIntent: Intent? = if (action.containsKey(PushNotificationsConstants.PINPOINT_URL)) {
             val url = action[PushNotificationsConstants.PINPOINT_URL]
             Intent(Intent.ACTION_VIEW, Uri.parse(url))
         }
@@ -56,7 +55,7 @@ class AWSPinpointPushNotificationsActivity : Activity() {
         // Default action is open app
         else {
             val packageName = applicationContext.packageName
-            applicationContext.packageManager.getLaunchIntentForPackage(packageName)!!
+            applicationContext.packageManager.getLaunchIntentForPackage(packageName)
         }
         return notificationIntent
     }

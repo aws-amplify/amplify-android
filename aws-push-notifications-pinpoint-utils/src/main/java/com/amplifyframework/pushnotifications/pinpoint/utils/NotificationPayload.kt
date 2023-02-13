@@ -26,21 +26,32 @@ import kotlinx.serialization.json.Json
 @Serializable
 data class NotificationPayload internal constructor(
     val notificationId: Int,
+    val messageId: String?,
+    val senderId: String?,
+    val sendTime: Long?,
     val title: String?,
     val body: String?,
     val imageUrl: String?,
+    val channelId: String?,
     val action: HashMap<String, String>,
     val silentPush: Boolean,
     val rawData: HashMap<String, String>
 ) {
     constructor(
+        messageId: String?,
+        senderId: String?,
+        sendTime: Long?,
         title: String?,
         body: String?,
         imageUrl: String?,
+        channelId: String?,
         action: HashMap<String, String>,
         silentPush: Boolean = false,
         rawData: HashMap<String, String>
-    ) : this(UUID.randomUUID().hashCode(), title, body, imageUrl, action, silentPush, rawData)
+    ) : this(
+        UUID.randomUUID().hashCode(),
+        messageId, senderId, sendTime, title, body, imageUrl, channelId, action, silentPush, rawData
+    )
 
     companion object {
         inline operator fun invoke(block: Builder.() -> Unit) = Builder().apply(block).build()
@@ -52,22 +63,38 @@ data class NotificationPayload internal constructor(
     }
 
     class Builder {
+        private var messageId: String? = null
+        private var senderId: String? = null
+        private var sendTime: Long? = null
         private var title: String? = null
         private var body: String? = null
         private var imageUrl: String? = null
+        private var channelId: String? = null
         private var action: HashMap<String, String> = hashMapOf()
         var silentPush: Boolean = false
         var rawData: HashMap<String, String> = hashMapOf()
 
-        fun notification(title: String?, body: String?, imageUrl: String?) = apply {
+        fun notification(messageId: String?, senderId: String?, sendTime: Long?) {
+            this.messageId = messageId
+            this.senderId = senderId
+            this.sendTime = sendTime
+        }
+
+        fun notificationContent(title: String?, body: String?, imageUrl: String?) = apply {
             this.title = title
             this.body = body
             this.imageUrl = imageUrl
         }
 
+        fun notificationOptions(channelId: String?) {
+            this.channelId = channelId
+        }
+
         fun tapAction(action: HashMap<String, String>) = apply { this.action = action }
 
-        fun build() = NotificationPayload(title, body, imageUrl, action, silentPush, rawData)
+        fun build() = NotificationPayload(
+            messageId, senderId, sendTime, title, body, imageUrl, channelId, action, silentPush, rawData
+        )
     }
 }
 
