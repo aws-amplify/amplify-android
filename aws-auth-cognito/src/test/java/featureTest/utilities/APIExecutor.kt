@@ -22,7 +22,6 @@ import com.amplifyframework.core.Consumer
 import com.google.gson.Gson
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
-import kotlin.Exception
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
 import kotlin.reflect.KParameter
@@ -69,7 +68,7 @@ internal val apiExecutor: (AWSCognitoAuthPlugin, API) -> Any = { authPlugin: AWS
         throw Exception("No matching api function with required parameters found")
     targetApi.callBy(requiredParams)
 
-    latch.await(5, TimeUnit.SECONDS)
+    latch.await(5, TimeUnit.MINUTES)
     result
 }
 

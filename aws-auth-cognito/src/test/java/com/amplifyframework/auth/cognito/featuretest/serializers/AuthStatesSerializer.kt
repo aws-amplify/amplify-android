@@ -177,6 +177,7 @@ internal data class AuthStatesProxy(
                             type = "SignInChallengeState.WaitingForAnswer",
                             authChallenge = authState.challenge
                         )
+                        is SignInChallengeState.Error -> TODO()
                     }
                 }
                 else -> {

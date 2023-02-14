@@ -15,7 +15,7 @@
 
 package com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerators
 
-import com.amplifyframework.auth.cognito.exceptions.service.CodeMismatchException
+import com.amplifyframework.auth.cognito.CognitoAuthExceptionConverter
 import com.amplifyframework.auth.cognito.featuretest.API
 import com.amplifyframework.auth.cognito.featuretest.AuthAPI
 import com.amplifyframework.auth.cognito.featuretest.CognitoType
@@ -27,6 +27,7 @@ import com.amplifyframework.auth.cognito.featuretest.ResponseType
 import com.amplifyframework.auth.cognito.featuretest.generators.SerializableProvider
 import com.amplifyframework.auth.cognito.featuretest.generators.authstategenerators.AuthStateJsonGenerator
 import com.amplifyframework.auth.cognito.featuretest.generators.toJsonElement
+import com.amplifyframework.auth.exceptions.UnknownException
 import kotlinx.serialization.json.JsonObject
 
 object ConfirmSignInTestCaseGenerator : SerializableProvider {
@@ -103,34 +104,34 @@ object ConfirmSignInTestCaseGenerator : SerializableProvider {
         )
     )
 
-    private val repeatedCase = FeatureTestCase(
-        description = "Test that invalid code on confirm SignIn with SMS challenge errors out",
-        preConditions = PreConditions(
-            "authconfiguration.json",
-            "SigningIn_SigningIn.json",
-            mockedResponses = listOf(
-                MockResponse(
-                    CognitoType.CognitoIdentityProvider,
-                    "confirmSignIn",
-                    ResponseType.Failure,
-                    CodeMismatchException(null).toJsonElement()
+    private val errorCase: FeatureTestCase
+        get() {
+            val exception = CognitoAuthExceptionConverter.lookup(
+                UnknownException(), "Confirm Sign in failed."
+            )
+            return baseCase.copy(
+                description = "Test that invalid code on confirm SignIn with SMS challenge errors out",
+                preConditions = PreConditions(
+                    "authconfiguration.json",
+                    "SigningIn_SigningIn.json",
+                    mockedResponses = listOf(
+                        MockResponse(
+                            CognitoType.CognitoIdentityProvider,
+                            "respondToAuthChallenge",
+                            ResponseType.Failure,
+                            exception.toJsonElement()
+                        )
+                    )
+                ),
+                validations = listOf(
+                    ExpectationShapes.Amplify(
+                        AuthAPI.confirmSignIn,
+                        ResponseType.Failure,
+                        exception.toJsonElement(),
+                    )
                 )
             )
-        ),
-        api = API(
-            AuthAPI.confirmSignIn,
-            params = mapOf(
-                "challengeResponse" to challengeCode
-            ).toJsonElement(),
-            options = JsonObject(emptyMap())
-        ),
-        validations = listOf(
-            ExpectationShapes.Amplify(
-                AuthAPI.deleteUser,
-                ResponseType.Failure,
-                CodeMismatchException(null).toJsonElement(),
-            ))
-    )
+        }
 
-    override val serializables: List<Any> = listOf(baseCase, repeatedCase)
+    override val serializables: List<Any> = listOf(baseCase, errorCase)
 }

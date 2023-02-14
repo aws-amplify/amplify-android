@@ -28,13 +28,6 @@ import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions
 import com.amplifyframework.auth.result.AuthSessionResult
 import com.amplifyframework.statemachine.codegen.states.AuthState
 import com.google.gson.Gson
-import java.io.BufferedWriter
-import java.io.File
-import java.io.FileOutputStream
-import java.io.FileWriter
-import kotlin.reflect.KClass
-import kotlin.reflect.KVisibility
-import kotlin.reflect.full.declaredMemberProperties
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
@@ -42,6 +35,13 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import java.io.BufferedWriter
+import java.io.File
+import java.io.FileOutputStream
+import java.io.FileWriter
+import kotlin.reflect.KClass
+import kotlin.reflect.KVisibility
+import kotlin.reflect.full.declaredMemberProperties
 
 const val basePath = "aws-auth-cognito/src/test/resources/feature-test"
 
@@ -66,6 +66,7 @@ fun cleanDirectory() {
 internal fun FeatureTestCase.exportJson() {
     val format = Json {
         prettyPrint = true
+        ignoreUnknownKeys = true
     }
 
     val result = format.encodeToString(this)
@@ -93,7 +94,10 @@ internal fun AuthState.exportJson() {
 internal fun List<FeatureTestCase>.exportToMd() {
     val outputStream = FileOutputStream("testSuite.md")
     val writer = outputStream.bufferedWriter()
-    val jsonFormat = Json { prettyPrint = true }
+    val jsonFormat = Json {
+        prettyPrint = true
+        ignoreUnknownKeys = true
+    }
 
     groupBy { it.api.name }
         .forEach {

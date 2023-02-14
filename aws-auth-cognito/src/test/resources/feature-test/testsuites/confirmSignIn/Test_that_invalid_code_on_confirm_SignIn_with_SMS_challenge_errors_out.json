@@ -1,0 +1,51 @@
+{
+    "description": "Test that invalid code on confirm SignIn with SMS challenge errors out",
+    "preConditions": {
+        "amplify-configuration": "authconfiguration.json",
+        "state": "SigningIn_SigningIn.json",
+        "mockedResponses": [
+            {
+                "type": "cognitoIdentityProvider",
+                "apiName": "respondToAuthChallenge",
+                "responseType": "failure",
+                "response": {
+                    "errorType": "UnknownException",
+                    "errorMessage": "Confirm Sign in failed.",
+                    "recoverySuggestion": "Sorry, we don't have a suggested fix for this error yet.",
+                    "cause": {
+                        "errorType": "UnknownException",
+                        "errorMessage": "An unclassified error prevented this operation.",
+                        "recoverySuggestion": "See the attached exception for more details",
+                        "cause": null
+                    }
+                }
+            }
+        ]
+    },
+    "api": {
+        "name": "confirmSignIn",
+        "params": {
+            "challengeResponse": "000000"
+        },
+        "options": {
+        }
+    },
+    "validations": [
+        {
+            "type": "amplify",
+            "apiName": "confirmSignIn",
+            "responseType": "failure",
+            "response": {
+                "errorType": "UnknownException",
+                "errorMessage": "Confirm Sign in failed.",
+                "recoverySuggestion": "Sorry, we don't have a suggested fix for this error yet.",
+                "cause": {
+                    "errorType": "UnknownException",
+                    "errorMessage": "An unclassified error prevented this operation.",
+                    "recoverySuggestion": "See the attached exception for more details",
+                    "cause": null
+                }
+            }
+        }
+    ]
+}
