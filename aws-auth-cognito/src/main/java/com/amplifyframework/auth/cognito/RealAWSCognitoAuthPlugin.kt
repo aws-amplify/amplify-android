@@ -133,23 +133,22 @@ import com.amplifyframework.statemachine.codegen.events.SignOutEvent
 import com.amplifyframework.statemachine.codegen.states.AuthState
 import com.amplifyframework.statemachine.codegen.states.AuthenticationState
 import com.amplifyframework.statemachine.codegen.states.AuthorizationState
-import com.amplifyframework.statemachine.codegen.states.CustomSignInState
 import com.amplifyframework.statemachine.codegen.states.DeleteUserState
 import com.amplifyframework.statemachine.codegen.states.HostedUISignInState
 import com.amplifyframework.statemachine.codegen.states.SRPSignInState
 import com.amplifyframework.statemachine.codegen.states.SignInChallengeState
 import com.amplifyframework.statemachine.codegen.states.SignInState
 import com.amplifyframework.statemachine.codegen.states.SignOutState
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.async
-import kotlinx.coroutines.launch
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 
 internal class RealAWSCognitoAuthPlugin(
     private val configuration: AuthConfiguration,
@@ -599,11 +598,9 @@ internal class RealAWSCognitoAuthPlugin(
                         onError.accept(InvalidStateException())
                     }
                 }
-            }
-            else if(authNState is AuthenticationState.SignedIn) {
+            } else if (authNState is AuthenticationState.SignedIn) {
                 onError.accept(SignedInException())
-            }
-            else {
+            } else {
                 onError.accept(InvalidStateException())
             }
         }
@@ -636,27 +633,34 @@ internal class RealAWSCognitoAuthPlugin(
                     signInState is SignInState.Error -> {
                         authStateMachine.cancel(token)
                         onError.accept(
-                            CognitoAuthExceptionConverter.lookup(signInState.exception, "Confirm Sign in failed.")
+                            CognitoAuthExceptionConverter.lookup(
+                                signInState.exception, "Confirm Sign in failed."
+                            )
                         )
                     }
-                    signInState is SignInState.ResolvingChallenge && signInState.challengeState is SignInChallengeState.Error ->
-                    {
+                    signInState is SignInState.ResolvingChallenge &&
+                        signInState.challengeState is SignInChallengeState.Error -> {
                         authStateMachine.cancel(token)
                         onError.accept(
-                            CognitoAuthExceptionConverter.lookup((signInState.challengeState as SignInChallengeState.Error).exception, "Confirm Sign in failed.")
+                            CognitoAuthExceptionConverter.lookup(
+                                (
+                                    signInState.challengeState as SignInChallengeState.Error
+                                    ).exception,
+                                "Confirm Sign in failed."
+                            )
                         )
                     }
                 }
             }, {
-                val awsCognitoConfirmSignInOptions = options as? AWSCognitoAuthConfirmSignInOptions
-                val event = SignInChallengeEvent(
-                    SignInChallengeEvent.EventType.VerifyChallengeAnswer(
-                        challengeResponse,
-                        awsCognitoConfirmSignInOptions?.metadata ?: mapOf()
-                    )
+            val awsCognitoConfirmSignInOptions = options as? AWSCognitoAuthConfirmSignInOptions
+            val event = SignInChallengeEvent(
+                SignInChallengeEvent.EventType.VerifyChallengeAnswer(
+                    challengeResponse,
+                    awsCognitoConfirmSignInOptions?.metadata ?: mapOf()
                 )
-                authStateMachine.send(event)
-            }
+            )
+            authStateMachine.send(event)
+        }
         )
     }
 

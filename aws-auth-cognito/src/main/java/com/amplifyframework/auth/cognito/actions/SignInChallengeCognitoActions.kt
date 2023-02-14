@@ -26,7 +26,6 @@ import com.amplifyframework.statemachine.codegen.actions.SignInChallengeActions
 import com.amplifyframework.statemachine.codegen.data.AuthChallenge
 import com.amplifyframework.statemachine.codegen.events.CustomSignInEvent
 import com.amplifyframework.statemachine.codegen.events.SignInChallengeEvent
-import com.amplifyframework.statemachine.codegen.events.SignInEvent
 
 internal object SignInChallengeCognitoActions : SignInChallengeActions {
     private const val KEY_SECRET_HASH = "SECRET_HASH"
