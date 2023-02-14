@@ -756,7 +756,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
          * @return Current builder instance, for fluent construction of plugin.
          */
         @VisibleForTesting
-        Builder reachabilityMonitor(ReachabilityMonitor reachabilityMonitor) {
+        public Builder reachabilityMonitor(ReachabilityMonitor reachabilityMonitor) {
             this.reachabilityMonitor = reachabilityMonitor;
             return this;
         }
