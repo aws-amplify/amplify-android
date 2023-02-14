@@ -66,7 +66,6 @@ fun cleanDirectory() {
 internal fun FeatureTestCase.exportJson() {
     val format = Json {
         prettyPrint = true
-        ignoreUnknownKeys = true
     }
 
     val result = format.encodeToString(this)
@@ -94,10 +93,7 @@ internal fun AuthState.exportJson() {
 internal fun List<FeatureTestCase>.exportToMd() {
     val outputStream = FileOutputStream("testSuite.md")
     val writer = outputStream.bufferedWriter()
-    val jsonFormat = Json {
-        prettyPrint = true
-        ignoreUnknownKeys = true
-    }
+    val jsonFormat = Json { prettyPrint = true }
 
     groupBy { it.api.name }
         .forEach {

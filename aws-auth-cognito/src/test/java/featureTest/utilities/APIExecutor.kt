@@ -20,13 +20,13 @@ import com.amplifyframework.auth.cognito.featuretest.API
 import com.amplifyframework.core.Action
 import com.amplifyframework.core.Consumer
 import com.google.gson.Gson
+import kotlinx.serialization.json.JsonObject
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
 import kotlin.reflect.KParameter
 import kotlin.reflect.full.declaredFunctions
-import kotlinx.serialization.json.JsonObject
 
 /**
  * Executes the API on given [AWSCognitoAuthPlugin] instance
@@ -68,7 +68,7 @@ internal val apiExecutor: (AWSCognitoAuthPlugin, API) -> Any = { authPlugin: AWS
         throw Exception("No matching api function with required parameters found")
     targetApi.callBy(requiredParams)
 
-    latch.await(5, TimeUnit.MINUTES)
+    latch.await(5, TimeUnit.SECONDS)
     result
 }
 

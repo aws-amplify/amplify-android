@@ -211,12 +211,8 @@ class CognitoMockFactory(
         responseObject: JsonObject
     ) {
         if (mockResponse.responseType == ResponseType.Failure) {
-
-            val format = Json {
-                prettyPrint = true
-            }
             try {
-                val response = format.decodeFromString(
+                val response = Json.decodeFromString(
                     when (mockResponse.type) {
                         CognitoType.CognitoIdentity -> CognitoIdentityExceptionSerializer
                         CognitoType.CognitoIdentityProvider -> CognitoIdentityProviderExceptionSerializer
