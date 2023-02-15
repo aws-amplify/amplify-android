@@ -15,6 +15,7 @@
 
 package com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerators
 
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.CodeMismatchException
 import com.amplifyframework.auth.cognito.CognitoAuthExceptionConverter
 import com.amplifyframework.auth.cognito.featuretest.API
 import com.amplifyframework.auth.cognito.featuretest.AuthAPI
@@ -27,7 +28,6 @@ import com.amplifyframework.auth.cognito.featuretest.ResponseType
 import com.amplifyframework.auth.cognito.featuretest.generators.SerializableProvider
 import com.amplifyframework.auth.cognito.featuretest.generators.authstategenerators.AuthStateJsonGenerator
 import com.amplifyframework.auth.cognito.featuretest.generators.toJsonElement
-import com.amplifyframework.auth.exceptions.UnknownException
 import kotlinx.serialization.json.JsonObject
 
 object ConfirmSignInTestCaseGenerator : SerializableProvider {
@@ -106,9 +106,9 @@ object ConfirmSignInTestCaseGenerator : SerializableProvider {
 
     private val errorCase: FeatureTestCase
         get() {
-            val exception = CognitoAuthExceptionConverter.lookup(
-                UnknownException(), "Confirm Sign in failed."
-            )
+            val exception = CodeMismatchException.invoke {
+                message = "Confirmation code entered is not correct."
+            }
             return baseCase.copy(
                 description = "Test that invalid code on confirm SignIn with SMS challenge errors out",
                 preConditions = PreConditions(
@@ -127,7 +127,10 @@ object ConfirmSignInTestCaseGenerator : SerializableProvider {
                     ExpectationShapes.Amplify(
                         AuthAPI.confirmSignIn,
                         ResponseType.Failure,
-                        exception.toJsonElement(),
+                        CognitoAuthExceptionConverter.lookup(
+                            exception,
+                            "Confirm Sign in failed."
+                        ).toJsonElement()
                     )
                 )
             )

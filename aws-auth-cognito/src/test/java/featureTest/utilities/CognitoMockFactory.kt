@@ -44,7 +44,6 @@ import com.amplifyframework.auth.cognito.featuretest.MockResponse
 import com.amplifyframework.auth.cognito.featuretest.ResponseType
 import com.amplifyframework.auth.cognito.featuretest.serializers.CognitoIdentityExceptionSerializer
 import com.amplifyframework.auth.cognito.featuretest.serializers.CognitoIdentityProviderExceptionSerializer
-import com.amplifyframework.auth.exceptions.UnknownException
 import io.mockk.coEvery
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -211,18 +210,14 @@ class CognitoMockFactory(
         responseObject: JsonObject
     ) {
         if (mockResponse.responseType == ResponseType.Failure) {
-            try {
-                val response = Json.decodeFromString(
-                    when (mockResponse.type) {
-                        CognitoType.CognitoIdentity -> CognitoIdentityExceptionSerializer
-                        CognitoType.CognitoIdentityProvider -> CognitoIdentityProviderExceptionSerializer
-                    },
-                    responseObject.toString()
-                )
-                throw response
-            } catch (e: Exception) {
-                throw UnknownException()
-            }
+            val response = Json.decodeFromString(
+                when (mockResponse.type) {
+                    CognitoType.CognitoIdentity -> CognitoIdentityExceptionSerializer
+                    CognitoType.CognitoIdentityProvider -> CognitoIdentityProviderExceptionSerializer
+                },
+                responseObject.toString()
+            )
+            throw response
         }
     }
 

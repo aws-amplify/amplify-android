@@ -9,15 +9,8 @@
                 "apiName": "respondToAuthChallenge",
                 "responseType": "failure",
                 "response": {
-                    "errorType": "UnknownException",
-                    "errorMessage": "Confirm Sign in failed.",
-                    "recoverySuggestion": "Sorry, we don't have a suggested fix for this error yet.",
-                    "cause": {
-                        "errorType": "UnknownException",
-                        "errorMessage": "An unclassified error prevented this operation.",
-                        "recoverySuggestion": "See the attached exception for more details",
-                        "cause": null
-                    }
+                    "errorType": "CodeMismatchException",
+                    "errorMessage": "Confirmation code entered is not correct."
                 }
             }
         ]
@@ -36,14 +29,12 @@
             "apiName": "confirmSignIn",
             "responseType": "failure",
             "response": {
-                "errorType": "UnknownException",
-                "errorMessage": "Confirm Sign in failed.",
-                "recoverySuggestion": "Sorry, we don't have a suggested fix for this error yet.",
+                "errorType": "CodeMismatchException",
+                "errorMessage": "Confirmation code entered is not correct.",
+                "recoverySuggestion": "Enter correct confirmation code.",
                 "cause": {
-                    "errorType": "UnknownException",
-                    "errorMessage": "An unclassified error prevented this operation.",
-                    "recoverySuggestion": "See the attached exception for more details",
-                    "cause": null
+                    "errorType": "CodeMismatchException",
+                    "errorMessage": "Confirmation code entered is not correct."
                 }
             }
         }
