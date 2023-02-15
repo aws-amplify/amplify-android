@@ -143,7 +143,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
 
             OkHttpConfigurator.ForType configurator = Optional.ofNullable(apiConfigurators.get(apiName))
                     // If no apiConfigurator was provided, we use a noop one.
-                    .orElse((ignoreOkHttpClientBuilder, ignoreType) -> {});
+                    .orElse((ignoreOkHttpClientBuilder, ignoreType) -> { });
 
             configurator.applyConfiguration(okHttpClientBuilder, OkHttpConfigurator.Type.HTTP);
 
@@ -177,7 +177,8 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
                 final SubscriptionAuthorizer subscriptionAuthorizer =
                     new SubscriptionAuthorizer(apiConfiguration, authProvider);
                 final SubscriptionEndpoint subscriptionEndpoint =
-                    new SubscriptionEndpoint(apiConfiguration, configurator, gqlResponseFactory, subscriptionAuthorizer);
+                    new SubscriptionEndpoint(apiConfiguration, configurator, gqlResponseFactory,
+                            subscriptionAuthorizer);
                 clientDetails = new ClientDetails(apiConfiguration,
                                                   okHttpClientBuilder.build(),
                                                   subscriptionEndpoint,
@@ -905,7 +906,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         public Builder configureClient(
                 @NonNull String forApiName, @NonNull OkHttpConfigurator byConfigurator) {
             this.apiConfigurators.put(forApiName, (okHttpClientBuilder, type) -> {
-                if(OkHttpConfigurator.Type.HTTP.equals(type)) {
+                if (OkHttpConfigurator.Type.HTTP.equals(type)) {
                     byConfigurator.applyConfiguration(okHttpClientBuilder);
                 }
             });

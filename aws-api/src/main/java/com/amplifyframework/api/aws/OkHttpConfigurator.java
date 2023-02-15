@@ -51,13 +51,55 @@ public interface OkHttpConfigurator {
      */
     void applyConfiguration(@NonNull OkHttpClient.Builder okHttpClientBuilder);
 
+    /**
+     * Type of OkHttpConfigurator.
+     */
     enum Type {
         HTTP,
         WEBSOCKET
     }
 
+    /**
+     * An OkHttpConfigurator is a hook provided to a customer, enabling them to customize
+     * the way an API client is setup while the AWS API plugin is being instantiated.
+     *
+     * This hook is for advanced use cases, such as where a user may want to append some of
+     * their own request headers, or otherwise manipulate an outgoing request.
+     *
+     * The configurator has an associated {@link Type}, to allow configuring for a regular
+     * HTTP request or the WebSockets protocol update mechanism request.
+     *
+     * See {@link AWSApiPlugin.Builder#configureClient(String, OkHttpConfigurator)}
+     * for more details.
+     */
     @FunctionalInterface
     interface ForType {
+        /**
+         * A customer can implement this hook to apply additional configurations
+         * for a particular API. The user supplies an implementation of this function
+         * when the AWSApiPlugin is being constructed:
+         * <pre>
+         *     AWSApiPlugin plugin = AWSApiPlugin.builder()
+         *         .configureClient("someApi", (okHttpBuilder, type) -> {
+         *              // Change the timeout for both WEBSOCKET and HTTP connections.
+         *              okHttpBuilder.connectTimeout(10, TimeUnit.SECONDS);
+         *
+         *              // Add a custom header to websocket requests.
+         *              if (Type.WEBSOCKET.equals(type)) {
+         *                  okHttpClientBuilder.addInterceptor(chain -> chain.proceed(
+         *                      chain.request().newBuilder()
+         *                         .addHeader("my-custom-header", "hello")
+         *                         .build()
+         *                   ));
+         *              }
+         *         })
+         *         .build();
+         * </pre>
+         * The hook itself is applied later, when {@link Amplify#configure(Context)} is invoked.
+         *
+         * @param okHttpClientBuilder An {@link OkHttpClient.Builder} instance.
+         * @param type A {@link Type} of configurator this configuration will apply to.
+         */
         void applyConfiguration(@NonNull OkHttpClient.Builder okHttpClientBuilder, Type type);
     }
 }
