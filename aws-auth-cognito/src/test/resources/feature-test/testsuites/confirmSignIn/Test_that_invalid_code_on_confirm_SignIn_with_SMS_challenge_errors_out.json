@@ -1,0 +1,42 @@
+{
+    "description": "Test that invalid code on confirm SignIn with SMS challenge errors out",
+    "preConditions": {
+        "amplify-configuration": "authconfiguration.json",
+        "state": "SigningIn_SigningIn.json",
+        "mockedResponses": [
+            {
+                "type": "cognitoIdentityProvider",
+                "apiName": "respondToAuthChallenge",
+                "responseType": "failure",
+                "response": {
+                    "errorType": "CodeMismatchException",
+                    "errorMessage": "Confirmation code entered is not correct."
+                }
+            }
+        ]
+    },
+    "api": {
+        "name": "confirmSignIn",
+        "params": {
+            "challengeResponse": "000000"
+        },
+        "options": {
+        }
+    },
+    "validations": [
+        {
+            "type": "amplify",
+            "apiName": "confirmSignIn",
+            "responseType": "failure",
+            "response": {
+                "errorType": "CodeMismatchException",
+                "errorMessage": "Confirmation code entered is not correct.",
+                "recoverySuggestion": "Enter correct confirmation code.",
+                "cause": {
+                    "errorType": "CodeMismatchException",
+                    "errorMessage": "Confirmation code entered is not correct."
+                }
+            }
+        }
+    ]
+}
