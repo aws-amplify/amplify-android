@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.AnalyticsMetadataTy
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AttributeType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChangePasswordRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeviceRememberedStatusType
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.EventType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetUserAttributeVerificationCodeRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetUserRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ListDevicesRequest
@@ -590,7 +591,7 @@ internal class RealAWSCognitoAuthPlugin(
             val signInState = (authNState as? AuthenticationState.SigningIn)?.signInState
             if (signInState is SignInState.ResolvingChallenge) {
                 when (signInState.challengeState) {
-                    is SignInChallengeState.WaitingForAnswer, is SignInChallengeState.Error -> {
+                    is SignInChallengeState.WaitingForAnswer -> {
                         _confirmSignIn(challengeResponse, options, onSuccess, onError)
                     }
                     else -> {
@@ -639,16 +640,15 @@ internal class RealAWSCognitoAuthPlugin(
                     }
                     signInState is SignInState.ResolvingChallenge &&
                         signInState.challengeState is SignInChallengeState.Error -> {
-                        (signInState.challengeState as SignInChallengeState.Error).exception?.let {
-                            authStateMachine.cancel(token)
-                            onError.accept(
-                                CognitoAuthExceptionConverter.lookup(
-                                    error = it,
-                                    fallbackMessage = "Confirm Sign in failed."
-                                )
+                        authStateMachine.cancel(token)
+                        onError.accept(
+                            CognitoAuthExceptionConverter.lookup(
+                                (
+                                    signInState.challengeState as SignInChallengeState.Error
+                                    ).exception,
+                                "Confirm Sign in failed."
                             )
-                            (signInState.challengeState as? SignInChallengeState.Error)?.exception = null
-                        }
+                        )
                     }
                 }
             }, {

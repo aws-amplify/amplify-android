@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ internal sealed class SignInChallengeState : State {
     data class WaitingForAnswer(val challenge: AuthChallenge) : SignInChallengeState()
     data class Verifying(val id: String = "") : SignInChallengeState()
     data class Verified(val id: String = "") : SignInChallengeState()
-    data class Error(var exception: Exception?, val challenge: AuthChallenge) : SignInChallengeState()
+    data class Error(val exception: Exception, val challenge: AuthChallenge) : SignInChallengeState()
 
     class Resolver(private val challengeActions: SignInChallengeActions) : StateMachineResolver<SignInChallengeState> {
         override val defaultState: SignInChallengeState = NotStarted()
@@ -60,7 +60,8 @@ internal sealed class SignInChallengeState : State {
                 is Verifying -> when (challengeEvent) {
                     is SignInChallengeEvent.EventType.Verified -> StateResolution(Verified())
                     is SignInChallengeEvent.EventType.ThrowError -> {
-                        StateResolution(Error(challengeEvent.exception, challengeEvent.challenge), listOf())
+                        val action = challengeActions.resetToWaitingForAnswer(challengeEvent, challengeEvent.challenge)
+                        StateResolution(Error(challengeEvent.exception, challengeEvent.challenge), listOf(action))
                     }
 
                     else -> defaultResolution

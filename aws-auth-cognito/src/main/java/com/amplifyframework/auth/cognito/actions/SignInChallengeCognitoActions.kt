@@ -86,6 +86,14 @@ internal object SignInChallengeCognitoActions : SignInChallengeActions {
         dispatcher.send(evt)
     }
 
+    override fun resetToWaitingForAnswer(
+        event: SignInChallengeEvent.EventType.ThrowError,
+        challenge: AuthChallenge
+    ): Action = Action<AuthEnvironment>("VerifySignInChallenge") { id, dispatcher ->
+        logger.verbose("$id Starting execution")
+        dispatcher.send(SignInChallengeEvent(SignInChallengeEvent.EventType.WaitForAnswer(challenge)))
+    }
+
     private fun getChallengeResponseKey(challengeName: String): String? {
         return when (ChallengeNameType.fromValue(challengeName)) {
             is ChallengeNameType.SmsMfa -> "SMS_MFA_CODE"
