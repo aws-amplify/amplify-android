@@ -89,7 +89,7 @@ internal object SignInChallengeCognitoActions : SignInChallengeActions {
     override fun resetToWaitingForAnswer(
         event: SignInChallengeEvent.EventType.ThrowError,
         challenge: AuthChallenge
-    ): Action = Action<AuthEnvironment>("VerifySignInChallenge") { id, dispatcher ->
+    ): Action = Action<AuthEnvironment>("ResetToWaitingForAnswer") { id, dispatcher ->
         logger.verbose("$id Starting execution")
         dispatcher.send(SignInChallengeEvent(SignInChallengeEvent.EventType.WaitForAnswer(challenge)))
     }

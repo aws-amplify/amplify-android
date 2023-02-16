@@ -24,7 +24,6 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.AnalyticsMetadataTy
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AttributeType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChangePasswordRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeviceRememberedStatusType
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.EventType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetUserAttributeVerificationCodeRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetUserRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ListDevicesRequest
@@ -598,8 +597,6 @@ internal class RealAWSCognitoAuthPlugin(
                         onError.accept(InvalidStateException())
                     }
                 }
-            } else if (authNState is AuthenticationState.SignedIn) {
-                onError.accept(SignedInException())
             } else {
                 onError.accept(InvalidStateException())
             }
