@@ -41,9 +41,7 @@ dependencies {
     testImplementation(project(":aws-api-appsync"))
     // Used to reference Temporal types in tests.
     testImplementation(project(":testmodels"))
-    testImplementation(project(":testutils")) {
-        isTransitive = false
-    }
+    testImplementation(project(":testutils"))
     testImplementation(testDependency.junit)
     testImplementation(testDependency.mockito)
     testImplementation(testDependency.robolectric)
@@ -52,9 +50,7 @@ dependencies {
     testImplementation(testDependency.jsonassert)
     testImplementation(dependency.gson)
 
-    androidTestImplementation(project(":testutils")) {
-        isTransitive = false
-    }
+    androidTestImplementation(project(":testutils"))
     androidTestImplementation(dependency.androidx.annotation)
     androidTestImplementation(testDependency.androidx.test.core)
     androidTestImplementation(testDependency.androidx.test.runner)
