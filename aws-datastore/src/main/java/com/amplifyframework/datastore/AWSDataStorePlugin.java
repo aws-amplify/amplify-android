@@ -40,6 +40,7 @@ import com.amplifyframework.core.model.query.QueryOptions;
 import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
+import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.datastore.appsync.AppSyncClient;
 import com.amplifyframework.datastore.model.ModelProviderLocator;
 import com.amplifyframework.datastore.storage.ItemChangeMapper;
@@ -671,6 +672,38 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             onObservationFailure,
             onObservationCompleted
         )), onObservationFailure);
+    }
+
+
+    public  <T extends Model> Completable saveDirectlyToLocalStorage(T model) {
+        return orchestrator.saveDirectlyToLocalStorage(model);
+    }
+
+    public Completable mergeApiResponse(Model model, Integer version, Temporal.Timestamp lastChangedAt) {
+        return orchestrator.mergeApiResponse(model, version, lastChangedAt);
+    }
+
+    public void restartMutationProcessor() {
+        orchestrator.restartMutationProcessor();
+    }
+
+    public CountDownLatch categoryInitializationsPending() {
+        return categoryInitializationsPending;
+    }
+
+    public synchronized void hydrate(@NonNull Action onComplete, @NonNull Consumer<DataStoreException> onError) {
+        waitForInitialization()
+                .andThen(orchestrator.hydrate())
+                .subscribeOn(Schedulers.io())
+                .subscribe(
+                        onComplete::call,
+                        error -> onError.accept(new DataStoreException(
+                                "Failed to manually hydrate DataStore.", error, "Retry."))
+                );
+    }
+
+    public synchronized void refreshSyncExpression() throws DataStoreException {
+        orchestrator.refreshSyncExpression();
     }
 
     /**

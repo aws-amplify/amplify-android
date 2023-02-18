@@ -97,6 +97,7 @@ public final class SubscriptionProcessorTest {
                 .schemaRegistry(schemaRegistry)
                 .merger(merger)
                 .queryPredicateProvider(queryPredicateProvider)
+                .dataStoreSubscriptionsSupplier(() -> DefaultDataStoreSubscriptionsSupplier.instance())
                 .onFailure(throwable -> { })
                 .build();
     }

@@ -55,7 +55,7 @@ public final class GsonFactory {
         ModelWithMetadataAdapter.register(builder);
         SerializedModelAdapter.register(builder);
         SerializedCustomTypeAdapter.register(builder);
-        builder.serializeNulls();
+        // builder.serializeNulls();
         return builder.create();
     }
 }
