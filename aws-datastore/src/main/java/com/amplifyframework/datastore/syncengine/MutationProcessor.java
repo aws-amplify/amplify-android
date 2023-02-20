@@ -25,6 +25,7 @@ import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.SchemaRegistry;
 import com.amplifyframework.core.model.SerializedModel;
+import com.amplifyframework.datastore.DataStoreConfigurationProvider;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.appsync.AppSyncConflictUnhandledError;
@@ -35,6 +36,7 @@ import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.logging.Logger;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -56,6 +58,7 @@ final class MutationProcessor {
     private final SchemaRegistry schemaRegistry;
     private final MutationOutbox mutationOutbox;
     private final AppSync appSync;
+    private final DataStoreConfigurationProvider dataStoreConfiguration;
     private final ConflictResolver conflictResolver;
     private final CompositeDisposable ongoingOperationsDisposable;
     private final RetryHandler retryHandler;
@@ -66,7 +69,8 @@ final class MutationProcessor {
         this.schemaRegistry = Objects.requireNonNull(builder.schemaRegistry);
         this.mutationOutbox = Objects.requireNonNull(builder.mutationOutbox);
         this.appSync = Objects.requireNonNull(builder.appSync);
-        this.conflictResolver = Objects.requireNonNull(builder.conflictResolver);
+        this.dataStoreConfiguration = Objects.requireNonNull(builder.dataStoreConfiguration);
+        this.conflictResolver = new ConflictResolver(this.dataStoreConfiguration, this.appSync);
         this.retryHandler = Objects.requireNonNull(builder.retryHandler);
         this.ongoingOperationsDisposable = new CompositeDisposable();
     }
@@ -103,7 +107,7 @@ final class MutationProcessor {
             .flatMapCompletable(event -> drainMutationOutbox())
             .subscribe(
                 () -> LOG.warn("Observation of mutation outbox was completed."),
-                error -> LOG.warn("Error ended observation of mutation outbox: ", error)
+                error -> LOG.error("Error ended observation of mutation outbox: ", error)
             )
         );
     }
@@ -119,9 +123,7 @@ final class MutationProcessor {
                 processOutboxItem(next)
                     .blockingAwait();
             } catch (RuntimeException error) {
-                return Completable.error(new DataStoreException(
-                        "Failed to process " + error, "Check your internet connection."
-                ));
+                return Completable.error(error);
             }
         } while (true);
     }
@@ -157,17 +159,12 @@ final class MutationProcessor {
                 );
                 publishCurrentOutboxStatus();
             })
-            // If caused by an AppSync error, then publish it to hub, swallow,
-            // and then remove from the outbox to unblock the queue.
-            // Otherwise, pass it through.
+            // Errors on a mutation shouldn't halt the processing of the remaining mutations.
+            // If an error happens, it has to be announced (via Hub and the error handler) and the mutation removed from
+            // the outbox.
             .onErrorResumeNext(error -> {
-                if (error instanceof DataStoreException.GraphQLResponseException) {
-                    DataStoreException.GraphQLResponseException appSyncError =
-                        (DataStoreException.GraphQLResponseException) error;
-                    return mutationOutbox.remove(mutationOutboxItem.getMutationId())
-                        .doOnComplete(() -> announceMutationFailed(mutationOutboxItem, appSyncError));
-                }
-                return Completable.error(error);
+                return mutationOutbox.remove(mutationOutboxItem.getMutationId())
+                    .doOnComplete(() -> announceMutationFailed(mutationOutboxItem, error));
             })
             // Finally, catch all.
             .doOnError(error -> {
@@ -221,12 +218,27 @@ final class MutationProcessor {
      */
     private <T extends Model> void announceMutationFailed(
             PendingMutation<T> pendingMutation,
-            DataStoreException.GraphQLResponseException error
+            Throwable error
     ) {
-        List<GraphQLResponse.Error> errors = error.getErrors();
+        List<GraphQLResponse.Error> errors = error instanceof DataStoreException.GraphQLResponseException
+                ? ((DataStoreException.GraphQLResponseException) error).getErrors()
+                : Collections.emptyList();
+
         OutboxMutationFailedEvent<T> errorEvent =
                 OutboxMutationFailedEvent.create(pendingMutation, errors);
+
         Amplify.Hub.publish(HubChannel.DATASTORE, errorEvent.toHubEvent());
+
+        // Exceptions from customer's error handler code shouldn't prevent the processor from working.
+        try {
+            DataStoreException err = error instanceof DataStoreException.GraphQLResponseException
+                    ? (DataStoreException.GraphQLResponseException) error
+                    : new DataStoreException("Mutation failed.", error, "See underlying cause.");
+
+            this.dataStoreConfiguration.getConfiguration().getErrorHandler().accept(err);
+        } catch (Throwable err) {
+            LOG.warn("Error invoking the error handler", err);
+        }
     }
 
     /**
@@ -337,11 +349,12 @@ final class MutationProcessor {
 
     private <T extends Model> Single<ModelWithMetadata<T>> publishWithRetry(
             @NonNull PendingMutation<T> mutation) {
-        List<Class<? extends Throwable>> skipException = new ArrayList<>();
-        skipException.add(DataStoreException.GraphQLResponseException.class);
-        skipException.add(ApiException.NonRetryableException.class);
+        List<Class<? extends Throwable>> nonRetryableExceptions = new ArrayList<>();
+        nonRetryableExceptions.add(DataStoreException.GraphQLResponseException.class);
+        nonRetryableExceptions.add(ApiException.NonRetryableException.class);
+
         LOG.info("Started Publish with retry: " + mutation);
-        return retryHandler.retry(publishToNetwork(mutation), skipException);
+        return retryHandler.retry(publishToNetwork(mutation), nonRetryableExceptions);
     }
 
     /**
@@ -363,6 +376,7 @@ final class MutationProcessor {
         AppSyncConflictUnhandledError<T> unhandledConflict =
             AppSyncConflictUnhandledError.findFirst(modelClazz, errors);
         if (unhandledConflict != null) {
+            LOG.warn(String.format("Unhandled conflict: %s", unhandledConflict));
             return conflictResolver.resolve(pendingMutation, unhandledConflict);
         }
 
@@ -399,7 +413,7 @@ final class MutationProcessor {
             BuilderSteps.ModelSchemaRegistryStep,
             BuilderSteps.MutationOutboxStep,
             BuilderSteps.AppSyncStep,
-            BuilderSteps.ConflictResolverStep,
+            BuilderSteps.DataStoreConfigurationProviderStep,
             BuilderSteps.RetryHandlerStep,
             BuilderSteps.BuildStep {
         private Merger merger;
@@ -407,7 +421,7 @@ final class MutationProcessor {
         private SchemaRegistry schemaRegistry;
         private MutationOutbox mutationOutbox;
         private AppSync appSync;
-        private ConflictResolver conflictResolver;
+        private DataStoreConfigurationProvider dataStoreConfiguration;
         private RetryHandler retryHandler;
 
         @NonNull
@@ -440,15 +454,16 @@ final class MutationProcessor {
 
         @NonNull
         @Override
-        public BuilderSteps.ConflictResolverStep appSync(@NonNull AppSync appSync) {
+        public BuilderSteps.DataStoreConfigurationProviderStep appSync(@NonNull AppSync appSync) {
             Builder.this.appSync = Objects.requireNonNull(appSync);
             return Builder.this;
         }
 
         @NonNull
         @Override
-        public BuilderSteps.RetryHandlerStep conflictResolver(@NonNull ConflictResolver conflictResolver) {
-            this.conflictResolver = Objects.requireNonNull(conflictResolver);
+        public BuilderSteps.RetryHandlerStep dataStoreConfigurationProvider(
+                @NonNull DataStoreConfigurationProvider dataStoreConfiguration) {
+            Builder.this.dataStoreConfiguration = Objects.requireNonNull(dataStoreConfiguration);
             return Builder.this;
         }
 
@@ -489,12 +504,13 @@ final class MutationProcessor {
 
         interface AppSyncStep {
             @NonNull
-            ConflictResolverStep appSync(@NonNull AppSync appSync);
+            DataStoreConfigurationProviderStep appSync(@NonNull AppSync appSync);
         }
 
-        interface ConflictResolverStep {
+        interface DataStoreConfigurationProviderStep {
             @NonNull
-            RetryHandlerStep conflictResolver(@NonNull ConflictResolver conflictResolver);
+            RetryHandlerStep dataStoreConfigurationProvider(
+                    DataStoreConfigurationProvider dataStoreConfiguration);
         }
 
         interface RetryHandlerStep {

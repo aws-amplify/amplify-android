@@ -20,7 +20,6 @@ import android.net.Uri;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.ApiException.ApiAuthException;
-import com.amplifyframework.api.aws.auth.CognitoCredentialsProvider;
 import com.amplifyframework.api.aws.auth.IamRequestDecorator;
 import com.amplifyframework.api.aws.sigv4.ApiKeyAuthProvider;
 import com.amplifyframework.api.aws.sigv4.AppSyncV4Signer;
@@ -29,6 +28,7 @@ import com.amplifyframework.api.aws.sigv4.DefaultCognitoUserPoolsAuthProvider;
 import com.amplifyframework.api.aws.sigv4.FunctionAuthProvider;
 import com.amplifyframework.api.aws.sigv4.OidcAuthProvider;
 import com.amplifyframework.api.graphql.GraphQLRequest;
+import com.amplifyframework.auth.CognitoCredentialsProvider;
 
 import org.json.JSONException;
 import org.json.JSONObject;

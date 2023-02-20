@@ -148,15 +148,16 @@ final class SubscriptionEndpoint {
         }
 
         try {
-            webSocket.send(new JSONObject()
+            String jsonMessage = new JSONObject()
                 .put("id", subscriptionId)
                 .put("type", "start")
                 .put("payload", new JSONObject()
                 .put("data", request.getContent())
                 .put("extensions", new JSONObject()
                 .put("authorization", authorizer.createHeadersForSubscription(request, authType))))
-                .toString()
-            );
+                .toString();
+
+            webSocket.send(jsonMessage);
         } catch (JSONException | ApiException exception) {
             // If the subscriptionId was still pending, then we can call the onSubscriptionError
             if (pendingSubscriptionIds.remove(subscriptionId)) {
@@ -266,10 +267,12 @@ final class SubscriptionEndpoint {
 
         if (!wasSubscriptionPending && !webSocketListener.isDisconnectedState()) {
             try {
-                webSocket.send(new JSONObject()
+                String jsonMessage = new JSONObject()
                     .put("type", "stop")
                     .put("id", subscriptionId)
-                    .toString());
+                    .toString();
+
+                webSocket.send(jsonMessage);
             } catch (JSONException jsonException) {
                 throw new ApiException(
                     "Failed to construct subscription release message.",
@@ -557,9 +560,11 @@ final class SubscriptionEndpoint {
 
         private void sendConnectionInit(WebSocket webSocket) {
             try {
-                webSocket.send(new JSONObject()
+                String jsonMessage = new JSONObject()
                     .put("type", "connection_init")
-                    .toString());
+                    .toString();
+
+                webSocket.send(jsonMessage);
             } catch (JSONException jsonException) {
                 notifyError(jsonException);
             }
@@ -573,10 +578,14 @@ final class SubscriptionEndpoint {
 
                 switch (subscriptionMessageType) {
                     case CONNECTION_ACK:
-                        timeoutWatchdog.start(() -> webSocket.close(
-                                NORMAL_CLOSURE_STATUS,
-                                "WebSocket closed due to timeout."
-                            ),
+                        timeoutWatchdog.start(() -> {
+                            LOG.warn("WebSocket closed due to timeout.");
+
+                            webSocket.close(
+                                    NORMAL_CLOSURE_STATUS,
+                                    "WebSocket closed due to timeout."
+                            );
+                        },
                             Integer.parseInt(
                                 jsonMessage.getJSONObject("payload").getString("connectionTimeoutMs")
                             )

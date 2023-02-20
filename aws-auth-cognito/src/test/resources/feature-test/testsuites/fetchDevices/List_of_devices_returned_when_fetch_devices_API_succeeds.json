@@ -1,0 +1,74 @@
+{
+    "description": "List of devices returned when fetch devices API succeeds",
+    "preConditions": {
+        "amplify-configuration": "authconfiguration.json",
+        "state": "SignedIn_SessionEstablished.json",
+        "mockedResponses": [
+            {
+                "type": "cognitoIdentityProvider",
+                "apiName": "listDevices",
+                "responseType": "success",
+                "response": {
+                    "devices": [
+                        {
+                            "deviceAttributes": [
+                                {
+                                    "name": "name",
+                                    "value": "value"
+                                }
+                            ],
+                            "deviceCreateDate": {
+                                "value": {
+                                    "seconds": 1.676485556E9,
+                                    "nanos": 7.65001E8
+                                }
+                            },
+                            "deviceKey": "deviceKey",
+                            "deviceLastAuthenticatedDate": {
+                                "value": {
+                                    "seconds": 1.676485556E9,
+                                    "nanos": 7.65007E8
+                                }
+                            },
+                            "deviceLastModifiedDate": {
+                                "value": {
+                                    "seconds": 1.676485556E9,
+                                    "nanos": 7.65008E8
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        ]
+    },
+    "api": {
+        "name": "fetchDevices",
+        "params": {
+        },
+        "options": {
+        }
+    },
+    "validations": [
+        {
+            "type": "amplify",
+            "apiName": "fetchDevices",
+            "responseType": "success",
+            "response": [
+                {
+                    "id": "deviceKey"
+                }
+            ]
+        },
+        {
+            "type": "amplify",
+            "apiName": "fetchDevices",
+            "responseType": "success",
+            "response": [
+                {
+                    "id": "deviceKey"
+                }
+            ]
+        }
+    ]
+}

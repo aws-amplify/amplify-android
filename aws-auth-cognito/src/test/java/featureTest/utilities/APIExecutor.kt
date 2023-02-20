@@ -23,6 +23,7 @@ import com.google.gson.Gson
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import kotlin.reflect.KClass
+import kotlin.reflect.KFunction
 import kotlin.reflect.KParameter
 import kotlin.reflect.full.declaredFunctions
 import kotlinx.serialization.json.JsonObject
@@ -34,25 +35,37 @@ internal val apiExecutor: (AWSCognitoAuthPlugin, API) -> Any = { authPlugin: AWS
 
     lateinit var result: Any
     val latch = CountDownLatch(1)
+    val targetApis = authPlugin::class.declaredFunctions.filter { it.name == api.name.name }
 
-    val targetApi = authPlugin::class.declaredFunctions.first { it.name == api.name.name }
-
-    val requiredParams = targetApi.parameters.associateWith { kParam ->
-        when {
-            kParam.kind == KParameter.Kind.INSTANCE -> authPlugin
-            kParam.type.classifier as KClass<*> == Action::class -> Action {
-                result = Unit
-                latch.countDown()
+    var requiredParams: Map<KParameter, Any?>? = null
+    var targetApi: KFunction<*>? = null
+    for (currentApi in targetApis) {
+        try {
+            val currentParams = currentApi.parameters.associateWith { kParam ->
+                when {
+                    kParam.kind == KParameter.Kind.INSTANCE -> authPlugin
+                    kParam.type.classifier as KClass<*> == Action::class -> Action {
+                        result = Unit
+                        latch.countDown()
+                    }
+                    kParam.type.classifier as KClass<*> == Consumer::class -> Consumer<Any> { value ->
+                        result = value
+                        latch.countDown()
+                    }
+                    kParam.name == "options" -> AuthOptionsFactory.create(api.name, api.options as JsonObject)
+                    else -> kParam.name?.let { getParam(it, kParam, api.params as JsonObject) }
+                }
             }
-            kParam.type.classifier as KClass<*> == Consumer::class -> Consumer<Any> { value ->
-                result = value
-                latch.countDown()
-            }
-            kParam.name == "options" -> AuthOptionsFactory.create(api.name, api.options as JsonObject)
-            else -> kParam.name?.let { getParam(it, api.params as JsonObject) }
+            targetApi = currentApi
+            requiredParams = currentParams
+            break
+        } catch (ex: Exception) {
+            print(ex.toString())
         }
     }
 
+    if (targetApi == null || requiredParams == null)
+        throw Exception("No matching api function with required parameters found")
     targetApi.callBy(requiredParams)
 
     latch.await(5, TimeUnit.SECONDS)
@@ -62,10 +75,10 @@ internal val apiExecutor: (AWSCognitoAuthPlugin, API) -> Any = { authPlugin: AWS
 /**
  * Traverses given json to find value of paramName
  */
-private inline fun <reified T> getParam(paramName: String, paramsObject: Map<String, *>): T {
+private inline fun getParam(paramName: String, kParam: KParameter, paramsObject: Map<String, *>): kotlin.Any {
     paramsObject.entries.first {
         it.key == paramName
     }.apply {
-        return Gson().fromJson(value.toString(), T::class.java)
+        return Gson().fromJson(value.toString(), (kParam.type.classifier as KClass<*>).javaObjectType)
     }
 }

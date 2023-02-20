@@ -1,3 +1,40 @@
+## [Release 2.2.2](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.2.2)
+
+### Bug Fixes
+- **auth:** fix npe in initialize fetch auth session ([#2284](https://github.com/aws-amplify/amplify-android/issues/2284))
+- **auth:** Fix confirm signin when incorrect MFA code is entered ([#2286](https://github.com/aws-amplify/amplify-android/issues/2286))
+
+[See all changes between 2.2.1 and 2.2.2](https://github.com/aws-amplify/amplify-android/compare/release_v2.2.1...release_v2.2.2)
+
+## [Release 2.2.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.2.1)
+
+### Bug Fixes
+- **auth:** Moving credential provider to main (#2273)
+
+[See all changes between 2.2.0 and 2.2.1](https://github.com/aws-amplify/amplify-android/compare/release_v2.2.0...release_v2.2.1)
+
+## [Release 2.2.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.2.0)
+
+### Features
+- **auth:** add required hash param to cognito api calls (#2266)
+- **datastore:** Add recoverability improvements (#2201)
+- **auth:** Added parity test for fetchDevices,rememberDevice,forgetDevice and fetchUserAttributes (#2174)
+
+### Bug Fixes
+- **analytics:** Remove test dependencies from implementation configuration (#2253)
+- **auth:** Fix Authorization header for HostedUI fetchToken when appSecret is used (#2264)
+
+[See all changes between 2.1.1 and 2.2.0](https://github.com/aws-amplify/amplify-android/compare/release_v2.1.1...release_v2.2.0)
+
+## [Release 2.1.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.1.1)
+
+### Bug Fixes
+- **datastore:** Fix lock contention issue when running DataStore.start() from the callback of DataStore.stop() (#2208)
+- **core:** Remove unused dependencies (#2207)
+- **geo:** Bump MapLibre SDK to 9.6.0 (#2254)
+
+[See all changes between 2.1.0 and 2.1.1](https://github.com/aws-amplify/amplify-android/compare/release_v2.1.0...release_v2.1.1)
+
 ## [Release 2.1.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.1.0)
 
 ### Features
