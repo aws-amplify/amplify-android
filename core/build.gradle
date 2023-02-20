@@ -21,9 +21,8 @@ dependencies {
     implementation dependency.androidx.v4support
     implementation dependency.androidx.annotation
     implementation dependency.androidx.nav.fragment
-    implementation dependency.androidx.nav.fragmentktx
     implementation dependency.androidx.nav.ui
-    implementation dependency.androidx.nav.uiktx
+    implementation dependency.kotlin.stdlib
 
     testImplementation project(path: ':aws-api-appsync') // Used to reference Temporal types in tests.
     testImplementation project(path: ':testmodels')
