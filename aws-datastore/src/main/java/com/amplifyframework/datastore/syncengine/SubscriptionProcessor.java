@@ -69,6 +69,8 @@ final class SubscriptionProcessor {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
     private static final long TIMEOUT_SECONDS_PER_MODEL = 20;
     private static final long NETWORK_OP_TIMEOUT_SECONDS = 60;
+    private static final int DEFAULT_MAX_AGE_IN_MINUTES = 10;
+    private static final int DEFAULT_MAX_TOTAL_SUBSCRIPTIONS = 100;
 
     private final AppSync appSync;
     private final ModelProvider modelProvider;
@@ -124,7 +126,10 @@ final class SubscriptionProcessor {
 
         // Need to create a new buffer so we can properly handle retries and stop/start scenarios.
         // Re-using the same buffer has some unexpected results due to the replay aspect of the subject.
-        buffer = ReplaySubject.create();
+        // We allow mutations to reside for 10 minutes and collect a maximum of 100 for predicable
+        // memory usage.
+        buffer = ReplaySubject.createWithTimeAndSize(
+            DEFAULT_MAX_AGE_IN_MINUTES, TimeUnit.MINUTES, Schedulers.io(), DEFAULT_MAX_TOTAL_SUBSCRIPTIONS);
 
         Set<Observable<SubscriptionEvent<? extends Model>>> subscriptions = new HashSet<>();
         for (ModelSchema modelSchema : modelProvider.modelSchemas().values()) {

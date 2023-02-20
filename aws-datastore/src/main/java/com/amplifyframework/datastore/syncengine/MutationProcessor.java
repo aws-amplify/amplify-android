@@ -120,11 +120,16 @@ final class MutationProcessor {
                 return Completable.complete();
             }
             try {
-                processOutboxItem(next)
-                    .blockingAwait();
+                processOutboxItem(next).blockingAwait();
             } catch (RuntimeException error) {
                 return Completable.error(error);
             }
+            next = mutationOutbox.peek();
+            if (next == null) {
+                mutationOutbox.load().blockingAwait();
+            }
+            // publish status after making sure mutationOutbox is current after last item drain
+            publishCurrentOutboxStatus();
         } while (true);
     }
 
@@ -157,7 +162,6 @@ final class MutationProcessor {
                     "Pending mutation was published to cloud successfully, " +
                         "and removed from the mutation outbox: " + mutationOutboxItem
                 );
-                publishCurrentOutboxStatus();
             })
             // Errors on a mutation shouldn't halt the processing of the remaining mutations.
             // If an error happens, it has to be announced (via Hub and the error handler) and the mutation removed from

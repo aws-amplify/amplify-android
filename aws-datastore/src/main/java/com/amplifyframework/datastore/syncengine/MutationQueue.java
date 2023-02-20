@@ -21,17 +21,22 @@ import androidx.annotation.Nullable;
 import com.amplifyframework.core.model.Model;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 
 /**
  * The {@link MutationQueue} is a LinkedHashMap like container , the goal of using this container is to
  * achieve O(1) time complexity for both getting a {@link PendingMutation} and update an existing mutation with
  * valid id.
- * MutationQueue is implementing the Queue interface and provide most of the queue operations,
+ * MutationQueue is implementing the Queue interface and provide most of the queue operations.
+ * The capacity is 100 which should be plenty given that only one should really be loaded at
+ * at time via the {@link PersistentMutationOutbox#load()}. There can be more than one mutation
+ * in the queue only if they are mutations of the same model.
  */
 public final class MutationQueue {
+    private static final int MAX_MUTATIONS_TO_MERGE = 100;
 
-    private final Map<TimeBasedUuid, Node> mutationMap = new HashMap<>();
+    private final Map<TimeBasedUuid, Node> mutationMap = new HashMap<>(MAX_MUTATIONS_TO_MERGE);
     private final Node dummyHead;
     private final Node dummyTail;
 
@@ -112,18 +117,27 @@ public final class MutationQueue {
     /**
      * Replace an existing {@link PendingMutation} inside the Queue.
      *
+     * We only allow additions after the threshold if it is below
+     * {@link MutationQueue#MAX_MUTATIONS_TO_MERGE} or is an existing
+     * mutation.
+     *
      * @param timeBasedUuid              the UUID of a pending mutation
      * @param pendingMutation the pending mutation's instance
      */
-    synchronized void updateExistingQueueItemOrAppendNew(@NonNull TimeBasedUuid timeBasedUuid,
-                                                         @NonNull PendingMutation<? extends Model> pendingMutation) {
+    synchronized void updateExistingQueueItemOrAppendNewIfWithinLimit(
+        @NonNull TimeBasedUuid timeBasedUuid,
+        @NonNull PendingMutation<? extends Model> pendingMutation) {
         // If there is already a mutation with same ID in the queue,
-        // we'll go find it, and then update it, with this contents.
+        // we'll go find it, and then update it, with this
+        // contents.
         if (mutationMap.containsKey(timeBasedUuid)) {
             mutationMap.get(timeBasedUuid).mutation = pendingMutation;
         } else {
-            // Otherwise, just add it to the end of the queue.
-            addToTail(pendingMutation);
+            // Otherwise, just add it to the end of the queue if the
+            // isn't too large already.
+            if (mutationMap.size() < MAX_MUTATIONS_TO_MERGE) {
+                addToTail(pendingMutation);
+            }
         }
     }
 
@@ -204,6 +218,15 @@ public final class MutationQueue {
     @Nullable
     public synchronized PendingMutation<? extends Model> peek() {
         return mutationMap.isEmpty() ? null : dummyHead.next.mutation;
+    }
+
+    /**
+     * Get the keys in the current map. This is used when "refreshing the queue" to make
+     * sure all mutations for present Pending mutations can get all their siblings loaded.
+     * @return an iterator of {@link TimeBasedUuid}
+     */
+    public synchronized Iterable<TimeBasedUuid> iterator() {
+        return new HashSet<>(mutationMap.keySet());
     }
 
     /**

@@ -24,7 +24,9 @@ import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.SerializedModel;
+import com.amplifyframework.core.model.query.Page;
 import com.amplifyframework.core.model.query.Where;
+import com.amplifyframework.core.model.query.predicate.QueryField;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.DataStoreException;
@@ -125,7 +127,8 @@ final class PersistentMutationOutbox implements MutationOutbox {
                 // to get identically the thing that was saved. But we know the save succeeded.
                 // So, let's skip the unwrapping, and use the thing that was enqueued,
                 // the pendingMutation, directly.
-                mutationQueue.updateExistingQueueItemOrAppendNew(pendingMutation.getMutationId(), pendingMutation);
+                mutationQueue.updateExistingQueueItemOrAppendNewIfWithinLimit(
+                    pendingMutation.getMutationId(), pendingMutation);
                 LOG.info("Successfully enqueued " + pendingMutation);
                 announceEventEnqueued(pendingMutation);
                 publishCurrentOutboxStatus();
@@ -184,7 +187,7 @@ final class PersistentMutationOutbox implements MutationOutbox {
         return Completable.create(emitter -> {
             inFlightMutations.clear();
             mutationQueue.clear();
-            storage.query(PendingMutation.PersistentRecord.class, Where.matchesAll(),
+            storage.query(PendingMutation.PersistentRecord.class, Where.matchesAll().paginated(Page.firstResult()),
                 results -> {
                     while (results.hasNext()) {
                         try {
@@ -195,13 +198,42 @@ final class PersistentMutationOutbox implements MutationOutbox {
                             return;
                         }
                     }
-                    // Publish outbox status upon loading
-                    publishCurrentOutboxStatus();
                     emitter.onComplete();
                 },
                 emitter::onError
             );
-        })
+        }).andThen(Observable.fromIterable(mutationQueue.iterator())
+            .flatMapCompletable((timeBasedUuid) -> Completable.create(emitter -> {
+                PendingMutation<? extends Model> pendingMutation = mutationQueue.getMutationById(timeBasedUuid);
+                if (pendingMutation != null) {
+                    QueryPredicate hasOtherPendingModelMutations = QueryField
+                        // find other PendingModelMutations
+                        .field("containedModelId")
+                        .eq(pendingMutation.getMutationId().toString())
+                        .and(QueryPredicate.not(
+                            // but not _this_ pending mutation
+                            QueryField.field("id")
+                                .eq(timeBasedUuid)
+                        ));
+                    storage.query(PendingMutation.PersistentRecord.class,
+                        Where.matches(hasOtherPendingModelMutations),
+                        results -> {
+                            while (results.hasNext()) {
+                                try {
+                                    PendingMutation.PersistentRecord persistentRecord = results.next();
+                                    mutationQueue.add(converter.fromRecord(persistentRecord));
+                                } catch (Throwable throwable) {
+                                    emitter.onError(throwable);
+                                    return;
+                                }
+                            }
+                            emitter.onComplete();
+                        },
+                        emitter::onError
+                    );
+                }
+            }))
+        ).andThen(Completable.fromAction(this::publishCurrentOutboxStatus))
         .doOnSubscribe(disposable -> semaphore.acquire())
         .doOnTerminate(semaphore::release);
     }
