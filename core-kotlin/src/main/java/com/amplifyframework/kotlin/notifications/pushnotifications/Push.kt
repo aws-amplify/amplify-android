@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -21,7 +21,6 @@ import com.amplifyframework.notifications.pushnotifications.PushNotificationResu
 import com.amplifyframework.notifications.pushnotifications.PushNotificationsException
 
 interface Push : Notifications {
-
     /**
      * Registers device token from FCM with the service.
      */

@@ -1,5 +1,5 @@
 /*
- *  Copyright 2016-2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *  Copyright 2016-2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License").
  *  You may not use this file except in compliance with the License.
@@ -30,10 +30,10 @@ class EndpointProfileTest : TestCase() {
 
     fun `test serialization`() {
         val expected =
-            "{\"ApplicationId\":\"app id\",\"EndpointId\":\"unique-id\"," +
+            "{\"Address\":\"\",\"ApplicationId\":\"app id\",\"EndpointId\":\"unique-id\"," +
                 "\"Location\":\"{\\\"country\\\":\\\"en_US\\\"}\",\"Demographic\":\"{\\\"appVersion\\\":" +
                 "\\\"1.0.0\\\",\\\"make\\\":\\\"TEST MANUFACTURER\\\",\\\"locale\\\":\\\"en_US\\\"}\"," +
-                "\"EffectiveDate\":\"${effectiveDate.millisToIsoDate()}\",\"OptOut\":\"NONE\",\"User\":\"{}\"}"
+                "\"EffectiveDate\":\"${effectiveDate.millisToIsoDate()}\",\"User\":\"{}\"}"
         assertEquals(expected, endpointProfile.toString())
     }
 
@@ -57,10 +57,10 @@ class EndpointProfileTest : TestCase() {
         assertEquals(4.0, endpointProfile.allMetrics["metric4"])
 
         val expected =
-            "{\"ApplicationId\":\"app id\",\"EndpointId\":\"unique-id\"," +
+            "{\"Address\":\"\",\"ApplicationId\":\"app id\",\"EndpointId\":\"unique-id\"," +
                 "\"Location\":\"{\\\"country\\\":\\\"en_US\\\"}\",\"Demographic\":\"{\\\"appVersion\\\":" +
                 "\\\"1.0.0\\\",\\\"make\\\":\\\"TEST MANUFACTURER\\\",\\\"locale\\\":\\\"en_US\\\"}\"," +
-                "\"EffectiveDate\":\"${effectiveDate.millisToIsoDate()}\",\"OptOut\":\"NONE\"," +
+                "\"EffectiveDate\":\"${effectiveDate.millisToIsoDate()}\"," +
                 "\"Metrics\":{\"metric2\":2.0,\"metric3\":-3.0,\"metric4\":4.0},\"User\":\"{}\"}"
         assertEquals(expected, endpointProfile.toString())
 
@@ -91,10 +91,10 @@ class EndpointProfileTest : TestCase() {
 
         println(endpointProfile.toString())
         val expected =
-            "{\"ApplicationId\":\"app id\",\"EndpointId\":\"unique-id\"," +
+            "{\"Address\":\"\",\"ApplicationId\":\"app id\",\"EndpointId\":\"unique-id\"," +
                 "\"Location\":\"{\\\"country\\\":\\\"en_US\\\"}\",\"Demographic\":\"{\\\"appVersion\\\":" +
                 "\\\"1.0.0\\\",\\\"make\\\":\\\"TEST MANUFACTURER\\\",\\\"locale\\\":\\\"en_US\\\"}\"," +
-                "\"EffectiveDate\":\"${effectiveDate.millisToIsoDate()}\",\"OptOut\":\"NONE\"," +
+                "\"EffectiveDate\":\"${effectiveDate.millisToIsoDate()}\"," +
                 "\"Attributes\":{\"attribute4\":[\"g\",\"h\",\"i\"],\"attribute3\":[\"\"]," +
                 "\"attribute2\":[\"d\",\"e\",\"f\"]},\"User\":\"{}\"}"
         assertEquals(expected, endpointProfile.toString())

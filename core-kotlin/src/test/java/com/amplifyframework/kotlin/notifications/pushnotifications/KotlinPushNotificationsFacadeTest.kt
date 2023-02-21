@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 package com.amplifyframework.kotlin.notifications.pushnotifications
 
 import android.os.Bundle
+import com.amplifyframework.analytics.UserProfile
 import com.amplifyframework.core.Action
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.kotlin.notifications.KotlinNotificationsFacade
@@ -41,56 +42,61 @@ class KotlinPushNotificationsFacadeTest {
         val notifications = KotlinNotificationsFacade(notificationsDelegate)
 
         val userId = "userId"
+        val profile = UserProfile.builder().name("test").build()
         coEvery {
-            pushDelegate.identifyUser(eq(userId), any(), any())
+            pushDelegate.identifyUser(eq(userId), eq(profile), any(), any())
         } coAnswers {
-            val indexOfCompletionAction = 1
+            val indexOfCompletionAction = 2
             val onComplete = it.invocation.args[indexOfCompletionAction] as Action
             onComplete.call()
         }
 
         coEvery {
-            notificationsDelegate.identifyUser(eq(userId), any(), any())
+            notificationsDelegate.identifyUser(eq(userId), eq(profile), any(), any())
         } coAnswers {
-            val indexOfCompletionAction = 1
+            val indexOfCompletionAction = 2
             val onComplete = it.invocation.args[indexOfCompletionAction] as Action
-            pushDelegate.identifyUser(userId, onComplete, { })
+            pushDelegate.identifyUser(userId, profile, onComplete, { })
         }
 
-        notifications.identifyUser(userId)
+        notifications.identifyUser(userId, profile)
         coVerify {
-            pushDelegate.identifyUser(eq(userId), any(), any())
+            pushDelegate.identifyUser(eq(userId), eq(profile), any(), any())
         }
     }
 
     @Test
     fun identifyUserSucceeds() = runBlocking {
         val userId = "userId"
+        val profile = UserProfile.builder().name("test").build()
+
         every {
-            pushDelegate.identifyUser(eq(userId), any(), any())
+            pushDelegate.identifyUser(eq(userId), eq(profile), any(), any())
         } answers {
-            val indexOfCompletionAction = 1
+            val indexOfCompletionAction = 2
             val onComplete = it.invocation.args[indexOfCompletionAction] as Action
             onComplete.call()
         }
-        push.identifyUser(userId)
+        push.identifyUser(userId, profile)
         verify {
-            pushDelegate.identifyUser(eq(userId), any(), any())
+            pushDelegate.identifyUser(eq(userId), eq(profile), any(), any())
         }
     }
 
     @Test(expected = PushNotificationsException::class)
     fun identifyUserThrows() = runBlocking {
         val userId = "userId"
+        val profile = UserProfile.builder().name("test").build()
+
         val error = PushNotificationsException("uh", "oh")
         every {
-            pushDelegate.identifyUser(eq(userId), any(), any())
+            pushDelegate.identifyUser(eq(userId), eq(profile), any(), any())
         } answers {
-            val indexOfErrorConsumer = 2
+            val indexOfErrorConsumer = 3
             val onError = it.invocation.args[indexOfErrorConsumer] as Consumer<PushNotificationsException>
             onError.accept(error)
         }
-        push.identifyUser(userId)
+        push.identifyUser(userId, profile)
     }
 
     @Test

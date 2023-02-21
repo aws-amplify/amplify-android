@@ -18,7 +18,7 @@ import android.content.SharedPreferences
 import androidx.test.core.app.ApplicationProvider
 import com.amplifyframework.analytics.AnalyticsEvent
 import com.amplifyframework.analytics.AnalyticsProperties
-import com.amplifyframework.analytics.pinpoint.models.AWSPinpointUserProfile
+import com.amplifyframework.analytics.pinpoint.targeting.models.AWSPinpointUserProfile
 import com.amplifyframework.analytics.pinpoint.targeting.AnalyticsClient
 import com.amplifyframework.analytics.pinpoint.targeting.TargetingClient
 import com.amplifyframework.analytics.pinpoint.targeting.data.AndroidAppDetails

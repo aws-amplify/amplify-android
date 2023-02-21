@@ -20,78 +20,17 @@ import com.amplifyframework.analytics.AnalyticsDoubleProperty
 import com.amplifyframework.analytics.AnalyticsEventBehavior
 import com.amplifyframework.analytics.AnalyticsIntegerProperty
 import com.amplifyframework.analytics.AnalyticsProperties
-import com.amplifyframework.analytics.AnalyticsPropertyBehavior
 import com.amplifyframework.analytics.AnalyticsStringProperty
 import com.amplifyframework.analytics.UserProfile
-import com.amplifyframework.analytics.pinpoint.models.AWSPinpointUserProfile
 import com.amplifyframework.analytics.pinpoint.targeting.AnalyticsClient
 import com.amplifyframework.analytics.pinpoint.targeting.TargetingClient
-import com.amplifyframework.analytics.pinpoint.targeting.endpointProfile.EndpointProfileLocation
-import com.amplifyframework.analytics.pinpoint.targeting.endpointProfile.EndpointProfileUser
 
 internal class AWSPinpointAnalyticsPluginBehavior(
     private val analyticsClient: AnalyticsClient,
     private val targetingClient: TargetingClient,
 ) : AnalyticsCategoryBehavior {
 
-    companion object {
-        private const val USER_NAME_KEY = "name"
-        private const val USER_PLAN_KEY = "plan"
-        private const val USER_EMAIL_KEY = "email"
-    }
-
-    override fun identifyUser(userId: String, profile: UserProfile?) {
-        val endpointProfile = targetingClient.currentEndpoint().apply {
-            addAttribute(USER_NAME_KEY, profile?.name?.let { listOf(it) } ?: emptyList())
-            addAttribute(USER_EMAIL_KEY, profile?.email?.let { listOf(it) } ?: emptyList())
-            addAttribute(USER_PLAN_KEY, profile?.plan?.let { listOf(it) } ?: emptyList())
-            profile?.location?.let { userLocation ->
-                val country = userLocation.country
-                if (null != country) {
-                    location = userLocation.let {
-                        EndpointProfileLocation(
-                            country,
-                            it.latitude,
-                            it.longitude,
-                            it.postalCode ?: "",
-                            it.city ?: "",
-                            it.region ?: ""
-                        )
-                    }
-                }
-            }
-        }
-        val endpointUser = EndpointProfileUser(userId).apply {
-            if (profile is AWSPinpointUserProfile) {
-                profile.userAttributes?.let {
-                    it.forEach { entry ->
-                        when (val attribute = entry.value) {
-                            is AnalyticsPropertyBehavior -> {
-                                addUserAttribute(entry.key, listOf(attribute.value.toString()))
-                            }
-                        }
-                    }
-                }
-                profile.customProperties?.let {
-                    it.forEach { entry ->
-                        when (val property = entry.value) {
-                            is AnalyticsStringProperty, is AnalyticsBooleanProperty -> {
-                                endpointProfile.addAttribute(entry.key, listOf(property.value.toString()))
-                            }
-                            is AnalyticsIntegerProperty, is AnalyticsDoubleProperty -> {
-                                endpointProfile.addMetric(entry.key, property.value.toString().toDouble())
-                            }
-                            else -> {
-                                throw IllegalArgumentException("Invalid property type")
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        endpointProfile.user = endpointUser
-        targetingClient.updateEndpointProfile(endpointProfile)
-    }
+    override fun identifyUser(userId: String, profile: UserProfile?) = targetingClient.identifyUser(userId, profile)
 
     override fun disable() = analyticsClient.disableEventSubmitter()
 
@@ -146,7 +85,5 @@ internal class AWSPinpointAnalyticsPluginBehavior(
         }
     }
 
-    override fun flushEvents() {
-        analyticsClient.flushEvents()
-    }
+    override fun flushEvents() = analyticsClient.flushEvents()
 }

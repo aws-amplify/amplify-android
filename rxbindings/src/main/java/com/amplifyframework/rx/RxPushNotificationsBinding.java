@@ -19,6 +19,7 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
 
+import com.amplifyframework.analytics.UserProfile;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.notifications.pushnotifications.PushNotificationResult;
 import com.amplifyframework.notifications.pushnotifications.PushNotificationsCategoryBehavior;
@@ -27,6 +28,7 @@ import com.amplifyframework.notifications.pushnotifications.PushNotificationsExc
 import java.util.Map;
 import java.util.Objects;
 
+import io.reactivex.rxjava3.annotations.Nullable;
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Single;
 
@@ -43,8 +45,8 @@ final class RxPushNotificationsBinding implements RxPushNotificationsCategoryBeh
     }
 
     @Override
-    public Completable identifyUser(String userId) {
-        return toCompletable(((onResult, onError) -> delegate.identifyUser(userId, onResult, onError)));
+    public Completable identifyUser(String userId, @Nullable UserProfile profile) {
+        return toCompletable(((onResult, onError) -> delegate.identifyUser(userId, profile, onResult, onError)));
     }
 
     @Override

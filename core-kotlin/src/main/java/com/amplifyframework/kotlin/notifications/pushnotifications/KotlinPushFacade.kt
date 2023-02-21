@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 package com.amplifyframework.kotlin.notifications.pushnotifications
 
 import android.os.Bundle
+import com.amplifyframework.analytics.UserProfile
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.notifications.pushnotifications.PushNotificationsCategoryBehavior
 import kotlin.coroutines.resume
@@ -23,9 +24,10 @@ import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
 class KotlinPushFacade(private val delegate: PushNotificationsCategoryBehavior = Amplify.Notifications.Push) : Push {
-    override suspend fun identifyUser(userId: String) = suspendCoroutine { continuation ->
+    override suspend fun identifyUser(userId: String, profile: UserProfile?) = suspendCoroutine { continuation ->
         delegate.identifyUser(
             userId,
+            profile,
             { continuation.resume(Unit) },
             { continuation.resumeWithException(it) }
         )

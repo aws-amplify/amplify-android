@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
 
 package com.amplifyframework.kotlin.notifications
 
+import com.amplifyframework.analytics.UserProfile
 import com.amplifyframework.notifications.pushnotifications.PushNotificationsException
 
 interface Notifications {
@@ -22,5 +23,5 @@ interface Notifications {
      * Identifies the user of the device to the service.
      */
     @Throws(PushNotificationsException::class)
-    suspend fun identifyUser(userId: String)
+    suspend fun identifyUser(userId: String, profile: UserProfile?)
 }

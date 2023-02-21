@@ -15,6 +15,7 @@
 
 package com.amplifyframework.rx;
 
+import com.amplifyframework.analytics.UserProfile;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.notifications.NotificationsCategoryBehavior;
@@ -61,17 +62,18 @@ public final class RxNotificationsBindingTest {
     @Test
     public void testIdentifyUser() throws InterruptedException {
         String userId = RandomString.string();
+        UserProfile profile = UserProfile.builder().name("test").build();
 
         // Arrange an invocation of the success Action
         doAnswer(invocation -> {
-            // 0 = userId, 1 = onComplete, 2 = onFailure
-            Action onCompletion = invocation.getArgument(1);
+            // 0 = userId, 1 = profile, 2 = onComplete, 3 = onFailure
+            Action onCompletion = invocation.getArgument(2);
             onCompletion.call();
             return null;
-        }).when(delegate).identifyUser(eq(userId), anyAction(), anyConsumer());
+        }).when(delegate).identifyUser(eq(userId), eq(profile), anyAction(), anyConsumer());
 
         // Act: call the binding
-        TestObserver<Void> observer = notifications.identifyUser(userId).test();
+        TestObserver<Void> observer = notifications.identifyUser(userId, profile).test();
 
         // Assert: Completable completes with success
         observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
@@ -85,20 +87,21 @@ public final class RxNotificationsBindingTest {
     @Test
     public void testIdentifyUserFails() throws InterruptedException {
         String userId = RandomString.string();
+        UserProfile profile = UserProfile.builder().name("test").build();
 
         // Arrange a callback on the failure consumer
         PushNotificationsException failure =
                 new PushNotificationsException("Push Notifications Exception", REPORT_BUG_TO_AWS_SUGGESTION);
         doAnswer(invocation -> {
-            // 0 = userId, 1 = onComplete, 2 = onFailure
-            int positionOfFailureConsumer = 2;
+            // 0 = userId, 1 = profile, 2 = onComplete, 3 = onFailure
+            int positionOfFailureConsumer = 3;
             Consumer<PushNotificationsException> onFailure = invocation.getArgument(positionOfFailureConsumer);
             onFailure.accept(failure);
             return null;
-        }).when(delegate).identifyUser(eq(userId), anyAction(), anyConsumer());
+        }).when(delegate).identifyUser(eq(userId), eq(profile), anyAction(), anyConsumer());
 
         // Act: call the binding
-        TestObserver<Void> observer = notifications.identifyUser(userId).test();
+        TestObserver<Void> observer = notifications.identifyUser(userId, profile).test();
 
         // Assert: failure is furnished via Rx Completable.
         observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);

@@ -27,7 +27,7 @@ import aws.sdk.kotlin.services.pinpoint.model.GetEndpointRequest
 import com.amplifyframework.analytics.AnalyticsEvent
 import com.amplifyframework.analytics.AnalyticsProperties
 import com.amplifyframework.analytics.UserProfile
-import com.amplifyframework.analytics.pinpoint.models.AWSPinpointUserProfile
+import com.amplifyframework.analytics.pinpoint.targeting.models.AWSPinpointUserProfile
 import com.amplifyframework.analytics.pinpoint.targeting.endpointProfile.EndpointProfile
 import com.amplifyframework.auth.AuthPlugin
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin

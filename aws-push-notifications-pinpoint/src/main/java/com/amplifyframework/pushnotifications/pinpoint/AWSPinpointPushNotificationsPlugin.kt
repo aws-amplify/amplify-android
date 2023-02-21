@@ -22,6 +22,7 @@ import android.os.Bundle
 import aws.sdk.kotlin.services.pinpoint.PinpointClient
 import aws.sdk.kotlin.services.pinpoint.model.ChannelType
 import com.amplifyframework.AmplifyException
+import com.amplifyframework.analytics.UserProfile
 import com.amplifyframework.analytics.pinpoint.targeting.AnalyticsClient
 import com.amplifyframework.analytics.pinpoint.targeting.TargetingClient
 import com.amplifyframework.analytics.pinpoint.targeting.data.AndroidAppDetails
@@ -29,7 +30,6 @@ import com.amplifyframework.analytics.pinpoint.targeting.data.AndroidDeviceDetai
 import com.amplifyframework.analytics.pinpoint.targeting.database.PinpointDatabase
 import com.amplifyframework.analytics.pinpoint.targeting.util.getUniqueId
 import com.amplifyframework.auth.cognito.BuildConfig
-import com.amplifyframework.auth.exceptions.ConfigurationException
 import com.amplifyframework.core.Action
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
@@ -128,7 +128,7 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
                 logger.info("Registering push notifications token: $token")
             }
         } catch (exception: Exception) {
-            throw ConfigurationException(
+            throw PushNotificationsException(
                 "Failed to configure AWSPinpointPushNotificationsPlugin.",
                 "Make sure your amplifyconfiguration.json is valid.",
                 exception
@@ -136,14 +136,23 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
         }
     }
 
-    override fun identifyUser(userId: String, onSuccess: Action, onError: Consumer<PushNotificationsException>) {
+    override fun identifyUser(
+        userId: String,
+        profile: UserProfile?,
+        onSuccess: Action,
+        onError: Consumer<PushNotificationsException>
+    ) {
         try {
-            Amplify.Analytics.identifyUser(userId, null)
-        } catch (illegalStateException: IllegalStateException) {
-            logger.warn("Failed to identify user, Analytics plugin not configured.")
-            // TODO: update user profile endpoint
+            targetingClient.identifyUser(userId, profile)
+            onSuccess.call()
         } catch (exception: Exception) {
-            throw PushNotificationsException.default()
+            onError.accept(
+                PushNotificationsException(
+                    "Failed to identify user with the service.",
+                    AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION,
+                    exception
+                )
+            )
         }
     }
 
@@ -202,16 +211,20 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
                 PushNotificationResult.AppInForeground()
             } else {
                 if (canShowNotification(payload)) {
-                    pushNotificationsUtils.showNotification(
-                        payload, AWSPinpointPushNotificationsActivity::class.java
-                    )
+                    pushNotificationsUtils.showNotification(payload, AWSPinpointPushNotificationsActivity::class.java)
                 }
                 tryAnalyticsRecordEvent("background_event")
                 PushNotificationResult.NotificationPosted()
             }
             onSuccess.accept(result)
         } catch (exception: Exception) {
-            onError.accept(PushNotificationsException.default())
+            onError.accept(
+                PushNotificationsException(
+                    "Failed to identify user with the service.",
+                    AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION,
+                    exception
+                )
+            )
         }
     }
 
@@ -247,8 +260,12 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
         try {
             val event = analyticsClient.createEvent(eventName)
             analyticsClient.recordEvent(event)
-        } catch (illegalStateException: IllegalStateException) {
-            logger.warn("Failed to record $eventName with Analytics plugin, plugin not configured.")
+        } catch (exception: Exception) {
+            throw PushNotificationsException(
+                "Failed to identify user with the service.",
+                AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION,
+                exception
+            )
         }
     }
 

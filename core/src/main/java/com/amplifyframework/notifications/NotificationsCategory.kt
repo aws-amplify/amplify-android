@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 package com.amplifyframework.notifications
 
 import android.content.Context
+import com.amplifyframework.analytics.UserProfile
 import com.amplifyframework.core.Action
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.core.category.Category
@@ -64,7 +65,12 @@ open class NotificationsCategory : Category<NotificationsPlugin<*>>(), Notificat
      * Defer to subcategories for top level APIs.
      * Ex: subCategories.forEach { it.identifyUser(userId, onSuccess, onError) }
      */
-    override fun identifyUser(userId: String, onSuccess: Action, onError: Consumer<PushNotificationsException>) {
-        Push.identifyUser(userId, onSuccess, onError)
+    override fun identifyUser(
+        userId: String,
+        profile: UserProfile?,
+        onSuccess: Action,
+        onError: Consumer<PushNotificationsException>
+    ) {
+        Push.identifyUser(userId, profile, onSuccess, onError)
     }
 }

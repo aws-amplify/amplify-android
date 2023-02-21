@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -22,9 +22,18 @@ import aws.sdk.kotlin.services.pinpoint.model.EndpointLocation
 import aws.sdk.kotlin.services.pinpoint.model.EndpointRequest
 import aws.sdk.kotlin.services.pinpoint.model.EndpointUser
 import aws.sdk.kotlin.services.pinpoint.model.UpdateEndpointRequest
+import com.amplifyframework.analytics.AnalyticsBooleanProperty
+import com.amplifyframework.analytics.AnalyticsDoubleProperty
+import com.amplifyframework.analytics.AnalyticsIntegerProperty
+import com.amplifyframework.analytics.AnalyticsPropertyBehavior
+import com.amplifyframework.analytics.AnalyticsStringProperty
+import com.amplifyframework.analytics.UserProfile
 import com.amplifyframework.analytics.pinpoint.targeting.data.AndroidAppDetails
 import com.amplifyframework.analytics.pinpoint.targeting.data.AndroidDeviceDetails
 import com.amplifyframework.analytics.pinpoint.targeting.endpointProfile.EndpointProfile
+import com.amplifyframework.analytics.pinpoint.targeting.endpointProfile.EndpointProfileLocation
+import com.amplifyframework.analytics.pinpoint.targeting.endpointProfile.EndpointProfileUser
+import com.amplifyframework.analytics.pinpoint.targeting.models.AWSPinpointUserProfile
 import com.amplifyframework.analytics.pinpoint.targeting.util.getUniqueId
 import com.amplifyframework.analytics.pinpoint.targeting.util.millisToIsoDate
 import com.amplifyframework.analytics.pinpoint.targeting.util.putString
@@ -53,6 +62,67 @@ class TargetingClient(
     init {
         globalAttributes = loadAttributes()
         globalMetrics = loadMetrics()
+    }
+
+    /**
+     * Allows you to tie a user to their actions and record traits about them. It includes
+     * an unique User ID and any optional traits you know about them like their email, name, etc.
+     *
+     * @param userId  The unique identifier for the user
+     * @param profile User specific data (e.g. plan, accountType, email, age, location, etc).
+     *                If profile is null, no user data other than id will be attached to the endpoint.
+     */
+    fun identifyUser(userId: String, profile: UserProfile?) {
+        val endpointProfile = currentEndpoint().apply {
+            addAttribute(USER_NAME_KEY, profile?.name?.let { listOf(it) } ?: emptyList())
+            addAttribute(USER_EMAIL_KEY, profile?.email?.let { listOf(it) } ?: emptyList())
+            addAttribute(USER_PLAN_KEY, profile?.plan?.let { listOf(it) } ?: emptyList())
+            profile?.location?.let { userLocation ->
+                val country = userLocation.country
+                if (null != country) {
+                    location = userLocation.let {
+                        EndpointProfileLocation(
+                            country,
+                            it.latitude,
+                            it.longitude,
+                            it.postalCode ?: "",
+                            it.city ?: "",
+                            it.region ?: ""
+                        )
+                    }
+                }
+            }
+        }
+        val endpointUser = EndpointProfileUser(userId).apply {
+            if (profile is AWSPinpointUserProfile) {
+                profile.userAttributes?.let {
+                    it.forEach { entry ->
+                        when (val attribute = entry.value) {
+                            is AnalyticsPropertyBehavior -> {
+                                addUserAttribute(entry.key, listOf(attribute.value.toString()))
+                            }
+                        }
+                    }
+                }
+                profile.customProperties?.let {
+                    it.forEach { entry ->
+                        when (val property = entry.value) {
+                            is AnalyticsStringProperty, is AnalyticsBooleanProperty -> {
+                                endpointProfile.addAttribute(entry.key, listOf(property.value.toString()))
+                            }
+                            is AnalyticsIntegerProperty, is AnalyticsDoubleProperty -> {
+                                endpointProfile.addMetric(entry.key, property.value.toString().toDouble())
+                            }
+                            else -> {
+                                throw IllegalArgumentException("Invalid property type")
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        endpointProfile.user = endpointUser
+        updateEndpointProfile(endpointProfile)
     }
 
     /**
@@ -299,5 +369,9 @@ class TargetingClient(
         private val LOG = Amplify.Logging.forNamespace("amplify:aws-analytics-pinpoint")
         private const val CUSTOM_ATTRIBUTES_KEY = "ENDPOINT_PROFILE_CUSTOM_ATTRIBUTES"
         private const val CUSTOM_METRICS_KEY = "ENDPOINT_PROFILE_CUSTOM_METRICS"
+
+        private const val USER_NAME_KEY = "name"
+        private const val USER_PLAN_KEY = "plan"
+        private const val USER_EMAIL_KEY = "email"
     }
 }

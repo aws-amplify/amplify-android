@@ -18,12 +18,14 @@ package com.amplifyframework.rx;
 import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
 
+import com.amplifyframework.analytics.UserProfile;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.notifications.NotificationsCategoryBehavior;
 import com.amplifyframework.notifications.pushnotifications.PushNotificationsException;
 
 import java.util.Objects;
 
+import io.reactivex.rxjava3.annotations.Nullable;
 import io.reactivex.rxjava3.core.Completable;
 
 final class RxNotificationsBinding implements RxNotificationsCategoryBehavior {
@@ -39,8 +41,8 @@ final class RxNotificationsBinding implements RxNotificationsCategoryBehavior {
     }
 
     @Override
-    public Completable identifyUser(String userId) {
-        return toCompletable(((onResult, onError) -> delegate.identifyUser(userId, onResult, onError)));
+    public Completable identifyUser(String userId, @Nullable UserProfile profile) {
+        return toCompletable(((onResult, onError) -> delegate.identifyUser(userId, profile, onResult, onError)));
     }
 
     private Completable toCompletable(RxAdapters.VoidBehaviors.ActionEmitter<PushNotificationsException> behavior) {

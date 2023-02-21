@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
 
 package com.amplifyframework.kotlin.notifications
 
+import com.amplifyframework.analytics.UserProfile
 import com.amplifyframework.core.Action
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.notifications.NotificationsCategoryBehavior
@@ -32,30 +33,34 @@ class KotlinNotificationsFacadeTest {
     @Test
     fun identifyUserSucceeds() = runBlocking {
         val userId = "userId"
+        val profile = UserProfile.builder().name("test").build()
+
         every {
-            delegate.identifyUser(eq(userId), any(), any())
+            delegate.identifyUser(eq(userId), eq(profile), any(), any())
         } answers {
-            val indexOfCompletionAction = 1
+            val indexOfCompletionAction = 2
             val onComplete = it.invocation.args[indexOfCompletionAction] as Action
             onComplete.call()
         }
-        notifications.identifyUser(userId)
+        notifications.identifyUser(userId, profile)
         verify {
-            delegate.identifyUser(eq(userId), any(), any())
+            delegate.identifyUser(eq(userId), eq(profile), any(), any())
         }
     }
 
     @Test(expected = PushNotificationsException::class)
     fun identifyUserThrows() = runBlocking {
         val userId = "userId"
+        val profile = UserProfile.builder().name("test").build()
+
         val error = PushNotificationsException("uh", "oh")
         every {
-            delegate.identifyUser(eq(userId), any(), any())
+            delegate.identifyUser(eq(userId), eq(profile), any(), any())
         } answers {
-            val indexOfErrorConsumer = 2
+            val indexOfErrorConsumer = 3
             val onError = it.invocation.args[indexOfErrorConsumer] as Consumer<PushNotificationsException>
             onError.accept(error)
         }
-        notifications.identifyUser(userId)
+        notifications.identifyUser(userId, profile)
     }
 }

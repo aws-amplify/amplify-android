@@ -13,19 +13,19 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.notifications.pushnotifications
+package com.amplifyframework.notifications
 
-import com.amplifyframework.notifications.NotificationsException
+import com.amplifyframework.AmplifyException
 
 /**
- * Exception thrown by Push Notifications category plugins.
+ * Exception thrown by Notifications category plugins.
  * Creates a new exception with a message, root cause, and recovery suggestion.
  * @param message An error message describing why this exception was thrown
  * @param cause The underlying cause of this exception
  * @param recoverySuggestion Text suggesting a way to recover from the error being described
  */
-open class PushNotificationsException(
+open class NotificationsException(
     message: String,
     recoverySuggestion: String,
     cause: Throwable? = null
-) : NotificationsException(message, recoverySuggestion, cause)
+) : AmplifyException(message, cause, recoverySuggestion)

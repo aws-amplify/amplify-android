@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 package com.amplifyframework.notifications.pushnotifications
 
 import android.os.Bundle
+import com.amplifyframework.analytics.UserProfile
 import com.amplifyframework.core.Action
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.core.category.Category
@@ -24,8 +25,12 @@ class PushNotificationsCategory : Category<PushNotificationsPlugin<*>>(), PushNo
 
     override fun getCategoryType() = selectedPlugin.categoryType
 
-    override fun identifyUser(userId: String, onSuccess: Action, onError: Consumer<PushNotificationsException>) =
-        selectedPlugin.identifyUser(userId, onSuccess, onError)
+    override fun identifyUser(
+        userId: String,
+        profile: UserProfile?,
+        onSuccess: Action,
+        onError: Consumer<PushNotificationsException>
+    ) = selectedPlugin.identifyUser(userId, profile, onSuccess, onError)
 
     override fun registerDevice(token: String, onSuccess: Action, onError: Consumer<PushNotificationsException>) =
         selectedPlugin.registerDevice(token, onSuccess, onError)
