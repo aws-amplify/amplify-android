@@ -43,13 +43,13 @@ class AWSPinpointPushNotificationsActivity : Activity() {
 
     private fun processIntent(action: HashMap<String, String>): Intent? {
         // Action is open url
-        val notificationIntent: Intent? = if (action.containsKey(PushNotificationsConstants.PINPOINT_URL)) {
-            val url = action[PushNotificationsConstants.PINPOINT_URL]
+        val notificationIntent: Intent? = if (action.containsKey(PushNotificationsConstants.URL)) {
+            val url = action[PushNotificationsConstants.URL]
             Intent(Intent.ACTION_VIEW, Uri.parse(url))
         }
         // Action is open deeplink
-        else if (action.containsKey(PushNotificationsConstants.PINPOINT_DEEPLINK)) {
-            val deepLink = action[PushNotificationsConstants.PINPOINT_DEEPLINK]
+        else if (action.containsKey(PushNotificationsConstants.DEEPLINK)) {
+            val deepLink = action[PushNotificationsConstants.DEEPLINK]
             Intent(Intent.ACTION_VIEW, Uri.parse(deepLink))
         }
         // Default action is open app

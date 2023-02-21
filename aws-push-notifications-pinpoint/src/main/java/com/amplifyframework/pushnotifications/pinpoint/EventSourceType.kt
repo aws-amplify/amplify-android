@@ -108,7 +108,7 @@ class EventSourceType private constructor(
             val pinpointAttribute = payload.rawData[PushNotificationsConstants.PINPOINT_PREFIX] ?: return result
             try {
                 val journeyAttribute = Json.decodeFromString<Map<String, Map<String, String>>>(pinpointAttribute)
-                val journeyAttributes = journeyAttribute[PushNotificationsConstants.JOURNEY_ATTRIBUTE_KEY]
+                val journeyAttributes = journeyAttribute[PushNotificationsConstants.JOURNEY]
                 if (journeyAttributes != null) {
                     for ((key, value) in journeyAttributes) {
                         result[key] = value
