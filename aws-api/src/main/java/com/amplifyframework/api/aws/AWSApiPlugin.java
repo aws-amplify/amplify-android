@@ -41,6 +41,7 @@ import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.hub.HubChannel;
+import com.amplifyframework.logging.Logger;
 import com.amplifyframework.util.Immutable;
 import com.amplifyframework.util.UserAgent;
 
@@ -72,6 +73,8 @@ import okhttp3.Protocol;
  */
 @SuppressWarnings("TypeParameterHidesVisibleType") // <R> shadows >com.amplifyframework.api.aws.R
 public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
+    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-api");
+
     private final Map<String, ClientDetails> apiDetails;
     private final Map<String, OkHttpConfigurator.ForType> apiConfigurators;
     private final GraphQLResponse.Factory gqlResponseFactory;
@@ -905,6 +908,8 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         @Deprecated
         public Builder configureClient(
                 @NonNull String forApiName, @NonNull OkHttpConfigurator byConfigurator) {
+            LOG.warn("The AWSApiPlugin.Builder::configureClient with a single argument lambda will be deprecated in "
+                    + "a next major version. Please use the overload that accepts a lambda with two arguments.");
             this.apiConfigurators.put(forApiName, (okHttpClientBuilder, type) -> {
                 if (OkHttpConfigurator.Type.HTTP.equals(type)) {
                     byConfigurator.applyConfiguration(okHttpClientBuilder);
