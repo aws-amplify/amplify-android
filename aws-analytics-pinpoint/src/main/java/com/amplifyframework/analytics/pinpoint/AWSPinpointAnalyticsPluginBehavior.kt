@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022-2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -14,8 +14,6 @@
  */
 package com.amplifyframework.analytics.pinpoint
 
-import android.app.Application
-import android.content.Context
 import com.amplifyframework.analytics.AnalyticsBooleanProperty
 import com.amplifyframework.analytics.AnalyticsCategoryBehavior
 import com.amplifyframework.analytics.AnalyticsDoubleProperty
@@ -26,16 +24,14 @@ import com.amplifyframework.analytics.AnalyticsPropertyBehavior
 import com.amplifyframework.analytics.AnalyticsStringProperty
 import com.amplifyframework.analytics.UserProfile
 import com.amplifyframework.analytics.pinpoint.models.AWSPinpointUserProfile
+import com.amplifyframework.analytics.pinpoint.targeting.AnalyticsClient
 import com.amplifyframework.analytics.pinpoint.targeting.TargetingClient
 import com.amplifyframework.analytics.pinpoint.targeting.endpointProfile.EndpointProfileLocation
 import com.amplifyframework.analytics.pinpoint.targeting.endpointProfile.EndpointProfileUser
 
 internal class AWSPinpointAnalyticsPluginBehavior(
-    private val context: Context,
-    val analyticsClient: AnalyticsClient,
+    private val analyticsClient: AnalyticsClient,
     private val targetingClient: TargetingClient,
-    private val autoEventSubmitter: AutoEventSubmitter,
-    private val autoSessionTracker: AutoSessionTracker
 ) : AnalyticsCategoryBehavior {
 
     companion object {
@@ -97,15 +93,9 @@ internal class AWSPinpointAnalyticsPluginBehavior(
         targetingClient.updateEndpointProfile(endpointProfile)
     }
 
-    override fun disable() {
-        autoEventSubmitter.stop()
-        autoSessionTracker.stopSessionTracking(context.applicationContext as Application)
-    }
+    override fun disable() = analyticsClient.disableEventSubmitter()
 
-    override fun enable() {
-        autoEventSubmitter.start()
-        autoSessionTracker.startSessionTracking(context.applicationContext as Application)
-    }
+    override fun enable() = analyticsClient.enableEventSubmitter()
 
     override fun recordEvent(eventName: String) {
         val pinpointEvent = analyticsClient.createEvent(eventName)

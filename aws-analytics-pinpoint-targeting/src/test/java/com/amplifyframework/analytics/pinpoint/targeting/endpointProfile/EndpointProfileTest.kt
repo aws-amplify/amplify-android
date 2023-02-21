@@ -33,7 +33,7 @@ class EndpointProfileTest : TestCase() {
             "{\"ApplicationId\":\"app id\",\"EndpointId\":\"unique-id\"," +
                 "\"Location\":\"{\\\"country\\\":\\\"en_US\\\"}\",\"Demographic\":\"{\\\"appVersion\\\":" +
                 "\\\"1.0.0\\\",\\\"make\\\":\\\"TEST MANUFACTURER\\\",\\\"locale\\\":\\\"en_US\\\"}\"," +
-                "\"EffectiveDate\":\"${effectiveDate.millisToIsoDate()}\",\"OptOut\":\"ALL\",\"User\":\"{}\"}"
+                "\"EffectiveDate\":\"${effectiveDate.millisToIsoDate()}\",\"OptOut\":\"NONE\",\"User\":\"{}\"}"
         assertEquals(expected, endpointProfile.toString())
     }
 
@@ -60,7 +60,7 @@ class EndpointProfileTest : TestCase() {
             "{\"ApplicationId\":\"app id\",\"EndpointId\":\"unique-id\"," +
                 "\"Location\":\"{\\\"country\\\":\\\"en_US\\\"}\",\"Demographic\":\"{\\\"appVersion\\\":" +
                 "\\\"1.0.0\\\",\\\"make\\\":\\\"TEST MANUFACTURER\\\",\\\"locale\\\":\\\"en_US\\\"}\"," +
-                "\"EffectiveDate\":\"${effectiveDate.millisToIsoDate()}\",\"OptOut\":\"ALL\"," +
+                "\"EffectiveDate\":\"${effectiveDate.millisToIsoDate()}\",\"OptOut\":\"NONE\"," +
                 "\"Metrics\":{\"metric2\":2.0,\"metric3\":-3.0,\"metric4\":4.0},\"User\":\"{}\"}"
         assertEquals(expected, endpointProfile.toString())
 
@@ -94,7 +94,7 @@ class EndpointProfileTest : TestCase() {
             "{\"ApplicationId\":\"app id\",\"EndpointId\":\"unique-id\"," +
                 "\"Location\":\"{\\\"country\\\":\\\"en_US\\\"}\",\"Demographic\":\"{\\\"appVersion\\\":" +
                 "\\\"1.0.0\\\",\\\"make\\\":\\\"TEST MANUFACTURER\\\",\\\"locale\\\":\\\"en_US\\\"}\"," +
-                "\"EffectiveDate\":\"${effectiveDate.millisToIsoDate()}\",\"OptOut\":\"ALL\"," +
+                "\"EffectiveDate\":\"${effectiveDate.millisToIsoDate()}\",\"OptOut\":\"NONE\"," +
                 "\"Attributes\":{\"attribute4\":[\"g\",\"h\",\"i\"],\"attribute3\":[\"\"]," +
                 "\"attribute2\":[\"d\",\"e\",\"f\"]},\"User\":\"{}\"}"
         assertEquals(expected, endpointProfile.toString())

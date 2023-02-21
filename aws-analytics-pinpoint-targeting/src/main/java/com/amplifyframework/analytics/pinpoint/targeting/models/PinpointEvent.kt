@@ -12,7 +12,7 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package com.amplifyframework.analytics.pinpoint.models
+package com.amplifyframework.analytics.pinpoint.targeting.models
 
 import com.amplifyframework.analytics.pinpoint.targeting.data.AndroidAppDetails
 import com.amplifyframework.analytics.pinpoint.targeting.data.AndroidDeviceDetails
@@ -28,7 +28,7 @@ import kotlinx.serialization.json.Json
 * */
 
 @Serializable
-internal data class PinpointEvent constructor(
+data class PinpointEvent constructor(
     val eventId: String = UUID.randomUUID().toString(),
     val eventType: String,
     val attributes: Map<String, String>,

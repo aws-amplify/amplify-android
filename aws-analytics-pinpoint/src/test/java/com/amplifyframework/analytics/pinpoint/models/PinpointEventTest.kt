@@ -16,6 +16,9 @@ package com.amplifyframework.analytics.pinpoint.models
 
 import com.amplifyframework.analytics.pinpoint.targeting.data.AndroidAppDetails
 import com.amplifyframework.analytics.pinpoint.targeting.data.AndroidDeviceDetails
+import com.amplifyframework.analytics.pinpoint.targeting.models.PinpointEvent
+import com.amplifyframework.analytics.pinpoint.targeting.models.PinpointSession
+import com.amplifyframework.analytics.pinpoint.targeting.models.SDKInfo
 import java.util.Locale
 import org.junit.Assert.assertEquals
 import org.junit.Test

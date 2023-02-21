@@ -13,11 +13,11 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.analytics.pinpoint.database
+package com.amplifyframework.analytics.pinpoint.targeting.database
 
 import android.database.sqlite.SQLiteDatabase
 
-internal class EventTable {
+class EventTable {
     companion object {
         const val TABLE_EVENT = "pinpointevent1"
         const val COLUMN_ID = "event_id"

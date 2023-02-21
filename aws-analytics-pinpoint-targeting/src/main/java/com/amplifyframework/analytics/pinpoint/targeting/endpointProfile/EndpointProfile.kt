@@ -16,6 +16,7 @@
 package com.amplifyframework.analytics.pinpoint.targeting.endpointProfile
 
 import android.content.Context
+import aws.sdk.kotlin.services.pinpoint.model.ChannelType
 import com.amplifyframework.analytics.pinpoint.targeting.data.AndroidAppDetails
 import com.amplifyframework.analytics.pinpoint.targeting.data.AndroidDeviceDetails
 import com.amplifyframework.analytics.pinpoint.targeting.util.millisToIsoDate
@@ -41,12 +42,9 @@ class EndpointProfile(
     private val metrics: MutableMap<String, Double> = ConcurrentHashMap()
     private val currentNumOfAttributesAndMetrics = AtomicInteger(0)
 
-    /**
-     * Returns whether the endpoint is opted out of notification.
-     *
-     * @return String (ALL | NONE)
-     */
-    val optOut: String = "NONE"
+    var channelType: ChannelType? = null
+
+    var address: String = ""
 
     private val country: String = try {
         applicationContext.resources.configuration.locales[0].isO3Country
@@ -230,12 +228,12 @@ class EndpointProfile(
 
     private fun toJSONObject(): JsonObject {
         return buildJsonObject {
+            put("Address", address)
             put("ApplicationId", applicationId)
             put("EndpointId", endpointId)
             put("Location", Json.encodeToString(EndpointProfileLocation.serializer(), location))
             put("Demographic", Json.encodeToString(EndpointProfileDemographic.serializer(), demographic))
             put("EffectiveDate", effectiveDate.millisToIsoDate())
-            put("OptOut", optOut)
             val attributesJson = buildJsonObject {
                 for ((key, value) in allAttributes) {
                     try {

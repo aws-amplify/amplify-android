@@ -13,14 +13,11 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.analytics.pinpoint
+package com.amplifyframework.analytics.pinpoint.targeting
 
 import android.content.Context
-import com.amplifyframework.analytics.pinpoint.targeting.TargetingClient
-import kotlinx.serialization.ExperimentalSerializationApi
 
-@OptIn(ExperimentalSerializationApi::class)
-internal class SessionClient(
+class SessionClient(
     private val context: Context,
     val targetingClient: TargetingClient,
     private val uniqueId: String,

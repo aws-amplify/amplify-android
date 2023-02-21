@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022-2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.analytics.pinpoint.database
+package com.amplifyframework.analytics.pinpoint.targeting.database
 
 import android.content.ContentValues
 import android.content.Context
@@ -22,20 +22,24 @@ import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteQueryBuilder
 import android.net.Uri
-import com.amplifyframework.analytics.pinpoint.models.PinpointEvent
+import com.amplifyframework.analytics.pinpoint.targeting.models.PinpointEvent
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-internal class PinpointDatabase(
-    private val context: Context,
+class PinpointDatabase(
+    context: Context,
+    dbName: String = DATABASE_NAME,
     private val coroutineDispatcher: CoroutineDispatcher = Dispatchers.Default
 ) {
+    companion object {
+        private const val DATABASE_NAME = "awspinpoint1.db"
+    }
 
     private val events = 10
     private val eventsId = 20
     private val basePath = "events"
-    private val databaseHelper = PinpointDatabaseHelper(context)
+    private val databaseHelper = PinpointDatabaseHelper(context, dbName)
     private val database: SQLiteDatabase = databaseHelper.writableDatabase
     private val contentUri: Uri
     private val uriMatcher: UriMatcher
@@ -68,7 +72,6 @@ internal class PinpointDatabase(
 
     suspend fun deleteEventById(eventColumnId: Int): Int {
         return withContext(coroutineDispatcher) {
-            val uri = contentUri
             val whereClause = "${EventTable.COLUMN_ID}=$eventColumnId"
             database.delete(
                 EventTable.TABLE_EVENT,

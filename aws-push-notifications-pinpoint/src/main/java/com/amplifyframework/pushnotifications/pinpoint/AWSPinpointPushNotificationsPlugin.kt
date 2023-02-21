@@ -20,10 +20,14 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.os.Bundle
 import aws.sdk.kotlin.services.pinpoint.PinpointClient
+import aws.sdk.kotlin.services.pinpoint.model.ChannelType
 import com.amplifyframework.AmplifyException
+import com.amplifyframework.analytics.pinpoint.targeting.AnalyticsClient
 import com.amplifyframework.analytics.pinpoint.targeting.TargetingClient
 import com.amplifyframework.analytics.pinpoint.targeting.data.AndroidAppDetails
 import com.amplifyframework.analytics.pinpoint.targeting.data.AndroidDeviceDetails
+import com.amplifyframework.analytics.pinpoint.targeting.database.PinpointDatabase
+import com.amplifyframework.analytics.pinpoint.targeting.util.getUniqueId
 import com.amplifyframework.auth.cognito.BuildConfig
 import com.amplifyframework.auth.exceptions.ConfigurationException
 import com.amplifyframework.core.Action
@@ -38,14 +42,17 @@ import com.amplifyframework.pushnotifications.pinpoint.utils.PushNotificationsSe
 import com.amplifyframework.pushnotifications.pinpoint.utils.PushNotificationsUtils
 import com.amplifyframework.pushnotifications.pinpoint.utils.toNotificationsPayload
 import com.google.firebase.messaging.FirebaseMessaging
+import java.util.concurrent.ConcurrentHashMap
 import org.json.JSONObject
 
 class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClient>() {
 
     companion object {
         private const val AWS_PINPOINT_PUSHNOTIFICATIONS_LOG_NAMESPACE = "amplify:aws-pinpoint-pushnotifications:%s"
-
         private const val AWS_PINPOINT_PUSHNOTIFICATIONS_PLUGIN_KEY = "awsPinpointPushNotificationsPlugin"
+
+        private const val DATABASE_NAME = "awspushnotifications.db"
+        private const val DEFAULT_AUTO_FLUSH_INTERVAL = 30000L
     }
 
     @SuppressLint("MissingFirebaseInstanceTokenRefresh")
@@ -65,6 +72,12 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
     private lateinit var pinpointClient: PinpointClient
 
     private lateinit var targetingClient: TargetingClient
+
+    private lateinit var analyticsClient: AnalyticsClient
+
+    private var eventSourceAttributes = ConcurrentHashMap<String, String>()
+
+    private var deviceRegistered = false
 
     @Throws(AmplifyException::class)
     override fun configure(pluginConfiguration: JSONObject?, context: Context) {
@@ -89,6 +102,19 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
                 context,
                 pinpointClient,
                 preferences,
+                androidAppDetails,
+                androidDeviceDetails
+            )
+
+            val pinpointDatabase = PinpointDatabase(context, DATABASE_NAME)
+
+            analyticsClient = AnalyticsClient(
+                context,
+                DEFAULT_AUTO_FLUSH_INTERVAL,
+                pinpointClient,
+                targetingClient,
+                pinpointDatabase,
+                preferences.getUniqueId(),
                 androidAppDetails,
                 androidDeviceDetails
             )
@@ -124,7 +150,14 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
     override fun registerDevice(token: String, onSuccess: Action, onError: Consumer<PushNotificationsException>) {
         // TODO: use credentials store instead of SharedPreferences
         putString("FCM_TOKEN", token)
-        // TODO: update pinpoint endpoint
+
+        // targetingClient needs to send the address, optOut etc. to Pinpoint so we can receive campaigns/journeys
+        val endpointProfile = targetingClient.currentEndpoint().apply {
+            channelType = ChannelType.Gcm
+            address = token
+        }
+        targetingClient.updateEndpointProfile(endpointProfile)
+        deviceRegistered = true
     }
 
     override fun recordNotificationReceived(
@@ -161,8 +194,8 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
             val payload = details.toNotificationsPayload()
             val eventSourceType: EventSourceType = EventSourceType.getEventSourceType(payload)
 
-            // TODO Add analytics behavior
             val eventSourceAttributes = eventSourceType.getAttributeParser().parseAttributes(payload)
+            tryUpdateEventSourceGlobally(eventSourceAttributes)
 
             val result = if (pushNotificationsUtils.isAppInForeground()) {
                 tryAnalyticsRecordEvent("foreground_event")
@@ -182,9 +215,38 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
         }
     }
 
+    /**
+     * Removes the attributes currently stored in eventSourceAttributes
+     * from the globalAttributes collection. This is called
+     * when we want to switch which event source (campaign, journey, or other future
+     * pinpoint construct) pinpoint events are attributed to.
+     */
+    private fun clearEventSourceAttributes() {
+        for (key in eventSourceAttributes.keys()) {
+            analyticsClient.removeGlobalAttribute(key)
+        }
+    }
+
+    /**
+     * Replaces the current event source attributes (if any)
+     * with a new set of event source attributes
+     * @param attributes map of attribute values
+     */
+    private fun tryUpdateEventSourceGlobally(attributes: Map<String, String>) {
+        // Remove attributes from previous update call
+        clearEventSourceAttributes()
+        for ((key, value) in attributes) {
+            analyticsClient.addGlobalAttribute(key, value)
+
+            // Hold on to attributes so we can remove them later
+            eventSourceAttributes[key] = value
+        }
+    }
+
     private fun tryAnalyticsRecordEvent(eventName: String) {
         try {
-            Amplify.Analytics.recordEvent(eventName)
+            val event = analyticsClient.createEvent(eventName)
+            analyticsClient.recordEvent(event)
         } catch (illegalStateException: IllegalStateException) {
             logger.warn("Failed to record $eventName with Analytics plugin, plugin not configured.")
         }
@@ -209,7 +271,6 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
     private fun canShowNotification(payload: NotificationPayload): Boolean {
         val notificationsEnabled = pushNotificationsUtils.areNotificationsEnabled()
         val silentPush = payload.silentPush
-        val optOut = targetingClient.currentEndpoint().optOut == "ALL"
-        return notificationsEnabled && !silentPush && !optOut
+        return notificationsEnabled && !silentPush && deviceRegistered
     }
 }

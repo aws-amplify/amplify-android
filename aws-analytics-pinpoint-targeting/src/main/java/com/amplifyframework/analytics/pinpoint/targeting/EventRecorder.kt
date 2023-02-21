@@ -12,7 +12,7 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package com.amplifyframework.analytics.pinpoint
+package com.amplifyframework.analytics.pinpoint.targeting
 
 import android.content.Context
 import android.database.Cursor
@@ -30,11 +30,10 @@ import aws.sdk.kotlin.services.pinpoint.model.PublicEndpoint
 import aws.sdk.kotlin.services.pinpoint.model.PutEventsRequest
 import aws.sdk.kotlin.services.pinpoint.model.Session
 import com.amplifyframework.analytics.AnalyticsEvent
-import com.amplifyframework.analytics.pinpoint.database.EventTable
-import com.amplifyframework.analytics.pinpoint.database.PinpointDatabase
-import com.amplifyframework.analytics.pinpoint.models.PinpointEvent
-import com.amplifyframework.analytics.pinpoint.targeting.TargetingClient
+import com.amplifyframework.analytics.pinpoint.targeting.database.EventTable
+import com.amplifyframework.analytics.pinpoint.targeting.database.PinpointDatabase
 import com.amplifyframework.analytics.pinpoint.targeting.endpointProfile.EndpointProfile
+import com.amplifyframework.analytics.pinpoint.targeting.models.PinpointEvent
 import com.amplifyframework.analytics.pinpoint.targeting.util.millisToIsoDate
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.logging.Logger
@@ -42,7 +41,9 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-internal class EventRecorder(
+internal const val AWS_PINPOINT_ANALYTICS_LOG_NAMESPACE = "amplify:aws-pinpoint-analytics:%s"
+
+class EventRecorder(
     val context: Context,
     private val pinpointClient: PinpointClient,
     private val pinpointDatabase: PinpointDatabase,
@@ -284,7 +285,15 @@ internal class EventRecorder(
             location = endpointLocation
             demographic = endpointDemographic
             effectiveDate = endpointProfile.effectiveDate.millisToIsoDate()
-            optOut = endpointProfile.optOut
+
+            if (endpointProfile.address != "" && endpointProfile.channelType != null) {
+                optOut = "NONE" // no opt out, send notifications
+                address = endpointProfile.address
+                channelType = endpointProfile.channelType
+            } else {
+                optOut = "ALL" // opt out from all notifications
+            }
+
             attributes = endpointProfile.allAttributes
             metrics = endpointProfile.allMetrics
             user = endpointUser

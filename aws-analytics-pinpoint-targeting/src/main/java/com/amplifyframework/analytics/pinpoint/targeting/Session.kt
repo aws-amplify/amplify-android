@@ -12,7 +12,7 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package com.amplifyframework.analytics.pinpoint
+package com.amplifyframework.analytics.pinpoint.targeting
 
 import android.content.Context
 import java.text.SimpleDateFormat
@@ -21,7 +21,7 @@ import java.util.TimeZone
 import kotlinx.serialization.Serializable
 
 @Serializable
-internal class Session {
+class Session {
 
     private val maxSessionIdLength = 8
     private val sessionIdPaddingChar = "_"

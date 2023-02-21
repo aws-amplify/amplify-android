@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.analytics.pinpoint;
+package com.amplifyframework.analytics.pinpoint.targeting;
 
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -26,7 +26,7 @@ import java.util.Locale;
 /**
  * Submits all the recorded event periodically.
  */
-final class AutoEventSubmitter {
+public final class AutoEventSubmitter {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-analytics");
 
     private final Handler handler;

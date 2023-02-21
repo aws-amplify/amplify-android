@@ -13,17 +13,16 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.analytics.pinpoint.database
+package com.amplifyframework.analytics.pinpoint.targeting.database
 
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 
-internal class PinpointDatabaseHelper(context: Context) :
-    SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
+internal class PinpointDatabaseHelper(context: Context, dbName: String) :
+    SQLiteOpenHelper(context, dbName, null, DATABASE_VERSION) {
 
     companion object {
-        private const val DATABASE_NAME = "awspinpoint1.db"
         private const val DATABASE_VERSION = 1
     }
 

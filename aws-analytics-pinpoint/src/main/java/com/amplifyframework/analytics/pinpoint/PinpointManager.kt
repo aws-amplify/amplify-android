@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022-2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -17,25 +17,22 @@ package com.amplifyframework.analytics.pinpoint
 import android.content.Context
 import aws.sdk.kotlin.services.pinpoint.PinpointClient
 import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider
-import com.amplifyframework.analytics.pinpoint.database.PinpointDatabase
-import com.amplifyframework.analytics.pinpoint.models.SDKInfo
+import com.amplifyframework.analytics.pinpoint.targeting.AnalyticsClient
 import com.amplifyframework.analytics.pinpoint.targeting.TargetingClient
 import com.amplifyframework.analytics.pinpoint.targeting.data.AndroidAppDetails
 import com.amplifyframework.analytics.pinpoint.targeting.data.AndroidDeviceDetails
+import com.amplifyframework.analytics.pinpoint.targeting.database.PinpointDatabase
 import com.amplifyframework.analytics.pinpoint.targeting.util.getUniqueId
-import com.amplifyframework.core.BuildConfig
-import com.amplifyframework.util.UserAgent.Platform
 
 /**
  * PinpointManager is the entry point to Pinpoint Analytics and Targeting.
  */
 internal class PinpointManager constructor(
-    val context: Context,
+    context: Context,
     private val awsPinpointConfiguration: AWSPinpointAnalyticsPluginConfiguration,
     private val credentialsProvider: CredentialsProvider?
 ) {
     val analyticsClient: AnalyticsClient
-    val sessionClient: SessionClient
     val targetingClient: TargetingClient
     internal val pinpointClient: PinpointClient = PinpointClient {
         credentialsProvider = this@PinpointManager.credentialsProvider
@@ -43,7 +40,6 @@ internal class PinpointManager constructor(
     }
 
     companion object {
-        private val SDK_NAME = Platform.ANDROID.libraryName
         /*
         Auth plugin needs to read from Pinpoint shared preferences, but we don't currently have an architecture
         that allows the plugins to pass data between each other. If the storage mechanism of UniqueId changes, we
@@ -74,19 +70,15 @@ internal class PinpointManager constructor(
             androidAppDetails,
             androidDeviceDetails,
         )
-        sessionClient = SessionClient(context, targetingClient, sharedPrefs.getUniqueId(), analyticsClient = null)
         analyticsClient = AnalyticsClient(
             context,
+            awsPinpointConfiguration.autoFlushEventsInterval,
             pinpointClient,
-            sessionClient,
             targetingClient,
             pinpointDatabase,
             sharedPrefs.getUniqueId(),
             androidAppDetails,
             androidDeviceDetails,
-            SDKInfo(SDK_NAME, BuildConfig.VERSION_NAME)
         )
-        sessionClient.setAnalyticsClient(analyticsClient)
-        sessionClient.startSession()
     }
 }

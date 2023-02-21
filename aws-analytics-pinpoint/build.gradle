@@ -35,8 +35,6 @@ dependencies {
 
     testImplementation dependency.junit
     testImplementation dependency.mockk
-    testImplementation dependency.mockito
-    testImplementation dependency.mockitoinline
     testImplementation dependency.robolectric
     implementation dependency.androidx.test.core
     testImplementation dependency.kotlin.test.coroutines

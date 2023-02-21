@@ -13,19 +13,18 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.analytics.pinpoint
+package com.amplifyframework.analytics.pinpoint.targeting
 
 import android.content.SharedPreferences
 import android.net.Uri
 import androidx.test.core.app.ApplicationProvider
 import aws.sdk.kotlin.services.pinpoint.PinpointClient
-import com.amplifyframework.analytics.pinpoint.database.PinpointDatabase
-import com.amplifyframework.analytics.pinpoint.models.PinpointEvent
-import com.amplifyframework.analytics.pinpoint.models.PinpointSession
-import com.amplifyframework.analytics.pinpoint.models.SDKInfo
-import com.amplifyframework.analytics.pinpoint.targeting.TargetingClient
 import com.amplifyframework.analytics.pinpoint.targeting.data.AndroidAppDetails
 import com.amplifyframework.analytics.pinpoint.targeting.data.AndroidDeviceDetails
+import com.amplifyframework.analytics.pinpoint.targeting.database.PinpointDatabase
+import com.amplifyframework.analytics.pinpoint.targeting.models.PinpointEvent
+import com.amplifyframework.analytics.pinpoint.targeting.models.PinpointSession
+import com.amplifyframework.analytics.pinpoint.targeting.models.SDKInfo
 import com.amplifyframework.analytics.pinpoint.targeting.util.getUniqueId
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -42,20 +41,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
-/*
- * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License").
- * You may not use this file except in compliance with the License.
- * A copy of the License is located at
- *
- *  http://aws.amazon.com/apache2.0
- *
- * or in the "license" file accompanying this file. This file is distributed
- * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
- * express or implied. See the License for the specific language governing
- * permissions and limitations under the License.
- */
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
 class AnalyticsClientTest {
@@ -75,18 +60,21 @@ class AnalyticsClientTest {
     fun setup() = runTest {
         mockkStatic("com.amplifyframework.analytics.pinpoint.targeting.util.SharedPreferencesUtilKt")
         every { sharedPrefs.getUniqueId() } answers { "UNIQUE_ID" }
+        coEvery { sessionClient.setAnalyticsClient(any()) } answers { }
+        coEvery { sessionClient.startSession() } answers { }
 
         analyticsClient = AnalyticsClient(
             ApplicationProvider.getApplicationContext(),
+            30000L,
             pinpointClient,
-            sessionClient,
             targetingClient,
             pinpointDatabase,
             sharedPrefs.getUniqueId(),
             androidAppDetails,
             androidDeviceDetails,
-            sdkInfo,
             UnconfinedTestDispatcher(testScheduler),
+            sessionClient,
+            sdkInfo,
             eventRecorder
         )
         val sessionId = UUID.randomUUID().toString()

@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022-2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -13,21 +13,23 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.analytics.pinpoint
+package com.amplifyframework.analytics.pinpoint.targeting
 
+import android.app.Application
 import android.content.Context
 import aws.sdk.kotlin.services.pinpoint.PinpointClient
 import com.amplifyframework.analytics.AnalyticsChannelEventName
-import com.amplifyframework.analytics.pinpoint.database.PinpointDatabase
-import com.amplifyframework.analytics.pinpoint.models.PinpointEvent
-import com.amplifyframework.analytics.pinpoint.models.PinpointSession
-import com.amplifyframework.analytics.pinpoint.models.SDKInfo
-import com.amplifyframework.analytics.pinpoint.targeting.TargetingClient
 import com.amplifyframework.analytics.pinpoint.targeting.data.AndroidAppDetails
 import com.amplifyframework.analytics.pinpoint.targeting.data.AndroidDeviceDetails
+import com.amplifyframework.analytics.pinpoint.targeting.database.PinpointDatabase
+import com.amplifyframework.analytics.pinpoint.targeting.models.PinpointEvent
+import com.amplifyframework.analytics.pinpoint.targeting.models.PinpointSession
+import com.amplifyframework.analytics.pinpoint.targeting.models.SDKInfo
 import com.amplifyframework.core.Amplify
+import com.amplifyframework.core.BuildConfig
 import com.amplifyframework.hub.HubChannel
 import com.amplifyframework.hub.HubEvent
+import com.amplifyframework.util.UserAgent
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.CoroutineDispatcher
@@ -35,17 +37,18 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-internal class AnalyticsClient(
+class AnalyticsClient(
     val context: Context,
+    autoFlushEventsInterval: Long,
     pinpointClient: PinpointClient,
-    private val sessionClient: SessionClient,
     targetingClient: TargetingClient,
     pinpointDatabase: PinpointDatabase,
     private val uniqueId: String,
     private val androidAppDetails: AndroidAppDetails,
     private val androidDeviceDetails: AndroidDeviceDetails,
-    private val sdkInfo: SDKInfo,
     private val coroutineDispatcher: CoroutineDispatcher = Dispatchers.Default,
+    private val sessionClient: SessionClient = SessionClient(context, targetingClient, uniqueId),
+    private val sdkInfo: SDKInfo = SDKInfo(SDK_NAME, BuildConfig.VERSION_NAME),
     private val eventRecorder: EventRecorder = EventRecorder(
         context,
         pinpointClient,
@@ -54,9 +57,33 @@ internal class AnalyticsClient(
         coroutineDispatcher
     )
 ) {
+    companion object {
+        private val SDK_NAME = UserAgent.Platform.ANDROID.libraryName
+    }
+
     private val coroutineScope = CoroutineScope(coroutineDispatcher)
     private val globalAttributes = ConcurrentHashMap<String, String>()
     private val globalMetrics = ConcurrentHashMap<String, Double>()
+
+    private val autoEventSubmitter = AutoEventSubmitter(this, autoFlushEventsInterval)
+    private val autoSessionTracker = AutoSessionTracker(this, sessionClient)
+
+    init {
+        sessionClient.setAnalyticsClient(this)
+        sessionClient.startSession()
+
+        enableEventSubmitter()
+    }
+
+    fun enableEventSubmitter() {
+        autoEventSubmitter.start()
+        autoSessionTracker.startSessionTracking(context.applicationContext as Application)
+    }
+
+    fun disableEventSubmitter() {
+        autoEventSubmitter.stop()
+        autoSessionTracker.stopSessionTracking(context.applicationContext as Application)
+    }
 
     fun createEvent(
         eventType: String,

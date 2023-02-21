@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.analytics.pinpoint;
+package com.amplifyframework.analytics.pinpoint.targeting;
 
 import android.app.Activity;
 import android.app.Application;
@@ -24,7 +24,7 @@ import android.util.Log;
  * Tracks when the host application enters or leaves foreground.
  * The constructor registers to receive activity lifecycle events.
  **/
-final class AutoSessionTracker implements Application.ActivityLifecycleCallbacks {
+public final class AutoSessionTracker implements Application.ActivityLifecycleCallbacks {
     private static final String LOG_TAG = AutoSessionTracker.class.getSimpleName();
     private final SessionClient sessionClient;
     private final AnalyticsClient analyticsClient;
@@ -36,8 +36,7 @@ final class AutoSessionTracker implements Application.ActivityLifecycleCallbacks
      * @param analyticsClient Amazon pinpoint analytics client
      * @param sessionClient Amazon pinpoint session client
      */
-    AutoSessionTracker(final AnalyticsClient analyticsClient,
-                              final SessionClient sessionClient) {
+    AutoSessionTracker(final AnalyticsClient analyticsClient, final SessionClient sessionClient) {
         this.analyticsClient = analyticsClient;
         this.sessionClient = sessionClient;
         inForeground = false;

@@ -28,9 +28,12 @@ dependencies {
     implementation dependency.androidx.appcompat
     implementation dependency.aws.pinpoint
     implementation dependency.kotlin.serializationJson
+    implementation 'androidx.test.ext:junit-ktx:1.1.5'
 
     testImplementation dependency.junit
     testImplementation dependency.mockk
+    testImplementation dependency.mockito
+    testImplementation dependency.mockitoinline
     testImplementation dependency.robolectric
     testImplementation dependency.androidx.test.core
     testImplementation dependency.kotlin.test.coroutines

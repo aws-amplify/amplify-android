@@ -136,7 +136,14 @@ class TargetingClient(
             this.location = location
             this.demographic = demographic
             effectiveDate = endpointProfile.effectiveDate.millisToIsoDate()
-            optOut = endpointProfile.optOut
+            if (endpointProfile.address != "" && endpointProfile.channelType != null) {
+                optOut = "NONE" // no opt out, send notifications
+                address = endpointProfile.address
+                channelType = endpointProfile.channelType
+            } else {
+                optOut = "ALL" // opt out from all notifications
+            }
+
             attributes = endpointProfile.allAttributes
             metrics = endpointProfile.allMetrics
             this.user = user

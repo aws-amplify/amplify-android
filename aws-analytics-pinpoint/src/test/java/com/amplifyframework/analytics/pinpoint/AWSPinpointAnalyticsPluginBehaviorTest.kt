@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022-2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -14,20 +14,19 @@
  */
 package com.amplifyframework.analytics.pinpoint
 
-import android.app.Application
-import android.content.Context
 import android.content.SharedPreferences
 import androidx.test.core.app.ApplicationProvider
 import com.amplifyframework.analytics.AnalyticsEvent
 import com.amplifyframework.analytics.AnalyticsProperties
 import com.amplifyframework.analytics.pinpoint.models.AWSPinpointUserProfile
-import com.amplifyframework.analytics.pinpoint.models.PinpointEvent
-import com.amplifyframework.analytics.pinpoint.models.PinpointSession
-import com.amplifyframework.analytics.pinpoint.models.SDKInfo
+import com.amplifyframework.analytics.pinpoint.targeting.AnalyticsClient
 import com.amplifyframework.analytics.pinpoint.targeting.TargetingClient
 import com.amplifyframework.analytics.pinpoint.targeting.data.AndroidAppDetails
 import com.amplifyframework.analytics.pinpoint.targeting.data.AndroidDeviceDetails
 import com.amplifyframework.analytics.pinpoint.targeting.endpointProfile.EndpointProfile
+import com.amplifyframework.analytics.pinpoint.targeting.models.PinpointEvent
+import com.amplifyframework.analytics.pinpoint.targeting.models.PinpointSession
+import com.amplifyframework.analytics.pinpoint.targeting.models.SDKInfo
 import com.amplifyframework.analytics.pinpoint.targeting.util.getUniqueId
 import io.mockk.every
 import io.mockk.mockk
@@ -46,9 +45,6 @@ class AWSPinpointAnalyticsPluginBehaviorTest {
 
     private val analyticsClientMock = mockk<AnalyticsClient>(relaxed = true)
     private val targetingClientMock = mockk<TargetingClient>(relaxed = true)
-    private val autoEventSubmitterMock = mockk<AutoEventSubmitter>(relaxed = true)
-    private val autoSessionTrackerMock = mockk<AutoSessionTracker>(relaxed = true)
-    private val context: Context = ApplicationProvider.getApplicationContext()
     private lateinit var awsPinpointAnalyticsPluginBehavior: AWSPinpointAnalyticsPluginBehavior
     private val sharedPrefs = mockk<SharedPreferences>()
     private val androidAppDetails = AndroidAppDetails("com.test.app", "TestApp", "com.test.app", "1.0", "test")
@@ -60,11 +56,8 @@ class AWSPinpointAnalyticsPluginBehaviorTest {
         every { sharedPrefs.getUniqueId() }.answers { "UNIQUE_ID" }
 
         awsPinpointAnalyticsPluginBehavior = AWSPinpointAnalyticsPluginBehavior(
-            ApplicationProvider.getApplicationContext(),
             analyticsClientMock,
             targetingClientMock,
-            autoEventSubmitterMock,
-            autoSessionTrackerMock
         )
     }
 
@@ -141,15 +134,13 @@ class AWSPinpointAnalyticsPluginBehaviorTest {
     @Test
     fun `test enable()`() {
         awsPinpointAnalyticsPluginBehavior.enable()
-        verify(exactly = 1) { autoEventSubmitterMock.start() }
-        verify(exactly = 1) { autoSessionTrackerMock.startSessionTracking(context.applicationContext as Application) }
+        verify(exactly = 1) { analyticsClientMock.enableEventSubmitter() }
     }
 
     @Test
     fun `test disable()`() {
         awsPinpointAnalyticsPluginBehavior.disable()
-        verify(exactly = 1) { autoEventSubmitterMock.stop() }
-        verify(exactly = 1) { autoSessionTrackerMock.stopSessionTracking(context.applicationContext as Application) }
+        verify(exactly = 1) { analyticsClientMock.disableEventSubmitter() }
     }
 
     @Test

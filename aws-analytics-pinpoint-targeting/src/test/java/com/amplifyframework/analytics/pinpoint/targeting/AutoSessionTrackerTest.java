@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.analytics.pinpoint;
+package com.amplifyframework.analytics.pinpoint.targeting;
 
 import android.app.Activity;
 import android.app.Application;

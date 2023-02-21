@@ -12,16 +12,18 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package com.amplifyframework.analytics.pinpoint.models
+package com.amplifyframework.analytics.pinpoint.targeting.models
 
 import kotlinx.serialization.Serializable
 
+/*
+* Internal representation of Pinpoint Session
+* */
+
 @Serializable
-internal data class SDKInfo(
-    val name: String,
-    val version: String
-) {
-    override fun toString(): String {
-        return "$name-$version"
-    }
-}
+data class PinpointSession(
+    val sessionId: String,
+    val sessionStart: Long,
+    val sessionEnd: Long? = null,
+    val sessionDuration: Long? = null
+)

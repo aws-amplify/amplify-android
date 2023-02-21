@@ -12,11 +12,10 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package com.amplifyframework.analytics.pinpoint
+package com.amplifyframework.analytics.pinpoint.targeting
 
 import android.content.SharedPreferences
 import androidx.test.core.app.ApplicationProvider
-import com.amplifyframework.analytics.pinpoint.targeting.TargetingClient
 import com.amplifyframework.analytics.pinpoint.targeting.util.getUniqueId
 import io.mockk.every
 import io.mockk.mockk
