@@ -20,7 +20,6 @@ import aws.sdk.kotlin.services.cognitoidentity.model.Credentials
 import aws.sdk.kotlin.services.cognitoidentity.model.GetCredentialsForIdentityResponse
 import aws.sdk.kotlin.services.cognitoidentity.model.GetIdResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.CognitoIdentityProviderClient
-import aws.sdk.kotlin.services.cognitoidentityprovider.forgetDevice
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AttributeType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AuthenticationResultType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
@@ -211,13 +210,14 @@ class CognitoMockFactory(
         responseObject: JsonObject
     ) {
         if (mockResponse.responseType == ResponseType.Failure) {
-            throw Json.decodeFromString(
+            val response = Json.decodeFromString(
                 when (mockResponse.type) {
                     CognitoType.CognitoIdentity -> CognitoIdentityExceptionSerializer
                     CognitoType.CognitoIdentityProvider -> CognitoIdentityProviderExceptionSerializer
                 },
                 responseObject.toString()
             )
+            throw response
         }
     }
 

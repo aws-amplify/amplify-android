@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -148,6 +148,10 @@ internal sealed class SignInState : State {
                     is SignInEvent.EventType.ConfirmDevice -> {
                         val action = signInActions.confirmDevice(signInEvent)
                         StateResolution(ConfirmingDevice(), listOf(action))
+                    }
+                    is SignInEvent.EventType.ReceivedChallenge -> {
+                        val action = signInActions.initResolveChallenge(signInEvent)
+                        StateResolution(ResolvingChallenge(oldState.challengeState), listOf(action))
                     }
                     is SignInEvent.EventType.ThrowError -> StateResolution(Error(signInEvent.exception))
                     else -> defaultResolution
