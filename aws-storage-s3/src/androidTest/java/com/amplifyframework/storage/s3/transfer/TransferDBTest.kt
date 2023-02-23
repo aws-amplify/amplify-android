@@ -120,7 +120,8 @@ open class TransferDBTest {
                 ongoingRestore = false,
                 restoreExpirationTime = restoreExpirationTime
             ),
-            null
+            null,
+            useAccelerateEndpoint = false
         )
         val uri = transferDB.bulkInsertTransferRecords(contentValues)
         transferDB.getTransferRecordById(uri).run {
@@ -144,7 +145,8 @@ open class TransferDBTest {
             1L,
             0,
             null,
-            null
+            null,
+            false
         )
         contentValues[1] = transferDB.generateContentValuesForMultiPartUpload(
             key,
@@ -157,7 +159,8 @@ open class TransferDBTest {
             1L,
             0,
             null,
-            null
+            null,
+            false
         )
         contentValues[2] = transferDB.generateContentValuesForMultiPartUpload(
             key,
@@ -170,7 +173,8 @@ open class TransferDBTest {
             1L,
             1,
             null,
-            null
+            null,
+            false
         )
         val bulkInsertUri = transferDB.bulkInsertTransferRecords(contentValues)
         transferDB.getTransferRecordById(bulkInsertUri)

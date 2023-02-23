@@ -28,11 +28,13 @@ import com.amplifyframework.hub.SubscriptionToken;
 import com.amplifyframework.storage.StorageAccessLevel;
 import com.amplifyframework.storage.StorageCategory;
 import com.amplifyframework.storage.StorageChannelEventName;
+import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.TransferState;
 import com.amplifyframework.storage.operation.StorageUploadFileOperation;
 import com.amplifyframework.storage.operation.StorageUploadInputStreamOperation;
 import com.amplifyframework.storage.options.StorageUploadFileOptions;
 import com.amplifyframework.storage.options.StorageUploadInputStreamOptions;
+import com.amplifyframework.storage.s3.options.AWSS3StorageUploadFileOptions;
 import com.amplifyframework.storage.s3.test.R;
 import com.amplifyframework.storage.s3.util.WorkmanagerTestUtils;
 import com.amplifyframework.testutils.random.RandomTempFile;
@@ -53,6 +55,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -74,6 +77,7 @@ public final class AWSS3StorageUploadTest {
 
     /**
      * Initialize mobile client and configure the storage.
+     *
      * @throws Exception if mobile client initialization fails
      */
     @BeforeClass
@@ -95,8 +99,8 @@ public final class AWSS3StorageUploadTest {
     public void setUp() {
         // Always interact with PUBLIC access for consistency
         options = StorageUploadFileOptions.builder()
-                .accessLevel(TESTING_ACCESS_LEVEL)
-                .build();
+            .accessLevel(TESTING_ACCESS_LEVEL)
+            .build();
 
         // Create a set to remember all the subscriptions
         subscriptions = new HashSet<>();
@@ -157,7 +161,7 @@ public final class AWSS3StorageUploadTest {
      * transfer hasn't completed yet.
      *
      * @throws Exception if upload is not canceled successfully
-     *         before timeout
+     *                   before timeout
      */
     @SuppressWarnings("unchecked")
     @Test
@@ -206,7 +210,7 @@ public final class AWSS3StorageUploadTest {
      * while the transfer hasn't completed yet.
      *
      * @throws Exception if upload is not paused, resumed, and
-     *         completed successfully before timeout
+     *                   completed successfully before timeout
      */
     @SuppressWarnings("unchecked")
     @Test
@@ -258,7 +262,7 @@ public final class AWSS3StorageUploadTest {
      * using getTransfer API.
      *
      * @throws Exception if upload is not paused, resumed, and
-     *         completed successfully before timeout
+     *                   completed successfully before timeout
      */
     @SuppressWarnings("unchecked")
     @Test
@@ -303,7 +307,8 @@ public final class AWSS3StorageUploadTest {
                     opContainer.get().pause();
                 }
             },
-            result -> { },
+            result -> {
+            },
             errorContainer::set
         );
         opContainer.set(op);
@@ -320,7 +325,7 @@ public final class AWSS3StorageUploadTest {
      * using getTransfer API.
      *
      * @throws Exception if upload is not paused, resumed, and
-     *         completed successfully before timeout
+     *                   completed successfully before timeout
      */
     @SuppressWarnings("unchecked")
     @Test
@@ -367,7 +372,8 @@ public final class AWSS3StorageUploadTest {
                     opContainer.get().pause();
                 }
             },
-            result -> { },
+            result -> {
+            },
             errorContainer::set
         );
         opContainer.set(op);
@@ -378,4 +384,40 @@ public final class AWSS3StorageUploadTest {
         assertTrue(completed.await(EXTENDED_TIMEOUT_MS, TimeUnit.MILLISECONDS));
         assertNull(errorContainer.get());
     }
+
+    /**
+     * Tests that small file (single-part) uploads successfully.
+     *
+     * @throws Exception if upload fails
+     */
+    @Test(expected = StorageException.class)
+    public void testUploadSmallFileWithAccelerationEnabled() throws Exception {
+        File uploadFile = new RandomTempFile(SMALL_FILE_SIZE);
+        String fileName = uploadFile.getName();
+        AWSS3StorageUploadFileOptions awss3StorageUploadFileOptions =
+            AWSS3StorageUploadFileOptions.builder().setUseAccelerateEndpoint(true).build();
+        synchronousStorage.uploadFile(fileName, uploadFile,
+            awss3StorageUploadFileOptions);
+    }
+
+    /**
+     * Tests that large file (single-part) uploads successfully.
+     *
+     * @throws Exception if upload fails
+     */
+    @Test
+    public void testUploadLargeFileWithAccelerationEnabled() throws Exception {
+        try {
+            File uploadFile = new RandomTempFile(LARGE_FILE_SIZE);
+            String fileName = uploadFile.getName();
+            AWSS3StorageUploadFileOptions awss3StorageUploadFileOptions =
+                AWSS3StorageUploadFileOptions.builder().setUseAccelerateEndpoint(true).build();
+            synchronousStorage.uploadFile(fileName, uploadFile,
+                awss3StorageUploadFileOptions);
+        } catch (StorageException exception) {
+            assertEquals(exception.getCause().getCause().getMessage(),
+                "S3 Transfer Acceleration is disabled on this bucket");
+        }
+    }
+
 }

@@ -44,7 +44,7 @@ internal class TransferDBHelper(private val context: Context) :
 
         // This represents the latest database version.
         // Update this when the database is being upgraded.
-        private const val DATABASE_VERSION = 8
+        private const val DATABASE_VERSION = 9
         private const val BASE_PATH = "transfers"
         private const val TRANSFERS = 10
         private const val TRANSFER_ID = 20

@@ -30,8 +30,8 @@ interface AWSCognitoAuthService {
 
                 CognitoIdentityProviderClient {
                     this.region = it.region
-                    this.endpointResolver = it.endpoint?.let { endpoint ->
-                        AWSEndpointResolver(Endpoint(endpoint))
+                    this.endpointProvider = it.endpoint?.let { endpoint ->
+                        AWSEndpointProvider(Endpoint(endpoint))
                     }
                 }
             }
