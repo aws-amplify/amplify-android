@@ -115,7 +115,7 @@ public final class AWSApiPluginTest {
             .build();
 
         this.plugin = AWSApiPlugin.builder()
-            .configureClient("graphQlApi", (builder, ignoreType) -> {
+            .configureClient("graphQlApi", builder -> {
                 builder.addInterceptor(chain -> {
                     return chain.proceed(chain.request().newBuilder()
                         .addHeader("specialKey", "specialValue")

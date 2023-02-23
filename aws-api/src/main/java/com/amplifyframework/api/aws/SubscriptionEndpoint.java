@@ -76,7 +76,7 @@ final class SubscriptionEndpoint {
 
     SubscriptionEndpoint(
             @NonNull ApiConfiguration apiConfiguration,
-            @NonNull OkHttpConfigurator.ForType configurator,
+            @NonNull OkHttpConfigurator configurator,
             @NonNull GraphQLResponse.Factory responseFactory,
             @NonNull SubscriptionAuthorizer authorizer
     ) {
@@ -91,7 +91,7 @@ final class SubscriptionEndpoint {
                 .retryOnConnectionFailure(true);
 
         if (configurator != null) {
-            configurator.applyConfiguration(okHttpClientBuilder, OkHttpConfigurator.Type.WEBSOCKET);
+            configurator.applyConfiguration(okHttpClientBuilder);
         }
 
         this.okHttpClient = okHttpClientBuilder.build();
@@ -131,8 +131,8 @@ final class SubscriptionEndpoint {
             try {
                 webSocket = okHttpClient.newWebSocket(new Request.Builder()
                     .url(buildConnectionRequestUrl(authType))
+                    .addHeader("Sec-WebSocket-Protocol", "graphql-ws")
                     .header("User-Agent", UserAgent.string())
-                    .header("Sec-WebSocket-Protocol", "graphql-ws")
                     .build(), webSocketListener);
             } catch (ApiException apiException) {
                 onSubscriptionError.accept(apiException);

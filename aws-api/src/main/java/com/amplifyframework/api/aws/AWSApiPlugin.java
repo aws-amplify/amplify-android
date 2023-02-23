@@ -41,7 +41,6 @@ import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.hub.HubChannel;
-import com.amplifyframework.logging.Logger;
 import com.amplifyframework.util.Immutable;
 import com.amplifyframework.util.UserAgent;
 
@@ -55,7 +54,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -73,10 +71,9 @@ import okhttp3.Protocol;
  */
 @SuppressWarnings("TypeParameterHidesVisibleType") // <R> shadows >com.amplifyframework.api.aws.R
 public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
-    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-api");
-
     private final Map<String, ClientDetails> apiDetails;
-    private final Map<String, OkHttpConfigurator.ForType> apiConfigurators;
+    private final Map<String, OkHttpConfigurator> apiHttpClientConfigurators;
+    private final Map<String, OkHttpConfigurator> apiWebsocketUpgradeClientConfigurators;
     private final GraphQLResponse.Factory gqlResponseFactory;
     private final ApiAuthProviders authProvider;
     private final ExecutorService executorService;
@@ -110,7 +107,8 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         this.gqlApis = new HashSet<>();
         this.executorService = Executors.newCachedThreadPool();
         this.requestDecorator = new AuthRuleRequestDecorator(authProvider);
-        this.apiConfigurators = Immutable.of(builder.apiConfigurators);
+        this.apiHttpClientConfigurators = Immutable.of(builder.apiHttpClientConfigurators);
+        this.apiWebsocketUpgradeClientConfigurators = Immutable.of(builder.apiWebsocketUpgradeClientConfigurators);
     }
 
     /**
@@ -144,11 +142,10 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             okHttpClientBuilder.addNetworkInterceptor(UserAgentInterceptor.using(UserAgent::string));
             okHttpClientBuilder.eventListener(new ApiConnectionEventListener());
 
-            OkHttpConfigurator.ForType configurator = Optional.ofNullable(apiConfigurators.get(apiName))
-                    // If no apiConfigurator was provided, we use a noop one.
-                    .orElse((ignoreOkHttpClientBuilder, ignoreType) -> { });
-
-            configurator.applyConfiguration(okHttpClientBuilder, OkHttpConfigurator.Type.HTTP);
+            OkHttpConfigurator configurator = apiHttpClientConfigurators.get(apiName);
+            if (configurator != null) {
+                configurator.applyConfiguration(okHttpClientBuilder);
+            }
 
             final ApiRequestDecoratorFactory requestDecoratorFactory = new ApiRequestDecoratorFactory(authProvider,
                     apiConfiguration.getAuthorizationType(),
@@ -179,8 +176,10 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             } else if (EndpointType.GRAPHQL.equals(endpointType)) {
                 final SubscriptionAuthorizer subscriptionAuthorizer =
                     new SubscriptionAuthorizer(apiConfiguration, authProvider);
+                final OkHttpConfigurator websocketUpgradeConfigurator =
+                        apiWebsocketUpgradeClientConfigurators.get(apiName);
                 final SubscriptionEndpoint subscriptionEndpoint =
-                    new SubscriptionEndpoint(apiConfiguration, configurator, gqlResponseFactory,
+                    new SubscriptionEndpoint(apiConfiguration, websocketUpgradeConfigurator, gqlResponseFactory,
                             subscriptionAuthorizer);
                 clientDetails = new ClientDetails(apiConfiguration,
                                                   okHttpClientBuilder.build(),
@@ -875,11 +874,13 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
      */
     public static final class Builder {
         private ApiAuthProviders apiAuthProviders;
-        private final Map<String, OkHttpConfigurator.ForType> apiConfigurators;
+        private final Map<String, OkHttpConfigurator> apiHttpClientConfigurators;
+        private final Map<String, OkHttpConfigurator> apiWebsocketUpgradeClientConfigurators;
 
         private Builder() {
             this.apiAuthProviders = ApiAuthProviders.noProviderOverrides();
-            this.apiConfigurators = new HashMap<>();
+            this.apiHttpClientConfigurators = new HashMap<>();
+            this.apiWebsocketUpgradeClientConfigurators = new HashMap<>();
         }
 
         /**
@@ -896,41 +897,33 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
 
         /**
          * Apply customizations to an underlying OkHttpClient that will be used
-         * for a particular API.
+         * for a particular API's Http operations.
          * @param forApiName The name of the API for which these customizations should apply.
                              This can be found in your `amplifyconfiguration.json` file.
          * @param byConfigurator A lambda that hands the user an OkHttpClient.Builder,
          *                       and enables the user to set some configurations on it.
          * @return A builder instance, to continue chaining configurations
-         * @deprecated Replaced by {@link #configureClient(String, OkHttpConfigurator.ForType)}
          */
         @NonNull
-        @Deprecated
         public Builder configureClient(
                 @NonNull String forApiName, @NonNull OkHttpConfigurator byConfigurator) {
-            LOG.warn("The AWSApiPlugin.Builder::configureClient with a single argument lambda will be deprecated in "
-                    + "a next major version. Please use the overload that accepts a lambda with two arguments.");
-            this.apiConfigurators.put(forApiName, (okHttpClientBuilder, type) -> {
-                if (OkHttpConfigurator.Type.HTTP.equals(type)) {
-                    byConfigurator.applyConfiguration(okHttpClientBuilder);
-                }
-            });
+            this.apiHttpClientConfigurators.put(forApiName, byConfigurator);
             return this;
         }
 
         /**
          * Apply customizations to an underlying OkHttpClient that will be used
-         * for a particular API.
+         * for the WebSocket protocol upgrade of a particular API.
          * @param forApiName The name of the API for which these customizations should apply.
         This can be found in your `amplifyconfiguration.json` file.
-         * @param byConfigurator A lambda that hands the user an OkHttpClient.Builder and the OkHttpConfigurator.Type it
-         *                       applies to, and enables the user to set some configurations on it.
+         * @param byConfigurator A lambda that hands the user an OkHttpClient.Builder,
+         *                       and enables the user to set some configurations on it.
          * @return A builder instance, to continue chaining configurations
          */
         @NonNull
-        public Builder configureClient(
-                @NonNull String forApiName, @NonNull OkHttpConfigurator.ForType byConfigurator) {
-            this.apiConfigurators.put(forApiName, byConfigurator);
+        public Builder configureWebSocketUpgradeClient(
+                @NonNull String forApiName, @NonNull OkHttpConfigurator byConfigurator) {
+            this.apiWebsocketUpgradeClientConfigurators.put(forApiName, byConfigurator);
             return this;
         }
 

@@ -794,9 +794,8 @@ public final class MultiAuthSyncEngineInstrumentationTest {
         ApiCategory apiCategory = new ApiCategory();
         requestInterceptor = new HttpRequestInterceptor(expectedAuthType);
         apiCategory.addPlugin(AWSApiPlugin.builder()
-                                          .configureClient("DataStoreIntegTestsApi",
-                                              (okHttpClientBuilder, ignoreType) ->
-                                                  okHttpClientBuilder.addInterceptor(requestInterceptor)
+                                          .configureClient("DataStoreIntegTestsApi", okHttpClientBuilder ->
+                                              okHttpClientBuilder.addInterceptor(requestInterceptor)
                                           )
                                           .apiAuthProviders(apiAuthProviders)
                                           .build());
