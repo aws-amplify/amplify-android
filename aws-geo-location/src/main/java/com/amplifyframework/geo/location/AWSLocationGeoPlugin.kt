@@ -16,8 +16,6 @@
 package com.amplifyframework.geo.location
 
 import android.content.Context
-import android.content.Context.MODE_PRIVATE
-import android.content.SharedPreferences
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequest
 import androidx.work.PeriodicWorkRequestBuilder
@@ -33,6 +31,7 @@ import com.amplifyframework.geo.GeoCategoryPlugin
 import com.amplifyframework.geo.GeoException
 import com.amplifyframework.geo.location.auth.CognitoCredentialsProvider
 import com.amplifyframework.geo.location.configuration.GeoConfiguration
+import com.amplifyframework.geo.location.database.GeoDatabase
 import com.amplifyframework.geo.location.database.worker.UploadWorker
 import com.amplifyframework.geo.location.options.AmazonLocationSearchByCoordinatesOptions
 import com.amplifyframework.geo.location.options.AmazonLocationSearchByTextOptions
@@ -90,6 +89,8 @@ class AWSLocationGeoPlugin(
         CognitoCredentialsProvider(authCategory)
     }
 
+    private lateinit var database: GeoDatabase
+
     override fun getPluginKey(): String {
         return GEO_PLUGIN_KEY
     }
@@ -113,6 +114,7 @@ class AWSLocationGeoPlugin(
             )
             UploadWorker.geoService = geoService as AmazonLocationService
             locationTracker = LocationTracker(context)
+            database = GeoDatabase(context)
         } catch (error: Exception) {
             throw GeoException(
                 "Failed to configure AWSLocationGeoPlugin.",
@@ -297,7 +299,7 @@ class AWSLocationGeoPlugin(
             {
                 val id = device.resolvedId()
                 // Remove any updates that have been saved to the local database
-                locationTracker.clearSavedLocations(id, tracker)
+                database.locationDao.removeAll(id, tracker)
                 // Remove any updates that have already been sent to the back end
                 geoService.deleteLocationHistory(id, tracker)
             },
@@ -385,8 +387,8 @@ class AWSLocationGeoPlugin(
         GeoDeviceType.UNCHECKED -> id
         GeoDeviceType.USER_AND_DEVICE ->
             (credentialsProvider as CognitoCredentialsProvider).getIdentityId() + " - " +
-                locationTracker.database.sharedPreferences.getId()
-        GeoDeviceType.DEVICE -> locationTracker.database.sharedPreferences.getId()
+                database.sharedPreferences.getId()
+        GeoDeviceType.DEVICE -> database.sharedPreferences.getId()
         else -> // GeoDeviceType.USER
             (credentialsProvider as CognitoCredentialsProvider).getIdentityId()
     }
