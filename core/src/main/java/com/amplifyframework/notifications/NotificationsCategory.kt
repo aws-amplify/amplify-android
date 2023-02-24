@@ -50,9 +50,8 @@ open class NotificationsCategory : Category<NotificationsPlugin<*>>(), Notificat
                     Push.addPlugin(plugin as PushNotificationsPlugin<*>)
 
                     val notificationsConfiguration = configuration as? NotificationsCategoryConfiguration
-                    val subCategoryConfiguration = notificationsConfiguration?.subCategoryConfigs?.get(subCategoryType)
                     Push.configure(
-                        subCategoryConfiguration ?: EmptyCategoryConfiguration.forCategoryType(categoryType),
+                        notificationsConfiguration ?: EmptyCategoryConfiguration.forCategoryType(categoryType),
                         context
                     )
                 }

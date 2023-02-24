@@ -92,7 +92,7 @@ class AnalyticsClient(
         eventTimestamp: Long = System.currentTimeMillis(),
         eventId: String = UUID.randomUUID().toString()
     ): PinpointEvent {
-        val session = sessionClient.session ?: throw IllegalStateException("session is null")
+        val session = sessionClient.session ?: Session(context, uniqueId)
         return createEvent(
             eventType,
             session.sessionId,

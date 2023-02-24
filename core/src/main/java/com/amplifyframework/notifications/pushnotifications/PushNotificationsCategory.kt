@@ -36,13 +36,13 @@ class PushNotificationsCategory : Category<PushNotificationsPlugin<*>>(), PushNo
         selectedPlugin.registerDevice(token, onSuccess, onError)
 
     override fun recordNotificationReceived(
-        data: Map<String, String>,
+        data: Bundle,
         onSuccess: Action,
         onError: Consumer<PushNotificationsException>
     ) = selectedPlugin.recordNotificationReceived(data, onSuccess, onError)
 
     override fun recordNotificationOpened(
-        data: Map<String, String>,
+        data: Bundle,
         onSuccess: Action,
         onError: Consumer<PushNotificationsException>
     ) = selectedPlugin.recordNotificationOpened(data, onSuccess, onError)

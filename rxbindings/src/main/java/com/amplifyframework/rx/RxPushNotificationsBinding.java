@@ -50,12 +50,12 @@ final class RxPushNotificationsBinding implements RxPushNotificationsCategoryBeh
     }
 
     @Override
-    public Completable recordNotificationReceived(Map<String, String> data) {
+    public Completable recordNotificationReceived(Bundle data) {
         return toCompletable(((onResult, onError) -> delegate.recordNotificationReceived(data, onResult, onError)));
     }
 
     @Override
-    public Completable recordNotificationOpened(Map<String, String> data) {
+    public Completable recordNotificationOpened(Bundle data) {
         return toCompletable(((onResult, onError) -> delegate.recordNotificationOpened(data, onResult, onError)));
     }
 

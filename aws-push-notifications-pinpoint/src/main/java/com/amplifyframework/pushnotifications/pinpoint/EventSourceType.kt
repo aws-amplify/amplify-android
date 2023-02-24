@@ -21,42 +21,68 @@ import com.amplifyframework.pushnotifications.pinpoint.utils.PushNotificationsCo
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 
-class EventSourceType private constructor(
-    private var eventSourceIdAttributeKey: String,
-    private var eventSourceActivityAttributeKey: String,
-    private var attributeParser: EventSourceAttributeParser
+internal class EventSourceType private constructor(
+    private val eventSourceName: String,
+    private val eventSourcePrefix:String,
+    private val eventSourceIdAttributeKey: String,
+    private val eventSourceActivityAttributeKey: String,
+    private val attributeParser: EventSourceAttributeParser
 ) {
+    private val eventTypeOpened = "$eventSourcePrefix.$AWS_EVENT_TYPE_OPENED";
+    private val eventTypeReceivedBackground = "$eventSourcePrefix.$AWS_EVENT_TYPE_RECEIVED_BACKGROUND";
+    private val eventTypeReceivedForeground = "$eventSourcePrefix.$AWS_EVENT_TYPE_RECEIVED_FOREGROUND";
 
     companion object {
-        private val CAMPAIGN = EventSourceType(
-            PushNotificationsConstants.PINPOINT_CAMPAIGN_CAMPAIGN_ID,
-            PushNotificationsConstants.PINPOINT_CAMPAIGN_CAMPAIGN_ACTIVITY_ID,
-            CampaignAttributeParser()
-        )
-
-        private val JOURNEY = EventSourceType(
-            PushNotificationsConstants.JOURNEY_ID,
-            PushNotificationsConstants.JOURNEY_ACTIVITY_ID,
-            JourneyAttributeParser()
-        )
-
-        private val UNKNOWN = EventSourceType(
-            "",
-            "",
-            EventSourceAttributeParser()
-        )
+        private const val CAMPAIGN_EVENT_SOURCE_NAME = "campaign"
+        private const val JOURNEY_EVENT_SOURCE_NAME = "journey"
+        private const val CAMPAIGN_EVENT_SOURCE_PREFIX = "_campaign"
+        private const val JOURNEY_EVENT_SOURCE_PREFIX = "_journey"
+        private const val UNKNOWN_EVENT_SOURCE_NAME = "unknown"
+        private const val AWS_EVENT_TYPE_OPENED = "opened_notification"
+        private const val AWS_EVENT_TYPE_RECEIVED_FOREGROUND = "received_foreground"
+        private const val AWS_EVENT_TYPE_RECEIVED_BACKGROUND = "received_background"
 
         fun getEventSourceType(payload: NotificationPayload): EventSourceType {
             return if (payload.rawData.containsKey(PushNotificationsConstants.PINPOINT_CAMPAIGN_CAMPAIGN_ACTIVITY_ID)) {
-                CAMPAIGN
+                EventSourceType(
+                    CAMPAIGN_EVENT_SOURCE_NAME,
+                    CAMPAIGN_EVENT_SOURCE_PREFIX,
+                    PushNotificationsConstants.PINPOINT_CAMPAIGN_CAMPAIGN_ID,
+                    PushNotificationsConstants.PINPOINT_CAMPAIGN_CAMPAIGN_ACTIVITY_ID,
+                    CampaignAttributeParser()
+                )
             } else if (payload.rawData.containsKey(PushNotificationsConstants.PINPOINT_PREFIX) &&
                 payload.rawData[PushNotificationsConstants.PINPOINT_PREFIX]!!.contains("\"journey\"".toRegex())
             ) {
-                JOURNEY
+                EventSourceType(
+                    JOURNEY_EVENT_SOURCE_NAME,
+                    JOURNEY_EVENT_SOURCE_PREFIX,
+                    PushNotificationsConstants.JOURNEY_ID,
+                    PushNotificationsConstants.JOURNEY_ACTIVITY_ID,
+                    JourneyAttributeParser()
+                )
             } else {
-                UNKNOWN
+                EventSourceType(
+                    UNKNOWN_EVENT_SOURCE_NAME,
+                    "",
+                    "",
+                    "",
+                    EventSourceAttributeParser()
+                )
             }
         }
+    }
+
+    fun getEventTypeOpened(): String {
+        return eventTypeOpened
+    }
+
+    fun getEventTypeReceivedForeground(): String {
+        return eventTypeReceivedForeground
+    }
+
+    fun getEventTypeReceivedBackground(): String {
+        return eventTypeReceivedBackground
     }
 
     fun getEventSourceIdAttributeKey(): String {

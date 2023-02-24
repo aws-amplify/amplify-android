@@ -36,7 +36,7 @@ public interface RxPushNotificationsCategoryBehavior extends RxNotificationsCate
      * @return An Rx {@link Completable} which completes successfully if notification received event is recorded,
      *         emits an {@link PushNotificationsException} otherwise
      */
-    Completable recordNotificationReceived(Map<String, String> data);
+    Completable recordNotificationReceived(Bundle data);
 
     /**
      * Registers that a user opened a notification.
@@ -44,7 +44,7 @@ public interface RxPushNotificationsCategoryBehavior extends RxNotificationsCate
      * @return An Rx {@link Completable} which completes successfully if notification opened event is recorded,
      *         emits an {@link PushNotificationsException} otherwise
      */
-    Completable recordNotificationOpened(Map<String, String> data);
+    Completable recordNotificationOpened(Bundle data);
 
     /**
      * Displays notification on the system tray if app is background/killed state.

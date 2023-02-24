@@ -56,7 +56,6 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
 
         private const val DATABASE_NAME = "awspushnotifications.db"
         private const val DEFAULT_AUTO_FLUSH_INTERVAL = 30000L
-
         private const val AWS_PINPOINT_PUSHNOTIFICATIONS_PREFERENCES_SUFFIX = "515d6767-01b7-49e5-8273-c8d11b0f331d"
         private const val AWS_PINPOINT_PUSHNOTIFICATIONS_DEVICE_TOKEN_LEGACY_KEY = "AWSPINPOINT.GCMTOKEN"
         private const val AWS_PINPOINT_PUSHNOTIFICATIONS_DEVICE_TOKEN_KEY = "FCMDeviceToken"
@@ -216,15 +215,17 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
     }
 
     override fun recordNotificationReceived(
-        data: Map<String, String>,
+        data: Bundle,
         onSuccess: Action,
         onError: Consumer<PushNotificationsException>
     ) {
         try {
+            val payload = data.toNotificationsPayload()
+            val eventSourceType = EventSourceType.getEventSourceType(payload)
             if (pushNotificationsUtils.isAppInForeground()) {
-                tryAnalyticsRecordEvent("foreground_event")
+                tryAnalyticsRecordEvent(eventSourceType.getEventTypeReceivedForeground())
             } else {
-                tryAnalyticsRecordEvent("background_event")
+                tryAnalyticsRecordEvent(eventSourceType.getEventTypeReceivedBackground())
             }
             onSuccess.call()
         } catch (exception: PushNotificationsException) {
@@ -233,12 +234,14 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
     }
 
     override fun recordNotificationOpened(
-        data: Map<String, String>,
+        data: Bundle,
         onSuccess: Action,
         onError: Consumer<PushNotificationsException>
     ) {
         try {
-            tryAnalyticsRecordEvent("notification_opened")
+            val payload = data.toNotificationsPayload()
+            val eventSourceType = EventSourceType.getEventSourceType(payload)
+            tryAnalyticsRecordEvent(eventSourceType.getEventTypeOpened())
             onSuccess.call()
         } catch (exception: PushNotificationsException) {
             onError.accept(exception)
@@ -252,19 +255,19 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
     ) {
         try {
             val payload = details.toNotificationsPayload()
-            val eventSourceType: EventSourceType = EventSourceType.getEventSourceType(payload)
+            val eventSourceType = EventSourceType.getEventSourceType(payload)
 
             val eventSourceAttributes = eventSourceType.getAttributeParser().parseAttributes(payload)
             tryUpdateEventSourceGlobally(eventSourceAttributes)
 
             val result = if (pushNotificationsUtils.isAppInForeground()) {
-                tryAnalyticsRecordEvent("foreground_event")
+                tryAnalyticsRecordEvent(eventSourceType.getEventTypeReceivedForeground())
                 PushNotificationResult.AppInForeground()
             } else {
                 if (canShowNotification(payload)) {
                     pushNotificationsUtils.showNotification(payload, AWSPinpointPushNotificationsActivity::class.java)
-                }
-                tryAnalyticsRecordEvent("background_event")
+                } // TODO: else add isOptedOut to event
+                tryAnalyticsRecordEvent(eventSourceType.getEventTypeReceivedBackground())
                 PushNotificationResult.NotificationPosted()
             }
             onSuccess.accept(result)
@@ -310,7 +313,10 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
     private fun tryAnalyticsRecordEvent(eventName: String) {
         try {
             val event = analyticsClient.createEvent(eventName)
+            //TODO: globals and foreground key
+            event.attributes.plus("isAppInForeground" to pushNotificationsUtils.isAppInForeground().toString())
             analyticsClient.recordEvent(event)
+            analyticsClient.flushEvents()
         } catch (exception: Exception) {
             throw PushNotificationsException(
                 "Failed to record push notifications event $eventName.",

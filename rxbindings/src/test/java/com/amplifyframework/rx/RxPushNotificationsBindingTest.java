@@ -216,11 +216,8 @@ public final class RxPushNotificationsBindingTest {
      */
     @Test
     public void testRecordNotificationReceived() throws InterruptedException {
-        Map<String, String> data = new HashMap<String, String>() {
-            {
-                put("test", "value");
-            }
-        };
+        Bundle bundle = mock(Bundle.class);
+        bundle.putString("key", "value");
 
         // Arrange an invocation of the success Action
         doAnswer(invocation -> {
@@ -228,10 +225,10 @@ public final class RxPushNotificationsBindingTest {
             Action onCompletion = invocation.getArgument(1);
             onCompletion.call();
             return null;
-        }).when(delegate).recordNotificationReceived(eq(data), anyAction(), anyConsumer());
+        }).when(delegate).recordNotificationReceived(eq(bundle), anyAction(), anyConsumer());
 
         // Act: call the binding
-        TestObserver<Void> observer = push.recordNotificationReceived(data).test();
+        TestObserver<Void> observer = push.recordNotificationReceived(bundle).test();
 
         // Assert: Completable completes with success
         observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
@@ -244,11 +241,8 @@ public final class RxPushNotificationsBindingTest {
      */
     @Test
     public void testRecordNotificationReceivedFails() throws InterruptedException {
-        Map<String, String> data = new HashMap<String, String>() {
-            {
-                put("test", "value");
-            }
-        };
+        Bundle bundle = mock(Bundle.class);
+        bundle.putString("key", "value");
 
         // Arrange a callback on the failure consumer
         PushNotificationsException failure = new PushNotificationsException(
@@ -262,10 +256,10 @@ public final class RxPushNotificationsBindingTest {
             Consumer<PushNotificationsException> onFailure = invocation.getArgument(positionOfFailureConsumer);
             onFailure.accept(failure);
             return null;
-        }).when(delegate).recordNotificationReceived(eq(data), anyAction(), anyConsumer());
+        }).when(delegate).recordNotificationReceived(eq(bundle), anyAction(), anyConsumer());
 
         // Act: call the binding
-        TestObserver<Void> observer = push.recordNotificationReceived(data).test();
+        TestObserver<Void> observer = push.recordNotificationReceived(bundle).test();
 
         // Assert: failure is furnished via Rx Completable.
         observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
@@ -279,11 +273,8 @@ public final class RxPushNotificationsBindingTest {
      */
     @Test
     public void testRecordNotificationOpened() throws InterruptedException {
-        Map<String, String> data = new HashMap<String, String>() {
-            {
-                put("test", "value");
-            }
-        };
+        Bundle bundle = mock(Bundle.class);
+        bundle.putString("key", "value");
 
         // Arrange an invocation of the success Action
         doAnswer(invocation -> {
@@ -291,10 +282,10 @@ public final class RxPushNotificationsBindingTest {
             Action onCompletion = invocation.getArgument(1);
             onCompletion.call();
             return null;
-        }).when(delegate).recordNotificationOpened(eq(data), anyAction(), anyConsumer());
+        }).when(delegate).recordNotificationOpened(eq(bundle), anyAction(), anyConsumer());
 
         // Act: call the binding
-        TestObserver<Void> observer = push.recordNotificationOpened(data).test();
+        TestObserver<Void> observer = push.recordNotificationOpened(bundle).test();
 
         // Assert: Completable completes with success
         observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
@@ -307,11 +298,8 @@ public final class RxPushNotificationsBindingTest {
      */
     @Test
     public void testRecordNotificationOpenedFails() throws InterruptedException {
-        Map<String, String> data = new HashMap<String, String>() {
-            {
-                put("test", "value");
-            }
-        };
+        Bundle bundle = mock(Bundle.class);
+        bundle.putString("key", "value");
 
         // Arrange a callback on the failure consumer
         PushNotificationsException failure = new PushNotificationsException(
@@ -325,10 +313,10 @@ public final class RxPushNotificationsBindingTest {
             Consumer<PushNotificationsException> onFailure = invocation.getArgument(positionOfFailureConsumer);
             onFailure.accept(failure);
             return null;
-        }).when(delegate).recordNotificationOpened(eq(data), anyAction(), anyConsumer());
+        }).when(delegate).recordNotificationOpened(eq(bundle), anyAction(), anyConsumer());
 
         // Act: call the binding
-        TestObserver<Void> observer = push.recordNotificationOpened(data).test();
+        TestObserver<Void> observer = push.recordNotificationOpened(bundle).test();
 
         // Assert: failure is furnished via Rx Completable.
         observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);

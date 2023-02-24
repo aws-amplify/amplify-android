@@ -81,7 +81,7 @@ data class NotificationPayload internal constructor(
             this.sendTime = sendTime
         }
 
-        fun notificationContent(title: String?, body: String?, imageUrl: String?) = apply {
+        fun notificationContent(title: String?, body: String?, imageUrl: String? = null) = apply {
             this.title = title
             this.body = body
             this.imageUrl = imageUrl

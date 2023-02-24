@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -27,16 +27,23 @@ import com.amplifyframework.pushnotifications.pinpoint.utils.toNotificationsPayl
 
 class AWSPinpointPushNotificationsActivity : Activity() {
 
+    private val TAG = "PushNotificationsActivity"
+
     @Override
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        Amplify.Notifications.Push.recordNotificationOpened(emptyMap(), { }, { })
-        val payload = (intent.extras?.get("payload") as Bundle).toNotificationsPayload()
-        val intent = processIntent(payload.action)
         try {
+            val bundle = intent.extras?.get("payload") as Bundle
+            val payload = bundle.toNotificationsPayload()
+            val intent = processIntent(payload.action)
+            Amplify.Notifications.Push.recordNotificationOpened(bundle, {
+                Log.i(TAG, "Notification opened event recorded successfully.")
+            }, {
+                Log.i(TAG, "Record notification opened event failed.", it)
+            })
             startActivity(intent)
-        } catch (e: ActivityNotFoundException) {
-            Log.e("TAG", "Couldn't launch intent.", e)
+        } catch (exception: ActivityNotFoundException) {
+            Log.e(TAG, "Couldn't launch PushNotifications Activity.", exception)
         }
         finish()
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -31,22 +31,4 @@ class NotificationsCategoryConfiguration : CategoryConfiguration() {
      * @return The category type to which the current object is affiliated
      */
     override fun getCategoryType() = CategoryType.NOTIFICATIONS
-
-    val subCategoryConfigs: Map<SubCategoryType, CategoryConfiguration> = mapOf(
-        SubCategoryType.PUSH_NOTIFICATIONS to PushNotificationsCategoryConfiguration()
-    )
-
-    override fun populateFromJSON(json: JSONObject) {
-        subCategoryConfigs.forEach { (subCategoryType, config) ->
-            val key = subCategoryType.configurationKey
-            if (json.has(key)) {
-                config.populateFromJSON(json.getJSONObject(key))
-            }
-        }
-    }
-}
-
-class PushNotificationsCategoryConfiguration : CategoryConfiguration() {
-    override fun getCategoryType() = CategoryType.NOTIFICATIONS
-    fun getSubCategoryType() = SubCategoryType.PUSH_NOTIFICATIONS
 }

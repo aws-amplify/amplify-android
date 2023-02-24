@@ -23,9 +23,16 @@ import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 
 abstract class PushNotificationsService : FirebaseMessagingService() {
+
+    private val TAG = "PushNotificationsService"
+
     override fun onNewToken(token: String) {
         super.onNewToken(token)
-        Amplify.Notifications.Push.registerDevice(token, { }, { })
+        Amplify.Notifications.Push.registerDevice(token, {
+            Log.i(TAG, "Device token registered successfully.")
+        }, {
+            Log.i(TAG, "Device token registration failed.", it)
+        })
     }
 
     override fun handleIntent(intent: Intent?) {
@@ -38,7 +45,7 @@ abstract class PushNotificationsService : FirebaseMessagingService() {
             // do nothing
         } else if (!data.keySet().any { it.contains(PushNotificationsConstants.PINPOINT_PREFIX) }) {
             Log.i(
-                "PushNotificationsService",
+                TAG,
                 "Message payload does not contain pinpoint push notification message, which is not supported."
             )
 
@@ -51,10 +58,14 @@ abstract class PushNotificationsService : FirebaseMessagingService() {
 
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         super.onMessageReceived(remoteMessage)
-        Log.d("TAG", "Message: " + remoteMessage.data + "," + remoteMessage.notification)
+        Log.d(TAG, "Message: " + remoteMessage.data + "," + remoteMessage.notification)
         // handle payload and show notification
         val notificationPayload = processRemoteMessage(remoteMessage)
         val notificationDetails = notificationPayload.bundle()
-        Amplify.Notifications.Push.handleNotificationReceived(notificationDetails, { }, { })
+        Amplify.Notifications.Push.handleNotificationReceived(notificationDetails, {
+            Log.i(TAG, "Notification handled successfully.")
+        }, {
+            Log.i(TAG, "Handle notification failed.", it)
+        })
     }
 }

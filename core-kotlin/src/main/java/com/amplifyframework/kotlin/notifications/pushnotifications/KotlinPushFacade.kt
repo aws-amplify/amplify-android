@@ -41,7 +41,7 @@ class KotlinPushFacade(private val delegate: PushNotificationsCategoryBehavior =
         )
     }
 
-    override suspend fun recordNotificationReceived(data: Map<String, String>) = suspendCoroutine { continuation ->
+    override suspend fun recordNotificationReceived(data: Bundle) = suspendCoroutine { continuation ->
         delegate.recordNotificationReceived(
             data,
             { continuation.resume(Unit) },
@@ -49,7 +49,7 @@ class KotlinPushFacade(private val delegate: PushNotificationsCategoryBehavior =
         )
     }
 
-    override suspend fun recordNotificationOpened(data: Map<String, String>) = suspendCoroutine { continuation ->
+    override suspend fun recordNotificationOpened(data: Bundle) = suspendCoroutine { continuation ->
         delegate.recordNotificationOpened(
             data,
             { continuation.resume(Unit) },

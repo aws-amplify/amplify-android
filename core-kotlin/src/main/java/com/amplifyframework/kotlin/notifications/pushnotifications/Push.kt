@@ -31,13 +31,13 @@ interface Push : Notifications {
      * Registers that a notification was received while the app was in the foreground/background/kill.
      */
     @Throws(PushNotificationsException::class)
-    suspend fun recordNotificationReceived(data: Map<String, String>)
+    suspend fun recordNotificationReceived(data: Bundle)
 
     /**
      * Registers that a user opened a notification.
      */
     @Throws(PushNotificationsException::class)
-    suspend fun recordNotificationOpened(data: Map<String, String>)
+    suspend fun recordNotificationOpened(data: Bundle)
 
     /**
      * Displays notification on the system tray if app is background/killed state.

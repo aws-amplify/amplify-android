@@ -23,13 +23,13 @@ import com.amplifyframework.notifications.NotificationsCategoryBehavior
 interface PushNotificationsCategoryBehavior : NotificationsCategoryBehavior {
 
     fun recordNotificationReceived(
-        data: Map<String, String>,
+        data: Bundle,
         onSuccess: Action,
         onError: Consumer<PushNotificationsException>
     )
 
     fun recordNotificationOpened(
-        data: Map<String, String>,
+        data: Bundle,
         onSuccess: Action,
         onError: Consumer<PushNotificationsException>
     )

@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -20,8 +20,8 @@ import org.json.JSONObject
 class AWSPinpointPushNotificationsConfiguration internal constructor(val appId: String, val region: String) {
     companion object {
         fun fromJson(pluginJson: JSONObject?): AWSPinpointPushNotificationsConfiguration {
-            val region = pluginJson?.getJSONObject("pinpointNotifications")?.getString("region")
-            val appId = pluginJson?.getJSONObject("pinpointNotifications")?.getString("appId")
+            val region = pluginJson?.getString("region")
+            val appId = pluginJson?.getString("appId")
             return AWSPinpointPushNotificationsConfiguration(appId!!, region!!)
         }
     }
