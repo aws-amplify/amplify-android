@@ -203,6 +203,8 @@ class TargetingClient(
             }
         }
         val endpointRequest = EndpointRequest {
+            channelType = endpointProfile.channelType
+            address = endpointProfile.address
             this.location = location
             this.demographic = demographic
             effectiveDate = endpointProfile.effectiveDate.millisToIsoDate()

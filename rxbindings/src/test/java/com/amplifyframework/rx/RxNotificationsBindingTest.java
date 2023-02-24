@@ -90,8 +90,11 @@ public final class RxNotificationsBindingTest {
         UserProfile profile = UserProfile.builder().name("test").build();
 
         // Arrange a callback on the failure consumer
-        PushNotificationsException failure =
-                new PushNotificationsException("Push Notifications Exception", REPORT_BUG_TO_AWS_SUGGESTION);
+        PushNotificationsException failure = new PushNotificationsException(
+                "Failed to identify user with the service.",
+                REPORT_BUG_TO_AWS_SUGGESTION,
+                new Exception()
+        );
         doAnswer(invocation -> {
             // 0 = userId, 1 = profile, 2 = onComplete, 3 = onFailure
             int positionOfFailureConsumer = 3;

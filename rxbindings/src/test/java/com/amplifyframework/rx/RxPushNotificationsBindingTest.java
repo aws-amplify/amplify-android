@@ -133,8 +133,11 @@ public final class RxPushNotificationsBindingTest {
         UserProfile profile = UserProfile.builder().name("test").build();
 
         // Arrange a callback on the failure consumer
-        PushNotificationsException failure =
-                new PushNotificationsException("Push Notifications Exception", REPORT_BUG_TO_AWS_SUGGESTION);
+        PushNotificationsException failure = new PushNotificationsException(
+                "Failed to identify user with the service.",
+                REPORT_BUG_TO_AWS_SUGGESTION,
+                new Exception()
+        );
         doAnswer(invocation -> {
             // 0 = userId, 1 = profile, 2 = onComplete, 3 = onFailure
             int positionOfFailureConsumer = 3;
@@ -185,8 +188,11 @@ public final class RxPushNotificationsBindingTest {
         String token = RandomString.string();
 
         // Arrange a callback on the failure consumer
-        PushNotificationsException failure =
-                new PushNotificationsException("Push Notifications Exception", REPORT_BUG_TO_AWS_SUGGESTION);
+        PushNotificationsException failure = new PushNotificationsException(
+                "Failed to register FCM device token with the service.",
+                REPORT_BUG_TO_AWS_SUGGESTION,
+                new Exception()
+        );
         doAnswer(invocation -> {
             // 0 = userId, 1 = onComplete, 2 = onFailure
             int positionOfFailureConsumer = 2;
@@ -245,8 +251,11 @@ public final class RxPushNotificationsBindingTest {
         };
 
         // Arrange a callback on the failure consumer
-        PushNotificationsException failure =
-                new PushNotificationsException("Push Notifications Exception", REPORT_BUG_TO_AWS_SUGGESTION);
+        PushNotificationsException failure = new PushNotificationsException(
+                "Failed to record push notifications event $eventName.",
+                REPORT_BUG_TO_AWS_SUGGESTION,
+                new Exception()
+        );
         doAnswer(invocation -> {
             // 0 = userId, 1 = onComplete, 2 = onFailure
             int positionOfFailureConsumer = 2;
@@ -305,8 +314,11 @@ public final class RxPushNotificationsBindingTest {
         };
 
         // Arrange a callback on the failure consumer
-        PushNotificationsException failure =
-                new PushNotificationsException("Push Notifications Exception", REPORT_BUG_TO_AWS_SUGGESTION);
+        PushNotificationsException failure = new PushNotificationsException(
+            "Failed to record push notifications event $eventName.",
+            REPORT_BUG_TO_AWS_SUGGESTION,
+            new Exception()
+        );
         doAnswer(invocation -> {
             // 0 = userId, 1 = onComplete, 2 = onFailure
             int positionOfFailureConsumer = 2;
@@ -362,8 +374,11 @@ public final class RxPushNotificationsBindingTest {
         bundle.putString("key", "value");
 
         // Arrange a callback on the failure consumer
-        PushNotificationsException failure =
-                new PushNotificationsException("Push Notifications Exception", REPORT_BUG_TO_AWS_SUGGESTION);
+        PushNotificationsException failure = new PushNotificationsException(
+                "Failed to handle push notification message.",
+                REPORT_BUG_TO_AWS_SUGGESTION,
+                new Exception()
+        );
         doAnswer(invocation -> {
             // 0 = userId, 1 = onComplete, 2 = onFailure
             int positionOfFailureConsumer = 2;

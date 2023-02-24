@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.auth.cognito.data
+package com.amplifyframework.core.store
 
 import android.content.Context
 import android.content.SharedPreferences
@@ -25,7 +25,7 @@ import androidx.security.crypto.MasterKeys
 import java.io.File
 import java.util.UUID
 
-internal class EncryptedKeyValueRepository(
+class EncryptedKeyValueRepository(
     private val context: Context,
     private val sharedPreferencesName: String,
 ) : KeyValueRepository {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -18,12 +18,12 @@ import android.content.SharedPreferences
 import androidx.test.core.app.ApplicationProvider
 import com.amplifyframework.analytics.AnalyticsEvent
 import com.amplifyframework.analytics.AnalyticsProperties
-import com.amplifyframework.analytics.pinpoint.targeting.models.AWSPinpointUserProfile
 import com.amplifyframework.analytics.pinpoint.targeting.AnalyticsClient
 import com.amplifyframework.analytics.pinpoint.targeting.TargetingClient
 import com.amplifyframework.analytics.pinpoint.targeting.data.AndroidAppDetails
 import com.amplifyframework.analytics.pinpoint.targeting.data.AndroidDeviceDetails
 import com.amplifyframework.analytics.pinpoint.targeting.endpointProfile.EndpointProfile
+import com.amplifyframework.analytics.pinpoint.models.AWSPinpointUserProfile
 import com.amplifyframework.analytics.pinpoint.targeting.models.PinpointEvent
 import com.amplifyframework.analytics.pinpoint.targeting.models.PinpointSession
 import com.amplifyframework.analytics.pinpoint.targeting.models.SDKInfo

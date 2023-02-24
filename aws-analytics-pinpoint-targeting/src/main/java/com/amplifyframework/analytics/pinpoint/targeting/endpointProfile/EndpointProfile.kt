@@ -1,5 +1,5 @@
 /*
- *  Copyright 2016-2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *  Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License").
  *  You may not use this file except in compliance with the License.
@@ -43,7 +43,6 @@ class EndpointProfile(
     private val currentNumOfAttributesAndMetrics = AtomicInteger(0)
 
     var channelType: ChannelType? = null
-
     var address: String = ""
 
     private val country: String = try {

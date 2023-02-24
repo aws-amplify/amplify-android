@@ -19,6 +19,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.SharedPreferences
 import android.os.Bundle
+import androidx.core.content.edit
 import aws.sdk.kotlin.services.pinpoint.PinpointClient
 import aws.sdk.kotlin.services.pinpoint.model.ChannelType
 import com.amplifyframework.AmplifyException
@@ -33,6 +34,8 @@ import com.amplifyframework.auth.cognito.BuildConfig
 import com.amplifyframework.core.Action
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
+import com.amplifyframework.core.store.EncryptedKeyValueRepository
+import com.amplifyframework.core.store.KeyValueRepository
 import com.amplifyframework.notifications.pushnotifications.PushNotificationResult
 import com.amplifyframework.notifications.pushnotifications.PushNotificationsException
 import com.amplifyframework.notifications.pushnotifications.PushNotificationsPlugin
@@ -53,6 +56,10 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
 
         private const val DATABASE_NAME = "awspushnotifications.db"
         private const val DEFAULT_AUTO_FLUSH_INTERVAL = 30000L
+
+        private const val AWS_PINPOINT_PUSHNOTIFICATIONS_PREFERENCES_SUFFIX = "515d6767-01b7-49e5-8273-c8d11b0f331d"
+        private const val AWS_PINPOINT_PUSHNOTIFICATIONS_DEVICE_TOKEN_LEGACY_KEY = "AWSPINPOINT.GCMTOKEN"
+        private const val AWS_PINPOINT_PUSHNOTIFICATIONS_DEVICE_TOKEN_KEY = "FCMDeviceToken"
     }
 
     @SuppressLint("MissingFirebaseInstanceTokenRefresh")
@@ -62,6 +69,8 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
         Amplify.Logging.forNamespace(AWS_PINPOINT_PUSHNOTIFICATIONS_LOG_NAMESPACE.format(this::class.java.simpleName))
 
     private lateinit var preferences: SharedPreferences
+
+    private lateinit var store: KeyValueRepository
 
     private lateinit var configuration: AWSPinpointPushNotificationsConfiguration
 
@@ -86,53 +95,80 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
             configuration = AWSPinpointPushNotificationsConfiguration.fromJson(pluginConfiguration)
             pushNotificationsUtils = PushNotificationsUtils(context)
 
-            preferences = context.getSharedPreferences(
-                configuration.appId + "515d6767-01b7-49e5-8273-c8d11b0f331d",
-                Context.MODE_PRIVATE
-            )
-
-            pinpointClient = PinpointClient {
-                region = configuration.region
-                credentialsProvider = CognitoCredentialsProvider()
-            }
-
             val androidAppDetails = AndroidAppDetails(context, configuration.appId)
             val androidDeviceDetails = AndroidDeviceDetails(context)
-            targetingClient = TargetingClient(
-                context,
-                pinpointClient,
-                preferences,
-                androidAppDetails,
-                androidDeviceDetails
-            )
 
-            val pinpointDatabase = PinpointDatabase(context, DATABASE_NAME)
-
-            analyticsClient = AnalyticsClient(
-                context,
-                DEFAULT_AUTO_FLUSH_INTERVAL,
-                pinpointClient,
-                targetingClient,
-                pinpointDatabase,
-                preferences.getUniqueId(),
-                androidAppDetails,
-                androidDeviceDetails
-            )
-
-            FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
-                if (!task.isSuccessful) {
-                    logger.info("Fetching FCM registration token failed: ${task.exception}")
-                }
-                val token = task.result
-                registerDevice(token, { }, { })
-                logger.info("Registering push notifications token: $token")
-            }
+            createAndMigrateStore()
+            pinpointClient = createPinpointClient()
+            targetingClient = createTargetingClient(androidAppDetails, androidDeviceDetails)
+            analyticsClient = createAnalyticsClient(androidAppDetails, androidDeviceDetails)
+            fetchFCMDeviceToken()
         } catch (exception: Exception) {
             throw PushNotificationsException(
                 "Failed to configure AWSPinpointPushNotificationsPlugin.",
                 "Make sure your amplifyconfiguration.json is valid.",
                 exception
             )
+        }
+    }
+
+    private fun createAndMigrateStore() {
+        preferences = context.getSharedPreferences(
+            configuration.appId + AWS_PINPOINT_PUSHNOTIFICATIONS_PREFERENCES_SUFFIX,
+            Context.MODE_PRIVATE
+        )
+        store = EncryptedKeyValueRepository(
+            context,
+            configuration.appId + AWS_PINPOINT_PUSHNOTIFICATIONS_PREFERENCES_SUFFIX
+        )
+
+        val deviceToken = preferences.getString(AWS_PINPOINT_PUSHNOTIFICATIONS_DEVICE_TOKEN_LEGACY_KEY, null)
+        deviceToken?.let {
+            store.put(AWS_PINPOINT_PUSHNOTIFICATIONS_DEVICE_TOKEN_KEY, it)
+            preferences.edit { remove(AWS_PINPOINT_PUSHNOTIFICATIONS_DEVICE_TOKEN_LEGACY_KEY).apply() }
+        }
+    }
+
+    private fun createPinpointClient() = PinpointClient {
+        region = configuration.region
+        credentialsProvider = CognitoCredentialsProvider()
+    }
+
+    private fun createTargetingClient(
+        androidAppDetails: AndroidAppDetails,
+        androidDeviceDetails: AndroidDeviceDetails
+    ): TargetingClient {
+        return TargetingClient(context, pinpointClient, preferences, androidAppDetails, androidDeviceDetails)
+    }
+
+    private fun createAnalyticsClient(
+        androidAppDetails: AndroidAppDetails,
+        androidDeviceDetails: AndroidDeviceDetails
+    ): AnalyticsClient {
+        val pinpointDatabase = PinpointDatabase(context, DATABASE_NAME)
+        return AnalyticsClient(
+            context,
+            DEFAULT_AUTO_FLUSH_INTERVAL,
+            pinpointClient,
+            targetingClient,
+            pinpointDatabase,
+            preferences.getUniqueId(),
+            androidAppDetails,
+            androidDeviceDetails
+        )
+    }
+
+    private fun fetchFCMDeviceToken() {
+        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+            if (!task.isSuccessful) {
+                logger.info("Fetching FCM registration token failed: ${task.exception}")
+            }
+            val token = task.result
+            registerDevice(token, {
+                logger.info("Registering push notifications token: $token")
+            }, {
+                throw it
+            })
         }
     }
 
@@ -157,16 +193,26 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
     }
 
     override fun registerDevice(token: String, onSuccess: Action, onError: Consumer<PushNotificationsException>) {
-        // TODO: use credentials store instead of SharedPreferences
-        putString("FCM_TOKEN", token)
+        try {
+            store.put(AWS_PINPOINT_PUSHNOTIFICATIONS_DEVICE_TOKEN_KEY, token)
+            // targetingClient needs to send the address, optOut etc. to Pinpoint so we can receive campaigns/journeys
+            val endpointProfile = targetingClient.currentEndpoint().apply {
+                channelType = ChannelType.Gcm
+                address = token
+            }
 
-        // targetingClient needs to send the address, optOut etc. to Pinpoint so we can receive campaigns/journeys
-        val endpointProfile = targetingClient.currentEndpoint().apply {
-            channelType = ChannelType.Gcm
-            address = token
+            targetingClient.updateEndpointProfile(endpointProfile)
+            deviceRegistered = true
+            onSuccess.call()
+        } catch (exception: Exception) {
+            onError.accept(
+                PushNotificationsException(
+                    "Failed to register FCM device token with the service.",
+                    AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION,
+                    exception
+                )
+            )
         }
-        targetingClient.updateEndpointProfile(endpointProfile)
-        deviceRegistered = true
     }
 
     override fun recordNotificationReceived(
@@ -174,14 +220,16 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
         onSuccess: Action,
         onError: Consumer<PushNotificationsException>
     ) {
-        if (pushNotificationsUtils.isAppInForeground()) {
-            tryAnalyticsRecordEvent("foreground_event")
-            PushNotificationResult.AppInForeground()
-        } else {
-            tryAnalyticsRecordEvent("background_event")
-            PushNotificationResult.NotificationPosted()
+        try {
+            if (pushNotificationsUtils.isAppInForeground()) {
+                tryAnalyticsRecordEvent("foreground_event")
+            } else {
+                tryAnalyticsRecordEvent("background_event")
+            }
+            onSuccess.call()
+        } catch (exception: PushNotificationsException) {
+            onError.accept(exception)
         }
-        onSuccess.call()
     }
 
     override fun recordNotificationOpened(
@@ -189,9 +237,12 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
         onSuccess: Action,
         onError: Consumer<PushNotificationsException>
     ) {
-        tryAnalyticsRecordEvent("notification_opened")
-        PushNotificationResult.NotificationOpened()
-        onSuccess.call()
+        try {
+            tryAnalyticsRecordEvent("notification_opened")
+            onSuccess.call()
+        } catch (exception: PushNotificationsException) {
+            onError.accept(exception)
+        }
     }
 
     override fun handleNotificationReceived(
@@ -220,7 +271,7 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
         } catch (exception: Exception) {
             onError.accept(
                 PushNotificationsException(
-                    "Failed to identify user with the service.",
+                    "Failed to handle push notification message.",
                     AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION,
                     exception
                 )
@@ -262,7 +313,7 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
             analyticsClient.recordEvent(event)
         } catch (exception: Exception) {
             throw PushNotificationsException(
-                "Failed to identify user with the service.",
+                "Failed to record push notifications event $eventName.",
                 AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION,
                 exception
             )
@@ -274,16 +325,6 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
     override fun getEscapeHatch() = pinpointClient
 
     override fun getVersion() = BuildConfig.VERSION_NAME
-
-    private fun getString(key: String?, optValue: String?): String? {
-        return preferences.getString(key, optValue)
-    }
-
-    private fun putString(key: String?, value: String?) {
-        val editor = preferences.edit()
-        editor.putString(key, value)
-        editor.apply()
-    }
 
     private fun canShowNotification(payload: NotificationPayload): Boolean {
         val notificationsEnabled = pushNotificationsUtils.areNotificationsEnabled()
