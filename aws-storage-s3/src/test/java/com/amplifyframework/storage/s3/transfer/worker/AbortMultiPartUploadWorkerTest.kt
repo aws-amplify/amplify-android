@@ -31,6 +31,7 @@ import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
+import io.mockk.spyk
 import io.mockk.unmockkStatic
 import io.mockk.verify
 import java.util.UUID
@@ -54,16 +55,17 @@ internal class AbortMultiPartUploadWorkerTest {
 
     @Before
     fun setup() {
+
         context = ApplicationProvider.getApplicationContext()
         workerParameters = mockk(WorkerParameters::class.java.name)
-        s3Client = mockk<S3Client>(relaxed = true, relaxUnitFun = true)
+        s3Client = spyk<S3Client>(recordPrivateCalls = true)
         mockkStatic(S3Client::withConfig)
         transferDB = mockk(TransferDB::class.java.name)
         transferStatusUpdater = mockk(TransferStatusUpdater::class.java.name)
         every { workerParameters.inputData }.answers { workDataOf(BaseTransferWorker.TRANSFER_RECORD_ID to 1) }
         every { workerParameters.runAttemptCount }.answers { 1 }
         every { workerParameters.taskExecutor }.answers { ImmediateTaskExecutor() }
-        every { s3Client.withConfig(any()) } returns s3Client
+        every { any<S3Client>().withConfig(any()) }.answers { s3Client }
     }
 
     @After
@@ -99,6 +101,7 @@ internal class AbortMultiPartUploadWorkerTest {
         val expectedResult =
             ListenableWorker.Result.success(workDataOf(BaseTransferWorker.OUTPUT_TRANSFER_RECORD_ID to 1))
         verify(exactly = 1) { transferStatusUpdater.updateTransferState(1, TransferState.FAILED) }
+        verify(exactly = 1) { any<S3Client>().withConfig(any())}
         assertEquals(expectedResult, result)
     }
 

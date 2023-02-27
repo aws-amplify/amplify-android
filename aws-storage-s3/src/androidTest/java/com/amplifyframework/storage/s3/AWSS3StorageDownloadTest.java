@@ -65,7 +65,7 @@ public final class AWSS3StorageDownloadTest {
 
     private static final StorageAccessLevel TESTING_ACCESS_LEVEL = StorageAccessLevel.PUBLIC;
     private static final long LARGE_FILE_SIZE = 10 * 1024 * 1024L; // 10 MB
-    private static final long SMALL_FILE_SIZE = 4 * 1024 * 1024L;
+    private static final long SMALL_FILE_SIZE = 100L;
     private static final String LARGE_FILE_NAME = "large-" + System.currentTimeMillis();
     private static final String SMALL_FILE_NAME = "small-" + System.currentTimeMillis();
 

@@ -82,6 +82,8 @@ internal open class ProgressListenerInterceptor(
         private val progressListener: ProgressListener
     ) : HttpBody.ChannelContent() {
         val delegate = httpBody.readFrom()
+        override val contentLength: Long?
+            get() = httpBody.contentLength
         override fun readFrom(): SdkByteReadChannel {
             return object : SdkByteReadChannel by delegate {
                 override val availableForRead: Int
