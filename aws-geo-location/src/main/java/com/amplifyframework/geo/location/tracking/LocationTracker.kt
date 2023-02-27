@@ -22,7 +22,6 @@ import android.content.ServiceConnection
 import android.os.IBinder
 import androidx.annotation.VisibleForTesting
 import com.amplifyframework.geo.GeoException
-import com.amplifyframework.geo.location.database.GeoDatabase
 import com.amplifyframework.geo.location.tracking.LocationTrackingService.LocationServiceBinder
 import com.amplifyframework.geo.options.GeoTrackingSessionOptions
 import kotlin.coroutines.resume
@@ -34,7 +33,6 @@ import kotlinx.coroutines.suspendCancellableCoroutine
  */
 internal class LocationTracker(private val context: Context) {
     private var serviceConnection: LocationServiceConnection? = null
-    private val database by lazy { GeoDatabase(context) }
 
     /**
      * Start a new tracking session
@@ -74,10 +72,6 @@ internal class LocationTracker(private val context: Context) {
         serviceConnection?.binder?.service?.stopTracking()
         serviceConnection?.let { context.unbindService(it) }
         serviceConnection = null
-    }
-
-    suspend fun clearSavedLocations(deviceId: String, tracker: String) {
-        database.locationDao.removeAll(deviceId, tracker)
     }
 
     @VisibleForTesting

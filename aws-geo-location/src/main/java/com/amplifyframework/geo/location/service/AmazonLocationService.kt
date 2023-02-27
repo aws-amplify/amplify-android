@@ -127,7 +127,9 @@ internal class AmazonLocationService(
                 this.deviceId = deviceId
                 // Amazon Location Service uses [longitude, latitude]
                 this.position = listOf(position.location.longitude, position.location.latitude)
-                this.sampleTime = Instant.fromEpochSeconds(position.timeStamp.time)
+                this.sampleTime = position.timeStamp?.let {
+                    Instant.fromEpochSeconds(it.time)
+                } ?: Instant.now()
                 this.positionProperties = options.positionProperties.properties
             }
             updateList.add(devicePositionUpdate)
