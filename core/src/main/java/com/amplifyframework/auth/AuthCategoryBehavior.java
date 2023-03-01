@@ -19,6 +19,7 @@ import android.app.Activity;
 import android.content.Intent;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
 
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions;
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions;
@@ -41,6 +42,8 @@ import com.amplifyframework.auth.result.AuthUpdateAttributeResult;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
 
+import org.json.JSONObject;
+
 import java.util.List;
 import java.util.Map;
 
@@ -48,7 +51,6 @@ import java.util.Map;
  * Specifies the behavior for the Auth category.
  */
 public interface AuthCategoryBehavior {
-
     /**
      * Creates a new user account with the specified username and password.
      * Can also pass in user attributes to associate with the user through
@@ -513,4 +515,11 @@ public interface AuthCategoryBehavior {
     void deleteUser(
             @NonNull Action onSuccess,
             @NonNull Consumer<AuthException> onError);
+
+    /**
+     * Get the JSON that was used to configure the Auth category.
+     * @return the JSON object the category was configured with
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    JSONObject getPluginConfiguration();
 }

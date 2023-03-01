@@ -148,19 +148,22 @@ import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
+import org.json.JSONObject
 
 internal class RealAWSCognitoAuthPlugin(
-    private val configuration: AuthConfiguration,
+    private val configurationJSON: JSONObject,
     private val authEnvironment: AuthEnvironment,
     private val authStateMachine: AuthStateMachine,
     private val logger: Logger
 ) : AuthCategoryBehavior {
 
     private val lastPublishedHubEventName = AtomicReference<String>()
+    private val configuration: AuthConfiguration
 
     init {
         addAuthStateChangeListener()
         configureAuthStates()
+        configuration = AuthConfiguration.fromJson(configurationJSON)
     }
 
     fun escapeHatch() = authEnvironment.cognitoAuthService
@@ -1730,6 +1733,10 @@ internal class RealAWSCognitoAuthPlugin(
                 else -> onError.accept(InvalidStateException())
             }
         }
+    }
+
+    override fun getPluginConfiguration(): JSONObject {
+        return configurationJSON
     }
 
     private fun _deleteUser(token: String, onSuccess: Action, onError: Consumer<AuthException>) {
