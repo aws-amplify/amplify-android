@@ -217,11 +217,11 @@ public final class Orchestrator {
             case SYNC_VIA_API:
                 LOG.info("Orchestrator transitioning from SYNC_VIA_API to STOPPED");
                 stopApiSync();
-                setCurrentStateToStopped();
+                stopObservingStorageChanges();
                 break;
             case LOCAL_ONLY:
                 LOG.info("Orchestrator transitioning from LOCAL_ONLY to STOPPED");
-                setCurrentStateToStopped();
+                stopObservingStorageChanges();
                 break;
             case STOPPED:
                 break;
@@ -289,7 +289,12 @@ public final class Orchestrator {
         }
     }
 
-    private void setCurrentStateToStopped() {
+    /**
+     * Stop observing the local storage. Do not enqueue changes to the outbox.
+     */
+    private void stopObservingStorageChanges() {
+        LOG.info("Stopping observation of local storage changes.");
+        storageObserver.stopObservingStorageChanges();
         LOG.info("Setting currentState to STOPPED");
         currentState.set(State.STOPPED);
     }
