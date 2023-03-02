@@ -1,3 +1,11 @@
+## [Release 0.22.1](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.22.1)
+
+### Bug Fixes
+- **core:** Remove unused dependencies ([#2237](https://github.com/aws-amplify/amplify-android/issues/2237))
+- **datastore:** Fix aliasing of column names ([#2310](https://github.com/aws-amplify/amplify-android/issues/2310))
+
+[See all changes between 0.22.0 and 0.22.1](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.22.0...release-kotlin_v0.22.1)
+
 ## [Release 0.22.0](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.22.0)
 
 ### Features
