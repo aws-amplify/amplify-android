@@ -5,10 +5,10 @@
             "associatedType": "Call",
             "name": "HasMany"
         },
-        "ownedBy": {
+        "ownerOfPhone": {
             "associatedType": "Person",
             "name": "BelongsTo",
-            "targetName": "ownedById"
+            "targetName": "ownerOfPhoneId"
         }
     },
     "authRules": [],
@@ -33,24 +33,24 @@
             "name": "number",
             "targetType": "String"
         },
-        "ownedById": {
+        "ownerOfPhoneId": {
             "authRules": [],
             "isArray": false,
             "isEnum": false,
             "isModel": false,
             "isRequired": true,
             "javaClassForValue": "java.lang.String",
-            "name": "ownedById",
+            "name": "ownerOfPhoneId",
             "targetType": "ID"
         },
-        "ownedBy": {
+        "ownerOfPhone": {
             "authRules": [],
             "isArray": false,
             "isEnum": false,
             "isModel": true,
             "isRequired": true,
             "javaClassForValue": "com.amplifyframework.core.model.SerializedModel",
-            "name": "ownedBy",
+            "name": "ownerOfPhone",
             "targetType": "Person"
         },
         "calls": {
