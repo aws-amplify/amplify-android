@@ -1,9 +1,1 @@
 *   @aws-amplify/amplify-android
-/aws-api-appsync @aws-amplify/amplify-android @aws-amplify/amplify-data
-/aws-api @aws-amplify/amplify-android @aws-amplify/amplify-data
-/aws-datastore @aws-amplify/amplify-android @aws-amplify/amplify-data
-/aws-core @aws-amplify/amplify-android @aws-amplify/amplify-data
-/.github @aws-amplify/amplify-android @aws-amplify/amplify-data
-/.circleci @aws-amplify/amplify-android @aws-amplify/amplify-data
-/testmodels @aws-amplify/amplify-android @aws-amplify/amplify-data
-/testutils @aws-amplify/amplify-android @aws-amplify/amplify-data
