@@ -1,3 +1,11 @@
+## [Release 1.38.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.38.1)
+
+### Bug Fixes
+- **core:** Remove unused dependencies ([#2237](https://github.com/aws-amplify/amplify-android/issues/2237))
+- **datastore:** Fix aliasing of column names ([#2310](https://github.com/aws-amplify/amplify-android/issues/2310))
+
+[See all changes between 1.38.0 and 1.38.1](https://github.com/aws-amplify/amplify-android/compare/release_v1.38.0...release_v1.38.1)
+
 ## [Release 1.38.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.38.0)
 
 ### Features
