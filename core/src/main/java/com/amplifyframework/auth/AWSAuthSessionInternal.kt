@@ -16,6 +16,10 @@ package com.amplifyframework.auth
 
 import com.amplifyframework.auth.result.AuthSessionResult
 
+/**
+ * Although this has public access, it is intended for internal use and should not be used directly by host
+ * applications. The behavior of this may change without warning.
+ */
 open class AWSAuthSessionInternal(
     @get:JvmName("getSignedIn")
     open val isSignedIn: Boolean,
