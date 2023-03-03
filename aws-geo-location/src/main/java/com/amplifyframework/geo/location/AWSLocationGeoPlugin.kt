@@ -19,6 +19,7 @@ import android.content.Context
 import aws.sdk.kotlin.services.location.LocationClient
 import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider
 import com.amplifyframework.AmplifyException
+import com.amplifyframework.annotations.InternalApiWarning
 import com.amplifyframework.auth.AuthCategory
 import com.amplifyframework.auth.CognitoCredentialsProvider
 import com.amplifyframework.core.Amplify
@@ -64,7 +65,7 @@ class AWSLocationGeoPlugin(
         configuration.searchIndices!!.default
     }
 
-    @Deprecated("This credentialsProvider was released with public visibility, but is not intended to be consumed.")
+    @InternalApiWarning
     val credentialsProvider: CredentialsProvider by lazy {
         CognitoCredentialsProvider()
     }
