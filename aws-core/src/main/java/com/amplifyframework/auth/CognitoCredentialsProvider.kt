@@ -26,7 +26,6 @@ import kotlin.coroutines.suspendCoroutine
 /**
  * Wrapper to provide credentials from Auth synchronously and asynchronously
  */
-@Deprecated("This interface was released with public visibility, but is not intended to be consumed.")
 open class CognitoCredentialsProvider : AuthCredentialsProvider {
 
     /**
