@@ -43,7 +43,7 @@ interface AWSCredentialsProvider<out T : AWSCredentials> {
     )
 }
 
-internal fun <T : AWSCredentials> convertToCredentialsProvider(
+internal fun <T : AWSCredentials> convertToSdkCredentialsProvider(
     awsCredentialsProvider: AWSCredentialsProvider<T>
 ): CredentialsProvider {
 
@@ -51,7 +51,7 @@ internal fun <T : AWSCredentials> convertToCredentialsProvider(
         override suspend fun getCredentials(): Credentials {
             return suspendCoroutine { continuation ->
                 awsCredentialsProvider.fetchAWSCredentials(
-                    { continuation.resume(it.toCredentials()) },
+                    { continuation.resume(it.toSdkCredentials()) },
                     { continuation.resumeWithException(it) }
                 )
             }

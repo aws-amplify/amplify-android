@@ -87,7 +87,7 @@ class AWSTemporaryCredentials(
     val expiration: Instant
 ) : AWSCredentials(accessKeyId, secretAccessKey)
 
-internal fun AWSCredentials.toCredentials(): Credentials {
+internal fun AWSCredentials.toSdkCredentials(): Credentials {
     return Credentials(
         accessKeyId = this.accessKeyId,
         secretAccessKey = this.secretAccessKey,

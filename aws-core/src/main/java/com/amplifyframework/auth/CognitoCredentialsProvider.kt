@@ -36,7 +36,7 @@ open class CognitoCredentialsProvider : AuthCredentialsProvider {
             Amplify.Auth.fetchAuthSession(
                 { authSession ->
                     authSession.toAWSAuthSession()?.awsCredentialsResult?.value?.let {
-                        continuation.resume(it.toCredentials())
+                        continuation.resume(it.toSdkCredentials())
                     } ?: continuation.resumeWithException(
                         AuthException(
                             "Failed to get credentials. " +
