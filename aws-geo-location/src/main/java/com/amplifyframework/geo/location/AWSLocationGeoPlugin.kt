@@ -64,6 +64,7 @@ class AWSLocationGeoPlugin(
         configuration.searchIndices!!.default
     }
 
+    @Deprecated("This credentialsProvider was released with public visibility, but is not intended to be consumed.")
     val credentialsProvider: CredentialsProvider by lazy {
         CognitoCredentialsProvider()
     }

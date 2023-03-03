@@ -36,8 +36,6 @@ dependencies {
     implementation(dependency.androidx.nav.ui)
     implementation(dependency.kotlin.serializationJson)
 
-    implementation(dependency.aws.credentials)
-
     testImplementation(project(":aws-api-appsync"))
     // Used to reference Temporal types in tests.
     testImplementation(project(":testmodels"))

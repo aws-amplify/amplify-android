@@ -18,6 +18,7 @@ package com.amplifyframework.auth
 import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider
 import com.amplifyframework.core.Consumer
 
+@Deprecated("This interface was released with public visibility, but is not intended to be consumed.")
 interface AuthCredentialsProvider : CredentialsProvider {
     /**
      * Get the identity ID of the currently logged in user if they are registered in identity pools.

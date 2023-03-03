@@ -23,17 +23,29 @@ apply(from = rootProject.file("configuration/publishing.gradle"))
 
 group = properties["POM_GROUP"].toString()
 
+android {
+    kotlinOptions {
+        moduleName = "com.amplifyframework.aws-core"
+    }
+}
+
 dependencies {
     implementation(project(":core"))
-    implementation(project(":aws-core"))
+    implementation(dependency.kotlin.stdlib)
+    implementation(dependency.kotlin.coroutines)
 
-    implementation(dependency.androidx.annotation)
-    implementation(dependency.androidx.core)
-    implementation(dependency.gson)
+    implementation(dependency.aws.credentials)
 
-    testImplementation(testDependency.junit)
-    testImplementation(testDependency.robolectric)
-    testImplementation(testDependency.jsonassert)
-    testImplementation(project(":testmodels"))
-    testImplementation(project(":testutils"))
+}
+
+afterEvaluate {
+    // Disables this warning:
+    // warning: listOf(classfile) MethodParameters attribute
+    // introduced in version 52.0 class files is ignored in
+    // version 51.0 class files
+    // Root project has -Werror, so this warning
+    // would fail the build, otherwise.
+    tasks.withType<JavaCompile>().configureEach {
+        options.compilerArgs.add("-Xlint:-classfile")
+    }
 }

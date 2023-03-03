@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ import kotlin.coroutines.suspendCoroutine
 /**
  * Wrapper to provide credentials from Auth synchronously and asynchronously
  */
+@Deprecated("This interface was released with public visibility, but is not intended to be consumed.")
 open class CognitoCredentialsProvider : AuthCredentialsProvider {
 
     /**
@@ -97,13 +98,4 @@ open class CognitoCredentialsProvider : AuthCredentialsProvider {
 
 private fun AuthSession.toAWSAuthSession(): AWSAuthSessionInternal? {
     return this as? AWSAuthSessionInternal
-}
-
-private fun AWSCredentials.toCredentials(): Credentials {
-    return Credentials(
-        accessKeyId = this.accessKeyId,
-        secretAccessKey = this.secretAccessKey,
-        sessionToken = (this as? AWSTemporaryCredentials)?.sessionToken,
-        expiration = (this as? AWSTemporaryCredentials)?.expiration
-    )
 }

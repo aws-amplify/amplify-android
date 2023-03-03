@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@ package com.amplifyframework.auth
 
 import com.amplifyframework.auth.result.AuthSessionResult
 
+@Deprecated("This class was released with public visibility, but is not intended to be consumed.")
 open class AWSAuthSessionInternal(
     @get:JvmName("getSignedIn")
     open val isSignedIn: Boolean,
