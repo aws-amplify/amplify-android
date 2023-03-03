@@ -515,11 +515,4 @@ public interface AuthCategoryBehavior {
     void deleteUser(
             @NonNull Action onSuccess,
             @NonNull Consumer<AuthException> onError);
-
-    /**
-     * Get the JSON that was used to configure the Auth category.
-     * @return the JSON object the category was configured with
-     */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    JSONObject getPluginConfiguration();
 }

@@ -397,11 +397,5 @@ public final class AuthCategory extends Category<AuthPlugin<?>> implements AuthC
             @NonNull Consumer<AuthException> onError) {
         getSelectedPlugin().deleteUser(onSuccess, onError);
     }
-
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    @Override
-    public JSONObject getPluginConfiguration() {
-        return getSelectedPlugin().getPluginConfiguration();
-    }
 }
 

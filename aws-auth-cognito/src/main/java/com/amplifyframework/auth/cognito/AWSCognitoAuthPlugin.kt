@@ -94,7 +94,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
 
     private lateinit var pluginConfigurationJSON: JSONObject
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    override fun getPluginConfiguration(): JSONObject {
+    fun getPluginConfiguration(): JSONObject {
         return pluginConfigurationJSON
     }
 
@@ -128,7 +128,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
 
             val authStateMachine = AuthStateMachine(authEnvironment)
             realPlugin = RealAWSCognitoAuthPlugin(
-                pluginConfiguration,
+                configuration,
                 authEnvironment,
                 authStateMachine,
                 logger
