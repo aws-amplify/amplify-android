@@ -35,7 +35,6 @@ dependencies {
     implementation(dependency.kotlin.coroutines)
 
     implementation(dependency.aws.credentials)
-
 }
 
 afterEvaluate {
