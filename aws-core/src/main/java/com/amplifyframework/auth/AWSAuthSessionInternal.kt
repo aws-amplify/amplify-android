@@ -14,8 +14,8 @@
  */
 package com.amplifyframework.auth
 
+import com.amplifyframework.annotations.InternalApiWarning
 import com.amplifyframework.auth.result.AuthSessionResult
-import com.amplifyframework.core.InternalApiWarning
 
 @InternalApiWarning
 open class AWSAuthSessionInternal(

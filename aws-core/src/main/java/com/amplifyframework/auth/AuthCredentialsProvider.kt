@@ -16,8 +16,8 @@
 package com.amplifyframework.auth
 
 import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider
+import com.amplifyframework.annotations.InternalApiWarning
 import com.amplifyframework.core.Consumer
-import com.amplifyframework.core.InternalApiWarning
 
 @InternalApiWarning
 interface AuthCredentialsProvider : CredentialsProvider {

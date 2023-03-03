@@ -30,6 +30,7 @@ android {
 }
 
 dependencies {
+    api(project(":annotations"))
     implementation(dependency.androidx.v4support)
     implementation(dependency.androidx.annotation)
     implementation(dependency.androidx.nav.fragment)

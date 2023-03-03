@@ -135,6 +135,7 @@ dependencyResolutionManagement {
     }
 }
 
+include(":annotations")
 include(":core")
 include("aws-core")
 
