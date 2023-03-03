@@ -28,7 +28,6 @@ import com.amplifyframework.hub.SubscriptionToken;
 import com.amplifyframework.storage.StorageAccessLevel;
 import com.amplifyframework.storage.StorageCategory;
 import com.amplifyframework.storage.StorageChannelEventName;
-import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.TransferState;
 import com.amplifyframework.storage.operation.StorageUploadFileOperation;
 import com.amplifyframework.storage.operation.StorageUploadInputStreamOperation;
@@ -55,7 +54,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
