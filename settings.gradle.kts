@@ -85,7 +85,7 @@ dependencyResolutionManagement {
 
             // AWS
             val awsKotlinSdk = "awsKotlinSdk"
-            version(awsKotlinSdk, "0.20.3-beta")
+            version(awsKotlinSdk, "0.21.1-beta")
 
             library("aws-sdk-core", "com.amazonaws:aws-android-sdk-core:2.62.2")
 

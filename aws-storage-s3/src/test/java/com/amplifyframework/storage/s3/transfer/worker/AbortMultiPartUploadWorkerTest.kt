@@ -101,7 +101,7 @@ internal class AbortMultiPartUploadWorkerTest {
         val expectedResult =
             ListenableWorker.Result.success(workDataOf(BaseTransferWorker.OUTPUT_TRANSFER_RECORD_ID to 1))
         verify(exactly = 1) { transferStatusUpdater.updateTransferState(1, TransferState.FAILED) }
-        verify(exactly = 1) { any<S3Client>().withConfig(any())}
+        verify(exactly = 1) { any<S3Client>().withConfig(any()) }
         assertEquals(expectedResult, result)
     }
 

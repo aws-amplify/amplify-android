@@ -136,7 +136,7 @@ public final class AWSS3StorageUploadTest {
      */
     @Test
     public void testUploadSmallFileStream() throws Exception {
-        File uploadFile = new RandomTempFile(4 * 1024 * 1024);
+        File uploadFile = new RandomTempFile(SMALL_FILE_SIZE);
         String fileName = uploadFile.getName();
         StorageUploadInputStreamOptions options = StorageUploadInputStreamOptions.builder()
             .accessLevel(TESTING_ACCESS_LEVEL)
@@ -153,6 +153,8 @@ public final class AWSS3StorageUploadTest {
     public void testUploadLargeFile() throws Exception {
         File uploadFile = new RandomTempFile(LARGE_FILE_SIZE);
         String fileName = uploadFile.getName();
+        AWSS3StorageUploadFileOptions options =
+            AWSS3StorageUploadFileOptions.builder().setUseAccelerateEndpoint(true).build();
         synchronousStorage.uploadFile(fileName, uploadFile, options, EXTENDED_TIMEOUT_MS);
     }
 
@@ -390,20 +392,14 @@ public final class AWSS3StorageUploadTest {
      *
      * @throws Exception if upload fails
      */
-    @Test(expected = StorageException.class)
+    @Test
     public void testUploadSmallFileWithAccelerationEnabled() throws Exception {
-        try {
-            File uploadFile = new RandomTempFile(SMALL_FILE_SIZE);
-            String fileName = uploadFile.getName();
-            AWSS3StorageUploadFileOptions awss3StorageUploadFileOptions =
-                AWSS3StorageUploadFileOptions.builder().setUseAccelerateEndpoint(true).build();
-            synchronousStorage.uploadFile(fileName, uploadFile,
-                awss3StorageUploadFileOptions);
-        } catch (Exception e) {
-            assertEquals(e.getCause().getCause().getMessage(),
-                "S3 Transfer Acceleration is disabled on this bucket");
-            throw e;
-        }
+        File uploadFile = new RandomTempFile(SMALL_FILE_SIZE);
+        String fileName = uploadFile.getName();
+        AWSS3StorageUploadFileOptions awss3StorageUploadFileOptions =
+            AWSS3StorageUploadFileOptions.builder().setUseAccelerateEndpoint(true).build();
+        synchronousStorage.uploadFile(fileName, uploadFile,
+            awss3StorageUploadFileOptions);
     }
 
     /**
@@ -411,20 +407,14 @@ public final class AWSS3StorageUploadTest {
      *
      * @throws Exception if upload fails
      */
-    @Test(expected = StorageException.class)
+    @Test
     public void testUploadLargeFileWithAccelerationEnabled() throws Exception {
-        try {
-            File uploadFile = new RandomTempFile(LARGE_FILE_SIZE);
-            String fileName = uploadFile.getName();
-            AWSS3StorageUploadFileOptions awss3StorageUploadFileOptions =
-                AWSS3StorageUploadFileOptions.builder().setUseAccelerateEndpoint(true).build();
-            synchronousStorage.uploadFile(fileName, uploadFile,
-                awss3StorageUploadFileOptions);
-        } catch (StorageException exception) {
-            assertEquals(exception.getCause().getCause().getMessage(),
-                "S3 Transfer Acceleration is disabled on this bucket");
-            throw exception;
-        }
+        File uploadFile = new RandomTempFile(LARGE_FILE_SIZE);
+        String fileName = uploadFile.getName();
+        AWSS3StorageUploadFileOptions awss3StorageUploadFileOptions =
+            AWSS3StorageUploadFileOptions.builder().setUseAccelerateEndpoint(true).build();
+        synchronousStorage.uploadFile(fileName, uploadFile,
+            awss3StorageUploadFileOptions);
     }
 
 }

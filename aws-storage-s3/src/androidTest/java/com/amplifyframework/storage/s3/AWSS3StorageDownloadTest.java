@@ -327,13 +327,8 @@ public final class AWSS3StorageDownloadTest {
      */
     @Test
     public void testDownloadLargeFileWithAccelerationEnabled() throws Exception {
-        try {
-            AWSS3StorageDownloadFileOptions awsS3Options =
-                AWSS3StorageDownloadFileOptions.builder().setUseAccelerateEndpoint(true).build();
-            synchronousStorage.downloadFile(LARGE_FILE_NAME, downloadFile, awsS3Options, EXTENDED_TIMEOUT_MS);
-        } catch (Exception exception) {
-            assertEquals(exception.getCause().getCause().getMessage(),
-                "S3 Transfer Acceleration is disabled on this bucket");
-        }
+        AWSS3StorageDownloadFileOptions awsS3Options =
+            AWSS3StorageDownloadFileOptions.builder().setUseAccelerateEndpoint(true).build();
+        synchronousStorage.downloadFile(LARGE_FILE_NAME, downloadFile, awsS3Options, EXTENDED_TIMEOUT_MS);
     }
 }

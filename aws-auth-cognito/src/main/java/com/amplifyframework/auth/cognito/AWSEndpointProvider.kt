@@ -16,10 +16,10 @@ package com.amplifyframework.auth.cognito
 
 import aws.sdk.kotlin.services.cognitoidentityprovider.endpoints.EndpointParameters
 import aws.sdk.kotlin.services.cognitoidentityprovider.endpoints.EndpointProvider
-import aws.smithy.kotlin.runtime.http.endpoints.Endpoint
+import aws.smithy.kotlin.runtime.client.endpoints.Endpoint
 
 internal class AWSEndpointProvider(val endpoint: Endpoint) : EndpointProvider {
     override suspend fun resolveEndpoint(params: EndpointParameters): Endpoint {
-        return Endpoint(endpoint.uri)
+        return Endpoint(uri = endpoint.uri)
     }
 }
