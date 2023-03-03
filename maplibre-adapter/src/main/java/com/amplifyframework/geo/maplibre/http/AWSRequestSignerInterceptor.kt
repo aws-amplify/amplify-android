@@ -19,17 +19,20 @@ import aws.smithy.kotlin.runtime.auth.awssigning.AwsSigningConfig
 import aws.smithy.kotlin.runtime.auth.awssigning.DefaultAwsSigner
 import aws.smithy.kotlin.runtime.http.Headers as AwsHeaders
 import aws.smithy.kotlin.runtime.http.HttpMethod
-import aws.smithy.kotlin.runtime.http.Protocol
-import aws.smithy.kotlin.runtime.http.QueryParameters
-import aws.smithy.kotlin.runtime.http.Url
 import aws.smithy.kotlin.runtime.http.content.ByteArrayContent
 import aws.smithy.kotlin.runtime.http.request.HttpRequest
+import aws.smithy.kotlin.runtime.net.Host
+import aws.smithy.kotlin.runtime.net.QueryParameters
+import aws.smithy.kotlin.runtime.net.Scheme
+import aws.smithy.kotlin.runtime.net.Url
+import aws.smithy.kotlin.runtime.net.toUrlString
 import com.amplifyframework.geo.location.AWSLocationGeoPlugin
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import kotlinx.coroutines.runBlocking
 import okhttp3.HttpUrl
 import okhttp3.Interceptor
+import okhttp3.Protocol
 import okhttp3.Request
 import okhttp3.RequestBody
 import okhttp3.Response
@@ -71,7 +74,7 @@ internal class AWSRequestSignerInterceptor(
 
     private fun Request.Builder.copyFrom(request: HttpRequest): Request.Builder {
         val urlBuilder = HttpUrl.Builder()
-            .host(request.url.host)
+            .host(request.url.host.toUrlString())
             .scheme(request.url.scheme.protocolName)
             .encodedPath(request.url.encodedPath)
 
@@ -106,8 +109,8 @@ internal class AWSRequestSignerInterceptor(
         }
 
         val httpUrl = Url(
-            scheme = Protocol.parse(url.scheme),
-            host = url.host,
+            scheme = Scheme(url.scheme, url.port),
+            host = Host.parse(url.host),
             port = url.port,
             path = url.encodedPath,
             parameters = QueryParameters.invoke {
