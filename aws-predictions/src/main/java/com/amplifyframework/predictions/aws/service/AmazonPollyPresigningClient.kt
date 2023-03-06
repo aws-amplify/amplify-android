@@ -16,9 +16,12 @@ package com.amplifyframework.predictions.aws.service
 
 import androidx.annotation.WorkerThread
 import aws.sdk.kotlin.services.polly.PollyClient
+import aws.sdk.kotlin.services.polly.endpoints.DefaultEndpointProvider
+import aws.sdk.kotlin.services.polly.endpoints.EndpointParameters
 import aws.sdk.kotlin.services.polly.model.SynthesizeSpeechRequest
 import aws.sdk.kotlin.services.polly.presigners.PollyPresignConfig
 import aws.sdk.kotlin.services.polly.presigners.presign
+import aws.smithy.kotlin.runtime.auth.awssigning.SigningContextualizedEndpoint
 import java.net.URL
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.runBlocking
@@ -54,6 +57,14 @@ class AmazonPollyPresigningClient(pollyClient: PollyClient) : PollyClient by pol
         val presignConfig = PollyPresignConfig {
             region = this@AmazonPollyPresigningClient.config.region
             credentialsProvider = presignCredentialsProvider
+            endpointProvider = {
+                val endpoint = DefaultEndpointProvider().resolveEndpoint(
+                    EndpointParameters.invoke {
+                        region = it.region
+                    }
+                )
+                SigningContextualizedEndpoint(endpoint, it)
+            }
         }
         val presignedRequest = runBlocking {
             synthesizeSpeechRequest.presign(presignConfig, options.expires.seconds)
