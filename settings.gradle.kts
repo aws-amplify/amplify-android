@@ -58,7 +58,7 @@ dependencyResolutionManagement {
             library("androidx-test-workmanager", "androidx.work:work-testing:2.7.1")
 
             // Misc
-            library("mockwebserver", "com.squareup.okhttp3:mockwebserver:5.0.0-alpha.9")
+            library("mockwebserver", "com.squareup.okhttp3:mockwebserver:5.0.0-alpha.11")
             library("robolectric", "org.robolectric:robolectric:4.7")
             library("jsonassert", "org.skyscreamer:jsonassert:1.5.0")
             library("json", "org.json:json:20210307")
@@ -127,7 +127,7 @@ dependencyResolutionManagement {
 
             // Misc
             library("oauth2", "com.google.auth:google-auth-library-oauth2-http:0.26.0")
-            library("okhttp", "com.squareup.okhttp3:okhttp:5.0.0-alpha.9")
+            library("okhttp", "com.squareup.okhttp3:okhttp:5.0.0-alpha.11")
             library("gson", "com.google.code.gson:gson:2.8.9")
             library("tensorflow", "org.tensorflow:tensorflow-lite:2.0.0")
             library("uuidgen", "com.fasterxml.uuid:java-uuid-generator:4.0.1")
