@@ -21,7 +21,6 @@ import androidx.core.util.ObjectsCompat;
 
 import java.util.Iterator;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Spliterator;
 import java.util.function.Consumer;
 import java.util.stream.StreamSupport;
