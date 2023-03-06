@@ -89,7 +89,7 @@ dependencyResolutionManagement {
 
             library("aws-sdk-core", "com.amazonaws:aws-android-sdk-core:2.62.2")
 
-            library("aws-credentials", "aws.smithy.kotlin:aws-credentials:0.12.6")
+            library("aws-credentials", "aws.smithy.kotlin:aws-credentials:0.16.2")
             library("aws-ktor", "aws.smithy.kotlin:http-client-engine-ktor:0.7.7")
             library("aws-signing", "aws.smithy.kotlin:aws-signing-default:0.16.2")
             library("aws-cognitoidentity", "aws.sdk.kotlin", "cognitoidentity").versionRef(awsKotlinSdk)
