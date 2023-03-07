@@ -43,7 +43,7 @@ interface AWSCredentialsProvider<out T : AWSCredentials> {
     )
 }
 
-internal fun <T : AWSCredentials> convertToSdkCredentialsProvider(
+fun <T : AWSCredentials> convertToSdkCredentialsProvider(
     awsCredentialsProvider: AWSCredentialsProvider<T>
 ): CredentialsProvider {
 
