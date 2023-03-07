@@ -930,10 +930,11 @@ internal class RealAWSCognitoAuthPlugin(
         val forceRefresh = options.forceRefresh
         authStateMachine.getCurrentState { authState ->
             if (authState.authNState is AuthenticationState.SignedOut) {
-                onError.accept(SignedOutException())
+                authStateMachine.send(AuthorizationEvent(AuthorizationEvent.EventType.FetchUnAuthSession))
+                _fetchAuthSession(onSuccess, onError)
             } else {
                 when (val authZState = authState.authZState) {
-                    is AuthorizationState.Configured -> {
+                    is AuthorizationState.Configured, -> {
                         authStateMachine.send(AuthorizationEvent(AuthorizationEvent.EventType.FetchUnAuthSession))
                         _fetchAuthSession(onSuccess, onError)
                     }

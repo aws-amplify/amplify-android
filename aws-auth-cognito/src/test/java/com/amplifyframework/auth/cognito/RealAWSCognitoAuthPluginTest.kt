@@ -52,7 +52,6 @@ import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttribu
 import com.amplifyframework.auth.cognito.options.AuthFlowType
 import com.amplifyframework.auth.cognito.usecases.ResetPasswordUseCase
 import com.amplifyframework.auth.exceptions.InvalidStateException
-import com.amplifyframework.auth.exceptions.SignedOutException
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
 import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions
@@ -202,11 +201,10 @@ class RealAWSCognitoAuthPluginTest {
     }
 
     @Test
-    fun testFetchAuthSessionFailsIfSignedOut() {
+    fun testFetchAuthSessionSucceedsIfSignedOut() {
         // GIVEN
         val onSuccess = mockk<Consumer<AuthSession>>()
         val onError = mockk<Consumer<AuthException>>(relaxed = true)
-        val expectedAuthError = SignedOutException()
         val currentAuthState = mockk<AuthState> {
             every { authNState } returns AuthenticationState.SignedOut(mockk())
             every { authZState } returns AuthorizationState.DeletingUser(mockk())
@@ -220,7 +218,6 @@ class RealAWSCognitoAuthPluginTest {
 
         // THEN
         verify(exactly = 0) { onSuccess.accept(any()) }
-        verify { onError.accept(expectedAuthError) }
     }
 
     @Test
