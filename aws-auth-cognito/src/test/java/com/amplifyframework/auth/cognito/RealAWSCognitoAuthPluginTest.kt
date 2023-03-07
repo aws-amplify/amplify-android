@@ -40,6 +40,7 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.VerifyUserAttribute
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.VerifyUserAttributeResponse
 import com.amplifyframework.auth.AuthCodeDeliveryDetails
 import com.amplifyframework.auth.AuthException
+import com.amplifyframework.auth.AuthSession
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidUserPoolConfigurationException
@@ -51,6 +52,7 @@ import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttribu
 import com.amplifyframework.auth.cognito.options.AuthFlowType
 import com.amplifyframework.auth.cognito.usecases.ResetPasswordUseCase
 import com.amplifyframework.auth.exceptions.InvalidStateException
+import com.amplifyframework.auth.exceptions.SignedOutException
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
 import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions
@@ -193,6 +195,28 @@ class RealAWSCognitoAuthPluginTest {
 
         // WHEN
         plugin.signUp("user", "pass", AuthSignUpOptions.builder().build(), onSuccess, onError)
+
+        // THEN
+        verify(exactly = 0) { onSuccess.accept(any()) }
+        verify { onError.accept(expectedAuthError) }
+    }
+
+    @Test
+    fun testFetchAuthSessionFailsIfSignedOut() {
+        // GIVEN
+        val onSuccess = mockk<Consumer<AuthSession>>()
+        val onError = mockk<Consumer<AuthException>>(relaxed = true)
+        val expectedAuthError = SignedOutException()
+        val currentAuthState = mockk<AuthState> {
+            every { authNState } returns AuthenticationState.SignedOut(mockk())
+            every { authZState } returns AuthorizationState.DeletingUser(mockk())
+        }
+        every { authStateMachine.getCurrentState(captureLambda()) } answers {
+            lambda<(AuthState) -> Unit>().invoke(currentAuthState)
+        }
+
+        // WHEN
+        plugin.fetchAuthSession(onSuccess, onError)
 
         // THEN
         verify(exactly = 0) { onSuccess.accept(any()) }
