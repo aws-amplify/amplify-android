@@ -23,6 +23,7 @@ import java.util.Iterator;
 import java.util.Objects;
 import java.util.Spliterator;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 /**
@@ -45,7 +46,9 @@ public final class PaginatedResult<T> implements Iterable<T> {
     public PaginatedResult(@NonNull Iterable<T> items,
                            @Nullable GraphQLRequest<PaginatedResult<T>> requestForNextResult) {
         this.requestForNextResult = requestForNextResult;
-        this.items = () -> StreamSupport.stream(items.spliterator(), false).filter(Objects::nonNull).iterator();
+        this.items = StreamSupport.stream(items.spliterator(), false)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 
     /**
