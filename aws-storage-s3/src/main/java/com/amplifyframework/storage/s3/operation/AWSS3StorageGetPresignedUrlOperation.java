@@ -34,7 +34,7 @@ import java.util.concurrent.ExecutorService;
  * An operation to retrieve pre-signed object URL from AWS S3.
  */
 public final class AWSS3StorageGetPresignedUrlOperation
-        extends StorageGetUrlOperation<AWSS3StorageGetPresignedUrlRequest> {
+    extends StorageGetUrlOperation<AWSS3StorageGetPresignedUrlRequest> {
     private final StorageService storageService;
     private final ExecutorService executorService;
     private final AuthCredentialsProvider authCredentialsProvider;
@@ -45,23 +45,23 @@ public final class AWSS3StorageGetPresignedUrlOperation
     /**
      * Constructs a new AWSS3StorageGetUrlOperation.
      *
-     * @param storageService      S3 client wrapper
-     * @param executorService     Executor service used for running
-     *                            blocking operations on a separate thread
-     * @param authCredentialsProvider Interface to retrieve AWS specific auth information
-     * @param request             getUrl request parameters
+     * @param storageService                  S3 client wrapper
+     * @param executorService                 Executor service used for running
+     *                                        blocking operations on a separate thread
+     * @param authCredentialsProvider         Interface to retrieve AWS specific auth information
+     * @param request                         getUrl request parameters
      * @param awss3StoragePluginConfiguration s3Plugin configuration
-     * @param onSuccess           Notified when URL is generated.
-     * @param onError             Notified upon URL generation error
+     * @param onSuccess                       Notified when URL is generated.
+     * @param onError                         Notified upon URL generation error
      */
     public AWSS3StorageGetPresignedUrlOperation(
-            @NonNull StorageService storageService,
-            @NonNull ExecutorService executorService,
-            @NonNull AuthCredentialsProvider authCredentialsProvider,
-            @NonNull AWSS3StorageGetPresignedUrlRequest request,
-            @NonNull AWSS3StoragePluginConfiguration awss3StoragePluginConfiguration,
-            @NonNull Consumer<StorageGetUrlResult> onSuccess,
-            @NonNull Consumer<StorageException> onError
+        @NonNull StorageService storageService,
+        @NonNull ExecutorService executorService,
+        @NonNull AuthCredentialsProvider authCredentialsProvider,
+        @NonNull AWSS3StorageGetPresignedUrlRequest request,
+        @NonNull AWSS3StoragePluginConfiguration awss3StoragePluginConfiguration,
+        @NonNull Consumer<StorageGetUrlResult> onSuccess,
+        @NonNull Consumer<StorageException> onError
     ) {
         super(request);
         this.storageService = storageService;
@@ -76,13 +76,16 @@ public final class AWSS3StorageGetPresignedUrlOperation
     @Override
     public void start() {
         executorService.submit(() -> {
-            awsS3StoragePluginConfiguration.getAWSS3PluginPrefixResolver(authCredentialsProvider).
+                awsS3StoragePluginConfiguration.getAWSS3PluginPrefixResolver(authCredentialsProvider).
                     resolvePrefix(getRequest().getAccessLevel(),
-                    getRequest().getTargetIdentityId(),
+                        getRequest().getTargetIdentityId(),
                         prefix -> {
                             try {
                                 String serviceKey = prefix.concat(getRequest().getKey());
-                                URL url = storageService.getPresignedUrl(serviceKey, getRequest().getExpires());
+                                URL url = storageService.getPresignedUrl(
+                                    serviceKey,
+                                    getRequest().getExpires(),
+                                    getRequest().useAccelerateEndpoint());
                                 onSuccess.accept(StorageGetUrlResult.fromUrl(url));
                             } catch (Exception exception) {
                                 onError.accept(new StorageException(
@@ -93,7 +96,7 @@ public final class AWSS3StorageGetPresignedUrlOperation
                             }
 
                         },
-                    onError);
+                        onError);
             }
         );
     }

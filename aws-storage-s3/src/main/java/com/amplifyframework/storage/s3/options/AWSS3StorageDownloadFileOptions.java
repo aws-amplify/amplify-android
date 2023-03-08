@@ -24,9 +24,11 @@ import com.amplifyframework.storage.options.StorageDownloadFileOptions;
  * Options to specify attributes of object download operation from an AWS S3 bucket.
  */
 public final class AWSS3StorageDownloadFileOptions extends StorageDownloadFileOptions {
+    private final boolean useAccelerationMode;
 
     private AWSS3StorageDownloadFileOptions(final Builder builder) {
         super(builder);
+        this.useAccelerationMode = builder.useAccelerateEndpoint;
     }
 
     /**
@@ -55,7 +57,8 @@ public final class AWSS3StorageDownloadFileOptions extends StorageDownloadFileOp
     public static Builder from(@NonNull final AWSS3StorageDownloadFileOptions options) {
         return builder()
             .accessLevel(options.getAccessLevel())
-            .targetIdentityId(options.getTargetIdentityId());
+            .targetIdentityId(options.getTargetIdentityId())
+            .setUseAccelerateEndpoint(options.useAccelerateEndpoint());
     }
 
     /**
@@ -65,6 +68,15 @@ public final class AWSS3StorageDownloadFileOptions extends StorageDownloadFileOp
     @NonNull
     public static AWSS3StorageDownloadFileOptions defaultInstance() {
         return builder().build();
+    }
+
+    /**
+     * Gets the flag to determine whether to use acceleration endpoint.
+     *
+     * @return boolean flag
+     */
+    public boolean useAccelerateEndpoint() {
+        return useAccelerationMode;
     }
 
     @Override
@@ -94,6 +106,7 @@ public final class AWSS3StorageDownloadFileOptions extends StorageDownloadFileOp
         return "AWSS3StorageDownloadFileOptions {" +
                 "accessLevel=" + getAccessLevel() +
                 ", targetIdentityId=" + getTargetIdentityId() +
+                ", useAccelerationMode=" + useAccelerateEndpoint() +
                 '}';
     }
 
@@ -103,6 +116,18 @@ public final class AWSS3StorageDownloadFileOptions extends StorageDownloadFileOp
      * fluent configuration method calls.
      */
     public static final class Builder extends StorageDownloadFileOptions.Builder<Builder> {
+        private boolean useAccelerateEndpoint;
+
+        /**
+         * Configure to use acceleration mode on new StorageDownloadFileOptions instances.
+         * @param useAccelerateEndpoint flag to represent acceleration mode for new DownloadFileOptions instance
+         * @return Current Builder instance for fluent chaining
+         */
+        public Builder setUseAccelerateEndpoint(boolean useAccelerateEndpoint) {
+            this.useAccelerateEndpoint = useAccelerateEndpoint;
+            return this;
+        }
+
         @Override
         @NonNull
         public AWSS3StorageDownloadFileOptions build() {

@@ -21,9 +21,11 @@ package com.amplifyframework.storage.s3.transfer.worker
 import android.content.Context
 import androidx.work.WorkerParameters
 import aws.sdk.kotlin.services.s3.S3Client
+import aws.sdk.kotlin.services.s3.withConfig
 import com.amplifyframework.storage.s3.transfer.TransferDB
 import com.amplifyframework.storage.s3.transfer.TransferStatusUpdater
 import com.amplifyframework.storage.s3.transfer.UploadProgressListener
+import com.amplifyframework.storage.s3.transfer.UploadProgressListenerInterceptor
 
 internal class SinglePartUploadWorker(
     private val s3: S3Client,
@@ -38,7 +40,10 @@ internal class SinglePartUploadWorker(
     override suspend fun performWork(): Result {
         uploadProgressListener = UploadProgressListener(transferRecord, transferStatusUpdater)
         val putObjectRequest = createPutObjectRequest(transferRecord, uploadProgressListener)
-        return s3.putObject(putObjectRequest).let {
+        return s3.withConfig {
+            interceptors += UploadProgressListenerInterceptor(uploadProgressListener)
+            enableAccelerate = transferRecord.useAccelerateEndpoint == 1
+        }.putObject(putObjectRequest).let {
             Result.success(outputData)
         }
     }

@@ -34,6 +34,8 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito
+import org.mockito.Mockito.any
+import org.mockito.Mockito.eq
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
@@ -57,10 +59,11 @@ class AWSS3StorageUploadInputStreamOperationTest {
         coEvery { authCredentialsProvider.getIdentityId() } returns "abc"
         Mockito.`when`(
             storageService.uploadInputStream(
-                Mockito.any(),
-                Mockito.any(),
-                Mockito.any(),
-                Mockito.any()
+                any(),
+                any(),
+                any(),
+                any(),
+                eq(false)
             )
         ).thenReturn(Mockito.mock(TransferObserver::class.java))
         val request = AWSS3StorageUploadRequest<InputStream>(
@@ -70,7 +73,8 @@ class AWSS3StorageUploadInputStreamOperationTest {
             "",
             "/image",
             ServerSideEncryption.NONE,
-            mutableMapOf()
+            mutableMapOf(),
+            false
         )
         inputStreamOperation = AWSS3StorageUploadInputStreamOperation(
             storageService,
@@ -84,10 +88,11 @@ class AWSS3StorageUploadInputStreamOperationTest {
         )
         inputStreamOperation.start()
         Mockito.verify(storageService).uploadInputStream(
-            Mockito.eq(inputStreamOperation.transferId),
-            Mockito.eq(expectedKey),
-            Mockito.eq(tempInputStream),
-            Mockito.any(ObjectMetadata::class.java)
+            eq(inputStreamOperation.transferId),
+            eq(expectedKey),
+            eq(tempInputStream),
+            any(ObjectMetadata::class.java),
+            eq(false)
         )
     }
 
@@ -99,10 +104,11 @@ class AWSS3StorageUploadInputStreamOperationTest {
         coEvery { authCredentialsProvider.getIdentityId() } returns "abc"
         Mockito.`when`(
             storageService.uploadInputStream(
-                Mockito.any(),
-                Mockito.any(),
-                Mockito.any(),
-                Mockito.any()
+                any(),
+                any(),
+                any(),
+                any(),
+                eq(false)
             )
         )
             .thenReturn(Mockito.mock(TransferObserver::class.java))
@@ -113,7 +119,8 @@ class AWSS3StorageUploadInputStreamOperationTest {
             "",
             "/image",
             ServerSideEncryption.NONE,
-            mutableMapOf()
+            mutableMapOf(),
+            false
         )
         inputStreamOperation = AWSS3StorageUploadInputStreamOperation(
             storageService,
@@ -138,10 +145,11 @@ class AWSS3StorageUploadInputStreamOperationTest {
         )
         inputStreamOperation.start()
         Mockito.verify(storageService).uploadInputStream(
-            Mockito.eq(inputStreamOperation.transferId),
-            Mockito.eq(expectedKey),
-            Mockito.eq(tempInputStream),
-            Mockito.any(ObjectMetadata::class.java)
+            eq(inputStreamOperation.transferId),
+            eq(expectedKey),
+            eq(tempInputStream),
+            any(ObjectMetadata::class.java),
+            eq(false)
         )
     }
 
@@ -153,10 +161,11 @@ class AWSS3StorageUploadInputStreamOperationTest {
         coEvery { authCredentialsProvider.getIdentityId() } returns "abc"
         Mockito.`when`(
             storageService.uploadInputStream(
-                Mockito.any(),
-                Mockito.any(),
-                Mockito.any(),
-                Mockito.any()
+                any(),
+                any(),
+                any(),
+                any(),
+                eq(false)
             )
         ).thenReturn(Mockito.mock(TransferObserver::class.java))
         val request = AWSS3StorageUploadRequest<InputStream>(
@@ -166,7 +175,8 @@ class AWSS3StorageUploadInputStreamOperationTest {
             "",
             "/image",
             ServerSideEncryption.NONE,
-            mutableMapOf()
+            mutableMapOf(),
+            false
         )
         inputStreamOperation = AWSS3StorageUploadInputStreamOperation(
             storageService,
@@ -191,10 +201,11 @@ class AWSS3StorageUploadInputStreamOperationTest {
         )
         inputStreamOperation.start()
         Mockito.verify(storageService).uploadInputStream(
-            Mockito.eq(inputStreamOperation.transferId),
-            Mockito.eq(expectedKey),
-            Mockito.eq(tempInputStream),
-            Mockito.any(ObjectMetadata::class.java)
+            eq(inputStreamOperation.transferId),
+            eq(expectedKey),
+            eq(tempInputStream),
+            any(ObjectMetadata::class.java),
+            eq(false)
         )
     }
 }
