@@ -207,7 +207,7 @@ class RealAWSCognitoAuthPluginTest {
         val onError = mockk<Consumer<AuthException>>(relaxed = true)
         val currentAuthState = mockk<AuthState> {
             every { authNState } returns AuthenticationState.SignedOut(mockk())
-            every { authZState } returns AuthorizationState.DeletingUser(mockk())
+            every { authZState } returns AuthorizationState.Configured()
         }
         every { authStateMachine.getCurrentState(captureLambda()) } answers {
             lambda<(AuthState) -> Unit>().invoke(currentAuthState)
