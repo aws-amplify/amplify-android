@@ -25,7 +25,6 @@ import com.amplifyframework.notifications.pushnotifications.PushNotificationResu
 import com.amplifyframework.notifications.pushnotifications.PushNotificationsCategoryBehavior;
 import com.amplifyframework.notifications.pushnotifications.PushNotificationsException;
 
-import java.util.Map;
 import java.util.Objects;
 
 import io.reactivex.rxjava3.annotations.Nullable;

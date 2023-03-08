@@ -17,8 +17,6 @@ package com.amplifyframework.notifications
 
 import com.amplifyframework.core.category.CategoryConfiguration
 import com.amplifyframework.core.category.CategoryType
-import com.amplifyframework.core.category.SubCategoryType
-import org.json.JSONObject
 
 /**
  * Configuration for Notifications category that also

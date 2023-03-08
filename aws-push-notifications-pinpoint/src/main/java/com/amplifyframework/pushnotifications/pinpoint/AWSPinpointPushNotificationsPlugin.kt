@@ -313,7 +313,7 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
     private fun tryAnalyticsRecordEvent(eventName: String) {
         try {
             val event = analyticsClient.createEvent(eventName)
-            //TODO: globals and foreground key
+            // TODO: globals and foreground key
             event.attributes.plus("isAppInForeground" to pushNotificationsUtils.isAppInForeground().toString())
             analyticsClient.recordEvent(event)
             analyticsClient.flushEvents()

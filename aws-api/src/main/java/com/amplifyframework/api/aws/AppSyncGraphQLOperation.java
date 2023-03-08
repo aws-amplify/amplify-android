@@ -134,6 +134,7 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
                 try {
                     jsonResponse = responseBody.string();
                 } catch (IOException exception) {
+                    LOG.warn("Error retrieving JSON from response.", exception);
                     onFailure.accept(new ApiException(
                         "Could not retrieve the response body from the returned JSON",
                         exception, AmplifyException.TODO_RECOVERY_SUGGESTION

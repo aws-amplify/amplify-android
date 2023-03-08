@@ -15,17 +15,25 @@
 
 package com.amplifyframework.datastore.syncengine;
 
+import com.amplifyframework.api.ApiException;
 import com.amplifyframework.datastore.DataStoreException;
 
 import org.junit.Test;
 
+import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.IntStream;
 
 import io.reactivex.rxjava3.core.Single;
+import io.reactivex.rxjava3.observers.TestObserver;
+import io.reactivex.rxjava3.schedulers.TestScheduler;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class RetryHandlerTest {
 
@@ -37,7 +45,7 @@ public class RetryHandlerTest {
         //arrange
         RetryHandler subject = new RetryHandler();
         String expectedValue = "Test value";
-        Single<String> mockSingle = Single.create(emitter -> emitter.onSuccess(expectedValue));
+        Single<String> mockSingle = Single.just(expectedValue);
 
         //act and assert
         subject.retry(mockSingle, new ArrayList<>())
@@ -45,7 +53,7 @@ public class RetryHandlerTest {
                 .awaitDone(1, TimeUnit.SECONDS)
                 .assertNoErrors()
                 .assertValue(expectedValue)
-                .isDisposed();
+                .assertComplete();
     }
 
     /**
@@ -54,20 +62,59 @@ public class RetryHandlerTest {
     @Test
     public void testNoRetryOnIrrecoverableError() {
         //arrange
+        TestScheduler scheduler = new TestScheduler();
         RetryHandler subject = new RetryHandler();
-        DataStoreException expectedException = new DataStoreException.
+        DataStoreException retryableException = new DataStoreException.
                 GraphQLResponseException("PaginatedResult<ModelWithMetadata<BlogOwner>>",
                 new ArrayList<>());
-        Single<String> mockSingle = Single.error(expectedException);
-        ArrayList<Class<? extends Throwable>> skipExceptionList = new ArrayList<>();
-        skipExceptionList.add(DataStoreException.GraphQLResponseException.class);
+        ApiException nonRetryableException = new ApiException("Non recoverable", "This is intentional");
+        AtomicInteger counter = new AtomicInteger();
+        Single<String> single = Single.create(emitter -> {
+            if (counter.incrementAndGet() >= 5) {
+                emitter.onError(nonRetryableException);
+            } else {
+                emitter.onError(retryableException);
+            }
+
+            // Advance clock by next delay
+            scheduler.advanceTimeBy(subject.jitteredDelayMillis(counter.get()), TimeUnit.MILLISECONDS);
+        });
+        List<Class<? extends Throwable>> nonRetryableExceptionList =
+                Collections.singletonList(nonRetryableException.getClass());
 
         //act and assert
-        subject.retry(mockSingle, skipExceptionList)
+        subject.retry(single, nonRetryableExceptionList, scheduler)
                 .test()
                 .awaitDone(1, TimeUnit.SECONDS)
-                .assertError(expectedException)
-                .isDisposed();
+                .assertError(nonRetryableException);
+
+        assertEquals(5, counter.get());
+    }
+
+    /**
+     * Test cancel retries on dispose.
+     */
+    @Test
+    public void testCancelOnDispose() {
+        //arrange
+        TestScheduler scheduler = new TestScheduler();
+        RetryHandler subject = new RetryHandler();
+        Single<String> single = Single.just("some value").delay(3, TimeUnit.SECONDS, scheduler);
+
+        //act and assert
+        TestObserver<String> retry = subject.retry(single, Collections.emptyList()).test();
+
+        retry
+                .assertEmpty()
+                .assertNotComplete();
+
+        retry.dispose();
+
+        scheduler.advanceTimeBy(3, TimeUnit.SECONDS);
+
+        retry.assertEmpty();
+
+        assertTrue(retry.isDisposed());
     }
 
     /**
@@ -76,22 +123,54 @@ public class RetryHandlerTest {
     @Test
     public void testRetryOnRecoverableError() {
         //arrange
-        RetryHandler subject = new RetryHandler(8, 0, 1, 1);
+        RetryHandler subject = new RetryHandler(0, Duration.ofMinutes(1).toMillis());
         DataStoreException expectedException =
                 new DataStoreException("PaginatedResult<ModelWithMetadata<BlogOwner>>", "");
         AtomicInteger count = new AtomicInteger(0);
 
-        Single<Object> mockSingle = Single.error(expectedException)
-                .doOnError(e -> count.incrementAndGet());
+        Single<Object> mockSingle = Single.create(emitter -> {
+            if (count.get() == 0) {
+                count.incrementAndGet();
+                emitter.onError(expectedException);
+            } else {
+                count.incrementAndGet();
+                emitter.onSuccess(true);
+            }
+        });
 
         //act and assert
         subject.retry(mockSingle, new ArrayList<>())
                 .test()
                 .awaitDone(10, TimeUnit.SECONDS)
-                .assertError(expectedException)
-                .isDisposed();
+                .assertNoErrors();
 
         assertEquals(2, count.get());
+    }
+
+    /**
+     * Test it won't retry beyond the maxDelay.
+     */
+    @Test
+    public void testDoesNotGoBeyondMaxDelay() {
+        //arrange
+        TestScheduler scheduler = new TestScheduler();
+        RetryHandler subject = new RetryHandler(0, Duration.ofMinutes(5).toMillis());
+        DataStoreException expectedException =
+                new DataStoreException("PaginatedResult<ModelWithMetadata<BlogOwner>>", "");
+        AtomicInteger count = new AtomicInteger(0);
+
+        Single<Object> mockSingle = Single.create(emitter -> {
+            emitter.onError(expectedException);
+            scheduler.advanceTimeBy(subject.jitteredDelayMillis(count.incrementAndGet()), TimeUnit.MILLISECONDS);
+        });
+
+        //act and assert
+        subject.retry(mockSingle, new ArrayList<>(), scheduler)
+                .test()
+                .awaitDone(10, TimeUnit.SECONDS)
+                .assertError(expectedException);
+
+        assertEquals(10, count.get());
     }
 
     /**
@@ -100,11 +179,11 @@ public class RetryHandlerTest {
     @Test
     public void testJitteredDelaySec() {
         //arrange
-        RetryHandler subject = new RetryHandler(8, 0, 1, 5);
+        RetryHandler subject = new RetryHandler(0, Integer.MAX_VALUE);
         //act
-        long delay = subject.jitteredDelaySec(2);
+        long delay = subject.jitteredDelayMillis(2);
         //assert
-        assertEquals(4, delay);
+        assertEquals(Duration.ofSeconds(4).toMillis(), delay);
     }
 
     /**
@@ -113,11 +192,50 @@ public class RetryHandlerTest {
     @Test
     public void testJitteredDelaySecReturnsNoMoreThanMaxValue() {
         //arrange
-        RetryHandler subject = new RetryHandler(8, 0, 1, 1);
+        long maxDelayMs = Duration.ofSeconds(4).toMillis();
+        RetryHandler subject = new RetryHandler(0, maxDelayMs);
         //act
-        long delay = subject.jitteredDelaySec(2);
+        long delay = subject.jitteredDelayMillis(2);
         //assert
-        assertEquals(1, delay);
+        assertEquals(maxDelayMs, delay);
+    }
+
+    /**
+     * test jittered delay method returns powers of 2 when there's no jitter.
+     */
+    @Test
+    public void testExponentialDelaysNoJitter() {
+        int jitterFactor = 0;
+
+        //arrange
+        RetryHandler subject = new RetryHandler(jitterFactor, Integer.MAX_VALUE);
+
+        IntStream.rangeClosed(0, 10).forEach(attempt -> {
+            //act
+            long delay = subject.jitteredDelayMillis(attempt);
+
+            //assert
+            assertEquals(Duration.ofSeconds((long) Math.pow(2, attempt)).toMillis(), delay, jitterFactor);
+        });
+    }
+
+    /**
+     * test jittered delay method returns powers of 2 plus a random amount of miliseconds between 0 and jitterFactor.
+     */
+    @Test
+    public void testExponentialDelaysWithJitterIsWithinDelta() {
+        int jitterFactor = 100;
+
+        //arrange
+        RetryHandler subject = new RetryHandler(jitterFactor, Integer.MAX_VALUE);
+
+        IntStream.rangeClosed(0, 10).forEach(attempt -> {
+            //act
+            long delay = subject.jitteredDelayMillis(attempt);
+
+            //assert
+            assertEquals(Duration.ofSeconds((long) Math.pow(2, attempt)).toMillis(), delay, jitterFactor);
+        });
     }
 
 }

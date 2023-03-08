@@ -18,8 +18,10 @@
 package com.amplifyframework.auth.cognito.featuretest.serializers
 
 import aws.sdk.kotlin.services.cognitoidentity.model.CognitoIdentityException
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.CodeMismatchException
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.CognitoIdentityProviderException
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.NotAuthorizedException
+import com.amplifyframework.auth.exceptions.UnknownException
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.descriptors.SerialDescriptor
@@ -32,14 +34,19 @@ private data class CognitoExceptionSurrogate(
     val errorMessage: String?
 ) {
     fun <T> toRealException(): T {
-        return when (errorType) {
+        val exception = when (errorType) {
             NotAuthorizedException::class.java.simpleName -> NotAuthorizedException.invoke {
+                message = errorMessage
+            } as T
+            UnknownException::class.java.simpleName -> UnknownException(message = errorMessage ?: "") as T
+            CodeMismatchException::class.java.simpleName -> CodeMismatchException.invoke {
                 message = errorMessage
             } as T
             else -> {
                 error("Exception for $errorType not defined")
             }
         }
+        return exception
     }
 
     companion object {

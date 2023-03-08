@@ -9,7 +9,7 @@
         "authChallenge": {
           "challengeName": "CUSTOM_CHALLENGE",
           "username": "username",
-          "session": "someSession",
+          "session": null,
           "parameters": {
             "SALT": "abc",
             "SECRET_BLOCK": "secretBlock",

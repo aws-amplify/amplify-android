@@ -23,14 +23,14 @@ import kotlinx.serialization.json.Json
 
 internal class EventSourceType private constructor(
     private val eventSourceName: String,
-    private val eventSourcePrefix:String,
+    private val eventSourcePrefix: String,
     private val eventSourceIdAttributeKey: String,
     private val eventSourceActivityAttributeKey: String,
     private val attributeParser: EventSourceAttributeParser
 ) {
-    private val eventTypeOpened = "$eventSourcePrefix.$AWS_EVENT_TYPE_OPENED";
-    private val eventTypeReceivedBackground = "$eventSourcePrefix.$AWS_EVENT_TYPE_RECEIVED_BACKGROUND";
-    private val eventTypeReceivedForeground = "$eventSourcePrefix.$AWS_EVENT_TYPE_RECEIVED_FOREGROUND";
+    private val eventTypeOpened = "$eventSourcePrefix.$AWS_EVENT_TYPE_OPENED"
+    private val eventTypeReceivedBackground = "$eventSourcePrefix.$AWS_EVENT_TYPE_RECEIVED_BACKGROUND"
+    private val eventTypeReceivedForeground = "$eventSourcePrefix.$AWS_EVENT_TYPE_RECEIVED_FOREGROUND"
 
     companion object {
         private const val CAMPAIGN_EVENT_SOURCE_NAME = "campaign"

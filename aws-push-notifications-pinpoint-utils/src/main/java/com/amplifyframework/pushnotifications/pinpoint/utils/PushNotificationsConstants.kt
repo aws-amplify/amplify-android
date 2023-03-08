@@ -29,12 +29,12 @@ class PushNotificationsConstants {
         const val JOURNEY = "journey" // journey
         const val JOURNEY_ID = "journey_id" // journey_id
         const val JOURNEY_ACTIVITY_ID = "journey_activity_id" // journey_activity_id
-        const val PINPOINT_OPENAPP = "${PINPOINT_PREFIX}${OPENAPP}" // pinpoint.openApp
-        const val PINPOINT_URL = "${PINPOINT_PREFIX}${URL}" // pinpoint.url
-        const val PINPOINT_DEEPLINK = "${PINPOINT_PREFIX}${DEEPLINK}" // pinpoint.deeplink
-        const val PINPOINT_NOTIFICATION_TITLE = "${NOTIFICATION_PREFIX}${TITLE}" // pinpoint.notification.title
+        const val PINPOINT_OPENAPP = "${PINPOINT_PREFIX}$OPENAPP" // pinpoint.openApp
+        const val PINPOINT_URL = "${PINPOINT_PREFIX}$URL" // pinpoint.url
+        const val PINPOINT_DEEPLINK = "${PINPOINT_PREFIX}$DEEPLINK" // pinpoint.deeplink
+        const val PINPOINT_NOTIFICATION_TITLE = "${NOTIFICATION_PREFIX}$TITLE" // pinpoint.notification.title
         const val PINPOINT_NOTIFICATION_BODY = "${NOTIFICATION_PREFIX}body" // pinpoint.notification.body
-        const val PINPOINT_NOTIFICATION_IMAGEURL = "${NOTIFICATION_PREFIX}${IMAGEURL}" // pinpoint.notification.imageUrl
+        const val PINPOINT_NOTIFICATION_IMAGEURL = "${NOTIFICATION_PREFIX}$IMAGEURL" // pinpoint.notification.imageUrl
         // pinpoint.notification.silentPush
         const val PINPOINT_NOTIFICATION_SILENTPUSH = "${NOTIFICATION_PREFIX}silentPush"
         const val PINPOINT_CAMPAIGN_CAMPAIGN_ID = "${CAMPAIGN_PREFIX}campaign_id" // pinpoint.campaign.campaign_id

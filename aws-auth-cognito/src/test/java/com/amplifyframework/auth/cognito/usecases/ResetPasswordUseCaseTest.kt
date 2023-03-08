@@ -23,6 +23,7 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeliveryMediumType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ForgotPasswordRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ForgotPasswordResponse
 import com.amplifyframework.auth.AuthException
+import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.auth.options.AuthResetPasswordOptions
 import com.amplifyframework.auth.result.AuthResetPasswordResult
 import com.amplifyframework.auth.result.step.AuthNextResetPasswordStep
@@ -50,6 +51,7 @@ import org.junit.Test
 class ResetPasswordUseCaseTest {
 
     private val dummyClientId = "app client id"
+    private val dummyAppClientSecret = "app client secret"
     private val dummyUserName = "username"
     private val expectedPinpointEndpointId = "abc123"
 
@@ -64,7 +66,7 @@ class ResetPasswordUseCaseTest {
     @Before
     fun setUp() {
         Dispatchers.setMain(mainThreadSurrogate)
-        resetPasswordUseCase = ResetPasswordUseCase(mockCognitoIPClient, dummyClientId)
+        resetPasswordUseCase = ResetPasswordUseCase(mockCognitoIPClient, dummyClientId, dummyAppClientSecret)
     }
 
     @After
@@ -82,6 +84,11 @@ class ResetPasswordUseCaseTest {
             username = dummyUserName
             clientMetadata = mapOf()
             clientId = dummyClientId
+            secretHash = AuthHelper.getSecretHash(
+                username,
+                dummyClientId,
+                dummyAppClientSecret
+            )
             analyticsMetadata = AnalyticsMetadataType.invoke { analyticsEndpointId = expectedPinpointEndpointId }
         }
 

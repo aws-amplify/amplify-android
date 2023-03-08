@@ -588,11 +588,17 @@ internal class RealAWSCognitoAuthPlugin(
         authStateMachine.getCurrentState { authState ->
             val authNState = authState.authNState
             val signInState = (authNState as? AuthenticationState.SigningIn)?.signInState
-            when ((signInState as? SignInState.ResolvingChallenge)?.challengeState) {
-                is SignInChallengeState.WaitingForAnswer -> {
-                    _confirmSignIn(challengeResponse, options, onSuccess, onError)
+            if (signInState is SignInState.ResolvingChallenge) {
+                when (signInState.challengeState) {
+                    is SignInChallengeState.WaitingForAnswer -> {
+                        _confirmSignIn(challengeResponse, options, onSuccess, onError)
+                    }
+                    else -> {
+                        onError.accept(InvalidStateException())
+                    }
                 }
-                else -> onError.accept(InvalidStateException())
+            } else {
+                onError.accept(InvalidStateException())
             }
         }
     }
@@ -610,7 +616,6 @@ internal class RealAWSCognitoAuthPlugin(
                 val authNState = authState.authNState
                 val authZState = authState.authZState
                 val signInState = (authNState as? AuthenticationState.SigningIn)?.signInState
-                val challengeState = (signInState as? SignInState.ResolvingChallenge)?.challengeState
                 when {
                     authNState is AuthenticationState.SignedIn &&
                         authZState is AuthorizationState.SessionEstablished -> {
@@ -625,21 +630,34 @@ internal class RealAWSCognitoAuthPlugin(
                     signInState is SignInState.Error -> {
                         authStateMachine.cancel(token)
                         onError.accept(
-                            CognitoAuthExceptionConverter.lookup(signInState.exception, "Confirm Sign in failed.")
+                            CognitoAuthExceptionConverter.lookup(
+                                signInState.exception, "Confirm Sign in failed."
+                            )
+                        )
+                    }
+                    signInState is SignInState.ResolvingChallenge &&
+                        signInState.challengeState is SignInChallengeState.Error -> {
+                        authStateMachine.cancel(token)
+                        onError.accept(
+                            CognitoAuthExceptionConverter.lookup(
+                                (
+                                    signInState.challengeState as SignInChallengeState.Error
+                                    ).exception,
+                                "Confirm Sign in failed."
+                            )
                         )
                     }
                 }
-            },
-            {
-                val awsCognitoConfirmSignInOptions = options as? AWSCognitoAuthConfirmSignInOptions
-                val event = SignInChallengeEvent(
-                    SignInChallengeEvent.EventType.VerifyChallengeAnswer(
-                        challengeResponse,
-                        awsCognitoConfirmSignInOptions?.metadata ?: mapOf()
-                    )
+            }, {
+            val awsCognitoConfirmSignInOptions = options as? AWSCognitoAuthConfirmSignInOptions
+            val event = SignInChallengeEvent(
+                SignInChallengeEvent.EventType.VerifyChallengeAnswer(
+                    challengeResponse,
+                    awsCognitoConfirmSignInOptions?.metadata ?: mapOf()
                 )
-                authStateMachine.send(event)
-            }
+            )
+            authStateMachine.send(event)
+        }
         )
     }
 
@@ -1145,7 +1163,10 @@ internal class RealAWSCognitoAuthPlugin(
                 val encodedData = authEnvironment.getUserContextData(username)
                 val pinpointEndpointId = authEnvironment.getPinpointEndpointId()
 
-                ResetPasswordUseCase(cognitoIdentityProviderClient, appClient).execute(
+                ResetPasswordUseCase(
+                    cognitoIdentityProviderClient, appClient,
+                    configuration.userPool?.appClientSecret
+                ).execute(
                     username,
                     options,
                     encodedData,
@@ -1195,6 +1216,11 @@ internal class RealAWSCognitoAuthPlugin(
                         this.username = username
                         this.confirmationCode = confirmationCode
                         password = newPassword
+                        secretHash = AuthHelper.getSecretHash(
+                            username,
+                            configuration.userPool?.appClient,
+                            configuration.userPool?.appClientSecret
+                        )
                         clientMetadata =
                             (options as? AWSCognitoAuthConfirmResetPasswordOptions)?.metadata ?: mapOf()
                         clientId = configuration.userPool?.appClient

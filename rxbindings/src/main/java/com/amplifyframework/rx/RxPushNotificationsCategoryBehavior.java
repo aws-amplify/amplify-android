@@ -20,8 +20,6 @@ import android.os.Bundle;
 import com.amplifyframework.notifications.pushnotifications.PushNotificationResult;
 import com.amplifyframework.notifications.pushnotifications.PushNotificationsException;
 
-import java.util.Map;
-
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Single;
 

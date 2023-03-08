@@ -6,8 +6,8 @@ type Person @model {
 type Phone @model {
     id: ID!
     number: String!
-    ownedById: ID!
-    ownedBy: Person! @connection(fields: ["ownedById"])
+    ownerOfPhoneId: ID!
+    ownerOfPhone: Person! @connection(fields: ["ownerOfPhoneId"])
     calls: [Call] @connection(fields: ["id"])
 }
 

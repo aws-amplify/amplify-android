@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -26,7 +26,6 @@ import com.amplifyframework.statemachine.codegen.actions.SignInChallengeActions
 import com.amplifyframework.statemachine.codegen.data.AuthChallenge
 import com.amplifyframework.statemachine.codegen.events.CustomSignInEvent
 import com.amplifyframework.statemachine.codegen.events.SignInChallengeEvent
-import com.amplifyframework.statemachine.codegen.events.SignInEvent
 
 internal object SignInChallengeCognitoActions : SignInChallengeActions {
     private const val KEY_SECRET_HASH = "SECRET_HASH"
@@ -81,20 +80,25 @@ internal object SignInChallengeCognitoActions : SignInChallengeActions {
                 )
             )
         } catch (e: Exception) {
-            SignInEvent(SignInEvent.EventType.ThrowError(e))
+            SignInChallengeEvent(SignInChallengeEvent.EventType.ThrowError(e, challenge))
         }
         logger.verbose("$id Sending event ${evt.type}")
         dispatcher.send(evt)
     }
 
+    override fun resetToWaitingForAnswer(
+        event: SignInChallengeEvent.EventType.ThrowError,
+        challenge: AuthChallenge
+    ): Action = Action<AuthEnvironment>("ResetToWaitingForAnswer") { id, dispatcher ->
+        logger.verbose("$id Starting execution")
+        dispatcher.send(SignInChallengeEvent(SignInChallengeEvent.EventType.WaitForAnswer(challenge)))
+    }
+
     private fun getChallengeResponseKey(challengeName: String): String? {
-        val VALUE_ANSWER = "ANSWER"
-        val VALUE_SMS_MFA = "SMS_MFA_CODE"
-        val VALUE_NEW_PASSWORD = "NEW_PASSWORD"
         return when (ChallengeNameType.fromValue(challengeName)) {
-            is ChallengeNameType.SmsMfa -> VALUE_SMS_MFA
-            is ChallengeNameType.NewPasswordRequired -> VALUE_NEW_PASSWORD
-            is ChallengeNameType.CustomChallenge -> VALUE_ANSWER
+            is ChallengeNameType.SmsMfa -> "SMS_MFA_CODE"
+            is ChallengeNameType.NewPasswordRequired -> "NEW_PASSWORD"
+            is ChallengeNameType.CustomChallenge -> "ANSWER"
             else -> null
         }
     }

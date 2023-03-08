@@ -29,8 +29,6 @@ import com.amplifyframework.testutils.random.RandomString;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.rxjava3.observers.TestObserver;

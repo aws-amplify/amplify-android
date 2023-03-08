@@ -19,11 +19,16 @@ import com.amplifyframework.core.Amplify;
 import com.amplifyframework.datastore.utils.ErrorInspector;
 import com.amplifyframework.logging.Logger;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
+import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.core.Scheduler;
 import io.reactivex.rxjava3.core.Single;
-import io.reactivex.rxjava3.core.SingleEmitter;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 
 /**
  * Class for retrying call on failure on a single.
@@ -31,89 +36,107 @@ import io.reactivex.rxjava3.core.SingleEmitter;
 public class RetryHandler {
 
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
-    private static final int MAX_EXPONENT_VALUE = 8;
-    private static final int JITTER_FACTOR_VALUE = 100;
-    private static final int MAX_ATTEMPTS_VALUE = 3;
-    private static final int MAX_DELAY_S_VALUE = 5 * 60;
-    private final int maxExponent;
-    private final int jitterFactor;
-    private final int maxAttempts;
-    private final int maxDelayS;
+    private static final long JITTER_MS_VALUE = 100;
+    @SuppressWarnings("checkstyle:magicnumber")
+    private static final long MAX_DELAY_MS_VALUE = Duration.ofMinutes(5).toMillis();
+    private final long jitterMs;
+    private final long maxDelayMs;
 
     /**
      * Constructor to inject constants for unit testing.
-     * @param maxExponent maxExponent backoff can go to.
-     * @param jitterFactor jitterFactor for backoff.
-     * @param maxAttempts max attempt for retrying.
-     * @param maxDelayS max delay for retrying.
+     *
+     * @param jitterMs   jitterMs for backoff.
+     * @param maxDelayMs max delay for retrying.
      */
-    public RetryHandler(int maxExponent,
-                        int jitterFactor,
-                        int maxAttempts,
-                        int maxDelayS) {
+    public RetryHandler(long jitterMs,
+                        long maxDelayMs) {
 
-        this.maxExponent = maxExponent;
-        this.jitterFactor = jitterFactor;
-        this.maxAttempts = maxAttempts;
-        this.maxDelayS = maxDelayS;
+        this.jitterMs = jitterMs;
+        this.maxDelayMs = maxDelayMs;
     }
 
     /**
      * Parameter less constructor.
      */
     public RetryHandler() {
-        maxExponent = MAX_EXPONENT_VALUE;
-        jitterFactor = JITTER_FACTOR_VALUE;
-        maxAttempts = MAX_ATTEMPTS_VALUE;
-        maxDelayS = MAX_DELAY_S_VALUE;
+        jitterMs = JITTER_MS_VALUE;
+        maxDelayMs = MAX_DELAY_MS_VALUE;
     }
 
     /**
-     * retry.
-     * @param single single to be retried.
-     * @param skipExceptions exceptions which should not be retried.
-     * @param <T> The type for single.
+     * Creates a {@link Single} that wraps a given one to make it retryable.
+     *
+     * @param single                 single to be retried.
+     * @param nonRetryableExceptions exceptions which should not be retried.
+     * @param <T>                    The type for single.
      * @return single of type T.
      */
-    public <T> Single<T> retry(Single<T> single, List<Class<? extends Throwable>> skipExceptions) {
-        return Single.create(emitter -> call(single, emitter, 0L, maxAttempts, skipExceptions));
+    public <T> Single<T> retry(Single<T> single, List<Class<? extends Throwable>> nonRetryableExceptions) {
+        return retry(single, nonRetryableExceptions, Schedulers.computation());
     }
 
-    @SuppressWarnings("ResultOfMethodCallIgnored")
-    private <T> void call(
-            Single<T> single,
-            SingleEmitter<T> emitter,
-            Long delayInSeconds,
-            int attemptsLeft,
-            List<Class<? extends Throwable>> skipExceptions) {
-        single.delaySubscription(delayInSeconds, TimeUnit.SECONDS)
-                .subscribe(emitter::onSuccess, error -> {
-                    if (!emitter.isDisposed()) {
-                        LOG.verbose("Retry attempts left " + attemptsLeft + ". exception type:" + error.getClass());
-                        if (attemptsLeft == 0 || ErrorInspector.contains(error, skipExceptions)) {
-                            emitter.onError(error);
-                        } else {
-                            call(single, emitter, jitteredDelaySec(attemptsLeft),
-                                    attemptsLeft - 1, skipExceptions);
-                        }
-                    } else {
-                        LOG.verbose("The subscribing channel is disposed.");
+    /**
+     * Creates a {@link Single} that wraps a given one to make it retryable.
+     *
+     * @param single                 single to be retried.
+     * @param nonRetryableExceptions exceptions which should not be retried.
+     * @param scheduler              Scheduler to run the timer, useful for Unit Testing.
+     * @param <T>                    The type for single.
+     * @return A new single with retries support.
+     */
+    protected <T> Single<T> retry(Single<T> single, List<Class<? extends Throwable>> nonRetryableExceptions,
+                                  Scheduler scheduler) {
+
+        AtomicInteger numAttempt = new AtomicInteger();
+        AtomicBoolean isInProgress = new AtomicBoolean();
+
+        Observable<T> observable = Observable.fromSingle(single);
+
+        Observable<T> retryableObservable = observable.doOnSubscribe(ignore -> {
+            LOG.info("Starting attempt #" + (numAttempt.get() + 1));
+        }).doOnNext(ignore -> {
+            isInProgress.set(true);
+            LOG.info("Success on attempt #" + (numAttempt.get() + 1));
+        }).retryWhen(errors -> {
+            return errors.flatMap(error -> {
+                if (!ErrorInspector.contains(error, nonRetryableExceptions)) {
+                    long delay = jitteredDelayMillis(numAttempt.get());
+
+                    LOG.warn("Attempt #" + (numAttempt.get() + 1) + " failed.", error);
+
+                    if (delay > maxDelayMs) {
+                        LOG.warn("No more attempts left.");
+                        return Observable.error(error);
                     }
-                });
+
+                    return Observable.timer(delay, TimeUnit.MILLISECONDS, scheduler).doOnSubscribe(ignore -> {
+                        LOG.debug("Retrying in " + delay + " milliseconds.");
+
+                        numAttempt.getAndIncrement();
+                    });
+                }
+
+                LOG.warn("Non-retryable exception.", error);
+                return Observable.error(error);
+            });
+        }).doOnDispose(() -> {
+            if (!isInProgress.get()) {
+                LOG.info("The subscribing channel is disposed, canceling retries.");
+            }
+        });
+
+        return retryableObservable.firstOrError();
     }
 
 
     /**
-     * Method returns jittered delay time in seconds.
-     * @param attemptsLeft number of attempts left.
-     * @return delay in seconds.
+     * Method returns a jittered 2^numAttempt delay time in milliseconds.
+     *
+     * @param numAttempt Attempt number.
+     * @return delay in milliseconds.
      */
-    long jitteredDelaySec(int attemptsLeft) {
-        int numAttempt = maxAttempts - (maxAttempts - attemptsLeft);
-        double waitTimeSeconds =
-                Math.min(maxDelayS, Math.pow(2, ((numAttempt) % maxExponent))
-                        + jitterFactor * Math.random());
-        LOG.debug("Wait time is " + waitTimeSeconds + " seconds before retrying");
-        return (long) waitTimeSeconds;
+    long jitteredDelayMillis(int numAttempt) {
+        return (long) (Duration.ofSeconds((long) Math.pow(2, numAttempt)).toMillis() + (jitterMs * Math.random()));
     }
+
 }
