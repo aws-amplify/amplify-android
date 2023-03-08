@@ -34,7 +34,6 @@ import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
 import com.amplifyframework.statemachine.codegen.events.DeleteUserEvent
 import com.amplifyframework.statemachine.codegen.events.SignOutEvent
-import kotlin.Error
 
 internal sealed class AuthorizationState : State {
     data class NotConfigured(val id: String = "") : AuthorizationState()
