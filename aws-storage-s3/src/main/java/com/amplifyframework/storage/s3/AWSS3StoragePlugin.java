@@ -55,6 +55,8 @@ import com.amplifyframework.storage.s3.operation.AWSS3StorageListOperation;
 import com.amplifyframework.storage.s3.operation.AWSS3StorageRemoveOperation;
 import com.amplifyframework.storage.s3.operation.AWSS3StorageUploadFileOperation;
 import com.amplifyframework.storage.s3.operation.AWSS3StorageUploadInputStreamOperation;
+import com.amplifyframework.storage.s3.options.AWSS3StorageDownloadFileOptions;
+import com.amplifyframework.storage.s3.options.AWSS3StorageGetPresignedUrlOptions;
 import com.amplifyframework.storage.s3.options.AWSS3StorageUploadFileOptions;
 import com.amplifyframework.storage.s3.options.AWSS3StorageUploadInputStreamOptions;
 import com.amplifyframework.storage.s3.request.AWSS3StorageDownloadFileRequest;
@@ -254,6 +256,8 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
         @NonNull StorageGetUrlOptions options,
         @NonNull Consumer<StorageGetUrlResult> onSuccess,
         @NonNull Consumer<StorageException> onError) {
+        boolean useAccelerateEndpoint = options instanceof AWSS3StorageGetPresignedUrlOptions &&
+            ((AWSS3StorageGetPresignedUrlOptions) options).useAccelerateEndpoint();
         AWSS3StorageGetPresignedUrlRequest request = new AWSS3StorageGetPresignedUrlRequest(
             key,
             options.getAccessLevel() != null
@@ -262,7 +266,8 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
             options.getTargetIdentityId(),
             options.getExpires() != 0
                 ? options.getExpires()
-                : defaultUrlExpiration
+                : defaultUrlExpiration,
+            useAccelerateEndpoint
         );
 
         AWSS3StorageGetPresignedUrlOperation operation =
@@ -313,13 +318,17 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
         @NonNull Consumer<StorageDownloadFileResult> onSuccess,
         @NonNull Consumer<StorageException> onError
     ) {
+        boolean useAccelerateEndpoint =
+            options instanceof AWSS3StorageDownloadFileOptions &&
+                ((AWSS3StorageDownloadFileOptions) options).useAccelerateEndpoint();
         AWSS3StorageDownloadFileRequest request = new AWSS3StorageDownloadFileRequest(
             key,
             local,
             options.getAccessLevel() != null
                 ? options.getAccessLevel()
                 : defaultAccessLevel,
-            options.getTargetIdentityId()
+            options.getTargetIdentityId(),
+            useAccelerateEndpoint
         );
 
         AWSS3StorageDownloadFileOperation operation = new AWSS3StorageDownloadFileOperation(
@@ -371,6 +380,8 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
         @NonNull Consumer<StorageUploadFileResult> onSuccess,
         @NonNull Consumer<StorageException> onError
     ) {
+        boolean useAccelerateEndpoint = options instanceof AWSS3StorageUploadFileOptions &&
+            ((AWSS3StorageUploadFileOptions) options).useAccelerateEndpoint();
         AWSS3StorageUploadRequest<File> request = new AWSS3StorageUploadRequest<>(
             key,
             local,
@@ -382,7 +393,8 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
             options instanceof AWSS3StorageUploadFileOptions
                 ? ((AWSS3StorageUploadFileOptions) options).getServerSideEncryption()
                 : ServerSideEncryption.NONE,
-            options.getMetadata()
+            options.getMetadata(),
+            useAccelerateEndpoint
         );
 
         AWSS3StorageUploadFileOperation operation = new AWSS3StorageUploadFileOperation(
@@ -434,6 +446,8 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
         @NonNull Consumer<StorageUploadInputStreamResult> onSuccess,
         @NonNull Consumer<StorageException> onError
     ) {
+        boolean useAccelerateEndpoint = options instanceof AWSS3StorageUploadInputStreamOptions &&
+            ((AWSS3StorageUploadInputStreamOptions) options).useAccelerateEndpoint();
         AWSS3StorageUploadRequest<InputStream> request = new AWSS3StorageUploadRequest<>(
             key,
             local,
@@ -445,7 +459,8 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
             options instanceof AWSS3StorageUploadInputStreamOptions
                 ? ((AWSS3StorageUploadInputStreamOptions) options).getServerSideEncryption()
                 : ServerSideEncryption.NONE,
-            options.getMetadata()
+            options.getMetadata(),
+            useAccelerateEndpoint
         );
 
         AWSS3StorageUploadInputStreamOperation operation = new AWSS3StorageUploadInputStreamOperation(
