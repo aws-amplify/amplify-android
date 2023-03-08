@@ -15,7 +15,6 @@
 
 package com.amplifyframework.auth.cognito.actions
 
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeleteUserRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.UserNotFoundException
 import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.statemachine.Action
@@ -30,29 +29,37 @@ internal object DeleteUserCognitoActions : DeleteUserActions {
         Action<AuthEnvironment>("DeleteUser") { id, dispatcher ->
             logger.verbose("$id Starting execution")
             val evt = try {
-                cognitoAuthService.cognitoIdentityProviderClient?.deleteUser(
-                    DeleteUserRequest.invoke { this.accessToken = accessToken }
-                )
-                AuthenticationEvent(AuthenticationEvent.EventType.SignOutRequested(SignOutData(globalSignOut = false)))
+//                cognitoAuthService.cognitoIdentityProviderClient?.deleteUser(
+//                    DeleteUserRequest.invoke { this.accessToken = accessToken }
+//                )
+                DeleteUserEvent(DeleteUserEvent.EventType.SignOutDeletedUser())
             } catch (e: Exception) {
                 logger.warn("Failed to delete user.", e)
                 if (e is UserNotFoundException) {
                     // The user could have been remotely deleted, clear local session
-                    AuthenticationEvent(
-                        AuthenticationEvent.EventType.SignOutRequested(
-                            SignOutData(globalSignOut = false)
-                        )
-                    )
+                    DeleteUserEvent(DeleteUserEvent.EventType.ThrowError(e, true))
                 } else {
-                    DeleteUserEvent(DeleteUserEvent.EventType.ThrowError(e))
+                    DeleteUserEvent(DeleteUserEvent.EventType.ThrowError(e, false))
                 }
             }
             logger.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
         }
 
-    override fun finishDeletingUser(): Action =
+    override fun finishDeletingUser(signOutUser: Boolean): Action =
         Action<AuthEnvironment>("Finish Deleting User") { _, dispatcher ->
-            dispatcher.send(AuthorizationEvent(AuthorizationEvent.EventType.UserDeleted()))
+            if (signOutUser) {
+                dispatcher.send(
+                    AuthenticationEvent(
+                        AuthenticationEvent.EventType.SignOutRequested(
+                            SignOutData(
+                                globalSignOut = false
+                            )
+                        )
+                    )
+                )
+            } else {
+                dispatcher.send(AuthorizationEvent(AuthorizationEvent.EventType.UserDeleted()))
+            }
         }
 }

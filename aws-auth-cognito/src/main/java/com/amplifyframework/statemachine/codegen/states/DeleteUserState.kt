@@ -55,11 +55,20 @@ internal sealed class DeleteUserState : State {
                 is DeletingUser -> {
                     when (deleteUserEvent) {
                         is DeleteUserEvent.EventType.SignOutDeletedUser -> {
-                            val action = deleteUserActions.finishDeletingUser()
-                            StateResolution(UserDeleted(), listOf(action))
+                            val action = deleteUserActions.finishDeletingUser(true)
+                            StateResolution(DeletingUser(), listOf(action))
                         }
                         is DeleteUserEvent.EventType.ThrowError -> {
-                            StateResolution(Error(deleteUserEvent.exception))
+                            if (deleteUserEvent.signOutUser) {
+                                val action = deleteUserActions.finishDeletingUser(true)
+                                StateResolution(DeletingUser(), listOf(action))
+                            } else {
+                                StateResolution(Error(deleteUserEvent.exception))
+                            }
+                        }
+                        is DeleteUserEvent.EventType.UserSignedOutAndDeleted -> {
+                            val action = deleteUserActions.finishDeletingUser(false)
+                            StateResolution(UserDeleted(), listOf(action))
                         }
                         else -> StateResolution(oldState)
                     }

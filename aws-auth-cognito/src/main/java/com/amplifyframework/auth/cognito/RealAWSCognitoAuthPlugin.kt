@@ -1739,11 +1739,16 @@ internal class RealAWSCognitoAuthPlugin(
             { authState ->
                 when (val authNState = authState.authNState) {
                     is AuthenticationState.SignedOut -> {
-                        val event = DeleteUserEvent(DeleteUserEvent.EventType.SignOutDeletedUser())
+                        val event = DeleteUserEvent(DeleteUserEvent.EventType.UserSignedOutAndDeleted())
                         authStateMachine.send(event)
                     }
                     is AuthenticationState.Error -> {
-                        val event = DeleteUserEvent(DeleteUserEvent.EventType.ThrowError(authNState.exception))
+                        val event = DeleteUserEvent(
+                            DeleteUserEvent.EventType.ThrowError(
+                                authNState.exception,
+                                false
+                            )
+                        )
                         authStateMachine.send(event)
                     }
                     else -> {

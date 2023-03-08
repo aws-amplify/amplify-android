@@ -26,7 +26,7 @@ internal class DeleteUserEvent(
         data class DeleteUser(val accessToken: String) : EventType()
         data class UserSignedOutAndDeleted(val id: String = "") : EventType()
         data class SignOutDeletedUser(val id: String = "") : EventType()
-        data class ThrowError(val exception: Exception) : EventType()
+        data class ThrowError(val exception: Exception, val signOutUser: Boolean) : EventType()
     }
 
     override val type: String = eventType.javaClass.simpleName
