@@ -15,6 +15,7 @@
 
 package com.amplifyframework.auth.cognito.actions
 
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeleteUserRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.UserNotFoundException
 import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.statemachine.Action
@@ -29,9 +30,9 @@ internal object DeleteUserCognitoActions : DeleteUserActions {
         Action<AuthEnvironment>("DeleteUser") { id, dispatcher ->
             logger.verbose("$id Starting execution")
             val evt = try {
-//                cognitoAuthService.cognitoIdentityProviderClient?.deleteUser(
-//                    DeleteUserRequest.invoke { this.accessToken = accessToken }
-//                )
+                cognitoAuthService.cognitoIdentityProviderClient?.deleteUser(
+                    DeleteUserRequest.invoke { this.accessToken = accessToken }
+                )
                 DeleteUserEvent(DeleteUserEvent.EventType.SignOutDeletedUser())
             } catch (e: Exception) {
                 logger.warn("Failed to delete user.", e)
