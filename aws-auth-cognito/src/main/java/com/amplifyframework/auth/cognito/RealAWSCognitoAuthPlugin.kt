@@ -148,7 +148,6 @@ import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
-import org.json.JSONObject
 
 internal class RealAWSCognitoAuthPlugin(
     private val configuration: AuthConfiguration,
