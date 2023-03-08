@@ -36,6 +36,7 @@ public final class AWSS3StorageUploadRequest<L> {
     private final String contentType;
     private final ServerSideEncryption serverSideEncryption;
     private final Map<String, String> metadata;
+    private final boolean useAccelerateEndpoint;
 
     /**
      * Constructs a new AWSS3StorageUploadRequest.
@@ -50,6 +51,7 @@ public final class AWSS3StorageUploadRequest<L> {
      * @param contentType The standard MIME type describing the format of the object to store
      * @param serverSideEncryption server side encryption type for the current storage bucket
      * @param metadata Metadata for the object to store
+     * @param useAccelerateEndpoint flag to use acceleration endpoint.
      */
     public AWSS3StorageUploadRequest(
             @NonNull String key,
@@ -58,7 +60,8 @@ public final class AWSS3StorageUploadRequest<L> {
             @Nullable String targetIdentityId,
             @Nullable String contentType,
             @NonNull ServerSideEncryption serverSideEncryption,
-            @Nullable Map<String, String> metadata
+            @Nullable Map<String, String> metadata,
+            boolean useAccelerateEndpoint
     ) {
         this.key = key;
         this.local = local;
@@ -70,6 +73,7 @@ public final class AWSS3StorageUploadRequest<L> {
         if (metadata != null) {
             this.metadata.putAll(metadata);
         }
+        this.useAccelerateEndpoint = useAccelerateEndpoint;
     }
 
     /**
@@ -133,6 +137,15 @@ public final class AWSS3StorageUploadRequest<L> {
     @NonNull
     public Map<String, String> getMetadata() {
         return metadata;
+    }
+
+    /**
+     * Gets the flag to determine whether to use acceleration endpoint.
+     *
+     * @return boolean flag
+     */
+    public boolean useAccelerateEndpoint() {
+        return useAccelerateEndpoint;
     }
 }
 

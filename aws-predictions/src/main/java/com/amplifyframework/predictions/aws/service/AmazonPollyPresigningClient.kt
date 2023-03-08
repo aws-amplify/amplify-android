@@ -17,7 +17,6 @@ package com.amplifyframework.predictions.aws.service
 import androidx.annotation.WorkerThread
 import aws.sdk.kotlin.services.polly.PollyClient
 import aws.sdk.kotlin.services.polly.model.SynthesizeSpeechRequest
-import aws.sdk.kotlin.services.polly.presigners.PollyPresignConfig
 import aws.sdk.kotlin.services.polly.presigners.presign
 import java.net.URL
 import kotlin.time.Duration.Companion.seconds
@@ -51,12 +50,10 @@ class AmazonPollyPresigningClient(pollyClient: PollyClient) : PollyClient by pol
         options: PresignedSynthesizeSpeechUrlOptions
     ): URL {
         val presignCredentialsProvider = options.credentialsProvider ?: this.config.credentialsProvider
-        val presignConfig = PollyPresignConfig {
-            region = this@AmazonPollyPresigningClient.config.region
-            credentialsProvider = presignCredentialsProvider
-        }
+        val configBuilder = this@AmazonPollyPresigningClient.config.toBuilder()
+        configBuilder.credentialsProvider = presignCredentialsProvider
         val presignedRequest = runBlocking {
-            synthesizeSpeechRequest.presign(presignConfig, options.expires.seconds)
+            synthesizeSpeechRequest.presign(configBuilder.build(), options.expires.seconds)
         }
         return URL(presignedRequest.url.toString())
     }

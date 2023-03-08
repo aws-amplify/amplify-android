@@ -94,10 +94,11 @@ internal class TransferManager @JvmOverloads constructor(
         file: File,
         metadata: ObjectMetadata,
         cannedAcl: ObjectCannedAcl? = null,
-        listener: TransferListener? = null
+        listener: TransferListener? = null,
+        useAccelerateEndpoint: Boolean = false
     ): TransferObserver {
         val transferRecordId = if (shouldUploadInMultipart(file)) {
-            createMultipartUploadRecords(transferId, bucket, key, file, metadata, cannedAcl)
+            createMultipartUploadRecords(transferId, bucket, key, file, metadata, cannedAcl, useAccelerateEndpoint)
         } else {
             val uri = transferDB.insertSingleTransferRecord(
                 transferId,
@@ -106,7 +107,8 @@ internal class TransferManager @JvmOverloads constructor(
                 key,
                 file,
                 cannedAcl,
-                metadata
+                metadata,
+                useAccelerateEndpoint = useAccelerateEndpoint
             )
             uri.lastPathSegment?.toInt()
                 ?: throw IllegalStateException("Invalid TransferRecord ID ${uri.lastPathSegment}")
@@ -135,7 +137,8 @@ internal class TransferManager @JvmOverloads constructor(
         transferId: String,
         key: String,
         inputStream: InputStream,
-        options: UploadOptions
+        options: UploadOptions,
+        useAccelerateEndpoint: Boolean
     ): TransferObserver {
         val file = writeInputStreamToFile(inputStream)
         return upload(
@@ -145,7 +148,8 @@ internal class TransferManager @JvmOverloads constructor(
             file,
             options.objectMetadata,
             options.cannedAcl,
-            options.transferListener
+            options.transferListener,
+            useAccelerateEndpoint
         )
     }
 
@@ -155,12 +159,20 @@ internal class TransferManager @JvmOverloads constructor(
         bucket: String,
         key: String,
         file: File,
-        listener: TransferListener? = null
+        listener: TransferListener? = null,
+        useAccelerateEndpoint: Boolean = false
     ): TransferObserver {
         if (file.isDirectory) {
             throw IllegalArgumentException("Invalid file: $file")
         }
-        val uri = transferDB.insertSingleTransferRecord(transferId, TransferType.DOWNLOAD, bucket, key, file)
+        val uri = transferDB.insertSingleTransferRecord(
+            transferId,
+            TransferType.DOWNLOAD,
+            bucket,
+            key,
+            file,
+            useAccelerateEndpoint = useAccelerateEndpoint
+        )
         val transferRecordId: Int = uri.lastPathSegment?.toInt()
             ?: throw IllegalStateException("Invalid TransferRecord ID ${uri.lastPathSegment}")
         if (file.isFile) {
@@ -235,6 +247,7 @@ internal class TransferManager @JvmOverloads constructor(
         file: File,
         metadata: ObjectMetadata,
         cannedAcl: ObjectCannedAcl?,
+        useAccelerateEndpoint: Boolean
     ): Int {
         var remainingLength = file.length()
         val partSize =
@@ -255,7 +268,8 @@ internal class TransferManager @JvmOverloads constructor(
             file.length(),
             0,
             metadata,
-            cannedAcl
+            cannedAcl,
+            useAccelerateEndpoint
         )
         repeat(partCount) {
             val bytesForPart = min(optimalPartSize, remainingLength)
@@ -270,7 +284,8 @@ internal class TransferManager @JvmOverloads constructor(
                 bytesForPart,
                 if (remainingLength - optimalPartSize <= 0) 1 else 0,
                 metadata,
-                cannedAcl
+                cannedAcl,
+                useAccelerateEndpoint
             )
             partNum++
             fileOffset += optimalPartSize
