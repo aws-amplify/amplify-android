@@ -19,6 +19,7 @@ import androidx.work.WorkerParameters
 import aws.sdk.kotlin.services.s3.S3Client
 import aws.sdk.kotlin.services.s3.completeMultipartUpload
 import aws.sdk.kotlin.services.s3.model.CompletedMultipartUpload
+import aws.sdk.kotlin.services.s3.withConfig
 import com.amplifyframework.storage.s3.transfer.TransferDB
 import com.amplifyframework.storage.s3.transfer.TransferStatusUpdater
 
@@ -35,7 +36,9 @@ internal class CompleteMultiPartUploadWorker(
 
     override suspend fun performWork(): Result {
         val completedParts = transferDB.queryPartETagsOfUpload(transferRecord.id)
-        return s3.completeMultipartUpload {
+        return s3.withConfig {
+            enableAccelerate = transferRecord.useAccelerateEndpoint == 1
+        }.completeMultipartUpload {
             bucket = transferRecord.bucketName
             key = transferRecord.key
             multipartUpload = CompletedMultipartUpload {
