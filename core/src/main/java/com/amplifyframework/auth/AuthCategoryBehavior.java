@@ -19,7 +19,6 @@ import android.app.Activity;
 import android.content.Intent;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
 
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions;
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions;
@@ -41,8 +40,6 @@ import com.amplifyframework.auth.result.AuthSignUpResult;
 import com.amplifyframework.auth.result.AuthUpdateAttributeResult;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
-
-import org.json.JSONObject;
 
 import java.util.List;
 import java.util.Map;

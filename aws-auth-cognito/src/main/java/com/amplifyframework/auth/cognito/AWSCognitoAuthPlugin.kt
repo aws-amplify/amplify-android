@@ -93,6 +93,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
     }
 
     private lateinit var pluginConfigurationJSON: JSONObject
+
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     fun getPluginConfiguration(): JSONObject {
         return pluginConfigurationJSON
