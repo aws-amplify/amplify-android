@@ -121,8 +121,8 @@ public final class AWSS3StorageGetPresignedUrlOptions extends StorageGetUrlOptio
         private boolean useAccelerateEndpoint;
 
         /**
-         * Configure to use acceleration mode on new StorageDownloadFileOptions instances.
-         * @param useAccelerateEndpoint flag to represent acceleration mode for new DownloadFileOptions instance
+         * Configure to use acceleration mode on new StorageGetPresignedUrlOptions instances.
+         * @param useAccelerateEndpoint flag to represent acceleration mode for new GetPresignedUrlOptions instance
          * @return Current Builder instance for fluent chaining
          */
         public Builder setUseAccelerateEndpoint(boolean useAccelerateEndpoint) {

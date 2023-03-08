@@ -149,8 +149,8 @@ public final class AWSS3StorageUploadFileOptions extends StorageUploadFileOption
         }
 
         /**
-         * Configure to use acceleration mode.
-         * @param useAccelerateEndpoint flag to represent acceleration mode for new DownloadFileOptions instance
+         * Configure to use acceleration mode on new StorageUploadFileOptions instances.
+         * @param useAccelerateEndpoint flag to represent acceleration mode for new UploadFileOptions instance
          * @return Current Builder instance for fluent chaining
          */
         public Builder setUseAccelerateEndpoint(boolean useAccelerateEndpoint) {

@@ -149,8 +149,8 @@ public final class AWSS3StorageUploadInputStreamOptions extends StorageUploadInp
         }
 
         /**
-         * Configure to use acceleration mode on new StorageDownloadFileOptions instances.
-         * @param useAccelerateEndpoint flag to represent acceleration mode for new DownloadFileOptions instance
+         * Configure to use acceleration mode on new StorageUploadInputStreamOptions instances.
+         * @param useAccelerateEndpoint flag to represent acceleration mode for new UploadInputStreamOptions instance
          * @return Current Builder instance for fluent chaining
          */
         public Builder setUseAccelerateEndpoint(boolean useAccelerateEndpoint) {
