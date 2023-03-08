@@ -39,9 +39,10 @@ public interface StorageService {
      *
      * @param serviceKey key to uniquely specify item to generate URL for
      * @param expires    Number of seconds before URL expires
+     * @param useAccelerateEndpoint Flag to enable acceleration endpoint
      * @return A pre-signed URL
      */
-    URL getPresignedUrl(@NonNull String serviceKey, int expires);
+    URL getPresignedUrl(@NonNull String serviceKey, int expires, boolean useAccelerateEndpoint);
 
     /**
      * Begin downloading a specific item to a file and return an observer
@@ -50,11 +51,14 @@ public interface StorageService {
      * @param transferId unique id for this transfer
      * @param serviceKey key to uniquely specify item to download
      * @param file       file to write downloaded item
+     * @param useAccelerateEndpoint flag to use accelerate endpoint
      * @return An instance of {@link TransferObserver} to monitor download
      */
     TransferObserver downloadToFile(@NonNull String transferId,
                                     @NonNull String serviceKey,
-                                    @NonNull File file);
+                                    @NonNull File file,
+                                    boolean useAccelerateEndpoint);
+
 
     /**
      * Begin uploading a file to a key in storage and return an observer
@@ -65,12 +69,14 @@ public interface StorageService {
      * @param serviceKey Key to uniquely label item in storage
      * @param file       file to upload
      * @param metadata   metadata to attach to uploaded item
+     * @param useAccelerateEndpoint flag to use accelerate endpoint
      * @return An instance of {@link TransferObserver} to monitor upload
      */
     TransferObserver uploadFile(@NonNull String transferId,
                                 @NonNull String serviceKey,
                                 @NonNull File file,
-                                @NonNull ObjectMetadata metadata);
+                                @NonNull ObjectMetadata metadata,
+                                boolean useAccelerateEndpoint);
 
     /**
      * Begin uploading an InputStream to a key in storage and return an observer
@@ -81,6 +87,7 @@ public interface StorageService {
      * @param serviceKey  key to uniquely label item in storage
      * @param inputStream InputStream from which to read content
      * @param metadata    Metadata to attach to uploaded item
+     * @param useAccelerateEndpoint Flag to use accelerate endpoint
      * @return An instance of {@link TransferObserver} to monitor upload
      * @throws IOException on error reading the InputStream, or saving it to a temporary
      *                     File before the upload begins.
@@ -88,7 +95,8 @@ public interface StorageService {
     TransferObserver uploadInputStream(@NonNull String transferId,
                                        @NonNull String serviceKey,
                                        @NonNull InputStream inputStream,
-                                       @NonNull ObjectMetadata metadata)
+                                       @NonNull ObjectMetadata metadata,
+                                       boolean useAccelerateEndpoint)
         throws IOException;
 
     /**

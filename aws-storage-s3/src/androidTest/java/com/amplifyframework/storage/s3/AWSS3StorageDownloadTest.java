@@ -32,6 +32,7 @@ import com.amplifyframework.storage.TransferState;
 import com.amplifyframework.storage.operation.StorageDownloadFileOperation;
 import com.amplifyframework.storage.options.StorageDownloadFileOptions;
 import com.amplifyframework.storage.options.StorageUploadFileOptions;
+import com.amplifyframework.storage.s3.options.AWSS3StorageDownloadFileOptions;
 import com.amplifyframework.storage.s3.test.R;
 import com.amplifyframework.storage.s3.util.WorkmanagerTestUtils;
 import com.amplifyframework.testutils.FileAssert;
@@ -96,8 +97,8 @@ public final class AWSS3StorageDownloadTest {
         // Upload to PUBLIC for consistency
         String key;
         StorageUploadFileOptions uploadOptions = StorageUploadFileOptions.builder()
-                .accessLevel(TESTING_ACCESS_LEVEL)
-                .build();
+            .accessLevel(TESTING_ACCESS_LEVEL)
+            .build();
 
         // Upload large test file
         largeFile = new RandomTempFile(LARGE_FILE_NAME, LARGE_FILE_SIZE);
@@ -119,8 +120,8 @@ public final class AWSS3StorageDownloadTest {
     public void setUp() throws Exception {
         // Always interact with PUBLIC access for consistency
         options = StorageDownloadFileOptions.builder()
-                .accessLevel(TESTING_ACCESS_LEVEL)
-                .build();
+            .accessLevel(TESTING_ACCESS_LEVEL)
+            .build();
 
         // Create a set to remember all the subscriptions
         subscriptions = new HashSet<>();
@@ -273,7 +274,7 @@ public final class AWSS3StorageDownloadTest {
         final AtomicReference<StorageDownloadFileOperation<?>> opContainer = new AtomicReference<>();
         final AtomicReference<String> transferId = new AtomicReference<>();
         final AtomicReference<Throwable> errorContainer = new AtomicReference<>();
-            // Listen to Hub events to resume when operation has been paused
+        // Listen to Hub events to resume when operation has been paused
         SubscriptionToken resumeToken = Amplify.Hub.subscribe(HubChannel.STORAGE, hubEvent -> {
             if (StorageChannelEventName.DOWNLOAD_STATE.toString().equals(hubEvent.getName())) {
                 HubEvent<String> stateEvent = (HubEvent<String>) hubEvent;
@@ -316,5 +317,17 @@ public final class AWSS3StorageDownloadTest {
         assertTrue(completed.await(EXTENDED_TIMEOUT_MS, TimeUnit.MILLISECONDS));
         assertNull(errorContainer.get());
         FileAssert.assertEquals(largeFile, downloadFile);
+    }
+
+    /**
+     * Tests download fails due to acceleration mode disabled.
+     *
+     * @throws Exception download fails because acceleration is not enabled on test bucket.
+     */
+    @Test
+    public void testDownloadLargeFileWithAccelerationEnabled() throws Exception {
+        AWSS3StorageDownloadFileOptions awsS3Options =
+            AWSS3StorageDownloadFileOptions.builder().setUseAccelerateEndpoint(true).build();
+        synchronousStorage.downloadFile(LARGE_FILE_NAME, downloadFile, awsS3Options, EXTENDED_TIMEOUT_MS);
     }
 }
