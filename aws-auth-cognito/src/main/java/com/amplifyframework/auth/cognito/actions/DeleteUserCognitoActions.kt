@@ -22,6 +22,7 @@ import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.DeleteUserActions
 import com.amplifyframework.statemachine.codegen.data.SignOutData
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
+import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
 import com.amplifyframework.statemachine.codegen.events.DeleteUserEvent
 
 internal object DeleteUserCognitoActions : DeleteUserActions {
@@ -48,5 +49,10 @@ internal object DeleteUserCognitoActions : DeleteUserActions {
             }
             logger.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
+        }
+
+    override fun finishDeletingUser(): Action =
+        Action<AuthEnvironment>("Finish Deleting User") { _, dispatcher ->
+            dispatcher.send(AuthorizationEvent(AuthorizationEvent.EventType.UserDeleted()))
         }
 }

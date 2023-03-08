@@ -929,62 +929,57 @@ internal class RealAWSCognitoAuthPlugin(
     ) {
         val forceRefresh = options.forceRefresh
         authStateMachine.getCurrentState { authState ->
-            if (authState.authNState is AuthenticationState.SignedOut) {
-                authStateMachine.send(AuthorizationEvent(AuthorizationEvent.EventType.FetchUnAuthSession))
-                _fetchAuthSession(onSuccess, onError)
-            } else {
-                when (val authZState = authState.authZState) {
-                    is AuthorizationState.Configured, -> {
-                        authStateMachine.send(AuthorizationEvent(AuthorizationEvent.EventType.FetchUnAuthSession))
-                        _fetchAuthSession(onSuccess, onError)
-                    }
-                    is AuthorizationState.SessionEstablished -> {
-                        val credential = authZState.amplifyCredential
-                        if (!credential.isValid() || forceRefresh) {
-                            if (credential is AmplifyCredential.IdentityPoolFederated) {
-                                authStateMachine.send(
-                                    AuthorizationEvent(
-                                        AuthorizationEvent.EventType.StartFederationToIdentityPool(
-                                            credential.federatedToken,
-                                            credential.identityId,
-                                            credential
-                                        )
-                                    )
-                                )
-                            } else {
-                                authStateMachine.send(
-                                    AuthorizationEvent(AuthorizationEvent.EventType.RefreshSession(credential))
-                                )
-                            }
-                            _fetchAuthSession(onSuccess, onError)
-                        } else onSuccess.accept(credential.getCognitoSession())
-                    }
-                    is AuthorizationState.Error -> {
-                        val error = authZState.exception
-                        if (error is SessionError) {
-                            val amplifyCredential = error.amplifyCredential
-                            if (amplifyCredential is AmplifyCredential.IdentityPoolFederated) {
-                                authStateMachine.send(
-                                    AuthorizationEvent(
-                                        AuthorizationEvent.EventType.StartFederationToIdentityPool(
-                                            amplifyCredential.federatedToken,
-                                            amplifyCredential.identityId,
-                                            amplifyCredential
-                                        )
-                                    )
-                                )
-                            } else {
-                                authStateMachine.send(
-                                    AuthorizationEvent(AuthorizationEvent.EventType.RefreshSession(amplifyCredential))
-                                )
-                            }
-                            _fetchAuthSession(onSuccess, onError)
-                        } else {
-                            onError.accept(InvalidStateException())
-                        }
-                    }
-                    else -> onError.accept(InvalidStateException())
+            when (val authZState = authState.authZState) {
+                is AuthorizationState.Configured -> {
+                    authStateMachine.send(AuthorizationEvent(AuthorizationEvent.EventType.FetchUnAuthSession))
+                    _fetchAuthSession(onSuccess, onError)
                 }
+                is AuthorizationState.SessionEstablished -> {
+                    val credential = authZState.amplifyCredential
+                    if (!credential.isValid() || forceRefresh) {
+                        if (credential is AmplifyCredential.IdentityPoolFederated) {
+                            authStateMachine.send(
+                                AuthorizationEvent(
+                                    AuthorizationEvent.EventType.StartFederationToIdentityPool(
+                                        credential.federatedToken,
+                                        credential.identityId,
+                                        credential
+                                    )
+                                )
+                            )
+                        } else {
+                            authStateMachine.send(
+                                AuthorizationEvent(AuthorizationEvent.EventType.RefreshSession(credential))
+                            )
+                        }
+                        _fetchAuthSession(onSuccess, onError)
+                    } else onSuccess.accept(credential.getCognitoSession())
+                }
+                is AuthorizationState.Error -> {
+                    val error = authZState.exception
+                    if (error is SessionError) {
+                        val amplifyCredential = error.amplifyCredential
+                        if (amplifyCredential is AmplifyCredential.IdentityPoolFederated) {
+                            authStateMachine.send(
+                                AuthorizationEvent(
+                                    AuthorizationEvent.EventType.StartFederationToIdentityPool(
+                                        amplifyCredential.federatedToken,
+                                        amplifyCredential.identityId,
+                                        amplifyCredential
+                                    )
+                                )
+                            )
+                        } else {
+                            authStateMachine.send(
+                                AuthorizationEvent(AuthorizationEvent.EventType.RefreshSession(amplifyCredential))
+                            )
+                        }
+                        _fetchAuthSession(onSuccess, onError)
+                    } else {
+                        onError.accept(InvalidStateException())
+                    }
+                }
+                else -> onError.accept(InvalidStateException())
             }
         }
     }

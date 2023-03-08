@@ -34,6 +34,7 @@ import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
 import com.amplifyframework.statemachine.codegen.events.DeleteUserEvent
 import com.amplifyframework.statemachine.codegen.events.SignOutEvent
+import kotlin.Error
 
 internal sealed class AuthorizationState : State {
     data class NotConfigured(val id: String = "") : AuthorizationState()
@@ -231,9 +232,17 @@ internal sealed class AuthorizationState : State {
                         )
                     }
                 }
-                is DeletingUser -> {
-                    val resolution = deleteUserResolver.resolve(oldState.deleteUserState, event)
-                    StateResolution(DeletingUser(resolution.newState), resolution.actions)
+                is DeletingUser -> when (authorizationEvent) {
+                    is AuthorizationEvent.EventType.UserDeleted -> {
+                        StateResolution(Configured())
+                    }
+                    is AuthorizationEvent.EventType.ThrowError -> {
+                        StateResolution(Error(authorizationEvent.exception))
+                    }
+                    else -> {
+                        val resolution = deleteUserResolver.resolve(oldState.deleteUserState, event)
+                        StateResolution(DeletingUser(resolution.newState), resolution.actions)
+                    }
                 }
                 is SessionEstablished -> when {
                     authenticationEvent is AuthenticationEvent.EventType.SignInRequested -> StateResolution(SigningIn())
