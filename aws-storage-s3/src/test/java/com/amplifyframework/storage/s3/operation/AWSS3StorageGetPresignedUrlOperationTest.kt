@@ -50,7 +50,8 @@ public class AWSS3StorageGetPresignedUrlOperationTest {
             key,
             StorageAccessLevel.PUBLIC,
             "",
-            1
+            1,
+            false
         )
         coEvery { authCredentialsProvider.getIdentityId() } returns "abc"
         awsS3StorageGetPresignedUrlOperation = AWSS3StorageGetPresignedUrlOperation(
@@ -63,7 +64,7 @@ public class AWSS3StorageGetPresignedUrlOperationTest {
             {}
         )
         awsS3StorageGetPresignedUrlOperation.start()
-        Mockito.verify(storageService).getPresignedUrl(expectedKey, 1)
+        Mockito.verify(storageService).getPresignedUrl(expectedKey, 1, false)
     }
 
     @Test
@@ -74,7 +75,8 @@ public class AWSS3StorageGetPresignedUrlOperationTest {
             key,
             StorageAccessLevel.PUBLIC,
             "",
-            1
+            1,
+            false
         )
         coEvery { authCredentialsProvider.getIdentityId() } returns "abc"
         awsS3StorageGetPresignedUrlOperation = AWSS3StorageGetPresignedUrlOperation(
@@ -98,7 +100,7 @@ public class AWSS3StorageGetPresignedUrlOperationTest {
             { Log.e("TAG", "$it") }
         )
         awsS3StorageGetPresignedUrlOperation.start()
-        Mockito.verify(storageService).getPresignedUrl(expectedKey, 1)
+        Mockito.verify(storageService).getPresignedUrl(expectedKey, 1, false)
     }
 
     @Test
@@ -109,7 +111,8 @@ public class AWSS3StorageGetPresignedUrlOperationTest {
             key,
             StorageAccessLevel.PUBLIC,
             "",
-            1
+            1,
+            false
         )
         coEvery { authCredentialsProvider.getIdentityId() } returns "abc"
         awsS3StorageGetPresignedUrlOperation = AWSS3StorageGetPresignedUrlOperation(
@@ -133,6 +136,6 @@ public class AWSS3StorageGetPresignedUrlOperationTest {
             { Log.e("TAG", "$it") }
         )
         awsS3StorageGetPresignedUrlOperation.start()
-        Mockito.verify(storageService).getPresignedUrl(expectedKey, 1)
+        Mockito.verify(storageService).getPresignedUrl(expectedKey, 1, false)
     }
 }
