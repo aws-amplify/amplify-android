@@ -26,7 +26,6 @@ import java.lang.Exception
 internal sealed class DeleteUserState : State {
     data class NotStarted(val id: String = "") : DeleteUserState()
     data class DeletingUser(val id: String = "") : DeleteUserState()
-    data class SigningOut(val id: String = "") : DeleteUserState()
     data class UserDeleted(val id: String = "") : DeleteUserState()
     data class Error(val exception: Exception) : DeleteUserState()
 
@@ -54,30 +53,21 @@ internal sealed class DeleteUserState : State {
                 }
                 is DeletingUser -> {
                     when (deleteUserEvent) {
-                        is DeleteUserEvent.EventType.SignOutDeletedUser -> {
+                        is DeleteUserEvent.EventType.UserDeleted -> {
                             val action = deleteUserActions.initiateSignOut()
-                            StateResolution(SigningOut(), listOf(action))
+                            StateResolution(UserDeleted(), listOf(action))
                         }
                         is DeleteUserEvent.EventType.ThrowError -> {
                             if (deleteUserEvent.signOutUser) {
                                 val action = deleteUserActions.initiateSignOut()
-                                StateResolution(DeletingUser(), listOf(action))
+                                StateResolution(UserDeleted(), listOf(action))
                             } else {
                                 StateResolution(Error(deleteUserEvent.exception))
                             }
                         }
                         else -> StateResolution(oldState)
                     }
-                }
-                is SigningOut -> {
-                    when (deleteUserEvent) {
-                        is DeleteUserEvent.EventType.UserSignedOutAndDeleted -> {
-                            StateResolution(UserDeleted())
-                        }
-                        else -> StateResolution(oldState)
-                    }
-                }
-                else -> StateResolution(oldState)
+                } else -> StateResolution(oldState)
             }
         }
     }

@@ -24,8 +24,7 @@ internal class DeleteUserEvent(
 ) : StateMachineEvent {
     sealed class EventType {
         data class DeleteUser(val accessToken: String) : EventType()
-        data class UserSignedOutAndDeleted(val id: String = "") : EventType()
-        data class SignOutDeletedUser(val id: String = "") : EventType()
+        data class UserDeleted(val id: String = "") : EventType()
         data class ThrowError(val exception: Exception, val signOutUser: Boolean) : EventType()
     }
 

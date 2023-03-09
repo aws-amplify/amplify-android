@@ -1737,42 +1737,34 @@ internal class RealAWSCognitoAuthPlugin(
         authStateMachine.listen(
             listenerToken,
             { authState ->
-                when (val authNState = authState.authNState) {
-                    is AuthenticationState.SignedOut -> {
-                        val event = DeleteUserEvent(DeleteUserEvent.EventType.UserSignedOutAndDeleted())
-                        authStateMachine.send(event)
-                    }
-                    is AuthenticationState.Error -> {
-                        val event = DeleteUserEvent(
-                            DeleteUserEvent.EventType.ThrowError(
-                                authNState.exception,
-                                false
+                if (authState is AuthState.Configured) {
+                    val (authNState, authZState) = authState
+                    when {
+                        authNState is AuthenticationState.SignedOut && authZState is AuthorizationState.Configured -> {
+                            sendHubEvent(AuthChannelEventName.USER_DELETED.toString())
+                            authStateMachine.cancel(listenerToken)
+                            onSuccess.call()
+                        }
+                        authNState is AuthenticationState.Error -> {
+                            authStateMachine.cancel(listenerToken)
+                            onError.accept(
+                                CognitoAuthExceptionConverter.lookup(
+                                    authNState.exception,
+                                    "Failed to sign user out after deleting user."
+                                )
                             )
-                        )
-                        authStateMachine.send(event)
-                    }
-                    else -> {
-                        // No-op
-                    }
-                }
-                val authZState = authState.authZState as? AuthorizationState.DeletingUser
-                when (val deleteUserState = authZState?.deleteUserState) {
-                    is DeleteUserState.UserDeleted -> {
-                        onSuccess.call()
-                        sendHubEvent(AuthChannelEventName.USER_DELETED.toString())
-                        authStateMachine.cancel(listenerToken)
-                    }
-                    is DeleteUserState.Error -> {
-                        authStateMachine.cancel(listenerToken)
-                        onError.accept(
-                            CognitoAuthExceptionConverter.lookup(
-                                deleteUserState.exception,
-                                "Request to delete user may have failed. Please check exception stack"
+                        }
+                        authZState is AuthorizationState.Error -> {
+                            onError.accept(
+                                CognitoAuthExceptionConverter.lookup(
+                                    authZState.exception,
+                                    "Request to delete user may have failed. Please check exception stack"
+                                )
                             )
-                        )
-                    }
-                    else -> {
-                        // No-op
+                        }
+                        else -> {
+                            // No - op
+                        }
                     }
                 }
             },

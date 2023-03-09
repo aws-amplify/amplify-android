@@ -33,7 +33,7 @@ internal object DeleteUserCognitoActions : DeleteUserActions {
                 cognitoAuthService.cognitoIdentityProviderClient?.deleteUser(
                     DeleteUserRequest.invoke { this.accessToken = accessToken }
                 )
-                DeleteUserEvent(DeleteUserEvent.EventType.SignOutDeletedUser())
+                DeleteUserEvent(DeleteUserEvent.EventType.UserDeleted())
             } catch (e: Exception) {
                 logger.warn("Failed to delete user.", e)
                 if (e is UserNotFoundException) {
@@ -48,13 +48,16 @@ internal object DeleteUserCognitoActions : DeleteUserActions {
         }
 
     override fun initiateSignOut(): Action =
-        Action<AuthEnvironment>("Sign Out Deleted User") { _, dispatcher ->
-            dispatcher.send(
-                AuthenticationEvent(
-                    AuthenticationEvent.EventType.SignOutRequested(
-                        SignOutData()
-                    )
+        Action<AuthEnvironment>("Sign Out Deleted User") { id, dispatcher ->
+            logger.verbose("$id Starting execution")
+            val evt = AuthorizationEvent(AuthorizationEvent.EventType.UserDeleted())
+            val evt2 = AuthenticationEvent(
+                AuthenticationEvent.EventType.SignOutRequested(SignOutData(globalSignOut = true)
                 )
-            )
+        )
+            logger.verbose("$id Sending event ${evt.type}")
+            dispatcher.send(evt)
+            logger.verbose("$id Sending event ${evt2.type}")
+            dispatcher.send(evt2)
         }
 }
