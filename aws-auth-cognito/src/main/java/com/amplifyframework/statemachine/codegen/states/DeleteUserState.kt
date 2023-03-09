@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -26,7 +26,6 @@ import java.lang.Exception
 internal sealed class DeleteUserState : State {
     data class NotStarted(val id: String = "") : DeleteUserState()
     data class DeletingUser(val id: String = "") : DeleteUserState()
-    data class SigningOut(val id: String = "") : DeleteUserState()
     data class UserDeleted(val id: String = "") : DeleteUserState()
     data class Error(val exception: Exception) : DeleteUserState()
 
