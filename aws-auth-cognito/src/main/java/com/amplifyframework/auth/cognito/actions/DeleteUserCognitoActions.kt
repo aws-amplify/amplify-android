@@ -52,9 +52,8 @@ internal object DeleteUserCognitoActions : DeleteUserActions {
             logger.verbose("$id Starting execution")
             val evt = AuthorizationEvent(AuthorizationEvent.EventType.UserDeleted())
             val evt2 = AuthenticationEvent(
-                AuthenticationEvent.EventType.SignOutRequested(SignOutData(globalSignOut = true)
-                )
-        )
+                AuthenticationEvent.EventType.SignOutRequested(SignOutData(globalSignOut = true))
+            )
             logger.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
             logger.verbose("$id Sending event ${evt2.type}")
