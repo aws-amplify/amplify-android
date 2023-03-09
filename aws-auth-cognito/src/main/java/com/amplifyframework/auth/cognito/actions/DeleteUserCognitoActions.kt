@@ -47,20 +47,14 @@ internal object DeleteUserCognitoActions : DeleteUserActions {
             dispatcher.send(evt)
         }
 
-    override fun finishDeletingUser(signOutUser: Boolean): Action =
-        Action<AuthEnvironment>("Finish Deleting User") { _, dispatcher ->
-            if (signOutUser) {
-                dispatcher.send(
-                    AuthenticationEvent(
-                        AuthenticationEvent.EventType.SignOutRequested(
-                            SignOutData(
-                                globalSignOut = false
-                            )
-                        )
+    override fun initiateSignOut(): Action =
+        Action<AuthEnvironment>("Sign Out Deleted User") { _, dispatcher ->
+            dispatcher.send(
+                AuthenticationEvent(
+                    AuthenticationEvent.EventType.SignOutRequested(
+                        SignOutData()
                     )
                 )
-            } else {
-                dispatcher.send(AuthorizationEvent(AuthorizationEvent.EventType.UserDeleted()))
-            }
+            )
         }
 }
