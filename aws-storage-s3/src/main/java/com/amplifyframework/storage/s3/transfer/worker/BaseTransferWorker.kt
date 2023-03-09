@@ -21,6 +21,7 @@ import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.work.CoroutineWorker
@@ -34,10 +35,8 @@ import aws.sdk.kotlin.services.s3.model.RequestPayer
 import aws.sdk.kotlin.services.s3.model.ServerSideEncryption
 import aws.sdk.kotlin.services.s3.model.StorageClass
 import aws.smithy.kotlin.runtime.content.ByteStream
-import aws.smithy.kotlin.runtime.io.SdkByteReadChannel
-import aws.smithy.kotlin.runtime.io.readChannel
+import aws.smithy.kotlin.runtime.content.fromFile
 import aws.smithy.kotlin.runtime.time.Instant
-import aws.smithy.kotlin.runtime.util.InternalApi
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.storage.ObjectMetadata
 import com.amplifyframework.storage.TransferState
@@ -50,7 +49,6 @@ import com.amplifyframework.storage.s3.transfer.TransferStatusUpdater
 import java.io.File
 import java.lang.Exception
 import java.net.SocketException
-import java.nio.ByteBuffer
 import kotlinx.coroutines.CancellationException
 
 /**
@@ -112,7 +110,9 @@ internal abstract class BaseTransferWorker(
             }
             else -> {
                 val ex = result.exceptionOrNull()
-                logger.error("${this.javaClass.simpleName} failed with exception: $ex")
+                if (!isStopped) {
+                    logger.error("${this.javaClass.simpleName} failed with exception: ${Log.getStackTraceString(ex)}")
+                }
                 if (isRetryableError(ex)) {
                     Result.retry()
                 } else {
@@ -206,7 +206,7 @@ internal abstract class BaseTransferWorker(
         return PutObjectRequest {
             bucket = transferRecord.bucketName
             key = transferRecord.key
-            body = ByteStream.readWithProgressUpdates(file, progressListener = progressListener)
+            body = ByteStream.fromFile(file)
             cacheControl = transferRecord.headerCacheControl
             contentDisposition = transferRecord.headerContentDisposition
             serverSideEncryption = transferRecord.sseAlgorithm?.let {
@@ -226,69 +226,6 @@ internal abstract class BaseTransferWorker(
             requestPayer = transferRecord.userMetadata?.get(ObjectMetadata.REQUESTER_PAYS_HEADER)
                 ?.let { RequestPayer.fromValue(it) }
             tagging = transferRecord.userMetadata?.get(ObjectMetadata.S3_TAGGING)
-        }
-    }
-
-    @OptIn(InternalApi::class)
-    fun ByteStream.Companion.readWithProgressUpdates(
-        file: File,
-        start: Long = 0,
-        length: Long = file.length(),
-        progressListener: ProgressListener?
-    ): ByteStream {
-        return object : ByteStream.OneShotStream() {
-            override val contentLength: Long = length
-            override fun readFrom(): SdkByteReadChannel {
-                val oneShotStream = file.readChannel(start, start + length - 1)
-                return object : SdkByteReadChannel {
-                    override val availableForRead: Int
-                        get() = oneShotStream.availableForRead
-                    override val isClosedForRead: Boolean
-                        get() = oneShotStream.isClosedForRead
-                    override val isClosedForWrite: Boolean
-                        get() = oneShotStream.isClosedForWrite
-
-                    override suspend fun awaitContent() {
-                        oneShotStream.awaitContent()
-                    }
-
-                    override fun cancel(cause: Throwable?): Boolean {
-                        return oneShotStream.cancel(cause)
-                    }
-
-                    override suspend fun readAvailable(sink: ByteBuffer): Int {
-                        return oneShotStream.readAvailable(sink).also {
-                            if (it > 0) {
-                                progressListener?.progressChanged(it.toLong())
-                            }
-                        }
-                    }
-
-                    override suspend fun readAvailable(sink: ByteArray, offset: Int, length: Int): Int {
-                        return oneShotStream.readAvailable(sink, offset, length).also {
-                            if (it > 0) {
-                                progressListener?.progressChanged(it.toLong())
-                            }
-                        }
-                    }
-
-                    override suspend fun readFully(sink: ByteArray, offset: Int, length: Int) {
-                        return oneShotStream.readFully(sink, offset, length).also {
-                            if (sink.isNotEmpty()) {
-                                progressListener?.progressChanged(sink.size.toLong())
-                            }
-                        }
-                    }
-
-                    override suspend fun readRemaining(limit: Int): ByteArray {
-                        return readRemaining(limit).also {
-                            if (it.isNotEmpty()) {
-                                progressListener?.progressChanged(it.size.toLong())
-                            }
-                        }
-                    }
-                }
-            }
         }
     }
 }

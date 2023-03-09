@@ -93,7 +93,12 @@ class AWSS3StorageDownloadFileOperation @JvmOverloads internal constructor(
                         try {
                             val serviceKey = prefix + downloadRequest.key
                             this.file = downloadRequest.local
-                            transferObserver = storageService.downloadToFile(transferId, serviceKey, file)
+                            transferObserver = storageService.downloadToFile(
+                                transferId,
+                                serviceKey,
+                                file,
+                                downloadRequest.useAccelerateEndpoint()
+                            )
                             transferObserver?.setTransferListener(DownloadTransferListener())
                         } catch (exception: Exception) {
                             onError?.accept(

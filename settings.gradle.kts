@@ -58,7 +58,7 @@ dependencyResolutionManagement {
             library("androidx-test-workmanager", "androidx.work:work-testing:2.7.1")
 
             // Misc
-            library("mockwebserver", "com.squareup.okhttp3:mockwebserver:5.0.0-alpha.9")
+            library("mockwebserver", "com.squareup.okhttp3:mockwebserver:5.0.0-alpha.11")
             library("robolectric", "org.robolectric:robolectric:4.7")
             library("jsonassert", "org.skyscreamer:jsonassert:1.5.0")
             library("json", "org.json:json:20210307")
@@ -85,13 +85,13 @@ dependencyResolutionManagement {
 
             // AWS
             val awsKotlinSdk = "awsKotlinSdk"
-            version(awsKotlinSdk, "0.17.12-beta")
+            version(awsKotlinSdk, "0.21.1-beta")
 
             library("aws-sdk-core", "com.amazonaws:aws-android-sdk-core:2.62.2")
 
-            library("aws-credentials", "aws.smithy.kotlin:aws-credentials:0.12.6")
+            library("aws-credentials", "aws.smithy.kotlin:aws-credentials:0.16.2")
             library("aws-ktor", "aws.smithy.kotlin:http-client-engine-ktor:0.7.7")
-            library("aws-signing", "aws.smithy.kotlin:aws-signing-default:0.12.6")
+            library("aws-signing", "aws.smithy.kotlin:aws-signing-default:0.16.2")
             library("aws-cognitoidentity", "aws.sdk.kotlin", "cognitoidentity").versionRef(awsKotlinSdk)
             library(
                 "aws-cognitoidentityprovider",
@@ -127,7 +127,7 @@ dependencyResolutionManagement {
 
             // Misc
             library("oauth2", "com.google.auth:google-auth-library-oauth2-http:0.26.0")
-            library("okhttp", "com.squareup.okhttp3:okhttp:5.0.0-alpha.9")
+            library("okhttp", "com.squareup.okhttp3:okhttp:5.0.0-alpha.11")
             library("gson", "com.google.code.gson:gson:2.8.9")
             library("tensorflow", "org.tensorflow:tensorflow-lite:2.0.0")
             library("uuidgen", "com.fasterxml.uuid:java-uuid-generator:4.0.1")

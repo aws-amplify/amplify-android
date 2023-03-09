@@ -22,6 +22,7 @@ import androidx.work.workDataOf
 import aws.sdk.kotlin.services.s3.S3Client
 import aws.sdk.kotlin.services.s3.model.AbortMultipartUploadRequest
 import aws.sdk.kotlin.services.s3.model.AbortMultipartUploadResponse
+import aws.sdk.kotlin.services.s3.withConfig
 import com.amplifyframework.storage.TransferState
 import com.amplifyframework.storage.s3.transfer.TransferDB
 import com.amplifyframework.storage.s3.transfer.TransferRecord
@@ -29,10 +30,14 @@ import com.amplifyframework.storage.s3.transfer.TransferStatusUpdater
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkStatic
+import io.mockk.spyk
+import io.mockk.unmockkStatic
 import io.mockk.verify
 import java.util.UUID
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
@@ -50,14 +55,22 @@ internal class AbortMultiPartUploadWorkerTest {
 
     @Before
     fun setup() {
+
         context = ApplicationProvider.getApplicationContext()
         workerParameters = mockk(WorkerParameters::class.java.name)
-        s3Client = mockk(S3Client::class.java.name)
+        s3Client = spyk<S3Client>(recordPrivateCalls = true)
+        mockkStatic(S3Client::withConfig)
         transferDB = mockk(TransferDB::class.java.name)
         transferStatusUpdater = mockk(TransferStatusUpdater::class.java.name)
         every { workerParameters.inputData }.answers { workDataOf(BaseTransferWorker.TRANSFER_RECORD_ID to 1) }
         every { workerParameters.runAttemptCount }.answers { 1 }
         every { workerParameters.taskExecutor }.answers { ImmediateTaskExecutor() }
+        every { any<S3Client>().withConfig(any()) }.answers { s3Client }
+    }
+
+    @After
+    fun tearDown() {
+        unmockkStatic(S3Client::withConfig)
     }
 
     @Test
@@ -88,6 +101,7 @@ internal class AbortMultiPartUploadWorkerTest {
         val expectedResult =
             ListenableWorker.Result.success(workDataOf(BaseTransferWorker.OUTPUT_TRANSFER_RECORD_ID to 1))
         verify(exactly = 1) { transferStatusUpdater.updateTransferState(1, TransferState.FAILED) }
+        verify(exactly = 1) { any<S3Client>().withConfig(any()) }
         assertEquals(expectedResult, result)
     }
 

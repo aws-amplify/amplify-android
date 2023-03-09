@@ -23,7 +23,6 @@ import androidx.core.util.ObjectsCompat;
  * Options to specify attributes of get API invocation.
  */
 public class StorageDownloadFileOptions extends StorageOptions {
-
     /**
      * Constructs a StorageDownloadFileOptions instance with the
      * attributes from builder instance.

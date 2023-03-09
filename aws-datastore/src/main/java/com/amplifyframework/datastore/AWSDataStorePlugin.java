@@ -755,8 +755,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
          * @param reachabilityMonitor An instance that implements LocalStorageAdapter.
          * @return Current builder instance, for fluent construction of plugin.
          */
-        @VisibleForTesting
-        Builder reachabilityMonitor(ReachabilityMonitor reachabilityMonitor) {
+        public Builder reachabilityMonitor(ReachabilityMonitor reachabilityMonitor) {
             this.reachabilityMonitor = reachabilityMonitor;
             return this;
         }

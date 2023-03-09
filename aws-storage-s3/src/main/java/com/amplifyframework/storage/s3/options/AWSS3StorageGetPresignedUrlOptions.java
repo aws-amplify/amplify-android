@@ -25,9 +25,11 @@ import com.amplifyframework.storage.options.StorageGetUrlOptions;
  * Options to specify attributes of presigned URL generation from an AWS S3 bucket.
  */
 public final class AWSS3StorageGetPresignedUrlOptions extends StorageGetUrlOptions {
+    private final boolean useAccelerationMode;
 
     private AWSS3StorageGetPresignedUrlOptions(final Builder builder) {
         super(builder);
+        this.useAccelerationMode = builder.useAccelerateEndpoint;
     }
 
     /**
@@ -66,6 +68,15 @@ public final class AWSS3StorageGetPresignedUrlOptions extends StorageGetUrlOptio
     @NonNull
     public static AWSS3StorageGetPresignedUrlOptions defaultInstance() {
         return builder().build();
+    }
+
+    /**
+     * Gets the flag to determine whether to use acceleration endpoint.
+     *
+     * @return boolean flag
+     */
+    public boolean useAccelerateEndpoint() {
+        return useAccelerationMode;
     }
 
     @Override
@@ -107,6 +118,18 @@ public final class AWSS3StorageGetPresignedUrlOptions extends StorageGetUrlOptio
      * fluent configuration method calls.
      */
     public static final class Builder extends StorageGetUrlOptions.Builder<Builder> {
+        private boolean useAccelerateEndpoint;
+
+        /**
+         * Configure to use acceleration mode on new StorageGetPresignedUrlOptions instances.
+         * @param useAccelerateEndpoint flag to represent acceleration mode for new GetPresignedUrlOptions instance
+         * @return Current Builder instance for fluent chaining
+         */
+        public Builder setUseAccelerateEndpoint(boolean useAccelerateEndpoint) {
+            this.useAccelerateEndpoint = useAccelerateEndpoint;
+            return this;
+        }
+
         @Override
         @NonNull
         public AWSS3StorageGetPresignedUrlOptions build() {
