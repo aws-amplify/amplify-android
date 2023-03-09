@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -15,7 +15,6 @@
 
 package com.amplifyframework.notifications.pushnotifications
 
-import android.os.Bundle
 import com.amplifyframework.core.Action
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.notifications.NotificationsCategoryBehavior
@@ -23,19 +22,19 @@ import com.amplifyframework.notifications.NotificationsCategoryBehavior
 interface PushNotificationsCategoryBehavior : NotificationsCategoryBehavior {
 
     fun recordNotificationReceived(
-        data: Bundle,
+        payload: NotificationPayload,
         onSuccess: Action,
         onError: Consumer<PushNotificationsException>
     )
 
     fun recordNotificationOpened(
-        data: Bundle,
+        payload: NotificationPayload,
         onSuccess: Action,
         onError: Consumer<PushNotificationsException>
     )
 
     fun handleNotificationReceived(
-        details: Bundle,
+        payload: NotificationPayload,
         onSuccess: Consumer<PushNotificationResult>,
         onError: Consumer<PushNotificationsException>
     )

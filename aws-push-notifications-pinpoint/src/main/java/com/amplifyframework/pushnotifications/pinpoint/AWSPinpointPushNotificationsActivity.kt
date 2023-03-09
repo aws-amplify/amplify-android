@@ -22,8 +22,8 @@ import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import com.amplifyframework.core.Amplify
+import com.amplifyframework.notifications.pushnotifications.NotificationPayload
 import com.amplifyframework.pushnotifications.pinpoint.utils.PushNotificationsConstants
-import com.amplifyframework.pushnotifications.pinpoint.utils.toNotificationsPayload
 
 class AWSPinpointPushNotificationsActivity : Activity() {
 
@@ -33,14 +33,15 @@ class AWSPinpointPushNotificationsActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         try {
-            val bundle = intent.extras?.get("payload") as Bundle
-            val payload = bundle.toNotificationsPayload()
-            val intent = processIntent(payload.action)
-            Amplify.Notifications.Push.recordNotificationOpened(bundle, {
-                Log.i(TAG, "Notification opened event recorded successfully.")
-            }, {
-                Log.i(TAG, "Record notification opened event failed.", it)
-            })
+            val payload = intent.getParcelableExtra<NotificationPayload>("amplifyNotificationPayload")
+            val intent = processIntent(payload?.action)
+            if (payload != null) {
+                Amplify.Notifications.Push.recordNotificationOpened(payload, {
+                    Log.i(TAG, "Notification opened event recorded successfully.")
+                }, {
+                    Log.i(TAG, "Record notification opened event failed.", it)
+                })
+            }
             startActivity(intent)
         } catch (exception: ActivityNotFoundException) {
             Log.e(TAG, "Couldn't launch PushNotifications Activity.", exception)
@@ -48,22 +49,25 @@ class AWSPinpointPushNotificationsActivity : Activity() {
         finish()
     }
 
-    private fun processIntent(action: HashMap<String, String>): Intent? {
-        // Action is open url
-        val notificationIntent: Intent? = if (action.containsKey(PushNotificationsConstants.URL)) {
-            val url = action[PushNotificationsConstants.URL]
-            Intent(Intent.ACTION_VIEW, Uri.parse(url))
+    private fun processIntent(action: Map<String, String>?): Intent? {
+        return when {
+            action?.get(PushNotificationsConstants.URL) != null -> {
+                // Action is open url
+                val url = action[PushNotificationsConstants.URL]
+                Intent(Intent.ACTION_VIEW, Uri.parse(url))
+            }
+            action?.get(PushNotificationsConstants.DEEPLINK) != null -> {
+                // Action is open deeplink
+                val deepLink = action[PushNotificationsConstants.DEEPLINK]
+                Intent(Intent.ACTION_VIEW, Uri.parse(deepLink))
+            }
+            // Default action is open app
+            else -> getDefaultTapAction()
         }
-        // Action is open deeplink
-        else if (action.containsKey(PushNotificationsConstants.DEEPLINK)) {
-            val deepLink = action[PushNotificationsConstants.DEEPLINK]
-            Intent(Intent.ACTION_VIEW, Uri.parse(deepLink))
-        }
-        // Default action is open app
-        else {
-            val packageName = applicationContext.packageName
-            applicationContext.packageManager.getLaunchIntentForPackage(packageName)
-        }
-        return notificationIntent
+    }
+
+    private fun getDefaultTapAction(): Intent? {
+        val packageName = applicationContext.packageName
+        return applicationContext.packageManager.getLaunchIntentForPackage(packageName)
     }
 }

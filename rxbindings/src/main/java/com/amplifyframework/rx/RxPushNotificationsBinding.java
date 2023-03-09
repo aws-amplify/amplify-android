@@ -15,12 +15,12 @@
 
 package com.amplifyframework.rx;
 
-import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
 
 import com.amplifyframework.analytics.UserProfile;
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.notifications.pushnotifications.NotificationPayload;
 import com.amplifyframework.notifications.pushnotifications.PushNotificationResult;
 import com.amplifyframework.notifications.pushnotifications.PushNotificationsCategoryBehavior;
 import com.amplifyframework.notifications.pushnotifications.PushNotificationsException;
@@ -49,18 +49,18 @@ final class RxPushNotificationsBinding implements RxPushNotificationsCategoryBeh
     }
 
     @Override
-    public Completable recordNotificationReceived(Bundle data) {
-        return toCompletable(((onResult, onError) -> delegate.recordNotificationReceived(data, onResult, onError)));
+    public Completable recordNotificationReceived(NotificationPayload payload) {
+        return toCompletable(((onResult, onError) -> delegate.recordNotificationReceived(payload, onResult, onError)));
     }
 
     @Override
-    public Completable recordNotificationOpened(Bundle data) {
-        return toCompletable(((onResult, onError) -> delegate.recordNotificationOpened(data, onResult, onError)));
+    public Completable recordNotificationOpened(NotificationPayload payload) {
+        return toCompletable(((onResult, onError) -> delegate.recordNotificationOpened(payload, onResult, onError)));
     }
 
     @Override
-    public Single<PushNotificationResult> handleNotificationReceived(Bundle details) {
-        return toSingle(((onResult, onError) -> delegate.handleNotificationReceived(details, onResult, onError)));
+    public Single<PushNotificationResult> handleNotificationReceived(NotificationPayload payload) {
+        return toSingle(((onResult, onError) -> delegate.handleNotificationReceived(payload, onResult, onError)));
     }
 
     @Override

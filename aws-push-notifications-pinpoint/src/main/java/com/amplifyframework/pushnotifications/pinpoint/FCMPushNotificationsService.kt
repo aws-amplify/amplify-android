@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.pushnotifications.pinpoint.utils
+package com.amplifyframework.pushnotifications.pinpoint
 
 import android.content.Intent
 import android.os.Bundle
@@ -22,7 +22,7 @@ import com.amplifyframework.core.Amplify
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 
-abstract class PushNotificationsService : FirebaseMessagingService() {
+internal class FCMPushNotificationsService : FirebaseMessagingService() {
 
     private val TAG = "PushNotificationsService"
 
@@ -42,13 +42,6 @@ abstract class PushNotificationsService : FirebaseMessagingService() {
         data.remove("androidx.content.wakelockid")
 
         if (intent?.action == "com.google.firebase.messaging.NEW_TOKEN") {
-            // do nothing
-        } else if (!data.keySet().any { it.contains(PushNotificationsConstants.PINPOINT_PREFIX) }) {
-            Log.i(
-                TAG,
-                "Message payload does not contain pinpoint push notification message, which is not supported."
-            )
-
             super.handleIntent(intent)
         } else {
             // message contains pinpoint push notification payload, handle the payload and show notification
@@ -59,13 +52,22 @@ abstract class PushNotificationsService : FirebaseMessagingService() {
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         super.onMessageReceived(remoteMessage)
         Log.d(TAG, "Message: " + remoteMessage.data + "," + remoteMessage.notification)
+
         // handle payload and show notification
-        val notificationPayload = processRemoteMessage(remoteMessage)
-        val notificationDetails = notificationPayload.bundle()
-        Amplify.Notifications.Push.handleNotificationReceived(notificationDetails, {
-            Log.i(TAG, "Notification handled successfully.")
-        }, {
-            Log.i(TAG, "Handle notification failed.", it)
-        })
+        val notificationPayload = PinpointNotificationPayload.createFromRemoteMessage(remoteMessage)
+
+        if (notificationPayload != null) {
+            Amplify.Notifications.Push.handleNotificationReceived(notificationPayload, {
+                Log.i(TAG, "Notification handled successfully.")
+            }, {
+                Log.i(TAG, "Handle notification failed.", it)
+            })
+        } else {
+            Log.i(
+                TAG,
+                "Message payload does not contain pinpoint push notification message, which is not supported."
+            )
+            super.handleIntent(remoteMessage.toIntent())
+        }
     }
 }

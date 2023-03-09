@@ -14,10 +14,8 @@
  */
 
 plugins {
-    id("org.jetbrains.kotlin.plugin.serialization") version "1.6.10"
     id("com.android.library")
     id("kotlin-android")
-    id("org.jlleitschuh.gradle.ktlint")
 }
 
 apply(from = rootProject.file("configuration/checkstyle.gradle"))
@@ -36,7 +34,6 @@ dependencies {
     implementation(dependency.androidx.annotation)
     implementation(dependency.androidx.core)
     implementation(dependency.firebasemessaging)
-    implementation(dependency.kotlin.serializationJson)
 
     //noinspection GradleDependency
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:$lifecycleVersion")

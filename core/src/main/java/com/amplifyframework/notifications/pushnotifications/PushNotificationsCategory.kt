@@ -15,7 +15,6 @@
 
 package com.amplifyframework.notifications.pushnotifications
 
-import android.os.Bundle
 import com.amplifyframework.analytics.UserProfile
 import com.amplifyframework.core.Action
 import com.amplifyframework.core.Consumer
@@ -36,20 +35,20 @@ class PushNotificationsCategory : Category<PushNotificationsPlugin<*>>(), PushNo
         selectedPlugin.registerDevice(token, onSuccess, onError)
 
     override fun recordNotificationReceived(
-        data: Bundle,
+        payload: NotificationPayload,
         onSuccess: Action,
         onError: Consumer<PushNotificationsException>
-    ) = selectedPlugin.recordNotificationReceived(data, onSuccess, onError)
+    ) = selectedPlugin.recordNotificationReceived(payload, onSuccess, onError)
 
     override fun recordNotificationOpened(
-        data: Bundle,
+        payload: NotificationPayload,
         onSuccess: Action,
         onError: Consumer<PushNotificationsException>
-    ) = selectedPlugin.recordNotificationOpened(data, onSuccess, onError)
+    ) = selectedPlugin.recordNotificationOpened(payload, onSuccess, onError)
 
     override fun handleNotificationReceived(
-        details: Bundle,
+        payload: NotificationPayload,
         onSuccess: Consumer<PushNotificationResult>,
         onError: Consumer<PushNotificationsException>
-    ) = selectedPlugin.handleNotificationReceived(details, onSuccess, onError)
+    ) = selectedPlugin.handleNotificationReceived(payload, onSuccess, onError)
 }

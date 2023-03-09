@@ -15,8 +15,7 @@
 
 package com.amplifyframework.rx;
 
-import android.os.Bundle;
-
+import com.amplifyframework.notifications.pushnotifications.NotificationPayload;
 import com.amplifyframework.notifications.pushnotifications.PushNotificationResult;
 import com.amplifyframework.notifications.pushnotifications.PushNotificationsException;
 
@@ -30,27 +29,27 @@ public interface RxPushNotificationsCategoryBehavior extends RxNotificationsCate
 
     /**
      * Registers that a notification was received while the app was in the foreground/background/kill.
-     * @param data campaign/journey data
+     * @param payload campaign/journey data
      * @return An Rx {@link Completable} which completes successfully if notification received event is recorded,
      *         emits an {@link PushNotificationsException} otherwise
      */
-    Completable recordNotificationReceived(Bundle data);
+    Completable recordNotificationReceived(NotificationPayload payload);
 
     /**
      * Registers that a user opened a notification.
-     * @param data campaign/journey data
+     * @param payload campaign/journey data
      * @return An Rx {@link Completable} which completes successfully if notification opened event is recorded,
      *         emits an {@link PushNotificationsException} otherwise
      */
-    Completable recordNotificationOpened(Bundle data);
+    Completable recordNotificationOpened(NotificationPayload payload);
 
     /**
      * Displays notification on the system tray if app is background/killed state.
-     * @param details notification payload
+     * @param payload notification payload
      * @return An Rx {@link Single} which emits an {@link PushNotificationResult} on success, or an
      *         {@link PushNotificationsException} on failure
      */
-    Single<PushNotificationResult> handleNotificationReceived(Bundle details);
+    Single<PushNotificationResult> handleNotificationReceived(NotificationPayload payload);
 
     /**
      * Registers device token from FCM with the service. This API creates/updates the service with token.

@@ -16,7 +16,7 @@
 package com.amplifyframework.pushnotifications.pinpoint
 
 import android.util.Log
-import com.amplifyframework.pushnotifications.pinpoint.utils.NotificationPayload
+import com.amplifyframework.notifications.pushnotifications.NotificationPayload
 import com.amplifyframework.pushnotifications.pinpoint.utils.PushNotificationsConstants
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json

@@ -15,9 +15,9 @@
 
 package com.amplifyframework.kotlin.notifications.pushnotifications
 
-import android.os.Bundle
 import com.amplifyframework.analytics.UserProfile
 import com.amplifyframework.core.Amplify
+import com.amplifyframework.notifications.pushnotifications.NotificationPayload
 import com.amplifyframework.notifications.pushnotifications.PushNotificationsCategoryBehavior
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
@@ -41,25 +41,25 @@ class KotlinPushFacade(private val delegate: PushNotificationsCategoryBehavior =
         )
     }
 
-    override suspend fun recordNotificationReceived(data: Bundle) = suspendCoroutine { continuation ->
+    override suspend fun recordNotificationReceived(payload: NotificationPayload) = suspendCoroutine { continuation ->
         delegate.recordNotificationReceived(
-            data,
+            payload,
             { continuation.resume(Unit) },
             { continuation.resumeWithException(it) }
         )
     }
 
-    override suspend fun recordNotificationOpened(data: Bundle) = suspendCoroutine { continuation ->
+    override suspend fun recordNotificationOpened(payload: NotificationPayload) = suspendCoroutine { continuation ->
         delegate.recordNotificationOpened(
-            data,
+            payload,
             { continuation.resume(Unit) },
             { continuation.resumeWithException(it) }
         )
     }
 
-    override suspend fun handleNotificationReceived(details: Bundle) = suspendCoroutine { continuation ->
+    override suspend fun handleNotificationReceived(payload: NotificationPayload) = suspendCoroutine { continuation ->
         delegate.handleNotificationReceived(
-            details,
+            payload,
             { continuation.resume(it) },
             { continuation.resumeWithException(it) }
         )

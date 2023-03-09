@@ -15,10 +15,8 @@
 
 package com.amplifyframework.pushnotifications.pinpoint
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.content.SharedPreferences
-import android.os.Bundle
 import androidx.core.content.edit
 import aws.sdk.kotlin.runtime.http.operation.customUserAgentMetadata
 import aws.sdk.kotlin.services.pinpoint.PinpointClient
@@ -40,13 +38,11 @@ import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.core.store.EncryptedKeyValueRepository
 import com.amplifyframework.core.store.KeyValueRepository
+import com.amplifyframework.notifications.pushnotifications.NotificationPayload
 import com.amplifyframework.notifications.pushnotifications.PushNotificationResult
 import com.amplifyframework.notifications.pushnotifications.PushNotificationsException
 import com.amplifyframework.notifications.pushnotifications.PushNotificationsPlugin
-import com.amplifyframework.pushnotifications.pinpoint.utils.NotificationPayload
-import com.amplifyframework.pushnotifications.pinpoint.utils.PushNotificationsService
 import com.amplifyframework.pushnotifications.pinpoint.utils.PushNotificationsUtils
-import com.amplifyframework.pushnotifications.pinpoint.utils.toNotificationsPayload
 import com.google.firebase.messaging.FirebaseMessaging
 import java.util.concurrent.ConcurrentHashMap
 import org.json.JSONObject
@@ -63,9 +59,6 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
         private const val AWS_PINPOINT_PUSHNOTIFICATIONS_DEVICE_TOKEN_LEGACY_KEY = "AWSPINPOINT.GCMTOKEN"
         private const val AWS_PINPOINT_PUSHNOTIFICATIONS_DEVICE_TOKEN_KEY = "FCMDeviceToken"
     }
-
-    @SuppressLint("MissingFirebaseInstanceTokenRefresh")
-    open class ServiceExtension : PushNotificationsService()
 
     private val logger =
         Amplify.Logging.forNamespace(AWS_PINPOINT_PUSHNOTIFICATIONS_LOG_NAMESPACE.format(this::class.java.simpleName))
@@ -224,12 +217,11 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
     }
 
     override fun recordNotificationReceived(
-        data: Bundle,
+        payload: NotificationPayload,
         onSuccess: Action,
         onError: Consumer<PushNotificationsException>
     ) {
         try {
-            val payload = data.toNotificationsPayload()
             val eventSourceType = EventSourceType.getEventSourceType(payload)
             if (pushNotificationsUtils.isAppInForeground()) {
                 tryAnalyticsRecordEvent(eventSourceType.getEventTypeReceivedForeground())
@@ -243,12 +235,11 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
     }
 
     override fun recordNotificationOpened(
-        data: Bundle,
+        payload: NotificationPayload,
         onSuccess: Action,
         onError: Consumer<PushNotificationsException>
     ) {
         try {
-            val payload = data.toNotificationsPayload()
             val eventSourceType = EventSourceType.getEventSourceType(payload)
             tryAnalyticsRecordEvent(eventSourceType.getEventTypeOpened())
             onSuccess.call()
@@ -258,12 +249,11 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
     }
 
     override fun handleNotificationReceived(
-        details: Bundle,
+        payload: NotificationPayload,
         onSuccess: Consumer<PushNotificationResult>,
         onError: Consumer<PushNotificationsException>
     ) {
         try {
-            val payload = details.toNotificationsPayload()
             val eventSourceType = EventSourceType.getEventSourceType(payload)
 
             val eventSourceAttributes = eventSourceType.getAttributeParser().parseAttributes(payload)

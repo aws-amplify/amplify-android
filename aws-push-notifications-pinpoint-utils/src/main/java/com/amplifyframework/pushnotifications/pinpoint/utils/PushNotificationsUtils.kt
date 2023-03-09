@@ -30,6 +30,7 @@ import androidx.annotation.ChecksSdkIntAtLeast
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
+import com.amplifyframework.notifications.pushnotifications.NotificationPayload
 import java.net.URL
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -99,14 +100,14 @@ class PushNotificationsUtils(
 
     @SuppressLint("NewApi")
     fun showNotification(
-        details: NotificationPayload,
+        payload: NotificationPayload,
         targetClass: Class<*>?
     ) {
         CoroutineScope(Dispatchers.IO).launch {
             val requestCode = 0
-            val largeImageIcon = details.imageUrl?.let { downloadImage(it) }
+            val largeImageIcon = payload.imageUrl?.let { downloadImage(it) }
             val notificationIntent = Intent(context, targetClass)
-            notificationIntent.putExtra("payload", details.bundle())
+            notificationIntent.putExtra("amplifyNotificationPayload", payload)
             val pendingIntent = PendingIntent.getActivity(
                 context,
                 requestCode,
@@ -121,8 +122,8 @@ class PushNotificationsUtils(
             }
 
             builder.apply {
-                setContentTitle(details.title)
-                setContentText(details.body)
+                setContentTitle(payload.title)
+                setContentText(payload.body)
                 setSmallIcon(R.drawable.ic_launcher_foreground)
                 setContentIntent(pendingIntent)
                 setPriority(NotificationCompat.PRIORITY_DEFAULT)
@@ -133,7 +134,7 @@ class PushNotificationsUtils(
             with(NotificationManagerCompat.from(context)) {
                 // notificationId is a unique int for each notification that you must define
                 // TODO: get id from payload
-                notify(details.notificationId, builder.build())
+                notify(payload.notificationId, builder.build())
             }
         }
     }

@@ -15,12 +15,12 @@
 
 package com.amplifyframework.kotlin.notifications.pushnotifications
 
-import android.os.Bundle
 import com.amplifyframework.analytics.UserProfile
 import com.amplifyframework.core.Action
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.kotlin.notifications.KotlinNotificationsFacade
 import com.amplifyframework.notifications.NotificationsCategoryBehavior
+import com.amplifyframework.notifications.pushnotifications.NotificationPayload
 import com.amplifyframework.notifications.pushnotifications.PushNotificationResult
 import com.amplifyframework.notifications.pushnotifications.PushNotificationsCategoryBehavior
 import com.amplifyframework.notifications.pushnotifications.PushNotificationsException
@@ -131,90 +131,90 @@ class KotlinPushNotificationsFacadeTest {
 
     @Test
     fun recordNotificationReceivedSucceeds() = runBlocking {
-        val data = mapOf("test" to "temp")
+        val payload = NotificationPayload.Builder().build()
         every {
-            pushDelegate.recordNotificationReceived(eq(data), any(), any())
+            pushDelegate.recordNotificationReceived(eq(payload), any(), any())
         } answers {
             val indexOfCompletionAction = 1
             val onComplete = it.invocation.args[indexOfCompletionAction] as Action
             onComplete.call()
         }
-        push.recordNotificationReceived(data)
+        push.recordNotificationReceived(payload)
         verify {
-            pushDelegate.recordNotificationReceived(eq(data), any(), any())
+            pushDelegate.recordNotificationReceived(eq(payload), any(), any())
         }
     }
 
     @Test(expected = PushNotificationsException::class)
     fun recordNotificationReceivedThrows() = runBlocking {
-        val data = mapOf("test" to "temp")
+        val payload = NotificationPayload.Builder().build()
         val error = PushNotificationsException("uh", "oh")
         every {
-            pushDelegate.recordNotificationReceived(eq(data), any(), any())
+            pushDelegate.recordNotificationReceived(eq(payload), any(), any())
         } answers {
             val indexOfErrorConsumer = 2
             val onError = it.invocation.args[indexOfErrorConsumer] as Consumer<PushNotificationsException>
             onError.accept(error)
         }
-        push.recordNotificationReceived(data)
+        push.recordNotificationReceived(payload)
     }
 
     @Test
     fun recordNotificationOpenedSucceeds() = runBlocking {
-        val data = mapOf("test" to "temp")
+        val payload = NotificationPayload.Builder().build()
         every {
-            pushDelegate.recordNotificationOpened(eq(data), any(), any())
+            pushDelegate.recordNotificationOpened(eq(payload), any(), any())
         } answers {
             val indexOfCompletionAction = 1
             val onComplete = it.invocation.args[indexOfCompletionAction] as Action
             onComplete.call()
         }
-        push.recordNotificationOpened(data)
+        push.recordNotificationOpened(payload)
         verify {
-            pushDelegate.recordNotificationOpened(eq(data), any(), any())
+            pushDelegate.recordNotificationOpened(eq(payload), any(), any())
         }
     }
 
     @Test(expected = PushNotificationsException::class)
     fun recordNotificationOpenedThrows() = runBlocking {
-        val data = mapOf("test" to "temp")
+        val payload = NotificationPayload.Builder().build()
         val error = PushNotificationsException("uh", "oh")
         every {
-            pushDelegate.recordNotificationOpened(eq(data), any(), any())
+            pushDelegate.recordNotificationOpened(eq(payload), any(), any())
         } answers {
             val indexOfErrorConsumer = 2
             val onError = it.invocation.args[indexOfErrorConsumer] as Consumer<PushNotificationsException>
             onError.accept(error)
         }
-        push.recordNotificationOpened(data)
+        push.recordNotificationOpened(payload)
     }
 
     @Test
     fun handleNotificationReceivedSucceeds() = runBlocking {
-        val details = Bundle()
+        val payload = NotificationPayload.Builder().build()
         val result = PushNotificationResult.NotificationPosted()
         every {
-            pushDelegate.handleNotificationReceived(eq(details), any(), any())
+            pushDelegate.handleNotificationReceived(eq(payload), any(), any())
         } answers {
             val indexOfResultConsumer = 1
             val onResult = it.invocation.args[indexOfResultConsumer] as Consumer<PushNotificationResult>
             onResult.accept(result)
         }
 
-        assert(result == push.handleNotificationReceived(details))
+        assert(result == push.handleNotificationReceived(payload))
     }
 
     @Test(expected = PushNotificationsException::class)
     fun handleNotificationReceivedThrows(): Unit = runBlocking {
-        val details = Bundle()
+        val payload = NotificationPayload.Builder().build()
         val error = PushNotificationsException("uh", "oh")
         every {
-            pushDelegate.handleNotificationReceived(eq(details), any(), any())
+            pushDelegate.handleNotificationReceived(eq(payload), any(), any())
         } answers {
             val indexOfErrorConsumer = 2
             val onError = it.invocation.args[indexOfErrorConsumer] as Consumer<PushNotificationsException>
             onError.accept(error)
         }
-        push.handleNotificationReceived(details)
+        push.handleNotificationReceived(payload)
     }
 }

@@ -15,8 +15,8 @@
 
 package com.amplifyframework.kotlin.notifications.pushnotifications
 
-import android.os.Bundle
 import com.amplifyframework.kotlin.notifications.Notifications
+import com.amplifyframework.notifications.pushnotifications.NotificationPayload
 import com.amplifyframework.notifications.pushnotifications.PushNotificationResult
 import com.amplifyframework.notifications.pushnotifications.PushNotificationsException
 
@@ -31,17 +31,17 @@ interface Push : Notifications {
      * Registers that a notification was received while the app was in the foreground/background/kill.
      */
     @Throws(PushNotificationsException::class)
-    suspend fun recordNotificationReceived(data: Bundle)
+    suspend fun recordNotificationReceived(payload: NotificationPayload)
 
     /**
      * Registers that a user opened a notification.
      */
     @Throws(PushNotificationsException::class)
-    suspend fun recordNotificationOpened(data: Bundle)
+    suspend fun recordNotificationOpened(payload: NotificationPayload)
 
     /**
      * Displays notification on the system tray if app is background/killed state.
      */
     @Throws(PushNotificationsException::class)
-    suspend fun handleNotificationReceived(details: Bundle): PushNotificationResult
+    suspend fun handleNotificationReceived(payload: NotificationPayload): PushNotificationResult
 }
