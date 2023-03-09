@@ -140,6 +140,9 @@ internal sealed class AuthorizationState : State {
                         val action = authorizationActions.persistCredentials(AmplifyCredential.Empty)
                         StateResolution(StoringCredentials(AmplifyCredential.Empty), listOf(action))
                     }
+                    event.isSignOutEvent() is SignOutEvent.EventType.SignedOutSuccess -> {
+                        StateResolution(Configured())
+                    }
                     authenticationEvent is AuthenticationEvent.EventType.CancelSignOut -> {
                         StateResolution(SessionEstablished(oldState.amplifyCredential))
                     }
@@ -233,7 +236,8 @@ internal sealed class AuthorizationState : State {
                 }
                 is DeletingUser -> when (authorizationEvent) {
                     is AuthorizationEvent.EventType.UserDeleted -> {
-                        StateResolution(Configured())
+                        val action = authorizationActions.persistCredentials(AmplifyCredential.Empty)
+                        StateResolution(Configured(), listOf(action))
                     }
                     is AuthorizationEvent.EventType.ThrowError -> {
                         StateResolution(Error(authorizationEvent.exception))
