@@ -20,8 +20,11 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.os.Bundle
 import androidx.core.content.edit
+import aws.sdk.kotlin.runtime.http.operation.customUserAgentMetadata
 import aws.sdk.kotlin.services.pinpoint.PinpointClient
 import aws.sdk.kotlin.services.pinpoint.model.ChannelType
+import aws.smithy.kotlin.runtime.client.RequestInterceptorContext
+import aws.smithy.kotlin.runtime.http.interceptors.HttpInterceptor
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.analytics.UserProfile
 import com.amplifyframework.analytics.pinpoint.targeting.AnalyticsClient
@@ -131,6 +134,12 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
     private fun createPinpointClient() = PinpointClient {
         region = configuration.region
         credentialsProvider = CognitoCredentialsProvider()
+        interceptors += object : HttpInterceptor {
+            override suspend fun modifyBeforeSerialization(context: RequestInterceptorContext<Any>): Any {
+                context.executionContext.customUserAgentMetadata.add("pushnotifications", BuildConfig.VERSION_NAME)
+                return super.modifyBeforeSerialization(context)
+            }
+        }
     }
 
     private fun createTargetingClient(

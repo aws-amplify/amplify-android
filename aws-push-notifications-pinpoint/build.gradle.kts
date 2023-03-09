@@ -32,6 +32,7 @@ dependencies {
     api(project(":aws-push-notifications-pinpoint-utils"))
     api(dependency.firebasemessaging)
 
+    implementation(dependency.aws.http)
     implementation(dependency.aws.pinpoint)
 
     implementation(dependency.androidx.core.ktx)
