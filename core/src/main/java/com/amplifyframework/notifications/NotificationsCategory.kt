@@ -45,7 +45,7 @@ open class NotificationsCategory : Category<NotificationsPlugin<*>>(), Notificat
      */
     override fun configure(configuration: CategoryConfiguration, context: Context) {
         plugins.forEach { plugin ->
-            when (val subCategoryType = plugin.getSubCategoryType()) {
+            when (plugin.getSubCategoryType()) {
                 PUSH_NOTIFICATIONS -> {
                     Push.addPlugin(plugin as PushNotificationsPlugin<*>)
 

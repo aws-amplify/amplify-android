@@ -30,6 +30,7 @@ import com.amplifyframework.analytics.pinpoint.targeting.data.AndroidAppDetails
 import com.amplifyframework.analytics.pinpoint.targeting.data.AndroidDeviceDetails
 import com.amplifyframework.analytics.pinpoint.targeting.database.PinpointDatabase
 import com.amplifyframework.analytics.pinpoint.targeting.util.getUniqueId
+import com.amplifyframework.auth.CognitoCredentialsProvider
 import com.amplifyframework.auth.cognito.BuildConfig
 import com.amplifyframework.core.Action
 import com.amplifyframework.core.Amplify
@@ -39,7 +40,6 @@ import com.amplifyframework.core.store.KeyValueRepository
 import com.amplifyframework.notifications.pushnotifications.PushNotificationResult
 import com.amplifyframework.notifications.pushnotifications.PushNotificationsException
 import com.amplifyframework.notifications.pushnotifications.PushNotificationsPlugin
-import com.amplifyframework.pushnotifications.pinpoint.credentials.CognitoCredentialsProvider
 import com.amplifyframework.pushnotifications.pinpoint.utils.NotificationPayload
 import com.amplifyframework.pushnotifications.pinpoint.utils.PushNotificationsService
 import com.amplifyframework.pushnotifications.pinpoint.utils.PushNotificationsUtils

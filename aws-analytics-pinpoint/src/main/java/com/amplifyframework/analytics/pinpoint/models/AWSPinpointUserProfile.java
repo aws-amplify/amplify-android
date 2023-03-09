@@ -21,6 +21,7 @@ import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.analytics.AnalyticsProperties;
 import com.amplifyframework.analytics.UserProfile;
+import com.amplifyframework.analytics.pinpoint.targeting.models.AWSPinpointUserProfileBehavior;
 
 import java.util.Objects;
 
@@ -28,7 +29,7 @@ import java.util.Objects;
  * Extends the category-defined UserProfile class to include features supported
  * relevant to Pinpoint only.
  */
-public final class AWSPinpointUserProfile extends UserProfile {
+public final class AWSPinpointUserProfile extends UserProfile implements AWSPinpointUserProfileBehavior {
     private final AnalyticsProperties userAttributes;
 
     /**

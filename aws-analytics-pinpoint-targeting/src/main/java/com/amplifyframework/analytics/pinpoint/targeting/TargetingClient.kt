@@ -33,7 +33,7 @@ import com.amplifyframework.analytics.pinpoint.targeting.data.AndroidDeviceDetai
 import com.amplifyframework.analytics.pinpoint.targeting.endpointProfile.EndpointProfile
 import com.amplifyframework.analytics.pinpoint.targeting.endpointProfile.EndpointProfileLocation
 import com.amplifyframework.analytics.pinpoint.targeting.endpointProfile.EndpointProfileUser
-import com.amplifyframework.analytics.pinpoint.targeting.models.AWSPinpointUserProfile
+import com.amplifyframework.analytics.pinpoint.targeting.models.AWSPinpointUserProfileBehavior
 import com.amplifyframework.analytics.pinpoint.targeting.util.getUniqueId
 import com.amplifyframework.analytics.pinpoint.targeting.util.millisToIsoDate
 import com.amplifyframework.analytics.pinpoint.targeting.util.putString
@@ -94,7 +94,7 @@ class TargetingClient(
             }
         }
         val endpointUser = EndpointProfileUser(userId).apply {
-            if (profile is AWSPinpointUserProfile) {
+            if (profile is AWSPinpointUserProfileBehavior) {
                 profile.userAttributes?.let {
                     it.forEach { entry ->
                         when (val attribute = entry.value) {

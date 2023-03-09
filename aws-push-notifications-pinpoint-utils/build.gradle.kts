@@ -45,7 +45,7 @@ dependencies {
     //noinspection GradleDependency
     implementation("androidx.lifecycle:lifecycle-livedata-ktx:$lifecycleVersion")
     //noinspection GradleDependency
-    implementation("com.google.android.material:material:1.4.0")
+    implementation("com.google.android.material:material:1.8.0")
 
     testImplementation(testDependency.junit)
     testImplementation(testDependency.mockk)
