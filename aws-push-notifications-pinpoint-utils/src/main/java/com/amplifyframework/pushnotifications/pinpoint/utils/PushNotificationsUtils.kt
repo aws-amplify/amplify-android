@@ -98,6 +98,7 @@ class PushNotificationsUtils(
         return NotificationManagerCompat.from(context).areNotificationsEnabled()
     }
 
+    @Suppress("DEPRECATION")
     @SuppressLint("NewApi")
     fun showNotification(
         payload: NotificationPayload,

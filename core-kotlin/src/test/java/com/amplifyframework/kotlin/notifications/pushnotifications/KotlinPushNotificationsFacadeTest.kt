@@ -36,6 +36,8 @@ class KotlinPushNotificationsFacadeTest {
     private val pushDelegate = mockk<PushNotificationsCategoryBehavior>()
     private val push = KotlinPushFacade(pushDelegate)
 
+    private val payload = NotificationPayload(0, "id", "sender", 0, "title", "body")
+
     @Test
     fun identifyUserCategoryLevelSucceeds() = runBlocking {
         val notificationsDelegate = mockk<NotificationsCategoryBehavior>()
@@ -131,7 +133,6 @@ class KotlinPushNotificationsFacadeTest {
 
     @Test
     fun recordNotificationReceivedSucceeds() = runBlocking {
-        val payload = NotificationPayload.Builder().build()
         every {
             pushDelegate.recordNotificationReceived(eq(payload), any(), any())
         } answers {
@@ -147,7 +148,6 @@ class KotlinPushNotificationsFacadeTest {
 
     @Test(expected = PushNotificationsException::class)
     fun recordNotificationReceivedThrows() = runBlocking {
-        val payload = NotificationPayload.Builder().build()
         val error = PushNotificationsException("uh", "oh")
         every {
             pushDelegate.recordNotificationReceived(eq(payload), any(), any())
@@ -161,7 +161,6 @@ class KotlinPushNotificationsFacadeTest {
 
     @Test
     fun recordNotificationOpenedSucceeds() = runBlocking {
-        val payload = NotificationPayload.Builder().build()
         every {
             pushDelegate.recordNotificationOpened(eq(payload), any(), any())
         } answers {
@@ -177,7 +176,6 @@ class KotlinPushNotificationsFacadeTest {
 
     @Test(expected = PushNotificationsException::class)
     fun recordNotificationOpenedThrows() = runBlocking {
-        val payload = NotificationPayload.Builder().build()
         val error = PushNotificationsException("uh", "oh")
         every {
             pushDelegate.recordNotificationOpened(eq(payload), any(), any())
@@ -191,7 +189,6 @@ class KotlinPushNotificationsFacadeTest {
 
     @Test
     fun handleNotificationReceivedSucceeds() = runBlocking {
-        val payload = NotificationPayload.Builder().build()
         val result = PushNotificationResult.NotificationPosted()
         every {
             pushDelegate.handleNotificationReceived(eq(payload), any(), any())
@@ -206,7 +203,6 @@ class KotlinPushNotificationsFacadeTest {
 
     @Test(expected = PushNotificationsException::class)
     fun handleNotificationReceivedThrows(): Unit = runBlocking {
-        val payload = NotificationPayload.Builder().build()
         val error = PushNotificationsException("uh", "oh")
         every {
             pushDelegate.handleNotificationReceived(eq(payload), any(), any())

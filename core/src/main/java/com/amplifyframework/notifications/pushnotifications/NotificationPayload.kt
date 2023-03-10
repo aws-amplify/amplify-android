@@ -16,19 +16,22 @@
 package com.amplifyframework.notifications.pushnotifications
 
 import android.os.Parcelable
+import java.util.UUID
 import kotlinx.parcelize.Parcelize
 
 @Parcelize
 open class NotificationPayload(
     val notificationId: Int,
-    val messageId: String?,
-    val senderId: String?,
-    val sendTime: Long?,
-    val title: String?,
-    val body: String?,
-    val imageUrl: String?,
-    val channelId: String?,
-    val action: Map<String, String>,
-    val silentPush: Boolean,
-    val rawData: Map<String, String>
-) : Parcelable
+    val messageId: String? = null,
+    val senderId: String? = null,
+    val sendTime: Long? = null,
+    val title: String? = null,
+    val body: String? = null,
+    val imageUrl: String? = null,
+    val channelId: String? = null,
+    val action: Map<String, String> = mapOf(),
+    val silentPush: Boolean = false,
+    val rawData: Map<String, String> = mapOf()
+) : Parcelable {
+    internal constructor() : this(UUID.randomUUID().hashCode())
+}

@@ -154,6 +154,7 @@ class AWSPinpointAnalyticsPluginBehaviorTest {
             )
         }
         val actualEndpoint = slot<EndpointProfile>()
+        every { targetingClientMock.identifyUser(any(), any()) } answers { callOriginal() }
         every { targetingClientMock.updateEndpointProfile(capture(actualEndpoint)) } returns Unit
 
         val properties =
@@ -177,6 +178,7 @@ class AWSPinpointAnalyticsPluginBehaviorTest {
         val expectedEndpointAttributes =
             mapOf("email" to listOf("test@test.com"), "name" to listOf("test"), "plan" to listOf())
 
+        verify(exactly = 1) { targetingClientMock.identifyUser("USER_ID", userProfile) }
         verify(exactly = 1) { targetingClientMock.updateEndpointProfile(any()) }
 
         assertEquals(actualEndpoint.captured.user.userAttributes, expectedUserAttributes)

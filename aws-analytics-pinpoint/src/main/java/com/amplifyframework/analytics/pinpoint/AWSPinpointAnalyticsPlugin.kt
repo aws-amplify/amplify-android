@@ -26,7 +26,7 @@ import org.json.JSONObject
 /**
  * The plugin implementation for Amazon Pinpoint in Analytics category.
  */
-class AWSPinpointAnalyticsPlugin : AnalyticsPlugin<Any>() {
+class AWSPinpointAnalyticsPlugin : AnalyticsPlugin<PinpointClient>() {
 
     private val pluginKey = "awsPinpointAnalyticsPlugin"
     private val analyticsConfigKey = "pinpointAnalytics"

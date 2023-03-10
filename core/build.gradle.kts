@@ -46,6 +46,7 @@ dependencies {
     testImplementation(project(":testutils"))
     testImplementation(testDependency.junit)
     testImplementation(testDependency.mockito)
+    testImplementation(testDependency.mockitoinline)
     testImplementation(testDependency.robolectric)
     testImplementation(dependency.rxjava)
     testImplementation(testDependency.androidx.test.core)

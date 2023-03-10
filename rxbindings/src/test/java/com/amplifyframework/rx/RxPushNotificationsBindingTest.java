@@ -48,6 +48,8 @@ public final class RxPushNotificationsBindingTest {
     private PushNotificationsCategoryBehavior delegate;
     private RxPushNotificationsBinding push;
 
+    private final NotificationPayload payload = new NotificationPayload();
+
     /**
      * Creates an {@link RxPushNotificationsBinding} instance to test.
      * It is tested by arranging behaviors on its {@link PushNotificationsCategoryBehavior} delegate.
@@ -213,8 +215,6 @@ public final class RxPushNotificationsBindingTest {
      */
     @Test
     public void testRecordNotificationReceived() throws InterruptedException {
-        NotificationPayload payload = new NotificationPayload.Builder().build();
-
         // Arrange an invocation of the success Action
         doAnswer(invocation -> {
             // 0 = userId, 1 = onComplete, 2 = onFailure
@@ -237,8 +237,6 @@ public final class RxPushNotificationsBindingTest {
      */
     @Test
     public void testRecordNotificationReceivedFails() throws InterruptedException {
-        NotificationPayload payload = new NotificationPayload.Builder().build();
-
         // Arrange a callback on the failure consumer
         PushNotificationsException failure = new PushNotificationsException(
                 "Failed to record push notifications event $eventName.",
@@ -268,8 +266,6 @@ public final class RxPushNotificationsBindingTest {
      */
     @Test
     public void testRecordNotificationOpened() throws InterruptedException {
-        NotificationPayload payload = new NotificationPayload.Builder().build();
-
         // Arrange an invocation of the success Action
         doAnswer(invocation -> {
             // 0 = userId, 1 = onComplete, 2 = onFailure
@@ -292,8 +288,6 @@ public final class RxPushNotificationsBindingTest {
      */
     @Test
     public void testRecordNotificationOpenedFails() throws InterruptedException {
-        NotificationPayload payload = new NotificationPayload.Builder().build();
-
         // Arrange a callback on the failure consumer
         PushNotificationsException failure = new PushNotificationsException(
             "Failed to record push notifications event $eventName.",
@@ -323,8 +317,6 @@ public final class RxPushNotificationsBindingTest {
      */
     @Test
     public void testHandleNotificationReceived() throws InterruptedException {
-        NotificationPayload payload = new NotificationPayload.Builder().build();
-
         PushNotificationResult expectedResult = new PushNotificationResult.NotificationPosted();
 
         // Arrange an invocation of the success Action
@@ -350,8 +342,6 @@ public final class RxPushNotificationsBindingTest {
      */
     @Test
     public void testHandleNotificationReceivedFails() throws InterruptedException {
-        NotificationPayload payload = new NotificationPayload.Builder().build();
-
         // Arrange a callback on the failure consumer
         PushNotificationsException failure = new PushNotificationsException(
                 "Failed to handle push notification message.",

@@ -114,8 +114,8 @@ fun Project.configureAndroid() {
     }
 
     configure<LibraryExtension> {
-        buildToolsVersion = "30.0.2"
-        compileSdk = 31
+        buildToolsVersion = "30.0.3"
+        compileSdk = 32
 
         defaultConfig {
             minSdk = 24
