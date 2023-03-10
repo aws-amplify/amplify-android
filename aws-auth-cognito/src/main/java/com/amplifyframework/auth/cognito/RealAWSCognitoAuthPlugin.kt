@@ -1744,7 +1744,7 @@ internal class RealAWSCognitoAuthPlugin(
                     val exception = deleteUserException
                     when {
                         authZState is AuthorizationState.DeletingUser &&
-                                authZState.deleteUserState is DeleteUserState.Error -> {
+                            authZState.deleteUserState is DeleteUserState.Error -> {
                             deleteUserException = authZState.deleteUserState.exception
                         }
                         authNState is AuthenticationState.SignedOut && authZState is AuthorizationState.Configured -> {
