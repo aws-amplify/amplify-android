@@ -242,7 +242,7 @@ internal sealed class AuthorizationState : State {
                         )
                     }
                     is AuthorizationEvent.EventType.ThrowError -> {
-                        StateResolution(Error(authorizationEvent.exception))
+                        StateResolution(SessionEstablished(oldState.amplifyCredential))
                     }
                     else -> {
                         val resolution = deleteUserResolver.resolve(oldState.deleteUserState, event)

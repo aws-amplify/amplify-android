@@ -29,22 +29,25 @@ internal object DeleteUserCognitoActions : DeleteUserActions {
     override fun initDeleteUserAction(accessToken: String): Action =
         Action<AuthEnvironment>("DeleteUser") { id, dispatcher ->
             logger.verbose("$id Starting execution")
-            val evt = try {
+            try {
                 cognitoAuthService.cognitoIdentityProviderClient?.deleteUser(
                     DeleteUserRequest.invoke { this.accessToken = accessToken }
                 )
-                DeleteUserEvent(DeleteUserEvent.EventType.UserDeleted())
+                val evt = DeleteUserEvent(DeleteUserEvent.EventType.UserDeleted())
+                dispatcher.send(evt)
             } catch (e: Exception) {
                 logger.warn("Failed to delete user.", e)
                 if (e is UserNotFoundException) {
                     // The user could have been remotely deleted, clear local session
-                    DeleteUserEvent(DeleteUserEvent.EventType.ThrowError(e, true))
+                    val evt = DeleteUserEvent(DeleteUserEvent.EventType.ThrowError(e, true))
+                    dispatcher.send(evt)
                 } else {
-                    DeleteUserEvent(DeleteUserEvent.EventType.ThrowError(e, false))
+                    val evt = DeleteUserEvent(DeleteUserEvent.EventType.ThrowError(e, false))
+                    dispatcher.send(evt)
+                    val evt2 = AuthorizationEvent(AuthorizationEvent.EventType.ThrowError(e))
+                    dispatcher.send(evt2)
                 }
             }
-            logger.verbose("$id Sending event ${evt.type}")
-            dispatcher.send(evt)
         }
 
     override fun initiateSignOut(): Action =
@@ -52,7 +55,7 @@ internal object DeleteUserCognitoActions : DeleteUserActions {
             logger.verbose("$id Starting execution")
             val evt = AuthorizationEvent(AuthorizationEvent.EventType.UserDeleted())
             val evt2 = AuthenticationEvent(
-                AuthenticationEvent.EventType.SignOutRequested(SignOutData(globalSignOut = true))
+                AuthenticationEvent.EventType.SignOutRequested(SignOutData(globalSignOut = true, bypassCancel = true))
             )
             logger.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
