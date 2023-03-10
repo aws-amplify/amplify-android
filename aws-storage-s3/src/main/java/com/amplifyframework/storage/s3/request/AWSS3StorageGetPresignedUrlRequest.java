@@ -29,6 +29,7 @@ public final class AWSS3StorageGetPresignedUrlRequest {
     private final StorageAccessLevel accessLevel;
     private final String targetIdentityId;
     private final int expires;
+    private final boolean useAccelerateEndpoint;
 
     /**
      * Constructs a new AWSS3StorageGetUrlRequest.
@@ -40,16 +41,19 @@ public final class AWSS3StorageGetPresignedUrlRequest {
      * @param targetIdentityId If set, this should override the current user's identity ID.
      *                         If null, the operation will fetch the current identity ID.
      * @param expires The number of seconds before the URL expires
+     * @param useAccelerateEndpoint Flag to enable acceleration mode
      */
     public AWSS3StorageGetPresignedUrlRequest(
             @NonNull String key,
             @NonNull StorageAccessLevel accessLevel,
             @Nullable String targetIdentityId,
-            int expires) {
+            int expires,
+            boolean useAccelerateEndpoint) {
         this.key = key;
         this.accessLevel = accessLevel;
         this.targetIdentityId = targetIdentityId;
         this.expires = expires;
+        this.useAccelerateEndpoint = useAccelerateEndpoint;
     }
 
     /**
@@ -85,6 +89,15 @@ public final class AWSS3StorageGetPresignedUrlRequest {
      */
     public int getExpires() {
         return expires;
+    }
+
+    /**
+     * Gets the flag to determine whether to use acceleration endpoint.
+     *
+     * @return boolean flag
+     */
+    public boolean useAccelerateEndpoint() {
+        return useAccelerateEndpoint;
     }
 }
 

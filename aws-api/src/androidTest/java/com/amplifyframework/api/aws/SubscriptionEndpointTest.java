@@ -37,8 +37,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -71,7 +73,7 @@ public final class SubscriptionEndpointTest {
 
         final GraphQLResponse.Factory responseFactory = new GsonGraphQLResponseFactory();
         final SubscriptionAuthorizer authorizer = new SubscriptionAuthorizer(apiConfiguration);
-        this.subscriptionEndpoint = new SubscriptionEndpoint(apiConfiguration, responseFactory, authorizer);
+        this.subscriptionEndpoint = new SubscriptionEndpoint(apiConfiguration, null, responseFactory, authorizer);
 
         this.eventId = RandomString.string();
         this.subscriptionIdsForRelease = new HashSet<>();
@@ -117,6 +119,51 @@ public final class SubscriptionEndpointTest {
         // Theoretically would expect that we'd have two subscriptions,
         // and that their subscription IDs would be different/unique.
         assertNotEquals(firstSubscriptionId, secondSubscriptionId);
+    }
+
+    /**
+     * It uses a configurator if present.
+     *
+     * This test verifies that a configurator can add an interceptor and that it will be run when establishing
+     * subscriptions.
+     * @throws ApiException On failure to load API configuration from config file
+     * @throws JSONException On failure to manipulate configuration JSON during test arrangement
+     */
+    @Test
+    public void usesConfiguratorIfPresent() throws ApiException, JSONException {
+        String endpointConfigKey = "eventsApi"; // The endpoint config in amplifyconfiguration.json with this name
+        JSONObject configJson = Resources.readAsJson(getApplicationContext(), R.raw.amplifyconfiguration)
+                .getJSONObject("api")
+                .getJSONObject("plugins")
+                .getJSONObject("awsAPIPlugin");
+        AWSApiPluginConfiguration pluginConfiguration = AWSApiPluginConfigurationReader.readFrom(configJson);
+        ApiConfiguration apiConfiguration = pluginConfiguration.getApi(endpointConfigKey);
+        assertNotNull(apiConfiguration);
+
+        final GraphQLResponse.Factory responseFactory = new GsonGraphQLResponseFactory();
+        final SubscriptionAuthorizer authorizer = new SubscriptionAuthorizer(apiConfiguration);
+
+        final AtomicInteger counter = new AtomicInteger();
+
+        final OkHttpConfigurator configurator = okHttpBuilder -> {
+            counter.incrementAndGet();
+
+            okHttpBuilder.addInterceptor(chain -> {
+                counter.incrementAndGet();
+
+                return chain.proceed(chain.request());
+            });
+        };
+
+        this.subscriptionEndpoint = new SubscriptionEndpoint(apiConfiguration, configurator, responseFactory,
+                authorizer);
+
+        String firstSubscriptionId = subscribeToEventComments(eventId);
+        assertNotNull(firstSubscriptionId);
+
+        subscriptionIdsForRelease.add(firstSubscriptionId);
+
+        assertEquals(2, counter.get());
     }
 
     /**

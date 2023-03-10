@@ -55,7 +55,8 @@ internal data class TransferRecord(
     var sseKMSKey: String? = null,
     var md5: String? = null,
     var cannedAcl: String? = null,
-    var workManagerRequestId: String? = null
+    var workManagerRequestId: String? = null,
+    var useAccelerateEndpoint: Int = 0
 ) {
     companion object {
 
@@ -144,6 +145,9 @@ internal data class TransferRecord(
                     c.getString(c.getColumnIndexOrThrow(TransferTable.COLUMN_CANNED_ACL))
                 this.headerStorageClass =
                     c.getString(c.getColumnIndexOrThrow(TransferTable.COLUMN_HEADER_STORAGE_CLASS))
+                this.useAccelerateEndpoint = c.getInt(
+                    c.getColumnIndexOrThrow(TransferTable.COLUMN_USE_ACCELERATE_ENDPOINT)
+                )
             }
         }
     }
