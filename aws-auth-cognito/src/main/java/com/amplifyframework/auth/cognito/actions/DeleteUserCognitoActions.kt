@@ -34,17 +34,21 @@ internal object DeleteUserCognitoActions : DeleteUserActions {
                     DeleteUserRequest.invoke { this.accessToken = accessToken }
                 )
                 val evt = DeleteUserEvent(DeleteUserEvent.EventType.UserDeleted())
+                logger.verbose("$id Sending event ${evt.type}")
                 dispatcher.send(evt)
             } catch (e: Exception) {
                 logger.warn("Failed to delete user.", e)
                 if (e is UserNotFoundException) {
                     // The user could have been remotely deleted, clear local session
                     val evt = DeleteUserEvent(DeleteUserEvent.EventType.ThrowError(e, true))
+                    logger.verbose("$id Sending event ${evt.type}")
                     dispatcher.send(evt)
                 } else {
                     val evt = DeleteUserEvent(DeleteUserEvent.EventType.ThrowError(e, false))
+                    logger.verbose("$id Sending event ${evt.type}")
                     dispatcher.send(evt)
                     val evt2 = AuthorizationEvent(AuthorizationEvent.EventType.ThrowError(e))
+                    logger.verbose("$id Sending event ${evt2.type}")
                     dispatcher.send(evt2)
                 }
             }
