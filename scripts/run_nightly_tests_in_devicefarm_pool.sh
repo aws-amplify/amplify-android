@@ -66,11 +66,79 @@ function stopDuplicates {
 }
 stopDuplicates
 
+# Select range of devices from version 7 and above.
+device1=$(aws devicefarm list-devices \
+                --region="us-west-2" \
+                --filters '[
+                    {"attribute":"AVAILABILITY","operator":"EQUALS","values":["HIGHLY_AVAILABLE"]},
+                    {"attribute":"PLATFORM","operator":"EQUALS","values":["ANDROID"]},
+                    {"attribute":"OS_VERSION","operator":"GREATER_THAN_OR_EQUALS","values":["7"]},
+                    {"attribute":"OS_VERSION","operator":"LESS_THAN","values":["7.1"]},
+                    {"attribute":"MANUFACTURER","operator":"IN","values":["Google", "Pixel", "Samsung"]}
+                ]' \
+                | jq -r '.devices[0].arn')
+
+device2=$(aws devicefarm list-devices \
+                --region="us-west-2" \
+                --filters '[
+                    {"attribute":"AVAILABILITY","operator":"EQUALS","values":["HIGHLY_AVAILABLE"]},
+                    {"attribute":"PLATFORM","operator":"EQUALS","values":["ANDROID"]},
+                    {"attribute":"OS_VERSION","operator":"GREATER_THAN_OR_EQUALS","values":["8"]},
+                    {"attribute":"OS_VERSION","operator":"LESS_THAN","values":["9"]},
+                    {"attribute":"MANUFACTURER","operator":"IN","values":["Samsung"]}
+                ]' \
+                | jq -r '.devices[0].arn')
+
+device3=$(aws devicefarm list-devices \
+                --region="us-west-2" \
+                --filters '[
+                    {"attribute":"ARN","operator":"NOT_IN","values":["'$device2'"]},
+                    {"attribute":"AVAILABILITY","operator":"EQUALS","values":["HIGHLY_AVAILABLE"]},
+                    {"attribute":"PLATFORM","operator":"EQUALS","values":["ANDROID"]},
+                    {"attribute":"OS_VERSION","operator":"GREATER_THAN_OR_EQUALS","values":["9"]},
+                    {"attribute":"OS_VERSION","operator":"LESS_THAN","values":["10"]},
+                    {"attribute":"MANUFACTURER","operator":"IN","values":["Samsung"]}
+                ]' \
+                | jq -r '.devices[0].arn')
+
+device4=$(aws devicefarm list-devices \
+                --region="us-west-2" \
+                --filters '[
+                    {"attribute":"ARN","operator":"NOT_IN","values":["'$device2'", "'$device3'"]},
+                    {"attribute":"AVAILABILITY","operator":"EQUALS","values":["HIGHLY_AVAILABLE"]},
+                    {"attribute":"PLATFORM","operator":"EQUALS","values":["ANDROID"]},
+                    {"attribute":"OS_VERSION","operator":"GREATER_THAN_OR_EQUALS","values":["10"]},
+                    {"attribute":"OS_VERSION","operator":"LESS_THAN","values":["11"]},
+                    {"attribute":"MANUFACTURER","operator":"IN","values":["Samsung"]}
+                ]' \
+                | jq -r '.devices[0].arn')
+
+device5=$(aws devicefarm list-devices \
+                --region="us-west-2" \
+                --filters '[
+                    {"attribute":"AVAILABILITY","operator":"EQUALS","values":["HIGHLY_AVAILABLE"]},
+                    {"attribute":"PLATFORM","operator":"EQUALS","values":["ANDROID"]},
+                    {"attribute":"OS_VERSION","operator":"GREATER_THAN_OR_EQUALS","values":["12"]},
+                    {"attribute":"MANUFACTURER","operator":"IN","values":["Google", "Pixel"]}
+                ]' \
+                | jq -r '.devices[0].arn')
+
+# IF we fail to find our required test devices, fail.
+if [[ -z "${device1}" || -z "${device2}" || -z "${device3}" || -z "${device4}" || -z "${device5}" ]]; then
+    echo "Failed to grab 5 required devices for integration tests."
+    exit 1
+fi
+
 # Schedule the test run in device farm
 echo "Scheduling test run"
 run_arn=`aws devicefarm schedule-run --project-arn=$project_arn \
                             --app-arn="$app_package_upload_arn" \
-                            --device-pool-arn=$device_pool_arn \
+                            --device-selection-configuration='{
+                                "filters": [
+                                  {"attribute": "ARN", "operator":"IN", "values":["'$device1'", "'$device2'", "'$device3'", "'$device4'", "'$device5'"]}
+                                ],
+                                "maxDevices": '5'
+                            }' \
                             --name="$run_name" \
                             --test="type=INSTRUMENTATION,testPackageArn=$test_package_upload_arn" \
                             --execution-configuration="jobTimeoutMinutes=30,videoCapture=false" \

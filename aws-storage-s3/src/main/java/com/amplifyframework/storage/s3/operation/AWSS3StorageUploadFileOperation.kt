@@ -105,7 +105,13 @@ class AWSS3StorageUploadFileOperation @JvmOverloads internal constructor(
                                 objectMetadata.metaData[ObjectMetadata.SERVER_SIDE_ENCRYPTION] =
                                     storageServerSideEncryption.getName()
                             }
-                            transferObserver = storageService.uploadFile(transferId, serviceKey, file, objectMetadata)
+                            transferObserver = storageService.uploadFile(
+                                transferId,
+                                serviceKey,
+                                file,
+                                objectMetadata,
+                                uploadRequest.useAccelerateEndpoint()
+                            )
                             transferObserver?.setTransferListener(UploadTransferListener())
                         } catch (exception: Exception) {
                             onError?.accept(

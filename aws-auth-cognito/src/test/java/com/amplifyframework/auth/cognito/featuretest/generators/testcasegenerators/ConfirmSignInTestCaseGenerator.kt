@@ -15,6 +15,8 @@
 
 package com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerators
 
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.CodeMismatchException
+import com.amplifyframework.auth.cognito.CognitoAuthExceptionConverter
 import com.amplifyframework.auth.cognito.featuretest.API
 import com.amplifyframework.auth.cognito.featuretest.AuthAPI
 import com.amplifyframework.auth.cognito.featuretest.CognitoType
@@ -102,5 +104,37 @@ object ConfirmSignInTestCaseGenerator : SerializableProvider {
         )
     )
 
-    override val serializables: List<Any> = listOf(baseCase)
+    private val errorCase: FeatureTestCase
+        get() {
+            val exception = CodeMismatchException.invoke {
+                message = "Confirmation code entered is not correct."
+            }
+            return baseCase.copy(
+                description = "Test that invalid code on confirm SignIn with SMS challenge errors out",
+                preConditions = PreConditions(
+                    "authconfiguration.json",
+                    "SigningIn_SigningIn.json",
+                    mockedResponses = listOf(
+                        MockResponse(
+                            CognitoType.CognitoIdentityProvider,
+                            "respondToAuthChallenge",
+                            ResponseType.Failure,
+                            exception.toJsonElement()
+                        )
+                    )
+                ),
+                validations = listOf(
+                    ExpectationShapes.Amplify(
+                        AuthAPI.confirmSignIn,
+                        ResponseType.Failure,
+                        CognitoAuthExceptionConverter.lookup(
+                            exception,
+                            "Confirm Sign in failed."
+                        ).toJsonElement()
+                    )
+                )
+            )
+        }
+
+    override val serializables: List<Any> = listOf(baseCase, errorCase)
 }

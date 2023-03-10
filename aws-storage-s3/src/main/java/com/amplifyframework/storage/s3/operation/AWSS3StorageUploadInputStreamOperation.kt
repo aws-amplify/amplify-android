@@ -116,7 +116,8 @@ class AWSS3StorageUploadInputStreamOperation @JvmOverloads internal constructor(
                                 transferId,
                                 serviceKey,
                                 inputStream,
-                                objectMetadata
+                                objectMetadata,
+                                uploadRequest.useAccelerateEndpoint()
                             )
                             transferObserver?.setTransferListener(UploadTransferListener())
                         } catch (ioException: IOException) {

@@ -83,13 +83,15 @@ internal class TransferDB private constructor(context: Context) {
         partNumber: Int,
         uploadId: String,
         bytesTotal: Long,
-        isLastPart: Int
+        isLastPart: Int,
+        useAccelerateEndpoint: Boolean = false
     ): Uri {
         val values: ContentValues = generateContentValuesForMultiPartUpload(
             transferId,
             bucket, key, file,
             fileOffset, partNumber, uploadId, bytesTotal, isLastPart, ObjectMetadata(),
-            null
+            null,
+            useAccelerateEndpoint
         )
         return transferDBHelper.insert(transferDBHelper.contentUri, values)
     }
@@ -114,6 +116,7 @@ internal class TransferDB private constructor(context: Context) {
         file: File?,
         cannedAcl: ObjectCannedAcl? = null,
         metadata: ObjectMetadata? = ObjectMetadata(),
+        useAccelerateEndpoint: Boolean = false
     ): Uri {
         val values = generateContentValuesForSinglePartTransfer(
             transferId,
@@ -122,7 +125,8 @@ internal class TransferDB private constructor(context: Context) {
             key,
             file,
             metadata,
-            cannedAcl
+            cannedAcl,
+            useAccelerateEndpoint
         )
         return transferDBHelper.insert(transferDBHelper.contentUri, values)
     }
@@ -557,7 +561,8 @@ internal class TransferDB private constructor(context: Context) {
         key: String,
         file: File,
         metadata: ObjectMetadata?,
-        cannedAcl: ObjectCannedAcl?
+        cannedAcl: ObjectCannedAcl?,
+        useAccelerateEndpoint: Boolean
     ): Uri {
         val values = generateContentValuesForSinglePartTransfer(
             transferId,
@@ -566,7 +571,8 @@ internal class TransferDB private constructor(context: Context) {
             key,
             file,
             metadata,
-            cannedAcl
+            cannedAcl,
+            useAccelerateEndpoint
         )
         return transferDBHelper.insert(
             transferDBHelper.contentUri,
@@ -602,7 +608,8 @@ internal class TransferDB private constructor(context: Context) {
         bytesTotal: Long,
         isLastPart: Int,
         metadata: ObjectMetadata?,
-        cannedAcl: ObjectCannedAcl?
+        cannedAcl: ObjectCannedAcl?,
+        useAccelerateEndpoint: Boolean
     ): ContentValues {
         val values = ContentValues()
         values.put(TransferTable.COLUMN_TRANSFER_ID, transferId)
@@ -619,6 +626,7 @@ internal class TransferDB private constructor(context: Context) {
         values.put(TransferTable.COLUMN_MULTIPART_ID, uploadId)
         values.put(TransferTable.COLUMN_IS_LAST_PART, isLastPart)
         values.put(TransferTable.COLUMN_IS_ENCRYPTED, 0)
+        values.put(TransferTable.COLUMN_USE_ACCELERATE_ENDPOINT, if (useAccelerateEndpoint) 1 else 0)
         values.putAll(generateContentValuesForObjectMetadata(metadata))
         cannedAcl?.let {
             values.put(TransferTable.COLUMN_CANNED_ACL, it.value)
@@ -716,7 +724,8 @@ internal class TransferDB private constructor(context: Context) {
         key: String,
         file: File?,
         metadata: ObjectMetadata?,
-        cannedAcl: ObjectCannedAcl?
+        cannedAcl: ObjectCannedAcl?,
+        useAccelerateEndpoint: Boolean
     ): ContentValues {
         val values = ContentValues()
         values.put(TransferTable.COLUMN_TRANSFER_ID, transferId)
@@ -734,6 +743,7 @@ internal class TransferDB private constructor(context: Context) {
         values.put(TransferTable.COLUMN_IS_ENCRYPTED, 0)
         values.putAll(generateContentValuesForObjectMetadata(metadata))
         values.put(TransferTable.COLUMN_CANNED_ACL, cannedAcl?.value)
+        values.put(TransferTable.COLUMN_USE_ACCELERATE_ENDPOINT, if (useAccelerateEndpoint) 1 else 0)
         return values
     }
 

@@ -18,6 +18,7 @@ package com.amplifyframework.auth.cognito
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import androidx.annotation.RestrictTo
 import androidx.annotation.VisibleForTesting
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.auth.AuthCodeDeliveryDetails
@@ -91,6 +92,13 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         }
     }
 
+    private lateinit var pluginConfigurationJSON: JSONObject
+
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    fun getPluginConfiguration(): JSONObject {
+        return pluginConfigurationJSON
+    }
+
     private fun Exception.toAuthException(): AuthException {
         return if (this is AuthException) {
             this
@@ -105,6 +113,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
 
     @Throws(AmplifyException::class)
     override fun configure(pluginConfiguration: JSONObject, context: Context) {
+        pluginConfigurationJSON = pluginConfiguration
         try {
             val configuration = AuthConfiguration.fromJson(pluginConfiguration)
             val credentialStoreClient = CredentialStoreClient(configuration, context, logger)
