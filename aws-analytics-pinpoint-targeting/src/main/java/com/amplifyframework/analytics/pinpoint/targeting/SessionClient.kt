@@ -16,7 +16,9 @@
 package com.amplifyframework.analytics.pinpoint.targeting
 
 import android.content.Context
+import androidx.annotation.RestrictTo
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 class SessionClient(
     private val context: Context,
     val targetingClient: TargetingClient,

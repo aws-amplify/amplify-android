@@ -19,7 +19,6 @@ import androidx.annotation.RestrictTo
 import com.amplifyframework.notifications.pushnotifications.NotificationPayload
 import com.amplifyframework.pushnotifications.pinpoint.utils.PushNotificationsConstants
 import com.google.firebase.messaging.RemoteMessage
-import java.util.UUID
 import kotlin.collections.HashMap
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -35,7 +34,7 @@ class PinpointNotificationPayload internal constructor(
     silentPush: Boolean = false,
     rawData: Map<String, String> = mapOf()
 ) : NotificationPayload(
-    UUID.randomUUID().hashCode(), messageId, senderId, sendTime,
+    messageId, senderId, sendTime,
     title, body, imageUrl,
     channelId, action, silentPush, rawData
 ) {

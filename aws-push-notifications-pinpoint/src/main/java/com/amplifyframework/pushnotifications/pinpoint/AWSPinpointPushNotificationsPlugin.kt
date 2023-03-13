@@ -42,9 +42,11 @@ import com.amplifyframework.notifications.pushnotifications.NotificationPayload
 import com.amplifyframework.notifications.pushnotifications.PushNotificationResult
 import com.amplifyframework.notifications.pushnotifications.PushNotificationsException
 import com.amplifyframework.notifications.pushnotifications.PushNotificationsPlugin
+import com.amplifyframework.pushnotifications.pinpoint.utils.PushNotificationsConstants
 import com.amplifyframework.pushnotifications.pinpoint.utils.PushNotificationsUtils
 import com.google.firebase.messaging.FirebaseMessaging
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.random.Random
 import org.json.JSONObject
 
 class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClient>() {
@@ -264,7 +266,14 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
                 PushNotificationResult.AppInForeground()
             } else {
                 if (canShowNotification(payload)) {
-                    pushNotificationsUtils.showNotification(payload, AWSPinpointPushNotificationsActivity::class.java)
+                    val notificationId = getNotificationRequestId(
+                        eventSourceType.getEventSourceIdAttributeKey(),
+                        eventSourceType.getEventSourceActivityAttributeKey()
+                    )
+                    pushNotificationsUtils.showNotification(
+                        notificationId, payload,
+                        AWSPinpointPushNotificationsActivity::class.java
+                    )
                 } // TODO: else add isOptedOut to event
                 tryAnalyticsRecordEvent(eventSourceType.getEventTypeReceivedBackground())
                 PushNotificationResult.NotificationPosted()
@@ -278,6 +287,26 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
                     exception
                 )
             )
+        }
+    }
+
+    /**
+     * @return a unique notification request ID that is given to the
+     * NotificationManager for the notification. A random identifier
+     * is generated in order to uniquely identify the notification
+     * within the application.
+     */
+    private fun getNotificationRequestId(
+        eventSourceId: String,
+        activityId: String?
+    ): Int {
+        // Adding a random unique identifier for direct sends. For a campaign,
+        // use the eventSourceId and the activityId in order to prevent displaying
+        // duplicate notifications from a campaign activity.
+        return if (PushNotificationsConstants.DIRECT_CAMPAIGN_SEND == eventSourceId && activityId == null) {
+            Random.nextInt()
+        } else {
+            "$eventSourceId:$activityId".hashCode()
         }
     }
 

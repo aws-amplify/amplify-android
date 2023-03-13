@@ -101,6 +101,7 @@ class PushNotificationsUtils(
     @Suppress("DEPRECATION")
     @SuppressLint("NewApi")
     fun showNotification(
+        notificationId: Int,
         payload: NotificationPayload,
         targetClass: Class<*>?
     ) {
@@ -109,6 +110,7 @@ class PushNotificationsUtils(
             val largeImageIcon = payload.imageUrl?.let { downloadImage(it) }
             val notificationIntent = Intent(context, targetClass)
             notificationIntent.putExtra("amplifyNotificationPayload", payload)
+            notificationIntent.putExtra("notificationId", notificationId)
             val pendingIntent = PendingIntent.getActivity(
                 context,
                 requestCode,
@@ -133,9 +135,7 @@ class PushNotificationsUtils(
             }
 
             with(NotificationManagerCompat.from(context)) {
-                // notificationId is a unique int for each notification that you must define
-                // TODO: get id from payload
-                notify(payload.notificationId, builder.build())
+                notify(notificationId, builder.build())
             }
         }
     }

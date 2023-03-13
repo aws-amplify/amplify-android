@@ -19,11 +19,13 @@ import android.app.Activity;
 import android.app.Application;
 import android.os.Bundle;
 import android.util.Log;
+import androidx.annotation.RestrictTo;
 
 /**
  * Tracks when the host application enters or leaves foreground.
  * The constructor registers to receive activity lifecycle events.
  **/
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public final class AutoSessionTracker implements Application.ActivityLifecycleCallbacks {
     private static final String LOG_TAG = AutoSessionTracker.class.getSimpleName();
     private final SessionClient sessionClient;

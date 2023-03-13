@@ -22,11 +22,13 @@ import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteQueryBuilder
 import android.net.Uri
+import androidx.annotation.RestrictTo
 import com.amplifyframework.analytics.pinpoint.targeting.models.PinpointEvent
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 class PinpointDatabase(
     context: Context,
     dbName: String = DATABASE_NAME,

@@ -15,10 +15,12 @@
  */
 package com.amplifyframework.analytics.pinpoint.targeting.endpointProfile
 
+import androidx.annotation.RestrictTo
 import java.util.concurrent.ConcurrentHashMap
 import kotlinx.serialization.Serializable
 
 @Serializable
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 class EndpointProfileUser(val userId: String? = null) {
     val userAttributes: MutableMap<String, List<String>> = ConcurrentHashMap()
 

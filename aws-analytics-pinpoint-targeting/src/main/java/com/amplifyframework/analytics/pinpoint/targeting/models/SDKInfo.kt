@@ -14,9 +14,11 @@
  */
 package com.amplifyframework.analytics.pinpoint.targeting.models
 
+import androidx.annotation.RestrictTo
 import kotlinx.serialization.Serializable
 
 @Serializable
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 data class SDKInfo(
     val name: String,
     val version: String

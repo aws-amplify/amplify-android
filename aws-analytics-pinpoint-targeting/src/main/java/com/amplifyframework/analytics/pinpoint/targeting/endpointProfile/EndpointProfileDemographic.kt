@@ -16,12 +16,14 @@
 package com.amplifyframework.analytics.pinpoint.targeting.endpointProfile
 
 import android.os.Build
+import androidx.annotation.RestrictTo
 import com.amplifyframework.analytics.pinpoint.targeting.data.AndroidAppDetails
 import com.amplifyframework.analytics.pinpoint.targeting.data.AndroidDeviceDetails
 import java.util.TimeZone
 import kotlinx.serialization.Serializable
 
 @Serializable
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 class EndpointProfileDemographic internal constructor(val appVersion: String?, val make: String, val locale: String) {
     internal constructor(
         appDetails: AndroidAppDetails,

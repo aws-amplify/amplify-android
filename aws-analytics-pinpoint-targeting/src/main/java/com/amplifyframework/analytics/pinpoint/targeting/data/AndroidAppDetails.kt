@@ -16,9 +16,11 @@
 package com.amplifyframework.analytics.pinpoint.targeting.data
 
 import android.content.Context
+import androidx.annotation.RestrictTo
 import kotlinx.serialization.Serializable
 
 @Serializable
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 class AndroidAppDetails {
 
     val appId: String

@@ -16,6 +16,7 @@
 package com.amplifyframework.analytics.pinpoint.targeting.endpointProfile
 
 import android.content.Context
+import androidx.annotation.RestrictTo
 import aws.sdk.kotlin.services.pinpoint.model.ChannelType
 import com.amplifyframework.analytics.pinpoint.targeting.data.AndroidAppDetails
 import com.amplifyframework.analytics.pinpoint.targeting.data.AndroidDeviceDetails
@@ -32,6 +33,7 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 class EndpointProfile(
     uniqueId: String,
     appDetails: AndroidAppDetails,

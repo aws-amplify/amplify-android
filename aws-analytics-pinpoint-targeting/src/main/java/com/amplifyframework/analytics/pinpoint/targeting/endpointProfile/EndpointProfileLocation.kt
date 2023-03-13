@@ -15,6 +15,7 @@
  */
 package com.amplifyframework.analytics.pinpoint.targeting.endpointProfile
 
+import androidx.annotation.RestrictTo
 import kotlinx.serialization.Serializable
 
 /**
@@ -28,6 +29,7 @@ import kotlinx.serialization.Serializable
  * @param region endpoint location region
  */
 @Serializable
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 data class EndpointProfileLocation(
     val country: String,
     val latitude: Double? = null,

@@ -41,5 +41,6 @@ class PushNotificationsConstants {
         // pinpoint.campaign.campaign_activity_id
         const val PINPOINT_CAMPAIGN_CAMPAIGN_ACTIVITY_ID = "${CAMPAIGN_PREFIX}campaign_activity_id"
         const val DEFAULT_NOTIFICATION_CHANNEL_ID = "PINPOINT.NOTIFICATION" // PINPOINT.NOTIFICATION
+        const val DIRECT_CAMPAIGN_SEND = "_DIRECT" // _DIRECT
     }
 }

@@ -16,6 +16,7 @@ package com.amplifyframework.analytics.pinpoint.targeting
 
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.annotation.RestrictTo
 import aws.sdk.kotlin.services.pinpoint.PinpointClient
 import aws.sdk.kotlin.services.pinpoint.model.EndpointDemographic
 import aws.sdk.kotlin.services.pinpoint.model.EndpointLocation
@@ -46,6 +47,7 @@ import kotlinx.coroutines.launch
 import org.json.JSONException
 import org.json.JSONObject
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 class TargetingClient(
     context: Context,
     private val pinpointClient: PinpointClient,

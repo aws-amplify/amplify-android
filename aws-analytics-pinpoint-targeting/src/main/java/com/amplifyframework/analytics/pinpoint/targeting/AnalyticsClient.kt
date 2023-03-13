@@ -17,6 +17,7 @@ package com.amplifyframework.analytics.pinpoint.targeting
 
 import android.app.Application
 import android.content.Context
+import androidx.annotation.RestrictTo
 import aws.sdk.kotlin.services.pinpoint.PinpointClient
 import com.amplifyframework.analytics.AnalyticsChannelEventName
 import com.amplifyframework.analytics.pinpoint.targeting.data.AndroidAppDetails
@@ -37,6 +38,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 class AnalyticsClient(
     val context: Context,
     autoFlushEventsInterval: Long,
