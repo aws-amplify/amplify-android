@@ -77,7 +77,6 @@ class StateTransitionTests : StateTransitionTestBase() {
         setupSRPActions()
         setupSignOutActions()
         setupFetchAuthActions()
-        setupDeleteAction()
         setupStateMachine()
         Dispatchers.setMain(mainThreadSurrogate)
     }
