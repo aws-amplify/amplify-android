@@ -53,7 +53,11 @@ internal sealed class SignOutState : State {
                     is SignOutEvent.EventType.InvokeHostedUISignOut -> {
                         val action = signOutActions.hostedUISignOutAction(signOutEvent)
                         StateResolution(
-                            SigningOutHostedUI(signOutEvent.signedInData, signOutEvent.signOutData.globalSignOut, signOutEvent.signOutData.bypassCancel),
+                            SigningOutHostedUI(
+                                signOutEvent.signedInData,
+                                signOutEvent.signOutData.globalSignOut,
+                                signOutEvent.signOutData.bypassCancel
+                            ),
                             listOf(action)
                         )
                     }
