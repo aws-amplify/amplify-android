@@ -19,4 +19,5 @@ import com.amplifyframework.statemachine.Action
 
 internal interface DeleteUserActions {
     fun initDeleteUserAction(accessToken: String): Action
+    fun initiateSignOut(): Action
 }

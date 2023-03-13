@@ -130,7 +130,8 @@ internal sealed class AuthenticationState : State {
                             StateResolution(SigningIn(), listOf(action))
                         }
                         authenticationEvent is AuthenticationEvent.EventType.SignOutRequested -> {
-                            val action = authenticationActions.initiateSignOutAction(authenticationEvent, null)
+                            val action = authenticationActions
+                                .initiateSignOutAction(authenticationEvent, null)
                             StateResolution(SigningOut(), listOf(action))
                         }
                         authorizationEvent is AuthorizationEvent.EventType.StartFederationToIdentityPool -> {
