@@ -72,8 +72,8 @@ class AnalyticsClientTest {
             sharedPrefs.getUniqueId(),
             androidAppDetails,
             androidDeviceDetails,
-            UnconfinedTestDispatcher(testScheduler),
             sessionClient,
+            UnconfinedTestDispatcher(testScheduler),
             sdkInfo,
             eventRecorder
         )

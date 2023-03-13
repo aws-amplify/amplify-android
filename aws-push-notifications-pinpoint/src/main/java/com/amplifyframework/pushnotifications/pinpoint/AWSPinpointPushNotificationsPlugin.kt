@@ -157,7 +157,8 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
             pinpointDatabase,
             preferences.getUniqueId(),
             androidAppDetails,
-            androidDeviceDetails
+            androidDeviceDetails,
+            null // notifications does not need session client
         )
     }
 

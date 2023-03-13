@@ -17,6 +17,7 @@ package com.amplifyframework.analytics.pinpoint.targeting;
 
 import android.os.Handler;
 import android.os.HandlerThread;
+import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 
 import com.amplifyframework.core.Amplify;
@@ -35,7 +36,7 @@ public final class AutoEventSubmitter {
     private Runnable submitRunnable;
     private final long autoFlushInterval;
 
-    AutoEventSubmitter(final AnalyticsClient analyticsClient, final long autoFlushInterval) {
+    AutoEventSubmitter(@NonNull final AnalyticsClient analyticsClient, final long autoFlushInterval) {
         HandlerThread handlerThread = new HandlerThread("AutoEventSubmitter");
         handlerThread.start();
         this.handler = new Handler(handlerThread.getLooper());

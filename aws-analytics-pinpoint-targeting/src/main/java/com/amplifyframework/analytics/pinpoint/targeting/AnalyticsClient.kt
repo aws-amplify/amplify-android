@@ -48,8 +48,8 @@ class AnalyticsClient(
     private val uniqueId: String,
     private val androidAppDetails: AndroidAppDetails,
     private val androidDeviceDetails: AndroidDeviceDetails,
+    private val sessionClient: SessionClient? = SessionClient(context, targetingClient, uniqueId),
     private val coroutineDispatcher: CoroutineDispatcher = Dispatchers.Default,
-    private val sessionClient: SessionClient = SessionClient(context, targetingClient, uniqueId),
     private val sdkInfo: SDKInfo = SDKInfo(SDK_NAME, BuildConfig.VERSION_NAME),
     private val eventRecorder: EventRecorder = EventRecorder(
         context,
@@ -68,23 +68,23 @@ class AnalyticsClient(
     private val globalMetrics = ConcurrentHashMap<String, Double>()
 
     private val autoEventSubmitter = AutoEventSubmitter(this, autoFlushEventsInterval)
-    private val autoSessionTracker = AutoSessionTracker(this, sessionClient)
+    private val autoSessionTracker = sessionClient?.let { AutoSessionTracker(this, it) }
 
     init {
-        sessionClient.setAnalyticsClient(this)
-        sessionClient.startSession()
+        sessionClient?.setAnalyticsClient(this)
+        sessionClient?.startSession()
 
         enableEventSubmitter()
     }
 
     fun enableEventSubmitter() {
         autoEventSubmitter.start()
-        autoSessionTracker.startSessionTracking(context.applicationContext as Application)
+        autoSessionTracker?.startSessionTracking(context.applicationContext as Application)
     }
 
     fun disableEventSubmitter() {
         autoEventSubmitter.stop()
-        autoSessionTracker.stopSessionTracking(context.applicationContext as Application)
+        autoSessionTracker?.stopSessionTracking(context.applicationContext as Application)
     }
 
     fun createEvent(
@@ -94,7 +94,7 @@ class AnalyticsClient(
         eventTimestamp: Long = System.currentTimeMillis(),
         eventId: String = UUID.randomUUID().toString()
     ): PinpointEvent {
-        val session = sessionClient.session ?: Session(context, uniqueId)
+        val session = sessionClient?.session ?: Session(context, uniqueId)
         return createEvent(
             eventType,
             session.sessionId,

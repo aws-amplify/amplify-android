@@ -19,6 +19,7 @@ import android.app.Activity;
 import android.app.Application;
 import android.os.Bundle;
 import android.util.Log;
+import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 
 /**
@@ -38,7 +39,7 @@ public final class AutoSessionTracker implements Application.ActivityLifecycleCa
      * @param analyticsClient Amazon pinpoint analytics client
      * @param sessionClient Amazon pinpoint session client
      */
-    AutoSessionTracker(final AnalyticsClient analyticsClient, final SessionClient sessionClient) {
+    AutoSessionTracker(@NonNull final AnalyticsClient analyticsClient, @NonNull final SessionClient sessionClient) {
         this.analyticsClient = analyticsClient;
         this.sessionClient = sessionClient;
         inForeground = false;
