@@ -3,6 +3,23 @@
 ### Features
 - **storage:** Add support for S3 acceleration mode ([#2304](https://github.com/aws-amplify/amplify-android/issues/2304))
 - **aws-datastore:** Make the reachability component configurable ([#2307](https://github.com/aws-amplify/amplify-android/issues/2307))
+- **aws-api,aws-datastore:** WebSocket improvements ([#2283](https://github.com/aws-amplify/amplify-android/issues/2283))
+
+### Bug Fixes
+- **datastore:** Fix aliasing of column names ([#2312](https://github.com/aws-amplify/amplify-android/issues/2312))
+- **auth:** Delete user invalid state fixes ([#2326](https://github.com/aws-amplify/amplify-android/issues/2326))
+
+### Miscellaneous
+- release: Amplify Android 2.3.0 ([#2323](https://github.com/aws-amplify/amplify-android/issues/2323))
+- Restore publishing sources jar ([#2329](https://github.com/aws-amplify/amplify-android/issues/2329))
+
+[See all changes between 2.2.2 and 2.3.0](https://github.com/aws-amplify/amplify-android/compare/release_v2.2.2...release_v2.3.0)
+
+## [Release 2.3.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.3.0)
+
+### Features
+- **storage:** Add support for S3 acceleration mode ([#2304](https://github.com/aws-amplify/amplify-android/issues/2304))
+- **aws-datastore:** Make the reachability component configurable ([#2307](https://github.com/aws-amplify/amplify-android/issues/2307))
 
 ### Bug Fixes
 - **datastore:** Fix aliasing of column names ([#2312](https://github.com/aws-amplify/amplify-android/issues/2312))
