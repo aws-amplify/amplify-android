@@ -17,7 +17,7 @@ package com.amplifyframework.pushnotifications.pinpoint.models
 
 import com.amplifyframework.analytics.AnalyticsProperties
 import com.amplifyframework.analytics.UserProfile
-import com.amplifyframework.analytics.pinpoint.targeting.models.AWSPinpointUserProfileBehavior
+import com.amplifyframework.pinpoint.core.models.AWSPinpointUserProfileBehavior
 
 /**
  * Extends the category-defined UserProfile class to include features supported relevant to Pinpoint Notifications only.

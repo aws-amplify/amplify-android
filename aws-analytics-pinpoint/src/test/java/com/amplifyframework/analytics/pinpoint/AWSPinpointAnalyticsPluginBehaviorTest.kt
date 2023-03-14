@@ -19,15 +19,15 @@ import androidx.test.core.app.ApplicationProvider
 import com.amplifyframework.analytics.AnalyticsEvent
 import com.amplifyframework.analytics.AnalyticsProperties
 import com.amplifyframework.analytics.pinpoint.models.AWSPinpointUserProfile
-import com.amplifyframework.analytics.pinpoint.targeting.AnalyticsClient
-import com.amplifyframework.analytics.pinpoint.targeting.TargetingClient
-import com.amplifyframework.analytics.pinpoint.targeting.data.AndroidAppDetails
-import com.amplifyframework.analytics.pinpoint.targeting.data.AndroidDeviceDetails
-import com.amplifyframework.analytics.pinpoint.targeting.endpointProfile.EndpointProfile
-import com.amplifyframework.analytics.pinpoint.targeting.models.PinpointEvent
-import com.amplifyframework.analytics.pinpoint.targeting.models.PinpointSession
-import com.amplifyframework.analytics.pinpoint.targeting.models.SDKInfo
-import com.amplifyframework.analytics.pinpoint.targeting.util.getUniqueId
+import com.amplifyframework.pinpoint.core.AnalyticsClient
+import com.amplifyframework.pinpoint.core.TargetingClient
+import com.amplifyframework.pinpoint.core.data.AndroidAppDetails
+import com.amplifyframework.pinpoint.core.data.AndroidDeviceDetails
+import com.amplifyframework.pinpoint.core.endpointProfile.EndpointProfile
+import com.amplifyframework.pinpoint.core.models.PinpointEvent
+import com.amplifyframework.pinpoint.core.models.PinpointSession
+import com.amplifyframework.pinpoint.core.models.SDKInfo
+import com.amplifyframework.pinpoint.core.util.getUniqueId
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
@@ -52,7 +52,7 @@ class AWSPinpointAnalyticsPluginBehaviorTest {
 
     @Before
     fun setup() {
-        mockkStatic("com.amplifyframework.analytics.pinpoint.targeting.util.SharedPreferencesUtilKt")
+        mockkStatic("com.amplifyframework.pinpoint.core.util.SharedPreferencesUtilKt")
         every { sharedPrefs.getUniqueId() }.answers { "UNIQUE_ID" }
 
         awsPinpointAnalyticsPluginBehavior = AWSPinpointAnalyticsPluginBehavior(

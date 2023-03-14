@@ -17,12 +17,12 @@ package com.amplifyframework.analytics.pinpoint
 import android.content.Context
 import aws.sdk.kotlin.services.pinpoint.PinpointClient
 import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider
-import com.amplifyframework.analytics.pinpoint.targeting.AnalyticsClient
-import com.amplifyframework.analytics.pinpoint.targeting.TargetingClient
-import com.amplifyframework.analytics.pinpoint.targeting.data.AndroidAppDetails
-import com.amplifyframework.analytics.pinpoint.targeting.data.AndroidDeviceDetails
-import com.amplifyframework.analytics.pinpoint.targeting.database.PinpointDatabase
-import com.amplifyframework.analytics.pinpoint.targeting.util.getUniqueId
+import com.amplifyframework.pinpoint.core.AnalyticsClient
+import com.amplifyframework.pinpoint.core.TargetingClient
+import com.amplifyframework.pinpoint.core.data.AndroidAppDetails
+import com.amplifyframework.pinpoint.core.data.AndroidDeviceDetails
+import com.amplifyframework.pinpoint.core.database.PinpointDatabase
+import com.amplifyframework.pinpoint.core.util.getUniqueId
 
 /**
  * PinpointManager is the entry point to Pinpoint Analytics and Targeting.

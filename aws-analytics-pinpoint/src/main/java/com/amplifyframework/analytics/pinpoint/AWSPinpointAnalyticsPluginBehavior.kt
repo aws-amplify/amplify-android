@@ -12,6 +12,7 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
+
 package com.amplifyframework.analytics.pinpoint
 
 import com.amplifyframework.analytics.AnalyticsBooleanProperty
@@ -22,8 +23,8 @@ import com.amplifyframework.analytics.AnalyticsIntegerProperty
 import com.amplifyframework.analytics.AnalyticsProperties
 import com.amplifyframework.analytics.AnalyticsStringProperty
 import com.amplifyframework.analytics.UserProfile
-import com.amplifyframework.analytics.pinpoint.targeting.AnalyticsClient
-import com.amplifyframework.analytics.pinpoint.targeting.TargetingClient
+import com.amplifyframework.pinpoint.core.AnalyticsClient
+import com.amplifyframework.pinpoint.core.TargetingClient
 
 internal class AWSPinpointAnalyticsPluginBehavior(
     private val analyticsClient: AnalyticsClient,

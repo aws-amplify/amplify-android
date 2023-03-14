@@ -21,7 +21,7 @@ import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.analytics.AnalyticsProperties;
 import com.amplifyframework.analytics.UserProfile;
-import com.amplifyframework.analytics.pinpoint.targeting.models.AWSPinpointUserProfileBehavior;
+import com.amplifyframework.pinpoint.core.models.AWSPinpointUserProfileBehavior;
 
 import java.util.Objects;
 
