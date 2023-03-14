@@ -12,15 +12,20 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
+
 package com.amplifyframework.auth
 
-import com.amplifyframework.auth.result.AuthSessionResult
+import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider
+import com.amplifyframework.annotations.InternalApiWarning
+import com.amplifyframework.core.Consumer
 
-open class AWSAuthSessionInternal(
-    @get:JvmName("getSignedIn")
-    open val isSignedIn: Boolean,
-    open val identityIdResult: AuthSessionResult<String>,
-    open val awsCredentialsResult: AuthSessionResult<AWSCredentials>,
-    open val userSubResult: AuthSessionResult<String>,
-    open val userPoolTokensResult: AuthSessionResult<AWSCognitoUserPoolTokens>,
-) : AuthSession(isSignedIn)
+@InternalApiWarning
+interface AuthCredentialsProvider : CredentialsProvider {
+    /**
+     * Get the identity ID of the currently logged in user if they are registered in identity pools.
+     * @return identity id
+     */
+    suspend fun getIdentityId(): String
+
+    fun getAccessToken(onResult: Consumer<String>, onFailure: Consumer<Exception>)
+}

@@ -26,6 +26,7 @@ group = properties["POM_GROUP"].toString()
 
 dependencies {
     implementation(project(":core"))
+    implementation(project(":aws-core"))
     implementation(dependency.kotlin.coroutines)
     implementation(dependency.kotlin.serializationJson)
     implementation(dependency.androidx.appcompat)

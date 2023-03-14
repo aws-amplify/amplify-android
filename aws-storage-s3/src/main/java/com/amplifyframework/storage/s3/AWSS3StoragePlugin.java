@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -17,8 +17,10 @@ package com.amplifyframework.storage.s3;
 
 import android.content.Context;
 import androidx.annotation.NonNull;
+import androidx.annotation.OptIn;
 import androidx.annotation.VisibleForTesting;
 
+import com.amplifyframework.annotations.InternalApiWarning;
 import com.amplifyframework.auth.AuthCredentialsProvider;
 import com.amplifyframework.auth.CognitoCredentialsProvider;
 import com.amplifyframework.core.Consumer;
@@ -107,6 +109,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
      * Constructs the AWS S3 Storage Plugin initializing the executor service.
      */
     @SuppressWarnings("unused") // This is a public API.
+    @OptIn(markerClass = InternalApiWarning.class)
     public AWSS3StoragePlugin() {
         this(new CognitoCredentialsProvider());
     }
@@ -117,6 +120,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
      * @param awsS3StoragePluginConfiguration storage plugin configuration
      */
     @SuppressWarnings("unused") // This is a public API.
+    @OptIn(markerClass = InternalApiWarning.class)
     public AWSS3StoragePlugin(AWSS3StoragePluginConfiguration awsS3StoragePluginConfiguration) {
         this(new CognitoCredentialsProvider(), awsS3StoragePluginConfiguration);
     }

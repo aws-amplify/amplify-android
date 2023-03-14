@@ -135,7 +135,9 @@ dependencyResolutionManagement {
     }
 }
 
+include(":annotations")
 include(":core")
+include(":aws-core")
 
 // Plugin Modules
 include(":aws-analytics-pinpoint")

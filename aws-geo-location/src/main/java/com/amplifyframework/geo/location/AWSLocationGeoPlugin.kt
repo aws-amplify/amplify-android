@@ -19,6 +19,7 @@ import android.content.Context
 import aws.sdk.kotlin.services.location.LocationClient
 import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider
 import com.amplifyframework.AmplifyException
+import com.amplifyframework.annotations.InternalApiWarning
 import com.amplifyframework.auth.AuthCategory
 import com.amplifyframework.auth.CognitoCredentialsProvider
 import com.amplifyframework.core.Amplify
@@ -64,6 +65,7 @@ class AWSLocationGeoPlugin(
         configuration.searchIndices!!.default
     }
 
+    @InternalApiWarning
     val credentialsProvider: CredentialsProvider by lazy {
         CognitoCredentialsProvider()
     }
