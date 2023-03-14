@@ -25,7 +25,7 @@ group = properties["POM_GROUP"].toString()
 
 dependencies {
     implementation(project(":core"))
-    implementation(project(":aws-auth-cognito"))
+    implementation(project(":aws-core"))
     implementation(project(":aws-pinpoint-core"))
 
     api(project(":aws-push-notifications-pinpoint-utils"))

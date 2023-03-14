@@ -26,6 +26,7 @@ group = properties["POM_GROUP"].toString()
 
 dependencies {
     implementation(project(":core"))
+    implementation(project(":aws-core"))
     implementation(project(":aws-pinpoint-core"))
 
     implementation(dependency.androidx.appcompat)

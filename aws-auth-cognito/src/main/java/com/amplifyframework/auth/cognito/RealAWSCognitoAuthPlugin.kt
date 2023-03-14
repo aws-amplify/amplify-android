@@ -833,7 +833,8 @@ internal class RealAWSCognitoAuthPlugin(
             when (val authNState = it.authNState) {
                 is AuthenticationState.SigningOut -> {
                     (authNState.signOutState as? SignOutState.SigningOutHostedUI)?.let { signOutState ->
-                        if (callbackUri == null && signOutState.signedInData.signInMethod !=
+                        if (callbackUri == null && !signOutState.bypassCancel &&
+                            signOutState.signedInData.signInMethod !=
                             SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.UNKNOWN)
                         ) {
                             authStateMachine.send(
@@ -1734,40 +1735,35 @@ internal class RealAWSCognitoAuthPlugin(
 
     private fun _deleteUser(token: String, onSuccess: Action, onError: Consumer<AuthException>) {
         val listenerToken = StateChangeListenerToken()
+        var deleteUserException: Exception? = null
         authStateMachine.listen(
             listenerToken,
             { authState ->
-                when (val authNState = authState.authNState) {
-                    is AuthenticationState.SignedOut -> {
-                        val event = DeleteUserEvent(DeleteUserEvent.EventType.SignOutDeletedUser())
-                        authStateMachine.send(event)
-                    }
-                    is AuthenticationState.Error -> {
-                        val event = DeleteUserEvent(DeleteUserEvent.EventType.ThrowError(authNState.exception))
-                        authStateMachine.send(event)
-                    }
-                    else -> {
-                        // No-op
-                    }
-                }
-                val authZState = authState.authZState as? AuthorizationState.DeletingUser
-                when (val deleteUserState = authZState?.deleteUserState) {
-                    is DeleteUserState.UserDeleted -> {
-                        onSuccess.call()
-                        sendHubEvent(AuthChannelEventName.USER_DELETED.toString())
-                        authStateMachine.cancel(listenerToken)
-                    }
-                    is DeleteUserState.Error -> {
-                        authStateMachine.cancel(listenerToken)
-                        onError.accept(
-                            CognitoAuthExceptionConverter.lookup(
-                                deleteUserState.exception,
-                                "Request to delete user may have failed. Please check exception stack"
+                if (authState is AuthState.Configured) {
+                    val (authNState, authZState) = authState
+                    val exception = deleteUserException
+                    when {
+                        authZState is AuthorizationState.DeletingUser &&
+                            authZState.deleteUserState is DeleteUserState.Error -> {
+                            deleteUserException = authZState.deleteUserState.exception
+                        }
+                        authNState is AuthenticationState.SignedOut && authZState is AuthorizationState.Configured -> {
+                            sendHubEvent(AuthChannelEventName.USER_DELETED.toString())
+                            authStateMachine.cancel(listenerToken)
+                            onSuccess.call()
+                        }
+                        authZState is AuthorizationState.SessionEstablished && exception != null -> {
+                            authStateMachine.cancel(listenerToken)
+                            onError.accept(
+                                CognitoAuthExceptionConverter.lookup(
+                                    exception,
+                                    "Request to delete user may have failed. Please check exception stack"
+                                )
                             )
-                        )
-                    }
-                    else -> {
-                        // No-op
+                        }
+                        else -> {
+                            // No - op
+                        }
                     }
                 }
             },

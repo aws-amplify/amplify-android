@@ -26,7 +26,6 @@ import aws.smithy.kotlin.runtime.http.interceptors.HttpInterceptor
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.analytics.UserProfile
 import com.amplifyframework.auth.CognitoCredentialsProvider
-import com.amplifyframework.auth.cognito.BuildConfig
 import com.amplifyframework.core.Action
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer

@@ -16,7 +16,6 @@
 package com.amplifyframework.notifications.pushnotifications
 
 import android.os.Parcelable
-import java.util.UUID
 import kotlinx.parcelize.Parcelize
 
 @Parcelize

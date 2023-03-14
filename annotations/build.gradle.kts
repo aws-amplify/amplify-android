@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -23,17 +23,24 @@ apply(from = rootProject.file("configuration/publishing.gradle"))
 
 group = properties["POM_GROUP"].toString()
 
+android {
+    kotlinOptions {
+        moduleName = "com.amplifyframework.annotations"
+    }
+}
+
 dependencies {
-    implementation(project(":core"))
-    implementation(project(":aws-core"))
+    implementation(dependency.kotlin.stdlib)
+}
 
-    implementation(dependency.androidx.annotation)
-    implementation(dependency.androidx.core)
-    implementation(dependency.gson)
-
-    testImplementation(testDependency.junit)
-    testImplementation(testDependency.robolectric)
-    testImplementation(testDependency.jsonassert)
-    testImplementation(project(":testmodels"))
-    testImplementation(project(":testutils"))
+afterEvaluate {
+    // Disables this warning:
+    // warning: listOf(classfile) MethodParameters attribute
+    // introduced in version 52.0 class files is ignored in
+    // version 51.0 class files
+    // Root project has -Werror, so this warning
+    // would fail the build, otherwise.
+    tasks.withType<JavaCompile>().configureEach {
+        options.compilerArgs.add("-Xlint:-classfile")
+    }
 }

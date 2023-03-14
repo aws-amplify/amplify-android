@@ -31,14 +31,13 @@ android {
 }
 
 dependencies {
+    api(project(":annotations"))
     implementation(dependency.androidx.v4support)
     implementation(dependency.androidx.annotation)
     implementation(dependency.androidx.nav.fragment)
     implementation(dependency.androidx.nav.ui)
     implementation(dependency.androidx.security)
     implementation(dependency.kotlin.serializationJson)
-
-    implementation(dependency.aws.credentials)
 
     testImplementation(project(":aws-api-appsync"))
     // Used to reference Temporal types in tests.

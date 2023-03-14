@@ -17,8 +17,8 @@ package com.amplifyframework.auth.cognito
 
 import aws.sdk.kotlin.services.cognitoidentity.CognitoIdentityClient
 import aws.sdk.kotlin.services.cognitoidentityprovider.CognitoIdentityProviderClient
-import aws.sdk.kotlin.services.cognitoidentityprovider.endpoints.EndpointProvider
 import aws.smithy.kotlin.runtime.client.endpoints.Endpoint
+import aws.smithy.kotlin.runtime.client.endpoints.EndpointProvider
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 
 interface AWSCognitoAuthService {

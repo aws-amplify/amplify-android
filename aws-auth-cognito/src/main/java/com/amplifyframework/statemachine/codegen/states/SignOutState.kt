@@ -29,7 +29,11 @@ import com.amplifyframework.statemachine.codegen.events.SignOutEvent
 
 internal sealed class SignOutState : State {
     data class NotStarted(val id: String = "") : SignOutState()
-    data class SigningOutHostedUI(val signedInData: SignedInData, val globalSignOut: Boolean) : SignOutState()
+    data class SigningOutHostedUI(
+        val signedInData: SignedInData,
+        val globalSignOut: Boolean,
+        val bypassCancel: Boolean
+    ) : SignOutState()
     data class SigningOutGlobally(val id: String = "") : SignOutState()
     data class RevokingToken(val id: String = "") : SignOutState()
     data class BuildingRevokeTokenError(val id: String = "") : SignOutState()
@@ -49,7 +53,11 @@ internal sealed class SignOutState : State {
                     is SignOutEvent.EventType.InvokeHostedUISignOut -> {
                         val action = signOutActions.hostedUISignOutAction(signOutEvent)
                         StateResolution(
-                            SigningOutHostedUI(signOutEvent.signedInData, signOutEvent.signOutData.globalSignOut),
+                            SigningOutHostedUI(
+                                signOutEvent.signedInData,
+                                signOutEvent.signOutData.globalSignOut,
+                                signOutEvent.signOutData.bypassCancel
+                            ),
                             listOf(action)
                         )
                     }
