@@ -15,6 +15,7 @@
 
 package com.amplifyframework.auth
 
+import aws.smithy.kotlin.runtime.auth.awscredentials.Credentials
 import aws.smithy.kotlin.runtime.time.Instant
 
 /**
@@ -85,3 +86,12 @@ class AWSTemporaryCredentials(
      */
     val expiration: Instant
 ) : AWSCredentials(accessKeyId, secretAccessKey)
+
+internal fun AWSCredentials.toSdkCredentials(): Credentials {
+    return Credentials(
+        accessKeyId = this.accessKeyId,
+        secretAccessKey = this.secretAccessKey,
+        sessionToken = (this as? AWSTemporaryCredentials)?.sessionToken,
+        expiration = (this as? AWSTemporaryCredentials)?.expiration
+    )
+}
