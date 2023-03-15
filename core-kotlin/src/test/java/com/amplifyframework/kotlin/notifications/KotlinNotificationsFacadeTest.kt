@@ -33,6 +33,23 @@ class KotlinNotificationsFacadeTest {
     @Test
     fun identifyUserSucceeds() = runBlocking {
         val userId = "userId"
+
+        every {
+            delegate.identifyUser(eq(userId), any(), any())
+        } answers {
+            val indexOfCompletionAction = 1
+            val onComplete = it.invocation.args[indexOfCompletionAction] as Action
+            onComplete.call()
+        }
+        notifications.identifyUser(userId)
+        verify {
+            delegate.identifyUser(eq(userId), any(), any())
+        }
+    }
+
+    @Test
+    fun identifyUserWithProfileSucceeds() = runBlocking {
+        val userId = "userId"
         val profile = UserProfile.builder().name("test").build()
 
         every {
@@ -50,6 +67,21 @@ class KotlinNotificationsFacadeTest {
 
     @Test(expected = PushNotificationsException::class)
     fun identifyUserThrows() = runBlocking {
+        val userId = "userId"
+
+        val error = PushNotificationsException("uh", "oh")
+        every {
+            delegate.identifyUser(eq(userId), any(), any())
+        } answers {
+            val indexOfErrorConsumer = 2
+            val onError = it.invocation.args[indexOfErrorConsumer] as Consumer<PushNotificationsException>
+            onError.accept(error)
+        }
+        notifications.identifyUser(userId)
+    }
+
+    @Test(expected = PushNotificationsException::class)
+    fun identifyUserWithProfileThrows() = runBlocking {
         val userId = "userId"
         val profile = UserProfile.builder().name("test").build()
 

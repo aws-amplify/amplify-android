@@ -23,7 +23,13 @@ import com.amplifyframework.notifications.pushnotifications.PushNotificationsExc
 interface NotificationsCategoryBehavior {
     fun identifyUser(
         userId: String,
-        profile: UserProfile?,
+        profile: UserProfile,
+        onSuccess: Action,
+        onError: Consumer<PushNotificationsException>
+    )
+
+    fun identifyUser(
+        userId: String,
         onSuccess: Action,
         onError: Consumer<PushNotificationsException>
     )

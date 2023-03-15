@@ -20,14 +20,15 @@ import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.util.Log
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.notifications.pushnotifications.NotificationPayload
 import com.amplifyframework.pushnotifications.pinpoint.utils.PushNotificationsConstants
 
 class AWSPinpointPushNotificationsActivity : Activity() {
 
-    private val TAG = "PushNotificationsActivity"
+    companion object {
+        private val LOG = Amplify.Logging.forNamespace("amplify:aws-push-notifications-pinpoint")
+    }
 
     @Override
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -37,14 +38,14 @@ class AWSPinpointPushNotificationsActivity : Activity() {
             val intent = processIntent(payload?.action)
             if (payload != null) {
                 Amplify.Notifications.Push.recordNotificationOpened(payload, {
-                    Log.i(TAG, "Notification opened event recorded successfully.")
+                    LOG.info("Notification opened event recorded successfully.")
                 }, {
-                    Log.i(TAG, "Record notification opened event failed.", it)
+                    LOG.error("Record notification opened event failed.", it)
                 })
             }
             startActivity(intent)
-        } catch (exception: ActivityNotFoundException) {
-            Log.e(TAG, "Couldn't launch PushNotifications Activity.", exception)
+        } catch (e: ActivityNotFoundException) {
+            LOG.error("Couldn't launch PushNotifications Activity.", e)
         }
         finish()
     }

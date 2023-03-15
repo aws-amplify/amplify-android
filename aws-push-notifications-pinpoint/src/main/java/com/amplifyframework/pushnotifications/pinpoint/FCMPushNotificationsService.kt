@@ -17,22 +17,22 @@ package com.amplifyframework.pushnotifications.pinpoint
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.notifications.pushnotifications.NotificationPayload
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 
 internal class FCMPushNotificationsService : FirebaseMessagingService() {
-
-    private val TAG = "PushNotificationsService"
+    companion object {
+        private val LOG = Amplify.Logging.forNamespace("amplify:aws-push-notifications-pinpoint-utils")
+    }
 
     override fun onNewToken(token: String) {
         super.onNewToken(token)
         Amplify.Notifications.Push.registerDevice(token, {
-            Log.i(TAG, "Device token registered successfully.")
+            LOG.info("Device token registered successfully.")
         }, {
-            Log.i(TAG, "Device token registration failed.", it)
+            LOG.error("Device token registration failed.", it)
         })
     }
 
@@ -47,21 +47,20 @@ internal class FCMPushNotificationsService : FirebaseMessagingService() {
         when {
             // message contains pinpoint push notification payload, show notification
             notificationPayload != null -> onMessageReceived(notificationPayload)
-            intent?.action == "com.google.firebase.messaging.NEW_TOKEN" -> super.handleIntent(intent)
             else -> {
-                Log.i(
-                    TAG, "Message payload does not contain pinpoint push notification message, which is not supported."
-                )
+                LOG.info("Ignoring messages that does not contain pinpoint push notification payload.")
                 super.handleIntent(intent)
             }
         }
     }
 
     private fun onMessageReceived(payload: NotificationPayload) {
+        LOG.debug("Payload: ${payload.rawData}")
+
         Amplify.Notifications.Push.handleNotificationReceived(payload, {
-            Log.i(TAG, "Notification handled successfully.")
+            LOG.info("Notification handled successfully.")
         }, {
-            Log.i(TAG, "Handle notification failed.", it)
+            LOG.error("Handle notification failed.", it)
         })
     }
 }

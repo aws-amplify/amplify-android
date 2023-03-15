@@ -30,7 +30,15 @@ class KotlinNotificationsFacade(
     @Suppress("PropertyName")
     val Push = KotlinPushFacade()
 
-    override suspend fun identifyUser(userId: String, profile: UserProfile?) = suspendCoroutine { continuation ->
+    override suspend fun identifyUser(userId: String) = suspendCoroutine { continuation ->
+        delegate.identifyUser(
+            userId,
+            { continuation.resume(Unit) },
+            { continuation.resumeWithException(it) }
+        )
+    }
+
+    override suspend fun identifyUser(userId: String, profile: UserProfile) = suspendCoroutine { continuation ->
         delegate.identifyUser(
             userId,
             profile,

@@ -51,7 +51,7 @@ import org.json.JSONObject
 class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClient>() {
 
     companion object {
-        private const val AWS_PINPOINT_PUSHNOTIFICATIONS_LOG_NAMESPACE = "amplify:aws-pinpoint-pushnotifications:%s"
+        private val LOG = Amplify.Logging.forNamespace("amplify:aws-push-notifications-pinpoint")
         private const val AWS_PINPOINT_PUSHNOTIFICATIONS_PLUGIN_KEY = "awsPinpointPushNotificationsPlugin"
 
         private const val DATABASE_NAME = "awspushnotifications.db"
@@ -60,9 +60,6 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
         private const val AWS_PINPOINT_PUSHNOTIFICATIONS_DEVICE_TOKEN_LEGACY_KEY = "AWSPINPOINT.GCMTOKEN"
         private const val AWS_PINPOINT_PUSHNOTIFICATIONS_DEVICE_TOKEN_KEY = "FCMDeviceToken"
     }
-
-    private val logger =
-        Amplify.Logging.forNamespace(AWS_PINPOINT_PUSHNOTIFICATIONS_LOG_NAMESPACE.format(this::class.java.simpleName))
 
     private lateinit var preferences: SharedPreferences
 
@@ -164,11 +161,11 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
     private fun fetchFCMDeviceToken() {
         FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
             if (!task.isSuccessful) {
-                logger.info("Fetching FCM registration token failed: ${task.exception}")
+                LOG.info("Fetching FCM registration token failed: ${task.exception}")
             }
             val token = task.result
             registerDevice(token, {
-                logger.info("Registering push notifications token: $token")
+                LOG.info("Registering push notifications token: $token")
             }, {
                 throw it
             })
@@ -176,6 +173,19 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
     }
 
     override fun identifyUser(
+        userId: String,
+        onSuccess: Action,
+        onError: Consumer<PushNotificationsException>
+    ) = _identifyUser(userId, null, onSuccess, onError)
+
+    override fun identifyUser(
+        userId: String,
+        profile: UserProfile,
+        onSuccess: Action,
+        onError: Consumer<PushNotificationsException>
+    ) = _identifyUser(userId, profile, onSuccess, onError)
+
+    private fun _identifyUser(
         userId: String,
         profile: UserProfile?,
         onSuccess: Action,
@@ -224,12 +234,11 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
         onError: Consumer<PushNotificationsException>
     ) {
         try {
+            val isAppInForeground = pushNotificationsUtils.isAppInForeground()
+            val attributes = mapOf("isAppInForeground" to isAppInForeground.toString())
             val eventSourceType = EventSourceType.getEventSourceType(payload)
-            if (pushNotificationsUtils.isAppInForeground()) {
-                tryAnalyticsRecordEvent(eventSourceType.getEventTypeReceivedForeground())
-            } else {
-                tryAnalyticsRecordEvent(eventSourceType.getEventTypeReceivedBackground())
-            }
+            val eventName = eventSourceType.getEventTypeReceived(isAppInForeground)
+            tryAnalyticsRecordEvent(eventName, attributes)
             onSuccess.call()
         } catch (exception: PushNotificationsException) {
             onError.accept(exception)
@@ -243,7 +252,9 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
     ) {
         try {
             val eventSourceType = EventSourceType.getEventSourceType(payload)
-            tryAnalyticsRecordEvent(eventSourceType.getEventTypeOpened())
+            val eventSourceAttributes = eventSourceType.attributeParser.parseAttributes(payload)
+            tryUpdateEventSourceGlobally(eventSourceAttributes)
+            tryAnalyticsRecordEvent(eventSourceType.eventTypeOpened)
             onSuccess.call()
         } catch (exception: PushNotificationsException) {
             onError.accept(exception)
@@ -256,28 +267,30 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
         onError: Consumer<PushNotificationsException>
     ) {
         try {
+            val isAppInForeground = pushNotificationsUtils.isAppInForeground()
             val eventSourceType = EventSourceType.getEventSourceType(payload)
-
-            val eventSourceAttributes = eventSourceType.getAttributeParser().parseAttributes(payload)
+            val eventSourceAttributes = eventSourceType.attributeParser.parseAttributes(payload)
             tryUpdateEventSourceGlobally(eventSourceAttributes)
 
-            val result = if (pushNotificationsUtils.isAppInForeground()) {
-                tryAnalyticsRecordEvent(eventSourceType.getEventTypeReceivedForeground())
-                PushNotificationResult.AppInForeground()
-            } else {
-                if (canShowNotification(payload)) {
-                    val notificationId = getNotificationRequestId(
-                        eventSourceType.getEventSourceIdAttributeKey(),
-                        eventSourceType.getEventSourceActivityAttributeKey()
-                    )
+            val eventName = eventSourceType.getEventTypeReceived(isAppInForeground)
+            val result = when {
+                isAppInForeground -> PushNotificationResult.AppInForeground
+                payload.silentPush -> PushNotificationResult.Silent
+                canShowNotification(payload) -> {
+                    val notificationId = getNotificationRequestId(eventSourceAttributes, eventSourceType)
                     pushNotificationsUtils.showNotification(
-                        notificationId, payload,
-                        AWSPinpointPushNotificationsActivity::class.java
+                        notificationId, payload, AWSPinpointPushNotificationsActivity::class.java
                     )
-                } // TODO: else add isOptedOut to event
-                tryAnalyticsRecordEvent(eventSourceType.getEventTypeReceivedBackground())
-                PushNotificationResult.NotificationPosted()
+                    PushNotificationResult.NotificationPosted
+                }
+                else -> PushNotificationResult.OptedOut
             }
+            // adding isAppInForeground and isOptedOut attributes to events for backwards compatibility with aws-sdk-android
+            val attributes = mapOf(
+                "isAppInForeground" to isAppInForeground.toString(),
+                "isOptedOut" to (result is PushNotificationResult.OptedOut).toString()
+            )
+            tryAnalyticsRecordEvent(eventName, attributes)
             onSuccess.accept(result)
         } catch (exception: Exception) {
             onError.accept(
@@ -296,14 +309,13 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
      * is generated in order to uniquely identify the notification
      * within the application.
      */
-    private fun getNotificationRequestId(
-        eventSourceId: String,
-        activityId: String?
-    ): Int {
+    private fun getNotificationRequestId(attributes: Map<String, String>, eventSourceType: EventSourceType): Int {
         // Adding a random unique identifier for direct sends. For a campaign,
         // use the eventSourceId and the activityId in order to prevent displaying
         // duplicate notifications from a campaign activity.
-        return if (PushNotificationsConstants.DIRECT_CAMPAIGN_SEND == eventSourceId && activityId == null) {
+        val eventSourceId = attributes[eventSourceType.eventSourceIdAttributeKey]
+        val activityId = attributes[eventSourceType.eventSourceActivityAttributeKey]
+        return if (PushNotificationsConstants.DIRECT_CAMPAIGN_SEND == eventSourceId && activityId.isNullOrBlank()) {
             Random.nextInt()
         } else {
             "$eventSourceId:$activityId".hashCode()
@@ -338,11 +350,9 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
         }
     }
 
-    private fun tryAnalyticsRecordEvent(eventName: String) {
+    private fun tryAnalyticsRecordEvent(eventName: String, attributes: Map<String, String> = mapOf()) {
         try {
-            val event = analyticsClient.createEvent(eventName)
-            // TODO: globals and foreground key
-            event.attributes.plus("isAppInForeground" to pushNotificationsUtils.isAppInForeground().toString())
+            val event = analyticsClient.createEvent(eventName, attributes.toMutableMap())
             analyticsClient.recordEvent(event)
             analyticsClient.flushEvents()
         } catch (exception: Exception) {
@@ -363,6 +373,7 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
     private fun canShowNotification(payload: NotificationPayload): Boolean {
         val notificationsEnabled = pushNotificationsUtils.areNotificationsEnabled()
         val silentPush = payload.silentPush
+        // TODO: check endpoint optOut param?
         return notificationsEnabled && !silentPush && deviceRegistered
     }
 }

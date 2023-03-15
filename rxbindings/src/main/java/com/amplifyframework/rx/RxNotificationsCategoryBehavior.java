@@ -20,7 +20,6 @@ import com.amplifyframework.notifications.NotificationsCategoryBehavior;
 import com.amplifyframework.notifications.pushnotifications.PushNotificationsException;
 
 import io.reactivex.rxjava3.annotations.NonNull;
-import io.reactivex.rxjava3.annotations.Nullable;
 import io.reactivex.rxjava3.core.Completable;
 
 /**
@@ -33,9 +32,17 @@ public interface RxNotificationsCategoryBehavior {
     /**
      * Identifies the user with the service.
      * @param userId user identifier
+     * @return An Rx {@link Completable} which completes successfully if user profile was updated with identity,
+     *         emits an {@link PushNotificationsException} otherwise
+     */
+    Completable identifyUser(@NonNull String userId);
+
+    /**
+     * Identifies the user with the service.
+     * @param userId user identifier
      * @param profile user profile
      * @return An Rx {@link Completable} which completes successfully if user profile was updated with identity,
      *         emits an {@link PushNotificationsException} otherwise
      */
-    Completable identifyUser(@NonNull String userId, @Nullable UserProfile profile);
+    Completable identifyUser(@NonNull String userId, @NonNull UserProfile profile);
 }

@@ -71,6 +71,41 @@ public final class RxPushNotificationsBindingTest {
         RxNotificationsBinding notifications = new RxNotificationsBinding(notificationDelegate);
 
         String userId = "userId";
+
+        // Arrange an invocation of the success Action
+        doAnswer(invocation -> {
+            // 0 = userId, 1 = onComplete, 2 = onFailure
+            Action onCompletion = invocation.getArgument(1);
+            onCompletion.call();
+            return null;
+        }).when(delegate).identifyUser(eq(userId), anyAction(), anyConsumer());
+
+        doAnswer(invocation -> {
+            // 0 = userId, 1 = onComplete, 2 = onFailure
+            Action onCompletion = invocation.getArgument(1);
+            delegate.identifyUser(userId, onCompletion, e -> { });
+            return null;
+        }).when(notificationDelegate).identifyUser(eq(userId), anyAction(), anyConsumer());
+
+        // Act: call the binding
+        TestObserver<Void> observer = notifications.identifyUser(userId).test();
+
+        // Assert: Completable completes with success
+        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        observer.assertNoErrors().assertComplete();
+    }
+
+    /**
+     * Tests that a successful request to category identify the user will
+     * propagate a completion back through the binding.
+     * @throws InterruptedException If test observer is interrupted while awaiting terminal event
+     */
+    @Test
+    public void testIdentifyUserWithProfileCategoryLevel() throws InterruptedException {
+        NotificationsCategoryBehavior notificationDelegate = mock(NotificationsCategoryBehavior.class);
+        RxNotificationsBinding notifications = new RxNotificationsBinding(notificationDelegate);
+
+        String userId = "userId";
         UserProfile profile = UserProfile.builder().name("test").build();
 
         // Arrange an invocation of the success Action
@@ -104,6 +139,31 @@ public final class RxPushNotificationsBindingTest {
     @Test
     public void testIdentifyUser() throws InterruptedException {
         String userId = "userId";
+
+        // Arrange an invocation of the success Action
+        doAnswer(invocation -> {
+            // 0 = userId, 1 = onComplete, 2 = onFailure
+            Action onCompletion = invocation.getArgument(1);
+            onCompletion.call();
+            return null;
+        }).when(delegate).identifyUser(eq(userId), anyAction(), anyConsumer());
+
+        // Act: call the binding
+        TestObserver<Void> observer = push.identifyUser(userId).test();
+
+        // Assert: Completable completes with success
+        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        observer.assertNoErrors().assertComplete();
+    }
+
+    /**
+     * Tests that a successful request to identify the user will
+     * propagate a completion back through the binding.
+     * @throws InterruptedException If test observer is interrupted while awaiting terminal event
+     */
+    @Test
+    public void testIdentifyUserWithProfile() throws InterruptedException {
+        String userId = "userId";
         UserProfile profile = UserProfile.builder().name("test").build();
 
         // Arrange an invocation of the success Action
@@ -128,6 +188,36 @@ public final class RxPushNotificationsBindingTest {
      */
     @Test
     public void testIdentifyUserFails() throws InterruptedException {
+        String userId = "userId";
+
+        // Arrange a callback on the failure consumer
+        PushNotificationsException failure = new PushNotificationsException(
+                "Failed to identify user with the service.",
+                REPORT_BUG_TO_AWS_SUGGESTION,
+                new Exception()
+        );
+        doAnswer(invocation -> {
+            // 0 = userId, 1 = onComplete, 2 = onFailure
+            int positionOfFailureConsumer = 2;
+            Consumer<PushNotificationsException> onFailure = invocation.getArgument(positionOfFailureConsumer);
+            onFailure.accept(failure);
+            return null;
+        }).when(delegate).identifyUser(eq(userId), anyAction(), anyConsumer());
+
+        // Act: call the binding
+        TestObserver<Void> observer = push.identifyUser(userId).test();
+
+        // Assert: failure is furnished via Rx Completable.
+        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        observer.assertNotComplete().assertError(failure);
+    }
+
+    /**
+     * Identify the user failure is propagated up through the binding.
+     * @throws InterruptedException If test observer is interrupted while awaiting terminal event
+     */
+    @Test
+    public void testIdentifyUserWithProfileFails() throws InterruptedException {
         String userId = "userId";
         UserProfile profile = UserProfile.builder().name("test").build();
 
@@ -317,7 +407,7 @@ public final class RxPushNotificationsBindingTest {
      */
     @Test
     public void testHandleNotificationReceived() throws InterruptedException {
-        PushNotificationResult expectedResult = new PushNotificationResult.NotificationPosted();
+        PushNotificationResult expectedResult = PushNotificationResult.NotificationPosted.INSTANCE;
 
         // Arrange an invocation of the success Action
         doAnswer(invocation -> {

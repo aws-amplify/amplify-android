@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -20,36 +20,25 @@ package com.amplifyframework.notifications.pushnotifications
  */
 sealed class PushNotificationResult {
     /**
-     * The message wasn't for pinpoint.
+     * Amplify handled the message and posted a local notification.
      */
-    data class NotHandled(val id: String = "") : PushNotificationResult()
+    object NotificationPosted : PushNotificationResult()
 
     /**
-     * The SDK handled the message and posted a local notification.
-     */
-    data class NotificationPosted(val id: String = "") : PushNotificationResult()
-
-    /**
-     * The SDK handled the message, but no notification was posted, since
+     * Amplify handled the message, but no notification was posted, since
      * the app was in the foreground.
      */
-    data class AppInForeground(val id: String = "") : PushNotificationResult()
+    object AppInForeground : PushNotificationResult()
 
     /**
-     * The SDK handled the message, but no notification was posted, since
+     * Amplify handled the message, but no notification was posted, since
      * the app was opted out.
      */
-    data class OptedOut(val id: String = "") : PushNotificationResult()
+    object OptedOut : PushNotificationResult()
 
     /**
      * The SDK handled the message that indicated the local campaign
      * notification was opened.
      */
-    data class NotificationOpened(val id: String = "") : PushNotificationResult()
-
-    /**
-     * The SDK handled the message that indicated the local campaign
-     * notification was opened.
-     */
-    data class Silent(val id: String = "") : PushNotificationResult()
+    object Silent : PushNotificationResult()
 }

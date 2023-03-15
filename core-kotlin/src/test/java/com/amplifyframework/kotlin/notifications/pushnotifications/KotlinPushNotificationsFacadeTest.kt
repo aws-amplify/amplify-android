@@ -36,10 +36,38 @@ class KotlinPushNotificationsFacadeTest {
     private val pushDelegate = mockk<PushNotificationsCategoryBehavior>()
     private val push = KotlinPushFacade(pushDelegate)
 
-    private val payload = NotificationPayload(0, "id", "sender", 0, "title", "body")
+    private val payload = NotificationPayload("id", "sender", 0, "title", "body")
 
     @Test
     fun identifyUserCategoryLevelSucceeds() = runBlocking {
+        val notificationsDelegate = mockk<NotificationsCategoryBehavior>()
+        val notifications = KotlinNotificationsFacade(notificationsDelegate)
+
+        val userId = "userId"
+        coEvery {
+            pushDelegate.identifyUser(eq(userId), any(), any())
+        } coAnswers {
+            val indexOfCompletionAction = 1
+            val onComplete = it.invocation.args[indexOfCompletionAction] as Action
+            onComplete.call()
+        }
+
+        coEvery {
+            notificationsDelegate.identifyUser(eq(userId), any(), any())
+        } coAnswers {
+            val indexOfCompletionAction = 1
+            val onComplete = it.invocation.args[indexOfCompletionAction] as Action
+            pushDelegate.identifyUser(userId, onComplete, { })
+        }
+
+        notifications.identifyUser(userId)
+        coVerify {
+            pushDelegate.identifyUser(eq(userId), any(), any())
+        }
+    }
+
+    @Test
+    fun identifyUserWithProfileCategoryLevelSucceeds() = runBlocking {
         val notificationsDelegate = mockk<NotificationsCategoryBehavior>()
         val notifications = KotlinNotificationsFacade(notificationsDelegate)
 
@@ -70,6 +98,23 @@ class KotlinPushNotificationsFacadeTest {
     @Test
     fun identifyUserSucceeds() = runBlocking {
         val userId = "userId"
+
+        every {
+            pushDelegate.identifyUser(eq(userId), any(), any())
+        } answers {
+            val indexOfCompletionAction = 1
+            val onComplete = it.invocation.args[indexOfCompletionAction] as Action
+            onComplete.call()
+        }
+        push.identifyUser(userId)
+        verify {
+            pushDelegate.identifyUser(eq(userId), any(), any())
+        }
+    }
+
+    @Test
+    fun identifyUserWithProfileSucceeds() = runBlocking {
+        val userId = "userId"
         val profile = UserProfile.builder().name("test").build()
 
         every {
@@ -87,6 +132,21 @@ class KotlinPushNotificationsFacadeTest {
 
     @Test(expected = PushNotificationsException::class)
     fun identifyUserThrows() = runBlocking {
+        val userId = "userId"
+
+        val error = PushNotificationsException("uh", "oh")
+        every {
+            pushDelegate.identifyUser(eq(userId), any(), any())
+        } answers {
+            val indexOfErrorConsumer = 2
+            val onError = it.invocation.args[indexOfErrorConsumer] as Consumer<PushNotificationsException>
+            onError.accept(error)
+        }
+        push.identifyUser(userId)
+    }
+
+    @Test(expected = PushNotificationsException::class)
+    fun identifyUserWithProfileThrows() = runBlocking {
         val userId = "userId"
         val profile = UserProfile.builder().name("test").build()
 
@@ -189,7 +249,7 @@ class KotlinPushNotificationsFacadeTest {
 
     @Test
     fun handleNotificationReceivedSucceeds() = runBlocking {
-        val result = PushNotificationResult.NotificationPosted()
+        val result = PushNotificationResult.NotificationPosted
         every {
             pushDelegate.handleNotificationReceived(eq(payload), any(), any())
         } answers {

@@ -23,5 +23,11 @@ interface Notifications {
      * Identifies the user of the device to the service.
      */
     @Throws(PushNotificationsException::class)
-    suspend fun identifyUser(userId: String, profile: UserProfile?)
+    suspend fun identifyUser(userId: String)
+
+    /**
+     * Identifies the user of the device to the service.
+     */
+    @Throws(PushNotificationsException::class)
+    suspend fun identifyUser(userId: String, profile: UserProfile)
 }

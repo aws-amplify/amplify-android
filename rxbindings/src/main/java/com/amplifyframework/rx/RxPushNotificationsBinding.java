@@ -44,7 +44,12 @@ final class RxPushNotificationsBinding implements RxPushNotificationsCategoryBeh
     }
 
     @Override
-    public Completable identifyUser(String userId, @Nullable UserProfile profile) {
+    public Completable identifyUser(String userId) {
+        return toCompletable(((onResult, onError) -> delegate.identifyUser(userId, onResult, onError)));
+    }
+
+    @Override
+    public Completable identifyUser(String userId, UserProfile profile) {
         return toCompletable(((onResult, onError) -> delegate.identifyUser(userId, profile, onResult, onError)));
     }
 

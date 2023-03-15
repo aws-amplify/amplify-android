@@ -15,29 +15,25 @@
 
 package com.amplifyframework.pushnotifications.pinpoint
 
-import android.util.Log
 import com.amplifyframework.notifications.pushnotifications.NotificationPayload
 import com.amplifyframework.pushnotifications.pinpoint.utils.PushNotificationsConstants
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 
 internal class EventSourceType private constructor(
-    private val eventSourceName: String,
-    private val eventSourcePrefix: String,
-    private val eventSourceIdAttributeKey: String,
-    private val eventSourceActivityAttributeKey: String,
-    private val attributeParser: EventSourceAttributeParser
+    eventSourcePrefix: String,
+    val eventSourceIdAttributeKey: String,
+    val eventSourceActivityAttributeKey: String,
+    internal val attributeParser: EventSourceAttributeParser
 ) {
-    private val eventTypeOpened = "$eventSourcePrefix.$AWS_EVENT_TYPE_OPENED"
+    val eventTypeOpened = "$eventSourcePrefix.$AWS_EVENT_TYPE_OPENED"
     private val eventTypeReceivedBackground = "$eventSourcePrefix.$AWS_EVENT_TYPE_RECEIVED_BACKGROUND"
     private val eventTypeReceivedForeground = "$eventSourcePrefix.$AWS_EVENT_TYPE_RECEIVED_FOREGROUND"
 
     companion object {
-        private const val CAMPAIGN_EVENT_SOURCE_NAME = "campaign"
-        private const val JOURNEY_EVENT_SOURCE_NAME = "journey"
+        private val LOG = Amplify.Logging.forNamespace("amplify:aws-push-notifications-pinpoint")
         private const val CAMPAIGN_EVENT_SOURCE_PREFIX = "_campaign"
         private const val JOURNEY_EVENT_SOURCE_PREFIX = "_journey"
-        private const val UNKNOWN_EVENT_SOURCE_NAME = "unknown"
         private const val AWS_EVENT_TYPE_OPENED = "opened_notification"
         private const val AWS_EVENT_TYPE_RECEIVED_FOREGROUND = "received_foreground"
         private const val AWS_EVENT_TYPE_RECEIVED_BACKGROUND = "received_background"
@@ -45,7 +41,6 @@ internal class EventSourceType private constructor(
         fun getEventSourceType(payload: NotificationPayload): EventSourceType {
             return if (payload.rawData.containsKey(PushNotificationsConstants.PINPOINT_CAMPAIGN_CAMPAIGN_ACTIVITY_ID)) {
                 EventSourceType(
-                    CAMPAIGN_EVENT_SOURCE_NAME,
                     CAMPAIGN_EVENT_SOURCE_PREFIX,
                     PushNotificationsConstants.PINPOINT_CAMPAIGN_CAMPAIGN_ID,
                     PushNotificationsConstants.PINPOINT_CAMPAIGN_CAMPAIGN_ACTIVITY_ID,
@@ -55,47 +50,21 @@ internal class EventSourceType private constructor(
                 payload.rawData[PushNotificationsConstants.PINPOINT_PREFIX]!!.contains("\"journey\"".toRegex())
             ) {
                 EventSourceType(
-                    JOURNEY_EVENT_SOURCE_NAME,
                     JOURNEY_EVENT_SOURCE_PREFIX,
                     PushNotificationsConstants.JOURNEY_ID,
                     PushNotificationsConstants.JOURNEY_ACTIVITY_ID,
                     JourneyAttributeParser()
                 )
             } else {
-                EventSourceType(
-                    UNKNOWN_EVENT_SOURCE_NAME,
-                    "",
-                    "",
-                    "",
-                    EventSourceAttributeParser()
-                )
+                EventSourceType("", "", "", EventSourceAttributeParser())
             }
         }
     }
 
-    fun getEventTypeOpened(): String {
-        return eventTypeOpened
-    }
-
-    fun getEventTypeReceivedForeground(): String {
-        return eventTypeReceivedForeground
-    }
-
-    fun getEventTypeReceivedBackground(): String {
-        return eventTypeReceivedBackground
-    }
-
-    fun getEventSourceIdAttributeKey(): String {
-        return eventSourceIdAttributeKey
-    }
-
-    fun getEventSourceActivityAttributeKey(): String {
-        return eventSourceActivityAttributeKey
-    }
-
-    internal fun getAttributeParser(): EventSourceAttributeParser {
-        return attributeParser
-    }
+    fun getEventTypeReceived(isAppInForeground: Boolean) = if (isAppInForeground)
+        eventTypeReceivedForeground
+    else
+        eventTypeReceivedBackground
 
     /**
      * Campaign attributes are send from Pinpoint flattened
@@ -115,7 +84,7 @@ internal class EventSourceType private constructor(
 
     private class CampaignAttributeParser : EventSourceAttributeParser() {
         override fun parseAttributes(payload: NotificationPayload): Map<String, String> {
-            val result: HashMap<String, String> = HashMap()
+            val result: MutableMap<String, String> = mutableMapOf()
             val campaignAttributes = payload.rawData.filter {
                 it.key.contains(PushNotificationsConstants.CAMPAIGN_PREFIX)
             }
@@ -130,19 +99,18 @@ internal class EventSourceType private constructor(
 
     private class JourneyAttributeParser : EventSourceAttributeParser() {
         override fun parseAttributes(payload: NotificationPayload): Map<String, String> {
-            val result: HashMap<String, String> = HashMap()
-            val pinpointAttribute = payload.rawData[PushNotificationsConstants.PINPOINT_PREFIX] ?: return result
+            val result: MutableMap<String, String> = mutableMapOf()
+            val pinpointJsonString = payload.rawData[PushNotificationsConstants.PINPOINT_PREFIX] ?: return result
             try {
-                val journeyAttribute = Json.decodeFromString<Map<String, Map<String, String>>>(pinpointAttribute)
-                val journeyAttributes = journeyAttribute[PushNotificationsConstants.JOURNEY]
+                val journeyMap = Json.decodeFromString<Map<String, Map<String, String>>>(pinpointJsonString)
+                val journeyAttributes = journeyMap[PushNotificationsConstants.JOURNEY]
                 if (journeyAttributes != null) {
                     for ((key, value) in journeyAttributes) {
                         result[key] = value
                     }
                 }
-                return result
             } catch (e: Exception) {
-                Log.e("PushNotificationsService", e.toString())
+                LOG.error("Error parsing journey attribute", e)
             }
             return result
         }

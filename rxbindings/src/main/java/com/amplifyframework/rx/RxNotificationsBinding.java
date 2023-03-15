@@ -25,7 +25,6 @@ import com.amplifyframework.notifications.pushnotifications.PushNotificationsExc
 
 import java.util.Objects;
 
-import io.reactivex.rxjava3.annotations.Nullable;
 import io.reactivex.rxjava3.core.Completable;
 
 final class RxNotificationsBinding implements RxNotificationsCategoryBehavior {
@@ -41,7 +40,12 @@ final class RxNotificationsBinding implements RxNotificationsCategoryBehavior {
     }
 
     @Override
-    public Completable identifyUser(String userId, @Nullable UserProfile profile) {
+    public Completable identifyUser(String userId) {
+        return toCompletable(((onResult, onError) -> delegate.identifyUser(userId, onResult, onError)));
+    }
+
+    @Override
+    public Completable identifyUser(String userId, @NonNull UserProfile profile) {
         return toCompletable(((onResult, onError) -> delegate.identifyUser(userId, profile, onResult, onError)));
     }
 

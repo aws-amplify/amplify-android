@@ -26,7 +26,13 @@ class PushNotificationsCategory : Category<PushNotificationsPlugin<*>>(), PushNo
 
     override fun identifyUser(
         userId: String,
-        profile: UserProfile?,
+        onSuccess: Action,
+        onError: Consumer<PushNotificationsException>
+    ) = selectedPlugin.identifyUser(userId, onSuccess, onError)
+
+    override fun identifyUser(
+        userId: String,
+        profile: UserProfile,
         onSuccess: Action,
         onError: Consumer<PushNotificationsException>
     ) = selectedPlugin.identifyUser(userId, profile, onSuccess, onError)
