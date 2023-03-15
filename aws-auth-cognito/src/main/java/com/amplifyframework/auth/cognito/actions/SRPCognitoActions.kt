@@ -81,7 +81,11 @@ internal object SRPCognitoActions : SRPActions {
                             params.plus(KEY_DEVICE_KEY to it)
                         } ?: params
 
-                        SRPEvent(SRPEvent.EventType.RespondPasswordVerifier(challengeParams, event.metadata, initiateAuthResponse.session))
+                        SRPEvent(
+                            SRPEvent.EventType.RespondPasswordVerifier(
+                                challengeParams, event.metadata, initiateAuthResponse.session
+                            )
+                        )
                     } ?: throw Exception("Auth challenge parameters are empty.")
                     else -> throw Exception("Not yet implemented.")
                 }
@@ -136,7 +140,11 @@ internal object SRPCognitoActions : SRPActions {
                                 params.plus(KEY_DEVICE_KEY to it)
                             } ?: params
 
-                            SRPEvent(SRPEvent.EventType.RespondPasswordVerifier(challengeParams, event.metadata, initiateAuthResponse.session))
+                            SRPEvent(
+                                SRPEvent.EventType.RespondPasswordVerifier(
+                                    challengeParams, event.metadata, initiateAuthResponse.session
+                                )
+                            )
                         } ?: throw ServiceException(
                             "Auth challenge parameters are empty.",
                             AmplifyException.TODO_RECOVERY_SUGGESTION
