@@ -19,6 +19,7 @@ import android.util.Range;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.graphql.GraphQLRequest;
+import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.PaginatedResult;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
@@ -29,6 +30,7 @@ import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.datastore.DataStoreChannelEventName;
 import com.amplifyframework.datastore.DataStoreConfiguration;
 import com.amplifyframework.datastore.DataStoreConfigurationProvider;
+import com.amplifyframework.datastore.DataStoreErrorHandler;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.appsync.AppSyncMocking;
@@ -53,6 +55,7 @@ import com.amplifyframework.testutils.random.RandomString;
 import com.amplifyframework.util.ForEach;
 import com.amplifyframework.util.Time;
 
+import com.google.common.collect.Lists;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -65,6 +68,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Random;
 import java.util.Set;
 import java.util.Timer;
@@ -85,6 +89,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -107,10 +112,11 @@ public final class SyncProcessorTest {
     private SynchronousStorageAdapter storageAdapter;
 
     private SyncProcessor syncProcessor;
-    private int errorHandlerCallCount;
+    private DataStoreErrorHandler errorHandler;
     private int modelCount;
     private RetryHandler requestRetry;
     private boolean isSyncRetryEnabled = true;
+
 
     /**
      * Wire up dependencies for the SyncProcessor, and build one for testing.
@@ -125,7 +131,7 @@ public final class SyncProcessorTest {
         modelCount = modelProvider.models().size();
 
         this.appSync = mock(AppSync.class);
-        this.errorHandlerCallCount = 0;
+        this.errorHandler = mock(DataStoreErrorHandler.class);
         this.requestRetry = new RetryHandler();
 
         initSyncProcessor(10_000);
@@ -149,7 +155,7 @@ public final class SyncProcessorTest {
                 .syncInterval(BASE_SYNC_INTERVAL_MINUTES, TimeUnit.MINUTES)
                 .syncMaxRecords(syncMaxRecords)
                 .syncPageSize(1_000)
-                .errorHandler(dataStoreException -> errorHandlerCallCount++)
+                .errorHandler(this.errorHandler)
                 .syncExpression(BlogOwner.class, () -> BlogOwner.NAME.beginsWith("J"))
                 .syncExpression(Author.class, QueryPredicates::none)
                 .build();
@@ -604,7 +610,51 @@ public final class SyncProcessorTest {
         );
 
         // Assert: sync process failed the first time the api threw an error
-        assertEquals(1, errorHandlerCallCount);
+        verify(this.errorHandler, times(1)).accept(any());
+    }
+
+    /**
+     * Verify that the user-provided onError callback is invoked for every error if sync contains data and errors.
+     * Verify that Hub events are emitted once per page with non-applicable data
+     * @throws DataStoreException On failure to build GraphQLRequest for sync query.
+     */
+    @Test
+    public void userProvidedErrorCallbackInvokedOnNonApplicableData() throws DataStoreException {
+        // Arrange: mock data + errors when invoking hydrate on the mock object. Each response is a page in a paginated
+        // syncQuery
+        AppSyncMocking.sync(appSync)
+                .mockSuccessResponse(BlogOwner.class, null, "someToken",
+                        Lists.newArrayList(BLOGGER_JAMESON),
+                        Lists.newArrayList(
+                                new GraphQLResponse.Error("My Error 1", null, null, null),
+                                new GraphQLResponse.Error("My Error 2", null, null, null),
+                                new GraphQLResponse.Error("My Error 3", null, null, null)
+                        )
+                )
+                .mockSuccessResponse(BlogOwner.class, "someToken", null,
+                        Lists.newArrayList(BLOGGER_ISLA),
+                        Lists.newArrayList(
+                                new GraphQLResponse.Error("My Error 4", null, null, null),
+                                new GraphQLResponse.Error("My Error 5", null, null, null)
+                        )
+            );
+
+        // Collects nonApplicableDataReceived events.
+        HubAccumulator nonApplicableDataReceivedAccumulator =
+                createAccumulator(forEvent(DataStoreChannelEventName.NON_APPLICABLE_DATA_RECEIVED), 2);
+
+        // Act: Start the accumulators.
+        nonApplicableDataReceivedAccumulator.start();
+        // Act: call hydrate.
+        syncProcessor.hydrate().test().awaitDone(OP_TIMEOUT_MS, TimeUnit.MILLISECONDS).assertComplete();
+
+        // Assert: The error handler is called once for each GraphQL error
+        verify(this.errorHandler, times(5))
+                .accept(argThat(dataStoreException -> Objects.requireNonNull(dataStoreException.getMessage())
+                        .startsWith("Error received when syncing data:")));
+        // Assert: A single nonApplicableDataReceived event is emitted to the Hub for each syncQuery page
+        assertEquals(2, nonApplicableDataReceivedAccumulator
+                .await((int) OP_TIMEOUT_MS, TimeUnit.MILLISECONDS).size());
     }
 
 

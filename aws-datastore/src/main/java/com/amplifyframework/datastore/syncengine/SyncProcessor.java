@@ -19,6 +19,7 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLRequest;
+import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.PaginatedResult;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
@@ -37,6 +38,7 @@ import com.amplifyframework.datastore.DataStoreErrorHandler;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
+import com.amplifyframework.datastore.events.NonApplicableDataReceivedEvent;
 import com.amplifyframework.datastore.events.SyncQueriesStartedEvent;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
@@ -245,14 +247,33 @@ final class SyncProcessor {
             }
         })
                 .doOnNext(paginatedResult -> {
-                    if (paginatedResult.hasNextResult()) {
-                        processor.onNext(paginatedResult.getRequestForNextResult());
+                    if (paginatedResult.hasErrors()) {
+                        DataStoreErrorHandler errorHandler = dataStoreConfigurationProvider.getConfiguration()
+                                .getErrorHandler();
+
+                        for (GraphQLResponse.Error error : paginatedResult.getErrors()) {
+                            errorHandler.accept(new DataStoreException(
+                                    "Error received when syncing data: " + error.getMessage(),
+                                    "Ensure app code is up to date, auth directives exist and are correct on each " +
+                                            "model, and that server-side data has not been invalidated by a schema " +
+                                            "change."
+                            ));
+                        }
+
+                        Amplify.Hub.publish(HubChannel.DATASTORE,
+                                new NonApplicableDataReceivedEvent(paginatedResult.getErrors(), schema.getName())
+                                        .toHubEvent()
+                        );
+                    }
+
+                    if (paginatedResult.getData().hasNextResult()) {
+                        processor.onNext(paginatedResult.getData().getRequestForNextResult());
                     } else {
                         processor.onComplete();
                     }
                 })
                 // If it's a SerializedModel, add the ModelSchema, since it isn't added during deserialization.
-                .map(paginatedResult -> Flowable.fromIterable(paginatedResult)
+                .map(paginatedResult -> Flowable.fromIterable(paginatedResult.getData())
                         .map(modelWithMetadata -> hydrateSchemaIfNeeded(modelWithMetadata, schema))
                         .toList()
                         .blockingGet()
@@ -285,32 +306,29 @@ final class SyncProcessor {
      *                response.getData().getRequestForNextResult() for subsequent requests.
      * @param <T> The type of model to sync.
      */
-    private <T extends Model> Single<PaginatedResult<ModelWithMetadata<T>>> syncPage(
+    private <T extends Model> Single<GraphQLResponse<PaginatedResult<ModelWithMetadata<T>>>> syncPage(
             GraphQLRequest<PaginatedResult<ModelWithMetadata<T>>> request) {
 
         return Single.create(emitter -> {
             Cancelable cancelable = appSync.sync(request, result -> {
-                if (result.hasErrors()) {
-                    emitter.onError(new DataStoreException.IrRecoverableException(
-                            String.format("A model sync failed: %s", result.getErrors()),
-                            "Check your schema."
-                    ));
-                } else if (!result.hasData()) {
+                if (!result.hasData()) {
                     emitter.onError(new DataStoreException.IrRecoverableException(
                             "Empty response from AppSync.", "Report to AWS team."
                     ));
                 } else {
-                    emitter.onSuccess(result.getData());
+                    if (result.hasErrors()) {
+                        LOG.warn(String.format("Both data and errors received on model sync: %s", result.getErrors()));
+                    }
+
+                    emitter.onSuccess(result);
                 }
             }, emitter::onError);
             emitter.setDisposable(AmplifyDisposables.fromCancelable(cancelable));
         });
     }
 
-    private <T extends Model> Single<PaginatedResult<ModelWithMetadata<T>>> syncPageWithRetry(
+    private <T extends Model> Single<GraphQLResponse<PaginatedResult<ModelWithMetadata<T>>>> syncPageWithRetry(
             GraphQLRequest<PaginatedResult<ModelWithMetadata<T>>> request) {
-        // We don't want to treat DataStoreException.GraphQLResponseException as non retryable here because we want to
-        // support merging the applicable data if any.
         List<Class<? extends Throwable>> skipException = new ArrayList<>();
         skipException.add(DataStoreException.IrRecoverableException.class);
         skipException.add(ApiException.NonRetryableException.class);
