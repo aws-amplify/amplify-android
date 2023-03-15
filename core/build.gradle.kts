@@ -16,7 +16,6 @@
 plugins {
     id("com.android.library")
     id("kotlin-android")
-    id("kotlin-parcelize")
 }
 
 apply(from = rootProject.file("configuration/checkstyle.gradle"))
@@ -38,6 +37,8 @@ dependencies {
     implementation(dependency.androidx.nav.ui)
     implementation(dependency.androidx.security)
     implementation(dependency.kotlin.serializationJson)
+
+    implementation(project(":common-core"))
 
     testImplementation(project(":aws-api-appsync"))
     // Used to reference Temporal types in tests.

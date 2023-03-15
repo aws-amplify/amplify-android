@@ -22,7 +22,6 @@ import android.net.Uri
 import android.os.Bundle
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.notifications.pushnotifications.NotificationPayload
-import com.amplifyframework.pushnotifications.pinpoint.utils.PushNotificationsConstants
 
 class AWSPinpointPushNotificationsActivity : Activity() {
 

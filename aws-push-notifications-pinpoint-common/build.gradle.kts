@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -24,17 +24,29 @@ apply(from = rootProject.file("configuration/publishing.gradle"))
 group = properties["POM_GROUP"].toString()
 
 dependencies {
-    implementation(project(":core"))
-    implementation(project(":common-core"))
-    implementation(dependency.androidx.annotation)
-    implementation(dependency.androidx.appcompat)
-    implementation(dependency.rxjava)
+    val lifecycleVersion = "2.4.1"
 
-    testImplementation(project(":testutils"))
+    implementation(project(":common-core"))
+
+    implementation(dependency.androidx.core.ktx)
+    implementation(dependency.androidx.activity)
+    implementation(dependency.androidx.appcompat)
+    implementation(dependency.androidx.annotation)
+    implementation(dependency.androidx.core)
+    implementation(dependency.firebasemessaging)
+
+    //noinspection GradleDependency
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:$lifecycleVersion")
+    //noinspection GradleDependency
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycleVersion")
+    //noinspection GradleDependency
+    implementation("androidx.lifecycle:lifecycle-livedata-ktx:$lifecycleVersion")
+    //noinspection GradleDependency
+    implementation("com.google.android.material:material:1.8.0")
+
     testImplementation(testDependency.junit)
-    testImplementation(testDependency.mockito)
     testImplementation(testDependency.mockk)
-    testImplementation(testDependency.androidx.test.core)
-    testImplementation(testDependency.robolectric)
-    testImplementation(project(":rxbindings"))
+
+    androidTestImplementation(testDependency.androidx.test.runner)
+    androidTestImplementation(testDependency.androidx.test.junit)
 }

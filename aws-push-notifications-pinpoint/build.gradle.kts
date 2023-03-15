@@ -26,9 +26,10 @@ group = properties["POM_GROUP"].toString()
 dependencies {
     implementation(project(":core"))
     implementation(project(":aws-core"))
+    implementation(project(":common-core"))
     implementation(project(":aws-pinpoint-core"))
 
-    api(project(":aws-push-notifications-pinpoint-utils"))
+    api(project(":aws-push-notifications-pinpoint-common"))
     api(dependency.firebasemessaging)
 
     implementation(dependency.aws.http)
