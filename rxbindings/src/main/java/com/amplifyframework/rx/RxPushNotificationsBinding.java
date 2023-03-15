@@ -27,7 +27,6 @@ import com.amplifyframework.notifications.pushnotifications.PushNotificationsExc
 
 import java.util.Objects;
 
-import io.reactivex.rxjava3.annotations.Nullable;
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Single;
 

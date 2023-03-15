@@ -15,6 +15,7 @@
 
 package com.amplifyframework.pushnotifications.pinpoint
 
+import com.amplifyframework.core.Amplify
 import com.amplifyframework.notifications.pushnotifications.NotificationPayload
 import com.amplifyframework.pushnotifications.pinpoint.utils.PushNotificationsConstants
 import kotlinx.serialization.decodeFromString
