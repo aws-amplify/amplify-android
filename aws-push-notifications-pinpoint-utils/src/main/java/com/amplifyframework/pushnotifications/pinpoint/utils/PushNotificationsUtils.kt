@@ -39,12 +39,16 @@ import kotlinx.coroutines.withContext
 
 class PushNotificationsUtils(
     private val context: Context,
-    private var channelId: String = PushNotificationsConstants.DEFAULT_NOTIFICATION_CHANNEL_ID
+    private val channelId: String = PushNotificationsConstants.DEFAULT_NOTIFICATION_CHANNEL_ID
 ) {
+    init {
+        retrieveNotificationChannel()
+    }
+
     @ChecksSdkIntAtLeast(api = Build.VERSION_CODES.O)
     private fun isNotificationChannelSupported() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
 
-    private fun retrieveNotificationChannel(channelId: String): NotificationChannel? {
+    private fun retrieveNotificationChannel(): NotificationChannel? {
         var channel: NotificationChannel? = null
         val notificationManager = ContextCompat.getSystemService(context, NotificationManager::class.java)
         if (isNotificationChannelSupported()) {
@@ -116,7 +120,7 @@ class PushNotificationsUtils(
                 notificationIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
-            val notificationChannel = retrieveNotificationChannel(channelId)
+            val notificationChannel = retrieveNotificationChannel()
             val builder = if (isNotificationChannelSupported() && notificationChannel != null) {
                 NotificationCompat.Builder(context, notificationChannel.id)
             } else {
