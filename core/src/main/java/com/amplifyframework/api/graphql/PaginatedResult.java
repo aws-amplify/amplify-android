@@ -20,12 +20,15 @@ import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
 
 import java.util.Iterator;
+import java.util.Objects;
 import java.util.Spliterator;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 /**
- * Represents a page of results returned from an API.  Specifically, contains the list of items in the page, as well as
- * a GraphQLRequest which can be used to obtain the next page.
+ * Represents a page of results returned from an API.  Specifically, contains the list of non-null items in the page,
+ * as well as a GraphQLRequest which can be used to obtain the next page.
  *
  * @param <T> Type of the items in the list.
  */
@@ -43,7 +46,9 @@ public final class PaginatedResult<T> implements Iterable<T> {
     public PaginatedResult(@NonNull Iterable<T> items,
                            @Nullable GraphQLRequest<PaginatedResult<T>> requestForNextResult) {
         this.requestForNextResult = requestForNextResult;
-        this.items = items;
+        this.items = StreamSupport.stream(items.spliterator(), false)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 
     /**
