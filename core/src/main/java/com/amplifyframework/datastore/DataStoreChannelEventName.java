@@ -88,7 +88,12 @@ public enum DataStoreChannelEventName {
      * event is emitted with metrics related to the latest sync
      * for the model.
      */
-    MODEL_SYNCED("modelSynced");
+    MODEL_SYNCED("modelSynced"),
+
+    /**
+     * Non applicable data was received from the backend.
+     */
+    NON_APPLICABLE_DATA_RECEIVED("nonApplicableDataReceived");
 
     private final String hubEventName;
 
