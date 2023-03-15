@@ -39,6 +39,8 @@ internal class EventSourceType private constructor(
         private const val AWS_EVENT_TYPE_RECEIVED_FOREGROUND = "received_foreground"
         private const val AWS_EVENT_TYPE_RECEIVED_BACKGROUND = "received_background"
 
+        private val pinpointJourneyPrefix = PushNotificationsConstants.PINPOINT_PREFIX.dropLast(1)
+
         fun getEventSourceType(payload: NotificationPayload): EventSourceType {
             return if (payload.rawData.containsKey(PushNotificationsConstants.PINPOINT_CAMPAIGN_CAMPAIGN_ACTIVITY_ID)) {
                 EventSourceType(
@@ -47,8 +49,8 @@ internal class EventSourceType private constructor(
                     PushNotificationsConstants.PINPOINT_CAMPAIGN_CAMPAIGN_ACTIVITY_ID,
                     CampaignAttributeParser()
                 )
-            } else if (payload.rawData.containsKey(PushNotificationsConstants.PINPOINT_PREFIX) &&
-                payload.rawData[PushNotificationsConstants.PINPOINT_PREFIX]!!.contains("\"journey\"".toRegex())
+            } else if (payload.rawData.containsKey(pinpointJourneyPrefix) &&
+                payload.rawData[pinpointJourneyPrefix]!!.contains("\"journey\"".toRegex())
             ) {
                 EventSourceType(
                     JOURNEY_EVENT_SOURCE_PREFIX,
@@ -101,7 +103,7 @@ internal class EventSourceType private constructor(
     private class JourneyAttributeParser : EventSourceAttributeParser() {
         override fun parseAttributes(payload: NotificationPayload): Map<String, String> {
             val result: MutableMap<String, String> = mutableMapOf()
-            val pinpointJsonString = payload.rawData[PushNotificationsConstants.PINPOINT_PREFIX] ?: return result
+            val pinpointJsonString = payload.rawData[pinpointJourneyPrefix] ?: return result
             try {
                 val journeyMap = Json.decodeFromString<Map<String, Map<String, String>>>(pinpointJsonString)
                 val journeyAttributes = journeyMap[PushNotificationsConstants.JOURNEY]
