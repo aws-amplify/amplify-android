@@ -33,7 +33,6 @@ dependencies {
     implementation(dependency.androidx.appcompat)
     implementation(dependency.androidx.annotation)
     implementation(dependency.androidx.core)
-    implementation(dependency.firebasemessaging)
 
     //noinspection GradleDependency
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:$lifecycleVersion")

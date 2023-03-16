@@ -16,7 +16,6 @@
 package com.amplifyframework.pushnotifications.pinpoint
 
 import com.amplifyframework.notifications.pushnotifications.NotificationPayload
-import com.amplifyframework.pushnotifications.pinpoint.utils.PushNotificationsConstants
 import org.junit.Assert.assertEquals
 import org.junit.Test
 

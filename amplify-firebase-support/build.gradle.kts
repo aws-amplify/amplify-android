@@ -15,7 +15,7 @@
 
 plugins {
     id("com.android.library")
-    id("kotlin-android")
+    id("org.jetbrains.kotlin.android")
 }
 
 apply(from = rootProject.file("configuration/checkstyle.gradle"))
@@ -24,24 +24,6 @@ apply(from = rootProject.file("configuration/publishing.gradle"))
 group = properties["POM_GROUP"].toString()
 
 dependencies {
-    implementation(project(":core"))
-    implementation(project(":aws-core"))
     implementation(project(":common-core"))
-    implementation(project(":aws-pinpoint-core"))
-    implementation(project(":amplify-firebase-support"))
-
-    api(project(":aws-push-notifications-pinpoint-common"))
-    api(dependency.firebasemessaging)
-
-    implementation(dependency.aws.http)
-    implementation(dependency.aws.pinpoint)
-
-    implementation(dependency.androidx.core.ktx)
-    implementation(dependency.androidx.appcompat)
-    implementation(dependency.kotlin.serializationJson)
-
-    testImplementation(testDependency.junit)
-
-    androidTestImplementation(testDependency.androidx.test.runner)
-    androidTestImplementation(testDependency.androidx.test.junit)
+    implementation(dependency.firebasemessaging)
 }

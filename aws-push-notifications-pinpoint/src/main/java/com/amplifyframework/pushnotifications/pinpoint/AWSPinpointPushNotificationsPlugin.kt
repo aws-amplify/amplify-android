@@ -41,8 +41,6 @@ import com.amplifyframework.pinpoint.core.data.AndroidAppDetails
 import com.amplifyframework.pinpoint.core.data.AndroidDeviceDetails
 import com.amplifyframework.pinpoint.core.database.PinpointDatabase
 import com.amplifyframework.pinpoint.core.util.getUniqueId
-import com.amplifyframework.pushnotifications.pinpoint.utils.PushNotificationsConstants
-import com.amplifyframework.pushnotifications.pinpoint.utils.PushNotificationsUtils
 import com.google.firebase.messaging.FirebaseMessaging
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.random.Random
@@ -234,9 +232,10 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
         onError: Consumer<PushNotificationsException>
     ) {
         try {
+            val pinpointPayload = payload.toPinpointPayload()
             val isAppInForeground = pushNotificationsUtils.isAppInForeground()
             val attributes = mapOf("isAppInForeground" to isAppInForeground.toString())
-            val eventSourceType = EventSourceType.getEventSourceType(payload)
+            val eventSourceType = EventSourceType.getEventSourceType(pinpointPayload)
             val eventName = eventSourceType.getEventTypeReceived(isAppInForeground)
             tryAnalyticsRecordEvent(eventName, attributes)
             onSuccess.call()
@@ -261,25 +260,30 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
         }
     }
 
+    override fun shouldHandleNotification(payload: NotificationPayload): Boolean {
+        return payload.isPinpointNotification()
+    }
+
     override fun handleNotificationReceived(
         payload: NotificationPayload,
         onSuccess: Consumer<PushNotificationResult>,
         onError: Consumer<PushNotificationsException>
     ) {
         try {
+            val pinpointPayload = payload.toPinpointPayload()
             val isAppInForeground = pushNotificationsUtils.isAppInForeground()
-            val eventSourceType = EventSourceType.getEventSourceType(payload)
-            val eventSourceAttributes = eventSourceType.attributeParser.parseAttributes(payload)
+            val eventSourceType = EventSourceType.getEventSourceType(pinpointPayload)
+            val eventSourceAttributes = eventSourceType.attributeParser.parseAttributes(pinpointPayload)
             tryUpdateEventSourceGlobally(eventSourceAttributes)
 
             val eventName = eventSourceType.getEventTypeReceived(isAppInForeground)
             val result = when {
                 isAppInForeground -> PushNotificationResult.AppInForeground
-                payload.silentPush -> PushNotificationResult.Silent
-                canShowNotification(payload) -> {
+                pinpointPayload.silentPush -> PushNotificationResult.Silent
+                canShowNotification(pinpointPayload) -> {
                     val notificationId = getNotificationRequestId(eventSourceAttributes, eventSourceType)
                     pushNotificationsUtils.showNotification(
-                        notificationId, payload, AWSPinpointPushNotificationsActivity::class.java
+                        notificationId, pinpointPayload, AWSPinpointPushNotificationsActivity::class.java
                     )
                     PushNotificationResult.NotificationPosted
                 }

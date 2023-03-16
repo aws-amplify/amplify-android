@@ -19,7 +19,7 @@ import android.os.Parcelable
 import kotlinx.parcelize.Parcelize
 
 @Parcelize
-open class NotificationPayload(
+class NotificationPayload(
     val messageId: String? = null,
     val senderId: String? = null,
     val sendTime: Long? = null,

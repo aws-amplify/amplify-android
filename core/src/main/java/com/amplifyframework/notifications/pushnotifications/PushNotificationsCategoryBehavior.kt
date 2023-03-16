@@ -33,6 +33,8 @@ interface PushNotificationsCategoryBehavior : NotificationsCategoryBehavior {
         onError: Consumer<PushNotificationsException>
     )
 
+    fun shouldHandleNotification(payload: NotificationPayload): Boolean
+
     fun handleNotificationReceived(
         payload: NotificationPayload,
         onSuccess: Consumer<PushNotificationResult>,

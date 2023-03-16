@@ -18,6 +18,7 @@ package com.amplifyframework.pushnotifications.pinpoint
 import android.content.Intent
 import android.os.Bundle
 import com.amplifyframework.core.Amplify
+import com.amplifyframework.firebasesupport.AmplifyFirebaseSupport
 import com.amplifyframework.notifications.pushnotifications.NotificationPayload
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
@@ -43,14 +44,14 @@ internal class FCMPushNotificationsService : FirebaseMessagingService() {
         data.remove("androidx.content.wakelockid")
 
         // get pinpoint notifications payload
-        val notificationPayload = PinpointNotificationPayload.createFromRemoteMessage(RemoteMessage(data))
-        when {
+        val notificationPayload = AmplifyFirebaseSupport.createFromRemoteMessage(RemoteMessage(data))
+        val isAmplifyPayload = Amplify.Notifications.Push.shouldHandleNotification(notificationPayload)
+        if(isAmplifyPayload) {
             // message contains pinpoint push notification payload, show notification
-            notificationPayload != null -> onMessageReceived(notificationPayload)
-            else -> {
-                LOG.info("Ignoring messages that does not contain pinpoint push notification payload.")
-                super.handleIntent(intent)
-            }
+            onMessageReceived(notificationPayload)
+        } else {
+            LOG.info("Ignoring messages that does not contain pinpoint push notification payload.")
+            super.handleIntent(intent)
         }
     }
 
