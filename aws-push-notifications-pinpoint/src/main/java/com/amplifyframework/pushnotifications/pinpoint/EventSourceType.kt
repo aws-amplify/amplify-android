@@ -22,10 +22,10 @@ import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 
 internal class EventSourceType private constructor(
-    eventSourcePrefix: String,
-    val eventSourceIdAttributeKey: String,
-    val eventSourceActivityAttributeKey: String,
-    internal val attributeParser: EventSourceAttributeParser
+    eventSourcePrefix: String = "",
+    val eventSourceIdAttributeKey: String = "",
+    val eventSourceActivityAttributeKey: String = "",
+    internal val attributeParser: EventSourceAttributeParser = EventSourceAttributeParser()
 ) {
     val eventTypeOpened = "$eventSourcePrefix.$AWS_EVENT_TYPE_OPENED"
     private val eventTypeReceivedBackground = "$eventSourcePrefix.$AWS_EVENT_TYPE_RECEIVED_BACKGROUND"
@@ -57,7 +57,7 @@ internal class EventSourceType private constructor(
                     JourneyAttributeParser()
                 )
             } else {
-                EventSourceType("", "", "", EventSourceAttributeParser())
+                EventSourceType()
             }
         }
     }
@@ -78,42 +78,26 @@ internal class EventSourceType private constructor(
      * an empty map.
      */
     internal open class EventSourceAttributeParser {
-        open fun parseAttributes(payload: NotificationPayload): Map<String, String> {
-            return emptyMap()
-        }
+        open fun parseAttributes(payload: NotificationPayload): Map<String, String> = emptyMap()
     }
 
     private class CampaignAttributeParser : EventSourceAttributeParser() {
-        override fun parseAttributes(payload: NotificationPayload): Map<String, String> {
-            val result: MutableMap<String, String> = mutableMapOf()
-            val campaignAttributes = payload.rawData.filter {
-                it.key.contains(PushNotificationsConstants.CAMPAIGN_PREFIX)
-            }
-            for ((key, value) in campaignAttributes) {
-                // Remove campaign prefix and include it in the attributes
-                val sanitizedKey = key.replace(PushNotificationsConstants.CAMPAIGN_PREFIX, "")
-                result[sanitizedKey] = value
-            }
-            return result
+        override fun parseAttributes(payload: NotificationPayload) = payload.rawData.filter {
+            it.key.contains(PushNotificationsConstants.CAMPAIGN_PREFIX)
+        }.mapKeys {
+            it.key.replace(PushNotificationsConstants.CAMPAIGN_PREFIX, "")
         }
     }
 
     private class JourneyAttributeParser : EventSourceAttributeParser() {
-        override fun parseAttributes(payload: NotificationPayload): Map<String, String> {
-            val result: MutableMap<String, String> = mutableMapOf()
-            val pinpointJsonString = payload.rawData[PushNotificationsConstants.PINPOINT_PREFIX] ?: return result
+        override fun parseAttributes(payload: NotificationPayload) = payload
+            .rawData[PushNotificationsConstants.PINPOINT_PREFIX]?.let {
             try {
-                val journeyMap = Json.decodeFromString<Map<String, Map<String, String>>>(pinpointJsonString)
-                val journeyAttributes = journeyMap[PushNotificationsConstants.JOURNEY]
-                if (journeyAttributes != null) {
-                    for ((key, value) in journeyAttributes) {
-                        result[key] = value
-                    }
-                }
+                Json.decodeFromString<Map<String, Map<String, String>>>(it)[PushNotificationsConstants.JOURNEY]
             } catch (e: Exception) {
                 LOG.error("Error parsing journey attribute", e)
+                null
             }
-            return result
-        }
+        } ?: mapOf()
     }
 }

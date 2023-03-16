@@ -42,7 +42,7 @@ class EventSourceTypeTest {
         "{\"$journeyActivityIdKey\":\"test_journey_activity_id\",\"$journeyRunIdKey\":\"test_journey_run_id\"," +
         "\"$journeyIdKey\":\"test_journey_id\"}}"
 
-    private val journeyData = mapOf(PushNotificationsConstants.PINPOINT_PREFIX to journeyAttributes)
+    private val journeyData = mapOf("pinpoint" to journeyAttributes)
     private val journeyPayload = NotificationPayload("", "", 0, "", "", "", "", mapOf(), false, journeyData)
 
     @Test
