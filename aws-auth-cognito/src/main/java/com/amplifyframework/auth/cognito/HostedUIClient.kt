@@ -104,7 +104,7 @@ internal class HostedUIClient private constructor(
 
         if (errorState != null) {
             val errorDescription = uri.getQueryParameter("error_description")?.trim()
-            val message = if (errorDescription?.isNotEmpty() == true) "$errorState, $errorDescription" else errorState
+            val message = if (errorDescription?.isNotEmpty() == true) "$errorState: $errorDescription" else errorState
             throw CodeValidationException(message)
         } else if (callbackState == null || code == null) {
             throw CodeValidationException()
