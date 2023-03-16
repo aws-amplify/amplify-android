@@ -122,7 +122,7 @@ class PushNotificationsUtils(
             )
             val notificationChannel = retrieveNotificationChannel()
             val builder = if (isNotificationChannelSupported() && notificationChannel != null) {
-                NotificationCompat.Builder(context, notificationChannel.id)
+                NotificationCompat.Builder(context, payload.channelId ?: notificationChannel.id)
             } else {
                 NotificationCompat.Builder(context)
             }
