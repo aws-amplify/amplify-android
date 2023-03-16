@@ -22,10 +22,10 @@ import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 
 internal class EventSourceType private constructor(
-    eventSourcePrefix: String,
-    val eventSourceIdAttributeKey: String,
-    val eventSourceActivityAttributeKey: String,
-    internal val attributeParser: EventSourceAttributeParser
+    eventSourcePrefix: String = "",
+    val eventSourceIdAttributeKey: String = "",
+    val eventSourceActivityAttributeKey: String = "",
+    internal val attributeParser: EventSourceAttributeParser = EventSourceAttributeParser()
 ) {
     val eventTypeOpened = "$eventSourcePrefix.$AWS_EVENT_TYPE_OPENED"
     private val eventTypeReceivedBackground = "$eventSourcePrefix.$AWS_EVENT_TYPE_RECEIVED_BACKGROUND"
@@ -57,7 +57,7 @@ internal class EventSourceType private constructor(
                     JourneyAttributeParser()
                 )
             } else {
-                EventSourceType("", "", "", EventSourceAttributeParser())
+                EventSourceType()
             }
         }
     }
