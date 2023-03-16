@@ -56,6 +56,12 @@ afterEvaluate { project ->
                 version VERSION_NAME
 
                 artifact("${buildDir}/outputs/aar/${artifactId}-release.aar")
+                if (project.getPlugins().hasPlugin('com.android.application') ||
+                        project.getPlugins().hasPlugin('com.android.library')) {
+                    artifact(androidSourcesJar)
+                } else {
+                    artifact(sourcesJar)
+                }
 
                 pom {
                     name = POM_NAME
@@ -121,15 +127,5 @@ afterEvaluate { project ->
             useInMemoryPgpKeys(keyId, signingKey, signingPassword)
         }
         sign publishing.publications.library
-    }
-
-
-    artifacts {
-        if (project.getPlugins().hasPlugin('com.android.application') ||
-                project.getPlugins().hasPlugin('com.android.library')) {
-            archives androidSourcesJar
-        } else {
-            archives sourcesJar
-        }
     }
 }

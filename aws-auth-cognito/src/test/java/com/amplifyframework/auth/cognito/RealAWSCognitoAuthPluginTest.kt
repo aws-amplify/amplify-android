@@ -40,12 +40,14 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.VerifyUserAttribute
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.VerifyUserAttributeResponse
 import com.amplifyframework.auth.AuthCodeDeliveryDetails
 import com.amplifyframework.auth.AuthException
+import com.amplifyframework.auth.AuthSession
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidUserPoolConfigurationException
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.auth.cognito.helpers.SRPHelper
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthResendUserAttributeConfirmationCodeOptions
+import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttributeOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttributesOptions
 import com.amplifyframework.auth.cognito.options.AuthFlowType
@@ -197,6 +199,51 @@ class RealAWSCognitoAuthPluginTest {
         // THEN
         verify(exactly = 0) { onSuccess.accept(any()) }
         verify { onError.accept(expectedAuthError) }
+    }
+
+    @Test
+    fun testFetchAuthSessionSucceedsIfSignedOut() {
+        // GIVEN
+        val onSuccess = mockk<Consumer<AuthSession>>()
+        val onError = mockk<Consumer<AuthException>>(relaxed = true)
+        val currentAuthState = mockk<AuthState> {
+            every { authNState } returns AuthenticationState.SignedOut(mockk())
+            every { authZState } returns AuthorizationState.Configured()
+        }
+        every { authStateMachine.getCurrentState(captureLambda()) } answers {
+            lambda<(AuthState) -> Unit>().invoke(currentAuthState)
+        }
+
+        // WHEN
+        plugin.fetchAuthSession(onSuccess, onError)
+
+        // THEN
+        verify(exactly = 0) { onSuccess.accept(any()) }
+    }
+
+    @Test
+    fun testCustomSignInWithSRPSucceedsWithChallenge() {
+        // GIVEN
+        val onSuccess = mockk<Consumer<AuthSignInResult>>()
+        val onError = mockk<Consumer<AuthException>>(relaxed = true)
+        val currentAuthState = mockk<AuthState> {
+            every { authNState } returns AuthenticationState.SignedOut(mockk())
+        }
+        every { authStateMachine.getCurrentState(captureLambda()) } answers {
+            lambda<(AuthState) -> Unit>().invoke(currentAuthState)
+        }
+
+        // WHEN
+        plugin.signIn(
+            "username",
+            "password",
+            AWSCognitoAuthSignInOptions.builder().authFlowType(AuthFlowType.CUSTOM_AUTH_WITH_SRP).build(),
+            onSuccess,
+            onError
+        )
+
+        // THEN
+        verify(exactly = 0) { onSuccess.accept(any()) }
     }
 
     @Test

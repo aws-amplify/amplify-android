@@ -1,4 +1,4 @@
-## Amplify for Android (Developer Preview)
+## Amplify for Android
 <img src="https://s3.amazonaws.com/aws-mobile-hub-images/aws-amplify-logo.png" alt="AWS Amplify" width="550">
  
 [![DiscordChat](https://img.shields.io/discord/308323056592486420?logo=discord)](https://discord.gg/jWVbPfC)
@@ -69,12 +69,12 @@ dependencies section:
 ```groovy
 dependencies {
     // Only specify modules that provide functionality your app will use
-    implementation 'com.amplifyframework:aws-analytics-pinpoint:2.3.0'
-    implementation 'com.amplifyframework:aws-api:2.3.0'
-    implementation 'com.amplifyframework:aws-auth-cognito:2.3.0'
-    implementation 'com.amplifyframework:aws-datastore:2.3.0'
-    implementation 'com.amplifyframework:aws-predictions:2.3.0'
-    implementation 'com.amplifyframework:aws-storage-s3:2.3.0'
+    implementation 'com.amplifyframework:aws-analytics-pinpoint:2.4.0'
+    implementation 'com.amplifyframework:aws-api:2.4.0'
+    implementation 'com.amplifyframework:aws-auth-cognito:2.4.0'
+    implementation 'com.amplifyframework:aws-datastore:2.4.0'
+    implementation 'com.amplifyframework:aws-predictions:2.4.0'
+    implementation 'com.amplifyframework:aws-storage-s3:2.4.0'
 }
 ```
 
