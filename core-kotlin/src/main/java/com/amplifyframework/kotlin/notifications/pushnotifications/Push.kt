@@ -40,6 +40,11 @@ interface Push : Notifications {
     suspend fun recordNotificationOpened(payload: NotificationPayload)
 
     /**
+     * Returns whether Amplify can handle the notification payload.
+     */
+    fun shouldHandleNotification(payload: NotificationPayload): Boolean
+
+    /**
      * Displays notification on the system tray if app is background/killed state.
      */
     @Throws(PushNotificationsException::class)

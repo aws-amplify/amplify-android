@@ -63,6 +63,11 @@ final class RxPushNotificationsBinding implements RxPushNotificationsCategoryBeh
     }
 
     @Override
+    public Boolean shouldHandleNotification(NotificationPayload payload) {
+        return delegate.shouldHandleNotification(payload);
+    }
+
+    @Override
     public Single<PushNotificationResult> handleNotificationReceived(NotificationPayload payload) {
         return toSingle(((onResult, onError) -> delegate.handleNotificationReceived(payload, onResult, onError)));
     }

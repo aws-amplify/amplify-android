@@ -36,7 +36,7 @@ class KotlinPushNotificationsFacadeTest {
     private val pushDelegate = mockk<PushNotificationsCategoryBehavior>()
     private val push = KotlinPushFacade(pushDelegate)
 
-    private val payload = NotificationPayload("id", "sender", 0, "title", "body")
+    private val payload = NotificationPayload.builder().build()
 
     @Test
     fun identifyUserCategoryLevelSucceeds() = runBlocking {
@@ -245,6 +245,18 @@ class KotlinPushNotificationsFacadeTest {
             onError.accept(error)
         }
         push.recordNotificationOpened(payload)
+    }
+
+    @Test
+    fun shouldHandleNotificationReturns() {
+        every {
+            pushDelegate.shouldHandleNotification(eq(payload))
+        } returns(true)
+
+        push.shouldHandleNotification(payload)
+        verify {
+            pushDelegate.shouldHandleNotification(eq(payload))
+        }
     }
 
     @Test

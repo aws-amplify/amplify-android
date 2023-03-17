@@ -65,6 +65,8 @@ class KotlinPushFacade(private val delegate: PushNotificationsCategoryBehavior =
         )
     }
 
+    override fun shouldHandleNotification(payload: NotificationPayload) = delegate.shouldHandleNotification(payload)
+
     override suspend fun handleNotificationReceived(payload: NotificationPayload) = suspendCoroutine { continuation ->
         delegate.handleNotificationReceived(
             payload,
