@@ -52,6 +52,10 @@ class PushNotificationsCategory : Category<PushNotificationsPlugin<*>>(), PushNo
         onError: Consumer<PushNotificationsException>
     ) = selectedPlugin.recordNotificationOpened(payload, onSuccess, onError)
 
+    override fun shouldHandleNotification(
+        payload: NotificationPayload
+    ) = selectedPlugin.shouldHandleNotification(payload)
+
     override fun handleNotificationReceived(
         payload: NotificationPayload,
         onSuccess: Consumer<PushNotificationResult>,

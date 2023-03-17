@@ -15,19 +15,81 @@
 
 package com.amplifyframework.notifications.pushnotifications
 
+import android.content.Intent
+import android.os.Bundle
 import android.os.Parcelable
 import kotlinx.parcelize.Parcelize
+import org.json.JSONObject
+
+sealed class NotificationContentProvider {
+    data class FCM(val from: String?, val content: Map<String, String>) : NotificationContentProvider()
+    data class ADM(val content: Intent?) : NotificationContentProvider()
+    data class Baidu(val content: String?) : NotificationContentProvider()
+}
 
 @Parcelize
 open class NotificationPayload(
-    val messageId: String? = null,
-    val senderId: String? = null,
-    val sendTime: Long? = null,
-    val title: String? = null,
-    val body: String? = null,
-    val imageUrl: String? = null,
-    val channelId: String? = null,
-    val action: Map<String, String> = mapOf(),
-    val silentPush: Boolean = false,
-    val rawData: Map<String, String> = mapOf()
-) : Parcelable
+    var title: String? = null,
+    var body: String? = null,
+    var imageUrl: String? = null,
+    var channelId: String? = null,
+    var action: Map<String, String> = mapOf(),
+    var silentPush: Boolean = false,
+    var rawData: Map<String, String> = mapOf(),
+    var targetClass: Class<*>? = null
+) : Parcelable {
+
+    internal constructor(builder: Builder) : this() {
+        targetClass = builder.targetClass
+        channelId = builder.channelId
+
+        when (val provider = builder.contentProvider) {
+            is NotificationContentProvider.FCM -> {
+                rawData = provider.content.plus("from" to provider.from.toString())
+            }
+            is NotificationContentProvider.ADM -> {
+                val bundle = provider.content?.extras ?: Bundle()
+                rawData = buildMap {
+                    bundle.keySet().forEach { key ->
+                        bundle.getString(key)?.let { put(key, it) }
+                    }
+                }
+            }
+            is NotificationContentProvider.Baidu -> {
+                val jsonObject = provider.content?.let { JSONObject(it) }
+                rawData = buildMap {
+                    jsonObject?.keys()?.forEach { key ->
+                        put(key, jsonObject.getString(key))
+                    }
+                }
+            }
+            else -> Unit
+        }
+    }
+
+    companion object {
+        @JvmStatic
+        fun builder() = Builder()
+
+        inline operator fun invoke(block: Builder.() -> Unit) = Builder().apply(block).build()
+    }
+
+    class Builder {
+        var contentProvider: NotificationContentProvider? = null
+            private set
+        var channelId: String? = null
+            private set
+        var targetClass: Class<*>? = null
+            private set
+
+        fun notificationContentProvider(contentProvider: NotificationContentProvider) = apply {
+            this.contentProvider = contentProvider
+        }
+
+        fun notificationChannelId(channelId: String?) = apply { this.channelId = channelId }
+
+        fun targetClass(targetClass: Class<*>?) = apply { this.targetClass = targetClass }
+
+        fun build() = NotificationPayload(this)
+    }
+}

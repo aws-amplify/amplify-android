@@ -111,7 +111,7 @@ class PushNotificationsUtils(
     ) {
         CoroutineScope(Dispatchers.IO).launch {
             val largeImageIcon = payload.imageUrl?.let { downloadImage(it) }
-            val notificationIntent = Intent(context, targetClass)
+            val notificationIntent = Intent(context, payload.targetClass ?: targetClass)
             notificationIntent.putExtra("amplifyNotificationPayload", payload)
             notificationIntent.putExtra("notificationId", notificationId)
             val pendingIntent = PendingIntent.getActivity(

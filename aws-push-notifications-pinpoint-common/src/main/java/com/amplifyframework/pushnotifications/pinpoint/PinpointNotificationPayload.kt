@@ -17,41 +17,23 @@ package com.amplifyframework.pushnotifications.pinpoint
 
 import androidx.annotation.RestrictTo
 import com.amplifyframework.notifications.pushnotifications.NotificationPayload
-import com.google.firebase.messaging.RemoteMessage
-import kotlin.collections.HashMap
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-class PinpointNotificationPayload internal constructor(
-    messageId: String? = null,
-    senderId: String? = null,
-    sendTime: Long? = null,
-    title: String? = null,
-    body: String? = null,
-    imageUrl: String? = null,
-    channelId: String? = null,
-    action: Map<String, String> = mapOf(),
-    silentPush: Boolean = false,
-    rawData: Map<String, String> = mapOf()
-) : NotificationPayload(
-    messageId, senderId, sendTime,
-    title, body, imageUrl,
-    channelId, action, silentPush, rawData
-) {
+class PinpointNotificationPayload : NotificationPayload() {
     companion object {
-        fun createFromRemoteMessage(remoteMessage: RemoteMessage): PinpointNotificationPayload? {
-            if (!remoteMessage.data.keys.any { it.contains(PushNotificationsConstants.PINPOINT_PREFIX) }) return null
+        fun isPinpointNotificationPayload(payload: NotificationPayload) = payload.rawData.keys.any {
+            it.contains(PushNotificationsConstants.PINPOINT_PREFIX)
+        }
 
-            val data = remoteMessage.data
-            val messageId = remoteMessage.messageId
-            val senderId = remoteMessage.senderId
-            val sendTime = remoteMessage.sentTime
+        fun fromNotificationPayload(payload: NotificationPayload): NotificationPayload {
+            val data = payload.rawData
             val title = data[PushNotificationsConstants.TITLE]
                 ?: data[PushNotificationsConstants.PINPOINT_NOTIFICATION_TITLE]
             val body = data[PushNotificationsConstants.MESSAGE]
                 ?: data[PushNotificationsConstants.PINPOINT_NOTIFICATION_BODY]
             val imageUrl = data[PushNotificationsConstants.IMAGEURL]
                 ?: data[PushNotificationsConstants.PINPOINT_NOTIFICATION_IMAGEURL]
-            val channelId = PushNotificationsConstants.DEFAULT_NOTIFICATION_CHANNEL_ID
+            val channelId = payload.channelId ?: PushNotificationsConstants.DEFAULT_NOTIFICATION_CHANNEL_ID
             val silentPush = data[PushNotificationsConstants.PINPOINT_NOTIFICATION_SILENTPUSH].equals("1")
             val action: MutableMap<String, String> = mutableMapOf()
 
@@ -67,12 +49,7 @@ class PinpointNotificationPayload internal constructor(
                 action.put(PushNotificationsConstants.DEEPLINK, it)
             }
 
-            return PinpointNotificationPayload(
-                messageId, senderId, sendTime,
-                title, body, imageUrl,
-                channelId, action, silentPush,
-                HashMap(remoteMessage.data)
-            )
+            return NotificationPayload(title, body, imageUrl, channelId, action, silentPush, data, payload.targetClass)
         }
     }
 }
