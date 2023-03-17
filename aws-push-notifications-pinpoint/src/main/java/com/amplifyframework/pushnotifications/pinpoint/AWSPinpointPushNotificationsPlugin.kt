@@ -238,6 +238,8 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
             val attributes = mapOf("isAppInForeground" to isAppInForeground.toString())
             val eventSourceType = EventSourceType.getEventSourceType(payload)
             val eventName = eventSourceType.getEventTypeReceived(isAppInForeground)
+            val eventSourceAttributes = eventSourceType.attributeParser.parseAttributes(payload)
+            tryUpdateEventSourceGlobally(eventSourceAttributes)
             tryAnalyticsRecordEvent(eventName, attributes)
             onSuccess.call()
         } catch (exception: PushNotificationsException) {
