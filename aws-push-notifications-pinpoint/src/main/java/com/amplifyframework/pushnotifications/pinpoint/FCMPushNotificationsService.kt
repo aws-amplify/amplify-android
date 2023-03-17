@@ -50,13 +50,12 @@ class FCMPushNotificationsService : FirebaseMessagingService() {
         }
 
         val isAmplifyMessage = Amplify.Notifications.Push.shouldHandleNotification(notificationPayload)
-        when {
+        if (isAmplifyMessage) {
             // message contains pinpoint push notification payload, show notification
-            isAmplifyMessage -> onMessageReceived(notificationPayload)
-            else -> {
-                LOG.info("Ignoring messages that does not contain pinpoint push notification payload.")
-                super.handleIntent(intent)
-            }
+            onMessageReceived(notificationPayload)
+        } else {
+            LOG.info("Ignoring messages that does not contain pinpoint push notification payload.")
+            super.handleIntent(intent)
         }
     }
 

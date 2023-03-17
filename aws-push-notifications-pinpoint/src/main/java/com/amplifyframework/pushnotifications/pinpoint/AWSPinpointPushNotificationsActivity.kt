@@ -23,7 +23,7 @@ import android.os.Bundle
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.notifications.pushnotifications.NotificationPayload
 
-class AWSPinpointPushNotificationsActivity : Activity() {
+internal class AWSPinpointPushNotificationsActivity : Activity() {
 
     companion object {
         private val LOG = Amplify.Logging.forNamespace("amplify:aws-push-notifications-pinpoint")
@@ -34,7 +34,7 @@ class AWSPinpointPushNotificationsActivity : Activity() {
         super.onCreate(savedInstanceState)
         try {
             val payload = NotificationPayload.fromIntent(intent)
-            val intent = getIntentAction(payload)
+            val intent = payload?.let { getIntentAction(it) }
             if (payload != null) {
                 Amplify.Notifications.Push.recordNotificationOpened(payload, {
                     LOG.info("Notification opened event recorded successfully.")
@@ -49,8 +49,8 @@ class AWSPinpointPushNotificationsActivity : Activity() {
         finish()
     }
 
-    private fun getIntentAction(payload: NotificationPayload?): Intent? {
-        val action = payload?.let { PinpointNotificationPayload.fromNotificationPayload(it) }?.action
+    private fun getIntentAction(payload: NotificationPayload): Intent? {
+        val action = PinpointNotificationPayload.fromNotificationPayload(payload)?.action
         return when {
             action?.get(PushNotificationsConstants.URL) != null -> {
                 // Action is open url

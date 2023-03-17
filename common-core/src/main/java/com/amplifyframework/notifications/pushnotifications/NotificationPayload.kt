@@ -17,31 +17,31 @@ package com.amplifyframework.notifications.pushnotifications
 
 import android.content.Intent
 import android.os.Parcelable
+import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize
 
-open class NotificationContentProvider(val providerName: String) {
-    data class FCM(val from: String?, val content: Map<String, String>) : NotificationContentProvider("FCM")
+@Parcelize
+open class NotificationContentProvider : Parcelable {
+    data class FCM(val from: String?, val content: Map<String, String>) : NotificationContentProvider()
 }
 
 @Parcelize
 open class NotificationPayload(
-    var providerName: String? = null,
-    var channelId: String? = null,
-    var rawData: Map<String, String> = mapOf(),
-    var targetClass: Class<*>? = null
+    val contentProvider: NotificationContentProvider?,
+    val channelId: String? = null,
+    val targetClass: Class<*>? = null
 ) : Parcelable {
 
-    internal constructor(builder: Builder) : this() {
-        targetClass = builder.targetClass
-        channelId = builder.channelId
+    @IgnoredOnParcel
+    val rawData: Map<String, String> = extractRawData()
 
-        when (val provider = builder.contentProvider) {
-            is NotificationContentProvider.FCM -> {
-                providerName = provider.providerName
-                rawData = provider.content.plus("from" to provider.from.toString())
-            }
-            else -> Unit
+    internal constructor(builder: Builder) : this(builder.contentProvider, builder.channelId, builder.targetClass)
+
+    private fun extractRawData() = when (contentProvider) {
+        is NotificationContentProvider.FCM -> {
+            contentProvider.content.plus("from" to contentProvider.from.toString())
         }
+        else -> mapOf()
     }
 
     companion object {

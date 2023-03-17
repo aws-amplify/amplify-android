@@ -16,22 +16,28 @@
 package com.amplifyframework.pushnotifications.pinpoint
 
 import androidx.annotation.RestrictTo
+import com.amplifyframework.notifications.pushnotifications.NotificationContentProvider
 import com.amplifyframework.notifications.pushnotifications.NotificationPayload
 
-@RestrictTo(RestrictTo.Scope.LIBRARY)
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 class PinpointNotificationPayload internal constructor(
-    var title: String? = null,
-    var body: String? = null,
-    var imageUrl: String? = null,
-    var action: Map<String, String> = mapOf(),
-    var silentPush: Boolean = false
-) : NotificationPayload() {
+    val title: String? = null,
+    val body: String? = null,
+    val imageUrl: String? = null,
+    val action: Map<String, String> = mapOf(),
+    val silentPush: Boolean = false,
+    channelId: String? = null,
+    targetClass: Class<*>? = null,
+    contentProvider: NotificationContentProvider? = null,
+) : NotificationPayload(contentProvider, channelId, targetClass) {
     companion object {
         fun isPinpointNotificationPayload(payload: NotificationPayload) = payload.rawData.keys.any {
             it.contains(PushNotificationsConstants.PINPOINT_PREFIX)
         }
 
-        fun fromNotificationPayload(payload: NotificationPayload): PinpointNotificationPayload {
+        fun fromNotificationPayload(payload: NotificationPayload): PinpointNotificationPayload? {
+            if (!isPinpointNotificationPayload(payload)) return null
+
             val data = payload.rawData
             val title = data[PushNotificationsConstants.TITLE]
                 ?: data[PushNotificationsConstants.PINPOINT_NOTIFICATION_TITLE]
@@ -55,11 +61,11 @@ class PinpointNotificationPayload internal constructor(
                 action.put(PushNotificationsConstants.DEEPLINK, it)
             }
 
-            return PinpointNotificationPayload(title, body, imageUrl, action, silentPush).also {
-                it.channelId = channelId
-                it.targetClass = payload.targetClass
-                it.rawData = payload.rawData
-            }
+            return PinpointNotificationPayload(
+                title, body, imageUrl,
+                action, silentPush, channelId,
+                payload.targetClass, payload.contentProvider
+            )
         }
     }
 }

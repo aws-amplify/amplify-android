@@ -233,6 +233,8 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
     ) {
         try {
             val pinpointPayload = PinpointNotificationPayload.fromNotificationPayload(payload)
+                ?: throw Exception("message does not contain pinpoint push notification payload")
+
             val isAppInForeground = pushNotificationsUtils.isAppInForeground()
             val attributes = mapOf("isAppInForeground" to isAppInForeground.toString())
             val eventSourceType = EventSourceType.getEventSourceType(pinpointPayload)
@@ -241,8 +243,14 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
             tryUpdateEventSourceGlobally(eventSourceAttributes)
             tryAnalyticsRecordEvent(eventName, attributes)
             onSuccess.call()
-        } catch (exception: PushNotificationsException) {
-            onError.accept(exception)
+        } catch (exception: Exception) {
+            onError.accept(
+                PushNotificationsException(
+                    "Failed to record notification received event.",
+                    AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION,
+                    exception
+                )
+            )
         }
     }
 
@@ -253,13 +261,21 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
     ) {
         try {
             val pinpointPayload = PinpointNotificationPayload.fromNotificationPayload(payload)
+                ?: throw Exception("message does not contain pinpoint push notification payload")
+
             val eventSourceType = EventSourceType.getEventSourceType(pinpointPayload)
             val eventSourceAttributes = eventSourceType.attributeParser.parseAttributes(pinpointPayload)
             tryUpdateEventSourceGlobally(eventSourceAttributes)
             tryAnalyticsRecordEvent(eventSourceType.eventTypeOpened)
             onSuccess.call()
-        } catch (exception: PushNotificationsException) {
-            onError.accept(exception)
+        } catch (exception: Exception) {
+            onError.accept(
+                PushNotificationsException(
+                    "Failed to record notification opened event.",
+                    AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION,
+                    exception
+                )
+            )
         }
     }
 
@@ -274,6 +290,8 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
     ) {
         try {
             val pinpointPayload = PinpointNotificationPayload.fromNotificationPayload(payload)
+                ?: throw Exception("message does not contain pinpoint push notification payload")
+
             val isAppInForeground = pushNotificationsUtils.isAppInForeground()
             val eventSourceType = EventSourceType.getEventSourceType(pinpointPayload)
             val eventSourceAttributes = eventSourceType.attributeParser.parseAttributes(pinpointPayload)
@@ -363,11 +381,7 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
             analyticsClient.recordEvent(event)
             analyticsClient.flushEvents()
         } catch (exception: Exception) {
-            throw PushNotificationsException(
-                "Failed to record push notifications event $eventName.",
-                AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION,
-                exception
-            )
+            throw Exception("Failed to record push notifications event $eventName.")
         }
     }
 
@@ -380,7 +394,6 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
     private fun canShowNotification(payload: PinpointNotificationPayload): Boolean {
         val notificationsEnabled = pushNotificationsUtils.areNotificationsEnabled()
         val silentPush = payload.silentPush
-        // TODO: check endpoint optOut param?
         return notificationsEnabled && !silentPush && deviceRegistered
     }
 }
