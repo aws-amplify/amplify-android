@@ -33,8 +33,8 @@ class AWSPinpointPushNotificationsActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         try {
-            val payload = intent.getParcelableExtra<NotificationPayload>("amplifyNotificationPayload")
-            val intent = processIntent(payload?.action)
+            val payload = NotificationPayload.fromIntent(intent)
+            val intent = getIntentAction(payload)
             if (payload != null) {
                 Amplify.Notifications.Push.recordNotificationOpened(payload, {
                     LOG.info("Notification opened event recorded successfully.")
@@ -49,7 +49,8 @@ class AWSPinpointPushNotificationsActivity : Activity() {
         finish()
     }
 
-    private fun processIntent(action: Map<String, String>?): Intent? {
+    private fun getIntentAction(payload: NotificationPayload?): Intent? {
+        val action = payload?.let { PinpointNotificationPayload.fromNotificationPayload(it) }?.action
         return when {
             action?.get(PushNotificationsConstants.URL) != null -> {
                 // Action is open url

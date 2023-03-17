@@ -26,7 +26,7 @@ group = properties["POM_GROUP"].toString()
 dependencies {
     val lifecycleVersion = "2.4.1"
 
-    implementation(project(":common-core"))
+    api(project(":common-core"))
 
     implementation(dependency.androidx.core.ktx)
     implementation(dependency.androidx.activity)

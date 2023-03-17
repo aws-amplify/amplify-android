@@ -18,14 +18,20 @@ package com.amplifyframework.pushnotifications.pinpoint
 import androidx.annotation.RestrictTo
 import com.amplifyframework.notifications.pushnotifications.NotificationPayload
 
-@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-class PinpointNotificationPayload : NotificationPayload() {
+@RestrictTo(RestrictTo.Scope.LIBRARY)
+class PinpointNotificationPayload internal constructor(
+    var title: String? = null,
+    var body: String? = null,
+    var imageUrl: String? = null,
+    var action: Map<String, String> = mapOf(),
+    var silentPush: Boolean = false
+) : NotificationPayload() {
     companion object {
         fun isPinpointNotificationPayload(payload: NotificationPayload) = payload.rawData.keys.any {
             it.contains(PushNotificationsConstants.PINPOINT_PREFIX)
         }
 
-        fun fromNotificationPayload(payload: NotificationPayload): NotificationPayload {
+        fun fromNotificationPayload(payload: NotificationPayload): PinpointNotificationPayload {
             val data = payload.rawData
             val title = data[PushNotificationsConstants.TITLE]
                 ?: data[PushNotificationsConstants.PINPOINT_NOTIFICATION_TITLE]
@@ -49,7 +55,11 @@ class PinpointNotificationPayload : NotificationPayload() {
                 action.put(PushNotificationsConstants.DEEPLINK, it)
             }
 
-            return NotificationPayload(title, body, imageUrl, channelId, action, silentPush, data, payload.targetClass)
+            return PinpointNotificationPayload(title, body, imageUrl, action, silentPush).also {
+                it.channelId = channelId
+                it.targetClass = payload.targetClass
+                it.rawData = payload.rawData
+            }
         }
     }
 }

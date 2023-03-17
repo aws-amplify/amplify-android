@@ -47,8 +47,6 @@ internal class FCMPushNotificationsService : FirebaseMessagingService() {
         val remoteMessage = RemoteMessage((data))
         val notificationPayload = NotificationPayload {
             notificationContentProvider(NotificationContentProvider.FCM(remoteMessage.from, remoteMessage.data))
-            notificationChannelId("test")
-            targetClass(null)
         }
 
         val isAmplifyMessage = Amplify.Notifications.Push.shouldHandleNotification(notificationPayload)

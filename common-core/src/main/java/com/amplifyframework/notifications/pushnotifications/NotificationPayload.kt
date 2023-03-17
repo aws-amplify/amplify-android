@@ -16,25 +16,17 @@
 package com.amplifyframework.notifications.pushnotifications
 
 import android.content.Intent
-import android.os.Bundle
 import android.os.Parcelable
 import kotlinx.parcelize.Parcelize
-import org.json.JSONObject
 
-sealed class NotificationContentProvider {
-    data class FCM(val from: String?, val content: Map<String, String>) : NotificationContentProvider()
-    data class ADM(val content: Intent?) : NotificationContentProvider()
-    data class Baidu(val content: String?) : NotificationContentProvider()
+open class NotificationContentProvider(val providerName: String) {
+    data class FCM(val from: String?, val content: Map<String, String>) : NotificationContentProvider("FCM")
 }
 
 @Parcelize
 open class NotificationPayload(
-    var title: String? = null,
-    var body: String? = null,
-    var imageUrl: String? = null,
+    var providerName: String? = null,
     var channelId: String? = null,
-    var action: Map<String, String> = mapOf(),
-    var silentPush: Boolean = false,
     var rawData: Map<String, String> = mapOf(),
     var targetClass: Class<*>? = null
 ) : Parcelable {
@@ -45,23 +37,8 @@ open class NotificationPayload(
 
         when (val provider = builder.contentProvider) {
             is NotificationContentProvider.FCM -> {
+                providerName = provider.providerName
                 rawData = provider.content.plus("from" to provider.from.toString())
-            }
-            is NotificationContentProvider.ADM -> {
-                val bundle = provider.content?.extras ?: Bundle()
-                rawData = buildMap {
-                    bundle.keySet().forEach { key ->
-                        bundle.getString(key)?.let { put(key, it) }
-                    }
-                }
-            }
-            is NotificationContentProvider.Baidu -> {
-                val jsonObject = provider.content?.let { JSONObject(it) }
-                rawData = buildMap {
-                    jsonObject?.keys()?.forEach { key ->
-                        put(key, jsonObject.getString(key))
-                    }
-                }
             }
             else -> Unit
         }
@@ -72,6 +49,10 @@ open class NotificationPayload(
         fun builder() = Builder()
 
         inline operator fun invoke(block: Builder.() -> Unit) = Builder().apply(block).build()
+
+        fun fromIntent(intent: Intent?): NotificationPayload? {
+            return intent?.getParcelableExtra("amplifyNotificationPayload")
+        }
     }
 
     class Builder {

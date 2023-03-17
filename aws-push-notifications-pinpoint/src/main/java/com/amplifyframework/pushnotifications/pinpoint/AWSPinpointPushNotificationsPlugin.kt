@@ -377,7 +377,7 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
 
     override fun getVersion() = BuildConfig.VERSION_NAME
 
-    private fun canShowNotification(payload: NotificationPayload): Boolean {
+    private fun canShowNotification(payload: PinpointNotificationPayload): Boolean {
         val notificationsEnabled = pushNotificationsUtils.areNotificationsEnabled()
         val silentPush = payload.silentPush
         // TODO: check endpoint optOut param?
