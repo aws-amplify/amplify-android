@@ -29,7 +29,7 @@ dependencies {
     implementation(project(":common-core"))
     implementation(project(":aws-pinpoint-core"))
 
-    api(project(":aws-push-notifications-pinpoint-common"))
+    implementation(project(":aws-push-notifications-pinpoint-common"))
     api(dependency.firebasemessaging)
 
     implementation(dependency.aws.http)

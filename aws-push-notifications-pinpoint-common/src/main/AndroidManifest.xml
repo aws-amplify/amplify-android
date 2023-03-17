@@ -15,10 +15,10 @@
 -->
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.amplifyframework.pushnotifications.pinpoint">
+    package="com.amplifyframework.pushnotifications.pinpoint.common">
     <application>
         <activity
-            android:name=".permissions.PermissionsRequestActivity"
+            android:name="com.amplifyframework.pushnotifications.pinpoint.permissions.PermissionsRequestActivity"
             android:theme="@android:style/Theme.Translucent.NoTitleBar"
             android:exported="false"/>
     </application>

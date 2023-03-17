@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.pushnotifications.pinpoint.utils
+package com.amplifyframework.pushnotifications.pinpoint
 
 import android.graphics.Color
 import android.media.AudioAttributes
@@ -22,8 +22,6 @@ import android.provider.Settings
 import androidx.core.app.NotificationChannelCompat
 import androidx.core.app.NotificationChannelGroupCompat
 import androidx.core.app.NotificationManagerCompat
-import com.amplifyframework.pushnotifications.pinpoint.NotificationImportance
-import com.amplifyframework.pushnotifications.pinpoint.PushNotificationChannels
 import io.mockk.MockKAssertScope
 import io.mockk.every
 import io.mockk.mockk

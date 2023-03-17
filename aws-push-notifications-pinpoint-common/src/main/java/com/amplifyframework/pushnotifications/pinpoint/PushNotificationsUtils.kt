@@ -31,6 +31,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import com.amplifyframework.notifications.pushnotifications.NotificationPayload
+import com.amplifyframework.pushnotifications.pinpoint.common.R
 import java.net.URL
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
