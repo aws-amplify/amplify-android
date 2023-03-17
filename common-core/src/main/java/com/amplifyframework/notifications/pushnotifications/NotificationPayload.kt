@@ -22,6 +22,7 @@ import kotlinx.parcelize.Parcelize
 
 @Parcelize
 open class NotificationContentProvider : Parcelable {
+    @Parcelize
     data class FCM(val from: String?, val content: Map<String, String>) : NotificationContentProvider()
 }
 
