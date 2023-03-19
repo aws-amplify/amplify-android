@@ -47,6 +47,7 @@ import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidUserPoo
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.auth.cognito.helpers.SRPHelper
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthResendUserAttributeConfirmationCodeOptions
+import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttributeOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttributesOptions
 import com.amplifyframework.auth.cognito.options.AuthFlowType
@@ -215,6 +216,31 @@ class RealAWSCognitoAuthPluginTest {
 
         // WHEN
         plugin.fetchAuthSession(onSuccess, onError)
+
+        // THEN
+        verify(exactly = 0) { onSuccess.accept(any()) }
+    }
+
+    @Test
+    fun testCustomSignInWithSRPSucceedsWithChallenge() {
+        // GIVEN
+        val onSuccess = mockk<Consumer<AuthSignInResult>>()
+        val onError = mockk<Consumer<AuthException>>(relaxed = true)
+        val currentAuthState = mockk<AuthState> {
+            every { authNState } returns AuthenticationState.SignedOut(mockk())
+        }
+        every { authStateMachine.getCurrentState(captureLambda()) } answers {
+            lambda<(AuthState) -> Unit>().invoke(currentAuthState)
+        }
+
+        // WHEN
+        plugin.signIn(
+            "username",
+            "password",
+            AWSCognitoAuthSignInOptions.builder().authFlowType(AuthFlowType.CUSTOM_AUTH_WITH_SRP).build(),
+            onSuccess,
+            onError
+        )
 
         // THEN
         verify(exactly = 0) { onSuccess.accept(any()) }

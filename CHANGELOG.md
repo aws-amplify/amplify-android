@@ -1,3 +1,15 @@
+## [Release 2.4.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.4.0)
+
+### Features
+- **auth:** Add aws-core and AWSCredentialsProvider ([#2316](https://github.com/aws-amplify/amplify-android/issues/2316))
+
+### Bug Fixes
+- **core:** add null checks for dev menu logs ([#2332](https://github.com/aws-amplify/amplify-android/issues/2332))
+- **datastore:** Accept applicable data if errors are present when syncing ([#2278](https://github.com/aws-amplify/amplify-android/issues/2278))
+- **auth:** Fix for missing session variable when custom auth is performed ([#2335](https://github.com/aws-amplify/amplify-android/issues/2335))
+
+[See all changes between 2.3.0 and 2.4.0](https://github.com/aws-amplify/amplify-android/compare/release_v2.3.0...release_v2.4.0)
+
 ## [Release 2.3.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.3.0)
 
 ### Features
