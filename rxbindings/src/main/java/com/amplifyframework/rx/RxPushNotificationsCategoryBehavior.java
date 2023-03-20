@@ -44,6 +44,13 @@ public interface RxPushNotificationsCategoryBehavior extends RxNotificationsCate
     Completable recordNotificationOpened(NotificationPayload payload);
 
     /**
+     * Returns whether Amplify can handle the notification payload.
+     * @param payload notification payload
+     * @return true is Amplify can handle the notification payload
+     */
+    Boolean shouldHandleNotification(NotificationPayload payload);
+
+    /**
      * Displays notification on the system tray if app is background/killed state.
      * @param payload notification payload
      * @return An Rx {@link Single} which emits an {@link PushNotificationResult} on success, or an

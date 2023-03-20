@@ -15,8 +15,8 @@
 
 package com.amplifyframework.pushnotifications.pinpoint
 
+import com.amplifyframework.notifications.pushnotifications.NotificationContentProvider
 import com.amplifyframework.notifications.pushnotifications.NotificationPayload
-import com.amplifyframework.pushnotifications.pinpoint.utils.PushNotificationsConstants
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -32,7 +32,7 @@ class EventSourceTypeTest {
         campaignTreatmentIdKey to "test_treatment_id"
     )
 
-    private val campaignPayload = NotificationPayload("", "", 0, "", "", "", "", mapOf(), false, campaignData)
+    private val campaignPayload = NotificationPayload(NotificationContentProvider.FCM(campaignData))
 
     // set up journey payload
     private val journeyIdKey = PushNotificationsConstants.JOURNEY_ID
@@ -43,7 +43,7 @@ class EventSourceTypeTest {
         "\"$journeyIdKey\":\"test_journey_id\"}}"
 
     private val journeyData = mapOf("pinpoint" to journeyAttributes)
-    private val journeyPayload = NotificationPayload("", "", 0, "", "", "", "", mapOf(), false, journeyData)
+    private val journeyPayload = NotificationPayload(NotificationContentProvider.FCM(journeyData))
 
     @Test
     fun testCampaignEventTypeBackgroundReceived() {

@@ -19,15 +19,18 @@ import com.amplifyframework.analytics.UserProfile;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.notifications.NotificationsCategoryBehavior;
+import com.amplifyframework.notifications.pushnotifications.NotificationContentProvider;
 import com.amplifyframework.notifications.pushnotifications.NotificationPayload;
 import com.amplifyframework.notifications.pushnotifications.PushNotificationResult;
 import com.amplifyframework.notifications.pushnotifications.PushNotificationsCategoryBehavior;
 import com.amplifyframework.notifications.pushnotifications.PushNotificationsException;
 import com.amplifyframework.testutils.random.RandomString;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.rxjava3.observers.TestObserver;
@@ -37,6 +40,7 @@ import static com.amplifyframework.rx.Matchers.anyAction;
 import static com.amplifyframework.rx.Matchers.anyConsumer;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
 /**
@@ -48,7 +52,8 @@ public final class RxPushNotificationsBindingTest {
     private PushNotificationsCategoryBehavior delegate;
     private RxPushNotificationsBinding push;
 
-    private final NotificationPayload payload = new NotificationPayload();
+    private final NotificationPayload payload = new NotificationPayload
+        .Builder(new NotificationContentProvider.FCM(Collections.emptyMap())).build();
 
     /**
      * Creates an {@link RxPushNotificationsBinding} instance to test.
@@ -398,6 +403,23 @@ public final class RxPushNotificationsBindingTest {
         // Assert: failure is furnished via Rx Completable.
         observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
         observer.assertNotComplete().assertError(failure);
+    }
+
+    /**
+     * Tests that a successful request to should handle notification will
+     * propagate a completion back through the binding.
+     * @throws InterruptedException If test observer is interrupted while awaiting terminal event
+     */
+    @Test
+    public void testShouldHandleNotification() throws InterruptedException {
+        // Arrange an invocation of the success Action
+        doReturn(true).when(delegate).shouldHandleNotification(eq(payload));
+
+        // Act: call the binding
+        boolean actual = push.shouldHandleNotification(payload);
+
+        // Assert: Completable completes with success
+        Assert.assertTrue(actual);
     }
 
     /**

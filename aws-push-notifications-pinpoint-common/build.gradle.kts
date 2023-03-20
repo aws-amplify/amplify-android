@@ -24,22 +24,28 @@ apply(from = rootProject.file("configuration/publishing.gradle"))
 group = properties["POM_GROUP"].toString()
 
 dependencies {
-    implementation(project(":core"))
-    implementation(project(":aws-core"))
-    implementation(project(":common-core"))
-    implementation(project(":aws-pinpoint-core"))
+    val lifecycleVersion = "2.4.1"
 
-    implementation(project(":aws-push-notifications-pinpoint-common"))
-    api(dependency.firebasemessaging)
-
-    implementation(dependency.aws.http)
-    implementation(dependency.aws.pinpoint)
+    api(project(":common-core"))
 
     implementation(dependency.androidx.core.ktx)
+    implementation(dependency.androidx.activity)
     implementation(dependency.androidx.appcompat)
-    implementation(dependency.kotlin.serializationJson)
+    implementation(dependency.androidx.annotation)
+    implementation(dependency.androidx.core)
+    implementation(dependency.firebasemessaging)
+
+    //noinspection GradleDependency
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:$lifecycleVersion")
+    //noinspection GradleDependency
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycleVersion")
+    //noinspection GradleDependency
+    implementation("androidx.lifecycle:lifecycle-livedata-ktx:$lifecycleVersion")
+    //noinspection GradleDependency
+    implementation("com.google.android.material:material:1.8.0")
 
     testImplementation(testDependency.junit)
+    testImplementation(testDependency.mockk)
 
     androidTestImplementation(testDependency.androidx.test.runner)
     androidTestImplementation(testDependency.androidx.test.junit)

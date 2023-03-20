@@ -139,8 +139,9 @@ dependencyResolutionManagement {
 }
 
 include(":annotations")
-include(":core")
 include(":aws-core")
+include(":core")
+include(":common-core")
 
 // Plugin Modules
 include(":aws-analytics-pinpoint")
@@ -163,4 +164,4 @@ include(":rxbindings")
 include(":aws-api-appsync")
 include(":maplibre-adapter")
 include(":aws-pinpoint-core")
-include(":aws-push-notifications-pinpoint-utils")
+include(":aws-push-notifications-pinpoint-common")

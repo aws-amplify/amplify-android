@@ -18,11 +18,12 @@ package com.amplifyframework.pushnotifications.pinpoint
 import android.content.Intent
 import android.os.Bundle
 import com.amplifyframework.core.Amplify
+import com.amplifyframework.notifications.pushnotifications.NotificationContentProvider
 import com.amplifyframework.notifications.pushnotifications.NotificationPayload
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 
-internal class FCMPushNotificationsService : FirebaseMessagingService() {
+class FCMPushNotificationsService : FirebaseMessagingService() {
     companion object {
         private val LOG = Amplify.Logging.forNamespace("amplify:aws-push-notifications-pinpoint-utils")
     }
@@ -42,15 +43,17 @@ internal class FCMPushNotificationsService : FirebaseMessagingService() {
         // * The wakelock ID set by the WakefulBroadcastReceiver
         data.remove("androidx.content.wakelockid")
 
-        // get pinpoint notifications payload
-        val notificationPayload = PinpointNotificationPayload.createFromRemoteMessage(RemoteMessage(data))
-        when {
+        // create notifications payload
+        val remoteMessage = RemoteMessage((data))
+        val notificationPayload = NotificationPayload(NotificationContentProvider.FCM(remoteMessage.data))
+
+        val isAmplifyMessage = Amplify.Notifications.Push.shouldHandleNotification(notificationPayload)
+        if (isAmplifyMessage) {
             // message contains pinpoint push notification payload, show notification
-            notificationPayload != null -> onMessageReceived(notificationPayload)
-            else -> {
-                LOG.info("Ignoring messages that does not contain pinpoint push notification payload.")
-                super.handleIntent(intent)
-            }
+            onMessageReceived(notificationPayload)
+        } else {
+            LOG.info("Ignoring messages that does not contain pinpoint push notification payload.")
+            super.handleIntent(intent)
         }
     }
 

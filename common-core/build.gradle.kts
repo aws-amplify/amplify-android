@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -16,26 +16,13 @@
 plugins {
     id("com.android.library")
     id("kotlin-android")
+    id("kotlin-parcelize")
 }
+
+apply(from = rootProject.file("configuration/checkstyle.gradle"))
 apply(from = rootProject.file("configuration/publishing.gradle"))
 
 group = properties["POM_GROUP"].toString()
 
 dependencies {
-    implementation(dependency.kotlin.stdlib)
-    implementation(dependency.kotlin.coroutines)
-    implementation(dependency.androidx.core.ktx)
-    implementation(project(":core"))
-    implementation(project(":common-core"))
-
-    testImplementation(testDependency.androidx.test.core)
-    testImplementation(testDependency.junit)
-    testImplementation(testDependency.mockk)
-    testImplementation(testDependency.kotlin.test.coroutines)
-    testImplementation(project(":testmodels"))
-}
-
-android.kotlinOptions {
-    jvmTarget = "1.8"
-    freeCompilerArgs = freeCompilerArgs + "-opt-in=kotlin.RequiresOptIn"
 }
