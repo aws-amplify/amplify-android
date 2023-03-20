@@ -2,46 +2,7 @@
   "serializedData": {
     "contact": {
       "serializedData": {
-        "phone": {
-          "serializedData": {
-            "areaCode": "415",
-            "phone": "6666666",
-            "countryCode": "1"
-          },
-          "customTypeSchema": {
-            "pluralName": "Phones",
-            "name": "Phone",
-            "fields": {
-              "number": {
-                "javaClassForValue": "java.lang.String",
-                "isRequired": true,
-                "isCustomType": false,
-                "name": "number",
-                "isEnum": false,
-                "targetType": "String",
-                "isArray": false
-              },
-              "areaCode": {
-                "javaClassForValue": "java.lang.String",
-                "isRequired": true,
-                "isCustomType": false,
-                "name": "areaCode",
-                "isEnum": false,
-                "targetType": "String",
-                "isArray": false
-              },
-              "countryCode": {
-                "javaClassForValue": "java.lang.String",
-                "isRequired": true,
-                "isCustomType": false,
-                "name": "countryCode",
-                "isEnum": false,
-                "targetType": "String",
-                "isArray": false
-              }
-            }
-          }
-        },
+        "phone": null,
         "email": "tester@testing.com"
       },
       "customTypeSchema": {

@@ -1,0 +1,112 @@
+{
+  "serializedData": {
+    "contact": {
+      "serializedData": {
+        "phone": {
+          "serializedData": {
+            "number": "41555555555",
+            "countryCode": "+1"
+          },
+          "customTypeSchema": {
+            "pluralName": "Phones",
+            "name": "Phone",
+            "fields": {
+              "number": {
+                "javaClassForValue": "java.lang.String",
+                "isRequired": true,
+                "isCustomType": false,
+                "name": "number",
+                "isEnum": false,
+                "targetType": "String",
+                "isArray": false
+              },
+              "countryCode": {
+                "javaClassForValue": "java.lang.String",
+                "isRequired": true,
+                "isCustomType": false,
+                "name": "countryCode",
+                "isEnum": false,
+                "targetType": "String",
+                "isArray": false
+              }
+            }
+          }
+        },
+        "email": "test@test.com"
+      },
+      "customTypeSchema": {
+        "pluralName": "Contacts",
+        "name": "Contact",
+        "fields": {
+          "phone": {
+            "javaClassForValue": "java.util.Map",
+            "isRequired": true,
+            "isCustomType": true,
+            "name": "phone",
+            "isEnum": false,
+            "targetType": "Phone",
+            "isArray": false
+          },
+          "email": {
+            "javaClassForValue": "java.lang.String",
+            "isRequired": true,
+            "isCustomType": false,
+            "name": "email",
+            "isEnum": false,
+            "targetType": "String",
+            "isArray": false
+          }
+        }
+      }
+    },
+    "fullName": "Tester Test",
+    "id": "some-unique-id"
+  },
+  "id": "some-unique-id",
+  "modelSchema": {
+    "associations": {},
+    "pluralName": "People",
+    "authRules": [],
+    "indexes": {},
+    "name": "Person",
+    "modelSchemaVersion": 0,
+    "fields": {
+      "contact": {
+        "javaClassForValue": "java.util.Map",
+        "isRequired": true,
+        "isCustomType": true,
+        "isReadOnly": false,
+        "isModel": false,
+        "authRules": [],
+        "name": "contact",
+        "isEnum": false,
+        "targetType": "Contact",
+        "isArray": false
+      },
+      "fullName": {
+        "javaClassForValue": "java.lang.String",
+        "isRequired": true,
+        "isCustomType": false,
+        "isReadOnly": false,
+        "isModel": false,
+        "authRules": [],
+        "name": "fullName",
+        "isEnum": false,
+        "targetType": "String",
+        "isArray": false
+      },
+      "id": {
+        "javaClassForValue": "java.lang.String",
+        "isRequired": true,
+        "isCustomType": false,
+        "isReadOnly": false,
+        "isModel": false,
+        "authRules": [],
+        "name": "id",
+        "isEnum": false,
+        "targetType": "ID",
+        "isArray": false
+      }
+    }
+  }
+}
