@@ -28,7 +28,7 @@ open class NotificationContentProvider : Parcelable {
 
 @Parcelize
 open class NotificationPayload(
-    val contentProvider: NotificationContentProvider?,
+    val contentProvider: NotificationContentProvider,
     val channelId: String? = null,
     val targetClass: Class<*>? = null
 ) : Parcelable {
@@ -55,7 +55,7 @@ open class NotificationPayload(
     }
 
     class Builder {
-        var contentProvider: NotificationContentProvider? = null
+        var contentProvider = NotificationContentProvider()
             private set
         var channelId: String? = null
             private set
