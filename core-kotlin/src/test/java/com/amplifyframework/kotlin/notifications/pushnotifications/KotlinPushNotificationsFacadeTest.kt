@@ -20,6 +20,7 @@ import com.amplifyframework.core.Action
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.kotlin.notifications.KotlinNotificationsFacade
 import com.amplifyframework.notifications.NotificationsCategoryBehavior
+import com.amplifyframework.notifications.pushnotifications.NotificationContentProvider
 import com.amplifyframework.notifications.pushnotifications.NotificationPayload
 import com.amplifyframework.notifications.pushnotifications.PushNotificationResult
 import com.amplifyframework.notifications.pushnotifications.PushNotificationsCategoryBehavior
@@ -36,7 +37,7 @@ class KotlinPushNotificationsFacadeTest {
     private val pushDelegate = mockk<PushNotificationsCategoryBehavior>()
     private val push = KotlinPushFacade(pushDelegate)
 
-    private val payload = NotificationPayload.builder().build()
+    private val payload = NotificationPayload(NotificationContentProvider.FCM(mapOf()))
 
     @Test
     fun identifyUserCategoryLevelSucceeds() = runBlocking {

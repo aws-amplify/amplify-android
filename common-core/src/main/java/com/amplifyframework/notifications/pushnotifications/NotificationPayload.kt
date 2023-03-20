@@ -21,9 +21,9 @@ import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize
 
 @Parcelize
-open class NotificationContentProvider : Parcelable {
+open class NotificationContentProvider internal constructor(open val content: Map<String, String>) : Parcelable {
     @Parcelize
-    data class FCM(val content: Map<String, String>) : NotificationContentProvider()
+    class FCM(override val content: Map<String, String>) : NotificationContentProvider(content)
 }
 
 @Parcelize
@@ -45,26 +45,23 @@ open class NotificationPayload(
 
     companion object {
         @JvmStatic
-        fun builder() = Builder()
+        fun builder(contentProvider: NotificationContentProvider) = Builder(contentProvider)
 
-        inline operator fun invoke(block: Builder.() -> Unit) = Builder().apply(block).build()
+        inline operator fun invoke(
+            contentProvider: NotificationContentProvider,
+            block: Builder.() -> Unit
+        ) = Builder(contentProvider).apply(block).build()
 
         fun fromIntent(intent: Intent?): NotificationPayload? {
             return intent?.getParcelableExtra("amplifyNotificationPayload")
         }
     }
 
-    class Builder {
-        var contentProvider = NotificationContentProvider()
-            private set
+    class Builder(val contentProvider: NotificationContentProvider) {
         var channelId: String? = null
             private set
         var targetClass: Class<*>? = null
             private set
-
-        fun notificationContentProvider(contentProvider: NotificationContentProvider) = apply {
-            this.contentProvider = contentProvider
-        }
 
         fun notificationChannelId(channelId: String?) = apply { this.channelId = channelId }
 

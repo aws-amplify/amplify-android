@@ -19,6 +19,7 @@ import com.amplifyframework.analytics.UserProfile;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.notifications.NotificationsCategoryBehavior;
+import com.amplifyframework.notifications.pushnotifications.NotificationContentProvider;
 import com.amplifyframework.notifications.pushnotifications.NotificationPayload;
 import com.amplifyframework.notifications.pushnotifications.PushNotificationResult;
 import com.amplifyframework.notifications.pushnotifications.PushNotificationsCategoryBehavior;
@@ -29,6 +30,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.rxjava3.observers.TestObserver;
@@ -50,7 +52,8 @@ public final class RxPushNotificationsBindingTest {
     private PushNotificationsCategoryBehavior delegate;
     private RxPushNotificationsBinding push;
 
-    private final NotificationPayload payload = NotificationPayload.builder().build();
+    private final NotificationPayload payload = new NotificationPayload
+        .Builder(new NotificationContentProvider.FCM(Collections.emptyMap())).build();
 
     /**
      * Creates an {@link RxPushNotificationsBinding} instance to test.
