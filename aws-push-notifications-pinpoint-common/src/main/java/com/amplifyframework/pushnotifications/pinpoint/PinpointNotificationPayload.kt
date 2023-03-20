@@ -28,7 +28,7 @@ class PinpointNotificationPayload internal constructor(
     val silentPush: Boolean = false,
     channelId: String? = null,
     targetClass: Class<*>? = null,
-    contentProvider: NotificationContentProvider? = null,
+    contentProvider: NotificationContentProvider,
 ) : NotificationPayload(contentProvider, channelId, targetClass) {
     companion object {
         fun isPinpointNotificationPayload(payload: NotificationPayload) = payload.rawData.keys.any {
