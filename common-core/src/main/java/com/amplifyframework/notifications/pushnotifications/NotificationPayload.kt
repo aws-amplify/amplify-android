@@ -23,7 +23,7 @@ import kotlinx.parcelize.Parcelize
 @Parcelize
 open class NotificationContentProvider : Parcelable {
     @Parcelize
-    data class FCM(val from: String?, val content: Map<String, String>) : NotificationContentProvider()
+    data class FCM(val content: Map<String, String>) : NotificationContentProvider()
 }
 
 @Parcelize
@@ -39,9 +39,7 @@ open class NotificationPayload(
     internal constructor(builder: Builder) : this(builder.contentProvider, builder.channelId, builder.targetClass)
 
     private fun extractRawData() = when (contentProvider) {
-        is NotificationContentProvider.FCM -> {
-            contentProvider.content.plus("from" to contentProvider.from.toString())
-        }
+        is NotificationContentProvider.FCM -> contentProvider.content
         else -> mapOf()
     }
 

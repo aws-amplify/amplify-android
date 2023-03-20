@@ -38,7 +38,7 @@ dependencies {
     implementation(dependency.androidx.security)
     implementation(dependency.kotlin.serializationJson)
 
-    implementation(project(":common-core"))
+    api(project(":common-core"))
 
     testImplementation(project(":aws-api-appsync"))
     // Used to reference Temporal types in tests.
