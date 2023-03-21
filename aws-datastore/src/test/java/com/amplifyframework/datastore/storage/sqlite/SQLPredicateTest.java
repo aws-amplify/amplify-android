@@ -103,6 +103,10 @@ public class SQLPredicateTest {
         validateSQLExpressionForNotContains(sqlPredicate, "tags");
     }
 
+    /**
+     * Test beginsWith query type.
+     * @throws DataStoreException Not thrown.
+     */
     @Test
     public void testBeginsWithForStringField() throws DataStoreException {
         QueryPredicateOperation<String> predicate = Blog.TAGS.beginsWith("something");
