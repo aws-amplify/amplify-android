@@ -2,9 +2,7 @@
 
 ### Bug Fixes
 - **core:** add null checks for dev menu logs ([#2333](https://github.com/aws-amplify/amplify-android/issues/2333))
-
-### Miscellaneous
-- Use instr() for string checking v1 ([#2346](https://github.com/aws-amplify/amplify-android/issues/2346))
+- **api:** Use instr() for string checking v1 ([#2346](https://github.com/aws-amplify/amplify-android/issues/2346))
 
 [See all changes between 1.38.1 and 1.38.2](https://github.com/aws-amplify/amplify-android/compare/release_v1.38.1...release_v1.38.2)
 
