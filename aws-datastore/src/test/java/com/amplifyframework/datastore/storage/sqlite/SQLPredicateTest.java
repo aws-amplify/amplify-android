@@ -103,6 +103,13 @@ public class SQLPredicateTest {
         validateSQLExpressionForNotContains(sqlPredicate, "tags");
     }
 
+    @Test
+    public void testBeginsWithForStringField() throws DataStoreException {
+        QueryPredicateOperation<String> predicate = Blog.TAGS.beginsWith("something");
+        SQLPredicate sqlPredicate = new SQLPredicate(predicate);
+        validateSQLExpressionForBeginsWith(sqlPredicate, "tags");
+    }
+
     /**
      * Test IS NOT NULL expression.
      * @throws DataStoreException Not thrown.
@@ -135,5 +142,11 @@ public class SQLPredicateTest {
         assertEquals(1, sqlPredicate.getBindings().size());
         assertEquals("something", sqlPredicate.getBindings().get(0));
         assertEquals("instr(" + fieldName + ",?) = 0", sqlPredicate.toString());
+    }
+
+    private void validateSQLExpressionForBeginsWith(SQLPredicate sqlPredicate, String fieldName) {
+        assertEquals(1, sqlPredicate.getBindings().size());
+        assertEquals("something", sqlPredicate.getBindings().get(0));
+        assertEquals("instr(" + fieldName + ",?) = 1", sqlPredicate.toString());
     }
 }
