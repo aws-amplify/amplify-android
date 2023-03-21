@@ -18,9 +18,9 @@ package com.amplifyframework.auth.cognito
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
-import androidx.annotation.RestrictTo
 import androidx.annotation.VisibleForTesting
 import com.amplifyframework.AmplifyException
+import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.auth.AuthCodeDeliveryDetails
 import com.amplifyframework.auth.AuthDevice
 import com.amplifyframework.auth.AuthException
@@ -94,7 +94,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
 
     private lateinit var pluginConfigurationJSON: JSONObject
 
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    @InternalAmplifyApi
     fun getPluginConfiguration(): JSONObject {
         return pluginConfigurationJSON
     }
