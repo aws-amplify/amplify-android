@@ -1,3 +1,13 @@
+## [Release 2.4.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.4.1)
+
+### Bug Fixes
+- **auth:** Add hosted ui error description on token failure ([#2338](https://github.com/aws-amplify/amplify-android/issues/2338))
+
+### Miscellaneous
+- Use instr() for beginswith checking v2 ([#2347](https://github.com/aws-amplify/amplify-android/issues/2347))
+
+[See all changes between 2.4.0 and 2.4.1](https://github.com/aws-amplify/amplify-android/compare/release_v2.4.0...release_v2.4.1)
+
 ## [Release 2.4.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.4.0)
 
 ### Features
