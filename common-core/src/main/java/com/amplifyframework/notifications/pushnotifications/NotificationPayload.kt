@@ -52,6 +52,7 @@ open class NotificationPayload(
             block: Builder.() -> Unit
         ) = Builder(contentProvider).apply(block).build()
 
+        @JvmStatic
         fun fromIntent(intent: Intent?): NotificationPayload? {
             return intent?.getParcelableExtra("amplifyNotificationPayload")
         }
