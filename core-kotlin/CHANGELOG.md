@@ -1,3 +1,13 @@
+## [Release 0.22.2](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.22.2)
+
+### Bug Fixes
+- **core:** add null checks for dev menu logs ([#2333](https://github.com/aws-amplify/amplify-android/issues/2333))
+
+### Miscellaneous
+- Use instr() for string checking v1 ([#2346](https://github.com/aws-amplify/amplify-android/issues/2346))
+
+[See all changes between 0.22.1 and 0.22.2](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.22.1...release-kotlin_v0.22.2)
+
 ## [Release 0.22.1](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.22.1)
 
 ### Bug Fixes
