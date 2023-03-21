@@ -16,9 +16,9 @@
 package com.amplifyframework.pinpoint.core
 
 import android.content.Context
-import androidx.annotation.RestrictTo
+import com.amplifyframework.annotations.RestrictToAmplify
 
-@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+@RestrictToAmplify
 class SessionClient(
     private val context: Context,
     val targetingClient: TargetingClient,

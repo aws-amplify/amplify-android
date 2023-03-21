@@ -15,14 +15,14 @@
 package com.amplifyframework.pinpoint.core
 
 import android.content.Context
-import androidx.annotation.RestrictTo
+import com.amplifyframework.annotations.RestrictToAmplify
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.TimeZone
 import kotlinx.serialization.Serializable
 
 @Serializable
-@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+@RestrictToAmplify
 class Session {
 
     private val maxSessionIdLength = 8

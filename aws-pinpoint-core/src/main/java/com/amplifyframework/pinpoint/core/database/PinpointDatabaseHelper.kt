@@ -18,9 +18,9 @@ package com.amplifyframework.pinpoint.core.database
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
-import androidx.annotation.RestrictTo
+import com.amplifyframework.annotations.RestrictToAmplify
 
-@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+@RestrictToAmplify
 internal class PinpointDatabaseHelper(context: Context, dbName: String) :
     SQLiteOpenHelper(context, dbName, null, DATABASE_VERSION) {
 

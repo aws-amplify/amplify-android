@@ -18,13 +18,13 @@ package com.amplifyframework.pinpoint.core.data
 import android.content.Context
 import android.os.Build
 import android.telephony.TelephonyManager
-import androidx.annotation.RestrictTo
+import com.amplifyframework.annotations.RestrictToAmplify
 import com.amplifyframework.pinpoint.core.util.LocaleSerializer
 import java.util.Locale
 import kotlinx.serialization.Serializable
 
 @Serializable
-@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+@RestrictToAmplify
 data class AndroidDeviceDetails constructor(
     val carrier: String? = null,
     val platformVersion: String = Build.VERSION.RELEASE ?: "TEST VERSION",

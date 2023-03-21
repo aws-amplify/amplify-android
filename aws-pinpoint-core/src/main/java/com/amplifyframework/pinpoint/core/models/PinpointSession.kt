@@ -14,7 +14,7 @@
  */
 package com.amplifyframework.pinpoint.core.models
 
-import androidx.annotation.RestrictTo
+import com.amplifyframework.annotations.RestrictToAmplify
 import kotlinx.serialization.Serializable
 
 /*
@@ -22,7 +22,7 @@ import kotlinx.serialization.Serializable
 * */
 
 @Serializable
-@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+@RestrictToAmplify
 data class PinpointSession(
     val sessionId: String,
     val sessionStart: Long,
