@@ -78,7 +78,7 @@ internal object SignInChallengeHelper {
             }
             challengeNameType is ChallengeNameType.SmsMfa ||
                 challengeNameType is ChallengeNameType.CustomChallenge ||
-                challengeNameType is ChallengeNameType.NewPasswordRequired -> {
+                challengeNameType is ChallengeNameType.NewPasswordRequired || challengeNameType?.value == "RESET_PASSWORD" -> {
                 val challenge =
                     AuthChallenge(challengeNameType.value, username, session, challengeParameters)
                 SignInEvent(SignInEvent.EventType.ReceivedChallenge(challenge))
@@ -96,6 +96,13 @@ internal object SignInChallengeHelper {
         onError: Consumer<AuthException>
     ) {
         val challengeParams = challenge.parameters?.toMutableMap() ?: mapOf()
+        if (challenge.challengeName == "RESET_PASSWORD") {
+            val authSignInResult = AuthSignInResult(
+                false,
+                AuthNextSignInStep(AuthSignInStep.RESET_PASSWORD, challengeParams, null)
+            )
+            onSuccess.accept(authSignInResult)
+        }
         when (ChallengeNameType.fromValue(challenge.challengeName)) {
             is ChallengeNameType.SmsMfa -> {
                 val deliveryDetails = AuthCodeDeliveryDetails(

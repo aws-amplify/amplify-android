@@ -16,6 +16,7 @@
 package com.amplifyframework.auth.cognito.actions
 
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.PasswordResetRequiredException
 import aws.sdk.kotlin.services.cognitoidentityprovider.respondToAuthChallenge
 import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
@@ -80,6 +81,15 @@ internal object SignInChallengeCognitoActions : SignInChallengeActions {
                 )
             )
         } catch (e: Exception) {
+            if (e is PasswordResetRequiredException) {
+                SignInChallengeHelper.evaluateNextStep(
+                    username = challenge.username ?: "",
+                    challengeNameType = ChallengeNameType.fromValue("RESET_PASSWORD"),
+                    session = null,
+                    challengeParameters = null,
+                    authenticationResult = null
+                )
+            }
             SignInChallengeEvent(SignInChallengeEvent.EventType.ThrowError(e, challenge))
         }
         logger.verbose("$id Sending event ${evt.type}")

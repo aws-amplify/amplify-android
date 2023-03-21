@@ -17,6 +17,7 @@ package com.amplifyframework.auth.cognito.actions
 
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.NotAuthorizedException
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.PasswordResetRequiredException
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.RespondToAuthChallengeRequest
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.auth.cognito.AuthEnvironment
@@ -155,6 +156,15 @@ internal object DeviceSRPCognitoSignInActions : DeviceSRPSignInActions {
                     )
                 } ?: throw InvalidUserPoolConfigurationException()
             } catch (exception: Exception) {
+                if (exception is PasswordResetRequiredException) {
+                    SignInChallengeHelper.evaluateNextStep(
+                        username = username,
+                        challengeNameType = ChallengeNameType.fromValue("RESET_PASSWORD"),
+                        session = null,
+                        challengeParameters = null,
+                        authenticationResult = null
+                    )
+                }
                 if (exception is NotAuthorizedException) {
                     credentialStoreClient.clearCredentials(CredentialType.Device(username))
                 }

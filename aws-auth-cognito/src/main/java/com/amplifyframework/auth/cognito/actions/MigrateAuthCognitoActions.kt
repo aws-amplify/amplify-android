@@ -17,6 +17,8 @@ package com.amplifyframework.auth.cognito.actions
 
 import aws.sdk.kotlin.services.cognitoidentityprovider.initiateAuth
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AuthFlowType
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.PasswordResetRequiredException
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
@@ -69,6 +71,15 @@ internal object MigrateAuthCognitoActions : MigrateAuthActions {
                     throw ServiceException("Sign in failed", AmplifyException.TODO_RECOVERY_SUGGESTION)
                 }
             } catch (e: Exception) {
+                if (e is PasswordResetRequiredException) {
+                    SignInChallengeHelper.evaluateNextStep(
+                        username = event.username,
+                        challengeNameType = ChallengeNameType.fromValue("RESET_PASSWORD"),
+                        session = null,
+                        challengeParameters = null,
+                        authenticationResult = null
+                    )
+                }
                 val errorEvent = SignInEvent(SignInEvent.EventType.ThrowError(e))
                 logger.verbose("$id Sending event ${errorEvent.type}")
                 dispatcher.send(errorEvent)
