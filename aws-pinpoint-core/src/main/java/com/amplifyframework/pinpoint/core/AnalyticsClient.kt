@@ -71,8 +71,10 @@ class AnalyticsClient(
     private val autoSessionTracker = sessionClient?.let { AutoSessionTracker(this, it) }
 
     init {
-        sessionClient?.setAnalyticsClient(this)
-        sessionClient?.startSession()
+        sessionClient?.let {
+            it.setAnalyticsClient(this)
+            it.startSession()
+        }
 
         enableEventSubmitter()
     }
