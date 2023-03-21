@@ -15,11 +15,11 @@
 
 package com.amplifyframework.pushnotifications.pinpoint
 
-import androidx.annotation.RestrictTo
+import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.notifications.pushnotifications.NotificationContentProvider
 import com.amplifyframework.notifications.pushnotifications.NotificationPayload
 
-@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+@InternalAmplifyApi
 class PinpointNotificationPayload internal constructor(
     val title: String? = null,
     val body: String? = null,

@@ -15,10 +15,8 @@
 
 package com.amplifyframework.pinpoint.core.models
 
-import androidx.annotation.RestrictTo
 import com.amplifyframework.analytics.AnalyticsProperties
 
-@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 interface AWSPinpointUserProfileBehavior {
     val userAttributes: AnalyticsProperties?
 }

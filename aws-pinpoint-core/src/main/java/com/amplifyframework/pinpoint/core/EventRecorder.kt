@@ -17,7 +17,6 @@ package com.amplifyframework.pinpoint.core
 import android.content.Context
 import android.database.Cursor
 import android.net.Uri
-import androidx.annotation.RestrictTo
 import aws.sdk.kotlin.services.pinpoint.PinpointClient
 import aws.sdk.kotlin.services.pinpoint.model.EndpointDemographic
 import aws.sdk.kotlin.services.pinpoint.model.EndpointItemResponse
@@ -31,6 +30,7 @@ import aws.sdk.kotlin.services.pinpoint.model.PublicEndpoint
 import aws.sdk.kotlin.services.pinpoint.model.PutEventsRequest
 import aws.sdk.kotlin.services.pinpoint.model.Session
 import com.amplifyframework.analytics.AnalyticsEvent
+import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.logging.Logger
 import com.amplifyframework.pinpoint.core.database.EventTable
@@ -44,7 +44,7 @@ import kotlinx.coroutines.withContext
 
 internal const val AWS_PINPOINT_ANALYTICS_LOG_NAMESPACE = "amplify:aws-pinpoint-analytics:%s"
 
-@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+@InternalAmplifyApi
 class EventRecorder(
     val context: Context,
     private val pinpointClient: PinpointClient,

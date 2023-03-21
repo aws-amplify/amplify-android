@@ -16,11 +16,11 @@
 package com.amplifyframework.pinpoint.core.data
 
 import android.content.Context
-import androidx.annotation.RestrictTo
+import com.amplifyframework.annotations.InternalAmplifyApi
 import kotlinx.serialization.Serializable
 
 @Serializable
-@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+@InternalAmplifyApi
 class AndroidAppDetails {
 
     val appId: String

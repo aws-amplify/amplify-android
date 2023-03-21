@@ -14,7 +14,7 @@
  */
 package com.amplifyframework.pinpoint.core.models
 
-import androidx.annotation.RestrictTo
+import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.pinpoint.core.data.AndroidAppDetails
 import com.amplifyframework.pinpoint.core.data.AndroidDeviceDetails
 import java.util.UUID
@@ -29,7 +29,7 @@ import kotlinx.serialization.json.Json
 * */
 
 @Serializable
-@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+@InternalAmplifyApi
 data class PinpointEvent constructor(
     val eventId: String = UUID.randomUUID().toString(),
     val eventType: String,

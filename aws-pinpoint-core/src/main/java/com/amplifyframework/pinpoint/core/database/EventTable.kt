@@ -16,9 +16,9 @@
 package com.amplifyframework.pinpoint.core.database
 
 import android.database.sqlite.SQLiteDatabase
-import androidx.annotation.RestrictTo
+import com.amplifyframework.annotations.InternalAmplifyApi
 
-@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+@InternalAmplifyApi
 class EventTable {
     companion object {
         const val TABLE_EVENT = "pinpointevent1"
