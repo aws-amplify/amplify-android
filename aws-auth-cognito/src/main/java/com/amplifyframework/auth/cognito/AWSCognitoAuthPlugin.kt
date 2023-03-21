@@ -20,7 +20,7 @@ import android.content.Context
 import android.content.Intent
 import androidx.annotation.VisibleForTesting
 import com.amplifyframework.AmplifyException
-import com.amplifyframework.annotations.RestrictToAmplify
+import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.auth.AuthCodeDeliveryDetails
 import com.amplifyframework.auth.AuthDevice
 import com.amplifyframework.auth.AuthException
@@ -94,7 +94,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
 
     private lateinit var pluginConfigurationJSON: JSONObject
 
-    @RestrictToAmplify
+    @InternalAmplifyApi
     fun getPluginConfiguration(): JSONObject {
         return pluginConfigurationJSON
     }
