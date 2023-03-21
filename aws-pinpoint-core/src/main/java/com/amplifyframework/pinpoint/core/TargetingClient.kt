@@ -28,7 +28,7 @@ import com.amplifyframework.analytics.AnalyticsIntegerProperty
 import com.amplifyframework.analytics.AnalyticsPropertyBehavior
 import com.amplifyframework.analytics.AnalyticsStringProperty
 import com.amplifyframework.analytics.UserProfile
-import com.amplifyframework.annotations.RestrictToAmplify
+import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.pinpoint.core.data.AndroidAppDetails
 import com.amplifyframework.pinpoint.core.data.AndroidDeviceDetails
@@ -47,7 +47,7 @@ import kotlinx.coroutines.launch
 import org.json.JSONException
 import org.json.JSONObject
 
-@RestrictToAmplify
+@InternalAmplifyApi
 class TargetingClient(
     context: Context,
     private val pinpointClient: PinpointClient,

@@ -15,11 +15,11 @@
 
 package com.amplifyframework.pushnotifications.pinpoint
 
-import com.amplifyframework.annotations.RestrictToAmplify
+import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.notifications.pushnotifications.NotificationContentProvider
 import com.amplifyframework.notifications.pushnotifications.NotificationPayload
 
-@RestrictToAmplify
+@InternalAmplifyApi
 class PinpointNotificationPayload internal constructor(
     val title: String? = null,
     val body: String? = null,

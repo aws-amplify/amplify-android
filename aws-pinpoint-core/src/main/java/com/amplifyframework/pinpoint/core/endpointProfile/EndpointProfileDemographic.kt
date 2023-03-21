@@ -17,14 +17,14 @@
 package com.amplifyframework.pinpoint.core.endpointProfile
 
 import android.os.Build
-import com.amplifyframework.annotations.RestrictToAmplify
+import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.pinpoint.core.data.AndroidAppDetails
 import com.amplifyframework.pinpoint.core.data.AndroidDeviceDetails
 import java.util.TimeZone
 import kotlinx.serialization.Serializable
 
 @Serializable
-@RestrictToAmplify
+@InternalAmplifyApi
 class EndpointProfileDemographic internal constructor(val appVersion: String?, val make: String, val locale: String) {
     internal constructor(
         appDetails: AndroidAppDetails,

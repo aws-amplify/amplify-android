@@ -19,7 +19,7 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import androidx.annotation.NonNull;
 
-import com.amplifyframework.annotations.RestrictToAmplify;
+import com.amplifyframework.annotations.InternalAmplifyApi;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.logging.Logger;
 
@@ -28,7 +28,7 @@ import java.util.Locale;
 /**
  * Submits all the recorded event periodically.
  */
-@RestrictToAmplify
+@InternalAmplifyApi
 public final class AutoEventSubmitter {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-analytics");
 

@@ -16,7 +16,7 @@
 
 package com.amplifyframework.pinpoint.core.endpointProfile
 
-import com.amplifyframework.annotations.RestrictToAmplify
+import com.amplifyframework.annotations.InternalAmplifyApi
 import kotlinx.serialization.Serializable
 
 /**
@@ -30,7 +30,7 @@ import kotlinx.serialization.Serializable
  * @param region endpoint location region
  */
 @Serializable
-@RestrictToAmplify
+@InternalAmplifyApi
 data class EndpointProfileLocation(
     val country: String,
     val latitude: Double? = null,

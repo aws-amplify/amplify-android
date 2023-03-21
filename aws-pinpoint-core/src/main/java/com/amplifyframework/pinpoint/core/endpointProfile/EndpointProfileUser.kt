@@ -16,12 +16,12 @@
 
 package com.amplifyframework.pinpoint.core.endpointProfile
 
-import com.amplifyframework.annotations.RestrictToAmplify
+import com.amplifyframework.annotations.InternalAmplifyApi
 import java.util.concurrent.ConcurrentHashMap
 import kotlinx.serialization.Serializable
 
 @Serializable
-@RestrictToAmplify
+@InternalAmplifyApi
 class EndpointProfileUser(val userId: String? = null) {
     val userAttributes: MutableMap<String, List<String>> = ConcurrentHashMap()
 

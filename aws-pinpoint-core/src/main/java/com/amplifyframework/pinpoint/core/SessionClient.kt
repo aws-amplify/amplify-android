@@ -16,9 +16,9 @@
 package com.amplifyframework.pinpoint.core
 
 import android.content.Context
-import com.amplifyframework.annotations.RestrictToAmplify
+import com.amplifyframework.annotations.InternalAmplifyApi
 
-@RestrictToAmplify
+@InternalAmplifyApi
 class SessionClient(
     private val context: Context,
     val targetingClient: TargetingClient,

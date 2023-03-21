@@ -19,7 +19,7 @@ import android.app.Application
 import android.content.Context
 import aws.sdk.kotlin.services.pinpoint.PinpointClient
 import com.amplifyframework.analytics.AnalyticsChannelEventName
-import com.amplifyframework.annotations.RestrictToAmplify
+import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.BuildConfig
 import com.amplifyframework.hub.HubChannel
@@ -38,7 +38,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-@RestrictToAmplify
+@InternalAmplifyApi
 class AnalyticsClient(
     val context: Context,
     autoFlushEventsInterval: Long,

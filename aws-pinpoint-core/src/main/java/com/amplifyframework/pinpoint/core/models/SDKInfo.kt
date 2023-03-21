@@ -14,11 +14,11 @@
  */
 package com.amplifyframework.pinpoint.core.models
 
-import com.amplifyframework.annotations.RestrictToAmplify
+import com.amplifyframework.annotations.InternalAmplifyApi
 import kotlinx.serialization.Serializable
 
 @Serializable
-@RestrictToAmplify
+@InternalAmplifyApi
 data class SDKInfo(
     val name: String,
     val version: String
