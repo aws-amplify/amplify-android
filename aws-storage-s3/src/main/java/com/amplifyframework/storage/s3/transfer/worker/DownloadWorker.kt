@@ -56,20 +56,7 @@ internal class DownloadWorker(
             transferRecord.bytesTotal = totalBytes
             transferRecord.bytesCurrent = downloadedBytes
             file.parentFile?.takeIf { !it.exists() }?.mkdirs()
-            val bufferSize = takeIf { response.contentLength < defaultBufferSize }?.let {
-                response.contentLength
-            } ?: defaultBufferSize
-            val byteArray = ByteArray(bufferSize.toInt())
-            val byteStream = response.body as ByteStream.OneShotStream
-            var bytesRead: Int
-            file.writeChannel().use { channel ->
-                while (byteStream.readFrom().readAvailable(byteArray)
-                    .also { bytesRead = it } != -1
-                ) {
-                    channel.writeAvailable(byteArray)
-                    downloadProgressListener.progressChanged(bytesRead.toLong())
-                }
-            }
+            writeToFileWithProgressUpdates(response.body as ByteStream.OneShotStream, file, downloadProgressListener)
             transferStatusUpdater.updateProgress(
                 transferRecord.id,
                 totalBytes,
@@ -77,6 +64,35 @@ internal class DownloadWorker(
                 true
             )
             Result.success(outputData)
+        }
+    }
+
+    @OptIn(InternalApi::class)
+    private suspend fun writeToFileWithProgressUpdates(
+        stream: ByteStream.OneShotStream,
+        file: File,
+        progressListener: DownloadProgressListener
+    ) {
+        val limit = stream.contentLength ?: 0L
+        val buffer = ByteArray(defaultBufferSize)
+        val sdkByteReadChannel = stream.readFrom()
+        file.writeChannel().use { destination ->
+            val flushDst = !destination.autoFlush
+            val copied = 0L
+            while (true) {
+                val remaining = limit - copied
+                if (remaining == 0L) break
+                val readBytes =
+                    sdkByteReadChannel.readAvailable(buffer, 0, minOf(buffer.size.toLong(), remaining).toInt())
+                if (readBytes == -1) break
+                if (readBytes > 0) {
+                    progressListener.progressChanged(readBytes.toLong())
+                }
+                destination.writeFully(buffer, 0, readBytes)
+                if (flushDst && stream.readFrom().availableForRead == 0) {
+                    destination.flush()
+                }
+            }
         }
     }
 }

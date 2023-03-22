@@ -21,7 +21,7 @@ import com.amplifyframework.statemachine.codegen.data.SignInData
 import java.lang.Exception
 import java.util.Date
 
-class HostedUIEvent(val eventType: EventType, override val time: Date? = null) : StateMachineEvent {
+internal class HostedUIEvent(val eventType: EventType, override val time: Date? = null) : StateMachineEvent {
 
     sealed class EventType {
         data class ShowHostedUI(val hostedUISignInData: SignInData.HostedUISignInData) : EventType()

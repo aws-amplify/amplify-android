@@ -15,4 +15,4 @@
 
 package com.amplifyframework.statemachine.codegen.data
 
-data class HostedUIErrorData(val error: Exception)
+internal data class HostedUIErrorData(val url: String?, val error: Exception)

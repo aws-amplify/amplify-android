@@ -15,11 +15,13 @@
 
 package com.amplifyframework.auth.cognito.actions
 
-import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.cognito.AuthEnvironment
+import com.amplifyframework.auth.exceptions.ValidationException
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.AuthenticationActions
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
+import com.amplifyframework.statemachine.codegen.data.CredentialType
+import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.data.SignInData
 import com.amplifyframework.statemachine.codegen.data.SignInMethod
 import com.amplifyframework.statemachine.codegen.data.SignedInData
@@ -29,41 +31,53 @@ import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.SignInEvent
 import com.amplifyframework.statemachine.codegen.events.SignOutEvent
 
-object AuthenticationCognitoActions : AuthenticationActions {
+internal object AuthenticationCognitoActions : AuthenticationActions {
     override fun configureAuthenticationAction(event: AuthenticationEvent.EventType.Configure) =
         Action<AuthEnvironment>("ConfigureAuthN") { id, dispatcher ->
-            logger?.verbose("$id Starting execution")
+            logger.verbose("$id Starting execution")
             val evt = when (val credentials = event.storedCredentials) {
-                is AmplifyCredential.UserPool -> {
-                    AuthenticationEvent(AuthenticationEvent.EventType.InitializedSignedIn(credentials.signedInData))
+                is AmplifyCredential.UserPoolTypeCredential -> {
+                    val deviceDataCredentials = (
+                        credentialStoreClient.loadCredentials(
+                            CredentialType.Device(credentials.signedInData.username)
+                        ) as? AmplifyCredential.DeviceData
+                        )?.deviceMetadata ?: DeviceMetadata.Empty
+                    AuthenticationEvent(
+                        AuthenticationEvent.EventType.InitializedSignedIn(
+                            credentials.signedInData,
+                            deviceDataCredentials
+                        )
+                    )
                 }
-                is AmplifyCredential.UserAndIdentityPool -> {
-                    AuthenticationEvent(AuthenticationEvent.EventType.InitializedSignedIn(credentials.signedInData))
+                is AmplifyCredential.IdentityPoolFederated -> {
+                    AuthenticationEvent(AuthenticationEvent.EventType.InitializedFederated)
                 }
                 else -> AuthenticationEvent(AuthenticationEvent.EventType.InitializedSignedOut(SignedOutData()))
             }
-            logger?.verbose("$id Sending event ${evt.type}")
+            logger.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
 
             val authEvent = AuthEvent(
                 AuthEvent.EventType.ConfiguredAuthentication(event.configuration, event.storedCredentials)
             )
-            logger?.verbose("$id Sending event ${authEvent.type}")
+            logger.verbose("$id Sending event ${authEvent.type}")
             dispatcher.send(authEvent)
         }
 
     override fun initiateSignInAction(event: AuthenticationEvent.EventType.SignInRequested) =
         Action<AuthEnvironment>("InitiateSignInAction") { id, dispatcher ->
-            logger?.verbose("$id Starting execution")
+            logger.verbose("$id Starting execution")
 
             val evt = when (val data = event.signInData) {
                 is SignInData.SRPSignInData -> {
                     if (data.username != null && data.password != null) {
-                        SignInEvent(SignInEvent.EventType.InitiateSignInWithSRP(data.username, data.password))
+                        SignInEvent(
+                            SignInEvent.EventType.InitiateSignInWithSRP(data.username, data.password, data.metadata)
+                        )
                     } else {
                         AuthenticationEvent(
                             AuthenticationEvent.EventType.ThrowError(
-                                AuthException("Sign in failed.", "username or password empty")
+                                ValidationException("Sign in failed.", "username or password empty")
                             )
                         )
                     }
@@ -71,12 +85,29 @@ object AuthenticationCognitoActions : AuthenticationActions {
                 is SignInData.CustomAuthSignInData -> {
                     if (data.username != null) {
                         SignInEvent(
-                            SignInEvent.EventType.InitiateSignInWithCustom(data.username, data.password, data.options)
+                            SignInEvent.EventType.InitiateSignInWithCustom(data.username, data.metadata)
                         )
                     } else {
                         AuthenticationEvent(
                             AuthenticationEvent.EventType.ThrowError(
-                                AuthException("Sign in failed.", "username can not be empty")
+                                ValidationException("Sign in failed.", "username can not be empty")
+                            )
+                        )
+                    }
+                }
+                is SignInData.CustomSRPAuthSignInData -> {
+                    if (data.username != null && data.password != null) {
+                        SignInEvent(
+                            SignInEvent.EventType.InitiateCustomSignInWithSRP(
+                                data.username,
+                                data.password,
+                                data.metadata
+                            )
+                        )
+                    } else {
+                        AuthenticationEvent(
+                            AuthenticationEvent.EventType.ThrowError(
+                                ValidationException("Sign in failed.", "username can not be empty")
                             )
                         )
                     }
@@ -84,9 +115,22 @@ object AuthenticationCognitoActions : AuthenticationActions {
                 is SignInData.HostedUISignInData -> {
                     SignInEvent(SignInEvent.EventType.InitiateHostedUISignIn(data))
                 }
+                is SignInData.MigrationAuthSignInData -> {
+                    if (data.username != null && data.password != null) {
+                        SignInEvent(
+                            SignInEvent.EventType.InitiateMigrateAuth(data.username, data.password, data.metadata)
+                        )
+                    } else {
+                        AuthenticationEvent(
+                            AuthenticationEvent.EventType.ThrowError(
+                                ValidationException("Sign in failed.", "username or password empty")
+                            )
+                        )
+                    }
+                }
             }
 
-            logger?.verbose("$id Sending event ${evt.type}")
+            logger.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
         }
 
@@ -94,10 +138,20 @@ object AuthenticationCognitoActions : AuthenticationActions {
         event: AuthenticationEvent.EventType.SignOutRequested,
         signedInData: SignedInData?
     ) = Action<AuthEnvironment>("InitSignOut") { id, dispatcher ->
-        logger?.verbose("$id Starting execution")
+        logger.verbose("$id Starting execution")
 
         val evt = when {
-            signedInData != null && signedInData.signInMethod == SignInMethod.HOSTED -> {
+            signedInData != null && signedInData.signInMethod is SignInMethod.HostedUI -> {
+                SignOutEvent(SignOutEvent.EventType.InvokeHostedUISignOut(event.signOutData, signedInData))
+            }
+            signedInData != null &&
+                signedInData.signInMethod == SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.UNKNOWN) &&
+                hostedUIClient != null -> {
+                /*
+                If sign in method is unknown, this is due to SignInMethod not being tracked in Amplify v1. We try to
+                assume that hosted ui sign in may have been used if hostedUIClient is configured. This only happens if
+                a customers configuration contained a valid Oauth section, complete with signOutRedirectURI.
+                 */
                 SignOutEvent(SignOutEvent.EventType.InvokeHostedUISignOut(event.signOutData, signedInData))
             }
             signedInData != null && event.signOutData.globalSignOut -> {
@@ -108,7 +162,7 @@ object AuthenticationCognitoActions : AuthenticationActions {
             }
             else -> SignOutEvent(SignOutEvent.EventType.SignOutLocally(signedInData))
         }
-        logger?.verbose("$id Sending event ${evt.type}")
+        logger.verbose("$id Sending event ${evt.type}")
         dispatcher.send(evt)
     }
 }

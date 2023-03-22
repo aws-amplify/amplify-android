@@ -16,8 +16,9 @@
 package com.amplifyframework.storage.s3.transfer
 
 import android.database.sqlite.SQLiteDatabase
+import java.util.UUID
 
-class TransferTable {
+internal class TransferTable {
     companion object {
         // Database table name
         const val TABLE_TRANSFER = "awstransfer"
@@ -128,12 +129,16 @@ class TransferTable {
 
         const val COLUMN_WORKMANAGER_REQUEST_ID = "workmanager_request_id"
 
+        // A unique transfer id for user to query
+        const val COLUMN_TRANSFER_ID = "transfer_id"
+
         private const val TABLE_VERSION_2 = 2
         private const val TABLE_VERSION_3 = 3
         private const val TABLE_VERSION_4 = 4
         private const val TABLE_VERSION_5 = 5
         private const val TABLE_VERSION_6 = 6
         private const val TABLE_VERSION_7 = 7
+        private const val TABLE_VERSION_8 = 8
 
         // Database creation SQL statement
         const val DATABASE_CREATE = "create table $TABLE_TRANSFER (" +
@@ -205,6 +210,9 @@ class TransferTable {
             if (TABLE_VERSION_7 in (oldVersion + 1)..newVersion) {
                 addVersion7Columns(database)
             }
+            if (TABLE_VERSION_8 in (oldVersion + 1)..newVersion) {
+                addVersion8Columns(database)
+            }
             database.setTransactionSuccessful()
             database.endTransaction()
         }
@@ -262,6 +270,15 @@ class TransferTable {
          */
         private fun addVersion7Columns(database: SQLiteDatabase) {
             val addConnectionType = "ALTER TABLE $TABLE_TRANSFER ADD COLUMN $COLUMN_WORKMANAGER_REQUEST_ID text;"
+            database.execSQL(addConnectionType)
+        }
+
+        /**
+         * Adds columns that were introduced in version 8 to the database
+         */
+        private fun addVersion8Columns(database: SQLiteDatabase) {
+            val addConnectionType = "ALTER TABLE $TABLE_TRANSFER ADD COLUMN $COLUMN_TRANSFER_ID text " +
+                "DEFAULT '${UUID.randomUUID()}';"
             database.execSQL(addConnectionType)
         }
     }

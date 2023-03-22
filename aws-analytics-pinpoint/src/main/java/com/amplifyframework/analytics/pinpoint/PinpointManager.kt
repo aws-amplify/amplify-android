@@ -24,8 +24,8 @@ import com.amplifyframework.analytics.pinpoint.models.AndroidAppDetails
 import com.amplifyframework.analytics.pinpoint.models.AndroidDeviceDetails
 import com.amplifyframework.analytics.pinpoint.models.SDKInfo
 import com.amplifyframework.analytics.pinpoint.targeting.TargetingClient
-import com.amplifyframework.analytics.pinpoint.targeting.notification.PinpointNotificationClient
 import com.amplifyframework.core.BuildConfig
+import com.amplifyframework.util.UserAgent.Platform
 
 /**
  * PinpointManager is the entry point to Pinpoint Analytics and Targeting.
@@ -39,25 +39,38 @@ internal class PinpointManager constructor(
     val analyticsClient: AnalyticsClient
     val sessionClient: SessionClient
     val targetingClient: TargetingClient
+    internal val pinpointClient: PinpointClient = PinpointClient {
+        credentialsProvider = this@PinpointManager.credentialsProvider
+        region = awsPinpointConfiguration.region
+    }
 
     companion object {
-        private const val SDK_NAME = "AMPLIFY-ANDROID"
+        private val SDK_NAME = Platform.ANDROID.libraryName
+        /*
+        Auth plugin needs to read from Pinpoint shared preferences, but we don't currently have an architecture
+        that allows the plugins to pass data between each other. If the storage mechanism of UniqueId changes, we
+        must also refactor AuthEnvironment from the Cognito Auth Plugin.
+         */
+        private const val PINPOINT_SHARED_PREFS_SUFFIX = "515d6767-01b7-49e5-8273-c8d11b0f331d"
     }
 
     init {
-        val pinpointClient = PinpointClient {
-            credentialsProvider = this@PinpointManager.credentialsProvider
-            region = awsPinpointConfiguration.region
-        }
         val pinpointDatabase = PinpointDatabase(context)
-        val sharedPrefs =
-            context.getSharedPreferences(awsPinpointConfiguration.appId, Context.MODE_PRIVATE)
+
+        /*
+        Auth plugin needs to read from Pinpoint shared preferences, but we don't currently have an architecture
+        that allows the plugins to pass data between each other. If the storage mechanism of UniqueId changes, we
+        must also refactor AuthEnvironment from the Cognito Auth Plugin.
+         */
+        val sharedPrefs = context.getSharedPreferences(
+            "${awsPinpointConfiguration.appId}$PINPOINT_SHARED_PREFS_SUFFIX",
+            Context.MODE_PRIVATE
+        )
         val sharedPrefsUniqueIdService = SharedPrefsUniqueIdService(sharedPrefs)
         val androidAppDetails = AndroidAppDetails(context, awsPinpointConfiguration.appId)
         val androidDeviceDetails = AndroidDeviceDetails(getCarrier(context))
         targetingClient = TargetingClient(
             pinpointClient,
-            PinpointNotificationClient(),
             sharedPrefsUniqueIdService,
             sharedPrefs,
             androidAppDetails,

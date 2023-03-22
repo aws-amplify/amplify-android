@@ -27,6 +27,8 @@ import com.amplifyframework.auth.AuthSession
 import com.amplifyframework.auth.AuthUser
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
+import com.amplifyframework.auth.exceptions.SessionExpiredException
+import com.amplifyframework.auth.exceptions.SignedOutException
 import com.amplifyframework.auth.result.AuthResetPasswordResult
 import com.amplifyframework.auth.result.AuthSignInResult
 import com.amplifyframework.auth.result.AuthSignOutResult
@@ -134,15 +136,15 @@ class KotlinAuthFacadeTest {
     @Test
     fun resendSignUpCodeSucceeds() = runBlocking {
         val username = "tony"
-        val signUpResult = mockk<AuthSignUpResult>()
+        val codeDeliveryDetails = mockk<AuthCodeDeliveryDetails>()
         every {
             delegate.resendSignUpCode(eq(username), any(), any(), any())
         } answers {
             val indexOfResultConsumer = 2
-            val onResult = it.invocation.args[indexOfResultConsumer] as Consumer<AuthSignUpResult>
-            onResult.accept(signUpResult)
+            val onResult = it.invocation.args[indexOfResultConsumer] as Consumer<AuthCodeDeliveryDetails>
+            onResult.accept(codeDeliveryDetails)
         }
-        assertEquals(signUpResult, auth.resendSignUpCode(username))
+        assertEquals(codeDeliveryDetails, auth.resendSignUpCode(username))
     }
 
     /**
@@ -346,9 +348,9 @@ class KotlinAuthFacadeTest {
     fun fetchAuthSessionSucceeds() = runBlocking {
         val session = AuthSession(true)
         every {
-            delegate.fetchAuthSession(any(), any())
+            delegate.fetchAuthSession(any(), any(), any())
         } answers {
-            val indexOfResultConsumer = 0
+            val indexOfResultConsumer = 1
             val onResult = it.invocation.args[indexOfResultConsumer] as Consumer<AuthSession>
             onResult.accept(session)
         }
@@ -363,9 +365,9 @@ class KotlinAuthFacadeTest {
     fun fetchAuthSessionThrows(): Unit = runBlocking {
         val error = AuthException("uh", "oh")
         every {
-            delegate.fetchAuthSession(any(), any())
+            delegate.fetchAuthSession(any(), any(), any())
         } answers {
-            val indexOfErrorConsumer = 1
+            val indexOfErrorConsumer = 2
             val onError = it.invocation.args[indexOfErrorConsumer] as Consumer<AuthException>
             onError.accept(error)
         }
@@ -376,13 +378,13 @@ class KotlinAuthFacadeTest {
      * When the fetchAuthSession() delegate emits an error, it should
      * be surfaced by the coroutine API, too.
      */
-    @Test(expected = AuthException.SessionExpiredException::class)
+    @Test(expected = SessionExpiredException::class)
     fun fetchAuthSessionThrowsSessionExpired(): Unit = runBlocking {
-        val error = AuthException.SessionExpiredException() as AuthException
+        val error = SessionExpiredException() as AuthException
         every {
-            delegate.fetchAuthSession(any(), any())
+            delegate.fetchAuthSession(any(), any(), any())
         } answers {
-            val indexOfErrorConsumer = 1
+            val indexOfErrorConsumer = 2
             val onError = it.invocation.args[indexOfErrorConsumer] as Consumer<AuthException>
             onError.accept(error)
         }
@@ -832,9 +834,9 @@ class KotlinAuthFacadeTest {
      * When the getCurrentUser() has null values an Auth Exception should be sent in the onError
      * which should be captured in the Kotlin facade too
      */
-    @Test(expected = AuthException.SignedOutException::class)
+    @Test(expected = SignedOutException::class)
     fun getCurrentUserThrowsWhenSignedOut(): Unit = runBlocking {
-        val expectedException = AuthException.SignedOutException()
+        val expectedException = SignedOutException()
         every {
             delegate.getCurrentUser(any(), any())
         } answers {
@@ -870,7 +872,7 @@ class KotlinAuthFacadeTest {
      */
     @Test(expected = AuthException::class)
     fun getCurrentUserWhenUserNameIsEmpty(): Unit = runBlocking {
-        val expectedException = AuthException.InvalidUserPoolConfigurationException()
+        val expectedException = AuthException("uh", "oh")
         every {
             delegate.getCurrentUser(any(), any())
         } answers {

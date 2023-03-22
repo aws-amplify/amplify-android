@@ -24,14 +24,23 @@ import com.amplifyframework.statemachine.codegen.data.SignInMethod
 import com.amplifyframework.statemachine.codegen.data.SignedInData
 import java.util.Date
 
-object CredentialStoreUtil {
+internal object CredentialStoreUtil {
+
+    private const val accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwidXNlcm5hbWUiO" +
+        "iJhbXBsaWZ5X3VzZXIiLCJpYXQiOjE1MTYyMzkwMjJ9.zBiQ0guLRX34pUEYLPyDxQAyDDlXmL0JY7kgPWAHZos"
+
     private val credential = AmplifyCredential.UserAndIdentityPool(
         SignedInData(
-            "userId",
-            "username",
+            "1234567890",
+            "amplify_user",
             Date(0),
-            SignInMethod.SRP,
-            CognitoUserPoolTokens("idToken", "accessToken", "refreshToken", 1212),
+            SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH),
+            CognitoUserPoolTokens(
+                "idToken",
+                accessToken,
+                "refreshToken",
+                1212
+            ),
         ),
         "identityId",
         AWSCredentials("accessKeyId", "secretAccessKey", "sessionToken", 1212)
@@ -41,13 +50,20 @@ object CredentialStoreUtil {
         return credential
     }
 
-    fun setupLegacyStore(context: Context, appClientId: String, identityPoolId: String) {
+    fun setupLegacyStore(context: Context, appClientId: String, userPoolId: String, identityPoolId: String) {
+
         AWSKeyValueStore(context, "CognitoIdentityProviderCache", true).apply {
             put("CognitoIdentityProvider.$appClientId.testuser.idToken", "idToken")
-            put("CognitoIdentityProvider.$appClientId.testuser.accessToken", "accessToken")
+            put("CognitoIdentityProvider.$appClientId.testuser.accessToken", accessToken)
             put("CognitoIdentityProvider.$appClientId.testuser.refreshToken", "refreshToken")
             put("CognitoIdentityProvider.$appClientId.testuser.tokenExpiration", "1212")
             put("CognitoIdentityProvider.$appClientId.LastAuthUser", "testuser")
+        }
+
+        AWSKeyValueStore(context, "CognitoIdentityProviderDeviceCache.$userPoolId.testuser", true).apply {
+            put("DeviceKey", "someDeviceKey")
+            put("DeviceGroupKey", "someDeviceGroupKey")
+            put("DeviceSecret", "someSecret")
         }
 
         AWSKeyValueStore(context, "com.amazonaws.android.auth", true).apply {

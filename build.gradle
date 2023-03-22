@@ -16,7 +16,7 @@
 buildscript {
     repositories {
         google()
-        jcenter()
+        mavenCentral()
         maven {
             url "https://plugins.gradle.org/m2/"
         }
@@ -30,10 +30,17 @@ buildscript {
     }
 }
 
+def useAwsSdkReleaseBuild() {
+    return hasProperty('useAwsSdkReleaseBuild') && project.useAwsSdkReleaseBuild == "true"
+}
+
 allprojects {
     repositories {
+        maven {
+            url = 'https://aws.oss.sonatype.org/content/repositories/snapshots/'
+        }
         google()
-        jcenter()
+        mavenCentral()
     }
 
     gradle.projectsEvaluated {
@@ -45,6 +52,11 @@ allprojects {
             maxHeapSize = '4g'
         }
     }
+}
+
+apply plugin: 'org.jetbrains.dokka'
+dokkaHtmlCollector {
+    outputDirectory = rootProject.buildDir
 }
 
 task clean(type: Delete) {
@@ -62,9 +74,7 @@ ext {
     compileSdkVersion = 30
     minSdkVersion = 24
     targetSdkVersion = 30
-
-    awsSdkVersion = '2.52.1'
-    awsKotlinSdkVersion = '0.17.6-beta'
+    awsKotlinSdkVersion = '0.17.10-beta'
     fragmentVersion = '1.3.1'
     navigationVersion = '2.3.4'
     dependency = [
@@ -102,23 +112,20 @@ ext {
             ]
         ],
         aws: [
-            core: "com.amazonaws:aws-android-sdk-core:$awsSdkVersion",
+            credentials: "aws.smithy.kotlin:aws-credentials:0.12.6",
+            ktor: "aws.smithy.kotlin:http-client-engine-ktor:0.7.7",
+            signing: "aws.smithy.kotlin:aws-signing-default:0.12.6",
+
+            cognitoidentity: "aws.sdk.kotlin:cognitoidentity:$awsKotlinSdkVersion",
+            cognitoidentityprovider: "aws.sdk.kotlin:cognitoidentityprovider:$awsKotlinSdkVersion",
             comprehend: "aws.sdk.kotlin:comprehend:$awsKotlinSdkVersion",
-            pinpoint: "com.amazonaws:aws-android-sdk-pinpoint:$awsSdkVersion",
-            mobileclient: "com.amazonaws:aws-android-sdk-mobile-client:$awsSdkVersion",
+            location: "aws.sdk.kotlin:location:$awsKotlinSdkVersion",
+            s3: "aws.sdk.kotlin:s3:$awsKotlinSdkVersion",
+            pinpointKotlin: "aws.sdk.kotlin:pinpoint:$awsKotlinSdkVersion",
             polly: "aws.sdk.kotlin:polly:$awsKotlinSdkVersion",
             rekognition: "aws.sdk.kotlin:rekognition:$awsKotlinSdkVersion",
             textract: "aws.sdk.kotlin:textract:$awsKotlinSdkVersion",
             translate: "aws.sdk.kotlin:translate:$awsKotlinSdkVersion",
-
-            cognitoidentity: "aws.sdk.kotlin:cognitoidentity:$awsKotlinSdkVersion",
-            cognitoidentityprovider: "aws.sdk.kotlin:cognitoidentityprovider:$awsKotlinSdkVersion",
-            credentials: "aws.smithy.kotlin:aws-credentials:0.12.6",
-            ktor: "aws.smithy.kotlin:http-client-engine-ktor:0.7.7",
-            location: "aws.sdk.kotlin:location:$awsKotlinSdkVersion",
-            s3: "aws.sdk.kotlin:s3:$awsKotlinSdkVersion",
-            signing: "aws.smithy.kotlin:aws-signing-default:0.12.6",
-            pinpointKotlin: "aws.sdk.kotlin:pinpoint:$awsKotlinSdkVersion"
         ],
         kotlin: [
             stdlib: 'org.jetbrains.kotlin:kotlin-stdlib:1.7.10',
@@ -129,7 +136,8 @@ ext {
             reflection: "org.jetbrains.kotlin:kotlin-reflect:1.7.10",
             test: [
                 junit: 'org.jetbrains.kotlin:kotlin-test-junit:1.5.31',
-                coroutines: 'org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.3'
+                coroutines: 'org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.3',
+                kotlinTest: 'org.jetbrains.kotlin:kotlin-test:1.7.10'
             ]
         ],
 
@@ -165,6 +173,20 @@ subprojects { project ->
         preBuild.dependsOn installGitHooks
         configureAndroidLibrary(project)
         project.apply from: '../jacoco.gradle'
+    }
+    if (!project.name.contains("test")) {
+        apply plugin: 'org.jetbrains.dokka'
+        dokkaHtml {
+            dokkaSourceSets {
+                configureEach {
+                    includeNonPublic.set(false)
+                    skipEmptyPackages.set(true)
+                    skipDeprecated.set(true)
+                    reportUndocumented.set(true)
+                    jdkVersion.set(8)
+                }
+            }
+        }
     }
 }
 

@@ -23,7 +23,7 @@ import com.amplifyframework.statemachine.codegen.actions.FetchAuthSessionActions
 import com.amplifyframework.statemachine.codegen.data.LoginsMapProvider
 import com.amplifyframework.statemachine.codegen.events.FetchAuthSessionEvent
 
-sealed class FetchAuthSessionState : State {
+internal sealed class FetchAuthSessionState : State {
     data class NotStarted(val id: String = "") : FetchAuthSessionState()
     data class FetchingIdentity(val logins: LoginsMapProvider) : FetchAuthSessionState()
     data class FetchingAWSCredentials(val identityId: String, val logins: LoginsMapProvider) : FetchAuthSessionState()

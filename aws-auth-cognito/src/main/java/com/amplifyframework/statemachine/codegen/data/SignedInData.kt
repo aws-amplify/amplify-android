@@ -20,11 +20,23 @@ import java.util.Date
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class SignedInData(
+internal data class SignedInData(
     val userId: String,
     val username: String,
     @Serializable(DateSerializer::class)
     val signedInDate: Date,
     val signInMethod: SignInMethod,
     val cognitoUserPoolTokens: CognitoUserPoolTokens
-)
+) {
+    override fun equals(other: Any?): Boolean {
+        return if (super.equals(other)) {
+            true
+        } else if (other == null || javaClass != other.javaClass || other !is SignedInData) {
+            false
+        } else {
+            userId == other.userId && username == other.username &&
+                signInMethod == other.signInMethod &&
+                cognitoUserPoolTokens == other.cognitoUserPoolTokens
+        }
+    }
+}

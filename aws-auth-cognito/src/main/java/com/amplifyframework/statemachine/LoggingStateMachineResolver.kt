@@ -19,7 +19,7 @@ import java.util.logging.ConsoleHandler
 import java.util.logging.Level
 import java.util.logging.Logger
 
-class LoggingStateMachineResolver<StateType : State, ResolverType : StateMachineResolver<StateType>>(
+internal class LoggingStateMachineResolver<StateType : State, ResolverType : StateMachineResolver<StateType>>(
     private val resolver: ResolverType,
     logger: Logger? = null,
     private val level: Level = Level.INFO

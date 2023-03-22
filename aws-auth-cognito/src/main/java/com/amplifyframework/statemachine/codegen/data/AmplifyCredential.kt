@@ -15,75 +15,91 @@
 
 package com.amplifyframework.statemachine.codegen.data
 
-import com.amplifyframework.auth.AuthProvider
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-sealed class AmplifyCredential {
+internal sealed class AmplifyCredential {
+
+    interface UserPoolTypeCredential {
+        val signedInData: SignedInData
+    }
+
+    interface IdentityPoolTypeCredential {
+        val identityId: String
+        val credentials: AWSCredentials
+    }
+
+    interface DeviceMetaDataTypeCredential {
+        val deviceMetadata: DeviceMetadata
+    }
+
     @Serializable
     @SerialName("empty")
     object Empty : AmplifyCredential()
 
     @Serializable
     @SerialName("userPool")
-    data class UserPool(val signedInData: SignedInData) : AmplifyCredential()
+    data class UserPool(override val signedInData: SignedInData) : AmplifyCredential(), UserPoolTypeCredential
 
     @Serializable
     @SerialName("identityPool")
-    data class IdentityPool(val identityId: String, val credentials: AWSCredentials) : AmplifyCredential()
+    data class IdentityPool(override val identityId: String, override val credentials: AWSCredentials) :
+        AmplifyCredential(), IdentityPoolTypeCredential
 
-//    @Serializable
-//    @SerialName("identityPoolFederated")
-//    data class IdentityPoolFederated(
-//        val federatedToken: FederatedToken,
-//        val identityId: String,
-//        val credentials: AWSCredentials
-//    ) : AmplifyCredential()
+    @Serializable
+    @SerialName("identityPoolFederated")
+    data class IdentityPoolFederated(
+        val federatedToken: FederatedToken,
+        override val identityId: String,
+        override val credentials: AWSCredentials
+    ) : AmplifyCredential(), IdentityPoolTypeCredential
 
     @Serializable
     @SerialName("userAndIdentityPool")
     data class UserAndIdentityPool(
-        val signedInData: SignedInData,
-        val identityId: String,
-        val credentials: AWSCredentials
-    ) : AmplifyCredential()
+        override val signedInData: SignedInData,
+        override val identityId: String,
+        override val credentials: AWSCredentials
+    ) : AmplifyCredential(), UserPoolTypeCredential, IdentityPoolTypeCredential
+
+    @Serializable
+    @SerialName("deviceMetadata")
+    data class DeviceData(override val deviceMetadata: DeviceMetadata) :
+        AmplifyCredential(), DeviceMetaDataTypeCredential
+
+    @Serializable
+    @SerialName("asfDevice")
+    data class ASFDevice(val id: String?) : AmplifyCredential()
 }
 
-// TODO: Token abstraction if needed
-// @Serializable
-// sealed class AuthTokens{
-//    data class CognitoUserPoolTokens(
-//        val idToken: String?,
-//        val accessToken: String?,
-//        val refreshToken: String?,
-//        val expiration: Long?,
-//    ) : AuthTokens()
-//    data class FederatedToken(val token: String, val provider: AuthProvider) : AuthTokens()
-// }
-
-data class FederatedToken(val token: String, val provider: AuthProvider)
-
+/**
+ * Contains identity provider info to federate a provider into identity pool
+ * @param token identity provider token (Cognito or 3rd party)
+ * @param providerName identity provider name
+ */
 @Serializable
-data class CognitoUserPoolTokens(
-    /**
-     * User Pool id token
-     */
+internal data class FederatedToken(val token: String, val providerName: String) {
+    override fun toString(): String {
+        return "FederatedToken(" +
+            "token = ${token.substring(0..4)}***, " +
+            "providerName = $providerName" +
+            ")"
+    }
+}
+
+/**
+ * Contains cognito user pool JWT tokens
+ * @param idToken User Pool id token
+ * @param accessToken User Pool access token
+ * @param refreshToken User Pool refresh token
+ * @param expiration Auth result expiration but not token expiration
+ */
+@Serializable
+internal data class CognitoUserPoolTokens(
     val idToken: String?,
-
-    /**
-     * User Pool access token
-     */
     val accessToken: String?,
-
-    /**
-     * User Pool refresh token
-     */
     val refreshToken: String?,
-
-    /**
-     * Auth result expiration but not token expiration
-     */
     val expiration: Long?,
 ) {
     override fun toString(): String {
@@ -93,16 +109,32 @@ data class CognitoUserPoolTokens(
             "refreshToken = ${refreshToken?.substring(0..4)}***" +
             ")"
     }
+
+    override fun equals(other: Any?): Boolean {
+        return if (super.equals(other)) {
+            true
+        } else if (other == null || javaClass != other.javaClass || other !is CognitoUserPoolTokens) {
+            false
+        } else {
+            idToken == other.idToken && accessToken == other.accessToken && refreshToken == other.refreshToken
+        }
+    }
 }
 
+/**
+ * Contains AWS credentials that allows access to AWS resources
+ * @param accessKeyId access key id
+ * @param secretAccessKey secret access key
+ * @param sessionToken temporary session token
+ * @param expiration session token expiration
+ */
 @Serializable
-data class AWSCredentials(
+internal data class AWSCredentials(
     val accessKeyId: String?,
     val secretAccessKey: String?,
     val sessionToken: String?,
     val expiration: Long?,
 ) {
-
     companion object {
         val empty = AWSCredentials(null, null, null, 0)
     }
@@ -115,4 +147,10 @@ data class AWSCredentials(
             "expiration = $expiration" +
             ")"
     }
+}
+
+internal sealed class CredentialType {
+    object Amplify : CredentialType()
+    data class Device(val username: String) : CredentialType()
+    object ASF : CredentialType()
 }

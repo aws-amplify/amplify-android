@@ -22,11 +22,11 @@ import javax.crypto.spec.SecretKeySpec
 
 /**
  * Creates the signature for context data. It create HMAC_SHA256 for the
- * stringified JSON payload data and then encode it in Base64. Payload contains
+ * stringified JSON payload data and then encodes it in Base64. Payload contains
  * username, userPoolId and timestamp so these are already factored in the
  * generated signature.
  */
-class SignatureGenerator {
+internal class SignatureGenerator {
     companion object {
         private val TAG = SignatureGenerator::class.java.simpleName
         private const val HMAC_SHA_256 = "HmacSHA256"

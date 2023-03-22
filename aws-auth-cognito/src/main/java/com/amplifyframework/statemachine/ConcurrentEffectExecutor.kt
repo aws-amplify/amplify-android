@@ -19,7 +19,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
-class ConcurrentEffectExecutor(private val dispatcherQueue: CoroutineDispatcher) : EffectExecutor {
+internal class ConcurrentEffectExecutor(private val dispatcherQueue: CoroutineDispatcher) : EffectExecutor {
     override fun execute(actions: List<Action>, eventDispatcher: EventDispatcher, environment: Environment) {
         actions.forEach { action ->
             GlobalScope.launch(dispatcherQueue) {

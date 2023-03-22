@@ -770,7 +770,7 @@ public final class MultiAuthSyncEngineInstrumentationTest {
         if (signInToCognito) {
             Log.v(tag, "Test requires signIn.");
             AuthSignInResult authSignInResult = auth.signIn(cognitoUser, cognitoPassword);
-            if (!authSignInResult.isSignInComplete()) {
+            if (!authSignInResult.isSignedIn()) {
                 fail("Unable to complete initial sign-in");
             }
         }

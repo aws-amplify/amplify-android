@@ -28,7 +28,6 @@ import com.amplifyframework.analytics.pinpoint.models.PinpointSession
 import com.amplifyframework.analytics.pinpoint.models.SDKInfo
 import com.amplifyframework.analytics.pinpoint.targeting.TargetingClient
 import com.amplifyframework.analytics.pinpoint.targeting.endpointProfile.EndpointProfile
-import com.amplifyframework.analytics.pinpoint.targeting.notification.PinpointNotificationClient
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
@@ -49,7 +48,6 @@ class AWSPinpointAnalyticsPluginBehaviorTest {
     private val autoSessionTrackerMock = mockk<AutoSessionTracker>(relaxed = true)
     private val context: Context = ApplicationProvider.getApplicationContext()
     private lateinit var awsPinpointAnalyticsPluginBehavior: AWSPinpointAnalyticsPluginBehavior
-    private val pinpointNotificationClient = mockk<PinpointNotificationClient>()
     private val sharedPrefsUniqueIdService = mockk<SharedPrefsUniqueIdService>()
     private val androidAppDetails = AndroidAppDetails("com.test.app", "TestApp", "com.test.app", "1.0", "test")
     private val androidDeviceDetails = AndroidDeviceDetails("test")
@@ -154,7 +152,6 @@ class AWSPinpointAnalyticsPluginBehaviorTest {
         every { sharedPrefsUniqueIdService.getUniqueId() }.answers { "UNIQUE_ID" }
         every { targetingClientMock.currentEndpoint() }.answers {
             EndpointProfile(
-                pinpointNotificationClient,
                 sharedPrefsUniqueIdService,
                 androidAppDetails,
                 androidDeviceDetails,

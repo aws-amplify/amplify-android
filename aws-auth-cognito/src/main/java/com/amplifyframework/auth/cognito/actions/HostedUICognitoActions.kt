@@ -16,38 +16,42 @@
 package com.amplifyframework.auth.cognito.actions
 
 import com.amplifyframework.auth.cognito.AuthEnvironment
+import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidOauthConfigurationException
 import com.amplifyframework.auth.cognito.helpers.JWTParser
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.HostedUIActions
+import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.data.SignInMethod
 import com.amplifyframework.statemachine.codegen.data.SignedInData
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.HostedUIEvent
 import java.util.Date
 
-object HostedUICognitoActions : HostedUIActions {
+internal object HostedUICognitoActions : HostedUIActions {
 
     override fun showHostedUI(event: HostedUIEvent.EventType.ShowHostedUI) =
         Action<AuthEnvironment>("InitHostedUIAuth") { id, dispatcher ->
-            logger?.verbose("$id Starting execution")
+            logger.verbose("$id Starting execution")
             try {
-                if (hostedUIClient == null) throw Exception() // TODO: More detailed exception
+                if (hostedUIClient == null) throw InvalidOauthConfigurationException()
                 hostedUIClient.launchCustomTabsSignIn(event.hostedUISignInData.hostedUIOptions)
             } catch (e: Exception) {
                 val errorEvent = HostedUIEvent(HostedUIEvent.EventType.ThrowError(e))
-                logger?.verbose("$id Sending event ${errorEvent.type}")
+                logger.verbose("$id Sending event ${errorEvent.type}")
                 dispatcher.send(errorEvent)
                 val evt = AuthenticationEvent(AuthenticationEvent.EventType.CancelSignIn())
-                logger?.verbose("$id Sending event ${evt.type}")
+                logger.verbose("$id Sending event ${evt.type}")
                 dispatcher.send(evt)
             }
         }
 
-    override fun fetchHostedUISignInToken(event: HostedUIEvent.EventType.FetchToken) =
+    override fun fetchHostedUISignInToken(event: HostedUIEvent.EventType.FetchToken, browserPackage: String?) =
         Action<AuthEnvironment>("InitHostedUITokenFetch") { id, dispatcher ->
-            logger?.verbose("$id Starting execution")
+            logger.verbose("$id Starting execution")
             val evt = try {
-                if (hostedUIClient == null) throw Exception() // TODO: More detailed exception
+                // This should never happen, but if it does it is due to bad Oauth configuration block in
+                // amplify json config
+                if (hostedUIClient == null) throw InvalidOauthConfigurationException()
 
                 val token = hostedUIClient.fetchToken(event.uri)
                 val userId = token.accessToken?.let { JWTParser.getClaim(it, "sub") } ?: ""
@@ -57,22 +61,22 @@ object HostedUICognitoActions : HostedUIActions {
                     userId,
                     username,
                     Date(),
-                    SignInMethod.HOSTED,
+                    SignInMethod.HostedUI(browserPackage),
                     token
                 )
                 val tokenFetchedEvent = HostedUIEvent(HostedUIEvent.EventType.TokenFetched)
-                logger?.verbose("$id Sending event ${tokenFetchedEvent.type}")
+                logger.verbose("$id Sending event ${tokenFetchedEvent.type}")
                 dispatcher.send(tokenFetchedEvent)
 
-                AuthenticationEvent(AuthenticationEvent.EventType.SignInCompleted(signedInData))
+                AuthenticationEvent(AuthenticationEvent.EventType.SignInCompleted(signedInData, DeviceMetadata.Empty))
             } catch (e: Exception) {
                 val errorEvent = HostedUIEvent(HostedUIEvent.EventType.ThrowError(e))
-                logger?.verbose("$id Sending event ${errorEvent.type}")
+                logger.verbose("$id Sending event ${errorEvent.type}")
                 dispatcher.send(errorEvent)
 
                 AuthenticationEvent(AuthenticationEvent.EventType.CancelSignIn())
             }
-            logger?.verbose("$id Sending event ${evt.type}")
+            logger.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
         }
 }

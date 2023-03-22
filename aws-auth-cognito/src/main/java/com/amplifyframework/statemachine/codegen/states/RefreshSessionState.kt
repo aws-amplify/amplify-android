@@ -21,11 +21,12 @@ import com.amplifyframework.statemachine.StateMachineResolver
 import com.amplifyframework.statemachine.StateResolution
 import com.amplifyframework.statemachine.codegen.actions.FetchAuthSessionActions
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
+import com.amplifyframework.statemachine.codegen.data.SignInMethod
 import com.amplifyframework.statemachine.codegen.data.SignedInData
 import com.amplifyframework.statemachine.codegen.events.FetchAuthSessionEvent
 import com.amplifyframework.statemachine.codegen.events.RefreshSessionEvent
 
-sealed class RefreshSessionState : State {
+internal sealed class RefreshSessionState : State {
     data class NotStarted(val id: String = "") : RefreshSessionState()
     data class RefreshingUserPoolTokens(val signedInData: SignedInData) : RefreshSessionState()
     data class RefreshingAuthSession(
@@ -81,9 +82,16 @@ sealed class RefreshSessionState : State {
             return when (oldState) {
                 is NotStarted -> when (refreshSessionEvent) {
                     is RefreshSessionEvent.EventType.RefreshUserPoolTokens -> {
-                        val action = fetchAuthSessionActions.refreshUserPoolTokensAction(
-                            refreshSessionEvent.signedInData
-                        )
+                        val action = when (refreshSessionEvent.signedInData.signInMethod) {
+                            is SignInMethod.HostedUI -> {
+                                fetchAuthSessionActions.refreshHostedUIUserPoolTokensAction(
+                                    refreshSessionEvent.signedInData
+                                )
+                            }
+                            else -> {
+                                fetchAuthSessionActions.refreshUserPoolTokensAction(refreshSessionEvent.signedInData)
+                            }
+                        }
                         StateResolution(RefreshingUserPoolTokens(refreshSessionEvent.signedInData), listOf(action))
                     }
                     is RefreshSessionEvent.EventType.RefreshUnAuthSession -> {
@@ -118,8 +126,8 @@ sealed class RefreshSessionState : State {
                     }
                     else -> defaultResolution
                 }
-                is RefreshingAuthSession -> when {
-                    fetchAuthSessionEvent is FetchAuthSessionEvent.EventType.Fetched -> {
+                is RefreshingAuthSession -> when (fetchAuthSessionEvent) {
+                    is FetchAuthSessionEvent.EventType.Fetched -> {
                         val amplifyCredential = AmplifyCredential.UserAndIdentityPool(
                             oldState.signedInData,
                             fetchAuthSessionEvent.identityId,

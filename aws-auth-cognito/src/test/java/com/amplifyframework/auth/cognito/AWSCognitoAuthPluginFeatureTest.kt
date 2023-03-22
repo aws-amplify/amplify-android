@@ -15,39 +15,46 @@
 
 package com.amplifyframework.auth.cognito
 
+import aws.sdk.kotlin.services.cognitoidentity.CognitoIdentityClient
 import aws.sdk.kotlin.services.cognitoidentityprovider.CognitoIdentityProviderClient
+import com.amplifyframework.auth.cognito.featuretest.AuthAPI
+import com.amplifyframework.auth.cognito.featuretest.ExpectationShapes
+import com.amplifyframework.auth.cognito.featuretest.ExpectationShapes.Cognito
+import com.amplifyframework.auth.cognito.featuretest.ExpectationShapes.Cognito.CognitoIdentity
+import com.amplifyframework.auth.cognito.featuretest.ExpectationShapes.Cognito.CognitoIdentityProvider
+import com.amplifyframework.auth.cognito.featuretest.FeatureTestCase
+import com.amplifyframework.auth.cognito.featuretest.generators.toJsonElement
+import com.amplifyframework.auth.cognito.featuretest.serializers.deserializeToAuthState
+import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.logging.Logger
+import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
+import com.amplifyframework.statemachine.codegen.data.CredentialType
+import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.states.AuthState
-import com.amplifyframework.testutils.featuretest.API
-import com.amplifyframework.testutils.featuretest.ExpectationShapes
-import com.amplifyframework.testutils.featuretest.FeatureTestCase
-import com.amplifyframework.testutils.featuretest.ResponseType.Success
-import com.amplifyframework.testutils.featuretest.auth.generators.toJsonElement
-import com.amplifyframework.testutils.featuretest.auth.serializers.deserializeToAuthState
-import com.google.gson.Gson
-import featureTest.utilities.APICaptorFactory
-import featureTest.utilities.AuthOptionsFactory
 import featureTest.utilities.CognitoMockFactory
-import featureTest.utilities.CognitoRequestFactory.getExpectedRequestFor
+import featureTest.utilities.CognitoRequestFactory
+import featureTest.utilities.apiExecutor
+import io.mockk.clearAllMocks
+import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkObject
+import io.mockk.mockkStatic
+import io.mockk.slot
 import java.io.File
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
-import kotlin.reflect.KParameter
-import kotlin.reflect.full.memberFunctions
+import kotlin.reflect.full.callSuspend
+import kotlin.reflect.full.declaredFunctions
 import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.newSingleThreadContext
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
 import org.json.JSONObject
 import org.junit.After
 import org.junit.Before
@@ -56,16 +63,17 @@ import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 
 @RunWith(Parameterized::class)
-class AWSCognitoAuthPluginFeatureTest(private val fileName: String) {
+class AWSCognitoAuthPluginFeatureTest(private val testCase: FeatureTestCase) {
 
     lateinit var feature: FeatureTestCase
-    lateinit var latch: CountDownLatch
+    private var apiExecutionResult: Any? = null
 
-    val sut = AWSCognitoAuthPlugin()
+    private val sut = AWSCognitoAuthPlugin()
     private lateinit var authStateMachine: AuthStateMachine
 
-    private val mockCognitoIPClient = mockk<CognitoIdentityProviderClient>()
-    private val cognitoMockFactory = CognitoMockFactory(mockCognitoIPClient)
+    private val mockCognitoIPClient = mockk<CognitoIdentityProviderClient>(relaxed = true)
+    private val mockCognitoIdClient = mockk<CognitoIdentityClient>()
+    private val cognitoMockFactory = CognitoMockFactory(mockCognitoIPClient, mockCognitoIdClient)
 
     // Used to execute a test in situations where the platform Main dispatcher is not available
     // see [https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-test/]
@@ -74,6 +82,7 @@ class AWSCognitoAuthPluginFeatureTest(private val fileName: String) {
     @After
     fun tearDown() {
         Dispatchers.resetMain()
+        clearAllMocks()
     }
 
     companion object {
@@ -81,47 +90,60 @@ class AWSCognitoAuthPluginFeatureTest(private val fileName: String) {
         private const val statesFilesBasePath = "/feature-test/states"
         private const val configurationFilesBasePath = "/feature-test/configuration"
 
+        private val apisToSkip: List<AuthAPI> = listOf()
+
         @JvmStatic
-        @Parameterized.Parameters(name = "test file : {0}")
-        fun data(): Collection<String> {
+        @Parameterized.Parameters(name = "{0}")
+        fun data(): Collection<FeatureTestCase> {
             val resourceDir = File(this::class.java.getResource(testSuiteBasePath)?.file!!)
             assert(resourceDir.isDirectory)
 
             return resourceDir.walkTopDown()
                 .filterNot { it.isDirectory }.map {
                     it.toRelativeString(resourceDir)
-                }.toList()
+                }.map {
+                    readTestFeature(it)
+                }.toList().filterNot {
+                    it.api.name in apisToSkip
+                }
+        }
+
+        private fun readTestFeature(fileName: String): FeatureTestCase {
+            val testCaseFile = this::class.java.getResource("$testSuiteBasePath/$fileName")
+            return Json.decodeFromString(File(testCaseFile!!.toURI()).readText())
         }
     }
 
     @Before
     fun setUp() {
         Dispatchers.setMain(mainThreadSurrogate)
-        feature = readTestFeature(fileName)
-        sut.realPlugin = readconfiguration(feature.preConditions.`amplify-configuration`)
-        latch = CountDownLatch(1)
+        feature = testCase
+        sut.realPlugin = readConfiguration(feature.preConditions.`amplify-configuration`)
     }
 
     @Test
     fun api_feature_test() {
         // GIVEN
-        setupMocks()
+        mockAndroidAPIs()
+        feature.preConditions.mockedResponses.forEach(cognitoMockFactory::mock)
 
         // WHEN
-        callAPI(feature.api)
+        apiExecutionResult = apiExecutor(sut, feature.api)
 
         // THEN
-        latch.await()
         feature.validations.forEach(this::verify)
     }
 
-    private fun readTestFeature(fileName: String): FeatureTestCase {
-        val testCaseFile = this::class.java.getResource("$testSuiteBasePath/$fileName")
-        feature = Json.decodeFromString(File(testCaseFile!!.toURI()).readText())
-        return feature
+    /**
+     * Mock Android APIs as per need basis.
+     * This is cheaper than using Robolectric.
+     */
+    private fun mockAndroidAPIs() {
+        mockkObject(AuthHelper)
+        coEvery { AuthHelper.getSecretHash(any(), any(), any()) } returns "a hash"
     }
 
-    private fun readconfiguration(configuration: String): RealAWSCognitoAuthPlugin {
+    private fun readConfiguration(configuration: String): RealAWSCognitoAuthPlugin {
         val configFileUrl = this::class.java.getResource("$configurationFilesBasePath/$configuration")
         val configJSONObject =
             JSONObject(File(configFileUrl!!.file).readText())
@@ -132,56 +154,46 @@ class AWSCognitoAuthPluginFeatureTest(private val fileName: String) {
 
         val authService = mockk<AWSCognitoAuthServiceBehavior> {
             every { cognitoIdentityProviderClient } returns mockCognitoIPClient
+            every { cognitoIdentityClient } returns mockCognitoIdClient
         }
 
-        val authEnvironment = AuthEnvironment(authConfiguration, authService, hostedUIClient = null)
+        /**
+         * Always consider amplify credential is valid. This will need to be mocked otherwise
+         * when we test the expiration based test cases.
+         */
+        mockkStatic("com.amplifyframework.auth.cognito.AWSCognitoAuthSessionKt")
+        every { any<AmplifyCredential>().isValid() } returns true
+
+        val credentialStoreClient = mockk<CredentialStoreClient>(relaxed = true)
+        coEvery { credentialStoreClient.loadCredentials(capture(slot<CredentialType.Device>())) } coAnswers {
+            AmplifyCredential.DeviceData(DeviceMetadata.Empty)
+        }
+
+        val logger = mockk<Logger>(relaxed = true)
+
+        val authEnvironment = AuthEnvironment(
+            mockk(),
+            authConfiguration,
+            authService,
+            credentialStoreClient,
+            null,
+            null,
+            logger
+        )
 
         authStateMachine = AuthStateMachine(authEnvironment, getState(feature.preConditions.state))
 
-        val credentialStoreStateMachine = mockk<CredentialStoreStateMachine>(relaxed = true)
-        val logger = mockk<Logger>(relaxed = true)
-
-        return RealAWSCognitoAuthPlugin(
-            authConfiguration,
-            authEnvironment,
-            authStateMachine,
-            credentialStoreStateMachine,
-            logger
-        )
-    }
-
-    private fun setupMocks() {
-        feature.preConditions.mockedResponses.forEach(cognitoMockFactory::mock)
-
-        feature.validations.filterIsInstance<ExpectationShapes.Amplify>().filter {
-            it.apiName == feature.api.name
-        }.forEach {
-            APICaptorFactory(it, latch)
-        }
+        return RealAWSCognitoAuthPlugin(authConfiguration, authEnvironment, authStateMachine, logger)
     }
 
     private fun verify(validation: ExpectationShapes) {
         when (validation) {
-            is ExpectationShapes.Cognito -> {
-                val actualResult = cognitoMockFactory.getActualResultFor(validation.apiName)
+            is Cognito -> verifyCognito(validation)
 
-                assertNotNull(actualResult)
-                assertEquals(getExpectedRequestFor(validation), actualResult)
-            }
             is ExpectationShapes.Amplify -> {
-                val expectedResponse: Any
-                val actualResult = if (validation.responseType == Success) {
-                    APICaptorFactory.successCaptors[validation.apiName]?.captured.apply {
-                        expectedResponse = Gson().fromJson(validation.response.toString(), this?.javaClass)
-                    }
-                } else {
-                    APICaptorFactory.errorCaptor.captured.toJsonElement().apply {
-                        expectedResponse = validation.response as JsonObject
-                    }
-                }
+                val expectedResponse = validation.response
 
-                assertNotNull(actualResult)
-                assertEquals(expectedResponse, actualResult)
+                assertEquals(expectedResponse, apiExecutionResult.toJsonElement())
             }
             is ExpectationShapes.State -> {
                 val getStateLatch = CountDownLatch(1)
@@ -194,29 +206,23 @@ class AWSCognitoAuthPluginFeatureTest(private val fileName: String) {
         }
     }
 
-    private fun callAPI(api: API) {
-        val targetApi = sut::class.memberFunctions.find { it.name == api.name.name }
-        val params = api.params as JsonObject
-        val requiredParams: MutableMap<KParameter, Any?>? = targetApi?.parameters?.associate {
-            it to (params[it.name] as? JsonPrimitive)?.content
-        }?.toMutableMap()
-        requiredParams?.set(targetApi.parameters[0], sut)
-        requiredParams?.set(
-            targetApi.parameters.first { it.name == "onSuccess" },
-            APICaptorFactory.onSuccess[api.name]
-        )
-        requiredParams?.set(targetApi.parameters.first { it.name == "onError" }, APICaptorFactory.onError)
-
-        val optionsObj = AuthOptionsFactory.create(api.name, api.options as JsonObject)
-        requiredParams?.set(targetApi.parameters.first { it.name == "options" }, optionsObj)
-
-        runBlocking {
-            requiredParams?.let { targetApi.callBy(it) }
-        }
-    }
-
     private fun getState(state: String): AuthState {
         val stateFileUrl = this::class.java.getResource("$statesFilesBasePath/$state")
         return File(stateFileUrl!!.file).readText().deserializeToAuthState()
+    }
+
+    private fun verifyCognito(validation: Cognito) {
+        val expectedRequest = CognitoRequestFactory.getExpectedRequestFor(validation)
+
+        coVerify {
+            when (validation) {
+                is CognitoIdentity -> mockCognitoIdClient to mockCognitoIPClient::class
+                is CognitoIdentityProvider -> mockCognitoIPClient to mockCognitoIPClient::class
+            }.apply {
+                second.declaredFunctions.first {
+                    it.name == validation.apiName
+                }.callSuspend(first, expectedRequest)
+            }
+        }
     }
 }

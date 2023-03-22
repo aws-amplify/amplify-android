@@ -28,6 +28,7 @@ import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
+import com.amplifyframework.auth.options.AuthFetchSessionOptions
 import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions
 import com.amplifyframework.auth.options.AuthResendUserAttributeConfirmationCodeOptions
 import com.amplifyframework.auth.options.AuthResetPasswordOptions
@@ -83,7 +84,7 @@ class KotlinAuthFacade(private val delegate: Delegate = Amplify.Auth) : Auth {
     override suspend fun resendSignUpCode(
         username: String,
         options: AuthResendSignUpCodeOptions
-    ): AuthSignUpResult {
+    ): AuthCodeDeliveryDetails {
         return suspendCoroutine { continuation ->
             delegate.resendSignUpCode(
                 username,
@@ -111,12 +112,12 @@ class KotlinAuthFacade(private val delegate: Delegate = Amplify.Auth) : Auth {
     }
 
     override suspend fun confirmSignIn(
-        confirmationCode: String,
+        challengeResponse: String,
         options: AuthConfirmSignInOptions
     ): AuthSignInResult {
         return suspendCoroutine { continuation ->
             delegate.confirmSignIn(
-                confirmationCode,
+                challengeResponse,
                 options,
                 { continuation.resume(it) },
                 { continuation.resumeWithException(it) }
@@ -159,9 +160,10 @@ class KotlinAuthFacade(private val delegate: Delegate = Amplify.Auth) : Auth {
         delegate.handleWebUISignInResponse(intent)
     }
 
-    override suspend fun fetchAuthSession(): AuthSession {
+    override suspend fun fetchAuthSession(options: AuthFetchSessionOptions): AuthSession {
         return suspendCoroutine { continuation ->
             delegate.fetchAuthSession(
+                AuthFetchSessionOptions.defaults(),
                 { continuation.resume(it) },
                 { continuation.resumeWithException(it) }
             )

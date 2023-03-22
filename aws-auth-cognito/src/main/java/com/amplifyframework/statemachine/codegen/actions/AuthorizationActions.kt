@@ -17,12 +17,16 @@ package com.amplifyframework.statemachine.codegen.actions
 
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
+import com.amplifyframework.statemachine.codegen.data.FederatedToken
 import com.amplifyframework.statemachine.codegen.data.SignedInData
+import com.amplifyframework.statemachine.codegen.events.DeleteUserEvent
 
-interface AuthorizationActions {
-    fun resetAuthorizationAction(): Action
+internal interface AuthorizationActions {
     fun configureAuthorizationAction(): Action
     fun initializeFetchUnAuthSession(): Action
     fun initializeFetchAuthSession(signedInData: SignedInData): Action
     fun initiateRefreshSessionAction(amplifyCredential: AmplifyCredential): Action
+    fun initializeFederationToIdentityPool(federatedToken: FederatedToken, developerProvidedIdentityId: String?): Action
+    fun initiateDeleteUser(event: DeleteUserEvent.EventType.DeleteUser): Action
+    fun persistCredentials(amplifyCredential: AmplifyCredential): Action
 }

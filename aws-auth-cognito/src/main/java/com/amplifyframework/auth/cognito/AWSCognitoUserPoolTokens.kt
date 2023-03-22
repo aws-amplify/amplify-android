@@ -18,7 +18,7 @@ package com.amplifyframework.auth.cognito
 /**
  * Wraps the various Cognito User Pool tokens.
  */
-data class AWSCognitoUserPoolTokens(
+data class AWSCognitoUserPoolTokens internal constructor(
     /**
      * Returns the access JWT token in its encoded string form.
      * @return the access JWT token in its encoded string form.

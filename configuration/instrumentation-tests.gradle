@@ -10,7 +10,8 @@ def module_backends = [
     'aws-storage-s3': 'NONE',
     'aws-analytics-pinpoint': 'NONE',
     'aws-predictions': 'NONE',
-    'core':'NONE'
+    'core':'NONE',
+    'aws-auth-cognito': 'AuthIntegrationTests'
 ]
 
 subprojects {

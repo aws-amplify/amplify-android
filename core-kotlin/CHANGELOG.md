@@ -1,3 +1,26 @@
+## [Release 0.21.6](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.21.6)
+
+### Miscellaneous
+- Add clientMetadata to signIn
+- Update build.gradle (#2045)
+
+[See all changes between 0.21.5 and 0.21.6](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.21.5...release-kotlin_v0.21.6)
+
+## [Release 0.21.5](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.21.5)
+
+### Miscellaneous
+- Update build.gradle (#1991)
+
+[See all changes between 0.21.4 and 0.21.5](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.21.4...release-kotlin_v0.21.5)
+
+## [Release 0.21.4](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.21.4)
+
+### Miscellaneous
+- Publish Javadocs (Amplify version) (#1897)
+- Update build.gradle (#1959)
+
+[See all changes between 0.21.3 and 0.21.4](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.21.3...release-kotlin_v0.21.4)
+
 ## [Release 0.21.3](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.21.3)
 
 ### Bug Fixes

@@ -25,13 +25,14 @@ import aws.sdk.kotlin.services.s3.model.ObjectCannedAcl
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.storage.ObjectMetadata
 import com.amplifyframework.storage.s3.AWSS3StoragePlugin
+import com.amplifyframework.storage.s3.TransferOperations
 import com.amplifyframework.storage.s3.transfer.worker.RouterWorker
 import com.amplifyframework.storage.s3.transfer.worker.TransferWorkerFactory
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import java.io.InputStream
-import java.lang.IllegalArgumentException
+import java.util.UUID
 import kotlin.math.ceil
 import kotlin.math.max
 import kotlin.math.min
@@ -49,8 +50,7 @@ internal class TransferManager @JvmOverloads constructor(
 ) {
 
     private val transferDB: TransferDB = TransferDB.getInstance(context)
-    private val transferStatusUpdater: TransferStatusUpdater =
-        TransferStatusUpdater.getInstance(context)
+    val transferStatusUpdater: TransferStatusUpdater = TransferStatusUpdater.getInstance(context)
     private val logger =
         Amplify.Logging.forNamespace(
             AWSS3StoragePlugin.AWS_S3_STORAGE_LOG_NAMESPACE.format(this::class.java.simpleName)
@@ -88,6 +88,7 @@ internal class TransferManager @JvmOverloads constructor(
      */
     @JvmOverloads
     fun upload(
+        transferId: String,
         bucket: String,
         key: String,
         file: File,
@@ -96,9 +97,10 @@ internal class TransferManager @JvmOverloads constructor(
         listener: TransferListener? = null
     ): TransferObserver {
         val transferRecordId = if (shouldUploadInMultipart(file)) {
-            createMultipartUploadRecords(bucket, key, file, metadata, cannedAcl)
+            createMultipartUploadRecords(transferId, bucket, key, file, metadata, cannedAcl)
         } else {
             val uri = transferDB.insertSingleTransferRecord(
+                transferId,
                 TransferType.UPLOAD,
                 bucket,
                 key,
@@ -111,7 +113,8 @@ internal class TransferManager @JvmOverloads constructor(
         }
         val transferRecord = transferDB.getTransferRecordById(transferRecordId)
             ?: throw IllegalStateException("Failed to find transferRecord")
-        val transferObserver = transferRecord.start(
+        val transferObserver = TransferOperations.start(
+            transferRecord,
             pluginKey,
             transferStatusUpdater,
             workManager,
@@ -129,12 +132,14 @@ internal class TransferManager @JvmOverloads constructor(
 
     @Throws(IOException::class)
     fun upload(
+        transferId: String,
         key: String,
         inputStream: InputStream,
         options: UploadOptions
     ): TransferObserver {
         val file = writeInputStreamToFile(inputStream)
         return upload(
+            transferId,
             options.bucket,
             key,
             file,
@@ -146,6 +151,7 @@ internal class TransferManager @JvmOverloads constructor(
 
     @JvmOverloads
     fun download(
+        transferId: String,
         bucket: String,
         key: String,
         file: File,
@@ -154,7 +160,7 @@ internal class TransferManager @JvmOverloads constructor(
         if (file.isDirectory) {
             throw IllegalArgumentException("Invalid file: $file")
         }
-        val uri = transferDB.insertSingleTransferRecord(TransferType.DOWNLOAD, bucket, key, file)
+        val uri = transferDB.insertSingleTransferRecord(transferId, TransferType.DOWNLOAD, bucket, key, file)
         val transferRecordId: Int = uri.lastPathSegment?.toInt()
             ?: throw IllegalStateException("Invalid TransferRecord ID ${uri.lastPathSegment}")
         if (file.isFile) {
@@ -163,7 +169,8 @@ internal class TransferManager @JvmOverloads constructor(
         }
         val transferRecord = transferDB.getTransferRecordById(transferRecordId)
             ?: throw IllegalStateException("Failed to find transferRecord")
-        val transferObserver = transferRecord.start(
+        val transferObserver = TransferOperations.start(
+            transferRecord,
             pluginKey,
             transferStatusUpdater,
             workManager,
@@ -181,30 +188,48 @@ internal class TransferManager @JvmOverloads constructor(
 
     fun pause(transferRecordId: Int): Boolean {
         val transferRecord = transferStatusUpdater.activeTransferMap[transferRecordId]
-        return transferRecord?.pause(transferStatusUpdater, workManager) ?: false
+        return transferRecord?.let { TransferOperations.pause(it, transferStatusUpdater, workManager) } ?: false
     }
 
     fun resume(transferRecordId: Int): Boolean {
         val transferRecord = transferStatusUpdater.activeTransferMap[transferRecordId]
-        return transferRecord?.resume(
-            pluginKey,
-            transferStatusUpdater,
-            workManager,
-            transferWorkerObserver,
-            transferDB
-        ) ?: false
+        return transferRecord?.let {
+            TransferOperations.resume(
+                it,
+                pluginKey,
+                transferStatusUpdater,
+                workManager,
+                transferWorkerObserver,
+                transferDB
+            )
+            mainHandler.post {
+                workManager
+                    .getWorkInfosForUniqueWorkLiveData(transferRecordId.toString())
+                    .observeForever(transferWorkerObserver)
+            }
+        } ?: false
     }
 
     fun cancel(transferRecordId: Int): Boolean {
         val transferRecord = transferStatusUpdater.activeTransferMap[transferRecordId]
-        return transferRecord?.cancel(
-            pluginKey,
-            transferStatusUpdater,
-            workManager
-        ) ?: false
+        return transferRecord?.let {
+            TransferOperations.cancel(
+                it,
+                pluginKey,
+                transferStatusUpdater,
+                workManager
+            )
+        } ?: false
+    }
+
+    fun getTransferOperationById(
+        transferId: String
+    ): TransferRecord? {
+        return transferDB.getTransferByTransferId(transferId)
     }
 
     private fun createMultipartUploadRecords(
+        transferId: String,
         bucket: String,
         key: String,
         file: File,
@@ -220,6 +245,7 @@ internal class TransferManager @JvmOverloads constructor(
         var fileOffset = 0L
         val contentValues = arrayOfNulls<ContentValues>(partCount + 1)
         contentValues[0] = transferDB.generateContentValuesForMultiPartUpload(
+            transferId,
             bucket,
             key,
             file,
@@ -234,6 +260,7 @@ internal class TransferManager @JvmOverloads constructor(
         repeat(partCount) {
             val bytesForPart = min(optimalPartSize, remainingLength)
             contentValues[partNum] = transferDB.generateContentValuesForMultiPartUpload(
+                UUID.randomUUID().toString(),
                 bucket,
                 key,
                 file,

@@ -19,54 +19,48 @@ import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.AuthActions
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
+import com.amplifyframework.statemachine.codegen.data.CredentialType
 import com.amplifyframework.statemachine.codegen.events.AuthEvent
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
 
-object AuthCognitoActions : AuthActions {
+internal object AuthCognitoActions : AuthActions {
     override fun initializeAuthConfigurationAction(event: AuthEvent.EventType.ConfigureAuth) =
         Action<AuthEnvironment>("InitAuthConfig") { id, dispatcher ->
-            logger?.verbose("$id Starting execution")
-            val evt = AuthEvent(AuthEvent.EventType.FetchCachedCredentials(configuration))
-            logger?.verbose("$id Sending event ${evt.type}")
+            logger.verbose("$id Starting execution")
+            val storedCredentials = credentialStoreClient.loadCredentials(CredentialType.Amplify)
+            val evt = configuration.userPool?.run {
+                AuthEvent(AuthEvent.EventType.ConfigureAuthentication(configuration, storedCredentials))
+            } ?: AuthEvent(AuthEvent.EventType.ConfigureAuthorization(configuration, storedCredentials))
+            logger.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
         }
 
     override fun initializeAuthenticationConfigurationAction(event: AuthEvent.EventType.ConfigureAuthentication) =
         Action<AuthEnvironment>("InitAuthNConfig") { id, dispatcher ->
-            logger?.verbose("$id Starting execution")
+            logger.verbose("$id Starting execution")
             val evt = AuthenticationEvent(
                 AuthenticationEvent.EventType.Configure(event.configuration, event.storedCredentials)
             )
-            logger?.verbose("$id Sending event ${evt.type}")
+            logger.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
         }
 
     override fun initializeAuthorizationConfigurationAction(event: AuthEvent.EventType) =
         Action<AuthEnvironment>("InitAuthZConfig") { id, dispatcher ->
-            logger?.verbose("$id Starting execution")
+            logger.verbose("$id Starting execution")
             val handleEvent = { credentials: AmplifyCredential ->
                 when (credentials) {
                     AmplifyCredential.Empty -> AuthorizationEvent(AuthorizationEvent.EventType.Configure)
                     else -> AuthorizationEvent(AuthorizationEvent.EventType.CachedCredentialsAvailable(credentials))
                 }
             }
-            val evt = when {
-                event is AuthEvent.EventType.ConfiguredAuthentication -> handleEvent(event.storedCredentials)
-                event is AuthEvent.EventType.ConfigureAuthorization -> handleEvent(event.storedCredentials)
+            val evt = when (event) {
+                is AuthEvent.EventType.ConfiguredAuthentication -> handleEvent(event.storedCredentials)
+                is AuthEvent.EventType.ConfigureAuthorization -> handleEvent(event.storedCredentials)
                 else -> AuthorizationEvent(AuthorizationEvent.EventType.Configure)
             }
-            logger?.verbose("$id Sending event ${evt.type}")
-            dispatcher.send(evt)
-        }
-
-    override fun validateCredentialsAndConfiguration(event: AuthEvent.EventType.ReceivedCachedCredentials) =
-        Action<AuthEnvironment>("InitAuthZConfig") { id, dispatcher ->
-            logger?.verbose("$id Starting execution")
-            val evt = configuration.userPool?.run {
-                AuthEvent(AuthEvent.EventType.ConfigureAuthentication(configuration, event.storedCredentials))
-            } ?: AuthEvent(AuthEvent.EventType.ConfigureAuthorization(configuration, event.storedCredentials))
-            logger?.verbose("$id Sending event ${evt.type}")
+            logger.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
         }
 }

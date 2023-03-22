@@ -15,11 +15,20 @@
 package com.amplifyframework.analytics.pinpoint
 
 import android.content.Context
+import android.content.SharedPreferences
+import android.util.Log
 import android.util.Pair
 import androidx.annotation.RawRes
 import androidx.test.core.app.ApplicationProvider
+import aws.sdk.kotlin.services.pinpoint.PinpointClient
+import aws.sdk.kotlin.services.pinpoint.model.EndpointLocation
+import aws.sdk.kotlin.services.pinpoint.model.EndpointResponse
+import aws.sdk.kotlin.services.pinpoint.model.GetEndpointRequest
 import com.amplifyframework.analytics.AnalyticsEvent
 import com.amplifyframework.analytics.AnalyticsProperties
+import com.amplifyframework.analytics.UserProfile
+import com.amplifyframework.analytics.pinpoint.models.AWSPinpointUserProfile
+import com.amplifyframework.analytics.pinpoint.targeting.endpointProfile.EndpointProfile
 import com.amplifyframework.auth.AuthPlugin
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
 import com.amplifyframework.core.Amplify
@@ -31,8 +40,8 @@ import com.amplifyframework.testutils.Sleep
 import com.amplifyframework.testutils.sync.SynchronousAuth
 import java.util.UUID
 import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.runBlocking
 import org.json.JSONException
-import org.junit.After
 import org.junit.Assert
 import org.junit.Before
 import org.junit.BeforeClass
@@ -44,6 +53,7 @@ class PinpointAnalyticsInstrumentationTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         @RawRes val resourceId = Resources.getRawResourceId(context, CREDENTIALS_RESOURCE_NAME)
         val userAndPasswordPair = readCredentialsFromResource(context, resourceId)
+        synchronousAuth.signOut()
         synchronousAuth.signIn(
             userAndPasswordPair!!.first,
             userAndPasswordPair.second
@@ -52,11 +62,10 @@ class PinpointAnalyticsInstrumentationTest {
             HubAccumulator.create(HubChannel.ANALYTICS, AnalyticsChannelEventName.FLUSH_EVENTS, 1).start()
         Amplify.Analytics.flushEvents()
         val events = hubAccumulator.await(10, TimeUnit.SECONDS)
-    }
-
-    @After
-    fun cleanUp() {
-        synchronousAuth.signOut()
+        pinpointClient = Amplify.Analytics.getPlugin("awsPinpointAnalyticsPlugin").escapeHatch as
+            PinpointClient
+        uniqueId = preferences.getString(UNIQUE_ID_KEY, "error-no-unique-id")!!
+        Assert.assertNotEquals(uniqueId, "error-no-unique-id")
     }
 
     /**
@@ -229,6 +238,115 @@ class PinpointAnalyticsInstrumentationTest {
         Assert.assertEquals(0, submittedEvents[1].properties.size().toLong())
     }
 
+    /**
+     * The [AWSPinpointAnalyticsPlugin.identifyUser] method should set
+     * an [EndpointProfile] on the [PinpointClient], containing
+     * all provided Amplify attributes.
+     */
+    @Test
+    fun testIdentifyUserWithDefaultProfile() {
+        val location = testLocation
+        val properties = endpointProperties
+        val userProfile = AWSPinpointUserProfile.builder()
+            .name("test-user")
+            .email("user@test.com")
+            .plan("test-plan")
+            .location(location)
+            .customProperties(properties)
+            .build()
+        Amplify.Analytics.identifyUser(UUID.randomUUID().toString(), userProfile)
+        Sleep.milliseconds(PINPOINT_ROUNDTRIP_TIMEOUT)
+        val endpointResponse = fetchEndpointResponse()
+        assertCommonEndpointResponseProperties(endpointResponse)
+        assert(null == endpointResponse.user!!.userAttributes)
+    }
+
+    /**
+     * [AWSPinpointUserProfile] extends [UserProfile] to include
+     * [AWSPinpointUserProfile.userAttributes] which is specific to Pinpoint. This test is very
+     * similar to testIdentifyUserWithDefaultProfile, but it adds user attributes in addition
+     * to the endpoint attributes.
+     */
+    @Test
+    fun testIdentifyUserWithUserAttributes() {
+        val location = testLocation
+        val properties = endpointProperties
+        val userAttributes = userAttributes
+        val pinpointUserProfile = AWSPinpointUserProfile.builder()
+            .name("test-user")
+            .email("user@test.com")
+            .plan("test-plan")
+            .location(location)
+            .customProperties(properties)
+            .userAttributes(userAttributes)
+            .build()
+        Amplify.Analytics.identifyUser(UUID.randomUUID().toString(), pinpointUserProfile)
+        Sleep.milliseconds(PINPOINT_ROUNDTRIP_TIMEOUT)
+        val endpointResponse = fetchEndpointResponse()
+        assertCommonEndpointResponseProperties(endpointResponse)
+        Assert.assertEquals(
+            "User attribute value",
+            endpointResponse.user!!
+                .userAttributes!!
+            ["SomeUserAttribute"]!!
+            [0]
+        )
+    }
+
+    private fun fetchEndpointResponse(): EndpointResponse {
+        var endpointResponse: EndpointResponse? = null
+        runBlocking {
+            endpointResponse = pinpointClient.getEndpoint(
+                GetEndpointRequest.invoke {
+                    this.applicationId = appId
+                    this.endpointId = uniqueId
+                }
+            ).endpointResponse
+        }
+        assert(null != endpointResponse)
+        return endpointResponse!!
+    }
+
+    private fun assertCommonEndpointResponseProperties(endpointResponse: EndpointResponse) {
+        Log.i("DEBUG", endpointResponse.toString())
+        val attributes = endpointResponse.attributes!!
+        Assert.assertEquals("user@test.com", attributes["email"]!![0])
+        Assert.assertEquals("test-user", attributes["name"]!![0])
+        Assert.assertEquals("test-plan", attributes["plan"]!![0])
+        val endpointProfileLocation: EndpointLocation = endpointResponse.location!!
+        Assert.assertEquals(47.6154086, endpointProfileLocation.latitude!!, 0.1)
+        Assert.assertEquals((-122.3349685), endpointProfileLocation.longitude!!, 0.1)
+        Assert.assertEquals("98122", endpointProfileLocation.postalCode)
+        Assert.assertEquals("Seattle", endpointProfileLocation.city)
+        Assert.assertEquals("WA", endpointProfileLocation.region)
+        Assert.assertEquals("USA", endpointProfileLocation.country)
+        Assert.assertEquals("TestStringValue", attributes["TestStringProperty"]!![0])
+        Assert.assertEquals(1.0, endpointResponse.metrics!!["TestDoubleProperty"]!!, 0.1)
+    }
+
+    private val userAttributes: AnalyticsProperties
+        get() = AnalyticsProperties.builder()
+            .add("SomeUserAttribute", "User attribute value")
+            .build()
+    private val endpointProperties: AnalyticsProperties
+        get() {
+            return AnalyticsProperties.builder()
+                .add("TestStringProperty", "TestStringValue")
+                .add("TestDoubleProperty", 1.0)
+                .build()
+        }
+    private val testLocation: UserProfile.Location
+        get() {
+            return UserProfile.Location.builder()
+                .latitude(47.6154086)
+                .longitude(-122.3349685)
+                .postalCode("98122")
+                .city("Seattle")
+                .region("WA")
+                .country("USA")
+                .build()
+        }
+
     private fun combineAndFilterEvents(hubEvents: List<HubEvent<*>>): MutableList<AnalyticsEvent> {
         val result = mutableListOf<AnalyticsEvent>()
         hubEvents.forEach {
@@ -246,18 +364,38 @@ class PinpointAnalyticsInstrumentationTest {
     companion object {
         private const val EVENT_FLUSH_TIMEOUT_WAIT = 15 /* seconds */
         private const val CREDENTIALS_RESOURCE_NAME = "credentials"
+        private const val CONFIGURATION_NAME = "amplifyconfiguration"
         private const val COGNITO_CONFIGURATION_TIMEOUT = 10 * 1000L
+        private const val PINPOINT_ROUNDTRIP_TIMEOUT = 10 * 1000L
         private const val RECORD_INSERTION_TIMEOUT = 5 * 1000L
+        private const val UNIQUE_ID_KEY = "UniqueId"
+        private const val PREFERENCES_AND_FILE_MANAGER_SUFFIX = "515d6767-01b7-49e5-8273-c8d11b0f331d"
         private lateinit var synchronousAuth: SynchronousAuth
+        private lateinit var preferences: SharedPreferences
+        private lateinit var appId: String
+        private lateinit var uniqueId: String
+        private lateinit var pinpointClient: PinpointClient
         @BeforeClass
         @JvmStatic
         fun setupBefore() {
             val context = ApplicationProvider.getApplicationContext<Context>()
+            @RawRes val resourceId = Resources.getRawResourceId(context, CONFIGURATION_NAME)
+            appId = readAppIdFromResource(context, resourceId)
+            preferences = context.getSharedPreferences(
+                "${appId}$PREFERENCES_AND_FILE_MANAGER_SUFFIX",
+                Context.MODE_PRIVATE
+            )
+            setUniqueId()
             Amplify.Auth.addPlugin(AWSCognitoAuthPlugin() as AuthPlugin<*>)
             Amplify.addPlugin(AWSPinpointAnalyticsPlugin())
             Amplify.configure(context)
             Sleep.milliseconds(COGNITO_CONFIGURATION_TIMEOUT)
             synchronousAuth = SynchronousAuth.delegatingTo(Amplify.Auth)
+        }
+
+        private fun setUniqueId() {
+            uniqueId = UUID.randomUUID().toString()
+            preferences.edit().putString(UNIQUE_ID_KEY, uniqueId).commit()
         }
 
         private fun readCredentialsFromResource(context: Context, @RawRes resourceId: Int): Pair<String, String>? {
@@ -272,6 +410,19 @@ class PinpointAnalyticsInstrumentationTest {
                     userCredentials = Pair(username, password)
                 }
                 userCredentials
+            } catch (jsonReadingFailure: JSONException) {
+                throw RuntimeException(jsonReadingFailure)
+            }
+        }
+
+        private fun readAppIdFromResource(context: Context, @RawRes resourceId: Int): String {
+            val resource = Resources.readAsJson(context, resourceId)
+            return try {
+                val analyticsJson = resource.getJSONObject("analytics")
+                val pluginsJson = analyticsJson.getJSONObject("plugins")
+                val pluginJson = pluginsJson.getJSONObject("awsPinpointAnalyticsPlugin")
+                val pinpointJson = pluginJson.getJSONObject("pinpointAnalytics")
+                pinpointJson.getString("appId")
             } catch (jsonReadingFailure: JSONException) {
                 throw RuntimeException(jsonReadingFailure)
             }

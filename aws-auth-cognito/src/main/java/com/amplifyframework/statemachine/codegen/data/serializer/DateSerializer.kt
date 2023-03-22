@@ -26,7 +26,7 @@ import kotlinx.serialization.encoding.Encoder
 /**
  * Serializer for Kotlinx Serialization of [java.util.Date] class
  */
-object DateSerializer : KSerializer<Date> {
+internal object DateSerializer : KSerializer<Date> {
     override fun deserialize(decoder: Decoder): Date {
         return Date(decoder.decodeLong())
     }

@@ -17,7 +17,7 @@ package android.util
 
 object Base64 {
     @JvmStatic
-    fun encode(input: ByteArray?, flags: Int): String {
+    fun encodeToString(input: ByteArray?, flags: Int): String {
         return java.util.Base64.getEncoder().encodeToString(input)
     }
 

@@ -28,10 +28,10 @@ import com.amplifyframework.hub.SubscriptionToken;
 import com.amplifyframework.storage.StorageAccessLevel;
 import com.amplifyframework.storage.StorageCategory;
 import com.amplifyframework.storage.StorageChannelEventName;
+import com.amplifyframework.storage.TransferState;
 import com.amplifyframework.storage.operation.StorageUploadFileOperation;
 import com.amplifyframework.storage.options.StorageUploadFileOptions;
 import com.amplifyframework.storage.s3.test.R;
-import com.amplifyframework.storage.s3.transfer.TransferState;
 import com.amplifyframework.storage.s3.util.WorkmanagerTestUtils;
 import com.amplifyframework.testutils.random.RandomTempFile;
 import com.amplifyframework.testutils.sync.SynchronousAuth;
@@ -40,7 +40,6 @@ import com.amplifyframework.testutils.sync.SynchronousStorage;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
@@ -117,7 +116,6 @@ public final class AWSS3StorageUploadTest {
      * @throws Exception if upload fails
      */
     @Test
-    @Ignore("fix in dev-preview")
     public void testUploadSmallFile() throws Exception {
         File uploadFile = new RandomTempFile(SMALL_FILE_SIZE);
         String fileName = uploadFile.getName();
@@ -130,7 +128,6 @@ public final class AWSS3StorageUploadTest {
      * @throws Exception if upload fails
      */
     @Test
-    @Ignore("fix in dev-preview")
     public void testUploadLargeFile() throws Exception {
         File uploadFile = new RandomTempFile(LARGE_FILE_SIZE);
         String fileName = uploadFile.getName();
@@ -146,7 +143,6 @@ public final class AWSS3StorageUploadTest {
      */
     @SuppressWarnings("unchecked")
     @Test
-    @Ignore("fix in dev-preview")
     public void testUploadFileIsCancelable() throws Exception {
         final CountDownLatch canceled = new CountDownLatch(1);
         final AtomicReference<Cancelable> opContainer = new AtomicReference<>();
@@ -196,7 +192,6 @@ public final class AWSS3StorageUploadTest {
      */
     @SuppressWarnings("unchecked")
     @Test
-    @Ignore("fix in dev-preview")
     public void testUploadFileIsResumable() throws Exception {
         final CountDownLatch completed = new CountDownLatch(1);
         final CountDownLatch resumed = new CountDownLatch(1);

@@ -34,7 +34,7 @@ import org.jetbrains.annotations.TestOnly
  * https://github.com/aws-amplify/aws-sdk-android/blob/main/aws-android-sdk-cognitoidentityprovider/src/main/java/com/amazonaws/mobileconnectors/cognitoidentityprovider/CognitoUser.java#L3587
  * SRP requires Kotlin version 1.5+, and minSDK version 24.
  */
-class SRPHelper(private val password: String) {
+internal class SRPHelper(private val password: String) {
 
     companion object {
         private val EPHEMERAL_KEY_LENGTH = 1024
@@ -55,6 +55,7 @@ class SRPHelper(private val password: String) {
             "7A33A85521ABDF1CBA64ECFB850458DBEF0A8AEA71575D060C7DB3970F85A6E1E4C7ABF5AE8CDB0933D71E8C94E04A25619D" +
             "CEE3D2261AD2EE6BF12FFA06D98A0864D87602733EC86A64521F2B18177B200CBBE117577A615D6C770988C0BAD946E208E2" +
             "4FA074E5AB3143DB5BFCE0FD108E4B82D120A93AD2CAFFFFFFFFFFFFFFFF"
+
     private val N = BigInteger(HEX_N, 16)
     private val random = SecureRandom()
 
@@ -91,7 +92,10 @@ class SRPHelper(private val password: String) {
 
     fun setUserPoolParams(userId: String, userPoolName: String) {
         this.userId = userId
-        this.userPoolName = userPoolName.split(Regex("_"), 2)[1]
+        this.userPoolName = userPoolName
+        if (userPoolName.contains("_")) {
+            this.userPoolName = userPoolName.split(Regex("_"), 2)[1]
+        }
     }
 
     @TestOnly
@@ -110,7 +114,6 @@ class SRPHelper(private val password: String) {
     }
 
     // u = H(A, B)
-    // @VisibleForTesting
     internal fun computeU(srpB: BigInteger): BigInteger {
         digest.reset()
         digest.update(publicA.toByteArray())
@@ -130,14 +133,15 @@ class SRPHelper(private val password: String) {
         return BigInteger(1, digest.digest(userIdPasswordHash))
     }
 
+    // verifier = (g ^ x) % N
+    internal fun computePasswordVerifier(salt: BigInteger): BigInteger {
+        val xValue = computeX(salt)
+        return g.modPow(xValue, N)
+    }
+
     // s = ((B - k * (g ^ x) % N) ^ (a + u * x) % N) % N
     internal fun computeS(uValue: BigInteger, xValue: BigInteger, srpB: BigInteger): BigInteger {
-        return (
-            srpB.subtract(k.multiply(g.modPow(xValue, N))).modPow(
-                privateA.add(uValue.multiply(xValue)),
-                N
-            )
-            ).mod(N)
+        return (srpB.subtract(k.multiply(g.modPow(xValue, N))).modPow(privateA.add(uValue.multiply(xValue)), N)).mod(N)
     }
 
     // p = MAC("Caldera Derived Key" | 1, MAC(s, u))[0:16]
@@ -183,6 +187,6 @@ class SRPHelper(private val password: String) {
         val sValue = computeS(uValue, xValue, bigIntSRPB)
         val key = computePasswordAuthenticationKey(sValue, uValue)
         val m1Signature = generateM1Signature(key, secretBlock)
-        return String(android.util.Base64.encode(m1Signature, android.util.Base64.NO_WRAP))
+        return android.util.Base64.encodeToString(m1Signature, android.util.Base64.NO_WRAP)
     }
 }

@@ -22,7 +22,7 @@ import com.amplifyframework.statemachine.StateResolution
 import com.amplifyframework.statemachine.codegen.actions.SRPActions
 import com.amplifyframework.statemachine.codegen.events.SRPEvent
 
-sealed class SRPSignInState : State {
+internal sealed class SRPSignInState : State {
     data class NotStarted(val id: String = "") : SRPSignInState()
     data class InitiatingSRPA(val id: String = "") : SRPSignInState()
     data class RespondingPasswordVerifier(val id: String = "") : SRPSignInState()
@@ -44,6 +44,10 @@ sealed class SRPSignInState : State {
                 is NotStarted -> when (srpEvent) {
                     is SRPEvent.EventType.InitiateSRP -> {
                         val action = srpActions.initiateSRPAuthAction(srpEvent)
+                        StateResolution(InitiatingSRPA(), listOf(action))
+                    }
+                    is SRPEvent.EventType.InitiateSRPWithCustom -> {
+                        val action = srpActions.initiateSRPWithCustomAuthAction(srpEvent)
                         StateResolution(InitiatingSRPA(), listOf(action))
                     }
                     else -> defaultResolution

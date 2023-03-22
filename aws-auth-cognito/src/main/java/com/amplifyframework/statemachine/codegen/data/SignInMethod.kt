@@ -15,6 +15,26 @@
 
 package com.amplifyframework.statemachine.codegen.data
 
-enum class SignInMethod {
-    SRP, CUSTOM, HOSTED
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+
+@Serializable
+internal sealed class SignInMethod {
+
+    @Serializable
+    @SerialName("SignInMethod.ApiBased")
+    data class ApiBased(val authType: AuthType) : SignInMethod() {
+
+        // Directly maps to AuthFlowType in Cognito Library
+        enum class AuthType {
+            USER_SRP_AUTH,
+            CUSTOM_AUTH,
+            USER_PASSWORD_AUTH,
+            UNKNOWN
+        }
+    }
+
+    @Serializable
+    @SerialName("SignInMethod.HostedUI")
+    data class HostedUI(val browserPackage: String? = null) : SignInMethod()
 }

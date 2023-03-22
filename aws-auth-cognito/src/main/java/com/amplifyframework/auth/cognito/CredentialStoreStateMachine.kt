@@ -15,7 +15,7 @@
 
 package com.amplifyframework.auth.cognito
 
-import com.amplifyframework.auth.cognito.actions.CredentialStoreActions
+import com.amplifyframework.auth.cognito.actions.CredentialStoreCognitoActions
 import com.amplifyframework.auth.cognito.data.AWSCognitoAuthCredentialStore
 import com.amplifyframework.auth.cognito.data.AWSCognitoLegacyCredentialStore
 import com.amplifyframework.logging.Logger
@@ -28,18 +28,21 @@ internal class CredentialStoreStateMachine(
     resolver: StateMachineResolver<CredentialStoreState>,
     environment: Environment,
 ) : StateMachine<CredentialStoreState, Environment>(resolver, environment) {
-    constructor(environment: Environment) : this(CredentialStoreState.Resolver(CredentialStoreActions), environment)
+    constructor(environment: Environment) : this(
+        CredentialStoreState.Resolver(CredentialStoreCognitoActions),
+        environment
+    )
 
     companion object {
         fun logging(environment: Environment) = CredentialStoreStateMachine(
-            CredentialStoreState.Resolver(CredentialStoreActions).logging(),
+            CredentialStoreState.Resolver(CredentialStoreCognitoActions).logging(),
             environment
         )
     }
 }
 
-class CredentialStoreEnvironment(
+internal class CredentialStoreEnvironment(
     val credentialStore: AWSCognitoAuthCredentialStore,
     val legacyCredentialStore: AWSCognitoLegacyCredentialStore,
-    val logger: Logger? = null
+    val logger: Logger
 ) : Environment

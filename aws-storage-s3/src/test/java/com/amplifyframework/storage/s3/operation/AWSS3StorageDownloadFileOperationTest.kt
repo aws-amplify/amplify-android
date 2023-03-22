@@ -29,8 +29,11 @@ import io.mockk.mockk
 import java.io.File
 import org.junit.Before
 import org.junit.Test
+import org.junit.runner.RunWith
 import org.mockito.Mockito
+import org.robolectric.RobolectricTestRunner
 
+@RunWith(RobolectricTestRunner::class)
 class AWSS3StorageDownloadFileOperationTest {
 
     private lateinit var awsS3StorageDownloadFileOperation: AWSS3StorageDownloadFileOperation
@@ -66,7 +69,11 @@ class AWSS3StorageDownloadFileOperationTest {
             {}
         )
         awsS3StorageDownloadFileOperation.start()
-        Mockito.verify(storageService).downloadToFile(expectedKey, tempFile)
+        Mockito.verify(storageService).downloadToFile(
+            awsS3StorageDownloadFileOperation.transferId,
+            expectedKey,
+            tempFile
+        )
     }
 
     @Test
@@ -92,7 +99,7 @@ class AWSS3StorageDownloadFileOperationTest {
                         accessLevel: StorageAccessLevel,
                         targetIdentity: String?,
                         onSuccess: Consumer<String>,
-                        onError: Consumer<StorageException>
+                        onError: Consumer<StorageException>?
                     ) {
                         onSuccess.accept("")
                     }
@@ -103,7 +110,11 @@ class AWSS3StorageDownloadFileOperationTest {
             {}
         )
         awsS3StorageDownloadFileOperation.start()
-        Mockito.verify(storageService).downloadToFile(expectedKey, tempFile)
+        Mockito.verify(storageService).downloadToFile(
+            awsS3StorageDownloadFileOperation.transferId,
+            expectedKey,
+            tempFile
+        )
     }
 
     @Test
@@ -129,7 +140,7 @@ class AWSS3StorageDownloadFileOperationTest {
                         accessLevel: StorageAccessLevel,
                         targetIdentity: String?,
                         onSuccess: Consumer<String>,
-                        onError: Consumer<StorageException>
+                        onError: Consumer<StorageException>?
                     ) {
                         onSuccess.accept("customPublic/")
                     }
@@ -140,6 +151,10 @@ class AWSS3StorageDownloadFileOperationTest {
             {}
         )
         awsS3StorageDownloadFileOperation.start()
-        Mockito.verify(storageService).downloadToFile(expectedKey, tempFile)
+        Mockito.verify(storageService).downloadToFile(
+            awsS3StorageDownloadFileOperation.transferId,
+            expectedKey,
+            tempFile
+        )
     }
 }

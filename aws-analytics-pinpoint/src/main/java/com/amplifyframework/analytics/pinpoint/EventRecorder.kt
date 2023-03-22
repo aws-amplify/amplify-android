@@ -56,15 +56,33 @@ internal class EventRecorder(
     private val defaultMaxSubmissionAllowed = 3
     private val defaultMaxSubmissionSize = 1024 * 100
     private val serviceDefinedMaxEventsPerBatch: Int = 100
-    internal suspend fun recordEvent(pinpointEvent: PinpointEvent): Uri {
+    internal suspend fun recordEvent(pinpointEvent: PinpointEvent): Uri? {
         return withContext(coroutineDispatcher) {
-            pinpointDatabase.saveEvent(pinpointEvent)
+            val result = runCatching {
+                pinpointDatabase.saveEvent(pinpointEvent)
+            }
+            when {
+                result.isSuccess -> result.getOrNull()
+                else -> {
+                    logger.error("Failed to record event ${result.exceptionOrNull()}")
+                    null
+                }
+            }
         }
     }
 
     internal suspend fun submitEvents(): List<AnalyticsEvent> {
         return withContext(coroutineDispatcher) {
-            processEvents()
+            val result = runCatching {
+                processEvents()
+            }
+            when {
+                result.isSuccess -> result.getOrNull() ?: emptyList()
+                else -> {
+                    logger.error("Failed to submit events ${result.exceptionOrNull()}")
+                    emptyList()
+                }
+            }
         }
     }
 
@@ -205,7 +223,7 @@ internal class EventRecorder(
                 id = pinpointEvent.pinpointSession.sessionId
                 startTimestamp = pinpointEvent.pinpointSession.sessionStart.millisToIsoDate()
                 stopTimestamp = pinpointEvent.pinpointSession.sessionEnd?.let {
-                    pinpointEvent.pinpointSession.sessionStart.millisToIsoDate()
+                    pinpointEvent.pinpointSession.sessionEnd.millisToIsoDate()
                 }
                 pinpointEvent.pinpointSession.sessionDuration?.toInt()?.let { duration = it }
             }
@@ -249,7 +267,6 @@ internal class EventRecorder(
         }
 
         return PublicEndpoint {
-            channelType = endpointProfile.channelType
             location = endpointLocation
             demographic = endpointDemographic
             effectiveDate = endpointProfile.effectiveDate.millisToIsoDate()

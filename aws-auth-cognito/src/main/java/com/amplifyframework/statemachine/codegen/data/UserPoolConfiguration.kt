@@ -21,12 +21,13 @@ import org.json.JSONObject
 /**
  * Configuration options for specifying cognito user pool.
  */
-data class UserPoolConfiguration internal constructor(val builder: Builder) {
+internal data class UserPoolConfiguration internal constructor(val builder: Builder) {
     val region: String? = builder.region
     val endpoint: String? = builder.endpoint
     val poolId: String? = builder.poolId
     val appClient: String? = builder.appClientId
     val appClientSecret: String? = builder.appClientSecret
+    val pinpointAppId: String? = builder.pinpointAppId
 
     companion object {
         private const val DEFAULT_REGION = "us-east-1"
@@ -62,6 +63,7 @@ data class UserPoolConfiguration internal constructor(val builder: Builder) {
         var poolId: String? = null
         var appClientId: String? = null
         var appClientSecret: String? = null
+        var pinpointAppId: String? = null
 
         init {
             configJson?.run {
@@ -70,6 +72,7 @@ data class UserPoolConfiguration internal constructor(val builder: Builder) {
                 poolId = optString(Config.POOL_ID.key).takeUnless { it.isNullOrEmpty() }
                 appClientId = optString(Config.APP_CLIENT_ID.key).takeUnless { it.isNullOrEmpty() }
                 appClientSecret = optString(Config.APP_CLIENT_SECRET.key).takeUnless { it.isNullOrEmpty() }
+                pinpointAppId = optString(Config.PINPOINT_APP_ID.key).takeUnless { it.isNullOrEmpty() }
             }
         }
 
@@ -78,6 +81,7 @@ data class UserPoolConfiguration internal constructor(val builder: Builder) {
         fun poolId(poolId: String) = apply { this.poolId = poolId }
         fun appClientId(appClientId: String) = apply { this.appClientId = appClientId }
         fun appClientSecret(appClientSecret: String) = apply { this.appClientSecret = appClientSecret }
+        fun pinpointAppId(pinpointAppId: String) = apply { this.pinpointAppId = pinpointAppId }
         fun build() = UserPoolConfiguration(this)
 
         @Throws(AuthException::class)
@@ -96,9 +100,9 @@ data class UserPoolConfiguration internal constructor(val builder: Builder) {
                     "https://$endpoint"
                 }
             } catch (e: Exception) {
-                throw AuthException(
-                    "Invalid endpoint value $endpoint",
-                    "Expected fully qualified hostname with no scheme, no path and no query"
+                throw Exception(
+                    "Invalid endpoint value $endpoint. Expected fully qualified hostname with no scheme, " +
+                        "no path and no query"
                 )
             }
         }
@@ -129,5 +133,10 @@ data class UserPoolConfiguration internal constructor(val builder: Builder) {
          * Contains user pool app client secret.
          */
         APP_CLIENT_SECRET("AppClientSecret"),
+
+        /**
+         * Contains pinpoint app id to link auth events to Pinpoint.
+         */
+        PINPOINT_APP_ID("PinpointAppId")
     }
 }

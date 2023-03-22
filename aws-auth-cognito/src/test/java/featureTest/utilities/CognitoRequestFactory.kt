@@ -18,8 +18,8 @@ package featureTest.utilities
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AttributeType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ForgotPasswordRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.SignUpRequest
+import com.amplifyframework.auth.cognito.featuretest.ExpectationShapes
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
-import com.amplifyframework.testutils.featuretest.ExpectationShapes
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
@@ -70,6 +70,6 @@ object CognitoRequestFactory {
             SignUpRequest.invoke(expectedRequest)
         }
 
-        else -> throw Error("Expected request for $targetApi for Cognito is not defined")
+        else -> error("Expected request for $targetApi for Cognito is not defined")
     }
 }

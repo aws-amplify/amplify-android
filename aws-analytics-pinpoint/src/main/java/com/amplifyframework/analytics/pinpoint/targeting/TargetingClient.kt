@@ -21,7 +21,6 @@ import aws.sdk.kotlin.services.pinpoint.model.EndpointDemographic
 import aws.sdk.kotlin.services.pinpoint.model.EndpointLocation
 import aws.sdk.kotlin.services.pinpoint.model.EndpointRequest
 import aws.sdk.kotlin.services.pinpoint.model.EndpointUser
-import aws.sdk.kotlin.services.pinpoint.model.PinpointException
 import aws.sdk.kotlin.services.pinpoint.model.UpdateEndpointRequest
 import com.amplifyframework.analytics.pinpoint.internal.core.idresolver.SharedPrefsUniqueIdService
 import com.amplifyframework.analytics.pinpoint.internal.core.util.millisToIsoDate
@@ -29,7 +28,6 @@ import com.amplifyframework.analytics.pinpoint.internal.core.util.putString
 import com.amplifyframework.analytics.pinpoint.models.AndroidAppDetails
 import com.amplifyframework.analytics.pinpoint.models.AndroidDeviceDetails
 import com.amplifyframework.analytics.pinpoint.targeting.endpointProfile.EndpointProfile
-import com.amplifyframework.analytics.pinpoint.targeting.notification.PinpointNotificationClient
 import com.amplifyframework.core.Amplify
 import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.CoroutineDispatcher
@@ -41,7 +39,6 @@ import org.json.JSONObject
 
 internal class TargetingClient(
     private val pinpointClient: PinpointClient,
-    pinpointNotificationClient: PinpointNotificationClient,
     idService: SharedPrefsUniqueIdService,
     private val prefs: SharedPreferences,
     appDetails: AndroidAppDetails,
@@ -50,7 +47,7 @@ internal class TargetingClient(
     coroutineDispatcher: CoroutineDispatcher = Dispatchers.Default,
 ) {
     private val endpointProfile: EndpointProfile =
-        EndpointProfile(pinpointNotificationClient, idService, appDetails, deviceDetails, applicationContext)
+        EndpointProfile(idService, appDetails, deviceDetails, applicationContext)
     private val globalAttributes: MutableMap<String, List<String>>
     private val globalMetrics: MutableMap<String, Double>
     private val coroutineScope = CoroutineScope(coroutineDispatcher)
@@ -138,8 +135,6 @@ internal class TargetingClient(
             }
         }
         val endpointRequest = EndpointRequest {
-            channelType = endpointProfile.channelType
-            address = endpointProfile.address
             this.location = location
             this.demographic = demographic
             effectiveDate = endpointProfile.effectiveDate.millisToIsoDate()
@@ -158,9 +153,10 @@ internal class TargetingClient(
         coroutineScope.launch {
             try {
                 LOG.info("Updating EndpointProfile.")
+                // This could fail if credentials are no longer stored due to sign out before this call is processed
                 pinpointClient.updateEndpoint(updateEndpointRequest)
                 LOG.info("EndpointProfile updated successfully.")
-            } catch (e: PinpointException) {
+            } catch (e: Exception) {
                 LOG.error("PinpointException occurred during endpoint update:", e)
             }
         }

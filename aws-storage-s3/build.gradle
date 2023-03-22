@@ -35,11 +35,15 @@ dependencies {
     testImplementation dependency.robolectric
     testImplementation dependency.androidx.test.core
     testImplementation dependency.mockk
+    testImplementation dependency.androidx.test.workmanager
+    testImplementation dependency.kotlin.test.coroutines
+    testImplementation project(path: ':aws-storage-s3')
 
     androidTestImplementation project(path: ':testutils')
     androidTestImplementation dependency.androidx.annotation
     androidTestImplementation dependency.androidx.test.runner
     androidTestImplementation dependency.androidx.test.junit
     androidTestImplementation dependency.androidx.test.workmanager
+    androidTestImplementation project(path: ':aws-storage-s3')
 }
 

@@ -28,6 +28,7 @@ import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
+import com.amplifyframework.auth.options.AuthFetchSessionOptions
 import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions
 import com.amplifyframework.auth.options.AuthResendUserAttributeConfirmationCodeOptions
 import com.amplifyframework.auth.options.AuthResetPasswordOptions
@@ -95,14 +96,14 @@ interface Auth {
      *                 depending on configuration
      * @param options Advanced options such as a map of auth information for custom auth,
      *                If not provided, default options will be used
-     * @return A sign-up result; if the code is requested, typically the result will
+     * @return A code delivery result; if the code is requested, typically the result will
      *         include a next step requiring confirmation of the re-sent code.
      */
     @Throws(AuthException::class)
     suspend fun resendSignUpCode(
         username: String,
         options: AuthResendSignUpCodeOptions = AuthResendSignUpCodeOptions.defaults()
-    ): AuthSignUpResult
+    ): AuthCodeDeliveryDetails
 
     /**
      * Basic authentication to the app with a username and password or, if custom auth is setup,
@@ -127,14 +128,14 @@ interface Auth {
 
     /**
      * Submit the confirmation code received as part of multi-factor Authentication during sign in.
-     * @param confirmationCode The code received as part of the multi-factor authentication process
+     * @param challengeResponse The code received as part of the multi-factor authentication process
      * @param options Advanced options such as a map of auth information for custom auth,
      *                If not provided, default options will be used
      * @return A sign-in result; check the nextStep field for cues on additional sign-in challenges
      */
     @Throws(AuthException::class)
     suspend fun confirmSignIn(
-        confirmationCode: String,
+        challengeResponse: String,
         options: AuthConfirmSignInOptions = AuthConfirmSignInOptions.defaults()
     ):
         AuthSignInResult
@@ -184,10 +185,12 @@ interface Auth {
      * to that plugin which contains the various security tokens and other identifying information if you want to
      * manually use them outside the plugin. Within Amplify this should not be needed as the other categories will
      * automatically work as long as you are signed in.
+     * * @param options Advanced options for fetching auth session.
+     *                If not provided, default options will be used.
      * @return Information about the current authenticated session, where applicable
      */
     @Throws(AuthException::class)
-    suspend fun fetchAuthSession(): AuthSession
+    suspend fun fetchAuthSession(options: AuthFetchSessionOptions = AuthFetchSessionOptions.defaults()): AuthSession
 
     /**
      * Remember the user device that is currently being used.

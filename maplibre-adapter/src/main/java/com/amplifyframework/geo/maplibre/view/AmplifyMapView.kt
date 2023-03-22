@@ -31,7 +31,6 @@ import com.amplifyframework.geo.GeoException
 import com.amplifyframework.geo.location.models.AmazonLocationPlace
 import com.amplifyframework.geo.maplibre.R
 import com.amplifyframework.geo.maplibre.util.getPlaceData
-import com.amplifyframework.geo.maplibre.util.id
 import com.amplifyframework.geo.maplibre.util.parseCoordinates
 import com.amplifyframework.geo.maplibre.util.toCoordinates
 import com.amplifyframework.geo.maplibre.util.toJsonElement
