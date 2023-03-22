@@ -42,6 +42,7 @@ public final class RxAmplify {
     @SuppressWarnings({"checkstyle:all"}) public static final RxDataStoreCategoryBehavior DataStore = new RxDataStoreBinding();
     @SuppressWarnings({"checkstyle:all"}) public static final RxPredictionsCategoryBehavior Predictions = new RxPredictionsBinding();
     @SuppressWarnings({"checkstyle:all"}) public static final RxGeoCategoryBehavior Geo = new RxGeoBinding();
+    @SuppressWarnings({"checkstyle:all"}) public static final RxNotificationsCategoryBehavior Notifications = new RxNotificationsBinding();
 
     /**
      * Read the configuration from amplifyconfiguration.json file.
