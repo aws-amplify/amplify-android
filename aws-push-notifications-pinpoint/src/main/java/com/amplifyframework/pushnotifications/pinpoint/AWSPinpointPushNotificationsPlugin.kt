@@ -42,6 +42,7 @@ import com.amplifyframework.pinpoint.core.data.AndroidDeviceDetails
 import com.amplifyframework.pinpoint.core.database.PinpointDatabase
 import com.amplifyframework.pinpoint.core.util.getUniqueId
 import com.google.firebase.messaging.FirebaseMessaging
+import java.io.IOException
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.random.Random
 import org.json.JSONObject
@@ -158,15 +159,23 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
 
     private fun fetchFCMDeviceToken() {
         FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
-            if (!task.isSuccessful) {
-                LOG.info("Fetching FCM registration token failed: ${task.exception}")
+            try {
+                if (!task.isSuccessful) {
+                    LOG.error("Fetching FCM registration token failed: ${task.exception}")
+                }
+                val token = task.result
+                registerDevice(token, {
+                    LOG.info("Registering push notifications token: $token")
+                }, {
+                    throw it
+                })
+            } catch (exception: IOException) {
+                LOG.error(
+                    "Fetching token failed, this is a known issue in emulators, " +
+                        "rerun the app: https://github.com/firebase/firebase-android-sdk/issues/3040",
+                    exception
+                )
             }
-            val token = task.result
-            registerDevice(token, {
-                LOG.info("Registering push notifications token: $token")
-            }, {
-                throw it
-            })
         }
     }
 
