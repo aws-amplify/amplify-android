@@ -160,7 +160,7 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
     private fun fetchFCMDeviceToken() {
         FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
             try {
-                if (task.isSuccessful) {
+                if (!task.isSuccessful) {
                     LOG.error("Fetching FCM registration token failed: ${task.exception}")
                 }
                 val token = task.result
