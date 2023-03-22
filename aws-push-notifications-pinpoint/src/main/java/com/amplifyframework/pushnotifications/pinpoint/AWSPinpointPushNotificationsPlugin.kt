@@ -170,7 +170,11 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
                     throw it
                 })
             } catch (exception: IOException) {
-                LOG.error("Fetching token failed, this is a known issue in emulators, rerun the app: https://github.com/firebase/firebase-android-sdk/issues/3040", exception)
+                LOG.error(
+                    "Fetching token failed, this is a known issue in emulators, " +
+                        "rerun the app: https://github.com/firebase/firebase-android-sdk/issues/3040",
+                    exception
+                )
             }
         }
     }
