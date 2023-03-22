@@ -3,10 +3,6 @@
 ### Features
 - **notifications:** add push notifications category and plugin ([#2336](https://github.com/aws-amplify/amplify-android/issues/2336))
 
-### Bug Fixes
-- **notifications:** fix campaign notifications ids ([#2360](https://github.com/aws-amplify/amplify-android/issues/2360))
-- **notifications:** Catch fetch token error ([#2361](https://github.com/aws-amplify/amplify-android/issues/2361))
-
 [See all changes between 2.4.1 and 2.5.0](https://github.com/aws-amplify/amplify-android/compare/release_v2.4.1...release_v2.5.0)
 
 ## [Release 2.4.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.4.1)
