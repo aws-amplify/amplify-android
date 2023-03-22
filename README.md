@@ -78,6 +78,7 @@ dependencies {
     implementation 'com.amplifyframework:aws-predictions:2.5.0'
     implementation 'com.amplifyframework:aws-storage-s3:2.5.0'
     implementation 'com.amplifyframework:aws-geo-location:2.5.0'
+    implementation 'com.amplifyframework:aws-push-notifications-pinpoint:2.5.0'
 }
 ```
 
