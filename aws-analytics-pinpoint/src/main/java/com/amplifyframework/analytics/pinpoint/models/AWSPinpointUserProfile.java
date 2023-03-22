@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.analytics.AnalyticsProperties;
 import com.amplifyframework.analytics.UserProfile;
+import com.amplifyframework.pinpoint.core.models.AWSPinpointUserProfileBehavior;
 
 import java.util.Objects;
 
@@ -28,7 +29,7 @@ import java.util.Objects;
  * Extends the category-defined UserProfile class to include features supported
  * relevant to Pinpoint only.
  */
-public final class AWSPinpointUserProfile extends UserProfile {
+public final class AWSPinpointUserProfile extends UserProfile implements AWSPinpointUserProfileBehavior {
     private final AnalyticsProperties userAttributes;
 
     /**

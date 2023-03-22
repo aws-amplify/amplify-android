@@ -33,8 +33,6 @@ android {
 }
 
 dependencies {
-    val lifecycleVersion = "2.4.1"
-
     implementation(project(":aws-auth-cognito"))
     implementation(project(":aws-geo-location"))
     implementation(project(":core"))

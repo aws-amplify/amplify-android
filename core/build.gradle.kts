@@ -35,7 +35,10 @@ dependencies {
     implementation(dependency.androidx.annotation)
     implementation(dependency.androidx.nav.fragment)
     implementation(dependency.androidx.nav.ui)
+    implementation(dependency.androidx.security)
     implementation(dependency.kotlin.serializationJson)
+
+    api(project(":common-core"))
 
     testImplementation(project(":aws-api-appsync"))
     // Used to reference Temporal types in tests.
@@ -43,6 +46,7 @@ dependencies {
     testImplementation(project(":testutils"))
     testImplementation(testDependency.junit)
     testImplementation(testDependency.mockito)
+    testImplementation(testDependency.mockitoinline)
     testImplementation(testDependency.robolectric)
     testImplementation(dependency.rxjava)
     testImplementation(testDependency.androidx.test.core)
