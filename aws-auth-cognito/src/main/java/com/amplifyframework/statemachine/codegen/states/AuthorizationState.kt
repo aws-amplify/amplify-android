@@ -51,7 +51,10 @@ internal sealed class AuthorizationState : State {
         val refreshSessionState: RefreshSessionState
     ) : AuthorizationState()
 
-    data class DeletingUser(val deleteUserState: DeleteUserState) : AuthorizationState()
+    data class DeletingUser(
+        val deleteUserState: DeleteUserState,
+        val amplifyCredential: AmplifyCredential
+    ) : AuthorizationState()
     data class StoringCredentials(val amplifyCredential: AmplifyCredential) : AuthorizationState()
     data class SessionEstablished(val amplifyCredential: AmplifyCredential) : AuthorizationState()
     data class FederatingToIdentityPool(
@@ -231,9 +234,22 @@ internal sealed class AuthorizationState : State {
                         )
                     }
                 }
-                is DeletingUser -> {
-                    val resolution = deleteUserResolver.resolve(oldState.deleteUserState, event)
-                    StateResolution(DeletingUser(resolution.newState), resolution.actions)
+                is DeletingUser -> when (authorizationEvent) {
+                    is AuthorizationEvent.EventType.UserDeleted -> {
+                        StateResolution(
+                            SigningOut(oldState.amplifyCredential),
+                            listOf()
+                        )
+                    }
+                    is AuthorizationEvent.EventType.ThrowError -> {
+                        StateResolution(SessionEstablished(oldState.amplifyCredential))
+                    }
+                    else -> {
+                        val resolution = deleteUserResolver.resolve(oldState.deleteUserState, event)
+                        StateResolution(
+                            DeletingUser(resolution.newState, oldState.amplifyCredential), resolution.actions
+                        )
+                    }
                 }
                 is SessionEstablished -> when {
                     authenticationEvent is AuthenticationEvent.EventType.SignInRequested -> StateResolution(SigningIn())
@@ -242,7 +258,7 @@ internal sealed class AuthorizationState : State {
                         StateResolution(SigningOut(oldState.amplifyCredential))
                     }
                     deleteUserEvent is DeleteUserEvent.EventType.DeleteUser -> StateResolution(
-                        DeletingUser(DeleteUserState.NotStarted()),
+                        DeletingUser(DeleteUserState.NotStarted(), oldState.amplifyCredential),
                         listOf(authorizationActions.initiateDeleteUser(deleteUserEvent))
                     )
                     authorizationEvent is AuthorizationEvent.EventType.RefreshSession -> {
@@ -305,7 +321,7 @@ internal sealed class AuthorizationState : State {
                     }
                     deleteUserEvent is DeleteUserEvent.EventType.DeleteUser -> {
                         StateResolution(
-                            DeletingUser(DeleteUserState.NotStarted()),
+                            DeletingUser(DeleteUserState.NotStarted(), AmplifyCredential.Empty),
                             listOf(authorizationActions.initiateDeleteUser(deleteUserEvent))
                         )
                     }

@@ -23,16 +23,8 @@ platform :android do |options|
           doc_files_to_update: ["#{project_root}/README.md", "#{project_root}/rxbindings/README.md"],
           release_title: 'Amplify Android',
           changelog_path: "#{project_root}/CHANGELOG.md",
-        },
-        {
-          release_tag_prefix: 'release-kotlin_v',
-          gradle_properties_path: "#{project_root}/core-kotlin/gradle.properties",
-          doc_files_to_update: [],
-          release_title: 'Amplify Android Kotlin Facade',
-          changelog_path: "#{project_root}/core-kotlin/CHANGELOG.md",
         }
       ]
     }
   end
 end
-

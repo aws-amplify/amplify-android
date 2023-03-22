@@ -20,18 +20,24 @@ import aws.sdk.kotlin.services.cognitoidentity.model.Credentials
 import aws.sdk.kotlin.services.cognitoidentity.model.GetCredentialsForIdentityResponse
 import aws.sdk.kotlin.services.cognitoidentity.model.GetIdResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.CognitoIdentityProviderClient
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.AttributeType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AuthenticationResultType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.CodeDeliveryDetailsType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ConfirmDeviceResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeleteUserResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeliveryMediumType
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeviceType
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.ForgetDeviceResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ForgotPasswordResponse
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetUserResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.GlobalSignOutResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.InitiateAuthResponse
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.ListDevicesResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.RespondToAuthChallengeResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.RevokeTokenResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.SignUpResponse
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.UpdateDeviceStatusResponse
 import aws.smithy.kotlin.runtime.time.Instant
 import com.amplifyframework.auth.cognito.featuretest.CognitoType
 import com.amplifyframework.auth.cognito.featuretest.MockResponse
@@ -119,6 +125,23 @@ class CognitoMockFactory(
                     }
                 }
             }
+            "getUser" -> {
+                coEvery { mockCognitoIPClient.getUser(any()) } coAnswers {
+                    setupError(mockResponse, responseObject)
+                    GetUserResponse.invoke {
+                        userAttributes = listOf<AttributeType>(
+                            AttributeType.invoke {
+                                name = "email"
+                                value = "email@email.com"
+                            },
+                            AttributeType.invoke {
+                                name = "phone_number"
+                                value = "000-000-0000"
+                            }
+                        )
+                    }
+                }
+            }
             "getCredentialsForIdentity" -> {
                 coEvery { mockCognitoIdClient.getCredentialsForIdentity(any()) } coAnswers {
                     setupError(mockResponse, responseObject)
@@ -145,6 +168,39 @@ class CognitoMockFactory(
                     GlobalSignOutResponse.invoke {}
                 }
             }
+            "updateDeviceStatus" -> {
+                coEvery { mockCognitoIPClient.updateDeviceStatus(any()) } coAnswers {
+                    setupError(mockResponse, responseObject)
+                    UpdateDeviceStatusResponse.invoke { }
+                }
+            }
+            "forgetDevice" -> {
+                coEvery { mockCognitoIPClient.forgetDevice(any()) } coAnswers {
+                    setupError(mockResponse, responseObject)
+                    ForgetDeviceResponse.invoke {}
+                }
+            }
+            "listDevices" -> {
+                coEvery { mockCognitoIPClient.listDevices(any()) } coAnswers {
+                    setupError(mockResponse, responseObject)
+                    ListDevicesResponse.invoke {
+                        devices = listOf<DeviceType>(
+                            DeviceType.invoke {
+                                deviceAttributes = listOf<AttributeType>(
+                                    AttributeType.invoke {
+                                        name = "name"
+                                        value = "value"
+                                    }
+                                )
+                                deviceKey = "deviceKey"
+                                deviceCreateDate = Instant.now()
+                                deviceLastAuthenticatedDate = Instant.now()
+                                deviceLastModifiedDate = Instant.now()
+                            }
+                        )
+                    }
+                }
+            }
             else -> throw Error("mock for ${mockResponse.apiName} not defined!")
         }
     }
@@ -154,13 +210,14 @@ class CognitoMockFactory(
         responseObject: JsonObject
     ) {
         if (mockResponse.responseType == ResponseType.Failure) {
-            throw Json.decodeFromString(
+            val response = Json.decodeFromString(
                 when (mockResponse.type) {
                     CognitoType.CognitoIdentity -> CognitoIdentityExceptionSerializer
                     CognitoType.CognitoIdentityProvider -> CognitoIdentityProviderExceptionSerializer
                 },
                 responseObject.toString()
             )
+            throw response
         }
     }
 

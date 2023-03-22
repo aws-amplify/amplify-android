@@ -1,0 +1,43 @@
+{
+    "description": "Nothing is returned when forget device succeeds",
+    "preConditions": {
+        "amplify-configuration": "authconfiguration.json",
+        "state": "SignedIn_SessionEstablished.json",
+        "mockedResponses": [
+            {
+                "type": "cognitoIdentityProvider",
+                "apiName": "updateDeviceStatus",
+                "responseType": "success",
+                "response": {
+                }
+            }
+        ]
+    },
+    "api": {
+        "name": "forgetDevice",
+        "params": {
+            "device": {
+                "id": "id",
+                "name": "test"
+            }
+        },
+        "options": {
+        }
+    },
+    "validations": [
+        {
+            "type": "amplify",
+            "apiName": "forgetDevice",
+            "responseType": "success",
+            "response": {
+            }
+        },
+        {
+            "type": "amplify",
+            "apiName": "forgetDevice",
+            "responseType": "success",
+            "response": {
+            }
+        }
+    ]
+}

@@ -21,24 +21,26 @@ import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import aws.sdk.kotlin.services.s3.S3Client
 import aws.sdk.kotlin.services.s3.model.GetObjectResponse
+import aws.sdk.kotlin.services.s3.withConfig
 import aws.smithy.kotlin.runtime.content.ByteStream
-import aws.smithy.kotlin.runtime.io.SdkByteReadChannel
-import aws.smithy.kotlin.runtime.io.readChannel
-import aws.smithy.kotlin.runtime.util.InternalApi
+import aws.smithy.kotlin.runtime.content.fromFile
 import com.amplifyframework.storage.TransferState
+import com.amplifyframework.storage.s3.transfer.DownloadProgressListenerInterceptor
 import com.amplifyframework.storage.s3.transfer.TransferDB
 import com.amplifyframework.storage.s3.transfer.TransferRecord
 import com.amplifyframework.storage.s3.transfer.TransferStatusUpdater
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkStatic
+import io.mockk.unmockkStatic
 import io.mockk.verify
 import java.io.File
 import java.io.RandomAccessFile
-import java.nio.ByteBuffer
 import java.util.UUID
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
@@ -53,17 +55,26 @@ internal class DownloadWorkerTest {
     private lateinit var transferDB: TransferDB
     private lateinit var transferStatusUpdater: TransferStatusUpdater
     private lateinit var workerParameters: WorkerParameters
+    private lateinit var downloadInterceptor: DownloadProgressListenerInterceptor
 
     @Before
     fun setup() {
         context = ApplicationProvider.getApplicationContext()
         workerParameters = mockk(WorkerParameters::class.java.name)
         s3Client = mockk<S3Client>(relaxed = true, relaxUnitFun = true)
+        mockkStatic(S3Client::withConfig)
+        downloadInterceptor = mockk<DownloadProgressListenerInterceptor>(relaxed = true, relaxUnitFun = true)
         transferDB = mockk(TransferDB::class.java.name)
         transferStatusUpdater = mockk(TransferStatusUpdater::class.java.name)
         every { workerParameters.inputData }.answers { workDataOf(BaseTransferWorker.TRANSFER_RECORD_ID to 1) }
         every { workerParameters.runAttemptCount }.answers { 1 }
         every { workerParameters.taskExecutor }.answers { ImmediateTaskExecutor() }
+        every { s3Client.withConfig(any()) } returns s3Client
+    }
+
+    @After
+    fun tearDown() {
+        unmockkStatic(S3Client::withConfig)
     }
 
     @Test
@@ -78,8 +89,9 @@ internal class DownloadWorkerTest {
 
         val response = GetObjectResponse {
             contentLength = 10
-            body = ByteStream.readAsOneShotStream(createFile(10))
+            body = ByteStream.fromFile(createFile(10))
         }
+
         coEvery {
             s3Client.getObject(
                 any(),
@@ -144,51 +156,5 @@ internal class DownloadWorkerTest {
         raf.close()
         file.deleteOnExit()
         return file
-    }
-
-    @OptIn(InternalApi::class)
-    private fun ByteStream.Companion.readAsOneShotStream(
-        file: File,
-        start: Long = 0,
-        length: Long = file.length(),
-    ): ByteStream {
-        return object : ByteStream.OneShotStream() {
-            override val contentLength: Long = length
-            override fun readFrom(): SdkByteReadChannel {
-                val oneShotStream = file.readChannel(start, start + length - 1)
-                return object : SdkByteReadChannel {
-                    override val availableForRead: Int
-                        get() = oneShotStream.availableForRead
-                    override val isClosedForRead: Boolean
-                        get() = oneShotStream.isClosedForRead
-                    override val isClosedForWrite: Boolean
-                        get() = oneShotStream.isClosedForWrite
-
-                    override suspend fun awaitContent() {
-                        oneShotStream.awaitContent()
-                    }
-
-                    override fun cancel(cause: Throwable?): Boolean {
-                        return oneShotStream.cancel(cause)
-                    }
-
-                    override suspend fun readAvailable(sink: ByteBuffer): Int {
-                        return oneShotStream.readAvailable(sink)
-                    }
-
-                    override suspend fun readAvailable(sink: ByteArray, offset: Int, length: Int): Int {
-                        return oneShotStream.readAvailable(sink, offset, length)
-                    }
-
-                    override suspend fun readFully(sink: ByteArray, offset: Int, length: Int) {
-                        return oneShotStream.readFully(sink, offset, length)
-                    }
-
-                    override suspend fun readRemaining(limit: Int): ByteArray {
-                        return readRemaining(limit)
-                    }
-                }
-            }
-        }
     }
 }

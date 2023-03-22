@@ -37,9 +37,7 @@ import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
 import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.data.LoginsMapProvider
-import com.amplifyframework.statemachine.codegen.data.SignInData
 import com.amplifyframework.statemachine.codegen.data.SignInMethod
-import com.amplifyframework.statemachine.codegen.data.SignOutData
 import com.amplifyframework.statemachine.codegen.data.SignedInData
 import com.amplifyframework.statemachine.codegen.data.SignedOutData
 import com.amplifyframework.statemachine.codegen.events.AuthEvent
@@ -67,9 +65,6 @@ open class StateTransitionTestBase {
         @Suppress("UNCHECKED_CAST")
         fun <T> uninitialized(): T = null as T
     }
-
-    @Mock
-    internal lateinit var signInData: SignInData
 
     @Mock
     internal lateinit var signedInData: SignedInData
@@ -344,7 +339,13 @@ open class StateTransitionTestBase {
         Mockito.`when`(mockSRPActions.initiateSRPAuthAction(MockitoHelper.anyObject()))
             .thenReturn(
                 Action { dispatcher, _ ->
-                    dispatcher.send(SRPEvent(SRPEvent.EventType.RespondPasswordVerifier(mapOf(), mapOf())))
+                    dispatcher.send(
+                        SRPEvent(
+                            SRPEvent.EventType.RespondPasswordVerifier(
+                                mapOf(), mapOf(), "sample_session"
+                            )
+                        )
+                    )
                 }
             )
 
@@ -481,21 +482,6 @@ open class StateTransitionTestBase {
                 Action { dispatcher, _ ->
                     dispatcher.send(
                         AuthorizationEvent(AuthorizationEvent.EventType.Refreshed(dummyCredential))
-                    )
-                }
-            )
-    }
-
-    internal fun setupDeleteAction() {
-        Mockito.`when`(
-            mockDeleteUserActions.initDeleteUserAction(MockitoHelper.anyObject())
-        )
-            .thenReturn(
-                Action { dispatcher, _ ->
-                    dispatcher.send(
-                        AuthenticationEvent(
-                            AuthenticationEvent.EventType.SignOutRequested(SignOutData(true))
-                        )
                     )
                 }
             )

@@ -23,6 +23,7 @@ import com.amplifyframework.AmplifyException
 import com.amplifyframework.auth.AuthCodeDeliveryDetails
 import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.cognito.CognitoAuthExceptionConverter
+import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthResetPasswordOptions
 import com.amplifyframework.auth.options.AuthResetPasswordOptions
 import com.amplifyframework.auth.result.AuthResetPasswordResult
@@ -37,7 +38,8 @@ import kotlinx.coroutines.withContext
  */
 internal class ResetPasswordUseCase(
     private val cognitoIdentityProviderClient: CognitoIdentityProviderClient,
-    private val appClientId: String
+    private val appClientId: String,
+    private val appClientSecret: String?
 ) {
     suspend fun execute(
         username: String,
@@ -53,6 +55,11 @@ internal class ResetPasswordUseCase(
                     this.username = username
                     this.clientMetadata = (options as? AWSCognitoAuthResetPasswordOptions)?.metadata ?: mapOf()
                     this.clientId = appClientId
+                    this.secretHash = AuthHelper.getSecretHash(
+                        username,
+                        appClientId,
+                        appClientSecret
+                    )
                     encodedContextData?.let { this.userContextData { encodedData = it } }
                     pinpointEndpointId?.let {
                         this.analyticsMetadata = AnalyticsMetadataType.invoke { analyticsEndpointId = it }

@@ -18,17 +18,20 @@ package com.amplifyframework.api.aws.auth;
 import com.amplifyframework.api.ApiException.ApiAuthException;
 import com.amplifyframework.api.aws.sigv4.AWS4Signer;
 
+import aws.smithy.kotlin.runtime.net.Url;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
 import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider;
+import aws.smithy.kotlin.runtime.http.DeferredHeaders;
 import aws.smithy.kotlin.runtime.http.Headers;
 import aws.smithy.kotlin.runtime.http.HttpMethod;
-import aws.smithy.kotlin.runtime.http.Url;
 import aws.smithy.kotlin.runtime.http.content.ByteArrayContent;
 import aws.smithy.kotlin.runtime.http.request.HttpRequest;
+import aws.smithy.kotlin.runtime.http.request.HttpRequestKt;
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
 import okio.Buffer;
@@ -79,7 +82,7 @@ public class IamRequestDecorator implements RequestDecorator {
             return null;
         });
 
-        HttpRequest req2 = new HttpRequest(method, url, headers, body2);
+        HttpRequest req2 = HttpRequestKt.HttpRequest(method, url, headers, body2, DeferredHeaders.Companion.getEmpty());
 
         HttpRequest request = v4Signer.signBlocking(req2, credentialsProvider, serviceName).getOutput();
 
@@ -124,8 +127,8 @@ public class IamRequestDecorator implements RequestDecorator {
             return output.toByteArray();
         } catch (IOException exception) {
             throw new ApiAuthException("Unable to calculate SigV4 signature for the request",
-                    exception,
-                    "Check your application logs for details.");
+                exception,
+                "Check your application logs for details.");
         }
     }
 }

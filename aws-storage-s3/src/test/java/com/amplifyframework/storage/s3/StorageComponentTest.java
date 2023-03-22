@@ -57,6 +57,7 @@ import java.util.Date;
 
 import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
 import static org.junit.Assert.assertEquals;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyInt;
 import static org.mockito.Mockito.anyString;
@@ -140,7 +141,7 @@ public final class StorageComponentTest {
 
         // Allow mock StorageService instance to return a non-null
         // URL instance.
-        when(storageService.getPresignedUrl(anyString(), anyInt()))
+        when(storageService.getPresignedUrl(anyString(), anyInt(), anyBoolean()))
                 .thenReturn(urlFromRemoteKey);
 
         // Let Storage category invoke getUrl on mock Storage Service.
@@ -171,7 +172,7 @@ public final class StorageComponentTest {
         // result by default. We need a non-null transfer observer.
         // One option is to mock that, too.
         TransferObserver observer = mock(TransferObserver.class);
-        when(storageService.downloadToFile(anyString(), anyString(), any(File.class)))
+        when(storageService.downloadToFile(anyString(), anyString(), any(File.class), anyBoolean()))
                 .thenReturn(observer);
 
         // Since we use a mock TransferObserver, it has no internal logic
@@ -214,7 +215,7 @@ public final class StorageComponentTest {
         final File toLocalFile = new RandomTempFile();
 
         TransferObserver observer = mock(TransferObserver.class);
-        when(storageService.downloadToFile(anyString(), anyString(), any(File.class)))
+        when(storageService.downloadToFile(anyString(), anyString(), any(File.class), anyBoolean()))
                 .thenReturn(observer);
 
         doAnswer(invocation -> {
@@ -251,7 +252,13 @@ public final class StorageComponentTest {
 
         TransferObserver observer =
                 mock(com.amplifyframework.storage.s3.transfer.TransferObserver.class);
-        when(storageService.uploadFile(anyString(), anyString(), any(File.class), any(ObjectMetadata.class)))
+        when(
+            storageService.uploadFile(anyString(),
+                anyString(),
+                any(File.class),
+                any(ObjectMetadata.class),
+                anyBoolean())
+        )
                 .thenReturn(observer);
 
         doAnswer(invocation -> {
@@ -291,7 +298,8 @@ public final class StorageComponentTest {
             anyString(),
             anyString(),
             any(InputStream.class),
-            any(ObjectMetadata.class))
+            any(ObjectMetadata.class),
+            anyBoolean())
         )
                 .thenReturn(observer);
 
@@ -333,8 +341,14 @@ public final class StorageComponentTest {
 
         com.amplifyframework.storage.s3.transfer.TransferObserver observer =
                 mock(com.amplifyframework.storage.s3.transfer.TransferObserver.class);
-        when(storageService.uploadFile(anyString(), anyString(), any(File.class), any(ObjectMetadata.class)))
-                .thenReturn(observer);
+        when(
+            storageService.uploadFile(
+                anyString(),
+                anyString(),
+                any(File.class),
+                any(ObjectMetadata.class),
+                anyBoolean())
+        ).thenReturn(observer);
 
         doAnswer(invocation -> {
             com.amplifyframework.storage.s3.transfer.TransferListener listener = invocation.getArgument(0);
@@ -377,7 +391,8 @@ public final class StorageComponentTest {
             anyString(),
             anyString(),
             any(InputStream.class),
-            any(ObjectMetadata.class))
+            any(ObjectMetadata.class),
+            anyBoolean())
         )
                 .thenReturn(observer);
 
