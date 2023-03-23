@@ -15,11 +15,14 @@
 
 package com.amplifyframework.pushnotifications.pinpoint
 
+import com.amplifyframework.annotations.InternalAmplifyApi
+
+@InternalAmplifyApi
 class PushNotificationsConstants {
     companion object {
         const val PINPOINT_PREFIX = "pinpoint" // pinpoint
         const val NOTIFICATION_PREFIX = "$PINPOINT_PREFIX.notification." // pinpoint.notification.
-        const val CAMPAIGN_PREFIX = "$PINPOINT_PREFIX.campaign." // pinpoint.campaign
+        const val CAMPAIGN_PREFIX = "$PINPOINT_PREFIX.campaign." // pinpoint.campaign.
         const val OPENAPP = "openApp" // openApp
         const val URL = "url" // url
         const val DEEPLINK = "deeplink" // deeplink
@@ -37,9 +40,11 @@ class PushNotificationsConstants {
         const val PINPOINT_NOTIFICATION_IMAGEURL = "$NOTIFICATION_PREFIX$IMAGEURL" // pinpoint.notification.imageUrl
         // pinpoint.notification.silentPush
         const val PINPOINT_NOTIFICATION_SILENTPUSH = "${NOTIFICATION_PREFIX}silentPush"
-        const val PINPOINT_CAMPAIGN_CAMPAIGN_ID = "${CAMPAIGN_PREFIX}campaign_id" // pinpoint.campaign.campaign_id
+        const val CAMPAIGN_ID = "campaign_id" // campaign_id
+        const val CAMPAIGN_ACTIVITY_ID = "campaign_activity_id" // campaign_activity_id
+        const val PINPOINT_CAMPAIGN_CAMPAIGN_ID = "$CAMPAIGN_PREFIX$CAMPAIGN_ID" // pinpoint.campaign.campaign_id
         // pinpoint.campaign.campaign_activity_id
-        const val PINPOINT_CAMPAIGN_CAMPAIGN_ACTIVITY_ID = "${CAMPAIGN_PREFIX}campaign_activity_id"
+        const val PINPOINT_CAMPAIGN_CAMPAIGN_ACTIVITY_ID = "$CAMPAIGN_PREFIX$CAMPAIGN_ACTIVITY_ID"
         const val DEFAULT_NOTIFICATION_CHANNEL_ID = "PINPOINT.NOTIFICATION" // PINPOINT.NOTIFICATION
         const val DIRECT_CAMPAIGN_SEND = "_DIRECT" // _DIRECT
     }

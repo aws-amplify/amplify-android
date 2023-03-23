@@ -62,8 +62,8 @@ class EventSourceTypeTest {
         val eventSource = EventSourceType.getEventSourceType(campaignPayload)
         val attributes = eventSource.attributeParser.parseAttributes(campaignPayload)
 
-        assertEquals(eventSource.eventSourceIdAttributeKey, campaignIdKey)
-        assertEquals(eventSource.eventSourceActivityAttributeKey, campaignActivityIdKey)
+        assertEquals(eventSource.eventSourceIdAttributeKey, PushNotificationsConstants.CAMPAIGN_ID)
+        assertEquals(eventSource.eventSourceActivityAttributeKey, PushNotificationsConstants.CAMPAIGN_ACTIVITY_ID)
 
         assertEquals(attributes["campaign_id"], campaignData[campaignIdKey])
         assertEquals(attributes["campaign_activity_id"], campaignData[campaignActivityIdKey])
