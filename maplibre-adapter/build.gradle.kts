@@ -38,6 +38,7 @@ dependencies {
     implementation(project(":core"))
     implementation(dependency.aws.signing)
     implementation(dependency.maplibre.sdk)
+    implementation(dependency.gson) // forces maplibre to pull at least the same gson version as other amplify libs
     implementation(dependency.maplibre.annotations)
     implementation(dependency.okhttp)
     implementation(dependency.kotlin.coroutines)
