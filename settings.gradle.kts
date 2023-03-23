@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -72,6 +72,7 @@ dependencyResolutionManagement {
             val nagivation = "navigation"
             version(nagivation, navigationVersion)
             library("androidx-v4support", "androidx.legacy:legacy-support-v4:1.0.0")
+            library("androidx-activity", "androidx.activity:activity:1.2.0")
             library("androidx-annotation", "androidx.annotation:annotation:1.1.0")
             library("androidx-appcompat", "androidx.appcompat:appcompat:1.2.0")
             library("androidx-browser", "androidx.browser:browser:1.4.0")
@@ -90,6 +91,7 @@ dependencyResolutionManagement {
             library("aws-sdk-core", "com.amazonaws:aws-android-sdk-core:2.62.2")
 
             library("aws-credentials", "aws.smithy.kotlin:aws-credentials:0.16.2")
+            library("aws-http", "aws.sdk.kotlin:aws-http:0.16.2")
             library("aws-ktor", "aws.smithy.kotlin:http-client-engine-ktor:0.7.7")
             library("aws-signing", "aws.smithy.kotlin:aws-signing-default:0.16.2")
             library("aws-cognitoidentity", "aws.sdk.kotlin", "cognitoidentity").versionRef(awsKotlinSdk)
@@ -101,7 +103,7 @@ dependencyResolutionManagement {
             library("aws-comprehend", "aws.sdk.kotlin", "comprehend").versionRef(awsKotlinSdk)
             library("aws-location", "aws.sdk.kotlin", "location").versionRef(awsKotlinSdk)
             library("aws-s3", "aws.sdk.kotlin", "s3").versionRef(awsKotlinSdk)
-            library("aws-pinpointKotlin", "aws.sdk.kotlin", "pinpoint").versionRef(awsKotlinSdk)
+            library("aws-pinpoint", "aws.sdk.kotlin", "pinpoint").versionRef(awsKotlinSdk)
             library("aws-polly", "aws.sdk.kotlin", "polly").versionRef(awsKotlinSdk)
             library("aws-rekognition", "aws.sdk.kotlin", "rekognition").versionRef(awsKotlinSdk)
             library("aws-textract", "aws.sdk.kotlin", "textract").versionRef(awsKotlinSdk)
@@ -124,6 +126,7 @@ dependencyResolutionManagement {
 
             // Google
             library("google-material", "com.google.android.material:material:1.4.0")
+            library("firebasemessaging", "com.google.firebase:firebase-messaging-ktx:23.1.0")
 
             // Misc
             library("oauth2", "com.google.auth:google-auth-library-oauth2-http:0.26.0")
@@ -136,8 +139,9 @@ dependencyResolutionManagement {
 }
 
 include(":annotations")
-include(":core")
 include(":aws-core")
+include(":core")
+include(":common-core")
 
 // Plugin Modules
 include(":aws-analytics-pinpoint")
@@ -147,6 +151,7 @@ include(":aws-datastore")
 include(":aws-geo-location")
 include(":aws-predictions")
 include(":aws-predictions-tensorflow")
+include(":aws-push-notifications-pinpoint")
 include(":aws-storage-s3")
 
 // Test Utilities and assets
@@ -158,3 +163,5 @@ include(":core-kotlin")
 include(":rxbindings")
 include(":aws-api-appsync")
 include(":maplibre-adapter")
+include(":aws-pinpoint-core")
+include(":aws-push-notifications-pinpoint-common")

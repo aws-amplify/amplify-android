@@ -5,7 +5,7 @@
   },
   "CHECKS": {
     "prefixes": ["chore: ", "refactor: ", "perf: ", "test: ", "docs: ", "release: "],
-    "regexp": "(fix|feat)\\((all|analytics|api|auth|core|datastore|geo|predictions|storage)\\): ",
+    "regexp": "(fix|feat)\\((all|analytics|api|auth|core|datastore|geo|predictions|storage|notifications)\\): ",
     "regexpFlags": "",
     "ignoreLabels" : ["ignore-pr-title"]
   },

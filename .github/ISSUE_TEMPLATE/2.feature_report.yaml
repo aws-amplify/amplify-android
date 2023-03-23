@@ -14,21 +14,22 @@ body:
         <details>
           <summary>Click to expand package version list</summary>
 
-          | Package                                              | Version                                                                                                          |
-          | ---------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-          | `com.amplifyframework:aws-analytics-pinpoint`        | ![Maven Central](https://img.shields.io/maven-central/v/com.amplifyframework/aws-analytics-pinpoint)             |
-          | `com.amplifyframework:aws-api`                       | ![Maven Central](https://img.shields.io/maven-central/v/com.amplifyframework/aws-api)                            |
-          | `com.amplifyframework:aws-api-appsync`               | ![Maven Central](https://img.shields.io/maven-central/v/com.amplifyframework/aws-api-appsync)                    |
-          | `com.amplifyframework:aws-auth-cognito`              | ![Maven Central](https://img.shields.io/maven-central/v/com.amplifyframework/aws-auth-cognito)                   |
-          | `com.amplifyframework:aws-datastore`                 | ![Maven Central](https://img.shields.io/maven-central/v/com.amplifyframework/aws-datastore)                      |
-          | `com.amplifyframework:aws-geo-location`              | ![Maven Central](https://img.shields.io/maven-central/v/com.amplifyframework/aws-geo-location)                   |
-          | `com.amplifyframework:maplibre-adapter`              | ![Maven Central](https://img.shields.io/maven-central/v/com.amplifyframework/maplibre-adapter)                   |
-          | `com.amplifyframework:aws-storage-s3`                | ![Maven Central](https://img.shields.io/maven-central/v/com.amplifyframework/aws-storage-s3)                     |
-          | `com.amplifyframework:aws-predictions`               | ![Maven Central](https://img.shields.io/maven-central/v/com.amplifyframework/aws-predictions)                    |
-          | `com.amplifyframework:aws-predictions-tensorflow`    | ![Maven Central](https://img.shields.io/maven-central/v/com.amplifyframework/aws-predictions-tensorflow)         |
-          | `com.amplifyframework:core`                          | ![Maven Central](https://img.shields.io/maven-central/v/com.amplifyframework/core)                               |
-          | `com.amplifyframework:core-kotlin`                   | ![Maven Central](https://img.shields.io/maven-central/v/com.amplifyframework/core-kotlin)                        |
-          | `com.amplifyframework:rxbindings`                    | ![Maven Central](https://img.shields.io/maven-central/v/com.amplifyframework/rxbindings)                         |
+          | Package                                                | Version                                                                                                          |
+          | ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------- |
+          | `com.amplifyframework:aws-analytics-pinpoint`          | ![Maven Central](https://img.shields.io/maven-central/v/com.amplifyframework/aws-analytics-pinpoint)             |
+          | `com.amplifyframework:aws-api`                         | ![Maven Central](https://img.shields.io/maven-central/v/com.amplifyframework/aws-api)                            |
+          | `com.amplifyframework:aws-api-appsync`                 | ![Maven Central](https://img.shields.io/maven-central/v/com.amplifyframework/aws-api-appsync)                    |
+          | `com.amplifyframework:aws-auth-cognito`                | ![Maven Central](https://img.shields.io/maven-central/v/com.amplifyframework/aws-auth-cognito)                   |
+          | `com.amplifyframework:aws-datastore`                   | ![Maven Central](https://img.shields.io/maven-central/v/com.amplifyframework/aws-datastore)                      |
+          | `com.amplifyframework:aws-geo-location`                | ![Maven Central](https://img.shields.io/maven-central/v/com.amplifyframework/aws-geo-location)                   |
+          | `com.amplifyframework:maplibre-adapter`                | ![Maven Central](https://img.shields.io/maven-central/v/com.amplifyframework/maplibre-adapter)                   |
+          | `com.amplifyframework:aws-storage-s3`                  | ![Maven Central](https://img.shields.io/maven-central/v/com.amplifyframework/aws-storage-s3)                     |
+          | `com.amplifyframework:aws-predictions`                 | ![Maven Central](https://img.shields.io/maven-central/v/com.amplifyframework/aws-predictions)                    |
+          | `com.amplifyframework:aws-predictions-tensorflow`      | ![Maven Central](https://img.shields.io/maven-central/v/com.amplifyframework/aws-predictions-tensorflow)         |
+          | `com.amplifyframework:aws-push-notifications-pinpoint` | ![Maven Central](https://img.shields.io/maven-central/v/com.amplifyframework/aws-push-notifications-pinpoint)    |
+          | `com.amplifyframework:core`                            | ![Maven Central](https://img.shields.io/maven-central/v/com.amplifyframework/core)                               |
+          | `com.amplifyframework:core-kotlin`                     | ![Maven Central](https://img.shields.io/maven-central/v/com.amplifyframework/core-kotlin)                        |
+          | `com.amplifyframework:rxbindings`                      | ![Maven Central](https://img.shields.io/maven-central/v/com.amplifyframework/rxbindings)                         |
 
         </details>
 
@@ -72,6 +73,7 @@ body:
         - Geo
         - Storage
         - Predictions
+        - Notifications
         - Not applicable
     validations:
       required: true
