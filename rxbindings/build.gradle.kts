@@ -25,6 +25,7 @@ group = properties["POM_GROUP"].toString()
 
 dependencies {
     implementation(project(":core"))
+    implementation(project(":common-core"))
     implementation(dependency.androidx.annotation)
     implementation(dependency.androidx.appcompat)
     implementation(dependency.rxjava)

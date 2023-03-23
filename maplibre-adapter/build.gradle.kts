@@ -33,13 +33,12 @@ android {
 }
 
 dependencies {
-    val lifecycleVersion = "2.4.1"
-
     implementation(project(":aws-auth-cognito"))
     implementation(project(":aws-geo-location"))
     implementation(project(":core"))
     implementation(dependency.aws.signing)
     implementation(dependency.maplibre.sdk)
+    implementation(dependency.gson) // forces maplibre to pull at least the same gson version as other amplify libs
     implementation(dependency.maplibre.annotations)
     implementation(dependency.okhttp)
     implementation(dependency.kotlin.coroutines)

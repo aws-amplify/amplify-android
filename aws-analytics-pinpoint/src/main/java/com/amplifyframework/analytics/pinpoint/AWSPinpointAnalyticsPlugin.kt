@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -14,7 +14,6 @@
  */
 package com.amplifyframework.analytics.pinpoint
 
-import android.app.Application
 import android.content.Context
 import aws.sdk.kotlin.services.pinpoint.PinpointClient
 import com.amplifyframework.analytics.AnalyticsEventBehavior
@@ -27,9 +26,7 @@ import org.json.JSONObject
 /**
  * The plugin implementation for Amazon Pinpoint in Analytics category.
  */
-internal const val AWS_PINPOINT_ANALYTICS_LOG_NAMESPACE = "amplify:aws-pinpoint-analytics:%s"
-
-class AWSPinpointAnalyticsPlugin : AnalyticsPlugin<Any>() {
+class AWSPinpointAnalyticsPlugin : AnalyticsPlugin<PinpointClient>() {
 
     private val pluginKey = "awsPinpointAnalyticsPlugin"
     private val analyticsConfigKey = "pinpointAnalytics"
@@ -100,20 +97,11 @@ class AWSPinpointAnalyticsPlugin : AnalyticsPlugin<Any>() {
             awsAnalyticsConfig,
             CognitoCredentialsProvider()
         )
-        val autoEventSubmitter = AutoEventSubmitter(
-            pinpointManager.analyticsClient,
-            awsAnalyticsConfig.autoFlushEventsInterval
-        )
-        val autoSessionTracker = AutoSessionTracker(pinpointManager.analyticsClient, pinpointManager.sessionClient)
+
         awsPinpointAnalyticsPluginBehavior = AWSPinpointAnalyticsPluginBehavior(
-            context,
             pinpointManager.analyticsClient,
             pinpointManager.targetingClient,
-            autoEventSubmitter,
-            autoSessionTracker
         )
-        autoSessionTracker.startSessionTracking(context.applicationContext as Application)
-        autoEventSubmitter.start()
     }
 
     override fun getEscapeHatch(): PinpointClient {
