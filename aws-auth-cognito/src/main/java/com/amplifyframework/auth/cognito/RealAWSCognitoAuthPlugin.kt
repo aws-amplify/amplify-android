@@ -27,6 +27,7 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeviceRememberedSta
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetUserAttributeVerificationCodeRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetUserRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ListDevicesRequest
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.PasswordResetRequiredException
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.UpdateDeviceStatusRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.UpdateUserAttributesRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.UpdateUserAttributesResponse
@@ -114,6 +115,7 @@ import com.amplifyframework.hub.HubEvent
 import com.amplifyframework.logging.Logger
 import com.amplifyframework.statemachine.StateChangeListenerToken
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
+import com.amplifyframework.statemachine.codegen.data.AuthChallenge
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.data.FederatedToken
@@ -521,15 +523,37 @@ internal class RealAWSCognitoAuthPlugin(
                         when {
                             srpSignInState is SRPSignInState.Error -> {
                                 authStateMachine.cancel(token)
-                                onError.accept(
-                                    CognitoAuthExceptionConverter.lookup(srpSignInState.exception, "Sign in failed.")
-                                )
+                                if (srpSignInState.exception is PasswordResetRequiredException) {
+                                    SignInChallengeHelper.getNextStep(
+                                        AuthChallenge("RESET_PASSWORD", session = null, parameters = null),
+                                        onSuccess,
+                                        onError
+                                    )
+                                } else {
+                                    onError.accept(
+                                        CognitoAuthExceptionConverter.lookup(
+                                            srpSignInState.exception,
+                                            "Sign in failed."
+                                        )
+                                    )
+                                }
                             }
                             signInState is SignInState.Error -> {
                                 authStateMachine.cancel(token)
-                                onError.accept(
-                                    CognitoAuthExceptionConverter.lookup(signInState.exception, "Sign in failed.")
-                                )
+                                if (signInState.exception is PasswordResetRequiredException) {
+                                    SignInChallengeHelper.getNextStep(
+                                        AuthChallenge("RESET_PASSWORD", session = null, parameters = null),
+                                        onSuccess,
+                                        onError
+                                    )
+                                } else {
+                                    onError.accept(
+                                        CognitoAuthExceptionConverter.lookup(
+                                            signInState.exception,
+                                            "Sign in failed."
+                                        )
+                                    )
+                                }
                             }
                             challengeState is SignInChallengeState.WaitingForAnswer -> {
                                 authStateMachine.cancel(token)

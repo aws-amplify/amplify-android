@@ -96,35 +96,43 @@ internal object SignInChallengeHelper {
         onError: Consumer<AuthException>
     ) {
         val challengeParams = challenge.parameters?.toMutableMap() ?: mapOf()
-        when (ChallengeNameType.fromValue(challenge.challengeName)) {
-            is ChallengeNameType.SmsMfa -> {
-                val deliveryDetails = AuthCodeDeliveryDetails(
-                    challengeParams.getValue("CODE_DELIVERY_DESTINATION"),
-                    AuthCodeDeliveryDetails.DeliveryMedium.fromString(
-                        challengeParams.getValue("CODE_DELIVERY_DELIVERY_MEDIUM")
+        if (challenge.challengeName == "RESET_PASSWORD") {
+            val authSignInResult = AuthSignInResult(
+                false,
+                AuthNextSignInStep(AuthSignInStep.RESET_PASSWORD, mapOf(), null)
+            )
+            onSuccess.accept(authSignInResult)
+        } else {
+            when (ChallengeNameType.fromValue(challenge.challengeName)) {
+                is ChallengeNameType.SmsMfa -> {
+                    val deliveryDetails = AuthCodeDeliveryDetails(
+                        challengeParams.getValue("CODE_DELIVERY_DESTINATION"),
+                        AuthCodeDeliveryDetails.DeliveryMedium.fromString(
+                            challengeParams.getValue("CODE_DELIVERY_DELIVERY_MEDIUM")
+                        )
                     )
-                )
-                val authSignInResult = AuthSignInResult(
-                    false,
-                    AuthNextSignInStep(AuthSignInStep.CONFIRM_SIGN_IN_WITH_SMS_MFA_CODE, mapOf(), deliveryDetails)
-                )
-                onSuccess.accept(authSignInResult)
+                    val authSignInResult = AuthSignInResult(
+                        false,
+                        AuthNextSignInStep(AuthSignInStep.CONFIRM_SIGN_IN_WITH_SMS_MFA_CODE, mapOf(), deliveryDetails)
+                    )
+                    onSuccess.accept(authSignInResult)
+                }
+                is ChallengeNameType.NewPasswordRequired -> {
+                    val authSignInResult = AuthSignInResult(
+                        false,
+                        AuthNextSignInStep(AuthSignInStep.CONFIRM_SIGN_IN_WITH_NEW_PASSWORD, challengeParams, null)
+                    )
+                    onSuccess.accept(authSignInResult)
+                }
+                is ChallengeNameType.CustomChallenge -> {
+                    val authSignInResult = AuthSignInResult(
+                        false,
+                        AuthNextSignInStep(AuthSignInStep.CONFIRM_SIGN_IN_WITH_CUSTOM_CHALLENGE, challengeParams, null)
+                    )
+                    onSuccess.accept(authSignInResult)
+                }
+                else -> onError.accept(UnknownException(cause = Exception("Challenge type not supported.")))
             }
-            is ChallengeNameType.NewPasswordRequired -> {
-                val authSignInResult = AuthSignInResult(
-                    false,
-                    AuthNextSignInStep(AuthSignInStep.CONFIRM_SIGN_IN_WITH_NEW_PASSWORD, challengeParams, null)
-                )
-                onSuccess.accept(authSignInResult)
-            }
-            is ChallengeNameType.CustomChallenge -> {
-                val authSignInResult = AuthSignInResult(
-                    false,
-                    AuthNextSignInStep(AuthSignInStep.CONFIRM_SIGN_IN_WITH_CUSTOM_CHALLENGE, challengeParams, null)
-                )
-                onSuccess.accept(authSignInResult)
-            }
-            else -> onError.accept(UnknownException(cause = Exception("Challenge type not supported.")))
         }
     }
 }
