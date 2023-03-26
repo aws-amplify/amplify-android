@@ -28,7 +28,6 @@ import com.amplifyframework.analytics.AnalyticsEvent
 import com.amplifyframework.analytics.AnalyticsProperties
 import com.amplifyframework.analytics.UserProfile
 import com.amplifyframework.analytics.pinpoint.models.AWSPinpointUserProfile
-import com.amplifyframework.analytics.pinpoint.targeting.endpointProfile.EndpointProfile
 import com.amplifyframework.auth.AuthPlugin
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
 import com.amplifyframework.core.Amplify
@@ -36,6 +35,7 @@ import com.amplifyframework.hub.HubChannel
 import com.amplifyframework.hub.HubEvent
 import com.amplifyframework.logging.AndroidLoggingPlugin
 import com.amplifyframework.logging.LogLevel
+import com.amplifyframework.pinpoint.core.endpointProfile.EndpointProfile
 import com.amplifyframework.testutils.HubAccumulator
 import com.amplifyframework.testutils.Resources
 import com.amplifyframework.testutils.Sleep

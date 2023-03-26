@@ -28,6 +28,7 @@ buildscript {
         classpath("com.android.tools.build:gradle:7.3.1")
         classpath(kotlin("gradle-plugin", version = "1.7.10"))
         classpath("org.jetbrains.dokka:dokka-gradle-plugin:1.7.10")
+        classpath("com.google.gms:google-services:4.3.15")
         classpath("org.jlleitschuh.gradle:ktlint-gradle:11.0.0")
         classpath("org.gradle:test-retry-gradle-plugin:1.4.1")
         classpath("org.jetbrains.kotlinx:kover:0.6.1")
@@ -127,8 +128,8 @@ fun Project.configureAndroid() {
     }
 
     configure<LibraryExtension> {
-        buildToolsVersion = "30.0.2"
-        compileSdk = 31
+        buildToolsVersion = "30.0.3"
+        compileSdk = 32
 
         defaultConfig {
             minSdk = 24

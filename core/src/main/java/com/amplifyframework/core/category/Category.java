@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -73,7 +73,7 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
      * @param context An Android Context
      * @throws AmplifyException if already configured
      */
-    public final synchronized void configure(
+    public synchronized void configure(
             @NonNull CategoryConfiguration configuration, @NonNull Context context)
             throws AmplifyException {
         synchronized (state) {
@@ -107,7 +107,7 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
      */
     @NonNull
     @WorkerThread
-    public final synchronized CategoryInitializationResult initialize(@NonNull Context context) {
+    public synchronized CategoryInitializationResult initialize(@NonNull Context context) {
         final Map<String, InitializationResult> pluginInitializationResults = new HashMap<>();
         if (!State.CONFIGURED.equals(state.get())) {
             for (P plugin : getPlugins()) {
