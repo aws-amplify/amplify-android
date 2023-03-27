@@ -55,7 +55,8 @@ class AWSS3StorageDownloadFileOperationTest {
             key,
             tempFile,
             StorageAccessLevel.PUBLIC,
-            null
+            null,
+            false
         )
         coEvery { authCredentialsProvider.getIdentityId() } returns "abc"
         awsS3StorageDownloadFileOperation = AWSS3StorageDownloadFileOperation(
@@ -72,7 +73,8 @@ class AWSS3StorageDownloadFileOperationTest {
         Mockito.verify(storageService).downloadToFile(
             awsS3StorageDownloadFileOperation.transferId,
             expectedKey,
-            tempFile
+            tempFile,
+            false
         )
     }
 
@@ -85,7 +87,8 @@ class AWSS3StorageDownloadFileOperationTest {
             key,
             tempFile,
             StorageAccessLevel.PUBLIC,
-            null
+            null,
+            false
         )
         coEvery { authCredentialsProvider.getIdentityId() } returns "abc"
         awsS3StorageDownloadFileOperation = AWSS3StorageDownloadFileOperation(
@@ -113,7 +116,8 @@ class AWSS3StorageDownloadFileOperationTest {
         Mockito.verify(storageService).downloadToFile(
             awsS3StorageDownloadFileOperation.transferId,
             expectedKey,
-            tempFile
+            tempFile,
+            false
         )
     }
 
@@ -126,7 +130,8 @@ class AWSS3StorageDownloadFileOperationTest {
             key,
             tempFile,
             StorageAccessLevel.PUBLIC,
-            null
+            null,
+            false
         )
         coEvery { authCredentialsProvider.getIdentityId() } returns "abc"
         awsS3StorageDownloadFileOperation = AWSS3StorageDownloadFileOperation(
@@ -154,7 +159,8 @@ class AWSS3StorageDownloadFileOperationTest {
         Mockito.verify(storageService).downloadToFile(
             awsS3StorageDownloadFileOperation.transferId,
             expectedKey,
-            tempFile
+            tempFile,
+            false
         )
     }
 }

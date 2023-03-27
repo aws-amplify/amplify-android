@@ -38,10 +38,10 @@ import java.util.UUID;
 public final class Phone implements Model {
   public static final QueryField ID = field("Phone", "id");
   public static final QueryField NUMBER = field("Phone", "number");
-  public static final QueryField OWNED_BY = field("Phone", "ownedById");
+  public static final QueryField OWNER_OF_PHONE = field("Phone", "ownerOfPhoneId");
   private final @ModelField(targetType="ID", isRequired = true) String id;
   private final @ModelField(targetType="String", isRequired = true) String number;
-  private final @ModelField(targetType="Person", isRequired = true) @BelongsTo(targetName = "ownedById", type = Person.class) Person ownedBy;
+  private final @ModelField(targetType="Person", isRequired = true) @BelongsTo(targetName = "ownerOfPhoneId", type = Person.class) Person ownerOfPhone;
   private final @ModelField(targetType="Call") @HasMany(associatedWith = "id", type = Call.class) List<Call> calls = null;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime updatedAt;
@@ -58,8 +58,8 @@ public final class Phone implements Model {
       return number;
   }
   
-  public Person getOwnedBy() {
-      return ownedBy;
+  public Person getOwnerOfPhone() {
+      return ownerOfPhone;
   }
   
   public List<Call> getCalls() {
@@ -74,10 +74,10 @@ public final class Phone implements Model {
       return updatedAt;
   }
   
-  private Phone(String id, String number, Person ownedBy) {
+  private Phone(String id, String number, Person ownerOfPhone) {
     this.id = id;
     this.number = number;
-    this.ownedBy = ownedBy;
+    this.ownerOfPhone = ownerOfPhone;
   }
   
   @Override
@@ -90,7 +90,7 @@ public final class Phone implements Model {
       Phone phone = (Phone) obj;
       return ObjectsCompat.equals(getId(), phone.getId()) &&
               ObjectsCompat.equals(getNumber(), phone.getNumber()) &&
-              ObjectsCompat.equals(getOwnedBy(), phone.getOwnedBy()) &&
+              ObjectsCompat.equals(getOwnerOfPhone(), phone.getOwnerOfPhone()) &&
               ObjectsCompat.equals(getCreatedAt(), phone.getCreatedAt()) &&
               ObjectsCompat.equals(getUpdatedAt(), phone.getUpdatedAt());
       }
@@ -101,7 +101,7 @@ public final class Phone implements Model {
     return new StringBuilder()
       .append(getId())
       .append(getNumber())
-      .append(getOwnedBy())
+      .append(getOwnerOfPhone())
       .append(getCreatedAt())
       .append(getUpdatedAt())
       .toString()
@@ -114,7 +114,7 @@ public final class Phone implements Model {
       .append("Phone {")
       .append("id=" + String.valueOf(getId()) + ", ")
       .append("number=" + String.valueOf(getNumber()) + ", ")
-      .append("ownedBy=" + String.valueOf(getOwnedBy()) + ", ")
+      .append("ownerOfPhone=" + String.valueOf(getOwnerOfPhone()) + ", ")
       .append("createdAt=" + String.valueOf(getCreatedAt()) + ", ")
       .append("updatedAt=" + String.valueOf(getUpdatedAt()))
       .append("}")
@@ -154,14 +154,14 @@ public final class Phone implements Model {
   public CopyOfBuilder copyOfBuilder() {
     return new CopyOfBuilder(id,
       number,
-      ownedBy);
+      ownerOfPhone);
   }
   public interface NumberStep {
-    OwnedByStep number(String number);
+    OwnerOfPhoneStep number(String number);
   }
 
-  public interface OwnedByStep {
-    BuildStep ownedBy(Person ownedBy);
+  public interface OwnerOfPhoneStep {
+    BuildStep ownerOfPhone(Person ownerOfPhone);
   }
   
 
@@ -171,10 +171,10 @@ public final class Phone implements Model {
   }
   
 
-  public static class Builder implements NumberStep, OwnedByStep, BuildStep {
+  public static class Builder implements NumberStep, OwnerOfPhoneStep, BuildStep {
     private String id;
     private String number;
-    private Person ownedBy;
+    private Person ownerOfPhone;
     @Override
      public Phone build() {
         String id = this.id != null ? this.id : UUID.randomUUID().toString();
@@ -182,19 +182,19 @@ public final class Phone implements Model {
         return new Phone(
           id,
           number,
-          ownedBy);
+          ownerOfPhone);
     }
     
     @Override
-     public OwnedByStep number(String number) {
+     public OwnerOfPhoneStep number(String number) {
         Objects.requireNonNull(number);
         this.number = number;
         return this;
     }
     
     @Override
-     public BuildStep ownedBy(Person ownedBy) {
-        this.ownedBy = ownedBy;
+     public BuildStep ownerOfPhone(Person ownerOfPhone) {
+        this.ownerOfPhone = ownerOfPhone;
         return this;
     }
     
@@ -221,10 +221,10 @@ public final class Phone implements Model {
   
 
   public final class CopyOfBuilder extends Builder {
-    private CopyOfBuilder(String id, String number, Person ownedBy) {
+    private CopyOfBuilder(String id, String number, Person ownerOfPhone) {
       super.id(id);
       super.number(number)
-        .ownedBy(ownedBy);
+        .ownerOfPhone(ownerOfPhone);
     }
     
     @Override
@@ -233,8 +233,8 @@ public final class Phone implements Model {
     }
     
     @Override
-     public CopyOfBuilder ownedBy(Person ownedBy) {
-      return (CopyOfBuilder) super.ownedBy(ownedBy);
+     public CopyOfBuilder ownerOfPhone(Person ownerOfPhone) {
+      return (CopyOfBuilder) super.ownerOfPhone(ownerOfPhone);
     }
   }
   

@@ -1,3 +1,74 @@
+## [Release 2.5.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.5.0)
+
+### Features
+- **notifications:** add push notifications category and plugin ([#2336](https://github.com/aws-amplify/amplify-android/pull/2336))
+
+[See all changes between 2.4.1 and 2.5.0](https://github.com/aws-amplify/amplify-android/compare/release_v2.4.1...release_v2.5.0)
+
+## [Release 2.4.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.4.1)
+
+### Bug Fixes
+- **auth:** Add hosted ui error description on token failure ([#2338](https://github.com/aws-amplify/amplify-android/issues/2338))
+- **api:** Use instr() for beginswith checking v2 ([#2347](https://github.com/aws-amplify/amplify-android/issues/2347))
+
+[See all changes between 2.4.0 and 2.4.1](https://github.com/aws-amplify/amplify-android/compare/release_v2.4.0...release_v2.4.1)
+
+## [Release 2.4.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.4.0)
+
+### Features
+- **auth:** Add aws-core and AWSCredentialsProvider ([#2316](https://github.com/aws-amplify/amplify-android/issues/2316))
+
+### Bug Fixes
+- **core:** add null checks for dev menu logs ([#2332](https://github.com/aws-amplify/amplify-android/issues/2332))
+- **datastore:** Accept applicable data if errors are present when syncing ([#2278](https://github.com/aws-amplify/amplify-android/issues/2278))
+- **auth:** Fix for missing session variable when custom auth is performed ([#2335](https://github.com/aws-amplify/amplify-android/issues/2335))
+
+[See all changes between 2.3.0 and 2.4.0](https://github.com/aws-amplify/amplify-android/compare/release_v2.3.0...release_v2.4.0)
+
+## [Release 2.3.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.3.0)
+
+### Features
+- **storage:** Add support for S3 acceleration mode ([#2304](https://github.com/aws-amplify/amplify-android/issues/2304))
+- **aws-datastore:** Make the reachability component configurable ([#2307](https://github.com/aws-amplify/amplify-android/issues/2307))
+- **aws-api,aws-datastore:** WebSocket improvements ([#2283](https://github.com/aws-amplify/amplify-android/issues/2283))
+
+### Bug Fixes
+- **datastore:** Fix aliasing of column names ([#2312](https://github.com/aws-amplify/amplify-android/issues/2312))
+- **auth:** Delete user invalid state fixes ([#2326](https://github.com/aws-amplify/amplify-android/issues/2326))
+
+### Miscellaneous
+- Restore publishing sources jar ([#2329](https://github.com/aws-amplify/amplify-android/issues/2329))
+
+[See all changes between 2.2.2 and 2.3.0](https://github.com/aws-amplify/amplify-android/compare/release_v2.2.2...release_v2.3.0)
+
+## [Release 2.2.2](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.2.2)
+
+### Bug Fixes
+- **auth:** fix npe in initialize fetch auth session ([#2284](https://github.com/aws-amplify/amplify-android/issues/2284))
+- **auth:** Fix confirm signin when incorrect MFA code is entered ([#2286](https://github.com/aws-amplify/amplify-android/issues/2286))
+
+[See all changes between 2.2.1 and 2.2.2](https://github.com/aws-amplify/amplify-android/compare/release_v2.2.1...release_v2.2.2)
+
+## [Release 2.2.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.2.1)
+
+### Bug Fixes
+- **auth:** Moving credential provider to main (#2273)
+
+[See all changes between 2.2.0 and 2.2.1](https://github.com/aws-amplify/amplify-android/compare/release_v2.2.0...release_v2.2.1)
+
+## [Release 2.2.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.2.0)
+
+### Features
+- **auth:** add required hash param to cognito api calls (#2266)
+- **datastore:** Add recoverability improvements (#2201)
+- **auth:** Added parity test for fetchDevices,rememberDevice,forgetDevice and fetchUserAttributes (#2174)
+
+### Bug Fixes
+- **analytics:** Remove test dependencies from implementation configuration (#2253)
+- **auth:** Fix Authorization header for HostedUI fetchToken when appSecret is used (#2264)
+
+[See all changes between 2.1.1 and 2.2.0](https://github.com/aws-amplify/amplify-android/compare/release_v2.1.1...release_v2.2.0)
+
 ## [Release 2.1.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.1.1)
 
 ### Bug Fixes

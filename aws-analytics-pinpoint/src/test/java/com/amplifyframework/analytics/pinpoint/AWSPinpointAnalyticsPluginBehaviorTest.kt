@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -14,22 +14,23 @@
  */
 package com.amplifyframework.analytics.pinpoint
 
-import android.app.Application
-import android.content.Context
+import android.content.SharedPreferences
 import androidx.test.core.app.ApplicationProvider
 import com.amplifyframework.analytics.AnalyticsEvent
 import com.amplifyframework.analytics.AnalyticsProperties
-import com.amplifyframework.analytics.pinpoint.internal.core.idresolver.SharedPrefsUniqueIdService
 import com.amplifyframework.analytics.pinpoint.models.AWSPinpointUserProfile
-import com.amplifyframework.analytics.pinpoint.models.AndroidAppDetails
-import com.amplifyframework.analytics.pinpoint.models.AndroidDeviceDetails
-import com.amplifyframework.analytics.pinpoint.models.PinpointEvent
-import com.amplifyframework.analytics.pinpoint.models.PinpointSession
-import com.amplifyframework.analytics.pinpoint.models.SDKInfo
-import com.amplifyframework.analytics.pinpoint.targeting.TargetingClient
-import com.amplifyframework.analytics.pinpoint.targeting.endpointProfile.EndpointProfile
+import com.amplifyframework.pinpoint.core.AnalyticsClient
+import com.amplifyframework.pinpoint.core.TargetingClient
+import com.amplifyframework.pinpoint.core.data.AndroidAppDetails
+import com.amplifyframework.pinpoint.core.data.AndroidDeviceDetails
+import com.amplifyframework.pinpoint.core.endpointProfile.EndpointProfile
+import com.amplifyframework.pinpoint.core.models.PinpointEvent
+import com.amplifyframework.pinpoint.core.models.PinpointSession
+import com.amplifyframework.pinpoint.core.models.SDKInfo
+import com.amplifyframework.pinpoint.core.util.getUniqueId
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkStatic
 import io.mockk.slot
 import io.mockk.verify
 import java.util.UUID
@@ -44,22 +45,19 @@ class AWSPinpointAnalyticsPluginBehaviorTest {
 
     private val analyticsClientMock = mockk<AnalyticsClient>(relaxed = true)
     private val targetingClientMock = mockk<TargetingClient>(relaxed = true)
-    private val autoEventSubmitterMock = mockk<AutoEventSubmitter>(relaxed = true)
-    private val autoSessionTrackerMock = mockk<AutoSessionTracker>(relaxed = true)
-    private val context: Context = ApplicationProvider.getApplicationContext()
     private lateinit var awsPinpointAnalyticsPluginBehavior: AWSPinpointAnalyticsPluginBehavior
-    private val sharedPrefsUniqueIdService = mockk<SharedPrefsUniqueIdService>()
+    private val sharedPrefs = mockk<SharedPreferences>()
     private val androidAppDetails = AndroidAppDetails("com.test.app", "TestApp", "com.test.app", "1.0", "test")
     private val androidDeviceDetails = AndroidDeviceDetails("test")
 
     @Before
     fun setup() {
+        mockkStatic("com.amplifyframework.pinpoint.core.util.SharedPreferencesUtilKt")
+        every { sharedPrefs.getUniqueId() }.answers { "UNIQUE_ID" }
+
         awsPinpointAnalyticsPluginBehavior = AWSPinpointAnalyticsPluginBehavior(
-            ApplicationProvider.getApplicationContext(),
             analyticsClientMock,
             targetingClientMock,
-            autoEventSubmitterMock,
-            autoSessionTrackerMock
         )
     }
 
@@ -136,29 +134,27 @@ class AWSPinpointAnalyticsPluginBehaviorTest {
     @Test
     fun `test enable()`() {
         awsPinpointAnalyticsPluginBehavior.enable()
-        verify(exactly = 1) { autoEventSubmitterMock.start() }
-        verify(exactly = 1) { autoSessionTrackerMock.startSessionTracking(context.applicationContext as Application) }
+        verify(exactly = 1) { analyticsClientMock.enableEventSubmitter() }
     }
 
     @Test
     fun `test disable()`() {
         awsPinpointAnalyticsPluginBehavior.disable()
-        verify(exactly = 1) { autoEventSubmitterMock.stop() }
-        verify(exactly = 1) { autoSessionTrackerMock.stopSessionTracking(context.applicationContext as Application) }
+        verify(exactly = 1) { analyticsClientMock.disableEventSubmitter() }
     }
 
     @Test
     fun `test identify user`() {
-        every { sharedPrefsUniqueIdService.getUniqueId() }.answers { "UNIQUE_ID" }
         every { targetingClientMock.currentEndpoint() }.answers {
             EndpointProfile(
-                sharedPrefsUniqueIdService,
+                sharedPrefs.getUniqueId(),
                 androidAppDetails,
                 androidDeviceDetails,
                 ApplicationProvider.getApplicationContext()
             )
         }
         val actualEndpoint = slot<EndpointProfile>()
+        every { targetingClientMock.identifyUser(any(), any()) } answers { callOriginal() }
         every { targetingClientMock.updateEndpointProfile(capture(actualEndpoint)) } returns Unit
 
         val properties =
@@ -182,11 +178,12 @@ class AWSPinpointAnalyticsPluginBehaviorTest {
         val expectedEndpointAttributes =
             mapOf("email" to listOf("test@test.com"), "name" to listOf("test"), "plan" to listOf())
 
+        verify(exactly = 1) { targetingClientMock.identifyUser("USER_ID", userProfile) }
         verify(exactly = 1) { targetingClientMock.updateEndpointProfile(any()) }
 
-        assertEquals(actualEndpoint.captured.user.getUserAttributes(), expectedUserAttributes)
+        assertEquals(actualEndpoint.captured.user.userAttributes, expectedUserAttributes)
         assertEquals(actualEndpoint.captured.allAttributes, expectedEndpointAttributes)
-        assertEquals(actualEndpoint.captured.user.getUserId(), "USER_ID")
+        assertEquals(actualEndpoint.captured.user.userId, "USER_ID")
     }
 
     @Test

@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -14,8 +14,6 @@
  */
 
 package com.amplifyframework.api.aws;
-
-import androidx.annotation.NonNull;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiCategory;
@@ -62,7 +60,6 @@ import static org.junit.Assert.assertEquals;
  */
 public final class GraphQLInstrumentationTest {
     private static final String API_WITH_API_KEY = "eventsApi";
-    private static final String API_WITH_AWS_IAM = "eventsApiWithIam";
     private static final String API_WITH_COGNITO_USER_POOLS = "eventsApiWithUserPools";
 
     private static SynchronousApi api;
@@ -96,8 +93,8 @@ public final class GraphQLInstrumentationTest {
     }
 
     /**
-     * Start auth with signedout state.
-     * @throws AuthException if signout fails.
+     * Start auth with signed out state.
+     * @throws AuthException if sign out fails.
      */
     @Before
     public void setUpAuth() throws AuthException {
@@ -231,21 +228,14 @@ public final class GraphQLInstrumentationTest {
      */
     static final class Comment implements Model {
         private final String content;
-        private final String id;
 
         @SuppressWarnings("checkstyle:ParameterName")
-        Comment(final String id, final String content) {
-            this.id = id;
+        Comment(final String content) {
             this.content = content;
         }
 
         String content() {
             return content;
-        }
-
-        @NonNull
-        public String getId() {
-            return id;
         }
     }
 
@@ -292,11 +282,6 @@ public final class GraphQLInstrumentationTest {
 
         String description() {
             return description;
-        }
-
-        @NonNull
-        public String getId() {
-            return id;
         }
     }
 }
