@@ -18,6 +18,7 @@ package com.amplifyframework.api.aws;
 import android.net.Uri;
 import android.util.Base64;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.AmplifyException;
@@ -76,19 +77,25 @@ final class SubscriptionEndpoint {
 
     SubscriptionEndpoint(
             @NonNull ApiConfiguration apiConfiguration,
+            @Nullable OkHttpConfigurator configurator,
             @NonNull GraphQLResponse.Factory responseFactory,
             @NonNull SubscriptionAuthorizer authorizer
-    ) throws ApiException {
+    ) {
         this.apiConfiguration = Objects.requireNonNull(apiConfiguration);
         this.subscriptions = new ConcurrentHashMap<>();
         this.responseFactory = Objects.requireNonNull(responseFactory);
         this.authorizer = Objects.requireNonNull(authorizer);
         this.timeoutWatchdog = new TimeoutWatchdog();
         this.pendingSubscriptionIds = Collections.synchronizedSet(new HashSet<>());
-        this.okHttpClient = new OkHttpClient.Builder()
-            .addNetworkInterceptor(UserAgentInterceptor.using(UserAgent::string))
-            .retryOnConnectionFailure(true)
-            .build();
+
+        OkHttpClient.Builder okHttpClientBuilder = new OkHttpClient.Builder()
+                .retryOnConnectionFailure(true);
+
+        if (configurator != null) {
+            configurator.applyConfiguration(okHttpClientBuilder);
+        }
+
+        this.okHttpClient = okHttpClientBuilder.build();
     }
 
     synchronized <T> void requestSubscription(
@@ -126,6 +133,7 @@ final class SubscriptionEndpoint {
                 webSocket = okHttpClient.newWebSocket(new Request.Builder()
                     .url(buildConnectionRequestUrl(authType))
                     .addHeader("Sec-WebSocket-Protocol", "graphql-ws")
+                    .header("User-Agent", UserAgent.string())
                     .build(), webSocketListener);
             } catch (ApiException apiException) {
                 onSubscriptionError.accept(apiException);
@@ -148,15 +156,16 @@ final class SubscriptionEndpoint {
         }
 
         try {
-            webSocket.send(new JSONObject()
+            String jsonMessage = new JSONObject()
                 .put("id", subscriptionId)
                 .put("type", "start")
                 .put("payload", new JSONObject()
                 .put("data", request.getContent())
                 .put("extensions", new JSONObject()
                 .put("authorization", authorizer.createHeadersForSubscription(request, authType))))
-                .toString()
-            );
+                .toString();
+
+            webSocket.send(jsonMessage);
         } catch (JSONException | ApiException exception) {
             // If the subscriptionId was still pending, then we can call the onSubscriptionError
             if (pendingSubscriptionIds.remove(subscriptionId)) {
@@ -266,10 +275,12 @@ final class SubscriptionEndpoint {
 
         if (!wasSubscriptionPending && !webSocketListener.isDisconnectedState()) {
             try {
-                webSocket.send(new JSONObject()
+                String jsonMessage = new JSONObject()
                     .put("type", "stop")
                     .put("id", subscriptionId)
-                    .toString());
+                    .toString();
+
+                webSocket.send(jsonMessage);
             } catch (JSONException jsonException) {
                 throw new ApiException(
                     "Failed to construct subscription release message.",
@@ -329,7 +340,7 @@ final class SubscriptionEndpoint {
         return new Uri.Builder()
             .scheme("wss")
             .authority(authority)
-            .appendPath(path)
+            .path(path)
             .appendQueryParameter("header", Base64.encodeToString(rawHeader, Base64.DEFAULT))
             .appendQueryParameter("payload", "e30=")
             .build()
@@ -487,7 +498,6 @@ final class SubscriptionEndpoint {
     final class AmplifyWebSocketListener extends WebSocketListener {
         private final CountDownLatch connectionResponse;
         private final AtomicReference<EndpointStatus> endpointStatus;
-        private OkHttpClient okHttpClient;
 
         AmplifyWebSocketListener() {
             this(new CountDownLatch(1));
@@ -557,9 +567,11 @@ final class SubscriptionEndpoint {
 
         private void sendConnectionInit(WebSocket webSocket) {
             try {
-                webSocket.send(new JSONObject()
+                String jsonMessage = new JSONObject()
                     .put("type", "connection_init")
-                    .toString());
+                    .toString();
+
+                webSocket.send(jsonMessage);
             } catch (JSONException jsonException) {
                 notifyError(jsonException);
             }
@@ -573,10 +585,14 @@ final class SubscriptionEndpoint {
 
                 switch (subscriptionMessageType) {
                     case CONNECTION_ACK:
-                        timeoutWatchdog.start(() -> webSocket.close(
-                                NORMAL_CLOSURE_STATUS,
-                                "WebSocket closed due to timeout."
-                            ),
+                        timeoutWatchdog.start(() -> {
+                            LOG.warn("WebSocket closed due to timeout.");
+
+                            webSocket.close(
+                                    NORMAL_CLOSURE_STATUS,
+                                    "WebSocket closed due to timeout."
+                            );
+                        },
                             Integer.parseInt(
                                 jsonMessage.getJSONObject("payload").getString("connectionTimeoutMs")
                             )

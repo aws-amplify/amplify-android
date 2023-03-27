@@ -68,7 +68,7 @@ public final class ModelWithMetadataAdapterTest {
     public void adapterCanSerializeMwm() throws JSONException {
         Temporal.Timestamp lastChangedAt = Temporal.Timestamp.now();
         String modelId = UUID.randomUUID().toString();
-        ModelMetadata metadata = new ModelMetadata(modelId, false, 4, lastChangedAt, "BlogOwner");
+        ModelMetadata metadata = new ModelMetadata(modelId, false, 4, lastChangedAt);
         BlogOwner model = BlogOwner.builder()
             .name("Blog Owner")
             .build();
@@ -80,7 +80,7 @@ public final class ModelWithMetadataAdapterTest {
             .put("_lastChangedAt", metadata.getLastChangedAt().getSecondsSinceEpoch())
             .put("_deleted", metadata.isDeleted())
             .put("_version", metadata.getVersion())
-            .put("__typename", metadata.getTypename())
+            .put("__typename", mwm.getSyncMetadata().getTypename())
             .toString();
         String actual = gson.toJson(mwm);
         JSONAssert.assertEquals(expected, actual, true);
@@ -97,7 +97,7 @@ public final class ModelWithMetadataAdapterTest {
             .id("45a5f600-8aa8-41ac-a529-aed75036f5be")
             .build();
         Temporal.Timestamp lastChangedAt = new Temporal.Timestamp(1594858827, TimeUnit.SECONDS);
-        ModelMetadata metadata = new ModelMetadata(model.getId(), false, 3, lastChangedAt, model.getModelName());
+        ModelMetadata metadata = new ModelMetadata(model.getId(), false, 3, lastChangedAt);
         ModelWithMetadata<BlogOwner> expected = new ModelWithMetadata<>(model, metadata);
 
         // Arrange some JSON, and then try to deserialize it
@@ -133,8 +133,7 @@ public final class ModelWithMetadataAdapterTest {
                 .serializedData(postSerializedData)
                 .build();
         Temporal.Timestamp lastChangedAt = new Temporal.Timestamp(1594858827, TimeUnit.SECONDS);
-        ModelMetadata metadata = new ModelMetadata(model.getPrimaryKeyString(), false, 3, lastChangedAt,
-                model.getModelName());
+        ModelMetadata metadata = new ModelMetadata(model.getPrimaryKeyString(), false, 3, lastChangedAt);
         ModelWithMetadata<SerializedModel> expected = new ModelWithMetadata<>(model, metadata);
 
         // Arrange some JSON, and then try to deserialize it

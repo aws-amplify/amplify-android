@@ -1,0 +1,62 @@
+apply plugin: 'kover'
+
+project.ext {
+
+    // Exclude file by names, packages or types. Such files will be ignored during test coverage
+    // calculation
+    ignoreFileFilter = [
+            '**/*App.*',
+            '**/*Application.*',
+            '**/*Activity.*',
+            '**/*Fragment.*',
+            '**/*View.*',
+            '**/*ViewGroup.*',
+            '**/*JsonAdapter.*',
+            '**/di/**',
+            '**/*Dagger.*'
+    ]
+}
+
+kover{
+    instrumentation {
+        // exclude jdk internals from instrumentation
+        excludeTasks.add "jdk.internal.*"
+    }
+
+    xmlReport {
+        // set to true to run koverXmlReport task during the execution of the check task (if it exists) of the current project
+        onCheck.set false
+
+        // change report file name
+        reportFile.set layout.buildDirectory.file("reports/kover/xml/${project.name}.xml")
+        overrideFilters {
+            // override common class filter
+            classes {
+                // override class exclusion rules
+                excludes.addAll ignoreFileFilter
+            }
+        }
+    }
+
+    htmlReport {
+        // set to true to run koverMergedHtmlReport task during the execution of the check task (if it exists) of the current project
+        onCheck.set false
+
+        // change report directory
+        reportDir.set layout.buildDirectory.dir("reports/kover/html/${project.name}/")
+
+        overrideFilters {
+            // override common class filter
+            classes {
+                // override class exclusion rules
+                excludes.addAll ignoreFileFilter
+            }
+        }
+    }
+}
+
+tasks.withType(Test) {
+    kover {
+        isDisabled = project.name.contains("test")
+    }
+}

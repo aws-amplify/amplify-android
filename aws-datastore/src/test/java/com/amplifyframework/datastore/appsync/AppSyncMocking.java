@@ -19,7 +19,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
 
-import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.aws.AppSyncGraphQLRequest;
 import com.amplifyframework.api.aws.AuthModeStrategyType;
 import com.amplifyframework.api.graphql.GraphQLRequest;
@@ -43,6 +42,7 @@ import org.mockito.stubbing.Stubber;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
 
 import static org.mockito.ArgumentMatchers.argThat;
@@ -163,6 +163,25 @@ public final class AppSyncMocking {
             return CreateConfigurator.this;
         }
 
+        /**
+         * When the AppSync create() method is invoked with the provided model,
+         * it will respond with the provided failure.
+         * @param model When this model is seen on the AppSync create(),
+         * @param error This error is emitted on the onFailure
+         * @param <T> Type of model
+         * @return A create configurator
+         */
+        @NonNull
+        public <T extends Model> CreateConfigurator mockResponseFailure(
+                @NonNull T model, @NonNull Throwable error) {
+            Objects.requireNonNull(model);
+            Objects.requireNonNull(error);
+            callOnFailure(/* onFailure position = */ 3, error)
+                .when(appSync)
+                .create(eq(model), /* schema */ any(), /* onResponse */ any(), /* onFailure */ any());
+            return CreateConfigurator.this;
+        }
+
         @SuppressWarnings("SameParameterValue")
         private static <T extends Model> Stubber callOnSuccess(
                 int positionOfOnSuccess, GraphQLResponse<ModelWithMetadata<T>> response) {
@@ -171,6 +190,18 @@ public final class AppSyncMocking {
                 Consumer<GraphQLResponse<ModelWithMetadata<T>>> onResult =
                     invocation.getArgument(positionOfOnSuccess);
                 onResult.accept(response);
+                // Technically, create() returns a Cancelable...
+                return new NoOpCancelable();
+            });
+        }
+
+        private static <T extends Model> Stubber callOnFailure(
+                int positionOfOnFailure, Throwable error) {
+            return doAnswer(invocation -> {
+                // Simulate a failure response callback from the create() method.
+                Consumer<Throwable> onFailure =
+                    invocation.getArgument(positionOfOnFailure);
+                onFailure.accept(error);
                 // Technically, create() returns a Cancelable...
                 return new NoOpCancelable();
             });
@@ -204,8 +235,7 @@ public final class AppSyncMocking {
          */
         @NonNull
         public <T extends Model> CreateConfigurator mockSuccessResponse(@NonNull T model) {
-            ModelMetadata metadata = new ModelMetadata(model.getPrimaryKeyString(), false, 1, Temporal.Timestamp.now(),
-                    model.getModelName());
+            ModelMetadata metadata = new ModelMetadata(model.getPrimaryKeyString(), false, 1, Temporal.Timestamp.now());
             ModelWithMetadata<T> modelWithMetadata = new ModelWithMetadata<>(model, metadata);
             return mockSuccessResponse(model, modelWithMetadata);
         }
@@ -313,7 +343,7 @@ public final class AppSyncMocking {
         public <T extends Model> UpdateConfigurator mockSuccessResponse(@NonNull T model, int version) {
             Temporal.Timestamp lastChangedAt = Temporal.Timestamp.now();
             ModelMetadata metadata = new ModelMetadata(model.getPrimaryKeyString(), false, version + 1,
-                    lastChangedAt, model.getModelName());
+                    lastChangedAt);
             ModelWithMetadata<T> modelWithMetadata = new ModelWithMetadata<>(model, metadata);
             return mockSuccessResponse(model, version, modelWithMetadata);
         }
@@ -426,7 +456,7 @@ public final class AppSyncMocking {
         public <T extends Model> DeleteConfigurator mockSuccessResponse(@NonNull T model, int version) {
             Temporal.Timestamp lastChangedAt = Temporal.Timestamp.now();
             ModelMetadata metadata = new ModelMetadata(model.getPrimaryKeyString(), true, version + 1,
-                    lastChangedAt, model.getModelName());
+                    lastChangedAt);
             ModelWithMetadata<T> modelWithMetadata = new ModelWithMetadata<>(model, metadata);
             return mockSuccessResponse(model, version, modelWithMetadata);
         }
@@ -509,13 +539,8 @@ public final class AppSyncMocking {
         @SafeVarargs
         public final <M extends Model> SyncConfigurator mockSuccessResponse(
                 Class<M> modelClass, ModelWithMetadata<M>... responseItems) {
-            return mockSuccessResponse(
-                    matchesRequest(modelClass, null),
-                    new GraphQLResponse<>(
-                            new PaginatedResult<>(new HashSet<>(Arrays.asList(responseItems)), null),
-                            Collections.emptyList()
-                    )
-            );
+            return mockSuccessResponse(modelClass, null, null, Arrays.asList(responseItems),
+                    Collections.emptyList());
         }
 
         /**
@@ -528,7 +553,6 @@ public final class AppSyncMocking {
          * @param responseItems The items that should be included in the mocked response, for the model class
          * @param <M> Type of models for which a response is mocked
          * @return The same Configurator instance, to enable chaining of calls
-         * @throws AmplifyException if a ModelSchema cannot be created in order to build the sync request.
          */
         @SuppressWarnings("varargs")
         @SafeVarargs
@@ -536,26 +560,52 @@ public final class AppSyncMocking {
                 Class<M> modelClass,
                 String token,
                 String nextToken,
-                ModelWithMetadata<M>... responseItems) throws AmplifyException {
-            final Iterable<ModelWithMetadata<M>> items = new HashSet<>(Arrays.asList(responseItems));
+                ModelWithMetadata<M>... responseItems) {
+            return mockSuccessResponse(modelClass, token, nextToken, Arrays.asList(responseItems),
+                    Collections.emptyList());
+        }
+
+        /**
+         * Configures an instance of an {@link AppSync} to invoke the response callback when asked to
+         * {@link AppSync#sync(GraphQLRequest, Consumer, Consumer)}, with the ability to specify a nextToken to match,
+         * a nextToken to return in the response and errors, for testing pagination.
+         * @param modelClass Class of models for which the endpoint should respond
+         * @param token nextToken to be expected on the GraphQLRequest for which the endpoint should respond.
+         * @param nextToken nextToken that should be used to build the requestForNextResult on the GraphQLResponse.
+         * @param responseItems The items that should be included in the mocked response, for the model class
+         * @param errors The errors that should be included in the mocked response.
+         * @param <M> Type of models for which a response is mocked
+         * @return The same Configurator instance, to enable chaining of calls
+         */
+        public <M extends Model> SyncConfigurator mockSuccessResponse(
+                Class<M> modelClass,
+                String token,
+                String nextToken,
+                List<ModelWithMetadata<M>> responseItems,
+                List<GraphQLResponse.Error> errors) {
+            final Iterable<ModelWithMetadata<M>> items = new HashSet<>(responseItems);
             AppSyncGraphQLRequest<PaginatedResult<ModelWithMetadata<M>>> requestForNextResult = null;
             if (nextToken != null) {
-                ModelSchema schema = ModelSchema.fromModelClass(modelClass);
-                requestForNextResult =
-                    AppSyncRequestFactory.buildSyncRequest(schema,
-                                                           null,
-                                                           null,
-                                                           QueryPredicates.all(),
-                                                           AuthModeStrategyType.DEFAULT)
-                        .newBuilder()
-                        .variable("nextToken", "String", nextToken)
-                        .build();
+                try {
+                    ModelSchema schema = ModelSchema.fromModelClass(modelClass);
+                    requestForNextResult =
+                        AppSyncRequestFactory.buildSyncRequest(schema,
+                                                               null,
+                                                               null,
+                                                               QueryPredicates.all(),
+                                                               AuthModeStrategyType.DEFAULT)
+                            .newBuilder()
+                            .variable("nextToken", "String", nextToken)
+                            .build();
+                } catch (Throwable err) {
+                    throw new RuntimeException(err);
+                }
             }
             return mockSuccessResponse(
                     matchesRequest(modelClass, token),
                     new GraphQLResponse<>(
                             new PaginatedResult<>(items, requestForNextResult),
-                            Collections.emptyList()
+                            errors
                     )
             );
         }

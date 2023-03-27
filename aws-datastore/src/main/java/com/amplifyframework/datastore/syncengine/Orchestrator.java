@@ -99,9 +99,7 @@ public final class Orchestrator {
         VersionRepository versionRepository = new VersionRepository(localStorageAdapter);
         Merger merger = new Merger(mutationOutbox, versionRepository, localStorageAdapter);
         SyncTimeRegistry syncTimeRegistry = new SyncTimeRegistry(localStorageAdapter);
-        ConflictResolver conflictResolver = new ConflictResolver(dataStoreConfigurationProvider, appSync);
         this.queryPredicateProvider = new QueryPredicateProvider(dataStoreConfigurationProvider);
-        RetryHandler retryHandler = new RetryHandler();
 
         this.mutationProcessor = MutationProcessor.builder()
             .merger(merger)
@@ -109,8 +107,8 @@ public final class Orchestrator {
             .schemaRegistry(schemaRegistry)
             .mutationOutbox(mutationOutbox)
             .appSync(appSync)
-            .conflictResolver(conflictResolver)
-            .retryHandler(retryHandler)
+            .dataStoreConfigurationProvider(dataStoreConfigurationProvider)
+            .retryHandler(new RetryHandler())
             .build();
         this.syncProcessor = SyncProcessor.builder()
             .modelProvider(modelProvider)
@@ -183,11 +181,14 @@ public final class Orchestrator {
         }
         LOG.info("Orchestrator lock acquired.");
         return Completable.fromAction(action)
-            .doFinally(() -> {
-                startStopSemaphore.release();
-                LOG.info("Orchestrator lock released.");
-            }
-        );
+            .andThen(
+                Completable.fromAction(
+                    () -> {
+                        startStopSemaphore.release();
+                        LOG.info("Orchestrator lock released.");
+                    }
+                )
+            );
     }
 
     private void unknownState(State state) throws DataStoreException {

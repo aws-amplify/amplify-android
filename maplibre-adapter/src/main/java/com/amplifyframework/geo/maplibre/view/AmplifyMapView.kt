@@ -18,7 +18,8 @@ package com.amplifyframework.geo.maplibre.view
 import android.content.Context
 import android.util.AttributeSet
 import android.view.View
-import android.widget.*
+import android.widget.Button
+import android.widget.RelativeLayout
 import androidx.annotation.UiThread
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.coordinatorlayout.widget.CoordinatorLayout.LayoutParams.MATCH_PARENT
@@ -29,7 +30,11 @@ import com.amplifyframework.geo.GeoCategory
 import com.amplifyframework.geo.GeoException
 import com.amplifyframework.geo.location.models.AmazonLocationPlace
 import com.amplifyframework.geo.maplibre.R
-import com.amplifyframework.geo.maplibre.util.*
+import com.amplifyframework.geo.maplibre.util.getPlaceData
+import com.amplifyframework.geo.maplibre.util.parseCoordinates
+import com.amplifyframework.geo.maplibre.util.toCoordinates
+import com.amplifyframework.geo.maplibre.util.toJsonElement
+import com.amplifyframework.geo.maplibre.util.toLatLng
 import com.amplifyframework.geo.maplibre.view.support.MapControls
 import com.amplifyframework.geo.maplibre.view.support.PlaceInfoPopupView
 import com.amplifyframework.geo.maplibre.view.support.fadeIn
@@ -202,12 +207,17 @@ class AmplifyMapView
         )
         addView(mapView, LayoutParams(MATCH_PARENT, MATCH_PARENT))
         addView(overlayLayout, LayoutParams(MATCH_PARENT, MATCH_PARENT))
-        addView(searchResultView, LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply {
-            behavior = BottomSheetBehavior<SearchResultListView>().apply {
-                topMargin = context.resources.getDimensionPixelSize(R.dimen.map_search_visibleArea)
-                addBottomSheetCallback(BottomSheetCallback())
+        addView(
+            searchResultView,
+            LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply {
+                behavior = BottomSheetBehavior<SearchResultListView>().apply {
+                    topMargin = context.resources.getDimensionPixelSize(
+                        R.dimen.map_search_visibleArea
+                    )
+                    addBottomSheetCallback(BottomSheetCallback())
+                }
             }
-        })
+        )
         adjustMapCenter()
         bindEvents()
     }
@@ -376,13 +386,15 @@ class AmplifyMapView
         }
         activeSymbol = null
         mapView.symbolManager.deleteAll()
-        symbols = mapView.symbolManager.create(places.mapIndexed { index, place ->
-            SymbolOptions()
-                .withSymbolSortKey(index.toFloat())
-                .withData(place.toJsonElement())
-                .withLatLng(place.coordinates.toLatLng())
-                .withIconImage(MapLibreView.PLACE_ICON_NAME)
-        })
+        symbols = mapView.symbolManager.create(
+            places.mapIndexed { index, place ->
+                SymbolOptions()
+                    .withSymbolSortKey(index.toFloat())
+                    .withData(place.toJsonElement())
+                    .withLatLng(place.coordinates.toLatLng())
+                    .withIconImage(MapLibreView.PLACE_ICON_NAME)
+            }
+        )
         searchResultView.places = places
     }
 
@@ -395,10 +407,10 @@ class AmplifyMapView
         val threshold = 0.05
         lastQueryBounds?.let {
             val boundariesUpdated =
-                (it.latNorth - bounds.latNorth).absoluteValue > threshold
-                        || (it.lonWest - bounds.lonWest).absoluteValue > threshold
-                        || (it.span.latitudeSpan - bounds.span.latitudeSpan).absoluteValue > threshold
-                        || (it.span.longitudeSpan - bounds.span.longitudeSpan).absoluteValue > threshold
+                (it.latNorth - bounds.latNorth).absoluteValue > threshold ||
+                    (it.lonWest - bounds.lonWest).absoluteValue > threshold ||
+                    (it.span.latitudeSpan - bounds.span.latitudeSpan).absoluteValue > threshold ||
+                    (it.span.longitudeSpan - bounds.span.longitudeSpan).absoluteValue > threshold
             if (boundariesUpdated) {
                 updateSearchButton.fadeIn()
             }
@@ -426,7 +438,6 @@ class AmplifyMapView
         }
 
         override fun onSlide(bottomSheet: View, slideOffset: Float) = Unit
-
     }
 
     /**
@@ -435,5 +446,4 @@ class AmplifyMapView
     interface OnPlaceSelectListener {
         fun onSelect(place: AmazonLocationPlace, symbol: Symbol)
     }
-
 }

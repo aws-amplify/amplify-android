@@ -31,25 +31,32 @@ public final class AWSS3StorageDownloadFileRequest {
     private final File local;
     private final StorageAccessLevel accessLevel;
     private final String targetIdentityId;
+    private final boolean useAccelerateEndpoint;
 
     /**
      * Constructs a new AWSS3StorageDownloadFileRequest.
+     * Although this has public access, it is intended for internal use and should not be used directly by host
+     * applications. The behavior of this may change without warning.
+     *
      * @param key key for item to download
      * @param local Target file for the downloaded file to be saved to
      * @param accessLevel Storage access level
      * @param targetIdentityId If set, this should override the current user's identity ID.
      *                         If null, the operation will fetch the current identity ID.
+     * @param useAccelerateEndpoint Flag to enable acceleration mode
      */
     public AWSS3StorageDownloadFileRequest(
             @NonNull String key,
             @NonNull File local,
             @NonNull StorageAccessLevel accessLevel,
-            @Nullable String targetIdentityId
+            @Nullable String targetIdentityId,
+            boolean useAccelerateEndpoint
     ) {
         this.key = key;
         this.local = local;
         this.accessLevel = accessLevel;
         this.targetIdentityId = targetIdentityId;
+        this.useAccelerateEndpoint = useAccelerateEndpoint;
     }
 
     /**
@@ -86,6 +93,15 @@ public final class AWSS3StorageDownloadFileRequest {
     @NonNull
     public File getLocal() {
         return local;
+    }
+
+    /**
+     * Gets the flag to determine whether to use acceleration endpoint.
+     *
+     * @return boolean flag
+     */
+    public boolean useAccelerateEndpoint() {
+        return useAccelerateEndpoint;
     }
 }
 

@@ -32,7 +32,7 @@ import kotlin.reflect.KClass
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.channels.sendBlocking
+import kotlinx.coroutines.channels.trySendBlocking
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.callbackFlow
@@ -89,7 +89,7 @@ class KotlinDataStoreFacade(private val delegate: Delegate = Amplify.DataStore) 
                 options,
                 {
                     while (it.hasNext()) {
-                        sendBlocking(it.next())
+                        trySendBlocking(it.next())
                     }
                     close()
                 },
@@ -99,7 +99,7 @@ class KotlinDataStoreFacade(private val delegate: Delegate = Amplify.DataStore) 
         }
     }
 
-    @FlowPreview
+    @OptIn(FlowPreview::class)
     @ExperimentalCoroutinesApi
     @Throws(DataStoreException::class)
     override suspend fun observe(): Flow<DataStoreItemChange<out Model>> {
@@ -113,24 +113,24 @@ class KotlinDataStoreFacade(private val delegate: Delegate = Amplify.DataStore) 
         return observation.waitForStart()
     }
 
-    @FlowPreview
+    @OptIn(FlowPreview::class)
     @ExperimentalCoroutinesApi
     @Throws(DataStoreException::class)
     override suspend fun <T : Model> observe(itemClass: KClass<T>, itemId: String):
         Flow<DataStoreItemChange<T>> {
-            val observation = Observation<DataStoreItemChange<T>>()
-            delegate.observe(
-                itemClass.java,
-                itemId,
-                { observation.starts.tryEmit(it) },
-                { observation.changes.tryEmit(it) },
-                { observation.failures.tryEmit(it) },
-                { observation.completions.tryEmit(Unit) }
-            )
-            return observation.waitForStart()
-        }
+        val observation = Observation<DataStoreItemChange<T>>()
+        delegate.observe(
+            itemClass.java,
+            itemId,
+            { observation.starts.tryEmit(it) },
+            { observation.changes.tryEmit(it) },
+            { observation.failures.tryEmit(it) },
+            { observation.completions.tryEmit(Unit) }
+        )
+        return observation.waitForStart()
+    }
 
-    @FlowPreview
+    @OptIn(FlowPreview::class)
     @ExperimentalCoroutinesApi
     @Throws(DataStoreException::class)
     override suspend fun <T : Model> observe(
@@ -149,7 +149,7 @@ class KotlinDataStoreFacade(private val delegate: Delegate = Amplify.DataStore) 
         return observation.waitForStart()
     }
 
-    @FlowPreview
+    @OptIn(FlowPreview::class)
     @ExperimentalCoroutinesApi
     override suspend fun <T : Model> observeQuery(
         itemClass: KClass<T>,
@@ -204,7 +204,7 @@ class KotlinDataStoreFacade(private val delegate: Delegate = Amplify.DataStore) 
         internal val completions: MutableSharedFlow<Unit> = MutableSharedFlow(1)
     ) {
         @Suppress("UNCHECKED_CAST")
-        @FlowPreview
+        @OptIn(FlowPreview::class)
         internal suspend fun waitForStart(): Flow<T> {
             // Observation either begins with signal from onError or onStart (with Cancelable token).
             val cancelable = flowOf(starts, failures)

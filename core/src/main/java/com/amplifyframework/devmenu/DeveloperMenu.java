@@ -126,6 +126,9 @@ public final class DeveloperMenu implements ShakeDetector.Listener {
      * @return the stored logs as a String.
      */
     public String getLogs() {
+        if (loggingPlugin == null) {
+            return "No logs to display.";
+        }
         List<LogEntry> logs = loggingPlugin.getLogs();
         if (logs.isEmpty()) {
             return "No logs to display.";
@@ -143,6 +146,9 @@ public final class DeveloperMenu implements ShakeDetector.Listener {
      * @return the stored logs as a String.
      */
     public String getFilteredLogs(@Nullable String searchText, @Nullable LogLevel logLevel) {
+        if (loggingPlugin == null) {
+            return "No logs to display.";
+        }
         if (Empty.check(searchText) && logLevel == null) {
             return getLogs();
         }
@@ -184,7 +190,7 @@ public final class DeveloperMenu implements ShakeDetector.Listener {
         }
         String deviceInfo = new DeviceInfo().toString();
         String logsText = "";
-        if (includeLogs && !loggingPlugin.getLogs().isEmpty()) {
+        if (includeLogs && loggingPlugin != null && !loggingPlugin.getLogs().isEmpty()) {
             logsText = "**Logs**\n```\n" + getLogs() + "```";
         }
         return String.format(Locale.US, "**Issue Description**\n%s\n\n**Environment Information**\n%s\n\n" +

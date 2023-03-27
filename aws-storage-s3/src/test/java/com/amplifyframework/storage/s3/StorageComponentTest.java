@@ -16,10 +16,13 @@
 package com.amplifyframework.storage.s3;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.auth.AuthCredentialsProvider;
+import com.amplifyframework.storage.ObjectMetadata;
 import com.amplifyframework.storage.StorageCategory;
 import com.amplifyframework.storage.StorageCategoryConfiguration;
 import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.StorageItem;
+import com.amplifyframework.storage.TransferState;
 import com.amplifyframework.storage.result.StorageDownloadFileResult;
 import com.amplifyframework.storage.result.StorageGetUrlResult;
 import com.amplifyframework.storage.result.StorageListResult;
@@ -27,16 +30,15 @@ import com.amplifyframework.storage.result.StorageRemoveResult;
 import com.amplifyframework.storage.result.StorageUploadFileResult;
 import com.amplifyframework.storage.result.StorageUploadInputStreamResult;
 import com.amplifyframework.storage.s3.configuration.AWSS3StoragePluginConfiguration;
+import com.amplifyframework.storage.s3.service.AWSS3StorageService;
 import com.amplifyframework.storage.s3.service.StorageService;
+import com.amplifyframework.storage.s3.transfer.TransferListener;
+import com.amplifyframework.storage.s3.transfer.TransferObserver;
 import com.amplifyframework.testutils.Await;
 import com.amplifyframework.testutils.random.RandomBytes;
 import com.amplifyframework.testutils.random.RandomString;
 import com.amplifyframework.testutils.random.RandomTempFile;
 
-import com.amazonaws.mobileconnectors.s3.transferutility.TransferListener;
-import com.amazonaws.mobileconnectors.s3.transferutility.TransferObserver;
-import com.amazonaws.mobileconnectors.s3.transferutility.TransferState;
-import com.amazonaws.services.s3.model.ObjectMetadata;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
@@ -55,6 +57,7 @@ import java.util.Date;
 
 import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
 import static org.junit.Assert.assertEquals;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyInt;
 import static org.mockito.Mockito.anyString;
@@ -84,10 +87,10 @@ public final class StorageComponentTest {
     @Before
     public void setup() throws AmplifyException {
         this.storage = new StorageCategory();
-        this.storageService = mock(StorageService.class);
+        this.storageService = mock(AWSS3StorageService.class);
         StorageService.Factory storageServiceFactory = (context, region, bucket) -> storageService;
-        CognitoAuthProvider cognitoAuthProvider = mock(CognitoAuthProvider.class);
-        doReturn(RandomString.string()).when(cognitoAuthProvider).getIdentityId();
+        AuthCredentialsProvider cognitoAuthProvider = mock(AuthCredentialsProvider.class);
+        doReturn(RandomString.string()).when(cognitoAuthProvider).getIdentityId(null);
         this.storage.addPlugin(new AWSS3StoragePlugin(storageServiceFactory,
                 cognitoAuthProvider, new AWSS3StoragePluginConfiguration.Builder().build())
         );
@@ -138,7 +141,7 @@ public final class StorageComponentTest {
 
         // Allow mock StorageService instance to return a non-null
         // URL instance.
-        when(storageService.getPresignedUrl(anyString(), anyInt()))
+        when(storageService.getPresignedUrl(anyString(), anyInt(), anyBoolean()))
                 .thenReturn(urlFromRemoteKey);
 
         // Let Storage category invoke getUrl on mock Storage Service.
@@ -169,7 +172,7 @@ public final class StorageComponentTest {
         // result by default. We need a non-null transfer observer.
         // One option is to mock that, too.
         TransferObserver observer = mock(TransferObserver.class);
-        when(storageService.downloadToFile(anyString(), any(File.class)))
+        when(storageService.downloadToFile(anyString(), anyString(), any(File.class), anyBoolean()))
                 .thenReturn(observer);
 
         // Since we use a mock TransferObserver, it has no internal logic
@@ -177,7 +180,7 @@ public final class StorageComponentTest {
         // callback, as part of our "happy path" test.
         doAnswer(invocation -> {
             TransferListener listener = invocation.getArgument(0);
-            listener.onStateChanged(0, TransferState.COMPLETED);
+            listener.onStateChanged(0, TransferState.COMPLETED, fromRemoteKey);
             return null;
         }).when(observer)
                 .setTransferListener(any(TransferListener.class));
@@ -212,7 +215,7 @@ public final class StorageComponentTest {
         final File toLocalFile = new RandomTempFile();
 
         TransferObserver observer = mock(TransferObserver.class);
-        when(storageService.downloadToFile(anyString(), any(File.class)))
+        when(storageService.downloadToFile(anyString(), anyString(), any(File.class), anyBoolean()))
                 .thenReturn(observer);
 
         doAnswer(invocation -> {
@@ -247,16 +250,23 @@ public final class StorageComponentTest {
         final String toRemoteKey = RandomString.string();
         final File fromLocalFile = new RandomTempFile(FILE_SIZE);
 
-        TransferObserver observer = mock(TransferObserver.class);
-        when(storageService.uploadFile(anyString(), any(File.class), any(ObjectMetadata.class)))
+        TransferObserver observer =
+                mock(com.amplifyframework.storage.s3.transfer.TransferObserver.class);
+        when(
+            storageService.uploadFile(anyString(),
+                anyString(),
+                any(File.class),
+                any(ObjectMetadata.class),
+                anyBoolean())
+        )
                 .thenReturn(observer);
 
         doAnswer(invocation -> {
             TransferListener listener = invocation.getArgument(0);
-            listener.onStateChanged(0, TransferState.COMPLETED);
+            listener.onStateChanged(0, TransferState.COMPLETED, toRemoteKey);
             return null;
         }).when(observer)
-                .setTransferListener(any(TransferListener.class));
+                .setTransferListener(any(com.amplifyframework.storage.s3.transfer.TransferListener.class));
 
         StorageUploadFileResult result =
                 Await.<StorageUploadFileResult, StorageException>result((onResult, onError) ->
@@ -284,12 +294,18 @@ public final class StorageComponentTest {
         final InputStream inputStream = new ByteArrayInputStream(RandomBytes.bytes());
 
         TransferObserver observer = mock(TransferObserver.class);
-        when(storageService.uploadInputStream(anyString(), any(InputStream.class), any(ObjectMetadata.class)))
+        when(storageService.uploadInputStream(
+            anyString(),
+            anyString(),
+            any(InputStream.class),
+            any(ObjectMetadata.class),
+            anyBoolean())
+        )
                 .thenReturn(observer);
 
         doAnswer(invocation -> {
             TransferListener listener = invocation.getArgument(0);
-            listener.onStateChanged(0, TransferState.COMPLETED);
+            listener.onStateChanged(0, TransferState.COMPLETED, toRemoteKey);
             return null;
         }).when(observer)
                 .setTransferListener(any(TransferListener.class));
@@ -323,16 +339,23 @@ public final class StorageComponentTest {
         final String toRemoteKey = RandomString.string();
         final File fromLocalFile = new RandomTempFile(FILE_SIZE);
 
-        TransferObserver observer = mock(TransferObserver.class);
-        when(storageService.uploadFile(anyString(), any(File.class), any(ObjectMetadata.class)))
-                .thenReturn(observer);
+        com.amplifyframework.storage.s3.transfer.TransferObserver observer =
+                mock(com.amplifyframework.storage.s3.transfer.TransferObserver.class);
+        when(
+            storageService.uploadFile(
+                anyString(),
+                anyString(),
+                any(File.class),
+                any(ObjectMetadata.class),
+                anyBoolean())
+        ).thenReturn(observer);
 
         doAnswer(invocation -> {
-            TransferListener listener = invocation.getArgument(0);
+            com.amplifyframework.storage.s3.transfer.TransferListener listener = invocation.getArgument(0);
             listener.onError(0, testError);
             return null;
         }).when(observer)
-                .setTransferListener(any(TransferListener.class));
+                .setTransferListener(any(com.amplifyframework.storage.s3.transfer.TransferListener.class));
 
         StorageException error =
                 Await.<StorageUploadFileResult, StorageException>error((onResult, onError) ->
@@ -364,7 +387,13 @@ public final class StorageComponentTest {
         final InputStream inputStream = new ByteArrayInputStream(RandomBytes.bytes());
 
         TransferObserver observer = mock(TransferObserver.class);
-        when(storageService.uploadInputStream(anyString(), any(InputStream.class), any(ObjectMetadata.class)))
+        when(storageService.uploadInputStream(
+            anyString(),
+            anyString(),
+            any(InputStream.class),
+            any(ObjectMetadata.class),
+            anyBoolean())
+        )
                 .thenReturn(observer);
 
         doAnswer(invocation -> {
@@ -373,17 +402,15 @@ public final class StorageComponentTest {
             return null;
         }).when(observer)
                 .setTransferListener(any(TransferListener.class));
-
         StorageException error =
                 Await.<StorageUploadInputStreamResult, StorageException>error((onResult, onError) ->
                         storage.uploadInputStream(
-                                toRemoteKey,
-                                inputStream,
-                                onResult,
-                                onError
+                            toRemoteKey,
+                            inputStream,
+                            onResult,
+                            onError
                         )
                 );
-
         assertEquals(testError, error.getCause());
     }
 

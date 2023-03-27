@@ -14,31 +14,37 @@
  */
 package com.amplifyframework.storage.s3.operation
 
-import com.amazonaws.services.s3.model.ObjectMetadata
+import com.amplifyframework.auth.AuthCredentialsProvider
 import com.amplifyframework.core.Consumer
+import com.amplifyframework.storage.ObjectMetadata
 import com.amplifyframework.storage.StorageAccessLevel
 import com.amplifyframework.storage.StorageException
-import com.amplifyframework.storage.s3.CognitoAuthProvider
 import com.amplifyframework.storage.s3.ServerSideEncryption
 import com.amplifyframework.storage.s3.configuration.AWSS3PluginPrefixResolver
 import com.amplifyframework.storage.s3.configuration.AWSS3StoragePluginConfiguration
 import com.amplifyframework.storage.s3.request.AWSS3StorageUploadRequest
 import com.amplifyframework.storage.s3.service.StorageService
+import com.google.common.util.concurrent.MoreExecutors
 import java.io.File
 import org.junit.Before
 import org.junit.Test
+import org.junit.runner.RunWith
 import org.mockito.Mockito
+import org.mockito.Mockito.any
+import org.mockito.Mockito.eq
+import org.robolectric.RobolectricTestRunner
 
+@RunWith(RobolectricTestRunner::class)
 class AWSS3StorageUploadFileOperationTest {
 
     private lateinit var awsS3StorageUploadFileOperation: AWSS3StorageUploadFileOperation
     private lateinit var storageService: StorageService
-    private lateinit var cognitoAuthProvider: CognitoAuthProvider
+    private lateinit var authCredentialsProvider: AuthCredentialsProvider
 
     @Before
     fun setup() {
         storageService = Mockito.spy(StorageService::class.java)
-        cognitoAuthProvider = Mockito.mock(CognitoAuthProvider::class.java)
+        authCredentialsProvider = Mockito.mock(AuthCredentialsProvider::class.java)
     }
 
     @Test
@@ -53,11 +59,13 @@ class AWSS3StorageUploadFileOperationTest {
             "",
             "/image",
             ServerSideEncryption.NONE,
-            mutableMapOf()
+            mutableMapOf(),
+            false
         )
         awsS3StorageUploadFileOperation = AWSS3StorageUploadFileOperation(
             storageService,
-            cognitoAuthProvider,
+            MoreExecutors.newDirectExecutorService(),
+            authCredentialsProvider,
             request,
             AWSS3StoragePluginConfiguration {},
             {},
@@ -66,9 +74,11 @@ class AWSS3StorageUploadFileOperationTest {
         )
         awsS3StorageUploadFileOperation.start()
         Mockito.verify(storageService).uploadFile(
-            Mockito.eq(expectedKey),
-            Mockito.eq(tempFile),
-            Mockito.any(ObjectMetadata::class.java)
+            eq(awsS3StorageUploadFileOperation.transferId),
+            eq(expectedKey),
+            eq(tempFile),
+            any(ObjectMetadata::class.java),
+            eq(false)
         )
     }
 
@@ -84,11 +94,13 @@ class AWSS3StorageUploadFileOperationTest {
             "",
             "/image",
             ServerSideEncryption.NONE,
-            mutableMapOf()
+            mutableMapOf(),
+            false
         )
         awsS3StorageUploadFileOperation = AWSS3StorageUploadFileOperation(
             storageService,
-            cognitoAuthProvider,
+            MoreExecutors.newDirectExecutorService(),
+            authCredentialsProvider,
             request,
             AWSS3StoragePluginConfiguration {
                 awsS3PluginPrefixResolver = object : AWSS3PluginPrefixResolver {
@@ -96,7 +108,7 @@ class AWSS3StorageUploadFileOperationTest {
                         accessLevel: StorageAccessLevel,
                         targetIdentity: String?,
                         onSuccess: Consumer<String>,
-                        onError: Consumer<StorageException>
+                        onError: Consumer<StorageException>?
                     ) {
                         onSuccess.accept("")
                     }
@@ -108,9 +120,11 @@ class AWSS3StorageUploadFileOperationTest {
         )
         awsS3StorageUploadFileOperation.start()
         Mockito.verify(storageService).uploadFile(
-            Mockito.eq(expectedKey),
-            Mockito.eq(tempFile),
-            Mockito.any(ObjectMetadata::class.java)
+            eq(awsS3StorageUploadFileOperation.transferId),
+            eq(expectedKey),
+            eq(tempFile),
+            any(ObjectMetadata::class.java),
+            eq(false)
         )
     }
 
@@ -126,11 +140,13 @@ class AWSS3StorageUploadFileOperationTest {
             "",
             "/image",
             ServerSideEncryption.NONE,
-            mutableMapOf()
+            mutableMapOf(),
+            false
         )
         awsS3StorageUploadFileOperation = AWSS3StorageUploadFileOperation(
             storageService,
-            cognitoAuthProvider,
+            MoreExecutors.newDirectExecutorService(),
+            authCredentialsProvider,
             request,
             AWSS3StoragePluginConfiguration {
                 awsS3PluginPrefixResolver = object : AWSS3PluginPrefixResolver {
@@ -138,7 +154,7 @@ class AWSS3StorageUploadFileOperationTest {
                         accessLevel: StorageAccessLevel,
                         targetIdentity: String?,
                         onSuccess: Consumer<String>,
-                        onError: Consumer<StorageException>
+                        onError: Consumer<StorageException>?
                     ) {
                         onSuccess.accept("publicCustom/")
                     }
@@ -150,9 +166,11 @@ class AWSS3StorageUploadFileOperationTest {
         )
         awsS3StorageUploadFileOperation.start()
         Mockito.verify(storageService).uploadFile(
-            Mockito.eq(expectedKey),
-            Mockito.eq(tempFile),
-            Mockito.any(ObjectMetadata::class.java)
+            eq(awsS3StorageUploadFileOperation.transferId),
+            eq(expectedKey),
+            eq(tempFile),
+            any(ObjectMetadata::class.java),
+            eq(false)
         )
     }
 }

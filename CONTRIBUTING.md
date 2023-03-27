@@ -428,10 +428,21 @@ Copy-paste this, and complete the workflow in the UI. It will invite you to
 ### Pull Request Guidelines
 - The title of your PR must be descriptive to the specific change.
 - The title of your PR must be of below format since next release version is determined from PR titles in the commit history.
-	- For a bugfix: `fix(category): description of changes`
-	- For a feature: `feat(catgory): add awesome feature`
-	- Everything else: `chore: fix build script`
-	- Eg. `fix(auth): throw correct auth exception for code mismatch`. Refer https://github.com/aws-amplify/amplify-android/pull/1370
+    - For a bugfix: `fix(category): description of changes`
+    - For a feature: `feat(catgory): add awesome feature`
+    - For a release: `release: release version`
+    - Everything else: `chore: fix build script`
+    - Valid categories are:
+      - all
+      - analytics
+      - api
+      - auth
+      - core
+      - datastore
+      - geo
+      - predictions
+      - storage
+    - Eg. `fix(auth): throw correct auth exception for code mismatch`. Refer https://github.com/aws-amplify/amplify-android/pull/1370
 - No period at the end of the title.
 - Pull Request message should indicate which issues are fixed: `fixes #<issue>` or `closes #<issue>`.
 - If not obvious (i.e. from unit tests), describe how you verified that your change works.

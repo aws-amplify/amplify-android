@@ -25,6 +25,7 @@ public final class AuthUserAttributeKey {
     private static final String ADDRESS = "address";
     private static final String BIRTHDATE = "birthdate";
     private static final String EMAIL = "email";
+    private static final String EMAIL_VERIFIED = "email_verified";
     private static final String FAMILY_NAME = "family_name";
     private static final String GENDER = "gender";
     private static final String GIVEN_NAME = "given_name";
@@ -32,6 +33,7 @@ public final class AuthUserAttributeKey {
     private static final String MIDDLE_NAME = "middle_name";
     private static final String NICKNAME = "nickname";
     private static final String PHONE_NUMBER = "phone_number";
+    private static final String PHONE_NUMBER_VERIFIED = "phone_number_verified";
     private static final String PICTURE = "picture";
     private static final String PREFERRED_USERNAME = "preferred_username";
     private static final String PROFILE = "profile";
@@ -72,6 +74,14 @@ public final class AuthUserAttributeKey {
      */
     public static AuthUserAttributeKey email() {
         return new AuthUserAttributeKey(EMAIL);
+    }
+
+    /**
+     * Factory method for getting email verified attribute.
+     * @return a pre-configured email verified attribute
+     */
+    public static AuthUserAttributeKey emailVerified() {
+        return new AuthUserAttributeKey(EMAIL_VERIFIED);
     }
 
     /**
@@ -136,6 +146,14 @@ public final class AuthUserAttributeKey {
      */
     public static AuthUserAttributeKey phoneNumber() {
         return new AuthUserAttributeKey(PHONE_NUMBER);
+    }
+
+    /**
+     * Factory method for getting phone number verified attribute.
+     * @return a pre-configured phone number attribute
+     */
+    public static AuthUserAttributeKey phoneNumberVerified() {
+        return new AuthUserAttributeKey(PHONE_NUMBER_VERIFIED);
     }
 
     /**

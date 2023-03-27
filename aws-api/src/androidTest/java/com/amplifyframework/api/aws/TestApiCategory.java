@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -22,12 +22,11 @@ import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiCategory;
 import com.amplifyframework.api.aws.sigv4.CognitoUserPoolsAuthProvider;
 import com.amplifyframework.api.aws.sigv4.DefaultCognitoUserPoolsAuthProvider;
+import com.amplifyframework.auth.CognitoCredentialsProvider;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.AmplifyConfiguration;
 import com.amplifyframework.core.category.CategoryConfiguration;
 import com.amplifyframework.core.category.CategoryType;
-
-import com.amazonaws.mobile.client.AWSMobileClient;
 
 import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
 
@@ -48,9 +47,9 @@ final class TestApiCategory {
     @NonNull
     static ApiCategory fromConfiguration(@RawRes int resourceId) throws AmplifyException {
         CognitoUserPoolsAuthProvider cognitoUserPoolsAuthProvider =
-            new DefaultCognitoUserPoolsAuthProvider(AWSMobileClient.getInstance());
+            new DefaultCognitoUserPoolsAuthProvider();
         ApiAuthProviders providers = ApiAuthProviders.builder()
-            .awsCredentialsProvider(AWSMobileClient.getInstance())
+            .awsCredentialsProvider(new CognitoCredentialsProvider())
             .cognitoUserPoolsAuthProvider(cognitoUserPoolsAuthProvider)
             .build();
         AWSApiPlugin plugin = AWSApiPlugin.builder()

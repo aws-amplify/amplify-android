@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -17,19 +17,22 @@ package com.amplifyframework.storage.s3;
 
 import android.content.Context;
 
+import com.amplifyframework.AmplifyException;
+import com.amplifyframework.auth.AuthException;
+import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin;
 import com.amplifyframework.storage.StorageAccessLevel;
 import com.amplifyframework.storage.StorageCategory;
 import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.options.StorageUploadFileOptions;
 import com.amplifyframework.storage.s3.UserCredentials.Credential;
-import com.amplifyframework.storage.s3.helper.AmplifyTransferServiceTestHelper;
 import com.amplifyframework.storage.s3.test.R;
+import com.amplifyframework.storage.s3.util.WorkmanagerTestUtils;
 import com.amplifyframework.testutils.random.RandomTempFile;
-import com.amplifyframework.testutils.sync.SynchronousMobileClient;
-import com.amplifyframework.testutils.sync.SynchronousMobileClient.MobileClientException;
+import com.amplifyframework.testutils.sync.SynchronousAuth;
 import com.amplifyframework.testutils.sync.SynchronousStorage;
 
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -49,7 +52,7 @@ public final class AWSS3StorageUploadAccessLevelTest {
 
     private static SynchronousStorage storage;
 
-    private static SynchronousMobileClient mobileClient;
+    private static SynchronousAuth synchronousAuth;
     private static Credential userOne;
     private static Credential userTwo;
 
@@ -59,18 +62,16 @@ public final class AWSS3StorageUploadAccessLevelTest {
 
     /**
      * Obtain the user IDs prior to running the tests.
-     * @throws MobileClientException On failure to initialize mobile client
+     * @throws AmplifyException On failure to initialize Amplify
+     * @throws InterruptedException On thread interruption
      */
     @BeforeClass
-    public static void setUpOnce() throws MobileClientException {
+    public static void setUpOnce() throws AmplifyException, InterruptedException {
         Context context = getApplicationContext();
 
-        AmplifyTransferServiceTestHelper.stopForegroundAndUnbind(getApplicationContext());
-
-        // Initialize identity. Bundle username, password, Identity Id up into a UserCredentials.
-        mobileClient = SynchronousMobileClient.instance();
-        mobileClient.initialize();
-        IdentityIdSource identityIdSource = MobileClientIdentityIdSource.create(mobileClient);
+        WorkmanagerTestUtils.INSTANCE.initializeWorkmanagerTestUtil(context);
+        synchronousAuth = SynchronousAuth.delegatingToCognito(context, new AWSCognitoAuthPlugin());
+        IdentityIdSource identityIdSource = MobileClientIdentityIdSource.create(synchronousAuth);
         UserCredentials userCredentials = UserCredentials.create(context, identityIdSource);
         Iterator<Credential> iterator = userCredentials.iterator();
         userOne = iterator.next();
@@ -82,31 +83,38 @@ public final class AWSS3StorageUploadAccessLevelTest {
     }
 
     /**
+     * Reset all the assigned static fields.
+     */
+    @AfterClass
+    public static void tearDownSuite() {
+        synchronousAuth = null;
+        userOne = null;
+        userTwo = null;
+        storage = null;
+    }
+
+    /**
      * Signs out by default and sets up the file to test uploading.
      *
      * @throws Exception if an error is encountered while creating file
      */
     @Before
     public void setUp() throws Exception {
-        // Start as a GUEST user
-        mobileClient.signOut();
-
         // Create a new file to upload
         uploadFile = new RandomTempFile(UPLOAD_SIZE);
         remoteKey = uploadFile.getName();
 
         // Override this per test-case
         uploadOptions = StorageUploadFileOptions.defaultInstance();
-
-        AmplifyTransferServiceTestHelper.stopForegroundAndUnbind(getApplicationContext());
     }
 
     /**
-     * Remove AmplifyTransferService foreground notification.
+     * Sign out after each test.
+     * @throws AuthException if error encountered while signing out
      */
     @After
-    public void tearDown() {
-        AmplifyTransferServiceTestHelper.stopForegroundAndUnbind(getApplicationContext());
+    public void tearDown() throws AuthException {
+        synchronousAuth.signOut();
     }
 
     /**
@@ -165,7 +173,7 @@ public final class AWSS3StorageUploadAccessLevelTest {
      */
     @Test
     public void testUploadAuthenticatedProtectedAccess() throws Exception {
-        mobileClient.signIn(userOne.getUsername(), userOne.getPassword());
+        synchronousAuth.signIn(userOne.getUsername(), userOne.getPassword());
         uploadOptions = StorageUploadFileOptions.builder()
                 .accessLevel(StorageAccessLevel.PROTECTED)
                 .targetIdentityId(userOne.getIdentityId())
@@ -180,7 +188,7 @@ public final class AWSS3StorageUploadAccessLevelTest {
      */
     @Test
     public void testUploadAuthenticatedPrivateAccess() throws Exception {
-        mobileClient.signIn(userOne.getUsername(), userOne.getPassword());
+        synchronousAuth.signIn(userOne.getUsername(), userOne.getPassword());
         uploadOptions = StorageUploadFileOptions.builder()
                 .accessLevel(StorageAccessLevel.PRIVATE)
                 .targetIdentityId(userOne.getIdentityId())
@@ -199,7 +207,7 @@ public final class AWSS3StorageUploadAccessLevelTest {
      */
     @Test(expected = StorageException.class)
     public void testUploadDifferentUserProtectedAccess() throws Exception {
-        mobileClient.signIn(userOne.getUsername(), userOne.getPassword());
+        synchronousAuth.signIn(userOne.getUsername(), userOne.getPassword());
         uploadOptions = StorageUploadFileOptions.builder()
                 .accessLevel(StorageAccessLevel.PROTECTED)
                 .targetIdentityId(userTwo.getIdentityId())
@@ -218,7 +226,7 @@ public final class AWSS3StorageUploadAccessLevelTest {
      */
     @Test(expected = StorageException.class)
     public void testUploadDifferentUserPrivateAccess() throws Exception {
-        mobileClient.signIn(userOne.getUsername(), userOne.getPassword());
+        synchronousAuth.signIn(userOne.getUsername(), userOne.getPassword());
         uploadOptions = StorageUploadFileOptions.builder()
                 .accessLevel(StorageAccessLevel.PRIVATE)
                 .targetIdentityId(userTwo.getIdentityId())

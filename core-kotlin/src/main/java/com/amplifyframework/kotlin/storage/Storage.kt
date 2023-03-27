@@ -16,7 +16,9 @@
 package com.amplifyframework.kotlin.storage
 
 import com.amplifyframework.core.async.Cancelable
+import com.amplifyframework.core.async.Resumable
 import com.amplifyframework.storage.StorageException
+import com.amplifyframework.storage.operation.StorageTransferOperation
 import com.amplifyframework.storage.options.StorageDownloadFileOptions
 import com.amplifyframework.storage.options.StorageGetUrlOptions
 import com.amplifyframework.storage.options.StorageListOptions
@@ -28,6 +30,7 @@ import com.amplifyframework.storage.result.StorageGetUrlResult
 import com.amplifyframework.storage.result.StorageListResult
 import com.amplifyframework.storage.result.StorageRemoveResult
 import com.amplifyframework.storage.result.StorageTransferProgress
+import com.amplifyframework.storage.result.StorageTransferResult
 import com.amplifyframework.storage.result.StorageUploadFileResult
 import com.amplifyframework.storage.result.StorageUploadInputStreamResult
 import java.io.File
@@ -84,13 +87,17 @@ interface Storage {
         options: StorageListOptions = StorageListOptions.defaultInstance()
     ): StorageListResult
 
+    @Throws(StorageException::class)
+    suspend fun getTransfer(transferId: String): StorageTransferOperation<*, StorageTransferResult>
+
     @FlowPreview
     data class InProgressStorageOperation<T>(
+        val transferId: String,
         private val results: Flow<T>,
         private val progress: Flow<StorageTransferProgress>,
         private val errors: Flow<StorageException>,
-        private val delegate: Cancelable?
-    ) : Cancelable {
+        private val delegate: StorageTransferOperation<*, *>?
+    ) : Cancelable, Resumable {
 
         override fun cancel() {
             delegate?.cancel()
@@ -114,6 +121,14 @@ interface Storage {
                 }
                 .map { it as T }
                 .first()
+        }
+
+        override fun pause() {
+            delegate?.pause()
+        }
+
+        override fun resume() {
+            delegate?.resume()
         }
     }
 }
