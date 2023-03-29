@@ -1,3 +1,13 @@
+## [Release 1.38.3](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.38.3)
+
+### Bug Fixes
+- **maplibre-adapter:** update MapLibre version ([#2371](https://github.com/aws-amplify/amplify-android/issues/2371))
+
+### Miscellaneous
+- Use better fallback for list query v1 ([#2345](https://github.com/aws-amplify/amplify-android/issues/2345))
+
+[See all changes between 1.38.2 and 1.38.3](https://github.com/aws-amplify/amplify-android/compare/release_v1.38.2...release_v1.38.3)
+
 ## [Release 1.38.2](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.38.2)
 
 ### Bug Fixes

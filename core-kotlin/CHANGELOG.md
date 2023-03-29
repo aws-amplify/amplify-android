@@ -1,3 +1,13 @@
+## [Release 0.22.3](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.22.3)
+
+### Bug Fixes
+- **maplibre-adapter:** update MapLibre version ([#2371](https://github.com/aws-amplify/amplify-android/issues/2371))
+
+### Miscellaneous
+- Use better fallback for list query v1 ([#2345](https://github.com/aws-amplify/amplify-android/issues/2345))
+
+[See all changes between 0.22.2 and 0.22.3](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.22.2...release-kotlin_v0.22.3)
+
 ## [Release 0.22.2](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.22.2)
 
 ### Bug Fixes
