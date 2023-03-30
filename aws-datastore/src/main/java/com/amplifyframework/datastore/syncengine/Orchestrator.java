@@ -28,7 +28,6 @@ import com.amplifyframework.datastore.DataStoreChannelEventName;
 import com.amplifyframework.datastore.DataStoreConfigurationProvider;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.appsync.AppSync;
-import com.amplifyframework.datastore.events.NetworkStatusEvent;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
@@ -43,6 +42,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
+import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.functions.Action;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
@@ -63,6 +63,8 @@ public final class Orchestrator {
     private final MutationOutbox mutationOutbox;
     private final CompositeDisposable disposables;
     private final Semaphore startStopSemaphore;
+    private final ReachabilityMonitor reachabilityMonitor;
+    private Disposable monitorNetworkChangesDisposable;
 
     /**
      * Constructs a new Orchestrator.
@@ -80,6 +82,7 @@ public final class Orchestrator {
      *        The reference to the variable returned by the provider only get set after the plugin's
      *        {@link AWSDataStorePlugin#configure(JSONObject, Context)} is invoked by Amplify.
      * @param targetState The desired state of operation - online, or offline
+     * @param reachabilityMonitor The reachability monitor to use.
      * @param isSyncRetryEnabled enable or disable the SyncProcessor retry
      */
     public Orchestrator(
@@ -89,6 +92,7 @@ public final class Orchestrator {
             @NonNull final AppSync appSync,
             @NonNull final DataStoreConfigurationProvider dataStoreConfigurationProvider,
             @NonNull final Supplier<State> targetState,
+            @NonNull final ReachabilityMonitor reachabilityMonitor,
             final boolean isSyncRetryEnabled) {
         Objects.requireNonNull(schemaRegistry);
         Objects.requireNonNull(modelProvider);
@@ -132,6 +136,7 @@ public final class Orchestrator {
         this.storageObserver = new StorageObserver(localStorageAdapter, mutationOutbox);
         this.currentState = new AtomicReference<>(State.STOPPED);
         this.targetState = targetState;
+        this.reachabilityMonitor = reachabilityMonitor;
         this.disposables = new CompositeDisposable();
 
         this.startStopSemaphore = new Semaphore(1);
@@ -147,10 +152,19 @@ public final class Orchestrator {
         return performSynchronized(() -> {
             switch (targetState.get()) {
                 case LOCAL_ONLY:
+                    if (monitorNetworkChangesDisposable != null) {
+                        monitorNetworkChangesDisposable.dispose();
+                        monitorNetworkChangesDisposable = null;
+                    }
                     transitionToLocalOnly();
                     break;
                 case SYNC_VIA_API:
-                    transitionToApiSync();
+                    boolean isOnline = reachabilityMonitor.getObservable().blockingFirst();
+                    if (isOnline) {
+                        transitionToApiSync();
+                    } else {
+                        transitionToLocalOnly();
+                    }
                     break;
                 case STOPPED:
                 default:
@@ -289,6 +303,7 @@ public final class Orchestrator {
      * Start syncing models to and from a remote API.
      */
     private void startApiSync() {
+        monitorNetworkChanges();
         LOG.info("Setting currentState to SYNC_VIA_API");
         currentState.set(State.SYNC_VIA_API);
         disposables.add(
@@ -312,7 +327,6 @@ public final class Orchestrator {
                     }
                     return;
                 }
-                publishNetworkStatusEvent(true);
 
                 long startTime = System.currentTimeMillis();
                 LOG.debug("About to hydrate...");
@@ -351,11 +365,6 @@ public final class Orchestrator {
         );
     }
 
-    private void publishNetworkStatusEvent(boolean active) {
-        Amplify.Hub.publish(HubChannel.DATASTORE,
-                HubEvent.create(DataStoreChannelEventName.NETWORK_STATUS, new NetworkStatusEvent(active)));
-    }
-
     private void publishReadyEvent() {
         Amplify.Hub.publish(HubChannel.DATASTORE, HubEvent.create(DataStoreChannelEventName.READY));
     }
@@ -366,16 +375,33 @@ public final class Orchestrator {
             return;
         }
         LOG.warn("API sync failed - transitioning to LOCAL_ONLY.", exception);
-        publishNetworkStatusEvent(false);
         Completable.fromAction(this::transitionToLocalOnly)
             .doOnError(error -> LOG.warn("Transition to LOCAL_ONLY failed.", error))
             .subscribe();
+    }
+
+    private void monitorNetworkChanges() {
+        if (monitorNetworkChangesDisposable != null) {
+            monitorNetworkChangesDisposable.dispose();
+        }
+
+        monitorNetworkChangesDisposable = reachabilityMonitor.getObservable()
+            .skip(1) // We skip the current online state, we only care about transitions
+            .filter(ignore -> !State.STOPPED.equals(currentState.get()))
+            .subscribe(isOnline -> {
+                if (isOnline) {
+                    startApiSync();
+                } else {
+                    stopApiSync();
+                }
+            });
     }
 
     /**
      * Stop all model synchronization with the remote API.
      */
     private void stopApiSync() {
+        monitorNetworkChanges();
         LOG.info("Setting currentState to LOCAL_ONLY");
         currentState.set(State.LOCAL_ONLY);
         disposables.clear();

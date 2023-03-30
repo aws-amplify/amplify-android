@@ -15,6 +15,9 @@
 
 package com.amplifyframework.datastore.syncengine;
 
+import android.content.Context;
+import androidx.annotation.NonNull;
+
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.graphql.GraphQLBehavior;
 import com.amplifyframework.api.graphql.MutationType;
@@ -104,6 +107,20 @@ public final class OrchestratorTest {
         schemaRegistry.clear();
         schemaRegistry.register(modelProvider.models());
 
+        ReachabilityMonitor reachabilityMonitor = new ReachabilityMonitor() {
+            @Override
+            public void configure(@NonNull Context context) { }
+
+            @Override
+            public void configure(@NonNull Context context, @NonNull ConnectivityProvider connectivityProvider) {}
+
+            @NonNull
+            @Override
+            public Observable<Boolean> getObservable() {
+                return Observable.just(true);
+            }
+        };
+
         orchestrator =
             new Orchestrator(modelProvider,
                 schemaRegistry,
@@ -111,7 +128,8 @@ public final class OrchestratorTest {
                 appSync,
                 DataStoreConfiguration::defaults,
                 () -> Orchestrator.State.SYNC_VIA_API,
-                    true
+                reachabilityMonitor,
+                true
             );
     }
 
