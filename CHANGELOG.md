@@ -1,3 +1,16 @@
+## [Release 2.6.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.6.0)
+
+### Features
+- **datastore:** Make the Sync Engine pausable/resumable on connectivity changes ([#2306](https://github.com/aws-amplify/amplify-android/pull/2306))
+
+### Bug Fixes
+- **datastore:** Fix MutationProcessorRetryTest ([#2197](https://github.com/aws-amplify/amplify-android/pull/2197))
+- **datastore:** Use a UnicastSubject instead of a ReplaySubject ([#2353](https://github.com/aws-amplify/amplify-android/pull/2353))
+- **maplibre-adapter:** update MapLibre version ([#2370](https://github.com/aws-amplify/amplify-android/pull/2370))
+
+### Miscellaneous
+- Use better fallback for list query v2 ([#2344](https://github.com/aws-amplify/amplify-android/pull/2344))
+
 ## [Release 2.5.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.5.0)
 
 ### Features
