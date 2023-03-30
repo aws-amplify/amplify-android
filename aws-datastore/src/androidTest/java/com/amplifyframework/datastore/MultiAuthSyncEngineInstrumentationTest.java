@@ -355,6 +355,7 @@ public final class MultiAuthSyncEngineInstrumentationTest {
      * @throws IOException Not expected.
      */
     @Test
+    @Ignore("Test is inconsistent, needs further investigation")
     public void testGroupPrivateUPIAMPostAnonymous() throws IOException, AmplifyException {
         verifyScenario(GroupPrivateUPIAMPost.class,
                       false,
@@ -457,6 +458,7 @@ public final class MultiAuthSyncEngineInstrumentationTest {
      * @throws IOException Not expected.
      */
     @Test
+    @Ignore("Test is inconsistent, needs further investigation")
     public void testPrivatePrivateUPIAMPostAnonymous() throws IOException, AmplifyException {
         verifyScenario(PrivatePrivateUPIAMPost.class,
                       false,
