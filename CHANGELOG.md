@@ -8,9 +8,7 @@
 - **datastore:** Use a UnicastSubject instead of a ReplaySubject ([#2353](https://github.com/aws-amplify/amplify-android/issues/2353))
 - **maplibre-adapter:** update MapLibre version ([#2370](https://github.com/aws-amplify/amplify-android/issues/2370))
 - **predictions:** null check values returned from service ([#2377](https://github.com/aws-amplify/amplify-android/issues/2377))
-
-### Miscellaneous
-- Use better fallback for list query v2 ([#2344](https://github.com/aws-amplify/amplify-android/issues/2344))
+- **api:** Use better fallback for list query v2 ([#2344](https://github.com/aws-amplify/amplify-android/issues/2344))
 
 [See all changes between 2.5.0 and 2.6.0](https://github.com/aws-amplify/amplify-android/compare/release_v2.5.0...release_v2.6.0)
 
