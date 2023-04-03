@@ -202,6 +202,7 @@ internal class LivenessWebSocket(
         val userAgent = "${UserAgent.string()} os/Android/${Build.VERSION.SDK_INT} md/device/$deviceName " +
             "md/device-manufacturer/$deviceManufacturer api/rekognitionstreaming/$amplifyVersion"
         return userAgent.replace(Build.MANUFACTURER, deviceManufacturer).replace(Build.MODEL, deviceName)
+            .replace("+", "_")
     }
 
     private fun startWebSocket(okHttpClient: OkHttpClient, url: String) {

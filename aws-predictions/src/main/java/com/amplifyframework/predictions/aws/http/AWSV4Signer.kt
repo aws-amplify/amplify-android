@@ -215,7 +215,7 @@ internal class AWSV4Signer {
             X_AMZ_DATE to amzDate,
             X_AMZ_EXPIRES to "299",
             X_AMZ_SIGNED_HEADERS to SIGNED_HEADERS,
-            X_AMZ_USER_AGENT to uriEncode(userAgent)
+            X_AMZ_USER_AGENT to urlEncode(userAgent).replace("+", encodedSpace)
         )
 
         if (!sessionToken.isNullOrEmpty()) {
@@ -237,14 +237,6 @@ internal class AWSV4Signer {
     private fun urlEncode(str: String): String {
         try {
             return URLEncoder.encode(str, Charset.defaultCharset().name())
-        } catch (e: UnsupportedEncodingException) {
-            throw IllegalArgumentException(e.message, e)
-        }
-    }
-
-    private fun uriEncode(str: String): String {
-        try {
-            return Uri.encode(str)
         } catch (e: UnsupportedEncodingException) {
             throw IllegalArgumentException(e.message, e)
         }

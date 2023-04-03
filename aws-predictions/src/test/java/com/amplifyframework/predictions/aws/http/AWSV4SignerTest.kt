@@ -112,4 +112,31 @@ internal class AWSV4SignerTest {
         assertEquals(expectedFirstFrame, firstFrame)
         assertEquals(expectedSecondFrame, secondFrame)
     }
+
+    @Test
+    fun `get signed uri with special characters in user agent`() {
+        val expectedUrl = "wss://streaming-rekognition.us-east-1.amazon.com/start-face-liveness-session-websocket" +
+                "?X-Amz-Algorithm=AWS4-HMAC-SHA256" +
+                "&X-Amz-Credential=accessKeyIdTest%252F19700120%252Fus-east-1%252Frekognition%252Faws4_request" +
+                "&X-Amz-Date=19700120T104017Z" +
+                "&X-Amz-Expires=299" +
+                "&X-Amz-SignedHeaders=host" +
+                "&tK=tV" +
+                "&x-amz-user-agent=userAgent%2528Test%2529" +
+                "&X-Amz-Signature=5bf3eddb52fe25a5035438737320ef6fdec816258800ec7c5dd44a322dce0c48"
+
+        val uri = URI(
+            "wss://streaming-rekognition.us-east-1.amazon.com/start-face-liveness-session-websocket?tK=tV"
+        )
+        val credentials = Credentials(
+            accessKeyId = "accessKeyIdTest",
+            secretAccessKey = "secretAccessKeyTest",
+            expiration = Instant.fromIso8601("2023-03-28T15:28:29+0000"),
+            providerName = "providerNameTest"
+        )
+        val dateMillis = 1680017309L
+        val signedUri = signer.getSignedUri(uri, credentials, "us-east-1", "userAgent(Test)", dateMillis)
+
+        assertEquals(expectedUrl, signedUri.toString())
+    }
 }
