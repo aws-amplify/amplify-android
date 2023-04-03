@@ -310,6 +310,14 @@ public final class AWSPredictionsPlugin extends PredictionsPlugin<AWSPredictions
         return operation;
     }
 
+    /**
+     * Starts a Liveness session.
+     * @param sessionId ID for the session to start.
+     * @param sessionInformation Information about the face liveness session.
+     * @param onSessionStarted Called when the face liveness session has been started.
+     * @param onComplete Called when the session is complete.
+     * @param onError Called when an error occurs during the session.
+     */
     @InternalAmplifyApi
     public static void startFaceLivenessSession(@NonNull String sessionId,
                                          @NonNull FaceLivenessSessionInformation sessionInformation,
@@ -320,6 +328,15 @@ public final class AWSPredictionsPlugin extends PredictionsPlugin<AWSPredictions
                 onSessionStarted, onComplete, onError);
     }
 
+    /**
+     * Starts a Liveness session with the given options.
+     * @param sessionId ID for the session to start.
+     * @param sessionInformation Information about the face liveness session.
+     * @param options The options for this session.
+     * @param onSessionStarted Called when the face liveness session has been started.
+     * @param onComplete Called when the session is complete.
+     * @param onError Called when an error occurs during the session.
+     */
     @InternalAmplifyApi
     public static void startFaceLivenessSession(@NonNull String sessionId,
                                          @NonNull FaceLivenessSessionInformation sessionInformation,
