@@ -163,7 +163,7 @@ class KotlinAuthFacade(private val delegate: Delegate = Amplify.Auth) : Auth {
     override suspend fun fetchAuthSession(options: AuthFetchSessionOptions): AuthSession {
         return suspendCoroutine { continuation ->
             delegate.fetchAuthSession(
-                AuthFetchSessionOptions.defaults(),
+                options,
                 { continuation.resume(it) },
                 { continuation.resumeWithException(it) }
             )
