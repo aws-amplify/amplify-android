@@ -1,6 +1,6 @@
 ## Amplify for Android
 <img src="https://s3.amazonaws.com/aws-mobile-hub-images/aws-amplify-logo.png" alt="AWS Amplify" width="550">
- 
+
 [![DiscordChat](https://img.shields.io/discord/308323056592486420?logo=discord)](https://discord.gg/jWVbPfC)
 [![GitHub release](https://img.shields.io/github/release/aws-amplify/amplify-android.svg)](https://github.com/aws-amplify/amplify-android/releases)
 [![Maven Central](https://img.shields.io/maven-central/v/com.amplifyframework/core.svg)](https://search.maven.org/search?q=g:com.amplifyframework%20a:core)
@@ -71,14 +71,14 @@ dependencies section:
 ```groovy
 dependencies {
     // Only specify modules that provide functionality your app will use
-    implementation 'com.amplifyframework:aws-analytics-pinpoint:2.6.0'
-    implementation 'com.amplifyframework:aws-api:2.6.0'
-    implementation 'com.amplifyframework:aws-auth-cognito:2.6.0'
-    implementation 'com.amplifyframework:aws-datastore:2.6.0'
-    implementation 'com.amplifyframework:aws-predictions:2.6.0'
-    implementation 'com.amplifyframework:aws-storage-s3:2.6.0'
-    implementation 'com.amplifyframework:aws-geo-location:2.6.0'
-    implementation 'com.amplifyframework:aws-push-notifications-pinpoint:2.6.0'
+    implementation 'com.amplifyframework:aws-analytics-pinpoint:2.7.0'
+    implementation 'com.amplifyframework:aws-api:2.7.0'
+    implementation 'com.amplifyframework:aws-auth-cognito:2.7.0'
+    implementation 'com.amplifyframework:aws-datastore:2.7.0'
+    implementation 'com.amplifyframework:aws-predictions:2.7.0'
+    implementation 'com.amplifyframework:aws-storage-s3:2.7.0'
+    implementation 'com.amplifyframework:aws-geo-location:2.7.0'
+    implementation 'com.amplifyframework:aws-push-notifications-pinpoint:2.7.0'
 }
 ```
 

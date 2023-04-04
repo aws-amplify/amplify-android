@@ -1,3 +1,13 @@
+## [Release 2.7.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.7.0)
+
+### Features
+- **predictions:** Liveness ([#2381](https://github.com/aws-amplify/amplify-android/issues/2381))
+
+### Bug Fixes
+- **auth:** Fix Kotlin Facade fetchAuthSession options mapping ([#2384](https://github.com/aws-amplify/amplify-android/issues/2384))
+
+[See all changes between 2.6.0 and 2.7.0](https://github.com/aws-amplify/amplify-android/compare/release_v2.6.0...release_v2.7.0)
+
 ## [Release 2.6.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.6.0)
 
 ### Features
