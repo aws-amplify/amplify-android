@@ -17,16 +17,26 @@ package com.amplifyframework.auth.cognito
 
 import aws.sdk.kotlin.services.cognitoidentity.CognitoIdentityClient
 import aws.sdk.kotlin.services.cognitoidentityprovider.CognitoIdentityProviderClient
+import aws.sdk.kotlin.runtime.http.operation.customUserAgentMetadata
+import aws.smithy.kotlin.runtime.client.RequestInterceptorContext
 import aws.smithy.kotlin.runtime.client.endpoints.Endpoint
 import aws.smithy.kotlin.runtime.client.endpoints.EndpointProvider
+import aws.smithy.kotlin.runtime.http.interceptors.HttpInterceptor
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 
 interface AWSCognitoAuthService {
     var cognitoIdentityProviderClient: CognitoIdentityProviderClient?
     var cognitoIdentityClient: CognitoIdentityClient?
+    var customUserAgentPairs: MutableMap<String, String>
 
     companion object {
         internal fun fromConfiguration(configuration: AuthConfiguration): AWSCognitoAuthService {
+            val service = object : AWSCognitoAuthService {
+                override var cognitoIdentityProviderClient: CognitoIdentityProviderClient? = null
+                override var cognitoIdentityClient: CognitoIdentityClient? = null
+                override var customUserAgentPairs: MutableMap<String, String> = mutableMapOf()
+            }
+
             val cognitoIdentityProviderClient = configuration.userPool?.let { it ->
 
                 CognitoIdentityProviderClient {
@@ -34,17 +44,35 @@ interface AWSCognitoAuthService {
                     this.endpointProvider = it.endpoint?.let { endpoint ->
                         EndpointProvider { Endpoint(endpoint) }
                     }
+                    this.interceptors += object : HttpInterceptor {
+                        override suspend fun modifyBeforeSerialization(context: RequestInterceptorContext<Any>): Any {
+                            service.customUserAgentPairs.forEach { (key, value) ->
+                                context.executionContext.customUserAgentMetadata.add(key, value)
+                            }
+                            return super.modifyBeforeSerialization(context)
+                        }
+                    }
                 }
             }
 
             val cognitoIdentityClient = configuration.identityPool?.let { it ->
-                CognitoIdentityClient { this.region = it.region }
+                CognitoIdentityClient {
+                    this.region = it.region
+                    this.interceptors += object : HttpInterceptor {
+                        override suspend fun modifyBeforeSerialization(context: RequestInterceptorContext<Any>): Any {
+                            service.customUserAgentPairs.forEach { (key, value) ->
+                                context.executionContext.customUserAgentMetadata.add(key, value)
+                            }
+                            return super.modifyBeforeSerialization(context)
+                        }
+                    }
+                }
             }
 
-            return object : AWSCognitoAuthService {
-                override var cognitoIdentityProviderClient = cognitoIdentityProviderClient
-                override var cognitoIdentityClient = cognitoIdentityClient
-            }
+            service.cognitoIdentityProviderClient = cognitoIdentityProviderClient
+            service.cognitoIdentityClient = cognitoIdentityClient
+
+            return service
         }
     }
 }

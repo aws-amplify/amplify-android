@@ -99,6 +99,11 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         return pluginConfigurationJSON
     }
 
+    @InternalAmplifyApi
+    fun addToUserAgent(key: String, value: String) {
+        realPlugin.addToUserAgent(key, value)
+    }
+
     private fun Exception.toAuthException(): AuthException {
         return if (this is AuthException) {
             this

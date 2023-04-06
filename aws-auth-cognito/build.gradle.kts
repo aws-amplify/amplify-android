@@ -33,6 +33,7 @@ dependencies {
     implementation(dependency.androidx.security)
     implementation(dependency.androidx.browser)
 
+    implementation(dependency.aws.http)
     implementation(dependency.aws.cognitoidentity)
     implementation(dependency.aws.cognitoidentityprovider)
 
