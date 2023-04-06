@@ -27,14 +27,14 @@ import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 interface AWSCognitoAuthService {
     var cognitoIdentityProviderClient: CognitoIdentityProviderClient?
     var cognitoIdentityClient: CognitoIdentityClient?
-    var customUserAgentPairs: MutableMap<String, String>
+    val customUserAgentPairs: MutableMap<String, String>
 
     companion object {
         internal fun fromConfiguration(configuration: AuthConfiguration): AWSCognitoAuthService {
             val service = object : AWSCognitoAuthService {
                 override var cognitoIdentityProviderClient: CognitoIdentityProviderClient? = null
                 override var cognitoIdentityClient: CognitoIdentityClient? = null
-                override var customUserAgentPairs: MutableMap<String, String> = mutableMapOf()
+                override val customUserAgentPairs: MutableMap<String, String> = mutableMapOf()
             }
 
             val cognitoIdentityProviderClient = configuration.userPool?.let { it ->
