@@ -25,18 +25,13 @@ import aws.smithy.kotlin.runtime.http.interceptors.HttpInterceptor
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 
 interface AWSCognitoAuthService {
-    var cognitoIdentityProviderClient: CognitoIdentityProviderClient?
-    var cognitoIdentityClient: CognitoIdentityClient?
+    val cognitoIdentityProviderClient: CognitoIdentityProviderClient?
+    val cognitoIdentityClient: CognitoIdentityClient?
     val customUserAgentPairs: MutableMap<String, String>
 
     companion object {
         internal fun fromConfiguration(configuration: AuthConfiguration): AWSCognitoAuthService {
-            val service = object : AWSCognitoAuthService {
-                override var cognitoIdentityProviderClient: CognitoIdentityProviderClient? = null
-                override var cognitoIdentityClient: CognitoIdentityClient? = null
-                override val customUserAgentPairs: MutableMap<String, String> = mutableMapOf()
-            }
-
+            val customPairs: MutableMap<String, String> = mutableMapOf()
             val cognitoIdentityProviderClient = configuration.userPool?.let { it ->
 
                 CognitoIdentityProviderClient {
@@ -46,7 +41,7 @@ interface AWSCognitoAuthService {
                     }
                     this.interceptors += object : HttpInterceptor {
                         override suspend fun modifyBeforeSerialization(context: RequestInterceptorContext<Any>): Any {
-                            service.customUserAgentPairs.forEach { (key, value) ->
+                            customPairs.forEach { (key, value) ->
                                 context.executionContext.customUserAgentMetadata.add(key, value)
                             }
                             return super.modifyBeforeSerialization(context)
@@ -60,7 +55,7 @@ interface AWSCognitoAuthService {
                     this.region = it.region
                     this.interceptors += object : HttpInterceptor {
                         override suspend fun modifyBeforeSerialization(context: RequestInterceptorContext<Any>): Any {
-                            service.customUserAgentPairs.forEach { (key, value) ->
+                            customPairs.forEach { (key, value) ->
                                 context.executionContext.customUserAgentMetadata.add(key, value)
                             }
                             return super.modifyBeforeSerialization(context)
@@ -69,10 +64,11 @@ interface AWSCognitoAuthService {
                 }
             }
 
-            service.cognitoIdentityProviderClient = cognitoIdentityProviderClient
-            service.cognitoIdentityClient = cognitoIdentityClient
-
-            return service
+            return object : AWSCognitoAuthService {
+                override val cognitoIdentityProviderClient = cognitoIdentityProviderClient
+                override val cognitoIdentityClient = cognitoIdentityClient
+                override val customUserAgentPairs = customPairs
+            }
         }
     }
 }
