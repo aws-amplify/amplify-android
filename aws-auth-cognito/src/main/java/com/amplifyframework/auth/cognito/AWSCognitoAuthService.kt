@@ -33,7 +33,6 @@ interface AWSCognitoAuthService {
         internal fun fromConfiguration(configuration: AuthConfiguration): AWSCognitoAuthService {
             val customPairs: MutableMap<String, String> = mutableMapOf()
             val cognitoIdentityProviderClient = configuration.userPool?.let { it ->
-
                 CognitoIdentityProviderClient {
                     this.region = it.region
                     this.endpointProvider = it.endpoint?.let { endpoint ->

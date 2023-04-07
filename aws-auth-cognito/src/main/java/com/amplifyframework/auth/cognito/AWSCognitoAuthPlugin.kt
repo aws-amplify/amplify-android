@@ -21,6 +21,7 @@ import android.content.Intent
 import androidx.annotation.VisibleForTesting
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.annotations.InternalAmplifyApi
+import com.amplifyframework.auth.AWSCognitoAuthMetadataType
 import com.amplifyframework.auth.AuthCodeDeliveryDetails
 import com.amplifyframework.auth.AuthDevice
 import com.amplifyframework.auth.AuthException
@@ -100,8 +101,8 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
     }
 
     @InternalAmplifyApi
-    fun addToUserAgent(key: String, value: String) {
-        realPlugin.addToUserAgent(key, value)
+    fun addToUserAgent(type: AWSCognitoAuthMetadataType, value: String) {
+        realPlugin.addToUserAgent(type, value)
     }
 
     private fun Exception.toAuthException(): AuthException {
