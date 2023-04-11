@@ -1,3 +1,9 @@
+## [Release 2.7.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.7.1)
+
+- There are no customer-impacting changes for this release. This release includes internal changes only.
+
+[See all changes between 2.7.0 and 2.7.1](https://github.com/aws-amplify/amplify-android/compare/release_v2.7.0...release_v2.7.1)
+
 ## [Release 2.7.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.7.0)
 
 ### Features
