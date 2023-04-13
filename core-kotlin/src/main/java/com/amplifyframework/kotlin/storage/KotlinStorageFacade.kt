@@ -148,7 +148,7 @@ class KotlinStorageFacade(private val delegate: Delegate = Amplify.Storage) : St
     }
 
     @Throws(StorageException::class)
-    @Deprecated("")
+    @Deprecated("use the paged list api instead.", replaceWith = ReplaceWith("list(String, StoragePagedListOptions)"))
     override suspend fun list(path: String, options: StorageListOptions): StorageListResult {
         return suspendCoroutine { continuation ->
             delegate.list(

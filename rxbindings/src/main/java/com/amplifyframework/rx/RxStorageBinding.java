@@ -152,6 +152,7 @@ public final class RxStorageBinding implements RxStorageCategoryBehavior {
 
     @NonNull
     @Override
+    @SuppressWarnings("deprecation")
     public Single<StorageListResult> list(@NonNull String path) {
         return toSingle((onResult, onError) -> {
             storage.list(path, onResult, onError);
@@ -161,6 +162,7 @@ public final class RxStorageBinding implements RxStorageCategoryBehavior {
 
     @NonNull
     @Override
+    @SuppressWarnings("deprecation")
     public Single<StorageListResult> list(@NonNull String path, @NonNull StorageListOptions options) {
         return toSingle((onResult, onError) -> {
             storage.list(path, options, onResult, onError);
