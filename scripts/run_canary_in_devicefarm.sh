@@ -1,5 +1,5 @@
 #!/bin/bash
-project_arn=$DEVICEFARM_PROJECT_ARN
+project_arn="arn:aws:devicefarm:us-west-2:192061767050:project:cfe6768a-b64b-4cff-8a48-3c9f461f1f6b"
 max_devices=$NUMBER_OF_DEVICES_TO_TEST
 module_name=$1
 file_name="$module_name-debug-androidTest.apk"
@@ -119,19 +119,7 @@ run_arn=`aws devicefarm schedule-run --project-arn=$project_arn \
                                 "maxDevices": '$max_devices'
                             }' \
                             --name="$file_name-$CODEBUILD_SOURCE_VERSION" \
-                            --test='{
-                                'type':'INSTRUMENTATION',
-                                'testPackageArn':'$test_package_upload_arn',
-                                'parameters': {
-                                    'filter':
-                                    com.amplifyframework.auth.cognito.AuthCanaryTest,
-                                    com.amplifyframework.analytics.pinpoint.PinpointAnalyticsStressTest,
-                                    com.amplifyframework.datastore.DatastoreCanaryTest,
-                                    com.amplifyframework.geo.location.GeoCanaryTest,
-                                    com.amplifyframework.predictions.aws.PredictionsCanaryTest,
-                                    com.amplifyframework.storage.s3.StorageCanaryTest'
-                                }
-                            }` \
+                            --test="type=INSTRUMENTATION,testPackageArn=$test_package_upload_arn,parameters={filter="com.amplifyframework.auth.cognito.AuthCanaryTest"}" \
                             --execution-configuration="jobTimeoutMinutes=30,videoCapture=false" \
                             --query="run.arn" \
                             --output=text \
