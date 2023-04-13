@@ -218,6 +218,7 @@ public final class StorageCategory extends Category<StoragePlugin<?>> implements
 
     @NonNull
     @Override
+    @Deprecated
     @SuppressWarnings("deprecation")
     public StorageListOperation<?> list(
             @NonNull String path,
@@ -229,6 +230,7 @@ public final class StorageCategory extends Category<StoragePlugin<?>> implements
 
     @NonNull
     @Override
+    @Deprecated
     @SuppressWarnings("deprecation")
     public StorageListOperation<?> list(
             @NonNull String path,

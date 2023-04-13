@@ -73,7 +73,7 @@ public final class AWSS3StorageListOperation extends StorageListOperation<AWSS3S
         this.awsS3StoragePluginConfiguration = awss3StoragePluginConfiguration;
     }
 
-    @SuppressWarnings("SyntheticAccessor")
+    @SuppressWarnings({"SyntheticAccessor", "deprecation"})
     @Override
     public void start() {
         executorService.submit(() -> {

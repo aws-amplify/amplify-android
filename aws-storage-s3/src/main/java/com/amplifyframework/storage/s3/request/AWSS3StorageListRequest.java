@@ -41,6 +41,7 @@ public final class AWSS3StorageListRequest {
      * @param targetIdentityId If set, this should override the current user's identity ID.
      *                         If null, the operation will fetch the current identity ID.
      */
+    @SuppressWarnings("deprecation")
     public AWSS3StorageListRequest(
             @NonNull String path,
             @NonNull StorageAccessLevel accessLevel,

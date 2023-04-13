@@ -609,6 +609,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
 
     @NonNull
     @Override
+    @SuppressWarnings("deprecation")
     public StorageListOperation<?> list(
         @NonNull String path,
         @NonNull StorageListOptions options,
@@ -648,8 +649,8 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
             path,
             options.getAccessLevel() != null ? options.getAccessLevel() : defaultAccessLevel,
             options.getTargetIdentityId(),
-            options.pageSize,
-            options.nextToken);
+            options.getPageSize(),
+            options.getNextToken());
 
         AWSS3StorageListOperation operation =
             new AWSS3StorageListOperation(
