@@ -39,6 +39,7 @@ import com.amplifyframework.storage.operation.StorageUploadInputStreamOperation;
 import com.amplifyframework.storage.options.StorageDownloadFileOptions;
 import com.amplifyframework.storage.options.StorageGetUrlOptions;
 import com.amplifyframework.storage.options.StorageListOptions;
+import com.amplifyframework.storage.options.StoragePagedListOptions;
 import com.amplifyframework.storage.options.StorageRemoveOptions;
 import com.amplifyframework.storage.options.StorageUploadFileOptions;
 import com.amplifyframework.storage.options.StorageUploadInputStreamOptions;
@@ -597,6 +598,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
 
     @NonNull
     @Override
+    @SuppressWarnings("deprecation")
     public StorageListOperation<?> list(
         @NonNull String path,
         @NonNull Consumer<StorageListResult> onSuccess,
@@ -620,6 +622,34 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
                 : defaultAccessLevel,
             options.getTargetIdentityId()
         );
+
+        AWSS3StorageListOperation operation =
+            new AWSS3StorageListOperation(
+                storageService,
+                executorService,
+                authCredentialsProvider,
+                request,
+                awsS3StoragePluginConfiguration,
+                onSuccess,
+                onError);
+
+        operation.start();
+
+        return operation;
+    }
+
+    @Override
+    public StorageListOperation<?> list(@NonNull String path,
+                                     @NonNull StoragePagedListOptions options,
+                                     @NonNull Consumer<StorageListResult> onSuccess,
+                                     @NonNull Consumer<StorageException> onError) {
+
+        AWSS3StorageListRequest request = new AWSS3StorageListRequest(
+            path,
+            options.getAccessLevel() != null ? options.getAccessLevel() : defaultAccessLevel,
+            options.getTargetIdentityId(),
+            options.pageSize,
+            options.nextToken);
 
         AWSS3StorageListOperation operation =
             new AWSS3StorageListOperation(

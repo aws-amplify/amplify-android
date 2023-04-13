@@ -480,7 +480,7 @@ public final class RxStorageBindingTest {
      */
     @Test
     public void listReturnsResult() {
-        StorageListResult result = StorageListResult.fromItems(Collections.emptyList());
+        StorageListResult result = StorageListResult.fromItems(Collections.emptyList(), null);
         doAnswer(invocation -> {
             final int indexOfResultConsumer = 1; // 0 localPath, 1 onResult, 2 onError
             Consumer<StorageListResult> resultConsumer = invocation.getArgument(indexOfResultConsumer);

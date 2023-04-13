@@ -436,7 +436,7 @@ class KotlinStorageFacadeTest {
     fun listSucceeds() = runBlocking {
         val path = "/beach/photos"
         val item = StorageItem("me_at_beach.png", 100L, Date(), "eTag", "props")
-        val result = StorageListResult.fromItems(listOf(item))
+        val result = StorageListResult.fromItems(listOf(item), null)
         every {
             delegate.list(eq(path), any(), any(), any())
         } answers {

@@ -30,6 +30,7 @@ import com.amplifyframework.storage.operation.StorageTransferOperation;
 import com.amplifyframework.storage.options.StorageDownloadFileOptions;
 import com.amplifyframework.storage.options.StorageGetUrlOptions;
 import com.amplifyframework.storage.options.StorageListOptions;
+import com.amplifyframework.storage.options.StoragePagedListOptions;
 import com.amplifyframework.storage.options.StorageRemoveOptions;
 import com.amplifyframework.storage.options.StorageUploadFileOptions;
 import com.amplifyframework.storage.options.StorageUploadInputStreamOptions;
@@ -161,6 +162,15 @@ public final class RxStorageBinding implements RxStorageCategoryBehavior {
     @NonNull
     @Override
     public Single<StorageListResult> list(@NonNull String path, @NonNull StorageListOptions options) {
+        return toSingle((onResult, onError) -> {
+            storage.list(path, options, onResult, onError);
+            return new NoOpCancelable(); // StorageListOperation is not Cancelable at the moment!
+        });
+    }
+
+    @NonNull
+    @Override
+    public Single<StorageListResult> list(@NonNull String path, @NonNull StoragePagedListOptions options) {
         return toSingle((onResult, onError) -> {
             storage.list(path, options, onResult, onError);
             return new NoOpCancelable(); // StorageListOperation is not Cancelable at the moment!
