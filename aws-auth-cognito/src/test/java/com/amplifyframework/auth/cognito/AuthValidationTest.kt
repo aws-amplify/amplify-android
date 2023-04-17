@@ -67,7 +67,7 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
-private const val configurationPath = "/feature-test/configuration/authConfiguration_oauth.json"
+private const val configurationPath = "/feature-test/configuration/authconfiguration_oauth.json"
 private const val username1 = "username"
 private const val username2 = "username2"
 private const val password1 = "password"
