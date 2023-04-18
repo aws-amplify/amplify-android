@@ -192,7 +192,7 @@ internal class AWSS3StorageService(
                 val lastModified = value.lastModified
                 val eTag = value.eTag
                 if (key != null && lastModified != null && eTag != null) {
-                    return@mapNotNull StorageItem(
+                    StorageItem(
                         S3Keys.extractAmplifyKey(key, prefix),
                         value.size,
                         Date.from(Instant.ofEpochMilli(lastModified.epochSeconds)),
@@ -200,7 +200,7 @@ internal class AWSS3StorageService(
                         null
                     )
                 } else {
-                    return@mapNotNull null
+                    null
                 }
             }
             StorageListResult.fromItems(items, result.nextContinuationToken)
