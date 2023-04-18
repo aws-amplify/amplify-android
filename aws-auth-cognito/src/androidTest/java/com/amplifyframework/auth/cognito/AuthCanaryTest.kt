@@ -114,7 +114,7 @@ class AuthCanaryTest {
         assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
     }
 
-    // Test requires confirmation code, testing onError call
+    // Test requires confirmation code, testing onError call.
     @Test
     fun confirmSignUp() {
         val latch = CountDownLatch(1)
