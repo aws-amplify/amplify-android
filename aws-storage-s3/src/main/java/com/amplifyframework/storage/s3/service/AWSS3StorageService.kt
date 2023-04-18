@@ -180,7 +180,6 @@ internal class AWSS3StorageService(
     }
 
     override fun listFiles(path: String, prefix: String, pageSize: Int, nextToken: String?): StorageListResult {
-        val items = mutableListOf<StorageItem>()
         return runBlocking {
             val result = s3Client.listObjectsV2 {
                 this.bucket = s3BucketName
@@ -188,18 +187,20 @@ internal class AWSS3StorageService(
                 this.maxKeys = pageSize
                 this.continuationToken = nextToken
             }
-            result.contents?.forEach { value ->
+            val items = result.contents?.mapNotNull { value ->
                 val key = value.key
                 val lastModified = value.lastModified
                 val eTag = value.eTag
                 if (key != null && lastModified != null && eTag != null) {
-                    items += StorageItem(
+                    return@mapNotNull StorageItem(
                         S3Keys.extractAmplifyKey(key, prefix),
                         value.size,
                         Date.from(Instant.ofEpochMilli(lastModified.epochSeconds)),
                         eTag,
                         null
                     )
+                } else {
+                    return@mapNotNull null
                 }
             }
             StorageListResult.fromItems(items, result.nextContinuationToken)

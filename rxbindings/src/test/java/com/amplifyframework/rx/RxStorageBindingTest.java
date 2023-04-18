@@ -483,7 +483,7 @@ public final class RxStorageBindingTest {
     public void listReturnsResult() {
         StorageListResult result = StorageListResult.fromItems(Collections.emptyList(), null);
         doAnswer(invocation -> {
-            final int indexOfResultConsumer = 2; // 0 localPath, 1 onResult, 2 onError
+            final int indexOfResultConsumer = 2; // 0 localPath, 1 options, 2 onResult, 3 onError
             Consumer<StorageListResult> resultConsumer = invocation.getArgument(indexOfResultConsumer);
             resultConsumer.accept(result);
             return mock(StorageListOperation.class);
@@ -506,7 +506,7 @@ public final class RxStorageBindingTest {
     public void listReturnsError() {
         StorageException error = new StorageException("Error removing item.", "Expected.");
         doAnswer(invocation -> {
-            final int indexOfErrorConsumer = 3; // 0 localPath, 1 onResult, 2 onError
+            final int indexOfErrorConsumer = 3; // 0 localPath, 1 options, 2 onResult, 3 onError
             Consumer<StorageException> errorConsumer = invocation.getArgument(indexOfErrorConsumer);
             errorConsumer.accept(error);
             return mock(StorageListOperation.class);

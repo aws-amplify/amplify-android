@@ -62,7 +62,7 @@ public interface RxStorageCategoryBehavior {
      * or the expiration details of the URL.
      * Provide callbacks to obtain the URL retrieval results.
      *
-     * @param key     the unique identifier for the object in storage
+     * @param key the unique identifier for the object in storage
      * @param options parameters specific to plugin behavior
      * @return A Single which emits a result on success, or an {@link StorageException}
      * if not able to get a url for the requested key
