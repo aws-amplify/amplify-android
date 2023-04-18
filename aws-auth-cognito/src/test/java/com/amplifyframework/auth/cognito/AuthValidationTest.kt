@@ -82,11 +82,7 @@ private val validLogins = mapOf(
 )
 
 /**
- * Contains validation tests for the SRP + Hosted UI test matrix outlined in this Quip doc:
- * https://quip-amazon.com/NUq6AUoSriWI/Android-SRP-and-Hosted-UI-Test-Matrix
- *
- * These tests mock out the KotlinSDK calls/responses and the HostedUI. It is testing the Amplify codebase's implementation
- * of each scenario.
+ * Contains validation tests for the SRP + Hosted UI test matrix.
  */
 @OptIn(ExperimentalCoroutinesApi::class, DelicateCoroutinesApi::class)
 class AuthValidationTest {
@@ -166,9 +162,9 @@ class AuthValidationTest {
     // Expected: Sign in and sign out successful
     @Test
     fun `SRP sign in existing user with correct password, SRP sign out`() {
-        val signInResult = signIn(username1, password1)
+        signIn(username1, password1)
+        assertSignedInAs(username1)
         signOut()
-        assertTrue(signInResult.isSignedIn)
         assertSignedOut()
     }
 
@@ -244,7 +240,7 @@ class AuthValidationTest {
     @Test
     fun `SRP sign in existing user with correct password, Hosted UI sign in`() {
         signIn(username1, password1)
-        assertFails("There is already a user signed in.") { signInHostedUi() }
+        assertFails { signInHostedUi() }
         assertSignedInAs(username1)
     }
 
@@ -253,7 +249,7 @@ class AuthValidationTest {
     @Test
     fun `Hosted UI sign in, SRP sign in existing user with correct password`() {
         signInHostedUi()
-        assertFails("There is already a user signed in.") { signIn(username1, password1) }
+        assertFails { signIn(username1, password1) }
         assertSignedInAs(username1)
     }
 
@@ -262,7 +258,7 @@ class AuthValidationTest {
     @Test
     fun `Hosted UI sign in, SRP sign in existing user with incorrect password`() {
         signInHostedUi()
-        assertFails("There is already a user signed in.") { signIn(username1, password1) }
+        assertFails { signIn(username1, password1) }
         assertSignedInAs(username1)
     }
 
