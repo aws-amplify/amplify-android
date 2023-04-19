@@ -110,20 +110,20 @@ stopDuplicates
 
 # Schedule the test run in device farm
 echo "Scheduling test run"
-run_arn=`aws devicefarm schedule-run --project-arn=$project_arn \
-                            --app-arn="$app_package_upload_arn" \
-                            --device-selection-configuration='{
-                                "filters": [
-                                  {"attribute": "ARN", "operator":"IN", "values":["'$minDevice'", "'$middleDevice'", "'$latestDevice'"]}
-                                ],
-                                "maxDevices": '$max_devices'
-                            }' \
-                            --name="$file_name-$CODEBUILD_SOURCE_VERSION" \
-                            --test="type=INSTRUMENTATION,testPackageArn=$test_package_upload_arn,filter="com.amplifyframework.auth.cognito.AuthCanaryTest" \
-                            --execution-configuration="jobTimeoutMinutes=30,videoCapture=false" \
-                            --query="run.arn" \
-                            --output=text \
-                            --region="us-west-2"`
+run_arn=$(aws devicefarm schedule-run --project-arn=$project_arn \
+                                      --app-arn="$app_package_upload_arn" \
+                                      --device-selection-configuration='{
+                                          "filters": [
+                                            {"attribute": "ARN", "operator":"IN", "values":["'$minDevice'", "'$middleDevice'", "'$latestDevice'"]}
+                                          ],
+                                          "maxDevices": '$max_devices'
+                                      }' \
+                                      --name="$file_name-$CODEBUILD_SOURCE_VERSION" \
+                                      --test="type=INSTRUMENTATION,testPackageArn=$test_package_upload_arn,parameters={filter="com.amplifyframework.auth.cognito.AuthCanaryTest"}" \
+                                      --execution-configuration="jobTimeoutMinutes=30,videoCapture=false" \
+                                      --query="run.arn" \
+                                      --output=text \
+                                      --region="us-west-2")
 
 status='NONE'
 result='NONE'
