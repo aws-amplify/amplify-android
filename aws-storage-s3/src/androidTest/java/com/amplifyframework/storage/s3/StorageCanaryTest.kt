@@ -9,6 +9,7 @@ import com.amplifyframework.logging.AndroidLoggingPlugin
 import com.amplifyframework.logging.LogLevel
 import com.amplifyframework.storage.StorageAccessLevel
 import com.amplifyframework.storage.operation.StorageUploadFileOperation
+import com.amplifyframework.storage.options.StoragePagedListOptions
 import com.amplifyframework.storage.options.StorageUploadFileOptions
 import java.io.File
 import java.io.FileInputStream
@@ -92,13 +93,18 @@ class StorageCanaryTest {
     @Test
     fun downloadFile() {
         val latch = CountDownLatch(1)
+        val uploadLatch = CountDownLatch(1)
         val file = createFile(1)
         val fileName = "ExampleKey${UUID.randomUUID()}"
         Amplify.Storage.uploadFile(
             fileName, file,
-            { Log.i(TAG, "Successfully uploaded: ${it.key}") },
+            {
+                Log.i(TAG, "Successfully uploaded: ${it.key}")
+                uploadLatch.countDown()
+            },
             { Log.e(TAG, "Upload failed", it) }
         )
+        latch.await(TIMEOUT_S, TimeUnit.SECONDS)
         try {
             Amplify.Storage.downloadFile(
                 fileName, file,
@@ -182,10 +188,14 @@ class StorageCanaryTest {
 
     @Test
     fun list() {
+        val options = StoragePagedListOptions.builder()
+            .setPageSize(1000)
+            .build()
+
         val latch = CountDownLatch(1)
         try {
             Amplify.Storage.list(
-                "",
+                "", options,
                 { result ->
                     result.items.forEach { item ->
                         Log.i(TAG, "Item: ${item.key}")

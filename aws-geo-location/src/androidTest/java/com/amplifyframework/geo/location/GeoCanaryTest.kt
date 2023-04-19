@@ -14,6 +14,7 @@
  */
 package com.amplifyframework.geo.location
 
+import android.content.Context
 import android.util.Log
 import androidx.test.core.app.ApplicationProvider
 import com.amplifyframework.AmplifyException
@@ -23,6 +24,7 @@ import com.amplifyframework.geo.models.Coordinates
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import junit.framework.Assert.fail
+import org.junit.After
 import org.junit.Assert
 import org.junit.BeforeClass
 import org.junit.Test
@@ -47,9 +49,15 @@ class GeoCanaryTest {
         }
     }
 
+    @After
+    fun tearDown() {
+        signOutFromCognito()
+    }
+
     @Test
     fun searchByText() {
         val latch = CountDownLatch(1)
+        signInWithCognito()
         val searchQuery = "Amazon Go"
         try {
             Amplify.Geo.searchByText(
@@ -74,6 +82,7 @@ class GeoCanaryTest {
     @Test
     fun searchByCoordinates() {
         val latch = CountDownLatch(1)
+        signInWithCognito()
         val position = Coordinates(47.6153, -122.3384)
         try {
             Amplify.Geo.searchByCoordinates(
@@ -93,5 +102,27 @@ class GeoCanaryTest {
             fail(e.toString())
         }
         Assert.assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
+    }
+
+    private fun signInWithCognito() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val (username, password) = Credentials.load(context)
+        Amplify.Auth.signIn(
+            username, password,
+            { result ->
+                if (result.isSignedIn) {
+                    Log.i("AuthQuickstart", "Sign in succeeded")
+                } else {
+                    Log.i("AuthQuickstart", "Sign in not complete")
+                }
+            },
+            { Log.e("AuthQuickstart", "Failed to sign in", it) }
+        )
+    }
+
+    private fun signOutFromCognito() {
+        Amplify.Auth.signOut {
+            Log.i(TAG, "Signed out successfully")
+        }
     }
 }
