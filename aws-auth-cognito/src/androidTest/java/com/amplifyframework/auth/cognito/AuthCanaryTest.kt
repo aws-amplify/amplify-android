@@ -39,7 +39,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.BeforeClass
-import org.junit.Ignore
 import org.junit.Test
 
 class AuthCanaryTest {
@@ -291,7 +290,7 @@ class AuthCanaryTest {
 //        }
 //        assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
 //    }
-//    
+//
 //    @Test
 //    fun forgetDevice() {
 //        signInBeforeTest(username, password)
