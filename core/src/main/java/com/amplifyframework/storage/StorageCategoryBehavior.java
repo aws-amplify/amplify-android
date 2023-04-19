@@ -28,6 +28,7 @@ import com.amplifyframework.storage.operation.StorageUploadInputStreamOperation;
 import com.amplifyframework.storage.options.StorageDownloadFileOptions;
 import com.amplifyframework.storage.options.StorageGetUrlOptions;
 import com.amplifyframework.storage.options.StorageListOptions;
+import com.amplifyframework.storage.options.StoragePagedListOptions;
 import com.amplifyframework.storage.options.StorageRemoveOptions;
 import com.amplifyframework.storage.options.StorageUploadFileOptions;
 import com.amplifyframework.storage.options.StorageUploadInputStreamOptions;
@@ -317,7 +318,9 @@ public interface StorageCategoryBehavior {
      * @param onError Called if an error occurs during operation
      * @return an operation object that provides notifications and
      *         actions related to the execution of the work
+     * @deprecated use the {@link #list(String, StoragePagedListOptions, Consumer, Consumer)} api instead.
      */
+    @Deprecated
     @NonNull
     StorageListOperation<?> list(
             @NonNull String path,
@@ -334,12 +337,32 @@ public interface StorageCategoryBehavior {
      * @param onError Called if an error occurs during operation
      * @return an operation object that provides notifications and
      *         actions related to the execution of the work
+     * @deprecated use the {@link #list(String, StoragePagedListOptions, Consumer, Consumer)} api instead.
      */
+    @Deprecated
     @NonNull
     StorageListOperation<?> list(
             @NonNull String path,
             @NonNull StorageListOptions options,
             @NonNull Consumer<StorageListResult> onSuccess,
             @NonNull Consumer<StorageException> onError);
+
+    /**
+     * List the object identifiers under the hierarchy specified
+     * by the path, relative to access level, from storage.
+     * Register consumers to observe progress.
+     * @param path The path in storage to list items from
+     * @param options parameters specific to plugin behavior
+     * @param onSuccess Called if operation completed successfully and furnishes a result
+     * @param onError Called if an error occurs during operation
+     * @return an operation object that provides notifications and
+     *         actions related to the execution of the work
+     */
+    StorageListOperation<?> list(
+        @NonNull String path,
+        @NonNull StoragePagedListOptions options,
+        @NonNull Consumer<StorageListResult> onSuccess,
+        @NonNull Consumer<StorageException> onError);
+
 }
 

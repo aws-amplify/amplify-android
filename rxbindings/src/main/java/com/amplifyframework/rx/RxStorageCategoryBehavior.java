@@ -23,6 +23,7 @@ import com.amplifyframework.storage.operation.StorageTransferOperation;
 import com.amplifyframework.storage.options.StorageDownloadFileOptions;
 import com.amplifyframework.storage.options.StorageGetUrlOptions;
 import com.amplifyframework.storage.options.StorageListOptions;
+import com.amplifyframework.storage.options.StoragePagedListOptions;
 import com.amplifyframework.storage.options.StorageRemoveOptions;
 import com.amplifyframework.storage.options.StorageUploadFileOptions;
 import com.amplifyframework.storage.options.StorageUploadInputStreamOptions;
@@ -47,9 +48,10 @@ public interface RxStorageCategoryBehavior {
     /**
      * Retrieve the remote URL for the object from storage.
      * Provide callbacks to obtain the URL retrieval results.
+     *
      * @param key the unique identifier for the object in storage
      * @return A Single which emits a result on success, or an {@link StorageException}
-     *         on failure to get the URL for the requested key
+     * on failure to get the URL for the requested key
      */
     @NonNull
     Single<StorageGetUrlResult> getUrl(String key);
@@ -59,164 +61,195 @@ public interface RxStorageCategoryBehavior {
      * Set advanced options such as the access level of the object
      * or the expiration details of the URL.
      * Provide callbacks to obtain the URL retrieval results.
+     *
      * @param key the unique identifier for the object in storage
      * @param options parameters specific to plugin behavior
      * @return A Single which emits a result on success, or an {@link StorageException}
-     *         if not able to get a url for the requested key
+     * if not able to get a url for the requested key
      */
     @NonNull
     Single<StorageGetUrlResult> getUrl(@NonNull String key, @NonNull StorageGetUrlOptions options);
 
-   /**
+    /**
      * Download a file.
-     * @param key Remote key of file
+     *
+     * @param key   Remote key of file
      * @param local Local file to which to save
      * @return An instance of {@link RxStorageBinding.RxProgressAwareSingleOperation}
-    *          which emits a download result or failure as a {@link Single}
+     * which emits a download result or failure as a {@link Single}
      */
     @NonNull
     RxStorageBinding.RxProgressAwareSingleOperation<StorageDownloadFileResult> downloadFile(
-            @NonNull String key,
-            @NonNull File local
+        @NonNull String key,
+        @NonNull File local
     );
 
     /**
      * Download a file.
-     * @param key Remote key of file
-     * @param local Local file to which to save
+     *
+     * @param key     Remote key of file
+     * @param local   Local file to which to save
      * @param options Additional download options
      * @return An instance of {@link RxStorageBinding.RxProgressAwareSingleOperation}
-     *          which emits a download result or failure as a {@link Single}. It also
-     *         provides progress information when the caller subscribes to
-     *         {@link RxStorageBinding.RxProgressAwareSingleOperation#observeProgress()}.
-     *         The download does not begin until subscription. You can cancel the download
-     *         by disposing the single subscription.
+     * which emits a download result or failure as a {@link Single}. It also
+     * provides progress information when the caller subscribes to
+     * {@link RxStorageBinding.RxProgressAwareSingleOperation#observeProgress()}.
+     * The download does not begin until subscription. You can cancel the download
+     * by disposing the single subscription.
      */
     @NonNull
     RxStorageBinding.RxProgressAwareSingleOperation<StorageDownloadFileResult> downloadFile(
-            @NonNull String key,
-            @NonNull File local,
-            @NonNull StorageDownloadFileOptions options
+        @NonNull String key,
+        @NonNull File local,
+        @NonNull StorageDownloadFileOptions options
     );
 
     /**
      * Upload a file.
-     * @param key Remote key of file
+     *
+     * @param key   Remote key of file
      * @param local Local file from which to read contents
      * @return A single which emits an upload result on success, or an error on failure.
-     *         The upload does not begin until subscription. You can cancel the upload
-     *         by disposing the single subscription.
+     * The upload does not begin until subscription. You can cancel the upload
+     * by disposing the single subscription.
      */
     @NonNull
     RxStorageBinding.RxProgressAwareSingleOperation<StorageUploadFileResult> uploadFile(
-            @NonNull String key,
-            @NonNull File local
+        @NonNull String key,
+        @NonNull File local
     );
 
     /**
      * Upload a file.
-     * @param key Remote key of file
-     * @param local Local file from which to read contents
+     *
+     * @param key     Remote key of file
+     * @param local   Local file from which to read contents
      * @param options Additional upload options
      * @return A single which emits an upload result on success, or an error on failure.
-     *         The upload does not begin until subscription. You can cancel the upload
-     *         by disposing the single subscription.
+     * The upload does not begin until subscription. You can cancel the upload
+     * by disposing the single subscription.
      */
     @NonNull
     RxStorageBinding.RxProgressAwareSingleOperation<StorageUploadFileResult> uploadFile(
-            @NonNull String key,
-            @NonNull File local,
-            @NonNull StorageUploadFileOptions options
+        @NonNull String key,
+        @NonNull File local,
+        @NonNull StorageUploadFileOptions options
     );
 
     /**
      * Upload an InputStream.
-     * @param key Remote key of the file containing the InputStream content
+     *
+     * @param key   Remote key of the file containing the InputStream content
      * @param local Local InputStream from which to read contents
      * @return A single which emits an upload result on success, or an error on failure.
-     *         The upload does not begin until subscription. You can cancel the upload
-     *         by disposing the single subscription.
+     * The upload does not begin until subscription. You can cancel the upload
+     * by disposing the single subscription.
      */
     @NonNull
     RxStorageBinding.RxProgressAwareSingleOperation<StorageUploadInputStreamResult> uploadInputStream(
-            @NonNull String key,
-            @NonNull InputStream local
+        @NonNull String key,
+        @NonNull InputStream local
     );
 
     /**
      * Upload an InputStream.
-     * @param key Remote key of the file containing the InputStream content
-     * @param local Local InputStream from which to read contents
+     *
+     * @param key     Remote key of the file containing the InputStream content
+     * @param local   Local InputStream from which to read contents
      * @param options Additional upload options
      * @return A single which emits an upload result on success, or an error on failure.
-     *         The upload does not begin until subscription. You can cancel the upload
-     *         by disposing the single subscription.
+     * The upload does not begin until subscription. You can cancel the upload
+     * by disposing the single subscription.
      */
     @NonNull
     RxStorageBinding.RxProgressAwareSingleOperation<StorageUploadInputStreamResult> uploadInputStream(
-            @NonNull String key,
-            @NonNull InputStream local,
-            @NonNull StorageUploadInputStreamOptions options
+        @NonNull String key,
+        @NonNull InputStream local,
+        @NonNull StorageUploadInputStreamOptions options
     );
 
     /**
      * Removes a remote file.
+     *
      * @param key Key to remote file
      * @return A single which emits a remove result on success, or an error on failure.
-     *         The remove operation does not begin until subscription. You can cancel the remove
-     *         by disposing the single subscription.
+     * The remove operation does not begin until subscription. You can cancel the remove
+     * by disposing the single subscription.
      */
     @NonNull
     Single<StorageRemoveResult> remove(
-            @NonNull String key
+        @NonNull String key
     );
 
     /**
      * Removes a remote file.
-     * @param key Key to remote file
+     *
+     * @param key     Key to remote file
      * @param options Remove options
      * @return A single which emits a remove result on success, or an error on failure.
-     *         The remove operation does not begin until subscription. You can cancel the remove
-     *         by disposing the single subscription.
+     * The remove operation does not begin until subscription. You can cancel the remove
+     * by disposing the single subscription.
      */
     @NonNull
     Single<StorageRemoveResult> remove(
-            @NonNull String key,
-            @NonNull StorageRemoveOptions options
+        @NonNull String key,
+        @NonNull StorageRemoveOptions options
     );
 
     /**
      * Lists remote files.
+     *
      * @param path Remote path where files are found
      * @return A single which emits a list result on success, or an error on failure.
-     *         The list operation does not begin until subscription. You can cancel the listing
-     *         by disposing the single subscription.
+     * The list operation does not begin until subscription. You can cancel the listing
+     * by disposing the single subscription.
+     * @deprecated use the {@link #list(String, StoragePagedListOptions)} api instead.
      */
     @NonNull
+    @Deprecated
     Single<StorageListResult> list(
-            @NonNull String path
+        @NonNull String path
     );
 
     /**
      * Lists remote files.
-     * @param path Remote path where files are found
+     *
+     * @param path    Remote path where files are found
      * @param options Storate listing options
      * @return A single which emits a list result on success, or an error on failure.
-     *         The list operation does not begin until subscription. You can cancel the listing
-     *         by disposing the single subscription.
+     * The list operation does not begin until subscription. You can cancel the listing
+     * by disposing the single subscription.
+     * @deprecated use the {@link #list(String, StoragePagedListOptions)} api instead.
+     */
+    @NonNull
+    @Deprecated
+    Single<StorageListResult> list(
+        @NonNull String path,
+        @NonNull StorageListOptions options
+    );
+
+    /**
+     * Lists remote files.
+     *
+     * @param path    Remote path where files are found
+     * @param options Storate listing options
+     * @return A single which emits a list result on success, or an error on failure.
+     * The list operation does not begin until subscription. You can cancel the listing
+     * by disposing the single subscription.
      */
     @NonNull
     Single<StorageListResult> list(
-            @NonNull String path,
-            @NonNull StorageListOptions options
+        @NonNull String path,
+        @NonNull StoragePagedListOptions options
     );
 
     /**
      * Queries the transfer form local db.
+     *
      * @param transferId ID of the transferOperation
      * @return A single which emits a StorageTransferOperation on success, or an error on failure.
-     *         The getTransfer operation does not begin until subscription. You can cancel the listing
-     *         by disposing the single subscription.
+     * The getTransfer operation does not begin until subscription. You can cancel the listing
+     * by disposing the single subscription.
      */
     @NonNull
     Single<StorageTransferOperation<?, ? extends StorageTransferResult>> getTransfer(
