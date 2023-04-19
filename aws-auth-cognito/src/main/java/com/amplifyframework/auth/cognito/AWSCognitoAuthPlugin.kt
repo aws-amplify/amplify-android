@@ -140,6 +140,8 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
                 authStateMachine,
                 logger
             )
+
+            blockQueueChannelWhileConfiguring()
         } catch (exception: Exception) {
             throw ConfigurationException(
                 "Failed to configure AWSCognitoAuthPlugin.",
@@ -147,6 +149,16 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
                 exception
             )
         }
+    }
+
+    // Auth configuration is an async process. Wait until the state machine is in a settled state before attempting
+    // to process any customer calls
+    private fun blockQueueChannelWhileConfiguring() {
+        queueChannel.trySend(
+            pluginScope.launch(start = CoroutineStart.LAZY) {
+                realPlugin.suspendWhileConfiguring()
+            }
+        )
     }
 
     override fun signUp(
