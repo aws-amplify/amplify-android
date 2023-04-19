@@ -30,6 +30,7 @@ import com.amplifyframework.storage.operation.StorageUploadInputStreamOperation;
 import com.amplifyframework.storage.options.StorageDownloadFileOptions;
 import com.amplifyframework.storage.options.StorageGetUrlOptions;
 import com.amplifyframework.storage.options.StorageListOptions;
+import com.amplifyframework.storage.options.StoragePagedListOptions;
 import com.amplifyframework.storage.options.StorageRemoveOptions;
 import com.amplifyframework.storage.options.StorageUploadFileOptions;
 import com.amplifyframework.storage.options.StorageUploadInputStreamOptions;
@@ -217,6 +218,8 @@ public final class StorageCategory extends Category<StoragePlugin<?>> implements
 
     @NonNull
     @Override
+    @Deprecated
+    @SuppressWarnings("deprecation")
     public StorageListOperation<?> list(
             @NonNull String path,
             @NonNull Consumer<StorageListResult> onSuccess,
@@ -227,12 +230,22 @@ public final class StorageCategory extends Category<StoragePlugin<?>> implements
 
     @NonNull
     @Override
+    @Deprecated
+    @SuppressWarnings("deprecation")
     public StorageListOperation<?> list(
             @NonNull String path,
             @NonNull StorageListOptions options,
             @NonNull Consumer<StorageListResult> onSuccess,
             @NonNull Consumer<StorageException> onError
     ) {
+        return getSelectedPlugin().list(path, options, onSuccess, onError);
+    }
+
+    @Override
+    public StorageListOperation<?> list(@NonNull String path,
+                                     @NonNull StoragePagedListOptions options,
+                                     @NonNull Consumer<StorageListResult> onSuccess,
+                                     @NonNull Consumer<StorageException> onError) {
         return getSelectedPlugin().list(path, options, onSuccess, onError);
     }
 }
