@@ -23,6 +23,7 @@ import com.amplifyframework.storage.operation.StorageDownloadFileOperation
 import com.amplifyframework.storage.operation.StorageTransferOperation
 import com.amplifyframework.storage.operation.StorageUploadFileOperation
 import com.amplifyframework.storage.operation.StorageUploadInputStreamOperation
+import com.amplifyframework.storage.options.StoragePagedListOptions
 import com.amplifyframework.storage.result.StorageDownloadFileResult
 import com.amplifyframework.storage.result.StorageGetUrlResult
 import com.amplifyframework.storage.result.StorageListResult
@@ -436,9 +437,9 @@ class KotlinStorageFacadeTest {
     fun listSucceeds() = runBlocking {
         val path = "/beach/photos"
         val item = StorageItem("me_at_beach.png", 100L, Date(), "eTag", "props")
-        val result = StorageListResult.fromItems(listOf(item))
+        val result = StorageListResult.fromItems(listOf(item), null)
         every {
-            delegate.list(eq(path), any(), any(), any())
+            delegate.list(eq(path), any<StoragePagedListOptions>(), any(), any())
         } answers {
             val indexOfResultConsumer = 2
             val arg = it.invocation.args[indexOfResultConsumer]
@@ -446,7 +447,7 @@ class KotlinStorageFacadeTest {
             onResult.accept(result)
             mockk()
         }
-        assertEquals(result, storage.list(path))
+        assertEquals(result, storage.list(path, StoragePagedListOptions.builder().build()))
     }
 
     /**
@@ -458,14 +459,14 @@ class KotlinStorageFacadeTest {
         val path = "/beach/photos"
         val error = StorageException("uh", "oh")
         every {
-            delegate.list(eq(path), any(), any(), any())
+            delegate.list(eq(path), any<StoragePagedListOptions>(), any(), any())
         } answers {
             val indexOfErrorConsumer = 3
             val onError = it.invocation.args[indexOfErrorConsumer] as Consumer<StorageException>
             onError.accept(error)
             mockk()
         }
-        storage.list(path)
+        storage.list(path, StoragePagedListOptions.builder().build())
     }
 
     @Test

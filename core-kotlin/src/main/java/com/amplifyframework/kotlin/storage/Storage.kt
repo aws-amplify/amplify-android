@@ -22,6 +22,7 @@ import com.amplifyframework.storage.operation.StorageTransferOperation
 import com.amplifyframework.storage.options.StorageDownloadFileOptions
 import com.amplifyframework.storage.options.StorageGetUrlOptions
 import com.amplifyframework.storage.options.StorageListOptions
+import com.amplifyframework.storage.options.StoragePagedListOptions
 import com.amplifyframework.storage.options.StorageRemoveOptions
 import com.amplifyframework.storage.options.StorageUploadFileOptions
 import com.amplifyframework.storage.options.StorageUploadInputStreamOptions
@@ -81,10 +82,17 @@ interface Storage {
         options: StorageRemoveOptions = StorageRemoveOptions.defaultInstance()
     ): StorageRemoveResult
 
+    @Deprecated("use the paged list api instead.", replaceWith = ReplaceWith("list(String, StoragePagedListOptions)"))
     @Throws(StorageException::class)
     suspend fun list(
         path: String,
         options: StorageListOptions = StorageListOptions.defaultInstance()
+    ): StorageListResult
+
+    @Throws(StorageException::class)
+    suspend fun list(
+        path: String,
+        options: StoragePagedListOptions
     ): StorageListResult
 
     @Throws(StorageException::class)

@@ -24,6 +24,7 @@ import com.amplifyframework.storage.StorageItem;
 import com.amplifyframework.storage.operation.StorageListOperation;
 import com.amplifyframework.storage.result.StorageListResult;
 import com.amplifyframework.storage.s3.configuration.AWSS3StoragePluginConfiguration;
+import com.amplifyframework.storage.s3.options.AWSS3StoragePagedListOptions;
 import com.amplifyframework.storage.s3.request.AWSS3StorageListRequest;
 import com.amplifyframework.storage.s3.service.StorageService;
 
@@ -72,28 +73,35 @@ public final class AWSS3StorageListOperation extends StorageListOperation<AWSS3S
         this.awsS3StoragePluginConfiguration = awss3StoragePluginConfiguration;
     }
 
-    @SuppressWarnings("SyntheticAccessor")
+    @SuppressWarnings({"SyntheticAccessor", "deprecation"})
     @Override
     public void start() {
         executorService.submit(() -> {
-            awsS3StoragePluginConfiguration.
-                getAWSS3PluginPrefixResolver(authCredentialsProvider).
-                resolvePrefix(getRequest().getAccessLevel(),
-                    getRequest().getTargetIdentityId(),
-                    prefix -> {
-                        try {
-                            String serviceKey = prefix.concat(getRequest().getPath());
-                            List<StorageItem> listedItems = storageService.listFiles(serviceKey, prefix);
-                            onSuccess.accept(StorageListResult.fromItems(listedItems));
-                        } catch (Exception exception) {
-                            onError.accept(new StorageException(
+                awsS3StoragePluginConfiguration.
+                    getAWSS3PluginPrefixResolver(authCredentialsProvider).
+                    resolvePrefix(getRequest().getAccessLevel(),
+                        getRequest().getTargetIdentityId(),
+                        prefix -> {
+                            try {
+                                String serviceKey = prefix.concat(getRequest().getPath());
+                                if (getRequest().getPageSize() == AWSS3StoragePagedListOptions.ALL_PAGE_SIZE) {
+                                    // fetch all the keys
+                                    List<StorageItem> listedItems = storageService.listFiles(serviceKey, prefix);
+                                    onSuccess.accept(StorageListResult.fromItems(listedItems, null));
+                                } else {
+                                    onSuccess.accept(
+                                        storageService.listFiles(serviceKey, prefix, getRequest().getPageSize(),
+                                            getRequest().getNextToken()));
+                                }
+                            } catch (Exception exception) {
+                                onError.accept(new StorageException(
                                     "Something went wrong with your AWS S3 Storage list operation",
                                     exception,
                                     "See attached exception for more information and suggestions"
-                            ));
-                        }
-                    },
-                    onError);
+                                ));
+                            }
+                        },
+                        onError);
             }
         );
     }

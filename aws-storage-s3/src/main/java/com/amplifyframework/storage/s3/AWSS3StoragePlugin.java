@@ -39,6 +39,7 @@ import com.amplifyframework.storage.operation.StorageUploadInputStreamOperation;
 import com.amplifyframework.storage.options.StorageDownloadFileOptions;
 import com.amplifyframework.storage.options.StorageGetUrlOptions;
 import com.amplifyframework.storage.options.StorageListOptions;
+import com.amplifyframework.storage.options.StoragePagedListOptions;
 import com.amplifyframework.storage.options.StorageRemoveOptions;
 import com.amplifyframework.storage.options.StorageUploadFileOptions;
 import com.amplifyframework.storage.options.StorageUploadInputStreamOptions;
@@ -59,6 +60,7 @@ import com.amplifyframework.storage.s3.operation.AWSS3StorageUploadFileOperation
 import com.amplifyframework.storage.s3.operation.AWSS3StorageUploadInputStreamOperation;
 import com.amplifyframework.storage.s3.options.AWSS3StorageDownloadFileOptions;
 import com.amplifyframework.storage.s3.options.AWSS3StorageGetPresignedUrlOptions;
+import com.amplifyframework.storage.s3.options.AWSS3StoragePagedListOptions;
 import com.amplifyframework.storage.s3.options.AWSS3StorageUploadFileOptions;
 import com.amplifyframework.storage.s3.options.AWSS3StorageUploadInputStreamOptions;
 import com.amplifyframework.storage.s3.request.AWSS3StorageDownloadFileRequest;
@@ -597,6 +599,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
 
     @NonNull
     @Override
+    @SuppressWarnings("deprecation")
     public StorageListOperation<?> list(
         @NonNull String path,
         @NonNull Consumer<StorageListResult> onSuccess,
@@ -607,19 +610,34 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
 
     @NonNull
     @Override
+    @SuppressWarnings("deprecation")
     public StorageListOperation<?> list(
         @NonNull String path,
         @NonNull StorageListOptions options,
         @NonNull Consumer<StorageListResult> onSuccess,
         @NonNull Consumer<StorageException> onError
     ) {
+        StoragePagedListOptions storagePagedListOptions =
+            StoragePagedListOptions.builder().
+                accessLevel(options.getAccessLevel())
+                .targetIdentityId(options.getTargetIdentityId())
+                .setPageSize(AWSS3StoragePagedListOptions.ALL_PAGE_SIZE)
+                .build();
+        return list(path, storagePagedListOptions, onSuccess, onError);
+    }
+
+    @Override
+    public StorageListOperation<?> list(@NonNull String path,
+                                        @NonNull StoragePagedListOptions options,
+                                        @NonNull Consumer<StorageListResult> onSuccess,
+                                        @NonNull Consumer<StorageException> onError) {
+
         AWSS3StorageListRequest request = new AWSS3StorageListRequest(
             path,
-            options.getAccessLevel() != null
-                ? options.getAccessLevel()
-                : defaultAccessLevel,
-            options.getTargetIdentityId()
-        );
+            options.getAccessLevel() != null ? options.getAccessLevel() : defaultAccessLevel,
+            options.getTargetIdentityId(),
+            options.getPageSize(),
+            options.getNextToken());
 
         AWSS3StorageListOperation operation =
             new AWSS3StorageListOperation(
