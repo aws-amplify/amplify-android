@@ -21,7 +21,7 @@ import com.amplifyframework.core.Amplify
 import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider
 import com.amplifyframework.testmodels.commentsblog.Post
 import com.amplifyframework.testmodels.commentsblog.PostStatus
-
+import java.util.UUID
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import org.junit.After
@@ -29,12 +29,11 @@ import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.BeforeClass
 import org.junit.Test
-import java.util.UUID
 
 class DatastoreCanaryTest {
     companion object {
         private const val TIMEOUT_S = 20L
-
+        private val TAG = DatastoreCanaryTest::class.simpleName
         @BeforeClass
         @JvmStatic
         fun setup() {
@@ -45,9 +44,9 @@ class DatastoreCanaryTest {
                         .build()
                 )
                 Amplify.configure(getApplicationContext())
-                Log.i("DatastoreCanaryTest", "Initialized Amplify")
+                Log.i(TAG, "Initialized Amplify")
             } catch (error: AmplifyException) {
-                Log.e("DatastoreCanaryTest", "Could not initialize Amplify", error)
+                Log.e(TAG, "Could not initialize Amplify", error)
             }
         }
     }
@@ -60,11 +59,11 @@ class DatastoreCanaryTest {
             Amplify.DataStore.clear(
                 {
                     latch.countDown()
-                    Log.i("DataStoreStressTest", "DataStore cleared")
+                    Log.i(TAG, "DataStore cleared")
                 },
                 {
                     latch.countDown()
-                    Log.e("DataStoreStressTest", "Error clearing DataStore", it)
+                    Log.e(TAG, "Error clearing DataStore", it)
                 }
             )
             latch.await(TIMEOUT_S.toLong(), TimeUnit.SECONDS)
@@ -85,11 +84,11 @@ class DatastoreCanaryTest {
         Amplify.DataStore.save(
             post,
             {
-                Log.i("DatastoreCanaryTest", "Created a new post successfully")
+                Log.i(TAG, "Created a new post successfully")
                 latch.countDown()
             },
             {
-                Log.e("DatastoreCanaryTest", "Error creating post", it)
+                Log.e(TAG, "Error creating post", it)
                 fail()
             }
         )
@@ -103,11 +102,11 @@ class DatastoreCanaryTest {
         Amplify.DataStore.query(
             Post::class.java,
             {
-                Log.i("DatastoreCanaryTest", "Successful query")
+                Log.i(TAG, "Successful query")
                 latch.countDown()
             },
             {
-                Log.e("DatastoreCanaryTest", "Error retrieving posts", it)
+                Log.e(TAG, "Error retrieving posts", it)
                 fail()
             }
         )
@@ -125,17 +124,17 @@ class DatastoreCanaryTest {
 
         Amplify.DataStore.save(
             post,
-            { Log.i("DatastoreCanaryTest", "Created a new post successfully") },
-            { Log.e("DatastoreCanaryTest", "Error creating post", it) }
+            { Log.i(TAG, "Created a new post successfully") },
+            { Log.e(TAG, "Error creating post", it) }
         )
         Thread.sleep(500)
         Amplify.DataStore.delete(
             post,
             {
-                Log.i("DatastoreCanaryTest", "Deleted a post.")
+                Log.i(TAG, "Deleted a post.")
                 latch.countDown()
             },
-            { Log.e("DatastoreCanaryTest", "Delete failed.", it) }
+            { Log.e(TAG, "Delete failed.", it) }
         )
         Thread.sleep(500)
         assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
@@ -146,11 +145,11 @@ class DatastoreCanaryTest {
         val latch = CountDownLatch(1)
         Amplify.DataStore.start(
             {
-                Log.i("DatastoreCanaryTest", "DataStore started")
+                Log.i(TAG, "DataStore started")
                 latch.countDown()
             },
             {
-                Log.e("DatastoreCanaryTest", "Error starting DataStore", it)
+                Log.e(TAG, "Error starting DataStore", it)
                 fail()
             }
         )
@@ -163,24 +162,24 @@ class DatastoreCanaryTest {
         Amplify.DataStore.observe(
             Post::class.java,
             {
-                Log.i("DatastoreCanaryTest", "Observation began")
+                Log.i(TAG, "Observation began")
                 latch.countDown()
             },
             {
                 val post = it.item()
-                Log.i("DatastoreCanaryTest", "Post: $post")
+                Log.i(TAG, "Post: $post")
             },
             {
-                Log.e("DatastoreCanaryTest", "Observation failed", it)
+                Log.e(TAG, "Observation failed", it)
                 fail()
             },
             {
-                Log.i("DatastoreCanaryTest", "Observation complete")
+                Log.i(TAG, "Observation complete")
             }
         )
         Amplify.DataStore.stop(
-            { Log.i("DatastoreCanaryTest", "DataStore stopped") },
-            { Log.e("DatastoreCanaryTest", "Error stopped DataStore", it) }
+            { Log.i(TAG, "DataStore stopped") },
+            { Log.e(TAG, "Error stopped DataStore", it) }
         )
         assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
     }
@@ -190,11 +189,11 @@ class DatastoreCanaryTest {
         val latch = CountDownLatch(1)
         Amplify.DataStore.stop(
             {
-                Log.i("DatastoreCanaryTest", "DataStore stopped")
+                Log.i(TAG, "DataStore stopped")
                 latch.countDown()
             },
             {
-                Log.e("DatastoreCanaryTest", "Error stopped DataStore", it)
+                Log.e(TAG, "Error stopped DataStore", it)
                 fail()
             }
         )
@@ -206,11 +205,11 @@ class DatastoreCanaryTest {
         val latch = CountDownLatch(1)
         Amplify.DataStore.clear(
             {
-                Log.i("DatastoreCanaryTest", "DataStore cleared")
+                Log.i(TAG, "DataStore cleared")
                 latch.countDown()
             },
             {
-                Log.e("DatastoreCanaryTest", "Error clearing DataStore", it)
+                Log.e(TAG, "Error clearing DataStore", it)
                 fail()
             }
         )

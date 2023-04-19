@@ -39,7 +39,7 @@ import org.junit.Test
 class PredictionsCanaryTest {
     companion object {
         private const val TIMEOUT_S = 20L
-
+        private val TAG = PredictionsCanaryTest::class.simpleName
         @BeforeClass
         @JvmStatic
         fun setup() {
@@ -47,9 +47,9 @@ class PredictionsCanaryTest {
                 Amplify.addPlugin(AWSCognitoAuthPlugin())
                 Amplify.addPlugin(AWSPredictionsPlugin())
                 Amplify.configure(ApplicationProvider.getApplicationContext())
-                Log.i("PredictionsCanaryTest", "Initialized Amplify")
+                Log.i(TAG, "Initialized Amplify")
             } catch (error: AmplifyException) {
-                Log.e("PredictionsCanaryTest", "Could not initialize Amplify", error)
+                Log.e(TAG, "Could not initialize Amplify", error)
             }
         }
     }
@@ -61,11 +61,11 @@ class PredictionsCanaryTest {
             Amplify.Predictions.translateText(
                 "I like to eat spaghetti", LanguageType.ENGLISH, LanguageType.SPANISH,
                 {
-                    Log.i("PredictionsCanaryTest", it.translatedText)
+                    Log.i(TAG, it.translatedText)
                     latch.countDown()
                 },
                 {
-                    Log.e("PredictionsCanaryTest", "Translation failed", it)
+                    Log.e(TAG, "Translation failed", it)
                     fail()
                 }
             )
@@ -82,11 +82,11 @@ class PredictionsCanaryTest {
             Amplify.Predictions.convertTextToSpeech(
                 "I like to eat spaghetti!",
                 {
-                    Log.i("PredictionsCanaryTest", "Successfully converted text to speech")
+                    Log.i(TAG, "Successfully converted text to speech")
                     latch.countDown()
                 },
                 {
-                    Log.e("PredictionsCanaryTest", "Failed to convert text to speech", it)
+                    Log.e(TAG, "Failed to convert text to speech", it)
                     fail()
                 }
             )
@@ -105,11 +105,11 @@ class PredictionsCanaryTest {
                 TextFormatType.PLAIN, image,
                 { result ->
                     val identifyResult = result as IdentifyTextResult
-                    Log.i("PredictionsCanaryTest", identifyResult.fullText)
+                    Log.i(TAG, identifyResult.fullText)
                     latch.countDown()
                 },
                 {
-                    Log.e("PredictionsCanaryTest", "Identify text failed", it)
+                    Log.e(TAG, "Identify text failed", it)
                     fail()
                 }
             )
@@ -128,11 +128,11 @@ class PredictionsCanaryTest {
                 TextFormatType.FORM, image,
                 { result ->
                     val identifyResult = result as IdentifyDocumentTextResult
-                    Log.i("PredictionsCanaryTest", identifyResult.fullText)
+                    Log.i(TAG, identifyResult.fullText)
                     latch.countDown()
                 },
                 {
-                    Log.e("PredictionsCanaryTest", "Identify text failed", it)
+                    Log.e(TAG, "Identify text failed", it)
                     fail()
                 }
             )
@@ -152,11 +152,11 @@ class PredictionsCanaryTest {
                 { result ->
                     val identifyResult = result as IdentifyEntitiesResult
                     val metadata = identifyResult.entities.firstOrNull()
-                    Log.i("PredictionsCanaryTest", "${metadata?.box?.toShortString()}")
+                    Log.i(TAG, "${metadata?.box?.toShortString()}")
                     latch.countDown()
                 },
                 {
-                    Log.e("PredictionsCanaryTest", "Entity detection failed", it)
+                    Log.e(TAG, "Entity detection failed", it)
                     fail()
                 }
             )
@@ -176,11 +176,11 @@ class PredictionsCanaryTest {
                 { result ->
                     val identifyResult = result as IdentifyCelebritiesResult
                     val metadata = identifyResult.celebrities.firstOrNull()
-                    Log.i("PredictionsCanaryTest", "${metadata?.celebrity?.name}")
+                    Log.i(TAG, "${metadata?.celebrity?.name}")
                     latch.countDown()
                 },
                 {
-                    Log.e("PredictionsCanaryTest", "Entity detection failed", it)
+                    Log.e(TAG, "Entity detection failed", it)
                     fail()
                 }
             )
@@ -200,11 +200,11 @@ class PredictionsCanaryTest {
                 { result ->
                     val identifyResult = result as IdentifyLabelsResult
                     val label = identifyResult.labels.firstOrNull()
-                    Log.i("PredictionsCanaryTest", "${label?.name}")
+                    Log.i(TAG, "${label?.name}")
                     latch.countDown()
                 },
                 {
-                    Log.e("PredictionsCanaryTest", "Label detection failed", it)
+                    Log.e(TAG, "Label detection failed", it)
                     fail()
                 }
             )
@@ -223,11 +223,11 @@ class PredictionsCanaryTest {
                 LabelType.MODERATION_LABELS, image,
                 { result ->
                     val identifyResult = result as IdentifyLabelsResult
-                    Log.i("PredictionsCanaryTest", "${identifyResult.isUnsafeContent}")
+                    Log.i(TAG, "${identifyResult.isUnsafeContent}")
                     latch.countDown()
                 },
                 {
-                    Log.e("PredictionsCanaryTest", "Identify failed", it)
+                    Log.e(TAG, "Identify failed", it)
                     fail()
                 }
             )
@@ -244,11 +244,11 @@ class PredictionsCanaryTest {
             Amplify.Predictions.interpret(
                 "I like to eat spaghetti",
                 {
-                    Log.i("PredictionsCanaryTest", "${it.sentiment?.value}")
+                    Log.i(TAG, "${it.sentiment?.value}")
                     latch.countDown()
                 },
                 {
-                    Log.e("PredictionsCanaryTest", "Interpret failed", it)
+                    Log.e(TAG, "Interpret failed", it)
                     fail()
                 }
             )

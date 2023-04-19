@@ -30,6 +30,7 @@ import org.junit.Test
 class GeoCanaryTest {
     companion object {
         private const val TIMEOUT_S = 20L
+        private val TAG = GeoCanaryTest::class.simpleName
 
         @BeforeClass
         @JvmStatic
@@ -38,9 +39,9 @@ class GeoCanaryTest {
                 Amplify.addPlugin(AWSCognitoAuthPlugin())
                 Amplify.addPlugin(AWSLocationGeoPlugin())
                 Amplify.configure(ApplicationProvider.getApplicationContext())
-                Log.i("GeoCanaryTest", "Initialized Amplify")
+                Log.i(TAG, "Initialized Amplify")
             } catch (error: AmplifyException) {
-                Log.e("GeoCanaryTest", "Could not initialize Amplify", error)
+                Log.e(TAG, "Could not initialize Amplify", error)
             }
             Thread.sleep(5000)
         }
@@ -55,12 +56,12 @@ class GeoCanaryTest {
                 searchQuery,
                 {
                     for (place in it.places) {
-                        Log.i("GeoCanaryTest", place.toString())
+                        Log.i(TAG, place.toString())
                     }
                     latch.countDown()
                 },
                 {
-                    Log.e("GeoCanaryTest", "Failed to search for $searchQuery", it)
+                    Log.e(TAG, "Failed to search for $searchQuery", it)
                     fail()
                 }
             )
@@ -79,12 +80,12 @@ class GeoCanaryTest {
                 position,
                 {
                     for (place in it.places) {
-                        Log.i("GeoCanaryTest", place.toString())
+                        Log.i(TAG, place.toString())
                     }
                     latch.countDown()
                 },
                 {
-                    Log.e("GeoCanaryTest", "Failed to reverse geocode $position", it)
+                    Log.e(TAG, "Failed to reverse geocode $position", it)
                     fail()
                 }
             )

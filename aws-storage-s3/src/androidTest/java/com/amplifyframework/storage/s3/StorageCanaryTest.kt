@@ -25,6 +25,7 @@ import org.junit.Test
 class StorageCanaryTest {
     companion object {
         private const val TIMEOUT_S = 20L
+        private val TAG = StorageCanaryTest::class.simpleName
         private const val TEMP_DIR_PROPERTY = "java.io.tmpdir"
         private val TEMP_DIR = System.getProperty(TEMP_DIR_PROPERTY)
 
@@ -36,9 +37,9 @@ class StorageCanaryTest {
                 Amplify.addPlugin(AWSS3StoragePlugin())
                 Amplify.addPlugin(AndroidLoggingPlugin(LogLevel.VERBOSE))
                 Amplify.configure(ApplicationProvider.getApplicationContext())
-                Log.i("StorageCanaryTest", "Initialized Amplify")
+                Log.i(TAG, "Initialized Amplify")
             } catch (error: AmplifyException) {
-                Log.e("StorageCanaryTest", "Could not initialize Amplify", error)
+                Log.e(TAG, "Could not initialize Amplify", error)
             }
         }
     }
@@ -52,11 +53,11 @@ class StorageCanaryTest {
             Amplify.Storage.uploadInputStream(
                 "ExampleKey", stream,
                 {
-                    Log.i("StorageCanaryTest", "Successfully uploaded: ${it.key}")
+                    Log.i(TAG, "Successfully uploaded: ${it.key}")
                     latch.countDown()
                 },
                 {
-                    Log.e("StorageCanaryTest", "Upload failed", it)
+                    Log.e(TAG, "Upload failed", it)
                     fail()
                 }
             )
@@ -74,11 +75,11 @@ class StorageCanaryTest {
             Amplify.Storage.uploadFile(
                 "ExampleKey", file,
                 {
-                    Log.i("StorageCanaryTest", "Successfully uploaded: ${it.key}")
+                    Log.i(TAG, "Successfully uploaded: ${it.key}")
                     latch.countDown()
                 },
                 {
-                    Log.e("StorageCanaryTest", "Upload failed", it)
+                    Log.e(TAG, "Upload failed", it)
                     fail()
                 }
             )
@@ -95,18 +96,18 @@ class StorageCanaryTest {
         val fileName = "ExampleKey${UUID.randomUUID()}"
         Amplify.Storage.uploadFile(
             fileName, file,
-            { Log.i("StorageCanaryTest", "Successfully uploaded: ${it.key}") },
-            { Log.e("StorageCanaryTest", "Upload failed", it) }
+            { Log.i(TAG, "Successfully uploaded: ${it.key}") },
+            { Log.e(TAG, "Upload failed", it) }
         )
         try {
             Amplify.Storage.downloadFile(
                 fileName, file,
                 {
-                    Log.i("StorageCanaryTest", "Successfully downloaded: ${it.file.name}")
+                    Log.i(TAG, "Successfully downloaded: ${it.file.name}")
                     latch.countDown()
                 },
                 {
-                    Log.e("StorageCanaryTest", "Download Failure", it)
+                    Log.e(TAG, "Download Failure", it)
                     fail()
                 }
             )
@@ -123,11 +124,11 @@ class StorageCanaryTest {
             Amplify.Storage.getUrl(
                 "ExampleKey",
                 {
-                    Log.i("StorageCanaryTest", "Successfully generated: ${it.url}")
+                    Log.i(TAG, "Successfully generated: ${it.url}")
                     latch.countDown()
                 },
                 {
-                    Log.e("StorageCanaryTest", "URL generation failure", it)
+                    Log.e(TAG, "URL generation failure", it)
                     fail()
                 }
             )
@@ -154,8 +155,8 @@ class StorageCanaryTest {
                 }
                 uploadLatch.countDown()
             },
-            { Log.i("StorageCanaryTest", "Successfully uploaded: ${it.key}") },
-            { Log.e("StorageCanaryTest", "Upload failed", it) }
+            { Log.i(TAG, "Successfully uploaded: ${it.key}") },
+            { Log.e(TAG, "Upload failed", it) }
         )
         opContainer.set(op)
         transferId.set(op.transferId)
@@ -165,11 +166,11 @@ class StorageCanaryTest {
             Amplify.Storage.getTransfer(
                 transferId.get(),
                 { operation ->
-                    Log.i("StorageCanaryTest", "Current State" + operation.transferState)
+                    Log.i(TAG, "Current State" + operation.transferState)
                     latch.countDown()
                 },
                 {
-                    Log.e("StorageCanaryTest", "Failed to query transfer", it)
+                    Log.e(TAG, "Failed to query transfer", it)
                     fail()
                 }
             )
@@ -187,12 +188,12 @@ class StorageCanaryTest {
                 "",
                 { result ->
                     result.items.forEach { item ->
-                        Log.i("StorageCanaryTest", "Item: ${item.key}")
+                        Log.i(TAG, "Item: ${item.key}")
                     }
                     latch.countDown()
                 },
                 {
-                    Log.e("StorageCanaryTest", "List failure", it)
+                    Log.e(TAG, "List failure", it)
                     fail()
                 }
             )
@@ -209,11 +210,11 @@ class StorageCanaryTest {
             Amplify.Storage.remove(
                 "myUploadedFileName.txt",
                 {
-                    Log.i("StorageCanaryTest", "Successfully removed: ${it.key}")
+                    Log.i(TAG, "Successfully removed: ${it.key}")
                     latch.countDown()
                 },
                 {
-                    Log.e("StorageCanaryTest", "Remove failure", it)
+                    Log.e(TAG, "Remove failure", it)
                     fail()
                 }
             )

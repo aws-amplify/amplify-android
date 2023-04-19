@@ -45,6 +45,7 @@ import org.junit.Test
 class AuthCanaryTest {
     companion object {
         private const val TIMEOUT_S = 20L
+        private val TAG = AuthCanaryTest::class.simpleName
         private val mainThreadSurrogate = newSingleThreadContext("Main thread")
         val attributes = listOf(
             (AuthUserAttribute(AuthUserAttributeKey.address(), "Sesame Street")),
@@ -61,9 +62,9 @@ class AuthCanaryTest {
             try {
                 Amplify.addPlugin(AWSCognitoAuthPlugin())
                 Amplify.configure(ApplicationProvider.getApplicationContext())
-                Log.i("MyAmplifyApp", "Initialized Amplify")
+                Log.i(TAG, "Initialized Amplify")
             } catch (error: AmplifyException) {
-                Log.e("MyAmplifyApp", "Could not initialize Amplify", error)
+                Log.e(TAG, "Could not initialize Amplify", error)
             }
         }
     }
@@ -100,11 +101,11 @@ class AuthCanaryTest {
             Amplify.Auth.signUp(
                 tempUsername, tempPassword, options,
                 {
-                    Log.i("AuthCanaryTest", "Sign up succeeded: $it")
+                    Log.i(TAG, "Sign up succeeded: $it")
                     latch.countDown()
                 },
                 {
-                    Log.e("AuthCanaryTest", "Sign up failed", it)
+                    Log.e(TAG, "Sign up failed", it)
                     fail()
                 }
             )
@@ -122,11 +123,11 @@ class AuthCanaryTest {
             Amplify.Auth.confirmSignUp(
                 "username", "the code you received via email",
                 { result ->
-                    Log.i("AuthCanaryTest", "Confirm signUp result completed: ${result.isSignUpComplete}")
+                    Log.i(TAG, "Confirm signUp result completed: ${result.isSignUpComplete}")
                     fail()
                 },
                 {
-                    Log.e("AuthCanaryTest", "Failed to confirm sign up", it)
+                    Log.e(TAG, "Failed to confirm sign up", it)
                     latch.countDown()
                 }
             )
@@ -144,11 +145,11 @@ class AuthCanaryTest {
             Amplify.Auth.resendSignUpCode(
                 tempUsername,
                 {
-                    Log.i("AuthCanaryTest", "Resend sign up code succeeded")
+                    Log.i(TAG, "Resend sign up code succeeded")
                     latch.countDown()
                 },
                 {
-                    Log.e("AuthCanaryTest", "Failed to confirm sign up", it)
+                    Log.e(TAG, "Failed to confirm sign up", it)
                     fail()
                 }
             )
@@ -167,15 +168,15 @@ class AuthCanaryTest {
                 username, password, options,
                 { result ->
                     if (result.isSignedIn) {
-                        Log.i("AuthCanaryTest", "Sign in succeeded")
+                        Log.i(TAG, "Sign in succeeded")
                         latch.countDown()
                     } else {
-                        Log.i("AuthCanaryTest", "Sign in not complete")
+                        Log.i(TAG, "Sign in not complete")
                         fail()
                     }
                 },
                 {
-                    Log.e("AuthCanaryTest", "Failed to sign in", it)
+                    Log.e(TAG, "Failed to sign in", it)
                     fail()
                 }
             )
@@ -200,11 +201,11 @@ class AuthCanaryTest {
             Amplify.Auth.confirmSignIn(
                 "confirmation code",
                 { result ->
-                    Log.i("AuthCanaryTest", "Confirm signIn result completed: ${result.isSignedIn}")
+                    Log.i(TAG, "Confirm signIn result completed: ${result.isSignedIn}")
                     fail()
                 },
                 {
-                    Log.e("AuthCanaryTest", "Confirm sign in failed", it)
+                    Log.e(TAG, "Confirm sign in failed", it)
                     latch.countDown()
                 }
             )
@@ -224,14 +225,14 @@ class AuthCanaryTest {
                     val session = it as AWSCognitoAuthSession
                     when (session.identityIdResult.type) {
                         AuthSessionResult.Type.SUCCESS ->
-                            Log.i("AuthCanaryTest", "IdentityId = ${session.identityIdResult.value}")
+                            Log.i(TAG, "IdentityId = ${session.identityIdResult.value}")
                         AuthSessionResult.Type.FAILURE ->
-                            Log.w("AuthCanaryTest", "IdentityId not found", session.identityIdResult.error)
+                            Log.w(TAG, "IdentityId not found", session.identityIdResult.error)
                     }
                     latch.countDown()
                 },
                 {
-                    Log.e("AuthCanaryTest", "Failed to fetch session", it)
+                    Log.e(TAG, "Failed to fetch session", it)
                     fail()
                 }
             )
@@ -253,14 +254,14 @@ class AuthCanaryTest {
                     val session = it as AWSCognitoAuthSession
                     when (session.identityIdResult.type) {
                         AuthSessionResult.Type.SUCCESS ->
-                            Log.i("AuthCanaryTest", "IdentityId = ${session.identityIdResult.value}")
+                            Log.i(TAG, "IdentityId = ${session.identityIdResult.value}")
                         AuthSessionResult.Type.FAILURE ->
-                            Log.w("AuthCanaryTest", "IdentityId not found", session.identityIdResult.error)
+                            Log.w(TAG, "IdentityId not found", session.identityIdResult.error)
                     }
                     latch.countDown()
                 },
                 {
-                    Log.e("AuthCanaryTest", "Failed to fetch session", it)
+                    Log.e(TAG, "Failed to fetch session", it)
                     fail()
                 }
             )
@@ -278,11 +279,11 @@ class AuthCanaryTest {
         try {
             Amplify.Auth.rememberDevice(
                 {
-                    Log.i("AuthCanaryTest", "Remember device succeeded")
+                    Log.i(TAG, "Remember device succeeded")
                     latch.countDown()
                 },
                 {
-                    Log.e("AuthCanaryTest", "Remember device failed with error", it)
+                    Log.e(TAG, "Remember device failed with error", it)
                     fail()
                 }
             )
@@ -300,11 +301,11 @@ class AuthCanaryTest {
         try {
             Amplify.Auth.forgetDevice(
                 {
-                    Log.i("AuthCanaryTest", "Forget device succeeded")
+                    Log.i(TAG, "Forget device succeeded")
                     latch.countDown()
                 },
                 {
-                    Log.e("AuthCanaryTest", "Forget device failed with error", it)
+                    Log.e(TAG, "Forget device failed with error", it)
                     fail()
                 }
             )
@@ -321,11 +322,11 @@ class AuthCanaryTest {
         try {
             Amplify.Auth.fetchDevices(
                 { devices ->
-                    devices.forEach { Log.i("AuthCanaryTest", "Device: $it") }
+                    devices.forEach { Log.i(TAG, "Device: $it") }
                     latch.countDown()
                 },
                 {
-                    Log.e("AuthCanaryTest", "Fetch devices failed with error", it)
+                    Log.e(TAG, "Fetch devices failed with error", it)
                     fail()
                 }
             )
@@ -342,11 +343,11 @@ class AuthCanaryTest {
 //        val latch = CountDownLatch(1)
 //        Amplify.Auth.resetPassword(username,
 //            {
-//                Log.i("AuthCanaryTest", "Reset password succeeded")
+//                Log.i(TAG, "Reset password succeeded")
 //                latch.countDown()
 //            },
 //            {
-//                Log.e("AuthCanaryTest", "Reset password failed", it)
+//                Log.e(TAG, "Reset password failed", it)
 //                fail()
 //            }
 //        )
@@ -361,11 +362,11 @@ class AuthCanaryTest {
             Amplify.Auth.confirmResetPassword(
                 "username", "NewPassword123", "confirmation code",
                 {
-                    Log.i("AuthCanaryTest", "New password confirmed")
+                    Log.i(TAG, "New password confirmed")
                     fail()
                 },
                 {
-                    Log.e("AuthCanaryTest", "Failed to confirm password reset", it)
+                    Log.e(TAG, "Failed to confirm password reset", it)
                     latch.countDown()
                 }
             )
@@ -383,11 +384,11 @@ class AuthCanaryTest {
 //        val latch = CountDownLatch(1)
 //        Amplify.Auth.updatePassword(tempPassword, tempPassword + "1",
 //            {
-//                Log.i("AuthCanaryTest", "Updated password successfully")
+//                Log.i(TAG, "Updated password successfully")
 //                latch.countDown()
 //            },
 //            {
-//                Log.e("AuthCanaryTest", "Password update failed", it)
+//                Log.e(TAG, "Password update failed", it)
 //                fail()
 //            }
 //        )
@@ -401,11 +402,11 @@ class AuthCanaryTest {
         try {
             Amplify.Auth.fetchUserAttributes(
                 {
-                    Log.i("AuthCanaryTest", "User attributes = $attributes")
+                    Log.i(TAG, "User attributes = $attributes")
                     latch.countDown()
                 },
                 {
-                    Log.e("AuthCanaryTest", "Failed to fetch user attributes", it)
+                    Log.e(TAG, "Failed to fetch user attributes", it)
                     fail()
                 }
             )
@@ -423,11 +424,11 @@ class AuthCanaryTest {
             Amplify.Auth.updateUserAttribute(
                 AuthUserAttribute(AuthUserAttributeKey.name(), "apitest"),
                 {
-                    Log.i("AuthCanaryTest", "Updated user attribute = $it")
+                    Log.i(TAG, "Updated user attribute = $it")
                     latch.countDown()
                 },
                 {
-                    Log.e("AuthCanaryTest", "Failed to update user attribute.", it)
+                    Log.e(TAG, "Failed to update user attribute.", it)
                     fail()
                 }
             )
@@ -445,11 +446,11 @@ class AuthCanaryTest {
             Amplify.Auth.confirmUserAttribute(
                 AuthUserAttributeKey.email(), "344299",
                 {
-                    Log.i("AuthCanaryTest", "Confirmed user attribute with correct code.")
+                    Log.i(TAG, "Confirmed user attribute with correct code.")
                     fail()
                 },
                 {
-                    Log.e("AuthCanaryTest", "Failed to confirm user attribute. Bad code?", it)
+                    Log.e(TAG, "Failed to confirm user attribute. Bad code?", it)
                     latch.countDown()
                 }
             )
@@ -467,11 +468,11 @@ class AuthCanaryTest {
             Amplify.Auth.updateUserAttributes(
                 attributes, // attributes is a list of AuthUserAttribute
                 {
-                    Log.i("AuthCanaryTest", "Updated user attributes = $it")
+                    Log.i(TAG, "Updated user attributes = $it")
                     latch.countDown()
                 },
                 {
-                    Log.e("AuthCanaryTest", "Failed to update user attributes", it)
+                    Log.e(TAG, "Failed to update user attributes", it)
                     fail()
                 }
             )
@@ -489,11 +490,11 @@ class AuthCanaryTest {
             Amplify.Auth.confirmUserAttribute(
                 AuthUserAttributeKey.email(), "344299",
                 {
-                    Log.i("AuthCanaryTest", "Confirmed user attribute with correct code.")
+                    Log.i(TAG, "Confirmed user attribute with correct code.")
                     fail()
                 },
                 {
-                    Log.e("AuthCanaryTest", "Failed to confirm user attribute. Bad code?", it)
+                    Log.e(TAG, "Failed to confirm user attribute. Bad code?", it)
                     latch.countDown()
                 }
             )
@@ -511,11 +512,11 @@ class AuthCanaryTest {
             Amplify.Auth.resendUserAttributeConfirmationCode(
                 AuthUserAttributeKey.email(),
                 {
-                    Log.i("AuthCanaryTest", "Code was sent again: $it")
+                    Log.i(TAG, "Code was sent again: $it")
                     latch.countDown()
                 },
                 {
-                    Log.e("AuthCanaryTest", "Failed to resend code", it)
+                    Log.e(TAG, "Failed to resend code", it)
                     fail()
                 }
             )
@@ -532,11 +533,11 @@ class AuthCanaryTest {
         try {
             Amplify.Auth.getCurrentUser(
                 {
-                    Log.i("AuthCanaryTest", "Current user details are: $it")
+                    Log.i(TAG, "Current user details are: $it")
                     latch.countDown()
                 },
                 {
-                    Log.e("AuthCanaryTest", "getCurrentUser failed with an exception: $it")
+                    Log.e(TAG, "getCurrentUser failed with an exception: $it")
                     fail()
                 }
             )
@@ -552,7 +553,7 @@ class AuthCanaryTest {
         val latch = CountDownLatch(1)
         try {
             Amplify.Auth.signOut {
-                Log.i("AuthCanaryTest", "Signed out successfully")
+                Log.i(TAG, "Signed out successfully")
                 latch.countDown()
             }
         } catch (e: Exception) {
@@ -570,7 +571,7 @@ class AuthCanaryTest {
             .build()
         try {
             Amplify.Auth.signOut(options) {
-                Log.i("AuthCanaryTest", "Signed out successfully")
+                Log.i(TAG, "Signed out successfully")
                 latch.countDown()
             }
         } catch (e: Exception) {
@@ -588,11 +589,11 @@ class AuthCanaryTest {
 //        val latch = CountDownLatch(1)
 //        Amplify.Auth.deleteUser(
 //            {
-//                Log.i("AuthCanaryTest", "Delete user succeeded")
+//                Log.i(TAG, "Delete user succeeded")
 //                latch.countDown()
 //            },
 //            {
-//                Log.e("AuthCanaryTest", "Delete user failed with error", it)
+//                Log.e(TAG, "Delete user failed with error", it)
 //                fail()
 //            }
 //        )
@@ -609,11 +610,11 @@ class AuthCanaryTest {
 //                "YOUR_TOKEN",
 //                AuthProvider.facebook(),
 //                {
-//                    Log.i("AuthCanaryTest", "Successful federation to Identity Pool.")
+//                    Log.i(TAG, "Successful federation to Identity Pool.")
 //                    latch.countDown()
 //                },
 //                {
-//                    Log.e("AuthCanaryTest", "Failed to federate to Identity Pool.", it)
+//                    Log.e(TAG, "Failed to federate to Identity Pool.", it)
 //                    fail()
 //                }
 //            )
@@ -628,11 +629,11 @@ class AuthCanaryTest {
 //        (Amplify.Auth.getPlugin("awsCognitoAuthPlugin") as? AWSCognitoAuthPlugin)?.let { plugin ->
 //            plugin.clearFederationToIdentityPool(
 //                {
-//                    Log.i("AuthCanaryTest", "Federation cleared successfully.")
+//                    Log.i(TAG, "Federation cleared successfully.")
 //                    latch.countDown()
 //                },
 //                {
-//                    Log.e("AuthCanaryTest", "Failed to clear federation.", it)
+//                    Log.e(TAG, "Failed to clear federation.", it)
 //                    fail()
 //                }
 //            )
@@ -646,8 +647,8 @@ class AuthCanaryTest {
             .build()
         Amplify.Auth.signUp(
             user, pass, options,
-            { Log.i("AuthCanaryTest", "Sign up succeeded: $it") },
-            { Log.e("AuthCanaryTest", "Sign up failed", it) }
+            { Log.i(TAG, "Sign up succeeded: $it") },
+            { Log.e(TAG, "Sign up failed", it) }
         )
     }
 
