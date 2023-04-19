@@ -271,49 +271,47 @@ class AuthCanaryTest {
         assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
     }
 
-    @Ignore // TODO: Value null at 'deviceKey'
-    @Test
-    fun rememberDevice() {
-        signInBeforeTest(username, password)
-        val latch = CountDownLatch(1)
-        try {
-            Amplify.Auth.rememberDevice(
-                {
-                    Log.i(TAG, "Remember device succeeded")
-                    latch.countDown()
-                },
-                {
-                    Log.e(TAG, "Remember device failed with error", it)
-                    fail()
-                }
-            )
-        } catch (e: Exception) {
-            fail(e.toString())
-        }
-        assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
-    }
-
-    @Ignore // TODO: Value null at 'deviceKey'
-    @Test
-    fun forgetDevice() {
-        signInBeforeTest(username, password)
-        val latch = CountDownLatch(1)
-        try {
-            Amplify.Auth.forgetDevice(
-                {
-                    Log.i(TAG, "Forget device succeeded")
-                    latch.countDown()
-                },
-                {
-                    Log.e(TAG, "Forget device failed with error", it)
-                    fail()
-                }
-            )
-        } catch (e: Exception) {
-            fail(e.toString())
-        }
-        assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
-    }
+//    @Test
+//    fun rememberDevice() {
+//        signInBeforeTest(username, password)
+//        val latch = CountDownLatch(1)
+//        try {
+//            Amplify.Auth.rememberDevice(
+//                {
+//                    Log.i(TAG, "Remember device succeeded")
+//                    latch.countDown()
+//                },
+//                {
+//                    Log.e(TAG, "Remember device failed with error", it)
+//                    fail()
+//                }
+//            )
+//        } catch (e: Exception) {
+//            fail(e.toString())
+//        }
+//        assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
+//    }
+//    
+//    @Test
+//    fun forgetDevice() {
+//        signInBeforeTest(username, password)
+//        val latch = CountDownLatch(1)
+//        try {
+//            Amplify.Auth.forgetDevice(
+//                {
+//                    Log.i(TAG, "Forget device succeeded")
+//                    latch.countDown()
+//                },
+//                {
+//                    Log.e(TAG, "Forget device failed with error", it)
+//                    fail()
+//                }
+//            )
+//        } catch (e: Exception) {
+//            fail(e.toString())
+//        }
+//        assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
+//    }
 
     @Test
     fun fetchDevices() {
