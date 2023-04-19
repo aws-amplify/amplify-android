@@ -17,9 +17,11 @@ package com.amplifyframework.storage.s3.service;
 
 import android.content.Context;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.amplifyframework.storage.ObjectMetadata;
 import com.amplifyframework.storage.StorageItem;
+import com.amplifyframework.storage.result.StorageListResult;
 import com.amplifyframework.storage.s3.transfer.TransferObserver;
 import com.amplifyframework.storage.s3.transfer.TransferRecord;
 
@@ -107,6 +109,17 @@ public interface StorageService {
      * @return A list of parsed items present inside given path
      */
     List<StorageItem> listFiles(@NonNull String path, @NonNull String prefix);
+
+    /**
+     * Returns a list of items from provided path inside the storage.
+     *
+     * @param path path inside storage to inspect for list of items
+     * @param prefix path appended to S3 keys
+     * @param pageSize number of keys to be retrieved from s3
+     * @param nextToken next continuation token to be passed to s3
+     * @return A list of parsed items present inside given path
+     */
+    StorageListResult listFiles(@NonNull String path, @NonNull String prefix, int pageSize, @Nullable String nextToken);
 
     /**
      * Delete an object with specific key inside the storage.

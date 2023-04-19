@@ -33,6 +33,7 @@ import com.amplifyframework.storage.operation.StorageUploadFileOperation;
 import com.amplifyframework.storage.operation.StorageUploadInputStreamOperation;
 import com.amplifyframework.storage.options.StorageDownloadFileOptions;
 import com.amplifyframework.storage.options.StorageGetUrlOptions;
+import com.amplifyframework.storage.options.StoragePagedListOptions;
 import com.amplifyframework.storage.options.StorageUploadFileOptions;
 import com.amplifyframework.storage.options.StorageUploadInputStreamOptions;
 import com.amplifyframework.storage.result.StorageDownloadFileResult;
@@ -480,18 +481,18 @@ public final class RxStorageBindingTest {
      */
     @Test
     public void listReturnsResult() {
-        StorageListResult result = StorageListResult.fromItems(Collections.emptyList());
+        StorageListResult result = StorageListResult.fromItems(Collections.emptyList(), null);
         doAnswer(invocation -> {
-            final int indexOfResultConsumer = 1; // 0 localPath, 1 onResult, 2 onError
+            final int indexOfResultConsumer = 2; // 0 localPath, 1 options, 2 onResult, 3 onError
             Consumer<StorageListResult> resultConsumer = invocation.getArgument(indexOfResultConsumer);
             resultConsumer.accept(result);
             return mock(StorageListOperation.class);
         })
         .when(delegate)
-            .list(eq(remoteKey), anyConsumer(), anyConsumer());
+            .list(eq(remoteKey), any(StoragePagedListOptions.class), anyConsumer(), anyConsumer());
 
         rxStorage
-            .list(remoteKey)
+            .list(remoteKey, StoragePagedListOptions.builder().build())
             .test()
             .assertValues(result);
     }
@@ -505,16 +506,16 @@ public final class RxStorageBindingTest {
     public void listReturnsError() {
         StorageException error = new StorageException("Error removing item.", "Expected.");
         doAnswer(invocation -> {
-            final int indexOfErrorConsumer = 2; // 0 localPath, 1 onResult, 2 onError
+            final int indexOfErrorConsumer = 3; // 0 localPath, 1 options, 2 onResult, 3 onError
             Consumer<StorageException> errorConsumer = invocation.getArgument(indexOfErrorConsumer);
             errorConsumer.accept(error);
             return mock(StorageListOperation.class);
         })
         .when(delegate)
-            .list(eq(remoteKey), anyConsumer(), anyConsumer());
+            .list(eq(remoteKey), any(StoragePagedListOptions.class), anyConsumer(), anyConsumer());
 
         rxStorage
-            .list(remoteKey)
+            .list(remoteKey, StoragePagedListOptions.builder().build())
             .test()
             .assertError(error);
     }
