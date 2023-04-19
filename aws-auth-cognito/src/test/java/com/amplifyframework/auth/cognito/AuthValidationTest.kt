@@ -186,6 +186,7 @@ class AuthValidationTest {
         signOut()
         assertSignedOut()
         signIn(username2, password2)
+        assertSignedInAs(username2)
     }
 
     // SPR 4
@@ -258,7 +259,7 @@ class AuthValidationTest {
     @Test
     fun `Hosted UI sign in, SRP sign in existing user with incorrect password`() {
         signInHostedUi()
-        assertFails { signIn(username1, password1) }
+        assertFails { signIn(username1, incorrectPassword) }
         assertSignedInAs(username1)
     }
 
