@@ -151,9 +151,11 @@ public final class TextractResultTransformers {
 
         // Each TABLE block contains CELL blocks
         doForEachRelatedBlock(block, blockMap, cellBlock -> {
-            rows.add(cellBlock.getRowIndex() - 1);
-            cols.add(cellBlock.getColumnIndex() - 1);
-            cells.add(fetchTableCell(cellBlock, blockMap));
+            if (cellBlock.getRowIndex() != null && cellBlock.getColumnIndex() != null) {
+                rows.add(cellBlock.getRowIndex() - 1);
+                cols.add(cellBlock.getColumnIndex() - 1);
+                cells.add(fetchTableCell(cellBlock, blockMap));
+            }
         });
 
         return Table.builder()
