@@ -1,3 +1,10 @@
+## [Release 1.38.4](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.38.4)
+
+### Bug Fixes
+- **predictions:** Fix processing for table title blocks ([#2407](https://github.com/aws-amplify/amplify-android/issues/2407))
+
+[See all changes between 1.38.3 and 1.38.4](https://github.com/aws-amplify/amplify-android/compare/release_v1.38.3...release_v1.38.4)
+
 ## [Release 1.38.3](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.38.3)
 
 ### Bug Fixes

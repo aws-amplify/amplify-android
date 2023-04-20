@@ -1,3 +1,10 @@
+## [Release 0.22.4](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.22.4)
+
+### Bug Fixes
+- **predictions:** Fix processing for table title blocks ([#2407](https://github.com/aws-amplify/amplify-android/issues/2407))
+
+[See all changes between 0.22.3 and 0.22.4](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.22.3...release-kotlin_v0.22.4)
+
 ## [Release 0.22.3](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.22.3)
 
 ### Bug Fixes
