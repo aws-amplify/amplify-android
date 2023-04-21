@@ -26,4 +26,4 @@ jobs:
           COMMENT: ${{ toJson(github.event.comment.body) }}
           COMMENT_URL: ${{github.event.comment.html_url}}
         shell: bash
-        run: echo COMMENT | xargs -I {} curl -s POST "$WEBHOOK_URL" -H "Content-Type:application/json" --data '{"comment":"{}", "commentUrl":"$COMMENT_URL"}'
+        run: echo COMMENT | xargs -I {} curl -s POST "$WEBHOOK_URL" -H "Content-Type:application/json" --data '{"comment":"{}", "commentUrl":"'$COMMENT_URL'"}'
