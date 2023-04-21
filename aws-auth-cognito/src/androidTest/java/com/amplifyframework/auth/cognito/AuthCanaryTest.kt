@@ -87,7 +87,7 @@ class AuthCanaryTest {
             password = it.second
         }
         tempUsername = UUID.randomUUID().toString()
-        tempPassword = "Password123"
+        tempPassword = UUID.randomUUID().toString()
     }
 
     @Test
