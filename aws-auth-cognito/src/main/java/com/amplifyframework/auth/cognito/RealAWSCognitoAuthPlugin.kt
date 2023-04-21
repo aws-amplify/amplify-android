@@ -197,6 +197,22 @@ internal class RealAWSCognitoAuthPlugin(
         }
     }
 
+    internal suspend fun suspendWhileConfiguring() {
+        return suspendCoroutine { continuation ->
+            val token = StateChangeListenerToken()
+            authStateMachine.listen(
+                token,
+                {
+                    if (it is AuthState.Configured || it is AuthState.Error) {
+                        authStateMachine.cancel(token)
+                        continuation.resume(Unit)
+                    }
+                },
+                { }
+            )
+        }
+    }
+
     override fun signUp(
         username: String,
         password: String,

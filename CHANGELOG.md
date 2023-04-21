@@ -1,3 +1,15 @@
+## [Release 2.8.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.8.0)
+
+### Features
+- **storage:** Add pagination support for list api ([#2395](https://github.com/aws-amplify/amplify-android/issues/2395))
+
+### Bug Fixes
+- **datastore:** Release semaphore if an error occurs while starting or stopping the Orchestrator ([#2398](https://github.com/aws-amplify/amplify-android/issues/2398))
+- **api:** Handle delete request with no body ([#2406](https://github.com/aws-amplify/amplify-android/issues/2406))
+- **auth:** Prevent auth calls from processing until configured or errored ([#2402](https://github.com/aws-amplify/amplify-android/issues/2402))
+
+[See all changes between 2.7.1 and 2.8.0](https://github.com/aws-amplify/amplify-android/compare/release_v2.7.1...release_v2.8.0)
+
 ## [Release 2.7.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.7.1)
 
 - There are no customer-impacting changes for this release. This release includes internal changes only.
