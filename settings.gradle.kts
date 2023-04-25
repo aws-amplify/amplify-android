@@ -117,7 +117,7 @@ dependencyResolutionManagement {
             library("kotlin-futures", "androidx.concurrent:concurrent-futures-ktx:1.1.0")
 
             // MapLibre
-            library("maplibre-sdk", "org.maplibre.gl:android-sdk:9.5.2")
+            library("maplibre-sdk", "org.maplibre.gl:android-sdk:9.6.0")
             library("maplibre-annotations", "org.maplibre.gl:android-plugin-annotation-v9:1.0.0")
 
             // RxJava

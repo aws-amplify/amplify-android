@@ -29,6 +29,7 @@ import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.exceptions.SessionExpiredException
 import com.amplifyframework.auth.exceptions.SignedOutException
+import com.amplifyframework.auth.options.AuthFetchSessionOptions
 import com.amplifyframework.auth.result.AuthResetPasswordResult
 import com.amplifyframework.auth.result.AuthSignInResult
 import com.amplifyframework.auth.result.AuthSignOutResult
@@ -355,6 +356,28 @@ class KotlinAuthFacadeTest {
             onResult.accept(session)
         }
         assertEquals(session, auth.fetchAuthSession())
+    }
+
+    /**
+     * Verify the options passed to fetchAuthSession() are used.
+     */
+    @Test
+    fun verifyFetchAuthSessionOptionsMapping() = runBlocking {
+        val options = AuthFetchSessionOptions.builder().forceRefresh(true).build()
+        val session = AuthSession(true)
+        every {
+            delegate.fetchAuthSession(any(), any(), any())
+        } answers {
+            val indexOfResultConsumer = 1
+            val onResult = it.invocation.args[indexOfResultConsumer] as Consumer<AuthSession>
+            onResult.accept(session)
+        }
+
+        auth.fetchAuthSession(options)
+
+        verify {
+            delegate.fetchAuthSession(options, any(), any())
+        }
     }
 
     /**

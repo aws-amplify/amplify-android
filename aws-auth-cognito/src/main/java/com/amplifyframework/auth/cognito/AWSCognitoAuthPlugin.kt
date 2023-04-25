@@ -21,6 +21,7 @@ import android.content.Intent
 import androidx.annotation.VisibleForTesting
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.annotations.InternalAmplifyApi
+import com.amplifyframework.auth.AWSCognitoAuthMetadataType
 import com.amplifyframework.auth.AuthCodeDeliveryDetails
 import com.amplifyframework.auth.AuthDevice
 import com.amplifyframework.auth.AuthException
@@ -99,6 +100,11 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         return pluginConfigurationJSON
     }
 
+    @InternalAmplifyApi
+    fun addToUserAgent(type: AWSCognitoAuthMetadataType, value: String) {
+        realPlugin.addToUserAgent(type, value)
+    }
+
     private fun Exception.toAuthException(): AuthException {
         return if (this is AuthException) {
             this
@@ -134,6 +140,8 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
                 authStateMachine,
                 logger
             )
+
+            blockQueueChannelWhileConfiguring()
         } catch (exception: Exception) {
             throw ConfigurationException(
                 "Failed to configure AWSCognitoAuthPlugin.",
@@ -141,6 +149,16 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
                 exception
             )
         }
+    }
+
+    // Auth configuration is an async process. Wait until the state machine is in a settled state before attempting
+    // to process any customer calls
+    private fun blockQueueChannelWhileConfiguring() {
+        queueChannel.trySend(
+            pluginScope.launch(start = CoroutineStart.LAZY) {
+                realPlugin.suspendWhileConfiguring()
+            }
+        )
     }
 
     override fun signUp(

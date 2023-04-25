@@ -31,7 +31,6 @@ import com.amplifyframework.predictions.models.Pose;
 import com.amplifyframework.util.Empty;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -57,7 +56,8 @@ public final class RekognitionResultTransformers {
      */
     @Nullable
     public static RectF fromBoundingBox(@Nullable BoundingBox box) {
-        if (box == null) {
+        if (box == null || box.getLeft() == null || box.getTop() == null || box.getWidth() == null
+                || box.getHeight() == null) {
             return null;
         }
         return new RectF(
@@ -81,6 +81,9 @@ public final class RekognitionResultTransformers {
         }
         List<PointF> points = new ArrayList<>();
         for (Point point : polygon) {
+            if (point.getX() == null || point.getY() == null) {
+                return null;
+            }
             PointF androidPoint = new PointF(
                     point.getX(),
                     point.getY()
@@ -99,7 +102,7 @@ public final class RekognitionResultTransformers {
      */
     @Nullable
     public static Pose fromRekognitionPose(@Nullable aws.sdk.kotlin.services.rekognition.model.Pose pose) {
-        if (pose == null) {
+        if (pose == null || pose.getPitch() == null || pose.getRoll() == null || pose.getYaw() == null) {
             return null;
         }
         return new Pose(pose.getPitch(), pose.getRoll(), pose.getYaw());
@@ -113,7 +116,7 @@ public final class RekognitionResultTransformers {
      */
     @Nullable
     public static AgeRange fromRekognitionAgeRange(@Nullable aws.sdk.kotlin.services.rekognition.model.AgeRange range) {
-        if (range == null) {
+        if (range == null || range.getLow() == null || range.getHigh() == null) {
             return null;
         }
         return new AgeRange(range.getLow(), range.getHigh());
@@ -127,13 +130,17 @@ public final class RekognitionResultTransformers {
      */
     @Nullable
     public static IdentifiedText fromTextDetection(@Nullable TextDetection text) {
-        if (text == null) {
+        if (text == null || text.getDetectedText() == null || text.getConfidence() == null) {
             return null;
+        }
+        RectF box = null;
+        if (text.getGeometry() != null) {
+            box = fromBoundingBox(text.getGeometry().getBoundingBox());
         }
         return IdentifiedText.builder()
                 .text(text.getDetectedText())
                 .confidence(text.getConfidence())
-                .box(fromBoundingBox(text.getGeometry().getBoundingBox()))
+                .box(box)
                 .polygon(fromPoints(text.getGeometry().getPolygon()))
                 .build();
     }
@@ -159,6 +166,9 @@ public final class RekognitionResultTransformers {
 
         // Pre-process all of the landmarks into a map of type -> matching points
         for (aws.sdk.kotlin.services.rekognition.model.Landmark landmark : landmarks) {
+            if (landmark.getType() == null || landmark.getX() == null || landmark.getY() == null) {
+                continue;
+            }
             LandmarkType type = LandmarkTypeAdapter.fromRekognition(landmark.getType().getValue());
             PointF point = new PointF(landmark.getX(), landmark.getY());
             List<PointF> points = landmarkMap.get(type);
@@ -188,42 +198,70 @@ public final class RekognitionResultTransformers {
      * @return the list of Amplify {@link BinaryFeature}
      */
     public static List<BinaryFeature> fromFaceDetail(FaceDetail face) {
-        return Arrays.asList(
-                BinaryFeature.builder()
-                        .type(BinaryFeatureType.BEARD.getAlias())
-                        .value(face.getBeard().getValue())
-                        .confidence(face.getBeard().getConfidence())
-                        .build(),
-                BinaryFeature.builder()
-                        .type(BinaryFeatureType.SUNGLASSES.getAlias())
-                        .value(face.getSunglasses().getValue())
-                        .confidence(face.getSunglasses().getConfidence())
-                        .build(),
-                BinaryFeature.builder()
-                        .type(BinaryFeatureType.SMILE.getAlias())
-                        .value(face.getSmile().getValue())
-                        .confidence(face.getSmile().getConfidence())
-                        .build(),
-                BinaryFeature.builder()
-                        .type(BinaryFeatureType.EYE_GLASSES.getAlias())
-                        .value(face.getEyeglasses().getValue())
-                        .confidence(face.getEyeglasses().getConfidence())
-                        .build(),
-                BinaryFeature.builder()
-                        .type(BinaryFeatureType.MUSTACHE.getAlias())
-                        .value(face.getMustache().getValue())
-                        .confidence(face.getMustache().getConfidence())
-                        .build(),
-                BinaryFeature.builder()
-                        .type(BinaryFeatureType.MOUTH_OPEN.getAlias())
-                        .value(face.getMouthOpen().getValue())
-                        .confidence(face.getMouthOpen().getConfidence())
-                        .build(),
-                BinaryFeature.builder()
-                        .type(BinaryFeatureType.EYES_OPEN.getAlias())
-                        .value(face.getEyesOpen().getValue())
-                        .confidence(face.getEyesOpen().getConfidence())
-                        .build()
-        );
+        List<BinaryFeature> features = new ArrayList<>();
+        if (face.getBeard() != null && face.getBeard().getConfidence() != null) {
+            features.add(
+                    BinaryFeature.builder()
+                            .type(BinaryFeatureType.BEARD.getAlias())
+                            .value(face.getBeard().getValue())
+                            .confidence(face.getBeard().getConfidence())
+                            .build()
+            );
+        }
+        if (face.getSunglasses() != null && face.getSunglasses().getConfidence() != null) {
+            features.add(
+                    BinaryFeature.builder()
+                            .type(BinaryFeatureType.SUNGLASSES.getAlias())
+                            .value(face.getSunglasses().getValue())
+                            .confidence(face.getSunglasses().getConfidence())
+                            .build()
+            );
+        }
+        if (face.getSmile() != null && face.getSmile().getConfidence() != null) {
+            features.add(
+                    BinaryFeature.builder()
+                            .type(BinaryFeatureType.SMILE.getAlias())
+                            .value(face.getSmile().getValue())
+                            .confidence(face.getSmile().getConfidence())
+                            .build()
+            );
+        }
+        if (face.getEyeglasses() != null && face.getEyeglasses().getConfidence() != null) {
+            features.add(
+                    BinaryFeature.builder()
+                            .type(BinaryFeatureType.EYE_GLASSES.getAlias())
+                            .value(face.getEyeglasses().getValue())
+                            .confidence(face.getEyeglasses().getConfidence())
+                            .build()
+            );
+        }
+        if (face.getMustache() != null && face.getMustache().getConfidence() != null) {
+            features.add(
+                    BinaryFeature.builder()
+                            .type(BinaryFeatureType.MUSTACHE.getAlias())
+                            .value(face.getMustache().getValue())
+                            .confidence(face.getMustache().getConfidence())
+                            .build()
+            );
+        }
+        if (face.getMouthOpen() != null && face.getMouthOpen().getConfidence() != null) {
+            features.add(
+                    BinaryFeature.builder()
+                            .type(BinaryFeatureType.MOUTH_OPEN.getAlias())
+                            .value(face.getMouthOpen().getValue())
+                            .confidence(face.getMouthOpen().getConfidence())
+                            .build()
+            );
+        }
+        if (face.getEyesOpen() != null && face.getEyesOpen().getConfidence() != null) {
+            features.add(
+                    BinaryFeature.builder()
+                            .type(BinaryFeatureType.EYES_OPEN.getAlias())
+                            .value(face.getEyesOpen().getValue())
+                            .confidence(face.getEyesOpen().getConfidence())
+                            .build()
+            );
+        }
+        return features;
     }
 }

@@ -14,6 +14,7 @@
  */
 
 plugins {
+    id("org.jetbrains.kotlin.plugin.serialization") version "1.8.10"
     id("com.android.library")
     id("kotlin-android")
 }
@@ -32,11 +33,16 @@ dependencies {
     implementation(dependency.aws.rekognition)
     implementation(dependency.aws.textract)
     implementation(dependency.aws.translate)
+    implementation(dependency.kotlin.serializationJson)
+    implementation(dependency.okhttp)
 
     testImplementation(project(":testutils"))
     testImplementation(testDependency.junit)
     testImplementation(testDependency.robolectric)
     testImplementation(dependency.rxjava)
+    testImplementation(testDependency.mockwebserver)
+    testImplementation(testDependency.mockk)
+    testImplementation(testDependency.kotlin.test.coroutines)
 
     androidTestImplementation(project(":testutils"))
     androidTestImplementation(project(":aws-auth-cognito"))

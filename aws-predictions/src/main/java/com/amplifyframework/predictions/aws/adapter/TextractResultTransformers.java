@@ -102,14 +102,22 @@ public final class TextractResultTransformers {
      */
     @Nullable
     public static IdentifiedText fetchIdentifiedText(@Nullable Block block) {
-        if (block == null || block.getText() == null) {
+        if (block == null || block.getText() == null || block.getConfidence() == null) {
             return null;
+        }
+        List<Point> polygon = null;
+        if (block.getGeometry() != null) {
+            polygon = block.getGeometry().getPolygon();
+        }
+        RectF box = null;
+        if (block.getGeometry() != null) {
+            box = fromBoundingBox(block.getGeometry().getBoundingBox());
         }
         return IdentifiedText.builder()
                 .text(block.getText())
                 .confidence(block.getConfidence())
-                .box(fromBoundingBox(block.getGeometry().getBoundingBox()))
-                .polygon(fromPoints(block.getGeometry().getPolygon()))
+                .box(box)
+                .polygon(fromPoints(polygon))
                 .page(block.getPage() != null ? block.getPage() : 0)
                 .build();
     }
@@ -125,9 +133,17 @@ public final class TextractResultTransformers {
         if (block == null || block.getSelectionStatus() == null) {
             return null;
         }
+        List<Point> polygon = null;
+        if (block.getGeometry() != null) {
+            polygon = block.getGeometry().getPolygon();
+        }
+        RectF box = null;
+        if (block.getGeometry() != null) {
+            box = fromBoundingBox(block.getGeometry().getBoundingBox());
+        }
         return Selection.builder()
-                .box(fromBoundingBox(block.getGeometry().getBoundingBox()))
-                .polygon(fromPoints(block.getGeometry().getPolygon()))
+                .box(box)
+                .polygon(fromPoints(polygon))
                 .selected(SelectionStatus.Selected.INSTANCE.equals(block.getSelectionStatus()))
                 .build();
     }
@@ -142,7 +158,7 @@ public final class TextractResultTransformers {
     @Nullable
     public static Table fetchTable(@Nullable Block block, @NonNull Map<String, Block> blockMap) {
         Objects.requireNonNull(blockMap);
-        if (block == null || !BlockType.Table.INSTANCE.equals(block.getBlockType())) {
+        if (block == null || !BlockType.Table.INSTANCE.equals(block.getBlockType()) || block.getConfidence() == null) {
             return null;
         }
         List<Cell> cells = new ArrayList<>();
@@ -151,16 +167,25 @@ public final class TextractResultTransformers {
 
         // Each TABLE block contains CELL blocks
         doForEachRelatedBlock(block, blockMap, cellBlock -> {
-            rows.add(cellBlock.getRowIndex() - 1);
-            cols.add(cellBlock.getColumnIndex() - 1);
-            cells.add(fetchTableCell(cellBlock, blockMap));
+            if (cellBlock.getRowIndex() != null && cellBlock.getColumnIndex() != null) {
+                rows.add(cellBlock.getRowIndex() - 1);
+                cols.add(cellBlock.getColumnIndex() - 1);
+                cells.add(fetchTableCell(cellBlock, blockMap));
+            }
         });
-
+        List<Point> polygon = null;
+        if (block.getGeometry() != null) {
+            polygon = block.getGeometry().getPolygon();
+        }
+        RectF box = null;
+        if (block.getGeometry() != null) {
+            box = fromBoundingBox(block.getGeometry().getBoundingBox());
+        }
         return Table.builder()
                 .cells(cells)
                 .confidence(block.getConfidence())
-                .box(fromBoundingBox(block.getGeometry().getBoundingBox()))
-                .polygon(fromPoints(block.getGeometry().getPolygon()))
+                .box(box)
+                .polygon(fromPoints(polygon))
                 .rowSize(rows.size())
                 .columnSize(cols.size())
                 .build();
@@ -176,7 +201,8 @@ public final class TextractResultTransformers {
     @Nullable
     public static BoundedKeyValue fetchKeyValue(@Nullable Block block, @NonNull Map<String, Block> blockMap) {
         Objects.requireNonNull(blockMap);
-        if (block == null || !BlockType.KeyValueSet.INSTANCE.equals(block.getBlockType())) {
+        if (block == null || !BlockType.KeyValueSet.INSTANCE.equals(block.getBlockType())
+                || block.getConfidence() == null) {
             return null;
         }
         // Must be of entity type "KEY"
@@ -201,18 +227,26 @@ public final class TextractResultTransformers {
 
         String key = keyBuilder.toString().trim();
         String value = valueBuilder.toString().trim();
+        List<Point> polygon = null;
+        if (block.getGeometry() != null) {
+            polygon = block.getGeometry().getPolygon();
+        }
+        RectF box = null;
+        if (block.getGeometry() != null) {
+            box = fromBoundingBox(block.getGeometry().getBoundingBox());
+        }
         return BoundedKeyValue.builder()
                 .keyValuePair(key, value)
                 .confidence(block.getConfidence())
-                .box(fromBoundingBox(block.getGeometry().getBoundingBox()))
-                .polygon(fromPoints(block.getGeometry().getPolygon()))
+                .box(box)
+                .polygon(fromPoints(polygon))
                 .build();
     }
 
     @Nullable
     private static Cell fetchTableCell(@Nullable Block block, @NonNull Map<String, Block> blockMap) {
         Objects.requireNonNull(blockMap);
-        if (block == null || !BlockType.Cell.INSTANCE.equals(block.getBlockType())) {
+        if (block == null || !BlockType.Cell.INSTANCE.equals(block.getBlockType()) || block.getConfidence() == null) {
             return null;
         }
         StringBuilder wordsBuilder = new StringBuilder();
@@ -232,11 +266,22 @@ public final class TextractResultTransformers {
             }
         });
 
+        List<Point> polygon = null;
+        if (block.getGeometry() != null) {
+            polygon = block.getGeometry().getPolygon();
+        }
+        if (block.getRowIndex() == null || block.getColumnIndex() == null) {
+            return null;
+        }
+        RectF box = null;
+        if (block.getGeometry() != null) {
+            box = fromBoundingBox(block.getGeometry().getBoundingBox());
+        }
         return Cell.builder()
                 .text(wordsBuilder.toString().trim())
                 .confidence(block.getConfidence())
-                .box(fromBoundingBox(block.getGeometry().getBoundingBox()))
-                .polygon(fromPoints(block.getGeometry().getPolygon()))
+                .box(box)
+                .polygon(fromPoints(polygon))
                 .selected(isSelected.get())
                 .row(block.getRowIndex() - 1)
                 .column(block.getColumnIndex() - 1)
@@ -253,12 +298,15 @@ public final class TextractResultTransformers {
         }
 
         for (Relationship relationship : block.getRelationships()) {
-            for (String id : relationship.getIds()) {
-                Block relatedBlock = blockMap.get(id);
-                if (relatedBlock == null) {
-                    continue;
+            List<String> relationshipIds = relationship.getIds();
+            if (relationshipIds != null) {
+                for (String id : relationshipIds) {
+                    Block relatedBlock = blockMap.get(id);
+                    if (relatedBlock == null) {
+                        continue;
+                    }
+                    forEach.accept(relatedBlock);
                 }
-                forEach.accept(relatedBlock);
             }
         }
     }

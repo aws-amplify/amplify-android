@@ -34,6 +34,8 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.VerifyUserAttribute
 import aws.sdk.kotlin.services.cognitoidentityprovider.resendConfirmationCode
 import aws.sdk.kotlin.services.cognitoidentityprovider.signUp
 import com.amplifyframework.AmplifyException
+import com.amplifyframework.annotations.InternalAmplifyApi
+import com.amplifyframework.auth.AWSCognitoAuthMetadataType
 import com.amplifyframework.auth.AWSCredentials
 import com.amplifyframework.auth.AWSTemporaryCredentials
 import com.amplifyframework.auth.AuthCategoryBehavior
@@ -165,6 +167,11 @@ internal class RealAWSCognitoAuthPlugin(
 
     fun escapeHatch() = authEnvironment.cognitoAuthService
 
+    @InternalAmplifyApi
+    fun addToUserAgent(type: AWSCognitoAuthMetadataType, value: String) {
+        authEnvironment.cognitoAuthService.customUserAgentPairs[type.key] = value
+    }
+
     @WorkerThread
     @Throws(AmplifyException::class)
     fun initialize() {
@@ -186,6 +193,22 @@ internal class RealAWSCognitoAuthPlugin(
             throw AmplifyException(
                 "Failed to configure auth plugin.",
                 "Make sure your amplifyconfiguration.json is valid"
+            )
+        }
+    }
+
+    internal suspend fun suspendWhileConfiguring() {
+        return suspendCoroutine { continuation ->
+            val token = StateChangeListenerToken()
+            authStateMachine.listen(
+                token,
+                {
+                    if (it is AuthState.Configured || it is AuthState.Error) {
+                        authStateMachine.cancel(token)
+                        continuation.resume(Unit)
+                    }
+                },
+                { }
             )
         }
     }
