@@ -119,7 +119,7 @@ run_arn=$(aws devicefarm schedule-run --project-arn=$project_arn \
                                           "maxDevices": '$max_devices'
                                       }' \
                                       --name="$file_name-$CODEBUILD_SOURCE_VERSION" \
-                                      --test="type=INSTRUMENTATION,testPackageArn=$test_package_upload_arn,parameters={filter="com.amplifyframework.auth.cognito.AuthCanaryTest"}" \
+                                      --test="type=INSTRUMENTATION,testPackageArn=$test_package_upload_arn,filter=com.amplifyframework.auth.cognito.AuthCanaryTest, com.amplifyframework.datastore.DatastoreCanaryTest" \
                                       --execution-configuration="jobTimeoutMinutes=30,videoCapture=false" \
                                       --query="run.arn" \
                                       --output=text \
