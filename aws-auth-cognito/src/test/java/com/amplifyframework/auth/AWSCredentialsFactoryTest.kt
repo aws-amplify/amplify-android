@@ -17,12 +17,12 @@ package com.amplifyframework.auth
 
 import aws.smithy.kotlin.runtime.time.toJvmInstant
 import com.amplifyframework.auth.AWSCredentials.Factory.createAWSCredentials
-import org.junit.Test
 import java.time.Instant
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertIsNot
 import kotlin.test.assertTrue
+import org.junit.Test
 
 class AWSCredentialsFactoryTest {
 
