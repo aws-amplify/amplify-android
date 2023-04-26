@@ -15,11 +15,14 @@
 
 package com.amplifyframework.auth
 
+import aws.smithy.kotlin.runtime.time.toJvmInstant
 import com.amplifyframework.auth.AWSCredentials.Factory.createAWSCredentials
+import org.junit.Test
+import java.time.Instant
+import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertIsNot
 import kotlin.test.assertTrue
-import org.junit.Test
 
 class AWSCredentialsFactoryTest {
 
@@ -45,8 +48,11 @@ class AWSCredentialsFactoryTest {
 
     @Test
     fun `factory creates AWSTemporaryCredentials object when both session or expiry is not null`() {
-        val credentials = createAWSCredentials("accessKey", "secret", "ST", 12L)
+        val expectedExpirationInSeconds = Instant.now().epochSecond
+        val credentials = createAWSCredentials("accessKey", "secret", "ST", expectedExpirationInSeconds)
 
         assertIs<AWSTemporaryCredentials>(credentials)
+        assertEquals(expectedExpirationInSeconds, credentials.expiration.toJvmInstant().epochSecond)
+        assertEquals(expectedExpirationInSeconds, credentials.expiresAt.epochSecond)
     }
 }
