@@ -25,6 +25,7 @@ import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.SchemaRegistry;
+import com.amplifyframework.core.model.SerializedCustomType;
 import com.amplifyframework.core.model.SerializedModel;
 import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.core.model.types.JavaFieldType;
@@ -309,6 +310,14 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
         Object fieldValue;
         if (model.getClass() == SerializedModel.class) {
             fieldValue = ((SerializedModel) model).getValue(field);
+
+            // If the custom type has nested custom type its serializedData contains
+            // serialized custom type schema as well.
+            // We don't want to store entire SerializedCustomType along with schema into
+            // Database but only its value.
+            if (field.isCustomType() && fieldValue != null) {
+                fieldValue = ((SerializedCustomType) fieldValue).getFlatSerializedData();
+            }
         } else {
             fieldValue = ModelHelper.getValue(model, field);
         }

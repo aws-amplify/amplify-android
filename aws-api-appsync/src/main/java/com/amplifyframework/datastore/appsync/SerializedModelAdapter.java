@@ -18,6 +18,7 @@ package com.amplifyframework.datastore.appsync;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.SchemaRegistry;
+import com.amplifyframework.core.model.SerializedCustomType;
 import com.amplifyframework.core.model.SerializedModel;
 import com.amplifyframework.util.GsonObjectConverter;
 
@@ -41,10 +42,12 @@ import java.util.Map;
  */
 public final class SerializedModelAdapter
         implements JsonDeserializer<SerializedModel>, JsonSerializer<SerializedModel> {
-    private SerializedModelAdapter() {}
+    private SerializedModelAdapter() {
+    }
 
     /**
      * Registers an adapter with a Gson builder.
+     *
      * @param builder A gson builder
      */
     public static void register(GsonBuilder builder) {
@@ -61,11 +64,16 @@ public final class SerializedModelAdapter
 
         JsonObject serializedData = new JsonObject();
         for (Map.Entry<String, Object> entry : src.getSerializedData().entrySet()) {
-            if (entry.getValue() instanceof SerializedModel) {
-                SerializedModel serializedModel = (SerializedModel) entry.getValue();
-                serializedData.add(entry.getKey(), context.serialize(serializedModel.getSerializedData()));
+            String fieldName = entry.getKey();
+            Object fieldValue = entry.getValue();
+            if (fieldValue instanceof SerializedModel) {
+                SerializedModel serializedModel = (SerializedModel) fieldValue;
+                serializedData.add(fieldName, context.serialize(serializedModel.getSerializedData()));
+            } else if (fieldValue instanceof SerializedCustomType) {
+                // serialize via SerializedCustomTypeAdapter
+                serializedData.add(fieldName, context.serialize(fieldValue));
             } else {
-                serializedData.add(entry.getKey(), context.serialize(entry.getValue()));
+                serializedData.add(fieldName, context.serialize(fieldValue));
             }
         }
         result.add("serializedData", serializedData);
@@ -84,21 +92,33 @@ public final class SerializedModelAdapter
         // Patch up nested models as SerializedModels themselves.
         for (Map.Entry<String, JsonElement> item : serializedDataObject.entrySet()) {
             ModelField field = modelSchema.getFields().get(item.getKey());
-            if (field != null && field.isModel()) {
+            if (field == null) {
+                continue;
+            }
+
+            JsonElement fieldValue = item.getValue();
+            String fieldName = field.getName();
+
+            // if the field type is a Model - convert the nested data into SerializedModel
+            if (field.isModel()) {
                 SchemaRegistry schemaRegistry = SchemaRegistry.instance();
                 ModelSchema nestedModelSchema = schemaRegistry.getModelSchemaForModelClass(field.getTargetType());
                 Gson gson = new Gson();
-                Type mapType = new TypeToken<Map<String, Object>>() {}.getType();
-                serializedData.put(field.getName(), SerializedModel.builder()
-                    .modelSchema(nestedModelSchema)
-                    .serializedData(gson.fromJson(item.getValue(), mapType))
-                    .build());
+                Type mapType = new TypeToken<Map<String, Object>>() {
+                }.getType();
+                serializedData.put(fieldName, SerializedModel.builder()
+                        .modelSchema(nestedModelSchema)
+                        .serializedData(gson.fromJson(fieldValue, mapType))
+                        .build());
+            } else if (field.isCustomType()) {
+                // if the field type is a CustomType - convert the nested data into SerializedCustomType
+                serializedData.put(fieldName, context.deserialize(fieldValue, SerializedCustomType.class));
             }
         }
 
         return SerializedModel.builder()
-            .modelSchema(modelSchema)
-            .serializedData(serializedData)
-            .build();
+                .modelSchema(modelSchema)
+                .serializedData(serializedData)
+                .build();
     }
 }
