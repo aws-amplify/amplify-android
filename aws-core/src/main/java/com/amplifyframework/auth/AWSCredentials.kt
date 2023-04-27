@@ -18,6 +18,7 @@ package com.amplifyframework.auth
 import aws.smithy.kotlin.runtime.auth.awscredentials.Credentials
 import aws.smithy.kotlin.runtime.time.Instant
 import aws.smithy.kotlin.runtime.time.toJvmInstant
+import aws.smithy.kotlin.runtime.time.toSdkInstant
 
 /**
  * Provides access to the AWS credentials used for accessing AWS services: AWS
@@ -109,6 +110,6 @@ internal fun AWSCredentials.toSdkCredentials(): Credentials {
         accessKeyId = this.accessKeyId,
         secretAccessKey = this.secretAccessKey,
         sessionToken = (this as? AWSTemporaryCredentials)?.sessionToken,
-        expiration = (this as? AWSTemporaryCredentials)?.expiration
+        expiration = (this as? AWSTemporaryCredentials)?.expiresAt?.toSdkInstant()
     )
 }
