@@ -1,3 +1,9 @@
+## [Release 2.8.2](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.8.2)
+
+### Miscellaneous
+- fix(all) Fix non-existent aws-http version + ensure Smithy version matches one in Kotlin SDK ([#2425](https://github.com/aws-amplify/amplify-android/issues/2425))
+
+[See all changes between 2.8.1 and 2.8.2](https://github.com/aws-amplify/amplify-android/compare/release_v2.8.1...release_v2.8.2)
 ## [Release 2.8.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.8.1)
 
 ### Bug Fixes
