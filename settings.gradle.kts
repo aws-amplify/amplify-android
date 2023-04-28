@@ -62,6 +62,9 @@ dependencyResolutionManagement {
             library("robolectric", "org.robolectric:robolectric:4.7")
             library("jsonassert", "org.skyscreamer:jsonassert:1.5.0")
             library("json", "org.json:json:20210307")
+
+            // AWS
+            library("aws-sdk-core", "com.amazonaws:aws-android-sdk-core:2.62.2")
         }
         // Library dependencies
         create("dependency") {
