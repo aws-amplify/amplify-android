@@ -1,3 +1,19 @@
+## [Release 2.8.2](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.8.2)
+
+### Miscellaneous
+- fix(all) Fix non-existent aws-http version + ensure Smithy version matches one in Kotlin SDK ([#2425](https://github.com/aws-amplify/amplify-android/issues/2425))
+
+[See all changes between 2.8.1 and 2.8.2](https://github.com/aws-amplify/amplify-android/compare/release_v2.8.1...release_v2.8.2)
+## [Release 2.8.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.8.1)
+
+### Bug Fixes
+- String interpolation for workflow ([#2412](https://github.com/aws-amplify/amplify-android/issues/2412))
+- Restore notifying comments on pending-close-response issues ([#2417](https://github.com/aws-amplify/amplify-android/issues/2417))
+
+### Miscellaneous
+- Revert "fix(datastore): Fix MutationProcessorRetryTest" ([#2419](https://github.com/aws-amplify/amplify-android/issues/2419))
+
+[See all changes between 2.8.0 and 2.8.1](https://github.com/aws-amplify/amplify-android/compare/release_v2.8.0...release_v2.8.1)
 ## [Release 2.8.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.8.0)
 
 ### Features

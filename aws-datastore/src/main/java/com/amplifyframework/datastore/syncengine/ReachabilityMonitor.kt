@@ -29,7 +29,7 @@ import java.util.concurrent.TimeUnit
 /**
  * The ReachabilityMonitor is responsible for watching the network status as provided by the OS.
  * It returns an observable that publishes "true" when the network becomes available and "false" when
- * the network is lost.
+ * the network is lost.  It publishes the current status on subscription.
  *
  * ReachabilityMonitor does not try to monitor the DataStore websockets or the status of the AppSync service.
  *
@@ -64,6 +64,8 @@ private class ReachabilityMonitorImpl constructor(val schedulerProvider: Schedul
         emitter = ObservableOnSubscribe { emitter ->
             val callback = getCallback(emitter)
             connectivityProvider.registerDefaultNetworkCallback(context, callback)
+            // Provide the current network status upon subscription.
+            emitter.onNext(connectivityProvider.hasActiveNetwork)
         }
     }
 
