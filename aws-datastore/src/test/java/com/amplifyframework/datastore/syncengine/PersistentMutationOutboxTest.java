@@ -1028,7 +1028,7 @@ public final class PersistentMutationOutboxTest {
 
     /**
      * If the queue contains multiple items, then
-     * {@link MutationQueue#nextMutationForModelId(String)}
+     * {@link MutationOutbox#getMutationForModelId(String)}
      * returns the first one.
      * @throws DataStoreException On failure to arrange content into storage
      */
