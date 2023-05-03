@@ -524,16 +524,7 @@ final class AppSyncRequestFactory {
         // If a field is a CustomType, it's value is either a SerializedCustomType
         // or a List of SerializedCustomType
         if (customTypeData instanceof SerializedCustomType) {
-            final Map<String, Object> result = new HashMap<>();
-            for (Map.Entry<String, Object> entry :
-                    ((SerializedCustomType) customTypeData).getSerializedData().entrySet()) {
-                if (entry.getValue() instanceof SerializedCustomType) {
-                    result.put(entry.getKey(), extractCustomTypeFieldValue(entry.getKey(), entry.getValue()));
-                } else {
-                    result.put(entry.getKey(), entry.getValue());
-                }
-            }
-            return result;
+            return ((SerializedCustomType) customTypeData).getFlatSerializedData();
         }
 
         if (customTypeData instanceof List) {
@@ -542,7 +533,7 @@ final class AppSyncRequestFactory {
             List<Object> customTypeList = (List<Object>) customTypeData;
             for (Object item : customTypeList) {
                 if (item instanceof SerializedCustomType) {
-                    result.add(extractCustomTypeFieldValue(fieldName, item));
+                    result.add(((SerializedCustomType) item).getFlatSerializedData());
                 } else {
                     result.add(item);
                 }

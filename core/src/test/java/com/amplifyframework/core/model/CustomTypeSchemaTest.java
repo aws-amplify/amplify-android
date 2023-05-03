@@ -15,9 +15,17 @@
 
 package com.amplifyframework.core.model;
 
+import com.amplifyframework.testutils.Resources;
+
+import com.google.gson.Gson;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.junit.Before;
 import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
@@ -26,6 +34,128 @@ import static org.junit.Assert.assertEquals;
  * Tests the {@link CustomTypeSchema}.
  */
 public final class CustomTypeSchemaTest {
+    private CustomTypeSchema addressSchema;
+    private CustomTypeSchema contactSchema;
+    private CustomTypeSchema phoneSchema;
+    private CustomTypeSchema personInfoSchema;
+
+    /**
+     * Create custom type schema for testing.
+     */
+    @Before
+    public void setup() {
+        Map<String, CustomTypeField> phoneFields = new HashMap<>();
+        phoneFields.put(
+                "areaCode", CustomTypeField.builder()
+                        .name("areaCode")
+                        .javaClassForValue(String.class)
+                        .targetType("String")
+                        .build());
+        phoneFields.put(
+                "number", CustomTypeField.builder()
+                        .name("number")
+                        .javaClassForValue(String.class)
+                        .targetType("String")
+                        .build());
+        phoneFields.put(
+                "countryCode", CustomTypeField.builder()
+                        .name("countryCode")
+                        .javaClassForValue(String.class)
+                        .targetType("String")
+                        .build());
+        phoneSchema = CustomTypeSchema.builder()
+                .name("Phone")
+                .pluralName("Phones")
+                .fields(phoneFields)
+                .build();
+
+        Map<String, CustomTypeField> contactFields = new HashMap<>();
+        contactFields.put(
+                "phone", CustomTypeField.builder()
+                        .name("phone")
+                        .javaClassForValue(Map.class)
+                        .targetType("Phone")
+                        .isCustomType(true)
+                        .build());
+        contactFields.put(
+                "email", CustomTypeField.builder()
+                        .name("email")
+                        .javaClassForValue(String.class)
+                        .targetType("String")
+                        .build());
+        contactSchema = CustomTypeSchema.builder()
+                .name("Contact")
+                .pluralName("Contacts")
+                .fields(contactFields)
+                .build();
+
+        Map<String, CustomTypeField> addressFields = new HashMap<>();
+        addressFields.put(
+                "postalCode", CustomTypeField.builder()
+                        .name("postalCode")
+                        .javaClassForValue(String.class)
+                        .targetType("String")
+                        .build());
+        addressFields.put(
+                "line1", CustomTypeField.builder()
+                        .name("line1")
+                        .javaClassForValue(String.class)
+                        .targetType("String")
+                        .build());
+        addressFields.put(
+                "line2", CustomTypeField.builder()
+                        .name("line2")
+                        .javaClassForValue(String.class)
+                        .targetType("String")
+                        .build());
+        addressFields.put(
+                "state", CustomTypeField.builder()
+                        .name("state")
+                        .javaClassForValue(String.class)
+                        .targetType("String")
+                        .build());
+        addressSchema = CustomTypeSchema.builder()
+                .name("Address")
+                .pluralName("Addresses")
+                .fields(addressFields)
+                .build();
+
+        Map<String, CustomTypeField> personInfoFields = new HashMap<>();
+        personInfoFields.put(
+                "name", CustomTypeField.builder()
+                        .name("name")
+                        .javaClassForValue(String.class)
+                        .targetType("String")
+                        .build());
+        personInfoFields.put(
+                "mailingAddresses", CustomTypeField.builder()
+                        .name("mailingAddresses")
+                        .javaClassForValue(List.class)
+                        .targetType("Address")
+                        .isCustomType(true)
+                        .isArray(true)
+                        .build());
+        personInfoFields.put(
+                "contact", CustomTypeField.builder()
+                        .name("contact")
+                        .javaClassForValue(Map.class)
+                        .targetType("Contact")
+                        .isCustomType(true)
+                        .build());
+        personInfoFields.put(
+                "tags", CustomTypeField.builder()
+                        .name("tags")
+                        .isArray(true)
+                        .javaClassForValue(List.class)
+                        .targetType("String")
+                        .build());
+        personInfoSchema = CustomTypeSchema.builder()
+                .name("Person")
+                .pluralName("People")
+                .fields(personInfoFields)
+                .build();
+    }
+
     /**
      * The {@link CustomTypeSchema#builder()} should create expected CustomType schema.
      */
@@ -81,5 +211,78 @@ public final class CustomTypeSchemaTest {
         assertEquals(typeName, schema.getName());
         assertEquals(typePluralName, schema.getPluralName());
         assertEquals(fields, schema.getFields());
+    }
+
+    /**
+     * The {@link SerializedCustomType#getFlatSerializedData()} should create a map of values.
+     *
+     *  @throws JSONException On illegal json found by JSONAssert.
+     */
+    @Test
+    public void customTypeGetFlatSerializedData() throws JSONException {
+        Map<String, Object> addressSerializedData1 = new HashMap<>();
+        addressSerializedData1.put("line1", "222 Somewhere far");
+        addressSerializedData1.put("line2", null);
+        addressSerializedData1.put("state", "CA");
+        addressSerializedData1.put("postalCode", "123456");
+
+        SerializedCustomType address1 = SerializedCustomType.builder()
+                .serializedData(addressSerializedData1)
+                .customTypeSchema(addressSchema)
+                .build();
+
+        Map<String, Object> addressSerializedData2 = new HashMap<>();
+        addressSerializedData2.put("line1", "444 Somewhere close");
+        addressSerializedData2.put("line2", "Apt 3");
+        addressSerializedData2.put("state", "WA");
+        addressSerializedData2.put("postalCode", "123456");
+
+        SerializedCustomType address2 = SerializedCustomType.builder()
+                .serializedData(addressSerializedData2)
+                .customTypeSchema(addressSchema)
+                .build();
+
+        ArrayList<SerializedCustomType> addresses = new ArrayList<>();
+        addresses.add(address1);
+        addresses.add(address2);
+
+        Map<String, Object> phoneSerializedData = new HashMap<>();
+        phoneSerializedData.put("countryCode", "1");
+        phoneSerializedData.put("areaCode", "415");
+        phoneSerializedData.put("phone", "6666666");
+
+        SerializedCustomType phone = SerializedCustomType.builder()
+                .serializedData(phoneSerializedData)
+                .customTypeSchema(phoneSchema)
+                .build();
+
+        Map<String, Object> contactSerializedData = new HashMap<>();
+        contactSerializedData.put("email", "tester@testing.com");
+        contactSerializedData.put("phone", phone);
+
+        SerializedCustomType contact = SerializedCustomType.builder()
+                .serializedData(contactSerializedData)
+                .customTypeSchema(contactSchema)
+                .build();
+
+        ArrayList<String> tags = new ArrayList<>();
+        tags.add("string1");
+        tags.add("string2");
+
+        Map<String, Object> personalSerializedData = new HashMap<>();
+        personalSerializedData.put("name", "Tester Testing");
+        personalSerializedData.put("mailingAddresses", addresses);
+        personalSerializedData.put("contact", contact);
+        personalSerializedData.put("tags", tags);
+
+        SerializedCustomType person = SerializedCustomType.builder()
+                .serializedData(personalSerializedData)
+                .customTypeSchema(personInfoSchema)
+                .build();
+
+        String expectedResourcePath = "serialized-custom-type-nested-data.json";
+        String expectedJson = Resources.readAsJson(expectedResourcePath).toString(2);
+        String actualJson = new JSONObject(new Gson().toJson(person.getFlatSerializedData())).toString(2);
+        assertEquals(expectedJson, actualJson);
     }
 }

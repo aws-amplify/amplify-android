@@ -1,6 +1,50 @@
 {
-  "postalCode": "123456",
-  "state": "CA",
-  "line1": "222 Somewhere far",
-  "line2": null
+  "serializedData": {
+    "postalCode": "123456",
+    "state": "CA",
+    "line2": null,
+    "line1": "222 Somewhere far"
+  },
+  "customTypeSchema": {
+    "pluralName": "Addresses",
+    "name": "Address",
+    "fields": {
+      "postalCode": {
+        "javaClassForValue": "java.lang.String",
+        "isRequired": true,
+        "isCustomType": false,
+        "name": "postalCode",
+        "isEnum": false,
+        "targetType": "String",
+        "isArray": false
+      },
+      "state": {
+        "javaClassForValue": "java.lang.String",
+        "isRequired": true,
+        "isCustomType": false,
+        "name": "state",
+        "isEnum": false,
+        "targetType": "String",
+        "isArray": false
+      },
+      "line2": {
+        "javaClassForValue": "java.lang.String",
+        "isRequired": false,
+        "isCustomType": false,
+        "name": "line2",
+        "isEnum": false,
+        "targetType": "String",
+        "isArray": false
+      },
+      "line1": {
+        "javaClassForValue": "java.lang.String",
+        "isRequired": true,
+        "isCustomType": false,
+        "name": "line1",
+        "isEnum": false,
+        "targetType": "String",
+        "isArray": false
+      }
+    }
+  }
 }
