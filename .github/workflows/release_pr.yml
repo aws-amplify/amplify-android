@@ -9,7 +9,7 @@ on:
 env:
   GIT_USER_NAME: amplify-android-dev+ghops
   GIT_USER_EMAIL: amplify-android-dev+ghops@amazon.com
-  BASE_BRANCH: ${{ github.event.ref }}
+  BASE_BRANCH: ${{ github.ref_name }}
 jobs:
   create_pr_for_next_release:
     runs-on: ubuntu-latest
