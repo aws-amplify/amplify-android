@@ -246,28 +246,37 @@ public final class PersistentMutationOutboxTest {
      * notifies the system that there is more work to be done, even though we've successfully
      * processed an event. The system will continue processing items from the outbox until
      * all have been processed.
-     * @throws DataStoreException On failure to arrange data into storage
      * @throws InterruptedException If thread interrupted while waiting for events
      */
     @Test
-    public void notifiesWhenContentAvailableAfterDelete() throws DataStoreException, InterruptedException {
-        // Start watching the events stream. We'll expect a notification here once,
-        // after the first deletion.
-        TestObserver<OutboxEvent> firstEventObserver = mutationOutbox.events().test();
+    public void notifiesWhenContentAvailableAfterDelete() throws InterruptedException {
+        // Start watching the events stream. We'll expect a notification here 3 times:
+        // after the first enqueue, after the second enqueue, after the first deletion.
+        TestObserver<OutboxEvent> enqueueEventObserver = mutationOutbox.events().test();
 
         // Arrange a few mutations into the queue.
         BlogOwner senatorBernie = BlogOwner.builder()
             .name("Senator Bernard Sanders")
             .build();
         PendingMutation<BlogOwner> createSenatorBernie = PendingMutation.creation(senatorBernie, schema);
-        storage.save(converter.toRecord(createSenatorBernie));
-        BlogOwner candidateBernie = senatorBernie.copyOfBuilder()
-            .name("Democratic Presidential Candidate, Bernard Sanders")
-            .build();
-        PendingMutation<BlogOwner> updateCandidateBernie = PendingMutation.update(candidateBernie, schema);
-        storage.save(converter.toRecord(updateCandidateBernie));
-        boolean completed = mutationOutbox.load().blockingAwait(TIMEOUT_MS, TimeUnit.MILLISECONDS);
-        assertTrue(completed);
+        boolean createCompleted = mutationOutbox.enqueue(createSenatorBernie)
+                .blockingAwait(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        assertTrue(createCompleted);
+
+        BlogOwner sam = BlogOwner.builder()
+                .name("Sam Watson")
+                .build();
+        PendingMutation<BlogOwner> insertSam = PendingMutation.creation(sam, schema);
+        boolean updateCompleted = mutationOutbox.enqueue(insertSam)
+                .blockingAwait(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        assertTrue(updateCompleted);
+
+        enqueueEventObserver
+                .awaitCount(2)
+                .assertValues(OutboxEvent.CONTENT_AVAILABLE, OutboxEvent.CONTENT_AVAILABLE)
+                .assertNoErrors();
+
+        TestObserver<OutboxEvent> firstRemoveEventObserver = mutationOutbox.events().test();
 
         // Remove first item.
         TestObserver<Void> firstRemoval = mutationOutbox.remove(createSenatorBernie.getMutationId()).test();
@@ -279,16 +288,16 @@ public final class PersistentMutationOutboxTest {
 
         // One event is observed on events(), since there are still some pending mutations
         // that need to be processed.
-        firstEventObserver
+        firstRemoveEventObserver
             .awaitCount(1)
             .assertValues(OutboxEvent.CONTENT_AVAILABLE)
             .assertNoErrors();
 
         // Get ready to watch the events() again.
-        TestObserver<OutboxEvent> secondEventObserver = mutationOutbox.events().test();
+        TestObserver<OutboxEvent> secondRemoveEventObserver = mutationOutbox.events().test();
 
         // Remove the next item.
-        TestObserver<Void> secondRemoval = mutationOutbox.remove(updateCandidateBernie.getMutationId()).test();
+        TestObserver<Void> secondRemoval = mutationOutbox.remove(insertSam.getMutationId()).test();
         secondRemoval.await(TIMEOUT_MS, TimeUnit.MILLISECONDS);
         secondRemoval
             .assertNoErrors()
@@ -296,8 +305,8 @@ public final class PersistentMutationOutboxTest {
             .dispose();
 
         // This time, we don't see any event on events(), since the outbox has become empty.
-        secondEventObserver.await(TIMEOUT_MS, TimeUnit.MILLISECONDS);
-        secondEventObserver.assertNoValues().assertNoErrors();
+        secondRemoveEventObserver.await(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        secondRemoveEventObserver.assertNoValues().assertNoErrors();
     }
 
     /**

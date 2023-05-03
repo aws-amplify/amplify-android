@@ -30,6 +30,7 @@ import java.util.Map;
  * MutationQueue is implementing the Queue interface and provide most of the queue operations.
  * 
  * @deprecated This class was released with public visibility but is not intended to be consumed.
+ *             It will be removed in future versions of Amplify.
  */
 @Deprecated
 public final class MutationQueue {
