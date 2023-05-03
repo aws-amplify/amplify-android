@@ -62,6 +62,9 @@ dependencyResolutionManagement {
             library("robolectric", "org.robolectric:robolectric:4.7")
             library("jsonassert", "org.skyscreamer:jsonassert:1.5.0")
             library("json", "org.json:json:20210307")
+
+            // AWS
+            library("aws-sdk-core", "com.amazonaws:aws-android-sdk-core:2.62.2")
         }
         // Library dependencies
         create("dependency") {
@@ -86,14 +89,16 @@ dependencyResolutionManagement {
 
             // AWS
             val awsKotlinSdk = "awsKotlinSdk"
-            version(awsKotlinSdk, "0.21.1-beta")
+            val awsSmithyKotlin = "awsSmithyKotlin"
+            /* When updating kotlin sdk or kotlin smithy,
+            ensure compatible versions used in aws-sdk-kotlin root gradle.properties
+             */
+            version(awsKotlinSdk, "0.21.1-beta") // ensure proper awsSmithyKotlin version also set
+            version(awsSmithyKotlin, "0.16.2") // ensure proper awsKotlinSdk version also set
 
-            library("aws-sdk-core", "com.amazonaws:aws-android-sdk-core:2.62.2")
-
-            library("aws-credentials", "aws.smithy.kotlin:aws-credentials:0.16.2")
-            library("aws-http", "aws.sdk.kotlin:aws-http:0.16.2")
-            library("aws-ktor", "aws.smithy.kotlin:http-client-engine-ktor:0.7.7")
-            library("aws-signing", "aws.smithy.kotlin:aws-signing-default:0.16.2")
+            library("aws-credentials", "aws.smithy.kotlin", "aws-credentials").versionRef(awsSmithyKotlin)
+            library("aws-signing", "aws.smithy.kotlin", "aws-signing-default").versionRef(awsSmithyKotlin)
+            library("aws-http", "aws.sdk.kotlin", "aws-http").versionRef(awsKotlinSdk)
             library("aws-cognitoidentity", "aws.sdk.kotlin", "cognitoidentity").versionRef(awsKotlinSdk)
             library(
                 "aws-cognitoidentityprovider",
