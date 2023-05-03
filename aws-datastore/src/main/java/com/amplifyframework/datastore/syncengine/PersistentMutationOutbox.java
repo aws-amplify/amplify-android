@@ -25,6 +25,7 @@ import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.SerializedModel;
 import com.amplifyframework.core.model.query.Page;
+import com.amplifyframework.core.model.query.QueryOptions;
 import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
@@ -64,6 +65,7 @@ final class PersistentMutationOutbox implements MutationOutbox {
     private final PendingMutation.Converter converter;
     private final Subject<OutboxEvent> events;
     private final Semaphore semaphore;
+    private boolean countMutations;
     private PendingMutation<? extends Model> loadedMutation;
     private int numMutationsInOutbox;
 
@@ -73,6 +75,7 @@ final class PersistentMutationOutbox implements MutationOutbox {
         this.converter = new GsonPendingMutationConverter();
         this.events = PublishSubject.<OutboxEvent>create().toSerialized();
         this.semaphore = new Semaphore(1);
+        this.countMutations = true;
         this.loadedMutation = null;
         this.numMutationsInOutbox = 0;
     }
@@ -238,19 +241,38 @@ final class PersistentMutationOutbox implements MutationOutbox {
     public Completable load() {
         return Completable.create(emitter -> {
             inFlightMutations.clear();
-            storage.query(PendingMutation.PersistentRecord.class, Where.matchesAll().paginated(Page.firstResult()),
+            QueryOptions queryOptions = Where.matchesAll();
+            if (!countMutations) {
+                queryOptions = queryOptions.paginated(Page.firstResult());
+            }
+            storage.query(PendingMutation.PersistentRecord.class, queryOptions,
                 results -> {
-                    if (results.hasNext()) {
-                        try {
-                            PendingMutation.PersistentRecord persistentRecord = results.next();
-                            loadedMutation = converter.fromRecord(persistentRecord);
-                        } catch (Throwable throwable) {
-                            emitter.onError(throwable);
-                            return;
-                        }
-                    } else {
+                    if (!results.hasNext()) {
                         loadedMutation = null;
+                        numMutationsInOutbox = 0;
                     }
+                    boolean firstResult = true;
+                    while (results.hasNext()) {
+                        PendingMutation.PersistentRecord persistentRecord = results.next();
+                        if (firstResult) {
+                            firstResult = false;
+                            try {
+                                loadedMutation = converter.fromRecord(persistentRecord);
+                            } catch (Throwable throwable) {
+                                emitter.onError(throwable);
+                                return;
+                            }
+                            if (countMutations) {
+                                numMutationsInOutbox = 0;
+                            } else {
+                                break;
+                            }
+                        }
+                        if (countMutations) {
+                            numMutationsInOutbox += 1;
+                        }
+                    }
+                    countMutations = false;
                     // Publish outbox status upon loading
                     publishCurrentOutboxStatus();
                     emitter.onComplete();
