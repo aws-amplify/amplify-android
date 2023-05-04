@@ -54,11 +54,14 @@ public interface ReachabilityMonitor {
 
 private class ReachabilityMonitorImpl constructor(val schedulerProvider: SchedulerProvider) : ReachabilityMonitor {
     private val subject = BehaviorSubject.create<Boolean>()
+    private var connectivityProvider: ConnectivityProvider? = null
+
     override fun configure(context: Context) {
         return configure(context, DefaultConnectivityProvider())
     }
 
     override fun configure(context: Context, connectivityProvider: ConnectivityProvider) {
+        this.connectivityProvider = connectivityProvider
         connectivityProvider.registerDefaultNetworkCallback(
             context,
             object : NetworkCallback() {
@@ -74,8 +77,16 @@ private class ReachabilityMonitorImpl constructor(val schedulerProvider: Schedul
     }
 
     override fun getObservable(): Observable<Boolean> {
-        return subject.subscribeOn(schedulerProvider.io())
-            .debounce(250, TimeUnit.MILLISECONDS, schedulerProvider.computation())
+        connectivityProvider?.let { connectivityProvider ->
+            return subject.subscribeOn(schedulerProvider.io())
+                .doOnSubscribe { subject.onNext(connectivityProvider.hasActiveNetwork) }
+                .debounce(250, TimeUnit.MILLISECONDS, schedulerProvider.computation())
+        } ?: run {
+            throw DataStoreException(
+                "ReachabilityMonitor has not been configured.",
+                "Call ReachabilityMonitor.configure() before calling ReachabilityMonitor.getObservable()"
+            )
+        }
     }
 }
 
