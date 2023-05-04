@@ -103,18 +103,15 @@ public final class OrchestratorTest {
         schemaRegistry.clear();
         schemaRegistry.register(modelProvider.models());
 
-        when(reachabilityMonitor.getObservable()).thenReturn(Observable.just(true));
-
-        orchestrator = new Orchestrator(
-            modelProvider,
-            schemaRegistry,
-            localStorageAdapter,
-            appSync,
-            DataStoreConfiguration::defaults,
-            () -> Orchestrator.State.SYNC_VIA_API,
-            reachabilityMonitor,
-            true
-        );
+        orchestrator =
+            new Orchestrator(modelProvider,
+                schemaRegistry,
+                localStorageAdapter,
+                appSync,
+                DataStoreConfiguration::defaults,
+                () -> Orchestrator.State.SYNC_VIA_API,
+                    true
+            );
     }
 
     /**

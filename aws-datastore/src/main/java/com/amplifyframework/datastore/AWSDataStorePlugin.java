@@ -41,7 +41,6 @@ import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.appsync.AppSyncClient;
-import com.amplifyframework.datastore.events.NetworkStatusEvent;
 import com.amplifyframework.datastore.model.ModelProviderLocator;
 import com.amplifyframework.datastore.storage.ItemChangeMapper;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
@@ -50,7 +49,6 @@ import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter;
 import com.amplifyframework.datastore.syncengine.Orchestrator;
 import com.amplifyframework.datastore.syncengine.ReachabilityMonitor;
 import com.amplifyframework.hub.HubChannel;
-import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.logging.Logger;
 
 import org.json.JSONObject;
@@ -114,8 +112,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             AppSyncClient.via(api),
             () -> pluginConfiguration,
             () -> api.getPlugins().isEmpty() ? Orchestrator.State.LOCAL_ONLY : Orchestrator.State.SYNC_VIA_API,
-            reachabilityMonitor,
-            isSyncRetryEnabled
+                isSyncRetryEnabled
         );
 
     }
@@ -149,7 +146,6 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             AppSyncClient.via(api, this.authModeStrategy),
             () -> pluginConfiguration,
             () -> api.getPlugins().isEmpty() ? Orchestrator.State.LOCAL_ONLY : Orchestrator.State.SYNC_VIA_API,
-            reachabilityMonitor,
             isSyncRetryEnabled
         );
     }
@@ -268,18 +264,31 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
         );
 
         reachabilityMonitor.configure(context);
-
-        waitForInitialization().subscribe(this::observeNetworkStatus);
+        observeNetworkStatus();
     }
 
-    private void publishNetworkStatusEvent(boolean active) {
-        Amplify.Hub.publish(HubChannel.DATASTORE,
-                HubEvent.create(DataStoreChannelEventName.NETWORK_STATUS, new NetworkStatusEvent(active)));
-    }
-
+    /**
+     * Start the datastore when the network is available, and stop the datastore when it is not
+     * available.
+     */
     private void observeNetworkStatus() {
         reachabilityMonitor.getObservable()
-                .subscribe(this::publishNetworkStatusEvent);
+            .doOnNext(networkIsAvailable -> {
+                if (networkIsAvailable) {
+                    LOG.info("Network available, start datastore");
+                    start(
+                        (Action) () -> { },
+                        ((e) -> LOG.error("Error starting datastore plugin after network event: " + e))
+                    );
+                } else {
+                    LOG.info("Network lost, stop datastore");
+                    stop(
+                        (Action) () -> { },
+                        ((e) -> LOG.error("Error stopping datastore plugin after network event: " + e))
+                    );
+                }
+            })
+            .subscribe();
     }
 
     @WorkerThread
