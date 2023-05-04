@@ -1,3 +1,11 @@
+## [Release 1.38.5](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.38.5)
+
+### Bug Fixes
+- **api:** Handle delete request with no body ([#2405](https://github.com/aws-amplify/amplify-android/issues/2405))
+- **datastore:** SerializedCustomType de/serialization ([#2363](https://github.com/aws-amplify/amplify-android/issues/2363))
+
+[See all changes between 1.38.4 and 1.38.5](https://github.com/aws-amplify/amplify-android/compare/release_v1.38.4...release_v1.38.5)
+
 ## [Release 1.38.4](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.38.4)
 
 ### Bug Fixes
