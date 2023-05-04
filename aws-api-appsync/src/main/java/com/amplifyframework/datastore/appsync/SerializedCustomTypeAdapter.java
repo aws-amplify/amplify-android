@@ -15,6 +15,8 @@
 
 package com.amplifyframework.datastore.appsync;
 
+import com.amplifyframework.core.model.CustomTypeField;
+import com.amplifyframework.core.model.CustomTypeSchema;
 import com.amplifyframework.core.model.SerializedCustomType;
 import com.amplifyframework.util.GsonObjectConverter;
 
@@ -31,7 +33,6 @@ import com.google.gson.JsonSerializer;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -53,50 +54,66 @@ public final class SerializedCustomTypeAdapter
 
     @Override
     public JsonElement serialize(SerializedCustomType src, Type typeOfSrc, JsonSerializationContext context) {
-        return context.serialize(src.getSerializedData());
+        CustomTypeSchema schema = src.getCustomTypeSchema();
+        JsonObject result = new JsonObject();
+        result.add("customTypeSchema", context.serialize(schema));
+
+        JsonObject serializedData = new JsonObject();
+
+        for (Map.Entry<String, Object> entry : src.getSerializedData().entrySet()) {
+            Object fieldValue = entry.getValue();
+            if (fieldValue instanceof SerializedCustomType) {
+                // serialize by type SerializedCustomType
+                serializedData.add(entry.getKey(), context.serialize((SerializedCustomType) fieldValue));
+            } else {
+                serializedData.add(entry.getKey(), context.serialize(fieldValue));
+            }
+        }
+
+        result.add("serializedData", serializedData);
+        return result;
     }
 
     @Override
     public SerializedCustomType deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
             throws JsonParseException {
-        JsonObject serializedDataObject = json.getAsJsonObject();
+        JsonObject object = json.getAsJsonObject();
+        CustomTypeSchema schema = context.deserialize(
+                object.get("customTypeSchema"), CustomTypeSchema.class);
+
+        JsonObject serializedDataObject = object.get("serializedData").getAsJsonObject();
         Map<String, Object> serializedData = new HashMap<>(GsonObjectConverter.toMap(serializedDataObject));
 
         // Patch up nested models as SerializedCustomTypes themselves.
         for (Map.Entry<String, JsonElement> entry : serializedDataObject.entrySet()) {
-            if (entry.getValue().isJsonObject()) {
-                serializedData.put(entry.getKey(), SerializedCustomType.builder()
-                        .serializedData(deserialize(entry.getValue(), typeOfT, context).getSerializedData())
-                        .customTypeSchema(null)
-                        .build());
-            } else if (entry.getValue().isJsonArray()) {
-                JsonArray arrayList = entry.getValue().getAsJsonArray();
-                ArrayList<Object> nestedList = new ArrayList<>();
-                for (int i = 0; i < arrayList.size(); i++) {
-                    JsonElement item = arrayList.get(i);
-                    if (item.isJsonObject()) {
-                        nestedList.add(SerializedCustomType.builder()
-                                .serializedData(deserialize(item, typeOfT, context).getSerializedData())
-                                .customTypeSchema(null)
-                                .build());
-                    } else {
-                        @SuppressWarnings("unchecked")
-                        List<Object> serializedList = (List<Object>) serializedData.get(entry.getKey());
+            CustomTypeField field = schema.getFields().get(entry.getKey());
+            if (field == null) {
+                continue;
+            }
 
-                        if (serializedList != null) {
-                            nestedList.add(serializedList.get(i));
-                        }
+            JsonElement fieldValue = entry.getValue();
+            String fieldName = field.getName();
+
+            if (field.isCustomType()) {
+                if (!field.isArray() && fieldValue.isJsonObject()) {
+                    serializedData.put(
+                            fieldName, context.deserialize(fieldValue, SerializedCustomType.class));
+                } else if (field.isArray() && fieldValue.isJsonArray()) {
+                    JsonArray arrayList = fieldValue.getAsJsonArray();
+                    ArrayList<Object> nestedList = new ArrayList<>();
+                    for (int i = 0; i < arrayList.size(); i++) {
+                        JsonElement item = arrayList.get(i);
+                        nestedList.add(context.deserialize(item, SerializedCustomType.class));
                     }
+
+                    serializedData.put(fieldName, nestedList);
                 }
-                serializedData.put(entry.getKey(), nestedList);
-            } else {
-                serializedData.put(entry.getKey(), serializedData.get(entry.getKey()));
             }
         }
 
         return SerializedCustomType.builder()
                 .serializedData(serializedData)
-                .customTypeSchema(null)
+                .customTypeSchema(schema)
                 .build();
     }
 }
