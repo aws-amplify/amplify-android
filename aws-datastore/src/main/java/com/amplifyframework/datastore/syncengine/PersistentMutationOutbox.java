@@ -24,6 +24,8 @@ import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.SerializedModel;
+import com.amplifyframework.core.model.query.Page;
+import com.amplifyframework.core.model.query.QueryOptions;
 import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
@@ -38,6 +40,7 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicReference;
 
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Maybe;
@@ -58,31 +61,84 @@ final class PersistentMutationOutbox implements MutationOutbox {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
 
     private final LocalStorageAdapter storage;
-    private final MutationQueue mutationQueue;
     private final Set<TimeBasedUuid> inFlightMutations;
     private final PendingMutation.Converter converter;
     private final Subject<OutboxEvent> events;
     private final Semaphore semaphore;
+    private boolean countMutations;
+    private PendingMutation<? extends Model> loadedMutation;
+    private int numMutationsInOutbox;
 
     PersistentMutationOutbox(@NonNull final LocalStorageAdapter localStorageAdapter) {
-        this(localStorageAdapter, new MutationQueue());
-    }
-
-    @VisibleForTesting
-    PersistentMutationOutbox(@NonNull final LocalStorageAdapter localStorageAdapter,
-                             @NonNull MutationQueue mutationQueue) {
         this.storage = Objects.requireNonNull(localStorageAdapter);
-        this.mutationQueue = mutationQueue;
         this.inFlightMutations = new HashSet<>();
         this.converter = new GsonPendingMutationConverter();
         this.events = PublishSubject.<OutboxEvent>create().toSerialized();
         this.semaphore = new Semaphore(1);
+        this.countMutations = true;
+        this.loadedMutation = null;
+        this.numMutationsInOutbox = 0;
     }
 
     @Override
     public boolean hasPendingMutation(@NonNull String modelId) {
         Objects.requireNonNull(modelId);
-        return mutationQueue.nextMutationForModelId(modelId) != null;
+        return getMutationForModelId(modelId) != null;
+    }
+
+    @VisibleForTesting
+    PendingMutation<? extends Model> getMutationForModelId(@NonNull String modelId) {
+        Objects.requireNonNull(modelId);
+        AtomicReference<PendingMutation<? extends Model>> mutationResult = new AtomicReference<>();
+        Completable.create(emitter -> {
+            storage.query(PendingMutation.PersistentRecord.class,
+                    Where.matches(PendingMutation.PersistentRecord.CONTAINED_MODEL_ID.eq(modelId)),
+                results -> {
+                    if (results.hasNext()) {
+                        try {
+                            PendingMutation.PersistentRecord persistentRecord = results.next();
+                            mutationResult.set(converter.fromRecord(persistentRecord));
+                        } catch (Throwable throwable) {
+                            emitter.onError(throwable);
+                        }
+                    }
+                    emitter.onComplete();
+                },
+                emitter::onError
+            );
+        })
+        .doOnSubscribe(disposable -> semaphore.acquire())
+        .doOnTerminate(semaphore::release)
+            .blockingAwait();
+
+        return mutationResult.get();
+    }
+
+    private PendingMutation<? extends Model> getMutationById(@NonNull String mutationId) {
+        Objects.requireNonNull(mutationId);
+        AtomicReference<PendingMutation<? extends Model>> mutationResult = new AtomicReference<>();
+        Completable.create(emitter -> {
+            storage.query(PendingMutation.PersistentRecord.class,
+                    Where.matches(PendingMutation.PersistentRecord.ID.eq(mutationId)),
+                results -> {
+                    if (results.hasNext()) {
+                        try {
+                            PendingMutation.PersistentRecord persistentRecord = results.next();
+                            mutationResult.set(converter.fromRecord(persistentRecord));
+                        } catch (Throwable throwable) {
+                            emitter.onError(throwable);
+                        }
+                    }
+                    emitter.onComplete();
+                },
+                emitter::onError
+            );
+        })
+        .doOnSubscribe(disposable -> semaphore.acquire())
+        .doOnTerminate(semaphore::release)
+            .blockingAwait();
+
+        return mutationResult.get();
     }
 
     @NonNull
@@ -94,9 +150,9 @@ final class PersistentMutationOutbox implements MutationOutbox {
             // mutation, and be done with this.
             String modelId = incomingMutation.getMutatedItem().getPrimaryKeyString();
             @SuppressWarnings("unchecked")
-            PendingMutation<T> existingMutation = (PendingMutation<T>) mutationQueue.nextMutationForModelId(modelId);
+            PendingMutation<T> existingMutation = (PendingMutation<T>) getMutationForModelId(modelId);
             if (existingMutation == null || inFlightMutations.contains(existingMutation.getMutationId())) {
-                return save(incomingMutation)
+                return save(incomingMutation, true)
                     .andThen(notifyContentAvailable());
             } else {
                 return resolveConflict(existingMutation, incomingMutation);
@@ -113,7 +169,7 @@ final class PersistentMutationOutbox implements MutationOutbox {
         return mutationConflictHandler.resolve();
     }
 
-    private <T extends Model> Completable save(PendingMutation<T> pendingMutation) {
+    private <T extends Model> Completable save(PendingMutation<T> pendingMutation, boolean addingNewMutation) {
         PendingMutation.PersistentRecord item = converter.toRecord(pendingMutation);
         return Completable.create(emitter -> storage.save(
                 item,
@@ -125,8 +181,10 @@ final class PersistentMutationOutbox implements MutationOutbox {
                 // to get identically the thing that was saved. But we know the save succeeded.
                 // So, let's skip the unwrapping, and use the thing that was enqueued,
                 // the pendingMutation, directly.
-                mutationQueue.updateExistingQueueItemOrAppendNew(pendingMutation.getMutationId(), pendingMutation);
                 LOG.info("Successfully enqueued " + pendingMutation);
+                if (addingNewMutation) {
+                    numMutationsInOutbox += 1;
+                }
                 announceEventEnqueued(pendingMutation);
                 publishCurrentOutboxStatus();
                 emitter.onComplete();
@@ -147,7 +205,7 @@ final class PersistentMutationOutbox implements MutationOutbox {
     private Completable removeNotLocking(@NonNull TimeBasedUuid pendingMutationId) {
         Objects.requireNonNull(pendingMutationId);
         return Completable.defer(() -> {
-            PendingMutation<? extends Model> pendingMutation = mutationQueue.getMutationById(pendingMutationId);
+            PendingMutation<? extends Model> pendingMutation = getMutationById(pendingMutationId.toString());
             if (pendingMutation == null) {
                 throw new DataStoreException(
                     "Outbox was asked to remove a mutation with ID = " + pendingMutationId + ". " +
@@ -161,10 +219,10 @@ final class PersistentMutationOutbox implements MutationOutbox {
                     StorageItemChange.Initiator.SYNC_ENGINE,
                     QueryPredicates.all(),
                     ignored -> {
-                        mutationQueue.removeById(pendingMutation.getMutationId());
                         inFlightMutations.remove(pendingMutationId);
                         LOG.info("Successfully removed from mutations outbox" + pendingMutation);
-                        final boolean contentAvailable = !mutationQueue.isEmpty();
+                        numMutationsInOutbox -= 1;
+                        final boolean contentAvailable = numMutationsInOutbox > 0;
                         if (contentAvailable) {
                             subscriber.onSuccess(OutboxEvent.CONTENT_AVAILABLE);
                         } else {
@@ -183,18 +241,38 @@ final class PersistentMutationOutbox implements MutationOutbox {
     public Completable load() {
         return Completable.create(emitter -> {
             inFlightMutations.clear();
-            mutationQueue.clear();
-            storage.query(PendingMutation.PersistentRecord.class, Where.matchesAll(),
+            QueryOptions queryOptions = Where.matchesAll();
+            if (!countMutations) {
+                queryOptions = queryOptions.paginated(Page.firstResult());
+            }
+            storage.query(PendingMutation.PersistentRecord.class, queryOptions,
                 results -> {
+                    if (!results.hasNext()) {
+                        loadedMutation = null;
+                        numMutationsInOutbox = 0;
+                    }
+                    boolean firstResult = true;
                     while (results.hasNext()) {
-                        try {
-                            PendingMutation.PersistentRecord persistentRecord = results.next();
-                            mutationQueue.add(converter.fromRecord(persistentRecord));
-                        } catch (Throwable throwable) {
-                            emitter.onError(throwable);
-                            return;
+                        PendingMutation.PersistentRecord persistentRecord = results.next();
+                        if (firstResult) {
+                            firstResult = false;
+                            try {
+                                loadedMutation = converter.fromRecord(persistentRecord);
+                            } catch (Throwable throwable) {
+                                emitter.onError(throwable);
+                                return;
+                            }
+                            if (countMutations) {
+                                numMutationsInOutbox = 0;
+                            } else {
+                                break;
+                            }
+                        }
+                        if (countMutations) {
+                            numMutationsInOutbox += 1;
                         }
                     }
+                    countMutations = false;
                     // Publish outbox status upon loading
                     publishCurrentOutboxStatus();
                     emitter.onComplete();
@@ -219,14 +297,15 @@ final class PersistentMutationOutbox implements MutationOutbox {
     @Nullable
     @Override
     public PendingMutation<? extends Model> peek() {
-        return mutationQueue.peek();
+        load().blockingAwait();
+        return loadedMutation;
     }
 
     @NonNull
     @Override
     public Completable markInFlight(@NonNull TimeBasedUuid pendingMutationId) {
         return Completable.create(emitter -> {
-            PendingMutation<? extends Model> mutation = mutationQueue.getMutationById(pendingMutationId);
+            PendingMutation<? extends Model> mutation = getMutationById(pendingMutationId.toString());
             if (mutation != null) {
                 inFlightMutations.add(mutation.getMutationId());
                 emitter.onComplete();
@@ -256,7 +335,7 @@ final class PersistentMutationOutbox implements MutationOutbox {
     private void publishCurrentOutboxStatus() {
         Amplify.Hub.publish(
             HubChannel.DATASTORE,
-            new OutboxStatusEvent(mutationQueue.isEmpty()).toHubEvent()
+            new OutboxStatusEvent(numMutationsInOutbox == 0).toHubEvent()
         );
     }
 
@@ -340,7 +419,7 @@ final class PersistentMutationOutbox implements MutationOutbox {
                                 incoming.getModelSchema(),
                                 PendingMutation.Type.CREATE);
                         return removeNotLocking(existing.getMutationId())
-                                .andThen(saveAndNotify(mergedPendingMutation));
+                                .andThen(saveAndNotify(mergedPendingMutation, true));
                     } else {
                         return overwriteExistingAndNotify(PendingMutation.Type.CREATE, QueryPredicates.all());
                     }
@@ -358,13 +437,13 @@ final class PersistentMutationOutbox implements MutationOutbox {
                                     incoming.getModelSchema(),
                                     PendingMutation.Type.UPDATE);
                             return removeNotLocking(existing.getMutationId())
-                                    .andThen(saveAndNotify(mergedPendingMutation));
+                                    .andThen(saveAndNotify(mergedPendingMutation, true));
                         } else {
-                            return removeNotLocking(existing.getMutationId()).andThen(saveAndNotify(incoming));
+                            return removeNotLocking(existing.getMutationId()).andThen(saveAndNotify(incoming, true));
                         }
                     } else {
                         // If it has a condition, we want to just add it to the queue
-                        return saveAndNotify(incoming);
+                        return saveAndNotify(incoming, true);
                     }
                 case DELETE:
                     // Incoming update after a delete -> throw exception
@@ -384,7 +463,7 @@ final class PersistentMutationOutbox implements MutationOutbox {
                     //
                     if (inFlightMutations.contains(existing.getMutationId())) {
                         // Existing create is already in flight, then save the delete
-                        return save(incoming);
+                        return save(incoming, true);
                     } else {
                         // The existing create mutation hasn't made it to the remote store, so we
                         // ignore the incoming and remove the existing create mutation from outbox.
@@ -406,12 +485,12 @@ final class PersistentMutationOutbox implements MutationOutbox {
             TimeBasedUuid id = existing.getMutationId();
             T item = incoming.getMutatedItem();
             ModelSchema schema = incoming.getModelSchema();
-            return save(PendingMutation.instance(id, item, schema, type, predicate))
+            return save(PendingMutation.instance(id, item, schema, type, predicate), false)
                 .andThen(notifyContentAvailable());
         }
 
-        private Completable saveAndNotify(PendingMutation<T> incoming) {
-            return save(incoming)
+        private Completable saveAndNotify(PendingMutation<T> incoming, boolean addedNewMutation) {
+            return save(incoming, addedNewMutation)
                 .andThen(notifyContentAvailable());
         }
 

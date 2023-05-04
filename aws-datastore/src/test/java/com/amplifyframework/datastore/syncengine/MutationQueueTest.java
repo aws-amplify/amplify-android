@@ -31,6 +31,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * Tests the {@link MutationQueue}.
  */
+@SuppressWarnings("deprecation")
 @RunWith(RobolectricTestRunner.class)
 public final class MutationQueueTest {
     private ModelSchema schema;
