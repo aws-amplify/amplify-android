@@ -22,7 +22,11 @@ import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.core.model.AuthStrategy;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.annotations.AuthRule;
+import com.amplifyframework.core.model.annotations.BelongsTo;
+import com.amplifyframework.core.model.annotations.HasMany;
+import com.amplifyframework.core.model.annotations.Index;
 import com.amplifyframework.core.model.annotations.ModelConfig;
+import com.amplifyframework.core.model.annotations.ModelField;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.datastore.DataStoreException;
@@ -40,6 +44,7 @@ import org.robolectric.RobolectricTestRunner;
 import org.skyscreamer.jsonassert.JSONAssert;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -263,6 +268,28 @@ public final class AppSyncGraphQLRequestFactoryTest {
         assertEquals(expected, actual);
     }
 
+    /**
+     * Verify that a nullable relation can have a null (missing) value in the GraphQL request.
+     */
+    @Test
+    public void nullableAssociationCanBeNull() {
+        // Expect
+        Map<String, Object> expected = new HashMap<>();
+        expected.put("id", "abc");
+        expected.put("text", "text");
+
+        // Act
+        // Create a Note that doesn't have a value for the optional measurement relation.
+        Note note = new Note("abc", "text", null);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> actual = (Map<String, Object>) AppSyncGraphQLRequestFactory.buildMutation(note, QueryPredicates.all(), MutationType.CREATE)
+                                                               .getVariables()
+                                                               .get("input");
+
+        // Assert
+        assertEquals(expected, actual);
+    }
+
     @ModelConfig(authRules = { @AuthRule(allow = AuthStrategy.OWNER) })
     static final class Todo implements Model {
         @com.amplifyframework.core.model.annotations.ModelField(targetType = "ID", isRequired = true)
@@ -283,6 +310,51 @@ public final class AppSyncGraphQLRequestFactoryTest {
 
         public String getId() {
             return "111";
+        }
+    }
+
+    @ModelConfig(authRules = {@AuthRule(allow = AuthStrategy.OWNER)})
+    @Index(name = "byMeasurement", fields = {"measurement_id"})
+    static final class Note implements Model {
+        @ModelField(targetType = "ID", isRequired = true)
+        private final String id;
+        @ModelField(targetType = "String")
+        private final String text;
+
+        @ModelField(targetType = "Measurement")
+        @BelongsTo(targetName = "measurement_id", targetNames = {"measurement_id"}, type = Measurement.class)
+        private final Measurement Measurement;
+
+        private Note(String id, String text, Measurement Measurement) {
+            this.id = id;
+            this.text = text;
+            this.Measurement = Measurement;
+        }
+
+        public String getId() {
+            return id;
+        }
+    }
+
+    @ModelConfig(authRules = {@AuthRule(allow = AuthStrategy.OWNER)})
+    static final class Measurement implements Model {
+        @ModelField(targetType = "ID")
+        private final String id;
+
+        @ModelField(targetType = "Int")
+        private final Integer value;
+
+        @ModelField(targetType = "Note")
+        @HasMany(associatedWith = "Measurement", type = Note.class)
+        private final List<Note> notes = null;
+
+        Measurement(String id, Integer value) {
+            this.id = id;
+            this.value = value;
+        }
+
+        public String getId() {
+            return id;
         }
     }
 }

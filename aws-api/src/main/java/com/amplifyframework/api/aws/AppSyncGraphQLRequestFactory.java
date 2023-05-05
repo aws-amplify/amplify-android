@@ -381,8 +381,10 @@ public final class AppSyncGraphQLRequestFactory {
             if (association == null) {
                 result.put(fieldName, fieldValue);
             } else if (association.isOwner()) {
-                Model target = (Model) Objects.requireNonNull(fieldValue);
-                result.put(association.getTargetName(), target.getPrimaryKeyString());
+                if (fieldValue != null) {
+                    Model target = (Model) fieldValue;
+                    result.put(association.getTargetName(), target.getPrimaryKeyString());
+                }
             }
             // Ignore if field is associated, but is not a "belongsTo" relationship
         }
