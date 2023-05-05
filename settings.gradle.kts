@@ -130,7 +130,7 @@ dependencyResolutionManagement {
             library("rxjava", "io.reactivex.rxjava3:rxjava:3.0.6")
 
             // Google
-            library("google-material", "com.google.android.material:material:1.4.0")
+            library("google-material", "com.google.android.material:material:1.8.0")
             library("firebasemessaging", "com.google.firebase:firebase-messaging-ktx:23.1.0")
 
             // Misc
