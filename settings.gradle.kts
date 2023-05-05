@@ -93,8 +93,8 @@ dependencyResolutionManagement {
             /* When updating kotlin sdk or kotlin smithy,
             ensure compatible versions used in aws-sdk-kotlin root gradle.properties
              */
-            version(awsKotlinSdk, "0.21.1-beta") // ensure proper awsSmithyKotlin version also set
-            version(awsSmithyKotlin, "0.16.2") // ensure proper awsKotlinSdk version also set
+            version(awsKotlinSdk, "0.22.1-beta") // ensure proper awsSmithyKotlin version also set
+            version(awsSmithyKotlin, "0.17.2") // ensure proper awsKotlinSdk version also set
 
             library("aws-credentials", "aws.smithy.kotlin", "aws-credentials").versionRef(awsSmithyKotlin)
             library("aws-signing", "aws.smithy.kotlin", "aws-signing-default").versionRef(awsSmithyKotlin)
