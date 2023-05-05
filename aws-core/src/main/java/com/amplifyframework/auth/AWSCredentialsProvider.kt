@@ -17,6 +17,7 @@ package com.amplifyframework.auth
 
 import aws.smithy.kotlin.runtime.auth.awscredentials.Credentials
 import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider
+import aws.smithy.kotlin.runtime.util.Attributes
 import com.amplifyframework.core.Consumer
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
@@ -48,7 +49,7 @@ fun <T : AWSCredentials> convertToSdkCredentialsProvider(
 ): CredentialsProvider {
 
     return object : CredentialsProvider {
-        override suspend fun getCredentials(): Credentials {
+        override suspend fun resolve(attributes: Attributes): Credentials {
             return suspendCoroutine { continuation ->
                 awsCredentialsProvider.fetchAWSCredentials(
                     { continuation.resume(it.toSdkCredentials()) },
