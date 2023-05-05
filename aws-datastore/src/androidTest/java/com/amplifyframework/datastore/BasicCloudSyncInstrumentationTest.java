@@ -231,16 +231,17 @@ public final class BasicCloudSyncInstrumentationTest {
                 .build();
         String modelName = BlogOwner.class.getSimpleName();
 
-        // Expect two mutations to be published to AppSync.
+        // Expect one mutation to be published to AppSync. The create and update mutations
+        // are merged into one create mutation.
         HubAccumulator richardAccumulator =
-            HubAccumulator.create(HubChannel.DATASTORE, publicationOf(modelName, richard.getId()), 2)
+            HubAccumulator.create(HubChannel.DATASTORE, publicationOf(modelName, richard.getId()), 1)
                 .start();
 
         // Create an item, then update it and save it again.
         dataStore.save(richard);
         dataStore.save(updatedRichard);
 
-        // Verify that 2 mutations were published.
+        // Verify that 1 mutation was published.
         richardAccumulator.await(60, TimeUnit.SECONDS);
 
         // Verify that the updatedRichard is saved in the DataStore.
@@ -268,16 +269,17 @@ public final class BasicCloudSyncInstrumentationTest {
                 .build();
         String modelName = BlogOwner.class.getSimpleName();
 
-        // Expect two mutations to be published to AppSync.
+        // Expect one mutation to be published to AppSync. The create and update mutations
+        // are merged into one create mutation.
         HubAccumulator accumulator =
-                HubAccumulator.create(HubChannel.DATASTORE, publicationOf(modelName, owner.getId()), 2)
+                HubAccumulator.create(HubChannel.DATASTORE, publicationOf(modelName, owner.getId()), 1)
                         .start();
 
         // Create an item, then update it with different field and save it again.
         dataStore.save(owner);
         dataStore.save(updatedOwner);
 
-        // Verify that 2 mutations were published.
+        // Verify that 1 mutation was published.
         accumulator.await(60, TimeUnit.SECONDS);
 
         // Verify that the updatedOwner is saved in the DataStore.
@@ -308,9 +310,10 @@ public final class BasicCloudSyncInstrumentationTest {
                 .build();
         String modelName = BlogOwner.class.getSimpleName();
 
-        // Expect two mutations to be published to AppSync.
+        // Expect one mutation of anotherOwner to be published to AppSync. The create and update
+        // mutations are merged into one create mutation.
         HubAccumulator accumulator =
-                HubAccumulator.create(HubChannel.DATASTORE, publicationOf(modelName, anotherOwner.getId()), 2)
+                HubAccumulator.create(HubChannel.DATASTORE, publicationOf(modelName, anotherOwner.getId()), 1)
                         .start();
 
         // Create an item, then update it with different field and save it again.
@@ -318,7 +321,7 @@ public final class BasicCloudSyncInstrumentationTest {
         dataStore.save(anotherOwner);
         dataStore.save(updatedOwner);
 
-        // Verify that 2 mutations were published.
+        // Verify that 1 mutation was published.
         accumulator.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
         // Verify that the updatedOwner is saved in the DataStore.
@@ -341,15 +344,9 @@ public final class BasicCloudSyncInstrumentationTest {
         BlogOwner owner = BlogOwner.builder()
                 .name("Jean")
                 .build();
-        String modelName = BlogOwner.class.getSimpleName();
         
-        HubAccumulator accumulator =
-                HubAccumulator.create(HubChannel.DATASTORE, publicationOf(modelName, owner.getId()), 2)
-                        .start();
         dataStore.save(owner);
         dataStore.delete(owner);
-        
-        accumulator.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
         
         // Verify that the owner is deleted from the local data store.
         assertThrows(NoSuchElementException.class, () -> dataStore.get(BlogOwner.class, owner.getId()));
@@ -466,7 +463,7 @@ public final class BasicCloudSyncInstrumentationTest {
         String modelName = BlogOwner.class.getSimpleName();
         
         HubAccumulator accumulator =
-                HubAccumulator.create(HubChannel.DATASTORE, publicationOf(modelName, owner.getId()), 2)
+                HubAccumulator.create(HubChannel.DATASTORE, publicationOf(modelName, owner.getId()), 1)
                         .start();
         // Create new and then immediately update
         dataStore.save(owner);
