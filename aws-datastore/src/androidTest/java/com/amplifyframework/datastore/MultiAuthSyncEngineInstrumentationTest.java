@@ -769,6 +769,7 @@ public final class MultiAuthSyncEngineInstrumentationTest {
 
         readCredsFromConfig(context);
 
+        auth.signOut(AuthSignOutOptions.builder().build());
         if (signInToCognito) {
             Log.v(tag, "Test requires signIn.");
             AuthSignInResult authSignInResult = auth.signIn(cognitoUser, cognitoPassword);

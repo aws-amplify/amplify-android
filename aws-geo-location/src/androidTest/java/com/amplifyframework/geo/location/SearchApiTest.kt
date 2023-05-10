@@ -61,6 +61,7 @@ class SearchApiTest {
      */
     @Test(expected = GeoException::class)
     fun cannotSearchByTextWithoutAuth() {
+        signOutFromCognito()
         val query = UUID.randomUUID().toString()
         // should not be authorized to look up place from Amazon Location Service
         geo.searchByText(query, GeoSearchByTextOptions.defaults())
@@ -74,6 +75,7 @@ class SearchApiTest {
      */
     @Test(expected = GeoException::class)
     fun cannotSearchByCoordinatesWithoutAuth() {
+        signOutFromCognito()
         val coordinates = Coordinates(
             nextDouble(-90.0, 90.0),
             nextDouble(-180.0, 180.0)
@@ -125,6 +127,8 @@ class SearchApiTest {
     }
 
     private fun signInWithCognito() {
+        // Sign out before signing in. If a user is already signed in, there will be a SignedInException.
+        signOutFromCognito()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val (username, password) = Credentials.load(context)
         auth.signIn(username, password)
