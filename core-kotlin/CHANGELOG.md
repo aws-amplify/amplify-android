@@ -1,3 +1,12 @@
+## [Release 0.22.5](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.22.5)
+
+### Bug Fixes
+- **api:** Handle delete request with no body ([#2405](https://github.com/aws-amplify/amplify-android/issues/2405))
+- **datastore:** SerializedCustomType de/serialization ([#2363](https://github.com/aws-amplify/amplify-android/issues/2363))
+- **datastore:** Load pending mutations one at a time from outbox (v1) ([#2429](https://github.com/aws-amplify/amplify-android/issues/2429))
+
+[See all changes between 0.22.4 and 0.22.5](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.22.4...release-kotlin_v0.22.5)
+
 ## [Release 0.22.4](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.22.4)
 
 ### Bug Fixes
