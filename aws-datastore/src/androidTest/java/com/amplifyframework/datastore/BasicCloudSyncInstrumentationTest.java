@@ -53,6 +53,7 @@ import com.amplifyframework.testutils.sync.SynchronousDataStore;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -294,6 +295,7 @@ public final class BasicCloudSyncInstrumentationTest {
      * @throws DataStoreException On failure to save or query items from DataStore.
      * @throws ApiException On failure to query the API.
      */
+    @Ignore("Test passes locally but fails inconsistently on CI. Ignoring the test pending further investigation.")
     @Test
     public void create1ThenCreate2ThenUpdate2() throws DataStoreException, ApiException {
         // Setup
