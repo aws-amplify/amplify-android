@@ -5,6 +5,9 @@
 - **datastore:** SerializedCustomType de/serialization ([#2363](https://github.com/aws-amplify/amplify-android/issues/2363))
 - **datastore:** Load pending mutations one at a time from outbox (v1) ([#2429](https://github.com/aws-amplify/amplify-android/issues/2429))
 
+### Miscellaneous
+- Enable TLSv1.2 support for pre Android Lollipop devices ([#3258](https://github.com/aws-amplify/aws-sdk-android/issues/3258))
+
 [See all changes between 1.38.4 and 1.38.5](https://github.com/aws-amplify/amplify-android/compare/release_v1.38.4...release_v1.38.5)
 
 ## [Release 1.38.4](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.38.4)
