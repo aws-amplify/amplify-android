@@ -1,3 +1,14 @@
+## [Release 2.8.3](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.8.3)
+
+### Bug Fixes
+- **datastore:** SerializedCustomType de/serialization ([#2350](https://github.com/aws-amplify/amplify-android/issues/2350))
+- **auth:** Use java.time.Instant for AWSTemporaryCredentials expiration ([#2415](https://github.com/aws-amplify/amplify-android/issues/2415))
+- **datastore:** Load pending mutations one at a time from outbox ([#2428](https://github.com/aws-amplify/amplify-android/issues/2428))
+- **datastore:** register network callback only once in reachability monitor ([#2434](https://github.com/aws-amplify/amplify-android/issues/2434))
+- **api:** Allow null associations on non-required fields. ([#2440](https://github.com/aws-amplify/amplify-android/issues/2440))
+
+[See all changes between 2.8.2 and 2.8.3](https://github.com/aws-amplify/amplify-android/compare/release_v2.8.2...release_v2.8.3)
+
 ## [Release 2.8.2](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.8.2)
 
 ### Miscellaneous
