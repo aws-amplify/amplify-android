@@ -1,3 +1,10 @@
+## [Release 2.8.4](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.8.4)
+
+### Bug Fixes
+- **datastore:** send only distinct network events after subscribe ([#2451](https://github.com/aws-amplify/amplify-android/issues/2451))
+
+[See all changes between 2.8.3 and 2.8.4](https://github.com/aws-amplify/amplify-android/compare/release_v2.8.3...release_v2.8.4)
+
 ## [Release 2.8.3](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.8.3)
 
 ### Bug Fixes
