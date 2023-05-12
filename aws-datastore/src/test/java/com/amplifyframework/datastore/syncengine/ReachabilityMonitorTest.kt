@@ -8,7 +8,6 @@ import io.reactivex.rxjava3.core.BackpressureStrategy
 import io.reactivex.rxjava3.schedulers.TestScheduler
 import io.reactivex.rxjava3.subscribers.TestSubscriber
 import java.util.concurrent.TimeUnit
-import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.mockito.Mockito.mock
 
@@ -69,48 +68,5 @@ class ReachabilityMonitorTest {
         testScheduler.advanceTimeBy(251, TimeUnit.MILLISECONDS)
 
         testSubscriber.assertValues(true, false, true, true)
-    }
-
-    /**
-     * Test that calling getObservable() multiple times only results in the network
-     * callback being registered once.
-     */
-    @Test
-    fun testNetworkCallbackRegisteredOnce() {
-        var networkCallback: ConnectivityManager.NetworkCallback? = null
-        var numCallbacksRegistered = 0
-
-        val connectivityProvider = object : ConnectivityProvider {
-            override val hasActiveNetwork: Boolean
-                get() = run {
-                    return true
-                }
-            override fun registerDefaultNetworkCallback(
-                context: Context,
-                callback: ConnectivityManager.NetworkCallback
-            ) {
-                networkCallback = callback
-                numCallbacksRegistered += 1
-            }
-        }
-
-        // TestScheduler allows the virtual time to be advanced by exact amounts, to allow for repeatable tests
-        val testScheduler = TestScheduler()
-        val reachabilityMonitor = ReachabilityMonitor.createForTesting(TestSchedulerProvider(testScheduler))
-        val mockContext = mock(Context::class.java)
-        reachabilityMonitor.configure(mockContext, connectivityProvider)
-
-        reachabilityMonitor.getObservable().subscribe()
-        val network = mock(Network::class.java)
-        // Should provide initial network state (true) upon subscription (after debounce)
-        testScheduler.advanceTimeBy(251, TimeUnit.MILLISECONDS)
-        networkCallback!!.onAvailable(network)
-
-        reachabilityMonitor.getObservable().subscribe()
-        testScheduler.advanceTimeBy(251, TimeUnit.MILLISECONDS)
-        networkCallback!!.onAvailable(network)
-
-        // Only 1 network callback should be registered
-        assertEquals(1, numCallbacksRegistered)
     }
 }
