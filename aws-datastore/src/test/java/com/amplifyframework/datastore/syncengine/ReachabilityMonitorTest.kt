@@ -68,7 +68,7 @@ class ReachabilityMonitorTest {
         // Should provide true after debounce
         testScheduler.advanceTimeBy(251, TimeUnit.MILLISECONDS)
 
-        testSubscriber.assertValues(true, false, true, true)
+        testSubscriber.assertValues(true, false, true)
     }
 
     /**

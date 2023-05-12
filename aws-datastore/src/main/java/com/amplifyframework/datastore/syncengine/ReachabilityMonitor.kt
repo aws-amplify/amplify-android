@@ -81,6 +81,7 @@ private class ReachabilityMonitorImpl constructor(val schedulerProvider: Schedul
             return subject.subscribeOn(schedulerProvider.io())
                 .doOnSubscribe { subject.onNext(connectivityProvider.hasActiveNetwork) }
                 .debounce(250, TimeUnit.MILLISECONDS, schedulerProvider.computation())
+                .distinctUntilChanged()
         } ?: run {
             throw DataStoreException(
                 "ReachabilityMonitor has not been configured.",
