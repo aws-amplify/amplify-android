@@ -1,5 +1,5 @@
 #!/bin/bash
-project_arn=$DEVICEFARM_PROJECT_ARN
+project_arn=arn:aws:devicefarm:us-west-2:192061767050:project:cfe6768a-b64b-4cff-8a48-3c9f461f1f6b
 max_devices=$NUMBER_OF_DEVICES_TO_TEST
 module_name=$1
 canary_test_name=$2
@@ -120,7 +120,7 @@ run_arn=$(aws devicefarm schedule-run --project-arn=$project_arn \
                                           "maxDevices": '$max_devices'
                                       }' \
                                       --name="$file_name-$CODEBUILD_SOURCE_VERSION" \
-                                      --test="type=INSTRUMENTATION,testPackageArn=$test_package_upload_arn,filter='$canary_test_name'" \
+                                      --test="type=INSTRUMENTATION,testPackageArn=$test_package_upload_arn,filter=$canary_test_name" \
                                       --execution-configuration="jobTimeoutMinutes=30,videoCapture=false" \
                                       --query="run.arn" \
                                       --output=text \

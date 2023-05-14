@@ -49,7 +49,7 @@ subprojects {
                     for (canary in canaryTests[project.name]) {
                         exec {
                             commandLine("$rootDir.path/scripts/run_canary_in_devicefarm.sh")
-                            args([project.name], canary)
+                            args(project.name, canary)
                         }
                     }
                 }
