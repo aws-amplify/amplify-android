@@ -19,7 +19,7 @@ def canaryTests = [
         'aws-analytics-pinpoint': ['com.amplifyframework.analytics.pinpoint.PinpointAnalyticsCanaryTest'],
         'aws-geo-location': ['com.amplifyframework.geo.location.GeoCanaryTest'],
         'aws-predictions': ['com.amplifyframework.predictions.aws.PredictionsCanaryTest'],
-//        'aws-push-notifications-pinpoint': [''],
+//      'aws-push-notifications-pinpoint': ['com.amplifyframework.pushnotifications.pinpoint.NotificationsCanaryTest'],
         'aws-storage-s3': ['com.amplifyframework.storage.s3.StorageCanaryTest']
 ]
 

@@ -52,7 +52,8 @@ class StorageCanaryTest {
         val stream = FileInputStream(raf)
         try {
             Amplify.Storage.uploadInputStream(
-                "ExampleKey", stream,
+                "ExampleKey",
+                stream,
                 {
                     Log.i(TAG, "Successfully uploaded: ${it.key}")
                     latch.countDown()
@@ -74,7 +75,8 @@ class StorageCanaryTest {
         val file = createFile(1)
         try {
             Amplify.Storage.uploadFile(
-                "ExampleKey", file,
+                "ExampleKey",
+                file,
                 {
                     Log.i(TAG, "Successfully uploaded: ${it.key}")
                     latch.countDown()
@@ -97,7 +99,8 @@ class StorageCanaryTest {
         val file = createFile(1)
         val fileName = "ExampleKey${UUID.randomUUID()}"
         Amplify.Storage.uploadFile(
-            fileName, file,
+            fileName,
+            file,
             {
                 Log.i(TAG, "Successfully uploaded: ${it.key}")
                 uploadLatch.countDown()
@@ -107,7 +110,8 @@ class StorageCanaryTest {
         latch.await(TIMEOUT_S, TimeUnit.SECONDS)
         try {
             Amplify.Storage.downloadFile(
-                fileName, file,
+                fileName,
+                file,
                 {
                     Log.i(TAG, "Successfully downloaded: ${it.file.name}")
                     latch.countDown()
@@ -153,7 +157,8 @@ class StorageCanaryTest {
         val transferId = AtomicReference<String>()
         val opContainer = AtomicReference<StorageUploadFileOperation<*>>()
         val op = Amplify.Storage.uploadFile(
-            fileName, file,
+            fileName,
+            file,
             StorageUploadFileOptions.builder().accessLevel(StorageAccessLevel.PUBLIC).build(),
             { progress ->
                 if (progress.currentBytes > 0) {
@@ -195,7 +200,8 @@ class StorageCanaryTest {
         val latch = CountDownLatch(1)
         try {
             Amplify.Storage.list(
-                "", options,
+                "",
+                options,
                 { result ->
                     result.items.forEach { item ->
                         Log.i(TAG, "Item: ${item.key}")
@@ -235,7 +241,7 @@ class StorageCanaryTest {
     }
 
     private fun createFile(size: Int): File {
-        val file = File(TEMP_DIR + File.separator + "file")
+        val file = File(TEMP_DIR!! + File.separator + "file")
         file.createNewFile()
         val raf = RandomAccessFile(file, "rw")
         raf.setLength((size * 1024 * 1024).toLong())

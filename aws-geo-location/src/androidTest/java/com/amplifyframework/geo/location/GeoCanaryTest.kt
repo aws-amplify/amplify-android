@@ -23,9 +23,9 @@ import com.amplifyframework.core.Amplify
 import com.amplifyframework.geo.models.Coordinates
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
-import junit.framework.Assert.fail
 import org.junit.After
 import org.junit.Assert
+import org.junit.Assert.fail
 import org.junit.BeforeClass
 import org.junit.Test
 
@@ -108,7 +108,8 @@ class GeoCanaryTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val (username, password) = Credentials.load(context)
         Amplify.Auth.signIn(
-            username, password,
+            username,
+            password,
             { result ->
                 if (result.isSignedIn) {
                     Log.i("AuthQuickstart", "Sign in succeeded")

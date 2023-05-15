@@ -34,6 +34,7 @@ class DatastoreCanaryTest {
     companion object {
         private const val TIMEOUT_S = 20L
         private val TAG = DatastoreCanaryTest::class.simpleName
+
         @BeforeClass
         @JvmStatic
         fun setup() {
@@ -66,7 +67,7 @@ class DatastoreCanaryTest {
                     Log.e(TAG, "Error clearing DataStore", it)
                 }
             )
-            latch.await(TIMEOUT_S.toLong(), TimeUnit.SECONDS)
+            latch.await(TIMEOUT_S, TimeUnit.SECONDS)
         } catch (error: Exception) {
             // ok to ignore since problem encountered during tear down of the test.
         }

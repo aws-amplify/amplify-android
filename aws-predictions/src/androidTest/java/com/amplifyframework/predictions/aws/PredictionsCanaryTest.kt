@@ -40,6 +40,7 @@ class PredictionsCanaryTest {
     companion object {
         private const val TIMEOUT_S = 20L
         private val TAG = PredictionsCanaryTest::class.simpleName
+
         @BeforeClass
         @JvmStatic
         fun setup() {
@@ -59,7 +60,9 @@ class PredictionsCanaryTest {
         val latch = CountDownLatch(1)
         try {
             Amplify.Predictions.translateText(
-                "I like to eat spaghetti", LanguageType.ENGLISH, LanguageType.SPANISH,
+                "I like to eat spaghetti",
+                LanguageType.ENGLISH,
+                LanguageType.SPANISH,
                 {
                     Log.i(TAG, it.translatedText)
                     latch.countDown()
@@ -102,7 +105,8 @@ class PredictionsCanaryTest {
         val image = Assets.readAsBitmap("sample-table.png")
         try {
             Amplify.Predictions.identify(
-                TextFormatType.PLAIN, image,
+                TextFormatType.PLAIN,
+                image,
                 { result ->
                     val identifyResult = result as IdentifyTextResult
                     Log.i(TAG, identifyResult.fullText)
@@ -125,7 +129,8 @@ class PredictionsCanaryTest {
         val image = Assets.readAsBitmap("sample-table.png")
         try {
             Amplify.Predictions.identify(
-                TextFormatType.FORM, image,
+                TextFormatType.FORM,
+                image,
                 { result ->
                     val identifyResult = result as IdentifyDocumentTextResult
                     Log.i(TAG, identifyResult.fullText)
@@ -148,7 +153,8 @@ class PredictionsCanaryTest {
         val image = Assets.readAsBitmap("jeff_bezos.jpg")
         try {
             Amplify.Predictions.identify(
-                IdentifyActionType.DETECT_ENTITIES, image,
+                IdentifyActionType.DETECT_ENTITIES,
+                image,
                 { result ->
                     val identifyResult = result as IdentifyEntitiesResult
                     val metadata = identifyResult.entities.firstOrNull()
@@ -172,7 +178,8 @@ class PredictionsCanaryTest {
         val image = Assets.readAsBitmap("jeff_bezos.jpg")
         try {
             Amplify.Predictions.identify(
-                IdentifyActionType.DETECT_CELEBRITIES, image,
+                IdentifyActionType.DETECT_CELEBRITIES,
+                image,
                 { result ->
                     val identifyResult = result as IdentifyCelebritiesResult
                     val metadata = identifyResult.celebrities.firstOrNull()
@@ -196,7 +203,8 @@ class PredictionsCanaryTest {
         val image = Assets.readAsBitmap("jeff_bezos.jpg")
         try {
             Amplify.Predictions.identify(
-                LabelType.LABELS, image,
+                LabelType.LABELS,
+                image,
                 { result ->
                     val identifyResult = result as IdentifyLabelsResult
                     val label = identifyResult.labels.firstOrNull()
@@ -220,7 +228,8 @@ class PredictionsCanaryTest {
         val image = Assets.readAsBitmap("jeff_bezos.jpg")
         try {
             Amplify.Predictions.identify(
-                LabelType.MODERATION_LABELS, image,
+                LabelType.MODERATION_LABELS,
+                image,
                 { result ->
                     val identifyResult = result as IdentifyLabelsResult
                     Log.i(TAG, "${identifyResult.isUnsafeContent}")
