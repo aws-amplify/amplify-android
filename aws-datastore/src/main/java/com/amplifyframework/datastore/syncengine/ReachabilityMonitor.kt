@@ -22,14 +22,13 @@ import android.net.Network
 import androidx.annotation.VisibleForTesting
 import com.amplifyframework.datastore.DataStoreException
 import io.reactivex.rxjava3.core.Observable
-import io.reactivex.rxjava3.core.ObservableEmitter
-import io.reactivex.rxjava3.core.ObservableOnSubscribe
+import io.reactivex.rxjava3.subjects.BehaviorSubject
 import java.util.concurrent.TimeUnit
 
 /**
  * The ReachabilityMonitor is responsible for watching the network status as provided by the OS.
  * It returns an observable that publishes "true" when the network becomes available and "false" when
- * the network is lost.
+ * the network is lost.  It publishes the current status on subscription.
  *
  * ReachabilityMonitor does not try to monitor the DataStore websockets or the status of the AppSync service.
  *
@@ -54,40 +53,40 @@ public interface ReachabilityMonitor {
 }
 
 private class ReachabilityMonitorImpl constructor(val schedulerProvider: SchedulerProvider) : ReachabilityMonitor {
-    private var emitter: ObservableOnSubscribe<Boolean>? = null
+    private val subject = BehaviorSubject.create<Boolean>()
+    private var connectivityProvider: ConnectivityProvider? = null
 
     override fun configure(context: Context) {
         return configure(context, DefaultConnectivityProvider())
     }
 
     override fun configure(context: Context, connectivityProvider: ConnectivityProvider) {
-        emitter = ObservableOnSubscribe { emitter ->
-            val callback = getCallback(emitter)
-            connectivityProvider.registerDefaultNetworkCallback(context, callback)
-        }
+        this.connectivityProvider = connectivityProvider
+        connectivityProvider.registerDefaultNetworkCallback(
+            context,
+            object : NetworkCallback() {
+                override fun onAvailable(network: Network) {
+                    subject.onNext(true)
+                }
+
+                override fun onLost(network: Network) {
+                    subject.onNext(false)
+                }
+            }
+        )
     }
 
     override fun getObservable(): Observable<Boolean> {
-        emitter?.let { emitter ->
-            return Observable.create(emitter)
-                .subscribeOn(schedulerProvider.io())
+        connectivityProvider?.let { connectivityProvider ->
+            return subject.subscribeOn(schedulerProvider.io())
+                .doOnSubscribe { subject.onNext(connectivityProvider.hasActiveNetwork) }
                 .debounce(250, TimeUnit.MILLISECONDS, schedulerProvider.computation())
+                .distinctUntilChanged()
         } ?: run {
             throw DataStoreException(
                 "ReachabilityMonitor has not been configured.",
                 "Call ReachabilityMonitor.configure() before calling ReachabilityMonitor.getObservable()"
             )
-        }
-    }
-
-    private fun getCallback(emitter: ObservableEmitter<Boolean>): NetworkCallback {
-        return object : NetworkCallback() {
-            override fun onAvailable(network: Network) {
-                emitter.onNext(true)
-            }
-            override fun onLost(network: Network) {
-                emitter.onNext(false)
-            }
         }
     }
 }

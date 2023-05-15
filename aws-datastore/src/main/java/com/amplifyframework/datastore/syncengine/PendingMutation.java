@@ -24,6 +24,7 @@ import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.annotations.Index;
 import com.amplifyframework.core.model.annotations.ModelConfig;
 import com.amplifyframework.core.model.annotations.ModelField;
+import com.amplifyframework.core.model.query.predicate.QueryField;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.DataStoreException;
@@ -277,6 +278,9 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
     @ModelConfig(pluralName = "PersistentRecords", type = Model.Type.SYSTEM)
     @Index(fields = "containedModelClassName", name = "containedModelClassNameBasedIndex")
     public static final class PersistentRecord implements Model, Comparable<PersistentRecord> {
+        static final QueryField ID = QueryField.field("PersistentRecord", "id");
+        static final QueryField CONTAINED_MODEL_ID = QueryField.field("PersistentRecord", "containedModelId");
+        
         @ModelField(targetType = "ID", isRequired = true)
         private final String id;
 

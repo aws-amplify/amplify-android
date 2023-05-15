@@ -16,10 +16,13 @@
 package com.amplifyframework.datastore.appsync;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.core.model.CustomTypeField;
+import com.amplifyframework.core.model.CustomTypeSchema;
 import com.amplifyframework.core.model.ModelAssociation;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.SchemaRegistry;
+import com.amplifyframework.core.model.SerializedCustomType;
 import com.amplifyframework.core.model.SerializedModel;
 import com.amplifyframework.core.model.temporal.GsonTemporalAdapters;
 import com.amplifyframework.core.model.temporal.Temporal;
@@ -59,6 +62,7 @@ public final class SerializedModelAdapterTest {
         GsonJavaTypeAdapters.register(builder);
         GsonTemporalAdapters.register(builder);
         SerializedModelAdapter.register(builder);
+        SerializedCustomTypeAdapter.register(builder);
         gson = builder.create();
     }
 
@@ -125,6 +129,56 @@ public final class SerializedModelAdapterTest {
 
         SerializedModel recovered = gson.fromJson(expectedJson, SerializedModel.class);
         Assert.assertEquals(blogAsSerializedModel, recovered);
+    }
+
+    /**
+     * Tests serialization and deserialization of a model that contains nested custom type.
+     *
+     * @throws JSONException On illegal json found by JSONAssert
+     * @throws AmplifyException On unable to parse schema
+     */
+    @Test
+    public void serdeForNestedCustomTypes() throws JSONException, AmplifyException {
+        CustomTypeSchema phoneSchema = customTypeSchemaForPhone();
+        CustomTypeSchema contactSchema = customTypeSchemaForContact();
+        ModelSchema personSchema = modelSchemaForPerson();
+
+        SchemaRegistry schemaRegistry = SchemaRegistry.instance();
+        schemaRegistry.register("Person", personSchema);
+
+        Map<String, Object> phoneSerializedData = new HashMap<>();
+        phoneSerializedData.put("countryCode", "+1");
+        phoneSerializedData.put("number", "41555555555");
+        SerializedCustomType phone = SerializedCustomType.builder()
+                .serializedData(phoneSerializedData)
+                .customTypeSchema(phoneSchema)
+                .build();
+
+        Map<String, Object> contactSerializedData = new HashMap<>();
+        contactSerializedData.put("email", "test@test.com");
+        contactSerializedData.put("phone", phone);
+        SerializedCustomType contact = SerializedCustomType.builder()
+                .serializedData(contactSerializedData)
+                .customTypeSchema(contactSchema)
+                .build();
+
+        Map<String, Object> personSerializedData = new HashMap<>();
+        personSerializedData.put("fullName", "Tester Test");
+        personSerializedData.put("contact", contact);
+        personSerializedData.put("id", "some-unique-id");
+        SerializedModel person = SerializedModel.builder()
+                .modelSchema(personSchema)
+                .serializedData(personSerializedData)
+                .build();
+
+        String resourcePath = "serialized-model-with-nested-custom-type-se-deserialization.json";
+        String expectedJson = new JSONObject(Resources.readAsString(resourcePath)).toString(2);
+        String actualJson = new JSONObject(gson.toJson(person)).toString(2);
+
+        Assert.assertEquals(expectedJson, actualJson);
+
+        SerializedModel recovered = gson.fromJson(expectedJson, SerializedModel.class);
+        Assert.assertEquals(person, recovered);
     }
 
     private ModelSchema modelSchemaForMeeting() {
@@ -222,5 +276,76 @@ public final class SerializedModelAdapterTest {
             .indexes(Collections.emptyMap())
             .modelClass(SerializedModel.class)
             .build();
+    }
+
+    private CustomTypeSchema customTypeSchemaForPhone() {
+        Map<String, CustomTypeField> phoneFields = new HashMap<>();
+        phoneFields.put("countryCode", CustomTypeField.builder()
+                .name("countryCode")
+                .targetType("String")
+                .javaClassForValue(String.class)
+                .isRequired(true)
+                .build());
+        phoneFields.put("number", CustomTypeField.builder()
+                .name("number")
+                .targetType("String")
+                .javaClassForValue(String.class)
+                .isRequired(true)
+                .build());
+        return CustomTypeSchema.builder()
+                .name("Phone")
+                .pluralName("Phones")
+                .fields(phoneFields)
+                .build();
+    }
+
+    private CustomTypeSchema customTypeSchemaForContact() {
+        Map<String, CustomTypeField> contactFields = new HashMap<>();
+        contactFields.put("email", CustomTypeField.builder()
+                .name("email")
+                .targetType("String")
+                .javaClassForValue(String.class)
+                .isRequired(true)
+                .build());
+        contactFields.put("phone", CustomTypeField.builder()
+                .name("phone")
+                .targetType("Phone")
+                .javaClassForValue(Map.class)
+                .isCustomType(true)
+                .isRequired(true)
+                .build());
+        return CustomTypeSchema.builder()
+                .name("Contact")
+                .pluralName("Contacts")
+                .fields(contactFields)
+                .build();
+    }
+
+    private ModelSchema modelSchemaForPerson() {
+        Map<String, ModelField> personFields = new HashMap<>();
+        personFields.put("id", ModelField.builder()
+                .name("id")
+                .javaClassForValue(String.class)
+                .targetType("ID")
+                .isRequired(true)
+                .build());
+        personFields.put("fullName", ModelField.builder()
+                .name("fullName")
+                .targetType("String")
+                .javaClassForValue(String.class)
+                .isRequired(true)
+                .build());
+        personFields.put("contact", ModelField.builder()
+                .name("contact")
+                .targetType("Contact")
+                .javaClassForValue(Map.class)
+                .isRequired(true)
+                .isCustomType(true)
+                .build());
+        return ModelSchema.builder()
+                .name("Person")
+                .pluralName("People")
+                .fields(personFields)
+                .build();
     }
 }

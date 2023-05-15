@@ -56,24 +56,22 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
 
 /**
- * Converts provided model or class type into a request container
- * with automatically generated GraphQL documents that follow
- * AppSync specifications.
+ * Converts provided model or class type into a request container with automatically generated GraphQL documents that
+ * follow AppSync specifications.
  */
 public final class AppSyncGraphQLRequestFactory {
     private static final int DEFAULT_QUERY_LIMIT = 1000;
 
     // This class should not be instantiated
-    private AppSyncGraphQLRequestFactory() {}
+    private AppSyncGraphQLRequestFactory() {
+    }
 
     /**
-     * Creates a {@link GraphQLRequest} that represents a query that expects a single value as a result.
-     * The request will be created with the correct document based on the model schema and
-     * variables based on given {@code objectId}.
-     *
+     * Creates a {@link GraphQLRequest} that represents a query that expects a single value as a result. The request
+     * will be created with the correct document based on the model schema and variables based on given
+     * {@code objectId}.
      * @param modelClass the model class.
      * @param objectId the model identifier.
      * @param <R> the response type.
@@ -82,30 +80,29 @@ public final class AppSyncGraphQLRequestFactory {
      * @throws IllegalStateException when the model schema does not contain the expected information.
      */
     public static <R, T extends Model> GraphQLRequest<R> buildQuery(
-            Class<T> modelClass,
-            String objectId
+        Class<T> modelClass,
+        String objectId
     ) {
         try {
             return AppSyncGraphQLRequest.builder()
-                    .modelClass(modelClass)
-                    .operation(QueryType.GET)
-                    .requestOptions(new ApiGraphQLRequestOptions())
-                    .responseType(modelClass)
-                    .variable("id", "ID!", objectId)
-                    .build();
+                       .modelClass(modelClass)
+                       .operation(QueryType.GET)
+                       .requestOptions(new ApiGraphQLRequestOptions())
+                       .responseType(modelClass)
+                       .variable("id", "ID!", objectId)
+                       .build();
         } catch (AmplifyException exception) {
             throw new IllegalStateException(
-                    "Could not generate a schema for the specified class",
-                    exception
+                "Could not generate a schema for the specified class",
+                exception
             );
         }
     }
 
     /**
-     * Creates a {@link GraphQLRequest} that represents a query that expects multiple values as a result.
-     * The request will be created with the correct document based on the model schema and variables
-     * for filtering based on the given predicate.
-     *
+     * Creates a {@link GraphQLRequest} that represents a query that expects multiple values as a result. The request
+     * will be created with the correct document based on the model schema and variables for filtering based on the
+     * given predicate.
      * @param modelClass the model class.
      * @param predicate the model predicate.
      * @param <R> the response type.
@@ -114,20 +111,19 @@ public final class AppSyncGraphQLRequestFactory {
      * @throws IllegalStateException when the model schema does not contain the expected information.
      */
     public static <R, T extends Model> GraphQLRequest<R> buildQuery(
-            Class<T> modelClass,
-            QueryPredicate predicate
+        Class<T> modelClass,
+        QueryPredicate predicate
     ) {
         Type dataType = TypeMaker.getParameterizedType(PaginatedResult.class, modelClass);
         return buildQuery(modelClass, predicate, DEFAULT_QUERY_LIMIT, dataType);
     }
 
     /**
-     * Creates a {@link GraphQLRequest} that represents a query that expects multiple values as a result
-     * within a certain range (i.e. paginated).
-     *
-     * The request will be created with the correct document based on the model schema and variables
-     * for filtering based on the given predicate and pagination.
-     *
+     * Creates a {@link GraphQLRequest} that represents a query that expects multiple values as a result within a
+     * certain range (i.e. paginated).
+     * <p>
+     * The request will be created with the correct document based on the model schema and variables for filtering based
+     * on the given predicate and pagination.
      * @param modelClass the model class.
      * @param predicate the predicate for filtering.
      * @param limit the page size/limit.
@@ -136,27 +132,27 @@ public final class AppSyncGraphQLRequestFactory {
      * @return a valid {@link GraphQLRequest} instance.
      */
     public static <R, T extends Model> GraphQLRequest<R> buildPaginatedResultQuery(
-            Class<T> modelClass,
-            QueryPredicate predicate,
-            int limit
+        Class<T> modelClass,
+        QueryPredicate predicate,
+        int limit
     ) {
         Type responseType = TypeMaker.getParameterizedType(PaginatedResult.class, modelClass);
         return buildQuery(modelClass, predicate, limit, responseType);
     }
 
     static <R, T extends Model> GraphQLRequest<R> buildQuery(
-            Class<T> modelClass,
-            QueryPredicate predicate,
-            int limit,
-            Type responseType
+        Class<T> modelClass,
+        QueryPredicate predicate,
+        int limit,
+        Type responseType
     ) {
         try {
             String modelName = ModelSchema.fromModelClass(modelClass).getName();
             AppSyncGraphQLRequest.Builder builder = AppSyncGraphQLRequest.builder()
-                    .modelClass(modelClass)
-                    .operation(QueryType.LIST)
-                    .requestOptions(new ApiGraphQLRequestOptions())
-                    .responseType(responseType);
+                                                        .modelClass(modelClass)
+                                                        .operation(QueryType.LIST)
+                                                        .requestOptions(new ApiGraphQLRequestOptions())
+                                                        .responseType(responseType);
 
             if (!QueryPredicates.all().equals(predicate)) {
                 String filterType = "Model" + Casing.capitalizeFirst(modelName) + "FilterInput";
@@ -167,15 +163,14 @@ public final class AppSyncGraphQLRequestFactory {
             return builder.build();
         } catch (AmplifyException exception) {
             throw new IllegalStateException(
-                    "Could not generate a schema for the specified class",
-                    exception
+                "Could not generate a schema for the specified class",
+                exception
             );
         }
     }
 
     /**
      * Creates a {@link GraphQLRequest} that represents a mutation of a given type.
-     *
      * @param model the model instance.
      * @param predicate the model predicate.
      * @param type the mutation type.
@@ -185,9 +180,9 @@ public final class AppSyncGraphQLRequestFactory {
      * @throws IllegalStateException when the model schema does not contain the expected information.
      */
     public static <R, T extends Model> GraphQLRequest<R> buildMutation(
-            T model,
-            QueryPredicate predicate,
-            MutationType type
+        T model,
+        QueryPredicate predicate,
+        MutationType type
     ) {
         try {
             Class<? extends Model> modelClass = model.getClass();
@@ -195,13 +190,13 @@ public final class AppSyncGraphQLRequestFactory {
             String graphQlTypeName = schema.getName();
 
             AppSyncGraphQLRequest.Builder builder = AppSyncGraphQLRequest.builder()
-                    .operation(type)
-                    .modelClass(modelClass)
-                    .requestOptions(new ApiGraphQLRequestOptions())
-                    .responseType(modelClass);
+                                                        .operation(type)
+                                                        .modelClass(modelClass)
+                                                        .requestOptions(new ApiGraphQLRequestOptions())
+                                                        .responseType(modelClass);
 
             String inputType =
-                    Casing.capitalize(type.toString()) +
+                Casing.capitalize(type.toString()) +
                     Casing.capitalizeFirst(graphQlTypeName) +
                     "Input!"; // CreateTodoInput
 
@@ -213,7 +208,7 @@ public final class AppSyncGraphQLRequestFactory {
 
             if (!QueryPredicates.all().equals(predicate)) {
                 String conditionType =
-                        "Model" +
+                    "Model" +
                         Casing.capitalizeFirst(graphQlTypeName) +
                         "ConditionInput";
                 builder.variable("condition", conditionType, parsePredicate(predicate));
@@ -222,15 +217,14 @@ public final class AppSyncGraphQLRequestFactory {
             return builder.build();
         } catch (AmplifyException exception) {
             throw new IllegalStateException(
-                    "Could not generate a schema for the specified class",
-                    exception
+                "Could not generate a schema for the specified class",
+                exception
             );
         }
     }
 
     /**
      * Creates a {@link GraphQLRequest} that represents a subscription of a given type.
-     *
      * @param modelClass the model type.
      * @param subscriptionType the subscription type.
      * @param <R> the response type.
@@ -239,20 +233,20 @@ public final class AppSyncGraphQLRequestFactory {
      * @throws IllegalStateException when the model schema does not contain the expected information.
      */
     public static <R, T extends Model> GraphQLRequest<R> buildSubscription(
-            Class<T> modelClass,
-            SubscriptionType subscriptionType
+        Class<T> modelClass,
+        SubscriptionType subscriptionType
     ) {
         try {
             return AppSyncGraphQLRequest.builder()
-                    .modelClass(modelClass)
-                    .operation(subscriptionType)
-                    .requestOptions(new ApiGraphQLRequestOptions())
-                    .responseType(modelClass)
-                    .build();
+                       .modelClass(modelClass)
+                       .operation(subscriptionType)
+                       .requestOptions(new ApiGraphQLRequestOptions())
+                       .responseType(modelClass)
+                       .build();
         } catch (AmplifyException exception) {
             throw new IllegalStateException(
-                    "Failed to build GraphQLRequest",
-                    exception
+                "Failed to build GraphQLRequest",
+                exception
             );
         }
     }
@@ -262,8 +256,8 @@ public final class AppSyncGraphQLRequestFactory {
             QueryPredicateOperation<?> qpo = (QueryPredicateOperation<?>) queryPredicate;
             QueryOperator<?> op = qpo.operator();
             return Collections.singletonMap(
-                    qpo.field(),
-                    Collections.singletonMap(appSyncOpType(op.type()), appSyncOpValue(op))
+                qpo.field(),
+                Collections.singletonMap(appSyncOpType(op.type()), appSyncOpValue(op))
             );
         } else if (queryPredicate instanceof QueryPredicateGroup) {
             QueryPredicateGroup qpg = (QueryPredicateGroup) queryPredicate;
@@ -316,7 +310,7 @@ public final class AppSyncGraphQLRequestFactory {
             default:
                 throw new IllegalStateException(
                     "Tried to parse an unsupported QueryOperator type. Check if a new QueryOperator.Type enum " +
-                    "has been created which is not supported in the AppSyncGraphQLRequestFactory."
+                        "has been created which is not supported in the AppSyncGraphQLRequestFactory."
                 );
         }
     }
@@ -347,13 +341,13 @@ public final class AppSyncGraphQLRequestFactory {
             default:
                 throw new IllegalStateException(
                     "Tried to parse an unsupported QueryOperator type. Check if a new QueryOperator.Type enum " +
-                    "has been created which is not implemented yet."
+                        "has been created which is not implemented yet."
                 );
         }
     }
 
     private static Map<String, Object> getDeleteMutationInputMap(
-            @NonNull ModelSchema schema, @NonNull Model instance) throws AmplifyException {
+        @NonNull ModelSchema schema, @NonNull Model instance) throws AmplifyException {
         final Map<String, Object> input = new HashMap<>();
         for (String fieldName : schema.getPrimaryIndexFields()) {
             input.put(fieldName, extractFieldValue(fieldName, instance, schema));
@@ -362,7 +356,7 @@ public final class AppSyncGraphQLRequestFactory {
     }
 
     private static Map<String, Object> getMapOfFieldNameAndValues(
-            @NonNull ModelSchema schema, @NonNull Model instance) throws AmplifyException {
+        @NonNull ModelSchema schema, @NonNull Model instance) throws AmplifyException {
         if (!instance.getClass().getSimpleName().equals(schema.getName())) {
             throw new AmplifyException(
                 "The object provided is not an instance of " + schema.getName() + ".",
@@ -381,8 +375,10 @@ public final class AppSyncGraphQLRequestFactory {
             if (association == null) {
                 result.put(fieldName, fieldValue);
             } else if (association.isOwner()) {
-                Model target = (Model) Objects.requireNonNull(fieldValue);
-                result.put(association.getTargetName(), target.getPrimaryKeyString());
+                if (fieldValue != null) {
+                    Model target = (Model) fieldValue;
+                    result.put(association.getTargetName(), target.getPrimaryKeyString());
+                }
             }
             // Ignore if field is associated, but is not a "belongsTo" relationship
         }
@@ -405,16 +401,16 @@ public final class AppSyncGraphQLRequestFactory {
     }
 
     private static Object extractFieldValue(String fieldName, Model instance, ModelSchema schema)
-            throws AmplifyException {
+        throws AmplifyException {
         try {
             Field privateField = instance.getClass().getDeclaredField(fieldName);
             privateField.setAccessible(true);
             return privateField.get(instance);
         } catch (Exception exception) {
             throw new AmplifyException(
-                    "An invalid field was provided. " + fieldName + " is not present in " + schema.getName(),
-                    exception,
-                    "Check if this model schema is a correct representation of the fields in the provided Object");
+                "An invalid field was provided. " + fieldName + " is not present in " + schema.getName(),
+                exception,
+                "Check if this model schema is a correct representation of the fields in the provided Object");
         }
     }
 }

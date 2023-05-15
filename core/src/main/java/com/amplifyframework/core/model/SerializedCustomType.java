@@ -33,6 +33,7 @@ import java.util.Objects;
  */
 public final class SerializedCustomType {
     private final Map<String, Object> serializedData;
+    private Map<String, Object> flatSerializedData;
     private final CustomTypeSchema customTypeSchema;
 
     private SerializedCustomType(Map<String, Object> serializedData, CustomTypeSchema customTypeSchema) {
@@ -124,6 +125,48 @@ public final class SerializedCustomType {
     @NonNull
     public Map<String, Object> getSerializedData() {
         return serializedData;
+    }
+
+    /**
+     * Gets the serialized data that doesn't contain SerializedCustomType structure.
+     *
+     * @return Serialized data
+     */
+    @SuppressWarnings("unchecked")
+    @NonNull
+    public Map<String, Object> getFlatSerializedData() {
+        if (flatSerializedData != null) {
+            return flatSerializedData;
+        }
+
+        flatSerializedData = new HashMap<>();
+
+        for (Map.Entry<String, Object> entry : serializedData.entrySet()) {
+            CustomTypeField field = customTypeSchema.getFields().get(entry.getKey());
+
+            if (field == null) {
+                continue;
+            }
+
+            Object fieldValue = entry.getValue();
+
+            if (field.isCustomType() && fieldValue != null) {
+                if (field.isArray()) {
+                    ArrayList<SerializedCustomType> items = (ArrayList<SerializedCustomType>) fieldValue;
+                    ArrayList<Map<String, Object>> flattenItems = new ArrayList<>();
+                    for (SerializedCustomType item : items) {
+                        flattenItems.add(item.getFlatSerializedData());
+                    }
+                    flatSerializedData.put(entry.getKey(), flattenItems);
+                } else {
+                    flatSerializedData.put(entry.getKey(), ((SerializedCustomType) fieldValue).getFlatSerializedData());
+                }
+            } else {
+                flatSerializedData.put(entry.getKey(), fieldValue);
+            }
+        }
+
+        return flatSerializedData;
     }
 
     /**
