@@ -18,25 +18,32 @@ package com.amplifyframework.auth.cognito
 import android.content.Context
 import android.util.Log
 import androidx.test.core.app.ApplicationProvider
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.AdminDeleteUserRequest
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.auth.AuthProvider
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions
 import com.amplifyframework.auth.cognito.options.AuthFlowType
+import com.amplifyframework.auth.cognito.test.R
 import com.amplifyframework.auth.cognito.testutils.Credentials
 import com.amplifyframework.auth.options.AuthFetchSessionOptions
 import com.amplifyframework.auth.options.AuthSignOutOptions
 import com.amplifyframework.auth.options.AuthSignUpOptions
 import com.amplifyframework.auth.result.AuthSessionResult
 import com.amplifyframework.core.Amplify
+import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
+import com.amplifyframework.testutils.Resources
 import java.util.UUID
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.newSingleThreadContext
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import org.junit.After
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Before
@@ -75,6 +82,7 @@ class AuthCanaryTest {
     private lateinit var password: String
     private lateinit var tempUsername: String
     private lateinit var tempPassword: String
+    private var createdNewUser = false
 
     @OptIn(ExperimentalCoroutinesApi::class)
     @Before
@@ -92,6 +100,33 @@ class AuthCanaryTest {
         }
         tempUsername = UUID.randomUUID().toString()
         tempPassword = UUID.randomUUID().toString()
+        createdNewUser = false
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @After
+    fun cleanUp() {
+        if (createdNewUser) {
+            val configJson = Resources.readAsJson(
+                ApplicationProvider.getApplicationContext(),
+                R.raw.amplifyconfiguration
+            )
+                .getJSONObject("auth")
+                .getJSONObject("plugins")
+                .getJSONObject("awsCognitoAuthPlugin")
+            val userPoolId = AuthConfiguration.fromJson(configJson).userPool!!.poolId!!
+            // Delete the temporary user that was created
+            val deleteUserRequest = AdminDeleteUserRequest {
+                this.username = tempUsername
+                this.userPoolId = userPoolId
+            }
+            val cognitoAuthPlugin = Amplify.Auth.getPlugin("awsCognitoAuthPlugin")
+            val cognitoAuthService = cognitoAuthPlugin.escapeHatch as AWSCognitoAuthService
+            val cognitoIdentityProviderClient = cognitoAuthService.cognitoIdentityProviderClient
+            TestScope().runTest {
+                cognitoIdentityProviderClient?.adminDeleteUser(deleteUserRequest)
+            }
+        }
     }
 
     @Test
@@ -106,6 +141,7 @@ class AuthCanaryTest {
                 tempPassword,
                 options,
                 {
+                    createdNewUser = true
                     Log.i(TAG, "Sign up succeeded: $it")
                     latch.countDown()
                 },
@@ -666,7 +702,10 @@ class AuthCanaryTest {
             user,
             pass,
             options,
-            { Log.i(TAG, "Sign up succeeded: $it") },
+            {
+                createdNewUser = true
+                Log.i(TAG, "Sign up succeeded: $it")
+            },
             { Log.e(TAG, "Sign up failed", it) }
         )
     }
