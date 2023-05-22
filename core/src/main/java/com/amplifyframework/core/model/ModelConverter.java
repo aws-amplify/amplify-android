@@ -116,7 +116,7 @@ public final class ModelConverter {
             return Collections.singletonMap("id", ((Map<?, ?>) fieldValue).get("id"));
         } else if (modelField.isModel() && fieldValue == null) {
             return null;
-        }else {
+        } else {
             throw new IllegalStateException("Associated data is not a Model or Map.");
         }
     }

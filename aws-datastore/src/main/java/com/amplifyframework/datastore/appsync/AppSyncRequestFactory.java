@@ -485,7 +485,7 @@ final class AppSyncRequestFactory {
             return ((Model) fieldValue).resolveIdentifier();
         } else if (modelField.isLazyModel() && fieldValue instanceof LazyModel) {
             return ((LazyModel) fieldValue).getValue().resolveIdentifier();
-        }else if ((modelField.isModel()|| modelField.isLazyModel()) && fieldValue instanceof Map) {
+        } else if ((modelField.isModel()|| modelField.isLazyModel()) && fieldValue instanceof Map) {
             return ((Map<?, ?>) fieldValue).get("id");
         } else {
             throw new IllegalStateException("Associated data is not Model or Map.");

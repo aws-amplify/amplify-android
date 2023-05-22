@@ -16,7 +16,5 @@
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.amplifyframework.datastore">
-    <uses-permission android:name="android.permission.INTERNET"
-        android:exported="true"
-        />
+    <uses-permission android:name="android.permission.INTERNET" />
 </manifest>

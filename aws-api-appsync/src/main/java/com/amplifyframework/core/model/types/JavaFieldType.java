@@ -89,7 +89,6 @@ public enum JavaFieldType {
 
     LAZY_MODEL(LazyModel.class),
 
-
     /**
      * Represents any custom type (objects that are not models).
      */

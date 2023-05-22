@@ -296,9 +296,9 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
     }
 
 
-        @NonNull
-    private Map<String, Object> getDataStoreLazyModelForNonBelongsTo
-            (@NonNull Cursor cursor, @NonNull ModelField field) {
+    @NonNull
+    private Map<String, Object> getDataStoreLazyModelForNonBelongsTo(@NonNull Cursor cursor,
+                                                                     @NonNull ModelField field) {
         Map<String, Object> mapOfKeyIdentifiers = new HashMap<>();
         SQLiteColumn column = SQLiteTable.fromSchema(parentSchema)
                 .getPrimaryKey();
