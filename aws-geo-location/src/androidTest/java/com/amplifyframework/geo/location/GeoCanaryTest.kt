@@ -41,11 +41,9 @@ class GeoCanaryTest {
                 Amplify.addPlugin(AWSCognitoAuthPlugin())
                 Amplify.addPlugin(AWSLocationGeoPlugin())
                 Amplify.configure(ApplicationProvider.getApplicationContext())
-                Log.i(TAG, "Initialized Amplify")
             } catch (error: AmplifyException) {
                 Log.e(TAG, "Could not initialize Amplify", error)
             }
-            Thread.sleep(5000)
         }
     }
 
@@ -68,10 +66,7 @@ class GeoCanaryTest {
                     }
                     latch.countDown()
                 },
-                {
-                    Log.e(TAG, "Failed to search for $searchQuery", it)
-                    fail()
-                }
+                { fail("Failed to search for $searchQuery: $it") }
             )
         } catch (e: Exception) {
             fail(e.toString())
@@ -93,10 +88,7 @@ class GeoCanaryTest {
                     }
                     latch.countDown()
                 },
-                {
-                    Log.e(TAG, "Failed to reverse geocode $position", it)
-                    fail()
-                }
+                { fail("Failed to reverse geocode $position: $it") }
             )
         } catch (e: Exception) {
             fail(e.toString())
@@ -105,25 +97,23 @@ class GeoCanaryTest {
     }
 
     private fun signInWithCognito() {
+        val latch = CountDownLatch(1)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val (username, password) = Credentials.load(context)
         Amplify.Auth.signIn(
             username,
             password,
-            { result ->
-                if (result.isSignedIn) {
-                    Log.i("AuthQuickstart", "Sign in succeeded")
-                } else {
-                    Log.i("AuthQuickstart", "Sign in not complete")
-                }
-            },
-            { Log.e("AuthQuickstart", "Failed to sign in", it) }
+            { latch.countDown() },
+            { Log.e(TAG, "Failed to sign in", it) }
         )
+        latch.await(TIMEOUT_S, TimeUnit.SECONDS)
     }
 
     private fun signOutFromCognito() {
+        val latch = CountDownLatch(1)
         Amplify.Auth.signOut {
-            Log.i(TAG, "Signed out successfully")
+            latch.countDown()
         }
+        latch.await(TIMEOUT_S, TimeUnit.SECONDS)
     }
 }

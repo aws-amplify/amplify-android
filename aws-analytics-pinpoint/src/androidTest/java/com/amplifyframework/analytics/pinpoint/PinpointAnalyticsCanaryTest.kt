@@ -16,7 +16,6 @@ package com.amplifyframework.analytics.pinpoint
 
 import android.content.Context
 import android.content.SharedPreferences
-import android.util.Log
 import android.util.Pair
 import androidx.annotation.RawRes
 import androidx.test.core.app.ApplicationProvider
@@ -253,7 +252,6 @@ class PinpointAnalyticsCanaryTest {
     }
 
     private fun assertCommonEndpointResponseProperties(endpointResponse: EndpointResponse) {
-        Log.i("DEBUG", endpointResponse.toString())
         val attributes = endpointResponse.attributes!!
         Assert.assertEquals("user@test.com", attributes["email"]!![0])
         Assert.assertEquals("test-user", attributes["name"]!![0])

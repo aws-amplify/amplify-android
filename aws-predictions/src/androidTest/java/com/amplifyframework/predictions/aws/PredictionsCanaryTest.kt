@@ -48,7 +48,6 @@ class PredictionsCanaryTest {
                 Amplify.addPlugin(AWSCognitoAuthPlugin())
                 Amplify.addPlugin(AWSPredictionsPlugin())
                 Amplify.configure(ApplicationProvider.getApplicationContext())
-                Log.i(TAG, "Initialized Amplify")
             } catch (error: AmplifyException) {
                 Log.e(TAG, "Could not initialize Amplify", error)
             }
@@ -58,44 +57,27 @@ class PredictionsCanaryTest {
     @Test
     fun translateText() {
         val latch = CountDownLatch(1)
-        try {
-            Amplify.Predictions.translateText(
-                "I like to eat spaghetti",
-                LanguageType.ENGLISH,
-                LanguageType.SPANISH,
-                {
-                    Log.i(TAG, it.translatedText)
-                    latch.countDown()
-                },
-                {
-                    Log.e(TAG, "Translation failed", it)
-                    fail()
-                }
-            )
-        } catch (e: Exception) {
-            fail(e.toString())
-        }
+        Amplify.Predictions.translateText(
+            "I like to eat spaghetti",
+            LanguageType.ENGLISH,
+            LanguageType.SPANISH,
+            {
+                Log.i(TAG, it.translatedText)
+                latch.countDown()
+            },
+            { fail("Translation failed: $it") }
+        )
         assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
     }
 
     @Test
     fun textToSpeech() {
         val latch = CountDownLatch(1)
-        try {
-            Amplify.Predictions.convertTextToSpeech(
-                "I like to eat spaghetti!",
-                {
-                    Log.i(TAG, "Successfully converted text to speech")
-                    latch.countDown()
-                },
-                {
-                    Log.e(TAG, "Failed to convert text to speech", it)
-                    fail()
-                }
-            )
-        } catch (e: Exception) {
-            fail(e.toString())
-        }
+        Amplify.Predictions.convertTextToSpeech(
+            "I like to eat spaghetti!",
+            { latch.countDown() },
+            { fail("Failed to convert text to speech: $it") }
+        )
         assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
     }
 
@@ -103,23 +85,16 @@ class PredictionsCanaryTest {
     fun identifyTextInImage() {
         val latch = CountDownLatch(1)
         val image = Assets.readAsBitmap("sample-table.png")
-        try {
-            Amplify.Predictions.identify(
-                TextFormatType.PLAIN,
-                image,
-                { result ->
-                    val identifyResult = result as IdentifyTextResult
-                    Log.i(TAG, identifyResult.fullText)
-                    latch.countDown()
-                },
-                {
-                    Log.e(TAG, "Identify text failed", it)
-                    fail()
-                }
-            )
-        } catch (e: Exception) {
-            fail(e.toString())
-        }
+        Amplify.Predictions.identify(
+            TextFormatType.PLAIN,
+            image,
+            { result ->
+                val identifyResult = result as IdentifyTextResult
+                Log.i(TAG, identifyResult.fullText)
+                latch.countDown()
+            },
+            { fail("Identify text failed: $it") }
+        )
         assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
     }
 
@@ -127,23 +102,16 @@ class PredictionsCanaryTest {
     fun identifyTextInDocument() {
         val latch = CountDownLatch(1)
         val image = Assets.readAsBitmap("sample-table.png")
-        try {
-            Amplify.Predictions.identify(
-                TextFormatType.FORM,
-                image,
-                { result ->
-                    val identifyResult = result as IdentifyDocumentTextResult
-                    Log.i(TAG, identifyResult.fullText)
-                    latch.countDown()
-                },
-                {
-                    Log.e(TAG, "Identify text failed", it)
-                    fail()
-                }
-            )
-        } catch (e: Exception) {
-            fail(e.toString())
-        }
+        Amplify.Predictions.identify(
+            TextFormatType.FORM,
+            image,
+            { result ->
+                val identifyResult = result as IdentifyDocumentTextResult
+                Log.i(TAG, identifyResult.fullText)
+                latch.countDown()
+            },
+            { fail("Identify text failed: $it") }
+        )
         assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
     }
 
@@ -151,24 +119,17 @@ class PredictionsCanaryTest {
     fun identifyEntities() {
         val latch = CountDownLatch(1)
         val image = Assets.readAsBitmap("jeff_bezos.jpg")
-        try {
-            Amplify.Predictions.identify(
-                IdentifyActionType.DETECT_ENTITIES,
-                image,
-                { result ->
-                    val identifyResult = result as IdentifyEntitiesResult
-                    val metadata = identifyResult.entities.firstOrNull()
-                    Log.i(TAG, "${metadata?.box?.toShortString()}")
-                    latch.countDown()
-                },
-                {
-                    Log.e(TAG, "Entity detection failed", it)
-                    fail()
-                }
-            )
-        } catch (e: Exception) {
-            fail(e.toString())
-        }
+        Amplify.Predictions.identify(
+            IdentifyActionType.DETECT_ENTITIES,
+            image,
+            { result ->
+                val identifyResult = result as IdentifyEntitiesResult
+                val metadata = identifyResult.entities.firstOrNull()
+                Log.i(TAG, "${metadata?.box?.toShortString()}")
+                latch.countDown()
+            },
+            { fail("Entity detection failed: $it") }
+        )
         assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
     }
 
@@ -176,24 +137,17 @@ class PredictionsCanaryTest {
     fun identifyCelebrities() {
         val latch = CountDownLatch(1)
         val image = Assets.readAsBitmap("jeff_bezos.jpg")
-        try {
-            Amplify.Predictions.identify(
-                IdentifyActionType.DETECT_CELEBRITIES,
-                image,
-                { result ->
-                    val identifyResult = result as IdentifyCelebritiesResult
-                    val metadata = identifyResult.celebrities.firstOrNull()
-                    Log.i(TAG, "${metadata?.celebrity?.name}")
-                    latch.countDown()
-                },
-                {
-                    Log.e(TAG, "Entity detection failed", it)
-                    fail()
-                }
-            )
-        } catch (e: Exception) {
-            fail(e.toString())
-        }
+        Amplify.Predictions.identify(
+            IdentifyActionType.DETECT_CELEBRITIES,
+            image,
+            { result ->
+                val identifyResult = result as IdentifyCelebritiesResult
+                val metadata = identifyResult.celebrities.firstOrNull()
+                Log.i(TAG, "${metadata?.celebrity?.name}")
+                latch.countDown()
+            },
+            { fail("Celebrity detection failed: $it") }
+        )
         assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
     }
 
@@ -201,24 +155,17 @@ class PredictionsCanaryTest {
     fun identifyLabels() {
         val latch = CountDownLatch(1)
         val image = Assets.readAsBitmap("jeff_bezos.jpg")
-        try {
-            Amplify.Predictions.identify(
-                LabelType.LABELS,
-                image,
-                { result ->
-                    val identifyResult = result as IdentifyLabelsResult
-                    val label = identifyResult.labels.firstOrNull()
-                    Log.i(TAG, "${label?.name}")
-                    latch.countDown()
-                },
-                {
-                    Log.e(TAG, "Label detection failed", it)
-                    fail()
-                }
-            )
-        } catch (e: Exception) {
-            fail(e.toString())
-        }
+        Amplify.Predictions.identify(
+            LabelType.LABELS,
+            image,
+            { result ->
+                val identifyResult = result as IdentifyLabelsResult
+                val label = identifyResult.labels.firstOrNull()
+                Log.i(TAG, "${label?.name}")
+                latch.countDown()
+            },
+            { fail("Label detection failed: $it") }
+        )
         assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
     }
 
@@ -226,44 +173,30 @@ class PredictionsCanaryTest {
     fun identifyModerationLabels() {
         val latch = CountDownLatch(1)
         val image = Assets.readAsBitmap("jeff_bezos.jpg")
-        try {
-            Amplify.Predictions.identify(
-                LabelType.MODERATION_LABELS,
-                image,
-                { result ->
-                    val identifyResult = result as IdentifyLabelsResult
-                    Log.i(TAG, "${identifyResult.isUnsafeContent}")
-                    latch.countDown()
-                },
-                {
-                    Log.e(TAG, "Identify failed", it)
-                    fail()
-                }
-            )
-        } catch (e: Exception) {
-            fail(e.toString())
-        }
+        Amplify.Predictions.identify(
+            LabelType.MODERATION_LABELS,
+            image,
+            { result ->
+                val identifyResult = result as IdentifyLabelsResult
+                Log.i(TAG, "${identifyResult.isUnsafeContent}")
+                latch.countDown()
+            },
+            { fail("Identify moderation labels failed: $it") }
+        )
         assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
     }
 
     @Test
     fun interpretSentiment() {
         val latch = CountDownLatch(1)
-        try {
-            Amplify.Predictions.interpret(
-                "I like to eat spaghetti",
-                {
-                    Log.i(TAG, "${it.sentiment?.value}")
-                    latch.countDown()
-                },
-                {
-                    Log.e(TAG, "Interpret failed", it)
-                    fail()
-                }
-            )
-        } catch (e: Exception) {
-            fail(e.toString())
-        }
+        Amplify.Predictions.interpret(
+            "I like to eat spaghetti",
+            {
+                Log.i(TAG, "${it.sentiment?.value}")
+                latch.countDown()
+            },
+            { fail("Interpret failed: $it") }
+        )
         assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
     }
 }

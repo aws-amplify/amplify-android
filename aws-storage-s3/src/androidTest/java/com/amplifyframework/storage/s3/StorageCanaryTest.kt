@@ -19,8 +19,6 @@ import androidx.test.core.app.ApplicationProvider
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
 import com.amplifyframework.core.Amplify
-import com.amplifyframework.logging.AndroidLoggingPlugin
-import com.amplifyframework.logging.LogLevel
 import com.amplifyframework.storage.StorageAccessLevel
 import com.amplifyframework.storage.operation.StorageUploadFileOperation
 import com.amplifyframework.storage.options.StoragePagedListOptions
@@ -50,9 +48,7 @@ class StorageCanaryTest {
             try {
                 Amplify.addPlugin(AWSCognitoAuthPlugin())
                 Amplify.addPlugin(AWSS3StoragePlugin())
-                Amplify.addPlugin(AndroidLoggingPlugin(LogLevel.VERBOSE))
                 Amplify.configure(ApplicationProvider.getApplicationContext())
-                Log.i(TAG, "Initialized Amplify")
             } catch (error: AmplifyException) {
                 Log.e(TAG, "Could not initialize Amplify", error)
             }
@@ -64,108 +60,72 @@ class StorageCanaryTest {
         val latch = CountDownLatch(1)
         val raf = createFile(1)
         val stream = FileInputStream(raf)
-        try {
-            Amplify.Storage.uploadInputStream(
-                "ExampleKey",
-                stream,
-                {
-                    Log.i(TAG, "Successfully uploaded: ${it.key}")
-                    latch.countDown()
-                },
-                {
-                    Log.e(TAG, "Upload failed", it)
-                    fail()
-                }
-            )
-        } catch (e: Exception) {
-            fail(e.toString())
-        }
+        val fileKey = "ExampleKey"
+        Amplify.Storage.uploadInputStream(
+            fileKey,
+            stream,
+            { latch.countDown() },
+            { fail("Upload failed: $it") }
+        )
         Assert.assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
+        removeFile(fileKey)
     }
 
     @Test
     fun uploadFile() {
         val latch = CountDownLatch(1)
         val file = createFile(1)
-        try {
-            Amplify.Storage.uploadFile(
-                "ExampleKey",
-                file,
-                {
-                    Log.i(TAG, "Successfully uploaded: ${it.key}")
-                    latch.countDown()
-                },
-                {
-                    Log.e(TAG, "Upload failed", it)
-                    fail()
-                }
-            )
-        } catch (e: Exception) {
-            fail(e.toString())
-        }
+        val fileKey = "ExampleKey"
+        Amplify.Storage.uploadFile(
+            fileKey,
+            file,
+            { latch.countDown() },
+            { fail("Upload failed: $it") }
+        )
         Assert.assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
+        removeFile(fileKey)
     }
 
     @Test
     fun downloadFile() {
-        val latch = CountDownLatch(1)
         val uploadLatch = CountDownLatch(1)
         val file = createFile(1)
         val fileName = "ExampleKey${UUID.randomUUID()}"
         Amplify.Storage.uploadFile(
             fileName,
             file,
-            {
-                Log.i(TAG, "Successfully uploaded: ${it.key}")
-                uploadLatch.countDown()
-            },
-            { Log.e(TAG, "Upload failed", it) }
+            { uploadLatch.countDown() },
+            { fail("Upload failed: $it") }
         )
-        latch.await(TIMEOUT_S, TimeUnit.SECONDS)
-        try {
-            Amplify.Storage.downloadFile(
-                fileName,
-                file,
-                {
-                    Log.i(TAG, "Successfully downloaded: ${it.file.name}")
-                    latch.countDown()
-                },
-                {
-                    Log.e(TAG, "Download Failure", it)
-                    fail()
-                }
-            )
-        } catch (e: Exception) {
-            fail(e.toString())
-        }
-        Assert.assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
+        uploadLatch.await(TIMEOUT_S, TimeUnit.SECONDS)
+
+        val downloadLatch = CountDownLatch(1)
+        Amplify.Storage.downloadFile(
+            fileName,
+            file,
+            { downloadLatch.countDown() },
+            { fail("Download failed: $it") }
+        )
+        Assert.assertTrue(downloadLatch.await(TIMEOUT_S, TimeUnit.SECONDS))
     }
 
     @Test
     fun getUrl() {
         val latch = CountDownLatch(1)
-        try {
-            Amplify.Storage.getUrl(
-                "ExampleKey",
-                {
-                    Log.i(TAG, "Successfully generated: ${it.url}")
-                    latch.countDown()
-                },
-                {
-                    Log.e(TAG, "URL generation failure", it)
-                    fail()
-                }
-            )
-        } catch (e: Exception) {
-            fail(e.toString())
-        }
+        Amplify.Storage.getUrl(
+            "ExampleKey",
+            {
+                Log.i(TAG, "Successfully generated: ${it.url}")
+                latch.countDown()
+            },
+            { fail("URL generation failure: $it") }
+        )
         Assert.assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
     }
 
     @Test
     fun getTransfer() {
         val uploadLatch = CountDownLatch(1)
-        val latch = CountDownLatch(1)
         val file = createFile(100)
         val fileName = "ExampleKey${UUID.randomUUID()}"
         val transferId = AtomicReference<String>()
@@ -181,28 +141,22 @@ class StorageCanaryTest {
                 uploadLatch.countDown()
             },
             { Log.i(TAG, "Successfully uploaded: ${it.key}") },
-            { Log.e(TAG, "Upload failed", it) }
+            { fail("Upload failed: $it") }
         )
         opContainer.set(op)
         transferId.set(op.transferId)
         uploadLatch.await(TIMEOUT_S, TimeUnit.SECONDS)
 
-        try {
-            Amplify.Storage.getTransfer(
-                transferId.get(),
-                { operation ->
-                    Log.i(TAG, "Current State" + operation.transferState)
-                    latch.countDown()
-                },
-                {
-                    Log.e(TAG, "Failed to query transfer", it)
-                    fail()
-                }
-            )
-        } catch (e: Exception) {
-            fail(e.toString())
-        }
-        Assert.assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
+        val transferLatch = CountDownLatch(1)
+        Amplify.Storage.getTransfer(
+            transferId.get(),
+            { operation ->
+                Log.i(TAG, "Current State" + operation.transferState)
+                transferLatch.countDown()
+            },
+            { fail("Failed to query transfer: $it") }
+        )
+        Assert.assertTrue(transferLatch.await(TIMEOUT_S, TimeUnit.SECONDS))
     }
 
     @Test
@@ -210,47 +164,32 @@ class StorageCanaryTest {
         val options = StoragePagedListOptions.builder()
             .setPageSize(1000)
             .build()
-
         val latch = CountDownLatch(1)
-        try {
-            Amplify.Storage.list(
-                "",
-                options,
-                { result ->
-                    result.items.forEach { item ->
-                        Log.i(TAG, "Item: ${item.key}")
-                    }
-                    latch.countDown()
-                },
-                {
-                    Log.e(TAG, "List failure", it)
-                    fail()
+        Amplify.Storage.list(
+            "",
+            options,
+            { result ->
+                result.items.forEach { item ->
+                    Log.i(TAG, "Item: ${item.key}")
                 }
-            )
-        } catch (e: Exception) {
-            fail(e.toString())
-        }
+                latch.countDown()
+            },
+            { fail("Failed to list items: $it") }
+        )
         Assert.assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
     }
 
     @Test
     fun remove() {
         val latch = CountDownLatch(1)
-        try {
-            Amplify.Storage.remove(
-                "myUploadedFileName.txt",
-                {
-                    Log.i(TAG, "Successfully removed: ${it.key}")
-                    latch.countDown()
-                },
-                {
-                    Log.e(TAG, "Remove failure", it)
-                    fail()
-                }
-            )
-        } catch (e: Exception) {
-            fail(e.toString())
-        }
+        Amplify.Storage.remove(
+            "myUploadedFileName.txt",
+            {
+                Log.i(TAG, "Successfully removed: ${it.key}")
+                latch.countDown()
+            },
+            { fail("Failed to remove file: $it") }
+        )
         Assert.assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
     }
 
@@ -262,5 +201,15 @@ class StorageCanaryTest {
         raf.close()
         file.deleteOnExit()
         return file
+    }
+
+    private fun removeFile(fileKey: String) {
+        val latch = CountDownLatch(1)
+        Amplify.Storage.remove(
+            fileKey,
+            { latch.countDown() },
+            { Log.e(TAG, "Failed to remove file", it) }
+        )
+        latch.await(TIMEOUT_S, TimeUnit.SECONDS)
     }
 }
