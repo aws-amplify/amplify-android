@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Utility for converting a Model to/from a Map&lt;String, Object&gt;.
@@ -74,12 +75,12 @@ public final class ModelConverter {
                                                                     ModelSchema schema)
             throws AmplifyException {
         final Object fieldValue = extractFieldValue(modelField.getName(), instance, schema);
-        if (modelField.isModel() && (fieldValue instanceof Model)  || fieldValue instanceof LazyModel) {
+        if ((modelField.isModel() && fieldValue instanceof Model)  || fieldValue instanceof LazyModel) {
             Model associatedModel;
             if (fieldValue instanceof Model){
                 associatedModel = (Model) fieldValue;
             } else {
-                associatedModel = ((LazyModel) fieldValue).getValue();
+                associatedModel = Objects.requireNonNull(((LazyModel<?>) fieldValue).getValue());
             }
             ModelSchema childSchema =
                     SchemaRegistry.instance().getModelSchemaForModelClass(associatedModel.getModelName());

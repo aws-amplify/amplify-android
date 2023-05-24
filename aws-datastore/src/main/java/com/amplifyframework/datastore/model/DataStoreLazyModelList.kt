@@ -1,5 +1,6 @@
 package com.amplifyframework.datastore.model
 
+import android.util.Log
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.core.model.LazyList
@@ -11,9 +12,11 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.toList
 import com.amplifyframework.core.Amplify as coreAmplify
 
-class DataStoreLazyModelList<M : Model>(private val clazz: Class<M>,
-                                        private val keyMap: Map<String, Any>
-                                        , private val predicate: DatastoreLazyQueryPredicate<M>) : LazyList<M>() {
+class DataStoreLazyModelList<M : Model>(
+    private val clazz: Class<M>,
+    private val keyMap: Map<String, Any>,
+    private val predicate: DatastoreLazyQueryPredicate<M>
+) : LazyList<M>() {
 
     private var value: List<M>? = null
 
@@ -24,21 +27,27 @@ class DataStoreLazyModelList<M : Model>(private val clazz: Class<M>,
     @OptIn(ExperimentalCoroutinesApi::class)
     override suspend fun get(): List<M>? {
         value?.let { return value }
-        value = Amplify.DataStore.query(clazz.kotlin, Where.matches(predicate.createPredicate(clazz, keyMap))
-        ).toList()
+        try {
+            value = Amplify.DataStore.query(clazz.kotlin, Where.matches(predicate.createPredicate(clazz, keyMap)))
+                .toList()
+        } catch (error: DataStoreException) {
+            Log.e("MyAmplifyApp", "Query failure", error)
+        }
         return value
     }
 
     override fun get(onSuccess: Consumer<List<M>>, onFailure: Consumer<AmplifyException>) {
         val onQuerySuccess = Consumer<Iterator<M>> {
-            onSuccess.accept(it.asSequence().toList()) }
-        val onApiFailure = Consumer<DataStoreException> {
-            onFailure.accept(it)}
+            val result = it.asSequence().toList()
+            value = result
+            onSuccess.accept(result)
+        }
+        val onApiFailure = Consumer<DataStoreException> { onFailure.accept(it) }
         coreAmplify.DataStore.query(
             clazz,
             predicate.createPredicate(clazz, keyMap),
             onQuerySuccess,
-            onApiFailure)
+            onApiFailure
+        )
     }
-
 }
