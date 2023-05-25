@@ -1,3 +1,18 @@
+/*
+ * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
 package com.amplifyframework.api.aws
 
 import android.util.Log
@@ -13,7 +28,7 @@ import com.amplifyframework.core.Amplify as coreAmplify
 
 class AppSyncLazyListModel<M : Model>(
     private val clazz: Class<M>,
-    private val keyMap: Map<String, Any>,
+    private val keyMap: List<Map<String, Any>>,
     private val predicate: AppSyncLazyQueryPredicate<M>
 ) : LazyList<M>() {
 
@@ -29,7 +44,7 @@ class AppSyncLazyListModel<M : Model>(
             value = Amplify.API.query(
                 AppSyncGraphQLRequestFactory.buildQuery<PaginatedResult<M>, M>(
                     clazz,
-                    predicate.createPredicate(clazz, keyMap)
+                    predicate.createListPredicate(clazz, keyMap)
                 )
             ).data.items.toList() // TODO : retrieve all pages of items?
         } catch (error: ApiException) {
@@ -39,6 +54,10 @@ class AppSyncLazyListModel<M : Model>(
     }
 
     override fun get(onSuccess: Consumer<List<M>>, onFailure: Consumer<AmplifyException>) {
+        value?.let { modelListValue ->
+            onSuccess.accept(modelListValue)
+            return
+        }
         val onQuerySuccess = Consumer<GraphQLResponse<PaginatedResult<M>>> {
             val result = it.data.items.toList() // TODO : retrieve all pages of items?
             value = result
@@ -46,7 +65,7 @@ class AppSyncLazyListModel<M : Model>(
         }
         val onApiFailure = Consumer<ApiException> { onFailure.accept(it) }
         coreAmplify.API.query(
-            AppSyncGraphQLRequestFactory.buildQuery(clazz, predicate.createPredicate(clazz, keyMap)),
+            AppSyncGraphQLRequestFactory.buildQuery(clazz, predicate.createListPredicate(clazz, keyMap)),
             onQuerySuccess,
             onApiFailure
         )

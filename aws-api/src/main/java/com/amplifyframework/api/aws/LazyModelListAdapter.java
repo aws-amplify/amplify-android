@@ -1,3 +1,18 @@
+/*
+ * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
 package com.amplifyframework.api.aws;
 
 import android.util.Log;
@@ -5,6 +20,7 @@ import android.util.Log;
 import com.amplifyframework.core.model.LazyList;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.SchemaRegistry;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
@@ -15,12 +31,15 @@ import com.google.gson.JsonSerializer;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 public class LazyModelListAdapter<M extends Model> implements JsonDeserializer<LazyList<M>>,
         JsonSerializer<LazyList<M>> {
+
+    private static final String ITEMS_KEY = "items";
 
     @SuppressWarnings("unchecked")
     @Override
@@ -32,16 +51,20 @@ public class LazyModelListAdapter<M extends Model> implements JsonDeserializer<L
         Log.d("LazyModelAdapter", "json: "+ json + " typeOfT " + typeOfT +
                 " typeOfT type name" + type + " context " +
                 context);
-         Map<String, Object> predicateKeyMap = new HashMap<>();
-        Iterator<String> primaryKeysIterator = SchemaRegistry.instance()
+        List<Map<String, Object>> predicateKeyList = new ArrayList<>();
+        List<String> primaryKeys = SchemaRegistry.instance()
                 .getModelSchemaForModelClass(type)
-                .getPrimaryIndexFields().iterator();
+                .getPrimaryIndexFields();
         JsonObject jsonObject = (JsonObject) json;
-        while (primaryKeysIterator.hasNext()){
-            String primaryKey = primaryKeysIterator.next();
-            predicateKeyMap.put(primaryKey, jsonObject.get(primaryKey));
+        JsonArray items = jsonObject.getAsJsonArray(ITEMS_KEY);
+        for (JsonElement jsonItem : items) {
+            Map<String, Object> predicateKeyMap = new HashMap<>();
+            for (String primaryKey : primaryKeys) {
+                predicateKeyMap.put(primaryKey, jsonItem.getAsJsonObject().get(primaryKey));
+            }
+            predicateKeyList.add(predicateKeyMap);
         }
-        return new AppSyncLazyListModel<>(type, predicateKeyMap, new AppSyncLazyQueryPredicate<>());
+        return new AppSyncLazyListModel<>(type, predicateKeyList, new AppSyncLazyQueryPredicate<>());
     }
 
     @Override
