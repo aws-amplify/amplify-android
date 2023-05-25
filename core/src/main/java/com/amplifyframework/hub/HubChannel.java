@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -62,6 +62,11 @@ public enum HubChannel {
      * Hub messages relating to Amplify Predictions.
      */
     PREDICTIONS(CategoryType.PREDICTIONS),
+
+    /**
+     * Hub messages relating to Amplify Notifications.
+     */
+    NOTIFICATIONS(CategoryType.NOTIFICATIONS),
 
     /**
      * Hub messages relating to Amplify Storage.

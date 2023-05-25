@@ -41,13 +41,16 @@ import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.appsync.AppSyncClient;
+import com.amplifyframework.datastore.events.NetworkStatusEvent;
 import com.amplifyframework.datastore.model.ModelProviderLocator;
 import com.amplifyframework.datastore.storage.ItemChangeMapper;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter;
 import com.amplifyframework.datastore.syncengine.Orchestrator;
+import com.amplifyframework.datastore.syncengine.ReachabilityMonitor;
 import com.amplifyframework.hub.HubChannel;
+import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.logging.Logger;
 
 import org.json.JSONObject;
@@ -90,6 +93,8 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
 
     private final boolean isSyncRetryEnabled;
 
+    private final ReachabilityMonitor reachabilityMonitor;
+
     private AWSDataStorePlugin(
             @NonNull ModelProvider modelProvider,
             @NonNull SchemaRegistry schemaRegistry,
@@ -100,6 +105,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
         this.authModeStrategy = AuthModeStrategyType.DEFAULT;
         this.userProvidedConfiguration = userProvidedConfiguration;
         this.isSyncRetryEnabled = userProvidedConfiguration != null && userProvidedConfiguration.getDoSyncRetry();
+        this.reachabilityMonitor = ReachabilityMonitor.Companion.create();
         // Used to interrogate plugins, to understand if sync should be automatically turned on
         this.orchestrator = new Orchestrator(
             modelProvider,
@@ -108,7 +114,8 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             AppSyncClient.via(api),
             () -> pluginConfiguration,
             () -> api.getPlugins().isEmpty() ? Orchestrator.State.LOCAL_ONLY : Orchestrator.State.SYNC_VIA_API,
-                isSyncRetryEnabled
+            reachabilityMonitor,
+            isSyncRetryEnabled
         );
 
     }
@@ -130,6 +137,9 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             SQLiteStorageAdapter.forModels(schemaRegistry, modelProvider) :
             builder.storageAdapter;
         this.categoryInitializationsPending = new CountDownLatch(1);
+        this.reachabilityMonitor = builder.reachabilityMonitor == null ?
+            ReachabilityMonitor.Companion.create() :
+            builder.reachabilityMonitor;
 
         // Used to interrogate plugins, to understand if sync should be automatically turned on
         this.orchestrator = new Orchestrator(
@@ -139,6 +149,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             AppSyncClient.via(api, this.authModeStrategy),
             () -> pluginConfiguration,
             () -> api.getPlugins().isEmpty() ? Orchestrator.State.LOCAL_ONLY : Orchestrator.State.SYNC_VIA_API,
+            reachabilityMonitor,
             isSyncRetryEnabled
         );
     }
@@ -255,6 +266,20 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             event -> InitializationStatus.SUCCEEDED.toString().equals(event.getName()),
             event -> categoryInitializationsPending.countDown()
         );
+
+        reachabilityMonitor.configure(context);
+
+        waitForInitialization().subscribe(this::observeNetworkStatus);
+    }
+
+    private void publishNetworkStatusEvent(boolean active) {
+        Amplify.Hub.publish(HubChannel.DATASTORE,
+                HubEvent.create(DataStoreChannelEventName.NETWORK_STATUS, new NetworkStatusEvent(active)));
+    }
+
+    private void observeNetworkStatus() {
+        reachabilityMonitor.getObservable()
+                .subscribe(this::publishNetworkStatusEvent);
     }
 
     @WorkerThread
@@ -288,6 +313,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
         return Completable.fromAction(() -> categoryInitializationsPending.await())
             .timeout(LIFECYCLE_TIMEOUT_MS, TimeUnit.MILLISECONDS)
             .subscribeOn(Schedulers.io())
+            .doOnComplete(() -> LOG.info("DataStore plugin initialized."))
             .doOnError(error -> LOG.error("DataStore initialization timed out.", error));
     }
 
@@ -657,6 +683,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
         private ApiCategory apiCategory;
         private AuthModeStrategyType authModeStrategy;
         private LocalStorageAdapter storageAdapter;
+        private ReachabilityMonitor reachabilityMonitor;
         private boolean isSyncRetryEnabled;
 
         private Builder() {}
@@ -715,6 +742,16 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
         }
 
         /**
+         * Package-private method to allow for injection of a ReachabilityMonitor for testing purposes.
+         * @param reachabilityMonitor An instance that implements LocalStorageAdapter.
+         * @return Current builder instance, for fluent construction of plugin.
+         */
+        public Builder reachabilityMonitor(ReachabilityMonitor reachabilityMonitor) {
+            this.reachabilityMonitor = reachabilityMonitor;
+            return this;
+        }
+
+        /**
          * Sets the authorization mode strategy which will be used by DataStore sync engine
          * when interacting with the API plugin.
          * @param authModeStrategy One of the options from the {@link AuthModeStrategyType} enum.
@@ -727,10 +764,14 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
 
         /**
          * Enables Retry on DataStore sync engine.
+         * @deprecated This configuration will be deprecated in a future version.
          * @param isSyncRetryEnabled is sync retry enabled.
          * @return An implementation of the {@link ModelProvider} interface.
          */
+        @Deprecated
         public Builder isSyncRetryEnabled(Boolean isSyncRetryEnabled) {
+            LOG.warn("The isSyncRetryEnabled configuration will be deprecated in a future version."
+                    + " Please discontinue use of this API.");
             this.isSyncRetryEnabled = isSyncRetryEnabled;
             return this;
         }

@@ -25,6 +25,7 @@ import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.api.graphql.PaginatedResult;
 import com.amplifyframework.api.graphql.QueryType;
 import com.amplifyframework.api.graphql.SubscriptionType;
+import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.model.AuthRule;
 import com.amplifyframework.core.model.AuthStrategy;
 import com.amplifyframework.core.model.LazyModel;
@@ -51,6 +52,7 @@ import com.amplifyframework.core.model.query.predicate.QueryPredicateGroup;
 import com.amplifyframework.core.model.query.predicate.QueryPredicateOperation;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.DataStoreException;
+import com.amplifyframework.logging.Logger;
 import com.amplifyframework.util.Casing;
 import com.amplifyframework.util.TypeMaker;
 
@@ -76,6 +78,8 @@ import java.util.Map;
  * and AppSync-specific field names (`_version`, `_deleted`, etc.)
  */
 final class AppSyncRequestFactory {
+    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
+
     private AppSyncRequestFactory() {}
 
     /**
@@ -488,6 +492,8 @@ final class AppSyncRequestFactory {
         } else if ((modelField.isModel()|| modelField.isLazyModel()) && fieldValue instanceof Map) {
             return ((Map<?, ?>) fieldValue).get("id");
         } else {
+            LOG.warn(String.format("Can't extract identifier: modelField=%s, isModel=%s, fieldValue=%s",
+                    modelField.getName(), modelField.isModel(), fieldValue));
             throw new IllegalStateException("Associated data is not Model or Map.");
         }
     }
@@ -521,16 +527,7 @@ final class AppSyncRequestFactory {
         // If a field is a CustomType, it's value is either a SerializedCustomType
         // or a List of SerializedCustomType
         if (customTypeData instanceof SerializedCustomType) {
-            final Map<String, Object> result = new HashMap<>();
-            for (Map.Entry<String, Object> entry :
-                    ((SerializedCustomType) customTypeData).getSerializedData().entrySet()) {
-                if (entry.getValue() instanceof SerializedCustomType) {
-                    result.put(entry.getKey(), extractCustomTypeFieldValue(entry.getKey(), entry.getValue()));
-                } else {
-                    result.put(entry.getKey(), entry.getValue());
-                }
-            }
-            return result;
+            return ((SerializedCustomType) customTypeData).getFlatSerializedData();
         }
 
         if (customTypeData instanceof List) {
@@ -539,7 +536,7 @@ final class AppSyncRequestFactory {
             List<Object> customTypeList = (List<Object>) customTypeData;
             for (Object item : customTypeList) {
                 if (item instanceof SerializedCustomType) {
-                    result.add(extractCustomTypeFieldValue(fieldName, item));
+                    result.add(((SerializedCustomType) item).getFlatSerializedData());
                 } else {
                     result.add(item);
                 }

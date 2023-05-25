@@ -23,6 +23,7 @@ import com.amplifyframework.storage.StorageCategoryBehavior;
 import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.options.StorageDownloadFileOptions;
 import com.amplifyframework.storage.options.StorageListOptions;
+import com.amplifyframework.storage.options.StoragePagedListOptions;
 import com.amplifyframework.storage.options.StorageRemoveOptions;
 import com.amplifyframework.storage.options.StorageUploadFileOptions;
 import com.amplifyframework.storage.options.StorageUploadInputStreamOptions;
@@ -45,7 +46,7 @@ import java.util.concurrent.TimeUnit;
  * performing various operations.
  */
 public final class SynchronousStorage {
-    private static final long STORAGE_OPERATION_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(5);
+    private static final long STORAGE_OPERATION_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(50);
     private final StorageCategoryBehavior asyncDelegate;
 
     private SynchronousStorage(StorageCategoryBehavior asyncDelegate) {
@@ -257,6 +258,7 @@ public final class SynchronousStorage {
      * @throws StorageException if list fails or times out
      */
     @NonNull
+    @SuppressWarnings("deprecation")
     public StorageListResult list(
             @NonNull String path,
             @NonNull StorageListOptions options,
@@ -264,6 +266,26 @@ public final class SynchronousStorage {
     ) throws StorageException {
         return Await.<StorageListResult, StorageException>result(timeoutMs, (onResult, onError) ->
                 asyncDelegate.list(path, options, onResult, onError)
+        );
+    }
+
+    /**
+     * List the files in S3 bucket synchronously.
+     *
+     * @param path      Path inside S3 bucket to list files from
+     * @param options   Paged list options
+     * @param timeoutMs Custom time-out duration in milliseconds
+     * @return List operation result containing list of stored objects
+     * @throws StorageException if list fails or times out
+     */
+    @NonNull
+    public StorageListResult list(
+        @NonNull String path,
+        @NonNull StoragePagedListOptions options,
+        long timeoutMs
+    ) throws StorageException {
+        return Await.<StorageListResult, StorageException>result(timeoutMs, (onResult, onError) ->
+            asyncDelegate.list(path, options, onResult, onError)
         );
     }
 }

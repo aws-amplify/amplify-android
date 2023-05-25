@@ -1,0 +1,17 @@
+{
+  "LABEL": {
+    "name": "Title Needs Formatting",
+    "color": "FF5733"
+  },
+  "CHECKS": {
+    "prefixes": ["chore: ", "refactor: ", "perf: ", "test: ", "docs: ", "release: "],
+    "regexp": "(fix|feat)\\((all|analytics|api|auth|core|datastore|geo|predictions|storage|notifications)\\): ",
+    "regexpFlags": "",
+    "ignoreLabels" : ["ignore-pr-title"]
+  },
+  "MESSAGES": {
+    "success": "All OK",
+    "failure": "Your title is not formatted correctly. Please see https://github.com/aws-amplify/amplify-android/blob/main/CONTRIBUTING.md#pull-request-guidelines for guidelines.",
+    "notice": ""
+  }
+}

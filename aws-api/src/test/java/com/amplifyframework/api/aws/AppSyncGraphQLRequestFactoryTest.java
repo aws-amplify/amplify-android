@@ -22,7 +22,11 @@ import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.core.model.AuthStrategy;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.annotations.AuthRule;
+import com.amplifyframework.core.model.annotations.BelongsTo;
+import com.amplifyframework.core.model.annotations.HasMany;
+import com.amplifyframework.core.model.annotations.Index;
 import com.amplifyframework.core.model.annotations.ModelConfig;
+import com.amplifyframework.core.model.annotations.ModelField;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.datastore.DataStoreException;
@@ -40,6 +44,7 @@ import org.robolectric.RobolectricTestRunner;
 import org.skyscreamer.jsonassert.JSONAssert;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -103,13 +108,13 @@ public final class AppSyncGraphQLRequestFactoryTest {
         // Arrange a person to delete, using UUID from test resource file
         final String expectedId = "dfcdac69-0662-41df-a67b-48c62a023f97";
         final Person tony = Person.builder()
-            .firstName("Tony")
-            .lastName("Swanson")
-            .age(19)
-            .dob(new Temporal.Date("2000-01-15"))
-            .id(expectedId)
-            .relationship(MaritalStatus.single)
-            .build();
+                                .firstName("Tony")
+                                .lastName("Swanson")
+                                .age(19)
+                                .dob(new Temporal.Date("2000-01-15"))
+                                .id(expectedId)
+                                .relationship(MaritalStatus.single)
+                                .build();
 
         // Act: build a mutation
         GraphQLRequest<Person> requestToDeleteTony = AppSyncGraphQLRequestFactory.buildMutation(
@@ -133,11 +138,11 @@ public final class AppSyncGraphQLRequestFactoryTest {
     @Test
     public void validateDeleteWithCustomPrimaryKey() throws AmplifyException, JSONException {
         final Item item = Item.builder()
-                .orderId("123a7asa")
-                .status(Status.IN_TRANSIT)
-                .createdAt(new Temporal.DateTime("2021-04-20T15:20:32.651Z"))
-                .name("Gummy Bears")
-                .build();
+                              .orderId("123a7asa")
+                              .status(Status.IN_TRANSIT)
+                              .createdAt(new Temporal.DateTime("2021-04-20T15:20:32.651Z"))
+                              .name("Gummy Bears")
+                              .build();
         JSONAssert.assertEquals(
             Resources.readAsString("delete-item.txt"),
             AppSyncGraphQLRequestFactory.buildMutation(item, QueryPredicates.all(), MutationType.DELETE).getContent(),
@@ -154,30 +159,29 @@ public final class AppSyncGraphQLRequestFactoryTest {
         // Arrange a person to delete, using UUID from test resource file
         final String expectedId = "dfcdac69-0662-41df-a67b-48c62a023f97";
         final Person tony = Person.builder()
-                .firstName("Tony")
-                .lastName("Swanson")
-                .age(19)
-                .dob(new Temporal.Date("2000-01-15"))
-                .id(expectedId)
-                .relationship(MaritalStatus.single)
-                .build();
+                                .firstName("Tony")
+                                .lastName("Swanson")
+                                .age(19)
+                                .dob(new Temporal.Date("2000-01-15"))
+                                .id(expectedId)
+                                .relationship(MaritalStatus.single)
+                                .build();
 
         // Act: build a mutation
         GraphQLRequest<Person> requestToDeleteTony = AppSyncGraphQLRequestFactory.buildMutation(
-                tony, Person.ID.beginsWith("e6"), MutationType.UPDATE
+            tony, Person.ID.beginsWith("e6"), MutationType.UPDATE
         );
 
         // Assert: expected is actual
         JSONAssert.assertEquals(
-                Resources.readAsString("update-person-with-predicate.txt"),
-                requestToDeleteTony.getContent(),
-                true
+            Resources.readAsString("update-person-with-predicate.txt"),
+            requestToDeleteTony.getContent(),
+            true
         );
     }
 
     /**
-     * Validates construction of a subscription request using a class and an
-     * {@link SubscriptionType}.
+     * Validates construction of a subscription request using a class and an {@link SubscriptionType}.
      * @throws JSONException from JSONAssert.assertEquals
      */
     @Test
@@ -201,21 +205,21 @@ public final class AppSyncGraphQLRequestFactoryTest {
     public void validateDateSerializer() throws JSONException {
         // Create expectation
         final Meeting meeting1 = Meeting.builder()
-                .name("meeting1")
-                .id("45a5f600-8aa8-41ac-a529-aed75036f5be")
-                .date(new Temporal.Date("2001-02-03"))
-                .dateTime(new Temporal.DateTime("2001-02-03T01:30:15Z"))
-                .time(new Temporal.Time("01:22:33"))
-                .timestamp(new Temporal.Timestamp(1234567890000L, TimeUnit.MILLISECONDS))
-                .build();
+                                     .name("meeting1")
+                                     .id("45a5f600-8aa8-41ac-a529-aed75036f5be")
+                                     .date(new Temporal.Date("2001-02-03"))
+                                     .dateTime(new Temporal.DateTime("2001-02-03T01:30:15Z"))
+                                     .time(new Temporal.Time("01:22:33"))
+                                     .timestamp(new Temporal.Timestamp(1234567890000L, TimeUnit.MILLISECONDS))
+                                     .build();
 
         // Act: build a mutation to create a Meeting
         GraphQLRequest<Meeting> requestToCreateMeeting1 =
-                AppSyncGraphQLRequestFactory.buildMutation(meeting1, QueryPredicates.all(), MutationType.CREATE);
+            AppSyncGraphQLRequestFactory.buildMutation(meeting1, QueryPredicates.all(), MutationType.CREATE);
 
         // Assert: expected is actual
         JSONAssert.assertEquals(Resources.readAsString("create-meeting1.txt"),
-                requestToCreateMeeting1.getContent(), true);
+            requestToCreateMeeting1.getContent(), true);
     }
 
     /**
@@ -231,10 +235,11 @@ public final class AppSyncGraphQLRequestFactoryTest {
         // Act
         Todo todo = new Todo("111", "Mop the floor", null);
         @SuppressWarnings("unchecked")
-        Map<String, Object> actual = (Map<String, Object>)
-            AppSyncGraphQLRequestFactory.buildMutation(todo, QueryPredicates.all(), MutationType.CREATE)
-                .getVariables()
-                .get("input");
+        Map<String, Object> actual = (Map<String, Object>) AppSyncGraphQLRequestFactory.buildMutation(
+            todo,
+            QueryPredicates.all(),
+            MutationType.CREATE
+        ).getVariables().get("input");
 
         // Assert
         assertEquals(expected, actual);
@@ -254,16 +259,40 @@ public final class AppSyncGraphQLRequestFactoryTest {
         // Act
         Todo todo = new Todo("111", "Mop the floor", "johndoe");
         @SuppressWarnings("unchecked")
-        Map<String, Object> actual = (Map<String, Object>)
-            AppSyncGraphQLRequestFactory.buildMutation(todo, QueryPredicates.all(), MutationType.CREATE)
-                .getVariables()
-                .get("input");
+        Map<String, Object> actual = (Map<String, Object>) AppSyncGraphQLRequestFactory.buildMutation(
+            todo,
+            QueryPredicates.all(),
+            MutationType.CREATE).getVariables().get("input");
 
         // Assert
         assertEquals(expected, actual);
     }
 
-    @ModelConfig(authRules = { @AuthRule(allow = AuthStrategy.OWNER) })
+    /**
+     * Verify that a nullable relation can have a null (missing) value in the GraphQL request.
+     */
+    @Test
+    public void nullableAssociationCanBeNull() {
+        // Expect
+        Map<String, Object> expected = new HashMap<>();
+        expected.put("id", "abc");
+        expected.put("text", "text");
+
+        // Act
+        // Create a Note that doesn't have a value for the optional measurement relation.
+        Note note = new Note("abc", "text", null);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> actual = (Map<String, Object>) AppSyncGraphQLRequestFactory.buildMutation(
+            note,
+            QueryPredicates.all(),
+            MutationType.CREATE
+        ).getVariables().get("input");
+
+        // Assert
+        assertEquals(expected, actual);
+    }
+
+    @ModelConfig(authRules = {@AuthRule(allow = AuthStrategy.OWNER)})
     static final class Todo implements Model {
         @com.amplifyframework.core.model.annotations.ModelField(targetType = "ID", isRequired = true)
         private final String id;
@@ -274,7 +303,8 @@ public final class AppSyncGraphQLRequestFactoryTest {
         @com.amplifyframework.core.model.annotations.ModelField
         private final String owner;
 
-        @SuppressWarnings("ParameterName") // checkstyle wants variable names to be >2 chars, but id is only 2.
+        @SuppressWarnings("ParameterName")
+            // checkstyle wants variable names to be >2 chars, but id is only 2.
         Todo(String id, String description, String owner) {
             this.id = id;
             this.description = description;
@@ -283,6 +313,51 @@ public final class AppSyncGraphQLRequestFactoryTest {
 
         public String getId() {
             return "111";
+        }
+    }
+
+    @ModelConfig(authRules = {@AuthRule(allow = AuthStrategy.OWNER)})
+    @Index(name = "byMeasurement", fields = "measurement_id")
+    static final class Note implements Model {
+        @ModelField(targetType = "ID", isRequired = true)
+        private final String id;
+        @ModelField(targetType = "String")
+        private final String text;
+
+        @ModelField(targetType = "Measurement")
+        @BelongsTo(targetName = "measurement_id", targetNames = "measurement_id", type = Measurement.class)
+        private final Measurement measurement;
+
+        private Note(String idString, String text, Measurement measurement) {
+            this.id = idString;
+            this.text = text;
+            this.measurement = measurement;
+        }
+
+        public String getId() {
+            return id;
+        }
+    }
+
+    @ModelConfig(authRules = {@AuthRule(allow = AuthStrategy.OWNER)})
+    static final class Measurement implements Model {
+        @ModelField(targetType = "ID")
+        private final String id;
+
+        @ModelField(targetType = "Int")
+        private final Integer value;
+
+        @ModelField(targetType = "Note")
+        @HasMany(associatedWith = "Measurement", type = Note.class)
+        private final List<Note> notes = null;
+
+        Measurement(String idString, Integer value) {
+            this.id = idString;
+            this.value = value;
+        }
+
+        public String getId() {
+            return id;
         }
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -21,10 +21,11 @@ import com.amplifyframework.api.aws.sigv4.ApiKeyAuthProvider;
 import com.amplifyframework.api.aws.sigv4.CognitoUserPoolsAuthProvider;
 import com.amplifyframework.api.aws.sigv4.FunctionAuthProvider;
 import com.amplifyframework.api.aws.sigv4.OidcAuthProvider;
-
-import com.amazonaws.auth.AWSCredentialsProvider;
+import com.amplifyframework.auth.CognitoCredentialsProvider;
 
 import java.util.Objects;
+
+import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider;
 
 /**
  * Wrapper class to contain Auth providers for
@@ -32,7 +33,7 @@ import java.util.Objects;
  */
 public final class ApiAuthProviders {
     private final ApiKeyAuthProvider apiKeyAuthProvider;
-    private final AWSCredentialsProvider awsCredentialsProvider;
+    private final CredentialsProvider awsCredentialsProvider;
     private final CognitoUserPoolsAuthProvider cognitoUserPoolsAuthProvider;
     private final OidcAuthProvider oidcAuthProvider;
     private final FunctionAuthProvider functionAuthProvider;
@@ -55,9 +56,9 @@ public final class ApiAuthProviders {
 
     /**
      * Gets the AWS Credentials provider.
-     * @return an implementation of {@link AWSCredentialsProvider}
+     * @return an implementation of {@link CredentialsProvider}
      */
-    public AWSCredentialsProvider getAWSCredentialsProvider() {
+    public CredentialsProvider getAWSCredentialsProvider() {
         return this.awsCredentialsProvider;
     }
 
@@ -109,7 +110,7 @@ public final class ApiAuthProviders {
      */
     public static final class Builder {
         private ApiKeyAuthProvider apiKeyAuthProvider;
-        private AWSCredentialsProvider awsCredentialsProvider;
+        private CredentialsProvider awsCredentialsProvider = new CognitoCredentialsProvider();
         private CognitoUserPoolsAuthProvider cognitoUserPoolsAuthProvider;
         private OidcAuthProvider oidcAuthProvider;
         private FunctionAuthProvider functionAuthProvider;
@@ -126,10 +127,10 @@ public final class ApiAuthProviders {
 
         /**
          * Assigns an AWS credentials provider.
-         * @param provider an instance of {@link AWSCredentialsProvider}
+         * @param provider an instance of {@link CredentialsProvider}
          * @return this builder object for chaining
          */
-        public ApiAuthProviders.Builder awsCredentialsProvider(@NonNull AWSCredentialsProvider provider) {
+        public ApiAuthProviders.Builder awsCredentialsProvider(@NonNull CredentialsProvider provider) {
             ApiAuthProviders.Builder.this.awsCredentialsProvider = Objects.requireNonNull(provider);
             return ApiAuthProviders.Builder.this;
         }
@@ -177,7 +178,7 @@ public final class ApiAuthProviders {
             return ApiAuthProviders.Builder.this.apiKeyAuthProvider;
         }
 
-        AWSCredentialsProvider getAWSCredentialsProvider() {
+        CredentialsProvider getAWSCredentialsProvider() {
             return ApiAuthProviders.Builder.this.awsCredentialsProvider;
         }
 

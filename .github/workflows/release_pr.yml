@@ -9,7 +9,7 @@ on:
 env:
   GIT_USER_NAME: amplify-android-dev+ghops
   GIT_USER_EMAIL: amplify-android-dev+ghops@amazon.com
-  BASE_BRANCH: main
+  BASE_BRANCH: ${{ github.ref_name }}
 jobs:
   create_pr_for_next_release:
     runs-on: ubuntu-latest
@@ -38,7 +38,7 @@ jobs:
         bundle exec fastlane android configure_git_options git_user_email:$GIT_USER_EMAIL git_user_name:$GIT_USER_NAME
     - name: Create/checkout a branch for the release
       run: |
-        branch_name=bump_version
+        branch_name=bump_version_${{ env.BASE_BRANCH }}
         git fetch --all
         (git branch -D $branch_name &>/dev/null) && (echo 'Existing $branch_name branch deleted') || (echo 'No existing $branch_name branch to delete.')
         git checkout -b $branch_name
@@ -48,7 +48,7 @@ jobs:
         RELEASE_TAG: ${{ github.event.inputs.release_tag }}
       run: |
         cd scripts
-        bundle exec fastlane android create_next_release_pr release_tag:"$RELEASE_TAG"
+        bundle exec fastlane android create_next_release_pr release_tag:"$RELEASE_TAG" base_branch:"$BASE_BRANCH"
     - name: Check modified file content
       run: |
         cat gradle.properties

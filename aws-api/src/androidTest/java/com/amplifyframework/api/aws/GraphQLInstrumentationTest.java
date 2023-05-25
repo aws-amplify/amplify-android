@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -15,20 +15,22 @@
 
 package com.amplifyframework.api.aws;
 
-import androidx.annotation.NonNull;
-
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiCategory;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.aws.test.R;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.SimpleGraphQLRequest;
+import com.amplifyframework.auth.AuthException;
+import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.testutils.Assets;
 import com.amplifyframework.testutils.sync.SynchronousApi;
-import com.amplifyframework.testutils.sync.SynchronousMobileClient;
+import com.amplifyframework.testutils.sync.SynchronousAuth;
 
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.util.Collections;
@@ -38,6 +40,7 @@ import java.util.UUID;
 
 import io.reactivex.rxjava3.observers.TestObserver;
 
+import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -57,29 +60,45 @@ import static org.junit.Assert.assertEquals;
  */
 public final class GraphQLInstrumentationTest {
     private static final String API_WITH_API_KEY = "eventsApi";
-    private static final String API_WITH_AWS_IAM = "eventsApiWithIam";
     private static final String API_WITH_COGNITO_USER_POOLS = "eventsApiWithUserPools";
 
     private static SynchronousApi api;
-    private static SynchronousMobileClient mobileClient;
+    private static SynchronousAuth synchronousAuth;
 
     private String currentApiName;
 
     /**
      * Configure the Amplify framework, if that hasn't already happened in this process instance.
      * @throws AmplifyException From Amplify configuration
-     * @throws SynchronousMobileClient.MobileClientException From failure to initialize auth
+     * @throws InterruptedException From failure to initialize auth
      */
-    @Before
-    public void setUp() throws AmplifyException, SynchronousMobileClient.MobileClientException {
+    @BeforeClass
+    public static void setUp() throws AmplifyException, InterruptedException {
         // Set up and configure API category
         ApiCategory asyncDelegate = TestApiCategory.fromConfiguration(R.raw.amplifyconfiguration);
         api = SynchronousApi.delegatingTo(asyncDelegate);
 
         // Set up Auth
-        mobileClient = SynchronousMobileClient.instance();
-        mobileClient.initialize();
-        mobileClient.signOut();
+        synchronousAuth = SynchronousAuth.delegatingToCognito(getApplicationContext(),
+                new AWSCognitoAuthPlugin());
+    }
+
+    /**
+     * Reset all the assigned static fields.
+     */
+    @AfterClass
+    public static void tearDown() {
+        synchronousAuth = null;
+        api = null;
+    }
+
+    /**
+     * Start auth with signed out state.
+     * @throws AuthException if sign out fails.
+     */
+    @Before
+    public void setUpAuth() throws AuthException {
+        synchronousAuth.signOut();
     }
 
     /**
@@ -209,21 +228,14 @@ public final class GraphQLInstrumentationTest {
      */
     static final class Comment implements Model {
         private final String content;
-        private final String id;
 
         @SuppressWarnings("checkstyle:ParameterName")
-        Comment(final String id, final String content) {
-            this.id = id;
+        Comment(final String content) {
             this.content = content;
         }
 
         String content() {
             return content;
-        }
-
-        @NonNull
-        public String getId() {
-            return id;
         }
     }
 
@@ -270,11 +282,6 @@ public final class GraphQLInstrumentationTest {
 
         String description() {
             return description;
-        }
-
-        @NonNull
-        public String getId() {
-            return id;
         }
     }
 }

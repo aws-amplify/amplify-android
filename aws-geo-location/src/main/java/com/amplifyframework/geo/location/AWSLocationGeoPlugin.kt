@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -16,11 +16,12 @@
 package com.amplifyframework.geo.location
 
 import android.content.Context
-
-import com.amazonaws.auth.AWSCredentialsProvider
-import com.amazonaws.services.geo.AmazonLocationClient
+import aws.sdk.kotlin.services.location.LocationClient
+import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider
 import com.amplifyframework.AmplifyException
+import com.amplifyframework.annotations.InternalApiWarning
 import com.amplifyframework.auth.AuthCategory
+import com.amplifyframework.auth.CognitoCredentialsProvider
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.geo.GeoCategoryPlugin
@@ -37,24 +38,24 @@ import com.amplifyframework.geo.options.GeoSearchByCoordinatesOptions
 import com.amplifyframework.geo.options.GeoSearchByTextOptions
 import com.amplifyframework.geo.options.GetMapStyleDescriptorOptions
 import com.amplifyframework.geo.result.GeoSearchResult
-
-import org.json.JSONObject
 import java.util.concurrent.Executors
+import kotlinx.coroutines.runBlocking
+import org.json.JSONObject
 
 /**
  * A plugin for the Geo category to interact with Amazon Location Service.
  */
 class AWSLocationGeoPlugin(
-    private val userConfiguration: GeoConfiguration? = null, // for programmatically overriding amplifyconfiguration.json
-    private val authProvider: AuthCategory = Amplify.Auth
-) : GeoCategoryPlugin<AmazonLocationClient?>() {
+    // for programmatically overriding amplifyconfiguration.json
+    private val userConfiguration: GeoConfiguration? = null,
+    private val authCategory: AuthCategory = Amplify.Auth
+) : GeoCategoryPlugin<LocationClient?>() {
     companion object {
         private const val GEO_PLUGIN_KEY = "awsLocationGeoPlugin"
-        private const val AUTH_PLUGIN_KEY = "awsCognitoAuthPlugin"
     }
 
     private lateinit var configuration: GeoConfiguration
-    private lateinit var geoService: GeoService<AmazonLocationClient>
+    private lateinit var geoService: GeoService<LocationClient>
 
     private val executor = Executors.newCachedThreadPool()
     private val defaultMapName: String by lazy {
@@ -64,9 +65,9 @@ class AWSLocationGeoPlugin(
         configuration.searchIndices!!.default
     }
 
-    val credentialsProvider: AWSCredentialsProvider by lazy {
-        val authPlugin = authProvider.getPlugin(AUTH_PLUGIN_KEY)
-        authPlugin.escapeHatch as AWSCredentialsProvider
+    @InternalApiWarning
+    val credentialsProvider: CredentialsProvider by lazy {
+        CognitoCredentialsProvider()
     }
 
     override fun getPluginKey(): String {
@@ -81,13 +82,14 @@ class AWSLocationGeoPlugin(
             this.geoService = AmazonLocationService(credentialsProvider, configuration.region)
         } catch (error: Exception) {
             throw GeoException(
-                "Failed to configure AWSLocationGeoPlugin.", error,
+                "Failed to configure AWSLocationGeoPlugin.",
+                error,
                 "Make sure your amplifyconfiguration.json is valid."
             )
         }
     }
 
-    override fun getEscapeHatch(): AmazonLocationClient {
+    override fun getEscapeHatch(): LocationClient {
         return geoService.provider
     }
 
@@ -212,15 +214,17 @@ class AWSLocationGeoPlugin(
 
     // Helper method that launches given task on a new worker thread.
     private fun <T : Any> execute(
-        runnableTask: () -> T,
+        runnableTask: suspend () -> T,
         errorTransformer: (Throwable) -> GeoException,
         onResult: Consumer<T>,
         onError: Consumer<GeoException>
     ) {
         executor.execute {
             try {
-                val result = runnableTask.invoke()
-                onResult.accept(result)
+                runBlocking {
+                    val result = runnableTask()
+                    onResult.accept(result)
+                }
             } catch (error: Throwable) {
                 val geoException = errorTransformer.invoke(error)
                 onError.accept(geoException)

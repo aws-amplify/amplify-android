@@ -15,15 +15,17 @@
 package com.amplifyframework.storage.s3.operation
 
 import android.util.Log
+import com.amplifyframework.auth.AuthCredentialsProvider
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.storage.StorageAccessLevel
 import com.amplifyframework.storage.StorageException
-import com.amplifyframework.storage.s3.CognitoAuthProvider
 import com.amplifyframework.storage.s3.configuration.AWSS3PluginPrefixResolver
 import com.amplifyframework.storage.s3.configuration.AWSS3StoragePluginConfiguration
 import com.amplifyframework.storage.s3.request.AWSS3StorageGetPresignedUrlRequest
 import com.amplifyframework.storage.s3.service.StorageService
 import com.google.common.util.concurrent.MoreExecutors
+import io.mockk.coEvery
+import io.mockk.mockk
 import org.junit.Before
 import org.junit.Test
 import org.mockito.Mockito
@@ -32,12 +34,12 @@ public class AWSS3StorageGetPresignedUrlOperationTest {
 
     private lateinit var awsS3StorageGetPresignedUrlOperation: AWSS3StorageGetPresignedUrlOperation
     private lateinit var storageService: StorageService
-    private lateinit var cognitoAuthProvider: CognitoAuthProvider
+    private lateinit var authCredentialsProvider: AuthCredentialsProvider
 
     @Before
     fun setup() {
         storageService = Mockito.spy(StorageService::class.java)
-        cognitoAuthProvider = Mockito.mock(CognitoAuthProvider::class.java)
+        authCredentialsProvider = mockk()
     }
 
     @Test
@@ -48,20 +50,21 @@ public class AWSS3StorageGetPresignedUrlOperationTest {
             key,
             StorageAccessLevel.PUBLIC,
             "",
-            1
+            1,
+            false
         )
-        Mockito.`when`(cognitoAuthProvider.identityId).thenReturn("abc")
+        coEvery { authCredentialsProvider.getIdentityId() } returns "abc"
         awsS3StorageGetPresignedUrlOperation = AWSS3StorageGetPresignedUrlOperation(
             storageService,
             MoreExecutors.newDirectExecutorService(),
-            cognitoAuthProvider,
+            authCredentialsProvider,
             request,
             AWSS3StoragePluginConfiguration {},
             {},
             {}
         )
         awsS3StorageGetPresignedUrlOperation.start()
-        Mockito.verify(storageService).getPresignedUrl(expectedKey, 1)
+        Mockito.verify(storageService).getPresignedUrl(expectedKey, 1, false)
     }
 
     @Test
@@ -72,13 +75,14 @@ public class AWSS3StorageGetPresignedUrlOperationTest {
             key,
             StorageAccessLevel.PUBLIC,
             "",
-            1
+            1,
+            false
         )
-        Mockito.`when`(cognitoAuthProvider.identityId).thenReturn("abc")
+        coEvery { authCredentialsProvider.getIdentityId() } returns "abc"
         awsS3StorageGetPresignedUrlOperation = AWSS3StorageGetPresignedUrlOperation(
             storageService,
             MoreExecutors.newDirectExecutorService(),
-            cognitoAuthProvider,
+            authCredentialsProvider,
             request,
             AWSS3StoragePluginConfiguration {
                 awsS3PluginPrefixResolver = object : AWSS3PluginPrefixResolver {
@@ -86,7 +90,7 @@ public class AWSS3StorageGetPresignedUrlOperationTest {
                         accessLevel: StorageAccessLevel,
                         targetIdentity: String?,
                         onSuccess: Consumer<String>,
-                        onError: Consumer<StorageException>
+                        onError: Consumer<StorageException>?
                     ) {
                         onSuccess.accept("")
                     }
@@ -96,7 +100,7 @@ public class AWSS3StorageGetPresignedUrlOperationTest {
             { Log.e("TAG", "$it") }
         )
         awsS3StorageGetPresignedUrlOperation.start()
-        Mockito.verify(storageService).getPresignedUrl(expectedKey, 1)
+        Mockito.verify(storageService).getPresignedUrl(expectedKey, 1, false)
     }
 
     @Test
@@ -107,13 +111,14 @@ public class AWSS3StorageGetPresignedUrlOperationTest {
             key,
             StorageAccessLevel.PUBLIC,
             "",
-            1
+            1,
+            false
         )
-        Mockito.`when`(cognitoAuthProvider.identityId).thenReturn("abc")
+        coEvery { authCredentialsProvider.getIdentityId() } returns "abc"
         awsS3StorageGetPresignedUrlOperation = AWSS3StorageGetPresignedUrlOperation(
             storageService,
             MoreExecutors.newDirectExecutorService(),
-            cognitoAuthProvider,
+            authCredentialsProvider,
             request,
             AWSS3StoragePluginConfiguration {
                 awsS3PluginPrefixResolver = object : AWSS3PluginPrefixResolver {
@@ -121,7 +126,7 @@ public class AWSS3StorageGetPresignedUrlOperationTest {
                         accessLevel: StorageAccessLevel,
                         targetIdentity: String?,
                         onSuccess: Consumer<String>,
-                        onError: Consumer<StorageException>
+                        onError: Consumer<StorageException>?
                     ) {
                         onSuccess.accept("publicCustom/")
                     }
@@ -131,6 +136,6 @@ public class AWSS3StorageGetPresignedUrlOperationTest {
             { Log.e("TAG", "$it") }
         )
         awsS3StorageGetPresignedUrlOperation.start()
-        Mockito.verify(storageService).getPresignedUrl(expectedKey, 1)
+        Mockito.verify(storageService).getPresignedUrl(expectedKey, 1, false)
     }
 }

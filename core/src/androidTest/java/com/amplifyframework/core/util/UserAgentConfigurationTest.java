@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -56,10 +56,10 @@ public final class UserAgentConfigurationTest {
      */
     @Test
     public void testUserAgentIsGeneratedCorrectly() {
-        String expectedUserAgentPrefix = UserAgent.Platform.FLUTTER.getLibraryName() + "/" +
-                BuildConfig.VERSION_NAME + " " +
+        String expectedUserAgentPrefix = UserAgent.Platform.FLUTTER.getLibraryName() + ":" +
+                BuildConfig.VERSION_NAME + " md/" +
                 UserAgent.Platform.ANDROID.getLibraryName() + "/" +
-                BuildConfig.VERSION_NAME + " ("; // "(" asserts that system info follows this prefix
+                BuildConfig.VERSION_NAME + " md/"; // "(" asserts that system info follows this prefix
         assertTrue(UserAgent.string().startsWith(expectedUserAgentPrefix));
     }
 

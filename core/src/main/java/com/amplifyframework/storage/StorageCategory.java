@@ -24,11 +24,13 @@ import com.amplifyframework.storage.operation.StorageDownloadFileOperation;
 import com.amplifyframework.storage.operation.StorageGetUrlOperation;
 import com.amplifyframework.storage.operation.StorageListOperation;
 import com.amplifyframework.storage.operation.StorageRemoveOperation;
+import com.amplifyframework.storage.operation.StorageTransferOperation;
 import com.amplifyframework.storage.operation.StorageUploadFileOperation;
 import com.amplifyframework.storage.operation.StorageUploadInputStreamOperation;
 import com.amplifyframework.storage.options.StorageDownloadFileOptions;
 import com.amplifyframework.storage.options.StorageGetUrlOptions;
 import com.amplifyframework.storage.options.StorageListOptions;
+import com.amplifyframework.storage.options.StoragePagedListOptions;
 import com.amplifyframework.storage.options.StorageRemoveOptions;
 import com.amplifyframework.storage.options.StorageUploadFileOptions;
 import com.amplifyframework.storage.options.StorageUploadInputStreamOptions;
@@ -37,6 +39,7 @@ import com.amplifyframework.storage.result.StorageGetUrlResult;
 import com.amplifyframework.storage.result.StorageListResult;
 import com.amplifyframework.storage.result.StorageRemoveResult;
 import com.amplifyframework.storage.result.StorageTransferProgress;
+import com.amplifyframework.storage.result.StorageTransferResult;
 import com.amplifyframework.storage.result.StorageUploadFileResult;
 import com.amplifyframework.storage.result.StorageUploadInputStreamResult;
 
@@ -183,6 +186,15 @@ public final class StorageCategory extends Category<StoragePlugin<?>> implements
         return getSelectedPlugin().uploadInputStream(key, local, options, onProgress, onSuccess, onError);
     }
 
+    @Override
+    public void getTransfer(
+            @NonNull String transferId,
+            @NonNull Consumer<StorageTransferOperation<?, ? extends StorageTransferResult>> onReceived,
+            @NonNull Consumer<StorageException> onError
+    ) {
+        getSelectedPlugin().getTransfer(transferId, onReceived, onError);
+    }
+
     @NonNull
     @Override
     public StorageRemoveOperation<?> remove(
@@ -206,6 +218,8 @@ public final class StorageCategory extends Category<StoragePlugin<?>> implements
 
     @NonNull
     @Override
+    @Deprecated
+    @SuppressWarnings("deprecation")
     public StorageListOperation<?> list(
             @NonNull String path,
             @NonNull Consumer<StorageListResult> onSuccess,
@@ -216,12 +230,22 @@ public final class StorageCategory extends Category<StoragePlugin<?>> implements
 
     @NonNull
     @Override
+    @Deprecated
+    @SuppressWarnings("deprecation")
     public StorageListOperation<?> list(
             @NonNull String path,
             @NonNull StorageListOptions options,
             @NonNull Consumer<StorageListResult> onSuccess,
             @NonNull Consumer<StorageException> onError
     ) {
+        return getSelectedPlugin().list(path, options, onSuccess, onError);
+    }
+
+    @Override
+    public StorageListOperation<?> list(@NonNull String path,
+                                     @NonNull StoragePagedListOptions options,
+                                     @NonNull Consumer<StorageListResult> onSuccess,
+                                     @NonNull Consumer<StorageException> onError) {
         return getSelectedPlugin().list(path, options, onSuccess, onError);
     }
 }

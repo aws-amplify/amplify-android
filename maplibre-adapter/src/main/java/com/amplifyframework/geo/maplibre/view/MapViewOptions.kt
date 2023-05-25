@@ -59,7 +59,10 @@ class MapViewOptions(
         ): MapViewOptions {
             return attrs?.let {
                 val typedArray = context.obtainStyledAttributes(
-                    attrs, R.styleable.map_AmplifyMapView, defStyleAttr, 0
+                    attrs,
+                    R.styleable.map_AmplifyMapView,
+                    defStyleAttr,
+                    0
                 )
                 val attribution =
                     typedArray.getString(R.styleable.map_AmplifyMapView_map_attribution)
@@ -72,8 +75,12 @@ class MapViewOptions(
                     DEFAULT_MAX_ZOOM
                 )
                 val center = Coordinate2D(
-                    latitude = typedArray.getDouble(R.styleable.map_AmplifyMapView_map_centerLatitude),
-                    longitude = typedArray.getDouble(R.styleable.map_AmplifyMapView_map_centerLongitude)
+                    latitude = typedArray.getDouble(
+                        R.styleable.map_AmplifyMapView_map_centerLatitude
+                    ),
+                    longitude = typedArray.getDouble(
+                        R.styleable.map_AmplifyMapView_map_centerLongitude
+                    )
                 )
                 val showCompassIndicator = typedArray.getBoolean(
                     R.styleable.map_AmplifyMapView_map_showCompassIndicator,
@@ -103,7 +110,6 @@ class MapViewOptions(
                     zoomLevel = zoomLevel
                 )
             } ?: MapViewOptions()
-
         }
     }
 
@@ -126,7 +132,8 @@ class MapViewOptions(
 }
 
 private fun TypedArray.getDouble(
-    @StyleableRes res: Int, defValue: Double = 0.0
+    @StyleableRes res: Int,
+    defValue: Double = 0.0
 ): Double {
     return this.getFloat(res, defValue.toFloat()).toDouble()
 }

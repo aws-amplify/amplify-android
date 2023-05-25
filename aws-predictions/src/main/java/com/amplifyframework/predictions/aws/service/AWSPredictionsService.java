@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -30,14 +30,15 @@ import com.amplifyframework.predictions.result.InterpretResult;
 import com.amplifyframework.predictions.result.TextToSpeechResult;
 import com.amplifyframework.predictions.result.TranslateTextResult;
 
-import com.amazonaws.auth.AWSCredentialsProvider;
-import com.amazonaws.services.comprehend.AmazonComprehendClient;
-import com.amazonaws.services.polly.AmazonPollyClient;
-import com.amazonaws.services.rekognition.AmazonRekognitionClient;
-import com.amazonaws.services.textract.AmazonTextractClient;
-import com.amazonaws.services.translate.AmazonTranslateClient;
+import aws.sdk.kotlin.services.comprehend.ComprehendClient;
 
 import java.nio.ByteBuffer;
+
+import aws.sdk.kotlin.services.polly.PollyClient;
+import aws.sdk.kotlin.services.rekognition.RekognitionClient;
+import aws.sdk.kotlin.services.textract.TextractClient;
+import aws.sdk.kotlin.services.translate.TranslateClient;
+import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider;
 
 /**
  * Predictions service that makes inferences via AWS cloud computing.
@@ -58,7 +59,7 @@ public final class AWSPredictionsService {
      */
     public AWSPredictionsService(
             @NonNull AWSPredictionsPluginConfiguration configuration,
-            @NonNull AWSCredentialsProvider credentialsProvider) {
+            @NonNull CredentialsProvider credentialsProvider) {
         this.configuration = configuration;
         this.pollyService = new AWSPollyService(configuration, credentialsProvider);
         this.translateService = new AWSTranslateService(configuration, credentialsProvider);
@@ -231,7 +232,7 @@ public final class AWSPredictionsService {
      * @return the configured Amazon Translate client
      */
     @NonNull
-    public AmazonTranslateClient getTranslateClient() {
+    public TranslateClient getTranslateClient() {
         return translateService.getClient();
     }
 
@@ -241,7 +242,7 @@ public final class AWSPredictionsService {
      * @return the configured Amazon Polly client
      */
     @NonNull
-    public AmazonPollyClient getPollyClient() {
+    public PollyClient getPollyClient() {
         return pollyService.getClient();
     }
 
@@ -251,7 +252,7 @@ public final class AWSPredictionsService {
      * @return the configured Amazon Rekognition client
      */
     @NonNull
-    public AmazonRekognitionClient getRekognitionClient() {
+    public RekognitionClient getRekognitionClient() {
         return rekognitionService.getClient();
     }
 
@@ -261,7 +262,7 @@ public final class AWSPredictionsService {
      * @return the configured Amazon Textract client
      */
     @NonNull
-    public AmazonTextractClient getTextractClient() {
+    public TextractClient getTextractClient() {
         return textractService.getClient();
     }
 
@@ -271,7 +272,7 @@ public final class AWSPredictionsService {
      * @return the configured Amazon Comprehend client
      */
     @NonNull
-    public AmazonComprehendClient getComprehendClient() {
+    public ComprehendClient getComprehendClient() {
         return comprehendService.getClient();
     }
 }

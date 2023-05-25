@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -34,10 +34,7 @@ public final class AWSCognitoAuthSignOutOptions extends AuthSignOutOptions {
      *                      into with a web UI experience (example value: "org.mozilla.firefox").
      *                      Defaults to the Chrome package if not specified.
      */
-    protected AWSCognitoAuthSignOutOptions(
-            boolean globalSignOut,
-            String browserPackage
-    ) {
+    protected AWSCognitoAuthSignOutOptions(boolean globalSignOut, String browserPackage) {
         super(globalSignOut);
         this.browserPackage = browserPackage;
     }
@@ -62,10 +59,7 @@ public final class AWSCognitoAuthSignOutOptions extends AuthSignOutOptions {
 
     @Override
     public int hashCode() {
-        return ObjectsCompat.hash(
-                isGlobalSignOut(),
-                getBrowserPackage()
-        );
+        return ObjectsCompat.hash(isGlobalSignOut(), getBrowserPackage());
     }
 
     @Override
@@ -123,10 +117,7 @@ public final class AWSCognitoAuthSignOutOptions extends AuthSignOutOptions {
          */
         @NonNull
         public AWSCognitoAuthSignOutOptions build() {
-            return new AWSCognitoAuthSignOutOptions(
-                    super.isGlobalSignOut(),
-                    browserPackage
-            );
+            return new AWSCognitoAuthSignOutOptions(super.isGlobalSignOut(), browserPackage);
         }
     }
 }

@@ -66,6 +66,10 @@ final class StorageObserver {
             .doOnSubscribe(disposable ->
                 LOG.info("Now observing local storage. Local changes will be enqueued to mutation outbox.")
             )
+            .filter(possiblySystemChange -> {
+                // Only enqueue mutations for USER models
+                return Model.Type.USER.equals(possiblySystemChange.modelSchema().getModelType());
+            })
             .filter(possiblyCyclicChange -> {
                 // Don't continue if the storage change was caused by the sync engine itself
                 return !StorageItemChange.Initiator.SYNC_ENGINE.equals(possiblyCyclicChange.initiator());

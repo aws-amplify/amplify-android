@@ -1,0 +1,36 @@
+{
+    "description": "AuthException is thrown when rememberDevice API is called without signing in",
+    "preConditions": {
+        "amplify-configuration": "authconfiguration.json",
+        "state": "SignedOut_Configured.json",
+        "mockedResponses": [
+            {
+                "type": "cognitoIdentityProvider",
+                "apiName": "updateDeviceStatus",
+                "responseType": "success",
+                "response": {
+                }
+            }
+        ]
+    },
+    "api": {
+        "name": "rememberDevice",
+        "params": {
+        },
+        "options": {
+        }
+    },
+    "validations": [
+        {
+            "type": "amplify",
+            "apiName": "rememberDevice",
+            "responseType": "failure",
+            "response": {
+                "errorType": "SignedOutException",
+                "errorMessage": "You are currently signed out.",
+                "recoverySuggestion": "Please sign in and reattempt the operation.",
+                "cause": null
+            }
+        }
+    ]
+}

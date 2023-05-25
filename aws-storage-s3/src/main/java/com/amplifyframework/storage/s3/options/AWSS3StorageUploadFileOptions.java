@@ -28,10 +28,12 @@ import java.util.Objects;
  */
 public final class AWSS3StorageUploadFileOptions extends StorageUploadFileOptions {
     private final ServerSideEncryption serverSideEncryption;
+    private final boolean useAccelerationMode;
 
     private AWSS3StorageUploadFileOptions(final Builder builder) {
         super(builder);
         this.serverSideEncryption = builder.getServerSideEncryption();
+        this.useAccelerationMode = builder.useAccelerateEndpoint;
     }
 
     /**
@@ -84,6 +86,15 @@ public final class AWSS3StorageUploadFileOptions extends StorageUploadFileOption
         return builder().build();
     }
 
+    /**
+     * Gets the flag to determine whether to use acceleration endpoint.
+     *
+     * @return boolean flag
+     */
+    public boolean useAccelerateEndpoint() {
+        return useAccelerationMode;
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {
@@ -130,10 +141,21 @@ public final class AWSS3StorageUploadFileOptions extends StorageUploadFileOption
      */
     public static final class Builder extends StorageUploadFileOptions.Builder<Builder> {
         private ServerSideEncryption serverSideEncryption;
+        private boolean useAccelerateEndpoint;
 
         private Builder() {
             super();
             this.serverSideEncryption = ServerSideEncryption.NONE;
+        }
+
+        /**
+         * Configure to use acceleration mode on new StorageUploadFileOptions instances.
+         * @param useAccelerateEndpoint flag to represent acceleration mode for new UploadFileOptions instance
+         * @return Current Builder instance for fluent chaining
+         */
+        public Builder setUseAccelerateEndpoint(boolean useAccelerateEndpoint) {
+            this.useAccelerateEndpoint = useAccelerateEndpoint;
+            return this;
         }
 
         /**

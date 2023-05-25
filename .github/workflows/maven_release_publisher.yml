@@ -1,0 +1,36 @@
+name: Amplify Android Maven Release
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+
+jobs:
+  maven-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ secrets.AMPLIFY_ANDROID_RELEASE_PUBLISHER_ROLE }}
+          aws-region: us-east-1
+      - name: Start Integration Test
+        uses: aws-actions/aws-codebuild-run-build@v1
+        with:
+          project-name: AmplifyAndroid-IntegrationTest
+          env-vars-for-codebuild: |
+            ORG_GRADLE_PROJECT_useAwsSdkReleaseBuild,
+            NUMBER_OF_DEVICES_TO_TEST
+        env:
+          ORG_GRADLE_PROJECT_useAwsSdkReleaseBuild: true
+          NUMBER_OF_DEVICES_TO_TEST: 3
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ secrets.AMPLIFY_ANDROID_RELEASE_PUBLISHER_ROLE }}
+          aws-region: us-east-1
+      - name: Start Maven Release Build
+        uses: aws-actions/aws-codebuild-run-build@v1
+        with:
+          project-name: AmplifyAndroid-ReleasePublisher

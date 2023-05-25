@@ -41,7 +41,6 @@ import com.mapbox.mapboxsdk.style.layers.SymbolLayer
 import com.mapbox.mapboxsdk.style.sources.GeoJsonOptions
 import com.mapbox.mapboxsdk.style.sources.GeoJsonSource
 
-
 typealias MapLibreOptions = com.mapbox.mapboxsdk.maps.MapboxMapOptions
 
 /**
@@ -142,11 +141,13 @@ class MapLibreView
      * @param callback the onLoad lambda
      */
     fun getStyle(callback: (MapboxMap, Style) -> Unit) {
-        getStyle(object : OnStyleLoaded {
-            override fun onLoad(map: MapboxMap, style: Style) {
-                callback(map, style)
+        getStyle(
+            object : OnStyleLoaded {
+                override fun onLoad(map: MapboxMap, style: Style) {
+                    callback(map, style)
+                }
             }
-        })
+        )
     }
 
     /**
@@ -221,8 +222,8 @@ class MapLibreView
 
     private fun enableClustering(map: MapboxMap, style: Style) {
         val geoJsonClusterOptions = GeoJsonOptions().withCluster(true)
-                                        .withClusterMaxZoom(clusteringOptions.maxClusterZoomLevel)
-                                        .withClusterRadius(clusteringOptions.clusterRadius)
+            .withClusterMaxZoom(clusteringOptions.maxClusterZoomLevel)
+            .withClusterRadius(clusteringOptions.clusterRadius)
         this.symbolManager = SymbolManager(this, map, style, null, geoJsonClusterOptions).apply {
             iconAllowOverlap = true
             iconIgnorePlacement = true
@@ -236,11 +237,17 @@ class MapLibreView
         val circleColorProperty = if (clusteringOptions.clusterColorSteps.isEmpty()) {
             PropertyFactory.circleColor(clusteringOptions.clusterColor)
         } else {
-            val circleColorStops = clusteringOptions.clusterColorSteps.toSortedMap().flatMap { (pointCount, clusterColor) ->
-                mutableListOf(Expression.stop(pointCount, Expression.color(clusterColor)))
-            }.toTypedArray()
-            PropertyFactory.circleColor(Expression.step(Expression.get("point_count"),
-                Expression.color(clusteringOptions.clusterColor), *circleColorStops))
+            val circleColorStops =
+                clusteringOptions.clusterColorSteps.toSortedMap().flatMap { (pointCount, clusterColor) ->
+                    mutableListOf(Expression.stop(pointCount, Expression.color(clusterColor)))
+                }.toTypedArray()
+            PropertyFactory.circleColor(
+                Expression.step(
+                    Expression.get("point_count"),
+                    Expression.color(clusteringOptions.clusterColor),
+                    *circleColorStops
+                )
+            )
         }
 
         // Change the circle radius based on zoom level
@@ -248,8 +255,9 @@ class MapLibreView
             Expression.exponential(1.75),
             Expression.zoom(),
             Expression.stop(map.minZoomLevel, 60),
-            Expression.stop(clusteringOptions.maxClusterZoomLevel, 20))
-        
+            Expression.stop(clusteringOptions.maxClusterZoomLevel, 20)
+        )
+
         clusterCircleLayer.setProperties(
             circleColorProperty,
             PropertyFactory.circleRadius(circleRadiusExpression)
@@ -329,5 +337,4 @@ class MapLibreView
     interface OnStyleLoaded {
         fun onLoad(map: MapboxMap, style: Style)
     }
-
 }

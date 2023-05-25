@@ -16,6 +16,7 @@
 package com.amplifyframework;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
 
 import java.util.Objects;
@@ -52,7 +53,7 @@ public class AmplifyException extends Exception {
      */
     public AmplifyException(
             @NonNull final String message,
-            @NonNull final Throwable cause,
+            @Nullable final Throwable cause,
             @NonNull final String recoverySuggestion
     ) {
         super(message, cause);

@@ -110,22 +110,12 @@ public final class AppSyncClient implements AppSync {
             @NonNull Consumer<GraphQLResponse<PaginatedResult<ModelWithMetadata<T>>>> onResponse,
             @NonNull Consumer<DataStoreException> onFailure
     ) {
-        final Consumer<GraphQLResponse<PaginatedResult<ModelWithMetadata<T>>>> responseConsumer = apiQueryResponse -> {
-            if (apiQueryResponse.hasErrors()) {
-                onFailure.accept(new DataStoreException(
-                    "Failure performing sync query to AppSync: " + apiQueryResponse.getErrors().toString(),
-                    AmplifyException.TODO_RECOVERY_SUGGESTION
-                ));
-            } else {
-                onResponse.accept(apiQueryResponse);
-            }
-        };
         final Consumer<ApiException> failureConsumer =
             failure -> onFailure.accept(new DataStoreException(
                         "Failure performing sync query to AppSync.",
                         failure, AmplifyException.TODO_RECOVERY_SUGGESTION));
 
-        final Cancelable cancelable = api.query(request, responseConsumer, failureConsumer);
+        final Cancelable cancelable = api.query(request, onResponse::accept, failureConsumer);
         if (cancelable != null) {
             return cancelable;
         }

@@ -15,19 +15,20 @@
 
 package com.amplifyframework.api.graphql;
 
-import android.os.Build;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
 import androidx.core.util.ObjectsCompat;
 
 import java.util.Iterator;
+import java.util.Objects;
 import java.util.Spliterator;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 /**
- * Represents a page of results returned from an API.  Specifically, contains the list of items in the page, as well as
- * a GraphQLRequest which can be used to obtain the next page.
+ * Represents a page of results returned from an API.  Specifically, contains the list of non-null items in the page,
+ * as well as a GraphQLRequest which can be used to obtain the next page.
  *
  * @param <T> Type of the items in the list.
  */
@@ -38,17 +39,21 @@ public final class PaginatedResult<T> implements Iterable<T> {
 
     /**
      * Creates a PaginatedResult.
-     * @param items Iterable&lt;T&gt; of the items from the response.
+     *
+     * @param items                Iterable&lt;T&gt; of the items from the response.
      * @param requestForNextResult a GraphQLRequest to obtain the next page of results, or null if no next page.
      */
     public PaginatedResult(@NonNull Iterable<T> items,
                            @Nullable GraphQLRequest<PaginatedResult<T>> requestForNextResult) {
         this.requestForNextResult = requestForNextResult;
-        this.items = items;
+        this.items = StreamSupport.stream(items.spliterator(), false)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 
     /**
      * Returns the list of items obtained from an API query.
+     *
      * @return Iterable of Model objects
      */
     public Iterable<T> getItems() {
@@ -57,6 +62,7 @@ public final class PaginatedResult<T> implements Iterable<T> {
 
     /**
      * Returns whether a subsequent page of results is available from the API.
+     *
      * @return boolean whether a subsequent page is available
      */
     public boolean hasNextResult() {
@@ -106,14 +112,12 @@ public final class PaginatedResult<T> implements Iterable<T> {
     public Iterator<T> iterator() {
         return items.iterator();
     }
-
-    @RequiresApi(api = Build.VERSION_CODES.N)
+    
     @Override
     public void forEach(@NonNull Consumer<? super T> action) {
         items.forEach(action);
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.N)
     @NonNull
     @Override
     public Spliterator<T> spliterator() {

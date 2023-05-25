@@ -117,11 +117,9 @@ internal class SearchResultListView(context: Context) : LinearLayout(context) {
             result.addAll(places)
             notifyDataSetChanged()
         }
-
     }
 
     interface OnItemClickListener {
         fun onClick(place: AmazonLocationPlace)
     }
-
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -17,17 +17,22 @@ package com.amplifyframework.storage.s3;
 
 import android.content.Context;
 
+import com.amplifyframework.auth.AuthPlugin;
+import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin;
 import com.amplifyframework.storage.StorageAccessLevel;
 import com.amplifyframework.storage.StorageCategory;
 import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.StorageItem;
 import com.amplifyframework.storage.options.StorageListOptions;
+import com.amplifyframework.storage.options.StoragePagedListOptions;
 import com.amplifyframework.storage.options.StorageUploadFileOptions;
 import com.amplifyframework.storage.result.StorageListResult;
 import com.amplifyframework.storage.s3.UserCredentials.IdentityIdSource;
+import com.amplifyframework.storage.s3.options.AWSS3StoragePagedListOptions;
 import com.amplifyframework.storage.s3.test.R;
+import com.amplifyframework.storage.s3.util.WorkmanagerTestUtils;
 import com.amplifyframework.testutils.random.RandomTempFile;
-import com.amplifyframework.testutils.sync.SynchronousMobileClient;
+import com.amplifyframework.testutils.sync.SynchronousAuth;
 import com.amplifyframework.testutils.sync.SynchronousStorage;
 
 import org.junit.Before;
@@ -37,6 +42,7 @@ import org.junit.Test;
 import java.io.File;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
 import static com.amplifyframework.storage.s3.UserCredentials.Credential;
@@ -47,14 +53,16 @@ import static org.junit.Assert.assertNotNull;
  * Instrumentation test to confirm that Storage List behaves
  * correctly with regards to the provided storage access level.
  */
+
 public final class AWSS3StorageListAccessLevelTest {
     private static final String TEST_DIR_NAME = Long.toString(System.currentTimeMillis());
     private static final long UPLOAD_SIZE = 100L;
 
     private static String uploadKey;
+    private static String pagedUploadKeyPrefix;
 
     private static SynchronousStorage storage;
-    private static SynchronousMobileClient mobileClient;
+    private static SynchronousAuth synchronousAuth;
     private static Credential userOne;
     private static Credential userTwo;
 
@@ -62,37 +70,38 @@ public final class AWSS3StorageListAccessLevelTest {
 
     /**
      * Upload the required resources in cloud prior to running the tests.
+     *
      * @throws Exception from failure to sign in with Cognito User Pools
      */
     @BeforeClass
     public static void setUpOnce() throws Exception {
         Context context = getApplicationContext();
 
-        // Init auth stuff
-        mobileClient = SynchronousMobileClient.instance();
-        mobileClient.initialize();
-        IdentityIdSource identityIdSource = MobileClientIdentityIdSource.create(mobileClient);
+        WorkmanagerTestUtils.INSTANCE.initializeWorkmanagerTestUtil(context);
+        synchronousAuth = SynchronousAuth.delegatingToCognito(context, (AuthPlugin) new AWSCognitoAuthPlugin());
+        IdentityIdSource identityIdSource = MobileClientIdentityIdSource.create(synchronousAuth);
         UserCredentials credentials = UserCredentials.create(context, identityIdSource);
         Iterator<Credential> users = credentials.iterator();
         userOne = users.next();
         userTwo = users.next();
-
         // Get a handle to storage
         StorageCategory asyncDelegate = TestStorageCategory.create(context, R.raw.amplifyconfiguration);
         storage = SynchronousStorage.delegatingTo(asyncDelegate);
-
         // Upload test file in S3 ahead of time
         uploadTestFiles();
     }
 
     /**
      * Signs out by default.
+     *
      * @throws Exception on failure to sign out
      */
     @Before
     public void setUp() throws Exception {
         // Start as a GUEST user
-        mobileClient.signOut();
+        if (synchronousAuth.fetchAuthSession().isSignedIn()) {
+            synchronousAuth.signOut();
+        }
     }
 
     private void assertListContainsUploadedFile(StorageListResult result) {
@@ -114,8 +123,8 @@ public final class AWSS3StorageListAccessLevelTest {
     @Test
     public void testListUnauthenticatedPublicAccess() throws Exception {
         listOptions = StorageListOptions.builder()
-                .accessLevel(StorageAccessLevel.PUBLIC)
-                .build();
+            .accessLevel(StorageAccessLevel.PUBLIC)
+            .build();
         StorageListResult result = storage.list(TEST_DIR_NAME, listOptions);
         assertListContainsUploadedFile(result);
     }
@@ -131,9 +140,9 @@ public final class AWSS3StorageListAccessLevelTest {
     @Test
     public void testListUnauthenticatedProtectedAccess() throws Exception {
         listOptions = StorageListOptions.builder()
-                .accessLevel(StorageAccessLevel.PROTECTED)
-                .targetIdentityId(userOne.getIdentityId())
-                .build();
+            .accessLevel(StorageAccessLevel.PROTECTED)
+            .targetIdentityId(userOne.getIdentityId())
+            .build();
         StorageListResult result = storage.list(TEST_DIR_NAME, listOptions);
         assertListContainsUploadedFile(result);
     }
@@ -150,9 +159,9 @@ public final class AWSS3StorageListAccessLevelTest {
     @Test(expected = StorageException.class)
     public void testListUnauthenticatedPrivateAccess() throws Exception {
         listOptions = StorageListOptions.builder()
-                .accessLevel(StorageAccessLevel.PRIVATE)
-                .targetIdentityId(userOne.getIdentityId())
-                .build();
+            .accessLevel(StorageAccessLevel.PRIVATE)
+            .targetIdentityId(userOne.getIdentityId())
+            .build();
         StorageListResult result = storage.list(TEST_DIR_NAME, listOptions);
         assertListContainsUploadedFile(result);
     }
@@ -164,13 +173,38 @@ public final class AWSS3StorageListAccessLevelTest {
      */
     @Test
     public void testListAuthenticatedProtectedAccess() throws Exception {
-        mobileClient.signIn(userOne.getUsername(), userOne.getPassword());
+        synchronousAuth.signIn(userOne.getUsername(), userOne.getPassword());
         listOptions = StorageListOptions.builder()
-                .accessLevel(StorageAccessLevel.PROTECTED)
-                .targetIdentityId(userOne.getIdentityId())
-                .build();
+            .accessLevel(StorageAccessLevel.PROTECTED)
+            .targetIdentityId(userOne.getIdentityId())
+            .build();
         StorageListResult result = storage.list(TEST_DIR_NAME, listOptions);
         assertListContainsUploadedFile(result);
+    }
+
+    /**
+     * Test listing files using page size.
+     *
+     * @throws Exception if list is unsuccessful
+     */
+    @Test
+    public void testPagedListAuthenticatedAccess() throws Exception {
+        synchronousAuth.signIn(userOne.getUsername(), userOne.getPassword());
+        uploadMultipleTestFiles();
+        StoragePagedListOptions storagePagedListOptions =
+            AWSS3StoragePagedListOptions.builder().setPageSize(5).setNextToken(null).build();
+        boolean isFirst = true;
+        StorageListResult result = null;
+        while (isFirst || result.getNextToken() != null) {
+            storagePagedListOptions = AWSS3StoragePagedListOptions.builder().setPageSize(5)
+                .setNextToken(result == null ? null : result.getNextToken()).build();
+            result = storage.list(pagedUploadKeyPrefix, storagePagedListOptions, TimeUnit.SECONDS.toMillis(50));
+            if (isFirst) {
+                assertNotNull(result.getNextToken());
+            }
+            isFirst = false;
+            assertEquals(result.getItems().size(), 5);
+        }
     }
 
     /**
@@ -180,11 +214,11 @@ public final class AWSS3StorageListAccessLevelTest {
      */
     @Test
     public void testListAuthenticatedPrivateAccess() throws Exception {
-        mobileClient.signIn(userOne.getUsername(), userOne.getPassword());
+        synchronousAuth.signIn(userOne.getUsername(), userOne.getPassword());
         listOptions = StorageListOptions.builder()
-                .accessLevel(StorageAccessLevel.PRIVATE)
-                .targetIdentityId(userOne.getIdentityId())
-                .build();
+            .accessLevel(StorageAccessLevel.PRIVATE)
+            .targetIdentityId(userOne.getIdentityId())
+            .build();
         StorageListResult result = storage.list(TEST_DIR_NAME, listOptions);
         assertListContainsUploadedFile(result);
     }
@@ -200,11 +234,11 @@ public final class AWSS3StorageListAccessLevelTest {
      */
     @Test
     public void testListDifferentUsersProtectedAccess() throws Exception {
-        mobileClient.signIn(userOne.getUsername(), userOne.getPassword());
+        synchronousAuth.signIn(userOne.getUsername(), userOne.getPassword());
         listOptions = StorageListOptions.builder()
-                .accessLevel(StorageAccessLevel.PROTECTED)
-                .targetIdentityId(userTwo.getIdentityId())
-                .build();
+            .accessLevel(StorageAccessLevel.PROTECTED)
+            .targetIdentityId(userTwo.getIdentityId())
+            .build();
         StorageListResult result = storage.list(TEST_DIR_NAME, listOptions);
         assertListContainsUploadedFile(result);
     }
@@ -220,11 +254,11 @@ public final class AWSS3StorageListAccessLevelTest {
      */
     @Test(expected = StorageException.class)
     public void testListDifferentUsersPrivateAccess() throws Exception {
-        mobileClient.signIn(userOne.getUsername(), userTwo.getPassword());
+        synchronousAuth.signIn(userOne.getUsername(), userTwo.getPassword());
         listOptions = StorageListOptions.builder()
-                .accessLevel(StorageAccessLevel.PRIVATE)
-                .targetIdentityId(userTwo.getIdentityId())
-                .build();
+            .accessLevel(StorageAccessLevel.PRIVATE)
+            .targetIdentityId(userTwo.getIdentityId())
+            .build();
         StorageListResult result = storage.list(TEST_DIR_NAME, listOptions);
         assertListContainsUploadedFile(result);
     }
@@ -238,34 +272,55 @@ public final class AWSS3StorageListAccessLevelTest {
         StorageUploadFileOptions options;
 
         // Upload as GUEST
-        mobileClient.signOut();
+        //synchronousAuth.signOut();
         options = StorageUploadFileOptions.builder()
-                .accessLevel(StorageAccessLevel.PUBLIC)
-                .build();
+            .accessLevel(StorageAccessLevel.PUBLIC)
+            .build();
         storage.uploadFile(uploadKey, uploadFile, options);
 
         // Upload as user one
-        mobileClient.signOut();
-        mobileClient.signIn(userOne.getUsername(), userOne.getPassword());
+        synchronousAuth.signOut();
+        synchronousAuth.signIn(userOne.getUsername(), userOne.getPassword());
         options = StorageUploadFileOptions.builder()
-                .accessLevel(StorageAccessLevel.PROTECTED)
-                .build();
+            .accessLevel(StorageAccessLevel.PROTECTED)
+            .build();
         storage.uploadFile(uploadKey, uploadFile, options);
         options = StorageUploadFileOptions.builder()
-                .accessLevel(StorageAccessLevel.PRIVATE)
-                .build();
+            .accessLevel(StorageAccessLevel.PRIVATE)
+            .build();
         storage.uploadFile(uploadKey, uploadFile, options);
 
         // Upload as user two
-        mobileClient.signOut();
-        mobileClient.signIn(userTwo.getUsername(), userTwo.getPassword());
+        synchronousAuth.signOut();
+        synchronousAuth.signIn(userTwo.getUsername(), userTwo.getPassword());
         options = StorageUploadFileOptions.builder()
-                .accessLevel(StorageAccessLevel.PROTECTED)
-                .build();
+            .accessLevel(StorageAccessLevel.PROTECTED)
+            .build();
         storage.uploadFile(uploadKey, uploadFile, options);
         options = StorageUploadFileOptions.builder()
-                .accessLevel(StorageAccessLevel.PRIVATE)
-                .build();
+            .accessLevel(StorageAccessLevel.PRIVATE)
+            .build();
         storage.uploadFile(uploadKey, uploadFile, options);
+    }
+
+    private static void uploadMultipleTestFiles() throws Exception {
+        // Create a temporary file to upload
+        File uploadFile = new RandomTempFile(UPLOAD_SIZE);
+        String uploadName = uploadFile.getName();
+        String uploadPath = uploadFile.getAbsolutePath();
+        pagedUploadKeyPrefix = "PAGED" + TEST_DIR_NAME + "/" + uploadName;
+        StorageUploadFileOptions options;
+
+        // Upload as GUEST
+        //synchronousAuth.signOut();
+        options = StorageUploadFileOptions.builder()
+            .accessLevel(StorageAccessLevel.PUBLIC)
+            .build();
+        for (int i = 0; i < 10; i++) {
+            storage.uploadFile(pagedUploadKeyPrefix + i, uploadFile, options);
+        }
+
+        // Upload as user one
+        synchronousAuth.signOut();
     }
 }

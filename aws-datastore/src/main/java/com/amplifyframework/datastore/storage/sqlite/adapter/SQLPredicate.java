@@ -180,12 +180,16 @@ public final class SQLPredicate {
                         .append("0");
             case BEGINS_WITH:
                 BeginsWithQueryOperator beginsWithOp = (BeginsWithQueryOperator) op;
-                addBinding(beginsWithOp.value() + "%");
-                return builder.append(column)
+                addBinding(beginsWithOp.value());
+                return builder.append("instr(")
+                        .append(column)
+                        .append(",")
+                        .append("?")
+                        .append(")")
                         .append(SqlKeyword.DELIMITER)
-                        .append(SqlKeyword.LIKE)
+                        .append(SqlKeyword.fromQueryOperator(QueryOperator.Type.EQUAL))
                         .append(SqlKeyword.DELIMITER)
-                        .append("?");
+                        .append("1");
             case EQUAL:
             case NOT_EQUAL:
                 Object operatorValue = getOperatorValue(op);

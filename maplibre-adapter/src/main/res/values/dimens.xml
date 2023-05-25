@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!--
+<?xml version="1.0" encoding="utf-8"?><!--
    Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 
    Licensed under the Apache License, Version 2.0 (the "License").
@@ -38,8 +37,6 @@
     <dimen name="map_search_infoTextSize">16sp</dimen>
     <dimen name="map_search_inputPadding">6dp</dimen>
     <dimen name="map_search_itemPadding">16dp</dimen>
-    <dimen name="map_search_itemTextSize">16sp</dimen>
-    <dimen name="map_search_padding">48dp</dimen>
     <dimen name="map_search_updateButtonPadding">20dp</dimen>
     <dimen name="map_search_resultTopHandleHeight">28dp</dimen>
     <dimen name="map_search_resultTopHandleRadius">18dp</dimen>

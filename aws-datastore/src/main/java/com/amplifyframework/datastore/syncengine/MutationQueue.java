@@ -27,8 +27,12 @@ import java.util.Map;
  * The {@link MutationQueue} is a LinkedHashMap like container , the goal of using this container is to
  * achieve O(1) time complexity for both getting a {@link PendingMutation} and update an existing mutation with
  * valid id.
- * MutationQueue is implementing the Queue interface and provide most of the queue operations,
+ * MutationQueue is implementing the Queue interface and provide most of the queue operations.
+ * 
+ * @deprecated This class was released with public visibility but is not intended to be consumed.
+ *             It will be removed in future versions of Amplify.
  */
+@Deprecated
 public final class MutationQueue {
 
     private final Map<TimeBasedUuid, Node> mutationMap = new HashMap<>();

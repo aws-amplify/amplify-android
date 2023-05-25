@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -29,14 +29,6 @@ import com.amplifyframework.predictions.models.Selection;
 import com.amplifyframework.predictions.models.Table;
 import com.amplifyframework.util.Empty;
 
-import com.amazonaws.services.textract.model.Block;
-import com.amazonaws.services.textract.model.BlockType;
-import com.amazonaws.services.textract.model.BoundingBox;
-import com.amazonaws.services.textract.model.EntityType;
-import com.amazonaws.services.textract.model.Point;
-import com.amazonaws.services.textract.model.Relationship;
-import com.amazonaws.services.textract.model.SelectionStatus;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -44,6 +36,14 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import aws.sdk.kotlin.services.textract.model.Block;
+import aws.sdk.kotlin.services.textract.model.BlockType;
+import aws.sdk.kotlin.services.textract.model.BoundingBox;
+import aws.sdk.kotlin.services.textract.model.EntityType;
+import aws.sdk.kotlin.services.textract.model.Point;
+import aws.sdk.kotlin.services.textract.model.Relationship;
+import aws.sdk.kotlin.services.textract.model.SelectionStatus;
 
 /**
  * Utility class to transform Amazon Textract service-specific
@@ -102,14 +102,22 @@ public final class TextractResultTransformers {
      */
     @Nullable
     public static IdentifiedText fetchIdentifiedText(@Nullable Block block) {
-        if (block == null || block.getText() == null) {
+        if (block == null || block.getText() == null || block.getConfidence() == null) {
             return null;
+        }
+        List<Point> polygon = null;
+        if (block.getGeometry() != null) {
+            polygon = block.getGeometry().getPolygon();
+        }
+        RectF box = null;
+        if (block.getGeometry() != null) {
+            box = fromBoundingBox(block.getGeometry().getBoundingBox());
         }
         return IdentifiedText.builder()
                 .text(block.getText())
                 .confidence(block.getConfidence())
-                .box(fromBoundingBox(block.getGeometry().getBoundingBox()))
-                .polygon(fromPoints(block.getGeometry().getPolygon()))
+                .box(box)
+                .polygon(fromPoints(polygon))
                 .page(block.getPage() != null ? block.getPage() : 0)
                 .build();
     }
@@ -125,10 +133,18 @@ public final class TextractResultTransformers {
         if (block == null || block.getSelectionStatus() == null) {
             return null;
         }
+        List<Point> polygon = null;
+        if (block.getGeometry() != null) {
+            polygon = block.getGeometry().getPolygon();
+        }
+        RectF box = null;
+        if (block.getGeometry() != null) {
+            box = fromBoundingBox(block.getGeometry().getBoundingBox());
+        }
         return Selection.builder()
-                .box(fromBoundingBox(block.getGeometry().getBoundingBox()))
-                .polygon(fromPoints(block.getGeometry().getPolygon()))
-                .selected(SelectionStatus.SELECTED.toString().equals(block.getSelectionStatus()))
+                .box(box)
+                .polygon(fromPoints(polygon))
+                .selected(SelectionStatus.Selected.INSTANCE.equals(block.getSelectionStatus()))
                 .build();
     }
 
@@ -142,7 +158,7 @@ public final class TextractResultTransformers {
     @Nullable
     public static Table fetchTable(@Nullable Block block, @NonNull Map<String, Block> blockMap) {
         Objects.requireNonNull(blockMap);
-        if (block == null || !BlockType.TABLE.toString().equals(block.getBlockType())) {
+        if (block == null || !BlockType.Table.INSTANCE.equals(block.getBlockType()) || block.getConfidence() == null) {
             return null;
         }
         List<Cell> cells = new ArrayList<>();
@@ -151,16 +167,25 @@ public final class TextractResultTransformers {
 
         // Each TABLE block contains CELL blocks
         doForEachRelatedBlock(block, blockMap, cellBlock -> {
-            rows.add(cellBlock.getRowIndex() - 1);
-            cols.add(cellBlock.getColumnIndex() - 1);
-            cells.add(fetchTableCell(cellBlock, blockMap));
+            if (cellBlock.getRowIndex() != null && cellBlock.getColumnIndex() != null) {
+                rows.add(cellBlock.getRowIndex() - 1);
+                cols.add(cellBlock.getColumnIndex() - 1);
+                cells.add(fetchTableCell(cellBlock, blockMap));
+            }
         });
-
+        List<Point> polygon = null;
+        if (block.getGeometry() != null) {
+            polygon = block.getGeometry().getPolygon();
+        }
+        RectF box = null;
+        if (block.getGeometry() != null) {
+            box = fromBoundingBox(block.getGeometry().getBoundingBox());
+        }
         return Table.builder()
                 .cells(cells)
                 .confidence(block.getConfidence())
-                .box(fromBoundingBox(block.getGeometry().getBoundingBox()))
-                .polygon(fromPoints(block.getGeometry().getPolygon()))
+                .box(box)
+                .polygon(fromPoints(polygon))
                 .rowSize(rows.size())
                 .columnSize(cols.size())
                 .build();
@@ -176,24 +201,25 @@ public final class TextractResultTransformers {
     @Nullable
     public static BoundedKeyValue fetchKeyValue(@Nullable Block block, @NonNull Map<String, Block> blockMap) {
         Objects.requireNonNull(blockMap);
-        if (block == null || !BlockType.KEY_VALUE_SET.toString().equals(block.getBlockType())) {
+        if (block == null || !BlockType.KeyValueSet.INSTANCE.equals(block.getBlockType())
+                || block.getConfidence() == null) {
             return null;
         }
         // Must be of entity type "KEY"
-        List<String> entityTypes = block.getEntityTypes();
-        if (entityTypes == null || !entityTypes.contains(EntityType.KEY.toString())) {
+        List<EntityType> entityTypes = block.getEntityTypes();
+        if (entityTypes == null || !entityTypes.contains(EntityType.Key.INSTANCE)) {
             return null;
         }
         StringBuilder keyBuilder = new StringBuilder();
         StringBuilder valueBuilder = new StringBuilder();
 
-        // KEY_VALUE_SET block contains either KEY or VALUE entity type blocks
+        // KeyValueSet block contains either Key or Value entity type blocks
         doForEachRelatedBlock(block, blockMap, relatedBlock -> {
-            // For KEY entity block
+            // For Key entity block
             if (relatedBlock.getText() != null) {
                 keyBuilder.append(relatedBlock.getText()).append(" ");
             }
-            // For VALUE entity block
+            // For Value entity block
             doForEachRelatedBlock(relatedBlock, blockMap, valueBlock -> {
                 valueBuilder.append(valueBlock.getText()).append(" ");
             });
@@ -201,18 +227,26 @@ public final class TextractResultTransformers {
 
         String key = keyBuilder.toString().trim();
         String value = valueBuilder.toString().trim();
+        List<Point> polygon = null;
+        if (block.getGeometry() != null) {
+            polygon = block.getGeometry().getPolygon();
+        }
+        RectF box = null;
+        if (block.getGeometry() != null) {
+            box = fromBoundingBox(block.getGeometry().getBoundingBox());
+        }
         return BoundedKeyValue.builder()
                 .keyValuePair(key, value)
                 .confidence(block.getConfidence())
-                .box(fromBoundingBox(block.getGeometry().getBoundingBox()))
-                .polygon(fromPoints(block.getGeometry().getPolygon()))
+                .box(box)
+                .polygon(fromPoints(polygon))
                 .build();
     }
 
     @Nullable
     private static Cell fetchTableCell(@Nullable Block block, @NonNull Map<String, Block> blockMap) {
         Objects.requireNonNull(blockMap);
-        if (block == null || !BlockType.CELL.toString().equals(block.getBlockType())) {
+        if (block == null || !BlockType.Cell.INSTANCE.equals(block.getBlockType()) || block.getConfidence() == null) {
             return null;
         }
         StringBuilder wordsBuilder = new StringBuilder();
@@ -226,17 +260,28 @@ public final class TextractResultTransformers {
                 wordsBuilder.append(text).append(" ");
             }
             // For SELECTION_ELEMENT block
-            String selectionStatus = relatedBlock.getSelectionStatus();
+            SelectionStatus selectionStatus = relatedBlock.getSelectionStatus();
             if (selectionStatus != null) {
-                isSelected.set(SelectionStatus.SELECTED.toString().equals(selectionStatus));
+                isSelected.set(SelectionStatus.Selected.INSTANCE.equals(selectionStatus));
             }
         });
 
+        List<Point> polygon = null;
+        if (block.getGeometry() != null) {
+            polygon = block.getGeometry().getPolygon();
+        }
+        if (block.getRowIndex() == null || block.getColumnIndex() == null) {
+            return null;
+        }
+        RectF box = null;
+        if (block.getGeometry() != null) {
+            box = fromBoundingBox(block.getGeometry().getBoundingBox());
+        }
         return Cell.builder()
                 .text(wordsBuilder.toString().trim())
                 .confidence(block.getConfidence())
-                .box(fromBoundingBox(block.getGeometry().getBoundingBox()))
-                .polygon(fromPoints(block.getGeometry().getPolygon()))
+                .box(box)
+                .polygon(fromPoints(polygon))
                 .selected(isSelected.get())
                 .row(block.getRowIndex() - 1)
                 .column(block.getColumnIndex() - 1)
@@ -253,12 +298,15 @@ public final class TextractResultTransformers {
         }
 
         for (Relationship relationship : block.getRelationships()) {
-            for (String id : relationship.getIds()) {
-                Block relatedBlock = blockMap.get(id);
-                if (relatedBlock == null) {
-                    continue;
+            List<String> relationshipIds = relationship.getIds();
+            if (relationshipIds != null) {
+                for (String id : relationshipIds) {
+                    Block relatedBlock = blockMap.get(id);
+                    if (relatedBlock == null) {
+                        continue;
+                    }
+                    forEach.accept(relatedBlock);
                 }
-                forEach.accept(relatedBlock);
             }
         }
     }

@@ -63,5 +63,4 @@ internal class SearchResultItemView(
         addView(label)
         addView(address)
     }
-
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 package com.amplifyframework.predictions;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.amplifyframework.AmplifyException;
 
@@ -23,7 +24,7 @@ import com.amplifyframework.AmplifyException;
  * Exception thrown by Predictions category upon encountering
  * an error during setup or operation.
  */
-public final class PredictionsException extends AmplifyException {
+public class PredictionsException extends AmplifyException {
     private static final long serialVersionUID = 6843042852631940595L;
 
     /**
@@ -34,7 +35,7 @@ public final class PredictionsException extends AmplifyException {
      */
     public PredictionsException(
             @NonNull final String message,
-            @NonNull final Throwable cause,
+            @Nullable final Throwable cause,
             @NonNull final String recoverySuggestion
     ) {
         super(message, cause, recoverySuggestion);

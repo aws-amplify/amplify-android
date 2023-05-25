@@ -14,33 +14,41 @@
  */
 package com.amplifyframework.storage.s3.operation
 
-import com.amazonaws.mobileconnectors.s3.transferutility.TransferObserver
-import com.amazonaws.services.s3.model.ObjectMetadata
+import com.amplifyframework.auth.AuthCredentialsProvider
 import com.amplifyframework.core.Consumer
+import com.amplifyframework.storage.ObjectMetadata
 import com.amplifyframework.storage.StorageAccessLevel
 import com.amplifyframework.storage.StorageException
-import com.amplifyframework.storage.s3.CognitoAuthProvider
 import com.amplifyframework.storage.s3.ServerSideEncryption
 import com.amplifyframework.storage.s3.configuration.AWSS3PluginPrefixResolver
 import com.amplifyframework.storage.s3.configuration.AWSS3StoragePluginConfiguration
 import com.amplifyframework.storage.s3.request.AWSS3StorageUploadRequest
 import com.amplifyframework.storage.s3.service.StorageService
+import com.amplifyframework.storage.s3.transfer.TransferObserver
+import com.google.common.util.concurrent.MoreExecutors
+import io.mockk.coEvery
+import io.mockk.mockk
 import java.io.File
 import java.io.InputStream
 import org.junit.Before
 import org.junit.Test
+import org.junit.runner.RunWith
 import org.mockito.Mockito
+import org.mockito.Mockito.any
+import org.mockito.Mockito.eq
+import org.robolectric.RobolectricTestRunner
 
+@RunWith(RobolectricTestRunner::class)
 class AWSS3StorageUploadInputStreamOperationTest {
 
     private lateinit var inputStreamOperation: AWSS3StorageUploadInputStreamOperation
     private lateinit var storageService: StorageService
-    private lateinit var cognitoAuthProvider: CognitoAuthProvider
+    private lateinit var authCredentialsProvider: AuthCredentialsProvider
 
     @Before
     fun setup() {
         storageService = Mockito.spy(StorageService::class.java)
-        cognitoAuthProvider = Mockito.mock(CognitoAuthProvider::class.java)
+        authCredentialsProvider = mockk<AuthCredentialsProvider>()
     }
 
     @Test
@@ -48,15 +56,16 @@ class AWSS3StorageUploadInputStreamOperationTest {
         val key = "123"
         val expectedKey = "public/123"
         val tempInputStream = File.createTempFile("new", "file.tmp").inputStream()
-        Mockito.`when`(cognitoAuthProvider.identityId).thenReturn("abc")
+        coEvery { authCredentialsProvider.getIdentityId() } returns "abc"
         Mockito.`when`(
             storageService.uploadInputStream(
-                Mockito.any(),
-                Mockito.any(),
-                Mockito.any()
+                any(),
+                any(),
+                any(),
+                any(),
+                eq(false)
             )
-        )
-            .thenReturn(Mockito.mock(TransferObserver::class.java))
+        ).thenReturn(Mockito.mock(TransferObserver::class.java))
         val request = AWSS3StorageUploadRequest<InputStream>(
             key,
             tempInputStream,
@@ -64,22 +73,26 @@ class AWSS3StorageUploadInputStreamOperationTest {
             "",
             "/image",
             ServerSideEncryption.NONE,
-            mutableMapOf()
+            mutableMapOf(),
+            false
         )
         inputStreamOperation = AWSS3StorageUploadInputStreamOperation(
             storageService,
-            cognitoAuthProvider,
-            request,
+            MoreExecutors.newDirectExecutorService(),
+            authCredentialsProvider,
             AWSS3StoragePluginConfiguration {},
+            request,
             {},
             {},
             {}
         )
         inputStreamOperation.start()
         Mockito.verify(storageService).uploadInputStream(
-            Mockito.eq(expectedKey),
-            Mockito.eq(tempInputStream),
-            Mockito.any(ObjectMetadata::class.java)
+            eq(inputStreamOperation.transferId),
+            eq(expectedKey),
+            eq(tempInputStream),
+            any(ObjectMetadata::class.java),
+            eq(false)
         )
     }
 
@@ -88,12 +101,14 @@ class AWSS3StorageUploadInputStreamOperationTest {
         val key = "123"
         val expectedKey = "123"
         val tempInputStream = File.createTempFile("new", "file.tmp").inputStream()
-        Mockito.`when`(cognitoAuthProvider.identityId).thenReturn("abc")
+        coEvery { authCredentialsProvider.getIdentityId() } returns "abc"
         Mockito.`when`(
             storageService.uploadInputStream(
-                Mockito.any(),
-                Mockito.any(),
-                Mockito.any()
+                any(),
+                any(),
+                any(),
+                any(),
+                eq(false)
             )
         )
             .thenReturn(Mockito.mock(TransferObserver::class.java))
@@ -104,33 +119,37 @@ class AWSS3StorageUploadInputStreamOperationTest {
             "",
             "/image",
             ServerSideEncryption.NONE,
-            mutableMapOf()
+            mutableMapOf(),
+            false
         )
         inputStreamOperation = AWSS3StorageUploadInputStreamOperation(
             storageService,
-            cognitoAuthProvider,
-            request,
+            MoreExecutors.newDirectExecutorService(),
+            authCredentialsProvider,
             AWSS3StoragePluginConfiguration {
                 awsS3PluginPrefixResolver = object : AWSS3PluginPrefixResolver {
                     override fun resolvePrefix(
                         accessLevel: StorageAccessLevel,
                         targetIdentity: String?,
                         onSuccess: Consumer<String>,
-                        onError: Consumer<StorageException>
+                        onError: Consumer<StorageException>?
                     ) {
                         onSuccess.accept("")
                     }
                 }
             },
+            request,
             {},
             {},
             {}
         )
         inputStreamOperation.start()
         Mockito.verify(storageService).uploadInputStream(
-            Mockito.eq(expectedKey),
-            Mockito.eq(tempInputStream),
-            Mockito.any(ObjectMetadata::class.java)
+            eq(inputStreamOperation.transferId),
+            eq(expectedKey),
+            eq(tempInputStream),
+            any(ObjectMetadata::class.java),
+            eq(false)
         )
     }
 
@@ -139,15 +158,16 @@ class AWSS3StorageUploadInputStreamOperationTest {
         val key = "123"
         val expectedKey = "publicCustom/123"
         val tempInputStream = File.createTempFile("new", "file.tmp").inputStream()
-        Mockito.`when`(cognitoAuthProvider.identityId).thenReturn("abc")
+        coEvery { authCredentialsProvider.getIdentityId() } returns "abc"
         Mockito.`when`(
             storageService.uploadInputStream(
-                Mockito.any(),
-                Mockito.any(),
-                Mockito.any()
+                any(),
+                any(),
+                any(),
+                any(),
+                eq(false)
             )
-        )
-            .thenReturn(Mockito.mock(TransferObserver::class.java))
+        ).thenReturn(Mockito.mock(TransferObserver::class.java))
         val request = AWSS3StorageUploadRequest<InputStream>(
             key,
             tempInputStream,
@@ -155,33 +175,37 @@ class AWSS3StorageUploadInputStreamOperationTest {
             "",
             "/image",
             ServerSideEncryption.NONE,
-            mutableMapOf()
+            mutableMapOf(),
+            false
         )
         inputStreamOperation = AWSS3StorageUploadInputStreamOperation(
             storageService,
-            cognitoAuthProvider,
-            request,
+            MoreExecutors.newDirectExecutorService(),
+            authCredentialsProvider,
             AWSS3StoragePluginConfiguration {
                 awsS3PluginPrefixResolver = object : AWSS3PluginPrefixResolver {
                     override fun resolvePrefix(
                         accessLevel: StorageAccessLevel,
                         targetIdentity: String?,
                         onSuccess: Consumer<String>,
-                        onError: Consumer<StorageException>
+                        onError: Consumer<StorageException>?
                     ) {
                         onSuccess.accept("publicCustom/")
                     }
                 }
             },
+            request,
             {},
             {},
             {}
         )
         inputStreamOperation.start()
         Mockito.verify(storageService).uploadInputStream(
-            Mockito.eq(expectedKey),
-            Mockito.eq(tempInputStream),
-            Mockito.any(ObjectMetadata::class.java)
+            eq(inputStreamOperation.transferId),
+            eq(expectedKey),
+            eq(tempInputStream),
+            any(ObjectMetadata::class.java),
+            eq(false)
         )
     }
 }

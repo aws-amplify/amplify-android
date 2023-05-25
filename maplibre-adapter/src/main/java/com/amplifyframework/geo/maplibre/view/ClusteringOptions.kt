@@ -61,7 +61,10 @@ class ClusteringOptions private constructor(
     class Builder {
         var clusterColor: Int = Color.parseColor("#1E88E5")
             private set
-        var clusterColorSteps: Map<Int, Int> = mapOf(20 to Color.parseColor("#EF5350"), 50 to Color.parseColor("#FFEB3B"))
+        var clusterColorSteps: Map<Int, Int> = mapOf(
+            20 to Color.parseColor("#EF5350"),
+            50 to Color.parseColor("#FFEB3B")
+        )
             private set
         var clusterNumberColor: Int = Color.BLACK
             private set
@@ -91,7 +94,7 @@ class ClusteringOptions private constructor(
          * @param clusterColorSteps a map from number of points in the cluster to the cluster circle color.
          * @return this builder instance.
          */
-        fun clusterColorSteps(clusterColorSteps: Map<Int, Int>) = apply { this.clusterColorSteps = clusterColorSteps}
+        fun clusterColorSteps(clusterColorSteps: Map<Int, Int>) = apply { this.clusterColorSteps = clusterColorSteps }
 
         /**
          * Sets the color for the number shown in the cluster circles.
@@ -105,7 +108,8 @@ class ClusteringOptions private constructor(
          * @param onClusterClicked the behavior when a cluster (feature) is clicked.
          * @return this builder instance.
          */
-        fun onClusterClicked(onClusterClicked: (MapLibreView, Feature) -> Unit) = apply { this.onClusterClicked = onClusterClicked }
+        fun onClusterClicked(onClusterClicked: (MapLibreView, Feature) -> Unit) =
+            apply { this.onClusterClicked = onClusterClicked }
 
         /**
          * Sets the maximum zoom level to cluster points at.

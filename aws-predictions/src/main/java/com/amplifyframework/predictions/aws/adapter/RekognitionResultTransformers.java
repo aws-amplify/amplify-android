@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -30,16 +30,15 @@ import com.amplifyframework.predictions.models.Polygon;
 import com.amplifyframework.predictions.models.Pose;
 import com.amplifyframework.util.Empty;
 
-import com.amazonaws.services.rekognition.model.BoundingBox;
-import com.amazonaws.services.rekognition.model.FaceDetail;
-import com.amazonaws.services.rekognition.model.Point;
-import com.amazonaws.services.rekognition.model.TextDetection;
-
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import aws.sdk.kotlin.services.rekognition.model.BoundingBox;
+import aws.sdk.kotlin.services.rekognition.model.FaceDetail;
+import aws.sdk.kotlin.services.rekognition.model.Point;
+import aws.sdk.kotlin.services.rekognition.model.TextDetection;
 
 /**
  * Utility class to transform Amazon Rekognition service-specific
@@ -57,7 +56,8 @@ public final class RekognitionResultTransformers {
      */
     @Nullable
     public static RectF fromBoundingBox(@Nullable BoundingBox box) {
-        if (box == null) {
+        if (box == null || box.getLeft() == null || box.getTop() == null || box.getWidth() == null
+                || box.getHeight() == null) {
             return null;
         }
         return new RectF(
@@ -81,6 +81,9 @@ public final class RekognitionResultTransformers {
         }
         List<PointF> points = new ArrayList<>();
         for (Point point : polygon) {
+            if (point.getX() == null || point.getY() == null) {
+                return null;
+            }
             PointF androidPoint = new PointF(
                     point.getX(),
                     point.getY()
@@ -92,28 +95,28 @@ public final class RekognitionResultTransformers {
 
 
     /**
-     * Converts {@link com.amazonaws.services.rekognition.model.Pose}
+     * Converts {@link aws.sdk.kotlin.services.rekognition.model.Pose}
      * from Amazon Rekognition into Amplify-compatible pose data.
      * @param pose the pose provided by Amazon Rekognition
      * @return the Amplify pose with same orientation
      */
     @Nullable
-    public static Pose fromRekognitionPose(@Nullable com.amazonaws.services.rekognition.model.Pose pose) {
-        if (pose == null) {
+    public static Pose fromRekognitionPose(@Nullable aws.sdk.kotlin.services.rekognition.model.Pose pose) {
+        if (pose == null || pose.getPitch() == null || pose.getRoll() == null || pose.getYaw() == null) {
             return null;
         }
         return new Pose(pose.getPitch(), pose.getRoll(), pose.getYaw());
     }
 
     /**
-     * Converts {@link com.amazonaws.services.rekognition.model.AgeRange}
+     * Converts {@link aws.sdk.kotlin.services.rekognition.model.AgeRange}
      * from Amazon Rekognition into Amplify-compatible age range data.
      * @param range the age range provided by Amazon Rekognition
      * @return the Amplify age range with same low and high
      */
     @Nullable
-    public static AgeRange fromRekognitionAgeRange(@Nullable com.amazonaws.services.rekognition.model.AgeRange range) {
-        if (range == null) {
+    public static AgeRange fromRekognitionAgeRange(@Nullable aws.sdk.kotlin.services.rekognition.model.AgeRange range) {
+        if (range == null || range.getLow() == null || range.getHigh() == null) {
             return null;
         }
         return new AgeRange(range.getLow(), range.getHigh());
@@ -127,19 +130,23 @@ public final class RekognitionResultTransformers {
      */
     @Nullable
     public static IdentifiedText fromTextDetection(@Nullable TextDetection text) {
-        if (text == null) {
+        if (text == null || text.getDetectedText() == null || text.getConfidence() == null) {
             return null;
+        }
+        RectF box = null;
+        if (text.getGeometry() != null) {
+            box = fromBoundingBox(text.getGeometry().getBoundingBox());
         }
         return IdentifiedText.builder()
                 .text(text.getDetectedText())
                 .confidence(text.getConfidence())
-                .box(fromBoundingBox(text.getGeometry().getBoundingBox()))
+                .box(box)
                 .polygon(fromPoints(text.getGeometry().getPolygon()))
                 .build();
     }
 
     /**
-     * Converts a list of {@link com.amazonaws.services.rekognition.model.Landmark}
+     * Converts a list of {@link aws.sdk.kotlin.services.rekognition.model.Landmark}
      * from Amazon Rekognition into Amplify-compatible list of
      * {@link Landmark} objects.
      * @param landmarks the list of Amazon Rekognition landmark objects
@@ -147,7 +154,7 @@ public final class RekognitionResultTransformers {
      */
     @NonNull
     public static List<Landmark> fromLandmarks(
-            @Nullable List<com.amazonaws.services.rekognition.model.Landmark> landmarks
+            @Nullable List<aws.sdk.kotlin.services.rekognition.model.Landmark> landmarks
     ) {
         List<Landmark> amplifyLandmarks = new ArrayList<>();
         if (Empty.check(landmarks)) {
@@ -158,8 +165,11 @@ public final class RekognitionResultTransformers {
         Map<LandmarkType, List<PointF>> landmarkMap = new HashMap<>();
 
         // Pre-process all of the landmarks into a map of type -> matching points
-        for (com.amazonaws.services.rekognition.model.Landmark landmark : landmarks) {
-            LandmarkType type = LandmarkTypeAdapter.fromRekognition(landmark.getType());
+        for (aws.sdk.kotlin.services.rekognition.model.Landmark landmark : landmarks) {
+            if (landmark.getType() == null || landmark.getX() == null || landmark.getY() == null) {
+                continue;
+            }
+            LandmarkType type = LandmarkTypeAdapter.fromRekognition(landmark.getType().getValue());
             PointF point = new PointF(landmark.getX(), landmark.getY());
             List<PointF> points = landmarkMap.get(type);
             if (points == null) {
@@ -188,42 +198,70 @@ public final class RekognitionResultTransformers {
      * @return the list of Amplify {@link BinaryFeature}
      */
     public static List<BinaryFeature> fromFaceDetail(FaceDetail face) {
-        return Arrays.asList(
-                BinaryFeature.builder()
-                        .type(BinaryFeatureType.BEARD.getAlias())
-                        .value(face.getBeard().getValue())
-                        .confidence(face.getBeard().getConfidence())
-                        .build(),
-                BinaryFeature.builder()
-                        .type(BinaryFeatureType.SUNGLASSES.getAlias())
-                        .value(face.getSunglasses().getValue())
-                        .confidence(face.getSunglasses().getConfidence())
-                        .build(),
-                BinaryFeature.builder()
-                        .type(BinaryFeatureType.SMILE.getAlias())
-                        .value(face.getSmile().getValue())
-                        .confidence(face.getSmile().getConfidence())
-                        .build(),
-                BinaryFeature.builder()
-                        .type(BinaryFeatureType.EYE_GLASSES.getAlias())
-                        .value(face.getEyeglasses().getValue())
-                        .confidence(face.getEyeglasses().getConfidence())
-                        .build(),
-                BinaryFeature.builder()
-                        .type(BinaryFeatureType.MUSTACHE.getAlias())
-                        .value(face.getMustache().getValue())
-                        .confidence(face.getMustache().getConfidence())
-                        .build(),
-                BinaryFeature.builder()
-                        .type(BinaryFeatureType.MOUTH_OPEN.getAlias())
-                        .value(face.getMouthOpen().getValue())
-                        .confidence(face.getMouthOpen().getConfidence())
-                        .build(),
-                BinaryFeature.builder()
-                        .type(BinaryFeatureType.EYES_OPEN.getAlias())
-                        .value(face.getEyesOpen().getValue())
-                        .confidence(face.getEyesOpen().getConfidence())
-                        .build()
-        );
+        List<BinaryFeature> features = new ArrayList<>();
+        if (face.getBeard() != null && face.getBeard().getConfidence() != null) {
+            features.add(
+                    BinaryFeature.builder()
+                            .type(BinaryFeatureType.BEARD.getAlias())
+                            .value(face.getBeard().getValue())
+                            .confidence(face.getBeard().getConfidence())
+                            .build()
+            );
+        }
+        if (face.getSunglasses() != null && face.getSunglasses().getConfidence() != null) {
+            features.add(
+                    BinaryFeature.builder()
+                            .type(BinaryFeatureType.SUNGLASSES.getAlias())
+                            .value(face.getSunglasses().getValue())
+                            .confidence(face.getSunglasses().getConfidence())
+                            .build()
+            );
+        }
+        if (face.getSmile() != null && face.getSmile().getConfidence() != null) {
+            features.add(
+                    BinaryFeature.builder()
+                            .type(BinaryFeatureType.SMILE.getAlias())
+                            .value(face.getSmile().getValue())
+                            .confidence(face.getSmile().getConfidence())
+                            .build()
+            );
+        }
+        if (face.getEyeglasses() != null && face.getEyeglasses().getConfidence() != null) {
+            features.add(
+                    BinaryFeature.builder()
+                            .type(BinaryFeatureType.EYE_GLASSES.getAlias())
+                            .value(face.getEyeglasses().getValue())
+                            .confidence(face.getEyeglasses().getConfidence())
+                            .build()
+            );
+        }
+        if (face.getMustache() != null && face.getMustache().getConfidence() != null) {
+            features.add(
+                    BinaryFeature.builder()
+                            .type(BinaryFeatureType.MUSTACHE.getAlias())
+                            .value(face.getMustache().getValue())
+                            .confidence(face.getMustache().getConfidence())
+                            .build()
+            );
+        }
+        if (face.getMouthOpen() != null && face.getMouthOpen().getConfidence() != null) {
+            features.add(
+                    BinaryFeature.builder()
+                            .type(BinaryFeatureType.MOUTH_OPEN.getAlias())
+                            .value(face.getMouthOpen().getValue())
+                            .confidence(face.getMouthOpen().getConfidence())
+                            .build()
+            );
+        }
+        if (face.getEyesOpen() != null && face.getEyesOpen().getConfidence() != null) {
+            features.add(
+                    BinaryFeature.builder()
+                            .type(BinaryFeatureType.EYES_OPEN.getAlias())
+                            .value(face.getEyesOpen().getValue())
+                            .confidence(face.getEyesOpen().getConfidence())
+                            .build()
+            );
+        }
+        return features;
     }
 }
