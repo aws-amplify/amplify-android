@@ -32,7 +32,7 @@ class AppSyncLazyModel<M : Model>(
                     clazz,
                     queryPredicate
                 )
-            ).data.items.iterator().next()
+            ).data.items.iterator().next() // TODO : handle case where there is no value
         } catch (error: ApiException) {
             Log.e("MyAmplifyApp", "Query failure", error)
         }
@@ -40,9 +40,9 @@ class AppSyncLazyModel<M : Model>(
     }
 
     override fun get(onSuccess: Consumer<M>, onFailure: Consumer<AmplifyException>) {
-        val onQuerySuccess = Consumer<GraphQLResponse<M>> {
-            value = it.data
-            onSuccess.accept(it.data)
+        val onQuerySuccess = Consumer<GraphQLResponse<PaginatedResult<M>>> {
+            value = it.data.items.iterator().next() // TODO : handle case where there is no value
+            onSuccess.accept(value!!)
         }
         val onApiFailure = Consumer<ApiException> { onFailure.accept(it) }
         coreAmplify.API.query(

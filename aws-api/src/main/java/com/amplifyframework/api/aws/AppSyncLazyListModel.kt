@@ -31,7 +31,7 @@ class AppSyncLazyListModel<M : Model>(
                     clazz,
                     predicate.createPredicate(clazz, keyMap)
                 )
-            ).data.items.toList()
+            ).data.items.toList() // TODO : retrieve all pages of items?
         } catch (error: ApiException) {
             Log.e("MyAmplifyApp", "Query failure", error)
         }
@@ -39,9 +39,10 @@ class AppSyncLazyListModel<M : Model>(
     }
 
     override fun get(onSuccess: Consumer<List<M>>, onFailure: Consumer<AmplifyException>) {
-        val onQuerySuccess = Consumer<GraphQLResponse<List<M>>> {
-            value = it.data
-            onSuccess.accept(it.data)
+        val onQuerySuccess = Consumer<GraphQLResponse<PaginatedResult<M>>> {
+            val result = it.data.items.toList() // TODO : retrieve all pages of items?
+            value = result
+            onSuccess.accept(result)
         }
         val onApiFailure = Consumer<ApiException> { onFailure.accept(it) }
         coreAmplify.API.query(
