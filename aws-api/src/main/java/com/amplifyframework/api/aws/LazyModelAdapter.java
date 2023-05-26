@@ -20,6 +20,7 @@ import android.util.Log;
 
 import com.amplifyframework.core.model.LazyModel;
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.SchemaRegistry;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
@@ -48,7 +49,7 @@ public class LazyModelAdapter<M extends Model> implements JsonDeserializer<LazyM
         Log.d("LazyModelAdapter", "json: "+ json + " typeOfT " + typeOfT +
                 " typeOfT type name" + type + " context " +
                 context);
-         Map<String, Object> predicateKeyMap = new HashMap<>();
+        Map<String, Object> predicateKeyMap = new HashMap<>();
         Iterator<String> primaryKeysIterator = SchemaRegistry.instance()
                 .getModelSchemaForModelClass(type)
                 .getPrimaryIndexFields().iterator();

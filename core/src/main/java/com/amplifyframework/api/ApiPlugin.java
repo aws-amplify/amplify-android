@@ -15,11 +15,8 @@
 
 package com.amplifyframework.api;
 
-import android.content.Context;
 import androidx.annotation.NonNull;
-import androidx.annotation.WorkerThread;
 
-import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.plugin.Plugin;
 
@@ -37,9 +34,5 @@ public abstract class ApiPlugin<E> implements ApiCategoryBehavior, Plugin<E> {
     public final CategoryType getCategoryType() {
         return CategoryType.API;
     }
-
-    @WorkerThread
-    @Override
-    public void initialize(@NonNull Context context) throws AmplifyException {}
 }
 
