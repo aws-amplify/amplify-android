@@ -42,12 +42,17 @@ class AppSyncLazyModel<M : Model>(
         value?.let { return value }
         val queryPredicate = predicate.createPredicate(clazz, keyMap)
         try {
-            value = Amplify.API.query(
+            val resultIterator = Amplify.API.query(
                 AppSyncGraphQLRequestFactory.buildQuery<PaginatedResult<M>, M>(
                     clazz,
                     queryPredicate
                 )
-            ).data.items.iterator().next() // TODO : handle case where there is no value
+            ).data.items.iterator()
+            value = if (resultIterator.hasNext()) {
+                resultIterator.next()
+            } else {
+                null
+            }
         } catch (error: ApiException) {
             Log.e("MyAmplifyApp", "Query failure", error)
         }
@@ -60,7 +65,13 @@ class AppSyncLazyModel<M : Model>(
             return
         }
         val onQuerySuccess = Consumer<GraphQLResponse<PaginatedResult<M>>> {
-            value = it.data.items.iterator().next() // TODO : handle case where there is no value
+            val resultIterator = it.data.items.iterator()
+            value = if (resultIterator.hasNext()) {
+                resultIterator.next()
+            } else {
+                null
+            }
+            // TODO : remove !! and allow null value to be passed in
             onSuccess.accept(value!!)
         }
         val onApiFailure = Consumer<ApiException> { onFailure.accept(it) }
