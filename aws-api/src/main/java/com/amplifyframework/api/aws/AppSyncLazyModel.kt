@@ -24,7 +24,6 @@ import com.amplifyframework.core.Consumer
 import com.amplifyframework.core.model.LazyModel
 import com.amplifyframework.core.model.Model
 import com.amplifyframework.kotlin.core.Amplify
-import com.google.gson.JsonPrimitive
 import com.amplifyframework.core.Amplify as coreAmplify
 
 class AppSyncLazyModel<M : Model>(
@@ -65,17 +64,19 @@ class AppSyncLazyModel<M : Model>(
             onSuccess.accept(modelValue)
             return
         }
-        val onQuerySuccess = Consumer<GraphQLResponse<M>> {
-            value = it.data.also { v ->
-                onSuccess.accept(v)
+        val onQuerySuccess = Consumer<GraphQLResponse<PaginatedResult<M>>> {
+            val resultIterator = it.data.items.iterator()
+            value = if (resultIterator.hasNext()) {
+                resultIterator.next()
+            } else {
+                null
             }
+            // TODO : remove !! and allow null value to be passed in
+            onSuccess.accept(value!!)
         }
         val onApiFailure = Consumer<ApiException> { onFailure.accept(it) }
-
-        val objectId: String? = (keyMap["id"] as? JsonPrimitive)?.asString
-
         coreAmplify.API.query(
-            AppSyncGraphQLRequestFactory.buildQuery(clazz, objectId),
+            AppSyncGraphQLRequestFactory.buildQuery(clazz, predicate.createPredicate(clazz, keyMap)),
             onQuerySuccess,
             onApiFailure
         )
