@@ -43,7 +43,6 @@ import com.amplifyframework.util.Wrap;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.TypeVariable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -217,7 +216,7 @@ public final class SelectionSet {
             SelectionSet node = new SelectionSet(null,
                     SerializedModel.class == modelClass
                             ? getModelFields(modelSchema, requestOptions.maxDepth(), operation)
-                            : getModelFields(modelClass, requestOptions.maxDepth(), operation));
+                            : getModelFields(modelClass, requestOptions.maxDepth(), operation, false));
             if (QueryType.LIST.equals(operation) || QueryType.SYNC.equals(operation)) {
                 node = wrapPagination(node);
             }
@@ -251,13 +250,15 @@ public final class SelectionSet {
          * TODO: this is mostly duplicative of {@link #getModelFields(ModelSchema, int, Operation)}.
          * Long-term, we want to remove this current method and rely only on the ModelSchema-based
          * version.
-         * @param clazz Class from which to build selection set
-         * @param depth Number of children deep to explore
+         *
+         * @param clazz          Class from which to build selection set
+         * @param depth          Number of children deep to explore
+         * @param primaryKeyOnly
          * @return Selection Set
          * @throws AmplifyException On failure to build selection set
          */
         @SuppressWarnings("unchecked") // Cast to Class<Model>
-        private Set<SelectionSet> getModelFields(Class<? extends Model> clazz, int depth, Operation operation)
+        private Set<SelectionSet> getModelFields(Class<? extends Model> clazz, int depth, Operation operation, Boolean primaryKeyOnly)
                 throws AmplifyException {
             if (depth < 0) {
                 return new HashSet<>();
@@ -266,9 +267,10 @@ public final class SelectionSet {
             Set<SelectionSet> result = new HashSet<>();
             ModelSchema schema = ModelSchema.fromModelClass(clazz);
 
-            if (depth == 0
-                    && LeafSerializationBehavior.JUST_ID.equals(requestOptions.leafSerializationBehavior())
-                    && operation != QueryType.SYNC
+            if (
+                    (depth == 0
+                    && (LeafSerializationBehavior.JUST_ID.equals(requestOptions.leafSerializationBehavior()) || primaryKeyOnly)
+                    && operation != QueryType.SYNC)
             ) {
                 for (String s : schema.getPrimaryIndexFields()) {
                     result.add(new SelectionSet(s));
@@ -279,14 +281,15 @@ public final class SelectionSet {
             for (Field field : FieldFinder.findModelFieldsIn(clazz)) {
                 String fieldName = field.getName();
                 if (schema.getAssociations().containsKey(fieldName)) {
-                    if (List.class.isAssignableFrom(field.getType()) ||
-                            LazyList.class.isAssignableFrom(field.getType())) {
+                    if (LazyList.class.isAssignableFrom(field.getType())) {
+                        continue;
+                    } else if (List.class.isAssignableFrom(field.getType())) {
                         if (depth >= 1) {
                             ParameterizedType listType = (ParameterizedType) field.getGenericType();
                             Class<Model> listTypeClass = (Class<Model>) listType.getActualTypeArguments()[0];
                             Set<SelectionSet> fields = wrapPagination(getModelFields(listTypeClass,
                                                                 depth - 1,
-                                                                operation));
+                                                                operation, false));
                             result.add(new SelectionSet(fieldName, fields));
                         }
                     } else if (depth >= 1) {
@@ -294,12 +297,15 @@ public final class SelectionSet {
                         if (LazyModel.class.isAssignableFrom(field.getType())) {
                             ParameterizedType pType = (ParameterizedType) field.getGenericType();
                             modalClass = (Class<Model>) pType.getActualTypeArguments()[0];
+                            Set<SelectionSet> fields = getModelFields(modalClass, 0, operation, true);
+                            result.add(new SelectionSet(fieldName, fields));
                         } else {
                             modalClass = (Class<Model>) field.getType();
+                            Set<SelectionSet> fields = getModelFields(modalClass, depth - 1, operation, false);
+                            result.add(new SelectionSet(fieldName, fields));
                         }
 
-                        Set<SelectionSet> fields = getModelFields(modalClass, depth - 1, operation);
-                        result.add(new SelectionSet(fieldName, fields));
+
                     }
                 } else if (isCustomType(field)) {
                     result.add(new SelectionSet(fieldName, getNestedCustomTypeFields(getClassForField(field))));
