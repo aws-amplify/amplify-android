@@ -18,7 +18,7 @@ package com.amplifyframework.core.model
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.core.Consumer
 
-class InMemoryLazyModel<M : Model>(val model: M? = null) : LazyModel<M> () {
+class InMemoryLazyModel<M : Model>(model: M? = null) : LazyModel<M> () {
 
     private var value: M? = model
 
@@ -27,33 +27,31 @@ class InMemoryLazyModel<M : Model>(val model: M? = null) : LazyModel<M> () {
     }
 
     override suspend fun get(): M? {
-        model?.let { value = model }
-        return model
+        return value
     }
 
     override fun get(onSuccess: Consumer<M>, onFailure: Consumer<AmplifyException>) {
-        if (model != null) {
-            onSuccess.accept(model)
+        if (value != null) {
+            onSuccess.accept(value!!)
         }
     }
 }
 
-class InMemoryLazyList<M : Model>(private val modelList: List<M>? = null) : LazyList<M>() {
-    private var value: List<M>? = modelList
-    override fun getValue(): List<M>? {
+class InMemoryLazyList<M : Model>(modelList: List<M> = emptyList()) : LazyList<M>() {
+    private var value: List<M> = modelList
+    override fun getItems(): List<M> {
         return value
     }
 
-    override suspend fun get(): List<M>? {
-        modelList?.let {
-            value = modelList
-        }
-        return modelList
+    override suspend fun getNextPage(): List<M> {
+        return emptyList()
     }
 
-    override fun get(onSuccess: Consumer<List<M>>, onFailure: Consumer<AmplifyException>) {
-        if (modelList != null) {
-            onSuccess.accept(modelList)
-        }
+    override fun getNextPage(onSuccess: Consumer<List<M>>, onFailure: Consumer<AmplifyException>) {
+        onSuccess.accept(emptyList())
+    }
+
+    override fun hasNextPage(): Boolean {
+        return false
     }
 }

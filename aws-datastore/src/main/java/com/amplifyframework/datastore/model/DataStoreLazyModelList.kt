@@ -33,26 +33,27 @@ class DataStoreLazyModelList<M : Model>(
     private val predicate: DatastoreLazyQueryPredicate<M>
 ) : LazyList<M>() {
 
-    private var value: List<M>? = null
+    private var value: MutableList<M> = mutableListOf()
 
-    override fun getValue(): List<M>? {
+    override fun getItems(): List<M> {
         return value
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    override suspend fun get(): List<M>? {
-        value?.let { return value }
+    override suspend fun getNextPage(): List<M> {
+        /*value?.let { return value }
         try {
             value = Amplify.DataStore.query(clazz.kotlin, Where.matches(predicate.createPredicate(clazz, keyMap)))
                 .toList()
         } catch (error: DataStoreException) {
             Log.e("MyAmplifyApp", "Query failure", error)
         }
-        return value
+        return value*/
+        TODO()
     }
 
-    override fun get(onSuccess: Consumer<List<M>>, onFailure: Consumer<AmplifyException>) {
-        val onQuerySuccess = Consumer<Iterator<M>> {
+    override fun getNextPage(onSuccess: Consumer<List<M>>, onFailure: Consumer<AmplifyException>) {
+        /*val onQuerySuccess = Consumer<Iterator<M>> {
             val result = it.asSequence().toList()
             value = result
             onSuccess.accept(result)
@@ -63,6 +64,11 @@ class DataStoreLazyModelList<M : Model>(
             predicate.createPredicate(clazz, keyMap),
             onQuerySuccess,
             onApiFailure
-        )
+        )*/
+        TODO()
+    }
+
+    override fun hasNextPage(): Boolean {
+        TODO()
     }
 }

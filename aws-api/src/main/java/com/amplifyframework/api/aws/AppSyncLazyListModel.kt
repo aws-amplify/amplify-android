@@ -15,7 +15,6 @@
 
 package com.amplifyframework.api.aws
 
-import android.util.Log
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.api.ApiException
 import com.amplifyframework.api.graphql.GraphQLResponse
@@ -32,42 +31,48 @@ class AppSyncLazyListModel<M : Model>(
     private val predicate: AppSyncLazyQueryPredicate<M>
 ) : LazyList<M>() {
 
-    private var value: List<M>? = null
+    private var value: MutableList<M> = mutableListOf()
+    private var paginatedResult: PaginatedResult<M>? = null
 
-    override fun getValue(): List<M>? {
+    override fun getItems(): List<M> {
         return value
     }
 
-    override suspend fun get(): List<M>? {
-        value?.let { return value }
-        try {
-            value = Amplify.API.query(
-                AppSyncGraphQLRequestFactory.buildQuery<PaginatedResult<M>, M>(
-                    clazz,
-                    predicate.createListPredicate(clazz, keyMap)
-                )
-            ).data.items.toList() // TODO : retrieve all pages of items?
-        } catch (error: ApiException) {
-            Log.e("MyAmplifyApp", "Query failure", error)
+    override suspend fun getNextPage(): List<M> {
+        val request = if (paginatedResult != null) {
+            paginatedResult!!.requestForNextResult
+        } else {
+            AppSyncGraphQLRequestFactory.buildQuery<PaginatedResult<M>, M>(
+                clazz,
+                predicate.createListPredicate(clazz, keyMap)
+            )
         }
-        return value
+        paginatedResult = Amplify.API.query(request).data
+        val nextPageOfItems = paginatedResult!!.items.toList()
+        value.addAll(nextPageOfItems)
+        return nextPageOfItems
     }
 
-    override fun get(onSuccess: Consumer<List<M>>, onFailure: Consumer<AmplifyException>) {
-        value?.let { modelListValue ->
-            onSuccess.accept(modelListValue)
-            return
-        }
+    override fun getNextPage(onSuccess: Consumer<List<M>>, onFailure: Consumer<AmplifyException>) {
         val onQuerySuccess = Consumer<GraphQLResponse<PaginatedResult<M>>> {
-            val result = it.data.items.toList() // TODO : retrieve all pages of items?
-            value = result
-            onSuccess.accept(result)
+            paginatedResult = it.data
+            val nextPageOfItems = paginatedResult!!.items.toList()
+            value.addAll(nextPageOfItems)
+            onSuccess.accept(nextPageOfItems)
         }
         val onApiFailure = Consumer<ApiException> { onFailure.accept(it) }
-        coreAmplify.API.query(
-            AppSyncGraphQLRequestFactory.buildQuery(clazz, predicate.createListPredicate(clazz, keyMap)),
-            onQuerySuccess,
-            onApiFailure
-        )
+        val request = if (paginatedResult != null) {
+            paginatedResult!!.requestForNextResult
+        } else {
+            AppSyncGraphQLRequestFactory.buildQuery<PaginatedResult<M>, M>(
+                clazz,
+                predicate.createListPredicate(clazz, keyMap)
+            )
+        }
+        coreAmplify.API.query(request, onQuerySuccess, onApiFailure)
+    }
+
+    override fun hasNextPage(): Boolean {
+        return paginatedResult?.hasNextResult() ?: true
     }
 }
