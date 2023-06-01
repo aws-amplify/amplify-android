@@ -45,7 +45,9 @@ import java.time.OffsetDateTime;
 import java.time.OffsetTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -316,7 +318,18 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
             // We don't want to store entire SerializedCustomType along with schema into
             // Database but only its value.
             if (field.isCustomType() && fieldValue != null) {
-                fieldValue = ((SerializedCustomType) fieldValue).getFlatSerializedData();
+                if (field.isArray()) {
+                    @SuppressWarnings("unchecked")
+                    List<SerializedCustomType> listOfItems = (List<SerializedCustomType>) fieldValue;
+                    List<Map<String, Object>> listOfValues = new ArrayList<>();
+
+                    for (SerializedCustomType item : listOfItems) {
+                        listOfValues.add(item.getFlatSerializedData());
+                    }
+                    fieldValue = listOfValues;
+                } else {
+                    fieldValue = ((SerializedCustomType) fieldValue).getFlatSerializedData();
+                }
             }
         } else {
             fieldValue = ModelHelper.getValue(model, field);
@@ -324,6 +337,7 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
         if (fieldValue == null) {
             return null;
         }
+
         final JavaFieldType javaFieldType = TypeConverter.getJavaFieldType(field);
         return convertRawValueToTarget(fieldValue, javaFieldType, gson);
     }
