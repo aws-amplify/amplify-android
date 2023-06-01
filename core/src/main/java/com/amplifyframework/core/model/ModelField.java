@@ -38,6 +38,10 @@ public final class ModelField {
     // field in the GraphQL target.
     private final String targetType;
 
+    // The names of foreign key fields in the target. For example: type of the
+    // field in the GraphQL target.
+    private final String[] targetNames;
+
     // If the field can be modified
     private final boolean isReadOnly;
 
@@ -53,6 +57,12 @@ public final class ModelField {
 
     // True if the field is an instance of model.
     private final boolean isModel;
+
+    // True if the field is an instance of lazy model.
+    private final boolean isLazyModel;
+
+    // True if the field is an instance of lazy list.
+    private final boolean isLazyList;
 
     // True if the field is an instance of CustomType
     private final boolean isCustomType;
@@ -72,8 +82,11 @@ public final class ModelField {
         this.isArray = builder.isArray;
         this.isEnum = builder.isEnum;
         this.isModel = builder.isModel;
+        this.isLazyList = builder.isLazyList;
+        this.isLazyModel = builder.isLazyModel;
         this.isCustomType = builder.isCustomType;
         this.authRules = builder.authRules;
+        this.targetNames = builder.targetNames;
     }
 
     /**
@@ -107,6 +120,14 @@ public final class ModelField {
      */
     public String getTargetType() {
         return targetType;
+    }
+
+    /**
+     * Returns the foreign key fields on the associated model.
+     * @return The data targetType of the field.
+     */
+    public String[] getTargetNames() {
+        return targetNames;
     }
 
     /**
@@ -152,6 +173,24 @@ public final class ModelField {
      */
     public boolean isModel() {
         return isModel;
+    }
+
+    /**
+     * Returns true if the field's target type is Model.
+     *
+     * @return True if the field's target type is Model.
+     */
+    public boolean isLazyModel() {
+        return isLazyModel;
+    }
+
+    /**
+     * Returns true if the field's target type is Model.
+     *
+     * @return True if the field's target type is Model.
+     */
+    public boolean isLazyList() {
+        return isLazyList;
     }
 
     /**
@@ -253,6 +292,9 @@ public final class ModelField {
         // The data targetType of the field.
         private String targetType;
 
+        // The data targetNames of the field.
+        private String[] targetNames;
+
         // If the field can be modified.
         private boolean isReadOnly = false;
 
@@ -268,6 +310,12 @@ public final class ModelField {
 
         // True if the field's target type is Model.
         private boolean isModel = false;
+
+        // True if the field's target type is lazy Model.
+        private boolean isLazyModel = false;
+
+        // True if the field's target type is Lazy list.
+        private boolean isLazyList = false;
 
         // True if the field's target type is CustomType.
         private boolean isCustomType = false;
@@ -310,6 +358,16 @@ public final class ModelField {
          */
         public ModelFieldBuilder targetType(String targetType) {
             this.targetType = targetType;
+            return this;
+        }
+
+        /**
+         * Set the data targetType of the field.
+         * @param targetNames The name of the foreign key fields.
+         * @return the builder object
+         */
+        public ModelFieldBuilder targetNames(String[] targetNames) {
+            this.targetNames = targetNames;
             return this;
         }
 
@@ -362,6 +420,26 @@ public final class ModelField {
          */
         public ModelFieldBuilder isModel(boolean isModel) {
             this.isModel = isModel;
+            return this;
+        }
+
+        /**
+         * Sets a flag indicating whether or not the field's target type is a Model.
+         * @param isLazyModel flag indicating if the field is a model
+         * @return the builder object
+         */
+        public ModelFieldBuilder isLazyModel(boolean isLazyModel) {
+            this.isLazyModel = isLazyModel;
+            return this;
+        }
+
+        /**
+         * Sets a flag indicating whether or not the field's target type is a Model.
+         * @param isLazyList flag indicating if the field is a model
+         * @return the builder object
+         */
+        public ModelFieldBuilder isLazyList(boolean isLazyList) {
+            this.isLazyList = isLazyList;
             return this;
         }
 

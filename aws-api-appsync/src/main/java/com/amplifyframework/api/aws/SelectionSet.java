@@ -16,6 +16,8 @@
 package com.amplifyframework.api.aws;
 
 import android.text.TextUtils;
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
@@ -26,6 +28,8 @@ import com.amplifyframework.core.model.AuthRule;
 import com.amplifyframework.core.model.AuthStrategy;
 import com.amplifyframework.core.model.CustomTypeField;
 import com.amplifyframework.core.model.CustomTypeSchema;
+import com.amplifyframework.core.model.LazyList;
+import com.amplifyframework.core.model.LazyModel;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelAssociation;
 import com.amplifyframework.core.model.ModelField;
@@ -97,7 +101,6 @@ public final class SelectionSet {
 
     /**
      * Generate the String value of the SelectionSet used in the GraphQL query document, with no margin.
-     *
      * Sample return value:
      *   items {
      *     foo
@@ -213,7 +216,7 @@ public final class SelectionSet {
             SelectionSet node = new SelectionSet(null,
                     SerializedModel.class == modelClass
                             ? getModelFields(modelSchema, requestOptions.maxDepth(), operation)
-                            : getModelFields(modelClass, requestOptions.maxDepth(), operation));
+                            : getModelFields(modelClass, requestOptions.maxDepth(), operation, false));
             if (QueryType.LIST.equals(operation) || QueryType.SYNC.equals(operation)) {
                 node = wrapPagination(node);
             }
@@ -247,13 +250,15 @@ public final class SelectionSet {
          * TODO: this is mostly duplicative of {@link #getModelFields(ModelSchema, int, Operation)}.
          * Long-term, we want to remove this current method and rely only on the ModelSchema-based
          * version.
-         * @param clazz Class from which to build selection set
-         * @param depth Number of children deep to explore
+         * 
+         * @param clazz          Class from which to build selection set
+         * @param depth          Number of children deep to explore
+         * @param primaryKeyOnly
          * @return Selection Set
          * @throws AmplifyException On failure to build selection set
          */
         @SuppressWarnings("unchecked") // Cast to Class<Model>
-        private Set<SelectionSet> getModelFields(Class<? extends Model> clazz, int depth, Operation operation)
+        private Set<SelectionSet> getModelFields(Class<? extends Model> clazz, int depth, Operation operation, Boolean primaryKeyOnly)
                 throws AmplifyException {
             if (depth < 0) {
                 return new HashSet<>();
@@ -262,9 +267,10 @@ public final class SelectionSet {
             Set<SelectionSet> result = new HashSet<>();
             ModelSchema schema = ModelSchema.fromModelClass(clazz);
 
-            if (depth == 0
-                    && LeafSerializationBehavior.JUST_ID.equals(requestOptions.leafSerializationBehavior())
-                    && operation != QueryType.SYNC
+            if (
+                    (depth == 0
+                    && (LeafSerializationBehavior.JUST_ID.equals(requestOptions.leafSerializationBehavior()) || primaryKeyOnly)
+                    && operation != QueryType.SYNC)
             ) {
                 for (String s : schema.getPrimaryIndexFields()) {
                     result.add(new SelectionSet(s));
@@ -275,18 +281,29 @@ public final class SelectionSet {
             for (Field field : FieldFinder.findModelFieldsIn(clazz)) {
                 String fieldName = field.getName();
                 if (schema.getAssociations().containsKey(fieldName)) {
-                    if (List.class.isAssignableFrom(field.getType())) {
+                    if (LazyList.class.isAssignableFrom(field.getType())) {
+                        continue;
+                    } else if (List.class.isAssignableFrom(field.getType())) {
                         if (depth >= 1) {
                             ParameterizedType listType = (ParameterizedType) field.getGenericType();
                             Class<Model> listTypeClass = (Class<Model>) listType.getActualTypeArguments()[0];
                             Set<SelectionSet> fields = wrapPagination(getModelFields(listTypeClass,
                                                                 depth - 1,
-                                                                operation));
+                                                                operation, false));
                             result.add(new SelectionSet(fieldName, fields));
                         }
                     } else if (depth >= 1) {
-                        Set<SelectionSet> fields = getModelFields((Class<Model>) field.getType(), depth - 1, operation);
-                        result.add(new SelectionSet(fieldName, fields));
+                        Class<Model> modalClass;
+                        if (LazyModel.class.isAssignableFrom(field.getType())) {
+                            ParameterizedType pType = (ParameterizedType) field.getGenericType();
+                            modalClass = (Class<Model>) pType.getActualTypeArguments()[0];
+                            Set<SelectionSet> fields = getModelFields(modalClass, 0, operation, true);
+                            result.add(new SelectionSet(fieldName, fields));
+                        } else {
+                            modalClass = (Class<Model>) field.getType();
+                            Set<SelectionSet> fields = getModelFields(modalClass, depth - 1, operation, false);
+                            result.add(new SelectionSet(fieldName, fields));
+                        }
                     }
                 } else if (isCustomType(field)) {
                     result.add(new SelectionSet(fieldName, getNestedCustomTypeFields(getClassForField(field))));
@@ -303,6 +320,9 @@ public final class SelectionSet {
             for (String fieldName : requestOptions.modelMetaFields()) {
                 result.add(new SelectionSet(fieldName));
             }
+
+            Log.i("MetadataFields", "for schema:" + schema.getName() + " operation: " + operation
+                    + " fields: " + requestOptions.modelMetaFields());
             return result;
         }
 

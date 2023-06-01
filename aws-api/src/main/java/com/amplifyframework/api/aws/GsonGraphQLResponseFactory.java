@@ -23,7 +23,6 @@ import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.PaginatedResult;
 import com.amplifyframework.util.Empty;
-import com.amplifyframework.util.GsonFactory;
 import com.amplifyframework.util.TypeMaker;
 
 import com.google.gson.Gson;

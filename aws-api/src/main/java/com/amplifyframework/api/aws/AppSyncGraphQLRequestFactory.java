@@ -25,6 +25,7 @@ import com.amplifyframework.api.graphql.QueryType;
 import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.core.model.AuthRule;
 import com.amplifyframework.core.model.AuthStrategy;
+import com.amplifyframework.core.model.LazyModel;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelAssociation;
 import com.amplifyframework.core.model.ModelField;
@@ -405,7 +406,11 @@ public final class AppSyncGraphQLRequestFactory {
         try {
             Field privateField = instance.getClass().getDeclaredField(fieldName);
             privateField.setAccessible(true);
-            return privateField.get(instance);
+            Object fieldInstance = privateField.get(instance);
+            if (fieldInstance != null && privateField.getType() == LazyModel.class) {
+                return ((LazyModel<?>) fieldInstance).getValue();
+            }
+            return fieldInstance;
         } catch (Exception exception) {
             throw new AmplifyException(
                 "An invalid field was provided. " + fieldName + " is not present in " + schema.getName(),

@@ -30,6 +30,9 @@ dependencies {
     implementation(dependency.androidx.annotation)
     implementation(dependency.androidx.core)
     implementation(dependency.gson)
+    implementation(dependency.kotlin.stdlib)
+    implementation(dependency.kotlin.coroutines)
+    implementation(dependency.androidx.core.ktx)
 
     testImplementation(testDependency.junit)
     testImplementation(testDependency.robolectric)
