@@ -4,13 +4,19 @@ import android.content.Context
 import android.net.ConnectivityManager
 import android.net.Network
 import com.amplifyframework.datastore.DataStoreException
+import io.reactivex.rxjava3.android.plugins.RxAndroidPlugins
 import io.reactivex.rxjava3.core.BackpressureStrategy
+import io.reactivex.rxjava3.core.Scheduler
+import io.reactivex.rxjava3.plugins.RxJavaPlugins
 import io.reactivex.rxjava3.schedulers.TestScheduler
 import io.reactivex.rxjava3.subscribers.TestSubscriber
-import java.util.concurrent.TimeUnit
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.mockito.Mockito.mock
+import java.util.concurrent.Callable
+import java.util.concurrent.TimeUnit
+
 
 class ReachabilityMonitorTest {
 
@@ -69,6 +75,88 @@ class ReachabilityMonitorTest {
         testScheduler.advanceTimeBy(251, TimeUnit.MILLISECONDS)
 
         testSubscriber.assertValues(true, false, true)
+    }
+
+    @Test
+    fun testReachabilityDebounceCache() {
+        var callback: ConnectivityManager.NetworkCallback? = null
+
+        val connectivityProvider = object : ConnectivityProvider {
+            override val hasActiveNetwork: Boolean
+                get() = run {
+                    return true
+                }
+            override fun registerDefaultNetworkCallback(
+                context: Context,
+                callback2: ConnectivityManager.NetworkCallback
+            ) {
+                callback = callback2
+            }
+        }
+
+        val mockContext = mock(Context::class.java)
+        // TestScheduler allows the virtual time to be advanced by exact amounts, to allow for repeatable tests
+        val testScheduler = TestScheduler()
+        val reachabilityMonitor = ReachabilityMonitor.createForTesting(TestSchedulerProvider(testScheduler))
+        RxAndroidPlugins.setInitMainThreadSchedulerHandler { s: Callable<Scheduler?>? -> testScheduler }
+        RxJavaPlugins.setIoSchedulerHandler { s: Scheduler? -> testScheduler }
+        reachabilityMonitor.configure(mockContext, connectivityProvider)
+
+        // TestSubscriber allows for assertions and awaits on the items it observes
+        val testSubscriber = TestSubscriber<Boolean>()
+        reachabilityMonitor.getObservable()
+            // TestSubscriber requires a Flowable
+            .toFlowable(BackpressureStrategy.BUFFER)
+            .subscribe(testSubscriber)
+
+        val network = mock(Network::class.java)
+
+        // Assert that the first value is returned
+        callback!!.onAvailable(network)
+        testScheduler.advanceTimeBy(251, TimeUnit.MILLISECONDS)
+        var result1: Boolean? = null
+        val disposable1 = reachabilityMonitor.getObservable().subscribeOn(testScheduler).subscribe { result1 = it }
+        testScheduler.advanceTimeBy(1, TimeUnit.MILLISECONDS)
+        assertTrue(result1 == true)
+
+        // Assert that the cached value is still returned if a status has changed but debouncer hasn't completed
+        callback!!.onLost(network)
+        var result2: Boolean? = null
+        val disposable2 = reachabilityMonitor.getObservable().subscribeOn(testScheduler).subscribe { result2 = it }
+        testScheduler.advanceTimeBy(1, TimeUnit.MILLISECONDS)
+        assertTrue(result2 == true)
+
+        // Assert that once the debouncer has completed, the returned value is changed
+        var result3: Boolean? = null
+        val disposable3 = reachabilityMonitor.getObservable().subscribeOn(testScheduler).subscribe { result3 = it }
+        testScheduler.advanceTimeBy(251, TimeUnit.MILLISECONDS)
+        assertTrue(result3 == false)
+
+        // Assert that if debouncer keeps getting restarted, value doesn't change
+        callback!!.onAvailable(network)
+        testScheduler.advanceTimeBy(100, TimeUnit.MILLISECONDS)
+        callback!!.onLost(network)
+        testScheduler.advanceTimeBy(100, TimeUnit.MILLISECONDS)
+        callback!!.onAvailable(network)
+        testScheduler.advanceTimeBy(100, TimeUnit.MILLISECONDS)
+
+        var result4: Boolean? = null
+        val disposable4 = reachabilityMonitor.getObservable().subscribeOn(testScheduler).subscribe { result4 = it }
+        testScheduler.advanceTimeBy(1, TimeUnit.MILLISECONDS)
+        assertTrue(result4 == false)
+
+        // Assert that once the debouncer has completed, the returned value is changed
+        testScheduler.advanceTimeBy(151, TimeUnit.MILLISECONDS)
+        var result5: Boolean? = null
+        val disposable5 = reachabilityMonitor.getObservable().subscribeOn(testScheduler).subscribe { result5 = it }
+        testScheduler.advanceTimeBy(1, TimeUnit.MILLISECONDS)
+        assertTrue(result5 == true)
+
+        disposable1.dispose()
+        disposable2.dispose()
+        disposable3.dispose()
+        disposable4.dispose()
+        disposable5.dispose()
     }
 
     /**
