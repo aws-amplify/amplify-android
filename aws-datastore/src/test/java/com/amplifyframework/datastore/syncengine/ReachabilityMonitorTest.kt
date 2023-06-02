@@ -4,13 +4,9 @@ import android.content.Context
 import android.net.ConnectivityManager
 import android.net.Network
 import com.amplifyframework.datastore.DataStoreException
-import io.reactivex.rxjava3.android.plugins.RxAndroidPlugins
 import io.reactivex.rxjava3.core.BackpressureStrategy
-import io.reactivex.rxjava3.core.Scheduler
-import io.reactivex.rxjava3.plugins.RxJavaPlugins
 import io.reactivex.rxjava3.schedulers.TestScheduler
 import io.reactivex.rxjava3.subscribers.TestSubscriber
-import java.util.concurrent.Callable
 import java.util.concurrent.TimeUnit
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -101,8 +97,6 @@ class ReachabilityMonitorTest {
         // TestScheduler allows the virtual time to be advanced by exact amounts, to allow for repeatable tests
         val testScheduler = TestScheduler()
         val reachabilityMonitor = ReachabilityMonitor.createForTesting(TestSchedulerProvider(testScheduler))
-        RxAndroidPlugins.setInitMainThreadSchedulerHandler { s: Callable<Scheduler?>? -> testScheduler }
-        RxJavaPlugins.setIoSchedulerHandler { s: Scheduler? -> testScheduler }
         reachabilityMonitor.configure(mockContext, connectivityProvider)
 
         // TestSubscriber allows for assertions and awaits on the items it observes
