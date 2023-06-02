@@ -10,13 +10,12 @@ import io.reactivex.rxjava3.core.Scheduler
 import io.reactivex.rxjava3.plugins.RxJavaPlugins
 import io.reactivex.rxjava3.schedulers.TestScheduler
 import io.reactivex.rxjava3.subscribers.TestSubscriber
+import java.util.concurrent.Callable
+import java.util.concurrent.TimeUnit
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.mockito.Mockito.mock
-import java.util.concurrent.Callable
-import java.util.concurrent.TimeUnit
-
 
 class ReachabilityMonitorTest {
 
@@ -77,6 +76,10 @@ class ReachabilityMonitorTest {
         testSubscriber.assertValues(true, false, true)
     }
 
+    /**
+     * Test that ensures the reachabilityMonitor observer does not block while waiting on the debouncer,
+     * but provides the last stable value (value that lasted > 250ms).
+     */
     @Test
     fun testReachabilityDebounceCache() {
         var callback: ConnectivityManager.NetworkCallback? = null
