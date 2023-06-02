@@ -82,7 +82,15 @@ private class ReachabilityMonitorImpl constructor(val schedulerProvider: Schedul
             .subscribe(subject)
     }
 
-    override fun getObservable() = subject.subscribeOn(schedulerProvider.io())
+    override fun getObservable(): Observable<Boolean> {
+        if (connectivityProvider == null) {
+            throw DataStoreException(
+                "ReachabilityMonitor has not been configured.",
+                "Call ReachabilityMonitor.configure() before calling ReachabilityMonitor.getObservable()"
+            )
+        }
+        return subject.subscribeOn(schedulerProvider.io())
+    }
 }
 
 /**
