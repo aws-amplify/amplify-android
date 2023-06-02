@@ -77,7 +77,7 @@ private class ReachabilityMonitorImpl constructor(val schedulerProvider: Schedul
             )
             emitter.onNext(connectivityProvider.hasActiveNetwork)
         }
-        observable.debounce(250, TimeUnit.MILLISECONDS)
+        observable.debounce(250, TimeUnit.MILLISECONDS, schedulerProvider.computation())
             .distinctUntilChanged()
             .subscribe(subject)
     }
