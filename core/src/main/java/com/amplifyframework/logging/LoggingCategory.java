@@ -64,6 +64,7 @@ public final class LoggingCategory extends Category<LoggingPlugin<?>> implements
 
     @NonNull
     @Override
+    @SuppressWarnings("deprecation")
     public Logger forNamespace(@Nullable String namespace) {
         Set<LoggingPlugin<?>> loggingPlugins = new HashSet<>(getPlugins());
         loggingPlugins.add(defaultPlugin);
@@ -72,6 +73,28 @@ public final class LoggingCategory extends Category<LoggingPlugin<?>> implements
             delegates.add(plugin.forNamespace(namespace));
         }
         return new BroadcastLogger(delegates);
+    }
+
+    @NonNull
+    @Override
+    public Logger logger(@NonNull String namespace) {
+        return null;
+    }
+
+    @NonNull
+    @Override
+    public Logger logger(@NonNull CategoryType categoryType, @NonNull String namespace) {
+        return null;
+    }
+
+    @Override
+    public void enable() {
+
+    }
+
+    @Override
+    public void disable() {
+
     }
 
     @NonNull

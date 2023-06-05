@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+        package="com.amplifyframework.logging.cloudwatch" >
+    <!-- Permission will be merged into the manifest of the hosting app. -->
+    <!-- Is required to launch foreground transfer service for targetSdkVersion 28+. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+</manifest>
