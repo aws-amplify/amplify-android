@@ -1,3 +1,10 @@
+## [Release 2.8.5](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.8.5)
+
+### Miscellaneous
+- @fix(data): Fix reachability debouncer causing delay on local inserts ([#2464](https://github.com/aws-amplify/amplify-android/issues/2464))
+
+[See all changes between 2.8.4 and 2.8.5](https://github.com/aws-amplify/amplify-android/compare/release_v2.8.4...release_v2.8.5)
+
 ## [Release 2.8.4](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.8.4)
 
 ### Bug Fixes
