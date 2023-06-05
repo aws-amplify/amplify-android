@@ -86,6 +86,7 @@ dependencyResolutionManagement {
             library("androidx-nav-fragment", "androidx.navigation", "navigation-fragment").versionRef(nagivation)
             library("androidx-nav-ui", "androidx.navigation", "navigation-ui").versionRef(nagivation)
             library("androidx-lifecycle-runtime", "androidx.lifecycle:lifecycle-runtime:2.4.1")
+            library("androidx-sqlite", "androidx.sqlite:sqlite:2.2.0")
 
             // AWS
             val awsKotlinSdk = "awsKotlinSdk"
@@ -103,7 +104,7 @@ dependencyResolutionManagement {
             library(
                 "aws-cognitoidentityprovider",
                 "aws.sdk.kotlin",
-                "cognitoidentityprovider"
+                "cognitoidentityprovider",
             ).versionRef(awsKotlinSdk)
             library("aws-comprehend", "aws.sdk.kotlin", "comprehend").versionRef(awsKotlinSdk)
             library("aws-location", "aws.sdk.kotlin", "location").versionRef(awsKotlinSdk)
@@ -113,6 +114,7 @@ dependencyResolutionManagement {
             library("aws-rekognition", "aws.sdk.kotlin", "rekognition").versionRef(awsKotlinSdk)
             library("aws-textract", "aws.sdk.kotlin", "textract").versionRef(awsKotlinSdk)
             library("aws-translate", "aws.sdk.kotlin", "translate").versionRef(awsKotlinSdk)
+            library("aws-cloudwatchlogs", "aws.sdk.kotlin", "cloudwatchlogs").versionRef(awsKotlinSdk)
 
             // Kotlin
             library("kotlin-stdlib", "org.jetbrains.kotlin:kotlin-stdlib:1.7.10")
@@ -139,6 +141,7 @@ dependencyResolutionManagement {
             library("gson", "com.google.code.gson:gson:2.8.9")
             library("tensorflow", "org.tensorflow:tensorflow-lite:2.0.0")
             library("uuidgen", "com.fasterxml.uuid:java-uuid-generator:4.0.1")
+            library("sqlcipher", "net.zetetic:android-database-sqlcipher:4.5.3")
         }
     }
 }
@@ -170,3 +173,4 @@ include(":aws-api-appsync")
 include(":maplibre-adapter")
 include(":aws-pinpoint-core")
 include(":aws-push-notifications-pinpoint-common")
+include(":aws-logging-cloudwatch")
