@@ -28,6 +28,7 @@ import com.amplifyframework.core.model.AuthStrategy;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelAssociation;
 import com.amplifyframework.core.model.ModelField;
+import com.amplifyframework.core.model.ModelIdentifier;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.query.predicate.BeginsWithQueryOperator;
 import com.amplifyframework.core.model.query.predicate.BetweenQueryOperator;
@@ -47,6 +48,7 @@ import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.util.Casing;
 import com.amplifyframework.util.TypeMaker;
 
+import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -56,6 +58,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Converts provided model or class type into a request container with automatically generated GraphQL documents that
@@ -83,18 +86,89 @@ public final class AppSyncGraphQLRequestFactory {
         Class<T> modelClass,
         String objectId
     ) {
+        return buildQuery(modelClass, new GraphQLRequestVariable("id", objectId, "ID!"));
+    }
+
+    /**
+     * Creates a {@link GraphQLRequest} that represents a query that expects a single value as a result. The request
+     * will be created with the correct document based on the model schema and variables based on given
+     * {@code modelIdentifier}.
+     * @param modelClass the model class.
+     * @param modelIdentifier the model identifier.
+     * @param <R> the response type.
+     * @param <T> the concrete model type.
+     * @return a valid {@link GraphQLRequest} instance.
+     * @throws IllegalStateException when the model schema does not contain the expected information.
+     */
+    public static <R, T extends Model> GraphQLRequest<R> buildQuery(
+            Class<T> modelClass,
+            ModelIdentifier<T> modelIdentifier
+    ) {
+        GraphQLRequestVariable variables[];
         try {
-            return AppSyncGraphQLRequest.builder()
-                       .modelClass(modelClass)
-                       .operation(QueryType.GET)
-                       .requestOptions(new ApiGraphQLRequestOptions())
-                       .responseType(modelClass)
-                       .variable("id", "ID!", objectId)
-                       .build();
+            ModelSchema modelSchema = ModelSchema.fromModelClass(modelClass);
+            List<String> primaryIndexFields = modelSchema.getPrimaryIndexFields();
+            List<? extends Serializable> sortedKeys = modelIdentifier.sortedKeys();
+
+            variables = new GraphQLRequestVariable[primaryIndexFields.size()];
+
+            for (int i = 0; i < primaryIndexFields.size(); i++) {
+
+                // Index 0 is primary key, next values are ordered sort keys
+                String key = primaryIndexFields.get(i);
+
+                // Find target field to pull type info
+                ModelField targetField =
+                        Objects.requireNonNull(modelSchema.getFields().get(key));
+
+                // Should create "ID!", "String!". Appends "!" if required
+                String targetTypeString = targetField.getTargetType() +
+                        (targetField.isRequired() ? "!" : "");
+
+                // If index 0, value is primary key, else get next unused sort key
+                Object value = i == 0 ?
+                        modelIdentifier.key().toString() : sortedKeys.get(i - 1);
+                variables[i] = new GraphQLRequestVariable(key, value, targetTypeString);
+            }
         } catch (AmplifyException exception) {
             throw new IllegalStateException(
-                "Could not generate a schema for the specified class",
-                exception
+                    "Could not generate a schema for the specified class",
+                    exception
+            );
+        }
+
+        return buildQuery(modelClass, variables);
+    }
+
+    /**
+     * Creates a {@link GraphQLRequest} that represents a query that expects a single value as a result. The request
+     * will be created with the correct document based on the model schema and variables.
+     * @param modelClass the model class.
+     * @param variables the variables.
+     * @param <R> the response type.
+     * @param <T> the concrete model type.
+     * @return a valid {@link GraphQLRequest} instance.
+     * @throws IllegalStateException when the model schema does not contain the expected information.
+     */
+    private static <R, T extends Model> GraphQLRequest<R> buildQuery(
+            Class<T> modelClass,
+            GraphQLRequestVariable... variables
+    ) {
+        try {
+            AppSyncGraphQLRequest.Builder builder =  AppSyncGraphQLRequest.builder()
+                    .modelClass(modelClass)
+                    .operation(QueryType.GET)
+                    .requestOptions(new ApiGraphQLRequestOptions())
+                    .responseType(modelClass);
+
+            for (GraphQLRequestVariable v: variables) {
+                builder.variable(v.getKey(), v.getType(), v.getValue());
+            }
+            return builder.build();
+        } catch (AmplifyException exception) {
+            throw new IllegalStateException(
+                    "Could not generate a schema for the specified class",
+                    exception
             );
         }
     }
