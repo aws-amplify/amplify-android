@@ -15,7 +15,9 @@
 
 package com.amplifyframework.api.aws;
 
-import androidx.annotation.NonNull;
+import static com.amplifyframework.api.aws.GraphQLRequestHelper.getDeleteMutationInputMap;
+import static com.amplifyframework.api.aws.GraphQLRequestHelper.getMapOfFieldNameAndValues;
+import static com.amplifyframework.api.aws.GraphQLRequestHelper.parsePredicate;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.graphql.GraphQLRequest;
@@ -23,41 +25,18 @@ import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.api.graphql.PaginatedResult;
 import com.amplifyframework.api.graphql.QueryType;
 import com.amplifyframework.api.graphql.SubscriptionType;
-import com.amplifyframework.core.model.AuthRule;
-import com.amplifyframework.core.model.AuthStrategy;
 import com.amplifyframework.core.model.Model;
-import com.amplifyframework.core.model.ModelAssociation;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelIdentifier;
 import com.amplifyframework.core.model.ModelSchema;
-import com.amplifyframework.core.model.query.predicate.BeginsWithQueryOperator;
-import com.amplifyframework.core.model.query.predicate.BetweenQueryOperator;
-import com.amplifyframework.core.model.query.predicate.ContainsQueryOperator;
-import com.amplifyframework.core.model.query.predicate.EqualQueryOperator;
-import com.amplifyframework.core.model.query.predicate.GreaterOrEqualQueryOperator;
-import com.amplifyframework.core.model.query.predicate.GreaterThanQueryOperator;
-import com.amplifyframework.core.model.query.predicate.LessOrEqualQueryOperator;
-import com.amplifyframework.core.model.query.predicate.LessThanQueryOperator;
-import com.amplifyframework.core.model.query.predicate.NotContainsQueryOperator;
-import com.amplifyframework.core.model.query.predicate.NotEqualQueryOperator;
-import com.amplifyframework.core.model.query.predicate.QueryOperator;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
-import com.amplifyframework.core.model.query.predicate.QueryPredicateGroup;
-import com.amplifyframework.core.model.query.predicate.QueryPredicateOperation;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.util.Casing;
 import com.amplifyframework.util.TypeMaker;
 
 import java.io.Serializable;
-import java.lang.reflect.Field;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
-import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -322,169 +301,6 @@ public final class AppSyncGraphQLRequestFactory {
                 "Failed to build GraphQLRequest",
                 exception
             );
-        }
-    }
-
-    private static Map<String, Object> parsePredicate(QueryPredicate queryPredicate) {
-        if (queryPredicate instanceof QueryPredicateOperation) {
-            QueryPredicateOperation<?> qpo = (QueryPredicateOperation<?>) queryPredicate;
-            QueryOperator<?> op = qpo.operator();
-            return Collections.singletonMap(
-                qpo.field(),
-                Collections.singletonMap(appSyncOpType(op.type()), appSyncOpValue(op))
-            );
-        } else if (queryPredicate instanceof QueryPredicateGroup) {
-            QueryPredicateGroup qpg = (QueryPredicateGroup) queryPredicate;
-
-            if (QueryPredicateGroup.Type.NOT.equals(qpg.type())) {
-                try {
-                    return Collections.singletonMap("not", parsePredicate(qpg.predicates().get(0)));
-                } catch (IndexOutOfBoundsException exception) {
-                    throw new IllegalStateException(
-                        "Predicate group of type NOT must include a value to negate.",
-                        exception
-                    );
-                }
-            } else {
-                List<Map<String, Object>> predicates = new ArrayList<>();
-
-                for (QueryPredicate predicate : qpg.predicates()) {
-                    predicates.add(parsePredicate(predicate));
-                }
-
-                return Collections.singletonMap(qpg.type().toString().toLowerCase(Locale.getDefault()), predicates);
-            }
-        } else {
-            throw new IllegalStateException(
-                "Invalid predicate type, supported values: QueryPredicateOperation, QueryPredicateGroup."
-            );
-        }
-    }
-
-    private static String appSyncOpType(QueryOperator.Type type) {
-        switch (type) {
-            case NOT_EQUAL:
-                return "ne";
-            case EQUAL:
-                return "eq";
-            case LESS_OR_EQUAL:
-                return "le";
-            case LESS_THAN:
-                return "lt";
-            case GREATER_OR_EQUAL:
-                return "ge";
-            case GREATER_THAN:
-                return "gt";
-            case CONTAINS:
-                return "contains";
-            case BETWEEN:
-                return "between";
-            case BEGINS_WITH:
-                return "beginsWith";
-            default:
-                throw new IllegalStateException(
-                    "Tried to parse an unsupported QueryOperator type. Check if a new QueryOperator.Type enum " +
-                        "has been created which is not supported in the AppSyncGraphQLRequestFactory."
-                );
-        }
-    }
-
-    private static Object appSyncOpValue(QueryOperator<?> qOp) {
-        switch (qOp.type()) {
-            case NOT_EQUAL:
-                return ((NotEqualQueryOperator) qOp).value();
-            case EQUAL:
-                return ((EqualQueryOperator) qOp).value();
-            case LESS_OR_EQUAL:
-                return ((LessOrEqualQueryOperator<?>) qOp).value();
-            case LESS_THAN:
-                return ((LessThanQueryOperator<?>) qOp).value();
-            case GREATER_OR_EQUAL:
-                return ((GreaterOrEqualQueryOperator<?>) qOp).value();
-            case GREATER_THAN:
-                return ((GreaterThanQueryOperator<?>) qOp).value();
-            case CONTAINS:
-                return ((ContainsQueryOperator) qOp).value();
-            case NOT_CONTAINS:
-                return ((NotContainsQueryOperator) qOp).value();
-            case BETWEEN:
-                BetweenQueryOperator<?> betweenOp = (BetweenQueryOperator<?>) qOp;
-                return Arrays.asList(betweenOp.start(), betweenOp.end());
-            case BEGINS_WITH:
-                return ((BeginsWithQueryOperator) qOp).value();
-            default:
-                throw new IllegalStateException(
-                    "Tried to parse an unsupported QueryOperator type. Check if a new QueryOperator.Type enum " +
-                        "has been created which is not implemented yet."
-                );
-        }
-    }
-
-    private static Map<String, Object> getDeleteMutationInputMap(
-        @NonNull ModelSchema schema, @NonNull Model instance) throws AmplifyException {
-        final Map<String, Object> input = new HashMap<>();
-        for (String fieldName : schema.getPrimaryIndexFields()) {
-            input.put(fieldName, extractFieldValue(fieldName, instance, schema));
-        }
-        return input;
-    }
-
-    private static Map<String, Object> getMapOfFieldNameAndValues(
-        @NonNull ModelSchema schema, @NonNull Model instance) throws AmplifyException {
-        if (!instance.getClass().getSimpleName().equals(schema.getName())) {
-            throw new AmplifyException(
-                "The object provided is not an instance of " + schema.getName() + ".",
-                "Please provide an instance of " + schema.getName() + " that matches the schema type."
-            );
-        }
-        final Map<String, Object> result = new HashMap<>();
-        for (ModelField modelField : schema.getFields().values()) {
-            if (modelField.isReadOnly()) {
-                // Skip read only fields, since they should not be included on the input object.
-                continue;
-            }
-            String fieldName = modelField.getName();
-            Object fieldValue = extractFieldValue(fieldName, instance, schema);
-            final ModelAssociation association = schema.getAssociations().get(fieldName);
-            if (association == null) {
-                result.put(fieldName, fieldValue);
-            } else if (association.isOwner()) {
-                if (fieldValue != null) {
-                    Model target = (Model) fieldValue;
-                    result.put(association.getTargetName(), target.getPrimaryKeyString());
-                }
-            }
-            // Ignore if field is associated, but is not a "belongsTo" relationship
-        }
-
-        /*
-         * If the owner field exists on the model, and the value is null, it should be omitted when performing a
-         * mutation because the AppSync server will automatically populate it using the authentication token provided
-         * in the request header.  The logic below filters out the owner field if null for this scenario.
-         */
-        for (AuthRule authRule : schema.getAuthRules()) {
-            if (AuthStrategy.OWNER.equals(authRule.getAuthStrategy())) {
-                String ownerField = authRule.getOwnerFieldOrDefault();
-                if (result.containsKey(ownerField) && result.get(ownerField) == null) {
-                    result.remove(ownerField);
-                }
-            }
-        }
-
-        return result;
-    }
-
-    private static Object extractFieldValue(String fieldName, Model instance, ModelSchema schema)
-        throws AmplifyException {
-        try {
-            Field privateField = instance.getClass().getDeclaredField(fieldName);
-            privateField.setAccessible(true);
-            return privateField.get(instance);
-        } catch (Exception exception) {
-            throw new AmplifyException(
-                "An invalid field was provided. " + fieldName + " is not present in " + schema.getName(),
-                exception,
-                "Check if this model schema is a correct representation of the fields in the provided Object");
         }
     }
 }
