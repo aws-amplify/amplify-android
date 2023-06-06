@@ -15,10 +15,6 @@
 
 package com.amplifyframework.api.aws;
 
-import static com.amplifyframework.api.aws.GraphQLRequestHelper.getDeleteMutationInputMap;
-import static com.amplifyframework.api.aws.GraphQLRequestHelper.getMapOfFieldNameAndValues;
-import static com.amplifyframework.api.aws.GraphQLRequestHelper.parsePredicate;
-
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.MutationType;
@@ -83,7 +79,7 @@ public final class AppSyncGraphQLRequestFactory {
             Class<T> modelClass,
             ModelIdentifier<T> modelIdentifier
     ) {
-        GraphQLRequestVariable variables[];
+        GraphQLRequestVariable[] variables;
         try {
             ModelSchema modelSchema = ModelSchema.fromModelClass(modelClass);
             List<String> primaryIndexFields = modelSchema.getPrimaryIndexFields();
@@ -134,13 +130,13 @@ public final class AppSyncGraphQLRequestFactory {
             GraphQLRequestVariable... variables
     ) {
         try {
-            AppSyncGraphQLRequest.Builder builder =  AppSyncGraphQLRequest.builder()
+            AppSyncGraphQLRequest.Builder builder = AppSyncGraphQLRequest.builder()
                     .modelClass(modelClass)
                     .operation(QueryType.GET)
                     .requestOptions(new ApiGraphQLRequestOptions())
                     .responseType(modelClass);
 
-            for (GraphQLRequestVariable v: variables) {
+            for (GraphQLRequestVariable v : variables) {
                 builder.variable(v.getKey(), v.getType(), v.getValue());
             }
             return builder.build();
@@ -209,7 +205,11 @@ public final class AppSyncGraphQLRequestFactory {
 
             if (!QueryPredicates.all().equals(predicate)) {
                 String filterType = "Model" + Casing.capitalizeFirst(modelName) + "FilterInput";
-                builder.variable("filter", filterType, parsePredicate(predicate));
+                builder.variable(
+                        "filter",
+                        filterType,
+                        GraphQLRequestHelper.parsePredicate(predicate)
+                );
             }
 
             builder.variable("limit", "Int", limit);
@@ -254,9 +254,17 @@ public final class AppSyncGraphQLRequestFactory {
                     "Input!"; // CreateTodoInput
 
             if (MutationType.DELETE.equals(type)) {
-                builder.variable("input", inputType, getDeleteMutationInputMap(schema, model));
+                builder.variable(
+                        "input",
+                        inputType,
+                        GraphQLRequestHelper.getDeleteMutationInputMap(schema, model)
+                );
             } else {
-                builder.variable("input", inputType, getMapOfFieldNameAndValues(schema, model));
+                builder.variable(
+                        "input",
+                        inputType,
+                        GraphQLRequestHelper.getMapOfFieldNameAndValues(schema, model)
+                );
             }
 
             if (!QueryPredicates.all().equals(predicate)) {
@@ -264,7 +272,8 @@ public final class AppSyncGraphQLRequestFactory {
                     "Model" +
                         Casing.capitalizeFirst(graphQlTypeName) +
                         "ConditionInput";
-                builder.variable("condition", conditionType, parsePredicate(predicate));
+                builder.variable(
+                        "condition", conditionType, GraphQLRequestHelper.parsePredicate(predicate));
             }
 
             return builder.build();

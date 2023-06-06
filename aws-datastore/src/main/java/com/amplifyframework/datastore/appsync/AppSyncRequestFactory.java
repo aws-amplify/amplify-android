@@ -15,16 +15,13 @@
 
 package com.amplifyframework.datastore.appsync;
 
-import static com.amplifyframework.api.aws.GraphQLRequestHelper.getDeleteMutationInputMap;
-import static com.amplifyframework.api.aws.GraphQLRequestHelper.getMapOfFieldNameAndValues;
-import static com.amplifyframework.api.aws.GraphQLRequestHelper.parsePredicate;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.aws.AppSyncGraphQLRequest;
 import com.amplifyframework.api.aws.AuthModeStrategyType;
+import com.amplifyframework.api.aws.GraphQLRequestHelper;
 import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.api.graphql.PaginatedResult;
 import com.amplifyframework.api.graphql.QueryType;
@@ -128,7 +125,11 @@ final class AppSyncRequestFactory {
                     // optimization is not possible anyway.
                     syncPredicate = QueryPredicateGroup.andOf(syncPredicate);
                 }
-                builder.variable("filter", filterType, parsePredicate(syncPredicate));
+                builder.variable(
+                        "filter",
+                        filterType,
+                        GraphQLRequestHelper.parsePredicate(syncPredicate)
+                );
             }
             return builder.build();
         } catch (AmplifyException amplifyException) {
@@ -166,7 +167,7 @@ final class AppSyncRequestFactory {
         try {
             Map<String, Object> inputMap = new HashMap<>();
             inputMap.put("_version", version);
-            inputMap.putAll(getDeleteMutationInputMap(schema, model));
+            inputMap.putAll(GraphQLRequestHelper.getDeleteMutationInputMap(schema, model));
             return buildMutation(schema, inputMap, predicate, MutationType.DELETE, strategyType);
         } catch (AmplifyException amplifyException) {
             throw new DataStoreException("Failed to get fields for model.",
@@ -183,7 +184,7 @@ final class AppSyncRequestFactory {
         try {
             Map<String, Object> inputMap = new HashMap<>();
             inputMap.put("_version", version);
-            inputMap.putAll(getMapOfFieldNameAndValues(schema, model));
+            inputMap.putAll(GraphQLRequestHelper.getMapOfFieldNameAndValues(schema, model));
             return buildMutation(schema, inputMap, predicate, MutationType.UPDATE, strategyType);
         } catch (AmplifyException amplifyException) {
             throw new DataStoreException("Failed to get fields for model.",
@@ -196,7 +197,7 @@ final class AppSyncRequestFactory {
             M model,
             AuthModeStrategyType strategyType) throws DataStoreException {
         try {
-            Map<String, Object> inputMap = getMapOfFieldNameAndValues(schema, model);
+            Map<String, Object> inputMap = GraphQLRequestHelper.getMapOfFieldNameAndValues(schema, model);
             return buildMutation(schema, inputMap, QueryPredicates.all(), MutationType.CREATE, strategyType);
         } catch (AmplifyException amplifyException) {
             throw new DataStoreException("Failed to get fields for model.",
@@ -240,7 +241,11 @@ final class AppSyncRequestFactory {
                         "Model" +
                         Casing.capitalizeFirst(graphQlTypeName) +
                         "ConditionInput";
-                builder.variable("condition", conditionType, parsePredicate(predicate));
+                builder.variable(
+                        "condition",
+                        conditionType,
+                        GraphQLRequestHelper.parsePredicate(predicate)
+                );
             }
             return builder.build();
 
