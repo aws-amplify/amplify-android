@@ -1,8 +1,24 @@
+/*
+ * Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
 package com.amplifyframework.api.aws;
 
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.annotations.InternalAmplifyApi;
 import com.amplifyframework.core.model.AuthRule;
 import com.amplifyframework.core.model.AuthStrategy;
 import com.amplifyframework.core.model.Model;
@@ -39,6 +55,12 @@ import java.util.ListIterator;
 import java.util.Locale;
 import java.util.Map;
 
+/**
+ * Although this has public access, it is intended for internal use and should not be used directly by host
+ * applications. The behavior of this may change without warning.
+ */
+@InternalAmplifyApi
+@SuppressWarnings("HideUtilityClassConstructor")
 public class GraphQLRequestHelper {
 
     private static String appSyncOpType(QueryOperator.Type type) throws AmplifyException {
@@ -70,7 +92,7 @@ public class GraphQLRequestHelper {
         }
     }
 
-    private static Object appSyncOpValue(QueryOperator<?> qOp) throws AmplifyException{
+    private static Object appSyncOpValue(QueryOperator<?> qOp) throws AmplifyException {
         switch (qOp.type()) {
             case NOT_EQUAL:
                 return ((NotEqualQueryOperator) qOp).value();
@@ -102,6 +124,8 @@ public class GraphQLRequestHelper {
         }
     }
 
+    @InternalAmplifyApi
+    @SuppressWarnings("MissingJavadocMethod")
     public static Map<String, Object> parsePredicate(QueryPredicate queryPredicate) throws AmplifyException {
         if (queryPredicate instanceof QueryPredicateOperation) {
             QueryPredicateOperation<?> qpo = (QueryPredicateOperation<?>) queryPredicate;
@@ -139,6 +163,8 @@ public class GraphQLRequestHelper {
         }
     }
 
+    @InternalAmplifyApi
+    @SuppressWarnings("MissingJavadocMethod")
     public static Map<String, Object> getDeleteMutationInputMap(
             @NonNull ModelSchema schema, @NonNull Model instance) throws AmplifyException {
         final Map<String, Object> input = new HashMap<>();
@@ -148,6 +174,8 @@ public class GraphQLRequestHelper {
         return input;
     }
 
+    @InternalAmplifyApi
+    @SuppressWarnings("MissingJavadocMethod")
     public static Map<String, Object> getMapOfFieldNameAndValues(
             @NonNull ModelSchema schema, @NonNull Model instance) throws AmplifyException {
         boolean isSerializedModel = instance instanceof SerializedModel;
@@ -178,7 +206,7 @@ public class GraphQLRequestHelper {
         return result;
     }
 
-    public static Map<String, Object> extractFieldLevelData(
+    private static Map<String, Object> extractFieldLevelData(
             ModelSchema schema, Model instance) throws AmplifyException {
         final Map<String, Object> result = new HashMap<>();
         for (ModelField modelField : schema.getFields().values()) {
@@ -214,7 +242,7 @@ public class GraphQLRequestHelper {
         return result;
     }
 
-    public static void insertForeignKeyValues(Map<String, Object> result, ModelField modelField,
+    private static void insertForeignKeyValues(Map<String, Object> result, ModelField modelField,
                                                Model instance, ModelSchema schema,
                                                ModelAssociation association) throws AmplifyException {
         final Object fieldValue = extractFieldValue(modelField.getName(), instance, schema);
@@ -250,7 +278,7 @@ public class GraphQLRequestHelper {
         }
     }
 
-    public static Object extractAssociateId(ModelField modelField, @NonNull Object fieldValue) {
+    private static Object extractAssociateId(ModelField modelField, @NonNull Object fieldValue) {
         if (modelField.isModel() && fieldValue instanceof Model) {
             return ((Model) fieldValue).resolveIdentifier();
         } else if (modelField.isModel() && fieldValue instanceof Map) {
@@ -260,7 +288,7 @@ public class GraphQLRequestHelper {
         }
     }
 
-    public static Object extractFieldValue(String fieldName, Model instance, ModelSchema schema)
+    private static Object extractFieldValue(String fieldName, Model instance, ModelSchema schema)
             throws AmplifyException {
         if (instance instanceof SerializedModel) {
             SerializedModel serializedModel = (SerializedModel) instance;
@@ -284,7 +312,7 @@ public class GraphQLRequestHelper {
         }
     }
 
-    public static Object extractCustomTypeFieldValue(String fieldName, Object customTypeData) throws AmplifyException {
+    private static Object extractCustomTypeFieldValue(String fieldName, Object customTypeData) throws AmplifyException {
         // Flutter use case:
         // If a field is a CustomType, it's value is either a SerializedCustomType
         // or a List of SerializedCustomType
