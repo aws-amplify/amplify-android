@@ -96,7 +96,8 @@ public final class AppSyncGraphQLRequestFactory {
                 ModelField targetField =
                         Objects.requireNonNull(modelSchema.getFields().get(key));
 
-                // Should create "ID!", "String!". Appends "!" if required
+                // Should create "ID!", "String!", "Float!", etc.
+                // Appends "!" if required (should always be the case with CPK requirements).
                 String targetTypeString = targetField.getTargetType() +
                         (targetField.isRequired() ? "!" : "");
 

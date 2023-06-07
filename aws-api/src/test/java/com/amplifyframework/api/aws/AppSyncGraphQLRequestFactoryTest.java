@@ -35,6 +35,7 @@ import com.amplifyframework.testmodels.ecommerce.Status;
 import com.amplifyframework.testmodels.meeting.Meeting;
 import com.amplifyframework.testmodels.personcar.MaritalStatus;
 import com.amplifyframework.testmodels.personcar.Person;
+import com.amplifyframework.testmodels.personcar.PersonWithCPK;
 import com.amplifyframework.testutils.Resources;
 
 import org.json.JSONException;
@@ -76,6 +77,30 @@ public final class AppSyncGraphQLRequestFactoryTest {
             true
         );
     }
+
+    /**
+     * Validate construction of a GraphQL query from a class and an object ID.
+     * @throws JSONException from JSONAssert.assertEquals
+     */
+    @Test
+    public void buildQueryFromClassAndModelIdentifier() throws JSONException {
+        // Arrange a hard-coded name/age as found int the expected data file.
+        String name = "First";
+        int age = 50;
+
+        // Act: create a request
+        GraphQLRequest<PersonWithCPK> request =
+                AppSyncGraphQLRequestFactory.buildQuery(PersonWithCPK.class, new PersonWithCPK.PersonIdentifier(name, age));
+
+        // Assert: content is expected content
+        JSONAssert.assertEquals(
+                Resources.readAsString("query-for-person-by-model-identifier.txt"),
+                request.getContent(),
+                true
+        );
+    }
+
+
 
     /**
      * Validate construction of a GraphQL query from a class and a predicate.
