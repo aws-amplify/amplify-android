@@ -62,32 +62,34 @@ private class ReachabilityMonitorImpl constructor(val schedulerProvider: Schedul
 
     override fun configure(context: Context, connectivityProvider: ConnectivityProvider) {
         this.connectivityProvider = connectivityProvider
-        connectivityProvider.registerDefaultNetworkCallback(
-            context,
-            object : NetworkCallback() {
-                override fun onAvailable(network: Network) {
-                    subject.onNext(true)
-                }
+        val observable = Observable.create { emitter ->
+            connectivityProvider.registerDefaultNetworkCallback(
+                context,
+                object : NetworkCallback() {
+                    override fun onAvailable(network: Network) {
+                        emitter.onNext(true)
+                    }
 
-                override fun onLost(network: Network) {
-                    subject.onNext(false)
+                    override fun onLost(network: Network) {
+                        emitter.onNext(false)
+                    }
                 }
-            }
-        )
+            )
+            emitter.onNext(connectivityProvider.hasActiveNetwork)
+        }
+        observable.debounce(250, TimeUnit.MILLISECONDS, schedulerProvider.computation())
+            .distinctUntilChanged()
+            .subscribe(subject)
     }
 
     override fun getObservable(): Observable<Boolean> {
-        connectivityProvider?.let { connectivityProvider ->
-            return subject.subscribeOn(schedulerProvider.io())
-                .doOnSubscribe { subject.onNext(connectivityProvider.hasActiveNetwork) }
-                .debounce(250, TimeUnit.MILLISECONDS, schedulerProvider.computation())
-                .distinctUntilChanged()
-        } ?: run {
+        if (connectivityProvider == null) {
             throw DataStoreException(
                 "ReachabilityMonitor has not been configured.",
                 "Call ReachabilityMonitor.configure() before calling ReachabilityMonitor.getObservable()"
             )
         }
+        return subject.subscribeOn(schedulerProvider.io())
     }
 }
 
