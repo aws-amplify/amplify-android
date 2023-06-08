@@ -1,5 +1,5 @@
 {
-  "query": "query GetPersonWithCPK($age: Int, $first_name: String!) {
+  "query": "query GetPersonWithCPK($age: Int!, $first_name: String!) {
   getPersonWithCPK(age: $age, first_name: $first_name) {
     age
     createdAt
