@@ -221,20 +221,20 @@ public class GraphQLRequestHelper {
                 // Skip fields that are not set, so that they are not set to null in the request.
                 continue;
             }
+
+            Object fieldValue = extractFieldValue(modelField.getName(), instance, schema);
+
             if (association == null) {
-                result.put(fieldName, extractFieldValue(modelField.getName(), instance, schema));
-            } else if (association.isOwner()) {
+                result.put(fieldName, fieldValue);
+            } else if (association.isOwner() && fieldValue != null) {
                 if (schema.getVersion() >= 1 && association.getTargetNames() != null
                         && association.getTargetNames().length > 0) {
                     // When target name length is more than 0 there are two scenarios, one is when
                     // there is custom primary key and other is when we have composite primary key.
-                    insertForeignKeyValues(result, modelField, instance, schema, association);
+                    insertForeignKeyValues(result, modelField, fieldValue, association);
                 } else {
-                    final Object fieldValue = extractFieldValue(modelField.getName(), instance, schema);
-                    if (fieldValue != null) {
-                        String targetName = association.getTargetName();
-                        result.put(targetName, extractAssociateId(modelField, fieldValue));
-                    }
+                    String targetName = association.getTargetName();
+                    result.put(targetName, extractAssociateId(modelField, fieldValue));
                 }
             }
             // Ignore if field is associated, but is not a "belongsTo" relationship
@@ -242,10 +242,11 @@ public class GraphQLRequestHelper {
         return result;
     }
 
-    private static void insertForeignKeyValues(Map<String, Object> result, ModelField modelField,
-                                               Model instance, ModelSchema schema,
-                                               ModelAssociation association) throws AmplifyException {
-        final Object fieldValue = extractFieldValue(modelField.getName(), instance, schema);
+    private static void insertForeignKeyValues(
+            Map<String, Object> result,
+            ModelField modelField,
+            Object fieldValue,
+            ModelAssociation association) throws AmplifyException {
         if (modelField.isModel() && fieldValue instanceof Model) {
             if (((Model) fieldValue).resolveIdentifier() instanceof ModelIdentifier<?>) {
                 final ModelIdentifier<?> primaryKey = (ModelIdentifier<?>) ((Model) fieldValue).resolveIdentifier();

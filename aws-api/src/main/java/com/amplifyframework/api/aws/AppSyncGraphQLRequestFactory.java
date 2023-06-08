@@ -15,6 +15,8 @@
 
 package com.amplifyframework.api.aws;
 
+import androidx.annotation.NonNull;
+
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.MutationType;
@@ -76,8 +78,8 @@ public final class AppSyncGraphQLRequestFactory {
      * @throws IllegalStateException when the model schema does not contain the expected information.
      */
     public static <R, T extends Model> GraphQLRequest<R> buildQuery(
-            Class<T> modelClass,
-            ModelIdentifier<T> modelIdentifier
+            @NonNull Class<T> modelClass,
+            @NonNull ModelIdentifier<T> modelIdentifier
     ) {
         GraphQLRequestVariable[] variables;
         try {

@@ -90,7 +90,10 @@ public final class AppSyncGraphQLRequestFactoryTest {
 
         // Act: create a request
         GraphQLRequest<PersonWithCPK> request =
-                AppSyncGraphQLRequestFactory.buildQuery(PersonWithCPK.class, new PersonWithCPK.PersonIdentifier(name, age));
+                AppSyncGraphQLRequestFactory.buildQuery(
+                        PersonWithCPK.class, new
+                                PersonWithCPK.PersonIdentifier(name, age)
+                );
 
         // Assert: content is expected content
         JSONAssert.assertEquals(
