@@ -246,7 +246,7 @@ public final class UserAgent {
             boolean modified = false;
             for (int i = 0, length = value.length(); i < length; i++) {
                 char c = value.charAt(i);
-                if ((c > '\u001f' && c < '\u007f') || c == '\t' ) {
+                if ((c > '\u001f' && c < '\u007f') || c == '\t') {
                     builder.append(c);
                 } else {
                     modified = true;
