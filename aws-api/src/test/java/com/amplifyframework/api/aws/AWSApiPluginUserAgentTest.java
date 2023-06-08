@@ -67,6 +67,7 @@ public final class AWSApiPluginUserAgentTest {
         // Set up backend
         server = new MockWebServer();
         server.start();
+        System.setProperty("user.language", "jp_JP\n");
 
         // Set up the API
         api = new AWSApiPlugin();
@@ -86,6 +87,7 @@ public final class AWSApiPluginUserAgentTest {
      */
     @After
     public void tearDown() throws IOException {
+        System.clearProperty("user.language");
         server.shutdown();
     }
 
