@@ -235,7 +235,22 @@ public final class UserAgent {
 
         @NonNull
         private static String sanitize(@Nullable String string) {
-            return string != null ? string : "UNKNOWN";
+            return string != null ? stripHeader(string) : "UNKNOWN";
+        }
+
+        /**
+         * Strips non-permitted characters in the header by okhttp.
+         */
+        private static String stripHeader(String value) {
+            StringBuilder builder = new StringBuilder(value.length());
+            for (int i = 0, length = value.length(); i < length; i++) {
+                char c = value.charAt(i);
+                // filter all the valid ascii characters.
+                if ((c > '\u001f' && c < '\u007f') || c == '\t') {
+                    builder.append(c);
+                }
+            }
+            return builder.toString();
         }
     }
 }
