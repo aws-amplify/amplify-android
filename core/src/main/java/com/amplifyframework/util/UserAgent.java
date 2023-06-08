@@ -243,16 +243,14 @@ public final class UserAgent {
          */
         private static String stripHeader(String value) {
             StringBuilder builder = new StringBuilder(value.length());
-            boolean modified = false;
             for (int i = 0, length = value.length(); i < length; i++) {
                 char c = value.charAt(i);
+                // filter all the valid ascii characters.
                 if ((c > '\u001f' && c < '\u007f') || c == '\t') {
                     builder.append(c);
-                } else {
-                    modified = true;
                 }
             }
-            return modified ? builder.toString() : value;
+            return builder.toString();
         }
     }
 }
