@@ -253,10 +253,10 @@ public class GraphQLRequestHelper {
                 ListIterator<String> targetNames = Arrays.asList(association.getTargetNames()).listIterator();
                 Iterator<? extends Serializable> sortedKeys = primaryKey.sortedKeys().listIterator();
 
-                result.put(targetNames.next(), primaryKey.key().toString());
+                result.put(targetNames.next(), primaryKey.key());
 
                 while (targetNames.hasNext()) {
-                    result.put(targetNames.next(), sortedKeys.next().toString());
+                    result.put(targetNames.next(), sortedKeys.next());
                 }
             } else if ((fieldValue instanceof SerializedModel)) {
                 SerializedModel serializedModel = ((SerializedModel) fieldValue);
