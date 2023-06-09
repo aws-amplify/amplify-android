@@ -87,7 +87,11 @@ class AppSyncGraphQLRequestFactoryCPKTest {
         val request: GraphQLRequest<Post> =
             AppSyncGraphQLRequestFactory.buildMutation(post, QueryPredicates.all(), MutationType.CREATE)
 
-        JSONAssert.assertEquals(Resources.readAsString("cpk_create_with_multiple_sk.json"), request.content, true)
+        JSONAssert.assertEquals(
+            Resources.readAsString("cpk_create_with_multiple_sk.json"),
+            request.content,
+            true
+        )
     }
 
     @Test
@@ -103,10 +107,13 @@ class AppSyncGraphQLRequestFactoryCPKTest {
         val request: GraphQLRequest<Post> =
             AppSyncGraphQLRequestFactory.buildMutation(post, QueryPredicates.all(), MutationType.CREATE)
 
-        JSONAssert.assertEquals(Resources.readAsString("cpk_create_with_multiple_sk_null_parent.json"), request.content, true)
+        JSONAssert.assertEquals(
+            Resources.readAsString("cpk_create_with_multiple_sk_null_parent.json"),
+            request.content,
+            true
+        )
     }
 
-    //TODO: While this test is currently passing, the request created is invalid due to Temporal time
     @Test
     fun create_with_cpk_with_multiple_sk_parent() {
 
@@ -126,7 +133,11 @@ class AppSyncGraphQLRequestFactoryCPKTest {
         val request: GraphQLRequest<Comment> =
             AppSyncGraphQLRequestFactory.buildMutation(comment, QueryPredicates.all(), MutationType.CREATE)
 
-        JSONAssert.assertEquals(Resources.readAsString("cpk_create_with_parent_with_multiple_sk.json"), request.content, true)
+        JSONAssert.assertEquals(
+            Resources.readAsString("cpk_create_with_parent_with_multiple_sk.json"),
+            request.content,
+            true
+        )
     }
 
     @Test
@@ -156,7 +167,11 @@ class AppSyncGraphQLRequestFactoryCPKTest {
         val request: GraphQLRequest<Post> =
             AppSyncGraphQLRequestFactory.buildQuery(Post::class.java, identifier)
 
-        JSONAssert.assertEquals(Resources.readAsString("cpk_query_with_multiple_sk.json"), request.content, true)
+        JSONAssert.assertEquals(
+            Resources.readAsString("cpk_query_with_multiple_sk.json"),
+            request.content,
+            true
+        )
     }
 
     @Test
@@ -165,7 +180,6 @@ class AppSyncGraphQLRequestFactoryCPKTest {
 
         JSONAssert.assertEquals(Resources.readAsString("cpk_list_query.json"), request.content, true)
     }
-
 
     @Test
     fun delete_model_with_cpk() {
@@ -194,7 +208,4 @@ class AppSyncGraphQLRequestFactoryCPKTest {
 
         JSONAssert.assertEquals(Resources.readAsString("cpk_update.json"), request.content, true)
     }
-
-
-
 }
