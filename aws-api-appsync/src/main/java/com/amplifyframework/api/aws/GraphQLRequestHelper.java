@@ -226,7 +226,7 @@ public class GraphQLRequestHelper {
 
             if (association == null) {
                 result.put(fieldName, fieldValue);
-            } else if (association.isOwner() && fieldValue != null) {
+            } else if (association.isOwner()) {
                 if (schema.getVersion() >= 1 && association.getTargetNames() != null
                         && association.getTargetNames().length > 0) {
                     // When target name length is more than 0 there are two scenarios, one is when
@@ -247,7 +247,11 @@ public class GraphQLRequestHelper {
             ModelField modelField,
             Object fieldValue,
             ModelAssociation association) throws AmplifyException {
-        if (modelField.isModel() && fieldValue instanceof Model) {
+        if (modelField.isModel() && fieldValue == null) {
+            for (String key : association.getTargetNames()) {
+                result.put(key, null);
+            }
+        } else if (modelField.isModel() && fieldValue instanceof Model) {
             if (((Model) fieldValue).resolveIdentifier() instanceof ModelIdentifier<?>) {
                 final ModelIdentifier<?> primaryKey = (ModelIdentifier<?>) ((Model) fieldValue).resolveIdentifier();
                 ListIterator<String> targetNames = Arrays.asList(association.getTargetNames()).listIterator();
@@ -284,6 +288,8 @@ public class GraphQLRequestHelper {
             return ((Model) fieldValue).resolveIdentifier();
         } else if (modelField.isModel() && fieldValue instanceof Map) {
             return ((Map<?, ?>) fieldValue).get("id");
+        } else if (modelField.isModel() && fieldValue == null) {
+            return null;
         } else {
             throw new IllegalStateException("Associated data is not Model or Map.");
         }
