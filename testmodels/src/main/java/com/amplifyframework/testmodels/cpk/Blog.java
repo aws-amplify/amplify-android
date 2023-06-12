@@ -30,7 +30,7 @@ public final class Blog implements Model {
   private final @ModelField(targetType="ID", isRequired = true) String siteId;
   private final @ModelField(targetType="String", isRequired = true) String name;
   private final @ModelField(targetType="User", isRequired = true) @HasOne(associatedWith = "id", type = User.class) User author = null;
-  private final @ModelField(targetType="Post", isRequired = true) @HasMany(associatedWith = "blog", type = Post.class) List<Post> posts = null;
+  private final @ModelField(targetType="Post") @HasMany(associatedWith = "blog", type = Post.class) List<Post> posts = null;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime updatedAt;
   private final @ModelField(targetType="ID", isRequired = true) String blogAuthorId;
