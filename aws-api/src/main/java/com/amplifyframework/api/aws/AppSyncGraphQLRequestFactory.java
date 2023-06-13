@@ -63,7 +63,22 @@ public final class AppSyncGraphQLRequestFactory {
         Class<T> modelClass,
         String objectId
     ) {
-        return buildQuery(modelClass, new GraphQLRequestVariable("id", objectId, "ID!"));
+        GraphQLRequestVariable variable;
+        try {
+            ModelSchema modelSchema = ModelSchema.fromModelClass(modelClass);
+            String primaryKeyName = modelSchema.getPrimaryKeyName();
+            // Find target field to pull type info
+            ModelField targetField =
+                    Objects.requireNonNull(modelSchema.getFields().get(primaryKeyName));
+            String targetTypeString = targetField.getTargetType() +
+                    (targetField.isRequired() ? "!" : "");
+            variable = new GraphQLRequestVariable(primaryKeyName, objectId, targetTypeString);
+        } catch (Exception exception) {
+            // If we fail to pull primary key name and type, fallback to default id/ID!
+            variable =  new GraphQLRequestVariable("id", objectId, "ID!");
+        }
+
+        return buildQuery(modelClass, variable);
     }
 
     /**

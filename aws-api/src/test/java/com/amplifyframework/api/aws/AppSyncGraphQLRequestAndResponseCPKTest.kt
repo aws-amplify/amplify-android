@@ -198,7 +198,28 @@ class AppSyncGraphQLRequestFactoryCPKTest {
     }
 
     @Test
-    fun query_by_cpk() {
+    fun query_by_single_cpk() {
+        // GIVEN
+        val requestJson = Resources.readAsString("cpk_query.json")
+        val responseJson = Resources.readAsString("cpk_query_response.json")
+
+        // WHEN
+        val request: GraphQLRequest<Comment> =
+            AppSyncGraphQLRequestFactory.buildQuery(Comment::class.java, "c1")
+        val response = responseFactory.buildResponse(request, responseJson)
+
+        // THEN
+        JSONAssert.assertEquals(requestJson, request.content, true)
+        assertFalse(response.hasErrors())
+        assertEquals("c1", response.data.commentId)
+        assertEquals("content1", response.data.content)
+        assertEquals("p1", response.data.post.postId)
+        assertEquals("b1", response.data.post.blog.blogId)
+        assertEquals("a1", response.data.post.blog.blogAuthorId)
+    }
+
+    @Test
+    fun query_by_cpk_with_custom_identifier() {
         // GIVEN
         val requestJson = Resources.readAsString("cpk_query.json")
         val responseJson = Resources.readAsString("cpk_query_response.json")
