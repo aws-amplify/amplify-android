@@ -75,7 +75,7 @@ public final class AppSyncGraphQLRequestFactory {
             variable = new GraphQLRequestVariable(primaryKeyName, objectId, targetTypeString);
         } catch (Exception exception) {
             // If we fail to pull primary key name and type, fallback to default id/ID!
-            variable =  new GraphQLRequestVariable("id", objectId, "ID!");
+            variable = new GraphQLRequestVariable("id", objectId, "ID!");
         }
 
         return buildQuery(modelClass, variable);

@@ -197,7 +197,12 @@ final class AppSyncRequestFactory {
             M model,
             AuthModeStrategyType strategyType) throws DataStoreException {
         try {
-            Map<String, Object> inputMap = GraphQLRequestHelper.getMapOfFieldNameAndValues(schema, model, MutationType.CREATE);
+            Map<String, Object> inputMap =
+                    GraphQLRequestHelper.getMapOfFieldNameAndValues(
+                            schema,
+                            model,
+                            MutationType.CREATE
+                    );
             return buildMutation(schema, inputMap, QueryPredicates.all(), MutationType.CREATE, strategyType);
         } catch (AmplifyException amplifyException) {
             throw new DataStoreException("Failed to get fields for model.",
