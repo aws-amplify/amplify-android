@@ -16,7 +16,16 @@
 package com.amplifyframework.datastore.storage.sqlite;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.core.model.CustomTypeField;
+import com.amplifyframework.core.model.CustomTypeSchema;
+import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.ModelField;
+import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.SchemaRegistry;
+import com.amplifyframework.core.model.SerializedCustomType;
+import com.amplifyframework.core.model.SerializedModel;
 import com.amplifyframework.core.model.types.JavaFieldType;
+import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.util.GsonFactory;
 import com.amplifyframework.util.UserAgent;
 
@@ -24,7 +33,9 @@ import com.google.gson.Gson;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
@@ -99,5 +110,101 @@ public class SQLiteModelFieldTypeConverterTest {
                 gson);
         final String expected = "2020-01-01T16:00:00.050020000";
         assertEquals(expected, actual);
+    }
+
+    /**
+     * Test the convertValueFromTarget getting serialized value from a CustomType field in Flutter user cases.
+     * @throws DataStoreException Not expected.
+     */
+    @Test
+    public void testConvertFromCustomTypeTargetValueFlutter() throws DataStoreException {
+        SerializedModel model = getTestSerializedModel();
+        ModelField testField = ModelField.builder()
+                .name("customTypeField")
+                .javaClassForValue(Map.class)
+                .targetType("DummyCustomType")
+                .isRequired(true)
+                .isCustomType(true)
+                .build();
+
+        SQLiteModelFieldTypeConverter converter = new SQLiteModelFieldTypeConverter(
+                ModelSchema.builder().name("DummySchemaNotUsedInTest").modelType(Model.Type.USER).build(),
+                SchemaRegistry.instance(),
+                new Gson()
+        );
+
+        Object result = converter.convertValueFromTarget(model, testField);
+        assertEquals(result, "{\"phone\":\"4155555555\",\"countryCode\":\"+1\"}");
+    }
+
+    /**
+     * Test the convertValueFromTarget getting serialized value from a list of CustomType field in Flutter user cases.
+     * @throws DataStoreException Not expected.
+     */
+    @Test
+    public void testConvertFromListOfCustomTypeTargetValuesFlutter() throws DataStoreException {
+        SerializedModel model = getTestSerializedModel();
+        ModelField testField = ModelField.builder()
+                .name("listCustomTypeField")
+                .javaClassForValue(List.class)
+                .targetType("DummyCustomType")
+                .isRequired(true)
+                .isCustomType(true)
+                .isArray(true)
+                .build();
+
+        SQLiteModelFieldTypeConverter converter = new SQLiteModelFieldTypeConverter(
+                ModelSchema.builder().name("DummySchemaNotUsedInTest").modelType(Model.Type.USER).build(),
+                SchemaRegistry.instance(),
+                new Gson()
+        );
+
+        Object result = converter.convertValueFromTarget(model, testField);
+        assertEquals(result, "[{\"phone\":\"4155555555\",\"countryCode\":\"+1\"},{\"phone\":\"4155555555\"," +
+                "\"countryCode\":\"+1\"}]");
+    }
+
+    private SerializedModel getTestSerializedModel() {
+        Map<String, Object> serializedCustomTypeData = new HashMap<>();
+        serializedCustomTypeData.put("phone", "4155555555");
+        serializedCustomTypeData.put("countryCode", "+1");
+
+        Map<String, CustomTypeField> customTypeFields = new HashMap<>();
+        customTypeFields.put("phone", CustomTypeField.builder()
+                .name("phone")
+                .targetType("String")
+                .javaClassForValue(String.class)
+                .build());
+        customTypeFields.put("countryCode", CustomTypeField.builder()
+                .name("countryCode")
+                .targetType("String")
+                .javaClassForValue(String.class)
+                .build());
+
+        SerializedCustomType testCustomType = SerializedCustomType.builder()
+                .serializedData(serializedCustomTypeData)
+                .customTypeSchema(CustomTypeSchema.builder()
+                        .name("Phone")
+                        .pluralName("Phones")
+                        .fields(customTypeFields)
+                        .build())
+                .build();
+
+        List<SerializedCustomType> testCustomTypeList = new ArrayList<>();
+        testCustomTypeList.add(testCustomType);
+        testCustomTypeList.add(testCustomType);
+
+        Map<String, Object> serializedModelData = new HashMap<>();
+        serializedModelData.put("id", "dummy-id");
+        serializedModelData.put("customTypeField", testCustomType);
+        serializedModelData.put("listCustomTypeField", testCustomTypeList);
+
+        return SerializedModel.builder()
+                .modelSchema(ModelSchema.builder()
+                        .name("DummySchemaNotUsed")
+                        .modelClass(SerializedModel.class)
+                        .build())
+                .serializedData(serializedModelData)
+                .build();
     }
 }
