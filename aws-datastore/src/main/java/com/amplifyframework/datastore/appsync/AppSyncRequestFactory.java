@@ -184,7 +184,7 @@ final class AppSyncRequestFactory {
         try {
             Map<String, Object> inputMap = new HashMap<>();
             inputMap.put("_version", version);
-            inputMap.putAll(GraphQLRequestHelper.getMapOfFieldNameAndValues(schema, model));
+            inputMap.putAll(GraphQLRequestHelper.getMapOfFieldNameAndValues(schema, model, MutationType.UPDATE));
             return buildMutation(schema, inputMap, predicate, MutationType.UPDATE, strategyType);
         } catch (AmplifyException amplifyException) {
             throw new DataStoreException("Failed to get fields for model.",
@@ -197,7 +197,7 @@ final class AppSyncRequestFactory {
             M model,
             AuthModeStrategyType strategyType) throws DataStoreException {
         try {
-            Map<String, Object> inputMap = GraphQLRequestHelper.getMapOfFieldNameAndValues(schema, model);
+            Map<String, Object> inputMap = GraphQLRequestHelper.getMapOfFieldNameAndValues(schema, model, MutationType.CREATE);
             return buildMutation(schema, inputMap, QueryPredicates.all(), MutationType.CREATE, strategyType);
         } catch (AmplifyException amplifyException) {
             throw new DataStoreException("Failed to get fields for model.",

@@ -266,7 +266,7 @@ public final class AppSyncGraphQLRequestFactory {
                 builder.variable(
                         "input",
                         inputType,
-                        GraphQLRequestHelper.getMapOfFieldNameAndValues(schema, model)
+                        GraphQLRequestHelper.getMapOfFieldNameAndValues(schema, model, type)
                 );
             }
 

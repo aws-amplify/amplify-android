@@ -19,6 +19,7 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.annotations.InternalAmplifyApi;
+import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.core.model.AuthRule;
 import com.amplifyframework.core.model.AuthStrategy;
 import com.amplifyframework.core.model.Model;
@@ -177,7 +178,7 @@ public class GraphQLRequestHelper {
     @InternalAmplifyApi
     @SuppressWarnings("MissingJavadocMethod")
     public static Map<String, Object> getMapOfFieldNameAndValues(
-            @NonNull ModelSchema schema, @NonNull Model instance) throws AmplifyException {
+            @NonNull ModelSchema schema, @NonNull Model instance, MutationType type) throws AmplifyException {
         boolean isSerializedModel = instance instanceof SerializedModel;
         boolean hasMatchingModelName = instance.getClass().getSimpleName().equals(schema.getName());
         if (!(hasMatchingModelName || isSerializedModel)) {
@@ -187,7 +188,7 @@ public class GraphQLRequestHelper {
             );
         }
 
-        Map<String, Object> result = new HashMap<>(extractFieldLevelData(schema, instance));
+        Map<String, Object> result = new HashMap<>(extractFieldLevelData(schema, instance, type));
 
         /*
          * If the owner field exists on the model, and the value is null, it should be omitted when performing a
@@ -207,7 +208,7 @@ public class GraphQLRequestHelper {
     }
 
     private static Map<String, Object> extractFieldLevelData(
-            ModelSchema schema, Model instance) throws AmplifyException {
+            ModelSchema schema, Model instance, MutationType type) throws AmplifyException {
         final Map<String, Object> result = new HashMap<>();
         for (ModelField modelField : schema.getFields().values()) {
             if (modelField.isReadOnly()) {
@@ -227,7 +228,10 @@ public class GraphQLRequestHelper {
             if (association == null) {
                 result.put(fieldName, fieldValue);
             } else if (association.isOwner()) {
-                if (schema.getVersion() >= 1 && association.getTargetNames() != null
+                if (fieldValue == null && MutationType.CREATE.equals(type)) {
+                    // Do not set null values on associations for create mutations.
+                }
+                else if (schema.getVersion() >= 1 && association.getTargetNames() != null
                         && association.getTargetNames().length > 0) {
                     // When target name length is more than 0 there are two scenarios, one is when
                     // there is custom primary key and other is when we have composite primary key.
@@ -248,6 +252,7 @@ public class GraphQLRequestHelper {
             Object fieldValue,
             ModelAssociation association) throws AmplifyException {
         if (modelField.isModel() && fieldValue == null) {
+            // When there is no model field value, set null for removal of values or deassociation.
             for (String key : association.getTargetNames()) {
                 result.put(key, null);
             }
@@ -283,12 +288,13 @@ public class GraphQLRequestHelper {
         }
     }
 
-    private static Object extractAssociateId(ModelField modelField, @NonNull Object fieldValue) {
+    private static Object extractAssociateId(ModelField modelField, Object fieldValue) {
         if (modelField.isModel() && fieldValue instanceof Model) {
             return ((Model) fieldValue).resolveIdentifier();
         } else if (modelField.isModel() && fieldValue instanceof Map) {
             return ((Map<?, ?>) fieldValue).get("id");
         } else if (modelField.isModel() && fieldValue == null) {
+            // When there is no model field value, set null for removal of values or deassociation.
             return null;
         } else {
             throw new IllegalStateException("Associated data is not Model or Map.");

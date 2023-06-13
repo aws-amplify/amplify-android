@@ -35,7 +35,6 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -313,8 +312,47 @@ class AppSyncGraphQLRequestFactoryCPKTest {
     }
 
     @Test
-    @Ignore("Fix bug around update")
     fun update_model_with_cpk() {
+        // GIVEN
+        val blog = Blog.builder()
+            .blogId("b1")
+            .siteId("s1")
+            .name("name1")
+            .blogAuthorId("a1")
+            .build()
+        val post = Post.builder()
+            .postId("p1")
+            .title("t1")
+            .createdAt(Temporal.DateTime("2023-06-09T16:22:30.48Z"))
+            .rating(3.4)
+            .blog(blog)
+            .build()
+        val comment = Comment.builder()
+            .commentId("c1")
+            .post(post)
+            .content("Updated Comment")
+            .build()
+        val requestJson = Resources.readAsString("cpk_update.json")
+        val responseJson = Resources.readAsString("cpk_update_response.json")
+
+        // WHEN
+        val request = ModelMutation.update(comment)
+        val response = responseFactory.buildResponse(request, responseJson)
+
+        // THEN
+        JSONAssert.assertEquals(requestJson, request.content, true)
+        assertFalse(response.hasErrors())
+        assertEquals(comment.commentId, response.data.commentId)
+        assertEquals(comment.content, response.data.content)
+        assertEquals(post.postId, response.data.post.postId)
+        assertEquals(post.title, response.data.post.title)
+        assertEquals(post.createdAt, response.data.post.createdAt)
+        assertEquals(post.rating, response.data.post.rating, 0.0)
+        assertEquals(blog.blogId, response.data.post.blog.blogId)
+    }
+
+    @Test
+    fun update_model_with_cpk_remove_association() {
         // GIVEN
         val post = Post.builder()
             .postId("p1")
@@ -322,8 +360,8 @@ class AppSyncGraphQLRequestFactoryCPKTest {
             .createdAt(Temporal.DateTime("2023-06-09T16:22:30.48Z"))
             .rating(3.4)
             .build()
-        val requestJson = Resources.readAsString("cpk_update.json")
-        val responseJson = Resources.readAsString("cpk_update_response.json")
+        val requestJson = Resources.readAsString("cpk_update_remove_association.json")
+        val responseJson = Resources.readAsString("cpk_update_remove_association_response.json")
 
         // WHEN
         val request = ModelMutation.update(post)
@@ -332,6 +370,11 @@ class AppSyncGraphQLRequestFactoryCPKTest {
         // THEN
         JSONAssert.assertEquals(requestJson, request.content, true)
         assertFalse(response.hasErrors())
+        assertEquals(post.postId, response.data.postId)
+        assertEquals(post.title, response.data.title)
+        assertEquals(post.createdAt, response.data.createdAt)
+        assertEquals(post.rating, response.data.rating, 0.0)
+        assertNull(response.data.blog)
     }
 }
 
