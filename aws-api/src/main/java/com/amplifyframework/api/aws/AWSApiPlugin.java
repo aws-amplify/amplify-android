@@ -16,7 +16,6 @@
 package com.amplifyframework.api.aws;
 
 import android.content.Context;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
@@ -135,7 +134,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     public void initialize(@NonNull Context context) throws AmplifyException {
         SchemaRegistry schemaRegistry = SchemaRegistry.instance();
         if (schemaRegistry.getModelSchemaMap().isEmpty()) {
-            ModelProvider modelProvider = ModelProviderLocatorAppSync.locate();
+            ModelProvider modelProvider = ModelProviderLocator.locate();
             schemaRegistry.register(modelProvider.modelSchemas(), modelProvider.customTypeSchemas());
         }
     }

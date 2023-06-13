@@ -36,12 +36,12 @@ import java.util.Objects;
  * needed to begin using the DataStore. This utility class is used from
  * {@link com.amplifyframework.api.aws.AWSApiPlugin#initialize}.
  */
-public final class ModelProviderLocatorAppSync {
+public final class ModelProviderLocator {
     private static final String DEFAULT_MODEL_PROVIDER_CLASS_NAME =
             "com.amplifyframework.api.generated.model.AmplifyModelProvider";
     private static final String GET_INSTANCE_ACCESSOR_METHOD_NAME = "getInstance";
 
-    private ModelProviderLocatorAppSync() {}
+    private ModelProviderLocator() {}
 
     /**
      * Locate the code-generated model provider.
