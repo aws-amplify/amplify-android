@@ -25,16 +25,13 @@ group = properties["POM_GROUP"].toString()
 
 dependencies {
     api(project(":core"))
-    implementation(project(":core-kotlin"))
+    api(project(":core-kotlin"))
     api(project(":aws-core"))
     implementation(project(":aws-api-appsync"))
 
     implementation(dependency.androidx.appcompat)
     implementation(dependency.aws.signing)
     implementation(dependency.gson)
-    implementation(dependency.kotlin.stdlib)
-    implementation(dependency.kotlin.coroutines)
-    implementation(dependency.androidx.core.ktx)
     implementation(dependency.okhttp)
 
     testImplementation(project(":testutils"))

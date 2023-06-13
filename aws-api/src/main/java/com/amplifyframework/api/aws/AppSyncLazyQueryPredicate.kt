@@ -28,29 +28,4 @@ class AppSyncLazyQueryPredicate<M : Model> {
         }
         return queryPredicate
     }
-
-    fun createListPredicate(clazz: Class<M>, keyMap: List<Map<String, Any>>): QueryPredicate {
-        var queryPredicate = QueryPredicates.all()
-        var firstItem = true
-        keyMap.forEach { keyMapEntry ->
-            var firstKeyEntry = true
-            var itemPredicate = QueryPredicates.all()
-            keyMapEntry.forEach { predicateKey ->
-                val currentPredicate = QueryField.field(clazz.simpleName, predicateKey.key).eq(predicateKey.value)
-                if (firstKeyEntry) {
-                    itemPredicate = currentPredicate
-                    firstKeyEntry = false
-                } else {
-                    itemPredicate = itemPredicate.and(currentPredicate)
-                }
-            }
-            if (firstItem) {
-                queryPredicate = itemPredicate
-                firstItem = false
-            } else {
-                queryPredicate = queryPredicate.or(itemPredicate)
-            }
-        }
-        return queryPredicate
-    }
 }

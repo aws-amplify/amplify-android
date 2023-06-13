@@ -15,8 +15,6 @@
 
 package com.amplifyframework.api.aws;
 
-import android.content.Context;
-
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.model.ModelProvider;
@@ -38,10 +36,9 @@ import java.util.Objects;
  * needed to begin using the DataStore. This utility class is used from
  * {@link com.amplifyframework.api.aws.AWSApiPlugin#initialize}.
  */
-// TODO : this class also exists in DataStore, try to have only one version of this class
 public final class ModelProviderLocatorAppSync {
     private static final String DEFAULT_MODEL_PROVIDER_CLASS_NAME =
-            "com.amplifyframework.datastore.generated.model.AmplifyModelProvider";
+            "com.amplifyframework.api.generated.model.AmplifyModelProvider";
     private static final String GET_INSTANCE_ACCESSOR_METHOD_NAME = "getInstance";
 
     private ModelProviderLocatorAppSync() {}

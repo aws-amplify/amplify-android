@@ -57,7 +57,6 @@ public final class GsonFactory {
         SerializedModelAdapter.register(builder);
         SerializedCustomTypeAdapter.register(builder);
         builder.registerTypeAdapter(LazyModel.class, new LazyModelAdapter<>());
-        builder.registerTypeAdapter(LazyList.class, new LazyModelListAdapter<>());
         builder.serializeNulls();
         return builder.create();
     }

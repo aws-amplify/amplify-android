@@ -16,7 +16,6 @@
 package com.amplifyframework.api.aws;
 
 import android.content.Context;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -251,7 +250,6 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         try {
             final GraphQLOperation<R> operation =
                     buildAppSyncGraphQLOperation(apiName, graphQLRequest, onResponse, onFailure);
-            Log.d("AWSApiPlugin","query: " + operation);
             operation.start();
             return operation;
         } catch (ApiException exception) {
