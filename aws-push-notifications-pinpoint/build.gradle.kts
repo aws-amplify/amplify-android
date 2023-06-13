@@ -41,6 +41,7 @@ dependencies {
 
     testImplementation(testDependency.junit)
 
+    androidTestImplementation(project(":aws-auth-cognito"))
     androidTestImplementation(testDependency.androidx.test.runner)
     androidTestImplementation(testDependency.androidx.test.junit)
 }

@@ -58,5 +58,7 @@ dependencies {
     androidTestImplementation(testDependency.aws.sdk.core)
     androidTestImplementation(testDependency.androidx.test.runner)
     androidTestImplementation(testDependency.androidx.test.junit)
+    androidTestImplementation(testDependency.kotlin.test.coroutines)
+    androidTestImplementation(project(":aws-api"))
     androidTestImplementation(project(":testutils"))
 }
