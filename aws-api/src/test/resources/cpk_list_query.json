@@ -1,0 +1,6 @@
+{
+  "query": "query ListBlogs($limit: Int) {\n  listBlogs(limit: $limit) {\n    items {\n      author {\n        createdAt\n        id\n        updatedAt\n      }\n      blogAuthorId\n      blogId\n      createdAt\n      name\n      posts {\n        items {\n          blog {\n            blogAuthorId\n            blogId\n            createdAt\n            name\n            siteId\n            updatedAt\n          }\n          comments {\n            items {\n              commentId\n              content\n              createdAt\n              updatedAt\n            }\n            nextToken\n          }\n          createdAt\n          postId\n          rating\n          title\n          updatedAt\n        }\n        nextToken\n      }\n      siteId\n      updatedAt\n    }\n    nextToken\n  }\n}\n",
+  "variables": {
+    "limit": 1000
+  }
+}

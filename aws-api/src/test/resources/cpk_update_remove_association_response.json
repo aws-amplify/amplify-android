@@ -1,0 +1,16 @@
+{
+  "data": {
+    "updatePost": {
+      "blog": null,
+      "comments": {
+        "items": [],
+        "nextToken": null
+      },
+      "createdAt": "2023-06-09T16:22:30.48Z",
+      "postId": "p1",
+      "rating": 3.4,
+      "title": "t1",
+      "updatedAt": "2023-06-13T14:19:56.122Z"
+    }
+  }
+}

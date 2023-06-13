@@ -1,0 +1,6 @@
+{
+  "query": "query GetComment($commentId: ID!) {\n  getComment(commentId: $commentId) {\n    commentId\n    content\n    createdAt\n    post {\n      blog {\n        blogAuthorId\n        blogId\n        createdAt\n        name\n        siteId\n        updatedAt\n      }\n      comments {\n        items {\n          commentId\n          content\n          createdAt\n          updatedAt\n        }\n        nextToken\n      }\n      createdAt\n      postId\n      rating\n      title\n      updatedAt\n    }\n    updatedAt\n  }\n}\n",
+  "variables": {
+    "commentId": "c1"
+  }
+}

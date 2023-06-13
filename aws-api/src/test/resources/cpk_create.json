@@ -1,0 +1,9 @@
+{
+  "query": "mutation CreateItem($input: CreateItemInput!) {\n  createItem(input: $input) {\n    createdAt\n    customKey\n    name\n    updatedAt\n  }\n}\n",
+  "variables": {
+    "input": {
+      "customKey": "ck1",
+      "name": "name1"
+    }
+  }
+}
