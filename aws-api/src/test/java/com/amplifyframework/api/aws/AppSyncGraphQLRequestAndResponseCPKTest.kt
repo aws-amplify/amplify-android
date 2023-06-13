@@ -30,6 +30,7 @@ import com.amplifyframework.testmodels.cpk.Post
 import com.amplifyframework.testmodels.cpk.Post.PostIdentifier
 import com.amplifyframework.testutils.Resources
 import com.amplifyframework.util.GsonFactory
+import java.io.Serializable
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -39,7 +40,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.skyscreamer.jsonassert.JSONAssert
-import java.io.Serializable
 
 /**
  * Tests the [AppSyncGraphQLRequestFactory].
@@ -286,7 +286,6 @@ class AppSyncGraphQLRequestFactoryCPKTest {
         assertEquals(1, response.data.items.count())
         val firstItem = response.data.items.first()
         assertEquals("b1", firstItem.blogId)
-
     }
 
     @Test
