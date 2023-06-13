@@ -1,17 +1,26 @@
-
 /*
 Need to create backends for s3, pinpoint, predictions, core
  */
 def module_backends = [
-    'aws-datastore':'DataStoreIntegTests',
-    'aws-api': 'ApiInstrumentedTests',
-    'aws-geo-location': 'GeoIntegTests',
-    'maplibre-adapter': 'GeoIntegTests',
-    'aws-storage-s3': 'NONE',
-    'aws-analytics-pinpoint': 'NONE',
-    'aws-predictions': 'NONE',
-    'core':'NONE',
-    'aws-auth-cognito': 'AuthIntegrationTests'
+        'aws-datastore'         : 'DataStoreIntegTests',
+        'aws-api'               : 'ApiInstrumentedTests',
+        'aws-geo-location'      : 'GeoIntegTests',
+        'maplibre-adapter'      : 'GeoIntegTests',
+        'aws-storage-s3'        : 'NONE',
+        'aws-analytics-pinpoint': 'NONE',
+        'aws-predictions'       : 'NONE',
+        'core'                  : 'NONE',
+        'aws-auth-cognito'      : 'AuthIntegrationTests'
+]
+
+def canaryTests = [
+        'aws-datastore'   : ['com.amplifyframework.datastore.DatastoreCanaryTest'],
+        'aws-auth-cognito': ['com.amplifyframework.auth.cognito.AuthCanaryTest'],
+        'aws-analytics-pinpoint': ['com.amplifyframework.analytics.pinpoint.PinpointAnalyticsCanaryTest'],
+        'aws-geo-location': ['com.amplifyframework.geo.location.GeoCanaryTest'],
+        'aws-predictions': ['com.amplifyframework.predictions.aws.PredictionsCanaryTest'],
+//      'aws-push-notifications-pinpoint': ['com.amplifyframework.pushnotifications.pinpoint.NotificationsCanaryTest'],
+        'aws-storage-s3': ['com.amplifyframework.storage.s3.StorageCanaryTest']
 ]
 
 subprojects {
@@ -34,6 +43,17 @@ subprojects {
                     }
                 }
             }
+            task runCanaryInDeviceFarm {
+                dependsOn(assembleAndroidTest)
+                doLast {
+                    for (canary in canaryTests[project.name]) {
+                        exec {
+                            commandLine("$rootDir.path/scripts/run_canary_in_devicefarm.sh")
+                            args(project.name, canary)
+                        }
+                    }
+                }
+            }
         }
     }
 }
@@ -41,12 +61,12 @@ subprojects {
 
 task pullBackendConfigFromAmplify(description: "Pulls backend configurations from Amplify project.") {
     doLast {
-        for(entry in module_backends) {
+        for (entry in module_backends) {
             def moduleName = entry.key
             def amplifyBackendProjectName = entry.value
 
             println("Getting config files for $amplifyBackendProjectName")
-            def amplifyPullCommand =  "$rootDir.path/scripts/pull_backend_config_from_amplify"
+            def amplifyPullCommand = "$rootDir.path/scripts/pull_backend_config_from_amplify"
             exec {
                 workingDir(rootDir.path)
                 executable(amplifyPullCommand)
