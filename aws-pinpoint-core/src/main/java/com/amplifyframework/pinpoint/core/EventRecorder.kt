@@ -198,8 +198,11 @@ class EventRecorder(
         return eventIdToDelete
     }
 
-    private fun isRetryableError(code: Int): Boolean {
-        return code in 500..599
+    private fun isRetryableError(code: Int?): Boolean {
+        code?.let {
+            return code in 500..599
+        }
+        return false
     }
 
     private fun processEndpointResponse(endpointResponse: EndpointItemResponse?) {

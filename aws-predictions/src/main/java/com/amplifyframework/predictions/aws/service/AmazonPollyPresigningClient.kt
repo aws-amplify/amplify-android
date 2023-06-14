@@ -18,9 +18,9 @@ import androidx.annotation.WorkerThread
 import aws.sdk.kotlin.services.polly.PollyClient
 import aws.sdk.kotlin.services.polly.model.SynthesizeSpeechRequest
 import aws.sdk.kotlin.services.polly.presigners.presignSynthesizeSpeech
-import kotlinx.coroutines.runBlocking
 import java.net.URL
 import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.runBlocking
 
 /**
  * Client for accessing Amazon Polly and generating a presigned URL of an
