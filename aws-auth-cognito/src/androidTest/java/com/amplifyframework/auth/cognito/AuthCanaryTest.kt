@@ -138,6 +138,7 @@ class AuthCanaryTest {
     }
 
     @Test
+    @Ignore("Sending sign up confirmation code is disabled in the user pool.")
     fun resendSignUpCode() {
         signUpUser(tempUsername, tempPassword)
         val latch = CountDownLatch(1)
@@ -345,6 +346,7 @@ class AuthCanaryTest {
     }
 
     @Test
+    @Ignore("Test fails when run too frequently due to resend confirmation code limit exceeded.")
     fun resendUserAttributeConfirmationCode() {
         signInUser(username, password)
         val latch = CountDownLatch(1)
@@ -427,7 +429,10 @@ class AuthCanaryTest {
         signInUser(tempUsername, tempPassword)
         val latch = CountDownLatch(1)
         Amplify.Auth.deleteUser(
-            { latch.countDown() },
+            {
+                signedUpNewUser = false
+                latch.countDown()
+            },
             { fail("Delete user failed: $it") }
         )
         assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
