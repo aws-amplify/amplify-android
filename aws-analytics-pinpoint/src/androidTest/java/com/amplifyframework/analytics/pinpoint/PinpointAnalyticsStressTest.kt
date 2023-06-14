@@ -37,14 +37,14 @@ import com.amplifyframework.testutils.HubAccumulator
 import com.amplifyframework.testutils.Resources
 import com.amplifyframework.testutils.Sleep
 import com.amplifyframework.testutils.sync.SynchronousAuth
-import java.util.UUID
-import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.runBlocking
 import org.json.JSONException
 import org.junit.Assert
 import org.junit.Before
 import org.junit.BeforeClass
 import org.junit.Test
+import java.util.UUID
+import java.util.concurrent.TimeUnit
 
 class PinpointAnalyticsStressTest {
 
@@ -310,8 +310,8 @@ class PinpointAnalyticsStressTest {
         Assert.assertEquals("test-user", attributes["name"]!![0])
         Assert.assertEquals("test-plan", attributes["plan"]!![0])
         val endpointProfileLocation: EndpointLocation = endpointResponse.location!!
-        Assert.assertEquals(47.6154086, endpointProfileLocation.latitude, 0.1)
-        Assert.assertEquals((-122.3349685), endpointProfileLocation.longitude, 0.1)
+        Assert.assertEquals(47.6154086, endpointProfileLocation.latitude ?: 0.0, 0.1)
+        Assert.assertEquals((-122.3349685), endpointProfileLocation.longitude ?: 0.0, 0.1)
         Assert.assertEquals("98122", endpointProfileLocation.postalCode)
         Assert.assertEquals("Seattle", endpointProfileLocation.city)
         Assert.assertEquals("WA", endpointProfileLocation.region)
