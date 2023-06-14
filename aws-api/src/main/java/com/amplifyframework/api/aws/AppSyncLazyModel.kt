@@ -38,6 +38,10 @@ class AppSyncLazyModel<M : Model>(
         return value
     }
 
+    override fun getIdentifier(): Map<String, Any>? {
+        return keyMap
+    }
+
     override suspend fun get(): M? {
         value?.let { return value }
         val queryPredicate = predicate.createPredicate(clazz, keyMap)

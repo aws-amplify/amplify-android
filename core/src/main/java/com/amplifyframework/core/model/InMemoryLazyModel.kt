@@ -17,6 +17,8 @@ package com.amplifyframework.core.model
 
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.core.Consumer
+import java.io.Serializable
+import java.util.*
 
 class InMemoryLazyModel<M : Model>(model: M? = null) : LazyModel<M> () {
 
@@ -24,6 +26,10 @@ class InMemoryLazyModel<M : Model>(model: M? = null) : LazyModel<M> () {
 
     override fun getValue(): M? {
         return value
+    }
+
+    override fun getIdentifier(): Map<String, Any>? {
+        return null
     }
 
     override suspend fun get(): M? {

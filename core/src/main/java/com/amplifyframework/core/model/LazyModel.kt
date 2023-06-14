@@ -20,6 +20,8 @@ import com.amplifyframework.core.Consumer
 
 abstract class LazyModel<M : Model> {
     abstract fun getValue(): M?
+    
+    abstract fun getIdentifier(): Map<String, Any>?
 
     abstract suspend fun get(): M?
 

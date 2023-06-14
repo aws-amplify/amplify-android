@@ -171,7 +171,7 @@ public class GraphQLRequestHelper {
             @NonNull ModelSchema schema, @NonNull Model instance) throws AmplifyException {
         final Map<String, Object> input = new HashMap<>();
         for (String fieldName : schema.getPrimaryIndexFields()) {
-            input.put(fieldName, extractFieldValue(fieldName, instance, schema));
+            input.put(fieldName, extractFieldValue(fieldName, instance, schema, true));
         }
         return input;
     }
@@ -224,21 +224,31 @@ public class GraphQLRequestHelper {
                 continue;
             }
 
-            Object fieldValue = extractFieldValue(modelField.getName(), instance, schema);
+            Object fieldValue = extractFieldValue(modelField.getName(), instance, schema, false);
+            Object underlyingFieldValue = fieldValue;
+            Map<String, Object> identifiersIfLazyModel = null;
+            if (modelField.isLazyModel() && fieldValue != null) {
+                LazyModel<?> lazyModel = (LazyModel<?>) fieldValue;
+                underlyingFieldValue = lazyModel.getValue();
+                identifiersIfLazyModel = lazyModel.getIdentifier();
+            }
 
             if (association == null) {
                 result.put(fieldName, fieldValue);
             } else if (association.isOwner()) {
-                if (fieldValue == null && MutationType.CREATE.equals(type)) {
+                if (
+                        (fieldValue == null || (modelField.isLazyModel() && underlyingFieldValue == null && identifiersIfLazyModel == null))
+                        && MutationType.CREATE.equals(type)
+                ) {
                     // Do not set null values on associations for create mutations.
                 } else if (schema.getVersion() >= 1 && association.getTargetNames() != null
                         && association.getTargetNames().length > 0) {
                     // When target name length is more than 0 there are two scenarios, one is when
                     // there is custom primary key and other is when we have composite primary key.
-                    insertForeignKeyValues(result, modelField, fieldValue, association);
+                    insertForeignKeyValues(result, modelField, fieldValue, underlyingFieldValue, association);
                 } else {
                     String targetName = association.getTargetName();
-                    result.put(targetName, extractAssociateId(modelField, fieldValue));
+                    result.put(targetName, extractAssociateId(modelField, fieldValue, underlyingFieldValue));
                 }
             }
             // Ignore if field is associated, but is not a "belongsTo" relationship
@@ -250,15 +260,16 @@ public class GraphQLRequestHelper {
             Map<String, Object> result,
             ModelField modelField,
             Object fieldValue,
+            Object underlyingFieldValue,
             ModelAssociation association) throws AmplifyException {
-        if ((modelField.isModel() || modelField.isLazyModel()) && fieldValue == null) {
+        if (modelField.isModel() && fieldValue == null) {
             // When there is no model field value, set null for removal of values or deassociation.
             for (String key : association.getTargetNames()) {
                 result.put(key, null);
             }
-        } else if ((modelField.isModel() || modelField.isLazyModel()) && fieldValue instanceof Model) {
-            if (((Model) fieldValue).resolveIdentifier() instanceof ModelIdentifier<?>) {
-                final ModelIdentifier<?> primaryKey = (ModelIdentifier<?>) ((Model) fieldValue).resolveIdentifier();
+        } else if ((modelField.isModel() || modelField.isLazyModel()) && underlyingFieldValue instanceof Model) {
+            if (((Model) underlyingFieldValue).resolveIdentifier() instanceof ModelIdentifier<?>) {
+                final ModelIdentifier<?> primaryKey = (ModelIdentifier<?>) ((Model) underlyingFieldValue).resolveIdentifier();
                 ListIterator<String> targetNames = Arrays.asList(association.getTargetNames()).listIterator();
                 Iterator<? extends Serializable> sortedKeys = primaryKey.sortedKeys().listIterator();
 
@@ -267,8 +278,8 @@ public class GraphQLRequestHelper {
                 while (targetNames.hasNext()) {
                     result.put(targetNames.next(), sortedKeys.next());
                 }
-            } else if ((fieldValue instanceof SerializedModel)) {
-                SerializedModel serializedModel = ((SerializedModel) fieldValue);
+            } else if ((underlyingFieldValue instanceof SerializedModel)) {
+                SerializedModel serializedModel = ((SerializedModel) underlyingFieldValue);
                 ModelSchema serializedSchema = serializedModel.getModelSchema();
                 if (serializedSchema != null &&
                         serializedSchema.getPrimaryIndexFields().size() > 1) {
@@ -280,28 +291,42 @@ public class GraphQLRequestHelper {
                                 .get(primaryKeyFieldsIterator.next()));
                     }
                 } else {
-                    result.put(association.getTargetNames()[0], ((Model) fieldValue).resolveIdentifier().toString());
+                    result.put(association.getTargetNames()[0], ((Model) underlyingFieldValue).resolveIdentifier().toString());
                 }
             } else {
-                result.put(association.getTargetNames()[0], ((Model) fieldValue).resolveIdentifier().toString());
+                result.put(association.getTargetNames()[0], ((Model) underlyingFieldValue).resolveIdentifier().toString());
+            }
+        } else if (modelField.isLazyModel() && fieldValue instanceof LazyModel) {
+            Map<String, Object> identifiers = ((LazyModel<?>) fieldValue).getIdentifier();
+            if (identifiers == null) {
+                for (String key : association.getTargetNames()) {
+                    result.put(key, null);
+                }
             }
         }
     }
 
-    private static Object extractAssociateId(ModelField modelField, Object fieldValue) {
-        if (modelField.isModel() && fieldValue instanceof Model) {
-            return ((Model) fieldValue).resolveIdentifier();
+    private static Object extractAssociateId(ModelField modelField, Object fieldValue, Object underlyingFieldValue) {
+        if ((modelField.isModel() || modelField.isLazyModel()) && underlyingFieldValue instanceof Model) {
+            return ((Model) underlyingFieldValue).resolveIdentifier();
         } else if (modelField.isModel() && fieldValue instanceof Map) {
             return ((Map<?, ?>) fieldValue).get("id");
         } else if (modelField.isModel() && fieldValue == null) {
             // When there is no model field value, set null for removal of values or deassociation.
             return null;
+        } else if (modelField.isLazyModel() && fieldValue instanceof LazyModel) {
+            Map<String, Object> identifiers = ((LazyModel<?>) fieldValue).getIdentifier();
+            if (identifiers == null) {
+                return null;
+            } else {
+                return identifiers.get("id");
+            }
         } else {
             throw new IllegalStateException("Associated data is not Model or Map.");
         }
     }
 
-    private static Object extractFieldValue(String fieldName, Model instance, ModelSchema schema)
+    private static Object extractFieldValue(String fieldName, Model instance, ModelSchema schema, Boolean extractLazyValue)
             throws AmplifyException {
         if (instance instanceof SerializedModel) {
             SerializedModel serializedModel = (SerializedModel) instance;
@@ -317,7 +342,7 @@ public class GraphQLRequestHelper {
             Field privateField = instance.getClass().getDeclaredField(fieldName);
             privateField.setAccessible(true);
             Object fieldInstance = privateField.get(instance);
-            if (fieldInstance != null && privateField.getType() == LazyModel.class) {
+            if (extractLazyValue && fieldInstance != null && privateField.getType() == LazyModel.class) {
                 return ((LazyModel<?>) fieldInstance).getValue();
             }
             return fieldInstance;
