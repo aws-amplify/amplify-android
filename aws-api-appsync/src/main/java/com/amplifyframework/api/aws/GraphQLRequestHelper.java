@@ -22,6 +22,7 @@ import com.amplifyframework.annotations.InternalAmplifyApi;
 import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.core.model.AuthRule;
 import com.amplifyframework.core.model.AuthStrategy;
+import com.amplifyframework.core.model.LazyModel;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelAssociation;
 import com.amplifyframework.core.model.ModelField;
@@ -250,12 +251,12 @@ public class GraphQLRequestHelper {
             ModelField modelField,
             Object fieldValue,
             ModelAssociation association) throws AmplifyException {
-        if (modelField.isModel() && fieldValue == null) {
+        if ((modelField.isModel() || modelField.isLazyModel()) && fieldValue == null) {
             // When there is no model field value, set null for removal of values or deassociation.
             for (String key : association.getTargetNames()) {
                 result.put(key, null);
             }
-        } else if (modelField.isModel() && fieldValue instanceof Model) {
+        } else if ((modelField.isModel() || modelField.isLazyModel()) && fieldValue instanceof Model) {
             if (((Model) fieldValue).resolveIdentifier() instanceof ModelIdentifier<?>) {
                 final ModelIdentifier<?> primaryKey = (ModelIdentifier<?>) ((Model) fieldValue).resolveIdentifier();
                 ListIterator<String> targetNames = Arrays.asList(association.getTargetNames()).listIterator();
@@ -315,7 +316,11 @@ public class GraphQLRequestHelper {
         try {
             Field privateField = instance.getClass().getDeclaredField(fieldName);
             privateField.setAccessible(true);
-            return privateField.get(instance);
+            Object fieldInstance = privateField.get(instance);
+            if (fieldInstance != null && privateField.getType() == LazyModel.class) {
+                return ((LazyModel<?>) fieldInstance).getValue();
+            }
+            return fieldInstance;
         } catch (Exception exception) {
             throw new AmplifyException(
                     "An invalid field was provided. " + fieldName + " is not present in " + schema.getName(),
