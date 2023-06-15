@@ -67,12 +67,15 @@ public interface Model {
         try {
             if (resolveIdentifier() instanceof ModelIdentifier) {
                 return ((ModelIdentifier<?>) resolveIdentifier()).getIdentifier();
-            } else {
+            } else if (resolveIdentifier() instanceof String){
                 return (String) resolveIdentifier();
+            } else {
+                return ModelIdentifier.Helper.escapeAndEncapsulateString(
+                        resolveIdentifier().toString()
+                );
             }
         } catch (Exception exception) {
-            throw (new IllegalStateException("Invalid Primary Key, " +
-                   "It should either be of type String or composite Primary Key." + exception));
+            throw (new IllegalStateException("Invalid Primary Key", exception));
         }
     }
 
