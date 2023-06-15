@@ -98,7 +98,7 @@ class AmazonPollyPresigningClientTest {
         val presignedUrl = pollyPresigningClient.getPresignedSynthesizeSpeechUrl(request)
         coVerify { defaultCredentialsProvider.resolve(emptyAttributes()) }
         assertNotNull(presignedUrl)
-        checkUrlForQueryParameter(presignedUrl, LANGUAGE_CODE_KEY, request.languageCode.toString())
+        checkUrlForQueryParameter(presignedUrl, LANGUAGE_CODE_KEY, request.languageCode?.value ?: "")
     }
 
     /**

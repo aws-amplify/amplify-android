@@ -18,6 +18,7 @@ import androidx.annotation.WorkerThread
 import aws.sdk.kotlin.services.polly.PollyClient
 import aws.sdk.kotlin.services.polly.model.SynthesizeSpeechRequest
 import aws.sdk.kotlin.services.polly.presigners.presignSynthesizeSpeech
+import aws.smithy.kotlin.runtime.util.emptyAttributes
 import java.net.URL
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.runBlocking
@@ -26,7 +27,7 @@ import kotlinx.coroutines.runBlocking
  * Client for accessing Amazon Polly and generating a presigned URL of an
  * Amazon Polly SynthesizeSpeech request.
  */
-class AmazonPollyPresigningClient(var pollyClient: PollyClient) : PollyClient by pollyClient {
+class AmazonPollyPresigningClient(private val pollyClient: PollyClient) : PollyClient by pollyClient {
 
     /**
      * Creates a presigned URL for a SynthesizeSpeech request.
@@ -54,7 +55,11 @@ class AmazonPollyPresigningClient(var pollyClient: PollyClient) : PollyClient by
         configBuilder.credentialsProvider = presignCredentialsProvider
 
         val presignedRequest = runBlocking {
-            pollyClient.presignSynthesizeSpeech(synthesizeSpeechRequest, options.expires.seconds)
+            val credentials = presignCredentialsProvider.resolve(emptyAttributes())
+            pollyClient.presignSynthesizeSpeech(synthesizeSpeechRequest) {
+                this.expiresAfter = options.expires.seconds
+                this.credentials = credentials
+            }
         }
         return URL(presignedRequest.url.toString())
     }
