@@ -1,3 +1,11 @@
+## [Release 1.38.6](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.38.6)
+
+### Bug Fixes
+- **datastore:** Flutter: fail to serialize list of custom type values ([#2463](https://github.com/aws-amplify/amplify-android/issues/2463))
+- **chore:** Strip non-permitted characters by okhttp in headers ([#2473](https://github.com/aws-amplify/amplify-android/issues/2473))
+
+[See all changes between 1.38.5 and 1.38.6](https://github.com/aws-amplify/amplify-android/compare/release_v1.38.5...release_v1.38.6)
+
 ## [Release 1.38.5](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.38.5)
 
 ### Bug Fixes
