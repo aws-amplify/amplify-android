@@ -33,6 +33,7 @@ import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicateOperation;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.DataStoreException;
+import com.amplifyframework.datastore.appsync.ModelMetadata;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLPredicate;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteColumn;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteTable;
@@ -352,7 +353,11 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
                                                   @NonNull T item) throws DataStoreException {
         final SQLiteTable table = SQLiteTable.fromSchema(modelSchema);
         final StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("INSERT INTO")
+        String insertCommand = "INSERT INTO";
+        if (item instanceof ModelMetadata) {
+            insertCommand = "INSERT OR IGNORE INTO";
+        }
+        stringBuilder.append(insertCommand)
                 .append(SqlKeyword.DELIMITER)
                 .append(Wrap.inBackticks(table.getName()))
                 .append(SqlKeyword.DELIMITER)
