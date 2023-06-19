@@ -22,6 +22,9 @@ import com.amplifyframework.geo.maplibre.view.ClusteringOptions
 import com.amplifyframework.geo.maplibre.view.MapLibreView
 import com.mapbox.mapboxsdk.maps.MapboxMap
 import com.mapbox.mapboxsdk.maps.Style
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
@@ -29,9 +32,6 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Rule
 import org.junit.Test
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
-import kotlin.coroutines.suspendCoroutine
 
 class MapViewTestActivityTest {
 
@@ -106,7 +106,7 @@ class MapViewTestActivityTest {
     fun clusteringCanBeEnabledWithoutOptions() = runBlockingSignedIn(rule) {
         val mapStyle = suspendCoroutine<Style> { continuation ->
             rule.scenario.onActivity { activity ->
-                println( "FAS: "+AmplifyWrapper.auth.fetchAuthSession().toString())
+                println("FAS: " + AmplifyWrapper.auth.fetchAuthSession().toString())
                 activity.mapView.addOnDidFailLoadingMapListener { error ->
                     continuation.resumeWithException(RuntimeException(error))
                 }
@@ -162,7 +162,7 @@ class MapViewTestActivityTest {
     private fun signInWithCognito() {
         val (username, password) = Credentials.load(ApplicationProvider.getApplicationContext())
         val result = AmplifyWrapper.auth.signIn(username, password)
-        println("SignIn complete: ${result}")
+        println("SignIn complete: $result")
     }
 
     private fun signOutFromCognito() {
