@@ -77,7 +77,7 @@ class MapViewStressTest {
                 signInWithCognito()
             }
             val result = block()
-            rule.scenario.onActivity { signOutFromCognito() }
+            rule.scenario.onActivity { }
             result
         }
     }
