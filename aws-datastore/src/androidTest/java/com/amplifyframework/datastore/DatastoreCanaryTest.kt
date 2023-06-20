@@ -17,6 +17,7 @@ package com.amplifyframework.datastore
 import android.util.Log
 import androidx.test.core.app.ApplicationProvider
 import com.amplifyframework.AmplifyException
+import com.amplifyframework.annotations.CanaryTest
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider
 import com.amplifyframework.testmodels.commentsblog.Post
@@ -30,6 +31,7 @@ import org.junit.Assert.fail
 import org.junit.BeforeClass
 import org.junit.Test
 
+@CanaryTest
 class DatastoreCanaryTest {
     companion object {
         private const val TIMEOUT_S = 20L

@@ -18,6 +18,7 @@ import android.content.Context
 import android.util.Log
 import androidx.test.core.app.ApplicationProvider
 import com.amplifyframework.AmplifyException
+import com.amplifyframework.annotations.CanaryTest
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.geo.models.Coordinates
@@ -29,6 +30,7 @@ import org.junit.Assert.fail
 import org.junit.BeforeClass
 import org.junit.Test
 
+@CanaryTest
 class GeoCanaryTest {
     companion object {
         private const val TIMEOUT_S = 20L

@@ -27,6 +27,7 @@ import com.amplifyframework.analytics.AnalyticsEvent
 import com.amplifyframework.analytics.AnalyticsProperties
 import com.amplifyframework.analytics.UserProfile
 import com.amplifyframework.analytics.pinpoint.models.AWSPinpointUserProfile
+import com.amplifyframework.annotations.CanaryTest
 import com.amplifyframework.auth.AuthPlugin
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
 import com.amplifyframework.core.Amplify
@@ -45,6 +46,7 @@ import org.junit.Before
 import org.junit.BeforeClass
 import org.junit.Test
 
+@CanaryTest
 class PinpointAnalyticsCanaryTest {
     companion object {
         private const val CREDENTIALS_RESOURCE_NAME = "credentials"

@@ -19,6 +19,7 @@ import android.content.Context
 import android.util.Log
 import androidx.test.core.app.ApplicationProvider
 import com.amplifyframework.AmplifyException
+import com.amplifyframework.annotations.CanaryTest
 import com.amplifyframework.api.aws.AWSApiPlugin
 import com.amplifyframework.api.rest.RestOptions
 import com.amplifyframework.auth.AuthProvider
@@ -47,6 +48,7 @@ import org.junit.BeforeClass
 import org.junit.Ignore
 import org.junit.Test
 
+@CanaryTest
 class AuthCanaryTest {
     companion object {
         private const val TIMEOUT_S = 20L
@@ -84,6 +86,7 @@ class AuthCanaryTest {
     @OptIn(ExperimentalCoroutinesApi::class)
     @Before
     fun resetAuth() {
+        throw UnsupportedOperationException("Expected this test not to be run")
         signOutUser()
         val context = ApplicationProvider.getApplicationContext<Context>()
         Dispatchers.setMain(mainThreadSurrogate)

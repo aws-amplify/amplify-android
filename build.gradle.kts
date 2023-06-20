@@ -136,6 +136,7 @@ fun Project.configureAndroid() {
             targetSdk = 30
             testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
             testInstrumentationRunnerArguments += "clearPackageData" to "true"
+            testInstrumentationRunnerArguments += "notAnnotation" to "com.amplifyframework.annotations.CanaryTest"
             consumerProguardFiles += rootProject.file("configuration/consumer-rules.pro")
 
             testOptions {

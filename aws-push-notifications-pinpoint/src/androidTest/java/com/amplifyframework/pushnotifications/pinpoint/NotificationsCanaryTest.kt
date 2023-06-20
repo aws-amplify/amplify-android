@@ -17,6 +17,7 @@ package com.amplifyframework.pushnotifications.pinpoint
 import android.util.Log
 import androidx.test.core.app.ApplicationProvider
 import com.amplifyframework.AmplifyException
+import com.amplifyframework.annotations.CanaryTest
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.notifications.pushnotifications.NotificationContentProvider
@@ -29,6 +30,7 @@ import org.junit.BeforeClass
 import org.junit.Ignore
 import org.junit.Test
 
+@CanaryTest
 @Ignore("Tests require push notification services to be set up.")
 class NotificationsCanaryTest {
     companion object {
