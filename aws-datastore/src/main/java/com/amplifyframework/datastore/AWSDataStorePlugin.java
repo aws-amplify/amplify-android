@@ -146,7 +146,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             modelProvider,
             schemaRegistry,
             sqliteStorageAdapter,
-            AppSyncClient.via(api, this.authModeStrategy),
+            AppSyncClient.via(api),
             () -> pluginConfiguration,
             () -> api.getPlugins().isEmpty() ? Orchestrator.State.LOCAL_ONLY : Orchestrator.State.SYNC_VIA_API,
             reachabilityMonitor,
@@ -754,9 +754,11 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
         /**
          * Sets the authorization mode strategy which will be used by DataStore sync engine
          * when interacting with the API plugin.
+         * @deprecated Auth mode strategy is automatically detected based on the auth rules of the type.
          * @param authModeStrategy One of the options from the {@link AuthModeStrategyType} enum.
          * @return An implementation of the {@link ModelProvider} interface.
          */
+        @Deprecated
         public Builder authModeStrategy(AuthModeStrategyType authModeStrategy) {
             this.authModeStrategy = authModeStrategy;
             return this;

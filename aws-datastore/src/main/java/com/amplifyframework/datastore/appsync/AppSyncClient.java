@@ -53,16 +53,13 @@ import com.amplifyframework.logging.Logger;
 public final class AppSyncClient implements AppSync {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
     private final GraphQLBehavior api;
-    private final AuthModeStrategyType authModeStrategyType;
 
     /**
      * Constructs a new AppSyncClient.
      * @param api The API Category, configured with a DataStore API
      */
-    private AppSyncClient(GraphQLBehavior api,
-                          AuthModeStrategyType strategyType) {
+    private AppSyncClient(GraphQLBehavior api) {
         this.api = api;
-        this.authModeStrategyType = strategyType;
     }
 
     /**
@@ -73,7 +70,7 @@ public final class AppSyncClient implements AppSync {
      */
     @NonNull
     public static AppSyncClient via(@NonNull GraphQLBehavior api) {
-        return new AppSyncClient(api, AuthModeStrategyType.DEFAULT);
+        return new AppSyncClient(api);
     }
 
     /**
@@ -83,10 +80,19 @@ public final class AppSyncClient implements AppSync {
      * @param strategyType Authorization strategy that should be used when creating
      *                     GraphQL requests for AppSync.
      * @return An App Sync API instance
+     * @deprecated AuthModeStrategyType is automatically detected by seeing the auth statements on the model.
      */
+    @Deprecated
     public static AppSyncClient via(@NonNull GraphQLBehavior api,
                                     @NonNull AuthModeStrategyType strategyType) {
-        return new AppSyncClient(api, strategyType);
+        return new AppSyncClient(api);
+    }
+
+    private AuthModeStrategyType getAuthModeStrategyType(ModelSchema modelSchema) {
+        if (modelSchema.hasModelLevelRules()) {
+            return AuthModeStrategyType.MULTIAUTH;
+        }
+        return AuthModeStrategyType.DEFAULT;
     }
 
     @NonNull
@@ -100,7 +106,7 @@ public final class AppSyncClient implements AppSync {
                                                       lastSync,
                                                       syncPageSize,
                                                       queryPredicate,
-                                                      authModeStrategyType);
+                                                      getAuthModeStrategyType(modelSchema));
     }
 
     @NonNull
@@ -131,7 +137,9 @@ public final class AppSyncClient implements AppSync {
             @NonNull Consumer<DataStoreException> onFailure) {
         try {
             final GraphQLRequest<ModelWithMetadata<T>> request =
-                    AppSyncRequestFactory.buildCreationRequest(modelSchema, model, authModeStrategyType);
+                    AppSyncRequestFactory.buildCreationRequest(modelSchema,
+                                                               model,
+                                                               getAuthModeStrategyType(modelSchema));
             return mutation(request, onResponse, onFailure);
         } catch (AmplifyException amplifyException) {
             onFailure.accept(new DataStoreException(
@@ -179,7 +187,7 @@ public final class AppSyncClient implements AppSync {
                                                          model,
                                                          version,
                                                          predicate,
-                                                         authModeStrategyType);
+                                                         getAuthModeStrategyType(modelSchema));
             return mutation(request, onResponse, onFailure);
         } catch (AmplifyException amplifyException) {
             onFailure.accept(new DataStoreException(
@@ -227,7 +235,7 @@ public final class AppSyncClient implements AppSync {
                                                                model,
                                                                version,
                                                                predicate,
-                                                               authModeStrategyType);
+                                                               getAuthModeStrategyType(modelSchema));
             return mutation(request, onResponse, onFailure);
         } catch (DataStoreException dataStoreException) {
             onFailure.accept(dataStoreException);
@@ -301,7 +309,7 @@ public final class AppSyncClient implements AppSync {
         try {
             request = AppSyncRequestFactory.buildSubscriptionRequest(modelSchema,
                                                                      subscriptionType,
-                                                                     authModeStrategyType);
+                                                                     getAuthModeStrategyType(modelSchema));
         } catch (DataStoreException requestGenerationException) {
             onSubscriptionFailure.accept(requestGenerationException);
             return new NoOpCancelable();

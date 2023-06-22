@@ -19,6 +19,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.core.Action;
@@ -197,6 +198,9 @@ final class SubscriptionProcessor {
                     if (isExceptionType(dataStoreException, AppSyncErrorType.UNAUTHORIZED)) {
                         // Ignore Unauthorized errors, so that DataStore can still be used even if the user is only
                         // authorized to read a subset of the models.
+                        latch.countDown();
+                    } else if (dataStoreException.getCause() instanceof ApiException.ApiAuthException) {
+                        // This can also be an unauthorized exception, ignore for the same reason as above
                         latch.countDown();
                         LOG.warn("Unauthorized failure:" + subscriptionType.name() + " " + modelSchema.getName());
                     } else if (isExceptionType(dataStoreException, AppSyncErrorType.OPERATION_DISABLED)) {
