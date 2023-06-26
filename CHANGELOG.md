@@ -1,3 +1,10 @@
+## [Release 2.8.6](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.8.6)
+
+### Bug Fixes
+- **datastore:** Flutter: fail to serialize list of custom type values ([#2462](https://github.com/aws-amplify/amplify-android/issues/2462))
+
+[See all changes between 2.8.5 and 2.8.6](https://github.com/aws-amplify/amplify-android/compare/release_v2.8.5...release_v2.8.6)
+
 ## [Release 2.8.5](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.8.5)
 
 ### Miscellaneous
