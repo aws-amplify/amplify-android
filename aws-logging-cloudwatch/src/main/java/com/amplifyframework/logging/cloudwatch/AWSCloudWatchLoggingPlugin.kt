@@ -16,91 +16,121 @@ package com.amplifyframework.logging.cloudwatch
 
 import android.content.Context
 import android.util.Log
-import aws.sdk.kotlin.runtime.auth.credentials.StaticCredentialsProvider
 import aws.sdk.kotlin.services.cloudwatchlogs.CloudWatchLogsClient
 import com.amplifyframework.AmplifyException
+import com.amplifyframework.auth.CognitoCredentialsProvider
+import com.amplifyframework.core.Action
 import com.amplifyframework.core.Consumer
+import com.amplifyframework.core.Resources
 import com.amplifyframework.core.category.CategoryType
 import com.amplifyframework.logging.Logger
 import com.amplifyframework.logging.LoggingPlugin
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import java.net.URL
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.json.Json
 import org.json.JSONObject
 
+/**
+ * TODO: Add documentation
+*/
 class AWSCloudWatchLoggingPlugin @JvmOverloads constructor(
-    private val awsCloudWatchLoggingPluginConfig: AWSCloudWatchLoggingPluginConfig? = null,
-) : LoggingPlugin<Void>() {
+    private val awsCloudWatchLoggingPluginConfig: AWSCloudWatchLoggingPluginConfiguration? = null,
+    private val awsRemoteLoggingConstraintProvider: RemoteLoggingConstraintProvider? = null,
+) : LoggingPlugin<CloudWatchLogsClient>() {
 
-    private val defaultNamespace = "amplify"
-    private var cloudwatchLogEventRecorder: CloudwatchLogEventRecorder? = null
-    private val coroutineScope = CoroutineScope(Dispatchers.IO)
-    private var logToLogcat = false
-    private val loggingConstraintsResolver = LoggingConstraintsResolver()
-
-    override fun forNamespace(namespace: String?): Logger {
-        Log.i("CloudWatchLoggingPlugin", "forNamespace $namespace")
-        val resolvedNameSpace = namespace ?: defaultNamespace
-        return CloudWatchLogger(
-            resolvedNameSpace,
-            null,
-            logToLogcat,
-            cloudwatchLogEventRecorder,
-            loggingConstraintsResolver,
+    private val loggingConstraintsResolver =
+        LoggingConstraintsResolver(
+            localLoggingConstraint = awsCloudWatchLoggingPluginConfig?.loggingConstraints,
+            remoteLoggingConstraintProvider = awsRemoteLoggingConstraintProvider,
         )
+    private val awsCloudWatchLoggingPluginBehavior = AWSCloudWatchLoggingPluginBehavior(
+        loggingConstraintsResolver,
+        awsCloudWatchLoggingPluginConfig,
+    )
+    private lateinit var cloudWatchLogsClient: CloudWatchLogsClient
+
+    companion object {
+        private const val CONFIG_FILENAME = "amplifyconfiguration_logging"
+        internal const val SHARED_PREFERENCE_FILENAME = "com.amplify.logging.a3fa4188-0ac5-11ee-be56-0242ac120002"
+    }
+
+    @Deprecated("Deprecated in Java")
+    override fun forNamespace(namespace: String?): Logger {
+        return awsCloudWatchLoggingPluginBehavior.forNamespace(namespace)
     }
 
     override fun logger(namespace: String): Logger {
-        TODO("Not yet implemented")
+        return awsCloudWatchLoggingPluginBehavior.logger(namespace)
     }
 
     override fun logger(categoryType: CategoryType, namespace: String): Logger {
-        TODO("Not yet implemented")
+        return awsCloudWatchLoggingPluginBehavior.logger(categoryType, namespace)
     }
 
     override fun enable() {
-        TODO("Not yet implemented")
+        awsCloudWatchLoggingPluginBehavior.enable()
     }
 
     override fun disable() {
-        TODO("Not yet implemented")
+        awsCloudWatchLoggingPluginBehavior.disable()
     }
 
     public fun flushLogs(
-        onSuccess: Consumer<Void>,
+        onSuccess: Action,
         onError: Consumer<AmplifyException>,
     ) {
+        awsCloudWatchLoggingPluginBehavior.flushLogs(onSuccess, onError)
     }
 
     override fun getPluginKey(): String {
-        return "AWSCloudWatchLoggingPlugin"
+        return "awsCloudWatchLoggingPlugin"
     }
 
     override fun configure(pluginConfiguration: JSONObject?, context: Context) {
-        Log.i("CloudWatchLoggingPlugin", "onConfiguration $pluginConfiguration")
-        System.loadLibrary("sqlcipher")
-        cloudwatchLogEventRecorder = CloudwatchLogEventRecorder(context)
-        val cloudWatchLogsClient = CloudWatchLogsClient {
-            credentialsProvider = StaticCredentialsProvider {
-                accessKeyId = "ID"
-                secretAccessKey = "ACCESS_KEY"
+        try {
+            // TODO: move reading from file to core
+            val awsLoggingConfig = awsCloudWatchLoggingPluginConfig ?: getConfigFromFile(context)
+            loggingConstraintsResolver.context = context
+            cloudWatchLogsClient = CloudWatchLogsClient {
+                credentialsProvider = CognitoCredentialsProvider()
+                region = awsLoggingConfig.region
             }
-            region = "us-east-1"
+            if (awsRemoteLoggingConstraintProvider == null) {
+                awsLoggingConfig.defaultRemoteConfiguration?.let {
+                    loggingConstraintsResolver.setRemoteConfigProvider(
+                        DefaultRemoteLoggingConstraintProvider(
+                            URL(it.endpoint),
+                            awsLoggingConfig.region,
+                            it.refreshIntervalInSeconds,
+                        ),
+                    )
+                }
+            }
+            val cloudWatchLogManager =
+                CloudWatchLogManager(context, awsLoggingConfig, cloudWatchLogsClient, loggingConstraintsResolver)
+            awsCloudWatchLoggingPluginBehavior.cloudWatchLogManager = cloudWatchLogManager
+            awsCloudWatchLoggingPluginBehavior.configure(awsLoggingConfig)
+        } catch (exception: Exception) {
+            Log.e("AWSCloudWatchLoggingPlugin", "failed to configure plugin", exception)
         }
-        cloudwatchLogEventRecorder?.awsCloudWatchLogsClient = cloudWatchLogsClient
-        coroutineScope.launch {
-            cloudwatchLogEventRecorder?.startSync()
-        }
-
-        loggingConstraintsResolver.localLoggingConstraint = awsCloudWatchLoggingPluginConfig?.localLoggingConstraint
-        logToLogcat = awsCloudWatchLoggingPluginConfig?.logToConsole == true
     }
 
-    override fun getEscapeHatch(): Void? {
-        TODO("Not yet implemented")
+    override fun getEscapeHatch(): CloudWatchLogsClient {
+        return cloudWatchLogsClient
     }
 
-    override fun getVersion(): String {
-        TODO("Not yet implemented")
+    override fun getVersion(): String = BuildConfig.VERSION_NAME
+
+    private fun getConfigFromFile(context: Context): AWSCloudWatchLoggingPluginConfiguration {
+        val resourceId = Resources.getRawResourceId(context, CONFIG_FILENAME)
+        val configJson = Resources.readJsonResourceFromId(context, resourceId)
+        val json = Json {
+            encodeDefaults = true
+            explicitNulls = false
+            ignoreUnknownKeys = true
+        }
+        return json.decodeFromString(
+            configJson.getJSONObject(pluginKey).toString(),
+        )
     }
 }

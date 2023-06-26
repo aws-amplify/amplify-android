@@ -28,8 +28,7 @@ import java.util.UUID
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import net.zetetic.database.sqlcipher.SQLiteDatabase
-import net.zetetic.database.sqlcipher.SQLiteQueryBuilder
+import net.sqlcipher.database.SQLiteQueryBuilder
 
 internal class CloudWatchLoggingDatabase(
     private val context: Context,
@@ -38,22 +37,20 @@ internal class CloudWatchLoggingDatabase(
 
     private val logEvents = 10
     private val logEventsId = 20
-    private val cloudWatchDatabaseHelper = CloudWatchDatabaseHelper(context)
     private val passphraseKey = "passphrase"
+    private val mb = 1024 * 1024
     private val sharedPreferences: SharedPreferences by lazy {
         EncryptedSharedPreferences.create(
             "awscloudwatchloggingdb.${getInstallationIdentifier(context)}",
             MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC),
             context,
             EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM,
         )
     }
     private val database by lazy {
-        val path = context.getDatabasePath(CloudWatchDatabaseHelper.DATABASE_NAME)
-        val db = SQLiteDatabase.openOrCreateDatabase(path, getDatabasePassphrase(), null, null)
-        LogEventTable.onCreate(db, 1)
-        db
+        System.loadLibrary("sqlcipher")
+        CloudWatchDatabaseHelper(context).getWritableDatabase(getDatabasePassphrase())
     }
     private val basePath = "cloudwatchlogevents"
     private val contentUri: Uri
@@ -69,20 +66,16 @@ internal class CloudWatchLoggingDatabase(
         uriMatcher.addURI(authority, "$basePath/#", logEventsId)
     }
 
-    fun closeDB() {
-        cloudWatchDatabaseHelper.close()
-    }
-
-    suspend fun saveLogEvent(event: CloudWatchLogEvent): Uri {
+    internal suspend fun saveLogEvent(event: CloudWatchLogEvent): Uri {
         return withContext(coroutineDispatcher) {
             insertEvent(contentUri, event)
         }
     }
 
-    suspend fun queryAllEvents(): List<CloudWatchLogEvent> {
+    internal suspend fun queryAllEvents(): List<CloudWatchLogEvent> {
         return withContext(coroutineDispatcher) {
             val cloudWatchLogEvents = mutableListOf<CloudWatchLogEvent>()
-            val cursor = query(contentUri, null, null, null, null, null)
+            val cursor = query(contentUri, null, null, null, LogEventTable.COLUMN_TIMESTAMP, null)
             cursor.use {
                 if (!it.moveToFirst()) {
                     return@use
@@ -98,7 +91,7 @@ internal class CloudWatchLoggingDatabase(
         }
     }
 
-    suspend fun bulkDelete(eventIds: List<Int>) {
+    internal suspend fun bulkDelete(eventIds: List<Int>) {
         return withContext(coroutineDispatcher) {
             val uri = contentUri
             val whereClause = "${LogEventTable.COLUMN_ID} in (${eventIds.joinToString(",")})"
@@ -108,6 +101,19 @@ internal class CloudWatchLoggingDatabase(
                 null,
             )
         }
+    }
+
+    internal fun isCacheFull(cacheSizeInMB: Int): Boolean {
+        val path = context.getDatabasePath(CloudWatchDatabaseHelper.DATABASE_NAME)
+        return if (path.exists()) {
+            path.length() >= cacheSizeInMB * mb
+        } else {
+            false
+        }
+    }
+
+    internal fun clearDatabase() {
+        database.delete(LogEventTable.TABLE_LOG_EVENT, null, null)
     }
 
     private suspend fun insertEvent(uri: Uri, event: CloudWatchLogEvent): Uri {

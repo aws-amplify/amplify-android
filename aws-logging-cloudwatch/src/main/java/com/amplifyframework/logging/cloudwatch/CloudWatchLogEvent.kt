@@ -14,6 +14,4 @@
  */
 package com.amplifyframework.logging.cloudwatch
 
-import java.sql.Timestamp
-
-data class CloudWatchLogEvent(val timestamp: Long, val message: String, val id: Int = 0)
+internal data class CloudWatchLogEvent(val timestamp: Long, val message: String, val id: Int = 0)

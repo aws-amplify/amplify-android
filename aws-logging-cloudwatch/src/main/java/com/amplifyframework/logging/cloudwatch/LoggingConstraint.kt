@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -16,78 +16,36 @@ package com.amplifyframework.logging.cloudwatch
 
 import com.amplifyframework.core.category.CategoryType
 import com.amplifyframework.logging.LogLevel
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.json.Json
 
+/**
+ * TODO: Acd documentation
+ */
+@Serializable
 data class LoggingConstraint(
     val defaultLogLevel: LogLevel = LogLevel.ERROR,
-    val categoryLogLevel: Map<LogLevel, CategoryType> = emptyMap(),
-    val userLogLevel: Array<UserLogLevel> = emptyArray(),
+    val categoryLogLevel: Map<CategoryType, LogLevel> = emptyMap(),
+    val userLogLevel: Map<String, UserLogLevel> = emptyMap(),
 ) {
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as LoggingConstraint
-
-        if (defaultLogLevel != other.defaultLogLevel) return false
-        if (categoryLogLevel != other.categoryLogLevel) return false
-        if (!userLogLevel.contentEquals(other.userLogLevel)) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = defaultLogLevel.hashCode()
-        result = 31 * result + categoryLogLevel.hashCode()
-        result = 31 * result + userLogLevel.contentHashCode()
-        return result
+    companion object {
+        fun fromString(jsonString: String): LoggingConstraint {
+            val json = Json {
+                encodeDefaults = true
+                explicitNulls = false
+                ignoreUnknownKeys = true
+            }
+            return json.decodeFromString<LoggingConstraint>(jsonString)
+        }
     }
 }
 
-data class CategoryLogLevel(
-    val logLevel: LogLevel,
-    val categories: Array<CategoryType>,
-) {
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as CategoryLogLevel
-
-        if (logLevel != other.logLevel) return false
-        if (!categories.contentEquals(other.categories)) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = logLevel.hashCode()
-        result = 31 * result + categories.contentHashCode()
-        return result
-    }
-}
-
+/**
+ * TODO: Acd documentation
+ */
+@Serializable
 data class UserLogLevel(
-    val userIdentifiers: Array<String>,
     val defaultLogLevel: LogLevel = LogLevel.ERROR,
-    val categoryLogLevel: Array<CategoryLogLevel>,
-) {
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as UserLogLevel
-
-        if (!userIdentifiers.contentEquals(other.userIdentifiers)) return false
-        if (defaultLogLevel != other.defaultLogLevel) return false
-        if (!categoryLogLevel.contentEquals(other.categoryLogLevel)) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = userIdentifiers.contentHashCode()
-        result = 31 * result + defaultLogLevel.hashCode()
-        result = 31 * result + categoryLogLevel.contentHashCode()
-        return result
-    }
-}
+    val categoryLogLevel: Map<CategoryType, LogLevel> = emptyMap()
+)

@@ -14,11 +14,27 @@
  */
 package com.amplifyframework.logging.cloudwatch
 
-data class AWSCloudWatchLoggingPluginConfig(
+import kotlinx.serialization.Serializable
+
+/**
+ * TODO: Add public documentation
+ */
+@Serializable
+data class AWSCloudWatchLoggingPluginConfiguration(
     val logGroupName: String,
     val region: String,
-    val cacheSizeInMB: Int = 5,
-    val logsFlushIntervalInMinutes: Int = 20,
-    val logToConsole: Boolean = false,
-    val localLoggingConstraint: LoggingConstraint = LoggingConstraint(),
+    val enable: Boolean = true,
+    val localStoreMaxSizeInMB: Int = 5,
+    val flushIntervalInSeconds: Int = 60,
+    val defaultRemoteConfiguration: DefaultRemoteConfiguration? = null,
+    val loggingConstraints: LoggingConstraint = LoggingConstraint(),
+)
+
+/**
+ * TODO: Add public documentation
+ */
+@Serializable
+data class DefaultRemoteConfiguration(
+    val endpoint: String,
+    val refreshIntervalInSeconds: Int = 1200,
 )

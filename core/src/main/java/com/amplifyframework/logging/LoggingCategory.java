@@ -78,23 +78,43 @@ public final class LoggingCategory extends Category<LoggingPlugin<?>> implements
     @NonNull
     @Override
     public Logger logger(@NonNull String namespace) {
-        return null;
+        Set<LoggingPlugin<?>> loggingPlugins = new HashSet<>(getPlugins());
+        loggingPlugins.add(defaultPlugin);
+        List<Logger> delegates = new ArrayList<>();
+        for (LoggingPlugin<?> plugin : loggingPlugins) {
+            delegates.add(plugin.logger(namespace));
+        }
+        return new BroadcastLogger(delegates);
     }
 
     @NonNull
     @Override
     public Logger logger(@NonNull CategoryType categoryType, @NonNull String namespace) {
-        return null;
+        Set<LoggingPlugin<?>> loggingPlugins = new HashSet<>(getPlugins());
+        loggingPlugins.add(defaultPlugin);
+        List<Logger> delegates = new ArrayList<>();
+        for (LoggingPlugin<?> plugin : loggingPlugins) {
+            delegates.add(plugin.logger(categoryType, namespace));
+        }
+        return new BroadcastLogger(delegates);
     }
 
     @Override
     public void enable() {
-
+        Set<LoggingPlugin<?>> loggingPlugins = new HashSet<>(getPlugins());
+        loggingPlugins.add(defaultPlugin);
+        for (LoggingPlugin<?> plugin : loggingPlugins) {
+            plugin.enable();
+        }
     }
 
     @Override
     public void disable() {
-
+        Set<LoggingPlugin<?>> loggingPlugins = new HashSet<>(getPlugins());
+        loggingPlugins.add(defaultPlugin);
+        for (LoggingPlugin<?> plugin : loggingPlugins) {
+            plugin.disable();
+        }
     }
 
     @NonNull

@@ -104,7 +104,7 @@ dependencyResolutionManagement {
             library(
                 "aws-cognitoidentityprovider",
                 "aws.sdk.kotlin",
-                "cognitoidentityprovider"
+                "cognitoidentityprovider",
             ).versionRef(awsKotlinSdk)
             library("aws-comprehend", "aws.sdk.kotlin", "comprehend").versionRef(awsKotlinSdk)
             library("aws-location", "aws.sdk.kotlin", "location").versionRef(awsKotlinSdk)
@@ -141,7 +141,7 @@ dependencyResolutionManagement {
             library("gson", "com.google.code.gson:gson:2.8.9")
             library("tensorflow", "org.tensorflow:tensorflow-lite:2.0.0")
             library("uuidgen", "com.fasterxml.uuid:java-uuid-generator:4.0.1")
-            library("sqlcipher", "net.zetetic:sqlcipher-android:4.5.4")
+            library("sqlcipher", "net.zetetic:android-database-sqlcipher:4.5.3")
         }
     }
 }

@@ -14,10 +14,10 @@
  */
 
 plugins {
+    id("org.jetbrains.kotlin.plugin.serialization") version "1.6.10"
     id("com.android.library")
     id("kotlin-android")
 }
-
 
 apply(from = rootProject.file("configuration/checkstyle.gradle"))
 apply(from = rootProject.file("configuration/publishing.gradle"))
@@ -29,7 +29,10 @@ dependencies {
     implementation(project(":aws-core"))
 
     implementation(dependency.androidx.security)
+    implementation(dependency.aws.signing)
+    implementation(dependency.okhttp)
     implementation(dependency.aws.cloudwatchlogs)
     implementation(dependency.sqlcipher)
     implementation(dependency.androidx.sqlite)
+    implementation(dependency.kotlin.serializationJson)
 }

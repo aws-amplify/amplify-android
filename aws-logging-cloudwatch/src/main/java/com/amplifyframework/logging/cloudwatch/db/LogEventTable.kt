@@ -14,7 +14,7 @@
  */
 package com.amplifyframework.logging.cloudwatch.db
 
-import net.zetetic.database.sqlcipher.SQLiteDatabase
+import net.sqlcipher.database.SQLiteDatabase
 
 class LogEventTable {
     companion object {

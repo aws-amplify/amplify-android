@@ -63,23 +63,23 @@ public final class AndroidLoggingPlugin extends LoggingPlugin<Void> {
     @NonNull
     @Override
     public Logger logger(@NonNull String namespace) {
-        return null;
+        return new AndroidLogger(namespace, defaultLoggerThreshold);
     }
 
     @NonNull
     @Override
     public Logger logger(@NonNull CategoryType categoryType, @NonNull String namespace) {
-        return null;
+        return new AndroidLogger(namespace, defaultLoggerThreshold);
     }
 
     @Override
     public void enable() {
-
+        AndroidLogger.setIsEnabled(true);
     }
 
     @Override
     public void disable() {
-
+        AndroidLogger.setIsEnabled(false);
     }
 
     @NonNull
