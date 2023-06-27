@@ -50,7 +50,7 @@ class DefaultRemoteLoggingConstraintProvider(
     }
     private val okHttpClient: OkHttpClient = OkHttpClient()
 
-    override fun fetchLoggingConfig(onSuccess: Consumer<LoggingConstraint>, onError: Consumer<Exception>) {
+    override fun fetchLoggingConfig(onSuccess: Consumer<LoggingConstraints>, onError: Consumer<Exception>) {
         coroutineScope.launch {
             try {
                 val request = HttpRequest(
@@ -78,7 +78,7 @@ class DefaultRemoteLoggingConstraintProvider(
                 }
                 val response = okHttpClient.newCall(okhttpRequestBuilder.build()).execute()
                 if (response.isSuccessful) {
-                    val remoteLoggingConstraints = json.decodeFromString<LoggingConstraint>(response.body.string())
+                    val remoteLoggingConstraints = json.decodeFromString<LoggingConstraints>(response.body.string())
                     onSuccess.accept(
                         remoteLoggingConstraints,
                     )

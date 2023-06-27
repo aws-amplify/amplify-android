@@ -22,7 +22,7 @@ import android.database.Cursor
 import android.net.Uri
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKeys
-import com.amplifyframework.logging.cloudwatch.CloudWatchLogEvent
+import com.amplifyframework.logging.cloudwatch.models.CloudWatchLogEvent
 import java.io.File
 import java.util.UUID
 import kotlinx.coroutines.CoroutineDispatcher

@@ -17,6 +17,6 @@ package com.amplifyframework.logging.cloudwatch
 import com.amplifyframework.core.Consumer
 
 interface RemoteLoggingConstraintProvider {
-    fun fetchLoggingConfig(onSuccess: Consumer<LoggingConstraint>, onError: Consumer<Exception>)
+    fun fetchLoggingConfig(onSuccess: Consumer<LoggingConstraints>, onError: Consumer<Exception>)
     fun getConstraintsSyncInterval(): Int
 }

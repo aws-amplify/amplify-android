@@ -12,6 +12,6 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package com.amplifyframework.logging.cloudwatch
+package com.amplifyframework.logging.cloudwatch.models
 
 internal data class CloudWatchLogEvent(val timestamp: Long, val message: String, val id: Int = 0)

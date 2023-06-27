@@ -12,8 +12,9 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package com.amplifyframework.logging.cloudwatch
+package com.amplifyframework.logging.cloudwatch.models
 
+import com.amplifyframework.logging.cloudwatch.LoggingConstraints
 import kotlinx.serialization.Serializable
 
 /**
@@ -27,7 +28,7 @@ data class AWSCloudWatchLoggingPluginConfiguration(
     val localStoreMaxSizeInMB: Int = 5,
     val flushIntervalInSeconds: Int = 60,
     val defaultRemoteConfiguration: DefaultRemoteConfiguration? = null,
-    val loggingConstraints: LoggingConstraint = LoggingConstraint(),
+    val loggingConstraints: LoggingConstraints = LoggingConstraints(),
 )
 
 /**

@@ -23,6 +23,7 @@ import aws.sdk.kotlin.services.cloudwatchlogs.model.InputLogEvent
 import aws.sdk.kotlin.services.cloudwatchlogs.model.PutLogEventsRequest
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.logging.cloudwatch.db.CloudWatchLoggingDatabase
+import com.amplifyframework.logging.cloudwatch.models.CloudWatchLogEvent
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale

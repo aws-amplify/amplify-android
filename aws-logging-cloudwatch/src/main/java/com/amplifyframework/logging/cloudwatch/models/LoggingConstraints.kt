@@ -12,7 +12,7 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package com.amplifyframework.logging.cloudwatch
+package com.amplifyframework.logging.cloudwatch.models
 
 import com.amplifyframework.core.category.CategoryType
 import com.amplifyframework.logging.LogLevel
@@ -24,19 +24,19 @@ import kotlinx.serialization.json.Json
  * TODO: Acd documentation
  */
 @Serializable
-data class LoggingConstraint(
+data class LoggingConstraints(
     val defaultLogLevel: LogLevel = LogLevel.ERROR,
     val categoryLogLevel: Map<CategoryType, LogLevel> = emptyMap(),
     val userLogLevel: Map<String, UserLogLevel> = emptyMap(),
 ) {
     companion object {
-        fun fromString(jsonString: String): LoggingConstraint {
+        fun fromString(jsonString: String): LoggingConstraints {
             val json = Json {
                 encodeDefaults = true
                 explicitNulls = false
                 ignoreUnknownKeys = true
             }
-            return json.decodeFromString<LoggingConstraint>(jsonString)
+            return json.decodeFromString<LoggingConstraints>(jsonString)
         }
     }
 }

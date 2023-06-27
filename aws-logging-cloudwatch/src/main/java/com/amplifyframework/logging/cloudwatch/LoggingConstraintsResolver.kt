@@ -27,13 +27,13 @@ import kotlinx.coroutines.launch
 
 internal class LoggingConstraintsResolver internal constructor(
     internal var context: Context? = null,
-    internal var localLoggingConstraint: LoggingConstraint? = null,
+    internal var localLoggingConstraint: LoggingConstraints? = null,
     private var remoteLoggingConstraintProvider: RemoteLoggingConstraintProvider? = null,
     internal var userId: String? = null,
     private val coroutineDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) {
     private val coroutine = CoroutineScope(coroutineDispatcher)
-    private var remoteLoggingConstraint: LoggingConstraint? = null
+    private var remoteLoggingConstraint: LoggingConstraints? = null
     private val logger = Amplify.Logging.forNamespace(this::class.java.simpleName)
 
     companion object {
@@ -80,7 +80,7 @@ internal class LoggingConstraintsResolver internal constructor(
         loadRemoteConfig()
     }
 
-    private fun saveRemoteConstraintsToSharedPreference(loggingConstraint: LoggingConstraint) {
+    private fun saveRemoteConstraintsToSharedPreference(loggingConstraint: LoggingConstraints) {
         context?.let {
             val sharedPreferences =
                 it.getSharedPreferences(AWSCloudWatchLoggingPlugin.SHARED_PREFERENCE_FILENAME, Context.MODE_PRIVATE)
@@ -88,7 +88,7 @@ internal class LoggingConstraintsResolver internal constructor(
         }
     }
 
-    private fun getRemoteConstraintsFromSharedPreference(): LoggingConstraint? {
+    private fun getRemoteConstraintsFromSharedPreference(): LoggingConstraints? {
         return context?.let {
             val remoteConstraints = it.getSharedPreferences(
                 AWSCloudWatchLoggingPlugin.SHARED_PREFERENCE_FILENAME,
@@ -96,7 +96,7 @@ internal class LoggingConstraintsResolver internal constructor(
             )
                 .getString(REMOTE_LOGGING_CONSTRAINTS_KEY, null)
             remoteConstraints?.let {
-                LoggingConstraint.fromString(remoteConstraints)
+                LoggingConstraints.fromString(remoteConstraints)
             }
         }
     }

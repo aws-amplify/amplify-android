@@ -18,6 +18,7 @@ import android.util.Log
 import com.amplifyframework.core.category.CategoryType
 import com.amplifyframework.logging.LogLevel
 import com.amplifyframework.logging.Logger
+import com.amplifyframework.logging.cloudwatch.models.CloudWatchLogEvent
 import java.util.concurrent.ConcurrentLinkedQueue
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
