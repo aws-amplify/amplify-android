@@ -40,6 +40,9 @@ internal class AWSV4Signer {
 
     // Initial prior signature will be signature of initial request (web socket connection request)
     private var priorSignature = ""
+
+    // Using en_US_POSIX for consistency with iOS and the locale gives US English results regardless of user and
+    // system preferences. Reference: https://developer.apple.com/library/archive/qa/qa1480/_index.html
     private val dateFormatter = SimpleDateFormat(DATE_PATTERN, Locale("en", "US", "POSIX"))
     private val timeFormatter = SimpleDateFormat(TIME_PATTERN, Locale("en", "US", "POSIX"))
     private val sha256Algorithm = MessageDigest.getInstance("SHA-256")
