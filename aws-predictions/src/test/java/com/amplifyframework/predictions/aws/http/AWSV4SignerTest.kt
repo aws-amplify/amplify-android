@@ -97,14 +97,14 @@ internal class AWSV4SignerTest {
     fun `get signed uri for different locale`() {
         signer = AWSV4Signer()
         val expectedUrl = "wss://streaming-rekognition.us-east-1.amazon.com/start-face-liveness-session-websocket" +
-                "?X-Amz-Algorithm=AWS4-HMAC-SHA256" +
-                "&X-Amz-Credential=accessKeyIdTest%252F19700120%252Fus-east-1%252Frekognition%252Faws4_request" +
-                "&X-Amz-Date=19700120T104017Z" +
-                "&X-Amz-Expires=299" +
-                "&X-Amz-SignedHeaders=host" +
-                "&tK=tV" +
-                "&x-amz-user-agent=userAgentTest" +
-                "&X-Amz-Signature=8bf221f80e5f69908ce8e3be0f03ad7cf96c1d329795218ca7ba5322056628ef"
+            "?X-Amz-Algorithm=AWS4-HMAC-SHA256" +
+            "&X-Amz-Credential=accessKeyIdTest%252F19700120%252Fus-east-1%252Frekognition%252Faws4_request" +
+            "&X-Amz-Date=19700120T104017Z" +
+            "&X-Amz-Expires=299" +
+            "&X-Amz-SignedHeaders=host" +
+            "&tK=tV" +
+            "&x-amz-user-agent=userAgentTest" +
+            "&X-Amz-Signature=8bf221f80e5f69908ce8e3be0f03ad7cf96c1d329795218ca7ba5322056628ef"
 
         val uri = URI(
             "wss://streaming-rekognition.us-east-1.amazon.com/start-face-liveness-session-websocket?tK=tV"
