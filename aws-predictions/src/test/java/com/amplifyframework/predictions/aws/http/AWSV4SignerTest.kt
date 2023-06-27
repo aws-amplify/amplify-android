@@ -24,6 +24,8 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import java.text.DateFormatSymbols
+import java.util.*
 
 @RunWith(RobolectricTestRunner::class)
 internal class AWSV4SignerTest {
@@ -136,6 +138,39 @@ internal class AWSV4SignerTest {
         )
         val dateMillis = 1680017309L
         val signedUri = signer.getSignedUri(uri, credentials, "us-east-1", "userAgent(Test)", dateMillis)
+
+        assertEquals(expectedUrl, signedUri.toString())
+    }
+
+    @Test
+    fun `test that locale change doesn't break date and time`() {
+        val testLocale = Locale.Builder().setLanguage("ar").setRegion("EG").build()
+        Locale.setDefault(testLocale)
+        signer = AWSV4Signer()
+
+        val expectedUrl = "wss://streaming-rekognition.us-east-1.amazon.com/start-face-liveness-session-websocket" +
+            "?X-Amz-Algorithm=AWS4-HMAC-SHA256" +
+            "&X-Amz-Credential=accessKeyIdTest%252F19700120%252Fus-east-1%252Frekognition%252Faws4_request" +
+            "&X-Amz-Date=19700120T104017Z" +
+            "&X-Amz-Expires=299" +
+            "&X-Amz-Security-Token=sessionTokenTest" +
+            "&X-Amz-SignedHeaders=host" +
+            "&tK=tV" +
+            "&x-amz-user-agent=userAgentTest" +
+            "&X-Amz-Signature=f9a94d627c77aac5c9e1ecf850231dda2fc6edc7294c3506f07b43f7d2bb4ad2"
+
+        val uri = URI(
+            "wss://streaming-rekognition.us-east-1.amazon.com/start-face-liveness-session-websocket?tK=tV"
+        )
+        val credentials = Credentials(
+            accessKeyId = "accessKeyIdTest",
+            secretAccessKey = "secretAccessKeyTest",
+            sessionToken = "sessionTokenTest",
+            expiration = Instant.fromIso8601("2023-03-28T15:28:29+0000"),
+            providerName = "providerNameTest"
+        )
+        val dateMillis = 1680017309L
+        val signedUri = signer.getSignedUri(uri, credentials, "us-east-1", "userAgentTest", dateMillis)
 
         assertEquals(expectedUrl, signedUri.toString())
     }
