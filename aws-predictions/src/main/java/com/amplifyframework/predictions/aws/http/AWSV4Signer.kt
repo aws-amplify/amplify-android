@@ -40,8 +40,8 @@ internal class AWSV4Signer {
 
     // Initial prior signature will be signature of initial request (web socket connection request)
     private var priorSignature = ""
-    private val dateFormatter = SimpleDateFormat(DATE_PATTERN, Locale.US)
-    private val timeFormatter = SimpleDateFormat(TIME_PATTERN, Locale.US)
+    private val dateFormatter = SimpleDateFormat(DATE_PATTERN, Locale("en", "US", "POSIX"))
+    private val timeFormatter = SimpleDateFormat(TIME_PATTERN, Locale("en", "US", "POSIX"))
     private val sha256Algorithm = MessageDigest.getInstance("SHA-256")
     val encodedSpace: String = Uri.encode(" ")
 
