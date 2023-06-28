@@ -31,6 +31,8 @@ public interface Model {
      * Return the ID that is the primary key
      * of a Model.
      *
+     * This API is internal to Amplify and should not be used.
+     *
      * @return the ID that is the primary key of a Model.
      */
     @NonNull
@@ -67,7 +69,7 @@ public interface Model {
         try {
             if (resolveIdentifier() instanceof ModelIdentifier) {
                 return ((ModelIdentifier<?>) resolveIdentifier()).getIdentifier();
-            } else if (resolveIdentifier() instanceof String){
+            } else if (resolveIdentifier() instanceof String) {
                 return (String) resolveIdentifier();
             } else {
                 return ModelIdentifier.Helper.escapeAndEncapsulateString(

@@ -45,7 +45,6 @@ class ModelIdentifierTest {
 
         val identifier = StringModelWithIdentifierIdentifier(expectedKey)
 
-
         assertEquals(expectedKey, identifier.identifier)
     }
 
@@ -59,7 +58,6 @@ class ModelIdentifierTest {
         val expectedIdentifier = "\"blog\"#\"site\""
 
         val identifier = BlogIdentifier(blogKey, siteKey)
-
 
         assertEquals(expectedIdentifier, identifier.identifier)
     }

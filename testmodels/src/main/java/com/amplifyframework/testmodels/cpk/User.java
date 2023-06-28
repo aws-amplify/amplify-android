@@ -1,16 +1,17 @@
 package com.amplifyframework.testmodels.cpk;
 
-import static com.amplifyframework.core.model.query.predicate.QueryField.field;
-
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.ModelIdentifier;
 import com.amplifyframework.core.model.annotations.ModelConfig;
 import com.amplifyframework.core.model.annotations.ModelField;
 import com.amplifyframework.core.model.query.predicate.QueryField;
 import com.amplifyframework.core.model.temporal.Temporal;
 
 import java.util.UUID;
+
+import static com.amplifyframework.core.model.query.predicate.QueryField.field;
 
 /** This is an auto generated class representing the User type in your schema. */
 @SuppressWarnings("all")
@@ -20,7 +21,9 @@ public final class User implements Model {
   private final @ModelField(targetType="ID", isRequired = true) String id;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime updatedAt;
-  public String resolveIdentifier() {
+  /** @deprecated This API is internal to Amplify and should not be used. */
+  @Deprecated
+   public String resolveIdentifier() {
     return id;
   }
   
@@ -127,6 +130,14 @@ public final class User implements Model {
     private CopyOfBuilder(String id) {
       super.id(id);
       
+    }
+  }
+  
+
+  public static class UserIdentifier extends ModelIdentifier<User> {
+    private static final long serialVersionUID = 1L;
+    public UserIdentifier(String id) {
+      super(id);
     }
   }
   

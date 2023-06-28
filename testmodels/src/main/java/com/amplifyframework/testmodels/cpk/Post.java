@@ -1,7 +1,5 @@
 package com.amplifyframework.testmodels.cpk;
 
-import static com.amplifyframework.core.model.query.predicate.QueryField.field;
-
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.model.Model;
@@ -16,6 +14,8 @@ import com.amplifyframework.core.model.temporal.Temporal;
 
 import java.util.List;
 import java.util.Objects;
+
+import static com.amplifyframework.core.model.query.predicate.QueryField.field;
 
 /** This is an auto generated class representing the Post type in your schema. */
 @SuppressWarnings("all")
@@ -35,7 +35,9 @@ public final class Post implements Model {
   private final @ModelField(targetType="Comment") @HasMany(associatedWith = "post", type = Comment.class) List<Comment> comments = null;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime updatedAt;
   private PostIdentifier postIdentifier;
-  public PostIdentifier resolveIdentifier() {
+  /** @deprecated This API is internal to Amplify and should not be used. */
+  @Deprecated
+   public PostIdentifier resolveIdentifier() {
     if (postIdentifier == null) {
       this.postIdentifier = new PostIdentifier(postId, title, createdAt, rating);
     }
