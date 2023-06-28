@@ -319,12 +319,10 @@ class PinpointAnalyticsInstrumentationTest {
     private fun assertCommonEndpointResponseProperties(endpointResponse: EndpointResponse) {
         Log.d("PinpointAnalyticsInstrumentationTest", endpointResponse.toString())
         val attributes = endpointResponse.attributes!!
-        if (attributes.isNotEmpty()) {
-            Assert.assertEquals("user@test.com", attributes["email"]!![0])
-            Assert.assertEquals("test-user", attributes["name"]!![0])
-            Assert.assertEquals("test-plan", attributes["plan"]!![0])
-            Assert.assertEquals("TestStringValue", attributes["TestStringProperty"]!![0])
-        }
+        Assert.assertEquals("user@test.com", attributes["email"]!![0])
+        Assert.assertEquals("test-user", attributes["name"]!![0])
+        Assert.assertEquals("test-plan", attributes["plan"]!![0])
+        Assert.assertEquals("TestStringValue", attributes["TestStringProperty"]!![0])
         val endpointProfileLocation: EndpointLocation = endpointResponse.location!!
         Assert.assertEquals(47.6154086, endpointProfileLocation.latitude!!, 0.1)
         Assert.assertEquals((-122.3349685), endpointProfileLocation.longitude!!, 0.1)

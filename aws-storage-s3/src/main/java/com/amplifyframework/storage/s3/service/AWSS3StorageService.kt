@@ -73,7 +73,7 @@ internal class AWSS3StorageService(
             enableAccelerate = useAccelerateEndpoint
         }.use {
             runBlocking {
-                s3Client.presignGetObject(
+                it.presignGetObject(
                     GetObjectRequest {
                         bucket = s3BucketName
                         key = serviceKey

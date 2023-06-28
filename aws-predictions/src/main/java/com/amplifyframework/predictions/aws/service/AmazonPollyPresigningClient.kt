@@ -51,9 +51,6 @@ class AmazonPollyPresigningClient(private val pollyClient: PollyClient) : PollyC
         options: PresignedSynthesizeSpeechUrlOptions
     ): URL {
         val presignCredentialsProvider = options.credentialsProvider ?: this.config.credentialsProvider
-        val configBuilder = this@AmazonPollyPresigningClient.config.toBuilder()
-        configBuilder.credentialsProvider = presignCredentialsProvider
-
         val presignedRequest = runBlocking {
             val credentials = presignCredentialsProvider.resolve(emptyAttributes())
             pollyClient.presignSynthesizeSpeech(synthesizeSpeechRequest) {

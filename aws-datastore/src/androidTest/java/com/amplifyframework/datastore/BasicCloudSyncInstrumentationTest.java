@@ -434,7 +434,6 @@ public final class BasicCloudSyncInstrumentationTest {
      * @throws ApiException On failure to query the API.
      */
 
-    @Ignore("Inconsistent test. Needs investigation")
     @Test
     public void createThenDelete() throws DataStoreException, ApiException {
         // Setup

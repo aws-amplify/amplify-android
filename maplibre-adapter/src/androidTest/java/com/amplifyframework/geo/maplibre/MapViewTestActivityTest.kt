@@ -106,7 +106,6 @@ class MapViewTestActivityTest {
     fun clusteringCanBeEnabledWithoutOptions() = runBlockingSignedIn(rule) {
         val mapStyle = suspendCoroutine<Style> { continuation ->
             rule.scenario.onActivity { activity ->
-                println("FAS: " + AmplifyWrapper.auth.fetchAuthSession().toString())
                 activity.mapView.addOnDidFailLoadingMapListener { error ->
                     continuation.resumeWithException(RuntimeException(error))
                 }
@@ -153,9 +152,7 @@ class MapViewTestActivityTest {
                 signOutFromCognito() // first sign out to ensure we are in clean state
                 signInWithCognito()
             }
-            val result = block()
-            rule.scenario.onActivity { }
-            result
+            block()
         }
     }
 

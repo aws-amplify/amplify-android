@@ -199,10 +199,7 @@ class EventRecorder(
     }
 
     private fun isRetryableError(code: Int?): Boolean {
-        code?.let {
-            return code in 500..599
-        }
-        return false
+        return code in 500..599
     }
 
     private fun processEndpointResponse(endpointResponse: EndpointItemResponse?) {

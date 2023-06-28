@@ -21,9 +21,6 @@ import com.amplifyframework.geo.GeoCategory
 import com.amplifyframework.geo.location.AWSLocationGeoPlugin
 import com.amplifyframework.testutils.sync.SynchronousGeo
 import com.amplifyframework.testutils.sync.TestCategory
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
-import kotlin.coroutines.suspendCoroutine
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
@@ -31,6 +28,9 @@ import org.junit.Assert
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
 
 class MapViewStressTest {
     @get:Rule
@@ -76,9 +76,7 @@ class MapViewStressTest {
                 signOutFromCognito() // first sign out to ensure we are in clean state
                 signInWithCognito()
             }
-            val result = block()
-            rule.scenario.onActivity { }
-            result
+            block()
         }
     }
 
