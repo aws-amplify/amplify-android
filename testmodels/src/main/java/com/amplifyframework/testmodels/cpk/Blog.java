@@ -1,7 +1,5 @@
 package com.amplifyframework.testmodels.cpk;
 
-import static com.amplifyframework.core.model.query.predicate.QueryField.field;
-
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.model.Model;
@@ -17,6 +15,8 @@ import com.amplifyframework.core.model.temporal.Temporal;
 import java.util.List;
 import java.util.Objects;
 
+import static com.amplifyframework.core.model.query.predicate.QueryField.field;
+
 /** This is an auto generated class representing the Blog type in your schema. */
 @SuppressWarnings("all")
 @ModelConfig(pluralName = "Blogs", type = Model.Type.USER, version = 1)
@@ -30,12 +30,14 @@ public final class Blog implements Model {
   private final @ModelField(targetType="ID", isRequired = true) String siteId;
   private final @ModelField(targetType="String", isRequired = true) String name;
   private final @ModelField(targetType="User", isRequired = true) @HasOne(associatedWith = "id", type = User.class) User author = null;
-  private final @ModelField(targetType="Post") @HasMany(associatedWith = "blog", type = Post.class) List<Post> posts = null;
+  private final @ModelField(targetType="Post", isRequired = true) @HasMany(associatedWith = "blog", type = Post.class) List<Post> posts = null;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime updatedAt;
   private final @ModelField(targetType="ID", isRequired = true) String blogAuthorId;
   private BlogIdentifier blogIdentifier;
-  public BlogIdentifier resolveIdentifier() {
+  /** @deprecated This API is internal to Amplify and should not be used. */
+  @Deprecated
+   public BlogIdentifier resolveIdentifier() {
     if (blogIdentifier == null) {
       this.blogIdentifier = new BlogIdentifier(blogId, siteId);
     }

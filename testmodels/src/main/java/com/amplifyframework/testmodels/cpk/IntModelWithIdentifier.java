@@ -1,7 +1,5 @@
 package com.amplifyframework.testmodels.cpk;
 
-import static com.amplifyframework.core.model.query.predicate.QueryField.field;
-
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.model.Model;
@@ -14,6 +12,8 @@ import com.amplifyframework.core.model.temporal.Temporal;
 
 import java.util.Objects;
 
+import static com.amplifyframework.core.model.query.predicate.QueryField.field;
+
 /** This is an auto generated class representing the IntModelWithIdentifier type in your schema. */
 @SuppressWarnings("all")
 @ModelConfig(pluralName = "IntModelWithIdentifiers", type = Model.Type.USER, version = 1)
@@ -23,12 +23,10 @@ public final class IntModelWithIdentifier implements Model {
   private final @ModelField(targetType="Int", isRequired = true) Integer customKey;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime updatedAt;
-  private IntModelWithIdentifierIdentifier intModelWithIdentifierIdentifier;
-  public IntModelWithIdentifierIdentifier resolveIdentifier() {
-    if (intModelWithIdentifierIdentifier == null) {
-      this.intModelWithIdentifierIdentifier = new IntModelWithIdentifierIdentifier(customKey);
-    }
-    return intModelWithIdentifierIdentifier;
+  /** @deprecated This API is internal to Amplify and should not be used. */
+  @Deprecated
+   public Integer resolveIdentifier() {
+    return customKey;
   }
   
   public Integer getCustomKey() {
@@ -135,4 +133,5 @@ public final class IntModelWithIdentifier implements Model {
       super(customKey);
     }
   }
+  
 }

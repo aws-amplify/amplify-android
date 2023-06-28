@@ -1,10 +1,9 @@
 package com.amplifyframework.testmodels.cpk;
 
-import static com.amplifyframework.core.model.query.predicate.QueryField.field;
-
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.ModelIdentifier;
 import com.amplifyframework.core.model.annotations.BelongsTo;
 import com.amplifyframework.core.model.annotations.Index;
 import com.amplifyframework.core.model.annotations.ModelConfig;
@@ -13,6 +12,8 @@ import com.amplifyframework.core.model.query.predicate.QueryField;
 import com.amplifyframework.core.model.temporal.Temporal;
 
 import java.util.Objects;
+
+import static com.amplifyframework.core.model.query.predicate.QueryField.field;
 
 /** This is an auto generated class representing the Comment type in your schema. */
 @SuppressWarnings("all")
@@ -27,7 +28,9 @@ public final class Comment implements Model {
   private final @ModelField(targetType="String", isRequired = true) String content;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime updatedAt;
-  public String resolveIdentifier() {
+  /** @deprecated This API is internal to Amplify and should not be used. */
+  @Deprecated
+   public String resolveIdentifier() {
     return commentId;
   }
   
@@ -183,6 +186,14 @@ public final class Comment implements Model {
     @Override
      public CopyOfBuilder content(String content) {
       return (CopyOfBuilder) super.content(content);
+    }
+  }
+  
+
+  public static class CommentIdentifier extends ModelIdentifier<Comment> {
+    private static final long serialVersionUID = 1L;
+    public CommentIdentifier(String commentId) {
+      super(commentId);
     }
   }
   
