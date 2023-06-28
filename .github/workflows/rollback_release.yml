@@ -22,7 +22,6 @@ jobs:
       BRANCH_FROM: ${{ inputs.branch_from }}
       DEPRECATED_VERSION: ${{ inputs.deprecated_version }}
       NEW_VERSION: ${{ inputs.new_version }}
-      CI_COMMIT_AUTHOR: ${{ github.event.repository.name }} Rollback Bot
       CI_COMMIT_MESSAGE: Re-release v${{ inputs.branch_from }} as v${{ inputs.new_version }}
       ROLLBACK_BRANCH: rollback_${{ inputs.deprecated_version }}
       NEW_TAG: release_v${{ inputs.new_version }}
@@ -39,8 +38,6 @@ jobs:
         run: git checkout -b ${{ env.ROLLBACK_BRANCH }}
       - name: Update Version
         run: |
-          git config --global user.name "${{ env.CI_COMMIT_AUTHOR }}"
-          git config --global user.email "amplify_android@users.noreply.github.com"
           sed -i 's/POM_VERSION=${{ env.BRANCH_FROM }}/POM_VERSION=${{ env.NEW_VERSION }}/g' gradle.properties
           git add gradle.properties
           git commit -m "${{ env.CI_COMMIT_MESSAGE }}"
