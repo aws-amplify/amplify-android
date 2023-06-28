@@ -1,0 +1,57 @@
+name: Rollback Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch_from:
+        description: 'The known good version to re-release (e.g. 2.9.1)'
+        required: true
+      deprecated_version:
+        description: 'The version you are rolling back (e.g. 2.9.2)'
+        required: true
+      new_version:
+        description: 'The new version number (e.g. 2.9.3)'
+
+
+
+jobs:
+  rollback-release:
+    runs-on: ubuntu-latest
+    env:
+      AWS_REGION: "us-east-1"
+      BRANCH_FROM: ${{ inputs.branch_from }}
+      DEPRECATED_VERSION: ${{ inputs.deprecated_version }}
+      NEW_VERSION: ${{ inputs.new_version }}
+      CI_COMMIT_AUTHOR: ${{ github.event.repository.name }} Rollback Bot
+      CI_COMMIT_MESSAGE: Re-release v${{ inputs.branch_from }} as v${{ inputs.new_version }}
+      ROLLBACK_BRANCH: rollback_${{ inputs.deprecated_version }}
+      NEW_TAG: release_v${{ inputs.new_version }}
+    permissions:
+      id-token: write
+      contents: write
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ format('release_v{0}', env.BRANCH_FROM) }}
+          token: ${{ secrets.WORKFLOW_TOKEN }}
+      - name: Create Rollback Branch
+        run: git checkout -b ${{ env.ROLLBACK_BRANCH }}
+      - name: Update Version
+        run: |
+          git config --global user.name "${{ env.CI_COMMIT_AUTHOR }}"
+          git config --global user.email "amplify_android@users.noreply.github.com"
+          sed -i 's/POM_VERSION=${{ env.BRANCH_FROM }}/POM_VERSION=${{ env.NEW_VERSION }}/g' gradle.properties
+          git add gradle.properties
+          git commit -m "${{ env.CI_COMMIT_MESSAGE }}"
+      - name: Push Changes
+        run: git push --atomic origin ${{ env.ROLLBACK_BRANCH }}
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ secrets.AMPLIFY_ANDROID_RELEASE_PUBLISHER_ROLE }}
+          aws-region: us-east-1
+      - name: Start Maven Release Build
+        uses: aws-actions/aws-codebuild-run-build@v1
+        with:
+          project-name: AmplifyAndroid-ReleasePublisher
