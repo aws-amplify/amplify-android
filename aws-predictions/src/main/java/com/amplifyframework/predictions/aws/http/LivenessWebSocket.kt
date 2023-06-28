@@ -28,6 +28,7 @@ import com.amplifyframework.predictions.PredictionsException
 import com.amplifyframework.predictions.aws.BuildConfig
 import com.amplifyframework.predictions.aws.exceptions.AccessDeniedException
 import com.amplifyframework.predictions.aws.exceptions.FaceLivenessSessionNotFoundException
+import com.amplifyframework.predictions.aws.exceptions.FaceLivenessSessionTimeoutException
 import com.amplifyframework.predictions.aws.models.liveness.BoundingBox
 import com.amplifyframework.predictions.aws.models.liveness.ClientChallenge
 import com.amplifyframework.predictions.aws.models.liveness.ClientSessionInformationEvent
@@ -214,11 +215,17 @@ internal class LivenessWebSocket(
 
     private fun handleWebSocketError(livenessResponse: LivenessResponseStream) {
         webSocketError = if (livenessResponse.validationException != null) {
-            PredictionsException(
-                "An error occurred during the face liveness flow.",
-                livenessResponse.validationException,
-                "See attached exception for more details."
-            )
+            if (livenessResponse.validationException.message.contains("expired")) {
+                FaceLivenessSessionTimeoutException(
+                    cause = livenessResponse.validationException
+                )
+            } else {
+                PredictionsException(
+                    "An error occurred during the face liveness flow.",
+                    livenessResponse.validationException,
+                    "See attached exception for more details."
+                )
+            }
         } else if (livenessResponse.internalServerException != null) {
             PredictionsException(
                 "An error occurred during the face liveness flow.",
