@@ -433,7 +433,6 @@ public final class BasicCloudSyncInstrumentationTest {
      * @throws DataStoreException On failure to save or query items from DataStore.
      * @throws ApiException On failure to query the API.
      */
-
     @Test
     public void createThenDelete() throws DataStoreException, ApiException {
         // Setup
