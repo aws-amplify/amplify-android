@@ -35,6 +35,7 @@ import com.amplifyframework.testmodels.ecommerce.Status;
 import com.amplifyframework.testmodels.meeting.Meeting;
 import com.amplifyframework.testmodels.personcar.MaritalStatus;
 import com.amplifyframework.testmodels.personcar.Person;
+import com.amplifyframework.testmodels.personcar.PersonWithCPK;
 import com.amplifyframework.testutils.Resources;
 
 import org.json.JSONException;
@@ -76,6 +77,33 @@ public final class AppSyncGraphQLRequestFactoryTest {
             true
         );
     }
+
+    /**
+     * Validate construction of a GraphQL query from a class and an object ID.
+     * @throws JSONException from JSONAssert.assertEquals
+     */
+    @Test
+    public void buildQueryFromClassAndModelIdentifier() throws JSONException {
+        // Arrange a hard-coded name/age as found in the expected data file.
+        String name = "First";
+        int age = 50;
+
+        // Act: create a request
+        GraphQLRequest<PersonWithCPK> request =
+                AppSyncGraphQLRequestFactory.buildQuery(
+                        PersonWithCPK.class, new
+                                PersonWithCPK.PersonIdentifier(name, age)
+                );
+
+        // Assert: content is expected content
+        JSONAssert.assertEquals(
+                Resources.readAsString("query-for-person-by-model-identifier.txt"),
+                request.getContent(),
+                true
+        );
+    }
+
+
 
     /**
      * Validate construction of a GraphQL query from a class and a predicate.
@@ -270,6 +298,7 @@ public final class AppSyncGraphQLRequestFactoryTest {
 
     /**
      * Verify that a nullable relation can have a null (missing) value in the GraphQL request.
+     * Verify that the null relation value is not passed on create mutation
      */
     @Test
     public void nullableAssociationCanBeNull() {
@@ -286,6 +315,32 @@ public final class AppSyncGraphQLRequestFactoryTest {
             note,
             QueryPredicates.all(),
             MutationType.CREATE
+        ).getVariables().get("input");
+
+        // Assert
+        assertEquals(expected, actual);
+    }
+
+    /**
+     * Verify that a nullable relation can have a null (missing) value in the GraphQL request.
+     * Verify that the null relation value is passed on update mutation
+     */
+    @Test
+    public void nullableAssociationPassedDuringUpdateMutation() {
+        // Expect
+        Map<String, Object> expected = new HashMap<>();
+        expected.put("id", "abc");
+        expected.put("text", "text");
+        expected.put("measurement_id", null);
+
+        // Act
+        // Create a Note that doesn't have a value for the optional measurement relation.
+        Note note = new Note("abc", "text", null);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> actual = (Map<String, Object>) AppSyncGraphQLRequestFactory.buildMutation(
+                note,
+                QueryPredicates.all(),
+                MutationType.UPDATE
         ).getVariables().get("input");
 
         // Assert

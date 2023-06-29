@@ -50,7 +50,7 @@ public final class PersonWithCPK implements Model {
     @ModelField(isRequired = true)
     private final String last_name;
 
-    @ModelField(targetType = "Int")
+    @ModelField(targetType = "Int", isRequired = true)
     private final Integer age;
 
     @ModelField(targetType = "AWSDate")
@@ -336,6 +336,7 @@ public final class PersonWithCPK implements Model {
          * @return Current Builder instance, for fluent method chaining
          */
         public FinalStep age(Integer age) {
+            Objects.requireNonNull(age);
             this.age = age;
             return this;
         }
@@ -418,9 +419,9 @@ public final class PersonWithCPK implements Model {
         }
     }
 
-    public class PersonIdentifier extends ModelIdentifier<PersonWithCPK> {
+    public static class PersonIdentifier extends ModelIdentifier<PersonWithCPK> {
         private static final long serialVersionUID = 1L;
-        public PersonIdentifier(String firstName, int age){
+        public PersonIdentifier(String firstName, Integer age){
             super(firstName, age);
         }
     }
