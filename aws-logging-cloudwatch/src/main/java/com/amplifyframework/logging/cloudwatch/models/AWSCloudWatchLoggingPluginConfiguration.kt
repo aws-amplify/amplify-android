@@ -20,7 +20,7 @@ import kotlinx.serialization.Serializable
  * Configuration to configure the plugin.
  */
 @Serializable
-data class AWSCloudWatchLoggingPluginConfiguration(
+data class AWSCloudWatchLoggingPluginConfiguration @JvmOverloads constructor(
     val logGroupName: String,
     val region: String,
     val enable: Boolean = true,
@@ -34,7 +34,7 @@ data class AWSCloudWatchLoggingPluginConfiguration(
  * Configuration to fetch remote logging constraints.
  */
 @Serializable
-data class DefaultRemoteConfiguration(
+data class DefaultRemoteConfiguration @JvmOverloads constructor(
     val endpoint: String,
     val refreshIntervalInSeconds: Int = 1200,
 )

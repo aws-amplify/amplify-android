@@ -26,7 +26,7 @@ import kotlinx.serialization.json.Json
  * Constraints to control the log level per categoryType or user
  */
 @Serializable
-data class LoggingConstraints(
+data class LoggingConstraints @JvmOverloads constructor(
     val defaultLogLevel: LogLevel = LogLevel.ERROR,
     val categoryLogLevel: Map<CategoryType, LogLevel> = emptyMap(),
     val userLogLevel: Map<String, UserLogLevel> = emptyMap(),
@@ -52,7 +52,7 @@ data class LoggingConstraints(
  * Constraints to control the log level per user
  */
 @Serializable
-data class UserLogLevel(
+data class UserLogLevel @JvmOverloads constructor(
     val defaultLogLevel: LogLevel = LogLevel.ERROR,
     val categoryLogLevel: Map<CategoryType, LogLevel> = emptyMap(),
 )

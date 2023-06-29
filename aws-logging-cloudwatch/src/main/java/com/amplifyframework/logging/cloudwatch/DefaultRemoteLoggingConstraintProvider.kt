@@ -38,7 +38,7 @@ import okhttp3.Request
 /**
  * Default implementation to fetch logging constraints remotely from AWS Lambda and S3.
  */
-class DefaultRemoteLoggingConstraintProvider(
+class DefaultRemoteLoggingConstraintProvider @JvmOverloads constructor(
     private val url: URL,
     private val regionString: String,
     private val refreshIntervalInSeconds: Int = 1200,
