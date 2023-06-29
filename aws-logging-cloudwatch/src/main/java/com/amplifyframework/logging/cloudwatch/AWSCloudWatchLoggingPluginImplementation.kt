@@ -28,7 +28,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-internal class AWSCloudWatchLoggingPluginBehavior(
+internal class AWSCloudWatchLoggingPluginImplementation(
     private val loggingConstraintsResolver: LoggingConstraintsResolver,
     private var awsCloudWatchLoggingPluginConfig: AWSCloudWatchLoggingPluginConfiguration? = null,
     internal var cloudWatchLogManager: CloudWatchLogManager? = null,

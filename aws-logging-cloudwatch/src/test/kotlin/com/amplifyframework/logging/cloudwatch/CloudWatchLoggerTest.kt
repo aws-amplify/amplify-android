@@ -32,7 +32,7 @@ import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class CloudWatchLoggerTest {
-    private val awsCloudWatchLoggingPluginBehavior = mockk<AWSCloudWatchLoggingPluginBehavior>()
+    private val awsCloudWatchLoggingPluginImplementation = mockk<AWSCloudWatchLoggingPluginImplementation>()
     private val loggingConstraintsResolver = mockk<LoggingConstraintsResolver>()
     private val logsEventsQueue = ConcurrentLinkedQueue<CloudWatchLogEvent>()
     private val namespace = "NAMESPACE"
@@ -45,7 +45,7 @@ internal class CloudWatchLoggerTest {
             namespace,
             categoryType,
             loggingConstraintsResolver,
-            awsCloudWatchLoggingPluginBehavior,
+            awsCloudWatchLoggingPluginImplementation,
             logsEventsQueue,
             Executors.newSingleThreadExecutor().asCoroutineDispatcher(),
         )
@@ -63,7 +63,7 @@ internal class CloudWatchLoggerTest {
             namespace,
             null,
             loggingConstraintsResolver,
-            awsCloudWatchLoggingPluginBehavior,
+            awsCloudWatchLoggingPluginImplementation,
         )
         every { loggingConstraintsResolver.resolveLogLevel(namespace, null) }.answers { LogLevel.WARN }
         assertEquals(LogLevel.WARN, cloudWatchLogger.thresholdLevel)
@@ -73,13 +73,13 @@ internal class CloudWatchLoggerTest {
     fun `persist logs in local queue when cloudwatch is not configured`() = runTest {
         val cloudWatchLogManager = mockk<CloudWatchLogManager>()
         val slot = mutableListOf<CloudWatchLogEvent>()
-        every { awsCloudWatchLoggingPluginBehavior.isPluginEnabled }.answers { true }
+        every { awsCloudWatchLoggingPluginImplementation.isPluginEnabled }.answers { true }
         every { loggingConstraintsResolver.resolveLogLevel(namespace, categoryType) }.answers { LogLevel.ERROR }
-        every { awsCloudWatchLoggingPluginBehavior.cloudWatchLogManager }.answers { null }
+        every { awsCloudWatchLoggingPluginImplementation.cloudWatchLogManager }.answers { null }
         coEvery { cloudWatchLogManager.saveLogEvent(capture(slot)) }.answers { }
         cloudWatchLogger.error("Test Message")
         assertEquals(1, logsEventsQueue.size)
-        every { awsCloudWatchLoggingPluginBehavior.cloudWatchLogManager }.answers { cloudWatchLogManager }
+        every { awsCloudWatchLoggingPluginImplementation.cloudWatchLogManager }.answers { cloudWatchLogManager }
         cloudWatchLogger.error("Test Message2")
         coVerify(exactly = 2) { cloudWatchLogManager.saveLogEvent(any()) }
         assertEquals(slot[0].message, "error/NAMESPACE: Test Message2")
@@ -90,9 +90,9 @@ internal class CloudWatchLoggerTest {
     fun `persist logs after cloudwatch is configured`() = runTest {
         val cloudWatchLogManager = mockk<CloudWatchLogManager>()
         val slot = mutableListOf<CloudWatchLogEvent>()
-        every { awsCloudWatchLoggingPluginBehavior.isPluginEnabled }.answers { true }
+        every { awsCloudWatchLoggingPluginImplementation.isPluginEnabled }.answers { true }
         every { loggingConstraintsResolver.resolveLogLevel(namespace, categoryType) }.answers { LogLevel.ERROR }
-        every { awsCloudWatchLoggingPluginBehavior.cloudWatchLogManager }.answers { cloudWatchLogManager }
+        every { awsCloudWatchLoggingPluginImplementation.cloudWatchLogManager }.answers { cloudWatchLogManager }
         coEvery { cloudWatchLogManager.saveLogEvent(capture(slot)) }.answers { }
         cloudWatchLogger.error("Test Message")
         assertEquals(0, logsEventsQueue.size)

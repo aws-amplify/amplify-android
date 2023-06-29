@@ -34,16 +34,16 @@ import org.junit.Before
 import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
-internal class AWSCloudWatchLoggingPluginBehaviorTest {
+internal class AWSCloudWatchLoggingPluginImplementationTest {
 
     private val cloudWatchLogManager = mockk<CloudWatchLogManager>()
     private val loggingConstraintsResolver = mockk<LoggingConstraintsResolver>(relaxed = true)
-    private lateinit var awsCloudWatchLoggingPluginBehavior: AWSCloudWatchLoggingPluginBehavior
+    private lateinit var awsCloudWatchLoggingPluginImplementation: AWSCloudWatchLoggingPluginImplementation
 
     @Before
     fun setup() {
-        awsCloudWatchLoggingPluginBehavior =
-            AWSCloudWatchLoggingPluginBehavior(
+        awsCloudWatchLoggingPluginImplementation =
+            AWSCloudWatchLoggingPluginImplementation(
                 loggingConstraintsResolver,
                 null,
                 cloudWatchLogManager,
@@ -60,7 +60,7 @@ internal class AWSCloudWatchLoggingPluginBehaviorTest {
         )
         every { loggingConstraintsResolver::localLoggingConstraint.set(capture(loggingConstraintsSlot)) }.answers { }
         coEvery { cloudWatchLogManager.startSync() }.answers { }
-        awsCloudWatchLoggingPluginBehavior.configure(
+        awsCloudWatchLoggingPluginImplementation.configure(
             awsLoggingConfig,
         )
         verify { loggingConstraintsResolver::localLoggingConstraint.set(awsLoggingConfig.loggingConstraints) }
@@ -77,7 +77,7 @@ internal class AWSCloudWatchLoggingPluginBehaviorTest {
         )
         every { loggingConstraintsResolver::localLoggingConstraint.set(any()) }.answers { }
         coEvery { cloudWatchLogManager.startSync() }.answers { }
-        awsCloudWatchLoggingPluginBehavior.configure(
+        awsCloudWatchLoggingPluginImplementation.configure(
             awsLoggingConfig,
         )
         verify { loggingConstraintsResolver::localLoggingConstraint.set(awsLoggingConfig.loggingConstraints) }
@@ -87,16 +87,16 @@ internal class AWSCloudWatchLoggingPluginBehaviorTest {
     @Test
     fun `on enable`() = runTest {
         coEvery { cloudWatchLogManager.startSync() }.answers { }
-        awsCloudWatchLoggingPluginBehavior.enable()
-        assertTrue(awsCloudWatchLoggingPluginBehavior.isPluginEnabled)
+        awsCloudWatchLoggingPluginImplementation.enable()
+        assertTrue(awsCloudWatchLoggingPluginImplementation.isPluginEnabled)
         coVerify(exactly = 1) { cloudWatchLogManager.startSync() }
     }
 
     @Test
     fun `on disable`() {
         every { cloudWatchLogManager.stopSync() }.answers { }
-        awsCloudWatchLoggingPluginBehavior.disable()
-        assertFalse(awsCloudWatchLoggingPluginBehavior.isPluginEnabled)
+        awsCloudWatchLoggingPluginImplementation.disable()
+        assertFalse(awsCloudWatchLoggingPluginImplementation.isPluginEnabled)
         verify(exactly = 1) { cloudWatchLogManager.stopSync() }
     }
 
@@ -106,7 +106,7 @@ internal class AWSCloudWatchLoggingPluginBehaviorTest {
         val onError = mockk<Consumer<AmplifyException>>()
         coEvery { cloudWatchLogManager.syncLogEventsWithCloudwatch() }.answers { }
         every { onSuccess.call() }.answers { }
-        awsCloudWatchLoggingPluginBehavior.flushLogs(onSuccess, onError)
+        awsCloudWatchLoggingPluginImplementation.flushLogs(onSuccess, onError)
         coVerify(exactly = 1) { cloudWatchLogManager.syncLogEventsWithCloudwatch() }
         verify(exactly = 1) { onSuccess.call() }
         verify(exactly = 0) { onError.accept(any()) }
@@ -119,7 +119,7 @@ internal class AWSCloudWatchLoggingPluginBehaviorTest {
         val exception = slot<AmplifyException>()
         coEvery { cloudWatchLogManager.syncLogEventsWithCloudwatch() }.throws(IllegalStateException())
         every { onError.accept(capture(exception)) }.answers { }
-        awsCloudWatchLoggingPluginBehavior.flushLogs(onSuccess, onError)
+        awsCloudWatchLoggingPluginImplementation.flushLogs(onSuccess, onError)
         coVerify(exactly = 1) { cloudWatchLogManager.syncLogEventsWithCloudwatch() }
         verify(exactly = 0) { onSuccess.call() }
         verify(exactly = 1) { onError.accept(exception.captured) }
@@ -129,7 +129,7 @@ internal class AWSCloudWatchLoggingPluginBehaviorTest {
     @Test
     fun `test logger for namespace`() {
         val namespace = "NAMESPACE"
-        val logger = awsCloudWatchLoggingPluginBehavior.logger(namespace) as CloudWatchLogger
+        val logger = awsCloudWatchLoggingPluginImplementation.logger(namespace) as CloudWatchLogger
         assertEquals(namespace, logger.namespace)
     }
 }

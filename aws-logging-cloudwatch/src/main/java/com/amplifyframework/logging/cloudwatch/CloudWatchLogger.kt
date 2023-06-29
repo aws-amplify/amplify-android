@@ -33,7 +33,7 @@ class CloudWatchLogger internal constructor(
     private val namespace: String,
     private val categoryType: CategoryType?,
     private val loggingConstraintsResolver: LoggingConstraintsResolver,
-    private val awsCloudWatchLoggingPlugin: AWSCloudWatchLoggingPluginBehavior,
+    private val awsCloudWatchLoggingPlugin: AWSCloudWatchLoggingPluginImplementation,
     private val logEventsQueue: Queue<CloudWatchLogEvent> = ConcurrentLinkedQueue(),
     private val dispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : Logger {

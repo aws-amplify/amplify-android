@@ -44,7 +44,7 @@ class AWSCloudWatchLoggingPlugin @JvmOverloads constructor(
             localLoggingConstraint = awsCloudWatchLoggingPluginConfig?.loggingConstraints,
             remoteLoggingConstraintProvider = awsRemoteLoggingConstraintProvider,
         )
-    private val awsCloudWatchLoggingPluginBehavior = AWSCloudWatchLoggingPluginBehavior(
+    private val awsCloudWatchLoggingPluginImplementation = AWSCloudWatchLoggingPluginImplementation(
         loggingConstraintsResolver,
         awsCloudWatchLoggingPluginConfig,
     )
@@ -57,30 +57,30 @@ class AWSCloudWatchLoggingPlugin @JvmOverloads constructor(
 
     @Deprecated("Deprecated in Java")
     override fun forNamespace(namespace: String?): Logger {
-        return awsCloudWatchLoggingPluginBehavior.forNamespace(namespace)
+        return awsCloudWatchLoggingPluginImplementation.forNamespace(namespace)
     }
 
     override fun logger(namespace: String): Logger {
-        return awsCloudWatchLoggingPluginBehavior.logger(namespace)
+        return awsCloudWatchLoggingPluginImplementation.logger(namespace)
     }
 
     override fun logger(categoryType: CategoryType, namespace: String): Logger {
-        return awsCloudWatchLoggingPluginBehavior.logger(categoryType, namespace)
+        return awsCloudWatchLoggingPluginImplementation.logger(categoryType, namespace)
     }
 
     override fun enable() {
-        awsCloudWatchLoggingPluginBehavior.enable()
+        awsCloudWatchLoggingPluginImplementation.enable()
     }
 
     override fun disable() {
-        awsCloudWatchLoggingPluginBehavior.disable()
+        awsCloudWatchLoggingPluginImplementation.disable()
     }
 
     public fun flushLogs(
         onSuccess: Action,
         onError: Consumer<AmplifyException>,
     ) {
-        awsCloudWatchLoggingPluginBehavior.flushLogs(onSuccess, onError)
+        awsCloudWatchLoggingPluginImplementation.flushLogs(onSuccess, onError)
     }
 
     override fun getPluginKey(): String {
@@ -109,8 +109,8 @@ class AWSCloudWatchLoggingPlugin @JvmOverloads constructor(
             }
             val cloudWatchLogManager =
                 CloudWatchLogManager(context, awsLoggingConfig, cloudWatchLogsClient, loggingConstraintsResolver)
-            awsCloudWatchLoggingPluginBehavior.cloudWatchLogManager = cloudWatchLogManager
-            awsCloudWatchLoggingPluginBehavior.configure(awsLoggingConfig)
+            awsCloudWatchLoggingPluginImplementation.cloudWatchLogManager = cloudWatchLogManager
+            awsCloudWatchLoggingPluginImplementation.configure(awsLoggingConfig)
         } catch (exception: Exception) {
             Log.e("AWSCloudWatchLoggingPlugin", "failed to configure plugin", exception)
         }

@@ -30,15 +30,14 @@ public interface LoggingCategoryBehavior {
      * Gets a logger configured to emit logs against a particular namespace.
      * @param namespace A namespace for all logs emitted by the returned logger instance
      * @return A logger that emits logs in the provided namespace
-     * @deprecated instead use for logger(@NonNull String namespace)
+     * @deprecated instead use {@link #logger(String)}
      */
     @Deprecated
     @NonNull
     Logger forNamespace(@Nullable String namespace);
 
     /**
-     * Gets a logger configured to emit logs against a particular categoryType and namespace.
-     * @param categoryType An Amplify categoryType
+     * Gets a logger configured to emit logs against a namespace.
      * @param namespace A namespace for all logs emitted by the returned logger instance
      * @return A logger that emits logs in the provided namespace
      */
@@ -48,7 +47,8 @@ public interface LoggingCategoryBehavior {
     /**
      * Gets a logger configured to emit logs against a particular namespace.
      * @param namespace A namespace for all logs emitted by the returned logger instance
-     * @return A logger that emits logs in the provided namespace
+     * @param categoryType An Amplify categoryType
+     * @return A logger that emits logs in the provided namespace and categoryType
      */
     @NonNull
     Logger logger(@NonNull CategoryType categoryType, @NonNull String namespace);
