@@ -1,6 +1,7 @@
 ## [Release 0.22.7](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.22.7)
 
-
+### Bug Fixes
+- Replace sha1prng secure random with recommended algorithm ([#3314](https://github.com/aws-amplify/aws-sdk-android/issues/3314))
 
 [See all changes between 0.22.6 and 0.22.7](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.22.6...release-kotlin_v0.22.7)
 
