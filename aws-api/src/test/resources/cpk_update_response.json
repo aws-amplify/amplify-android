@@ -1,0 +1,29 @@
+{
+  "data": {
+    "updateComment": {
+      "commentId": "c1",
+      "content": "Updated Comment",
+      "createdAt": "2023-06-13T14:28:27.205Z",
+      "post": {
+        "blog": {
+          "blogAuthorId": "a1",
+          "blogId": "b1",
+          "createdAt": "2023-06-13T14:18:32.903Z",
+          "name": "name1",
+          "siteId": "s1",
+          "updatedAt": "2023-06-13T14:18:32.903Z"
+        },
+        "comments": {
+          "items": [],
+          "nextToken": null
+        },
+        "createdAt": "2023-06-09T16:22:30.48Z",
+        "postId": "p1",
+        "rating": 3.4,
+        "title": "t1",
+        "updatedAt": "2023-06-13T14:28:26.761Z"
+      },
+      "updatedAt": "2023-06-13T14:28:27.590Z"
+    }
+  }
+}

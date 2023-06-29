@@ -20,6 +20,7 @@ import androidx.annotation.NonNull;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.aws.AppSyncGraphQLRequest;
 import com.amplifyframework.api.aws.AuthModeStrategyType;
+import com.amplifyframework.api.aws.GraphQLRequestHelper;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.core.model.AuthStrategy;
@@ -282,13 +283,13 @@ public final class AppSyncRequestFactoryTest {
 
     /**
      * Checks that the predicate expression matches the expected value.
-     * @throws DataStoreException If the output does not match.
+     * @throws AmplifyException If the output does not match.
      */
     @Test
-    public void validatePredicateGeneration() throws DataStoreException {
+    public void validatePredicateGeneration() throws AmplifyException {
         assertEquals(
             Collections.singletonMap("name", Collections.singletonMap("eq", "Test Dummy")),
-            AppSyncRequestFactory.parsePredicate(BlogOwner.NAME.eq("Test Dummy"))
+            GraphQLRequestHelper.parsePredicate(BlogOwner.NAME.eq("Test Dummy"))
         );
 
         assertEquals(
@@ -296,7 +297,7 @@ public final class AppSyncRequestFactoryTest {
                 Collections.singletonMap("name", Collections.singletonMap("beginsWith", "A day in the life of a...")),
                 Collections.singletonMap("blogOwnerBlogId", Collections.singletonMap("eq", "DUMMY_OWNER_ID"))
             )),
-            AppSyncRequestFactory.parsePredicate(
+                GraphQLRequestHelper.parsePredicate(
                 Blog.NAME.beginsWith("A day in the life of a...").and(Blog.OWNER.eq("DUMMY_OWNER_ID"))
             )
         );
