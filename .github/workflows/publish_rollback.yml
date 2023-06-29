@@ -1,0 +1,20 @@
+name: Publish Rollback Artifacts
+
+on:
+  workflow_dispatch:
+
+jobs:
+  publish_rollback:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@5fd3084fc36e372ff1fff382a39b10d03659f355 #2.2.0
+        with:
+          role-to-assume: ${{ secrets.AMPLIFY_ANDROID_RELEASE_PUBLISHER_ROLE }}
+          aws-region: us-east-1
+      - name: Start Maven Release Build
+        uses: aws-actions/aws-codebuild-run-build@d5a04846cedab61a0b7c897af0548af0d8fb14fb #1.0.12
+        with:
+          project-name: AmplifyAndroid-ReleasePublisher-V2
