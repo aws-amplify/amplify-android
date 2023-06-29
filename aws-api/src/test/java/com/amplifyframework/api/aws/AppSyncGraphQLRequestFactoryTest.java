@@ -84,7 +84,7 @@ public final class AppSyncGraphQLRequestFactoryTest {
      */
     @Test
     public void buildQueryFromClassAndModelIdentifier() throws JSONException {
-        // Arrange a hard-coded name/age as found int the expected data file.
+        // Arrange a hard-coded name/age as found in the expected data file.
         String name = "First";
         int age = 50;
 

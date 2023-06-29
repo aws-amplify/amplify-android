@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -226,7 +226,7 @@ class AppSyncGraphQLRequestFactoryCPKTest {
 
         // WHEN
         val request: GraphQLRequest<Comment> =
-            AppSyncGraphQLRequestFactory.buildQuery(Comment::class.java, CommentIdentifier("c1"))
+            AppSyncGraphQLRequestFactory.buildQuery(Comment::class.java, Comment.CommentIdentifier("c1"))
         val response = responseFactory.buildResponse(request, responseJson)
 
         // THEN
@@ -284,7 +284,7 @@ class AppSyncGraphQLRequestFactoryCPKTest {
         assertFalse(response.hasErrors())
         assertEquals("p1", response.data.postId)
         assertEquals("t1", response.data.title)
-        assertEquals(3.4, response.data.rating, 0.0)
+        assertEquals(4.5, response.data.rating, 0.0)
         assertEquals(Temporal.DateTime("2023-06-09T16:22:30.48Z"), response.data.createdAt)
         assertEquals("b1", response.data.blog.blogId)
         assertEquals("a1", response.data.blog.author.id)
@@ -397,5 +397,3 @@ class AppSyncGraphQLRequestFactoryCPKTest {
         assertNull(response.data.blog)
     }
 }
-
-class CommentIdentifier(commentId: String) : ModelIdentifier<Comment>(commentId), Serializable
