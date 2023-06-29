@@ -24,6 +24,7 @@ import aws.smithy.kotlin.runtime.net.Url
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.auth.CognitoCredentialsProvider
 import com.amplifyframework.core.Consumer
+import com.amplifyframework.logging.cloudwatch.models.LoggingConstraints
 import java.net.URL
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -35,7 +36,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 
 /**
- * TODO: Add documentation
+ * Default implementation to fetch logging constraints remotely from AWS Lambda and S3.
  */
 class DefaultRemoteLoggingConstraintProvider(
     private val url: URL,

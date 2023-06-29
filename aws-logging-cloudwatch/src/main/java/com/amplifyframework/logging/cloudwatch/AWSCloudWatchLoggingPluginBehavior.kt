@@ -22,6 +22,7 @@ import com.amplifyframework.core.Consumer
 import com.amplifyframework.core.category.CategoryType
 import com.amplifyframework.hub.HubChannel
 import com.amplifyframework.logging.Logger
+import com.amplifyframework.logging.cloudwatch.models.AWSCloudWatchLoggingPluginConfiguration
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

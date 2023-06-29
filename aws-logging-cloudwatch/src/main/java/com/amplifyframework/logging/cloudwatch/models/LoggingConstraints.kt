@@ -18,10 +18,11 @@ import com.amplifyframework.core.category.CategoryType
 import com.amplifyframework.logging.LogLevel
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 /**
- * TODO: Acd documentation
+ * Constraints to control the log level per categoryType or user
  */
 @Serializable
 data class LoggingConstraints(
@@ -30,22 +31,26 @@ data class LoggingConstraints(
     val userLogLevel: Map<String, UserLogLevel> = emptyMap(),
 ) {
     companion object {
+        private val json = Json {
+            encodeDefaults = true
+            explicitNulls = false
+            ignoreUnknownKeys = true
+        }
         fun fromString(jsonString: String): LoggingConstraints {
-            val json = Json {
-                encodeDefaults = true
-                explicitNulls = false
-                ignoreUnknownKeys = true
-            }
             return json.decodeFromString<LoggingConstraints>(jsonString)
+        }
+
+        fun toJsonString(loggingConstraints: LoggingConstraints): String {
+            return json.encodeToString(loggingConstraints)
         }
     }
 }
 
 /**
- * TODO: Acd documentation
+ * Constraints to control the log level per user
  */
 @Serializable
 data class UserLogLevel(
     val defaultLogLevel: LogLevel = LogLevel.ERROR,
-    val categoryLogLevel: Map<CategoryType, LogLevel> = emptyMap()
+    val categoryLogLevel: Map<CategoryType, LogLevel> = emptyMap(),
 )

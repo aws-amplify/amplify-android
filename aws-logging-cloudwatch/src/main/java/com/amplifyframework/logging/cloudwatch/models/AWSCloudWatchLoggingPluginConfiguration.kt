@@ -14,11 +14,10 @@
  */
 package com.amplifyframework.logging.cloudwatch.models
 
-import com.amplifyframework.logging.cloudwatch.LoggingConstraints
 import kotlinx.serialization.Serializable
 
 /**
- * TODO: Add public documentation
+ * Configuration to configure the plugin.
  */
 @Serializable
 data class AWSCloudWatchLoggingPluginConfiguration(
@@ -32,7 +31,7 @@ data class AWSCloudWatchLoggingPluginConfiguration(
 )
 
 /**
- * TODO: Add public documentation
+ * Configuration to fetch remote logging constraints.
  */
 @Serializable
 data class DefaultRemoteConfiguration(

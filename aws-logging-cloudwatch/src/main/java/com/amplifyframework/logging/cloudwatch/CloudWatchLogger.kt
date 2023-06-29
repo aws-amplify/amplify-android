@@ -19,6 +19,7 @@ import com.amplifyframework.core.category.CategoryType
 import com.amplifyframework.logging.LogLevel
 import com.amplifyframework.logging.Logger
 import com.amplifyframework.logging.cloudwatch.models.CloudWatchLogEvent
+import java.util.Queue
 import java.util.concurrent.ConcurrentLinkedQueue
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -26,18 +27,18 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 /**
-* TODO: Add documentation
-*/
+ * Logger to send logs to AWS Cloudwatch
+ */
 class CloudWatchLogger internal constructor(
     private val namespace: String,
     private val categoryType: CategoryType?,
     private val loggingConstraintsResolver: LoggingConstraintsResolver,
     private val awsCloudWatchLoggingPlugin: AWSCloudWatchLoggingPluginBehavior,
+    private val logEventsQueue: Queue<CloudWatchLogEvent> = ConcurrentLinkedQueue(),
     private val dispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : Logger {
 
     private val coroutineScope = CoroutineScope(dispatcher)
-    private val logEventsQueue = ConcurrentLinkedQueue<CloudWatchLogEvent>()
 
     override fun getThresholdLevel(): LogLevel {
         return loggingConstraintsResolver.resolveLogLevel(namespace, categoryType)
@@ -111,7 +112,7 @@ class CloudWatchLogger internal constructor(
 
     private fun persistEvent(event: CloudWatchLogEvent) {
         coroutineScope.launch {
-            awsCloudWatchLoggingPlugin.cloudWatchLogManager?.saveLogEvent(event).also {
+            awsCloudWatchLoggingPlugin.cloudWatchLogManager?.saveLogEvent(event)?.also {
                 flushLogsQueue()
             } ?: kotlin.run {
                 logEventsQueue.add(event)
@@ -120,9 +121,11 @@ class CloudWatchLogger internal constructor(
     }
 
     private suspend fun flushLogsQueue() {
-        awsCloudWatchLoggingPlugin.cloudWatchLogManager?.let { cloudWatchRecorder ->
-            logEventsQueue.forEach {
-                cloudWatchRecorder.saveLogEvent(it)
+        awsCloudWatchLoggingPlugin.cloudWatchLogManager?.let { cloudWatchManager ->
+            val iterator = logEventsQueue.iterator()
+            while (iterator.hasNext()) {
+                cloudWatchManager.saveLogEvent(iterator.next())
+                iterator.remove()
             }
         }
     }

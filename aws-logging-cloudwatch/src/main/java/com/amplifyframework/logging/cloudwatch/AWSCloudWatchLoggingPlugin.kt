@@ -25,13 +25,14 @@ import com.amplifyframework.core.Resources
 import com.amplifyframework.core.category.CategoryType
 import com.amplifyframework.logging.Logger
 import com.amplifyframework.logging.LoggingPlugin
+import com.amplifyframework.logging.cloudwatch.models.AWSCloudWatchLoggingPluginConfiguration
 import java.net.URL
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import org.json.JSONObject
 
 /**
- * TODO: Add documentation
+ * Logging plugin to send logs to AWS Cloudwatch
 */
 class AWSCloudWatchLoggingPlugin @JvmOverloads constructor(
     private val awsCloudWatchLoggingPluginConfig: AWSCloudWatchLoggingPluginConfiguration? = null,

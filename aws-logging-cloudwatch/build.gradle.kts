@@ -35,4 +35,12 @@ dependencies {
     implementation(dependency.sqlcipher)
     implementation(dependency.androidx.sqlite)
     implementation(dependency.kotlin.serializationJson)
+
+    testImplementation(project(":testutils"))
+    testImplementation(testDependency.junit)
+    testImplementation(testDependency.mockk)
+    testImplementation(testDependency.robolectric)
+    testImplementation(testDependency.androidx.test.core)
+    testImplementation(testDependency.kotlin.test.coroutines)
+    testImplementation(project(":aws-logging-cloudwatch"))
 }

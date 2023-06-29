@@ -21,8 +21,8 @@ import aws.sdk.kotlin.services.cloudwatchlogs.model.CreateLogStreamRequest
 import aws.sdk.kotlin.services.cloudwatchlogs.model.DescribeLogStreamsRequest
 import aws.sdk.kotlin.services.cloudwatchlogs.model.InputLogEvent
 import aws.sdk.kotlin.services.cloudwatchlogs.model.PutLogEventsRequest
-import com.amplifyframework.core.Amplify
 import com.amplifyframework.logging.cloudwatch.db.CloudWatchLoggingDatabase
+import com.amplifyframework.logging.cloudwatch.models.AWSCloudWatchLoggingPluginConfiguration
 import com.amplifyframework.logging.cloudwatch.models.CloudWatchLogEvent
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -31,11 +31,9 @@ import java.util.UUID
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.newSingleThreadContext
 import kotlinx.coroutines.withContext
 
 internal class CloudWatchLogManager(
@@ -43,6 +41,8 @@ internal class CloudWatchLogManager(
     private val pluginConfiguration: AWSCloudWatchLoggingPluginConfiguration,
     private val awsCloudWatchLogsClient: CloudWatchLogsClient,
     private val loggingConstraintsResolver: LoggingConstraintsResolver,
+    private val cloudWatchLoggingDatabase: CloudWatchLoggingDatabase = CloudWatchLoggingDatabase(context),
+    private val customCognitoCredentialsProvider: CustomCognitoCredentialsProvider = CustomCognitoCredentialsProvider(),
     private val dispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) {
     private val deviceIdKey = "unique_device_id"
@@ -54,21 +54,17 @@ internal class CloudWatchLogManager(
         }
     private val todayDate: String = SimpleDateFormat("MM-dd-yyyy", Locale.US).format(Date())
     private val coroutineScope = CoroutineScope(dispatcher)
-    private val cloudWatchLoggingDatabase = CloudWatchLoggingDatabase(context)
     private var isSyncInProgress = AtomicBoolean(false)
-
-    @OptIn(DelicateCoroutinesApi::class)
-    private var singleThreadedContext = newSingleThreadContext("DBPersistenceContext")
 
     init {
         onSignIn()
     }
 
     suspend fun saveLogEvent(event: CloudWatchLogEvent) {
-        withContext(singleThreadedContext) {
+        withContext(dispatcher) {
             try {
                 cloudWatchLoggingDatabase.saveLogEvent(event)
-                if (cloudWatchLoggingDatabase.isCacheFull(pluginConfiguration.localStoreMaxSizeInMB)) {
+                if (isCacheFull()) {
                     syncLogEventsWithCloudwatch()
                 } else {
                 }
@@ -108,56 +104,75 @@ internal class CloudWatchLogManager(
         if (isSyncInProgress.get()) {
             return
         }
-        withContext(singleThreadedContext) {
+        withContext(dispatcher) {
+            var inputLogEventsIdToBeDeleted: List<Int> = emptyList()
             try {
                 isSyncInProgress.set(true)
                 awsCloudWatchLogsClient.let { client ->
-                    val queriedEvents = cloudWatchLoggingDatabase.queryAllEvents().toMutableList()
-                    Log.i("CloudwatchLogEventRecorder", "Queried ${queriedEvents.size} events")
-                    while (queriedEvents.isNotEmpty()) {
-                        val groupName = pluginConfiguration.logGroupName
-                        val streamName = "$todayDate.${uniqueDeviceId()}.${userIdentityId ?: "guest"}"
-                        val nextBatch = getNextBatch(queriedEvents)
-                        val inputLogEvents = nextBatch.first
-                        var inputLogEventsIdToBeDeleted = nextBatch.second
-                        if (inputLogEvents.isEmpty()) {
-                            return@withContext
-                        }
-                        client.describeLogStreams(
-                            DescribeLogStreamsRequest {
-                                logGroupName = groupName
-                                logStreamNamePrefix = streamName
-                            },
-                        ).apply {
-                            if (this.logStreams == null || this.logStreams?.isEmpty() == true) {
-                                client.createLogStream(
-                                    CreateLogStreamRequest {
+                    while (true) {
+                        val queriedEvents = cloudWatchLoggingDatabase.queryAllEvents().toMutableList()
+                        if (queriedEvents.isEmpty()) break
+                        Log.i("CloudwatchLogEventRecorder", "Queried ${queriedEvents.size} events")
+                        while (queriedEvents.isNotEmpty()) {
+                            val groupName = pluginConfiguration.logGroupName
+                            val streamName = "$todayDate.${uniqueDeviceId()}.${userIdentityId ?: "guest"}"
+                            val nextBatch = getNextBatch(queriedEvents)
+                            val inputLogEvents = nextBatch.first
+                            inputLogEventsIdToBeDeleted = nextBatch.second
+                            if (inputLogEvents.isEmpty()) {
+                                return@withContext
+                            }
+                            createLogStreamIfNotCreated(streamName, groupName, client)
+                            try {
+                                client.putLogEvents(
+                                    PutLogEventsRequest {
+                                        logEvents = inputLogEvents
                                         logGroupName = groupName
                                         logStreamName = streamName
                                     },
-                                )
+                                ).also { response ->
+                                    response.rejectedLogEventsInfo?.tooNewLogEventStartIndex?.let {
+                                        inputLogEventsIdToBeDeleted = inputLogEventsIdToBeDeleted.slice(
+                                            IntRange(0, it - 1),
+                                        ).toMutableList()
+                                    }
+                                    cloudWatchLoggingDatabase.bulkDelete(inputLogEventsIdToBeDeleted)
+                                }
+                            } catch (networkException: Exception) {
+                                Log.e("TAG", networkException.toString())
                             }
-                        }
-                        client.putLogEvents(
-                            PutLogEventsRequest {
-                                logEvents = inputLogEvents
-                                logGroupName = groupName
-                                logStreamName = streamName
-                            },
-                        ).also { response ->
-                            response.rejectedLogEventsInfo?.tooNewLogEventStartIndex?.let {
-                                inputLogEventsIdToBeDeleted = inputLogEventsIdToBeDeleted.slice(
-                                    IntRange(0, it - 1),
-                                ).toMutableList()
-                            }
-                            cloudWatchLoggingDatabase.bulkDelete(inputLogEventsIdToBeDeleted)
                         }
                     }
                 }
             } catch (exception: Exception) {
                 Log.e("CloudwatchLogEventRecorder", "stacktrace:  ${Log.getStackTraceString(exception)}")
+                if (isCacheFull()) {
+                    cloudWatchLoggingDatabase.bulkDelete(inputLogEventsIdToBeDeleted)
+                }
             } finally {
                 isSyncInProgress.set(false)
+            }
+        }
+    }
+
+    private suspend fun createLogStreamIfNotCreated(
+        logStream: String,
+        groupName: String,
+        client: CloudWatchLogsClient,
+    ) {
+        client.describeLogStreams(
+            DescribeLogStreamsRequest {
+                logGroupName = groupName
+                logStreamNamePrefix = logStream
+            },
+        ).apply {
+            if (this.logStreams == null || this.logStreams?.isEmpty() == true) {
+                client.createLogStream(
+                    CreateLogStreamRequest {
+                        logGroupName = groupName
+                        logStreamName = logStream
+                    },
+                )
             }
         }
     }
@@ -192,26 +207,24 @@ internal class CloudWatchLogManager(
     }
 
     private fun clearCache() {
-        cloudWatchLoggingDatabase.clearDatabase()
-        context.getSharedPreferences(
-            AWSCloudWatchLoggingPlugin.SHARED_PREFERENCE_FILENAME,
-            Context.MODE_PRIVATE,
-        ).edit().remove(LoggingConstraintsResolver.REMOTE_LOGGING_CONSTRAINTS_KEY).apply()
+        coroutineScope.launch {
+            cloudWatchLoggingDatabase.clearDatabase()
+            context.getSharedPreferences(
+                AWSCloudWatchLoggingPlugin.SHARED_PREFERENCE_FILENAME,
+                Context.MODE_PRIVATE,
+            ).edit().remove(LoggingConstraintsResolver.REMOTE_LOGGING_CONSTRAINTS_KEY).apply()
+        }
     }
 
     internal fun onSignIn() {
         coroutineScope.launch {
             syncLogEventsWithCloudwatch()
-            Amplify.Auth.getCurrentUser(
-                {
-                    userIdentityId = it.userId
-                    loggingConstraintsResolver.userId = userIdentityId
-                },
-                {
-                    userIdentityId = null
-                    loggingConstraintsResolver.userId = userIdentityId
-                },
-            )
+            userIdentityId = try {
+                val authUser = customCognitoCredentialsProvider.getCurrentUser()
+                authUser.userId
+            } catch (exception: Exception) {
+                null
+            }
         }
     }
 
@@ -227,4 +240,6 @@ internal class CloudWatchLogManager(
             sharedPreferences.edit().putString(deviceIdKey, id).apply()
         }
     }
+
+    private fun isCacheFull() = cloudWatchLoggingDatabase.isCacheFull(pluginConfiguration.localStoreMaxSizeInMB)
 }

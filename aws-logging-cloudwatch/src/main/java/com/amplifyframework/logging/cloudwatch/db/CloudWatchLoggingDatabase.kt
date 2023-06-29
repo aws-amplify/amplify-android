@@ -75,7 +75,7 @@ internal class CloudWatchLoggingDatabase(
     internal suspend fun queryAllEvents(): List<CloudWatchLogEvent> {
         return withContext(coroutineDispatcher) {
             val cloudWatchLogEvents = mutableListOf<CloudWatchLogEvent>()
-            val cursor = query(contentUri, null, null, null, LogEventTable.COLUMN_TIMESTAMP, null)
+            val cursor = query(contentUri, null, null, null, LogEventTable.COLUMN_TIMESTAMP, "10000")
             cursor.use {
                 if (!it.moveToFirst()) {
                     return@use
@@ -112,7 +112,7 @@ internal class CloudWatchLoggingDatabase(
         }
     }
 
-    internal fun clearDatabase() {
+    internal suspend fun clearDatabase() {
         database.delete(LogEventTable.TABLE_LOG_EVENT, null, null)
     }
 
