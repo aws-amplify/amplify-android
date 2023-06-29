@@ -1,3 +1,9 @@
+## [Release 0.22.7](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.22.7)
+
+
+
+[See all changes between 0.22.6 and 0.22.7](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.22.6...release-kotlin_v0.22.7)
+
 ## [Release 0.22.6](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.22.6)
 
 ### Bug Fixes

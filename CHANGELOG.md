@@ -1,3 +1,9 @@
+## [Release 1.38.7](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.38.7)
+
+
+
+[See all changes between 1.38.6 and 1.38.7](https://github.com/aws-amplify/amplify-android/compare/release_v1.38.6...release_v1.38.7)
+
 ## [Release 1.38.6](https://github.com/aws-amplify/amplify-android/releases/tag/release_v1.38.6)
 
 ### Bug Fixes
