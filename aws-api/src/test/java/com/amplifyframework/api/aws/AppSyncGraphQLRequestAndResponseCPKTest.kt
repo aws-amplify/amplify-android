@@ -19,7 +19,6 @@ import com.amplifyframework.api.graphql.GraphQLResponse
 import com.amplifyframework.api.graphql.MutationType
 import com.amplifyframework.api.graphql.model.ModelMutation
 import com.amplifyframework.api.graphql.model.ModelQuery
-import com.amplifyframework.core.model.ModelIdentifier
 import com.amplifyframework.core.model.query.predicate.QueryPredicates
 import com.amplifyframework.core.model.temporal.Temporal
 import com.amplifyframework.testmodels.cpk.Blog
@@ -30,7 +29,6 @@ import com.amplifyframework.testmodels.cpk.Post
 import com.amplifyframework.testmodels.cpk.Post.PostIdentifier
 import com.amplifyframework.testutils.Resources
 import com.amplifyframework.util.GsonFactory
-import java.io.Serializable
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -45,7 +43,7 @@ import org.skyscreamer.jsonassert.JSONAssert
  * Tests the [AppSyncGraphQLRequestFactory].
  */
 @RunWith(RobolectricTestRunner::class)
-class AppSyncGraphQLRequestFactoryCPKTest {
+class AppSyncGraphQLRequestAndResponseCPKTest {
 
     lateinit var responseFactory: GraphQLResponse.Factory
 
