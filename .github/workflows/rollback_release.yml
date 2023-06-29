@@ -42,7 +42,9 @@ jobs:
           git config --global user.email 41898282+github-actions[bot]@users.noreply.github.com
           git config --global user.name github-actions[bot]
           sed -i 's/POM_VERSION=${{ env.BRANCH_FROM }}/POM_VERSION=${{ env.NEW_VERSION }}/g' gradle.properties
+          echo -e '## [Release ${{ env.NEW_VERSION }}](https://github.com/${{ github.repository }}/releases/tag/${{ env.NEW_TAG }})\n\nThis is a re-release of version ${{ env.BRANCH_FROM }}. Use this instead of version ${{ env.DEPRECATED_VERSION }}.\n' | cat - CHANGELOG.md > temp && mv temp CHANGELOG.md
           git add gradle.properties
+          git add CHANGELOG.md
           git commit -m "${{ env.CI_COMMIT_MESSAGE }}"
       - name: Tag Version
         run: git tag "${{ env.NEW_TAG }}"
