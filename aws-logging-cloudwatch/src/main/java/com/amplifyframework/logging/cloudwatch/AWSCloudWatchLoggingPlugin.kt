@@ -27,6 +27,7 @@ import com.amplifyframework.logging.Logger
 import com.amplifyframework.logging.LoggingPlugin
 import com.amplifyframework.logging.cloudwatch.models.AWSCloudWatchLoggingPluginConfiguration
 import java.net.URL
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import org.json.JSONObject
@@ -122,6 +123,7 @@ class AWSCloudWatchLoggingPlugin @JvmOverloads constructor(
 
     override fun getVersion(): String = BuildConfig.VERSION_NAME
 
+    @OptIn(ExperimentalSerializationApi::class)
     private fun getConfigFromFile(context: Context): AWSCloudWatchLoggingPluginConfiguration {
         val resourceId = Resources.getRawResourceId(context, CONFIG_FILENAME)
         val configJson = Resources.readJsonResourceFromId(context, resourceId)

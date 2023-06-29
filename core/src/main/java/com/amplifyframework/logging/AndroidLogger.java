@@ -23,16 +23,17 @@ import androidx.annotation.Nullable;
 import java.util.Objects;
 
 final class AndroidLogger implements Logger {
+    private static boolean isEnabled = true;
     private final LogLevel threshold;
     private final String namespace;
-    private static boolean isEnabled = true;
 
-    static void setIsEnabled(boolean enabled) {
-        isEnabled = enabled;
-    }
     AndroidLogger(@NonNull String namespace, @NonNull LogLevel threshold) {
         this.threshold = Objects.requireNonNull(threshold);
         this.namespace = Objects.requireNonNull(namespace);
+    }
+
+    static void setIsEnabled(boolean enabled) {
+        isEnabled = enabled;
     }
 
     @NonNull

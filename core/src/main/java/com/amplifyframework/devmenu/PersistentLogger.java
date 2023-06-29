@@ -34,20 +34,19 @@ import java.util.Objects;
 final class PersistentLogger implements Logger {
     // Maximum number of logs to store.
     private static final int MAX_NUM_LOGS = 500;
+    private static boolean isEnabled = true;
     // Namespace for this logger.
     private final String namespace;
     // The logs stored by this logger.
     private final List<LogEntry> logs;
 
-    private static boolean isEnabled = true;
-
-    static void setIsEnabled(boolean enabled) {
-        isEnabled = enabled;
-    }
-
     PersistentLogger(@NonNull String namespace) {
         this.namespace = Objects.requireNonNull(namespace);
         this.logs = new LinkedList<>();
+    }
+
+    static void setIsEnabled(boolean enabled) {
+        isEnabled = enabled;
     }
 
     @NonNull

@@ -53,7 +53,13 @@ public interface LoggingCategoryBehavior {
     @NonNull
     Logger logger(@NonNull CategoryType categoryType, @NonNull String namespace);
 
+    /**
+     * Enable the logging category.
+     */
     void enable();
 
+    /**
+     * Disable the logging category.
+     */
     void disable();
 }

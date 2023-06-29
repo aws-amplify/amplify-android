@@ -21,6 +21,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.amplifyframework.core.BuildConfig;
+import com.amplifyframework.core.Resources;
 import com.amplifyframework.core.category.CategoryType;
 
 import org.json.JSONObject;
@@ -92,6 +93,7 @@ public final class AndroidLoggingPlugin extends LoggingPlugin<Void> {
     public void configure(
             JSONObject pluginConfiguration,
             @NonNull Context context) {
+        AndroidLogger.setIsEnabled(readConfigFile(context));
     }
 
     @Nullable
@@ -104,5 +106,18 @@ public final class AndroidLoggingPlugin extends LoggingPlugin<Void> {
     @Override
     public String getVersion() {
         return BuildConfig.VERSION_NAME;
+    }
+
+    private boolean readConfigFile(Context context) {
+        try {
+            String configName = "amplifyconfiguration_logging";
+            int resourceId = Resources.getRawResourceId(context, configName);
+            return Resources.readJsonResourceFromId(context, resourceId)
+                .getJSONObject("consoleLoggingPlugin")
+                .getBoolean("enable");
+        } catch (Exception exception) {
+            // default to true
+            return true;
+        }
     }
 }
