@@ -81,6 +81,7 @@ import com.amplifyframework.auth.cognito.result.RevokeTokenError
 import com.amplifyframework.auth.cognito.usecases.ResetPasswordUseCase
 import com.amplifyframework.auth.exceptions.ConfigurationException
 import com.amplifyframework.auth.exceptions.InvalidStateException
+import com.amplifyframework.auth.exceptions.NotAuthorizedException
 import com.amplifyframework.auth.exceptions.SessionExpiredException
 import com.amplifyframework.auth.exceptions.SignedOutException
 import com.amplifyframework.auth.exceptions.UnknownException
@@ -1030,6 +1031,10 @@ internal class RealAWSCognitoAuthPlugin(
                                         onSuccess.accept(error.amplifyCredential.getCognitoSession(error.exception))
                                     }
                                     is SessionExpiredException -> {
+                                        onSuccess.accept(AmplifyCredential.Empty.getCognitoSession(error.exception))
+                                        sendHubEvent(AuthChannelEventName.SESSION_EXPIRED.toString())
+                                    }
+                                    is NotAuthorizedException -> {
                                         onSuccess.accept(AmplifyCredential.Empty.getCognitoSession(error.exception))
                                         sendHubEvent(AuthChannelEventName.SESSION_EXPIRED.toString())
                                     }
