@@ -16,7 +16,7 @@ package com.amplifyframework.logging.cloudwatch.db
 
 import net.sqlcipher.database.SQLiteDatabase
 
-class LogEventTable {
+internal class LogEventTable {
     companion object {
         const val TABLE_LOG_EVENT = "cloudwatchlogevent"
         const val COLUMN_ID = "event_id"
