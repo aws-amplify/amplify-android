@@ -35,7 +35,7 @@ internal class LoggingConstraintsResolver internal constructor(
 ) {
     private val coroutine = CoroutineScope(coroutineDispatcher)
     private var remoteLoggingConstraint: LoggingConstraints? = null
-    private val logger = Amplify.Logging.forNamespace(this::class.java.simpleName)
+    private val logger = Amplify.Logging.logger(CategoryType.LOGGING, this::class.java.simpleName)
 
     companion object {
         internal const val REMOTE_LOGGING_CONSTRAINTS_KEY = "remoteLoggingConstraints"

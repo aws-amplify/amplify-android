@@ -15,12 +15,13 @@
 package com.amplifyframework.logging.cloudwatch
 
 import android.content.Context
-import android.util.Log
 import aws.sdk.kotlin.services.cloudwatchlogs.CloudWatchLogsClient
 import aws.sdk.kotlin.services.cloudwatchlogs.model.CreateLogStreamRequest
 import aws.sdk.kotlin.services.cloudwatchlogs.model.DescribeLogStreamsRequest
 import aws.sdk.kotlin.services.cloudwatchlogs.model.InputLogEvent
 import aws.sdk.kotlin.services.cloudwatchlogs.model.PutLogEventsRequest
+import com.amplifyframework.core.Amplify
+import com.amplifyframework.core.category.CategoryType
 import com.amplifyframework.logging.cloudwatch.db.CloudWatchLoggingDatabase
 import com.amplifyframework.logging.cloudwatch.models.AWSCloudWatchLoggingPluginConfiguration
 import com.amplifyframework.logging.cloudwatch.models.CloudWatchLogEvent
@@ -55,6 +56,7 @@ internal class CloudWatchLogManager(
     private val todayDate: String = SimpleDateFormat("MM-dd-yyyy", Locale.US).format(Date())
     private val coroutineScope = CoroutineScope(dispatcher)
     private var isSyncInProgress = AtomicBoolean(false)
+    private val logger = Amplify.Logging.logger(CategoryType.LOGGING, this::class.java.simpleName)
 
     init {
         onSignIn()
@@ -69,11 +71,7 @@ internal class CloudWatchLogManager(
                 } else {
                 }
             } catch (e: Exception) {
-                Log.e(
-                    "CloudwatchLogEventRecorder",
-                    "failed to save event",
-                    e,
-                )
+                logger.error("failed to save event", e)
             }
         }
     }
@@ -85,9 +83,9 @@ internal class CloudWatchLogManager(
                 try {
                     syncLogEventsWithCloudwatch()
                 } catch (e: Exception) {
-                    Log.e("CloudwatchLogEventRecorder", "error $e, stacktrace:  ${Log.getStackTraceString(e)}")
+                    logger.error("error while syncing logs", e)
                 } finally {
-                    Log.d("Behavior", "waiting sync")
+                    logger.debug("waiting sync")
                     delay(pluginConfiguration.flushIntervalInSeconds * 1000L)
                 }
             }
@@ -97,7 +95,7 @@ internal class CloudWatchLogManager(
     internal fun stopSync() {
         stopSync = true
         clearCache()
-        Log.d("Behavior", "stopping sync")
+        logger.debug("stopping sync")
     }
 
     internal suspend fun syncLogEventsWithCloudwatch() {
@@ -112,7 +110,7 @@ internal class CloudWatchLogManager(
                     while (true) {
                         val queriedEvents = cloudWatchLoggingDatabase.queryAllEvents().toMutableList()
                         if (queriedEvents.isEmpty()) break
-                        Log.i("CloudwatchLogEventRecorder", "Queried ${queriedEvents.size} events")
+                        logger.debug("Queried ${queriedEvents.size} events")
                         while (queriedEvents.isNotEmpty()) {
                             val groupName = pluginConfiguration.logGroupName
                             val streamName = "$todayDate.${uniqueDeviceId()}.${userIdentityId ?: "guest"}"
@@ -123,29 +121,25 @@ internal class CloudWatchLogManager(
                                 return@withContext
                             }
                             createLogStreamIfNotCreated(streamName, groupName, client)
-                            try {
-                                client.putLogEvents(
-                                    PutLogEventsRequest {
-                                        logEvents = inputLogEvents
-                                        logGroupName = groupName
-                                        logStreamName = streamName
-                                    },
-                                ).also { response ->
-                                    response.rejectedLogEventsInfo?.tooNewLogEventStartIndex?.let {
-                                        inputLogEventsIdToBeDeleted = inputLogEventsIdToBeDeleted.slice(
-                                            IntRange(0, it - 1),
-                                        ).toMutableList()
-                                    }
-                                    cloudWatchLoggingDatabase.bulkDelete(inputLogEventsIdToBeDeleted)
+                            client.putLogEvents(
+                                PutLogEventsRequest {
+                                    logEvents = inputLogEvents
+                                    logGroupName = groupName
+                                    logStreamName = streamName
+                                },
+                            ).also { response ->
+                                response.rejectedLogEventsInfo?.tooNewLogEventStartIndex?.let {
+                                    inputLogEventsIdToBeDeleted = inputLogEventsIdToBeDeleted.slice(
+                                        IntRange(0, it - 1),
+                                    ).toMutableList()
                                 }
-                            } catch (networkException: Exception) {
-                                Log.e("TAG", networkException.toString())
+                                cloudWatchLoggingDatabase.bulkDelete(inputLogEventsIdToBeDeleted)
                             }
                         }
                     }
                 }
             } catch (exception: Exception) {
-                Log.e("CloudwatchLogEventRecorder", "stacktrace:  ${Log.getStackTraceString(exception)}")
+                logger.error("failed to sync logs", exception)
                 if (isCacheFull()) {
                     cloudWatchLoggingDatabase.bulkDelete(inputLogEventsIdToBeDeleted)
                 }

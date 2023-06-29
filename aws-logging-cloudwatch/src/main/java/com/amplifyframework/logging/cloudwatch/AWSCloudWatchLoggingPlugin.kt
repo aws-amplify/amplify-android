@@ -15,11 +15,11 @@
 package com.amplifyframework.logging.cloudwatch
 
 import android.content.Context
-import android.util.Log
 import aws.sdk.kotlin.services.cloudwatchlogs.CloudWatchLogsClient
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.auth.CognitoCredentialsProvider
 import com.amplifyframework.core.Action
+import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.core.Resources
 import com.amplifyframework.core.category.CategoryType
@@ -50,6 +50,7 @@ class AWSCloudWatchLoggingPlugin @JvmOverloads constructor(
         awsCloudWatchLoggingPluginConfig,
     )
     private lateinit var cloudWatchLogsClient: CloudWatchLogsClient
+    private val logger = Amplify.Logging.logger(CategoryType.LOGGING, this::class.java.simpleName)
 
     companion object {
         private const val CONFIG_FILENAME = "amplifyconfiguration_logging"
@@ -113,7 +114,7 @@ class AWSCloudWatchLoggingPlugin @JvmOverloads constructor(
             awsCloudWatchLoggingPluginImplementation.cloudWatchLogManager = cloudWatchLogManager
             awsCloudWatchLoggingPluginImplementation.configure(awsLoggingConfig)
         } catch (exception: Exception) {
-            Log.e("AWSCloudWatchLoggingPlugin", "failed to configure plugin", exception)
+            logger.error("failed to configure plugin", exception)
         }
     }
 
