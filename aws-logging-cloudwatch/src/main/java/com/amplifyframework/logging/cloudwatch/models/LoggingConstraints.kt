@@ -16,6 +16,7 @@ package com.amplifyframework.logging.cloudwatch.models
 
 import com.amplifyframework.core.category.CategoryType
 import com.amplifyframework.logging.LogLevel
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
@@ -31,6 +32,7 @@ data class LoggingConstraints(
     val userLogLevel: Map<String, UserLogLevel> = emptyMap(),
 ) {
     companion object {
+        @OptIn(ExperimentalSerializationApi::class)
         private val json = Json {
             encodeDefaults = true
             explicitNulls = false

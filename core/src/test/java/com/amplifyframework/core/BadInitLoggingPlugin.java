@@ -91,11 +91,9 @@ public final class BadInitLoggingPlugin extends LoggingPlugin<Void> {
 
     @Override
     public void enable() {
-
     }
 
     @Override
     public void disable() {
-
     }
 }

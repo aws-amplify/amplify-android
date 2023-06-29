@@ -92,7 +92,6 @@ public final class AndroidLoggingPlugin extends LoggingPlugin<Void> {
     public void configure(
             JSONObject pluginConfiguration,
             @NonNull Context context) {
-        // In the future, accept a log level configuration from JSON?
     }
 
     @Nullable

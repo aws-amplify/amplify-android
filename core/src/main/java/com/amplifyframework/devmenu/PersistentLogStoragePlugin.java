@@ -54,36 +54,36 @@ public final class PersistentLogStoragePlugin extends LoggingPlugin<Void> {
     @SuppressWarnings("deprecation")
     public Logger forNamespace(@Nullable String namespace) {
         String usedNamespace = namespace == null ? AMPLIFY_NAMESPACE : namespace;
-        PersistentLogger preExistingLogger = loggers.get(usedNamespace);
+        return logger(usedNamespace);
+    }
+
+    @NonNull
+    @Override
+    public Logger logger(@NonNull String namespace) {
+        PersistentLogger preExistingLogger = loggers.get(namespace);
         if (preExistingLogger != null) {
             return preExistingLogger;
         } else {
-            PersistentLogger newLogger = new PersistentLogger(usedNamespace);
-            loggers.put(usedNamespace, newLogger);
+            PersistentLogger newLogger = new PersistentLogger(namespace);
+            loggers.put(namespace, newLogger);
             return newLogger;
         }
     }
 
     @NonNull
     @Override
-    public Logger logger(@NonNull String namespace) {
-        return null;
-    }
-
-    @NonNull
-    @Override
     public Logger logger(@NonNull CategoryType categoryType, @NonNull String namespace) {
-        return null;
+        return logger(namespace);
     }
 
     @Override
     public void enable() {
-
+        PersistentLogger.setIsEnabled(true);
     }
 
     @Override
     public void disable() {
-
+        PersistentLogger.setIsEnabled(false);
     }
 
     @NonNull

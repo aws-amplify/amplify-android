@@ -75,22 +75,20 @@ final class FakeLoggingPlugin<E> extends LoggingPlugin<E> {
     @NonNull
     @Override
     public Logger logger(@NonNull String namespace) {
-        return null;
+        return logger;
     }
 
     @NonNull
     @Override
     public Logger logger(@NonNull CategoryType categoryType, @NonNull String namespace) {
-        return null;
+        return logger;
     }
 
     @Override
     public void enable() {
-
     }
 
     @Override
     public void disable() {
-
     }
 }

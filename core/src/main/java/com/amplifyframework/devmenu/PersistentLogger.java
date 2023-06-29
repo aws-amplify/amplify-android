@@ -39,6 +39,12 @@ final class PersistentLogger implements Logger {
     // The logs stored by this logger.
     private final List<LogEntry> logs;
 
+    private static boolean isEnabled = true;
+
+    static void setIsEnabled(boolean enabled) {
+        isEnabled = enabled;
+    }
+
     PersistentLogger(@NonNull String namespace) {
         this.namespace = Objects.requireNonNull(namespace);
         this.logs = new LinkedList<>();
@@ -110,6 +116,9 @@ final class PersistentLogger implements Logger {
      * @param logLevel the level the log was logged at
      */
     private void addToLogs(String message, Throwable throwable, LogLevel logLevel) {
+        if (!isEnabled) {
+            return;
+        }
         if (logs.size() == MAX_NUM_LOGS) {
             logs.remove(0);
         }
