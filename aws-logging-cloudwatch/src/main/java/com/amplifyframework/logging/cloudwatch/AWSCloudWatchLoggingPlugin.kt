@@ -91,7 +91,6 @@ class AWSCloudWatchLoggingPlugin @JvmOverloads constructor(
 
     override fun configure(pluginConfiguration: JSONObject?, context: Context) {
         try {
-            // TODO: move reading from file to core
             val awsLoggingConfig = awsCloudWatchLoggingPluginConfig ?: getConfigFromFile(context)
             loggingConstraintsResolver.context = context
             cloudWatchLogsClient = CloudWatchLogsClient {
