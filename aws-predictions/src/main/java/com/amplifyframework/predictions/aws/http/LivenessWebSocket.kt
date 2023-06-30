@@ -20,6 +20,7 @@ import android.os.Build
 import androidx.annotation.VisibleForTesting
 import aws.smithy.kotlin.runtime.auth.awscredentials.Credentials
 import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider
+import aws.smithy.kotlin.runtime.util.emptyAttributes
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.core.Action
 import com.amplifyframework.core.Amplify
@@ -168,7 +169,7 @@ internal class LivenessWebSocket(
 
         CoroutineScope(Dispatchers.Main).launch {
             try {
-                val credentials = credentialsProvider.getCredentials()
+                val credentials = credentialsProvider.resolve(emptyAttributes())
                 this@LivenessWebSocket.credentials = credentials
                 val signedUri = signer.getSignedUri(URI.create(endpoint), credentials, region, userAgent)
                 if (signedUri != null) {

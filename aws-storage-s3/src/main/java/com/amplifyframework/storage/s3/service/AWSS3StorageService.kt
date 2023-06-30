@@ -21,7 +21,7 @@ import aws.sdk.kotlin.services.s3.deleteObject
 import aws.sdk.kotlin.services.s3.listObjectsV2
 import aws.sdk.kotlin.services.s3.model.GetObjectRequest
 import aws.sdk.kotlin.services.s3.paginators.listObjectsV2Paginated
-import aws.sdk.kotlin.services.s3.presigners.presign
+import aws.sdk.kotlin.services.s3.presigners.presignGetObject
 import aws.sdk.kotlin.services.s3.withConfig
 import com.amplifyframework.auth.AuthCredentialsProvider
 import com.amplifyframework.storage.ObjectMetadata
@@ -73,10 +73,13 @@ internal class AWSS3StorageService(
             enableAccelerate = useAccelerateEndpoint
         }.use {
             runBlocking {
-                GetObjectRequest {
-                    bucket = s3BucketName
-                    key = serviceKey
-                }.presign(it.config, expires.seconds)
+                it.presignGetObject(
+                    GetObjectRequest {
+                        bucket = s3BucketName
+                        key = serviceKey
+                    },
+                    expires.seconds
+                )
             }
         }
         return URL(presignUrlRequest.url.toString())

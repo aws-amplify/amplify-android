@@ -198,7 +198,7 @@ class EventRecorder(
         return eventIdToDelete
     }
 
-    private fun isRetryableError(code: Int): Boolean {
+    private fun isRetryableError(code: Int?): Boolean {
         return code in 500..599
     }
 

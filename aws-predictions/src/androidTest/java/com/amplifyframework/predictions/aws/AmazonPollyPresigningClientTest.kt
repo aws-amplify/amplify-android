@@ -21,6 +21,8 @@ import aws.sdk.kotlin.services.polly.model.LanguageCode
 import aws.sdk.kotlin.services.polly.model.SynthesizeSpeechRequest
 import aws.smithy.kotlin.runtime.auth.awscredentials.Credentials
 import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider
+import aws.smithy.kotlin.runtime.util.Attributes
+import aws.smithy.kotlin.runtime.util.emptyAttributes
 import com.amplifyframework.predictions.aws.service.AmazonPollyPresigningClient
 import com.amplifyframework.predictions.aws.service.PresignedSynthesizeSpeechUrlOptions
 import io.mockk.coVerify
@@ -67,7 +69,7 @@ class AmazonPollyPresigningClientTest {
     fun testGetPresignedUrl() {
         val request = SynthesizeSpeechRequest { }
         val presignedUrl = pollyPresigningClient.getPresignedSynthesizeSpeechUrl(request)
-        coVerify { defaultCredentialsProvider.getCredentials() }
+        coVerify { defaultCredentialsProvider.resolve(emptyAttributes()) }
         assertNotNull(presignedUrl)
     }
 
@@ -80,7 +82,7 @@ class AmazonPollyPresigningClientTest {
             this.text = "hello"
         }
         val presignedUrl = pollyPresigningClient.getPresignedSynthesizeSpeechUrl(request)
-        coVerify { defaultCredentialsProvider.getCredentials() }
+        coVerify { defaultCredentialsProvider.resolve(emptyAttributes()) }
         assertNotNull(presignedUrl)
         checkUrlForQueryParameter(presignedUrl, TEXT_KEY, request.text!!)
     }
@@ -94,9 +96,9 @@ class AmazonPollyPresigningClientTest {
             this.languageCode = LanguageCode.EnUs
         }
         val presignedUrl = pollyPresigningClient.getPresignedSynthesizeSpeechUrl(request)
-        coVerify { defaultCredentialsProvider.getCredentials() }
+        coVerify { defaultCredentialsProvider.resolve(emptyAttributes()) }
         assertNotNull(presignedUrl)
-        checkUrlForQueryParameter(presignedUrl, LANGUAGE_CODE_KEY, request.languageCode.toString())
+        checkUrlForQueryParameter(presignedUrl, LANGUAGE_CODE_KEY, request.languageCode?.value ?: "")
     }
 
     /**
@@ -110,7 +112,7 @@ class AmazonPollyPresigningClientTest {
             .credentialsProvider(otherCredentialsProvider)
             .build()
         val presignedUrl = pollyPresigningClient.getPresignedSynthesizeSpeechUrl(request, options)
-        coVerify { otherCredentialsProvider.getCredentials() }
+        coVerify { otherCredentialsProvider.resolve(emptyAttributes()) }
         assertNotNull(presignedUrl)
     }
 
@@ -125,7 +127,7 @@ class AmazonPollyPresigningClientTest {
             .expires(60)
             .build()
         val presignedUrl = pollyPresigningClient.getPresignedSynthesizeSpeechUrl(request, options)
-        coVerify { defaultCredentialsProvider.getCredentials() }
+        coVerify { defaultCredentialsProvider.resolve(emptyAttributes()) }
         assertNotNull(presignedUrl)
         checkUrlForQueryParameter(presignedUrl, EXPIRES_KEY, options.expires.toString())
     }
@@ -143,7 +145,7 @@ class AmazonPollyPresigningClientTest {
     }
 
     open class TestCredentialsProvider : CredentialsProvider {
-        override suspend fun getCredentials(): Credentials {
+        override suspend fun resolve(attributes: Attributes): Credentials {
             return Credentials("testAccessKey", "testSecretKey")
         }
     }

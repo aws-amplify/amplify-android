@@ -41,7 +41,7 @@ abstract class AWS4Signer(private val regionName: String) {
             region = regionName
             useDoubleUriEncode = true
             service = serviceName
-            this.credentialsProvider = credentialsProvider
+            this.credentials = credentialsProvider.resolve()
             signedBodyHeader = awsSignedBodyHeaderType
         }
         return DefaultAwsSigner.sign(httpRequest, signingConfig)
