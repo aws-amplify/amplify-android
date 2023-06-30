@@ -1,0 +1,18 @@
+{
+  "query": "query GetPersonWithCPK($age: Int!, $first_name: String!) {
+  getPersonWithCPK(age: $age, first_name: $first_name) {
+    age
+    createdAt
+    dob
+    first_name
+    last_name
+    relationship
+    updatedAt
+  }
+}
+",
+  "variables": {
+    "age": 50,
+    "first_name": "First"
+  }
+}
