@@ -15,13 +15,19 @@
 
 package com.amplifyframework.logging;
 
+import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
+import com.amplifyframework.AmplifyException;
+import com.amplifyframework.core.Resources;
 import com.amplifyframework.core.category.Category;
+import com.amplifyframework.core.category.CategoryConfiguration;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.util.Environment;
+
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -121,5 +127,27 @@ public final class LoggingCategory extends Category<LoggingPlugin<?>> implements
     @Override
     protected LoggingPlugin<?> getSelectedPlugin() throws IllegalStateException {
         throw new UnsupportedOperationException("Getting the selected logging plugin is not supported.");
+    }
+
+    @Override
+    public synchronized void configure(@NonNull CategoryConfiguration configuration, @NonNull Context context)
+        throws AmplifyException {
+        super.configure(configuration, context);
+        JSONObject loggingConfiguration = readConfigFile(context);
+        Set<LoggingPlugin<?>> loggingPlugins = new HashSet<>(getPlugins());
+        loggingPlugins.add(defaultPlugin);
+        for (LoggingPlugin<?> plugin : loggingPlugins) {
+            plugin.configure(loggingConfiguration, context);
+        }
+    }
+
+    private JSONObject readConfigFile(Context context) {
+        try {
+            String configName = "amplifyconfiguration_logging";
+            int resourceId = Resources.getRawResourceId(context, configName);
+            return Resources.readJsonResourceFromId(context, resourceId);
+        } catch (Exception exception) {
+            return null;
+        }
     }
 }

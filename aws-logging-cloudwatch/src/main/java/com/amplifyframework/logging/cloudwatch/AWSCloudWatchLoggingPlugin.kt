@@ -21,7 +21,6 @@ import com.amplifyframework.auth.CognitoCredentialsProvider
 import com.amplifyframework.core.Action
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
-import com.amplifyframework.core.Resources
 import com.amplifyframework.core.category.CategoryType
 import com.amplifyframework.logging.Logger
 import com.amplifyframework.logging.LoggingPlugin
@@ -91,7 +90,7 @@ class AWSCloudWatchLoggingPlugin @JvmOverloads constructor(
 
     override fun configure(pluginConfiguration: JSONObject?, context: Context) {
         try {
-            val awsLoggingConfig = awsCloudWatchLoggingPluginConfig ?: getConfigFromFile(context)
+            val awsLoggingConfig = awsCloudWatchLoggingPluginConfig ?: getConfigFromFile(pluginConfiguration)
             loggingConstraintsResolver.context = context
             cloudWatchLogsClient = CloudWatchLogsClient {
                 credentialsProvider = CognitoCredentialsProvider()
@@ -124,16 +123,16 @@ class AWSCloudWatchLoggingPlugin @JvmOverloads constructor(
     override fun getVersion(): String = BuildConfig.VERSION_NAME
 
     @OptIn(ExperimentalSerializationApi::class)
-    private fun getConfigFromFile(context: Context): AWSCloudWatchLoggingPluginConfiguration {
-        val resourceId = Resources.getRawResourceId(context, CONFIG_FILENAME)
-        val configJson = Resources.readJsonResourceFromId(context, resourceId)
+    private fun getConfigFromFile(pluginConfiguration: JSONObject?): AWSCloudWatchLoggingPluginConfiguration {
         val json = Json {
             encodeDefaults = true
             explicitNulls = false
             ignoreUnknownKeys = true
         }
-        return json.decodeFromString(
-            configJson.getJSONObject(pluginKey).toString(),
-        )
+        return pluginConfiguration?.let {
+            json.decodeFromString(
+                it.getJSONObject(pluginKey).toString(),
+            )
+        } ?: throw IllegalStateException("Plugin configuration is missing")
     }
 }
