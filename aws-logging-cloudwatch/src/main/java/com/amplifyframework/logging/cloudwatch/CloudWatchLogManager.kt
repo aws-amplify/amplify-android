@@ -110,7 +110,6 @@ internal class CloudWatchLogManager(
                     while (true) {
                         val queriedEvents = cloudWatchLoggingDatabase.queryAllEvents().toMutableList()
                         if (queriedEvents.isEmpty()) break
-                        logger.debug("Queried ${queriedEvents.size} events")
                         while (queriedEvents.isNotEmpty()) {
                             val groupName = pluginConfiguration.logGroupName
                             val streamName = "$todayDate.${uniqueDeviceId()}.${userIdentityId ?: "guest"}"
