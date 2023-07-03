@@ -659,6 +659,22 @@ internal class RealAWSCognitoAuthPlugin(
                         )
                     }
                     signInState is SignInState.ResolvingChallenge &&
+                        signInState.challengeState is SignInChallengeState.WaitingForAnswer -> {
+                        authStateMachine.cancel(token)
+                        val authSignInResult = AuthSignInResult(
+                            false,
+                            AuthNextSignInStep(
+                                AuthSignInStep.CONFIRM_SIGN_IN_WITH_CUSTOM_CHALLENGE,
+                                (
+                                    signInState.challengeState as
+                                        SignInChallengeState.WaitingForAnswer
+                                    ).challenge.parameters ?: mapOf(),
+                                null
+                            )
+                        )
+                        onSuccess.accept(authSignInResult)
+                    }
+                    signInState is SignInState.ResolvingChallenge &&
                         signInState.challengeState is SignInChallengeState.Error -> {
                         authStateMachine.cancel(token)
                         onError.accept(
