@@ -63,6 +63,9 @@ internal sealed class SignInChallengeState : State {
                         val action = challengeActions.resetToWaitingForAnswer(challengeEvent, challengeEvent.challenge)
                         StateResolution(Error(challengeEvent.exception, challengeEvent.challenge), listOf(action))
                     }
+                    is SignInChallengeEvent.EventType.WaitForAnswer -> {
+                        StateResolution(WaitingForAnswer(challengeEvent.challenge), listOf())
+                    }
 
                     else -> defaultResolution
                 }
