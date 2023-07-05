@@ -9,7 +9,7 @@
                 "apiName": "initiateAuth",
                 "responseType": "success",
                 "response": {
-                    "challengeName": "CustomChallenge",
+                    "challengeName": "CUSTOM_CHALLENGE",
                     "challengeParameters": {
                         "SALT": "abc",
                         "SECRET_BLOCK": "secretBlock",
