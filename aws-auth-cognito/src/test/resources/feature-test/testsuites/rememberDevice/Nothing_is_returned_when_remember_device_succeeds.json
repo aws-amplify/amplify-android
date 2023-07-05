@@ -1,0 +1,39 @@
+{
+    "description": "Nothing is returned when remember device succeeds",
+    "preConditions": {
+        "amplify-configuration": "authconfiguration.json",
+        "state": "SignedIn_SessionEstablished.json",
+        "mockedResponses": [
+            {
+                "type": "cognitoIdentityProvider",
+                "apiName": "updateDeviceStatus",
+                "responseType": "success",
+                "response": {
+                }
+            }
+        ]
+    },
+    "api": {
+        "name": "rememberDevice",
+        "params": {
+        },
+        "options": {
+        }
+    },
+    "validations": [
+        {
+            "type": "amplify",
+            "apiName": "rememberDevice",
+            "responseType": "success",
+            "response": {
+            }
+        },
+        {
+            "type": "amplify",
+            "apiName": "rememberDevice",
+            "responseType": "success",
+            "response": {
+            }
+        }
+    ]
+}
