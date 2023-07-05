@@ -44,7 +44,7 @@ class ModelIdentifierTest {
     @Test
     fun cpk_non_string_without_model_identifier_with_no_sort_key() {
         val expectedKey = 123
-        val expectedKeyString = "\"123\""
+        val expectedKeyString = "123"
 
         val identifier = IntModelWithoutIdentifier.builder().customId(expectedKey).build().primaryKeyString
 

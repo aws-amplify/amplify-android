@@ -69,12 +69,8 @@ public interface Model {
         try {
             if (resolveIdentifier() instanceof ModelIdentifier) {
                 return ((ModelIdentifier<?>) resolveIdentifier()).getIdentifier();
-            } else if (resolveIdentifier() instanceof String) {
-                return (String) resolveIdentifier();
             } else {
-                return ModelIdentifier.Helper.escapeAndEncapsulateString(
-                        resolveIdentifier().toString()
-                );
+                return resolveIdentifier().toString();
             }
         } catch (Exception exception) {
             throw (new IllegalStateException("Invalid Primary Key", exception));
