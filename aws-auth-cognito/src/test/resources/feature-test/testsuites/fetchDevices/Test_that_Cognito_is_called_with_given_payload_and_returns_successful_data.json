@@ -1,0 +1,64 @@
+{
+    "description": "Test that Cognito is called with given payload and returns successful data",
+    "preConditions": {
+        "amplify-configuration": "authconfiguration.json",
+        "state": "SignedIn_SessionEstablished.json",
+        "mockedResponses": [
+            {
+                "type": "cognitoIdentityProvider",
+                "apiName": "listDevices",
+                "responseType": "success",
+                "response": {
+                    "devices": [
+                        {
+                            "deviceAttributes": [
+                                {
+                                    "name": "name",
+                                    "value": "value"
+                                }
+                            ],
+                            "deviceCreateDate": {
+                                "value": {
+                                    "seconds": 1.688573481E9,
+                                    "nanos": 5.89558E8
+                                }
+                            },
+                            "deviceKey": "deviceKey",
+                            "deviceLastAuthenticatedDate": {
+                                "value": {
+                                    "seconds": 1.688573481E9,
+                                    "nanos": 5.89568E8
+                                }
+                            },
+                            "deviceLastModifiedDate": {
+                                "value": {
+                                    "seconds": 1.688573481E9,
+                                    "nanos": 5.89569E8
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        ]
+    },
+    "api": {
+        "name": "fetchDevices",
+        "params": {
+        },
+        "options": {
+        }
+    },
+    "validations": [
+        {
+            "type": "amplify",
+            "apiName": "fetchDevices",
+            "responseType": "success",
+            "response": [
+                {
+                    "id": "deviceKey"
+                }
+            ]
+        }
+    ]
+}
