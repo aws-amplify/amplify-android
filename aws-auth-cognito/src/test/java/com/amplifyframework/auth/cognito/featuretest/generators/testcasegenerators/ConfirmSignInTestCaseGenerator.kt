@@ -166,7 +166,6 @@ object ConfirmSignInTestCaseGenerator : SerializableProvider {
             )
         }
 
-
     private val successCaseWithSecondaryChallenge = FeatureTestCase(
         description = "Test that confirmsignin secondary challenge processes the custom challenge returned",
         preConditions = PreConditions(
@@ -188,7 +187,6 @@ object ConfirmSignInTestCaseGenerator : SerializableProvider {
             ExpectationShapes.State("SigningIn_SigningIn.json")
         )
     )
-
 
     override val serializables: List<Any> = listOf(baseCase, errorCase, successCaseWithSecondaryChallenge)
 }
