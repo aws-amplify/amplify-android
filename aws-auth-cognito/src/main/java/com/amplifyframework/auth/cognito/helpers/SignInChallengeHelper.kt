@@ -125,7 +125,7 @@ internal object SignInChallengeHelper {
                 )
                 onSuccess.accept(authSignInResult)
             }
-            else -> { onError.accept(UnknownException(cause = Exception("Challenge type not supported."))) }
+            else -> onError.accept(UnknownException(cause = Exception("Challenge type not supported.")))
         }
     }
 }
