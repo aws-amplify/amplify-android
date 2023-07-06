@@ -17,6 +17,7 @@ package com.amplifyframework.predictions.aws.http
 
 import aws.smithy.kotlin.runtime.auth.awscredentials.Credentials
 import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider
+import aws.smithy.kotlin.runtime.util.Attributes
 import com.amplifyframework.core.Action
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.predictions.PredictionsException
@@ -74,7 +75,7 @@ internal class LivenessWebSocketTest {
     private val onSessionInformationReceived = mockk<Consumer<SessionInformation>>(relaxed = true)
     private val onErrorReceived = mockk<Consumer<PredictionsException>>(relaxed = true)
     private val credentialsProvider = object : CredentialsProvider {
-        override suspend fun getCredentials(): Credentials {
+        override suspend fun resolve(attributes: Attributes): Credentials {
             return Credentials(
                 "", "", "", null, ""
             )

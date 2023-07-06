@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -19,7 +19,6 @@ import com.amplifyframework.api.graphql.GraphQLResponse
 import com.amplifyframework.api.graphql.MutationType
 import com.amplifyframework.api.graphql.model.ModelMutation
 import com.amplifyframework.api.graphql.model.ModelQuery
-import com.amplifyframework.core.model.ModelIdentifier
 import com.amplifyframework.core.model.query.predicate.QueryPredicates
 import com.amplifyframework.core.model.temporal.Temporal
 import com.amplifyframework.testmodels.cpk.Blog
@@ -30,7 +29,6 @@ import com.amplifyframework.testmodels.cpk.Post
 import com.amplifyframework.testmodels.cpk.Post.PostIdentifier
 import com.amplifyframework.testutils.Resources
 import com.amplifyframework.util.GsonFactory
-import java.io.Serializable
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -45,7 +43,7 @@ import org.skyscreamer.jsonassert.JSONAssert
  * Tests the [AppSyncGraphQLRequestFactory].
  */
 @RunWith(RobolectricTestRunner::class)
-class AppSyncGraphQLRequestFactoryCPKTest {
+class AppSyncGraphQLRequestAndResponseCPKTest {
 
     lateinit var responseFactory: GraphQLResponse.Factory
 
@@ -226,7 +224,7 @@ class AppSyncGraphQLRequestFactoryCPKTest {
 
         // WHEN
         val request: GraphQLRequest<Comment> =
-            AppSyncGraphQLRequestFactory.buildQuery(Comment::class.java, CommentIdentifier("c1"))
+            AppSyncGraphQLRequestFactory.buildQuery(Comment::class.java, Comment.CommentIdentifier("c1"))
         val response = responseFactory.buildResponse(request, responseJson)
 
         // THEN
@@ -284,7 +282,7 @@ class AppSyncGraphQLRequestFactoryCPKTest {
         assertFalse(response.hasErrors())
         assertEquals("p1", response.data.postId)
         assertEquals("t1", response.data.title)
-        assertEquals(3.4, response.data.rating, 0.0)
+        assertEquals(4.5, response.data.rating, 0.0)
         assertEquals(Temporal.DateTime("2023-06-09T16:22:30.48Z"), response.data.createdAt)
         assertEquals("b1", response.data.blog.blogId)
         assertEquals("a1", response.data.blog.author.id)
@@ -397,5 +395,3 @@ class AppSyncGraphQLRequestFactoryCPKTest {
         assertNull(response.data.blog)
     }
 }
-
-class CommentIdentifier(commentId: String) : ModelIdentifier<Comment>(commentId), Serializable

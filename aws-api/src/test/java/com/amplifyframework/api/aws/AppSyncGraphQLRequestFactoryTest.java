@@ -68,13 +68,13 @@ public final class AppSyncGraphQLRequestFactoryTest {
 
         // Act: create a request
         GraphQLRequest<Person> request =
-            AppSyncGraphQLRequestFactory.buildQuery(Person.class, uuidForExpectedQuery);
+                AppSyncGraphQLRequestFactory.buildQuery(Person.class, uuidForExpectedQuery);
 
         // Assert: content is expected content
         JSONAssert.assertEquals(
-            Resources.readAsString("query-for-person-by-id.txt"),
-            request.getContent(),
-            true
+                Resources.readAsString("query-for-person-by-id.txt"),
+                request.getContent(),
+                true
         );
     }
 
@@ -84,7 +84,7 @@ public final class AppSyncGraphQLRequestFactoryTest {
      */
     @Test
     public void buildQueryFromClassAndModelIdentifier() throws JSONException {
-        // Arrange a hard-coded name/age as found int the expected data file.
+        // Arrange a hard-coded name/age as found in the expected data file.
         String name = "First";
         int age = 50;
 
@@ -116,13 +116,13 @@ public final class AppSyncGraphQLRequestFactoryTest {
 
         // Act: generate query
         GraphQLRequest<Person> request =
-            AppSyncGraphQLRequestFactory.buildQuery(Person.class, Person.ID.eq(expectedId));
+                AppSyncGraphQLRequestFactory.buildQuery(Person.class, Person.ID.eq(expectedId));
 
         // Validate request is expected request
         JSONAssert.assertEquals(
-            Resources.readAsString("query-person-by-predicate.txt"),
-            request.getContent(),
-            true
+                Resources.readAsString("query-person-by-predicate.txt"),
+                request.getContent(),
+                true
         );
     }
 
@@ -136,24 +136,24 @@ public final class AppSyncGraphQLRequestFactoryTest {
         // Arrange a person to delete, using UUID from test resource file
         final String expectedId = "dfcdac69-0662-41df-a67b-48c62a023f97";
         final Person tony = Person.builder()
-                                .firstName("Tony")
-                                .lastName("Swanson")
-                                .age(19)
-                                .dob(new Temporal.Date("2000-01-15"))
-                                .id(expectedId)
-                                .relationship(MaritalStatus.single)
-                                .build();
+                .firstName("Tony")
+                .lastName("Swanson")
+                .age(19)
+                .dob(new Temporal.Date("2000-01-15"))
+                .id(expectedId)
+                .relationship(MaritalStatus.single)
+                .build();
 
         // Act: build a mutation
         GraphQLRequest<Person> requestToDeleteTony = AppSyncGraphQLRequestFactory.buildMutation(
-            tony, Person.ID.beginsWith("e6"), MutationType.DELETE
+                tony, Person.ID.beginsWith("e6"), MutationType.DELETE
         );
 
         // Assert: expected is actual
         JSONAssert.assertEquals(
-            Resources.readAsString("delete-person-with-predicate.txt"),
-            requestToDeleteTony.getContent(),
-            true
+                Resources.readAsString("delete-person-with-predicate.txt"),
+                requestToDeleteTony.getContent(),
+                true
         );
     }
 
@@ -166,15 +166,15 @@ public final class AppSyncGraphQLRequestFactoryTest {
     @Test
     public void validateDeleteWithCustomPrimaryKey() throws AmplifyException, JSONException {
         final Item item = Item.builder()
-                              .orderId("123a7asa")
-                              .status(Status.IN_TRANSIT)
-                              .createdAt(new Temporal.DateTime("2021-04-20T15:20:32.651Z"))
-                              .name("Gummy Bears")
-                              .build();
+                .orderId("123a7asa")
+                .status(Status.IN_TRANSIT)
+                .createdAt(new Temporal.DateTime("2021-04-20T15:20:32.651Z"))
+                .name("Gummy Bears")
+                .build();
         JSONAssert.assertEquals(
-            Resources.readAsString("delete-item.txt"),
-            AppSyncGraphQLRequestFactory.buildMutation(item, QueryPredicates.all(), MutationType.DELETE).getContent(),
-            true
+                Resources.readAsString("delete-item.txt"),
+                AppSyncGraphQLRequestFactory.buildMutation(item, QueryPredicates.all(), MutationType.DELETE).getContent(),
+                true
         );
     }
 
@@ -187,24 +187,24 @@ public final class AppSyncGraphQLRequestFactoryTest {
         // Arrange a person to delete, using UUID from test resource file
         final String expectedId = "dfcdac69-0662-41df-a67b-48c62a023f97";
         final Person tony = Person.builder()
-                                .firstName("Tony")
-                                .lastName("Swanson")
-                                .age(19)
-                                .dob(new Temporal.Date("2000-01-15"))
-                                .id(expectedId)
-                                .relationship(MaritalStatus.single)
-                                .build();
+                .firstName("Tony")
+                .lastName("Swanson")
+                .age(19)
+                .dob(new Temporal.Date("2000-01-15"))
+                .id(expectedId)
+                .relationship(MaritalStatus.single)
+                .build();
 
         // Act: build a mutation
         GraphQLRequest<Person> requestToDeleteTony = AppSyncGraphQLRequestFactory.buildMutation(
-            tony, Person.ID.beginsWith("e6"), MutationType.UPDATE
+                tony, Person.ID.beginsWith("e6"), MutationType.UPDATE
         );
 
         // Assert: expected is actual
         JSONAssert.assertEquals(
-            Resources.readAsString("update-person-with-predicate.txt"),
-            requestToDeleteTony.getContent(),
-            true
+                Resources.readAsString("update-person-with-predicate.txt"),
+                requestToDeleteTony.getContent(),
+                true
         );
     }
 
@@ -215,13 +215,13 @@ public final class AppSyncGraphQLRequestFactoryTest {
     @Test
     public void buildSubscriptionFromClassAndSubscriptionType() throws JSONException {
         GraphQLRequest<Person> subscriptionRequest = AppSyncGraphQLRequestFactory.buildSubscription(
-            Person.class, SubscriptionType.ON_CREATE
+                Person.class, SubscriptionType.ON_CREATE
         );
 
         JSONAssert.assertEquals(
-            Resources.readAsString("subscription-request-for-on-create.txt"),
-            subscriptionRequest.getContent(),
-            true
+                Resources.readAsString("subscription-request-for-on-create.txt"),
+                subscriptionRequest.getContent(),
+                true
         );
     }
 
@@ -233,21 +233,21 @@ public final class AppSyncGraphQLRequestFactoryTest {
     public void validateDateSerializer() throws JSONException {
         // Create expectation
         final Meeting meeting1 = Meeting.builder()
-                                     .name("meeting1")
-                                     .id("45a5f600-8aa8-41ac-a529-aed75036f5be")
-                                     .date(new Temporal.Date("2001-02-03"))
-                                     .dateTime(new Temporal.DateTime("2001-02-03T01:30:15Z"))
-                                     .time(new Temporal.Time("01:22:33"))
-                                     .timestamp(new Temporal.Timestamp(1234567890000L, TimeUnit.MILLISECONDS))
-                                     .build();
+                .name("meeting1")
+                .id("45a5f600-8aa8-41ac-a529-aed75036f5be")
+                .date(new Temporal.Date("2001-02-03"))
+                .dateTime(new Temporal.DateTime("2001-02-03T01:30:15Z"))
+                .time(new Temporal.Time("01:22:33"))
+                .timestamp(new Temporal.Timestamp(1234567890000L, TimeUnit.MILLISECONDS))
+                .build();
 
         // Act: build a mutation to create a Meeting
         GraphQLRequest<Meeting> requestToCreateMeeting1 =
-            AppSyncGraphQLRequestFactory.buildMutation(meeting1, QueryPredicates.all(), MutationType.CREATE);
+                AppSyncGraphQLRequestFactory.buildMutation(meeting1, QueryPredicates.all(), MutationType.CREATE);
 
         // Assert: expected is actual
         JSONAssert.assertEquals(Resources.readAsString("create-meeting1.txt"),
-            requestToCreateMeeting1.getContent(), true);
+                requestToCreateMeeting1.getContent(), true);
     }
 
     /**
@@ -264,9 +264,9 @@ public final class AppSyncGraphQLRequestFactoryTest {
         Todo todo = new Todo("111", "Mop the floor", null);
         @SuppressWarnings("unchecked")
         Map<String, Object> actual = (Map<String, Object>) AppSyncGraphQLRequestFactory.buildMutation(
-            todo,
-            QueryPredicates.all(),
-            MutationType.CREATE
+                todo,
+                QueryPredicates.all(),
+                MutationType.CREATE
         ).getVariables().get("input");
 
         // Assert
@@ -288,9 +288,9 @@ public final class AppSyncGraphQLRequestFactoryTest {
         Todo todo = new Todo("111", "Mop the floor", "johndoe");
         @SuppressWarnings("unchecked")
         Map<String, Object> actual = (Map<String, Object>) AppSyncGraphQLRequestFactory.buildMutation(
-            todo,
-            QueryPredicates.all(),
-            MutationType.CREATE).getVariables().get("input");
+                todo,
+                QueryPredicates.all(),
+                MutationType.CREATE).getVariables().get("input");
 
         // Assert
         assertEquals(expected, actual);
@@ -312,9 +312,9 @@ public final class AppSyncGraphQLRequestFactoryTest {
         Note note = new Note("abc", "text", null);
         @SuppressWarnings("unchecked")
         Map<String, Object> actual = (Map<String, Object>) AppSyncGraphQLRequestFactory.buildMutation(
-            note,
-            QueryPredicates.all(),
-            MutationType.CREATE
+                note,
+                QueryPredicates.all(),
+                MutationType.CREATE
         ).getVariables().get("input");
 
         // Assert

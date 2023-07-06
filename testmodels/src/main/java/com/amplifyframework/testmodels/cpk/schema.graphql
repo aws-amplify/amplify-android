@@ -34,3 +34,11 @@ type Item @model {
   customKey: String! @primaryKey
   name: String!
 }
+
+type IntModelWithIdentifier @model {
+  customKey: Int! @primaryKey
+}
+
+type StringModelWithIdentifier @model {
+  customKey: String! @primaryKey
+}

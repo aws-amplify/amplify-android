@@ -1,0 +1,65 @@
+name: Rollback Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch_from:
+        description: 'The known good version to re-release (e.g. 2.9.1)'
+        required: true
+      deprecated_version:
+        description: 'The version you are rolling back (e.g. 2.9.2)'
+        required: true
+      new_version:
+        description: 'The new version number (e.g. 2.9.3)'
+
+
+
+jobs:
+  rollback-release:
+    runs-on: ubuntu-latest
+    env:
+      AWS_REGION: "us-east-1"
+      BRANCH_FROM: ${{ inputs.branch_from }}
+      DEPRECATED_VERSION: ${{ inputs.deprecated_version }}
+      NEW_VERSION: ${{ inputs.new_version }}
+      CI_COMMIT_MESSAGE: Re-release v${{ inputs.branch_from }} as v${{ inputs.new_version }}
+      ROLLBACK_BRANCH: rollback_${{ inputs.deprecated_version }}
+      NEW_TAG: release_v${{ inputs.new_version }}
+    permissions:
+      id-token: write
+      contents: write
+      actions: write
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+        with:
+          ref: ${{ format('release_v{0}', env.BRANCH_FROM) }}
+          token: ${{ secrets.GH_WORKFLOW_TOKEN }}
+      - name: Create Rollback Branch
+        run: git checkout -b ${{ env.ROLLBACK_BRANCH }}
+      - name: Update Version
+        run: |
+          git config --global user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git config --global user.name github-actions[bot]
+          sed -i 's/POM_VERSION=${{ env.BRANCH_FROM }}/POM_VERSION=${{ env.NEW_VERSION }}/g' gradle.properties
+          echo -e '## [Release ${{ env.NEW_VERSION }}](https://github.com/${{ github.repository }}/releases/tag/${{ env.NEW_TAG }})\n\nThis is a re-release of version ${{ env.BRANCH_FROM }}. Use this instead of version ${{ env.DEPRECATED_VERSION }}.\n' | cat - CHANGELOG.md > temp && mv temp CHANGELOG.md
+          git add gradle.properties
+          git add CHANGELOG.md
+          git commit -m "${{ env.CI_COMMIT_MESSAGE }}"
+      - name: Tag Version
+        run: git tag "${{ env.NEW_TAG }}"
+      - name: Push Changes
+        run: git push --atomic origin ${{ env.ROLLBACK_BRANCH }} ${{ env.NEW_TAG }}
+      - name: Run Publish
+        uses: actions/github-script@d7906e4ad0b1822421a7e6a35d5ca353c962f410 # v6.4.1
+        with:
+          # The aws-codebuild-run-build action automatically passes the source version that the workflow
+          # is run on to Codebuild, and there is no override option. In order to run the Codebuild
+          # release with our newly-created tag version we dispatch another workflow on that tag.
+          script: |
+            github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'rollback_publish.yml',
+              ref: "${{ env.NEW_TAG }}",
+            })

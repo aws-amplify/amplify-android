@@ -146,11 +146,20 @@ public abstract class ModelIdentifier<T extends Model> implements Serializable {
         /**
          * Concatenates primary key and sort keys after encapsulating them with '"', escaping the '"' with '""' and
          * delimited by '#'.
+         * If no sort key and key is a string type, do not encapsulate
          * @param key Primary key.
          * @param sortedKeys List of sort keys.
          * @return Concatenated key.
          */
         public static String getIdentifier(Serializable key, List<? extends Serializable> sortedKeys) {
+            /*
+            For backwards compatibility to allow creating ModelIdentifiers for CPK that doesn't
+            contain a sort key, we should not encapsulate String keys with quotes. This would
+            also allow us to begin creating ModelIdentifiers for all Models in the future
+            */
+            if (key instanceof String && sortedKeys.size() == 0) {
+                return (String) key;
+            }
             StringBuilder builder = new StringBuilder();
             builder.append(Helper.escapeAndEncapsulateString(key.toString()));
             for (Serializable sortKey : sortedKeys) {

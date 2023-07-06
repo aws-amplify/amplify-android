@@ -54,7 +54,7 @@ public final class ModelQuery {
 
     /**
      * Creates a {@link GraphQLRequest} that represents a query that expects a single value as a result.
-     * The request will be created with the correct correct document based on the model schema and
+     * The request will be created with the correct document based on the model schema and
      * variables based on given {@code modelIdentifier}.
      * @param modelType the model class.
      * @param modelIdentifier the model identifier.
@@ -101,10 +101,10 @@ public final class ModelQuery {
     /**
      * Creates a {@link GraphQLRequest} that represents a query that expects multiple values as a result
      * within a certain range (i.e. paginated).
-     * 
+     *
      * The request will be created with the correct document based on the model schema and variables
      * for filtering based on the given predicate and pagination.
-     * 
+     *
      * @param modelType the model class.
      * @param predicate the predicate for filtering.
      * @param pagination the pagination settings.

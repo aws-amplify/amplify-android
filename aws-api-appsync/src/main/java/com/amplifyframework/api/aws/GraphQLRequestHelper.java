@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -143,9 +143,10 @@ public class GraphQLRequestHelper {
                 try {
                     return Collections.singletonMap("not", parsePredicate(qpg.predicates().get(0)));
                 } catch (IndexOutOfBoundsException exception) {
-                    throw new IllegalStateException(
+                    throw new AmplifyException(
                             "Predicate group of type NOT must include a value to negate.",
-                            exception
+                            exception,
+                            "Check if you created a NOT condition in your Predicate with no included value."
                     );
                 }
             } else {
@@ -238,7 +239,7 @@ public class GraphQLRequestHelper {
             } else if (association.isOwner()) {
                 if (
                         (fieldValue == null || (modelField.isLazyModel() && underlyingFieldValue == null && identifiersIfLazyModel == null))
-                        && MutationType.CREATE.equals(type)
+                                && MutationType.CREATE.equals(type)
                 ) {
                     // Do not set null values on associations for create mutations.
                 } else if (schema.getVersion() >= 1 && association.getTargetNames() != null
@@ -261,7 +262,7 @@ public class GraphQLRequestHelper {
             ModelField modelField,
             Object fieldValue,
             Object underlyingFieldValue,
-            ModelAssociation association) throws AmplifyException {
+            ModelAssociation association) {
         if (modelField.isModel() && fieldValue == null) {
             // When there is no model field value, set null for removal of values or deassociation.
             for (String key : association.getTargetNames()) {

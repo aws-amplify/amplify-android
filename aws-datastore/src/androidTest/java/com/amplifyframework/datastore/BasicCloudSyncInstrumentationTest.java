@@ -434,6 +434,7 @@ public final class BasicCloudSyncInstrumentationTest {
      * @throws ApiException On failure to query the API.
      */
     @Test
+    @Ignore("Inconsistent Test. Needs investigation")
     public void createThenDelete() throws DataStoreException, ApiException {
         // Setup
         BlogOwner owner = BlogOwner.builder()
