@@ -60,7 +60,7 @@ internal object SignInCustomCognitoActions : CustomSignInActions {
                     encodedContextData?.let { userContextData { encodedData = it } }
                 }
 
-                if (initiateAuthResponse?.challengeName is ChallengeNameType.CustomChallenge &&
+                if (initiateAuthResponse?.challengeName == ChallengeNameType.CustomChallenge &&
                     initiateAuthResponse.challengeParameters != null
                 ) {
                     SignInChallengeHelper.evaluateNextStep(

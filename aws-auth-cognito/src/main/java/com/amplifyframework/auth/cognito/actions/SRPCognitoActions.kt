@@ -87,9 +87,7 @@ internal object SRPCognitoActions : SRPActions {
                             )
                         )
                     } ?: throw Exception("Auth challenge parameters are empty.")
-                    else -> {
-                        throw Exception("Not yet implemented.")
-                    }
+                    else -> throw Exception("Not yet implemented.")
                 }
             } catch (e: Exception) {
                 val errorEvent = SRPEvent(SRPEvent.EventType.ThrowAuthError(e))
