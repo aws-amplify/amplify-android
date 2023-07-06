@@ -1,3 +1,14 @@
+## [Release 2.9.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.9.0)
+
+### Features
+- **api:** Custom Primary Key API Support([#2470](https://github.com/aws-amplify/amplify-android/issues/2470))
+
+### Bug Fixes
+- **misc:** bumping kotlin sdk version to include enhanced proxy exception messages ([#2438](https://github.com/aws-amplify/amplify-android/issues/2438))
+- **datastore:** DataStore CPK fixes([#2470](https://github.com/aws-amplify/amplify-android/issues/2470))
+
+[See all changes between 2.8.7 and 2.9.0](https://github.com/aws-amplify/amplify-android/compare/release_v2.8.7...release_v2.9.0)
+
 ## [Release 2.8.7](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.8.7)
 
 ### Bug Fixes
