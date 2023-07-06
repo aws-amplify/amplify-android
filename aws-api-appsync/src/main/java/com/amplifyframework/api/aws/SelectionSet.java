@@ -101,6 +101,7 @@ public final class SelectionSet {
 
     /**
      * Generate the String value of the SelectionSet used in the GraphQL query document, with no margin.
+     * 
      * Sample return value:
      *   items {
      *     foo

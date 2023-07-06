@@ -101,10 +101,10 @@ public final class ModelQuery {
     /**
      * Creates a {@link GraphQLRequest} that represents a query that expects multiple values as a result
      * within a certain range (i.e. paginated).
-     *
+     * 
      * The request will be created with the correct document based on the model schema and variables
      * for filtering based on the given predicate and pagination.
-     *
+     * 
      * @param modelType the model class.
      * @param predicate the predicate for filtering.
      * @param pagination the pagination settings.

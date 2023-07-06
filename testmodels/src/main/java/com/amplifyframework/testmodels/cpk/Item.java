@@ -34,150 +34,150 @@ import static com.amplifyframework.core.model.query.predicate.QueryField.field;
 @ModelConfig(pluralName = "Items", type = Model.Type.USER, version = 1)
 @Index(name = "undefined", fields = {"customKey"})
 public final class Item implements Model {
-    public static final QueryField CUSTOM_KEY = field("Item", "customKey");
-    public static final QueryField NAME = field("Item", "name");
-    private final @ModelField(targetType="String", isRequired = true) String customKey;
-    private final @ModelField(targetType="String", isRequired = true) String name;
-    private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
-    private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime updatedAt;
-    /** @deprecated This API is internal to Amplify and should not be used. */
-    @Deprecated
-    public String resolveIdentifier() {
-        return customKey;
-    }
+  public static final QueryField CUSTOM_KEY = field("Item", "customKey");
+  public static final QueryField NAME = field("Item", "name");
+  private final @ModelField(targetType="String", isRequired = true) String customKey;
+  private final @ModelField(targetType="String", isRequired = true) String name;
+  private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
+  private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime updatedAt;
+  /** @deprecated This API is internal to Amplify and should not be used. */
+  @Deprecated
+   public String resolveIdentifier() {
+    return customKey;
+  }
+  
+  public String getCustomKey() {
+      return customKey;
+  }
+  
+  public String getName() {
+      return name;
+  }
+  
+  public Temporal.DateTime getCreatedAt() {
+      return createdAt;
+  }
+  
+  public Temporal.DateTime getUpdatedAt() {
+      return updatedAt;
+  }
+  
+  private Item(String customKey, String name) {
+    this.customKey = customKey;
+    this.name = name;
+  }
+  
+  @Override
+   public boolean equals(Object obj) {
+      if (this == obj) {
+        return true;
+      } else if(obj == null || getClass() != obj.getClass()) {
+        return false;
+      } else {
+      Item item = (Item) obj;
+      return ObjectsCompat.equals(getCustomKey(), item.getCustomKey()) &&
+              ObjectsCompat.equals(getName(), item.getName()) &&
+              ObjectsCompat.equals(getCreatedAt(), item.getCreatedAt()) &&
+              ObjectsCompat.equals(getUpdatedAt(), item.getUpdatedAt());
+      }
+  }
+  
+  @Override
+   public int hashCode() {
+    return new StringBuilder()
+      .append(getCustomKey())
+      .append(getName())
+      .append(getCreatedAt())
+      .append(getUpdatedAt())
+      .toString()
+      .hashCode();
+  }
+  
+  @Override
+   public String toString() {
+    return new StringBuilder()
+      .append("Item {")
+      .append("customKey=" + String.valueOf(getCustomKey()) + ", ")
+      .append("name=" + String.valueOf(getName()) + ", ")
+      .append("createdAt=" + String.valueOf(getCreatedAt()) + ", ")
+      .append("updatedAt=" + String.valueOf(getUpdatedAt()))
+      .append("}")
+      .toString();
+  }
+  
+  public static CustomKeyStep builder() {
+      return new Builder();
+  }
+  
+  public CopyOfBuilder copyOfBuilder() {
+    return new CopyOfBuilder(customKey,
+      name);
+  }
+  public interface CustomKeyStep {
+    NameStep customKey(String customKey);
+  }
+  
 
-    public String getCustomKey() {
-        return customKey;
-    }
+  public interface NameStep {
+    BuildStep name(String name);
+  }
+  
 
-    public String getName() {
-        return name;
-    }
+  public interface BuildStep {
+    Item build();
+  }
+  
 
-    public Temporal.DateTime getCreatedAt() {
-        return createdAt;
+  public static class Builder implements CustomKeyStep, NameStep, BuildStep {
+    private String customKey;
+    private String name;
+    @Override
+     public Item build() {
+        
+        return new Item(
+          customKey,
+          name);
     }
-
-    public Temporal.DateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    private Item(String customKey, String name) {
+    
+    @Override
+     public NameStep customKey(String customKey) {
+        Objects.requireNonNull(customKey);
         this.customKey = customKey;
+        return this;
+    }
+    
+    @Override
+     public BuildStep name(String name) {
+        Objects.requireNonNull(name);
         this.name = name;
+        return this;
     }
+  }
+  
 
+  public final class CopyOfBuilder extends Builder {
+    private CopyOfBuilder(String customKey, String name) {
+      super.customKey(customKey)
+        .name(name);
+    }
+    
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        } else if(obj == null || getClass() != obj.getClass()) {
-            return false;
-        } else {
-            Item item = (Item) obj;
-            return ObjectsCompat.equals(getCustomKey(), item.getCustomKey()) &&
-                    ObjectsCompat.equals(getName(), item.getName()) &&
-                    ObjectsCompat.equals(getCreatedAt(), item.getCreatedAt()) &&
-                    ObjectsCompat.equals(getUpdatedAt(), item.getUpdatedAt());
-        }
+     public CopyOfBuilder customKey(String customKey) {
+      return (CopyOfBuilder) super.customKey(customKey);
     }
-
+    
     @Override
-    public int hashCode() {
-        return new StringBuilder()
-                .append(getCustomKey())
-                .append(getName())
-                .append(getCreatedAt())
-                .append(getUpdatedAt())
-                .toString()
-                .hashCode();
+     public CopyOfBuilder name(String name) {
+      return (CopyOfBuilder) super.name(name);
     }
+  }
+  
 
-    @Override
-    public String toString() {
-        return new StringBuilder()
-                .append("Item {")
-                .append("customKey=" + String.valueOf(getCustomKey()) + ", ")
-                .append("name=" + String.valueOf(getName()) + ", ")
-                .append("createdAt=" + String.valueOf(getCreatedAt()) + ", ")
-                .append("updatedAt=" + String.valueOf(getUpdatedAt()))
-                .append("}")
-                .toString();
+  public static class ItemIdentifier extends ModelIdentifier<Item> {
+    private static final long serialVersionUID = 1L;
+    public ItemIdentifier(String customKey) {
+      super(customKey);
     }
-
-    public static CustomKeyStep builder() {
-        return new Builder();
-    }
-
-    public CopyOfBuilder copyOfBuilder() {
-        return new CopyOfBuilder(customKey,
-                name);
-    }
-    public interface CustomKeyStep {
-        NameStep customKey(String customKey);
-    }
-
-
-    public interface NameStep {
-        BuildStep name(String name);
-    }
-
-
-    public interface BuildStep {
-        Item build();
-    }
-
-
-    public static class Builder implements CustomKeyStep, NameStep, BuildStep {
-        private String customKey;
-        private String name;
-        @Override
-        public Item build() {
-
-            return new Item(
-                    customKey,
-                    name);
-        }
-
-        @Override
-        public NameStep customKey(String customKey) {
-            Objects.requireNonNull(customKey);
-            this.customKey = customKey;
-            return this;
-        }
-
-        @Override
-        public BuildStep name(String name) {
-            Objects.requireNonNull(name);
-            this.name = name;
-            return this;
-        }
-    }
-
-
-    public final class CopyOfBuilder extends Builder {
-        private CopyOfBuilder(String customKey, String name) {
-            super.customKey(customKey)
-                    .name(name);
-        }
-
-        @Override
-        public CopyOfBuilder customKey(String customKey) {
-            return (CopyOfBuilder) super.customKey(customKey);
-        }
-
-        @Override
-        public CopyOfBuilder name(String name) {
-            return (CopyOfBuilder) super.name(name);
-        }
-    }
-
-
-    public static class ItemIdentifier extends ModelIdentifier<Item> {
-        private static final long serialVersionUID = 1L;
-        public ItemIdentifier(String customKey) {
-            super(customKey);
-        }
-    }
-
+  }
+  
 }
