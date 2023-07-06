@@ -38,8 +38,9 @@
                 "nextStep": {
                     "signInStep": "CONFIRM_SIGN_IN_WITH_CUSTOM_CHALLENGE",
                     "additionalInfo": {
-                        "CODE_DELIVERY_DELIVERY_MEDIUM": "SMS",
-                        "CODE_DELIVERY_DESTINATION": "+12345678900"
+                        "SALT": "abc",
+                        "SECRET_BLOCK": "secretBlock",
+                        "SRP_B": "def"
                     }
                 }
             }

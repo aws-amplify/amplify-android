@@ -19,21 +19,21 @@
                             ],
                             "deviceCreateDate": {
                                 "value": {
-                                    "seconds": 1.688573481E9,
-                                    "nanos": 5.89558E8
+                                    "seconds": 1.688674717E9,
+                                    "nanos": 2.73132E8
                                 }
                             },
                             "deviceKey": "deviceKey",
                             "deviceLastAuthenticatedDate": {
                                 "value": {
-                                    "seconds": 1.688573481E9,
-                                    "nanos": 5.89568E8
+                                    "seconds": 1.688674717E9,
+                                    "nanos": 2.73136E8
                                 }
                             },
                             "deviceLastModifiedDate": {
                                 "value": {
-                                    "seconds": 1.688573481E9,
-                                    "nanos": 5.89569E8
+                                    "seconds": 1.688674717E9,
+                                    "nanos": 2.73137E8
                                 }
                             }
                         }

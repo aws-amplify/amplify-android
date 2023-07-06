@@ -659,21 +659,24 @@ internal class RealAWSCognitoAuthPlugin(
                         )
                     }
                     signInState is SignInState.ResolvingChallenge &&
-                        signInState.challengeState is SignInChallengeState.WaitingForAnswer -> {
+                        signInState.challengeState is SignInChallengeState.WaitingForAnswer &&
+                        (signInState.challengeState as SignInChallengeState.WaitingForAnswer).followUp -> {
                         authStateMachine.cancel(token)
+                        val signInChallengeState = signInState.challengeState as SignInChallengeState.WaitingForAnswer
+                        var signInStep = AuthSignInStep.CONFIRM_SIGN_IN_WITH_CUSTOM_CHALLENGE
+                        if (signInChallengeState.challenge.challengeName == "SMS_MFA") {
+                            signInStep = AuthSignInStep.CONFIRM_SIGN_IN_WITH_SMS_MFA_CODE
+                        } else if (signInChallengeState.challenge.challengeName == "NEW_PASSWORD_REQUIRED") {
+                            signInStep = AuthSignInStep.CONFIRM_SIGN_IN_WITH_NEW_PASSWORD
+                        }
+
                         val authSignInResult = AuthSignInResult(
                             false,
-                            AuthNextSignInStep(
-                                AuthSignInStep.CONFIRM_SIGN_IN_WITH_CUSTOM_CHALLENGE,
-                                (
-                                    signInState.challengeState as
-                                        SignInChallengeState.WaitingForAnswer
-                                    ).challenge.parameters ?: mapOf(),
-                                null
-                            )
+                            AuthNextSignInStep(signInStep, signInChallengeState.challenge.parameters ?: mapOf(), null)
                         )
                         onSuccess.accept(authSignInResult)
                     }
+
                     signInState is SignInState.ResolvingChallenge &&
                         signInState.challengeState is SignInChallengeState.Error -> {
                         authStateMachine.cancel(token)

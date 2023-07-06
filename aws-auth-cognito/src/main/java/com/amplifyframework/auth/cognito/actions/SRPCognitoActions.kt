@@ -87,7 +87,9 @@ internal object SRPCognitoActions : SRPActions {
                             )
                         )
                     } ?: throw Exception("Auth challenge parameters are empty.")
-                    else -> throw Exception("Not yet implemented.")
+                    else -> {
+                        throw Exception("Not yet implemented.")
+                    }
                 }
             } catch (e: Exception) {
                 val errorEvent = SRPEvent(SRPEvent.EventType.ThrowAuthError(e))
@@ -133,8 +135,8 @@ internal object SRPCognitoActions : SRPActions {
                     encodedContextData?.let { userContextData { encodedData = it } }
                 }
 
-                when (initiateAuthResponse?.challengeName) {
-                    ChallengeNameType.PasswordVerifier ->
+                when (initiateAuthResponse?.challengeName?.value) {
+                    ChallengeNameType.PasswordVerifier.toString() ->
                         initiateAuthResponse.challengeParameters?.let { params ->
                             val challengeParams = deviceMetadata?.deviceKey?.let {
                                 params.plus(KEY_DEVICE_KEY to it)

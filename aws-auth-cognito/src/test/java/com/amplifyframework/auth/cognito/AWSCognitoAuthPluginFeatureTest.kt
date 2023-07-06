@@ -26,6 +26,8 @@ import com.amplifyframework.auth.cognito.featuretest.FeatureTestCase
 import com.amplifyframework.auth.cognito.featuretest.generators.toJsonElement
 import com.amplifyframework.auth.cognito.featuretest.serializers.deserializeToAuthState
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
+import com.amplifyframework.logging.JavaLoggingPlugin
+import com.amplifyframework.logging.LogLevel
 import com.amplifyframework.logging.Logger
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
@@ -169,7 +171,8 @@ class AWSCognitoAuthPluginFeatureTest(private val testCase: FeatureTestCase) {
             AmplifyCredential.DeviceData(DeviceMetadata.Empty)
         }
 
-        val logger = mockk<Logger>(relaxed = true)
+        val logger: Logger = JavaLoggingPlugin(LogLevel.VERBOSE).forNamespace(null)
+        // mockk<Logger>(relaxed = true)
 
         val authEnvironment = AuthEnvironment(
             mockk(),

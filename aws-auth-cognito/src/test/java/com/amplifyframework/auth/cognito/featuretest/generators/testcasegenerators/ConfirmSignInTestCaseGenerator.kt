@@ -103,8 +103,9 @@ object ConfirmSignInTestCaseGenerator : SerializableProvider {
             "nextStep" to mapOf(
                 "signInStep" to "CONFIRM_SIGN_IN_WITH_CUSTOM_CHALLENGE",
                 "additionalInfo" to mapOf(
-                    "CODE_DELIVERY_DELIVERY_MEDIUM" to "SMS",
-                    "CODE_DELIVERY_DESTINATION" to "+12345678900"
+                    "SALT" to "abc",
+                    "SECRET_BLOCK" to "secretBlock",
+                    "SRP_B" to "def"
                 ),
             )
         ).toJsonElement()

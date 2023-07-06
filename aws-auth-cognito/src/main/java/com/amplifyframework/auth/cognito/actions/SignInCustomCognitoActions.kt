@@ -60,7 +60,7 @@ internal object SignInCustomCognitoActions : CustomSignInActions {
                     encodedContextData?.let { userContextData { encodedData = it } }
                 }
 
-                if (initiateAuthResponse?.challengeName == ChallengeNameType.CustomChallenge &&
+                if (initiateAuthResponse?.challengeName is ChallengeNameType.CustomChallenge &&
                     initiateAuthResponse.challengeParameters != null
                 ) {
                     SignInChallengeHelper.evaluateNextStep(
@@ -72,6 +72,7 @@ internal object SignInCustomCognitoActions : CustomSignInActions {
                         signInMethod = SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.CUSTOM_AUTH)
                     )
                 } else {
+                    println(initiateAuthResponse)
                     throw ServiceException(
                         "This sign in method is not supported",
                         "Please consult our docs for supported sign in methods"
