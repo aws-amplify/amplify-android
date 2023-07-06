@@ -35,7 +35,6 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -43,7 +42,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import java.util.concurrent.Executors
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
@@ -58,7 +57,7 @@ internal class CloudWatchLogManagerTest {
     private lateinit var userIdSlot: CapturingSlot<String>
 
     @Before
-    fun setup() {
+    fun setup() = runTest {
         userIdSlot = slot<String>()
         every { cloudWatchLoggingDatabase.isCacheFull(any()) }.answers { false }
         every { loggingConstraintsResolver::userId.set(any()) }.answers { }
@@ -69,6 +68,7 @@ internal class CloudWatchLogManagerTest {
             cloudWatchLoggingDatabase.queryAllEvents()
         } returns emptyList()
         every { loggingConstraintsResolver::userId.set(capture(userIdSlot)) }.answers { }
+        val testDispatcher = UnconfinedTestDispatcher(testScheduler)
         cloudWatchLogManager = CloudWatchLogManager(
             context,
             pluginConfiguration,
@@ -76,7 +76,7 @@ internal class CloudWatchLogManagerTest {
             loggingConstraintsResolver,
             cloudWatchLoggingDatabase,
             customCognitoCredentialsProvider,
-            Executors.newSingleThreadExecutor().asCoroutineDispatcher(),
+            testDispatcher,
         )
     }
 

@@ -28,12 +28,13 @@ import com.amplifyframework.logging.cloudwatch.models.CloudWatchLogEvent
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.Timer
+import java.util.TimerTask
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -44,7 +45,7 @@ internal class CloudWatchLogManager(
     private val loggingConstraintsResolver: LoggingConstraintsResolver,
     private val cloudWatchLoggingDatabase: CloudWatchLoggingDatabase = CloudWatchLoggingDatabase(context),
     private val customCognitoCredentialsProvider: CustomCognitoCredentialsProvider = CustomCognitoCredentialsProvider(),
-    private val dispatcher: CoroutineDispatcher = Dispatchers.IO,
+    private val coroutineDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) {
     private val deviceIdKey = "unique_device_id"
     private var stopSync = false
@@ -54,16 +55,17 @@ internal class CloudWatchLogManager(
             loggingConstraintsResolver.userId = value
         }
     private val todayDate: String = SimpleDateFormat("MM-dd-yyyy", Locale.US).format(Date())
-    private val coroutineScope = CoroutineScope(dispatcher)
+    private val coroutineScope = CoroutineScope(coroutineDispatcher)
     private var isSyncInProgress = AtomicBoolean(false)
     private val logger = Amplify.Logging.logger(CategoryType.LOGGING, this::class.java.simpleName)
+    private var syncTask: TimerTask? = null
 
     init {
         onSignIn()
     }
 
     suspend fun saveLogEvent(event: CloudWatchLogEvent) {
-        withContext(dispatcher) {
+        withContext(coroutineDispatcher) {
             try {
                 cloudWatchLoggingDatabase.saveLogEvent(event)
                 if (isCacheFull()) {
@@ -78,22 +80,25 @@ internal class CloudWatchLogManager(
 
     suspend fun startSync() {
         stopSync = false
-        withContext(dispatcher) {
-            while (!stopSync) {
-                try {
-                    syncLogEventsWithCloudwatch()
-                } catch (e: Exception) {
-                    logger.error("error while syncing logs", e)
-                } finally {
-                    logger.debug("waiting sync")
-                    delay(pluginConfiguration.flushIntervalInSeconds * 1000L)
+        syncTask = object : TimerTask() {
+            override fun run() {
+                coroutineScope.launch {
+                    while (!stopSync) {
+                        try {
+                            syncLogEventsWithCloudwatch()
+                        } catch (e: Exception) {
+                            logger.error("error while syncing logs", e)
+                        }
+                    }
                 }
             }
         }
+        Timer().scheduleAtFixedRate(syncTask, 0, pluginConfiguration.flushIntervalInSeconds * 1000L)
     }
 
     internal fun stopSync() {
         stopSync = true
+        syncTask?.cancel()
         clearCache()
         logger.debug("stopping sync")
     }
@@ -102,7 +107,7 @@ internal class CloudWatchLogManager(
         if (isSyncInProgress.get()) {
             return
         }
-        withContext(dispatcher) {
+        withContext(coroutineDispatcher) {
             var inputLogEventsIdToBeDeleted: List<Int> = emptyList()
             try {
                 isSyncInProgress.set(true)

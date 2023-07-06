@@ -34,7 +34,6 @@ internal class CloudWatchLoggingDatabase(
     private val context: Context,
     private val coroutineDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) {
-
     private val logEvents = 10
     private val logEventsId = 20
     private val passphraseKey = "passphrase"
@@ -113,7 +112,9 @@ internal class CloudWatchLoggingDatabase(
     }
 
     internal suspend fun clearDatabase() {
-        database.delete(LogEventTable.TABLE_LOG_EVENT, null, null)
+        withContext(coroutineDispatcher) {
+            database.delete(LogEventTable.TABLE_LOG_EVENT, null, null)
+        }
     }
 
     private suspend fun insertEvent(uri: Uri, event: CloudWatchLogEvent): Uri {

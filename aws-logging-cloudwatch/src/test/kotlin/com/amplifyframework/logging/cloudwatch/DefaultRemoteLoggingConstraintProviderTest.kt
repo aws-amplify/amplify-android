@@ -40,12 +40,12 @@ import java.net.URL
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class DefaultRemoteLoggingConstraintProviderTest {
 
     private val okHttpClient = mockk<OkHttpClient>()
-    private val singleThreadDispatcher = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
     private val credentialsProvider = mockk<CredentialsProvider>()
     private lateinit var defaultRemoteLoggingConstraintProvider: DefaultRemoteLoggingConstraintProvider
     private val url = "https://g826tqdqil.execute-api.us-east-1.amazonaws.com/prod/loggingconstraints"
@@ -54,7 +54,7 @@ internal class DefaultRemoteLoggingConstraintProviderTest {
     private val mockResponse = mockk<Response>(relaxed = true)
 
     @Before
-    fun setup() {
+    fun setup() = runTest {
         every { mockResponse.close() }.answers { }
         every { mockResponse.body.close() }.answers { }
         coEvery { okHttpClient.newCall(capture(requestSlot)) }.answers { mockCall }
@@ -64,7 +64,7 @@ internal class DefaultRemoteLoggingConstraintProviderTest {
             URL(url),
             "us-east-1",
             okHttpClient = okHttpClient,
-            coroutineDispatcher = singleThreadDispatcher,
+            coroutineDispatcher = UnconfinedTestDispatcher(testScheduler),
             credentialsProvider = credentialsProvider,
         )
     }

@@ -29,6 +29,8 @@ import org.junit.Before
 import org.junit.Test
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.Executors
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import org.junit.Assert.assertTrue
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class CloudWatchLoggerTest {
@@ -49,6 +51,7 @@ internal class CloudWatchLoggerTest {
             logsEventsQueue,
             Executors.newSingleThreadExecutor().asCoroutineDispatcher(),
         )
+        every { awsCloudWatchLoggingPluginImplementation.isPluginEnabled }.answers { true }
     }
 
     @Test
@@ -70,10 +73,41 @@ internal class CloudWatchLoggerTest {
     }
 
     @Test
+    fun `test message not logged when threshold is above`() = runTest {
+        val queue = ConcurrentLinkedQueue<CloudWatchLogEvent>()
+        cloudWatchLogger = CloudWatchLogger(
+            namespace,
+            null,
+            loggingConstraintsResolver,
+            awsCloudWatchLoggingPluginImplementation,
+            logEventsQueue = queue,
+        )
+        every { loggingConstraintsResolver.resolveLogLevel(namespace, null) }.answers { LogLevel.ERROR }
+        cloudWatchLogger.info("test message")
+        assertTrue(queue.isEmpty())
+    }
+
+    @Test
+    fun `test message not logged when plugin is disabled`() = runTest {
+        val queue = ConcurrentLinkedQueue<CloudWatchLogEvent>()
+        every { awsCloudWatchLoggingPluginImplementation.isPluginEnabled }.answers { false }
+        cloudWatchLogger = CloudWatchLogger(
+            namespace,
+            null,
+            loggingConstraintsResolver,
+            awsCloudWatchLoggingPluginImplementation,
+            logEventsQueue = queue,
+            dispatcher = UnconfinedTestDispatcher(testScheduler),
+        )
+        every { loggingConstraintsResolver.resolveLogLevel(namespace, null) }.answers { LogLevel.VERBOSE }
+        cloudWatchLogger.info("test message")
+        assertTrue(queue.isEmpty())
+    }
+
+    @Test
     fun `persist logs in local queue when cloudwatch is not configured`() = runTest {
         val cloudWatchLogManager = mockk<CloudWatchLogManager>()
         val slot = mutableListOf<CloudWatchLogEvent>()
-        every { awsCloudWatchLoggingPluginImplementation.isPluginEnabled }.answers { true }
         every { loggingConstraintsResolver.resolveLogLevel(namespace, categoryType) }.answers { LogLevel.ERROR }
         every { awsCloudWatchLoggingPluginImplementation.cloudWatchLogManager }
             .returns(null) andThen cloudWatchLogManager
@@ -90,7 +124,6 @@ internal class CloudWatchLoggerTest {
     fun `persist logs after cloudwatch is configured`() = runTest {
         val cloudWatchLogManager = mockk<CloudWatchLogManager>()
         val slot = mutableListOf<CloudWatchLogEvent>()
-        every { awsCloudWatchLoggingPluginImplementation.isPluginEnabled }.answers { true }
         every { loggingConstraintsResolver.resolveLogLevel(namespace, categoryType) }.answers { LogLevel.ERROR }
         every { awsCloudWatchLoggingPluginImplementation.cloudWatchLogManager }.answers { cloudWatchLogManager }
         coEvery { cloudWatchLogManager.saveLogEvent(capture(slot)) }.answers { }

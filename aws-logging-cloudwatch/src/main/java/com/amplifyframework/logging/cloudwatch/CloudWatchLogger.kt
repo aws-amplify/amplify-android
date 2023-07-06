@@ -49,7 +49,7 @@ class CloudWatchLogger internal constructor(
     }
 
     override fun error(message: String?) {
-        if (shouldLog(LogLevel.ERROR)) {
+        if (shouldNotLogMessage(LogLevel.ERROR)) {
             return
         }
         val event = CloudWatchLogEvent(System.currentTimeMillis(), "error/$namespace: $message")
@@ -57,7 +57,7 @@ class CloudWatchLogger internal constructor(
     }
 
     override fun error(message: String?, error: Throwable?) {
-        if (shouldLog(LogLevel.ERROR)) {
+        if (shouldNotLogMessage(LogLevel.ERROR)) {
             return
         }
         val event = CloudWatchLogEvent(
@@ -68,7 +68,7 @@ class CloudWatchLogger internal constructor(
     }
 
     override fun warn(message: String?) {
-        if (shouldLog(LogLevel.WARN)) {
+        if (shouldNotLogMessage(LogLevel.WARN)) {
             return
         }
         val event = CloudWatchLogEvent(System.currentTimeMillis(), "warn/$namespace: $message")
@@ -76,7 +76,7 @@ class CloudWatchLogger internal constructor(
     }
 
     override fun warn(message: String?, issue: Throwable?) {
-        if (shouldLog(LogLevel.WARN)) {
+        if (shouldNotLogMessage(LogLevel.WARN)) {
             return
         }
         val event = CloudWatchLogEvent(
@@ -87,7 +87,7 @@ class CloudWatchLogger internal constructor(
     }
 
     override fun info(message: String?) {
-        if (shouldLog(LogLevel.INFO)) {
+        if (shouldNotLogMessage(LogLevel.INFO)) {
             return
         }
         val event = CloudWatchLogEvent(System.currentTimeMillis(), "info/$namespace: $message")
@@ -95,7 +95,7 @@ class CloudWatchLogger internal constructor(
     }
 
     override fun debug(message: String?) {
-        if (shouldLog(LogLevel.DEBUG)) {
+        if (shouldNotLogMessage(LogLevel.DEBUG)) {
             return
         }
         val event = CloudWatchLogEvent(System.currentTimeMillis(), "debug/$namespace: $message")
@@ -103,7 +103,7 @@ class CloudWatchLogger internal constructor(
     }
 
     override fun verbose(message: String?) {
-        if (shouldLog(LogLevel.VERBOSE)) {
+        if (shouldNotLogMessage(LogLevel.VERBOSE)) {
             return
         }
         val event = CloudWatchLogEvent(System.currentTimeMillis(), "verbose/$namespace: $message")
@@ -130,7 +130,7 @@ class CloudWatchLogger internal constructor(
         }
     }
 
-    private fun shouldLog(logLevel: LogLevel): Boolean {
-        return awsCloudWatchLoggingPlugin.isPluginEnabled && thresholdLevel.above(logLevel)
+    private fun shouldNotLogMessage(logLevel: LogLevel): Boolean {
+        return !awsCloudWatchLoggingPlugin.isPluginEnabled || thresholdLevel.above(logLevel)
     }
 }
