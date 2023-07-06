@@ -16,21 +16,19 @@
 package com.amplifyframework.core.model
 
 import com.amplifyframework.AmplifyException
+import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.core.Consumer
 
-abstract class LazyModel<M : Model> {
-    abstract fun getValue(): M?
+interface LazyModel<M : Model> {
+    fun getValue(): M?
     
-    abstract fun getIdentifier(): Map<String, Any>?
+    @InternalAmplifyApi
+    fun getIdentifier(): Map<String, Any>
 
-    abstract suspend fun get(): M?
+    @Throws(AmplifyException::class)
+    suspend fun getModel(): M?
 
-    suspend fun require(): M {
-        return get() ?: throw DataIntegrityException("Required model could not be found")
-    }
-
-    abstract fun get(onSuccess: Consumer<M>,
-                     onFailure: Consumer<AmplifyException>)
+    fun getModel(onSuccess: (M?) -> Unit, onError: Consumer<AmplifyException>)
 }
 
-class DataIntegrityException(s: String) : Throwable()
+

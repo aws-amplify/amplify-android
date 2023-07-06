@@ -16,7 +16,6 @@
 package com.amplifyframework.api.aws;
 
 import com.amplifyframework.api.graphql.GsonResponseAdapters;
-import com.amplifyframework.core.model.LazyList;
 import com.amplifyframework.core.model.LazyModel;
 import com.amplifyframework.core.model.query.predicate.GsonPredicateAdapters;
 import com.amplifyframework.core.model.temporal.GsonTemporalAdapters;
@@ -30,7 +29,7 @@ import com.google.gson.GsonBuilder;
 /**
  * Creates a {@link Gson} instance which may be used around the API plugin.
  */
-public final class GsonFactory {
+final class GsonFactory {
     private static Gson gson = null;
 
     private GsonFactory() {}

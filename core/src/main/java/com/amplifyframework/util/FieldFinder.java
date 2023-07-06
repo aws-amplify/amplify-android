@@ -18,13 +18,11 @@ package com.amplifyframework.util;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.amplifyframework.core.model.LazyModel;
 import com.amplifyframework.core.model.SerializedModel;
 import com.amplifyframework.core.model.annotations.ModelField;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -56,13 +54,6 @@ public final class FieldFinder {
         while (fieldContainerClazz != null) {
             for (Field field : fieldContainerClazz.getDeclaredFields()) {
                 if (field.isAnnotationPresent(ModelField.class)) {
-                    if (field.getType() == LazyModel.class){
-                        if (field.getGenericType() instanceof ParameterizedType) {
-                            ParameterizedType pType = (ParameterizedType)field.getGenericType() ;
-                        } else {
-                            System.out.println("Type: " + field.getType());
-                        }
-                    }
                     fields.add(field);
                 }
             }

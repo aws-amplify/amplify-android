@@ -16,11 +16,11 @@
 package com.amplifyframework.core.model
 
 import com.amplifyframework.AmplifyException
+import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.core.Consumer
-import java.io.Serializable
-import java.util.*
 
-class InMemoryLazyModel<M : Model>(model: M? = null) : LazyModel<M> () {
+@InternalAmplifyApi
+class InMemoryLazyModel<M : Model>(model: M? = null) : LazyModel<M> {
 
     private var value: M? = model
 
@@ -28,36 +28,15 @@ class InMemoryLazyModel<M : Model>(model: M? = null) : LazyModel<M> () {
         return value
     }
 
-    override fun getIdentifier(): Map<String, Any>? {
-        return null
+    override fun getIdentifier(): Map<String, Any> {
+        return emptyMap()
     }
 
-    override suspend fun get(): M? {
+    override suspend fun getModel(): M? {
         return value
     }
 
-    override fun get(onSuccess: Consumer<M>, onFailure: Consumer<AmplifyException>) {
-        if (value != null) {
-            onSuccess.accept(value!!)
-        }
-    }
-}
-
-class InMemoryLazyList<M : Model>(modelList: List<M> = emptyList()) : LazyList<M>() {
-    private var value: List<M> = modelList
-    override fun getItems(): List<M> {
-        return value
-    }
-
-    override suspend fun getNextPage(): List<M> {
-        return emptyList()
-    }
-
-    override fun getNextPage(onSuccess: Consumer<List<M>>, onFailure: Consumer<AmplifyException>) {
-        onSuccess.accept(emptyList())
-    }
-
-    override fun hasNextPage(): Boolean {
-        return false
+    override fun getModel(onSuccess: (M?) -> Unit, onError: Consumer<AmplifyException>) {
+        onSuccess(value)
     }
 }

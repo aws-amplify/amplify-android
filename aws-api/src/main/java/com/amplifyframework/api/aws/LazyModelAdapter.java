@@ -18,9 +18,9 @@ package com.amplifyframework.api.aws;
 import android.util.Log;
 
 
+import com.amplifyframework.annotations.InternalAmplifyApi;
 import com.amplifyframework.core.model.LazyModel;
 import com.amplifyframework.core.model.Model;
-import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.SchemaRegistry;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
@@ -36,6 +36,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+@InternalAmplifyApi
 public class LazyModelAdapter<M extends Model> implements JsonDeserializer<LazyModel<M>>,
         JsonSerializer<LazyModel<M>> {
 
@@ -58,7 +59,7 @@ public class LazyModelAdapter<M extends Model> implements JsonDeserializer<LazyM
             String primaryKey = primaryKeysIterator.next();
             predicateKeyMap.put(primaryKey, jsonObject.get(primaryKey));
         }
-        return new AppSyncLazyModel<>(type, predicateKeyMap, new AppSyncLazyQueryPredicate<>());
+        return new AppSyncLazyModel<>(type, predicateKeyMap);
     }
 
     @Override

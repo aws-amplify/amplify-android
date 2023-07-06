@@ -209,7 +209,6 @@ public final class ModelSchema {
     private static ModelField createModelField(Field field) {
         com.amplifyframework.core.model.annotations.ModelField annotation =
                 field.getAnnotation(com.amplifyframework.core.model.annotations.ModelField.class);
-        String[] targetNames;
         if (annotation != null) {
             final String fieldName = field.getName();
             final Class<?> fieldType;
@@ -235,22 +234,10 @@ public final class ModelSchema {
                     .isEnum(Enum.class.isAssignableFrom(field.getType()))
                     .isModel(Model.class.isAssignableFrom(field.getType()))
                     .isLazyModel(LazyModel.class.isAssignableFrom(field.getType()))
-                    .isLazyList(LazyList.class.isAssignableFrom(field.getType()))
                     .authRules(authRules)
                     .build();
         }
         return null;
-    }
-
-    public static Class<?> findSuperClassParameterType(Object instance) {
-        Class<?> subClass = instance.getClass();
-        while (subClass != subClass.getSuperclass()) {
-            // instance.getClass() is no subclass of classOfInterest or instance is a direct instance of classOfInterest
-            subClass = subClass.getSuperclass();
-            if (subClass == null) throw new IllegalArgumentException();
-        }
-        ParameterizedType parameterizedType = (ParameterizedType) subClass.getGenericSuperclass();
-        return (Class<?>) parameterizedType.getActualTypeArguments()[0];
     }
 
     // Utility method to extract association metadata from a field

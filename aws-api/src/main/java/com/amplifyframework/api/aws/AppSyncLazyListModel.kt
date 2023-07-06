@@ -16,6 +16,7 @@
 package com.amplifyframework.api.aws
 
 import com.amplifyframework.AmplifyException
+import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.api.ApiException
 import com.amplifyframework.api.graphql.GraphQLRequest
 import com.amplifyframework.api.graphql.GraphQLResponse
@@ -26,14 +27,15 @@ import com.amplifyframework.core.model.Model
 import com.amplifyframework.kotlin.core.Amplify
 import com.amplifyframework.core.Amplify as coreAmplify
 
+@InternalAmplifyApi
 class AppSyncLazyListModel<M : Model>(
     private val clazz: Class<M>,
-    private val keyMap: Map<String, Any>,
-    private val predicate: AppSyncLazyQueryPredicate<M>
-) : LazyList<M>() {
+    keyMap: Map<String, Any>,
+) : LazyList<M> {
 
     private var value: MutableList<M> = mutableListOf()
     private var paginatedResult: PaginatedResult<M>? = null
+    private val queryPredicate = AppSyncLazyQueryPredicate<M>().createPredicate(clazz, keyMap)
 
     override fun getItems(): List<M> {
         return value
@@ -41,7 +43,7 @@ class AppSyncLazyListModel<M : Model>(
 
     override suspend fun getNextPage(): List<M> {
         if (!hasNextPage()) {
-            return  emptyList()
+            return emptyList()
         }
         val request = createGraphQLRequest()
         paginatedResult = Amplify.API.query(request).data
@@ -50,7 +52,7 @@ class AppSyncLazyListModel<M : Model>(
         return nextPageOfItems
     }
 
-    override fun getNextPage(onSuccess: Consumer<List<M>>, onFailure: Consumer<AmplifyException>) {
+    override fun getNextPage(onSuccess: Consumer<List<M>>, onError: Consumer<AmplifyException>) {
         if (!hasNextPage()) {
             onSuccess.accept(emptyList())
             return
@@ -61,7 +63,7 @@ class AppSyncLazyListModel<M : Model>(
             value.addAll(nextPageOfItems)
             onSuccess.accept(nextPageOfItems)
         }
-        val onApiFailure = Consumer<ApiException> { onFailure.accept(it) }
+        val onApiFailure = Consumer<ApiException> { onError.accept(it) }
         val request = createGraphQLRequest()
         coreAmplify.API.query(request, onQuerySuccess, onApiFailure)
     }
@@ -76,7 +78,7 @@ class AppSyncLazyListModel<M : Model>(
         } else {
             AppSyncGraphQLRequestFactory.buildQuery(
                 clazz,
-                predicate.createPredicate(clazz, keyMap)
+                queryPredicate
             )
         }
     }

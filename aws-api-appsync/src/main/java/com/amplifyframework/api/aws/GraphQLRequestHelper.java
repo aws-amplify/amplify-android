@@ -227,7 +227,7 @@ public class GraphQLRequestHelper {
 
             Object fieldValue = extractFieldValue(modelField.getName(), instance, schema, false);
             Object underlyingFieldValue = fieldValue;
-            Map<String, Object> identifiersIfLazyModel = null;
+            Map<String, Object> identifiersIfLazyModel = new HashMap<>();
             if (modelField.isLazyModel() && fieldValue != null) {
                 LazyModel<?> lazyModel = (LazyModel<?>) fieldValue;
                 underlyingFieldValue = lazyModel.getValue();
@@ -238,7 +238,7 @@ public class GraphQLRequestHelper {
                 result.put(fieldName, fieldValue);
             } else if (association.isOwner()) {
                 if (
-                        (fieldValue == null || (modelField.isLazyModel() && underlyingFieldValue == null && identifiersIfLazyModel == null))
+                        (fieldValue == null || (modelField.isLazyModel() && underlyingFieldValue == null && identifiersIfLazyModel.isEmpty()))
                                 && MutationType.CREATE.equals(type)
                 ) {
                     // Do not set null values on associations for create mutations.
@@ -299,7 +299,7 @@ public class GraphQLRequestHelper {
             }
         } else if (modelField.isLazyModel() && fieldValue instanceof LazyModel) {
             Map<String, Object> identifiers = ((LazyModel<?>) fieldValue).getIdentifier();
-            if (identifiers == null) {
+            if (identifiers.isEmpty()) {
                 for (String key : association.getTargetNames()) {
                     result.put(key, null);
                 }
@@ -317,7 +317,7 @@ public class GraphQLRequestHelper {
             return null;
         } else if (modelField.isLazyModel() && fieldValue instanceof LazyModel) {
             Map<String, Object> identifiers = ((LazyModel<?>) fieldValue).getIdentifier();
-            if (identifiers == null) {
+            if (identifiers.isEmpty()) {
                 return null;
             } else {
                 return identifiers.get("id");

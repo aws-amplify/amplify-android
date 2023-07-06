@@ -19,18 +19,13 @@ import com.amplifyframework.AmplifyException
 import com.amplifyframework.api.ApiException
 import com.amplifyframework.core.Consumer
 
-abstract class LazyList<M : Model> {
-    abstract fun getItems(): List<M>
+interface LazyList<M : Model> {
+    fun getItems(): List<M>
 
-    @Throws(ApiException::class)
-    abstract suspend fun getNextPage(): List<M>
+    @Throws(AmplifyException::class)
+    suspend fun getNextPage(): List<M>
 
-    suspend fun require(): List<M> {
-        return getNextPage() ?: throw DataIntegrityException("Required model could not be found")
-    }
+    fun getNextPage(onSuccess: Consumer<List<M>>, onError: Consumer<AmplifyException>)
 
-    abstract fun getNextPage(onSuccess: Consumer<List<M>>,
-                             onFailure: Consumer<AmplifyException>)
-
-    abstract fun hasNextPage(): Boolean
+    fun hasNextPage(): Boolean
 }

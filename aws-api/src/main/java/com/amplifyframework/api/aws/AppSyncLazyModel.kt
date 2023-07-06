@@ -15,8 +15,8 @@
 
 package com.amplifyframework.api.aws
 
-import android.util.Log
 import com.amplifyframework.AmplifyException
+import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.api.ApiException
 import com.amplifyframework.api.graphql.GraphQLResponse
 import com.amplifyframework.api.graphql.PaginatedResult
@@ -26,25 +26,28 @@ import com.amplifyframework.core.model.Model
 import com.amplifyframework.kotlin.core.Amplify
 import com.amplifyframework.core.Amplify as coreAmplify
 
+@InternalAmplifyApi
 class AppSyncLazyModel<M : Model>(
     private val clazz: Class<M>,
-    private val keyMap: Map<String, Any>,
-    private val predicate: AppSyncLazyQueryPredicate<M>
-) : LazyModel<M>() {
+    private val keyMap: Map<String, Any>
+) : LazyModel<M> {
 
     private var value: M? = null
+    private var loadedValue = false
+    private val queryPredicate = AppSyncLazyQueryPredicate<M>().createPredicate(clazz, keyMap)
 
     override fun getValue(): M? {
         return value
     }
 
-    override fun getIdentifier(): Map<String, Any>? {
+    override fun getIdentifier(): Map<String, Any> {
         return keyMap
     }
 
-    override suspend fun get(): M? {
-        value?.let { return value }
-        val queryPredicate = predicate.createPredicate(clazz, keyMap)
+    override suspend fun getModel(): M? {
+        if (loadedValue) {
+            return  value
+        }
         try {
             val resultIterator = Amplify.API.query(
                 AppSyncGraphQLRequestFactory.buildQuery<PaginatedResult<M>, M>(
@@ -57,15 +60,16 @@ class AppSyncLazyModel<M : Model>(
             } else {
                 null
             }
+            loadedValue = true
         } catch (error: ApiException) {
-            Log.e("MyAmplifyApp", "Query failure", error)
+            throw AmplifyException("Error lazy loading the model.", error, error.message ?: "")
         }
         return value
     }
 
-    override fun get(onSuccess: Consumer<M>, onFailure: Consumer<AmplifyException>) {
-        value?.let { modelValue ->
-            onSuccess.accept(modelValue)
+    override fun getModel(onSuccess: (M?) -> Unit, onError: Consumer<AmplifyException>) {
+        if (loadedValue) {
+            onSuccess(value)
             return
         }
         val onQuerySuccess = Consumer<GraphQLResponse<PaginatedResult<M>>> {
@@ -75,12 +79,12 @@ class AppSyncLazyModel<M : Model>(
             } else {
                 null
             }
-            // TODO : remove !! and allow null value to be passed in
-            onSuccess.accept(value!!)
+            loadedValue = true
+            onSuccess(value)
         }
-        val onApiFailure = Consumer<ApiException> { onFailure.accept(it) }
+        val onApiFailure = Consumer<ApiException> { onError.accept(it) }
         coreAmplify.API.query(
-            AppSyncGraphQLRequestFactory.buildQuery(clazz, predicate.createPredicate(clazz, keyMap)),
+            AppSyncGraphQLRequestFactory.buildQuery(clazz, queryPredicate),
             onQuerySuccess,
             onApiFailure
         )

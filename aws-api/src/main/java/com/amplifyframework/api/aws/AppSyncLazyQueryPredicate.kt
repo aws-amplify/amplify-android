@@ -20,7 +20,7 @@ import com.amplifyframework.core.model.query.predicate.QueryField
 import com.amplifyframework.core.model.query.predicate.QueryPredicate
 import com.amplifyframework.core.model.query.predicate.QueryPredicates
 
-class AppSyncLazyQueryPredicate<M : Model> {
+internal class AppSyncLazyQueryPredicate<M : Model> {
     fun createPredicate(clazz: Class<M>, keyMap: Map<String, Any>): QueryPredicate {
         var queryPredicate = QueryPredicates.all()
         keyMap.forEach {
