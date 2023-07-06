@@ -49,7 +49,7 @@ final class JavaLogger implements Logger {
 
     @Override
     public void error(@Nullable String message) {
-        if (isEnabled && threshold.above(LogLevel.ERROR)) {
+        if (shouldNotLogMessage(LogLevel.ERROR)) {
             return;
         }
         log(LogLevel.ERROR, message);
@@ -57,7 +57,7 @@ final class JavaLogger implements Logger {
 
     @Override
     public void error(@Nullable String message, @Nullable Throwable error) {
-        if (isEnabled && threshold.above(LogLevel.ERROR)) {
+        if (shouldNotLogMessage(LogLevel.ERROR)) {
             return;
         }
         log(LogLevel.ERROR, message, error);
@@ -65,7 +65,7 @@ final class JavaLogger implements Logger {
 
     @Override
     public void warn(@Nullable String message) {
-        if (isEnabled && threshold.above(LogLevel.WARN)) {
+        if (shouldNotLogMessage(LogLevel.WARN)) {
             return;
         }
         log(LogLevel.WARN, message);
@@ -73,7 +73,7 @@ final class JavaLogger implements Logger {
 
     @Override
     public void warn(@Nullable String message, @Nullable Throwable issue) {
-        if (isEnabled && threshold.above(LogLevel.WARN)) {
+        if (shouldNotLogMessage(LogLevel.WARN)) {
             return;
         }
         log(LogLevel.WARN, message, issue);
@@ -81,7 +81,7 @@ final class JavaLogger implements Logger {
 
     @Override
     public void info(@Nullable String message) {
-        if (isEnabled && threshold.above(LogLevel.INFO)) {
+        if (shouldNotLogMessage(LogLevel.INFO)) {
             return;
         }
         log(LogLevel.INFO, message);
@@ -89,7 +89,7 @@ final class JavaLogger implements Logger {
 
     @Override
     public void debug(@Nullable String message) {
-        if (isEnabled && threshold.above(LogLevel.DEBUG)) {
+        if (shouldNotLogMessage(LogLevel.DEBUG)) {
             return;
         }
         log(LogLevel.DEBUG, message);
@@ -97,7 +97,7 @@ final class JavaLogger implements Logger {
 
     @Override
     public void verbose(@Nullable String message) {
-        if (isEnabled && threshold.above(LogLevel.VERBOSE)) {
+        if (shouldNotLogMessage(LogLevel.VERBOSE)) {
             return;
         }
         log(LogLevel.VERBOSE, message);
@@ -120,6 +120,10 @@ final class JavaLogger implements Logger {
         }
         System.out.println(lineBuilder.toString());
 
+    }
+
+    private boolean shouldNotLogMessage(LogLevel logLevel) {
+        return !isEnabled || threshold.above(logLevel);
     }
 
 }
