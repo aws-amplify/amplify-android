@@ -15,7 +15,7 @@
 
 package com.amplifyframework.auth.cognito
 
-import com.amplifyframework.auth.AWSAuthSessionInternal
+import com.amplifyframework.auth.AWSAuthSessionBehavior
 import com.amplifyframework.auth.AWSCognitoUserPoolTokens
 import com.amplifyframework.auth.AWSCredentials
 import com.amplifyframework.auth.AuthException
@@ -39,13 +39,20 @@ import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
  * @param userPoolTokensResult The tokens which come from User Pools (access, id, refresh tokens).
  */
 data class AWSCognitoAuthSession internal constructor(
-    @get:JvmName("getSignedIn")
     override val isSignedIn: Boolean,
     override val identityIdResult: AuthSessionResult<String>,
     override val awsCredentialsResult: AuthSessionResult<AWSCredentials>,
     override val userSubResult: AuthSessionResult<String>,
-    override val userPoolTokensResult: AuthSessionResult<AWSCognitoUserPoolTokens>
-) : AWSAuthSessionInternal(isSignedIn, identityIdResult, awsCredentialsResult, userSubResult, userPoolTokensResult)
+    val userPoolTokensResult: AuthSessionResult<AWSCognitoUserPoolTokens>
+) : AWSAuthSessionBehavior<AWSCognitoUserPoolTokens>(
+    isSignedIn,
+    identityIdResult,
+    awsCredentialsResult,
+    userSubResult,
+    userPoolTokensResult
+) {
+    override val accessToken = userPoolTokensResult.value?.accessToken
+}
 
 internal fun AmplifyCredential.isValid(): Boolean {
     return when (this) {
@@ -59,7 +66,7 @@ internal fun AmplifyCredential.isValid(): Boolean {
 
 internal fun AmplifyCredential.getCognitoSession(
     exception: AuthException = SignedOutException()
-): AWSAuthSessionInternal {
+): AWSAuthSessionBehavior<AWSCognitoUserPoolTokens> {
     fun getCredentialsResult(awsCredentials: CognitoCredentials): AuthSessionResult<AWSCredentials> =
         with(awsCredentials) {
             AWSCredentials.createAWSCredentials(accessKeyId, secretAccessKey, sessionToken, expiration)

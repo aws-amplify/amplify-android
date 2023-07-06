@@ -15,9 +15,24 @@
 
 package com.amplifyframework.core.store
 
-interface KeyValueRepository {
-    fun put(dataKey: String, value: String?)
-    fun get(dataKey: String): String?
-    fun remove(dataKey: String)
-    fun removeAll() = Unit
+import com.amplifyframework.annotations.InternalApiWarning
+import java.util.concurrent.ConcurrentHashMap
+
+@InternalApiWarning
+class InMemoryKeyValueRepository : KeyValueRepository {
+    private val cache = ConcurrentHashMap<String, String?>()
+
+    override fun put(dataKey: String, value: String?) {
+        value?.run { cache.put(dataKey, value) }
+    }
+
+    override fun get(dataKey: String): String? = cache.getOrDefault(dataKey, null)
+
+    override fun remove(dataKey: String) {
+        cache.remove(dataKey)
+    }
+
+    override fun removeAll() {
+        cache.clear()
+    }
 }

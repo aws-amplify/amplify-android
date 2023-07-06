@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -13,71 +13,45 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.auth;
+package com.amplifyframework.auth
 
-import androidx.annotation.NonNull;
-import androidx.core.util.ObjectsCompat;
+import androidx.core.util.ObjectsCompat
 
 /**
  * Stores the current auth state of the category. When cast to a plugin specific object,
  * implementation-specific auth details such as tokens can be retrieved as well.
  */
-public class AuthSession {
-    private final boolean isSignedIn;
-
+open class AuthSession(
     /**
      * Stores the current auth state of the category. When cast to a plugin specific object,
      * implementation-specific auth details such as tokens can be retrieved as well.
      * @param isSignedIn true if the user has been signed in, false otherwise
      */
-    public AuthSession(boolean isSignedIn) {
-        this.isSignedIn = isSignedIn;
-    }
-
-    /**
-     * Returns true if the user has been signed in, false otherwise.
-     * @return true if the user has been signed in, false otherwise
-     */
-    @NonNull
-    public boolean isSignedIn() {
-        return isSignedIn;
-    }
-
+    open val isSignedIn: Boolean
+) {
     /**
      * When overriding, be sure to include signedInStatus in the hash.
      * @return Hash code of this object
      */
-    @Override
-    public int hashCode() {
-        return ObjectsCompat.hash(
-                isSignedIn()
-        );
-    }
+    override fun hashCode() = ObjectsCompat.hash(isSignedIn)
 
     /**
      * When overriding, be sure to include signedInStatus in the comparison.
      * @return True if the two objects are equal, false otherwise
      */
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        } else if (obj == null || getClass() != obj.getClass()) {
-            return false;
-        } else {
-            AuthSession authSession = (AuthSession) obj;
-            return ObjectsCompat.equals(isSignedIn(), authSession.isSignedIn());
-        }
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        val authSession = other as AuthSession
+        if (isSignedIn != authSession.isSignedIn) return false
+
+        return true
     }
 
     /**
      * When overriding, be sure to include signedInStatus in the output string.
      * @return A string representation of the object
      */
-    @Override
-    public String toString() {
-        return "AuthSession{" +
-                "isSignedIn=" + isSignedIn +
-                '}';
-    }
+    override fun toString() = "AuthSession{isSignedIn=$isSignedIn}"
 }
