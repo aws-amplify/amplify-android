@@ -76,9 +76,9 @@ internal object SignInChallengeHelper {
                     )
                 }
             }
-            challengeNameType == ChallengeNameType.SmsMfa ||
-                challengeNameType == ChallengeNameType.CustomChallenge ||
-                challengeNameType == ChallengeNameType.NewPasswordRequired -> {
+            challengeNameType is ChallengeNameType.SmsMfa ||
+                challengeNameType is ChallengeNameType.CustomChallenge ||
+                challengeNameType is ChallengeNameType.NewPasswordRequired -> {
                 val challenge =
                     AuthChallenge(challengeNameType.value, username, session, challengeParameters)
                 SignInEvent(SignInEvent.EventType.ReceivedChallenge(challenge))
@@ -98,7 +98,7 @@ internal object SignInChallengeHelper {
         val challengeParams = challenge.parameters?.toMutableMap() ?: mapOf()
 
         when (ChallengeNameType.fromValue(challenge.challengeName)) {
-            ChallengeNameType.SmsMfa -> {
+            is ChallengeNameType.SmsMfa -> {
                 val deliveryDetails = AuthCodeDeliveryDetails(
                     challengeParams.getValue("CODE_DELIVERY_DESTINATION"),
                     AuthCodeDeliveryDetails.DeliveryMedium.fromString(
@@ -111,14 +111,14 @@ internal object SignInChallengeHelper {
                 )
                 onSuccess.accept(authSignInResult)
             }
-            ChallengeNameType.NewPasswordRequired -> {
+            is ChallengeNameType.NewPasswordRequired -> {
                 val authSignInResult = AuthSignInResult(
                     false,
                     AuthNextSignInStep(AuthSignInStep.CONFIRM_SIGN_IN_WITH_NEW_PASSWORD, challengeParams, null)
                 )
                 onSuccess.accept(authSignInResult)
             }
-            ChallengeNameType.CustomChallenge -> {
+            is ChallengeNameType.CustomChallenge -> {
                 val authSignInResult = AuthSignInResult(
                     false,
                     AuthNextSignInStep(AuthSignInStep.CONFIRM_SIGN_IN_WITH_CUSTOM_CHALLENGE, challengeParams, null)
