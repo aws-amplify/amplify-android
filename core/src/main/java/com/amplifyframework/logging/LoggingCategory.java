@@ -130,6 +130,11 @@ public final class LoggingCategory extends Category<LoggingPlugin<?>> implements
     }
 
     @Override
+    protected boolean configureFromDefaultConfigFile() {
+        return false;
+    }
+
+    @Override
     public synchronized void configure(@NonNull CategoryConfiguration configuration, @NonNull Context context)
         throws AmplifyException {
         super.configure(configuration, context);

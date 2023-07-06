@@ -14,6 +14,7 @@
  */
 package com.amplifyframework.logging.cloudwatch
 
+import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider
 import aws.smithy.kotlin.runtime.auth.awssigning.AwsSigningConfig
 import aws.smithy.kotlin.runtime.auth.awssigning.DefaultAwsSigner
 import aws.smithy.kotlin.runtime.http.Headers
@@ -42,6 +43,8 @@ class DefaultRemoteLoggingConstraintProvider @JvmOverloads constructor(
     private val url: URL,
     private val regionString: String,
     private val refreshIntervalInSeconds: Int = 1200,
+    private val okHttpClient: OkHttpClient = OkHttpClient(),
+    private val credentialsProvider: CredentialsProvider = CognitoCredentialsProvider(),
     coroutineDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : RemoteLoggingConstraintProvider {
     private val coroutineScope = CoroutineScope(coroutineDispatcher)
@@ -49,7 +52,6 @@ class DefaultRemoteLoggingConstraintProvider @JvmOverloads constructor(
         encodeDefaults = true
         explicitNulls = false
     }
-    private val okHttpClient: OkHttpClient = OkHttpClient()
 
     override fun fetchLoggingConfig(onSuccess: Consumer<LoggingConstraints>, onError: Consumer<Exception>) {
         coroutineScope.launch {
@@ -65,7 +67,7 @@ class DefaultRemoteLoggingConstraintProvider @JvmOverloads constructor(
                     AwsSigningConfig {
                         this.region = regionString
                         service = "execute-api"
-                        credentialsProvider = CognitoCredentialsProvider()
+                        credentialsProvider = this@DefaultRemoteLoggingConstraintProvider.credentialsProvider
                     },
                 ).output
 
@@ -77,16 +79,26 @@ class DefaultRemoteLoggingConstraintProvider @JvmOverloads constructor(
                         okhttpRequestBuilder.addHeader(header.key, it)
                     }
                 }
-                val response = okHttpClient.newCall(okhttpRequestBuilder.build()).execute()
-                if (response.isSuccessful) {
-                    val remoteLoggingConstraints = json.decodeFromString<LoggingConstraints>(response.body.string())
-                    onSuccess.accept(
-                        remoteLoggingConstraints,
-                    )
-                } else {
-                    onError.accept(
-                        AmplifyException("Failed to fetch remote logging constraints", response.body.string()),
-                    )
+                okHttpClient.newCall(okhttpRequestBuilder.build()).execute().use { response ->
+                    if (response.isSuccessful) {
+                        val remoteLoggingConstraints = json.decodeFromString<LoggingConstraints>(
+                            response.body.use {
+                                it.string()
+                            },
+                        )
+                        onSuccess.accept(
+                            remoteLoggingConstraints,
+                        )
+                    } else {
+                        onError.accept(
+                            AmplifyException(
+                                "Failed to fetch remote logging constraints",
+                                response.body.use {
+                                    it.string()
+                                },
+                            ),
+                        )
+                    }
                 }
             } catch (exception: Exception) {
                 onError.accept(

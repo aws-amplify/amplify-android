@@ -20,20 +20,15 @@ import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.category.CategoryType
 import com.amplifyframework.logging.LogLevel
 import com.amplifyframework.logging.cloudwatch.models.LoggingConstraints
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import java.util.Timer
+import java.util.TimerTask
 
 internal class LoggingConstraintsResolver internal constructor(
     internal var context: Context? = null,
     internal var localLoggingConstraint: LoggingConstraints? = null,
     private var remoteLoggingConstraintProvider: RemoteLoggingConstraintProvider? = null,
     internal var userId: String? = null,
-    private val coroutineDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) {
-    private val coroutine = CoroutineScope(coroutineDispatcher)
     private var remoteLoggingConstraint: LoggingConstraints? = null
     private val logger = Amplify.Logging.logger(CategoryType.LOGGING, this::class.java.simpleName)
 
@@ -59,18 +54,23 @@ internal class LoggingConstraintsResolver internal constructor(
 
     private fun loadRemoteConfig() {
         remoteLoggingConstraintProvider?.let { remoteProvider ->
-            coroutine.launch {
-                while (true) {
-                    remoteProvider.fetchLoggingConfig({
-                        remoteLoggingConstraint = it
-                        saveRemoteConstraintsToSharedPreference(it)
-                    }, {
-                        logger.error("failed to load remote config, error: ${Log.getStackTraceString(it)}")
+            val timerTask = object : TimerTask() {
+                override fun run() {
+                    try {
+                        remoteProvider.fetchLoggingConfig({
+                            remoteLoggingConstraint = it
+                            saveRemoteConstraintsToSharedPreference(it)
+                        }, {
+                            logger.error("failed to load remote config, error: ${Log.getStackTraceString(it)}")
+                            remoteLoggingConstraint = getRemoteConstraintsFromSharedPreference()
+                        })
+                    } catch (exception: Exception) {
+                        logger.error("failed to load remote config, error: ${Log.getStackTraceString(exception)}")
                         remoteLoggingConstraint = getRemoteConstraintsFromSharedPreference()
-                    })
-                    delay(remoteProvider.getConstraintsSyncInterval() * 1000L)
+                    }
                 }
             }
+            Timer().scheduleAtFixedRate(timerTask, 0, remoteProvider.getConstraintsSyncInterval() * 1000L)
         }
     }
 
