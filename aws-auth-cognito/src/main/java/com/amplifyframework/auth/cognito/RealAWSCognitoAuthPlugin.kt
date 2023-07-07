@@ -660,7 +660,7 @@ internal class RealAWSCognitoAuthPlugin(
                     }
                     signInState is SignInState.ResolvingChallenge &&
                         signInState.challengeState is SignInChallengeState.WaitingForAnswer &&
-                        (signInState.challengeState as SignInChallengeState.WaitingForAnswer).followUp -> {
+                        (signInState.challengeState as SignInChallengeState.WaitingForAnswer).hasNewResponse -> {
                         authStateMachine.cancel(token)
                         val signInChallengeState = signInState.challengeState as SignInChallengeState.WaitingForAnswer
                         var signInStep = AuthSignInStep.CONFIRM_SIGN_IN_WITH_CUSTOM_CHALLENGE

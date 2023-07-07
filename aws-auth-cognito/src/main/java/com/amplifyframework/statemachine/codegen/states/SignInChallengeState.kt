@@ -25,7 +25,10 @@ import com.amplifyframework.statemachine.codegen.events.SignInChallengeEvent
 
 internal sealed class SignInChallengeState : State {
     data class NotStarted(val id: String = "") : SignInChallengeState()
-    data class WaitingForAnswer(val challenge: AuthChallenge, val followUp: Boolean = false) : SignInChallengeState()
+    data class WaitingForAnswer(
+        val challenge: AuthChallenge,
+        val hasNewResponse: Boolean = false
+    ) : SignInChallengeState()
     data class Verifying(val id: String = "") : SignInChallengeState()
     data class Verified(val id: String = "") : SignInChallengeState()
     data class Error(val exception: Exception, val challenge: AuthChallenge) : SignInChallengeState()
