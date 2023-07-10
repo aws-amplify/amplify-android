@@ -107,21 +107,21 @@ internal object SignInChallengeHelper {
                 )
                 val authSignInResult = AuthSignInResult(
                     false,
-                    AuthNextSignInStep(AuthSignInStep.CONFIRM_SIGN_IN_WITH_SMS_MFA_CODE, mapOf(), deliveryDetails)
+                    AuthNextSignInStep(AuthSignInStep.CONFIRM_SIGN_IN_WITH_SMS_MFA_CODE, mapOf(), deliveryDetails, null, null)
                 )
                 onSuccess.accept(authSignInResult)
             }
             is ChallengeNameType.NewPasswordRequired -> {
                 val authSignInResult = AuthSignInResult(
                     false,
-                    AuthNextSignInStep(AuthSignInStep.CONFIRM_SIGN_IN_WITH_NEW_PASSWORD, challengeParams, null)
+                    AuthNextSignInStep(AuthSignInStep.CONFIRM_SIGN_IN_WITH_NEW_PASSWORD, challengeParams, null, null, null)
                 )
                 onSuccess.accept(authSignInResult)
             }
             is ChallengeNameType.CustomChallenge -> {
                 val authSignInResult = AuthSignInResult(
                     false,
-                    AuthNextSignInStep(AuthSignInStep.CONFIRM_SIGN_IN_WITH_CUSTOM_CHALLENGE, challengeParams, null)
+                    AuthNextSignInStep(AuthSignInStep.CONFIRM_SIGN_IN_WITH_CUSTOM_CHALLENGE, challengeParams, null, null, null)
                 )
                 onSuccess.accept(authSignInResult)
             }

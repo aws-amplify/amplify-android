@@ -24,6 +24,7 @@ import com.amplifyframework.auth.cognito.actions.FetchAuthSessionCognitoActions
 import com.amplifyframework.auth.cognito.actions.HostedUICognitoActions
 import com.amplifyframework.auth.cognito.actions.MigrateAuthCognitoActions
 import com.amplifyframework.auth.cognito.actions.SRPCognitoActions
+import com.amplifyframework.auth.cognito.actions.SetupTOTPCognitoActions
 import com.amplifyframework.auth.cognito.actions.SignInChallengeCognitoActions
 import com.amplifyframework.auth.cognito.actions.SignInCognitoActions
 import com.amplifyframework.auth.cognito.actions.SignInCustomCognitoActions
@@ -42,6 +43,7 @@ import com.amplifyframework.statemachine.codegen.states.HostedUISignInState
 import com.amplifyframework.statemachine.codegen.states.MigrateSignInState
 import com.amplifyframework.statemachine.codegen.states.RefreshSessionState
 import com.amplifyframework.statemachine.codegen.states.SRPSignInState
+import com.amplifyframework.statemachine.codegen.states.SetupTOTPState
 import com.amplifyframework.statemachine.codegen.states.SignInChallengeState
 import com.amplifyframework.statemachine.codegen.states.SignInState
 import com.amplifyframework.statemachine.codegen.states.SignOutState
@@ -49,7 +51,7 @@ import com.amplifyframework.statemachine.codegen.states.SignOutState
 internal class AuthStateMachine(
     resolver: StateMachineResolver<AuthState>,
     environment: Environment,
-    initialState: AuthState? = null
+    initialState: AuthState? = null,
 ) :
     StateMachine<AuthState, Environment>(resolver, environment, initialState = initialState) {
     constructor(environment: Environment, initialState: AuthState? = null) : this(
@@ -62,7 +64,8 @@ internal class AuthStateMachine(
                     SignInChallengeState.Resolver(SignInChallengeCognitoActions),
                     HostedUISignInState.Resolver(HostedUICognitoActions),
                     DeviceSRPSignInState.Resolver(DeviceSRPCognitoSignInActions),
-                    SignInCognitoActions
+                    SetupTOTPState.Resolver(SetupTOTPCognitoActions),
+                    SignInCognitoActions,
                 ),
                 SignOutState.Resolver(SignOutCognitoActions),
                 AuthenticationCognitoActions,
@@ -71,15 +74,15 @@ internal class AuthStateMachine(
                 FetchAuthSessionState.Resolver(FetchAuthSessionCognitoActions),
                 RefreshSessionState.Resolver(
                     FetchAuthSessionState.Resolver(FetchAuthSessionCognitoActions),
-                    FetchAuthSessionCognitoActions
+                    FetchAuthSessionCognitoActions,
                 ),
                 DeleteUserState.Resolver(DeleteUserCognitoActions),
-                AuthorizationCognitoActions
+                AuthorizationCognitoActions,
             ),
-            AuthCognitoActions
+            AuthCognitoActions,
         ),
         environment,
-        initialState
+        initialState,
     )
 
     companion object {
@@ -93,7 +96,8 @@ internal class AuthStateMachine(
                         SignInChallengeState.Resolver(SignInChallengeCognitoActions).logging(),
                         HostedUISignInState.Resolver(HostedUICognitoActions).logging(),
                         DeviceSRPSignInState.Resolver(DeviceSRPCognitoSignInActions).logging(),
-                        SignInCognitoActions
+                        SetupTOTPState.Resolver(SetupTOTPCognitoActions).logging(),
+                        SignInCognitoActions,
                     ).logging(),
                     SignOutState.Resolver(SignOutCognitoActions).logging(),
                     AuthenticationCognitoActions,
@@ -102,14 +106,14 @@ internal class AuthStateMachine(
                     FetchAuthSessionState.Resolver(FetchAuthSessionCognitoActions).logging(),
                     RefreshSessionState.Resolver(
                         FetchAuthSessionState.Resolver(FetchAuthSessionCognitoActions).logging(),
-                        FetchAuthSessionCognitoActions
+                        FetchAuthSessionCognitoActions,
                     ).logging(),
                     DeleteUserState.Resolver(DeleteUserCognitoActions),
-                    AuthorizationCognitoActions
+                    AuthorizationCognitoActions,
                 ).logging(),
-                AuthCognitoActions
+                AuthCognitoActions,
             ).logging(),
-            environment
+            environment,
         )
     }
 }
