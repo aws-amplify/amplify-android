@@ -567,7 +567,7 @@ internal class RealAWSCognitoAuthPlugin(
                         authStateMachine.cancel(token)
                         val authSignInResult = AuthSignInResult(
                             true,
-                            AuthNextSignInStep(AuthSignInStep.DONE, mapOf(), null)
+                            AuthNextSignInStep(AuthSignInStep.DONE, mapOf(), null, null, null)
                         )
                         onSuccess.accept(authSignInResult)
                         sendHubEvent(AuthChannelEventName.SIGNED_IN.toString())
@@ -647,7 +647,7 @@ internal class RealAWSCognitoAuthPlugin(
                         authStateMachine.cancel(token)
                         val authSignInResult = AuthSignInResult(
                             true,
-                            AuthNextSignInStep(AuthSignInStep.DONE, mapOf(), null)
+                            AuthNextSignInStep(AuthSignInStep.DONE, mapOf(), null, null, null)
                         )
                         onSuccess.accept(authSignInResult)
                         sendHubEvent(AuthChannelEventName.SIGNED_IN.toString())
@@ -853,7 +853,7 @@ internal class RealAWSCognitoAuthPlugin(
                         val authSignInResult =
                             AuthSignInResult(
                                 true,
-                                AuthNextSignInStep(AuthSignInStep.DONE, mapOf(), null)
+                                AuthNextSignInStep(AuthSignInStep.DONE, mapOf(), null, null, null)
                             )
                         onSuccess.accept(authSignInResult)
                         sendHubEvent(AuthChannelEventName.SIGNED_IN.toString())

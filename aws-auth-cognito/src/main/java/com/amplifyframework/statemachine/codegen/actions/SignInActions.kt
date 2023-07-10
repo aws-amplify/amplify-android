@@ -27,4 +27,5 @@ internal interface SignInActions {
     fun initResolveChallenge(event: SignInEvent.EventType.ReceivedChallenge): Action
     fun confirmDevice(event: SignInEvent.EventType.ConfirmDevice): Action
     fun startHostedUIAuthAction(event: SignInEvent.EventType.InitiateHostedUISignIn): Action
+    fun initiateTOTOSetupAction(event: SignInEvent.EventType.InitiateTOTPSetup): Action
 }
