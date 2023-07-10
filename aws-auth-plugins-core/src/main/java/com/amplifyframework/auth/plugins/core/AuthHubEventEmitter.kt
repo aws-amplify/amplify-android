@@ -20,7 +20,7 @@ import com.amplifyframework.hub.HubChannel
 import com.amplifyframework.hub.HubEvent
 import java.util.concurrent.atomic.AtomicReference
 
-object AuthHubEventEmitter {
+class AuthHubEventEmitter {
     private val lastPublishedHubEventName = AtomicReference<String>()
 
     fun sendHubEvent(eventName: String) {

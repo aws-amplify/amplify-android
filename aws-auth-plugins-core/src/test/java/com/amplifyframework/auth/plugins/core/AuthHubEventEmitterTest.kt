@@ -18,7 +18,6 @@ package com.amplifyframework.auth.plugins.core
 import com.amplifyframework.auth.AuthChannelEventName
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.hub.HubChannel
-import com.amplifyframework.hub.SubscriptionToken
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
@@ -26,24 +25,23 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import kotlin.test.fail
-import org.junit.After
+import org.junit.Before
 import org.junit.Test
 
 class AuthHubEventEmitterTest {
     private val TIMEOUT = 10L
-    private val emitter = AuthHubEventEmitter
-    private lateinit var token: SubscriptionToken
+    private lateinit var emitter: AuthHubEventEmitter
 
-    @After
-    fun cleanup() {
-        Amplify.Hub.unsubscribe(token)
+    @Before
+    fun setup() {
+        emitter = AuthHubEventEmitter()
     }
 
     @Test
     fun testEmitMultipleEvents() {
         val latch = CountDownLatch(2)
 
-        token = Amplify.Hub.subscribe(HubChannel.AUTH) {
+        Amplify.Hub.subscribe(HubChannel.AUTH) {
             when (AuthChannelEventName.valueOf(it.name)) {
                 AuthChannelEventName.SIGNED_IN, AuthChannelEventName.SIGNED_OUT -> latch.countDown()
                 else -> fail()
@@ -61,7 +59,7 @@ class AuthHubEventEmitterTest {
         val latch = CountDownLatch(2)
         val count = AtomicInteger(0)
 
-        token = Amplify.Hub.subscribe(HubChannel.AUTH) {
+        Amplify.Hub.subscribe(HubChannel.AUTH) {
             when (AuthChannelEventName.valueOf(it.name)) {
                 AuthChannelEventName.SIGNED_IN -> {
                     count.getAndIncrement()
@@ -82,7 +80,7 @@ class AuthHubEventEmitterTest {
     fun testEmitUnknownEvent() {
         val latch = CountDownLatch(1)
 
-        token = Amplify.Hub.subscribe(HubChannel.AUTH) {
+        Amplify.Hub.subscribe(HubChannel.AUTH) {
             when (it.name) {
                 "test" -> latch.countDown()
                 else -> fail()
@@ -98,7 +96,7 @@ class AuthHubEventEmitterTest {
     fun testSubscribeUnknownChannel() {
         val latch = CountDownLatch(1)
 
-        token = Amplify.Hub.subscribe(HubChannel.STORAGE) {
+        Amplify.Hub.subscribe(HubChannel.STORAGE) {
             latch.countDown()
         }
 
