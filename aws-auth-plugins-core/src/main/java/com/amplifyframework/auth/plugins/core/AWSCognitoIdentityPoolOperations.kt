@@ -73,7 +73,10 @@ class AWSCognitoIdentityPoolOperations(
                 )
 
                 val semVerRegex = "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)?\$".toRegex()
-                val pluginVersionSanitized = if (pluginVersionTrimmed.matches(semVerRegex)) pluginVersionTrimmed else "1.0.0"
+                val pluginVersionSanitized = if (pluginVersionTrimmed.matches(semVerRegex)) {
+                    logger.warn("Plugin version does not match semantic versioning rules, version set to 1.0.0")
+                    pluginVersionTrimmed
+                } else "1.0.0"
                 context.executionContext.customUserAgentMetadata.add(pluginKeySanitized, pluginVersionSanitized)
                 return super.modifyBeforeSerialization(context)
             }
