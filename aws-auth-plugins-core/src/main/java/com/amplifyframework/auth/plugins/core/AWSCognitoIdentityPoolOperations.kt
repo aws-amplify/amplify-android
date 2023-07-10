@@ -47,17 +47,19 @@ class AWSCognitoIdentityPoolOperations(
     context: Context,
     private val identityPool: AWSCognitoIdentityPoolConfiguration,
     pluginKey: String,
-    pluginVersion: String = "0"
+    pluginVersion: String = "1.0.0"
 ) {
     companion object {
         const val OIDC_PLUGIN_LOG_NAMESPACE = "amplify:oidc-plugin:%s"
     }
 
-    private val pluginKeyTrimmed = pluginKey.take(10)
+    private val pluginKeySanitized = pluginKey.take(25).filter { it.isLetterOrDigit() }
+    private val pluginVersionTrimmed = pluginVersion.take(10)
+
     private val KEY_LOGINS_PROVIDER = "amplify.${identityPool.poolId}.session.loginsProvider"
     private val KEY_IDENTITY_ID = "amplify.${identityPool.poolId}.session.identityId"
     private val KEY_AWS_CREDENTIALS = "amplify.${identityPool.poolId}.session.credential"
-    private val awsAuthCredentialStore = AuthCredentialStore(context.applicationContext, pluginKeyTrimmed, true)
+    private val awsAuthCredentialStore = AuthCredentialStore(context.applicationContext, pluginKeySanitized, true)
 
     private val logger = Amplify.Logging.forNamespace(OIDC_PLUGIN_LOG_NAMESPACE.format(this::class.java.simpleName))
 
@@ -69,7 +71,10 @@ class AWSCognitoIdentityPoolOperations(
                     AWSCognitoAuthMetadataType.AuthPluginsCore.key,
                     BuildConfig.VERSION_NAME
                 )
-                context.executionContext.customUserAgentMetadata.add(pluginKeyTrimmed, pluginVersion.take(10))
+
+                val semVerRegex = "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)?\$".toRegex()
+                val pluginVersionSanitized = if (pluginVersionTrimmed.matches(semVerRegex)) pluginVersionTrimmed else "1.0.0"
+                context.executionContext.customUserAgentMetadata.add(pluginKeySanitized, pluginVersionSanitized)
                 return super.modifyBeforeSerialization(context)
             }
         }
