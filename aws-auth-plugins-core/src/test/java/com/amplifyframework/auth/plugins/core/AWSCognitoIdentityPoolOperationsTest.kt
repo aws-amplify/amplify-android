@@ -45,15 +45,14 @@ class AWSCognitoIdentityPoolOperationsTest {
     private val KEY_IDENTITY_ID = "amplify.${config.poolId}.session.identityId"
     private val KEY_AWS_CREDENTIALS = "amplify.${config.poolId}.session.credential"
 
-    private val context = mockk<Context>()
+    private val context = mockk<Context>(relaxed = true)
     private val mockCognitoIDClient = mockk<CognitoIdentityClient>()
     private lateinit var awsCognitoIdentityPoolOperations: AWSCognitoIdentityPoolOperations
 
     @Before
     fun setup() {
-        coEvery { context.applicationContext } returns mockk()
-        mockkObject(CognitoIdentityClient)
-        coEvery { CognitoIdentityClient.invoke(any()) } returns mockCognitoIDClient
+        mockkObject(CognitoClientFactory)
+        coEvery { CognitoClientFactory.createIdentityClient(config, any(), any()) } returns mockCognitoIDClient
         mockkConstructor(AuthCredentialStore::class)
         coEvery { anyConstructed<AuthCredentialStore>().put(any(), any()) } returns Unit
 

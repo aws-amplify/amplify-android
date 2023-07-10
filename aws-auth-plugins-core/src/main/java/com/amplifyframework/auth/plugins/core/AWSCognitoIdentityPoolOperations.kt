@@ -16,13 +16,8 @@
 package com.amplifyframework.auth.plugins.core
 
 import android.content.Context
-import aws.sdk.kotlin.runtime.http.operation.customUserAgentMetadata
-import aws.sdk.kotlin.services.cognitoidentity.CognitoIdentityClient
 import aws.sdk.kotlin.services.cognitoidentity.model.GetCredentialsForIdentityRequest
 import aws.sdk.kotlin.services.cognitoidentity.model.GetIdRequest
-import aws.smithy.kotlin.runtime.client.RequestInterceptorContext
-import aws.smithy.kotlin.runtime.http.interceptors.HttpInterceptor
-import com.amplifyframework.auth.AWSCognitoAuthMetadataType
 import com.amplifyframework.auth.AWSCredentials
 import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.exceptions.NotAuthorizedException
@@ -33,7 +28,6 @@ import com.amplifyframework.auth.plugins.core.data.AWSCredentialsInternal
 import com.amplifyframework.auth.plugins.core.data.AuthCredentialStore
 import com.amplifyframework.auth.result.AuthSessionResult
 import com.amplifyframework.core.Amplify
-import com.amplifyframework.plugins.core.BuildConfig
 import java.time.Instant
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
@@ -53,35 +47,25 @@ class AWSCognitoIdentityPoolOperations(
         const val OIDC_PLUGIN_LOG_NAMESPACE = "amplify:oidc-plugin:%s"
     }
 
+    private val logger = Amplify.Logging.forNamespace(OIDC_PLUGIN_LOG_NAMESPACE.format(this::class.java.simpleName))
+
+    private val semVerRegex = "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)?\$".toRegex()
     private val pluginKeySanitized = pluginKey.take(25).filter { it.isLetterOrDigit() }
-    private val pluginVersionTrimmed = pluginVersion.take(10)
+    private val pluginVersionSanitized = pluginVersion.take(10).takeIf {
+        logger.warn("Plugin version does not match semantic versioning rules, version set to 1.0.0")
+        it.matches(semVerRegex)
+    } ?: "1.0.0"
 
     private val KEY_LOGINS_PROVIDER = "amplify.${identityPool.poolId}.session.loginsProvider"
     private val KEY_IDENTITY_ID = "amplify.${identityPool.poolId}.session.identityId"
     private val KEY_AWS_CREDENTIALS = "amplify.${identityPool.poolId}.session.credential"
     private val awsAuthCredentialStore = AuthCredentialStore(context.applicationContext, pluginKeySanitized, true)
 
-    private val logger = Amplify.Logging.forNamespace(OIDC_PLUGIN_LOG_NAMESPACE.format(this::class.java.simpleName))
-
-    val cognitoIdentityClient: CognitoIdentityClient = CognitoIdentityClient {
-        this.region = this@AWSCognitoIdentityPoolOperations.identityPool.region
-        this.interceptors += object : HttpInterceptor {
-            override suspend fun modifyBeforeSerialization(context: RequestInterceptorContext<Any>): Any {
-                context.executionContext.customUserAgentMetadata.add(
-                    AWSCognitoAuthMetadataType.AuthPluginsCore.key,
-                    BuildConfig.VERSION_NAME
-                )
-
-                val semVerRegex = "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)?\$".toRegex()
-                val pluginVersionSanitized = if (pluginVersionTrimmed.matches(semVerRegex)) {
-                    logger.warn("Plugin version does not match semantic versioning rules, version set to 1.0.0")
-                    pluginVersionTrimmed
-                } else "1.0.0"
-                context.executionContext.customUserAgentMetadata.add(pluginKeySanitized, pluginVersionSanitized)
-                return super.modifyBeforeSerialization(context)
-            }
-        }
-    }
+    val cognitoIdentityClient = CognitoClientFactory.createIdentityClient(
+        identityPool,
+        pluginKeySanitized,
+        pluginVersionSanitized
+    )
 
     private fun isValidSession(awsCredentials: AWSCredentialsInternal): Boolean {
         val currentTimeStamp = Instant.now()
