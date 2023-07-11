@@ -22,6 +22,7 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.confirmForgotPassword
 import aws.sdk.kotlin.services.cognitoidentityprovider.confirmSignUp
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AnalyticsMetadataType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AttributeType
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChangePasswordRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeviceRememberedStatusType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetUserAttributeVerificationCodeRequest
@@ -81,8 +82,6 @@ import com.amplifyframework.auth.cognito.result.RevokeTokenError
 import com.amplifyframework.auth.cognito.usecases.ResetPasswordUseCase
 import com.amplifyframework.auth.exceptions.ConfigurationException
 import com.amplifyframework.auth.exceptions.InvalidStateException
-import com.amplifyframework.auth.exceptions.NotAuthorizedException
-import com.amplifyframework.auth.exceptions.ServiceException
 import com.amplifyframework.auth.exceptions.SessionExpiredException
 import com.amplifyframework.auth.exceptions.SignedOutException
 import com.amplifyframework.auth.exceptions.UnknownException
@@ -131,6 +130,7 @@ import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
 import com.amplifyframework.statemachine.codegen.events.DeleteUserEvent
 import com.amplifyframework.statemachine.codegen.events.HostedUIEvent
+import com.amplifyframework.statemachine.codegen.events.SetupTOTPEvent
 import com.amplifyframework.statemachine.codegen.events.SignInChallengeEvent
 import com.amplifyframework.statemachine.codegen.events.SignOutEvent
 import com.amplifyframework.statemachine.codegen.states.AuthState
@@ -139,6 +139,7 @@ import com.amplifyframework.statemachine.codegen.states.AuthorizationState
 import com.amplifyframework.statemachine.codegen.states.DeleteUserState
 import com.amplifyframework.statemachine.codegen.states.HostedUISignInState
 import com.amplifyframework.statemachine.codegen.states.SRPSignInState
+import com.amplifyframework.statemachine.codegen.states.SetupTOTPState
 import com.amplifyframework.statemachine.codegen.states.SignInChallengeState
 import com.amplifyframework.statemachine.codegen.states.SignInState
 import com.amplifyframework.statemachine.codegen.states.SignOutState
@@ -560,6 +561,21 @@ internal class RealAWSCognitoAuthPlugin(
                                 authStateMachine.cancel(token)
                                 SignInChallengeHelper.getNextStep(challengeState.challenge, onSuccess, onError)
                             }
+
+                            totpSetupState is SetupTOTPState.WaitingForAnswer -> {
+                                authStateMachine.cancel(token)
+                                SignInChallengeHelper.getNextStep(
+                                    AuthChallenge(
+                                        ChallengeNameType.MfaSetup.value,
+                                        null,
+                                        null,
+                                        null,
+                                    ),
+                                    onSuccess,
+                                    onError,
+                                    totpSetupState.signInTOTPSetupData,
+                                )
+                            }
                         }
                     }
                     authNState is AuthenticationState.SignedIn &&
@@ -621,6 +637,15 @@ internal class RealAWSCognitoAuthPlugin(
                     else -> {
                         onError.accept(InvalidStateException())
                     }
+                }
+            }
+            if (signInState is SignInState.ResolvingTOTPSetup ) {
+                when (signInState.setupTOTPState) {
+                    is SetupTOTPState.WaitingForAnswer -> {
+                        _confirmSignIn(challengeResponse, options, onSuccess, onError)
+                    }
+
+                    else -> onError.accept(InvalidStateException())
                 }
             } else {
                 onError.accept(InvalidStateException())
@@ -693,6 +718,18 @@ internal class RealAWSCognitoAuthPlugin(
                             )
                         )
                         (signInState.challengeState as SignInChallengeState.Error).hasNewResponse = false
+                    }
+                    signInState is SignInState.ResolvingTOTPSetup -> {
+                        val setupData = (signInState.setupTOTPState as SetupTOTPState.WaitingForAnswer).signInTOTPSetupData
+                        val event = SetupTOTPEvent(
+                            SetupTOTPEvent.EventType.VerifyChallengeAnswer(
+                                challengeResponse,
+                                setupData.username,
+                                setupData.session,
+                                awsCognitoConfirmSignInOptions?.friendlyDeviceName,
+                            ),
+                        )
+                        authStateMachine.send(event)
                     }
                 }
             }, {

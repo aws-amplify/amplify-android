@@ -14,7 +14,6 @@
  */
 package com.amplifyframework.statemachine.codegen.states
 
-import com.amplifyframework.TOTPSetupDetails
 import com.amplifyframework.statemachine.State
 import com.amplifyframework.statemachine.StateMachineEvent
 import com.amplifyframework.statemachine.StateMachineResolver
@@ -26,14 +25,14 @@ import com.amplifyframework.statemachine.codegen.events.SetupTOTPEvent
 internal sealed class SetupTOTPState : State {
     data class NotStarted(val id: String = "") : SetupTOTPState()
     data class SetupTOTP(val signInTOTPSetupData: SignInTOTPSetupData) : SetupTOTPState()
-    data class WaitingForAnswer(val setupTOTPSetupDetails: TOTPSetupDetails) : SetupTOTPState()
-    data class Verifying(val code: String) : SetupTOTPState()
-    data class RespondingToAuthChallenge(val id: String = "") : SetupTOTPState()
+    data class WaitingForAnswer(val signInTOTPSetupData: SignInTOTPSetupData) : SetupTOTPState()
+    data class Verifying(val code: String, val username: String, val session: String?) : SetupTOTPState()
+    data class RespondingToAuthChallenge(val username: String, val session: String?) : SetupTOTPState()
     data class Success(val id: String = "") : SetupTOTPState()
     data class Error(val exception: Exception) : SetupTOTPState()
 
     class Resolver(private val setupTOTPActions: SetupTOTPActions) : StateMachineResolver<SetupTOTPState> {
-        override val defaultState = NotStarted()
+        override val defaultState = NotStarted("default")
 
         override fun resolve(oldState: SetupTOTPState, event: StateMachineEvent): StateResolution<SetupTOTPState> {
             val defaultResolution = StateResolution(oldState)
@@ -69,7 +68,11 @@ internal sealed class SetupTOTPState : State {
                 is WaitingForAnswer -> when (challengeEvent) {
                     is SetupTOTPEvent.EventType.VerifyChallengeAnswer -> {
                         StateResolution(
-                            Verifying(challengeEvent.answer),
+                            Verifying(
+                                challengeEvent.answer,
+                                oldState.signInTOTPSetupData.username,
+                                oldState.signInTOTPSetupData.session,
+                            ),
                             listOf(setupTOTPActions.verifyChallengeAnswer(challengeEvent)),
                         )
                     }
@@ -84,8 +87,12 @@ internal sealed class SetupTOTPState : State {
                 is Verifying -> when (challengeEvent) {
                     is SetupTOTPEvent.EventType.RespondToAuthChallenge -> {
                         StateResolution(
-                            RespondingToAuthChallenge(),
-                            listOf(setupTOTPActions.respondToAuthChallenge(challengeEvent)),
+                            RespondingToAuthChallenge(oldState.username, oldState.session),
+                            listOf(
+                                setupTOTPActions.respondToAuthChallenge(
+                                    challengeEvent,
+                                ),
+                            ),
                         )
                     }
 
@@ -113,7 +120,8 @@ internal sealed class SetupTOTPState : State {
                 is Error -> when (challengeEvent) {
                     is SetupTOTPEvent.EventType.VerifyChallengeAnswer -> {
                         StateResolution(
-                            Verifying(challengeEvent.answer),
+                            // TODO: Fix this
+                            Verifying(challengeEvent.answer, "", null),
                             listOf(setupTOTPActions.verifyChallengeAnswer(challengeEvent)),
                         )
                     }

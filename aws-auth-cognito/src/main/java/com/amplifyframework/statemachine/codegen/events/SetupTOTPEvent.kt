@@ -14,7 +14,6 @@
  */
 package com.amplifyframework.statemachine.codegen.events
 
-import com.amplifyframework.TOTPSetupDetails
 import com.amplifyframework.statemachine.StateMachineEvent
 import com.amplifyframework.statemachine.codegen.data.SignInTOTPSetupData
 import java.util.Date
@@ -24,10 +23,17 @@ internal class SetupTOTPEvent(val eventType: EventType, override val time: Date?
 
     sealed class EventType {
         data class SetupTOTP(val totpSetupDetails: SignInTOTPSetupData) : EventType()
-        data class WaitForAnswer(val totpSetupDetails: TOTPSetupDetails) : EventType()
+        data class WaitForAnswer(val totpSetupDetails: SignInTOTPSetupData) : EventType()
         data class ThrowAuthError(val exception: Exception) : EventType()
-        data class VerifyChallengeAnswer(val answer: String) : EventType()
-        data class RespondToAuthChallenge(val id: String = "") : EventType()
+        data class VerifyChallengeAnswer(
+            val answer: String,
+            val username: String,
+            val session: String?,
+            val friendlyDeviceName: String?,
+        ) :
+            EventType()
+
+        data class RespondToAuthChallenge(val username: String, val session: String?) : EventType()
         data class Verified(val id: String = "") : EventType()
     }
 

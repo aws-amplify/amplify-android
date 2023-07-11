@@ -16,6 +16,6 @@ package com.amplifyframework.statemachine.codegen.data
 
 internal data class SignInTOTPSetupData(
     val secretCode: String,
-    val session: String,
+    val session: String?,
     val username: String
 )
