@@ -143,6 +143,9 @@ public class ObserveQueryExecutor<T extends Model> implements Cancelable {
                     updateCompleteItemMap(itemChanged);
                 } else if (itemChanged.type() == StorageItemChange.Type.UPDATE) {
                     completeItemMap.remove(itemChanged.item().getPrimaryKeyString());
+                } else if (itemChanged.type() == StorageItemChange.Type.DELETE) {
+                    queryLocalData(itemClass, options, onQuerySnapshot, onObservationError);
+                    completeItemMap.remove(itemChanged.item().getPrimaryKeyString());
                 }
                 collect(itemChanged, onQuerySnapshot, itemClass, options, onObservationError);
             } catch (DataStoreException exception) {
