@@ -85,7 +85,7 @@ internal object SignInCognitoActions : SignInActions {
     override fun initResolveChallenge(event: SignInEvent.EventType.ReceivedChallenge) =
         Action<AuthEnvironment>("InitResolveChallenge") { id, dispatcher ->
             logger.verbose("$id Starting execution")
-            val evt = SignInChallengeEvent(SignInChallengeEvent.EventType.WaitForAnswer(event.challenge))
+            val evt = SignInChallengeEvent(SignInChallengeEvent.EventType.WaitForAnswer(event.challenge, true))
             logger.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
         }
