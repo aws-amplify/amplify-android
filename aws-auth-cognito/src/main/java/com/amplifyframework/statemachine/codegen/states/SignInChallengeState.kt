@@ -27,7 +27,7 @@ internal sealed class SignInChallengeState : State {
     data class NotStarted(val id: String = "") : SignInChallengeState()
     data class WaitingForAnswer(
         val challenge: AuthChallenge,
-        val hasNewResponse: Boolean = false
+        var hasNewResponse: Boolean = false
     ) : SignInChallengeState()
     data class Verifying(val id: String = "") : SignInChallengeState()
     data class Verified(val id: String = "") : SignInChallengeState()

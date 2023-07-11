@@ -675,6 +675,7 @@ internal class RealAWSCognitoAuthPlugin(
                             AuthNextSignInStep(signInStep, signInChallengeState.challenge.parameters ?: mapOf(), null)
                         )
                         onSuccess.accept(authSignInResult)
+                        (signInState.challengeState as SignInChallengeState.WaitingForAnswer).hasNewResponse = false
                     }
 
                     signInState is SignInState.ResolvingChallenge &&
