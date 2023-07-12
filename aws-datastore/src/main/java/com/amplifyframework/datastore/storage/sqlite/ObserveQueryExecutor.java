@@ -132,7 +132,6 @@ public class ObserveQueryExecutor<T extends Model> implements Cancelable {
         Objects.requireNonNull(onObservationStarted);
         Objects.requireNonNull(onObservationError);
         Objects.requireNonNull(onObservationComplete);
-        onObservationStarted.accept(this);
 
         Consumer<Object> onItemChanged = value -> {
 
@@ -144,7 +143,6 @@ public class ObserveQueryExecutor<T extends Model> implements Cancelable {
                 } else if (itemChanged.type() == StorageItemChange.Type.UPDATE) {
                     completeItemMap.remove(itemChanged.item().getPrimaryKeyString());
                 } else if (itemChanged.type() == StorageItemChange.Type.DELETE) {
-                    queryLocalData(itemClass, options, onQuerySnapshot, onObservationError);
                     completeItemMap.remove(itemChanged.item().getPrimaryKeyString());
                 }
                 collect(itemChanged, onQuerySnapshot, itemClass, options, onObservationError);
@@ -152,25 +150,33 @@ public class ObserveQueryExecutor<T extends Model> implements Cancelable {
                 onObservationError.accept(exception);
             }
         };
-        threadPool.submit(() -> queryLocalData(itemClass, options, onQuerySnapshot, onObservationError));
+        threadPool.submit(() -> queryLocalData(
+                itemClass,
+                options,
+                value -> {
+                    onObservationStarted.accept(this);
+                    onQuerySnapshot.accept(value);
+                    disposable = itemChangeSubject
+                            .filter(x -> x.item().getClass().isAssignableFrom(itemClass))
+                            .subscribe(
+                                    onItemChanged::accept,
+                                    failure -> {
+                                        if (failure instanceof DataStoreException) {
+                                            onObservationError.accept((DataStoreException) failure);
+                                            return;
+                                        }
+                                        onObservationError.accept(new DataStoreException(
+                                                "Failed to observe items in storage adapter.",
+                                                failure,
+                                                "Inspect the failure details."
+                                        ));
+                                    },
+                                    onObservationComplete::call
+                            );
 
-        disposable = itemChangeSubject
-            .filter(x -> x.item().getClass().isAssignableFrom(itemClass))
-            .subscribe(
-                onItemChanged::accept,
-                failure -> {
-                    if (failure instanceof DataStoreException) {
-                        onObservationError.accept((DataStoreException) failure);
-                        return;
-                    }
-                    onObservationError.accept(new DataStoreException(
-                            "Failed to observe items in storage adapter.",
-                            failure,
-                            "Inspect the failure details."
-                    ));
                 },
-                onObservationComplete::call
-            );
+                onObservationError
+        ));
     }
 
     private void queryLocalData(@NonNull Class<T> itemClass,
