@@ -40,7 +40,7 @@ data class LoginProvider(val name: String, val userIdentifier: String)
 /**
  * Provides access to Cognito Identity Client and API to to fetch identity Id and AWS Credentials
  * by exchanging OIDC tokens. AWS credentials are auto refreshes if expired.
- * 
+ *
  * @param context android context
  * @param identityPool Cognito Identity Pool configuration
  * @param pluginKey unique plugin key
