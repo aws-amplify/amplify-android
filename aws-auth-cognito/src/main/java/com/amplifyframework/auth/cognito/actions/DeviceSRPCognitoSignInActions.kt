@@ -136,19 +136,27 @@ internal object DeviceSRPCognitoSignInActions : DeviceSRPSignInActions {
 
                 srpHelper.setUserPoolParams(deviceKey, deviceGroupKey)
 
+                val challengeResponse = mutableMapOf(
+                    KEY_USERNAME to username,
+                    KEY_PASSWORD_CLAIM_SECRET_BLOCK to secretBlock,
+                    KEY_TIMESTAMP to srpHelper.dateString,
+                    KEY_PASSWORD_CLAIM_SIGNATURE to srpHelper.getSignature(salt, srpB, secretBlock),
+                    KEY_DEVICE_KEY to deviceKey
+                )
+
+                val secretHash = AuthHelper.getSecretHash(
+                    username,
+                    configuration.userPool?.appClient,
+                    configuration.userPool?.appClientSecret
+                )
+                secretHash?.let { challengeResponse[KEY_SECRET_HASH] = it }
+
                 cognitoAuthService.cognitoIdentityProviderClient?.let {
                     val respondToAuthChallenge = it.respondToAuthChallenge(
                         RespondToAuthChallengeRequest.invoke {
                             challengeName = ChallengeNameType.DevicePasswordVerifier
                             clientId = configuration.userPool?.appClient
-
-                            challengeResponses = mapOf(
-                                KEY_USERNAME to username,
-                                KEY_PASSWORD_CLAIM_SECRET_BLOCK to secretBlock,
-                                KEY_TIMESTAMP to srpHelper.dateString,
-                                KEY_PASSWORD_CLAIM_SIGNATURE to srpHelper.getSignature(salt, srpB, secretBlock),
-                                KEY_DEVICE_KEY to deviceKey
-                            )
+                            challengeResponses = challengeResponse
                             clientMetadata = event.metadata
                             pinpointEndpointId?.let { analyticsMetadata { analyticsEndpointId = it } }
                             encodedContextData?.let { userContextData { encodedData = it } }
