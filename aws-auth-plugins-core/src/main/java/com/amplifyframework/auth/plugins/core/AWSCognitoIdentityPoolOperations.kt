@@ -37,6 +37,15 @@ import kotlinx.serialization.json.Json
 @Serializable
 data class LoginProvider(val name: String, val userIdentifier: String)
 
+/**
+ * Provides access to Cognito Identity Client and API to to fetch identity Id and AWS Credentials
+ * by exchanging OIDC tokens. AWS credentials are auto refreshes if expired.
+ * 
+ * @param context android context
+ * @param identityPool Cognito Identity Pool configuration
+ * @param pluginKey unique plugin key
+ * @param pluginVersion plugin version name, default is 1.0.0
+ */
 class AWSCognitoIdentityPoolOperations(
     context: Context,
     private val identityPool: AWSCognitoIdentityPoolConfiguration,
@@ -143,6 +152,31 @@ class AWSCognitoIdentityPoolOperations(
             AuthSessionResult.success(it)
         } ?: AuthSessionResult.failure(UnknownException("Failed to fetch AWS credentials."))
 
+    /**
+     * fetches these identityIdResult and awsCredentialsResult. The results are part an AuthSession returned
+     * by `Amplify.Auth.fetchAuthSession` plugin API.
+     *
+     * Usage:
+     * ```
+     * // for authenticated user
+     * val logins = listOf(LoginProvider(providerName, tokens.idToken))
+     *
+     * // for guest user
+     * val logins = emptyList()
+     *
+     * val authSessionResult = awsCognitoIdentityPoolOperations.fetchAWSCognitoIdentityPoolDetails(logins, false)
+     *
+     * val session = OIDCAmplifySession(
+     *      true,
+     *      authSessionResult.identityIdResult, authSessionResult.awsCredentialsResult,
+     *      AuthSessionResult.success(tokens.getUserSub()), AuthSessionResult.success(tokens)
+     * )
+     * ```
+     * @param logins fetch AWS credentials for a authenticated user if LoginProvider info is present,
+     * fetch AWS credentials for a unauthenticated (guest) user if empty.
+     * @param forceRefresh fetch new AWS credentials if true
+     * @return identityId and awsCredentials results
+     */
     suspend fun fetchAWSCognitoIdentityPoolDetails(
         logins: List<LoginProvider>,
         forceRefresh: Boolean
@@ -191,6 +225,9 @@ class AWSCognitoIdentityPoolOperations(
         return AWSCognitoIdentityPoolDetails(identityIdResult, awsCredentialsResult)
     }
 
+    /**
+     * clear cached AWS credentials.
+     */
     fun clearCredentials() {
         logger.verbose("clearCredentials: clear cached AWS credentials")
         awsAuthCredentialStore.removeAll()
