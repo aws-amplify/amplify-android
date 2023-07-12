@@ -70,7 +70,7 @@ class AWSCognitoIdentityPoolOperations(
     private fun isValidSession(awsCredentials: AWSCredentialsInternal): Boolean {
         val currentTimeStamp = Instant.now()
         val isValid = currentTimeStamp < awsCredentials.expiration?.let { Instant.ofEpochSecond(it) }
-        logger.debug("fetchAWSCognitoIdentityPoolDetails: is AWS session valid? $isValid")
+        logger.verbose("fetchAWSCognitoIdentityPoolDetails: is AWS session valid? $isValid")
         return isValid
     }
 
@@ -83,10 +83,10 @@ class AWSCognitoIdentityPoolOperations(
             }
 
             val response = cognitoIdentityClient.getId(request)
-            logger.debug("getIdentityId: fetched identity id")
+            logger.verbose("getIdentityId: fetched identity id")
             response.identityId?.let { return@let it } ?: throw Exception("Fetching identity id failed.")
         } catch (notAuthorized: aws.sdk.kotlin.services.cognitoidentity.model.NotAuthorizedException) {
-            logger.debug("getIdentityId: guest access disabled")
+            logger.verbose("getIdentityId: guest access disabled")
             throw NotAuthorizedException(
                 recoverySuggestion = SignedOutException.RECOVERY_SUGGESTION_GUEST_ACCESS_DISABLED,
                 cause = notAuthorized
@@ -111,7 +111,7 @@ class AWSCognitoIdentityPoolOperations(
             }
 
             val response = cognitoIdentityClient.getCredentialsForIdentity(request)
-            logger.debug("getAWSCredentials: fetched AWS credentials")
+            logger.verbose("getAWSCredentials: fetched AWS credentials")
             response.credentials?.let {
                 return@let (
                     response.identityId to AWSCredentialsInternal(
@@ -123,7 +123,7 @@ class AWSCognitoIdentityPoolOperations(
                     )
             } ?: throw Exception("Fetching AWS credentials failed.")
         } catch (notAuthorized: aws.sdk.kotlin.services.cognitoidentity.model.NotAuthorizedException) {
-            logger.debug("getIdentityId: guest access disabled")
+            logger.verbose("getIdentityId: guest access disabled")
             throw NotAuthorizedException(
                 recoverySuggestion = SignedOutException.RECOVERY_SUGGESTION_GUEST_ACCESS_DISABLED,
                 cause = notAuthorized
@@ -147,12 +147,12 @@ class AWSCognitoIdentityPoolOperations(
         logins: List<LoginProvider>,
         forceRefresh: Boolean
     ): AWSCognitoIdentityPoolDetails {
-        logger.debug("fetchAWSCognitoIdentityPoolDetails: get cached AWS credentials")
+        logger.verbose("fetchAWSCognitoIdentityPoolDetails: get cached AWS credentials")
         val currentLoginProvider = deserializeLogins(awsAuthCredentialStore.get(KEY_LOGINS_PROVIDER))
         val currentIdentityId = awsAuthCredentialStore.get(KEY_IDENTITY_ID)
         val currentAWSCredentials = deserializeCredential(awsAuthCredentialStore.get(KEY_AWS_CREDENTIALS))
 
-        logger.debug("fetchAWSCognitoIdentityPoolDetails: start fetching identity id")
+        logger.verbose("fetchAWSCognitoIdentityPoolDetails: start fetching identity id")
         val identityIdResult = if (currentIdentityId == null || currentIdentityId.isBlank()) {
             try {
                 val identityId = getIdentityId(logins)
@@ -165,7 +165,7 @@ class AWSCognitoIdentityPoolOperations(
         }
 
         val newLogin = logins != currentLoginProvider
-        logger.debug("fetchAWSCognitoIdentityPoolDetails: start fetching AWS credentials")
+        logger.verbose("fetchAWSCognitoIdentityPoolDetails: start fetching AWS credentials")
         val awsCredentialsResult = if (currentAWSCredentials == null || !isValidSession(currentAWSCredentials) ||
             newLogin || forceRefresh
         ) {
@@ -177,7 +177,7 @@ class AWSCognitoIdentityPoolOperations(
                         awsAuthCredentialStore.put(KEY_LOGINS_PROVIDER, Json.encodeToString(logins))
                         awsAuthCredentialStore.put(KEY_IDENTITY_ID, identityId ?: "")
                         awsAuthCredentialStore.put(KEY_AWS_CREDENTIALS, Json.encodeToString(awsCredentials))
-                        logger.debug("fetchAWSCognitoIdentityPoolDetails: cached AWS credentials")
+                        logger.verbose("fetchAWSCognitoIdentityPoolDetails: cached AWS credentials")
                         getCredentialsResult(awsCredentials)
                     } catch (exception: AuthException) {
                         AuthSessionResult.failure(exception)
@@ -192,7 +192,7 @@ class AWSCognitoIdentityPoolOperations(
     }
 
     fun clearCredentials() {
-        logger.debug("clearCredentials: clear cached AWS credentials")
+        logger.verbose("clearCredentials: clear cached AWS credentials")
         awsAuthCredentialStore.removeAll()
     }
 
