@@ -19,6 +19,7 @@ import android.text.TextUtils;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.AmplifyException;
@@ -34,6 +35,7 @@ import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelAssociation;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.PropertyContainerPath;
 import com.amplifyframework.core.model.SchemaRegistry;
 import com.amplifyframework.core.model.SerializedModel;
 import com.amplifyframework.core.model.types.JavaFieldType;
@@ -72,6 +74,20 @@ public final class SelectionSet {
         this(selectionSet.value, new HashSet<>(selectionSet.nodes));
     }
 
+    // non public constructor to add associations.
+    // This is needed if a customer provided their own selection set + associations,
+    // since we wouldn't be creating our own SelectionSet with the builder.
+    SelectionSet(SelectionSet selectionSet, List<PropertyContainerPath> includeAssociations) {
+        this(selectionSet.value, new HashSet<>(selectionSet.nodes));
+
+        if (includeAssociations != null) {
+            for (PropertyContainerPath association : includeAssociations) {
+                SelectionSet included = SelectionSetUtils.asSelectionSet(association, false);
+                SelectionSetUtils.merge(this, included);
+            }
+        }
+    }
+
     /**
      * Constructor for a leaf node (no children).
      * @param value String value of the field.
@@ -88,6 +104,15 @@ public final class SelectionSet {
     public SelectionSet(String value, @NonNull Set<SelectionSet> nodes) {
         this.value = value;
         this.nodes = Objects.requireNonNull(nodes);
+    }
+
+    /**
+     * Returns node value.
+     * @return node value
+     */
+    @Nullable
+    public String getValue() {
+        return value;
     }
 
     /**
@@ -176,12 +201,19 @@ public final class SelectionSet {
      * Factory class for creating and serializing a selection set within a GraphQL document.
      */
     static final class Builder {
+        private String value;
         private Class<? extends Model> modelClass;
         private Operation operation;
         private GraphQLRequestOptions requestOptions;
         private ModelSchema modelSchema;
+        private List<PropertyContainerPath> includeAssociations;
 
         Builder() { }
+
+        public Builder value(@Nullable String value) {
+            this.value = value;
+            return Builder.this;
+        }
 
         public Builder modelClass(@NonNull Class<? extends Model> modelClass) {
             this.modelClass = Objects.requireNonNull(modelClass);
@@ -203,6 +235,11 @@ public final class SelectionSet {
             return Builder.this;
         }
 
+        public Builder includeAssociations(@NonNull List<PropertyContainerPath> associations) {
+            this.includeAssociations = associations;
+            return Builder.this;
+        }
+
         /**
          * Builds the SelectionSet containing all of the fields of the provided model class.
          * @return selection set
@@ -214,12 +251,19 @@ public final class SelectionSet {
                         "Provide either a modelClass or a modelSchema to build the selection set");
             }
             Objects.requireNonNull(this.operation);
-            SelectionSet node = new SelectionSet(null,
+            SelectionSet node = new SelectionSet(value,
                     SerializedModel.class == modelClass
                             ? getModelFields(modelSchema, requestOptions.maxDepth(), operation)
                             : getModelFields(modelClass, requestOptions.maxDepth(), operation, false));
             if (QueryType.LIST.equals(operation) || QueryType.SYNC.equals(operation)) {
                 node = wrapPagination(node);
+            }
+
+            if (includeAssociations != null) {
+                for (PropertyContainerPath association : includeAssociations) {
+                    SelectionSet included = SelectionSetUtils.asSelectionSet(association, false);
+                    SelectionSetUtils.merge(node, included);
+                }
             }
             return node;
         }
