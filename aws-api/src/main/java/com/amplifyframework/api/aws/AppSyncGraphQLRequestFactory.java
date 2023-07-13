@@ -16,6 +16,7 @@
 package com.amplifyframework.api.aws;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.graphql.GraphQLRequest;
@@ -27,6 +28,7 @@ import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelIdentifier;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.PropertyContainerPath;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.util.Casing;
@@ -54,6 +56,7 @@ public final class AppSyncGraphQLRequestFactory {
      * {@code objectId}.
      * @param modelClass the model class.
      * @param objectId the model identifier.
+     * @param includes list of associations that should be included in the selection set
      * @param <R> the response type.
      * @param <T> the concrete model type.
      * @return a valid {@link GraphQLRequest} instance.
@@ -61,7 +64,8 @@ public final class AppSyncGraphQLRequestFactory {
      */
     public static <R, T extends Model> GraphQLRequest<R> buildQuery(
         Class<T> modelClass,
-        String objectId
+        String objectId,
+        @Nullable List<PropertyContainerPath> includes
     ) {
         GraphQLRequestVariable variable;
         try {
@@ -78,7 +82,25 @@ public final class AppSyncGraphQLRequestFactory {
             variable = new GraphQLRequestVariable("id", objectId, "ID!");
         }
 
-        return buildQuery(modelClass, variable);
+        return buildQuery(modelClass, includes, variable);
+    }
+
+    /**
+     * Creates a {@link GraphQLRequest} that represents a query that expects a single value as a result. The request
+     * will be created with the correct document based on the model schema and variables based on given
+     * {@code objectId}.
+     * @param modelClass the model class.
+     * @param objectId the model identifier.
+     * @param <R> the response type.
+     * @param <T> the concrete model type.
+     * @return a valid {@link GraphQLRequest} instance.
+     * @throws IllegalStateException when the model schema does not contain the expected information.
+     */
+    public static <R, T extends Model> GraphQLRequest<R> buildQuery(
+            Class<T> modelClass,
+            String objectId
+    ) {
+        return buildQuery(modelClass, objectId, null);
     }
 
     /**
@@ -87,6 +109,7 @@ public final class AppSyncGraphQLRequestFactory {
      * {@code modelIdentifier}.
      * @param modelClass the model class.
      * @param modelIdentifier the model identifier.
+     * @param includes list of associations that should be included in the selection set
      * @param <R> the response type.
      * @param <T> the concrete model type.
      * @return a valid {@link GraphQLRequest} instance.
@@ -94,7 +117,8 @@ public final class AppSyncGraphQLRequestFactory {
      */
     public static <R, T extends Model> GraphQLRequest<R> buildQuery(
             @NonNull Class<T> modelClass,
-            @NonNull ModelIdentifier<T> modelIdentifier
+            @NonNull ModelIdentifier<T> modelIdentifier,
+            @Nullable List<PropertyContainerPath> includes
     ) {
         GraphQLRequestVariable[] variables;
         try {
@@ -130,7 +154,25 @@ public final class AppSyncGraphQLRequestFactory {
             );
         }
 
-        return buildQuery(modelClass, variables);
+        return buildQuery(modelClass, includes, variables);
+    }
+
+    /**
+     * Creates a {@link GraphQLRequest} that represents a query that expects a single value as a result. The request
+     * will be created with the correct document based on the model schema and variables based on given
+     * {@code modelIdentifier}.
+     * @param modelClass the model class.
+     * @param modelIdentifier the model identifier.
+     * @param <R> the response type.
+     * @param <T> the concrete model type.
+     * @return a valid {@link GraphQLRequest} instance.
+     * @throws IllegalStateException when the model schema does not contain the expected information.
+     */
+    public static <R, T extends Model> GraphQLRequest<R> buildQuery(
+            @NonNull Class<T> modelClass,
+            @NonNull ModelIdentifier<T> modelIdentifier
+    ) {
+        return buildQuery(modelClass, modelIdentifier, null);
     }
 
     /**
@@ -145,6 +187,7 @@ public final class AppSyncGraphQLRequestFactory {
      */
     private static <R, T extends Model> GraphQLRequest<R> buildQuery(
             Class<T> modelClass,
+            @Nullable List<PropertyContainerPath> includes,
             GraphQLRequestVariable... variables
     ) {
         try {
@@ -157,6 +200,18 @@ public final class AppSyncGraphQLRequestFactory {
             for (GraphQLRequestVariable v : variables) {
                 builder.variable(v.getKey(), v.getType(), v.getValue());
             }
+
+            if (includes != null) {
+                SelectionSet selectionSet = SelectionSet.builder()
+                        .modelClass(modelClass)
+                        .operation(QueryType.GET)
+                        .requestOptions(new ApiGraphQLRequestOptions())
+                        .includeAssociations(includes)
+                        .build();
+
+                builder.selectionSet(selectionSet);
+            }
+
             return builder.build();
         } catch (AmplifyException exception) {
             throw new IllegalStateException(

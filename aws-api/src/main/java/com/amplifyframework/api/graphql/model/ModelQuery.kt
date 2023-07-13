@@ -19,6 +19,7 @@ import com.amplifyframework.api.graphql.GraphQLRequest
 import com.amplifyframework.api.graphql.PaginatedResult
 import com.amplifyframework.core.model.Model
 import com.amplifyframework.core.model.ModelIdentifier
+import com.amplifyframework.core.model.PropertyContainerPath
 import com.amplifyframework.core.model.query.predicate.QueryPredicate
 import com.amplifyframework.core.model.query.predicate.QueryPredicates
 import java.util.Objects
@@ -34,14 +35,17 @@ object ModelQuery {
      * variables based on given `modelId`.
      * @param modelType the model class.
      * @param modelId the model identifier.
+     * @param includes list of associations that should be included in the selection set
      * @param <M> the concrete model type.
      * @return a valid [GraphQLRequest] instance.
     </M> */
-    operator fun <M : Model?> get(
+    @JvmOverloads
+    operator fun <M : Model> get(
         modelType: Class<M>,
-        modelId: String
+        modelId: String,
+        includes: List<PropertyContainerPath> = emptyList()
     ): GraphQLRequest<M> {
-        return AppSyncGraphQLRequestFactory.buildQuery(modelType, modelId)
+        return AppSyncGraphQLRequestFactory.buildQuery(modelType, modelId, includes)
     }
 
     /**
@@ -50,14 +54,17 @@ object ModelQuery {
      * variables based on given `modelIdentifier`.
      * @param modelType the model class.
      * @param modelIdentifier the model identifier.
+     * @param includes list of associations that should be included in the selection set
      * @param <M> the concrete model type.
      * @return a valid [GraphQLRequest] instance.
     </M> */
-    operator fun <M : Model?> get(
+    @JvmOverloads
+    operator fun <M : Model> get(
         modelType: Class<M>,
-        modelIdentifier: ModelIdentifier<M>
+        modelIdentifier: ModelIdentifier<M>,
+        includes: List<PropertyContainerPath> = emptyList()
     ): GraphQLRequest<M> {
-        return AppSyncGraphQLRequestFactory.buildQuery(modelType, modelIdentifier)
+        return AppSyncGraphQLRequestFactory.buildQuery(modelType, modelIdentifier, includes)
     }
 
     /**
@@ -69,9 +76,9 @@ object ModelQuery {
      * @param <M> the concrete model type.
      * @return a valid [GraphQLRequest] instance.
     </M> */
-    fun <M : Model?> list(
+    fun <M : Model> list(
         modelType: Class<M>,
-        predicate: QueryPredicate
+        predicate: QueryPredicate = QueryPredicates.all()
     ): GraphQLRequest<PaginatedResult<M>> {
         Objects.requireNonNull(modelType)
         Objects.requireNonNull(predicate)
@@ -86,7 +93,7 @@ object ModelQuery {
      * @return a valid [GraphQLRequest] instance.
      * @see .list
     </M> */
-    fun <M : Model?> list(modelType: Class<M>): GraphQLRequest<PaginatedResult<M>> {
+    fun <M : Model> list(modelType: Class<M>): GraphQLRequest<PaginatedResult<M>> {
         return list(modelType, QueryPredicates.all())
     }
 
@@ -104,7 +111,7 @@ object ModelQuery {
      * @return a valid [GraphQLRequest] instance.
      * @see ModelPagination.firstPage
     </M> */
-    fun <M : Model?> list(
+    fun <M : Model> list(
         modelType: Class<M>,
         predicate: QueryPredicate,
         pagination: ModelPagination
@@ -127,7 +134,8 @@ object ModelQuery {
      * @return a valid [GraphQLRequest] instance.
      * @see ModelPagination.firstPage
     </M> */
-    fun <M : Model?> list(
+    @JvmStatic
+    fun <M : Model> list(
         modelType: Class<M>,
         pagination: ModelPagination
     ): GraphQLRequest<PaginatedResult<M>> {
