@@ -1,3 +1,14 @@
+## [Release 2.10.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.10.0)
+
+### Features
+- **auth:** oidc plugin development toolkit ([#2507](https://github.com/aws-amplify/amplify-android/issues/2507))
+
+### Bug Fixes
+- **auth:** Fix for confirm sign in state machine callback ([#2503](https://github.com/aws-amplify/amplify-android/issues/2503))
+- **auth:** Fix for adding missing parameter for resolving device SRP ([#2508](https://github.com/aws-amplify/amplify-android/issues/2508))
+
+[See all changes between 2.9.0 and 2.10.0](https://github.com/aws-amplify/amplify-android/compare/release_v2.9.0...release_v2.10.0)
+
 ## [Release 2.9.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.9.0)
 
 ### Features
