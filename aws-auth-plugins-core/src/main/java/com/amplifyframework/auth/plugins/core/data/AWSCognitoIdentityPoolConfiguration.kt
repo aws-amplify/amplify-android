@@ -12,17 +12,10 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package com.amplifyframework.auth
 
-import com.amplifyframework.annotations.InternalApiWarning
-import com.amplifyframework.auth.result.AuthSessionResult
+package com.amplifyframework.auth.plugins.core.data
 
-@InternalApiWarning
-open class AWSAuthSessionInternal(
-    @get:JvmName("getSignedIn")
-    open val isSignedIn: Boolean,
-    open val identityIdResult: AuthSessionResult<String>,
-    open val awsCredentialsResult: AuthSessionResult<AWSCredentials>,
-    open val userSubResult: AuthSessionResult<String>,
-    open val userPoolTokensResult: AuthSessionResult<AWSCognitoUserPoolTokens>,
-) : AuthSession(isSignedIn)
+/**
+ * Configuration options for specifying cognito identity pool.
+ */
+data class AWSCognitoIdentityPoolConfiguration(val poolId: String, val region: String = "us-east-1")
