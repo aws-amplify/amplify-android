@@ -19,6 +19,7 @@ import com.amplifyframework.api.graphql.GraphQLRequest
 import com.amplifyframework.api.graphql.PaginatedResult
 import com.amplifyframework.core.model.Model
 import com.amplifyframework.core.model.ModelIdentifier
+import com.amplifyframework.core.model.ModelPath
 import com.amplifyframework.core.model.PropertyContainerPath
 import com.amplifyframework.core.model.query.predicate.QueryPredicate
 import com.amplifyframework.core.model.query.predicate.QueryPredicates
@@ -40,12 +41,15 @@ object ModelQuery {
      * @return a valid [GraphQLRequest] instance.
     </M> */
     @JvmOverloads
-    operator fun <M : Model> get(
+    @JvmStatic
+    operator fun <M : Model, P : ModelPath<M>> get(
         modelType: Class<M>,
         modelId: String,
-        includes: List<PropertyContainerPath> = emptyList()
+        includes: ((P) -> List<PropertyContainerPath>)? = null
     ): GraphQLRequest<M> {
-        return AppSyncGraphQLRequestFactory.buildQuery(modelType, modelId, includes)
+
+        val associations = includes?.invoke(ModelPath.getRootPath(modelType))
+        return AppSyncGraphQLRequestFactory.buildQuery(modelType, modelId, associations)
     }
 
     /**
@@ -59,12 +63,14 @@ object ModelQuery {
      * @return a valid [GraphQLRequest] instance.
     </M> */
     @JvmOverloads
-    operator fun <M : Model> get(
+    @JvmStatic
+    operator fun <M : Model, P : ModelPath<M>> get(
         modelType: Class<M>,
         modelIdentifier: ModelIdentifier<M>,
-        includes: List<PropertyContainerPath> = emptyList()
+        includes: ((P) -> List<PropertyContainerPath>)? = null
     ): GraphQLRequest<M> {
-        return AppSyncGraphQLRequestFactory.buildQuery(modelType, modelIdentifier, includes)
+        val associations = includes?.invoke(ModelPath.getRootPath(modelType))
+        return AppSyncGraphQLRequestFactory.buildQuery(modelType, modelIdentifier, associations)
     }
 
     /**
@@ -76,6 +82,7 @@ object ModelQuery {
      * @param <M> the concrete model type.
      * @return a valid [GraphQLRequest] instance.
     </M> */
+    @JvmStatic
     fun <M : Model> list(
         modelType: Class<M>,
         predicate: QueryPredicate = QueryPredicates.all()
@@ -93,6 +100,7 @@ object ModelQuery {
      * @return a valid [GraphQLRequest] instance.
      * @see .list
     </M> */
+    @JvmStatic
     fun <M : Model> list(modelType: Class<M>): GraphQLRequest<PaginatedResult<M>> {
         return list(modelType, QueryPredicates.all())
     }
@@ -111,6 +119,7 @@ object ModelQuery {
      * @return a valid [GraphQLRequest] instance.
      * @see ModelPagination.firstPage
     </M> */
+    @JvmStatic
     fun <M : Model> list(
         modelType: Class<M>,
         predicate: QueryPredicate,

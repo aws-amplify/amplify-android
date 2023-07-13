@@ -137,6 +137,30 @@ open class ModelPath<ModelType : Model>(
         propertyType = E::class.java
     )
 
+    companion object {
+
+        /**
+         * Attempts to get a reference to the root property path of a given model
+         * of type `M`. This uses reflection to allow models created before the
+         * `PropertyPath` type was added to continue working without disruption
+         * of the development workflow.
+         *
+         * @return the `P : ModelPath<M>`
+         * @throws ModelException.PropertyPathNotFound in case the path could not be read or found.
+         */
+        @Throws(ModelException.PropertyPathNotFound::class)
+        @JvmStatic
+        fun <M : Model, P : ModelPath<M>>getRootPath(clazz: Class<M>): P {
+            val field = try {
+                clazz.getDeclaredField("rootPath")
+            } catch (e: NoSuchFieldException) {
+                throw ModelException.PropertyPathNotFound(clazz.simpleName)
+            }
+            field.isAccessible = true
+            val path = field.get(null) as? P
+            return path ?: throw ModelException.PropertyPathNotFound(clazz.simpleName)
+        }
+    }
 }
 
 /**
@@ -170,25 +194,3 @@ class FieldPath<Type : Any>(
  * @return the passed associations as an array
  */
 fun includes(vararg associations: PropertyContainerPath) = listOf(*associations)
-
-/**
- * Attempts to get a reference to the root property path of a given model
- * of type `M`. This uses reflection to allow models created before the
- * `PropertyPath` type was added to continue working without disruption
- * of the development workflow.
- *
- * @return the `ModelPath<M>`
- * @throws ModelException.PropertyPathNotFound in case the path could not be read or found.
- */
-@Throws(ModelException.PropertyPathNotFound::class)
-fun <M : Model> Class<M>.getRootPath(): ModelPath<M> {
-    println(fields.map { it.name }.joinToString("\n"))
-    val field = try {
-        this.getDeclaredField("rootPath")
-    } catch (e: NoSuchFieldException) {
-        throw ModelException.PropertyPathNotFound(this.simpleName)
-    }
-    field.isAccessible = true
-    val path = field.get(null) as? ModelPath<M>
-    return path ?: throw ModelException.PropertyPathNotFound(this.simpleName)
-}
