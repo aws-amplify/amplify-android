@@ -1,3 +1,10 @@
+## [Release 2.10.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.10.0)
+
+### Features
+- **auth:** oidc plugin development toolkit ([#2507](https://github.com/aws-amplify/amplify-android/issues/2507))
+
+[See all changes between 2.9.1 and 2.10.0](https://github.com/aws-amplify/amplify-android/compare/release_v2.9.1...release_v2.10.0)
+
 ## [Release 2.9.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.9.0)
 
 ### Features
