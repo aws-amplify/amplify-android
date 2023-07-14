@@ -56,7 +56,7 @@ fun PropertyContainerPath.asSelectionSet(includeRoot: Boolean = true): Selection
         .build()
 
     if (metadata.isCollection) {
-        selectionSet = SelectionSet(metadata.name, setOf(selectionSet))
+        selectionSet = SelectionSet(metadata.name, mutableSetOf(selectionSet))
     }
 
     val parent = metadata.parent as? PropertyContainerPath
