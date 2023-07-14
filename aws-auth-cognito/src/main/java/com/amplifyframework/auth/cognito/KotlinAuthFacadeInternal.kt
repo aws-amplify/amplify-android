@@ -17,6 +17,7 @@ package com.amplifyframework.auth.cognito
 
 import android.app.Activity
 import android.content.Intent
+import com.amplifyframework.TOTPSetupDetails
 import com.amplifyframework.auth.AuthCodeDeliveryDetails
 import com.amplifyframework.auth.AuthDevice
 import com.amplifyframework.auth.AuthProvider
@@ -38,6 +39,7 @@ import com.amplifyframework.auth.options.AuthSignOutOptions
 import com.amplifyframework.auth.options.AuthSignUpOptions
 import com.amplifyframework.auth.options.AuthUpdateUserAttributeOptions
 import com.amplifyframework.auth.options.AuthUpdateUserAttributesOptions
+import com.amplifyframework.auth.options.AuthVerifyTOTPSetupOptions
 import com.amplifyframework.auth.options.AuthWebUISignInOptions
 import com.amplifyframework.auth.result.AuthResetPasswordResult
 import com.amplifyframework.auth.result.AuthSignInResult
@@ -515,6 +517,59 @@ internal class KotlinAuthFacadeInternal(private val delegate: RealAWSCognitoAuth
     suspend fun clearFederationToIdentityPool() {
         return suspendCoroutine { continuation ->
             delegate.clearFederationToIdentityPool(
+                { continuation.resume(Unit) },
+                { continuation.resumeWithException(it) }
+            )
+        }
+    }
+
+    suspend fun setupMFA(): TOTPSetupDetails {
+        return suspendCoroutine { continuation ->
+            delegate.setUpTOTP(
+                { continuation.resume(it) },
+                { continuation.resumeWithException(it) }
+            )
+        }
+    }
+
+    suspend fun verifyTOTPSetup(code: String) {
+        return suspendCoroutine { continuation ->
+            delegate.verifyTOTPSetup(
+                code,
+                { continuation.resume(Unit) },
+                { continuation.resumeWithException(it) }
+            )
+        }
+    }
+
+    suspend fun verifyTOTPSetup(code: String, options: AuthVerifyTOTPSetupOptions) {
+        return suspendCoroutine { continuation ->
+            delegate.verifyTOTPSetup(
+                code,
+                options,
+                { continuation.resume(Unit) },
+                { continuation.resumeWithException(it) }
+            )
+        }
+    }
+
+    suspend fun fetchMFAPreference(): UserMFAPreference {
+        return suspendCoroutine { continuation ->
+            delegate.fetchMFAPreference(
+                { continuation.resume(it) },
+                { continuation.resumeWithException(it) }
+            )
+        }
+    }
+
+    suspend fun updateMFAPreference(
+        sms: MFAPreference?,
+        totp: MFAPreference?
+    ) {
+        return suspendCoroutine { continuation ->
+            delegate.updateMFAPreference(
+                sms,
+                totp,
                 { continuation.resume(Unit) },
                 { continuation.resumeWithException(it) }
             )

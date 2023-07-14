@@ -82,7 +82,8 @@ internal object SignInChallengeHelper {
             challengeNameType is ChallengeNameType.SmsMfa ||
                 challengeNameType is ChallengeNameType.CustomChallenge ||
                 challengeNameType is ChallengeNameType.NewPasswordRequired ||
-                challengeNameType is ChallengeNameType.SoftwareTokenMfa -> {
+                challengeNameType is ChallengeNameType.SoftwareTokenMfa ||
+                challengeNameType is ChallengeNameType.SelectMfaType -> {
                 val challenge =
                     AuthChallenge(challengeNameType.value, username, session, challengeParameters)
                 SignInEvent(SignInEvent.EventType.ReceivedChallenge(challenge))
@@ -153,6 +154,19 @@ internal object SignInChallengeHelper {
                 )
                 onSuccess.accept(authSignInResult)
             }
+            is ChallengeNameType.SoftwareTokenMfa -> {
+                val authSignInResult = AuthSignInResult(
+                    false,
+                    AuthNextSignInStep(
+                        AuthSignInStep.CONFIRM_SIGN_IN_WITH_TOTP_CODE,
+                        mapOf(),
+                        null,
+                        null,
+                        null,
+                    ),
+                )
+                onSuccess.accept(authSignInResult)
+            }
             is ChallengeNameType.MfaSetup -> {
                 signInTOTPSetupData?.let {
                     val authSignInResult = AuthSignInResult(
@@ -168,7 +182,32 @@ internal object SignInChallengeHelper {
                     onSuccess.accept(authSignInResult)
                 } ?: onError.accept(UnknownException(cause = Exception("Challenge type not supported.")))
             }
+            is ChallengeNameType.SelectMfaType -> {
+                val authSignInResult = AuthSignInResult(
+                    false,
+                    AuthNextSignInStep(
+                        AuthSignInStep.CONTINUE_SIGN_IN_WITH_MFA_SELECTION,
+                        mapOf(),
+                        null,
+                        null,
+                        challengeParams["MFAS_CAN_CHOOSE"]?.let { getAllowedMFATypes(it) },
+                    ),
+                )
+                onSuccess.accept(authSignInResult)
+            }
             else -> onError.accept(UnknownException(cause = Exception("Challenge type not supported.")))
         }
+    }
+
+    private fun getAllowedMFATypes(allowedMFAType: String): Set<MFAType> {
+        val result = mutableSetOf<MFAType>()
+        allowedMFAType.replace(Regex("\\[|\\]|\""), "").split(",").forEach {
+            when (it) {
+                "SMS_MFA" -> result.add(MFAType.SMS)
+                "SOFTWARE_TOKEN_MFA" -> result.add(MFAType.TOTP)
+                else -> TODO("throw exception")
+            }
+        }
+        return result
     }
 }

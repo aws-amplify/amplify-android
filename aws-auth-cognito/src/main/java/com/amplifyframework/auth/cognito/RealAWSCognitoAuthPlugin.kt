@@ -18,8 +18,10 @@ package com.amplifyframework.auth.cognito
 import android.app.Activity
 import android.content.Intent
 import androidx.annotation.WorkerThread
+import aws.sdk.kotlin.services.cognitoidentityprovider.associateSoftwareToken
 import aws.sdk.kotlin.services.cognitoidentityprovider.confirmForgotPassword
 import aws.sdk.kotlin.services.cognitoidentityprovider.confirmSignUp
+import aws.sdk.kotlin.services.cognitoidentityprovider.getUser
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AnalyticsMetadataType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AttributeType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
@@ -28,13 +30,18 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeviceRememberedSta
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetUserAttributeVerificationCodeRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetUserRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ListDevicesRequest
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.SmsMfaSettingsType
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.SoftwareTokenMfaSettingsType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.UpdateDeviceStatusRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.UpdateUserAttributesRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.UpdateUserAttributesResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.VerifyUserAttributeRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.resendConfirmationCode
+import aws.sdk.kotlin.services.cognitoidentityprovider.setUserMfaPreference
 import aws.sdk.kotlin.services.cognitoidentityprovider.signUp
+import aws.sdk.kotlin.services.cognitoidentityprovider.verifySoftwareToken
 import com.amplifyframework.AmplifyException
+import com.amplifyframework.TOTPSetupDetails
 import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.auth.AWSCognitoAuthMetadataType
 import com.amplifyframework.auth.AWSCredentials
@@ -49,6 +56,7 @@ import com.amplifyframework.auth.AuthSession
 import com.amplifyframework.auth.AuthUser
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
+import com.amplifyframework.auth.MFAType
 import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidOauthConfigurationException
 import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidUserPoolConfigurationException
 import com.amplifyframework.auth.cognito.exceptions.invalidstate.SignedInException
@@ -97,6 +105,7 @@ import com.amplifyframework.auth.options.AuthSignOutOptions
 import com.amplifyframework.auth.options.AuthSignUpOptions
 import com.amplifyframework.auth.options.AuthUpdateUserAttributeOptions
 import com.amplifyframework.auth.options.AuthUpdateUserAttributesOptions
+import com.amplifyframework.auth.options.AuthVerifyTOTPSetupOptions
 import com.amplifyframework.auth.options.AuthWebUISignInOptions
 import com.amplifyframework.auth.result.AuthResetPasswordResult
 import com.amplifyframework.auth.result.AuthSignInResult
@@ -2019,6 +2028,193 @@ internal class RealAWSCognitoAuthPlugin(
                 else -> {
                     onError.accept(InvalidStateException("Clearing of federation failed."))
                 }
+            }
+        }
+    }
+
+    override fun setUpTOTP(onSuccess: Consumer<TOTPSetupDetails>, onError: Consumer<AuthException>) {
+        authStateMachine.getCurrentState { authState ->
+            when (authState.authNState) {
+                is AuthenticationState.SignedIn -> {
+                    GlobalScope.launch {
+                        try {
+                            val accessToken = getSession().userPoolTokensResult.value?.accessToken
+                            accessToken?.let { token ->
+                                SessionHelper.getUsername(token)?.let { username ->
+                                    authEnvironment.cognitoAuthService
+                                        .cognitoIdentityProviderClient?.associateSoftwareToken {
+                                            this.accessToken = token
+                                        }?.also { response ->
+                                            response.secretCode?.let { secret ->
+                                                onSuccess.accept(
+                                                    TOTPSetupDetails(
+                                                        secret,
+                                                        username
+                                                    )
+                                                )
+                                            }
+                                        }
+                                }
+                            } ?: onError.accept(SignedOutException())
+                        } catch (error: Exception) {
+                            onError.accept(
+                                CognitoAuthExceptionConverter.lookup(
+                                    error,
+                                    "Cannot find a multi-factor authentication (MFA) method.",
+                                )
+                            )
+                        }
+                    }
+                }
+
+                else -> onError.accept(InvalidStateException())
+            }
+        }
+    }
+
+    override fun verifyTOTPSetup(
+        code: String,
+        onSuccess: Action,
+        onError: Consumer<AuthException>
+    ) {
+        verifyTotp(code, null, onSuccess, onError)
+    }
+
+    override fun verifyTOTPSetup(
+        code: String,
+        options: AuthVerifyTOTPSetupOptions,
+        onSuccess: Action,
+        onError: Consumer<AuthException>
+    ) {
+        verifyTotp(code, options.friendlyDeviceName, onSuccess, onError)
+    }
+
+    fun fetchMFAPreference(
+        onSuccess: Consumer<UserMFAPreference>,
+        onError: Consumer<AuthException>
+    ) {
+        authStateMachine.getCurrentState { authState ->
+            when (authState.authNState) {
+                is AuthenticationState.SignedIn -> {
+                    GlobalScope.launch {
+                        try {
+                            val accessToken = getSession().userPoolTokensResult.value?.accessToken
+                            accessToken?.let { token ->
+                                authEnvironment.cognitoAuthService
+                                    .cognitoIdentityProviderClient?.getUser {
+                                        this.accessToken = token
+                                    }?.also { response ->
+                                        var enabledSet: MutableSet<MFAType>? = null
+                                        var preferred: MFAType? = null
+                                        if (!response.userMfaSettingList.isNullOrEmpty()) {
+                                            enabledSet = mutableSetOf<MFAType>()
+                                            response.userMfaSettingList?.forEach { mfaType ->
+                                                enabledSet.add(MFAType.toMFAType(mfaType))
+                                            }
+                                        }
+                                        response.preferredMfaSetting?.let { preferredMFA ->
+                                            preferred = MFAType.toMFAType(preferredMFA)
+                                        }
+                                        onSuccess.accept(UserMFAPreference(enabledSet, preferred))
+                                    }
+                            } ?: onError.accept(SignedOutException())
+                        } catch (error: Exception) {
+                            onError.accept(
+                                CognitoAuthExceptionConverter.lookup(
+                                    error,
+                                    "Cannot update the MFA preferences",
+                                )
+                            )
+                        }
+                    }
+                }
+
+                else -> onError.accept(InvalidStateException())
+            }
+        }
+    }
+
+    fun updateMFAPreference(
+        sms: MFAPreference?,
+        totp: MFAPreference?,
+        onSuccess: Action,
+        onError: Consumer<AuthException>
+    ) {
+        authStateMachine.getCurrentState { authState ->
+            when (authState.authNState) {
+                is AuthenticationState.SignedIn -> {
+                    GlobalScope.launch {
+                        try {
+                            val accessToken = getSession().userPoolTokensResult.value?.accessToken
+                            accessToken?.let { token ->
+                                authEnvironment.cognitoAuthService.cognitoIdentityProviderClient?.setUserMfaPreference {
+                                    this.accessToken = token
+                                    this.smsMfaSettings = sms?.let {
+                                        SmsMfaSettingsType.invoke {
+                                            enabled = it.mfaEnabled
+                                            preferredMfa = it.mfaPreferred
+                                        }
+                                    }
+                                    this.softwareTokenMfaSettings = totp?.let {
+                                        SoftwareTokenMfaSettingsType.invoke {
+                                            enabled = it.mfaEnabled
+                                            preferredMfa = it.mfaPreferred
+                                        }
+                                    }
+                                }?.also {
+                                    onSuccess.call()
+                                }
+                            } ?: onError.accept(SignedOutException())
+                        } catch (error: Exception) {
+                            onError.accept(
+                                CognitoAuthExceptionConverter.lookup(
+                                    error,
+                                    "Amazon Cognito cannot update the MFA preferences",
+                                )
+                            )
+                        }
+                    }
+                }
+
+                else -> onError.accept(InvalidStateException())
+            }
+        }
+    }
+
+    private fun verifyTotp(
+        code: String,
+        friendlyDeviceName: String?,
+        onSuccess: Action,
+        onError: Consumer<AuthException>
+    ) {
+        authStateMachine.getCurrentState { authState ->
+            when (authState.authNState) {
+                is AuthenticationState.SignedIn -> {
+                    GlobalScope.launch {
+                        try {
+                            val accessToken = getSession().userPoolTokensResult.value?.accessToken
+                            accessToken?.let { token ->
+                                authEnvironment.cognitoAuthService
+                                    .cognitoIdentityProviderClient?.verifySoftwareToken {
+                                        this.userCode = code
+                                        this.friendlyDeviceName = friendlyDeviceName
+                                        this.accessToken = token
+                                    }?.also {
+                                        onSuccess.call()
+                                    }
+                            } ?: onError.accept(SignedOutException())
+                        } catch (error: Exception) {
+                            onError.accept(
+                                CognitoAuthExceptionConverter.lookup(
+                                    error,
+                                    "Amazon Cognito cannot find a multi-factor authentication (MFA) method.",
+                                )
+                            )
+                        }
+                    }
+                }
+
+                else -> onError.accept(InvalidStateException())
             }
         }
     }

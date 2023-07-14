@@ -15,7 +15,6 @@
 
 package com.amplifyframework.statemachine.codegen.states
 
-import android.util.Log
 import com.amplifyframework.statemachine.State
 import com.amplifyframework.statemachine.StateMachineEvent
 import com.amplifyframework.statemachine.StateMachineResolver
@@ -99,7 +98,6 @@ internal sealed class SignInState : State {
             }
 
             oldState.setupTOTPState?.let { setupTOTPResolver.resolve(it, event) }?.let {
-                Log.d("SignInState", "new state ${it.newState}")
                 builder.setupTOTPState = it.newState
                 actions += it.actions
             }
@@ -112,7 +110,6 @@ internal sealed class SignInState : State {
         ): StateResolution<SignInState> {
             val signInEvent = asSignInEvent(event)
             val defaultResolution = StateResolution(oldState)
-            Log.d("SignInState", "resolving $oldState, for evt: $signInEvent")
             return when (oldState) {
                 is NotStarted -> when (signInEvent) {
                     is SignInEvent.EventType.InitiateSignInWithSRP -> StateResolution(

@@ -56,7 +56,7 @@ internal object SignInChallengeCognitoActions : SignInChallengeActions {
 
             val encodedContextData = username?.let { getUserContextData(it) }
             val pinpointEndpointId = getPinpointEndpointId()
-
+            logger.verbose("SRP Session: ${challenge.session}")
             val response = cognitoAuthService.cognitoIdentityProviderClient?.respondToAuthChallenge {
                 clientId = configuration.userPool?.appClient
                 challengeName = ChallengeNameType.fromValue(challenge.challengeName)
@@ -90,7 +90,8 @@ internal object SignInChallengeCognitoActions : SignInChallengeActions {
         return when (ChallengeNameType.fromValue(challengeName)) {
             is ChallengeNameType.SmsMfa -> "SMS_MFA_CODE"
             is ChallengeNameType.NewPasswordRequired -> "NEW_PASSWORD"
-            is ChallengeNameType.CustomChallenge -> "ANSWER"
+            is ChallengeNameType.CustomChallenge, ChallengeNameType.SelectMfaType -> "ANSWER"
+            is ChallengeNameType.SoftwareTokenMfa -> "SOFTWARE_TOKEN_MFA_CODE"
             else -> null
         }
     }

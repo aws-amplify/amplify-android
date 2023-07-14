@@ -20,6 +20,7 @@ import android.content.Intent;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.amplifyframework.TOTPSetupDetails;
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions;
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions;
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions;
@@ -32,6 +33,7 @@ import com.amplifyframework.auth.options.AuthSignOutOptions;
 import com.amplifyframework.auth.options.AuthSignUpOptions;
 import com.amplifyframework.auth.options.AuthUpdateUserAttributeOptions;
 import com.amplifyframework.auth.options.AuthUpdateUserAttributesOptions;
+import com.amplifyframework.auth.options.AuthVerifyTOTPSetupOptions;
 import com.amplifyframework.auth.options.AuthWebUISignInOptions;
 import com.amplifyframework.auth.result.AuthResetPasswordResult;
 import com.amplifyframework.auth.result.AuthSignInResult;
@@ -512,4 +514,21 @@ public interface AuthCategoryBehavior {
     void deleteUser(
             @NonNull Action onSuccess,
             @NonNull Consumer<AuthException> onError);
+
+    void setUpTOTP(
+        @NonNull Consumer<TOTPSetupDetails> onSuccess,
+        @NonNull Consumer<AuthException> onError);
+
+    void verifyTOTPSetup(
+        @NonNull String code,
+        @NonNull Action onSuccess,
+        @NonNull Consumer<AuthException> onError
+    );
+
+    void verifyTOTPSetup(
+        @NonNull String code,
+        @NonNull AuthVerifyTOTPSetupOptions options,
+        @NonNull Action onSuccess,
+        @NonNull Consumer<AuthException> onError
+    );
 }
