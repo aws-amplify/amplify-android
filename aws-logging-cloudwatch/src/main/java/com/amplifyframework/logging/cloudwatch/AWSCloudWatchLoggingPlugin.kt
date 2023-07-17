@@ -54,6 +54,7 @@ class AWSCloudWatchLoggingPlugin @JvmOverloads constructor(
 
     companion object {
         internal const val SHARED_PREFERENCE_FILENAME = "com.amplify.logging.a3fa4188-0ac5-11ee-be56-0242ac120002"
+        private const val PLUGIN_NAME = "awsCloudWatchLoggingPlugin"
     }
 
     @Deprecated("Deprecated in Java")
@@ -85,7 +86,7 @@ class AWSCloudWatchLoggingPlugin @JvmOverloads constructor(
     }
 
     override fun getPluginKey(): String {
-        return "awsCloudWatchLoggingPlugin"
+        return PLUGIN_NAME
     }
 
     override fun configure(pluginConfiguration: JSONObject?, context: Context) {

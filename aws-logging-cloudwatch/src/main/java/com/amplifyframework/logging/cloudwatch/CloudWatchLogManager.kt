@@ -23,6 +23,7 @@ import aws.sdk.kotlin.services.cloudwatchlogs.model.PutLogEventsRequest
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.category.CategoryType
 import com.amplifyframework.logging.cloudwatch.db.CloudWatchLoggingDatabase
+import com.amplifyframework.logging.cloudwatch.db.LogEvent
 import com.amplifyframework.logging.cloudwatch.models.AWSCloudWatchLoggingPluginConfiguration
 import com.amplifyframework.logging.cloudwatch.models.CloudWatchLogEvent
 import java.text.SimpleDateFormat
@@ -105,7 +106,7 @@ internal class CloudWatchLogManager(
             return
         }
         withContext(coroutineDispatcher) {
-            var inputLogEventsIdToBeDeleted: List<Int> = emptyList()
+            var inputLogEventsIdToBeDeleted: List<Long> = emptyList()
             try {
                 isSyncInProgress.set(true)
                 awsCloudWatchLogsClient.let { client ->
@@ -172,11 +173,11 @@ internal class CloudWatchLogManager(
         }
     }
 
-    private fun getNextBatch(queriedEvents: MutableList<CloudWatchLogEvent>):
-        Pair<List<InputLogEvent>, List<Int>> {
+    private fun getNextBatch(queriedEvents: MutableList<LogEvent>):
+        Pair<List<InputLogEvent>, List<Long>> {
         var totalBatchSize = 0L
         val inputLogEvents = mutableListOf<InputLogEvent>()
-        val inputLogEventsIdToBeDeleted = mutableListOf<Int>()
+        val inputLogEventsIdToBeDeleted = mutableListOf<Long>()
         val firstEvent = queriedEvents[0]
         val iterator = queriedEvents.iterator()
         while (iterator.hasNext()) {

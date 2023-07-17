@@ -69,24 +69,24 @@ internal class CloudWatchLoggingDatabase(
         insertEvent(event)
     }
 
-    internal suspend fun queryAllEvents(): List<CloudWatchLogEvent> = withContext(coroutineDispatcher) {
-        val cloudWatchLogEvents = mutableListOf<CloudWatchLogEvent>()
+    internal suspend fun queryAllEvents(): List<LogEvent> = withContext(coroutineDispatcher) {
+        val cloudWatchLogEvents = mutableListOf<LogEvent>()
         val cursor = query(null, null, null, LogEventTable.COLUMN_TIMESTAMP, "10000")
         cursor.use {
             if (!it.moveToFirst()) {
                 return@use
             }
             do {
-                val id = it.getInt(LogEventTable.Column.ID.ordinal)
+                val id = it.getLong(LogEventTable.Column.ID.ordinal)
                 val timestamp = it.getLong(LogEventTable.Column.TIMESTAMP.ordinal)
                 val message = it.getString(LogEventTable.Column.MESSAGE.ordinal)
-                cloudWatchLogEvents.add(CloudWatchLogEvent(timestamp, message, id))
+                cloudWatchLogEvents.add(LogEvent(timestamp, message, id))
             } while (cursor.moveToNext())
         }
         cloudWatchLogEvents
     }
 
-    internal suspend fun bulkDelete(eventIds: List<Int>) = withContext(coroutineDispatcher) {
+    internal suspend fun bulkDelete(eventIds: List<Long>) = withContext(coroutineDispatcher) {
         contentUri
         val whereClause = "${LogEventTable.COLUMN_ID} in (?)"
         database.delete(
