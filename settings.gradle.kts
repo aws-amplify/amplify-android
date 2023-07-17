@@ -147,6 +147,7 @@ include(":annotations")
 include(":aws-core")
 include(":core")
 include(":common-core")
+include(":aws-auth-plugins-core")
 
 // Plugin Modules
 include(":aws-analytics-pinpoint")

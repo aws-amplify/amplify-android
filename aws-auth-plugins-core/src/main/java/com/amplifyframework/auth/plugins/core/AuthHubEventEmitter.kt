@@ -13,11 +13,19 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.core.store
+package com.amplifyframework.auth.plugins.core
 
-interface KeyValueRepository {
-    fun put(dataKey: String, value: String?)
-    fun get(dataKey: String): String?
-    fun remove(dataKey: String)
-    fun removeAll() = Unit
+import com.amplifyframework.core.Amplify
+import com.amplifyframework.hub.HubChannel
+import com.amplifyframework.hub.HubEvent
+import java.util.concurrent.atomic.AtomicReference
+
+class AuthHubEventEmitter {
+    private val lastPublishedHubEventName = AtomicReference<String>()
+
+    fun sendHubEvent(eventName: String) {
+        if (lastPublishedHubEventName.getAndSet(eventName) != eventName) {
+            Amplify.Hub.publish(HubChannel.AUTH, HubEvent.create(eventName))
+        }
+    }
 }

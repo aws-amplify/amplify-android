@@ -62,6 +62,13 @@ class EncryptedKeyValueRepository(
         }
     }
 
+    override fun removeAll() {
+        with(editor) {
+            clear()
+            apply()
+        }
+    }
+
     /**
      * EncryptedSharedPreferences may have been backed up by the application, but will be unreadable due to the
      * KeyStore record being lost. To prevent an unreadable EncryptedSharedPreferences, we append a suffix to the name

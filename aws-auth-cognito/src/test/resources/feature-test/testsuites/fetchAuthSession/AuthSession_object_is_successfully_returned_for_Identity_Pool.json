@@ -19,6 +19,7 @@
             "apiName": "fetchAuthSession",
             "responseType": "success",
             "response": {
+                "accessToken": null,
                 "awsCredentialsResult": {
                     "accessKeyId": "someAccessKey",
                     "expiration": 2342134,

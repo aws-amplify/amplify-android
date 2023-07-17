@@ -22,6 +22,7 @@ import com.amplifyframework.auth.cognito.data.AWSCognitoLegacyCredentialStore.Co
 import com.amplifyframework.auth.cognito.data.AWSCognitoLegacyCredentialStore.Companion.AWS_KEY_VALUE_STORE_NAMESPACE_IDENTIFIER
 import com.amplifyframework.auth.cognito.data.AWSCognitoLegacyCredentialStore.Companion.AWS_MOBILE_CLIENT_PROVIDER
 import com.amplifyframework.core.store.EncryptedKeyValueRepository
+import com.amplifyframework.core.store.InMemoryKeyValueRepository
 import com.amplifyframework.core.store.KeyValueRepository
 
 internal class KeyValueRepositoryFactory {
