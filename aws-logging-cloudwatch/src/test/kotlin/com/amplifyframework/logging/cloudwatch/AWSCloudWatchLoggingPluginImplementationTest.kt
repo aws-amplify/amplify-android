@@ -46,7 +46,7 @@ internal class AWSCloudWatchLoggingPluginImplementationTest {
             AWSCloudWatchLoggingPluginImplementation(
                 loggingConstraintsResolver,
                 null,
-                cloudWatchLogManager,
+                cloudWatchLogManager
             )
     }
 
@@ -56,12 +56,12 @@ internal class AWSCloudWatchLoggingPluginImplementationTest {
         val awsLoggingConfig = AWSCloudWatchLoggingPluginConfiguration(
             enable = true,
             region = "REGION",
-            logGroupName = "LOG_GROUP",
+            logGroupName = "LOG_GROUP"
         )
         every { loggingConstraintsResolver::localLoggingConstraint.set(capture(loggingConstraintsSlot)) }.answers { }
         coEvery { cloudWatchLogManager.startSync() }.answers { }
         awsCloudWatchLoggingPluginImplementation.configure(
-            awsLoggingConfig,
+            awsLoggingConfig
         )
         verify { loggingConstraintsResolver::localLoggingConstraint.set(awsLoggingConfig.loggingConstraints) }
         assertEquals(awsLoggingConfig.loggingConstraints, loggingConstraintsSlot.captured)
@@ -73,12 +73,12 @@ internal class AWSCloudWatchLoggingPluginImplementationTest {
         val awsLoggingConfig = AWSCloudWatchLoggingPluginConfiguration(
             enable = false,
             region = "REGION",
-            logGroupName = "LOG_GROUP",
+            logGroupName = "LOG_GROUP"
         )
         every { loggingConstraintsResolver::localLoggingConstraint.set(any()) }.answers { }
         coEvery { cloudWatchLogManager.startSync() }.answers { }
         awsCloudWatchLoggingPluginImplementation.configure(
-            awsLoggingConfig,
+            awsLoggingConfig
         )
         verify { loggingConstraintsResolver::localLoggingConstraint.set(awsLoggingConfig.loggingConstraints) }
         coVerify(exactly = 0) { cloudWatchLogManager.startSync() }

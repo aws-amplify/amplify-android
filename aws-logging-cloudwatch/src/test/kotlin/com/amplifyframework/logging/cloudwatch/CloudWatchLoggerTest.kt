@@ -21,16 +21,16 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.asCoroutineDispatcher
-import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertEquals
-import org.junit.Before
-import org.junit.Test
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.Executors
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.runTest
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Before
+import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class CloudWatchLoggerTest {
@@ -49,7 +49,7 @@ internal class CloudWatchLoggerTest {
             loggingConstraintsResolver,
             awsCloudWatchLoggingPluginImplementation,
             logsEventsQueue,
-            Executors.newSingleThreadExecutor().asCoroutineDispatcher(),
+            Executors.newSingleThreadExecutor().asCoroutineDispatcher()
         )
         every { awsCloudWatchLoggingPluginImplementation.isPluginEnabled }.answers { true }
     }
@@ -66,7 +66,7 @@ internal class CloudWatchLoggerTest {
             namespace,
             null,
             loggingConstraintsResolver,
-            awsCloudWatchLoggingPluginImplementation,
+            awsCloudWatchLoggingPluginImplementation
         )
         every { loggingConstraintsResolver.resolveLogLevel(namespace, null) }.answers { LogLevel.WARN }
         assertEquals(LogLevel.WARN, cloudWatchLogger.thresholdLevel)
@@ -80,7 +80,7 @@ internal class CloudWatchLoggerTest {
             null,
             loggingConstraintsResolver,
             awsCloudWatchLoggingPluginImplementation,
-            logEventsQueue = queue,
+            logEventsQueue = queue
         )
         every { loggingConstraintsResolver.resolveLogLevel(namespace, null) }.answers { LogLevel.ERROR }
         cloudWatchLogger.info("test message")
@@ -97,7 +97,7 @@ internal class CloudWatchLoggerTest {
             loggingConstraintsResolver,
             awsCloudWatchLoggingPluginImplementation,
             logEventsQueue = queue,
-            dispatcher = UnconfinedTestDispatcher(testScheduler),
+            dispatcher = UnconfinedTestDispatcher(testScheduler)
         )
         every { loggingConstraintsResolver.resolveLogLevel(namespace, null) }.answers { LogLevel.VERBOSE }
         cloudWatchLogger.info("test message")

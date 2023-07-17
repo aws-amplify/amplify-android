@@ -45,7 +45,7 @@ internal class CloudWatchLogManager(
     private val loggingConstraintsResolver: LoggingConstraintsResolver,
     private val cloudWatchLoggingDatabase: CloudWatchLoggingDatabase = CloudWatchLoggingDatabase(context),
     private val customCognitoCredentialsProvider: CustomCognitoCredentialsProvider = CustomCognitoCredentialsProvider(),
-    private val coroutineDispatcher: CoroutineDispatcher = Dispatchers.IO,
+    private val coroutineDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
     private val deviceIdKey = "unique_device_id"
     private var stopSync = false
@@ -64,17 +64,14 @@ internal class CloudWatchLogManager(
         onSignIn()
     }
 
-    suspend fun saveLogEvent(event: CloudWatchLogEvent) {
-        withContext(coroutineDispatcher) {
-            try {
-                cloudWatchLoggingDatabase.saveLogEvent(event)
-                if (isCacheFull()) {
-                    syncLogEventsWithCloudwatch()
-                } else {
-                }
-            } catch (e: Exception) {
-                logger.error("failed to save event", e)
+    suspend fun saveLogEvent(event: CloudWatchLogEvent) = withContext(coroutineDispatcher) {
+        try {
+            cloudWatchLoggingDatabase.saveLogEvent(event)
+            if (isCacheFull()) {
+                syncLogEventsWithCloudwatch()
             }
+        } catch (e: Exception) {
+            logger.error("failed to save event", e)
         }
     }
 
@@ -130,11 +127,11 @@ internal class CloudWatchLogManager(
                                     logEvents = inputLogEvents
                                     logGroupName = groupName
                                     logStreamName = streamName
-                                },
+                                }
                             ).also { response ->
                                 response.rejectedLogEventsInfo?.tooNewLogEventStartIndex?.let {
                                     inputLogEventsIdToBeDeleted = inputLogEventsIdToBeDeleted.slice(
-                                        IntRange(0, it - 1),
+                                        IntRange(0, it - 1)
                                     ).toMutableList()
                                 }
                                 cloudWatchLoggingDatabase.bulkDelete(inputLogEventsIdToBeDeleted)
@@ -156,26 +153,26 @@ internal class CloudWatchLogManager(
     private suspend fun createLogStreamIfNotCreated(
         logStream: String,
         groupName: String,
-        client: CloudWatchLogsClient,
+        client: CloudWatchLogsClient
     ) {
         client.describeLogStreams(
             DescribeLogStreamsRequest {
                 logGroupName = groupName
                 logStreamNamePrefix = logStream
-            },
+            }
         ).apply {
             if (this.logStreams == null || this.logStreams?.isEmpty() == true) {
                 client.createLogStream(
                     CreateLogStreamRequest {
                         logGroupName = groupName
                         logStreamName = logStream
-                    },
+                    }
                 )
             }
         }
     }
 
-    private suspend fun getNextBatch(queriedEvents: MutableList<CloudWatchLogEvent>):
+    private fun getNextBatch(queriedEvents: MutableList<CloudWatchLogEvent>):
         Pair<List<InputLogEvent>, List<Int>> {
         var totalBatchSize = 0L
         val inputLogEvents = mutableListOf<InputLogEvent>()
@@ -196,7 +193,7 @@ internal class CloudWatchLogManager(
                 InputLogEvent {
                     timestamp = cloudWatchEvent.timestamp
                     message = cloudWatchEvent.message
-                },
+                }
             )
             inputLogEventsIdToBeDeleted.add(cloudWatchEvent.id)
             iterator.remove()
@@ -209,7 +206,7 @@ internal class CloudWatchLogManager(
             cloudWatchLoggingDatabase.clearDatabase()
             context.getSharedPreferences(
                 AWSCloudWatchLoggingPlugin.SHARED_PREFERENCE_FILENAME,
-                Context.MODE_PRIVATE,
+                Context.MODE_PRIVATE
             ).edit().remove(LoggingConstraintsResolver.REMOTE_LOGGING_CONSTRAINTS_KEY).apply()
         }
     }

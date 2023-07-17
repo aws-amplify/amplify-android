@@ -27,7 +27,7 @@ internal class LoggingConstraintsResolver internal constructor(
     internal var context: Context? = null,
     internal var localLoggingConstraint: LoggingConstraints? = null,
     private var remoteLoggingConstraintProvider: RemoteLoggingConstraintProvider? = null,
-    internal var userId: String? = null,
+    internal var userId: String? = null
 ) {
     private var remoteLoggingConstraint: LoggingConstraints? = null
     private val logger = Amplify.Logging.logger(CategoryType.LOGGING, this::class.java.simpleName)
@@ -75,7 +75,7 @@ internal class LoggingConstraintsResolver internal constructor(
     }
 
     internal fun setRemoteConfigProvider(
-        defaultRemoteLoggingConstraintProvider: DefaultRemoteLoggingConstraintProvider,
+        defaultRemoteLoggingConstraintProvider: DefaultRemoteLoggingConstraintProvider
     ) {
         remoteLoggingConstraintProvider = defaultRemoteLoggingConstraintProvider
         loadRemoteConfig()
@@ -94,7 +94,7 @@ internal class LoggingConstraintsResolver internal constructor(
         return context?.let {
             val remoteConstraints = it.getSharedPreferences(
                 AWSCloudWatchLoggingPlugin.SHARED_PREFERENCE_FILENAME,
-                Context.MODE_PRIVATE,
+                Context.MODE_PRIVATE
             )
                 .getString(REMOTE_LOGGING_CONSTRAINTS_KEY, null)
             remoteConstraints?.let {

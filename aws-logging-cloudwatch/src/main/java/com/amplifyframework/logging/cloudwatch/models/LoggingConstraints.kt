@@ -29,7 +29,7 @@ import kotlinx.serialization.json.Json
 data class LoggingConstraints @JvmOverloads constructor(
     val defaultLogLevel: LogLevel = LogLevel.ERROR,
     val categoryLogLevel: Map<CategoryType, LogLevel> = emptyMap(),
-    val userLogLevel: Map<String, UserLogLevel> = emptyMap(),
+    val userLogLevel: Map<String, UserLogLevel> = emptyMap()
 ) {
     companion object {
         @OptIn(ExperimentalSerializationApi::class)
@@ -38,11 +38,11 @@ data class LoggingConstraints @JvmOverloads constructor(
             explicitNulls = false
             ignoreUnknownKeys = true
         }
-        fun fromString(jsonString: String): LoggingConstraints {
-            return json.decodeFromString<LoggingConstraints>(jsonString)
+        internal fun fromString(jsonString: String): LoggingConstraints {
+            return json.decodeFromString(jsonString)
         }
 
-        fun toJsonString(loggingConstraints: LoggingConstraints): String {
+        internal fun toJsonString(loggingConstraints: LoggingConstraints): String {
             return json.encodeToString(loggingConstraints)
         }
     }
@@ -54,5 +54,5 @@ data class LoggingConstraints @JvmOverloads constructor(
 @Serializable
 data class UserLogLevel @JvmOverloads constructor(
     val defaultLogLevel: LogLevel = LogLevel.ERROR,
-    val categoryLogLevel: Map<CategoryType, LogLevel> = emptyMap(),
+    val categoryLogLevel: Map<CategoryType, LogLevel> = emptyMap()
 )

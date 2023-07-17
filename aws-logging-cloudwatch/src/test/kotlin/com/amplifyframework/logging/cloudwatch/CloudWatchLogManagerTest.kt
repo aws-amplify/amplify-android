@@ -35,6 +35,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -42,7 +43,6 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
@@ -58,7 +58,7 @@ internal class CloudWatchLogManagerTest {
 
     @Before
     fun setup() = runTest {
-        userIdSlot = slot<String>()
+        userIdSlot = slot()
         every { cloudWatchLoggingDatabase.isCacheFull(any()) }.answers { false }
         every { loggingConstraintsResolver::userId.set(any()) }.answers { }
         every { pluginConfiguration.localStoreMaxSizeInMB }.answers { 1 }
@@ -76,7 +76,7 @@ internal class CloudWatchLogManagerTest {
             loggingConstraintsResolver,
             cloudWatchLoggingDatabase,
             customCognitoCredentialsProvider,
-            testDispatcher,
+            testDispatcher
         )
     }
 
@@ -117,9 +117,9 @@ internal class CloudWatchLogManagerTest {
                 InputLogEvent {
                     message = cloudwatchEvent.message
                     timestamp = cloudwatchEvent.timestamp
-                },
+                }
             ),
-            putRequestSlot.captured.logEvents,
+            putRequestSlot.captured.logEvents
         )
     }
 
@@ -127,14 +127,14 @@ internal class CloudWatchLogManagerTest {
     fun `test onStopSync`() = runTest {
         context.getSharedPreferences(AWSCloudWatchLoggingPlugin.SHARED_PREFERENCE_FILENAME, Context.MODE_PRIVATE).edit()
             .putString(LoggingConstraintsResolver.REMOTE_LOGGING_CONSTRAINTS_KEY, "{}").apply()
-        coEvery { cloudWatchLoggingDatabase.clearDatabase() }.answers { }
+        coEvery { cloudWatchLoggingDatabase.clearDatabase() }.answers { 1 }
         cloudWatchLogManager.stopSync()
         coVerify(exactly = 1) { cloudWatchLoggingDatabase.clearDatabase() }
         assertFalse(
             context.getSharedPreferences(
                 AWSCloudWatchLoggingPlugin.SHARED_PREFERENCE_FILENAME,
-                Context.MODE_PRIVATE,
-            ).contains(LoggingConstraintsResolver.REMOTE_LOGGING_CONSTRAINTS_KEY),
+                Context.MODE_PRIVATE
+            ).contains(LoggingConstraintsResolver.REMOTE_LOGGING_CONSTRAINTS_KEY)
         )
     }
 }

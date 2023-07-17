@@ -45,7 +45,7 @@ class DefaultRemoteLoggingConstraintProvider @JvmOverloads constructor(
     private val refreshIntervalInSeconds: Int = 1200,
     private val okHttpClient: OkHttpClient = OkHttpClient(),
     private val credentialsProvider: CredentialsProvider = CognitoCredentialsProvider(),
-    coroutineDispatcher: CoroutineDispatcher = Dispatchers.IO,
+    coroutineDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) : RemoteLoggingConstraintProvider {
     private val coroutineScope = CoroutineScope(coroutineDispatcher)
     private val json = Json {
@@ -60,7 +60,7 @@ class DefaultRemoteLoggingConstraintProvider @JvmOverloads constructor(
                     HttpMethod.GET,
                     Url.parse(url.toString()),
                     Headers.Empty,
-                    HttpBody.Empty,
+                    HttpBody.Empty
                 )
                 val signedRequest = DefaultAwsSigner.sign(
                     request,
@@ -68,7 +68,7 @@ class DefaultRemoteLoggingConstraintProvider @JvmOverloads constructor(
                         this.region = regionString
                         service = "execute-api"
                         credentialsProvider = this@DefaultRemoteLoggingConstraintProvider.credentialsProvider
-                    },
+                    }
                 ).output
 
                 val okhttpRequestBuilder = Request.Builder()
@@ -84,10 +84,10 @@ class DefaultRemoteLoggingConstraintProvider @JvmOverloads constructor(
                         val remoteLoggingConstraints = json.decodeFromString<LoggingConstraints>(
                             response.body.use {
                                 it.string()
-                            },
+                            }
                         )
                         onSuccess.accept(
-                            remoteLoggingConstraints,
+                            remoteLoggingConstraints
                         )
                     } else {
                         onError.accept(
@@ -95,8 +95,8 @@ class DefaultRemoteLoggingConstraintProvider @JvmOverloads constructor(
                                 "Failed to fetch remote logging constraints",
                                 response.body.use {
                                     it.string()
-                                },
-                            ),
+                                }
+                            )
                         )
                     }
                 }
@@ -105,8 +105,8 @@ class DefaultRemoteLoggingConstraintProvider @JvmOverloads constructor(
                     AmplifyException(
                         "Failed to fetch remote logging constraints",
                         exception,
-                        "Please try again.",
-                    ),
+                        "Please try again."
+                    )
                 )
             }
         }

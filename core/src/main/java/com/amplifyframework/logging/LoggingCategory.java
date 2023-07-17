@@ -72,20 +72,13 @@ public final class LoggingCategory extends Category<LoggingPlugin<?>> implements
     @Override
     @SuppressWarnings("deprecation")
     public Logger forNamespace(@Nullable String namespace) {
-        Set<LoggingPlugin<?>> loggingPlugins = new HashSet<>(getPlugins());
-        loggingPlugins.add(defaultPlugin);
-        List<Logger> delegates = new ArrayList<>();
-        for (LoggingPlugin<?> plugin : loggingPlugins) {
-            delegates.add(plugin.forNamespace(namespace));
-        }
-        return new BroadcastLogger(delegates);
+        return logger(namespace);
     }
 
     @NonNull
     @Override
     public Logger logger(@NonNull String namespace) {
-        Set<LoggingPlugin<?>> loggingPlugins = new HashSet<>(getPlugins());
-        loggingPlugins.add(defaultPlugin);
+        Set<LoggingPlugin<?>> loggingPlugins = getPluginsWithDefault();
         List<Logger> delegates = new ArrayList<>();
         for (LoggingPlugin<?> plugin : loggingPlugins) {
             delegates.add(plugin.logger(namespace));
@@ -96,8 +89,7 @@ public final class LoggingCategory extends Category<LoggingPlugin<?>> implements
     @NonNull
     @Override
     public Logger logger(@NonNull CategoryType categoryType, @NonNull String namespace) {
-        Set<LoggingPlugin<?>> loggingPlugins = new HashSet<>(getPlugins());
-        loggingPlugins.add(defaultPlugin);
+        Set<LoggingPlugin<?>> loggingPlugins = getPluginsWithDefault();
         List<Logger> delegates = new ArrayList<>();
         for (LoggingPlugin<?> plugin : loggingPlugins) {
             delegates.add(plugin.logger(categoryType, namespace));
@@ -107,8 +99,7 @@ public final class LoggingCategory extends Category<LoggingPlugin<?>> implements
 
     @Override
     public void enable() {
-        Set<LoggingPlugin<?>> loggingPlugins = new HashSet<>(getPlugins());
-        loggingPlugins.add(defaultPlugin);
+        Set<LoggingPlugin<?>> loggingPlugins = getPluginsWithDefault();
         for (LoggingPlugin<?> plugin : loggingPlugins) {
             plugin.enable();
         }
@@ -116,8 +107,7 @@ public final class LoggingCategory extends Category<LoggingPlugin<?>> implements
 
     @Override
     public void disable() {
-        Set<LoggingPlugin<?>> loggingPlugins = new HashSet<>(getPlugins());
-        loggingPlugins.add(defaultPlugin);
+        Set<LoggingPlugin<?>> loggingPlugins = getPluginsWithDefault();
         for (LoggingPlugin<?> plugin : loggingPlugins) {
             plugin.disable();
         }
@@ -154,5 +144,11 @@ public final class LoggingCategory extends Category<LoggingPlugin<?>> implements
         } catch (Exception exception) {
             return null;
         }
+    }
+
+    private Set<LoggingPlugin<?>> getPluginsWithDefault() {
+        Set<LoggingPlugin<?>> loggingPlugins = new HashSet<>(getPlugins());
+        loggingPlugins.add(defaultPlugin);
+        return loggingPlugins;
     }
 }

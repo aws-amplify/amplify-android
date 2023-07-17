@@ -141,7 +141,7 @@ dependencyResolutionManagement {
             library("gson", "com.google.code.gson:gson:2.8.9")
             library("tensorflow", "org.tensorflow:tensorflow-lite:2.0.0")
             library("uuidgen", "com.fasterxml.uuid:java-uuid-generator:4.0.1")
-            library("sqlcipher", "net.zetetic:android-database-sqlcipher:4.5.3")
+            library("sqlcipher", "net.zetetic:android-database-sqlcipher:4.5.4")
         }
     }
 }

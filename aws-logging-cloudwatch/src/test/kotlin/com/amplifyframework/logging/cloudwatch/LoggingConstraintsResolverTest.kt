@@ -23,14 +23,14 @@ import com.amplifyframework.logging.cloudwatch.models.LoggingConstraints
 import com.amplifyframework.logging.cloudwatch.models.UserLogLevel
 import io.mockk.every
 import io.mockk.mockk
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
@@ -52,7 +52,7 @@ internal class LoggingConstraintsResolverTest {
             remoteLoggingConstraintProvider.fetchLoggingConfig(any<Consumer<LoggingConstraints>>(), any())
         }.answers {
             (it.invocation.args[1] as? Consumer<Exception>)?.accept(
-                IllegalStateException(),
+                IllegalStateException()
             )
             Unit
         }
@@ -63,11 +63,11 @@ internal class LoggingConstraintsResolverTest {
                 defaultLogLevel = LogLevel.INFO,
                 categoryLogLevel = mapOf<CategoryType, LogLevel>(
                     CategoryType.AUTH to LogLevel.NONE,
-                    CategoryType.API to LogLevel.WARN,
-                ),
+                    CategoryType.API to LogLevel.WARN
+                )
             ),
             remoteLoggingConstraintProvider = remoteLoggingConstraintProvider,
-            userId = userId,
+            userId = userId
         )
         val resolvedLogLevel = loggingConstraintsResolver.resolveLogLevel("ANY", CategoryType.LOGGING)
         assertEquals(LogLevel.INFO, resolvedLogLevel)
@@ -80,7 +80,7 @@ internal class LoggingConstraintsResolverTest {
             remoteLoggingConstraintProvider.fetchLoggingConfig(any<Consumer<LoggingConstraints>>(), any())
         }.answers {
             (it.invocation.args[1] as? Consumer<Exception>)?.accept(
-                IllegalStateException(),
+                IllegalStateException()
             )
             Unit
         }
@@ -91,11 +91,11 @@ internal class LoggingConstraintsResolverTest {
                 defaultLogLevel = LogLevel.INFO,
                 categoryLogLevel = mapOf<CategoryType, LogLevel>(
                     CategoryType.AUTH to LogLevel.NONE,
-                    CategoryType.API to LogLevel.WARN,
-                ),
+                    CategoryType.API to LogLevel.WARN
+                )
             ),
             remoteLoggingConstraintProvider = remoteLoggingConstraintProvider,
-            userId = userId,
+            userId = userId
         )
         val resolvedLogLevel = loggingConstraintsResolver.resolveLogLevel("ANY", CategoryType.AUTH)
         assertEquals(LogLevel.NONE, resolvedLogLevel)
@@ -108,7 +108,7 @@ internal class LoggingConstraintsResolverTest {
             remoteLoggingConstraintProvider.fetchLoggingConfig(any<Consumer<LoggingConstraints>>(), any())
         }.answers {
             (it.invocation.args[1] as? Consumer<Exception>)?.accept(
-                IllegalStateException(),
+                IllegalStateException()
             )
         }
         every { remoteLoggingConstraintProvider.getConstraintsSyncInterval() }.answers { 20 }
@@ -118,12 +118,12 @@ internal class LoggingConstraintsResolverTest {
                 defaultLogLevel = LogLevel.INFO,
                 categoryLogLevel = mapOf<CategoryType, LogLevel>(
                     CategoryType.AUTH to LogLevel.NONE,
-                    CategoryType.API to LogLevel.WARN,
+                    CategoryType.API to LogLevel.WARN
                 ),
-                userLogLevel = mapOf(userId to UserLogLevel(defaultLogLevel = LogLevel.WARN)),
+                userLogLevel = mapOf(userId to UserLogLevel(defaultLogLevel = LogLevel.WARN))
             ),
             remoteLoggingConstraintProvider = remoteLoggingConstraintProvider,
-            userId = userId,
+            userId = userId
         )
         val resolvedLogLevel = loggingConstraintsResolver.resolveLogLevel("ANY", CategoryType.AUTH)
         assertEquals(LogLevel.WARN, resolvedLogLevel)
@@ -137,7 +137,7 @@ internal class LoggingConstraintsResolverTest {
             remoteLoggingConstraintProvider.fetchLoggingConfig(any<Consumer<LoggingConstraints>>(), any())
         }.answers {
             (it.invocation.args[0] as Consumer<LoggingConstraints>).accept(
-                LoggingConstraints(defaultLogLevel = LogLevel.VERBOSE),
+                LoggingConstraints(defaultLogLevel = LogLevel.VERBOSE)
             )
             countDownLatch.countDown()
         }
@@ -148,11 +148,11 @@ internal class LoggingConstraintsResolverTest {
                 defaultLogLevel = LogLevel.INFO,
                 categoryLogLevel = mapOf<CategoryType, LogLevel>(
                     CategoryType.AUTH to LogLevel.NONE,
-                    CategoryType.API to LogLevel.WARN,
-                ),
+                    CategoryType.API to LogLevel.WARN
+                )
             ),
             remoteLoggingConstraintProvider = remoteLoggingConstraintProvider,
-            userId = userId,
+            userId = userId
         )
         countDownLatch.await(2, TimeUnit.SECONDS)
         val resolvedLogLevel = loggingConstraintsResolver.resolveLogLevel("ANY", CategoryType.AUTH)
@@ -169,8 +169,8 @@ internal class LoggingConstraintsResolverTest {
             (it.invocation.args[0] as Consumer<LoggingConstraints>).accept(
                 LoggingConstraints(
                     defaultLogLevel = LogLevel.VERBOSE,
-                    categoryLogLevel = mapOf(CategoryType.AUTH to LogLevel.DEBUG),
-                ),
+                    categoryLogLevel = mapOf(CategoryType.AUTH to LogLevel.DEBUG)
+                )
             )
             countDownLatch.countDown()
         }
@@ -181,11 +181,11 @@ internal class LoggingConstraintsResolverTest {
                 defaultLogLevel = LogLevel.INFO,
                 categoryLogLevel = mapOf<CategoryType, LogLevel>(
                     CategoryType.AUTH to LogLevel.NONE,
-                    CategoryType.API to LogLevel.WARN,
-                ),
+                    CategoryType.API to LogLevel.WARN
+                )
             ),
             remoteLoggingConstraintProvider = remoteLoggingConstraintProvider,
-            userId = userId,
+            userId = userId
         )
         // wait for remote config to be loaded
         countDownLatch.await(2, TimeUnit.SECONDS)
@@ -204,8 +204,8 @@ internal class LoggingConstraintsResolverTest {
                 LoggingConstraints(
                     defaultLogLevel = LogLevel.VERBOSE,
                     categoryLogLevel = mapOf(CategoryType.AUTH to LogLevel.DEBUG),
-                    userLogLevel = mapOf(userId to UserLogLevel(defaultLogLevel = LogLevel.WARN)),
-                ),
+                    userLogLevel = mapOf(userId to UserLogLevel(defaultLogLevel = LogLevel.WARN))
+                )
             )
             countDownLatch.countDown()
         }
@@ -216,11 +216,11 @@ internal class LoggingConstraintsResolverTest {
                 defaultLogLevel = LogLevel.INFO,
                 categoryLogLevel = mapOf<CategoryType, LogLevel>(
                     CategoryType.AUTH to LogLevel.NONE,
-                    CategoryType.API to LogLevel.WARN,
-                ),
+                    CategoryType.API to LogLevel.WARN
+                )
             ),
             remoteLoggingConstraintProvider = remoteLoggingConstraintProvider,
-            userId = userId,
+            userId = userId
         )
         // wait for remote config to be loaded
         countDownLatch.await(2, TimeUnit.SECONDS)
@@ -236,13 +236,13 @@ internal class LoggingConstraintsResolverTest {
         val remoteConfig = LoggingConstraints(
             defaultLogLevel = LogLevel.VERBOSE,
             categoryLogLevel = mapOf(CategoryType.AUTH to LogLevel.DEBUG),
-            userLogLevel = mapOf(userId to UserLogLevel(defaultLogLevel = LogLevel.WARN)),
+            userLogLevel = mapOf(userId to UserLogLevel(defaultLogLevel = LogLevel.WARN))
         )
         every {
             remoteLoggingConstraintProvider.fetchLoggingConfig(any<Consumer<LoggingConstraints>>(), any())
         }.answers {
             (it.invocation.args[0] as Consumer<LoggingConstraints>).accept(
-                remoteConfig,
+                remoteConfig
             )
             countDownLatch.countDown()
         }
@@ -253,20 +253,20 @@ internal class LoggingConstraintsResolverTest {
                 defaultLogLevel = LogLevel.INFO,
                 categoryLogLevel = mapOf<CategoryType, LogLevel>(
                     CategoryType.AUTH to LogLevel.NONE,
-                    CategoryType.API to LogLevel.WARN,
-                ),
+                    CategoryType.API to LogLevel.WARN
+                )
             ),
             remoteLoggingConstraintProvider = remoteLoggingConstraintProvider,
-            userId = userId,
+            userId = userId
         )
         // wait for remote config to be loaded
         countDownLatch.await(2, TimeUnit.SECONDS)
         val locallyPersistedRemoteConfig = LoggingConstraints.fromString(
             context.getSharedPreferences(
                 AWSCloudWatchLoggingPlugin.SHARED_PREFERENCE_FILENAME,
-                Context.MODE_PRIVATE,
+                Context.MODE_PRIVATE
             ).getString(LoggingConstraintsResolver.REMOTE_LOGGING_CONSTRAINTS_KEY, null)
-                ?: throw IllegalStateException("Failed to load config from shared preferences"),
+                ?: throw IllegalStateException("Failed to load config from shared preferences")
         )
         assertEquals(remoteConfig, locallyPersistedRemoteConfig)
     }

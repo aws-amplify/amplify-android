@@ -38,9 +38,9 @@ internal class LogEventTable {
         }
     }
 
-    enum class COLUMNINDEX(val index: Int) {
-        ID(0),
-        TIMESTAMP(1),
-        MESSAGE(2),
+    enum class Column {
+        ID,
+        TIMESTAMP,
+        MESSAGE
     }
 }

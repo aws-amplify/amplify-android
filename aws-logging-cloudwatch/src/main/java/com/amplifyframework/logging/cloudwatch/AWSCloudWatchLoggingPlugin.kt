@@ -20,6 +20,7 @@ import com.amplifyframework.AmplifyException
 import com.amplifyframework.auth.CognitoCredentialsProvider
 import com.amplifyframework.core.Action
 import com.amplifyframework.core.Amplify
+import com.amplifyframework.core.BuildConfig
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.core.category.CategoryType
 import com.amplifyframework.logging.Logger
@@ -36,23 +37,22 @@ import org.json.JSONObject
 */
 class AWSCloudWatchLoggingPlugin @JvmOverloads constructor(
     private val awsCloudWatchLoggingPluginConfig: AWSCloudWatchLoggingPluginConfiguration? = null,
-    private val awsRemoteLoggingConstraintProvider: RemoteLoggingConstraintProvider? = null,
+    private val awsRemoteLoggingConstraintProvider: RemoteLoggingConstraintProvider? = null
 ) : LoggingPlugin<CloudWatchLogsClient>() {
 
     private val loggingConstraintsResolver =
         LoggingConstraintsResolver(
             localLoggingConstraint = awsCloudWatchLoggingPluginConfig?.loggingConstraints,
-            remoteLoggingConstraintProvider = awsRemoteLoggingConstraintProvider,
+            remoteLoggingConstraintProvider = awsRemoteLoggingConstraintProvider
         )
     private val awsCloudWatchLoggingPluginImplementation = AWSCloudWatchLoggingPluginImplementation(
         loggingConstraintsResolver,
-        awsCloudWatchLoggingPluginConfig,
+        awsCloudWatchLoggingPluginConfig
     )
     private lateinit var cloudWatchLogsClient: CloudWatchLogsClient
     private val logger = Amplify.Logging.logger(CategoryType.LOGGING, this::class.java.simpleName)
 
     companion object {
-        private const val CONFIG_FILENAME = "amplifyconfiguration_logging"
         internal const val SHARED_PREFERENCE_FILENAME = "com.amplify.logging.a3fa4188-0ac5-11ee-be56-0242ac120002"
     }
 
@@ -79,7 +79,7 @@ class AWSCloudWatchLoggingPlugin @JvmOverloads constructor(
 
     public fun flushLogs(
         onSuccess: Action,
-        onError: Consumer<AmplifyException>,
+        onError: Consumer<AmplifyException>
     ) {
         awsCloudWatchLoggingPluginImplementation.flushLogs(onSuccess, onError)
     }
@@ -102,8 +102,8 @@ class AWSCloudWatchLoggingPlugin @JvmOverloads constructor(
                         DefaultRemoteLoggingConstraintProvider(
                             URL(it.endpoint),
                             awsLoggingConfig.region,
-                            it.refreshIntervalInSeconds,
-                        ),
+                            it.refreshIntervalInSeconds
+                        )
                     )
                 }
             }
@@ -111,7 +111,7 @@ class AWSCloudWatchLoggingPlugin @JvmOverloads constructor(
                 CloudWatchLogManager(context, awsLoggingConfig, cloudWatchLogsClient, loggingConstraintsResolver)
             awsCloudWatchLoggingPluginImplementation.cloudWatchLogManager = cloudWatchLogManager
             awsCloudWatchLoggingPluginImplementation.configure(awsLoggingConfig)
-        } catch (exception: Exception) {
+        } catch (exception: AmplifyException) {
             logger.error("failed to configure plugin", exception)
         }
     }
@@ -131,7 +131,7 @@ class AWSCloudWatchLoggingPlugin @JvmOverloads constructor(
         }
         return pluginConfiguration?.let {
             json.decodeFromString(
-                it.getJSONObject(pluginKey).toString(),
+                it.getJSONObject(pluginKey).toString()
             )
         } ?: throw IllegalStateException("Plugin configuration is missing")
     }

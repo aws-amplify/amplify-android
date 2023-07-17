@@ -32,7 +32,7 @@ import net.sqlcipher.database.SQLiteQueryBuilder
 
 internal class CloudWatchLoggingDatabase(
     private val context: Context,
-    private val coroutineDispatcher: CoroutineDispatcher = Dispatchers.IO,
+    private val coroutineDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
     private val logEvents = 10
     private val logEventsId = 20
@@ -44,7 +44,7 @@ internal class CloudWatchLoggingDatabase(
             MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC),
             context,
             EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM,
+            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
         )
     }
     private val database by lazy {
@@ -65,41 +65,35 @@ internal class CloudWatchLoggingDatabase(
         uriMatcher.addURI(authority, "$basePath/#", logEventsId)
     }
 
-    internal suspend fun saveLogEvent(event: CloudWatchLogEvent): Uri {
-        return withContext(coroutineDispatcher) {
-            insertEvent(contentUri, event)
-        }
+    internal suspend fun saveLogEvent(event: CloudWatchLogEvent): Uri = withContext(coroutineDispatcher) {
+        insertEvent(event)
     }
 
-    internal suspend fun queryAllEvents(): List<CloudWatchLogEvent> {
-        return withContext(coroutineDispatcher) {
-            val cloudWatchLogEvents = mutableListOf<CloudWatchLogEvent>()
-            val cursor = query(contentUri, null, null, null, LogEventTable.COLUMN_TIMESTAMP, "10000")
-            cursor.use {
-                if (!it.moveToFirst()) {
-                    return@use
-                }
-                do {
-                    val id = it.getInt(LogEventTable.COLUMNINDEX.ID.index)
-                    val timestamp = it.getLong(LogEventTable.COLUMNINDEX.TIMESTAMP.index)
-                    val message = it.getString(LogEventTable.COLUMNINDEX.MESSAGE.index)
-                    cloudWatchLogEvents.add(CloudWatchLogEvent(timestamp.toLong(), message, id))
-                } while (cursor.moveToNext())
+    internal suspend fun queryAllEvents(): List<CloudWatchLogEvent> = withContext(coroutineDispatcher) {
+        val cloudWatchLogEvents = mutableListOf<CloudWatchLogEvent>()
+        val cursor = query(null, null, null, LogEventTable.COLUMN_TIMESTAMP, "10000")
+        cursor.use {
+            if (!it.moveToFirst()) {
+                return@use
             }
-            cloudWatchLogEvents
+            do {
+                val id = it.getInt(LogEventTable.Column.ID.ordinal)
+                val timestamp = it.getLong(LogEventTable.Column.TIMESTAMP.ordinal)
+                val message = it.getString(LogEventTable.Column.MESSAGE.ordinal)
+                cloudWatchLogEvents.add(CloudWatchLogEvent(timestamp, message, id))
+            } while (cursor.moveToNext())
         }
+        cloudWatchLogEvents
     }
 
-    internal suspend fun bulkDelete(eventIds: List<Int>) {
-        return withContext(coroutineDispatcher) {
-            val uri = contentUri
-            val whereClause = "${LogEventTable.COLUMN_ID} in (${eventIds.joinToString(",")})"
-            database.delete(
-                LogEventTable.TABLE_LOG_EVENT,
-                whereClause,
-                null,
-            )
-        }
+    internal suspend fun bulkDelete(eventIds: List<Int>) = withContext(coroutineDispatcher) {
+        contentUri
+        val whereClause = "${LogEventTable.COLUMN_ID} in (?)"
+        database.delete(
+            LogEventTable.TABLE_LOG_EVENT,
+            whereClause,
+            arrayOf(eventIds.joinToString(","))
+        )
     }
 
     internal fun isCacheFull(cacheSizeInMB: Int): Boolean {
@@ -111,13 +105,11 @@ internal class CloudWatchLoggingDatabase(
         }
     }
 
-    internal suspend fun clearDatabase() {
-        withContext(coroutineDispatcher) {
-            database.delete(LogEventTable.TABLE_LOG_EVENT, null, null)
-        }
+    internal suspend fun clearDatabase() = withContext(coroutineDispatcher) {
+        database.delete(LogEventTable.TABLE_LOG_EVENT, null, null)
     }
 
-    private suspend fun insertEvent(uri: Uri, event: CloudWatchLogEvent): Uri {
+    private fun insertEvent(event: CloudWatchLogEvent): Uri {
         val contentValues = ContentValues()
         contentValues.put(LogEventTable.COLUMN_TIMESTAMP, event.timestamp)
         contentValues.put(LogEventTable.COLUMN_MESSAGE, event.message)
@@ -126,12 +118,11 @@ internal class CloudWatchLoggingDatabase(
     }
 
     private fun query(
-        uri: Uri,
         projection: Array<String?>? = null,
         selection: String? = null,
         selectionArgs: Array<String?>? = null,
         sortOrder: String? = null,
-        limit: String? = null,
+        limit: String? = null
     ): Cursor {
         val queryBuilder = SQLiteQueryBuilder()
         queryBuilder.tables = LogEventTable.TABLE_LOG_EVENT
@@ -143,7 +134,7 @@ internal class CloudWatchLoggingDatabase(
             null,
             null,
             sortOrder,
-            limit,
+            limit
         )
     }
 

@@ -101,7 +101,7 @@ subprojects {
 
     tasks.withType<Test>().configureEach {
         retry {
-            maxRetries.set(1)
+            maxRetries.set(9)
             maxFailures.set(100)
             failOnPassedAfterRetry.set(true)
         }

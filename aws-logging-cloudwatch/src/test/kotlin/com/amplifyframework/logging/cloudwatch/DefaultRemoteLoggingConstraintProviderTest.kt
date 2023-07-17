@@ -25,8 +25,11 @@ import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
+import java.net.URL
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import okhttp3.Call
 import okhttp3.OkHttpClient
@@ -36,11 +39,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import java.net.URL
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class DefaultRemoteLoggingConstraintProviderTest {
@@ -65,7 +63,7 @@ internal class DefaultRemoteLoggingConstraintProviderTest {
             "us-east-1",
             okHttpClient = okHttpClient,
             coroutineDispatcher = UnconfinedTestDispatcher(testScheduler),
-            credentialsProvider = credentialsProvider,
+            credentialsProvider = credentialsProvider
         )
     }
 

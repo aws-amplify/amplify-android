@@ -14,7 +14,6 @@
  */
 package com.amplifyframework.logging.cloudwatch
 
-import android.util.Log
 import com.amplifyframework.core.category.CategoryType
 import com.amplifyframework.logging.LogLevel
 import com.amplifyframework.logging.Logger
@@ -35,7 +34,7 @@ class CloudWatchLogger internal constructor(
     private val loggingConstraintsResolver: LoggingConstraintsResolver,
     private val awsCloudWatchLoggingPlugin: AWSCloudWatchLoggingPluginImplementation,
     private val logEventsQueue: Queue<CloudWatchLogEvent> = ConcurrentLinkedQueue(),
-    private val dispatcher: CoroutineDispatcher = Dispatchers.IO,
+    dispatcher: CoroutineDispatcher = Dispatchers.IO
 ) : Logger {
 
     private val coroutineScope = CoroutineScope(dispatcher)
@@ -48,65 +47,26 @@ class CloudWatchLogger internal constructor(
         return namespace
     }
 
-    override fun error(message: String?) {
-        if (shouldNotLogMessage(LogLevel.ERROR)) {
-            return
-        }
-        val event = CloudWatchLogEvent(System.currentTimeMillis(), "error/$namespace: $message")
-        persistEvent(event)
-    }
+    override fun error(message: String?) = log(LogLevel.ERROR, message)
 
-    override fun error(message: String?, error: Throwable?) {
-        if (shouldNotLogMessage(LogLevel.ERROR)) {
-            return
-        }
-        val event = CloudWatchLogEvent(
-            System.currentTimeMillis(),
-            "error/$namespace: $message, error: ${Log.getStackTraceString(error)}",
-        )
-        persistEvent(event)
-    }
+    override fun error(message: String?, error: Throwable?) = log(LogLevel.ERROR, message, error)
 
-    override fun warn(message: String?) {
-        if (shouldNotLogMessage(LogLevel.WARN)) {
-            return
-        }
-        val event = CloudWatchLogEvent(System.currentTimeMillis(), "warn/$namespace: $message")
-        persistEvent(event)
-    }
+    override fun warn(message: String?) = log(LogLevel.WARN, message)
 
-    override fun warn(message: String?, issue: Throwable?) {
-        if (shouldNotLogMessage(LogLevel.WARN)) {
-            return
-        }
-        val event = CloudWatchLogEvent(
-            System.currentTimeMillis(),
-            "warn/$namespace: $message, issue: ${Log.getStackTraceString(issue)}",
-        )
-        persistEvent(event)
-    }
+    override fun warn(message: String?, issue: Throwable?) = log(LogLevel.WARN, message, issue)
+    override fun info(message: String?) = log(LogLevel.INFO, message)
 
-    override fun info(message: String?) {
-        if (shouldNotLogMessage(LogLevel.INFO)) {
-            return
-        }
-        val event = CloudWatchLogEvent(System.currentTimeMillis(), "info/$namespace: $message")
-        persistEvent(event)
-    }
+    override fun debug(message: String?) = log(LogLevel.DEBUG, message)
 
-    override fun debug(message: String?) {
-        if (shouldNotLogMessage(LogLevel.DEBUG)) {
-            return
-        }
-        val event = CloudWatchLogEvent(System.currentTimeMillis(), "debug/$namespace: $message")
-        persistEvent(event)
-    }
+    override fun verbose(message: String?) = log(LogLevel.VERBOSE, message)
 
-    override fun verbose(message: String?) {
-        if (shouldNotLogMessage(LogLevel.VERBOSE)) {
+    private fun log(level: LogLevel, message: String?, error: Throwable? = null) {
+        if (shouldNotLogMessage(level)) {
             return
         }
-        val event = CloudWatchLogEvent(System.currentTimeMillis(), "verbose/$namespace: $message")
+        val logMessage = "${level.name.lowercase()}/$namespace: $message"
+        error?.let { logMessage.plus(", error: $it") }
+        val event = CloudWatchLogEvent(System.currentTimeMillis(), "$logMessage")
         persistEvent(event)
     }
 
@@ -114,9 +74,7 @@ class CloudWatchLogger internal constructor(
         coroutineScope.launch {
             awsCloudWatchLoggingPlugin.cloudWatchLogManager?.saveLogEvent(event)?.also {
                 flushLogsQueue()
-            } ?: kotlin.run {
-                logEventsQueue.add(event)
-            }
+            } ?: logEventsQueue.add(event)
         }
     }
 
