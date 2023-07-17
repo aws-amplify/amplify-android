@@ -16,14 +16,11 @@ package com.amplifyframework.logging.cloudwatch.db
 
 import android.content.ContentValues
 import android.content.Context
-import android.content.SharedPreferences
 import android.content.UriMatcher
 import android.database.Cursor
 import android.net.Uri
-import androidx.security.crypto.EncryptedSharedPreferences
-import androidx.security.crypto.MasterKeys
+import com.amplifyframework.core.store.EncryptedKeyValueRepository
 import com.amplifyframework.logging.cloudwatch.models.CloudWatchLogEvent
-import java.io.File
 import java.util.UUID
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -38,13 +35,10 @@ internal class CloudWatchLoggingDatabase(
     private val logEventsId = 20
     private val passphraseKey = "passphrase"
     private val mb = 1024 * 1024
-    private val sharedPreferences: SharedPreferences by lazy {
-        EncryptedSharedPreferences.create(
-            "awscloudwatchloggingdb.${getInstallationIdentifier(context)}",
-            MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC),
+    private val encryptedKeyValueRepository: EncryptedKeyValueRepository by lazy {
+        EncryptedKeyValueRepository(
             context,
-            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+            "awscloudwatchloggingdb"
         )
     }
     private val database by lazy {
@@ -138,34 +132,9 @@ internal class CloudWatchLoggingDatabase(
         )
     }
 
-    private fun getInstallationIdentifier(context: Context): String {
-        val identifierFile = File(context.noBackupFilesDir, "awscloudwatchloggingdb.installationIdentifier")
-        val previousIdentifier = getExistingInstallationIdentifier(identifierFile)
-        return previousIdentifier ?: createInstallationIdentifier(identifierFile)
-    }
-
-    private fun getExistingInstallationIdentifier(identifierFile: File): String? {
-        return if (identifierFile.exists()) {
-            val identifier = identifierFile.readText()
-            identifier.ifBlank { null }
-        } else {
-            null
-        }
-    }
-
-    private fun createInstallationIdentifier(identifierFile: File): String {
-        val newIdentifier = UUID.randomUUID().toString()
-        try {
-            identifierFile.writeText(newIdentifier)
-        } catch (e: Exception) {
-            // Failed to write identifier to file, session will be forced to be in memory
-        }
-        return newIdentifier
-    }
-
     private fun getDatabasePassphrase(): String {
-        return sharedPreferences.getString(passphraseKey, null) ?: UUID.randomUUID().toString().also { passphrase ->
-            sharedPreferences.edit().putString(passphraseKey, passphrase).apply()
+        return encryptedKeyValueRepository.get(passphraseKey) ?: UUID.randomUUID().toString().also { passphrase ->
+            encryptedKeyValueRepository.put(passphraseKey, passphrase)
         }
     }
 }

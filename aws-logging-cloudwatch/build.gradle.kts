@@ -35,6 +35,7 @@ dependencies {
     implementation(dependency.sqlcipher)
     implementation(dependency.androidx.sqlite)
     implementation(dependency.kotlin.serializationJson)
+    implementation(dependency.androidx.workmanager)
 
     testImplementation(project(":testutils"))
     testImplementation(testDependency.junit)
