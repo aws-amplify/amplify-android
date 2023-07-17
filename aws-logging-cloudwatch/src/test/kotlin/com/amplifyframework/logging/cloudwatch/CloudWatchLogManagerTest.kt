@@ -26,6 +26,7 @@ import aws.sdk.kotlin.services.cloudwatchlogs.model.PutLogEventsResponse
 import aws.sdk.kotlin.services.cloudwatchlogs.model.RejectedLogEventsInfo
 import com.amplifyframework.auth.AuthUser
 import com.amplifyframework.logging.cloudwatch.db.CloudWatchLoggingDatabase
+import com.amplifyframework.logging.cloudwatch.db.LogEvent
 import com.amplifyframework.logging.cloudwatch.models.AWSCloudWatchLoggingPluginConfiguration
 import com.amplifyframework.logging.cloudwatch.models.CloudWatchLogEvent
 import io.mockk.CapturingSlot
@@ -91,11 +92,12 @@ internal class CloudWatchLogManagerTest {
     @Test
     fun `on saveLogEvents and cache full`() = runTest {
         val cloudwatchEvent = CloudWatchLogEvent(System.currentTimeMillis(), "Sample log")
+        val logEvent = LogEvent(cloudwatchEvent.timestamp, cloudwatchEvent.message, 1L)
         every { cloudWatchLoggingDatabase.isCacheFull(any()) }.answers { true }
         coEvery { cloudWatchLoggingDatabase.saveLogEvent(any()) }.answers { Uri.parse("something/1") }
         coEvery {
             cloudWatchLoggingDatabase.queryAllEvents()
-        } returns listOf(cloudwatchEvent) andThen emptyList()
+        } returns listOf(logEvent) andThen emptyList()
         coEvery {
             cloudWatchLogsClient.describeLogStreams(any())
         }.answers { DescribeLogStreamsResponse.invoke { logStreams = null } }

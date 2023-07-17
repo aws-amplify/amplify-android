@@ -150,7 +150,7 @@ internal class CloudWatchLogManager(
             } catch (exception: Exception) {
                 Amplify.Hub.publish(
                     HubChannel.LOGGING,
-                    HubEvent.create(LoggingEventName.FLUSH_LOG_FAILURE)
+                    HubEvent.create(LoggingEventName.FLUSH_LOG_FAILURE, exception)
                 )
                 if (isCacheFull()) {
                     cloudWatchLoggingDatabase.bulkDelete(inputLogEventsIdToBeDeleted)
