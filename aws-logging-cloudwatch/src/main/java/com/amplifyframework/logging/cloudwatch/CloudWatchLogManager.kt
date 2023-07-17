@@ -22,6 +22,9 @@ import aws.sdk.kotlin.services.cloudwatchlogs.model.InputLogEvent
 import aws.sdk.kotlin.services.cloudwatchlogs.model.PutLogEventsRequest
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.category.CategoryType
+import com.amplifyframework.hub.HubChannel
+import com.amplifyframework.hub.HubEvent
+import com.amplifyframework.logging.LoggingEventName
 import com.amplifyframework.logging.cloudwatch.db.CloudWatchLoggingDatabase
 import com.amplifyframework.logging.cloudwatch.db.LogEvent
 import com.amplifyframework.logging.cloudwatch.models.AWSCloudWatchLoggingPluginConfiguration
@@ -73,6 +76,10 @@ internal class CloudWatchLogManager(
             }
         } catch (e: Exception) {
             logger.error("failed to save event", e)
+            Amplify.Hub.publish(
+                HubChannel.LOGGING,
+                HubEvent.create(LoggingEventName.WRITE_LOG_FAILURE, event)
+            )
         }
     }
 
@@ -141,6 +148,10 @@ internal class CloudWatchLogManager(
                     }
                 }
             } catch (exception: Exception) {
+                Amplify.Hub.publish(
+                    HubChannel.LOGGING,
+                    HubEvent.create(LoggingEventName.FLUSH_LOG_FAILURE)
+                )
                 if (isCacheFull()) {
                     cloudWatchLoggingDatabase.bulkDelete(inputLogEventsIdToBeDeleted)
                 }
