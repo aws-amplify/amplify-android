@@ -14,4 +14,4 @@
  */
 package com.amplifyframework.logging.cloudwatch.db
 
-internal data class LogEvent(val timestamp: Long, val message: String, val id: Long = 0)
+internal data class LogEvent(val timestamp: Long, val message: String, val id: Long)
