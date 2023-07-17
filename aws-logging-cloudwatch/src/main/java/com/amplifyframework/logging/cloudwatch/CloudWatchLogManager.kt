@@ -141,7 +141,6 @@ internal class CloudWatchLogManager(
                     }
                 }
             } catch (exception: Exception) {
-                logger.error("failed to sync logs", exception)
                 if (isCacheFull()) {
                     cloudWatchLoggingDatabase.bulkDelete(inputLogEventsIdToBeDeleted)
                 }
