@@ -120,6 +120,11 @@ class AWSCloudWatchLoggingPlugin @JvmOverloads constructor(
             awsCloudWatchLoggingPluginImplementation.configure(awsLoggingConfig)
         } catch (exception: AmplifyException) {
             logger.error("failed to configure plugin", exception)
+            throw AmplifyException(
+                "Failed to configure AWSCloudwatchLoggingPlugin",
+                exception,
+                "Make sure your configuration is valid."
+            )
         }
     }
 
