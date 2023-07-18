@@ -23,6 +23,7 @@ import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.async.Cancelable;
+import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
 import com.amplifyframework.logging.Logger;
@@ -37,7 +38,7 @@ import io.reactivex.rxjava3.disposables.Disposable;
  * e.g. the {@link Cancelable}.
  */
 public final class AmplifyDisposables {
-    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
+    private static final Logger LOG = Amplify.Logging.logger(CategoryType.DATASTORE, "amplify:aws-datastore");
 
     private AmplifyDisposables() {}
 

@@ -23,6 +23,7 @@ import android.net.Uri
 import aws.sdk.kotlin.services.s3.model.CompletedPart
 import aws.sdk.kotlin.services.s3.model.ObjectCannedAcl
 import com.amplifyframework.core.Amplify
+import com.amplifyframework.core.category.CategoryType
 import com.amplifyframework.storage.ObjectMetadata
 import com.amplifyframework.storage.TransferState
 import com.amplifyframework.storage.s3.AWSS3StoragePlugin
@@ -40,7 +41,8 @@ internal class TransferDB private constructor(context: Context) {
     }
 
     private val logger =
-        Amplify.Logging.forNamespace(
+        Amplify.Logging.logger(
+            CategoryType.STORAGE,
             AWSS3StoragePlugin.AWS_S3_STORAGE_LOG_NAMESPACE.format(this::class.java.simpleName)
         )
 
@@ -331,7 +333,7 @@ internal class TransferDB private constructor(context: Context) {
                 selection = TransferTable.COLUMN_TYPE + "=?",
                 selectionArgs = arrayOf(
                     type.toString()
-                ),
+                )
             )
         }
     }

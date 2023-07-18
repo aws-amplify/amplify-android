@@ -32,6 +32,7 @@ import com.amplifyframework.api.aws.sigv4.DefaultCognitoUserPoolsAuthProvider;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.auth.CognitoCredentialsProvider;
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.logging.Logger;
 
 import java.util.Objects;
@@ -43,7 +44,7 @@ import okhttp3.Request;
  * Factory class that creates instances of different implementations of {@link RequestDecorator}s.
  */
 public final class ApiRequestDecoratorFactory {
-    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-api");
+    private static final Logger LOG = Amplify.Logging.logger(CategoryType.API, "amplify:aws-api");
     private static final String AUTH_DEPENDENCY_PLUGIN_KEY = "awsCognitoAuthPlugin";
     private static final String APP_SYNC_SERVICE_NAME = "appsync";
     private static final String API_GATEWAY_SERVICE_NAME = "execute-api";

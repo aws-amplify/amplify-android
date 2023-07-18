@@ -24,6 +24,7 @@ import androidx.annotation.UiThread
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import com.amplifyframework.core.Amplify
+import com.amplifyframework.core.category.CategoryType
 import com.amplifyframework.geo.GeoCategory
 import com.amplifyframework.geo.maplibre.AmplifyMapLibreAdapter
 import com.amplifyframework.geo.maplibre.R
@@ -51,7 +52,8 @@ typealias MapLibreOptions = com.mapbox.mapboxsdk.maps.MapboxMapOptions
  * check the documentation at [https://docs.amplify.aws/lib/geo/getting-started/q/platform/android]
  */
 class MapLibreView
-@JvmOverloads @UiThread constructor(
+@JvmOverloads @UiThread
+constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0,
@@ -63,7 +65,7 @@ class MapLibreView
 ) : MapView(context, attrs, defStyleAttr) {
 
     companion object {
-        private val log = Amplify.Logging.forNamespace("amplify:maplibre-adapter")
+        private val log = Amplify.Logging.logger(CategoryType.GEO, "amplify:maplibre-adapter")
 
         // Marked as internal for testing purposes
         internal const val CLUSTER_CIRCLE_LAYER_ID = "cluster-circles"

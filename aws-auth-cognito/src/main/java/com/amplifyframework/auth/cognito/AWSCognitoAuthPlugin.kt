@@ -57,6 +57,7 @@ import com.amplifyframework.auth.result.AuthUpdateAttributeResult
 import com.amplifyframework.core.Action
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
+import com.amplifyframework.core.category.CategoryType
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
@@ -77,7 +78,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
     }
 
     private val logger =
-        Amplify.Logging.forNamespace(AWS_COGNITO_AUTH_LOG_NAMESPACE.format(this::class.java.simpleName))
+        Amplify.Logging.logger(CategoryType.AUTH, AWS_COGNITO_AUTH_LOG_NAMESPACE.format(this::class.java.simpleName))
 
     @VisibleForTesting
     internal lateinit var realPlugin: RealAWSCognitoAuthPlugin

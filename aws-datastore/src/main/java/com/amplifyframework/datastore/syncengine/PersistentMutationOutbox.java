@@ -21,6 +21,7 @@ import androidx.annotation.VisibleForTesting;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.SerializedModel;
@@ -58,7 +59,7 @@ import io.reactivex.rxjava3.subjects.Subject;
  * it is safe to remove it from this outbox.
  */
 final class PersistentMutationOutbox implements MutationOutbox {
-    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
+    private static final Logger LOG = Amplify.Logging.logger(CategoryType.DATASTORE, "amplify:aws-datastore");
 
     private final LocalStorageAdapter storage;
     private final Set<TimeBasedUuid> inFlightMutations;

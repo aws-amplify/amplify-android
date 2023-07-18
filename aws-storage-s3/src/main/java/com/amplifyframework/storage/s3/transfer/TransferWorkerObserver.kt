@@ -20,6 +20,7 @@ import androidx.lifecycle.Observer
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import com.amplifyframework.core.Amplify
+import com.amplifyframework.core.category.CategoryType
 import com.amplifyframework.storage.TransferState
 import com.amplifyframework.storage.s3.AWSS3StoragePlugin
 import com.amplifyframework.storage.s3.TransferOperations
@@ -43,7 +44,8 @@ internal class TransferWorkerObserver private constructor(
         CoroutineScope(Executors.newSingleThreadExecutor().asCoroutineDispatcher())
 
     private val logger =
-        Amplify.Logging.forNamespace(
+        Amplify.Logging.logger(
+            CategoryType.STORAGE,
             AWSS3StoragePlugin.AWS_S3_STORAGE_LOG_NAMESPACE.format(this::class.java.simpleName)
         )
 
@@ -180,7 +182,7 @@ internal class TransferWorkerObserver private constructor(
                 TransferType.ANY,
                 arrayOf(
                     TransferState.IN_PROGRESS,
-                    TransferState.WAITING,
+                    TransferState.WAITING
                 )
             )?.use {
                 while (it.moveToNext()) {

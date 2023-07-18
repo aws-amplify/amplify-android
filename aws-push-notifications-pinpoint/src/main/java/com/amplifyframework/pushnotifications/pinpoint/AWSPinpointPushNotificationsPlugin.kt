@@ -29,6 +29,7 @@ import com.amplifyframework.auth.CognitoCredentialsProvider
 import com.amplifyframework.core.Action
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
+import com.amplifyframework.core.category.CategoryType
 import com.amplifyframework.core.store.EncryptedKeyValueRepository
 import com.amplifyframework.core.store.KeyValueRepository
 import com.amplifyframework.notifications.pushnotifications.NotificationPayload
@@ -50,7 +51,7 @@ import org.json.JSONObject
 class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClient>() {
 
     companion object {
-        private val LOG = Amplify.Logging.forNamespace("amplify:aws-push-notifications-pinpoint")
+        private val LOG = Amplify.Logging.logger(CategoryType.NOTIFICATIONS, "amplify:aws-push-notifications-pinpoint")
         private const val AWS_PINPOINT_PUSHNOTIFICATIONS_PLUGIN_KEY = "awsPinpointPushNotificationsPlugin"
 
         private const val DATABASE_NAME = "awspushnotifications.db"
@@ -313,7 +314,9 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
                 canShowNotification(pinpointPayload) -> {
                     val notificationId = getNotificationRequestId(eventSourceAttributes, eventSourceType)
                     pushNotificationsUtils.showNotification(
-                        notificationId, pinpointPayload, AWSPinpointPushNotificationsActivity::class.java
+                        notificationId,
+                        pinpointPayload,
+                        AWSPinpointPushNotificationsActivity::class.java
                     )
                     PushNotificationResult.NotificationPosted
                 }

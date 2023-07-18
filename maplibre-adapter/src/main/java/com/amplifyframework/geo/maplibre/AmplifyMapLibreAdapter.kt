@@ -17,6 +17,7 @@ package com.amplifyframework.geo.maplibre
 
 import android.content.Context
 import com.amplifyframework.core.Amplify
+import com.amplifyframework.core.category.CategoryType
 import com.amplifyframework.geo.GeoCategory
 import com.amplifyframework.geo.location.AWSLocationGeoPlugin
 import com.amplifyframework.geo.maplibre.http.AWSRequestSignerInterceptor
@@ -39,7 +40,7 @@ class AmplifyMapLibreAdapter internal constructor(
 ) {
 
     companion object {
-        private val log = Amplify.Logging.forNamespace("amplify:maplibre-adapter")
+        private val log = Amplify.Logging.logger(CategoryType.GEO, "amplify:maplibre-adapter")
     }
 
     private val plugin: AWSLocationGeoPlugin by lazy {

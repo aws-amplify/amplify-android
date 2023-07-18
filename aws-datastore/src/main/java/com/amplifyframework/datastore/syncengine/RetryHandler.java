@@ -16,6 +16,7 @@
 package com.amplifyframework.datastore.syncengine;
 
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.datastore.utils.ErrorInspector;
 import com.amplifyframework.logging.Logger;
 
@@ -35,7 +36,7 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
  */
 public class RetryHandler {
 
-    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
+    private static final Logger LOG = Amplify.Logging.logger(CategoryType.DATASTORE, "amplify:aws-datastore");
     private static final long JITTER_MS_VALUE = 100;
     @SuppressWarnings("checkstyle:magicnumber")
     private static final long MAX_DELAY_MS_VALUE = Duration.ofMinutes(5).toMillis();

@@ -34,6 +34,7 @@ import java.util.Objects;
 final class PersistentLogger implements Logger {
     // Maximum number of logs to store.
     private static final int MAX_NUM_LOGS = 500;
+    private static boolean isEnabled = true;
     // Namespace for this logger.
     private final String namespace;
     // The logs stored by this logger.
@@ -42,6 +43,10 @@ final class PersistentLogger implements Logger {
     PersistentLogger(@NonNull String namespace) {
         this.namespace = Objects.requireNonNull(namespace);
         this.logs = new LinkedList<>();
+    }
+
+    static void setIsEnabled(boolean enabled) {
+        isEnabled = enabled;
     }
 
     @NonNull
@@ -110,6 +115,9 @@ final class PersistentLogger implements Logger {
      * @param logLevel the level the log was logged at
      */
     private void addToLogs(String message, Throwable throwable, LogLevel logLevel) {
+        if (!isEnabled) {
+            return;
+        }
         if (logs.size() == MAX_NUM_LOGS) {
             logs.remove(0);
         }

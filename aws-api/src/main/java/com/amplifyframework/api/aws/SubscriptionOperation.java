@@ -24,6 +24,7 @@ import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
+import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.logging.Logger;
 
 import java.util.Objects;
@@ -32,7 +33,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 final class SubscriptionOperation<T> extends GraphQLOperation<T> {
-    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-api");
+    private static final Logger LOG = Amplify.Logging.logger(CategoryType.API, "amplify:aws-api");
 
     private final SubscriptionEndpoint subscriptionEndpoint;
     private final ExecutorService executorService;
