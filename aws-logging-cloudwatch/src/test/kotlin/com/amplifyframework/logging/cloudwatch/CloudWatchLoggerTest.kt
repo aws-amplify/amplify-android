@@ -132,4 +132,17 @@ internal class CloudWatchLoggerTest {
         coVerify(exactly = 1) { cloudWatchLogManager.saveLogEvent(any()) }
         assertEquals(slot[0].message, "error/NAMESPACE: Test Message")
     }
+
+    @Test
+    fun `log error with exception`() {
+        val cloudWatchLogManager = mockk<CloudWatchLogManager>()
+        val slot = mutableListOf<CloudWatchLogEvent>()
+        every { loggingConstraintsResolver.resolveLogLevel(namespace, categoryType) }.answers { LogLevel.ERROR }
+        every { awsCloudWatchLoggingPluginImplementation.cloudWatchLogManager }.answers { cloudWatchLogManager }
+        coEvery { cloudWatchLogManager.saveLogEvent(capture(slot)) }.answers { }
+        cloudWatchLogger.error("Test Message", Throwable("Something Went Wrong"))
+        assertEquals(0, logsEventsQueue.size)
+        coVerify(exactly = 1) { cloudWatchLogManager.saveLogEvent(any()) }
+        assertEquals(slot[0].message, "error/NAMESPACE: Test Message, error: java.lang.Throwable: Something Went Wrong")
+    }
 }

@@ -15,9 +15,9 @@
 package com.amplifyframework.logging
 
 /**
- * An enumeration of the names of events relating the {@link LoggingCategory},
- * that are published via {@link HubCategory#publish(HubChannel, HubEvent)} on the
- * {@link HubChannel#LOGGING} channel.
+ * An enumeration of the names of events relating the [LoggingCategory],
+ * that are published via [com.amplifyframework.hub.HubCategory.publish] on the
+ * [com.amplifyframework.hub.HubChannel.LOGGING] channel.
  */
 enum class LoggingEventName(name: String) {
     WRITE_LOG_FAILURE("writeLogFailure"),

@@ -64,9 +64,8 @@ class CloudWatchLogger internal constructor(
         if (shouldNotLogMessage(level)) {
             return
         }
-        val logMessage = "${level.name.lowercase()}/$namespace: $message"
-        error?.let { logMessage.plus(", error: $it") }
-        val event = CloudWatchLogEvent(System.currentTimeMillis(), "$logMessage")
+        var logMessage = "${level.name.lowercase()}/$namespace: $message".plus(error?.let { ", error: $it" } ?: "")
+        val event = CloudWatchLogEvent(System.currentTimeMillis(), logMessage)
         persistEvent(event)
     }
 
