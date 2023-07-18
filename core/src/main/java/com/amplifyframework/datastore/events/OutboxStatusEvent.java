@@ -21,6 +21,7 @@ import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.datastore.DataStoreChannelEventName;
 import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.logging.Logger;
@@ -29,7 +30,7 @@ import com.amplifyframework.logging.Logger;
  * Event payload for the {@link DataStoreChannelEventName#OUTBOX_STATUS} event.
  */
 public final class OutboxStatusEvent implements HubEvent.Data<OutboxStatusEvent> {
-    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
+    private static final Logger LOG = Amplify.Logging.logger(CategoryType.DATASTORE, "amplify:aws-datastore");
     private final boolean isEmpty;
 
     /**

@@ -19,6 +19,7 @@ import android.content.Context
 import android.os.Handler
 import android.os.Looper
 import com.amplifyframework.core.Amplify
+import com.amplifyframework.core.category.CategoryType
 import com.amplifyframework.storage.TransferState
 import com.amplifyframework.storage.s3.AWSS3StoragePlugin
 import java.io.File
@@ -31,7 +32,8 @@ internal class TransferStatusUpdater private constructor(
     private val transferDB: TransferDB
 ) {
     private val logger =
-        Amplify.Logging.forNamespace(
+        Amplify.Logging.logger(
+            CategoryType.STORAGE,
             AWSS3StoragePlugin.AWS_S3_STORAGE_LOG_NAMESPACE.format(this::class.java.simpleName)
         )
     private val mainHandler = Handler(Looper.getMainLooper())

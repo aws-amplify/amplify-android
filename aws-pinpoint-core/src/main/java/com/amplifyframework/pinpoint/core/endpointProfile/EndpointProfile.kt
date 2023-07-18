@@ -19,6 +19,7 @@ import android.content.Context
 import aws.sdk.kotlin.services.pinpoint.model.ChannelType
 import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.core.Amplify
+import com.amplifyframework.core.category.CategoryType
 import com.amplifyframework.pinpoint.core.data.AndroidAppDetails
 import com.amplifyframework.pinpoint.core.data.AndroidDeviceDetails
 import com.amplifyframework.pinpoint.core.util.millisToIsoDate
@@ -275,7 +276,7 @@ class EndpointProfile(
         private const val MAX_ENDPOINT_ATTRIBUTE_METRIC_KEY_LENGTH = 50
         private const val MAX_ENDPOINT_ATTRIBUTE_VALUE_LENGTH = 100
         private const val MAX_ENDPOINT_ATTRIBUTE_VALUES = 50
-        private val LOG = Amplify.Logging.forNamespace("amplify:aws-analytics-pinpoint")
+        private val LOG = Amplify.Logging.logger(CategoryType.ANALYTICS, "amplify:aws-analytics-pinpoint")
         private fun processAttributeMetricKey(key: String): String {
             val trimmedKey = key.take(MAX_ENDPOINT_ATTRIBUTE_METRIC_KEY_LENGTH)
             if (trimmedKey.length < key.length) {

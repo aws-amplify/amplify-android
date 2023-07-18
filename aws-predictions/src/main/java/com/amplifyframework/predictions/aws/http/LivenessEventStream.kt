@@ -16,6 +16,7 @@
 package com.amplifyframework.predictions.aws.http
 
 import com.amplifyframework.core.Amplify
+import com.amplifyframework.core.category.CategoryType
 import com.amplifyframework.predictions.aws.models.liveness.LivenessResponseStream
 import java.nio.ByteBuffer
 import java.util.Arrays
@@ -28,7 +29,7 @@ import okio.ByteString.Companion.encodeUtf8
 
 internal object LivenessEventStream {
 
-    private val LOG = Amplify.Logging.forNamespace("amplify:aws-predictions")
+    private val LOG = Amplify.Logging.logger(CategoryType.PREDICTIONS, "amplify:aws-predictions")
 
     fun encode(data: ByteArray, headers: Map<String, Any>): ByteBuffer {
         var headerLength = 0

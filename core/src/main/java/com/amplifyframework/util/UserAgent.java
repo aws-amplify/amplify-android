@@ -34,7 +34,7 @@ import java.util.Map;
  * A utility to construct a User-Agent header, to be sent with all network operations.
  */
 public final class UserAgent {
-    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:core");
+    private static final Logger LOG = Amplify.Logging.logger("amplify:core");
 
     private static UserAgent instance = null;
 

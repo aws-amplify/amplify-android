@@ -30,6 +30,7 @@ import com.amplifyframework.analytics.AnalyticsStringProperty
 import com.amplifyframework.analytics.UserProfile
 import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.core.Amplify
+import com.amplifyframework.core.category.CategoryType
 import com.amplifyframework.pinpoint.core.data.AndroidAppDetails
 import com.amplifyframework.pinpoint.core.data.AndroidDeviceDetails
 import com.amplifyframework.pinpoint.core.endpointProfile.EndpointProfile
@@ -54,7 +55,7 @@ class TargetingClient(
     private val prefs: SharedPreferences,
     appDetails: AndroidAppDetails,
     deviceDetails: AndroidDeviceDetails,
-    coroutineDispatcher: CoroutineDispatcher = Dispatchers.Default,
+    coroutineDispatcher: CoroutineDispatcher = Dispatchers.Default
 ) {
     private val endpointProfile = EndpointProfile(prefs.getUniqueId(), appDetails, deviceDetails, context)
     private val globalAttributes: MutableMap<String, List<String>>
@@ -370,7 +371,7 @@ class TargetingClient(
     }
 
     companion object {
-        private val LOG = Amplify.Logging.forNamespace("amplify:aws-analytics-pinpoint")
+        private val LOG = Amplify.Logging.logger(CategoryType.ANALYTICS, "amplify:aws-analytics-pinpoint")
         private const val CUSTOM_ATTRIBUTES_KEY = "ENDPOINT_PROFILE_CUSTOM_ATTRIBUTES"
         private const val CUSTOM_METRICS_KEY = "ENDPOINT_PROFILE_CUSTOM_METRICS"
 

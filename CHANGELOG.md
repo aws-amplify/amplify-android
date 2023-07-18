@@ -1,3 +1,10 @@
+## [Release 2.11.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.11.0)
+
+### Features
+- **logging:** Add Cloudwatch Logging Plugin ([#2518](https://github.com/aws-amplify/amplify-android/issues/2518))
+
+[See all changes between 2.10.0 and 2.11.0](https://github.com/aws-amplify/amplify-android/compare/release_v2.10.0...release_v2.11.0)
+
 ## [Release 2.10.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.10.0)
 
 ### Features

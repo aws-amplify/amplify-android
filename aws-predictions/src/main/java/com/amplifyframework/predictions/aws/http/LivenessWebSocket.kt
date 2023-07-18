@@ -25,6 +25,7 @@ import com.amplifyframework.AmplifyException
 import com.amplifyframework.core.Action
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
+import com.amplifyframework.core.category.CategoryType
 import com.amplifyframework.predictions.PredictionsException
 import com.amplifyframework.predictions.aws.BuildConfig
 import com.amplifyframework.predictions.aws.exceptions.AccessDeniedException
@@ -73,6 +74,7 @@ internal class LivenessWebSocket(
 
     private val signer = AWSV4Signer()
     private var credentials: Credentials? = null
+
     @VisibleForTesting
     internal var webSocket: WebSocket? = null
     internal val challengeId = UUID.randomUUID().toString()
@@ -153,7 +155,6 @@ internal class LivenessWebSocket(
     }
 
     fun start() {
-
         val userAgent = getUserAgent()
 
         val okHttpClient = OkHttpClient.Builder()
@@ -417,6 +418,6 @@ internal class LivenessWebSocket(
     }
 
     companion object {
-        private val LOG = Amplify.Logging.forNamespace("amplify:aws-predictions")
+        private val LOG = Amplify.Logging.logger(CategoryType.PREDICTIONS, "amplify:aws-predictions")
     }
 }

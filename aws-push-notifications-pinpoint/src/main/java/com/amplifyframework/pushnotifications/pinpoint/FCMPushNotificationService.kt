@@ -18,6 +18,7 @@ package com.amplifyframework.pushnotifications.pinpoint
 import android.content.Intent
 import android.os.Bundle
 import com.amplifyframework.core.Amplify
+import com.amplifyframework.core.category.CategoryType
 import com.amplifyframework.notifications.pushnotifications.NotificationContentProvider
 import com.amplifyframework.notifications.pushnotifications.NotificationPayload
 import com.google.firebase.messaging.FirebaseMessagingService
@@ -25,7 +26,10 @@ import com.google.firebase.messaging.RemoteMessage
 
 class FCMPushNotificationService : FirebaseMessagingService() {
     companion object {
-        private val LOG = Amplify.Logging.forNamespace("amplify:aws-push-notifications-pinpoint-utils")
+        private val LOG = Amplify.Logging.logger(
+            CategoryType.NOTIFICATIONS,
+            "amplify:aws-push-notifications-pinpoint-utils"
+        )
     }
 
     override fun onNewToken(token: String) {

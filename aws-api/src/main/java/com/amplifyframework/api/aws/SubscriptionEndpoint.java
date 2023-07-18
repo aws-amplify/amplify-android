@@ -29,6 +29,7 @@ import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
+import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.logging.Logger;
 import com.amplifyframework.util.UserAgent;
 
@@ -60,7 +61,7 @@ import okhttp3.WebSocketListener;
  * and multiple GraphQL subscriptions that work on top of it.
  */
 final class SubscriptionEndpoint {
-    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-api");
+    private static final Logger LOG = Amplify.Logging.logger(CategoryType.API, "amplify:aws-api");
     private static final int CONNECTION_ACKNOWLEDGEMENT_TIMEOUT = 30 /* seconds */;
     private static final int NORMAL_CLOSURE_STATUS = 1000;
     private static final String UNAUTHORIZED_EXCEPTION = "UnauthorizedException";

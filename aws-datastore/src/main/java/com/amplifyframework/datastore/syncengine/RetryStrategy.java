@@ -16,6 +16,7 @@
 package com.amplifyframework.datastore.syncengine;
 
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.logging.Logger;
 
 import java.util.Arrays;
@@ -34,7 +35,7 @@ public final class RetryStrategy {
     public static final RxRetryStrategy RX_INTERRUPTIBLE_WITH_BACKOFF =
         new RxCompletableExponentialBackoffStrategy(2, 8, Arrays.asList(InterruptedException.class));
 
-    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
+    private static final Logger LOG = Amplify.Logging.logger(CategoryType.DATASTORE, "amplify:aws-datastore");
 
     private RetryStrategy() {}
 

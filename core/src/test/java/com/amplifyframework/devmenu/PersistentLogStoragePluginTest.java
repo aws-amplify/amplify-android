@@ -38,7 +38,7 @@ public final class PersistentLogStoragePluginTest {
     @Test
     public void logsAreStored() {
         PersistentLogStoragePlugin plugin = new PersistentLogStoragePlugin();
-        Logger logger = plugin.forNamespace("logging-test");
+        Logger logger = plugin.logger("logging-test");
         String message = "Error log";
         Throwable throwable = new Throwable("error message");
         logger.error(message, throwable);
