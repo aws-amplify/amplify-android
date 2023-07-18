@@ -133,8 +133,17 @@ internal class CloudWatchLoggingDatabase(
     }
 
     private fun getDatabasePassphrase(): String {
-        return encryptedKeyValueRepository.get(passphraseKey) ?: UUID.randomUUID().toString().also { passphrase ->
+        return encryptedKeyValueRepository.get(passphraseKey) ?: kotlin.run {
+            val passphrase = UUID.randomUUID().toString()
+            // If the database is restored from backup and the passphrase key is not present,
+            // this would result in the database file not getting loaded.
+            // To avoid this error, check to see if the database file exists and, if so, delete it and then recreate the database.
+            val path = context.getDatabasePath(CloudWatchDatabaseHelper.DATABASE_NAME)
+            if (path.exists()) {
+                path.delete()
+            }
             encryptedKeyValueRepository.put(passphraseKey, passphrase)
+            passphrase
         }
     }
 }
