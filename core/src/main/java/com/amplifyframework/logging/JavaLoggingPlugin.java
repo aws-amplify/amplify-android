@@ -20,6 +20,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.amplifyframework.core.BuildConfig;
+import com.amplifyframework.core.category.CategoryType;
 
 import org.json.JSONObject;
 
@@ -52,9 +53,32 @@ public final class JavaLoggingPlugin extends LoggingPlugin<Void> {
 
     @NonNull
     @Override
+    @SuppressWarnings("deprecation")
     public Logger forNamespace(@Nullable String namespace) {
         String usedNamespace = namespace == null ? AMPLIFY_NAMESPACE : namespace;
-        return new JavaLogger(usedNamespace, defaultLoggerThreshold);
+        return logger(usedNamespace);
+    }
+
+    @NonNull
+    @Override
+    public Logger logger(@NonNull String namespace) {
+        return new JavaLogger(namespace, defaultLoggerThreshold);
+    }
+
+    @NonNull
+    @Override
+    public Logger logger(@NonNull CategoryType categoryType, @NonNull String namespace) {
+        return logger(namespace);
+    }
+
+    @Override
+    public void enable() {
+        JavaLogger.setIsEnabled(true);
+    }
+
+    @Override
+    public void disable() {
+        JavaLogger.setIsEnabled(false);
     }
 
     @NonNull

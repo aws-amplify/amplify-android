@@ -28,6 +28,7 @@ import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
+import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.auth.AuthorizationTypeIterator;
 import com.amplifyframework.datastore.appsync.AppSyncExtensions;
 import com.amplifyframework.logging.Logger;
@@ -53,7 +54,7 @@ import okhttp3.ResponseBody;
  * @param <R> Casted type of GraphQL result data
  */
 public final class MultiAuthAppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
-    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-api");
+    private static final Logger LOG = Amplify.Logging.logger(CategoryType.API, "amplify:aws-api");
     private static final String CONTENT_TYPE = "application/json";
 
     private final String endpoint;

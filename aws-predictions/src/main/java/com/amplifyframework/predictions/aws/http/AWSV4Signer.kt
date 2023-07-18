@@ -18,6 +18,7 @@ package com.amplifyframework.predictions.aws.http
 import android.net.Uri
 import aws.smithy.kotlin.runtime.auth.awscredentials.Credentials
 import com.amplifyframework.core.Amplify
+import com.amplifyframework.core.category.CategoryType
 import java.io.UnsupportedEncodingException
 import java.net.URI
 import java.net.URISyntaxException
@@ -299,6 +300,6 @@ internal class AWSV4Signer {
         private const val X_AMZ_SECURITY_TOKEN = "X-Amz-Security-Token"
         private const val X_AMZ_USER_AGENT = "x-amz-user-agent"
 
-        private val LOG = Amplify.Logging.forNamespace("amplify:aws-predictions")
+        private val LOG = Amplify.Logging.logger(CategoryType.PREDICTIONS, "amplify:aws-predictions")
     }
 }

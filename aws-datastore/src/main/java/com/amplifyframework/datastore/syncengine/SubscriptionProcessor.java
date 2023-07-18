@@ -25,6 +25,7 @@ import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.async.Cancelable;
+import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
@@ -66,7 +67,7 @@ import io.reactivex.rxjava3.subjects.UnicastSubject;
  * marries mutated models back into the local DataStore, through the {@link Merger}.
  */
 final class SubscriptionProcessor {
-    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
+    private static final Logger LOG = Amplify.Logging.logger(CategoryType.DATASTORE, "amplify:aws-datastore");
     private static final long TIMEOUT_SECONDS_PER_MODEL = 20;
     private static final long NETWORK_OP_TIMEOUT_SECONDS = 60;
 

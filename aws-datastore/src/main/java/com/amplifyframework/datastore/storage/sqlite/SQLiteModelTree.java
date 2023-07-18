@@ -21,6 +21,7 @@ import android.database.sqlite.SQLiteException;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelAssociation;
 import com.amplifyframework.core.model.ModelSchema;
@@ -50,7 +51,7 @@ import java.util.Set;
  * Utility class to help traverse a tree of models by relationship.
  */
 final class SQLiteModelTree {
-    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
+    private static final Logger LOG = Amplify.Logging.logger(CategoryType.DATASTORE, "amplify:aws-datastore");
 
     private final SchemaRegistry registry;
     private final SQLiteDatabase database;

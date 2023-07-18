@@ -21,6 +21,7 @@ import androidx.annotation.NonNull;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
+import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.SchemaRegistry;
@@ -40,7 +41,7 @@ import java.util.Map;
 
 class SqlQueryProcessor {
 
-    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
+    private static final Logger LOG = Amplify.Logging.logger(CategoryType.DATASTORE, "amplify:aws-datastore");
     private final SchemaRegistry modelSchemaRegistry;
     private final SQLCommandFactory sqlCommandFactory;
     private final SQLCommandProcessor sqlCommandProcessor;

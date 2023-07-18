@@ -21,6 +21,7 @@ import androidx.annotation.NonNull;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.NoOpConsumer;
+import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.DataStoreChannelEventName;
@@ -45,7 +46,7 @@ import io.reactivex.rxjava3.core.Completable;
  * This is the purpose of the merger.
  */
 final class Merger {
-    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
+    private static final Logger LOG = Amplify.Logging.logger(CategoryType.DATASTORE, "amplify:aws-datastore");
     private final MutationOutbox mutationOutbox;
     private final VersionRepository versionRepository;
     private final LocalStorageAdapter localStorageAdapter;

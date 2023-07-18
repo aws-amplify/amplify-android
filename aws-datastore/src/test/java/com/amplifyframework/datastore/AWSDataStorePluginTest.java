@@ -87,7 +87,7 @@ import static org.mockito.Mockito.when;
 @RunWith(RobolectricTestRunner.class)
 @Ignore("Test class is unstable on CI - to be enabled after investigation")
 public final class AWSDataStorePluginTest {
-    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:datastore:test");
+    private static final Logger LOG = Amplify.Logging.logger(CategoryType.DATASTORE, "amplify:datastore:test");
     private static final long TIMEOUT_MS = TimeUnit.SECONDS.toMillis(1);
 
     private static final String MOCK_API_PLUGIN_NAME = "MockApiPlugin";

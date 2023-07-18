@@ -21,6 +21,7 @@ import androidx.core.util.Supplier;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.SchemaRegistry;
 import com.amplifyframework.datastore.AWSDataStorePlugin;
@@ -50,7 +51,7 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
  * Synchronizes changed data between the {@link LocalStorageAdapter} and {@link AppSync}.
  */
 public final class Orchestrator {
-    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
+    private static final Logger LOG = Amplify.Logging.logger(CategoryType.DATASTORE, "amplify:aws-datastore");
     private static final long LOCAL_OP_TIMEOUT_SECONDS = 7;
 
     private final SubscriptionProcessor subscriptionProcessor;

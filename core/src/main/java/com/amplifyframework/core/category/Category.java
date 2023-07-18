@@ -86,9 +86,11 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
             state.set(State.CONFIGURING);
             try {
                 for (P plugin : getPlugins()) {
-                    String pluginKey = plugin.getPluginKey();
-                    JSONObject pluginConfig = configuration.getPluginConfig(pluginKey);
-                    plugin.configure(pluginConfig != null ? pluginConfig : new JSONObject(), context);
+                    if (configureFromDefaultConfigFile()) {
+                        String pluginKey = plugin.getPluginKey();
+                        JSONObject pluginConfig = configuration.getPluginConfig(pluginKey);
+                        plugin.configure(pluginConfig != null ? pluginConfig : new JSONObject(), context);
+                    }
                 }
                 state.set(State.CONFIGURED);
             } catch (Throwable anyError) {
@@ -258,6 +260,16 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     protected synchronized boolean isInitialized() {
         return State.INITIALIZED.equals(state.get());
+    }
+
+    /**
+     * Return whether to configure the plugins using amplifyconfiguration.json.
+     * override this method for categories not configured using the default amplifyconfiguration.json
+     * For e.g., the Logging category
+     * @return whether to configure the plugins using amplifyconfiguration.json
+     */
+    protected boolean configureFromDefaultConfigFile() {
+        return true;
     }
 
     /**
