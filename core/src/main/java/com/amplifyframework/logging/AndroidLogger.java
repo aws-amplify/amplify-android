@@ -23,12 +23,17 @@ import androidx.annotation.Nullable;
 import java.util.Objects;
 
 final class AndroidLogger implements Logger {
+    private static boolean isEnabled = true;
     private final LogLevel threshold;
     private final String namespace;
 
     AndroidLogger(@NonNull String namespace, @NonNull LogLevel threshold) {
         this.threshold = Objects.requireNonNull(threshold);
         this.namespace = Objects.requireNonNull(namespace);
+    }
+
+    static void setIsEnabled(boolean enabled) {
+        isEnabled = enabled;
     }
 
     @NonNull
@@ -45,7 +50,7 @@ final class AndroidLogger implements Logger {
 
     @Override
     public void error(@Nullable String message) {
-        if (threshold.above(LogLevel.ERROR)) {
+        if (shouldNotLogMessage(LogLevel.ERROR)) {
             return;
         }
         Log.e(namespace, String.valueOf(message));
@@ -53,7 +58,7 @@ final class AndroidLogger implements Logger {
 
     @Override
     public void error(@Nullable String message, @Nullable Throwable error) {
-        if (threshold.above(LogLevel.ERROR)) {
+        if (shouldNotLogMessage(LogLevel.ERROR)) {
             return;
         }
         Log.e(namespace, message, error);
@@ -61,7 +66,7 @@ final class AndroidLogger implements Logger {
 
     @Override
     public void warn(@Nullable String message) {
-        if (threshold.above(LogLevel.WARN)) {
+        if (shouldNotLogMessage(LogLevel.WARN)) {
             return;
         }
         Log.w(namespace, String.valueOf(message));
@@ -69,7 +74,7 @@ final class AndroidLogger implements Logger {
 
     @Override
     public void warn(@Nullable String message, @Nullable Throwable issue) {
-        if (threshold.above(LogLevel.WARN)) {
+        if (shouldNotLogMessage(LogLevel.WARN)) {
             return;
         }
         Log.w(namespace, message, issue);
@@ -78,7 +83,7 @@ final class AndroidLogger implements Logger {
     @SuppressLint("LogConditional") // We guard with our own LogLevel.
     @Override
     public void info(@Nullable String message) {
-        if (threshold.above(LogLevel.INFO)) {
+        if (shouldNotLogMessage(LogLevel.INFO)) {
             return;
         }
         Log.i(namespace, String.valueOf(message));
@@ -87,7 +92,7 @@ final class AndroidLogger implements Logger {
     @SuppressLint("LogConditional") // We guard with our own LogLevel.
     @Override
     public void debug(@Nullable String message) {
-        if (threshold.above(LogLevel.DEBUG)) {
+        if (shouldNotLogMessage(LogLevel.DEBUG)) {
             return;
         }
         Log.d(namespace, String.valueOf(message));
@@ -96,9 +101,13 @@ final class AndroidLogger implements Logger {
     @SuppressLint("LogConditional") // We guard with our own LogLevel.
     @Override
     public void verbose(@Nullable String message) {
-        if (threshold.above(LogLevel.VERBOSE)) {
+        if (shouldNotLogMessage(LogLevel.VERBOSE)) {
             return;
         }
         Log.v(namespace, String.valueOf(message));
+    }
+
+    private boolean shouldNotLogMessage(LogLevel logLevel) {
+        return !isEnabled || threshold.above(logLevel);
     }
 }
