@@ -27,7 +27,7 @@ import com.amplifyframework.notifications.pushnotifications.NotificationPayload
 internal class AWSPinpointPushNotificationsActivity : Activity() {
 
     companion object {
-        private val LOG = Amplify.Logging.logger(CategoryType.ANALYTICS, "amplify:aws-push-notifications-pinpoint")
+        private val LOG = Amplify.Logging.logger(CategoryType.NOTIFICATIONS, "amplify:aws-push-notifications-pinpoint")
     }
 
     @Override

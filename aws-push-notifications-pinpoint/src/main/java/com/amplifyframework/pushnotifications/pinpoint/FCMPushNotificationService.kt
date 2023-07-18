@@ -27,7 +27,7 @@ import com.google.firebase.messaging.RemoteMessage
 class FCMPushNotificationService : FirebaseMessagingService() {
     companion object {
         private val LOG = Amplify.Logging.logger(
-            CategoryType.ANALYTICS,
+            CategoryType.NOTIFICATIONS,
             "amplify:aws-push-notifications-pinpoint-utils"
         )
     }

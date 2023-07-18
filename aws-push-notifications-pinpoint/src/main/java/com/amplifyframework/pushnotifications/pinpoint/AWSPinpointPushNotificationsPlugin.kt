@@ -51,7 +51,7 @@ import org.json.JSONObject
 class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClient>() {
 
     companion object {
-        private val LOG = Amplify.Logging.logger(CategoryType.ANALYTICS, "amplify:aws-push-notifications-pinpoint")
+        private val LOG = Amplify.Logging.logger(CategoryType.NOTIFICATIONS, "amplify:aws-push-notifications-pinpoint")
         private const val AWS_PINPOINT_PUSHNOTIFICATIONS_PLUGIN_KEY = "awsPinpointPushNotificationsPlugin"
 
         private const val DATABASE_NAME = "awspushnotifications.db"

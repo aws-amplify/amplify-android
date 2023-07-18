@@ -32,7 +32,7 @@ internal class EventSourceType private constructor(
     private val eventTypeReceivedForeground = "$eventSourcePrefix.$AWS_EVENT_TYPE_RECEIVED_FOREGROUND"
 
     companion object {
-        private val LOG = Amplify.Logging.logger(CategoryType.ANALYTICS, "amplify:aws-push-notifications-pinpoint")
+        private val LOG = Amplify.Logging.logger(CategoryType.NOTIFICATIONS, "amplify:aws-push-notifications-pinpoint")
         private const val CAMPAIGN_EVENT_SOURCE_PREFIX = "_campaign"
         private const val JOURNEY_EVENT_SOURCE_PREFIX = "_journey"
         private const val AWS_EVENT_TYPE_OPENED = "opened_notification"
