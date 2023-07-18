@@ -76,6 +76,7 @@ public final class SimpleLoggingPlugin extends LoggingPlugin<Void> {
 
     @NonNull
     @Override
+    @SuppressWarnings("deprecation")
     public Logger forNamespace(@Nullable String namespace) {
         return null;
     }

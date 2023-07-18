@@ -21,6 +21,7 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.annotations.InternalAmplifyApi;
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.logging.Logger;
 
 import java.util.Locale;
@@ -30,7 +31,7 @@ import java.util.Locale;
  */
 @InternalAmplifyApi
 public final class AutoEventSubmitter {
-    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-analytics");
+    private static final Logger LOG = Amplify.Logging.logger(CategoryType.ANALYTICS, "amplify:aws-analytics");
 
     private final Handler handler;
     private Runnable submitRunnable;

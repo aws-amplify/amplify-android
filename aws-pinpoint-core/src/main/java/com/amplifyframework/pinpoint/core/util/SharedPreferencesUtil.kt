@@ -18,9 +18,10 @@ package com.amplifyframework.pinpoint.core.util
 
 import android.content.SharedPreferences
 import com.amplifyframework.core.Amplify
+import com.amplifyframework.core.category.CategoryType
 import java.util.UUID
 
-private val LOG = Amplify.Logging.forNamespace("amplify:aws-analytics-pinpoint")
+private val LOG = Amplify.Logging.logger(CategoryType.ANALYTICS, "amplify:aws-analytics-pinpoint")
 internal fun SharedPreferences.putString(key: String, value: String) {
     try {
         val editor = this.edit()

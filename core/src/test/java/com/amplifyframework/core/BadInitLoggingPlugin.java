@@ -73,6 +73,7 @@ public final class BadInitLoggingPlugin extends LoggingPlugin<Void> {
 
     @NonNull
     @Override
+    @SuppressWarnings("deprecation")
     public Logger forNamespace(@Nullable String namespace) {
         return null;
     }

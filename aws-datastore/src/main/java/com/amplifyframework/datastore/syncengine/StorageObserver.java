@@ -19,6 +19,7 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.SerializedModel;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
@@ -37,7 +38,7 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
  * it onto a {@link MutationOutbox}.
  */
 final class StorageObserver {
-    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
+    private static final Logger LOG = Amplify.Logging.logger(CategoryType.DATASTORE, "amplify:aws-datastore");
 
     private final LocalStorageAdapter localStorageAdapter;
     private final MutationOutbox mutationOutbox;

@@ -19,6 +19,7 @@ import androidx.annotation.Nullable;
 
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
+import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.query.QuerySortBy;
 import com.amplifyframework.core.model.temporal.Temporal;
@@ -40,7 +41,7 @@ import java.util.Objects;
 public final class ModelComparator<T extends Model> implements Comparator<T> {
 
     private static final int NUM_LETTERS_FOR_GET = 3;
-    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
+    private static final Logger LOG = Amplify.Logging.logger(CategoryType.DATASTORE, "amplify:aws-datastore");
     private final QuerySortBy sortBy;
     private final Class<T> itemClass;
     private final Consumer<DataStoreException> onObservationError;

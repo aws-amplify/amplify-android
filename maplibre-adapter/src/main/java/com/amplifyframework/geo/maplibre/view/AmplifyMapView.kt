@@ -26,6 +26,7 @@ import androidx.coordinatorlayout.widget.CoordinatorLayout.LayoutParams.MATCH_PA
 import androidx.coordinatorlayout.widget.CoordinatorLayout.LayoutParams.WRAP_CONTENT
 import androidx.core.content.ContextCompat
 import com.amplifyframework.core.Amplify
+import com.amplifyframework.core.category.CategoryType
 import com.amplifyframework.geo.GeoCategory
 import com.amplifyframework.geo.GeoException
 import com.amplifyframework.geo.location.models.AmazonLocationPlace
@@ -62,7 +63,8 @@ import kotlin.math.absoluteValue
  * through the `mapView` property for map-related listeners and properties.
  */
 class AmplifyMapView
-@JvmOverloads @UiThread constructor(
+@JvmOverloads @UiThread
+constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0,
@@ -75,7 +77,7 @@ class AmplifyMapView
 ) : CoordinatorLayout(context, attrs, defStyleAttr) {
 
     companion object {
-        private val log = Amplify.Logging.forNamespace("amplify:maplibre-adapter")
+        private val log = Amplify.Logging.logger(CategoryType.GEO, "amplify:maplibre-adapter")
     }
 
     /**

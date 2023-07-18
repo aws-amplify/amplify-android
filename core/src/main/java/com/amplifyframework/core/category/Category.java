@@ -263,7 +263,7 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
     }
 
     /**
-     * Return whether to configure the plugins using amplifyconfiguration.json
+     * Return whether to configure the plugins using amplifyconfiguration.json.
      * override this method for categories not configured using the default amplifyconfiguration.json
      * For e.g., the Logging category
      * @return whether to configure the plugins using amplifyconfiguration.json

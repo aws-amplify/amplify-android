@@ -68,6 +68,7 @@ final class FakeLoggingPlugin<E> extends LoggingPlugin<E> {
 
     @NonNull
     @Override
+    @SuppressWarnings("deprecation")
     public Logger forNamespace(@Nullable String namespace) {
         return logger;
     }
