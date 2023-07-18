@@ -16,12 +16,19 @@ package com.amplifyframework.logging.cloudwatch
 
 import android.content.Context
 import android.util.Log
+import androidx.work.Constraints
+import androidx.work.ExistingWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.OneTimeWorkRequest
+import androidx.work.WorkManager
+import androidx.work.workDataOf
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.category.CategoryType
 import com.amplifyframework.logging.LogLevel
 import com.amplifyframework.logging.cloudwatch.models.LoggingConstraints
-import java.util.Timer
-import java.util.TimerTask
+import com.amplifyframework.logging.cloudwatch.worker.CloudwatchRouterWorker
+import com.amplifyframework.logging.cloudwatch.worker.RemoteConfigSyncWorker
+import java.util.concurrent.TimeUnit
 
 internal class LoggingConstraintsResolver internal constructor(
     internal var context: Context? = null,
@@ -37,7 +44,7 @@ internal class LoggingConstraintsResolver internal constructor(
     }
 
     init {
-        loadRemoteConfig()
+        enqueueConfigSyncWorker()
     }
 
     fun resolveLogLevel(namespace: String, categoryType: CategoryType?): LogLevel {
@@ -52,25 +59,20 @@ internal class LoggingConstraintsResolver internal constructor(
         } ?: LogLevel.ERROR // set to default if both local & remote config is missing
     }
 
-    private fun loadRemoteConfig() {
+    internal fun loadRemoteConfig() {
         remoteLoggingConstraintProvider?.let { remoteProvider ->
-            val timerTask = object : TimerTask() {
-                override fun run() {
-                    try {
-                        remoteProvider.fetchLoggingConfig({
-                            remoteLoggingConstraint = it
-                            saveRemoteConstraintsToSharedPreference(it)
-                        }, {
-                            logger.error("failed to load remote config, error: ${Log.getStackTraceString(it)}")
-                            remoteLoggingConstraint = getRemoteConstraintsFromSharedPreference()
-                        })
-                    } catch (exception: Exception) {
-                        logger.error("failed to load remote config, error: ${Log.getStackTraceString(exception)}")
-                        remoteLoggingConstraint = getRemoteConstraintsFromSharedPreference()
-                    }
-                }
+            try {
+                remoteProvider.fetchLoggingConfig({
+                    remoteLoggingConstraint = it
+                    saveRemoteConstraintsToSharedPreference(it)
+                }, {
+                    logger.error("failed to load remote config, error: ${Log.getStackTraceString(it)}")
+                    remoteLoggingConstraint = getRemoteConstraintsFromSharedPreference()
+                })
+            } catch (exception: Exception) {
+                logger.error("failed to load remote config, error: ${Log.getStackTraceString(exception)}")
+                remoteLoggingConstraint = getRemoteConstraintsFromSharedPreference()
             }
-            Timer().scheduleAtFixedRate(timerTask, 0, remoteProvider.getConstraintsSyncInterval() * 1000L)
         }
     }
 
@@ -78,7 +80,30 @@ internal class LoggingConstraintsResolver internal constructor(
         defaultRemoteLoggingConstraintProvider: DefaultRemoteLoggingConstraintProvider
     ) {
         remoteLoggingConstraintProvider = defaultRemoteLoggingConstraintProvider
-        loadRemoteConfig()
+        enqueueConfigSyncWorker()
+    }
+
+    internal fun enqueueConfigSyncWorker() {
+        context?.let { appContext ->
+            remoteLoggingConstraintProvider?.let {
+                val syncRequest = OneTimeWorkRequest.Builder(CloudwatchRouterWorker::class.java)
+                    .setInitialDelay(it.getConstraintsSyncInterval().toLong(), TimeUnit.SECONDS)
+                    .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build())
+                    .setInputData(
+                        workDataOf(
+                            CloudwatchRouterWorker.WORKER_CLASS_NAME to RemoteConfigSyncWorker::class.java.simpleName,
+                            CloudwatchRouterWorker.WORKER_ID to CloudwatchRouterWorker.WORKER_FACTORY_KEY
+                        )
+                    )
+                    .addTag(RemoteConfigSyncWorker.WORKER_NAME_TAG)
+                    .build()
+                WorkManager.getInstance(appContext).beginUniqueWork(
+                    RemoteConfigSyncWorker.WORKER_NAME_TAG,
+                    ExistingWorkPolicy.REPLACE,
+                    syncRequest
+                ).enqueue()
+            }
+        }
     }
 
     private fun saveRemoteConstraintsToSharedPreference(loggingConstraint: LoggingConstraints) {

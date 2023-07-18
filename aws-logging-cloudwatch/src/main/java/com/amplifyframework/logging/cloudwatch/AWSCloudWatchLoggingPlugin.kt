@@ -26,6 +26,8 @@ import com.amplifyframework.core.category.CategoryType
 import com.amplifyframework.logging.Logger
 import com.amplifyframework.logging.LoggingPlugin
 import com.amplifyframework.logging.cloudwatch.models.AWSCloudWatchLoggingPluginConfiguration
+import com.amplifyframework.logging.cloudwatch.worker.CloudwatchRouterWorker
+import com.amplifyframework.logging.cloudwatch.worker.CloudwatchWorkerFactory
 import java.net.URL
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.decodeFromString
@@ -111,6 +113,10 @@ class AWSCloudWatchLoggingPlugin @JvmOverloads constructor(
             val cloudWatchLogManager =
                 CloudWatchLogManager(context, awsLoggingConfig, cloudWatchLogsClient, loggingConstraintsResolver)
             awsCloudWatchLoggingPluginImplementation.cloudWatchLogManager = cloudWatchLogManager
+            CloudwatchRouterWorker.workerFactories[CloudwatchRouterWorker.WORKER_FACTORY_KEY] = CloudwatchWorkerFactory(
+                cloudWatchLogManager,
+                loggingConstraintsResolver
+            )
             awsCloudWatchLoggingPluginImplementation.configure(awsLoggingConfig)
         } catch (exception: AmplifyException) {
             logger.error("failed to configure plugin", exception)

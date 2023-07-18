@@ -15,6 +15,12 @@
 package com.amplifyframework.logging.cloudwatch
 
 import android.content.Context
+import androidx.work.Constraints
+import androidx.work.ExistingWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.OneTimeWorkRequest
+import androidx.work.WorkManager
+import androidx.work.workDataOf
 import aws.sdk.kotlin.services.cloudwatchlogs.CloudWatchLogsClient
 import aws.sdk.kotlin.services.cloudwatchlogs.model.CreateLogStreamRequest
 import aws.sdk.kotlin.services.cloudwatchlogs.model.DescribeLogStreamsRequest
@@ -29,12 +35,14 @@ import com.amplifyframework.logging.cloudwatch.db.CloudWatchLoggingDatabase
 import com.amplifyframework.logging.cloudwatch.db.LogEvent
 import com.amplifyframework.logging.cloudwatch.models.AWSCloudWatchLoggingPluginConfiguration
 import com.amplifyframework.logging.cloudwatch.models.CloudWatchLogEvent
+import com.amplifyframework.logging.cloudwatch.worker.CloudwatchLogsSyncWorker
+import com.amplifyframework.logging.cloudwatch.worker.CloudwatchRouterWorker
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import java.util.Timer
 import java.util.TimerTask
 import java.util.UUID
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -85,25 +93,12 @@ internal class CloudWatchLogManager(
 
     suspend fun startSync() {
         stopSync = false
-        syncTask = object : TimerTask() {
-            override fun run() {
-                coroutineScope.launch {
-                    while (!stopSync) {
-                        try {
-                            syncLogEventsWithCloudwatch()
-                        } catch (e: Exception) {
-                            logger.error("error while syncing logs", e)
-                        }
-                    }
-                }
-            }
-        }
-        Timer().scheduleAtFixedRate(syncTask, 0, pluginConfiguration.flushIntervalInSeconds * 1000L)
+        enqueueSync()
     }
 
     internal fun stopSync() {
         stopSync = true
-        syncTask?.cancel()
+        cancelSync()
         clearCache()
         logger.debug("stopping sync")
     }
@@ -237,6 +232,31 @@ internal class CloudWatchLogManager(
     internal fun onSignOut() {
         userIdentityId = null
         clearCache()
+    }
+
+    internal fun enqueueSync() {
+        if (!stopSync) {
+            val syncRequest = OneTimeWorkRequest.Builder(CloudwatchRouterWorker::class.java)
+                .setInitialDelay(pluginConfiguration.flushIntervalInSeconds.toLong(), TimeUnit.SECONDS)
+                .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build())
+                .setInputData(
+                    workDataOf(
+                        CloudwatchRouterWorker.WORKER_CLASS_NAME to CloudwatchLogsSyncWorker::class.java.simpleName,
+                        CloudwatchRouterWorker.WORKER_ID to CloudwatchRouterWorker.WORKER_FACTORY_KEY
+                    )
+                )
+                .addTag(CloudwatchLogsSyncWorker.WORKER_NAME_TAG)
+                .build()
+            WorkManager.getInstance(context).beginUniqueWork(
+                CloudwatchLogsSyncWorker.WORKER_NAME_TAG,
+                ExistingWorkPolicy.REPLACE,
+                syncRequest
+            ).enqueue()
+        }
+    }
+
+    private fun cancelSync() {
+        WorkManager.getInstance(context).cancelUniqueWork(CloudwatchLogsSyncWorker.WORKER_NAME_TAG)
     }
 
     private fun uniqueDeviceId(): String {

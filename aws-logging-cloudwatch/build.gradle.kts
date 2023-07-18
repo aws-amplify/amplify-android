@@ -36,6 +36,7 @@ dependencies {
     implementation(dependency.androidx.sqlite)
     implementation(dependency.kotlin.serializationJson)
     implementation(dependency.androidx.workmanager)
+    implementation(dependency.kotlin.futures)
 
     testImplementation(project(":testutils"))
     testImplementation(testDependency.junit)
