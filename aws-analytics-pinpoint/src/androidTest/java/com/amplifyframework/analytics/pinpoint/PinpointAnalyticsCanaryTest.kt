@@ -257,8 +257,8 @@ class PinpointAnalyticsCanaryTest {
         Assert.assertEquals("test-user", attributes["name"]!![0])
         Assert.assertEquals("test-plan", attributes["plan"]!![0])
         val endpointProfileLocation: EndpointLocation = endpointResponse.location!!
-        Assert.assertEquals(47.6154086, endpointProfileLocation.latitude, 0.1)
-        Assert.assertEquals((-122.3349685), endpointProfileLocation.longitude, 0.1)
+        Assert.assertEquals(47.6154086, endpointProfileLocation.latitude ?: 0.0, 0.1)
+        Assert.assertEquals((-122.3349685), endpointProfileLocation.longitude ?: 0.0, 0.1)
         Assert.assertEquals("98122", endpointProfileLocation.postalCode)
         Assert.assertEquals("Seattle", endpointProfileLocation.city)
         Assert.assertEquals("WA", endpointProfileLocation.region)

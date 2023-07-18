@@ -13,21 +13,16 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.auth.cognito.data
+package com.amplifyframework.auth
 
-import com.amplifyframework.core.store.KeyValueRepository
-import java.util.concurrent.ConcurrentHashMap
+import com.amplifyframework.auth.result.AuthSessionResult
 
-internal class InMemoryKeyValueRepository : KeyValueRepository {
-    private val cache = ConcurrentHashMap<String, String?>()
-
-    override fun put(dataKey: String, value: String?) {
-        value?.run { cache.put(dataKey, value) }
-    }
-
-    override fun get(dataKey: String): String? = cache.getOrDefault(dataKey, null)
-
-    override fun remove(dataKey: String) {
-        cache.remove(dataKey)
-    }
+abstract class AWSAuthSessionBehavior<TokensType>(
+    isSignedIn: Boolean,
+    open val identityIdResult: AuthSessionResult<String>,
+    open val awsCredentialsResult: AuthSessionResult<AWSCredentials>,
+    open val userSubResult: AuthSessionResult<String>,
+    val tokensResult: AuthSessionResult<TokensType>
+) : AuthSession(isSignedIn) {
+    abstract val accessToken: String?
 }

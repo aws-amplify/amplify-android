@@ -16,10 +16,11 @@
 package com.amplifyframework.api.aws.auth
 
 import aws.smithy.kotlin.runtime.auth.awscredentials.Credentials
+import aws.smithy.kotlin.runtime.util.Attributes
 import com.amplifyframework.auth.CognitoCredentialsProvider
 
 internal object DummyCredentialsProvider : CognitoCredentialsProvider() {
-    override suspend fun getCredentials(): Credentials {
+    override suspend fun resolve(attributes: Attributes): Credentials {
         return Credentials(
             "DummyAccessKeyId",
             "DummySecretAccessKey",

@@ -433,8 +433,8 @@ public final class BasicCloudSyncInstrumentationTest {
      * @throws DataStoreException On failure to save or query items from DataStore.
      * @throws ApiException On failure to query the API.
      */
-    @Ignore("Test passes locally but fails on CI. Ignoring pending investigation.")
     @Test
+    @Ignore("Inconsistent Test. Needs investigation")
     public void createThenDelete() throws DataStoreException, ApiException {
         // Setup
         BlogOwner owner = BlogOwner.builder()

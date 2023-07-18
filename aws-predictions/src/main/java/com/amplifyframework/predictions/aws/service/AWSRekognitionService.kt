@@ -341,7 +341,7 @@ internal class AWSRekognitionService(
             val amplifyGender = face.gender?.let { faceGender ->
                 faceGender.confidence?.let { faceGenderConfidence ->
                     Gender.builder()
-                        .value(GenderBinaryTypeAdapter.fromRekognition(faceGender.value.toString()))
+                        .value(GenderBinaryTypeAdapter.fromRekognition(faceGender.value?.value ?: ""))
                         .confidence(faceGenderConfidence)
                         .build()
                 }
@@ -350,7 +350,7 @@ internal class AWSRekognitionService(
             // Emotion detection
             val emotions: MutableList<Emotion> = ArrayList()
             face.emotions?.forEach { rekognitionEmotion ->
-                val emotion = EmotionTypeAdapter.fromRekognition(rekognitionEmotion.type.toString())
+                val emotion = EmotionTypeAdapter.fromRekognition(rekognitionEmotion.type?.value ?: "")
                 rekognitionEmotion.confidence?.let { emotionConfidence ->
                     val amplifyEmotion = Emotion.builder()
                         .value(emotion)
@@ -424,7 +424,7 @@ internal class AWSRekognitionService(
         val words: MutableList<IdentifiedText?> = ArrayList()
         val lines: MutableList<IdentifiedText?> = ArrayList()
         result.textDetections?.forEach { detection ->
-            when (TextTypes.fromValue(detection.type.toString())) {
+            when (TextTypes.fromValue(detection.type?.value ?: "")) {
                 TextTypes.Line -> {
                     detection.detectedText?.let { rawLineText.add(it) }
                     lines.add(RekognitionResultTransformers.fromTextDetection(detection))

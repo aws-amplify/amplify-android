@@ -1,3 +1,29 @@
+## [Release 2.10.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.10.0)
+
+### Features
+- **auth:** oidc plugin development toolkit ([#2507](https://github.com/aws-amplify/amplify-android/issues/2507))
+
+[See all changes between 2.9.1 and 2.10.0](https://github.com/aws-amplify/amplify-android/compare/release_v2.9.1...release_v2.10.0)
+
+## [Release 2.9.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.9.1)
+
+### Bug Fixes
+- **auth:** Fix for confirm sign in state machine callback ([#2503](https://github.com/aws-amplify/amplify-android/issues/2503))
+- **auth:** Fix for adding missing parameter for resolving device SRP ([#2508](https://github.com/aws-amplify/amplify-android/issues/2508))
+
+[See all changes between 2.9.0 and 2.9.1](https://github.com/aws-amplify/amplify-android/compare/release_v2.9.0...release_v2.9.1)
+
+## [Release 2.9.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.9.0)
+
+### Features
+- **api:** Custom Primary Key API Support([#2470](https://github.com/aws-amplify/amplify-android/issues/2470))
+
+### Bug Fixes
+- **misc:** bumping kotlin sdk version to include enhanced proxy exception messages ([#2438](https://github.com/aws-amplify/amplify-android/issues/2438))
+- **datastore:** DataStore CPK fixes([#2470](https://github.com/aws-amplify/amplify-android/issues/2470))
+
+[See all changes between 2.8.7 and 2.9.0](https://github.com/aws-amplify/amplify-android/compare/release_v2.8.7...release_v2.9.0)
+
 ## [Release 2.8.7](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.8.7)
 
 ### Bug Fixes

@@ -21,6 +21,7 @@ import com.amplifyframework.api.aws.AppSyncGraphQLRequestFactory;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.PaginatedResult;
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.ModelIdentifier;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 
@@ -49,6 +50,22 @@ public final class ModelQuery {
             @NonNull String modelId
     ) {
         return AppSyncGraphQLRequestFactory.buildQuery(modelType, modelId);
+    }
+
+    /**
+     * Creates a {@link GraphQLRequest} that represents a query that expects a single value as a result.
+     * The request will be created with the correct document based on the model schema and
+     * variables based on given {@code modelIdentifier}.
+     * @param modelType the model class.
+     * @param modelIdentifier the model identifier.
+     * @param <M> the concrete model type.
+     * @return a valid {@link GraphQLRequest} instance.
+     */
+    public static <M extends Model> GraphQLRequest<M> get(
+            @NonNull Class<M> modelType,
+            @NonNull ModelIdentifier<M> modelIdentifier
+    ) {
+        return AppSyncGraphQLRequestFactory.buildQuery(modelType, modelIdentifier);
     }
 
     /**
