@@ -154,8 +154,6 @@ public class ObserveQueryExecutor<T extends Model> implements Cancelable {
                 itemClass,
                 options,
                 value -> {
-                    onObservationStarted.accept(this);
-                    onQuerySnapshot.accept(value);
                     disposable = itemChangeSubject
                             .filter(x -> x.item().getClass().isAssignableFrom(itemClass))
                             .subscribe(
@@ -173,7 +171,8 @@ public class ObserveQueryExecutor<T extends Model> implements Cancelable {
                                     },
                                     onObservationComplete::call
                             );
-
+                    onObservationStarted.accept(this);
+                    onQuerySnapshot.accept(value);
                 },
                 onObservationError
         ));
