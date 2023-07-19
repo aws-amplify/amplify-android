@@ -264,12 +264,10 @@ public class ObserveQueryExecutorTest {
                 onObservationComplete);
     }
 
-
     @Test
     public void observeQueryShouldNotReturnDeletedRecord() throws InterruptedException, DataStoreException {
         CountDownLatch latch = new CountDownLatch(1);
         CountDownLatch changeLatch = new CountDownLatch(1);
-        AtomicInteger count = new AtomicInteger();
         BlogOwner blogOwner = BlogOwner.builder()
                 .name("Alan Turing")
                 .build();
@@ -281,15 +279,78 @@ public class ObserveQueryExecutorTest {
         Subject<StorageItemChange<? extends Model>> subject =
                 PublishSubject.<StorageItemChange<? extends Model>>create().toSerialized();
         Consumer<DataStoreQuerySnapshot<BlogOwner>> onQuerySnapshot = value -> {
-            if (count.get() == 0) {
+            if (latch.getCount()>0) {
                 Assert.assertTrue(value.getItems().contains(blogOwner));
                 latch.countDown();
             }
-            else if (count.get() > 0) {
+            else if (latch.getCount()==0) {
                 Assert.assertFalse(value.getItems().contains(blogOwner));
                 changeLatch.countDown();
             }
-            count.getAndIncrement();
+        };
+        Consumer<Cancelable> observationStarted = value -> {
+            try {
+                subject.onNext(StorageItemChange.<BlogOwner>builder()
+                        .changeId(UUID.randomUUID().toString())
+                        .initiator(StorageItemChange.Initiator.SYNC_ENGINE)
+                        .item(blogOwner)
+                        .patchItem(SerializedModel.create(blogOwner,
+                                ModelSchema.fromModelClass(BlogOwner.class)))
+                        .modelSchema(ModelSchema.fromModelClass(BlogOwner.class))
+                        .predicate(QueryPredicates.all())
+                        .type(StorageItemChange.Type.DELETE)
+                        .build());
+            } catch (AmplifyException exception) {
+                exception.printStackTrace();
+            }
+        };
+        Consumer<DataStoreException> onObservationError = NoOpConsumer.create();
+        Action onObservationComplete = () -> { };
+        SqlQueryProcessor mockSqlQueryProcessor = mock(SqlQueryProcessor.class);
+        when(mockSqlQueryProcessor.queryOfflineData(eq(BlogOwner.class), any(), any()))
+                .thenReturn(datastoreResultList);
+        when(mockSqlQueryProcessor.modelExists(any(), any())).thenReturn(false);
+        ExecutorService threadPool = Executors.newFixedThreadPool(
+                Runtime.getRuntime().availableProcessors() * 5);
+        ObserveQueryExecutor<BlogOwner> observeQueryExecutor = new ObserveQueryExecutor<>(subject,
+                mockSqlQueryProcessor,
+                threadPool,
+                mockSyncStatus,
+                new ModelSorter<>(),
+                maxRecords, 2);
+        observeQueryExecutor.observeQuery(
+                BlogOwner.class,
+                new ObserveQueryOptions(), observationStarted,
+                onQuerySnapshot,
+                onObservationError,
+                onObservationComplete);
+        Assert.assertTrue(latch.await(1, TimeUnit.SECONDS));
+        Assert.assertTrue(changeLatch.await(10, TimeUnit.SECONDS));
+    }
+
+    @Test(expected= AssertionError.class)
+    public void observeQueryShouldFailIfReturnsDeletedRecord() throws InterruptedException, DataStoreException {
+        CountDownLatch latch = new CountDownLatch(1);
+        CountDownLatch changeLatch = new CountDownLatch(1);
+        BlogOwner blogOwner = BlogOwner.builder()
+                .name("Alan Turing")
+                .build();
+        List<BlogOwner> datastoreResultList = new ArrayList<>();
+        int maxRecords = 50;
+        datastoreResultList.add(blogOwner);
+        SyncStatus mockSyncStatus = mock(SyncStatus.class);
+        when(mockSyncStatus.get(any(), any())).thenReturn(true);
+        Subject<StorageItemChange<? extends Model>> subject =
+                PublishSubject.<StorageItemChange<? extends Model>>create().toSerialized();
+        Consumer<DataStoreQuerySnapshot<BlogOwner>> onQuerySnapshot = value -> {
+            if (latch.getCount()>0) {
+                Assert.assertTrue(value.getItems().contains(blogOwner));
+                latch.countDown();
+            }
+            else if (latch.getCount()==0) {
+                Assert.assertTrue(value.getItems().contains(blogOwner));
+                changeLatch.countDown();
+            }
         };
         Consumer<Cancelable> observationStarted = value -> {
             try {
