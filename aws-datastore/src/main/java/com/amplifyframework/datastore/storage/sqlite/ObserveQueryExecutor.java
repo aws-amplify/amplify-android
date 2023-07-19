@@ -189,10 +189,11 @@ public class ObserveQueryExecutor<T extends Model> implements Cancelable {
             cancel();
             onObservationError.accept(value);
         };
-        callOnQuerySnapshot(onQuerySnapshot, itemClass, onQueryError, models);
         for (T model : models) {
             completeItemMap.put(model.getPrimaryKeyString(), model);
         }
+        callOnQuerySnapshot(onQuerySnapshot, itemClass, onQueryError, models);
+
     }
 
     /***
