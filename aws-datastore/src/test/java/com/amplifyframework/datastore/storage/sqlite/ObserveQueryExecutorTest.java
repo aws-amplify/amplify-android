@@ -115,7 +115,7 @@ public class ObserveQueryExecutorTest {
         List<BlogOwner> datastoreResultList = new ArrayList<>();
         int maxRecords = 50;
         datastoreResultList.add(blogOwner);
-        Consumer<Cancelable> observationStarted = NoOpConsumer.create();
+
         SyncStatus mockSyncStatus = mock(SyncStatus.class);
         when(mockSyncStatus.get(any(), any())).thenReturn(false);
         Subject<StorageItemChange<? extends Model>> subject =
@@ -131,6 +131,27 @@ public class ObserveQueryExecutorTest {
             count.getAndIncrement();
         };
         Consumer<DataStoreException> onObservationError = NoOpConsumer.create();
+        Consumer<Cancelable> observationStarted = value -> {
+            for (int i = 0; i < 5; i++) {
+                BlogOwner itemChange = BlogOwner.builder()
+                        .name("Alan Turing" + i)
+                        .build();
+                try {
+                    subject.onNext(StorageItemChange.<BlogOwner>builder()
+                            .changeId(UUID.randomUUID().toString())
+                            .initiator(StorageItemChange.Initiator.SYNC_ENGINE)
+                            .item(itemChange)
+                            .patchItem(SerializedModel.create(itemChange,
+                                    ModelSchema.fromModelClass(BlogOwner.class)))
+                            .modelSchema(ModelSchema.fromModelClass(BlogOwner.class))
+                            .predicate(QueryPredicates.all())
+                            .type(StorageItemChange.Type.UPDATE)
+                            .build());
+                } catch (AmplifyException exception) {
+                    exception.printStackTrace();
+                }
+            }
+        };
         Action onObservationComplete = () -> { };
         SqlQueryProcessor mockSqlQueryProcessor = mock(SqlQueryProcessor.class);
         when(mockSqlQueryProcessor.queryOfflineData(eq(BlogOwner.class), any(), any()))
@@ -152,26 +173,6 @@ public class ObserveQueryExecutorTest {
                 onObservationError,
                 onObservationComplete);
         Assert.assertTrue(latch.await(1, TimeUnit.SECONDS));
-        for (int i = 0; i < 5; i++) {
-            BlogOwner itemChange = BlogOwner.builder()
-                    .name("Alan Turing" + i)
-                    //.id("" + i + "")
-                    .build();
-            try {
-                subject.onNext(StorageItemChange.<BlogOwner>builder()
-                        .changeId(UUID.randomUUID().toString())
-                        .initiator(StorageItemChange.Initiator.SYNC_ENGINE)
-                        .item(itemChange)
-                        .patchItem(SerializedModel.create(itemChange,
-                                ModelSchema.fromModelClass(BlogOwner.class)))
-                        .modelSchema(ModelSchema.fromModelClass(BlogOwner.class))
-                        .predicate(QueryPredicates.all())
-                        .type(StorageItemChange.Type.UPDATE)
-                        .build());
-            } catch (AmplifyException exception) {
-                exception.printStackTrace();
-            }
-        }
         Assert.assertTrue(changeLatch.await(5, TimeUnit.SECONDS));
     }
 
