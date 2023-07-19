@@ -115,7 +115,6 @@ public class ObserveQueryExecutorTest {
         List<BlogOwner> datastoreResultList = new ArrayList<>();
         int maxRecords = 50;
         datastoreResultList.add(blogOwner);
-
         SyncStatus mockSyncStatus = mock(SyncStatus.class);
         when(mockSyncStatus.get(any(), any())).thenReturn(false);
         Subject<StorageItemChange<? extends Model>> subject =
@@ -277,12 +276,10 @@ public class ObserveQueryExecutorTest {
         List<BlogOwner> datastoreResultList = new ArrayList<>();
         int maxRecords = 50;
         datastoreResultList.add(blogOwner);
-
         SyncStatus mockSyncStatus = mock(SyncStatus.class);
         when(mockSyncStatus.get(any(), any())).thenReturn(true);
         Subject<StorageItemChange<? extends Model>> subject =
                 PublishSubject.<StorageItemChange<? extends Model>>create().toSerialized();
-
         Consumer<DataStoreQuerySnapshot<BlogOwner>> onQuerySnapshot = value -> {
             if (count.get() == 0) {
                 Assert.assertTrue(value.getItems().contains(blogOwner));
@@ -294,7 +291,6 @@ public class ObserveQueryExecutorTest {
             }
             count.getAndIncrement();
         };
-
         Consumer<Cancelable> observationStarted = value -> {
             try {
                 subject.onNext(StorageItemChange.<BlogOwner>builder()
@@ -311,7 +307,6 @@ public class ObserveQueryExecutorTest {
                 exception.printStackTrace();
             }
         };
-
         Consumer<DataStoreException> onObservationError = NoOpConsumer.create();
         Action onObservationComplete = () -> { };
         SqlQueryProcessor mockSqlQueryProcessor = mock(SqlQueryProcessor.class);
@@ -326,7 +321,6 @@ public class ObserveQueryExecutorTest {
                 mockSyncStatus,
                 new ModelSorter<>(),
                 maxRecords, 2);
-
         observeQueryExecutor.observeQuery(
                 BlogOwner.class,
                 new ObserveQueryOptions(), observationStarted,
