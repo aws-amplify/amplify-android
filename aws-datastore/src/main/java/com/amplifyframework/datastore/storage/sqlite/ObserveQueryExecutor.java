@@ -151,30 +151,30 @@ public class ObserveQueryExecutor<T extends Model> implements Cancelable {
             }
         };
         threadPool.submit(() -> queryLocalData(
-                itemClass,
-                options,
-                value -> {
-                    disposable = itemChangeSubject
-                            .filter(x -> x.item().getClass().isAssignableFrom(itemClass))
-                            .subscribe(
-                                    onItemChanged::accept,
-                                    failure -> {
-                                        if (failure instanceof DataStoreException) {
-                                            onObservationError.accept((DataStoreException) failure);
-                                            return;
-                                        }
-                                        onObservationError.accept(new DataStoreException(
-                                                "Failed to observe items in storage adapter.",
-                                                failure,
-                                                "Inspect the failure details."
-                                        ));
-                                    },
-                                    onObservationComplete::call
-                            );
-                    onObservationStarted.accept(this);
-                    onQuerySnapshot.accept(value);
-                },
-                onObservationError
+            itemClass,
+            options,
+            value -> {
+                disposable = itemChangeSubject
+                        .filter(x -> x.item().getClass().isAssignableFrom(itemClass))
+                        .subscribe(
+                                onItemChanged::accept,
+                                failure -> {
+                                    if (failure instanceof DataStoreException) {
+                                        onObservationError.accept((DataStoreException) failure);
+                                        return;
+                                    }
+                                    onObservationError.accept(new DataStoreException(
+                                            "Failed to observe items in storage adapter.",
+                                            failure,
+                                            "Inspect the failure details."
+                                    ));
+                                },
+                                onObservationComplete::call
+                        );
+                onObservationStarted.accept(this);
+                onQuerySnapshot.accept(value);
+            },
+            onObservationError
         ));
     }
 

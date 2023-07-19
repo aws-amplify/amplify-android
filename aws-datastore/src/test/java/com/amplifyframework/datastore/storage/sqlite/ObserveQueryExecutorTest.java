@@ -264,6 +264,11 @@ public class ObserveQueryExecutorTest {
                 onObservationComplete);
     }
 
+    /***
+     * Observe Query Should not return deleted record.
+     * @throws InterruptedException InterruptedException
+     * @throws DataStoreException DataStoreException
+     */
     @Test
     public void observeQueryShouldNotReturnDeletedRecord() throws InterruptedException, DataStoreException {
         CountDownLatch latch = new CountDownLatch(1);
@@ -279,11 +284,10 @@ public class ObserveQueryExecutorTest {
         Subject<StorageItemChange<? extends Model>> subject =
                 PublishSubject.<StorageItemChange<? extends Model>>create().toSerialized();
         Consumer<DataStoreQuerySnapshot<BlogOwner>> onQuerySnapshot = value -> {
-            if (latch.getCount()>0) {
+            if (latch.getCount() > 0) {
                 Assert.assertTrue(value.getItems().contains(blogOwner));
                 latch.countDown();
-            }
-            else if (latch.getCount()==0) {
+            } else if (latch.getCount() == 0) {
                 Assert.assertFalse(value.getItems().contains(blogOwner));
                 changeLatch.countDown();
             }
@@ -328,7 +332,12 @@ public class ObserveQueryExecutorTest {
         Assert.assertTrue(changeLatch.await(10, TimeUnit.SECONDS));
     }
 
-    @Test(expected= AssertionError.class)
+    /***
+     * Test should Fail when ObserveQuery returns deleted record.
+     * @throws InterruptedException InterruptedException
+     * @throws DataStoreException DataStoreException
+     */
+    @Test(expected = AssertionError.class)
     public void observeQueryShouldFailIfReturnsDeletedRecord() throws InterruptedException, DataStoreException {
         CountDownLatch latch = new CountDownLatch(1);
         CountDownLatch changeLatch = new CountDownLatch(1);
@@ -343,11 +352,10 @@ public class ObserveQueryExecutorTest {
         Subject<StorageItemChange<? extends Model>> subject =
                 PublishSubject.<StorageItemChange<? extends Model>>create().toSerialized();
         Consumer<DataStoreQuerySnapshot<BlogOwner>> onQuerySnapshot = value -> {
-            if (latch.getCount()>0) {
+            if (latch.getCount() > 0) {
                 Assert.assertTrue(value.getItems().contains(blogOwner));
                 latch.countDown();
-            }
-            else if (latch.getCount()==0) {
+            } else if (latch.getCount() == 0) {
                 Assert.assertTrue(value.getItems().contains(blogOwner));
                 changeLatch.countDown();
             }
