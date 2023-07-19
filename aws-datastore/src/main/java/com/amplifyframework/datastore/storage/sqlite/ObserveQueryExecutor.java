@@ -193,7 +193,6 @@ public class ObserveQueryExecutor<T extends Model> implements Cancelable {
             completeItemMap.put(model.getPrimaryKeyString(), model);
         }
         callOnQuerySnapshot(onQuerySnapshot, itemClass, onQueryError, models);
-
     }
 
     /***
