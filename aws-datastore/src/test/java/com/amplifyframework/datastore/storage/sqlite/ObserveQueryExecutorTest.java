@@ -35,14 +35,12 @@ import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.mockito.ArgumentCaptor;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -52,9 +50,7 @@ import io.reactivex.rxjava3.subjects.Subject;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 public class ObserveQueryExecutorTest {
@@ -268,94 +264,75 @@ public class ObserveQueryExecutorTest {
                 onObservationComplete);
     }
 
+
     @Test
-    public void observeQueryDeletesOfflineData() throws InterruptedException, DataStoreException {
-
-        // Try deleting a record and check record count should go down by 1
-
-        CountDownLatch latch = new CountDownLatch(2);
-        int expectedItemCount = 1;
-
-        final BlogOwner blogOwner = BlogOwner.builder()
+    public void observeQueryShouldNotReturnDeletedRecord() throws InterruptedException, DataStoreException {
+        CountDownLatch latch = new CountDownLatch(1);
+        CountDownLatch changeLatch = new CountDownLatch(1);
+        AtomicInteger count = new AtomicInteger();
+        BlogOwner blogOwner = BlogOwner.builder()
                 .name("Alan Turing")
                 .build();
-        List<BlogOwner> resultList = new ArrayList<>();
-        resultList.add(blogOwner);
+        List<BlogOwner> datastoreResultList = new ArrayList<>();
+        int maxRecords = 50;
+        datastoreResultList.add(blogOwner);
 
-        SqlQueryProcessor mockSqlQueryProcessor = mock(SqlQueryProcessor.class);
-        when(mockSqlQueryProcessor.queryOfflineData(eq(BlogOwner.class), any(), any())).thenReturn(resultList);
-
-        when(mockSqlQueryProcessor.modelExists(blogOwner, null)).thenReturn(false);
-
+        SyncStatus mockSyncStatus = mock(SyncStatus.class);
+        when(mockSyncStatus.get(any(), any())).thenReturn(true);
         Subject<StorageItemChange<? extends Model>> subject =
                 PublishSubject.<StorageItemChange<? extends Model>>create().toSerialized();
 
-        final ModelSchema schema;
-        final SerializedModel patchItem;
-        try {
-            schema = ModelSchema.fromModelClass(BlogOwner.class);
-            patchItem = SerializedModel.create(blogOwner, schema);
-        } catch (AmplifyException schemaBuildFailure) {
-            return;
-        }
-
-        StorageItemChange<BlogOwner> deletion = StorageItemChange.<BlogOwner>builder()
-                .item(blogOwner)
-                .modelSchema(schema)
-                .type(StorageItemChange.Type.DELETE)
-                .predicate(QueryPredicates.none())
-                .patchItem(patchItem)
-                .initiator(StorageItemChange.Initiator.DATA_STORE_API)
-                .build();
-
-
-
-        ExecutorService threadPool = mock(ThreadPoolExecutor.class);
-
-        ArgumentCaptor<Runnable> captor = ArgumentCaptor.forClass(Runnable.class);
-        doAnswer(invocation -> {
-            Runnable runnable = captor.getValue();
-            runnable.run();  // Manually execute the Runnable
-            return null;
-        }).when(threadPool).submit(captor.capture());
-
-        Consumer<Cancelable> observationStarted  = value -> {
-            subject.onNext(deletion);
-
-        };
-
         Consumer<DataStoreQuerySnapshot<BlogOwner>> onQuerySnapshot = value -> {
-            Assert.assertEquals(expectedItemCount, value.getItems().stream().count());
-
-            //Assert.assertTrue(!value.getItems().contains(blogOwner));
-            latch.countDown();
-
+            if (count.get() == 0) {
+                Assert.assertTrue(value.getItems().contains(blogOwner));
+                latch.countDown();
+            }
+            else if (count.get() > 0) {
+                Assert.assertFalse(value.getItems().contains(blogOwner));
+                changeLatch.countDown();
+            }
+            count.getAndIncrement();
         };
-        Consumer<DataStoreException> onObservationError = NoOpConsumer.create();
-        Action onObservationComplete = NoOpAction.create();
 
-        ObserveQueryExecutor<BlogOwner> observeQueryExecutor =
-                new ObserveQueryExecutor<>(subject,
-                        mockSqlQueryProcessor,
-                        threadPool,
-                        mock(SyncStatus.class),
-                        new ModelSorter<>(),
-                        DataStoreConfiguration.defaults());
+        Consumer<Cancelable> observationStarted = value -> {
+            try {
+                subject.onNext(StorageItemChange.<BlogOwner>builder()
+                        .changeId(UUID.randomUUID().toString())
+                        .initiator(StorageItemChange.Initiator.SYNC_ENGINE)
+                        .item(blogOwner)
+                        .patchItem(SerializedModel.create(blogOwner,
+                                ModelSchema.fromModelClass(BlogOwner.class)))
+                        .modelSchema(ModelSchema.fromModelClass(BlogOwner.class))
+                        .predicate(QueryPredicates.all())
+                        .type(StorageItemChange.Type.DELETE)
+                        .build());
+            } catch (AmplifyException exception) {
+                exception.printStackTrace();
+            }
+        };
+
+        Consumer<DataStoreException> onObservationError = NoOpConsumer.create();
+        Action onObservationComplete = () -> { };
+        SqlQueryProcessor mockSqlQueryProcessor = mock(SqlQueryProcessor.class);
+        when(mockSqlQueryProcessor.queryOfflineData(eq(BlogOwner.class), any(), any()))
+                .thenReturn(datastoreResultList);
+        when(mockSqlQueryProcessor.modelExists(any(), any())).thenReturn(false);
+        ExecutorService threadPool = Executors.newFixedThreadPool(
+                Runtime.getRuntime().availableProcessors() * 5);
+        ObserveQueryExecutor<BlogOwner> observeQueryExecutor = new ObserveQueryExecutor<>(subject,
+                mockSqlQueryProcessor,
+                threadPool,
+                mockSyncStatus,
+                new ModelSorter<>(),
+                maxRecords, 2);
 
         observeQueryExecutor.observeQuery(
                 BlogOwner.class,
-                new ObserveQueryOptions(null, null),
-                observationStarted,
+                new ObserveQueryOptions(), observationStarted,
                 onQuerySnapshot,
                 onObservationError,
                 onObservationComplete);
-
-//        // Shutdown the ExecutorService and wait for all tasks to complete
-//        threadPool.shutdown();
-//        threadPool.awaitTermination(10, TimeUnit.SECONDS);
-
-        // Assert that the Runnable is executed
-        verify(threadPool).submit(any(Runnable.class));
-        Assert.assertTrue(latch.await(10, TimeUnit.SECONDS));
+        Assert.assertTrue(latch.await(1, TimeUnit.SECONDS));
+        Assert.assertTrue(changeLatch.await(10, TimeUnit.SECONDS));
     }
 }
