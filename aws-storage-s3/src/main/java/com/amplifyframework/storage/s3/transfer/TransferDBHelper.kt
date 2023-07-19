@@ -26,6 +26,7 @@ import android.net.Uri
 import android.text.TextUtils
 import androidx.annotation.VisibleForTesting
 import com.amplifyframework.core.Amplify
+import com.amplifyframework.core.category.CategoryType
 import com.amplifyframework.storage.s3.AWSS3StoragePlugin
 
 @VisibleForTesting
@@ -35,7 +36,8 @@ internal class TransferDBHelper(private val context: Context) :
     internal val contentUri: Uri
     private val uriMatcher: UriMatcher
     private var database: SQLiteDatabase
-    private val logger = Amplify.Logging.forNamespace(
+    private val logger = Amplify.Logging.logger(
+        CategoryType.STORAGE,
         AWSS3StoragePlugin.AWS_S3_STORAGE_LOG_NAMESPACE.format(this::class.java.simpleName)
     )
 

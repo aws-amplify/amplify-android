@@ -17,6 +17,7 @@ package com.amplifyframework.datastore.model;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.datastore.DataStoreException;
@@ -29,7 +30,7 @@ import java.lang.reflect.Method;
  * Helpers class that contains {@link Model} related utilities.
  */
 public final class ModelHelper {
-    private static final Logger LOGGER = Amplify.Logging.forNamespace("amplify:aws-datastore");
+    private static final Logger LOGGER = Amplify.Logging.logger(CategoryType.DATASTORE, "amplify:aws-datastore");
 
     private ModelHelper() {
         // contains only static helper methods and should not be instantiated

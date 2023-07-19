@@ -27,7 +27,7 @@ import java.util.UUID
 
 class EncryptedKeyValueRepository(
     private val context: Context,
-    private val sharedPreferencesName: String,
+    private val sharedPreferencesName: String
 ) : KeyValueRepository {
 
     @VisibleForTesting
