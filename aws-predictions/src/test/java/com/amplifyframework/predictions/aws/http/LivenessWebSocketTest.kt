@@ -258,7 +258,7 @@ internal class LivenessWebSocketTest {
     }
 
     @Test
-    fun `web socket error cancels websocket`() {
+    fun `web socket error closes websocket`() {
         livenessWebSocket.webSocket = mockk()
         val event = ValidationException("ValidationException")
         val headers = mapOf(
@@ -272,7 +272,7 @@ internal class LivenessWebSocketTest {
 
         livenessWebSocket.webSocketListener.onMessage(mockk(), encodedByteString)
 
-        verify { livenessWebSocket.webSocket!!.cancel() }
+        verify { livenessWebSocket.webSocket!!.close(1000, any()) }
     }
 
     @Test
