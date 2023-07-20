@@ -20,5 +20,5 @@ import com.amplifyframework.auth.exceptions.ServiceException
  * Could not perform the action because the token was unable to be parsed
  * @param message Explains the reason for the exception
  */
-open class InvalidGrantException(message: String) :
-    ServiceException(message, TODO_RECOVERY_SUGGESTION)
+open class InvalidGrantException(message: String, description: String?) :
+    ServiceException(message, description ?: TODO_RECOVERY_SUGGESTION)

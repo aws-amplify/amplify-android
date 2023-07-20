@@ -20,6 +20,7 @@ import com.amplifyframework.AmplifyException
 import com.amplifyframework.auth.cognito.exceptions.service.InvalidGrantException
 import com.amplifyframework.auth.cognito.exceptions.service.ParseTokenException
 import com.amplifyframework.auth.exceptions.ServiceException
+import com.amplifyframework.auth.exceptions.SessionExpiredException
 import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
 import java.io.BufferedReader
 import java.io.DataOutputStream
@@ -86,7 +87,7 @@ internal object HostedUIHttpHelper {
 
             response.error?.let {
                 if (it == "invalid_grant") {
-                    throw InvalidGrantException(it)
+                    throw SessionExpiredException(cause = InvalidGrantException(it, response.errorDescription))
                 } else {
                     throw ServiceException(it, AmplifyException.TODO_RECOVERY_SUGGESTION)
                 }
@@ -114,7 +115,8 @@ internal class FetchTokenResponse(
     @SerialName("id_token") val idToken: String? = null,
     @SerialName("refresh_token") val refreshToken: String? = null,
     @SerialName("expires_in") private val expiresIn: Int? = null,
-    @SerialName("error") val error: String? = null
+    @SerialName("error") val error: String? = null,
+    @SerialName("error_description") val errorDescription: String? = null
 ) {
     val expiration = expiresIn?.let { Instant.now().plus(it.seconds).epochSeconds }
 }
