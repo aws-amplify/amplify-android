@@ -135,7 +135,7 @@ public class ObserveQueryExecutor<T extends Model> implements Cancelable {
 
         Consumer<Object> onItemChanged = value -> {
 
-            @SuppressWarnings("unchecked") 
+            @SuppressWarnings("unchecked")
             StorageItemChange<T> itemChanged = (StorageItemChange<T>) value;
             try {
                 if (sqlQueryProcessor.modelExists(itemChanged.item(), options.getQueryPredicate())) {
@@ -184,7 +184,7 @@ public class ObserveQueryExecutor<T extends Model> implements Cancelable {
                                 @NonNull Consumer<DataStoreException> onObservationError) {
         List<T> models = sqlQueryProcessor.queryOfflineData(itemClass,
                 Where.matchesAndSorts(options.getQueryPredicate(),
-                                      options.getSortBy()), onObservationError);
+                        options.getSortBy()), onObservationError);
         Consumer<DataStoreException> onQueryError = value -> {
             cancel();
             onObservationError.accept(value);

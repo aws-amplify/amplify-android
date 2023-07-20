@@ -35,6 +35,7 @@ import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 
 import org.junit.Assert;
 import org.junit.Test;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -331,6 +332,4 @@ public class ObserveQueryExecutorTest {
         Assert.assertTrue(latch.await(1, TimeUnit.SECONDS));
         Assert.assertTrue(changeLatch.await(10, TimeUnit.SECONDS));
     }
-
-
 }
