@@ -27,7 +27,7 @@ import com.amplifyframework.core.model.PropertyContainerPath
  * @param name: the name to match the child node of type `SelectionSetField`
  * @return the matched `SelectionSet` or `nil` if there's no child with the specified name.
  */
-fun SelectionSet.findChildByName(name: String) = nodes.find { it.value == name }
+internal fun SelectionSet.findChildByName(name: String) = nodes.find { it.value == name }
 
 /**
  * Replaces or adds a new child to the selection set tree. When a child node exists
@@ -37,7 +37,7 @@ fun SelectionSet.findChildByName(name: String) = nodes.find { it.value == name }
  *
  * @param selectionSet: the child node to be replaced.
  */
-fun SelectionSet.replaceChild(selectionSet: SelectionSet) {
+internal fun SelectionSet.replaceChild(selectionSet: SelectionSet) {
     this.nodes.removeIf { it.value == selectionSet.value }
     this.nodes.add(selectionSet)
 }
@@ -45,28 +45,52 @@ fun SelectionSet.replaceChild(selectionSet: SelectionSet) {
 /**
  * Transforms the entire property path (walking up the tree) into a `SelectionSet`.
  */
-fun PropertyContainerPath.asSelectionSet(includeRoot: Boolean = true): SelectionSet {
-    val metadata = getMetadata()
+internal fun PropertyContainerPath.asSelectionSet(includeRoot: Boolean = true): SelectionSet? {
+    val selectionSets = nodesInPath(this, includeRoot).map {
+        getSelectionSet(it)
+    }
+
+    if (selectionSets.isEmpty()) {
+        return null
+    }
+
+    return selectionSets.reduce { acc, selectionSet ->
+        selectionSet.replaceChild(acc)
+        selectionSet
+    }
+}
+
+private fun getSelectionSet(node: PropertyContainerPath): SelectionSet {
+    val metadata = node.getMetadata()
     val name = if (metadata.isCollection) "items" else metadata.name
+
     var selectionSet = SelectionSet.builder()
         .operation(QueryType.GET)
         .value(name)
         .requestOptions(onlyIncluded())
-        .modelClass(getModelType())
+        .modelClass(node.getModelType())
         .build()
 
     if (metadata.isCollection) {
         selectionSet = SelectionSet(metadata.name, mutableSetOf(selectionSet))
     }
 
-    val parent = metadata.parent as? PropertyContainerPath
-    if (parent != null && (parent.getMetadata().parent != null || includeRoot)) {
-        val parentSelectionSet = parent.asSelectionSet(includeRoot)
-        parentSelectionSet.replaceChild(selectionSet)
-        selectionSet = parentSelectionSet
-    }
-
     return selectionSet
+}
+
+private fun shouldProcessNode(node: PropertyContainerPath, includeRoot: Boolean): Boolean {
+    return includeRoot || node.getMetadata().parent != null
+}
+
+private fun nodesInPath(node: PropertyContainerPath, includeRoot: Boolean): List<PropertyContainerPath> {
+    var currentNode: PropertyContainerPath? = node
+    val path = mutableListOf<PropertyContainerPath>()
+
+    while (currentNode != null && shouldProcessNode(currentNode, includeRoot)) {
+        path.add(currentNode)
+        currentNode = currentNode.getMetadata().parent as? PropertyContainerPath
+    }
+    return path
 }
 
 /**
@@ -80,7 +104,7 @@ fun PropertyContainerPath.asSelectionSet(includeRoot: Boolean = true): Selection
  * @see replaceChild
  */
 @JvmName("merge")
-fun SelectionSet.mergeWith(selectionSet: SelectionSet) {
+internal fun SelectionSet.mergeWith(selectionSet: SelectionSet) {
     val name = selectionSet.value ?: ""
     val existingField = findChildByName(name)
 

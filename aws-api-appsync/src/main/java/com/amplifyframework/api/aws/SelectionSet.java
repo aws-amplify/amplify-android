@@ -16,7 +16,6 @@
 package com.amplifyframework.api.aws;
 
 import android.text.TextUtils;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -83,7 +82,9 @@ public final class SelectionSet {
         if (includeAssociations != null) {
             for (PropertyContainerPath association : includeAssociations) {
                 SelectionSet included = SelectionSetUtils.asSelectionSet(association, false);
-                SelectionSetUtils.merge(this, included);
+                if (included != null) {
+                    SelectionSetUtils.merge(this, included);
+                }
             }
         }
     }
@@ -262,7 +263,9 @@ public final class SelectionSet {
             if (includeAssociations != null) {
                 for (PropertyContainerPath association : includeAssociations) {
                     SelectionSet included = SelectionSetUtils.asSelectionSet(association, false);
-                    SelectionSetUtils.merge(node, included);
+                    if (included != null) {
+                        SelectionSetUtils.merge(node, included);
+                    }
                 }
             }
             return node;
@@ -366,8 +369,6 @@ public final class SelectionSet {
                 result.add(new SelectionSet(fieldName));
             }
 
-            Log.i("MetadataFields", "for schema:" + schema.getName() + " operation: " + operation
-                    + " fields: " + requestOptions.modelMetaFields());
             return result;
         }
 
