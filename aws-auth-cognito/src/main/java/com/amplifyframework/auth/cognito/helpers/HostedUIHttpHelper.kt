@@ -67,6 +67,7 @@ internal object HostedUIHttpHelper {
                 connection.errorStream
             }
             val responseString = responseStream.bufferedReader().use(BufferedReader::readText)
+
             return parseTokenResponse(responseString)
         } else {
             throw ServiceException(
@@ -87,7 +88,7 @@ internal object HostedUIHttpHelper {
 
             response.error?.let {
                 if (it == "invalid_grant") {
-                    throw SessionExpiredException(cause = InvalidGrantException(it, response.errorDescription))
+                    throw SessionExpiredException(it, cause = InvalidGrantException(it, response.errorDescription))
                 } else {
                     throw ServiceException(it, AmplifyException.TODO_RECOVERY_SUGGESTION)
                 }
@@ -100,11 +101,13 @@ internal object HostedUIHttpHelper {
                 expiration = response.expiration
             )
         } catch (e: Exception) {
-            throw ServiceException(
-                message = e.message ?: "An unknown service error has occurred",
-                recoverySuggestion = AmplifyException.TODO_RECOVERY_SUGGESTION,
-                cause = e
-            )
+            if (e !is SessionExpiredException && e !is ServiceException) {
+                throw ServiceException(
+                    message = e.message ?: "An unknown service error has occurred",
+                    recoverySuggestion = AmplifyException.TODO_RECOVERY_SUGGESTION,
+                    cause = e
+                )
+            } else throw e
         }
     }
 }
