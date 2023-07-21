@@ -94,7 +94,9 @@ object FetchAuthSessionTestCaseGenerator : SerializableProvider {
 
     private val refreshSuccessCase: FeatureTestCase = baseCase.copy(
         description = "AuthSession object is successfully returned after refresh",
-        preConditions = baseCase.preConditions.copy(
+        preConditions = PreConditions(
+            "authconfiguration.json",
+            "SignedIn_SessionEstablished.json",
             mockedResponses = listOf(mockedInitiateAuthResponse)
         ),
         api = API(
