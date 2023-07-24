@@ -50,6 +50,27 @@ object FetchAuthSessionTestCaseGenerator : SerializableProvider {
         ).toJsonElement()
     )
 
+    private val mockedIdentityIdResponse = MockResponse(
+        CognitoType.CognitoIdentity,
+        "getId",
+        ResponseType.Success,
+        mapOf("identityId" to "someIdentityId").toJsonElement()
+    )
+
+    private val mockedAWSCredentialsResponse = MockResponse(
+        CognitoType.CognitoIdentity,
+        "getCredentialsForIdentity",
+        ResponseType.Success,
+        mapOf(
+            "credentials" to mapOf(
+                "accessKeyId" to "someAccessKey",
+                "secretKey" to "someSecretKey",
+                "sessionToken" to AuthStateJsonGenerator.dummyToken,
+                "expiration" to 2342134
+            )
+        ).toJsonElement()
+    )
+
     private val expectedSuccess = AWSCognitoAuthSession(
         isSignedIn = true,
         identityIdResult = AuthSessionResult.success("someIdentityId"),
@@ -102,9 +123,9 @@ object FetchAuthSessionTestCaseGenerator : SerializableProvider {
         api = API(
             name = AuthAPI.fetchAuthSession,
             params = JsonObject(emptyMap()),
-            options = mapOf("forceRefresh" to true).toJsonElement(),
+            JsonObject(emptyMap())
         ),
-        validations = baseCase.validations
+        validations = listOf(apiReturnValidation)
     )
 
     private val identityPoolCase: FeatureTestCase = baseCase.copy(
