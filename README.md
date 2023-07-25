@@ -5,6 +5,7 @@
 [![GitHub release](https://img.shields.io/github/release/aws-amplify/amplify-android.svg)](https://github.com/aws-amplify/amplify-android/releases)
 [![Maven Central](https://img.shields.io/maven-central/v/com.amplifyframework/core.svg)](https://search.maven.org/search?q=g:com.amplifyframework%20a:core)
 -------------------------------------------------------
+This is a meaningless change to create a PR to test our CI pipeline
 
 The Amplify Android library is AWS' preferred mechanism for interacting
 with AWS services from an Android device.
