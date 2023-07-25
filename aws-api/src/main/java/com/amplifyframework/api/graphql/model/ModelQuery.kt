@@ -30,6 +30,24 @@ import java.util.Objects
  * from [Model] and [QueryPredicate].
  */
 object ModelQuery {
+
+    /**
+     * Creates a [GraphQLRequest] that represents a query that expects a single value as a result.
+     * The request will be created with the correct correct document based on the model schema and
+     * variables based on given `modelId`.
+     * @param modelType the model class.
+     * @param modelId the model identifier.
+     * @param <M> the concrete model type.
+     * @return a valid [GraphQLRequest] instance.
+    </M> */
+    @JvmStatic
+    operator fun <M : Model> get(
+        modelType: Class<M>,
+        modelId: String,
+    ): GraphQLRequest<M> {
+        return AppSyncGraphQLRequestFactory.buildQuery(modelType, modelId, null)
+    }
+
     /**
      * Creates a [GraphQLRequest] that represents a query that expects a single value as a result.
      * The request will be created with the correct correct document based on the model schema and
@@ -40,16 +58,30 @@ object ModelQuery {
      * @param <M> the concrete model type.
      * @return a valid [GraphQLRequest] instance.
     </M> */
-    @JvmOverloads
     @JvmStatic
     operator fun <M : Model, P : ModelPath<M>> get(
         modelType: Class<M>,
         modelId: String,
-        includes: ((P) -> List<PropertyContainerPath>)? = null
+        includes: ((P) -> List<PropertyContainerPath>)
     ): GraphQLRequest<M> {
+        return AppSyncGraphQLRequestFactory.buildQuery(modelType, modelId, includes)
+    }
 
-        val associations = includes?.invoke(ModelPath.getRootPath(modelType))
-        return AppSyncGraphQLRequestFactory.buildQuery(modelType, modelId, associations)
+    /**
+     * Creates a [GraphQLRequest] that represents a query that expects a single value as a result.
+     * The request will be created with the correct document based on the model schema and
+     * variables based on given `modelIdentifier`.
+     * @param modelType the model class.
+     * @param modelIdentifier the model identifier.
+     * @param <M> the concrete model type.
+     * @return a valid [GraphQLRequest] instance.
+    </M> */
+    @JvmStatic
+    operator fun <M : Model> get(
+        modelType: Class<M>,
+        modelIdentifier: ModelIdentifier<M>
+    ): GraphQLRequest<M> {
+        return AppSyncGraphQLRequestFactory.buildQuery(modelType, modelIdentifier, null)
     }
 
     /**
@@ -62,15 +94,13 @@ object ModelQuery {
      * @param <M> the concrete model type.
      * @return a valid [GraphQLRequest] instance.
     </M> */
-    @JvmOverloads
     @JvmStatic
     operator fun <M : Model, P : ModelPath<M>> get(
         modelType: Class<M>,
         modelIdentifier: ModelIdentifier<M>,
-        includes: ((P) -> List<PropertyContainerPath>)? = null
+        includes: ((P) -> List<PropertyContainerPath>)
     ): GraphQLRequest<M> {
-        val associations = includes?.invoke(ModelPath.getRootPath(modelType))
-        return AppSyncGraphQLRequestFactory.buildQuery(modelType, modelIdentifier, associations)
+        return AppSyncGraphQLRequestFactory.buildQuery(modelType, modelIdentifier, includes)
     }
 
     /**
