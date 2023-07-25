@@ -413,7 +413,8 @@ internal class LivenessWebSocket(
     }
 
     fun destroy() {
-        webSocket?.cancel()
+        // Close gracefully; 1000 means "normal closure"
+        webSocket?.close(1000, null)
     }
 
     companion object {
