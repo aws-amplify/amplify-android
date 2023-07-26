@@ -20,7 +20,6 @@ import com.amplifyframework.AmplifyException
 import com.amplifyframework.auth.cognito.exceptions.service.InvalidGrantException
 import com.amplifyframework.auth.cognito.exceptions.service.ParseTokenException
 import com.amplifyframework.auth.exceptions.ServiceException
-import com.amplifyframework.auth.exceptions.SessionExpiredException
 import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
 import java.io.BufferedReader
 import java.io.DataOutputStream
@@ -67,7 +66,6 @@ internal object HostedUIHttpHelper {
                 connection.errorStream
             }
             val responseString = responseStream.bufferedReader().use(BufferedReader::readText)
-
             return parseTokenResponse(responseString)
         } else {
             throw ServiceException(
@@ -88,7 +86,7 @@ internal object HostedUIHttpHelper {
 
             response.error?.let {
                 if (it == "invalid_grant") {
-                    throw SessionExpiredException(it, cause = InvalidGrantException(it, response.errorDescription))
+                    throw InvalidGrantException(it)
                 } else {
                     throw ServiceException(it, AmplifyException.TODO_RECOVERY_SUGGESTION)
                 }
@@ -101,13 +99,11 @@ internal object HostedUIHttpHelper {
                 expiration = response.expiration
             )
         } catch (e: Exception) {
-            if (e !is SessionExpiredException && e !is ServiceException) {
-                throw ServiceException(
-                    message = e.message ?: "An unknown service error has occurred",
-                    recoverySuggestion = AmplifyException.TODO_RECOVERY_SUGGESTION,
-                    cause = e
-                )
-            } else throw e
+            throw ServiceException(
+                message = e.message ?: "An unknown service error has occurred",
+                recoverySuggestion = AmplifyException.TODO_RECOVERY_SUGGESTION,
+                cause = e
+            )
         }
     }
 }
@@ -118,8 +114,7 @@ internal class FetchTokenResponse(
     @SerialName("id_token") val idToken: String? = null,
     @SerialName("refresh_token") val refreshToken: String? = null,
     @SerialName("expires_in") private val expiresIn: Int? = null,
-    @SerialName("error") val error: String? = null,
-    @SerialName("error_description") val errorDescription: String? = null
+    @SerialName("error") val error: String? = null
 ) {
     val expiration = expiresIn?.let { Instant.now().plus(it.seconds).epochSeconds }
 }
