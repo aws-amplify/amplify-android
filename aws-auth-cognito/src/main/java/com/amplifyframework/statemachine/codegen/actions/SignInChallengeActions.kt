@@ -24,4 +24,8 @@ internal interface SignInChallengeActions {
         event: SignInChallengeEvent.EventType.VerifyChallengeAnswer,
         challenge: AuthChallenge
     ): Action
+    fun resetToWaitingForAnswer(
+        event: SignInChallengeEvent.EventType.ThrowError,
+        challenge: AuthChallenge
+    ): Action
 }
