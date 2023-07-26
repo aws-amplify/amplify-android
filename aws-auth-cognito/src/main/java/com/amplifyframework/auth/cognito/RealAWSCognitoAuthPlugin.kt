@@ -681,7 +681,8 @@ internal class RealAWSCognitoAuthPlugin(
                     }
 
                     signInState is SignInState.ResolvingChallenge &&
-                        signInState.challengeState is SignInChallengeState.Error -> {
+                        signInState.challengeState is SignInChallengeState.Error &&
+                        (signInState.challengeState as SignInChallengeState.Error).hasNewResponse -> {
                         authStateMachine.cancel(token)
                         onError.accept(
                             CognitoAuthExceptionConverter.lookup(
@@ -691,6 +692,7 @@ internal class RealAWSCognitoAuthPlugin(
                                 "Confirm Sign in failed."
                             )
                         )
+                        (signInState.challengeState as SignInChallengeState.Error).hasNewResponse = false
                     }
                 }
             }, {
