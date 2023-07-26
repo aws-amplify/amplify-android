@@ -615,7 +615,7 @@ internal class RealAWSCognitoAuthPlugin(
             val signInState = (authNState as? AuthenticationState.SigningIn)?.signInState
             if (signInState is SignInState.ResolvingChallenge) {
                 when (signInState.challengeState) {
-                    is SignInChallengeState.WaitingForAnswer -> {
+                    is SignInChallengeState.WaitingForAnswer, is SignInChallengeState.Error -> {
                         _confirmSignIn(challengeResponse, options, onSuccess, onError)
                     }
                     else -> {
@@ -681,7 +681,8 @@ internal class RealAWSCognitoAuthPlugin(
                     }
 
                     signInState is SignInState.ResolvingChallenge &&
-                        signInState.challengeState is SignInChallengeState.Error -> {
+                        signInState.challengeState is SignInChallengeState.Error &&
+                        (signInState.challengeState as SignInChallengeState.Error).hasNewResponse -> {
                         authStateMachine.cancel(token)
                         onError.accept(
                             CognitoAuthExceptionConverter.lookup(
@@ -691,6 +692,7 @@ internal class RealAWSCognitoAuthPlugin(
                                 "Confirm Sign in failed."
                             )
                         )
+                        (signInState.challengeState as SignInChallengeState.Error).hasNewResponse = false
                     }
                 }
             }, {
