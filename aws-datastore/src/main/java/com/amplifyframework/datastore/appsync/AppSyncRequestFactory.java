@@ -27,6 +27,7 @@ import com.amplifyframework.api.graphql.PaginatedResult;
 import com.amplifyframework.api.graphql.QueryType;
 import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
@@ -50,7 +51,7 @@ import java.util.Map;
  * and AppSync-specific field names (`_version`, `_deleted`, etc.)
  */
 final class AppSyncRequestFactory {
-    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
+    private static final Logger LOG = Amplify.Logging.logger(CategoryType.DATASTORE, "amplify:aws-datastore");
 
     private AppSyncRequestFactory() {}
 

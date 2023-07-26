@@ -19,10 +19,14 @@
             "apiName": "fetchAuthSession",
             "responseType": "success",
             "response": {
+                "accessToken": null,
                 "awsCredentialsResult": {
                     "accessKeyId": "someAccessKey",
                     "expiration": 2342134,
-                    "expiresAt": {"seconds":2342134.0,"nanos":0.0},
+                    "expiresAt": {
+                        "seconds": 2342134.0,
+                        "nanos": 0.0
+                    },
                     "secretAccessKey": "someSecretKey",
                     "sessionToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNTE2MjM5MDIyLCJvcmlnaW5fanRpIjoib3JpZ2luX2p0aSJ9.Xqa-vjJe5wwwsqeRAdHf8kTBn_rYSkDn2lB7xj9Z1xU"
                 },

@@ -12,17 +12,15 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package com.amplifyframework.auth
+package com.amplifyframework.logging.cloudwatch
 
-import com.amplifyframework.annotations.InternalApiWarning
-import com.amplifyframework.auth.result.AuthSessionResult
+import com.amplifyframework.core.Consumer
+import com.amplifyframework.logging.cloudwatch.models.LoggingConstraints
 
-@InternalApiWarning
-open class AWSAuthSessionInternal(
-    @get:JvmName("getSignedIn")
-    open val isSignedIn: Boolean,
-    open val identityIdResult: AuthSessionResult<String>,
-    open val awsCredentialsResult: AuthSessionResult<AWSCredentials>,
-    open val userSubResult: AuthSessionResult<String>,
-    open val userPoolTokensResult: AuthSessionResult<AWSCognitoUserPoolTokens>,
-) : AuthSession(isSignedIn)
+/**
+ * Interface to provide custom implementation for RemoteLoggingConstraintProvider
+ */
+interface RemoteLoggingConstraintProvider {
+    fun fetchLoggingConfig(onSuccess: Consumer<LoggingConstraints>, onError: Consumer<Exception>)
+    fun getConstraintsSyncInterval(): Int
+}

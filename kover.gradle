@@ -58,5 +58,6 @@ kover{
 tasks.withType(Test) {
     kover {
         isDisabled = project.name.contains("test")
+        excludes = ['okhttp3.*'] // added to resolve conflict with mockk
     }
 }

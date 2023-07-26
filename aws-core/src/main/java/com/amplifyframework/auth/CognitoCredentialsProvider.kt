@@ -80,7 +80,7 @@ open class CognitoCredentialsProvider : AuthCredentialsProvider {
     override fun getAccessToken(onResult: Consumer<String>, onFailure: Consumer<Exception>) {
         Amplify.Auth.fetchAuthSession(
             { session ->
-                val tokens = session.toAWSAuthSession()?.userPoolTokensResult?.value?.accessToken
+                val tokens = session.toAWSAuthSession()?.accessToken
                 tokens?.let { onResult.accept(tokens) }
                     ?: onFailure.accept(
                         AuthException(
@@ -96,6 +96,6 @@ open class CognitoCredentialsProvider : AuthCredentialsProvider {
     }
 }
 
-private fun AuthSession.toAWSAuthSession(): AWSAuthSessionInternal? {
-    return this as? AWSAuthSessionInternal
+private fun AuthSession.toAWSAuthSession(): AWSAuthSessionBehavior<*>? {
+    return this as? AWSAuthSessionBehavior<*>
 }

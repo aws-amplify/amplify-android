@@ -19,6 +19,7 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.plugin.Plugin;
 import com.amplifyframework.logging.Logger;
 import com.amplifyframework.logging.LoggingPlugin;
@@ -75,7 +76,30 @@ public final class SimpleLoggingPlugin extends LoggingPlugin<Void> {
 
     @NonNull
     @Override
+    @SuppressWarnings("deprecation")
     public Logger forNamespace(@Nullable String namespace) {
         return null;
+    }
+
+    @NonNull
+    @Override
+    public Logger logger(@NonNull String namespace) {
+        return null;
+    }
+
+    @NonNull
+    @Override
+    public Logger logger(@NonNull CategoryType categoryType, @NonNull String namespace) {
+        return null;
+    }
+
+    @Override
+    public void enable() {
+
+    }
+
+    @Override
+    public void disable() {
+
     }
 }

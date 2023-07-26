@@ -19,6 +19,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.datastore.model.SystemModelsProviderFactory;
 import com.amplifyframework.logging.Logger;
@@ -30,7 +31,7 @@ import java.util.Set;
  * Add model name to ModelMetadata key.
  */
 public final class AddModelNameToModelMetadataKey implements ModelMigration {
-    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
+    private static final Logger LOG = Amplify.Logging.logger(CategoryType.DATASTORE, "amplify:aws-datastore");
     private final SQLiteDatabase database;
     private final ModelProvider modelProvider;
 

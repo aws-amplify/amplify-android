@@ -28,6 +28,7 @@ import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
+import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.logging.Logger;
 
 import java.io.IOException;
@@ -50,7 +51,7 @@ import okhttp3.ResponseBody;
  * @param <R> Casted type of GraphQL result data
  */
 public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
-    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-api");
+    private static final Logger LOG = Amplify.Logging.logger(CategoryType.API, "amplify:aws-api");
     private static final String CONTENT_TYPE = "application/json";
     private static final int START_OF_CLIENT_ERROR_CODE = 400;
     private static final int END_OF_CLIENT_ERROR_CODE = 499;

@@ -19,4 +19,5 @@ import com.amplifyframework.annotations.InternalAmplifyApi
 @InternalAmplifyApi
 enum class AWSCognitoAuthMetadataType(val key: String) {
     Authenticator("authenticator"),
+    AuthPluginsCore("oidc-auth-plugin")
 }

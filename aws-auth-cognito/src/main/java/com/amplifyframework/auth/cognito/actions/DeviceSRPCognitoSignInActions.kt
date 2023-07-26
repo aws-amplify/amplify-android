@@ -21,6 +21,7 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.RespondToAuthChalle
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidUserPoolConfigurationException
+import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.auth.cognito.helpers.SRPHelper
 import com.amplifyframework.auth.cognito.helpers.SignInChallengeHelper
 import com.amplifyframework.auth.exceptions.ServiceException
@@ -40,6 +41,7 @@ internal object DeviceSRPCognitoSignInActions : DeviceSRPSignInActions {
     private const val KEY_SALT = "SALT"
     private const val KEY_SECRET_BLOCK = "SECRET_BLOCK"
     private const val KEY_SRP_A = "SRP_A"
+    private const val KEY_SECRET_HASH = "SECRET_HASH"
     private const val KEY_SRP_B = "SRP_B"
     private const val KEY_USERNAME = "USERNAME"
     private const val KEY_DEVICE_KEY = "DEVICE_KEY"
@@ -56,16 +58,25 @@ internal object DeviceSRPCognitoSignInActions : DeviceSRPSignInActions {
 
                 srpHelper = SRPHelper(deviceMetadata?.deviceSecret ?: "")
 
+                val challengeResponse = mutableMapOf(
+                    KEY_USERNAME to username,
+                    KEY_DEVICE_KEY to (deviceMetadata?.deviceKey ?: ""),
+                    KEY_SRP_A to srpHelper.getPublicA()
+                )
+
+                val secretHash = AuthHelper.getSecretHash(
+                    username,
+                    configuration.userPool?.appClient,
+                    configuration.userPool?.appClientSecret
+                )
+                secretHash?.let { challengeResponse[KEY_SECRET_HASH] = it }
+
                 cognitoAuthService.cognitoIdentityProviderClient?.let { client ->
                     val respondToAuthChallenge = client.respondToAuthChallenge(
                         RespondToAuthChallengeRequest.invoke {
                             challengeName = ChallengeNameType.DeviceSrpAuth
                             clientId = configuration.userPool?.appClient
-                            challengeResponses = mapOf(
-                                KEY_USERNAME to username,
-                                KEY_DEVICE_KEY to (deviceMetadata?.deviceKey ?: ""),
-                                KEY_SRP_A to srpHelper.getPublicA()
-                            )
+                            challengeResponses = challengeResponse
                             clientMetadata = event.metadata
                             pinpointEndpointId?.let { analyticsMetadata { analyticsEndpointId = it } }
                             encodedContextData?.let { userContextData { encodedData = it } }
@@ -125,19 +136,27 @@ internal object DeviceSRPCognitoSignInActions : DeviceSRPSignInActions {
 
                 srpHelper.setUserPoolParams(deviceKey, deviceGroupKey)
 
+                val challengeResponse = mutableMapOf(
+                    KEY_USERNAME to username,
+                    KEY_PASSWORD_CLAIM_SECRET_BLOCK to secretBlock,
+                    KEY_TIMESTAMP to srpHelper.dateString,
+                    KEY_PASSWORD_CLAIM_SIGNATURE to srpHelper.getSignature(salt, srpB, secretBlock),
+                    KEY_DEVICE_KEY to deviceKey
+                )
+
+                val secretHash = AuthHelper.getSecretHash(
+                    username,
+                    configuration.userPool?.appClient,
+                    configuration.userPool?.appClientSecret
+                )
+                secretHash?.let { challengeResponse[KEY_SECRET_HASH] = it }
+
                 cognitoAuthService.cognitoIdentityProviderClient?.let {
                     val respondToAuthChallenge = it.respondToAuthChallenge(
                         RespondToAuthChallengeRequest.invoke {
                             challengeName = ChallengeNameType.DevicePasswordVerifier
                             clientId = configuration.userPool?.appClient
-
-                            challengeResponses = mapOf(
-                                KEY_USERNAME to username,
-                                KEY_PASSWORD_CLAIM_SECRET_BLOCK to secretBlock,
-                                KEY_TIMESTAMP to srpHelper.dateString,
-                                KEY_PASSWORD_CLAIM_SIGNATURE to srpHelper.getSignature(salt, srpB, secretBlock),
-                                KEY_DEVICE_KEY to deviceKey
-                            )
+                            challengeResponses = challengeResponse
                             clientMetadata = event.metadata
                             pinpointEndpointId?.let { analyticsMetadata { analyticsEndpointId = it } }
                             encodedContextData?.let { userContextData { encodedData = it } }
