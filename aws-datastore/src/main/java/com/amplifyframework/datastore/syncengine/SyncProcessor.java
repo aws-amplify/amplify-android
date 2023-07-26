@@ -313,9 +313,19 @@ final class SyncProcessor {
         return Single.create(emitter -> {
             Cancelable cancelable = appSync.sync(request, result -> {
                 if (!result.hasData()) {
-                    emitter.onError(new DataStoreException.IrRecoverableException(
+                    if (result.hasErrors()) {
+                        emitter.onError(new DataStoreException.IrRecoverableException(
+                            String.format(
+                                "GraphQL service returned a successful response containing errors: %s",
+                                result.getErrors()
+                            ),
+                            "The list of `GraphQLError` contains service-specific messages."
+                        ));
+                    } else {
+                        emitter.onError(new DataStoreException.IrRecoverableException(
                             "Empty response from AppSync.", "Report to AWS team."
-                    ));
+                        ));
+                    }
                 } else {
                     if (result.hasErrors()) {
                         LOG.warn(String.format("Both data and errors received on model sync: %s", result.getErrors()));
