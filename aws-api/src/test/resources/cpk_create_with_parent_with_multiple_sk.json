@@ -1,0 +1,13 @@
+{
+  "query": "mutation CreateComment($input: CreateCommentInput!) {\n  createComment(input: $input) {\n    commentId\n    content\n    createdAt\n    post {\n      blog {\n        blogAuthorId\n        blogId\n        createdAt\n        name\n        siteId\n        updatedAt\n      }\n      comments {\n        items {\n          commentId\n          content\n          createdAt\n          updatedAt\n        }\n        nextToken\n      }\n      createdAt\n      postId\n      rating\n      title\n      updatedAt\n    }\n    updatedAt\n  }\n}\n",
+  "variables": {
+    "input": {
+      "postCommentsPostId": "p1",
+      "commentId": "c1",
+      "postCommentsCreatedAt": "2023-06-09T16:22:30.48Z",
+      "postCommentsRating": 3.4,
+      "postCommentsTitle": "t1",
+      "content": "content1"
+    }
+  }
+}

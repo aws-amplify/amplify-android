@@ -21,6 +21,7 @@ import androidx.concurrent.futures.CallbackToFutureAdapter
 import androidx.work.ListenableWorker
 import androidx.work.WorkerParameters
 import com.amplifyframework.core.Amplify
+import com.amplifyframework.core.category.CategoryType
 import com.amplifyframework.storage.s3.AWSS3StoragePlugin
 import com.google.common.util.concurrent.ListenableFuture
 import java.lang.IllegalStateException
@@ -35,7 +36,8 @@ internal class RouterWorker constructor(
 ) : ListenableWorker(appContext, parameter) {
 
     private val logger =
-        Amplify.Logging.forNamespace(
+        Amplify.Logging.logger(
+            CategoryType.STORAGE,
             AWSS3StoragePlugin.AWS_S3_STORAGE_LOG_NAMESPACE.format(this::class.java.simpleName)
         )
     private val workerClassName =
@@ -78,7 +80,9 @@ internal class RouterWorker constructor(
                 return CallbackToFutureAdapter.getFuture {
                     Result.retry()
                 }
-            } else throw IllegalStateException("Failed to find delegate for $workerClassName")
+            } else {
+                throw IllegalStateException("Failed to find delegate for $workerClassName")
+            }
         }
     }
 

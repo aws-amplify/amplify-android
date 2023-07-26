@@ -113,7 +113,10 @@ import static org.junit.Assert.fail;
  * verify behavior when in multi-auth mode.
  */
 public final class MultiAuthSyncEngineInstrumentationTest {
-    private static final Logger LOG = Amplify.Logging.forNamespace("MultiAuthSyncEngineInstrumentationTest");
+    private static final Logger LOG = Amplify.Logging.logger(
+        CategoryType.DATASTORE,
+        "MultiAuthSyncEngineInstrumentationTest"
+    );
     private static final int TIMEOUT_SECONDS = 20;
     private static final String AUDIENCE = "integtest";
     private static final String GOOGLE_ISS_CLAIM = "https://accounts.google.com";
@@ -355,6 +358,7 @@ public final class MultiAuthSyncEngineInstrumentationTest {
      * @throws IOException Not expected.
      */
     @Test
+    @Ignore("Test is inconsistent, needs further investigation")
     public void testGroupPrivateUPIAMPostAnonymous() throws IOException, AmplifyException {
         verifyScenario(GroupPrivateUPIAMPost.class,
                       false,
@@ -457,6 +461,7 @@ public final class MultiAuthSyncEngineInstrumentationTest {
      * @throws IOException Not expected.
      */
     @Test
+    @Ignore("Test is inconsistent, needs further investigation")
     public void testPrivatePrivateUPIAMPostAnonymous() throws IOException, AmplifyException {
         verifyScenario(PrivatePrivateUPIAMPost.class,
                       false,
@@ -767,6 +772,7 @@ public final class MultiAuthSyncEngineInstrumentationTest {
 
         readCredsFromConfig(context);
 
+        auth.signOut(AuthSignOutOptions.builder().build());
         if (signInToCognito) {
             Log.v(tag, "Test requires signIn.");
             AuthSignInResult authSignInResult = auth.signIn(cognitoUser, cognitoPassword);

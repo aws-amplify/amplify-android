@@ -15,7 +15,6 @@
 package com.amplifyframework.predictions.aws.service
 
 import aws.sdk.kotlin.services.translate.TranslateClient
-import aws.sdk.kotlin.services.translate.TranslateClient.Companion.invoke
 import aws.sdk.kotlin.services.translate.translateText
 import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider
 import com.amplifyframework.core.Consumer

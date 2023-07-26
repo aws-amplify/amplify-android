@@ -25,6 +25,7 @@ import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.async.Cancelable;
+import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
@@ -57,7 +58,7 @@ import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
-import io.reactivex.rxjava3.subjects.ReplaySubject;
+import io.reactivex.rxjava3.subjects.UnicastSubject;
 
 /**
  * Observes mutations occurring on a remote {@link AppSync} system. The mutations arrive
@@ -66,7 +67,7 @@ import io.reactivex.rxjava3.subjects.ReplaySubject;
  * marries mutated models back into the local DataStore, through the {@link Merger}.
  */
 final class SubscriptionProcessor {
-    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
+    private static final Logger LOG = Amplify.Logging.logger(CategoryType.DATASTORE, "amplify:aws-datastore");
     private static final long TIMEOUT_SECONDS_PER_MODEL = 20;
     private static final long NETWORK_OP_TIMEOUT_SECONDS = 60;
 
@@ -78,7 +79,7 @@ final class SubscriptionProcessor {
     private final Consumer<Throwable> onFailure;
     private final CompositeDisposable ongoingOperationsDisposable;
     private final long adjustedTimeoutSeconds;
-    private ReplaySubject<SubscriptionEvent<? extends Model>> buffer;
+    private UnicastSubject<SubscriptionEvent<? extends Model>> buffer;
 
     /**
      * Constructs a new SubscriptionProcessor.
@@ -123,8 +124,8 @@ final class SubscriptionProcessor {
         AbortableCountDownLatch<DataStoreException> latch = new AbortableCountDownLatch<>(subscriptionCount);
 
         // Need to create a new buffer so we can properly handle retries and stop/start scenarios.
-        // Re-using the same buffer has some unexpected results due to the replay aspect of the subject.
-        buffer = ReplaySubject.create();
+        // Re-using the same buffer has some unexpected results due to the queueing aspect of the subject.
+        buffer = UnicastSubject.create();
 
         Set<Observable<SubscriptionEvent<? extends Model>>> subscriptions = new HashSet<>();
         for (ModelSchema modelSchema : modelProvider.modelSchemas().values()) {

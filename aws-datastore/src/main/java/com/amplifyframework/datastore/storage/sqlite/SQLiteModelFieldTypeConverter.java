@@ -21,10 +21,12 @@ import androidx.annotation.Nullable;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.SchemaRegistry;
+import com.amplifyframework.core.model.SerializedCustomType;
 import com.amplifyframework.core.model.SerializedModel;
 import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.core.model.types.JavaFieldType;
@@ -44,7 +46,9 @@ import java.time.OffsetDateTime;
 import java.time.OffsetTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -55,7 +59,7 @@ import java.util.concurrent.TimeUnit;
  * valid in a <code>SQLiteStatement</code>.
  */
 public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConverter<Cursor, Model> {
-    private static final Logger LOGGER = Amplify.Logging.forNamespace("amplify:aws-datastore");
+    private static final Logger LOGGER = Amplify.Logging.logger(CategoryType.DATASTORE, "amplify:aws-datastore");
 
     private final ModelSchema parentSchema;
     private final SchemaRegistry schemaRegistry;
@@ -223,7 +227,7 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
                     columnName += modelCount;
                 }
             }
-            
+
             final int columnIndex = cursor.getColumnIndexOrThrow(columnName);
             // This check is necessary, because primitive values will return 0 even when null
             if (cursor.isNull(columnIndex)) {
@@ -309,12 +313,32 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
         Object fieldValue;
         if (model.getClass() == SerializedModel.class) {
             fieldValue = ((SerializedModel) model).getValue(field);
+
+            // If the custom type has nested custom type its serializedData contains
+            // serialized custom type schema as well.
+            // We don't want to store entire SerializedCustomType along with schema into
+            // Database but only its value.
+            if (field.isCustomType() && fieldValue != null) {
+                if (field.isArray()) {
+                    @SuppressWarnings("unchecked")
+                    List<SerializedCustomType> listOfItems = (List<SerializedCustomType>) fieldValue;
+                    List<Map<String, Object>> listOfValues = new ArrayList<>();
+
+                    for (SerializedCustomType item : listOfItems) {
+                        listOfValues.add(item.getFlatSerializedData());
+                    }
+                    fieldValue = listOfValues;
+                } else {
+                    fieldValue = ((SerializedCustomType) fieldValue).getFlatSerializedData();
+                }
+            }
         } else {
             fieldValue = ModelHelper.getValue(model, field);
         }
         if (fieldValue == null) {
             return null;
         }
+
         final JavaFieldType javaFieldType = TypeConverter.getJavaFieldType(field);
         return convertRawValueToTarget(fieldValue, javaFieldType, gson);
     }

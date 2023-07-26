@@ -20,9 +20,9 @@ import androidx.annotation.RawRes;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiCategory;
-import com.amplifyframework.api.aws.auth.CognitoCredentialsProvider;
 import com.amplifyframework.api.aws.sigv4.CognitoUserPoolsAuthProvider;
 import com.amplifyframework.api.aws.sigv4.DefaultCognitoUserPoolsAuthProvider;
+import com.amplifyframework.auth.CognitoCredentialsProvider;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.AmplifyConfiguration;
 import com.amplifyframework.core.category.CategoryConfiguration;

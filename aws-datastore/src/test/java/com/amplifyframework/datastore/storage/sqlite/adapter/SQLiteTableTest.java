@@ -20,6 +20,7 @@ import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.datastore.storage.sqlite.SQLiteDataType;
 import com.amplifyframework.testmodels.commentsblog.Post;
 import com.amplifyframework.testmodels.customprimarykey.Comment;
+import com.amplifyframework.testmodels.customprimarykey.Item;
 import com.amplifyframework.testmodels.customprimarykey.ModelCompositeMultiplePk;
 
 import org.junit.Test;
@@ -263,5 +264,57 @@ public class SQLiteTableTest {
         SQLiteTable actual = SQLiteTable.fromSchema(schema);
         assertEquals(expected, actual);
         assertEquals("@@primaryKey", actual.getPrimaryKey().getFieldName());
+    }
+
+    /**
+     * Test if a {@link ModelSchema} for {@link com.amplifyframework.testmodels.customprimarykey.Item}
+     * returns an expected {@link SQLiteTable}.  This tests the general use case for CPK with
+     * no sort key.
+     * @throws AmplifyException on error deriving ModelSchema.
+     */
+    @Test
+    public void createSQLiteTableForaModelWithCPKButNoSortKeys() throws AmplifyException {
+        ModelSchema schema = ModelSchema.fromModelClass(Item.class);
+        Map<String, SQLiteColumn> columns = new HashMap<>();
+
+        columns.put("customKey", SQLiteColumn.builder()
+                .name("customKey")
+                .fieldName("customKey")
+                .dataType(SQLiteDataType.TEXT)
+                .isNonNull(true)
+                .tableName("Item")
+                .build());
+
+        columns.put("name", SQLiteColumn.builder()
+                .name("name")
+                .fieldName("name")
+                .dataType(SQLiteDataType.TEXT)
+                .isNonNull(true)
+                .tableName("Item")
+                .build());
+
+        columns.put("updatedAt", SQLiteColumn.builder()
+                .name("updatedAt")
+                .fieldName("updatedAt")
+                .dataType(SQLiteDataType.TEXT)
+                .isNonNull(false)
+                .tableName("Item")
+                .build());
+        columns.put("createdAt", SQLiteColumn.builder()
+                .name("createdAt")
+                .fieldName("createdAt")
+                .dataType(SQLiteDataType.TEXT)
+                .isNonNull(false)
+                .tableName("Item")
+                .build());
+
+        SQLiteTable expected = SQLiteTable.builder()
+                .columns(columns)
+                .name("Item")
+                .build();
+
+        SQLiteTable actual = SQLiteTable.fromSchema(schema);
+        assertEquals(expected, actual);
+        assertEquals("customKey", actual.getPrimaryKey().getFieldName());
     }
 }

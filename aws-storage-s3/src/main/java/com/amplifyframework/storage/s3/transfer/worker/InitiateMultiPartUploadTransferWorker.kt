@@ -19,6 +19,7 @@ import androidx.work.Data
 import androidx.work.WorkerParameters
 import aws.sdk.kotlin.services.s3.S3Client
 import aws.sdk.kotlin.services.s3.createMultipartUpload
+import aws.sdk.kotlin.services.s3.withConfig
 import com.amplifyframework.storage.TransferState
 import com.amplifyframework.storage.s3.transfer.TransferDB
 import com.amplifyframework.storage.s3.transfer.TransferStatusUpdater
@@ -37,7 +38,9 @@ internal class InitiateMultiPartUploadTransferWorker(
     override suspend fun performWork(): Result {
         transferStatusUpdater.updateTransferState(transferRecord.id, TransferState.IN_PROGRESS)
         val putObjectRequest = createPutObjectRequest(transferRecord, null)
-        return s3.createMultipartUpload {
+        return s3.withConfig {
+            enableAccelerate = transferRecord.useAccelerateEndpoint == 1
+        }.createMultipartUpload {
             bucket = putObjectRequest.bucket
             key = putObjectRequest.key
             acl = putObjectRequest.acl

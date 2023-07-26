@@ -18,6 +18,7 @@ import android.content.Context
 import androidx.work.WorkerParameters
 import aws.sdk.kotlin.services.s3.S3Client
 import aws.sdk.kotlin.services.s3.abortMultipartUpload
+import aws.sdk.kotlin.services.s3.withConfig
 import com.amplifyframework.storage.TransferState
 import com.amplifyframework.storage.s3.transfer.TransferDB
 import com.amplifyframework.storage.s3.transfer.TransferStatusUpdater
@@ -34,7 +35,9 @@ internal class AbortMultiPartUploadWorker(
 ) : BaseTransferWorker(transferStatusUpdater, transferDB, context, workerParameters) {
 
     override suspend fun performWork(): Result {
-        return s3.abortMultipartUpload {
+        return s3.withConfig {
+            enableAccelerate = transferRecord.useAccelerateEndpoint == 1
+        }.abortMultipartUpload {
             bucket = transferRecord.bucketName
             key = transferRecord.key
             uploadId = transferRecord.multipartId

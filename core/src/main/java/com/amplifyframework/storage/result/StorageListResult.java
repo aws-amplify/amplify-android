@@ -29,23 +29,26 @@ import java.util.List;
  */
 public final class StorageListResult {
     private final List<StorageItem> items;
+    private final String nextToken;
 
-    private StorageListResult(List<StorageItem> items) {
+    private StorageListResult(List<StorageItem> items, String nextToken) {
         this.items = items;
+        this.nextToken = nextToken;
     }
 
     /**
      * Factory method to construct a storage list result from a list of items.
      * @param items A possibly null, possibly empty list of items
+     * @param nextToken next continuation token
      * @return A new immutable instance of StorageListResult
      */
     @NonNull
-    public static StorageListResult fromItems(@Nullable List<StorageItem> items) {
+    public static StorageListResult fromItems(@Nullable List<StorageItem> items, @Nullable String nextToken) {
         final List<StorageItem> safeItems = new ArrayList<>();
         if (items != null) {
             safeItems.addAll(items);
         }
-        return new StorageListResult(Collections.unmodifiableList(safeItems));
+        return new StorageListResult(Collections.unmodifiableList(safeItems), nextToken);
     }
 
     /**
@@ -55,5 +58,13 @@ public final class StorageListResult {
     @NonNull
     public List<StorageItem> getItems() {
         return items;
+    }
+
+    /**
+     * Gets the next continuation token retrieved by the list API.
+     * @return next continuation token.
+     */
+    public String getNextToken() {
+        return nextToken;
     }
 }

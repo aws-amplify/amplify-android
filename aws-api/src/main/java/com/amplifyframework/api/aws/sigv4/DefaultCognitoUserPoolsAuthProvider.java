@@ -18,8 +18,8 @@ package com.amplifyframework.api.aws.sigv4;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.ApiException.ApiAuthException;
-import com.amplifyframework.api.aws.auth.CognitoCredentialsProvider;
 import com.amplifyframework.auth.AuthUser;
+import com.amplifyframework.auth.CognitoCredentialsProvider;
 import com.amplifyframework.core.Amplify;
 
 import java.util.concurrent.Semaphore;

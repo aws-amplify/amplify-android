@@ -20,11 +20,11 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RawRes;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.auth.CognitoCredentialsProvider;
 import com.amplifyframework.core.AmplifyConfiguration;
 import com.amplifyframework.core.category.CategoryConfiguration;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.predictions.PredictionsCategory;
-import com.amplifyframework.predictions.aws.auth.CognitoCredentialsProvider;
 
 import java.util.Objects;
 

@@ -70,7 +70,7 @@ public class AndroidLoggingPluginTest {
     public void productionLogsEmittedAtDefaultThreshold() {
         AndroidLoggingPlugin plugin = new AndroidLoggingPlugin();
         plugin.configure(new JSONObject(), ApplicationProvider.getApplicationContext());
-        Logger logger = plugin.forNamespace("amplify");
+        Logger logger = plugin.logger("amplify");
 
         logger.error("A most serious issue, indeed.");
         logger.warn("Ahh, bummer, but alright.");
@@ -95,7 +95,7 @@ public class AndroidLoggingPluginTest {
     public void allContentLoggedAtThresholdVerbose() {
         AndroidLoggingPlugin plugin = new AndroidLoggingPlugin(LogLevel.VERBOSE);
         plugin.configure(new JSONObject(), ApplicationProvider.getApplicationContext());
-        Logger logger = plugin.forNamespace("kool-module");
+        Logger logger = plugin.logger("kool-module");
 
         logger.verbose("This logs");
         logger.debug("This too");
@@ -122,7 +122,7 @@ public class AndroidLoggingPluginTest {
     public void noContentLoggedAtThresholdNone() {
         AndroidLoggingPlugin plugin = new AndroidLoggingPlugin(LogLevel.NONE);
         plugin.configure(new JSONObject(), ApplicationProvider.getApplicationContext());
-        Logger logger = plugin.forNamespace("logging-test");
+        Logger logger = plugin.logger("logging-test");
 
         logger.error("An error happened!");
         logger.info(null);

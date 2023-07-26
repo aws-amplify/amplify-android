@@ -30,6 +30,8 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito
+import org.mockito.Mockito.any
+import org.mockito.Mockito.eq
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
@@ -57,7 +59,8 @@ class AWSS3StorageUploadFileOperationTest {
             "",
             "/image",
             ServerSideEncryption.NONE,
-            mutableMapOf()
+            mutableMapOf(),
+            false
         )
         awsS3StorageUploadFileOperation = AWSS3StorageUploadFileOperation(
             storageService,
@@ -71,10 +74,11 @@ class AWSS3StorageUploadFileOperationTest {
         )
         awsS3StorageUploadFileOperation.start()
         Mockito.verify(storageService).uploadFile(
-            Mockito.eq(awsS3StorageUploadFileOperation.transferId),
-            Mockito.eq(expectedKey),
-            Mockito.eq(tempFile),
-            Mockito.any(ObjectMetadata::class.java)
+            eq(awsS3StorageUploadFileOperation.transferId),
+            eq(expectedKey),
+            eq(tempFile),
+            any(ObjectMetadata::class.java),
+            eq(false)
         )
     }
 
@@ -90,7 +94,8 @@ class AWSS3StorageUploadFileOperationTest {
             "",
             "/image",
             ServerSideEncryption.NONE,
-            mutableMapOf()
+            mutableMapOf(),
+            false
         )
         awsS3StorageUploadFileOperation = AWSS3StorageUploadFileOperation(
             storageService,
@@ -115,10 +120,11 @@ class AWSS3StorageUploadFileOperationTest {
         )
         awsS3StorageUploadFileOperation.start()
         Mockito.verify(storageService).uploadFile(
-            Mockito.eq(awsS3StorageUploadFileOperation.transferId),
-            Mockito.eq(expectedKey),
-            Mockito.eq(tempFile),
-            Mockito.any(ObjectMetadata::class.java)
+            eq(awsS3StorageUploadFileOperation.transferId),
+            eq(expectedKey),
+            eq(tempFile),
+            any(ObjectMetadata::class.java),
+            eq(false)
         )
     }
 
@@ -134,7 +140,8 @@ class AWSS3StorageUploadFileOperationTest {
             "",
             "/image",
             ServerSideEncryption.NONE,
-            mutableMapOf()
+            mutableMapOf(),
+            false
         )
         awsS3StorageUploadFileOperation = AWSS3StorageUploadFileOperation(
             storageService,
@@ -159,10 +166,11 @@ class AWSS3StorageUploadFileOperationTest {
         )
         awsS3StorageUploadFileOperation.start()
         Mockito.verify(storageService).uploadFile(
-            Mockito.eq(awsS3StorageUploadFileOperation.transferId),
-            Mockito.eq(expectedKey),
-            Mockito.eq(tempFile),
-            Mockito.any(ObjectMetadata::class.java)
+            eq(awsS3StorageUploadFileOperation.transferId),
+            eq(expectedKey),
+            eq(tempFile),
+            any(ObjectMetadata::class.java),
+            eq(false)
         )
     }
 }

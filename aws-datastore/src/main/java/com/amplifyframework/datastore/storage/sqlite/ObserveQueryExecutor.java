@@ -132,16 +132,17 @@ public class ObserveQueryExecutor<T extends Model> implements Cancelable {
         Objects.requireNonNull(onObservationStarted);
         Objects.requireNonNull(onObservationError);
         Objects.requireNonNull(onObservationComplete);
-        onObservationStarted.accept(this);
 
         Consumer<Object> onItemChanged = value -> {
 
-            @SuppressWarnings("unchecked") 
+            @SuppressWarnings("unchecked")
             StorageItemChange<T> itemChanged = (StorageItemChange<T>) value;
             try {
                 if (sqlQueryProcessor.modelExists(itemChanged.item(), options.getQueryPredicate())) {
                     updateCompleteItemMap(itemChanged);
                 } else if (itemChanged.type() == StorageItemChange.Type.UPDATE) {
+                    completeItemMap.remove(itemChanged.item().getPrimaryKeyString());
+                } else if (itemChanged.type() == StorageItemChange.Type.DELETE) {
                     completeItemMap.remove(itemChanged.item().getPrimaryKeyString());
                 }
                 collect(itemChanged, onQuerySnapshot, itemClass, options, onObservationError);
@@ -149,25 +150,32 @@ public class ObserveQueryExecutor<T extends Model> implements Cancelable {
                 onObservationError.accept(exception);
             }
         };
-        threadPool.submit(() -> queryLocalData(itemClass, options, onQuerySnapshot, onObservationError));
-
-        disposable = itemChangeSubject
-            .filter(x -> x.item().getClass().isAssignableFrom(itemClass))
-            .subscribe(
-                onItemChanged::accept,
-                failure -> {
-                    if (failure instanceof DataStoreException) {
-                        onObservationError.accept((DataStoreException) failure);
-                        return;
-                    }
-                    onObservationError.accept(new DataStoreException(
-                            "Failed to observe items in storage adapter.",
-                            failure,
-                            "Inspect the failure details."
-                    ));
-                },
-                onObservationComplete::call
-            );
+        threadPool.submit(() -> queryLocalData(
+            itemClass,
+            options,
+            value -> {
+                disposable = itemChangeSubject
+                        .filter(x -> x.item().getClass().isAssignableFrom(itemClass))
+                        .subscribe(
+                                onItemChanged::accept,
+                                failure -> {
+                                    if (failure instanceof DataStoreException) {
+                                        onObservationError.accept((DataStoreException) failure);
+                                        return;
+                                    }
+                                    onObservationError.accept(new DataStoreException(
+                                            "Failed to observe items in storage adapter.",
+                                            failure,
+                                            "Inspect the failure details."
+                                    ));
+                                },
+                                onObservationComplete::call
+                        );
+                onObservationStarted.accept(this);
+                onQuerySnapshot.accept(value);
+            },
+            onObservationError
+        ));
     }
 
     private void queryLocalData(@NonNull Class<T> itemClass,
@@ -176,15 +184,15 @@ public class ObserveQueryExecutor<T extends Model> implements Cancelable {
                                 @NonNull Consumer<DataStoreException> onObservationError) {
         List<T> models = sqlQueryProcessor.queryOfflineData(itemClass,
                 Where.matchesAndSorts(options.getQueryPredicate(),
-                                      options.getSortBy()), onObservationError);
+                        options.getSortBy()), onObservationError);
         Consumer<DataStoreException> onQueryError = value -> {
             cancel();
             onObservationError.accept(value);
         };
-        callOnQuerySnapshot(onQuerySnapshot, itemClass, onQueryError, models);
         for (T model : models) {
             completeItemMap.put(model.getPrimaryKeyString(), model);
         }
+        callOnQuerySnapshot(onQuerySnapshot, itemClass, onQueryError, models);
     }
 
     /***

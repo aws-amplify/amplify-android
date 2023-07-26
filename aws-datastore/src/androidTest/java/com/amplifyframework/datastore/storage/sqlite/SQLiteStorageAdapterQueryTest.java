@@ -202,11 +202,11 @@ public final class SQLiteStorageAdapterQueryTest {
         
         final Phone phoneCalling = Phone.builder()
                 .number("123-456-7890")
-                .ownedBy(personCalling)
+                .ownerOfPhone(personCalling)
                 .build();
         final Phone phoneCalled = Phone.builder()
                 .number("567-890-1234")
-                .ownedBy(personCalled)
+                .ownerOfPhone(personCalled)
                 .build();
         
         final Call phoneCall = Call.builder()
@@ -424,11 +424,11 @@ public final class SQLiteStorageAdapterQueryTest {
 
         final Phone phoneCalling = Phone.builder()
                 .number("123-456-7890")
-                .ownedBy(personCalling)
+                .ownerOfPhone(personCalling)
                 .build();
         final Phone phoneCalled = Phone.builder()
                 .number("567-890-1234")
-                .ownedBy(personCalled)
+                .ownerOfPhone(personCalled)
                 .build();
 
         adapter.save(personCalling);
