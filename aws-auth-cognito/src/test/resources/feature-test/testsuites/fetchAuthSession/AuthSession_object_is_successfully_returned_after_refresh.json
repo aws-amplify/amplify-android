@@ -24,7 +24,6 @@
         "params": {
         },
         "options": {
-            "forceRefresh": true
         }
     },
     "validations": [
