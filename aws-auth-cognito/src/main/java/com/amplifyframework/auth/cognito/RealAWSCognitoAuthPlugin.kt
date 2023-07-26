@@ -615,7 +615,7 @@ internal class RealAWSCognitoAuthPlugin(
             val signInState = (authNState as? AuthenticationState.SigningIn)?.signInState
             if (signInState is SignInState.ResolvingChallenge) {
                 when (signInState.challengeState) {
-                    is SignInChallengeState.WaitingForAnswer -> {
+                    is SignInChallengeState.WaitingForAnswer, is SignInChallengeState.Error -> {
                         _confirmSignIn(challengeResponse, options, onSuccess, onError)
                     }
                     else -> {
