@@ -12,86 +12,177 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
+package com.amplifyframework.api.graphql.model
 
-package com.amplifyframework.api.graphql.model;
-
-import androidx.annotation.NonNull;
-
-import com.amplifyframework.api.aws.AppSyncGraphQLRequestFactory;
-import com.amplifyframework.api.graphql.GraphQLRequest;
-import com.amplifyframework.api.graphql.MutationType;
-import com.amplifyframework.core.model.Model;
-import com.amplifyframework.core.model.query.predicate.QueryPredicate;
-import com.amplifyframework.core.model.query.predicate.QueryPredicates;
+import com.amplifyframework.api.aws.AppSyncGraphQLRequestFactory.buildMutation
+import com.amplifyframework.api.graphql.GraphQLRequest
+import com.amplifyframework.api.graphql.MutationType
+import com.amplifyframework.core.model.Model
+import com.amplifyframework.core.model.ModelPath
+import com.amplifyframework.core.model.PropertyContainerPath
+import com.amplifyframework.core.model.query.predicate.QueryPredicate
+import com.amplifyframework.core.model.query.predicate.QueryPredicates
 
 /**
- * Helper class that provides methods to create {@link GraphQLRequest} from {@link Model}.
+ * Helper class that provides methods to create [GraphQLRequest] from [Model].
  */
-public final class ModelMutation {
-    private ModelMutation() {}
-
+object ModelMutation {
     /**
-     * Creates a {@link GraphQLRequest} that represents a create mutation for a given {@code model} instance.
+     * Creates a [GraphQLRequest] that represents a create mutation for a given `model` instance.
      * @param model the model instance populated with values.
      * @param <M> the model concrete type.
-     * @return a valid {@code GraphQLRequest} instance.
-     * @see MutationType#CREATE
-     */
-    public static <M extends Model> GraphQLRequest<M> create(@NonNull M model) {
-        return AppSyncGraphQLRequestFactory.buildMutation(model, QueryPredicates.all(), MutationType.CREATE);
+     * @return a valid `GraphQLRequest` instance.
+     * @see MutationType.CREATE
+    </M> */
+    @JvmStatic
+    fun <M : Model> create(model: M): GraphQLRequest<M> {
+        return buildMutation(model, QueryPredicates.all(), MutationType.CREATE)
     }
 
     /**
-     * Creates a {@link GraphQLRequest} that represents an update mutation for a given {@code model} instance.
+     * Creates a [GraphQLRequest] that represents a create mutation for a given `model` instance.
+     * @param model the model instance populated with values.
+     * @param includes lambda returning list of associations that should be included in the selection set
+     * @param <M> the model concrete type.
+     * @param <P> the concrete model path for the M model type
+     * @return a valid `GraphQLRequest` instance.
+     * @see MutationType.CREATE
+    </M> */
+    @JvmStatic
+    fun <M : Model, P : ModelPath<M>> create(
+        model: M,
+        includes: ((P) -> List<PropertyContainerPath>)
+    ): GraphQLRequest<M> {
+        return buildMutation(model, QueryPredicates.all(), MutationType.CREATE, includes)
+    }
+
+    /**
+     * Creates a [GraphQLRequest] that represents an update mutation for a given `model` instance.
      * @param model the model instance populated with values.
      * @param predicate a predicate passed as the condition to apply the mutation.
      * @param <M> the model concrete type.
-     * @return a valid {@code GraphQLRequest} instance.
-     * @see MutationType#UPDATE
-     */
-    public static <M extends Model> GraphQLRequest<M> update(
-            @NonNull M model,
-            @NonNull QueryPredicate predicate
-    ) {
-        return AppSyncGraphQLRequestFactory.buildMutation(model, predicate, MutationType.UPDATE);
+     * @return a valid `GraphQLRequest` instance.
+     * @see MutationType.UPDATE
+    </M> */
+    fun <M : Model> update(
+        model: M,
+        predicate: QueryPredicate
+    ): GraphQLRequest<M> {
+        return buildMutation(model, predicate, MutationType.UPDATE)
     }
 
     /**
-     * Creates a {@link GraphQLRequest} that represents an update mutation for a given {@code model} instance.
+     * Creates a [GraphQLRequest] that represents an update mutation for a given `model` instance.
+     * @param model the model instance populated with values.
+     * @param predicate a predicate passed as the condition to apply the mutation.
+     * @param includes lambda returning list of associations that should be included in the selection set
+     * @param <M> the model concrete type.
+     * @param <P> the concrete model path for the M model type
+     * @return a valid `GraphQLRequest` instance.
+     * @see MutationType.UPDATE
+    </M> */
+    @JvmStatic
+    fun <M : Model, P : ModelPath<M>> update(
+        model: M,
+        predicate: QueryPredicate,
+        includes: ((P) -> List<PropertyContainerPath>)
+    ): GraphQLRequest<M> {
+        return buildMutation(model, predicate, MutationType.UPDATE, includes)
+    }
+
+    /**
+     * Creates a [GraphQLRequest] that represents an update mutation for a given `model` instance.
      * @param model the model instance populated with values.
      * @param <M> the model concrete type.
-     * @return a valid {@code GraphQLRequest} instance.
-     * @see MutationType#UPDATE
-     * @see #update(Model, QueryPredicate)
-     */
-    public static <M extends Model> GraphQLRequest<M> update(@NonNull M model) {
-        return AppSyncGraphQLRequestFactory.buildMutation(model, QueryPredicates.all(), MutationType.UPDATE);
+     * @return a valid `GraphQLRequest` instance.
+     * @see MutationType.UPDATE
+     *
+     * @see .update
+    </M> */
+    @JvmStatic
+    fun <M : Model> update(model: M): GraphQLRequest<M> {
+        return buildMutation(model, QueryPredicates.all(), MutationType.UPDATE)
     }
 
     /**
-     * Creates a {@link GraphQLRequest} that represents a delete mutation for a given {@code model} instance.
+     * Creates a [GraphQLRequest] that represents an update mutation for a given `model` instance.
+     * @param model the model instance populated with values.
+     * @param includes lambda returning list of associations that should be included in the selection set
+     * @param <M> the model concrete type.
+     * @param <P> the concrete model path for the M model type
+     * @return a valid `GraphQLRequest` instance.
+     * @see MutationType.UPDATE
+    </M> */
+    @JvmStatic
+    fun <M : Model, P : ModelPath<M>> update(
+        model: M,
+        includes: ((P) -> List<PropertyContainerPath>)
+    ): GraphQLRequest<M> {
+        return buildMutation(model, QueryPredicates.all(), MutationType.UPDATE, includes)
+    }
+
+    /**
+     * Creates a [GraphQLRequest] that represents a delete mutation for a given `model` instance.
      * @param model the model instance populated with values.
      * @param predicate a predicate passed as the condition to apply the mutation.
      * @param <M> the model concrete type.
-     * @return a valid {@code GraphQLRequest} instance.
-     * @see MutationType#DELETE
-     */
-    public static <M extends Model> GraphQLRequest<M> delete(
-            @NonNull M model,
-            @NonNull QueryPredicate predicate
-    ) {
-        return AppSyncGraphQLRequestFactory.buildMutation(model, predicate, MutationType.DELETE);
+     * @return a valid `GraphQLRequest` instance.
+     * @see MutationType.DELETE
+    </M> */
+    fun <M : Model> delete(
+        model: M,
+        predicate: QueryPredicate
+    ): GraphQLRequest<M> {
+        return buildMutation(model, predicate, MutationType.DELETE)
     }
 
     /**
-     * Creates a {@link GraphQLRequest} that represents a delete mutation for a given {@code model} instance.
+     * Creates a [GraphQLRequest] that represents a delete mutation for a given `model` instance.
+     * @param model the model instance populated with values.
+     * @param predicate a predicate passed as the condition to apply the mutation.
+     * @param includes lambda returning list of associations that should be included in the selection set
+     * @param <M> the model concrete type.
+     * @param <P> the concrete model path for the M model type
+     * @return a valid `GraphQLRequest` instance.
+     * @see MutationType.DELETE
+    </M> */
+    @JvmStatic
+    fun <M : Model, P : ModelPath<M>> delete(
+        model: M,
+        predicate: QueryPredicate,
+        includes: ((P) -> List<PropertyContainerPath>)
+    ): GraphQLRequest<M> {
+        return buildMutation(model, predicate, MutationType.DELETE, includes)
+    }
+
+    /**
+     * Creates a [GraphQLRequest] that represents a delete mutation for a given `model` instance.
      * @param model the model instance populated with values.
      * @param <M> the model concrete type.
-     * @return a valid {@code GraphQLRequest} instance.
-     * @see MutationType#DELETE
-     * @see #delete(Model, QueryPredicate)
-     */
-    public static <M extends Model> GraphQLRequest<M> delete(@NonNull M model) {
-        return AppSyncGraphQLRequestFactory.buildMutation(model, QueryPredicates.all(), MutationType.DELETE);
+     * @return a valid `GraphQLRequest` instance.
+     * @see MutationType.DELETE
+     *
+     * @see .delete
+    </M> */
+    @JvmStatic
+    fun <M : Model> delete(model: M): GraphQLRequest<M> {
+        return buildMutation(model, QueryPredicates.all(), MutationType.DELETE)
+    }
+
+    /**
+     * Creates a [GraphQLRequest] that represents a delete mutation for a given `model` instance.
+     * @param model the model instance populated with values.
+     * @param includes lambda returning list of associations that should be included in the selection set
+     * @param <M> the model concrete type.
+     * @param <P> the concrete model path for the M model type
+     * @return a valid `GraphQLRequest` instance.
+     * @see MutationType.DELETE
+    </M> */
+    @JvmStatic
+    fun <M : Model, P : ModelPath<M>> delete(
+        model: M,
+        includes: ((P) -> List<PropertyContainerPath>)
+    ): GraphQLRequest<M> {
+        return buildMutation(model, QueryPredicates.all(), MutationType.DELETE, includes)
     }
 }
