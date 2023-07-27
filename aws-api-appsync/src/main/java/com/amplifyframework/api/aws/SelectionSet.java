@@ -73,22 +73,6 @@ public final class SelectionSet {
         this(selectionSet.value, new HashSet<>(selectionSet.nodes));
     }
 
-    // non public constructor to add associations.
-    // This is needed if a customer provided their own selection set + associations,
-    // since we wouldn't be creating our own SelectionSet with the builder.
-    SelectionSet(SelectionSet selectionSet, List<PropertyContainerPath> includeAssociations) {
-        this(selectionSet.value, new HashSet<>(selectionSet.nodes));
-
-        if (includeAssociations != null) {
-            for (PropertyContainerPath association : includeAssociations) {
-                SelectionSet included = SelectionSetUtils.asSelectionSet(association, false);
-                if (included != null) {
-                    SelectionSetUtils.merge(this, included);
-                }
-            }
-        }
-    }
-
     /**
      * Constructor for a leaf node (no children).
      * @param value String value of the field.

@@ -259,7 +259,6 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
         private GraphQLRequestOptions requestOptions;
         private Type responseType;
         private SelectionSet selectionSet;
-        private List<PropertyContainerPath> includedAssociations;
         private AuthorizationType authorizationType;
         private final Map<String, Object> variables;
         private final Map<String, String> variableTypes;
@@ -341,16 +340,6 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
         }
 
         /**
-         * Sets the included associations and returns this builder.
-         * @param associations the associations to include in addition to the selection set.
-         * @return this builder instance.
-         */
-        public Builder includeAssociations(@NonNull List<PropertyContainerPath> associations) {
-            this.includedAssociations = Objects.requireNonNull(associations);
-            return Builder.this;
-        }
-
-        /**
          * Sets the authorization type for the request. If this field is set,
          * {@link Builder#authModeStrategyType} will be ignored.
          * @param authorizationType the desired authorization type.
@@ -417,11 +406,8 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
                         .modelSchema(this.modelSchema)
                         .modelClass(this.modelClass)
                         .operation(this.operation)
-                        .includeAssociations(this.includedAssociations)
                         .requestOptions(Objects.requireNonNull(this.requestOptions))
                         .build();
-            } else if (includedAssociations != null){
-                selectionSet = new SelectionSet(selectionSet, includedAssociations);
             }
 
             if (authModeStrategyType == null || authorizationType != null) {

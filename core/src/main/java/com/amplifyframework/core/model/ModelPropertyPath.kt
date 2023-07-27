@@ -15,6 +15,8 @@
 
 package com.amplifyframework.core.model
 
+import com.amplifyframework.annotations.InternalAmplifyApi
+
 /**
  * Represents a property of a `Model`. PropertyPath is a way of representing the
  * structure of a model with static typing, so developers can reference model
@@ -149,7 +151,7 @@ open class ModelPath<ModelType : Model>(
          * @throws ModelException.PropertyPathNotFound in case the path could not be read or found.
          */
         @Throws(ModelException.PropertyPathNotFound::class)
-        @JvmStatic
+        @InternalAmplifyApi
         fun <M : Model, P : ModelPath<M>>getRootPath(clazz: Class<M>): P {
             val field = try {
                 clazz.getDeclaredField("rootPath")
@@ -176,12 +178,11 @@ class FieldPath<Type : Any>(
         name = name,
         parent = parent
     )
-
 }
 
 /**
  * Function used to define which associations are included in the selection set
- * in an idiomatic manner. It's a simple delegation to `arrayOf` with the main
+ * in an idiomatic manner. It's a simple delegation to `listOf` with the main
  * goal of improved code readability.
  *
  * Example:
