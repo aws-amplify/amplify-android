@@ -17,6 +17,7 @@ package com.amplifyframework.api.aws
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.api.graphql.GraphQLRequest
 import com.amplifyframework.api.graphql.MutationType
+import com.amplifyframework.api.graphql.Operation
 import com.amplifyframework.api.graphql.PaginatedResult
 import com.amplifyframework.api.graphql.QueryType
 import com.amplifyframework.api.graphql.SubscriptionType
@@ -46,16 +47,13 @@ object AppSyncGraphQLRequestFactory {
      * @param objectId the model identifier.
      * @param <R> the response type.
      * @param <T> the concrete model type.
-     * @param <P> the model's ModelPath type.
      * @return a valid [GraphQLRequest] instance.
      * @throws IllegalStateException when the model schema does not contain the expected information.
     </T></R> */
-    @JvmOverloads
     @JvmStatic
-    fun <R, T : Model, P : ModelPath<T>> buildQuery(
+    fun <R, T : Model> buildQuery(
         modelClass: Class<T>,
         objectId: String,
-        includes: ((P) -> List<PropertyContainerPath>)? = null
     ): GraphQLRequest<R> {
         val variable: GraphQLRequestVariable = try {
             val modelSchema = ModelSchema.fromModelClass(modelClass)
@@ -69,7 +67,41 @@ object AppSyncGraphQLRequestFactory {
             // If we fail to pull primary key name and type, fallback to default id/ID!
             GraphQLRequestVariable("id", objectId, "ID!")
         }
-        return buildQuery(modelClass, includes, variable)
+        return buildQueryInternal(modelClass, null, variable)
+    }
+
+    /**
+     * Creates a [GraphQLRequest] that represents a query that expects a single value as a result. The request
+     * will be created with the correct document based on the model schema and variables based on given
+     * `objectId`.
+     * @param modelClass the model class.
+     * @param objectId the model identifier.
+     * @param includes lambda returning list of associations that should be included in the selection set
+     * @param <R> the response type.
+     * @param <T> the concrete model type.
+     * @param <P> the concrete model path for the M model type
+     * @return a valid [GraphQLRequest] instance.
+     * @throws IllegalStateException when the model schema does not contain the expected information.
+    </T></R> */
+    @JvmStatic
+    fun <R, T : Model, P : ModelPath<T>> buildQuery(
+        modelClass: Class<T>,
+        objectId: String,
+        includes: ((P) -> List<PropertyContainerPath>)
+    ): GraphQLRequest<R> {
+        val variable: GraphQLRequestVariable = try {
+            val modelSchema = ModelSchema.fromModelClass(modelClass)
+            val primaryKeyName = modelSchema.primaryKeyName
+            // Find target field to pull type info
+            val targetField = requireNotNull(modelSchema.fields[primaryKeyName])
+            val requiredSuffix = if (targetField.isRequired) "!" else ""
+            val targetTypeString = "${targetField.targetType}$requiredSuffix"
+            GraphQLRequestVariable(primaryKeyName, objectId, targetTypeString)
+        } catch (exception: Exception) {
+            // If we fail to pull primary key name and type, fallback to default id/ID!
+            GraphQLRequestVariable("id", objectId, "ID!")
+        }
+        return buildQueryInternal(modelClass, includes, variable)
     }
 
     /**
@@ -84,11 +116,9 @@ object AppSyncGraphQLRequestFactory {
      * @throws IllegalStateException when the model schema does not contain the expected information.
     </T></R> */
     @JvmStatic
-    @JvmOverloads
-    fun <R, T : Model, P : ModelPath<T>> buildQuery(
+    fun <R, T : Model> buildQuery(
         modelClass: Class<T>,
         modelIdentifier: ModelIdentifier<T>,
-        includes: ((P) -> List<PropertyContainerPath>)? = null
     ): GraphQLRequest<R> {
         try {
             val modelSchema = ModelSchema.fromModelClass(modelClass)
@@ -109,7 +139,7 @@ object AppSyncGraphQLRequestFactory {
 
                 GraphQLRequestVariable(key, value, targetTypeString)
             }
-            return buildQuery(modelClass, includes, *variables.toTypedArray())
+            return buildQueryInternal(modelClass, null, *variables.toTypedArray())
         } catch (exception: AmplifyException) {
             throw IllegalStateException(
                 "Could not generate a schema for the specified class",
@@ -120,15 +150,52 @@ object AppSyncGraphQLRequestFactory {
 
     /**
      * Creates a [GraphQLRequest] that represents a query that expects a single value as a result. The request
-     * will be created with the correct document based on the model schema and variables.
+     * will be created with the correct document based on the model schema and variables based on given
+     * `modelIdentifier`.
      * @param modelClass the model class.
-     * @param variables the variables.
+     * @param modelIdentifier the model identifier.
+     * @param includes lambda returning list of associations that should be included in the selection set
      * @param <R> the response type.
      * @param <T> the concrete model type.
+     * @param <P> the concrete model path for the M model type
      * @return a valid [GraphQLRequest] instance.
      * @throws IllegalStateException when the model schema does not contain the expected information.
     </T></R> */
-    private fun <R, T : Model, P : ModelPath<T>> buildQuery(
+    @JvmStatic
+    fun <R, T : Model, P : ModelPath<T>> buildQuery(
+        modelClass: Class<T>,
+        modelIdentifier: ModelIdentifier<T>,
+        includes: ((P) -> List<PropertyContainerPath>)
+    ): GraphQLRequest<R> {
+        try {
+            val modelSchema = ModelSchema.fromModelClass(modelClass)
+            val primaryIndexFields = modelSchema.primaryIndexFields
+            val sortedKeys = modelIdentifier.sortedKeys()
+            val variables = primaryIndexFields.mapIndexed { i, key ->
+                // Find target field to pull type info
+                val targetField = requireNotNull(modelSchema.fields[key])
+                val requiredSuffix = if (targetField.isRequired) "!" else ""
+                val targetTypeString = "${targetField.targetType}$requiredSuffix"
+
+                // If index 0, value is primary key, else get next unused sort key
+                val value = if (i == 0) {
+                    modelIdentifier.key().toString()
+                } else {
+                    sortedKeys[i-1]
+                }
+
+                GraphQLRequestVariable(key, value, targetTypeString)
+            }
+            return buildQueryInternal(modelClass, includes, *variables.toTypedArray())
+        } catch (exception: AmplifyException) {
+            throw IllegalStateException(
+                "Could not generate a schema for the specified class",
+                exception
+            )
+        }
+    }
+
+    private fun <R, T : Model, P : ModelPath<T>> buildQueryInternal(
         modelClass: Class<T>,
         includes: ((P) -> List<PropertyContainerPath>)?,
         vararg variables: GraphQLRequestVariable
@@ -142,16 +209,10 @@ object AppSyncGraphQLRequestFactory {
             for ((key, value, type) in variables) {
                 builder.variable(key, type, value)
             }
-            includes?.invoke(ModelPath.getRootPath(modelClass))?.let { associations ->
-                val selectionSet = SelectionSet.builder()
-                    .modelClass(modelClass)
-                    .operation(QueryType.GET)
-                    .requestOptions(ApiGraphQLRequestOptions())
-                    .includeAssociations(associations)
-                    .build()
-
-                builder.selectionSet(selectionSet)
-            }
+            
+            val customSelectionSet = includes?.let { createApiSelectionSet(modelClass, QueryType.GET, it) }
+            customSelectionSet?.let { builder.selectionSet(it) }
+            
             builder.build()
         } catch (exception: AmplifyException) {
             throw IllegalStateException(
@@ -178,7 +239,30 @@ object AppSyncGraphQLRequestFactory {
         predicate: QueryPredicate
     ): GraphQLRequest<R> {
         val dataType = TypeMaker.getParameterizedType(PaginatedResult::class.java, modelClass)
-        return buildQuery(modelClass, predicate, DEFAULT_QUERY_LIMIT, dataType)
+        return buildListQueryInternal(modelClass, predicate, DEFAULT_QUERY_LIMIT, dataType, null)
+    }
+
+    /**
+     * Creates a [GraphQLRequest] that represents a query that expects multiple values as a result. The request
+     * will be created with the correct document based on the model schema and variables for filtering based on the
+     * given predicate.
+     * @param modelClass the model class.
+     * @param predicate the model predicate.
+     * @param includes lambda returning list of associations that should be included in the selection set
+     * @param <R> the response type.
+     * @param <T> the concrete model type.
+     * @param <P> the concrete model path for the M model type
+     * @return a valid [GraphQLRequest] instance.
+     * @throws IllegalStateException when the model schema does not contain the expected information.
+    </T></R> */
+    @JvmStatic
+    fun <R, T : Model, P : ModelPath<T>> buildQuery(
+        modelClass: Class<T>,
+        predicate: QueryPredicate,
+        includes: ((P) -> List<PropertyContainerPath>),
+        ): GraphQLRequest<R> {
+        val dataType = TypeMaker.getParameterizedType(PaginatedResult::class.java, modelClass)
+        return buildListQueryInternal(modelClass, predicate, DEFAULT_QUERY_LIMIT, dataType, includes)
     }
 
     /**
@@ -202,15 +286,59 @@ object AppSyncGraphQLRequestFactory {
         limit: Int
     ): GraphQLRequest<R> {
         val responseType = TypeMaker.getParameterizedType(PaginatedResult::class.java, modelClass)
-        return buildQuery(modelClass, predicate, limit, responseType)
+        return buildListQueryInternal(modelClass, predicate, limit, responseType, null)
     }
 
+    /**
+     * Creates a [GraphQLRequest] that represents a query that expects multiple values as a result within a
+     * certain range (i.e. paginated).
+     *
+     *
+     * The request will be created with the correct document based on the model schema and variables for filtering based
+     * on the given predicate and pagination.
+     * @param modelClass the model class.
+     * @param predicate the predicate for filtering.
+     * @param limit the page size/limit.
+     * @param includes lambda returning list of associations that should be included in the selection set
+     * @param <R> the response type.
+     * @param <T> the concrete model type.
+     * @param <P> the concrete model path for the M model type
+     * @return a valid [GraphQLRequest] instance.
+    </T></R> */
     @JvmStatic
-    fun <R, T : Model> buildQuery(
+    fun <R, T : Model, P : ModelPath<T>> buildPaginatedResultQuery(
         modelClass: Class<T>,
         predicate: QueryPredicate,
         limit: Int,
-        responseType: Type
+        includes: ((P) -> List<PropertyContainerPath>),
+        ): GraphQLRequest<R> {
+        val responseType = TypeMaker.getParameterizedType(PaginatedResult::class.java, modelClass)
+        return buildListQueryInternal(modelClass, predicate, limit, responseType, includes)
+    }
+
+    /**
+     * Creates a [GraphQLRequest] that represents a query that expects multiple values as a result within a
+     * certain range (i.e. paginated).
+     *
+     *
+     * The request will be created with the correct document based on the model schema and variables for filtering based
+     * on the given predicate and pagination.
+     * @param modelClass the model class.
+     * @param predicate the predicate for filtering.
+     * @param limit the page size/limit.
+     * @param responseType the response type
+     * @param includes lambda returning list of associations that should be included in the selection set
+     * @param <R> the response type.
+     * @param <T> the concrete model type.
+     * @param <P> the concrete model path for the M model type
+     * @return a valid [GraphQLRequest] instance.
+    </T></R> */
+    private fun <R, T : Model, P : ModelPath<T>> buildListQueryInternal(
+        modelClass: Class<T>,
+        predicate: QueryPredicate,
+        limit: Int,
+        responseType: Type,
+        includes: ((P) -> List<PropertyContainerPath>)?
     ): GraphQLRequest<R> {
         return try {
             val modelName = ModelSchema.fromModelClass(
@@ -230,6 +358,10 @@ object AppSyncGraphQLRequestFactory {
                 )
             }
             builder.variable("limit", "Int", limit)
+
+            val customSelectionSet = includes?.let { createApiSelectionSet(modelClass, QueryType.LIST, it) }
+            customSelectionSet?.let { builder.selectionSet(it) }
+
             builder.build()
         } catch (exception: AmplifyException) {
             throw IllegalStateException(
@@ -254,6 +386,37 @@ object AppSyncGraphQLRequestFactory {
         model: T,
         predicate: QueryPredicate,
         type: MutationType
+    ): GraphQLRequest<R> {
+        return buildMutationInternal(model, predicate, type, null)
+    }
+
+    /**
+     * Creates a [GraphQLRequest] that represents a mutation of a given type.
+     * @param model the model instance.
+     * @param predicate the model predicate.
+     * @param type the mutation type.
+     * @param includes lambda returning list of associations that should be included in the selection set
+     * @param <R> the response type.
+     * @param <T> the concrete model type.
+     * @param <P> the concrete model path for the M model type
+     * @return a valid [GraphQLRequest] instance.
+     * @throws IllegalStateException when the model schema does not contain the expected information.
+    </T></R> */
+    @JvmStatic
+    fun <R, T : Model, P : ModelPath<T>> buildMutation(
+        model: T,
+        predicate: QueryPredicate,
+        type: MutationType,
+        includes: ((P) -> List<PropertyContainerPath>)
+    ): GraphQLRequest<R> {
+        return buildMutationInternal(model, predicate, type, includes)
+    }
+
+    private fun <R, T : Model, P : ModelPath<T>> buildMutationInternal(
+        model: T,
+        predicate: QueryPredicate,
+        type: MutationType,
+        includes: ((P) -> List<PropertyContainerPath>)?
     ): GraphQLRequest<R> {
         return try {
             val modelClass: Class<out Model> = model.javaClass
@@ -288,6 +451,10 @@ object AppSyncGraphQLRequestFactory {
                     "condition", conditionType, GraphQLRequestHelper.parsePredicate(predicate)
                 )
             }
+
+            val customSelectionSet = includes?.let { createApiSelectionSet(modelClass, type, it) }
+            customSelectionSet?.let { builder.selectionSet(it) }
+
             builder.build()
         } catch (exception: AmplifyException) {
             throw IllegalStateException(
@@ -296,6 +463,7 @@ object AppSyncGraphQLRequestFactory {
             )
         }
     }
+
 
     /**
      * Creates a [GraphQLRequest] that represents a subscription of a given type.
@@ -311,18 +479,65 @@ object AppSyncGraphQLRequestFactory {
         modelClass: Class<T>,
         subscriptionType: SubscriptionType
     ): GraphQLRequest<R> {
+        return buildSubscriptionInternal(modelClass, subscriptionType, null)
+    }
+
+    /**
+     * Creates a [GraphQLRequest] that represents a subscription of a given type.
+     * @param modelClass the model type.
+     * @param subscriptionType the subscription type.
+     * @param includes lambda returning list of associations that should be included in the selection set
+     * @param <R> the response type.
+     * @param <T> the concrete model type.
+     * @param <P> the concrete model path for the M model type
+     * @return a valid [GraphQLRequest] instance.
+     * @throws IllegalStateException when the model schema does not contain the expected information.
+    </T></R> */
+    @JvmStatic
+    fun <R, T : Model, P : ModelPath<T>> buildSubscription(
+        modelClass: Class<T>,
+        subscriptionType: SubscriptionType,
+        includes: ((P) -> List<PropertyContainerPath>)
+    ): GraphQLRequest<R> {
+        return buildSubscriptionInternal(modelClass, subscriptionType, includes)
+    }
+
+    private fun <R, T : Model, P : ModelPath<T>> buildSubscriptionInternal(
+        modelClass: Class<T>,
+        subscriptionType: SubscriptionType,
+        includes: ((P) -> List<PropertyContainerPath>)?
+    ): GraphQLRequest<R> {
         return try {
-            AppSyncGraphQLRequest.builder()
+            val builder = AppSyncGraphQLRequest.builder()
                 .modelClass(modelClass)
                 .operation(subscriptionType)
                 .requestOptions(ApiGraphQLRequestOptions())
                 .responseType(modelClass)
-                .build()
+
+            val customSelectionSet = includes?.let { createApiSelectionSet(modelClass, subscriptionType, it) }
+            customSelectionSet?.let { builder.selectionSet(it) }
+
+            builder.build()
         } catch (exception: AmplifyException) {
             throw IllegalStateException(
                 "Failed to build GraphQLRequest",
                 exception
             )
+        }
+    }
+    
+    private fun <T : Model, P : ModelPath<T>> createApiSelectionSet(
+        modelClass: Class<T>, 
+        operationType: Operation, 
+        includes: ((P) -> List<PropertyContainerPath>)
+    ): SelectionSet {
+        includes(ModelPath.getRootPath(modelClass)).let { associations ->
+            return SelectionSet.builder()
+                .modelClass(modelClass)
+                .operation(operationType)
+                .requestOptions(ApiGraphQLRequestOptions())
+                .includeAssociations(associations)
+                .build()
         }
     }
 }

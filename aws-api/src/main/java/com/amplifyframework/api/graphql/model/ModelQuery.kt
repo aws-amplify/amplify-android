@@ -23,7 +23,6 @@ import com.amplifyframework.core.model.ModelPath
 import com.amplifyframework.core.model.PropertyContainerPath
 import com.amplifyframework.core.model.query.predicate.QueryPredicate
 import com.amplifyframework.core.model.query.predicate.QueryPredicates
-import java.util.Objects
 
 /**
  * Helper class that provides methods to create [GraphQLRequest] for queries
@@ -45,7 +44,7 @@ object ModelQuery {
         modelType: Class<M>,
         modelId: String,
     ): GraphQLRequest<M> {
-        return AppSyncGraphQLRequestFactory.buildQuery(modelType, modelId, null)
+        return AppSyncGraphQLRequestFactory.buildQuery(modelType, modelId)
     }
 
     /**
@@ -54,8 +53,9 @@ object ModelQuery {
      * variables based on given `modelId`.
      * @param modelType the model class.
      * @param modelId the model identifier.
-     * @param includes list of associations that should be included in the selection set
+     * @param includes lambda returning list of associations that should be included in the selection set
      * @param <M> the concrete model type.
+     * @param <P> the concrete model path for the M model type
      * @return a valid [GraphQLRequest] instance.
     </M> */
     @JvmStatic
@@ -81,7 +81,7 @@ object ModelQuery {
         modelType: Class<M>,
         modelIdentifier: ModelIdentifier<M>
     ): GraphQLRequest<M> {
-        return AppSyncGraphQLRequestFactory.buildQuery(modelType, modelIdentifier, null)
+        return AppSyncGraphQLRequestFactory.buildQuery(modelType, modelIdentifier)
     }
 
     /**
@@ -90,8 +90,9 @@ object ModelQuery {
      * variables based on given `modelIdentifier`.
      * @param modelType the model class.
      * @param modelIdentifier the model identifier.
-     * @param includes list of associations that should be included in the selection set
+     * @param includes lambda returning list of associations that should be included in the selection set
      * @param <M> the concrete model type.
+     * @param <P> the concrete model path for the M model type
      * @return a valid [GraphQLRequest] instance.
     </M> */
     @JvmStatic
@@ -117,9 +118,27 @@ object ModelQuery {
         modelType: Class<M>,
         predicate: QueryPredicate = QueryPredicates.all()
     ): GraphQLRequest<PaginatedResult<M>> {
-        Objects.requireNonNull(modelType)
-        Objects.requireNonNull(predicate)
         return AppSyncGraphQLRequestFactory.buildQuery(modelType, predicate)
+    }
+
+    /**
+     * Creates a [GraphQLRequest] that represents a query that expects multiple values as a result.
+     * The request will be created with the correct document based on the model schema and variables
+     * for filtering based on the given predicate.
+     * @param modelType the model class.
+     * @param predicate the predicate for filtering.
+     * @param includes lambda returning list of associations that should be included in the selection set
+     * @param <M> the concrete model type.
+     * @param <P> the concrete model path for the M model type
+     * @return a valid [GraphQLRequest] instance.
+    </M> */
+    @JvmStatic
+    fun <M : Model, P : ModelPath<M>> list(
+        modelType: Class<M>,
+        predicate: QueryPredicate = QueryPredicates.all(),
+        includes: ((P) -> List<PropertyContainerPath>)
+    ): GraphQLRequest<PaginatedResult<M>> {
+        return AppSyncGraphQLRequestFactory.buildQuery(modelType, predicate, includes)
     }
 
     /**
@@ -133,6 +152,24 @@ object ModelQuery {
     @JvmStatic
     fun <M : Model> list(modelType: Class<M>): GraphQLRequest<PaginatedResult<M>> {
         return list(modelType, QueryPredicates.all())
+    }
+
+    /**
+     * Creates a [GraphQLRequest] that represents a query that expects multiple values as a result.
+     * The request will be created with the correct document based on the model schema.
+     * @param modelType the model class.
+     * @param includes lambda returning list of associations that should be included in the selection set
+     * @param <M> the concrete model type.
+     * @param <P> the concrete model path for the M model type
+     * @return a valid [GraphQLRequest] instance.
+     * @see .list
+    </M> */
+    @JvmStatic
+    fun <M : Model, P : ModelPath<M>> list(
+        modelType: Class<M>,
+        includes: ((P) -> List<PropertyContainerPath>)
+    ): GraphQLRequest<PaginatedResult<M>> {
+        return list(modelType, QueryPredicates.all(), includes)
     }
 
     /**
@@ -165,6 +202,34 @@ object ModelQuery {
      * within a certain range (i.e. paginated).
      *
      * The request will be created with the correct document based on the model schema and variables
+     * for filtering based on the given predicate and pagination.
+     *
+     * @param modelType the model class.
+     * @param predicate the predicate for filtering.
+     * @param pagination the pagination settings.
+     * @param includes lambda returning list of associations that should be included in the selection set
+     * @param <M> the concrete model type.
+     * @param <P> the concrete model path for the M model type
+     * @return a valid [GraphQLRequest] instance.
+     * @see ModelPagination.firstPage
+    </M> */
+    @JvmStatic
+    fun <M : Model, P : ModelPath<M>> list(
+        modelType: Class<M>,
+        predicate: QueryPredicate,
+        pagination: ModelPagination,
+        includes: ((P) -> List<PropertyContainerPath>)
+    ): GraphQLRequest<PaginatedResult<M>> {
+        return AppSyncGraphQLRequestFactory.buildPaginatedResultQuery(
+            modelType, predicate, pagination.limit, includes
+        )
+    }
+
+    /**
+     * Creates a [GraphQLRequest] that represents a query that expects multiple values as a result
+     * within a certain range (i.e. paginated).
+     *
+     * The request will be created with the correct document based on the model schema and variables
      * for pagination based on the given [ModelPagination].
      *
      * @param modelType the model class.
@@ -180,6 +245,32 @@ object ModelQuery {
     ): GraphQLRequest<PaginatedResult<M>> {
         return AppSyncGraphQLRequestFactory.buildPaginatedResultQuery(
             modelType, QueryPredicates.all(), pagination.limit
+        )
+    }
+
+    /**
+     * Creates a [GraphQLRequest] that represents a query that expects multiple values as a result
+     * within a certain range (i.e. paginated).
+     *
+     * The request will be created with the correct document based on the model schema and variables
+     * for pagination based on the given [ModelPagination].
+     *
+     * @param modelType the model class.
+     * @param pagination the pagination settings.
+     * @param includes lambda returning list of associations that should be included in the selection set
+     * @param <M> the concrete model type.
+     * @param <P> the concrete model path for the M model type
+     * @return a valid [GraphQLRequest] instance.
+     * @see ModelPagination.firstPage
+    </M> */
+    @JvmStatic
+    fun <M : Model, P : ModelPath<M>> list(
+        modelType: Class<M>,
+        pagination: ModelPagination,
+        includes: ((P) -> List<PropertyContainerPath>)
+    ): GraphQLRequest<PaginatedResult<M>> {
+        return AppSyncGraphQLRequestFactory.buildPaginatedResultQuery(
+            modelType, QueryPredicates.all(), pagination.limit, includes
         )
     }
 }
