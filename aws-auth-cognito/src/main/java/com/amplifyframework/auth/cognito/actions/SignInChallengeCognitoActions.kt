@@ -56,7 +56,6 @@ internal object SignInChallengeCognitoActions : SignInChallengeActions {
 
             val encodedContextData = username?.let { getUserContextData(it) }
             val pinpointEndpointId = getPinpointEndpointId()
-            logger.verbose("SRP Session: ${challenge.session}")
             val response = cognitoAuthService.cognitoIdentityProviderClient?.respondToAuthChallenge {
                 clientId = configuration.userPool?.appClient
                 challengeName = ChallengeNameType.fromValue(challenge.challengeName)

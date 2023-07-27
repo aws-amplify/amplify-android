@@ -210,7 +210,6 @@ internal object SRPCognitoActions : SRPActions {
                     encodedContextData?.let { userContextData { encodedData = it } }
                 }
                 if (response != null) {
-                    logger.verbose("SRP Session: ${response.session}")
                     SignInChallengeHelper.evaluateNextStep(
                         username,
                         response.challengeName,
