@@ -33,7 +33,7 @@ object ModelMutation {
      * @param <M> the model concrete type.
      * @return a valid `GraphQLRequest` instance.
      * @see MutationType.CREATE
-    </M> */
+     </M> */
     @JvmStatic
     fun <M : Model> create(model: M): GraphQLRequest<M> {
         return buildMutation(model, QueryPredicates.all(), MutationType.CREATE)
@@ -47,7 +47,7 @@ object ModelMutation {
      * @param <P> the concrete model path for the M model type
      * @return a valid `GraphQLRequest` instance.
      * @see MutationType.CREATE
-    </M> */
+     </M> */
     @JvmStatic
     fun <M : Model, P : ModelPath<M>> create(
         model: M,
@@ -63,7 +63,7 @@ object ModelMutation {
      * @param <M> the model concrete type.
      * @return a valid `GraphQLRequest` instance.
      * @see MutationType.UPDATE
-    </M> */
+     </M> */
     fun <M : Model> update(
         model: M,
         predicate: QueryPredicate
@@ -80,7 +80,7 @@ object ModelMutation {
      * @param <P> the concrete model path for the M model type
      * @return a valid `GraphQLRequest` instance.
      * @see MutationType.UPDATE
-    </M> */
+     </M> */
     @JvmStatic
     fun <M : Model, P : ModelPath<M>> update(
         model: M,
@@ -98,7 +98,7 @@ object ModelMutation {
      * @see MutationType.UPDATE
      *
      * @see .update
-    </M> */
+     </M> */
     @JvmStatic
     fun <M : Model> update(model: M): GraphQLRequest<M> {
         return buildMutation(model, QueryPredicates.all(), MutationType.UPDATE)
@@ -112,7 +112,7 @@ object ModelMutation {
      * @param <P> the concrete model path for the M model type
      * @return a valid `GraphQLRequest` instance.
      * @see MutationType.UPDATE
-    </M> */
+     </M> */
     @JvmStatic
     fun <M : Model, P : ModelPath<M>> update(
         model: M,
@@ -128,7 +128,7 @@ object ModelMutation {
      * @param <M> the model concrete type.
      * @return a valid `GraphQLRequest` instance.
      * @see MutationType.DELETE
-    </M> */
+     </M> */
     fun <M : Model> delete(
         model: M,
         predicate: QueryPredicate
@@ -145,7 +145,7 @@ object ModelMutation {
      * @param <P> the concrete model path for the M model type
      * @return a valid `GraphQLRequest` instance.
      * @see MutationType.DELETE
-    </M> */
+     </M> */
     @JvmStatic
     fun <M : Model, P : ModelPath<M>> delete(
         model: M,
@@ -163,7 +163,7 @@ object ModelMutation {
      * @see MutationType.DELETE
      *
      * @see .delete
-    </M> */
+     </M> */
     @JvmStatic
     fun <M : Model> delete(model: M): GraphQLRequest<M> {
         return buildMutation(model, QueryPredicates.all(), MutationType.DELETE)
@@ -177,7 +177,7 @@ object ModelMutation {
      * @param <P> the concrete model path for the M model type
      * @return a valid `GraphQLRequest` instance.
      * @see MutationType.DELETE
-    </M> */
+     </M> */
     @JvmStatic
     fun <M : Model, P : ModelPath<M>> delete(
         model: M,

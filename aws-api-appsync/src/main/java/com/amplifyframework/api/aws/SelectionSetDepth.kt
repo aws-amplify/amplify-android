@@ -48,6 +48,5 @@ class SelectionSetDepth(private val maxDepth: Int = 2) : GraphQLRequestOptions {
 
         @JvmStatic
         fun onlyIncluded() = SelectionSetDepth(maxDepth = 0)
-
     }
 }

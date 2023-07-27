@@ -16,7 +16,6 @@
 package com.amplifyframework.core.model
 
 import com.amplifyframework.AmplifyException
-import com.amplifyframework.api.ApiException
 import com.amplifyframework.core.Consumer
 
 interface LazyList<M : Model> {

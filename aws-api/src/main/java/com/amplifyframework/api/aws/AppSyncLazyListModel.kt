@@ -21,11 +21,11 @@ import com.amplifyframework.api.ApiException
 import com.amplifyframework.api.graphql.GraphQLRequest
 import com.amplifyframework.api.graphql.GraphQLResponse
 import com.amplifyframework.api.graphql.PaginatedResult
+import com.amplifyframework.core.Amplify as coreAmplify
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.core.model.LazyList
 import com.amplifyframework.core.model.Model
 import com.amplifyframework.kotlin.core.Amplify
-import com.amplifyframework.core.Amplify as coreAmplify
 
 @InternalAmplifyApi
 class AppSyncLazyListModel<M : Model>(
@@ -71,7 +71,7 @@ class AppSyncLazyListModel<M : Model>(
     override fun hasNextPage(): Boolean {
         return paginatedResult?.hasNextResult() ?: true
     }
-    
+
     private fun createGraphQLRequest(): GraphQLRequest<PaginatedResult<M>> {
         return if (paginatedResult != null) {
             paginatedResult!!.requestForNextResult

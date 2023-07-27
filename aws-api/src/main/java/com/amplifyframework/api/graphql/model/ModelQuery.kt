@@ -38,7 +38,7 @@ object ModelQuery {
      * @param modelId the model identifier.
      * @param <M> the concrete model type.
      * @return a valid [GraphQLRequest] instance.
-    </M> */
+     </M> */
     @JvmStatic
     operator fun <M : Model> get(
         modelType: Class<M>,
@@ -57,7 +57,7 @@ object ModelQuery {
      * @param <M> the concrete model type.
      * @param <P> the concrete model path for the M model type
      * @return a valid [GraphQLRequest] instance.
-    </M> */
+     </M> */
     @JvmStatic
     operator fun <M : Model, P : ModelPath<M>> get(
         modelType: Class<M>,
@@ -75,7 +75,7 @@ object ModelQuery {
      * @param modelIdentifier the model identifier.
      * @param <M> the concrete model type.
      * @return a valid [GraphQLRequest] instance.
-    </M> */
+     </M> */
     @JvmStatic
     operator fun <M : Model> get(
         modelType: Class<M>,
@@ -94,7 +94,7 @@ object ModelQuery {
      * @param <M> the concrete model type.
      * @param <P> the concrete model path for the M model type
      * @return a valid [GraphQLRequest] instance.
-    </M> */
+     </M> */
     @JvmStatic
     operator fun <M : Model, P : ModelPath<M>> get(
         modelType: Class<M>,
@@ -112,7 +112,7 @@ object ModelQuery {
      * @param predicate the predicate for filtering.
      * @param <M> the concrete model type.
      * @return a valid [GraphQLRequest] instance.
-    </M> */
+     </M> */
     @JvmStatic
     fun <M : Model> list(
         modelType: Class<M>,
@@ -131,7 +131,7 @@ object ModelQuery {
      * @param <M> the concrete model type.
      * @param <P> the concrete model path for the M model type
      * @return a valid [GraphQLRequest] instance.
-    </M> */
+     </M> */
     @JvmStatic
     fun <M : Model, P : ModelPath<M>> list(
         modelType: Class<M>,
@@ -148,7 +148,7 @@ object ModelQuery {
      * @param <M> the concrete model type.
      * @return a valid [GraphQLRequest] instance.
      * @see .list
-    </M> */
+     </M> */
     @JvmStatic
     fun <M : Model> list(modelType: Class<M>): GraphQLRequest<PaginatedResult<M>> {
         return list(modelType, QueryPredicates.all())
@@ -163,7 +163,7 @@ object ModelQuery {
      * @param <P> the concrete model path for the M model type
      * @return a valid [GraphQLRequest] instance.
      * @see .list
-    </M> */
+     </M> */
     @JvmStatic
     fun <M : Model, P : ModelPath<M>> list(
         modelType: Class<M>,
@@ -185,7 +185,7 @@ object ModelQuery {
      * @param <M> the concrete model type.
      * @return a valid [GraphQLRequest] instance.
      * @see ModelPagination.firstPage
-    </M> */
+     </M> */
     @JvmStatic
     fun <M : Model> list(
         modelType: Class<M>,
@@ -212,7 +212,7 @@ object ModelQuery {
      * @param <P> the concrete model path for the M model type
      * @return a valid [GraphQLRequest] instance.
      * @see ModelPagination.firstPage
-    </M> */
+     </M> */
     @JvmStatic
     fun <M : Model, P : ModelPath<M>> list(
         modelType: Class<M>,
@@ -237,7 +237,7 @@ object ModelQuery {
      * @param <M> the concrete model type.
      * @return a valid [GraphQLRequest] instance.
      * @see ModelPagination.firstPage
-    </M> */
+     </M> */
     @JvmStatic
     fun <M : Model> list(
         modelType: Class<M>,
@@ -262,7 +262,7 @@ object ModelQuery {
      * @param <P> the concrete model path for the M model type
      * @return a valid [GraphQLRequest] instance.
      * @see ModelPagination.firstPage
-    </M> */
+     </M> */
     @JvmStatic
     fun <M : Model, P : ModelPath<M>> list(
         modelType: Class<M>,

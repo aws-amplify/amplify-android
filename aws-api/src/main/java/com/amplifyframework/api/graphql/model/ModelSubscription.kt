@@ -32,7 +32,7 @@ object ModelSubscription {
      * @param type the subscription type.
      * @param <M> the concrete type of the model.
      * @return a valid [GraphQLRequest] instance.
-    </M> */
+     </M> */
     fun <M : Model> of(
         modelType: Class<M>,
         type: SubscriptionType,
@@ -48,7 +48,7 @@ object ModelSubscription {
      * @param <M> the concrete type of the model.
      * @param <P> the concrete model path for the M model type
      * @return a valid [GraphQLRequest] instance.
-    </M> */
+     </M> */
     fun <M : Model, P : ModelPath<M>> of(
         modelType: Class<M>,
         type: SubscriptionType,
@@ -63,7 +63,7 @@ object ModelSubscription {
      * @param <M> the concrete type of the model.
      * @return a valid [GraphQLRequest] instance.
      * @see .of
-    </M> */
+     </M> */
     @JvmStatic
     fun <M : Model> onCreate(modelType: Class<M>): GraphQLRequest<M> {
         return of(modelType, SubscriptionType.ON_CREATE)
@@ -77,7 +77,7 @@ object ModelSubscription {
      * @param <P> the concrete model path for the M model type
      * @return a valid [GraphQLRequest] instance.
      * @see .of
-    </M> */
+     </M> */
     @JvmStatic
     fun <M : Model, P : ModelPath<M>> onCreate(
         modelType: Class<M>,
@@ -92,7 +92,7 @@ object ModelSubscription {
      * @param <M> the concrete type of the model.
      * @return a valid [GraphQLRequest] instance.
      * @see .of
-    </M> */
+     </M> */
     fun <M : Model> onDelete(modelType: Class<M>): GraphQLRequest<M> {
         return of(modelType, SubscriptionType.ON_DELETE)
     }
@@ -105,7 +105,7 @@ object ModelSubscription {
      * @param <P> the concrete model path for the M model type
      * @return a valid [GraphQLRequest] instance.
      * @see .of
-    </M> */
+     </M> */
     @JvmStatic
     fun <M : Model, P : ModelPath<M>> onDelete(
         modelType: Class<M>,
@@ -114,14 +114,13 @@ object ModelSubscription {
         return of(modelType, SubscriptionType.ON_DELETE, includes)
     }
 
-
     /**
      * Creates a subscription request of type [SubscriptionType.ON_UPDATE].
      * @param modelType the model class.
      * @param <M> the concrete type of the model.
      * @return a valid [GraphQLRequest] instance.
      * @see .of
-    </M> */
+     </M> */
     fun <M : Model> onUpdate(modelType: Class<M>): GraphQLRequest<M> {
         return of(modelType, SubscriptionType.ON_UPDATE)
     }
@@ -134,7 +133,7 @@ object ModelSubscription {
      * @param <P> the concrete model path for the M model type
      * @return a valid [GraphQLRequest] instance.
      * @see .of
-    </M> */
+     </M> */
     @JvmStatic
     fun <M : Model, P : ModelPath<M>> onUpdate(
         modelType: Class<M>,

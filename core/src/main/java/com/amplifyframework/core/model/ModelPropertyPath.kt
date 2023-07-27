@@ -77,7 +77,6 @@ interface PropertyContainerPath : PropertyPath {
      *
      */
     fun getModelType(): Class<Model>
-
 }
 
 /**
@@ -152,7 +151,7 @@ open class ModelPath<ModelType : Model>(
          */
         @Throws(ModelException.PropertyPathNotFound::class)
         @InternalAmplifyApi
-        fun <M : Model, P : ModelPath<M>>getRootPath(clazz: Class<M>): P {
+        fun <M : Model, P : ModelPath<M>> getRootPath(clazz: Class<M>): P {
             val field = try {
                 clazz.getDeclaredField("rootPath")
             } catch (e: NoSuchFieldException) {

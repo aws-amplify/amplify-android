@@ -20,11 +20,11 @@ import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.api.ApiException
 import com.amplifyframework.api.graphql.GraphQLResponse
 import com.amplifyframework.api.graphql.PaginatedResult
+import com.amplifyframework.core.Amplify as coreAmplify
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.core.model.LazyModel
 import com.amplifyframework.core.model.Model
 import com.amplifyframework.kotlin.core.Amplify
-import com.amplifyframework.core.Amplify as coreAmplify
 
 @InternalAmplifyApi
 class AppSyncLazyModel<M : Model>(
@@ -46,7 +46,7 @@ class AppSyncLazyModel<M : Model>(
 
     override suspend fun getModel(): M? {
         if (loadedValue) {
-            return  value
+            return value
         }
         try {
             val resultIterator = Amplify.API.query(

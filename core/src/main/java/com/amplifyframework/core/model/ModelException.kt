@@ -31,5 +31,4 @@ sealed class ModelException(
         "Check if the model types were generated with the latest Amplify CLI and try again",
         cause
     )
-
 }

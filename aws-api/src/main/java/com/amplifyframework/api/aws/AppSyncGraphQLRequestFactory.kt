@@ -49,7 +49,7 @@ object AppSyncGraphQLRequestFactory {
      * @param <T> the concrete model type.
      * @return a valid [GraphQLRequest] instance.
      * @throws IllegalStateException when the model schema does not contain the expected information.
-    </T></R> */
+     </T></R> */
     @JvmStatic
     fun <R, T : Model> buildQuery(
         modelClass: Class<T>,
@@ -82,7 +82,7 @@ object AppSyncGraphQLRequestFactory {
      * @param <P> the concrete model path for the M model type
      * @return a valid [GraphQLRequest] instance.
      * @throws IllegalStateException when the model schema does not contain the expected information.
-    </T></R> */
+     </T></R> */
     @JvmStatic
     fun <R, T : Model, P : ModelPath<T>> buildQuery(
         modelClass: Class<T>,
@@ -114,7 +114,7 @@ object AppSyncGraphQLRequestFactory {
      * @param <T> the concrete model type.
      * @return a valid [GraphQLRequest] instance.
      * @throws IllegalStateException when the model schema does not contain the expected information.
-    </T></R> */
+     </T></R> */
     @JvmStatic
     fun <R, T : Model> buildQuery(
         modelClass: Class<T>,
@@ -134,7 +134,7 @@ object AppSyncGraphQLRequestFactory {
                 val value = if (i == 0) {
                     modelIdentifier.key().toString()
                 } else {
-                    sortedKeys[i-1]
+                    sortedKeys[i - 1]
                 }
 
                 GraphQLRequestVariable(key, value, targetTypeString)
@@ -160,7 +160,7 @@ object AppSyncGraphQLRequestFactory {
      * @param <P> the concrete model path for the M model type
      * @return a valid [GraphQLRequest] instance.
      * @throws IllegalStateException when the model schema does not contain the expected information.
-    </T></R> */
+     </T></R> */
     @JvmStatic
     fun <R, T : Model, P : ModelPath<T>> buildQuery(
         modelClass: Class<T>,
@@ -181,7 +181,7 @@ object AppSyncGraphQLRequestFactory {
                 val value = if (i == 0) {
                     modelIdentifier.key().toString()
                 } else {
-                    sortedKeys[i-1]
+                    sortedKeys[i - 1]
                 }
 
                 GraphQLRequestVariable(key, value, targetTypeString)
@@ -209,10 +209,10 @@ object AppSyncGraphQLRequestFactory {
             for ((key, value, type) in variables) {
                 builder.variable(key, type, value)
             }
-            
+
             val customSelectionSet = includes?.let { createApiSelectionSet(modelClass, QueryType.GET, it) }
             customSelectionSet?.let { builder.selectionSet(it) }
-            
+
             builder.build()
         } catch (exception: AmplifyException) {
             throw IllegalStateException(
@@ -232,7 +232,7 @@ object AppSyncGraphQLRequestFactory {
      * @param <T> the concrete model type.
      * @return a valid [GraphQLRequest] instance.
      * @throws IllegalStateException when the model schema does not contain the expected information.
-    </T></R> */
+     </T></R> */
     @JvmStatic
     fun <R, T : Model> buildQuery(
         modelClass: Class<T>,
@@ -254,13 +254,13 @@ object AppSyncGraphQLRequestFactory {
      * @param <P> the concrete model path for the M model type
      * @return a valid [GraphQLRequest] instance.
      * @throws IllegalStateException when the model schema does not contain the expected information.
-    </T></R> */
+     </T></R> */
     @JvmStatic
     fun <R, T : Model, P : ModelPath<T>> buildQuery(
         modelClass: Class<T>,
         predicate: QueryPredicate,
         includes: ((P) -> List<PropertyContainerPath>),
-        ): GraphQLRequest<R> {
+    ): GraphQLRequest<R> {
         val dataType = TypeMaker.getParameterizedType(PaginatedResult::class.java, modelClass)
         return buildListQueryInternal(modelClass, predicate, DEFAULT_QUERY_LIMIT, dataType, includes)
     }
@@ -278,7 +278,7 @@ object AppSyncGraphQLRequestFactory {
      * @param <R> the response type.
      * @param <T> the concrete model type.
      * @return a valid [GraphQLRequest] instance.
-    </T></R> */
+     </T></R> */
     @JvmStatic
     fun <R, T : Model> buildPaginatedResultQuery(
         modelClass: Class<T>,
@@ -304,14 +304,14 @@ object AppSyncGraphQLRequestFactory {
      * @param <T> the concrete model type.
      * @param <P> the concrete model path for the M model type
      * @return a valid [GraphQLRequest] instance.
-    </T></R> */
+     </T></R> */
     @JvmStatic
     fun <R, T : Model, P : ModelPath<T>> buildPaginatedResultQuery(
         modelClass: Class<T>,
         predicate: QueryPredicate,
         limit: Int,
         includes: ((P) -> List<PropertyContainerPath>),
-        ): GraphQLRequest<R> {
+    ): GraphQLRequest<R> {
         val responseType = TypeMaker.getParameterizedType(PaginatedResult::class.java, modelClass)
         return buildListQueryInternal(modelClass, predicate, limit, responseType, includes)
     }
@@ -332,7 +332,7 @@ object AppSyncGraphQLRequestFactory {
      * @param <T> the concrete model type.
      * @param <P> the concrete model path for the M model type
      * @return a valid [GraphQLRequest] instance.
-    </T></R> */
+     </T></R> */
     private fun <R, T : Model, P : ModelPath<T>> buildListQueryInternal(
         modelClass: Class<T>,
         predicate: QueryPredicate,
@@ -380,7 +380,7 @@ object AppSyncGraphQLRequestFactory {
      * @param <T> the concrete model type.
      * @return a valid [GraphQLRequest] instance.
      * @throws IllegalStateException when the model schema does not contain the expected information.
-    </T></R> */
+     </T></R> */
     @JvmStatic
     fun <R, T : Model> buildMutation(
         model: T,
@@ -401,7 +401,7 @@ object AppSyncGraphQLRequestFactory {
      * @param <P> the concrete model path for the M model type
      * @return a valid [GraphQLRequest] instance.
      * @throws IllegalStateException when the model schema does not contain the expected information.
-    </T></R> */
+     </T></R> */
     @JvmStatic
     fun <R, T : Model, P : ModelPath<T>> buildMutation(
         model: T,
@@ -428,8 +428,8 @@ object AppSyncGraphQLRequestFactory {
                 .requestOptions(ApiGraphQLRequestOptions())
                 .responseType(modelClass)
             val inputType = Casing.capitalize(type.toString()) +
-                    Casing.capitalizeFirst(graphQlTypeName) +
-                    "Input!" // CreateTodoInput
+                Casing.capitalizeFirst(graphQlTypeName) +
+                "Input!" // CreateTodoInput
             if (MutationType.DELETE == type) {
                 builder.variable(
                     "input",
@@ -445,8 +445,8 @@ object AppSyncGraphQLRequestFactory {
             }
             if (QueryPredicates.all() != predicate) {
                 val conditionType = "Model" +
-                        Casing.capitalizeFirst(graphQlTypeName) +
-                        "ConditionInput"
+                    Casing.capitalizeFirst(graphQlTypeName) +
+                    "ConditionInput"
                 builder.variable(
                     "condition", conditionType, GraphQLRequestHelper.parsePredicate(predicate)
                 )
@@ -464,7 +464,6 @@ object AppSyncGraphQLRequestFactory {
         }
     }
 
-
     /**
      * Creates a [GraphQLRequest] that represents a subscription of a given type.
      * @param modelClass the model type.
@@ -473,7 +472,7 @@ object AppSyncGraphQLRequestFactory {
      * @param <T> the concrete model type.
      * @return a valid [GraphQLRequest] instance.
      * @throws IllegalStateException when the model schema does not contain the expected information.
-    </T></R> */
+     </T></R> */
     @JvmStatic
     fun <R, T : Model> buildSubscription(
         modelClass: Class<T>,
@@ -492,7 +491,7 @@ object AppSyncGraphQLRequestFactory {
      * @param <P> the concrete model path for the M model type
      * @return a valid [GraphQLRequest] instance.
      * @throws IllegalStateException when the model schema does not contain the expected information.
-    </T></R> */
+     </T></R> */
     @JvmStatic
     fun <R, T : Model, P : ModelPath<T>> buildSubscription(
         modelClass: Class<T>,
@@ -525,10 +524,10 @@ object AppSyncGraphQLRequestFactory {
             )
         }
     }
-    
+
     private fun <T : Model, P : ModelPath<T>> createApiSelectionSet(
-        modelClass: Class<T>, 
-        operationType: Operation, 
+        modelClass: Class<T>,
+        operationType: Operation,
         includes: ((P) -> List<PropertyContainerPath>)
     ): SelectionSet {
         includes(ModelPath.getRootPath(modelClass)).let { associations ->

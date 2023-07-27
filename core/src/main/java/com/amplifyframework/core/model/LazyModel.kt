@@ -21,7 +21,7 @@ import com.amplifyframework.core.Consumer
 
 interface LazyModel<M : Model> {
     fun getValue(): M?
-    
+
     @InternalAmplifyApi
     fun getIdentifier(): Map<String, Any>
 
@@ -30,5 +30,3 @@ interface LazyModel<M : Model> {
 
     fun getModel(onSuccess: (M?) -> Unit, onError: Consumer<AmplifyException>)
 }
-
-
