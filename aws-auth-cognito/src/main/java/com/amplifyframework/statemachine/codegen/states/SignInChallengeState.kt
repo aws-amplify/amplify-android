@@ -67,9 +67,6 @@ internal sealed class SignInChallengeState : State {
                     else -> defaultResolution
                 }
                 is Verifying -> when (challengeEvent) {
-                    is SignInChallengeEvent.EventType.WaitForAnswer -> {
-                        StateResolution(WaitingForAnswer(challengeEvent.challenge))
-                    }
                     is SignInChallengeEvent.EventType.Verified -> StateResolution(Verified())
                     is SignInChallengeEvent.EventType.ThrowError -> {
                         StateResolution(Error(challengeEvent.exception, challengeEvent.challenge, true), listOf())

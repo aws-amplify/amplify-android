@@ -90,6 +90,8 @@ import com.amplifyframework.auth.cognito.result.RevokeTokenError
 import com.amplifyframework.auth.cognito.usecases.ResetPasswordUseCase
 import com.amplifyframework.auth.exceptions.ConfigurationException
 import com.amplifyframework.auth.exceptions.InvalidStateException
+import com.amplifyframework.auth.exceptions.NotAuthorizedException
+import com.amplifyframework.auth.exceptions.ServiceException
 import com.amplifyframework.auth.exceptions.SessionExpiredException
 import com.amplifyframework.auth.exceptions.SignedOutException
 import com.amplifyframework.auth.exceptions.UnknownException
@@ -126,6 +128,7 @@ import com.amplifyframework.hub.HubEvent
 import com.amplifyframework.logging.Logger
 import com.amplifyframework.statemachine.StateChangeListenerToken
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
+import com.amplifyframework.statemachine.codegen.data.AuthChallenge
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.data.FederatedToken
@@ -553,6 +556,7 @@ internal class RealAWSCognitoAuthPlugin(
                         val signInState = authNState.signInState
                         val srpSignInState = (signInState as? SignInState.SigningInWithSRP)?.srpSignInState
                         val challengeState = (signInState as? SignInState.ResolvingChallenge)?.challengeState
+                        val totpSetupState = (signInState as? SignInState.ResolvingTOTPSetup)?.setupTOTPState
                         when {
                             srpSignInState is SRPSignInState.Error -> {
                                 authStateMachine.cancel(token)
@@ -578,11 +582,11 @@ internal class RealAWSCognitoAuthPlugin(
                                         ChallengeNameType.MfaSetup.value,
                                         null,
                                         null,
-                                        null,
+                                        null
                                     ),
                                     onSuccess,
                                     onError,
-                                    totpSetupState.signInTOTPSetupData,
+                                    totpSetupState.signInTOTPSetupData
                                 )
                             }
                         }
@@ -641,28 +645,26 @@ internal class RealAWSCognitoAuthPlugin(
             if (signInState is SignInState.ResolvingChallenge) {
                 when (signInState.challengeState) {
                     is SignInChallengeState.WaitingForAnswer, is SignInChallengeState.Error -> {
-                        _confirmSignIn(challengeResponse, options, onSuccess, onError)
+                        _confirmSignIn(signInState, challengeResponse, options, onSuccess, onError)
                     }
                     else -> {
                         onError.accept(InvalidStateException())
                     }
                 }
             }
-            if (signInState is SignInState.ResolvingTOTPSetup ) {
+            if (signInState is SignInState.ResolvingTOTPSetup) {
                 when (signInState.setupTOTPState) {
                     is SetupTOTPState.WaitingForAnswer -> {
-                        _confirmSignIn(challengeResponse, options, onSuccess, onError)
+                        _confirmSignIn(signInState, challengeResponse, options, onSuccess, onError)
                     }
-
                     else -> onError.accept(InvalidStateException())
                 }
-            } else {
-                onError.accept(InvalidStateException())
             }
         }
     }
 
     private fun _confirmSignIn(
+        signInState: SignInState,
         challengeResponse: String,
         options: AuthConfirmSignInOptions,
         onSuccess: Consumer<AuthSignInResult>,
@@ -690,7 +692,8 @@ internal class RealAWSCognitoAuthPlugin(
                         authStateMachine.cancel(token)
                         onError.accept(
                             CognitoAuthExceptionConverter.lookup(
-                                signInState.exception, "Confirm Sign in failed."
+                                signInState.exception,
+                                "Confirm Sign in failed."
                             )
                         )
                     }
@@ -699,16 +702,23 @@ internal class RealAWSCognitoAuthPlugin(
                         (signInState.challengeState as SignInChallengeState.WaitingForAnswer).hasNewResponse -> {
                         authStateMachine.cancel(token)
                         val signInChallengeState = signInState.challengeState as SignInChallengeState.WaitingForAnswer
-                        var signInStep = AuthSignInStep.CONFIRM_SIGN_IN_WITH_CUSTOM_CHALLENGE
-                        if (signInChallengeState.challenge.challengeName == "SMS_MFA") {
-                            signInStep = AuthSignInStep.CONFIRM_SIGN_IN_WITH_SMS_MFA_CODE
-                        } else if (signInChallengeState.challenge.challengeName == "NEW_PASSWORD_REQUIRED") {
-                            signInStep = AuthSignInStep.CONFIRM_SIGN_IN_WITH_NEW_PASSWORD
+                        val signInStep = when (signInChallengeState.challenge.challengeName) {
+                            "SMS_MFA" -> AuthSignInStep.CONFIRM_SIGN_IN_WITH_SMS_MFA_CODE
+                            "NEW_PASSWORD_REQUIRED" -> AuthSignInStep.CONFIRM_SIGN_IN_WITH_NEW_PASSWORD
+                            "SOFTWARE_TOKEN_MFA" -> AuthSignInStep.CONFIRM_SIGN_IN_WITH_TOTP_CODE
+                            "SELECT_MFA_TYPE" -> AuthSignInStep.CONTINUE_SIGN_IN_WITH_MFA_SELECTION
+                            "MFA_SETUP" -> AuthSignInStep.CONTINUE_SIGN_IN_WITH_TOTP_SETUP
+                            else -> AuthSignInStep.CONFIRM_SIGN_IN_WITH_CUSTOM_CHALLENGE
                         }
-
                         val authSignInResult = AuthSignInResult(
                             false,
-                            AuthNextSignInStep(signInStep, signInChallengeState.challenge.parameters ?: mapOf(), null)
+                            AuthNextSignInStep(
+                                signInStep,
+                                signInChallengeState.challenge.parameters ?: mapOf(),
+                                null,
+                                null,
+                                null
+                            )
                         )
                         onSuccess.accept(authSignInResult)
                         (signInState.challengeState as SignInChallengeState.WaitingForAnswer).hasNewResponse = false
@@ -728,29 +738,38 @@ internal class RealAWSCognitoAuthPlugin(
                         )
                         (signInState.challengeState as SignInChallengeState.Error).hasNewResponse = false
                     }
-                    signInState is SignInState.ResolvingTOTPSetup -> {
-                        val setupData = (signInState.setupTOTPState as SetupTOTPState.WaitingForAnswer).signInTOTPSetupData
+                }
+            },
+            {
+                val awsCognitoConfirmSignInOptions = options as? AWSCognitoAuthConfirmSignInOptions
+                when (signInState) {
+                    is SignInState.ResolvingChallenge -> {
+                        val event = SignInChallengeEvent(
+                            SignInChallengeEvent.EventType.VerifyChallengeAnswer(
+                                challengeResponse,
+                                awsCognitoConfirmSignInOptions?.metadata ?: mapOf()
+                            )
+                        )
+                        authStateMachine.send(event)
+                    }
+
+                    is SignInState.ResolvingTOTPSetup -> {
+                        val setupData =
+                            (signInState.setupTOTPState as SetupTOTPState.WaitingForAnswer).signInTOTPSetupData
                         val event = SetupTOTPEvent(
                             SetupTOTPEvent.EventType.VerifyChallengeAnswer(
                                 challengeResponse,
                                 setupData.username,
                                 setupData.session,
-                                awsCognitoConfirmSignInOptions?.friendlyDeviceName,
-                            ),
+                                awsCognitoConfirmSignInOptions?.friendlyDeviceName
+                            )
                         )
                         authStateMachine.send(event)
                     }
+
+                    else -> onError.accept(InvalidStateException())
                 }
-            }, {
-            val awsCognitoConfirmSignInOptions = options as? AWSCognitoAuthConfirmSignInOptions
-            val event = SignInChallengeEvent(
-                SignInChallengeEvent.EventType.VerifyChallengeAnswer(
-                    challengeResponse,
-                    awsCognitoConfirmSignInOptions?.metadata ?: mapOf()
-                )
-            )
-            authStateMachine.send(event)
-        }
+            }
         )
     }
 
@@ -1047,7 +1066,9 @@ internal class RealAWSCognitoAuthPlugin(
                             )
                         }
                         _fetchAuthSession(onSuccess, onError)
-                    } else onSuccess.accept(credential.getCognitoSession())
+                    } else {
+                        onSuccess.accept(credential.getCognitoSession())
+                    }
                 }
                 is AuthorizationState.Error -> {
                     val error = authZState.exception
@@ -1264,7 +1285,8 @@ internal class RealAWSCognitoAuthPlugin(
                 val pinpointEndpointId = authEnvironment.getPinpointEndpointId()
 
                 ResetPasswordUseCase(
-                    cognitoIdentityProviderClient, appClient,
+                    cognitoIdentityProviderClient,
+                    appClient,
                     configuration.userPool?.appClientSecret
                 ).execute(
                     username,
@@ -1406,7 +1428,6 @@ internal class RealAWSCognitoAuthPlugin(
             when (authState.authNState) {
                 // Check if user signed in
                 is AuthenticationState.SignedIn -> {
-
                     GlobalScope.launch {
                         try {
                             val accessToken = getSession().userPoolTokensResult.value?.accessToken
@@ -1492,9 +1513,8 @@ internal class RealAWSCognitoAuthPlugin(
 
     private suspend fun updateUserAttributes(
         attributes: List<AuthUserAttribute>,
-        userAttributesOptionsMetadata: Map<String, String>?,
+        userAttributesOptionsMetadata: Map<String, String>?
     ): MutableMap<AuthUserAttributeKey, AuthUpdateAttributeResult> {
-
         return suspendCoroutine { continuation ->
 
             authStateMachine.getCurrentState { authState ->
@@ -1543,14 +1563,12 @@ internal class RealAWSCognitoAuthPlugin(
         response: UpdateUserAttributesResponse?,
         userAttributeList: List<AttributeType>
     ): MutableMap<AuthUserAttributeKey, AuthUpdateAttributeResult> {
-
         val finalResult = HashMap<AuthUserAttributeKey, AuthUpdateAttributeResult>()
 
         response?.codeDeliveryDetailsList?.let {
             val codeDeliveryDetailsList = it
             for (item in codeDeliveryDetailsList) {
                 item.attributeName?.let {
-
                     val deliveryMedium = AuthCodeDeliveryDetails.DeliveryMedium.fromString(item.deliveryMedium?.value)
                     val authCodeDeliveryDetails = AuthCodeDeliveryDetails(
                         item.destination.toString(),
@@ -1613,7 +1631,6 @@ internal class RealAWSCognitoAuthPlugin(
                                 getUserAttributeVerificationCodeResponse?.codeDeliveryDetails?.let {
                                     val codeDeliveryDetails = it
                                     codeDeliveryDetails.attributeName?.let {
-
                                         val deliveryMedium = AuthCodeDeliveryDetails.DeliveryMedium.fromString(
                                             codeDeliveryDetails.deliveryMedium?.value
                                         )
@@ -1923,7 +1940,6 @@ internal class RealAWSCognitoAuthPlugin(
                         authZState is AuthorizationState.SessionEstablished ||
                         authZState is AuthorizationState.Error
                     ) -> {
-
                     val existingCredential = when (authZState) {
                         is AuthorizationState.SessionEstablished -> authZState.amplifyCredential
                         is AuthorizationState.Error -> {
@@ -2060,7 +2076,7 @@ internal class RealAWSCognitoAuthPlugin(
                             onError.accept(
                                 CognitoAuthExceptionConverter.lookup(
                                     error,
-                                    "Cannot find a multi-factor authentication (MFA) method.",
+                                    "Cannot find a multi-factor authentication (MFA) method."
                                 )
                             )
                         }
@@ -2122,7 +2138,7 @@ internal class RealAWSCognitoAuthPlugin(
                             onError.accept(
                                 CognitoAuthExceptionConverter.lookup(
                                     error,
-                                    "Cannot update the MFA preferences",
+                                    "Cannot update the MFA preferences"
                                 )
                             )
                         }
@@ -2169,7 +2185,7 @@ internal class RealAWSCognitoAuthPlugin(
                             onError.accept(
                                 CognitoAuthExceptionConverter.lookup(
                                     error,
-                                    "Amazon Cognito cannot update the MFA preferences",
+                                    "Amazon Cognito cannot update the MFA preferences"
                                 )
                             )
                         }
@@ -2207,7 +2223,7 @@ internal class RealAWSCognitoAuthPlugin(
                             onError.accept(
                                 CognitoAuthExceptionConverter.lookup(
                                     error,
-                                    "Amazon Cognito cannot find a multi-factor authentication (MFA) method.",
+                                    "Amazon Cognito cannot find a multi-factor authentication (MFA) method."
                                 )
                             )
                         }
