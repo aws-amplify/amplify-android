@@ -81,6 +81,8 @@ import com.amplifyframework.auth.cognito.result.RevokeTokenError
 import com.amplifyframework.auth.cognito.usecases.ResetPasswordUseCase
 import com.amplifyframework.auth.exceptions.ConfigurationException
 import com.amplifyframework.auth.exceptions.InvalidStateException
+import com.amplifyframework.auth.exceptions.NotAuthorizedException
+import com.amplifyframework.auth.exceptions.ServiceException
 import com.amplifyframework.auth.exceptions.SessionExpiredException
 import com.amplifyframework.auth.exceptions.SignedOutException
 import com.amplifyframework.auth.exceptions.UnknownException
@@ -613,7 +615,7 @@ internal class RealAWSCognitoAuthPlugin(
             val signInState = (authNState as? AuthenticationState.SigningIn)?.signInState
             if (signInState is SignInState.ResolvingChallenge) {
                 when (signInState.challengeState) {
-                    is SignInChallengeState.WaitingForAnswer -> {
+                    is SignInChallengeState.WaitingForAnswer, is SignInChallengeState.Error -> {
                         _confirmSignIn(challengeResponse, options, onSuccess, onError)
                     }
                     else -> {
@@ -679,7 +681,8 @@ internal class RealAWSCognitoAuthPlugin(
                     }
 
                     signInState is SignInState.ResolvingChallenge &&
-                        signInState.challengeState is SignInChallengeState.Error -> {
+                        signInState.challengeState is SignInChallengeState.Error &&
+                        (signInState.challengeState as SignInChallengeState.Error).hasNewResponse -> {
                         authStateMachine.cancel(token)
                         onError.accept(
                             CognitoAuthExceptionConverter.lookup(
@@ -689,6 +692,7 @@ internal class RealAWSCognitoAuthPlugin(
                                 "Confirm Sign in failed."
                             )
                         )
+                        (signInState.challengeState as SignInChallengeState.Error).hasNewResponse = false
                     }
                 }
             }, {
@@ -1053,9 +1057,15 @@ internal class RealAWSCognitoAuthPlugin(
                                         onSuccess.accept(AmplifyCredential.Empty.getCognitoSession(error.exception))
                                         sendHubEvent(AuthChannelEventName.SESSION_EXPIRED.toString())
                                     }
+                                    is ServiceException -> {
+                                        onSuccess.accept(AmplifyCredential.Empty.getCognitoSession(error.exception))
+                                    }
+                                    is NotAuthorizedException -> {
+                                        onSuccess.accept(AmplifyCredential.Empty.getCognitoSession(error.exception))
+                                    }
                                     else -> {
                                         val errorResult = UnknownException("Fetch auth session failed.", error)
-                                        onSuccess.accept(error.amplifyCredential.getCognitoSession(errorResult))
+                                        onSuccess.accept(AmplifyCredential.Empty.getCognitoSession(errorResult))
                                     }
                                 }
                             }
