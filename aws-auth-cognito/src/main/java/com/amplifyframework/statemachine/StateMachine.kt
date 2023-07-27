@@ -137,9 +137,9 @@ internal open class StateMachine<StateType : State, EnvironmentType : Environmen
         val currentState = this.currentState
         subscribers[token] = listener
         onSubscribe?.invoke()
-        /*GlobalScope.launch(dispatcherQueue) {
+        GlobalScope.launch(dispatcherQueue) {
             listener.invoke(currentState)
-        }*/
+        }
     }
 
     /**

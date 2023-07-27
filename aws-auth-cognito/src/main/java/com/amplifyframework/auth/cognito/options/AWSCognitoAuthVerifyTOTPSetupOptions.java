@@ -17,21 +17,41 @@ package com.amplifyframework.auth.cognito.options;
 
 import com.amplifyframework.auth.options.AuthVerifyTOTPSetupOptions;
 
+/**
+ * Cognito extension of update verify totp setup options to add the platform specific fields.
+ */
 public final class AWSCognitoAuthVerifyTOTPSetupOptions extends AuthVerifyTOTPSetupOptions {
 
+    private String friendlyDeviceName;
+
     private AWSCognitoAuthVerifyTOTPSetupOptions(String friendlyDeviceName) {
-        super(friendlyDeviceName);
+        this.friendlyDeviceName = friendlyDeviceName;
     }
 
-    public static final class CognitoBuilder extends Builder<CognitoBuilder> {
+    /**
+     * Return the friendlyDeviceName to set during cognito TOTP setup.
+     * @return friendlyDeviceName string
+     * */
+    public String getFriendlyDeviceName() {
+        return friendlyDeviceName;
+    }
 
-        @Override
-        public CognitoBuilder getThis() {
-            return this;
+    /**
+     * The builder for this class.
+     */
+    public static final class CognitoBuilder extends Builder<CognitoBuilder> {
+        private String friendlyDeviceName;
+
+        private String getFriendlyDeviceName() {
+            return friendlyDeviceName;
         }
 
+        /**
+         * Construct and return the object with the values set in the builder.
+         * @return a new instance of AWSCognitoAuthVerifyTOTPSetupOptions with the values specified in the builder.
+         */
         public AWSCognitoAuthVerifyTOTPSetupOptions build() {
-            return new AWSCognitoAuthVerifyTOTPSetupOptions(super.getFriendlyDeviceName());
+            return new AWSCognitoAuthVerifyTOTPSetupOptions(getFriendlyDeviceName());
         }
     }
 }

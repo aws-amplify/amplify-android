@@ -83,7 +83,9 @@ internal object SRPCognitoActions : SRPActions {
 
                         SRPEvent(
                             SRPEvent.EventType.RespondPasswordVerifier(
-                                challengeParams, event.metadata, initiateAuthResponse.session
+                                challengeParams,
+                                event.metadata,
+                                initiateAuthResponse.session
                             )
                         )
                     } ?: throw Exception("Auth challenge parameters are empty.")
@@ -142,7 +144,9 @@ internal object SRPCognitoActions : SRPActions {
 
                             SRPEvent(
                                 SRPEvent.EventType.RespondPasswordVerifier(
-                                    challengeParams, event.metadata, initiateAuthResponse.session
+                                    challengeParams,
+                                    event.metadata,
+                                    initiateAuthResponse.session
                                 )
                             )
                         } ?: throw ServiceException(
@@ -188,7 +192,7 @@ internal object SRPCognitoActions : SRPActions {
                     KEY_USERNAME to username,
                     KEY_PASSWORD_CLAIM_SECRET_BLOCK to secretBlock,
                     KEY_PASSWORD_CLAIM_SIGNATURE to srpHelper.getSignature(salt, srpB, secretBlock),
-                    KEY_TIMESTAMP to srpHelper.dateString,
+                    KEY_TIMESTAMP to srpHelper.dateString
                 )
                 secretHash?.let { challengeParams[KEY_SECRET_HASH] = it }
                 challengeParams[KEY_DEVICE_KEY] = deviceKey

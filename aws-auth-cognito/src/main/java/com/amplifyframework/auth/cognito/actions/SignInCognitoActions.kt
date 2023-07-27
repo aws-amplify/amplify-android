@@ -49,7 +49,7 @@ internal object SignInCognitoActions : SignInActions {
         Action<AuthEnvironment>("StartCustomAuth") { id, dispatcher ->
             logger.verbose("$id Starting execution")
             val evt = CustomSignInEvent(
-                CustomSignInEvent.EventType.InitiateCustomSignIn(event.username, event.metadata),
+                CustomSignInEvent.EventType.InitiateCustomSignIn(event.username, event.metadata)
             )
             logger.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
@@ -59,7 +59,7 @@ internal object SignInCognitoActions : SignInActions {
         Action<AuthEnvironment>("StartMigrationAuth") { id, dispatcher ->
             logger.verbose("$id Starting execution")
             val evt = SignInEvent(
-                SignInEvent.EventType.InitiateMigrateAuth(event.username, event.password, event.metadata),
+                SignInEvent.EventType.InitiateMigrateAuth(event.username, event.password, event.metadata)
             )
             logger.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
@@ -77,7 +77,7 @@ internal object SignInCognitoActions : SignInActions {
         Action<AuthEnvironment>("StartDeviceSRPAuth") { id, dispatcher ->
             logger.verbose("$id Starting execution")
             val evt = DeviceSRPSignInEvent(
-                DeviceSRPSignInEvent.EventType.RespondDeviceSRPChallenge(event.username, event.metadata),
+                DeviceSRPSignInEvent.EventType.RespondDeviceSRPChallenge(event.username, event.metadata)
             )
             logger.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
@@ -109,20 +109,20 @@ internal object SignInCognitoActions : SignInActions {
                             this.passwordVerifier = deviceVerifierMap["verifier"]
                             this.salt = deviceVerifierMap["salt"]
                         }
-                    },
+                    }
                 ) ?: throw ServiceException("Sign in failed", AmplifyException.TODO_RECOVERY_SUGGESTION)
 
                 val updatedDeviceMetadata = deviceMetadata.copy(deviceSecret = deviceVerifierMap["secret"])
                 credentialStoreClient.storeCredentials(
                     CredentialType.Device(event.signedInData.username),
-                    AmplifyCredential.DeviceData(updatedDeviceMetadata),
+                    AmplifyCredential.DeviceData(updatedDeviceMetadata)
                 )
 
                 AuthenticationEvent(
                     AuthenticationEvent.EventType.SignInCompleted(
                         event.signedInData,
-                        DeviceMetadata.Metadata(deviceKey, deviceGroupKey),
-                    ),
+                        DeviceMetadata.Metadata(deviceKey, deviceGroupKey)
+                    )
                 )
             } catch (e: Exception) {
                 SignInEvent(SignInEvent.EventType.ThrowError(e))

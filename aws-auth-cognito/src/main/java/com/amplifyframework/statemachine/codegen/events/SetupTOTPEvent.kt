@@ -29,7 +29,7 @@ internal class SetupTOTPEvent(val eventType: EventType, override val time: Date?
             val answer: String,
             val username: String,
             val session: String?,
-            val friendlyDeviceName: String?,
+            val friendlyDeviceName: String?
         ) :
             EventType()
 

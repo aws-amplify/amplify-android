@@ -12,35 +12,27 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
+
 package com.amplifyframework.auth.options;
 
+/**
+ * The shared options among all Auth plugins.
+ * Note: This is currently empty but exists here to support common verify totp setup options.
+ */
 public class AuthVerifyTOTPSetupOptions {
-    private String friendlyDeviceName;
 
-    protected AuthVerifyTOTPSetupOptions(String friendlyDeviceName) {
-        this.friendlyDeviceName = friendlyDeviceName;
-    }
-
-    public String getFriendlyDeviceName() {
-        return friendlyDeviceName;
-    }
-
+    /**
+     * The builder for this class.
+     * @param <T> The type of builder - used to support plugin extensions of this.
+     */
     public abstract static class Builder<T extends Builder<T>> {
-        private String friendlyDeviceName;
 
-        protected String getFriendlyDeviceName() {
-            return friendlyDeviceName;
-        }
-
-        public abstract T getThis();
-
-        public T friendlyDeviceName(String friendlyDeviceName) {
-            this.friendlyDeviceName = friendlyDeviceName;
-            return getThis();
-        }
-
+        /**
+         * Build an instance of AuthVerifyTOTPSetupOptions (or one of its subclasses).
+         * @return an instance of AuthVerifyTOTPSetupOptions (or one of its subclasses)
+         */
         public AuthVerifyTOTPSetupOptions build() {
-            return new AuthVerifyTOTPSetupOptions(friendlyDeviceName);
+            return new AuthVerifyTOTPSetupOptions();
         }
 
     }

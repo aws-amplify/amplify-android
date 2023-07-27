@@ -18,11 +18,11 @@ import android.net.Uri
 
 data class TOTPSetupDetails(
     val sharedSecret: String,
-    val username: String,
+    val username: String
 ) {
     fun getSetupURI(
         issuer: String,
-        accountName: String = username,
+        accountName: String = username
     ): Uri {
         TODO()
     }

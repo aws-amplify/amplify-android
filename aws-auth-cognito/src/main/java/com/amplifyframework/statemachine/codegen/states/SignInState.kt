@@ -53,7 +53,7 @@ internal sealed class SignInState : State {
         private val hostedUISignInResolver: StateMachineResolver<HostedUISignInState>,
         private val deviceSRPSignInResolver: StateMachineResolver<DeviceSRPSignInState>,
         private val setupTOTPResolver: StateMachineResolver<SetupTOTPState>,
-        private val signInActions: SignInActions,
+        private val signInActions: SignInActions
     ) :
         StateMachineResolver<SignInState> {
         override val defaultState = NotStarted()
@@ -106,7 +106,7 @@ internal sealed class SignInState : State {
 
         private fun resolveSignInEvent(
             oldState: SignInState,
-            event: StateMachineEvent,
+            event: StateMachineEvent
         ): StateResolution<SignInState> {
             val signInEvent = asSignInEvent(event)
             val defaultResolution = StateResolution(oldState)
@@ -114,34 +114,34 @@ internal sealed class SignInState : State {
                 is NotStarted -> when (signInEvent) {
                     is SignInEvent.EventType.InitiateSignInWithSRP -> StateResolution(
                         SigningInWithSRP(oldState.srpSignInState),
-                        listOf(signInActions.startSRPAuthAction(signInEvent)),
+                        listOf(signInActions.startSRPAuthAction(signInEvent))
                     )
 
                     is SignInEvent.EventType.InitiateSignInWithCustom -> StateResolution(
                         SigningInWithCustom(oldState.customSignInState),
-                        listOf(signInActions.startCustomAuthAction(signInEvent)),
+                        listOf(signInActions.startCustomAuthAction(signInEvent))
                     )
 
                     is SignInEvent.EventType.InitiateHostedUISignIn -> StateResolution(
                         SigningInWithHostedUI(HostedUISignInState.NotStarted()),
-                        listOf(signInActions.startHostedUIAuthAction(signInEvent)),
+                        listOf(signInActions.startHostedUIAuthAction(signInEvent))
                     )
 
                     is SignInEvent.EventType.InitiateMigrateAuth -> StateResolution(
                         SigningInViaMigrateAuth(MigrateSignInState.NotStarted()),
-                        listOf(signInActions.startMigrationAuthAction(signInEvent)),
+                        listOf(signInActions.startMigrationAuthAction(signInEvent))
                     )
 
                     is SignInEvent.EventType.InitiateCustomSignInWithSRP -> StateResolution(
                         SigningInWithSRPCustom(oldState.srpSignInState),
-                        listOf(signInActions.startCustomAuthWithSRPAction(signInEvent)),
+                        listOf(signInActions.startCustomAuthWithSRPAction(signInEvent))
                     )
 
                     else -> defaultResolution
                 }
 
                 is SigningInWithSRP, is SigningInWithCustom, is SigningInViaMigrateAuth,
-                is SigningInWithSRPCustom,
+                is SigningInWithSRPCustom
                 -> when (signInEvent) {
                     is SignInEvent.EventType.ReceivedChallenge -> {
                         val action = signInActions.initResolveChallenge(signInEvent)
@@ -150,7 +150,7 @@ internal sealed class SignInState : State {
 
                     is SignInEvent.EventType.InitiateSignInWithDeviceSRP -> StateResolution(
                         ResolvingDeviceSRP(DeviceSRPSignInState.NotStarted()),
-                        listOf(signInActions.startDeviceSRPAuthAction(signInEvent)),
+                        listOf(signInActions.startDeviceSRPAuthAction(signInEvent))
                     )
 
                     is SignInEvent.EventType.ConfirmDevice -> {
@@ -160,7 +160,7 @@ internal sealed class SignInState : State {
 
                     is SignInEvent.EventType.InitiateTOTPSetup -> StateResolution(
                         ResolvingTOTPSetup(oldState.setupTOTPState),
-                        listOf(signInActions.initiateTOTOSetupAction(signInEvent)),
+                        listOf(signInActions.initiateTOTOSetupAction(signInEvent))
                     )
 
                     is SignInEvent.EventType.ThrowError -> StateResolution(Error(signInEvent.exception))
@@ -180,7 +180,7 @@ internal sealed class SignInState : State {
 
                     is SignInEvent.EventType.InitiateTOTPSetup -> StateResolution(
                         ResolvingTOTPSetup(oldState.setupTOTPState),
-                        listOf(signInActions.initiateTOTOSetupAction(signInEvent)),
+                        listOf(signInActions.initiateTOTOSetupAction(signInEvent))
                     )
 
                     is SignInEvent.EventType.ThrowError -> StateResolution(Error(signInEvent.exception))
@@ -200,7 +200,7 @@ internal sealed class SignInState : State {
 
                     is SignInEvent.EventType.InitiateSignInWithDeviceSRP -> StateResolution(
                         ResolvingDeviceSRP(DeviceSRPSignInState.NotStarted()),
-                        listOf(signInActions.startDeviceSRPAuthAction(signInEvent)),
+                        listOf(signInActions.startDeviceSRPAuthAction(signInEvent))
                     )
 
                     is SignInEvent.EventType.FinalizeSignIn -> {
@@ -218,7 +218,7 @@ internal sealed class SignInState : State {
 
                     is SignInEvent.EventType.InitiateTOTPSetup -> StateResolution(
                         ResolvingTOTPSetup(SetupTOTPState.NotStarted()),
-                        listOf(signInActions.initiateTOTOSetupAction(signInEvent)),
+                        listOf(signInActions.initiateTOTOSetupAction(signInEvent))
                     )
 
                     is SignInEvent.EventType.ThrowError -> StateResolution(Error(signInEvent.exception))

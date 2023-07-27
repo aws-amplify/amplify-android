@@ -515,16 +515,34 @@ public interface AuthCategoryBehavior {
             @NonNull Action onSuccess,
             @NonNull Consumer<AuthException> onError);
 
+    /**
+     * Setup TOTP for the currently signed in user.
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     */
     void setUpTOTP(
         @NonNull Consumer<TOTPSetupDetails> onSuccess,
         @NonNull Consumer<AuthException> onError);
 
+    /**
+     * Verify TOTP setup for the currently signed in user.
+     * @param code TOTP code to verify TOTP setup
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     */
     void verifyTOTPSetup(
         @NonNull String code,
         @NonNull Action onSuccess,
         @NonNull Consumer<AuthException> onError
     );
 
+    /**
+     * Verify TOTP setup for the currently signed in user.
+     * @param code TOTP code to verify TOTP setup
+     * @param options additional options to verify totp setup
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     */
     void verifyTOTPSetup(
         @NonNull String code,
         @NonNull AuthVerifyTOTPSetupOptions options,

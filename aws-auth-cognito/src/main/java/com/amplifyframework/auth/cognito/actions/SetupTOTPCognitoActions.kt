@@ -28,7 +28,7 @@ import com.amplifyframework.statemachine.codegen.events.SetupTOTPEvent
 
 internal object SetupTOTPCognitoActions : SetupTOTPActions {
     override fun initiateTOTPSetup(eventType: SetupTOTPEvent.EventType.SetupTOTP): Action = Action<AuthEnvironment>(
-        "InitiateTOTPSetup",
+        "InitiateTOTPSetup"
     ) { id, dispatcher ->
         logger.verbose("$id Starting execution")
         val evt = try {
@@ -39,15 +39,15 @@ internal object SetupTOTPCognitoActions : SetupTOTPActions {
                 logger.verbose("New Session is ${response.session}")
                 SetupTOTPEvent(
                     SetupTOTPEvent.EventType.WaitForAnswer(
-                        SignInTOTPSetupData(secret, response.session, eventType.totpSetupDetails.username),
-                    ),
+                        SignInTOTPSetupData(secret, response.session, eventType.totpSetupDetails.username)
+                    )
                 )
             } ?: SetupTOTPEvent(
-                SetupTOTPEvent.EventType.ThrowAuthError(Exception("Software token setup failed")),
+                SetupTOTPEvent.EventType.ThrowAuthError(Exception("Software token setup failed"))
             )
         } catch (e: Exception) {
             SetupTOTPEvent(
-                SetupTOTPEvent.EventType.ThrowAuthError(Exception("Software token setup failed")),
+                SetupTOTPEvent.EventType.ThrowAuthError(Exception("Software token setup failed"))
             )
         }
         logger.verbose("$id Sending event ${evt.type}")
@@ -55,7 +55,7 @@ internal object SetupTOTPCognitoActions : SetupTOTPActions {
     }
 
     override fun verifyChallengeAnswer(
-        eventType: SetupTOTPEvent.EventType.VerifyChallengeAnswer,
+        eventType: SetupTOTPEvent.EventType.VerifyChallengeAnswer
     ): Action =
         Action<AuthEnvironment>("verifyChallengeAnswer") { id, dispatcher ->
             logger.verbose("$id Starting execution")
@@ -73,25 +73,25 @@ internal object SetupTOTPCognitoActions : SetupTOTPActions {
                             SetupTOTPEvent(
                                 SetupTOTPEvent.EventType.RespondToAuthChallenge(
                                     eventType.username,
-                                    it.session,
-                                ),
+                                    it.session
+                                )
                             )
                         }
 
                         else -> {
                             SetupTOTPEvent(
                                 SetupTOTPEvent.EventType.ThrowAuthError(
-                                    Exception("Software token verification failed"),
-                                ),
+                                    Exception("Software token verification failed")
+                                )
                             )
                         }
                     }
                 } ?: SetupTOTPEvent(
-                    SetupTOTPEvent.EventType.ThrowAuthError(Exception("Software token verification failed")),
+                    SetupTOTPEvent.EventType.ThrowAuthError(Exception("Software token verification failed"))
                 )
             } catch (exception: Exception) {
                 SetupTOTPEvent(
-                    SetupTOTPEvent.EventType.ThrowAuthError(exception),
+                    SetupTOTPEvent.EventType.ThrowAuthError(exception)
                 )
             }
             logger.verbose("$id Sending event ${evt.type}")
@@ -99,7 +99,7 @@ internal object SetupTOTPCognitoActions : SetupTOTPActions {
         }
 
     override fun respondToAuthChallenge(
-        eventType: SetupTOTPEvent.EventType.RespondToAuthChallenge,
+        eventType: SetupTOTPEvent.EventType.RespondToAuthChallenge
     ): Action =
         Action<AuthEnvironment>("RespondToAuthChallenge") { id, dispatcher ->
             logger.verbose("$id Starting execution")
@@ -120,14 +120,14 @@ internal object SetupTOTPCognitoActions : SetupTOTPActions {
                         challengeNameType = response.challengeName,
                         session = response.session,
                         challengeParameters = response.challengeParameters,
-                        authenticationResult = response.authenticationResult,
+                        authenticationResult = response.authenticationResult
                     )
                 } ?: SetupTOTPEvent(
-                    SetupTOTPEvent.EventType.ThrowAuthError(Exception("Software token verification failed")),
+                    SetupTOTPEvent.EventType.ThrowAuthError(Exception("Software token verification failed"))
                 )
             } catch (exception: Exception) {
                 SetupTOTPEvent(
-                    SetupTOTPEvent.EventType.ThrowAuthError(exception),
+                    SetupTOTPEvent.EventType.ThrowAuthError(exception)
                 )
             }
             dispatcher.send(evt)

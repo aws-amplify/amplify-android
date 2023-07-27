@@ -20,14 +20,14 @@ import com.amplifyframework.statemachine.codegen.events.SetupTOTPEvent
 internal interface SetupTOTPActions {
     fun initiateTOTPSetup(eventType: SetupTOTPEvent.EventType.SetupTOTP): Action
     fun verifyChallengeAnswer(
-        eventType: SetupTOTPEvent.EventType.VerifyChallengeAnswer,
+        eventType: SetupTOTPEvent.EventType.VerifyChallengeAnswer
     ): Action
 
     fun respondToAuthChallenge(
-        eventType: SetupTOTPEvent.EventType.RespondToAuthChallenge,
+        eventType: SetupTOTPEvent.EventType.RespondToAuthChallenge
     ): Action
 
     fun resetToWaitingForAnswer(
-        eventType: SetupTOTPEvent.EventType.ThrowAuthError,
+        eventType: SetupTOTPEvent.EventType.ThrowAuthError
     ): Action
 }

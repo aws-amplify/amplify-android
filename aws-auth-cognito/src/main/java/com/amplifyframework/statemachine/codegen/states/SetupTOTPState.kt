@@ -42,12 +42,12 @@ internal sealed class SetupTOTPState : State {
                     is SetupTOTPEvent.EventType.SetupTOTP -> {
                         StateResolution(
                             SetupTOTP(challengeEvent.totpSetupDetails),
-                            listOf(setupTOTPActions.initiateTOTPSetup(challengeEvent)),
+                            listOf(setupTOTPActions.initiateTOTPSetup(challengeEvent))
                         )
                     }
 
                     is SetupTOTPEvent.EventType.ThrowAuthError -> StateResolution(
-                        Error(challengeEvent.exception),
+                        Error(challengeEvent.exception)
                     )
 
                     else -> defaultResolution
@@ -59,7 +59,7 @@ internal sealed class SetupTOTPState : State {
                     }
 
                     is SetupTOTPEvent.EventType.ThrowAuthError -> StateResolution(
-                        Error(challengeEvent.exception),
+                        Error(challengeEvent.exception)
                     )
 
                     else -> defaultResolution
@@ -71,14 +71,14 @@ internal sealed class SetupTOTPState : State {
                             Verifying(
                                 challengeEvent.answer,
                                 oldState.signInTOTPSetupData.username,
-                                oldState.signInTOTPSetupData.session,
+                                oldState.signInTOTPSetupData.session
                             ),
-                            listOf(setupTOTPActions.verifyChallengeAnswer(challengeEvent)),
+                            listOf(setupTOTPActions.verifyChallengeAnswer(challengeEvent))
                         )
                     }
 
                     is SetupTOTPEvent.EventType.ThrowAuthError -> StateResolution(
-                        Error(challengeEvent.exception),
+                        Error(challengeEvent.exception)
                     )
 
                     else -> defaultResolution
@@ -90,14 +90,14 @@ internal sealed class SetupTOTPState : State {
                             RespondingToAuthChallenge(oldState.username, oldState.session),
                             listOf(
                                 setupTOTPActions.respondToAuthChallenge(
-                                    challengeEvent,
-                                ),
-                            ),
+                                    challengeEvent
+                                )
+                            )
                         )
                     }
 
                     is SetupTOTPEvent.EventType.ThrowAuthError -> StateResolution(
-                        Error(challengeEvent.exception),
+                        Error(challengeEvent.exception)
                     )
 
                     else -> defaultResolution
@@ -106,12 +106,12 @@ internal sealed class SetupTOTPState : State {
                 is RespondingToAuthChallenge -> when (challengeEvent) {
                     is SetupTOTPEvent.EventType.Verified -> {
                         StateResolution(
-                            Success(),
+                            Success()
                         )
                     }
 
                     is SetupTOTPEvent.EventType.ThrowAuthError -> StateResolution(
-                        Error(challengeEvent.exception),
+                        Error(challengeEvent.exception)
                     )
 
                     else -> defaultResolution
@@ -122,7 +122,7 @@ internal sealed class SetupTOTPState : State {
                         StateResolution(
                             // TODO: Fix this
                             Verifying(challengeEvent.answer, "", null),
-                            listOf(setupTOTPActions.verifyChallengeAnswer(challengeEvent)),
+                            listOf(setupTOTPActions.verifyChallengeAnswer(challengeEvent))
                         )
                     }
 

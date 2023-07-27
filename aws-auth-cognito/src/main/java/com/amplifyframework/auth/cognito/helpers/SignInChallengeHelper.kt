@@ -46,7 +46,7 @@ internal object SignInChallengeHelper {
         session: String?,
         challengeParameters: Map<String, String>?,
         authenticationResult: AuthenticationResultType?,
-        signInMethod: SignInMethod = SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH),
+        signInMethod: SignInMethod = SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH)
     ): StateMachineEvent {
         return when {
             authenticationResult != null -> {
@@ -59,23 +59,23 @@ internal object SignInChallengeHelper {
                         username,
                         Date(),
                         signInMethod,
-                        tokens,
+                        tokens
                     )
                     it.newDeviceMetadata?.let { metadata ->
                         SignInEvent(
                             SignInEvent.EventType.ConfirmDevice(
                                 DeviceMetadata.Metadata(
                                     metadata.deviceKey ?: "",
-                                    metadata.deviceGroupKey ?: "",
+                                    metadata.deviceGroupKey ?: ""
                                 ),
-                                signedInData,
-                            ),
+                                signedInData
+                            )
                         )
                     } ?: AuthenticationEvent(
                         AuthenticationEvent.EventType.SignInCompleted(
                             signedInData,
-                            DeviceMetadata.Empty,
-                        ),
+                            DeviceMetadata.Empty
+                        )
                     )
                 }
             }
@@ -104,7 +104,7 @@ internal object SignInChallengeHelper {
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>,
         signInTOTPSetupData: SignInTOTPSetupData? = null,
-        allowedMFAType: Set<MFAType>? = null,
+        allowedMFAType: Set<MFAType>? = null
     ) {
         val challengeParams = challenge.parameters?.toMutableMap() ?: mapOf()
 
@@ -113,8 +113,8 @@ internal object SignInChallengeHelper {
                 val deliveryDetails = AuthCodeDeliveryDetails(
                     challengeParams.getValue("CODE_DELIVERY_DESTINATION"),
                     AuthCodeDeliveryDetails.DeliveryMedium.fromString(
-                        challengeParams.getValue("CODE_DELIVERY_DELIVERY_MEDIUM"),
-                    ),
+                        challengeParams.getValue("CODE_DELIVERY_DELIVERY_MEDIUM")
+                    )
                 )
                 val authSignInResult = AuthSignInResult(
                     false,
@@ -123,8 +123,8 @@ internal object SignInChallengeHelper {
                         mapOf(),
                         deliveryDetails,
                         null,
-                        null,
-                    ),
+                        null
+                    )
                 )
                 onSuccess.accept(authSignInResult)
             }
@@ -136,8 +136,8 @@ internal object SignInChallengeHelper {
                         challengeParams,
                         null,
                         null,
-                        null,
-                    ),
+                        null
+                    )
                 )
                 onSuccess.accept(authSignInResult)
             }
@@ -149,8 +149,8 @@ internal object SignInChallengeHelper {
                         challengeParams,
                         null,
                         null,
-                        null,
-                    ),
+                        null
+                    )
                 )
                 onSuccess.accept(authSignInResult)
             }
@@ -162,8 +162,8 @@ internal object SignInChallengeHelper {
                         mapOf(),
                         null,
                         null,
-                        null,
-                    ),
+                        null
+                    )
                 )
                 onSuccess.accept(authSignInResult)
             }
@@ -176,8 +176,8 @@ internal object SignInChallengeHelper {
                             challengeParams,
                             null,
                             TOTPSetupDetails(it.secretCode, it.username),
-                            allowedMFAType,
-                        ),
+                            allowedMFAType
+                        )
                     )
                     onSuccess.accept(authSignInResult)
                 } ?: onError.accept(UnknownException(cause = Exception("Challenge type not supported.")))
@@ -190,8 +190,8 @@ internal object SignInChallengeHelper {
                         mapOf(),
                         null,
                         null,
-                        challengeParams["MFAS_CAN_CHOOSE"]?.let { getAllowedMFATypes(it) },
-                    ),
+                        challengeParams["MFAS_CAN_CHOOSE"]?.let { getAllowedMFATypes(it) }
+                    )
                 )
                 onSuccess.accept(authSignInResult)
             }
