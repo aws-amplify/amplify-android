@@ -99,7 +99,12 @@ final class ConflictResolver {
                 LOG.debug(String.format("Conflict handler decision: %s", decision));
                 @SuppressWarnings("unchecked")
                 ConflictResolutionDecision<T> typedDecision = (ConflictResolutionDecision<T>) decision;
-                return resolveModelAndMetadata(conflictData, metadata, typedDecision);
+                return resolveModelAndMetadata(
+                    conflictData,
+                    metadata,
+                    typedDecision,
+                    pendingMutation.getMutationType()
+                );
             });
     }
 
@@ -156,30 +161,42 @@ final class ConflictResolver {
     private <T extends Model> Single<ModelWithMetadata<T>> resolveModelAndMetadata(
             @NonNull ConflictData<T> conflictData,
             @NonNull ModelMetadata metadata,
-            @NonNull ConflictResolutionDecision<T> decision) {
+            @NonNull ConflictResolutionDecision<T> decision,
+            @NonNull PendingMutation.Type mutationType) {
 
         switch (decision.getResolutionStrategy()) {
             case RETRY_LOCAL:
-                return publish(conflictData.getLocal(), metadata.getVersion());
+                // When retrying the local mutation we pass the mutation type so that we can correctly retry a deletion
+                // instead of an update
+                return publish(conflictData.getLocal(), metadata.getVersion(), mutationType);
             case APPLY_REMOTE:
                 // No network operations to do. The resolution is just to return
                 // the resolved data, so it can be applied locally.
                 return Single.just(new ModelWithMetadata<>(conflictData.getRemote(), metadata));
             case RETRY:
-                return publish(decision.getCustomModel(), metadata.getVersion());
+                // When retrying with a custom model the mutation is always an update
+                return publish(decision.getCustomModel(), metadata.getVersion(), PendingMutation.Type.UPDATE);
             default:
                 throw new IllegalStateException("Unknown resolution strategy = " + decision.getResolutionStrategy());
         }
     }
 
     @NonNull
-    private <T extends Model> Single<ModelWithMetadata<T>> publish(@NonNull T model, int version) {
+    private <T extends Model> Single<ModelWithMetadata<T>> publish(
+        @NonNull T model,
+        int version,
+        @NonNull PendingMutation.Type mutationType
+    ) {
         return Single
             .<GraphQLResponse<ModelWithMetadata<T>>>create(emitter -> {
                 //SchemaRegistry.instance().getModelSchemaForModelClass method supports schema generation for flutter
                 //models.
                 final ModelSchema schema = SchemaRegistry.instance().getModelSchemaForModelClass(model.getModelName());
-                appSync.update(model, schema, version, emitter::onSuccess, emitter::onError);
+                if (mutationType == PendingMutation.Type.DELETE) {
+                    appSync.delete(model, schema, version, emitter::onSuccess, emitter::onError);
+                } else {
+                    appSync.update(model, schema, version, emitter::onSuccess, emitter::onError);
+                }
             })
             .flatMap(response -> {
                 if (response.hasErrors() || !response.hasData()) {
