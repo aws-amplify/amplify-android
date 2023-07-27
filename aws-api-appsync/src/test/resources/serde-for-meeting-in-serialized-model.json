@@ -16,6 +16,7 @@
         "isArray": false,
         "isEnum": false,
         "isModel": false,
+        "isLazyModel": false,
         "authRules": []
       },
       "dateTime": {
@@ -28,6 +29,7 @@
         "isArray": false,
         "isEnum": false,
         "isModel": false,
+        "isLazyModel": false,
         "authRules": []
       },
       "id": {
@@ -40,6 +42,7 @@
         "isArray": false,
         "isEnum": false,
         "isModel": false,
+        "isLazyModel": false,
         "authRules": []
       },
       "name": {
@@ -52,6 +55,7 @@
         "isArray": false,
         "isEnum": false,
         "isModel": false,
+        "isLazyModel": false,
         "authRules": []
       },
       "time": {
@@ -64,6 +68,7 @@
         "isArray": false,
         "isEnum": false,
         "isModel": false,
+        "isLazyModel": false,
         "authRules": []
       },
       "timestamp": {
@@ -76,6 +81,7 @@
         "isArray": false,
         "isEnum": false,
         "isModel": false,
+        "isLazyModel": false,
         "authRules": []
       }
     },

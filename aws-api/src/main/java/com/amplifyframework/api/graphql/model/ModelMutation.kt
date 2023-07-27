@@ -64,6 +64,7 @@ object ModelMutation {
      * @return a valid `GraphQLRequest` instance.
      * @see MutationType.UPDATE
      </M> */
+    @JvmStatic
     fun <M : Model> update(
         model: M,
         predicate: QueryPredicate
@@ -129,6 +130,7 @@ object ModelMutation {
      * @return a valid `GraphQLRequest` instance.
      * @see MutationType.DELETE
      </M> */
+    @JvmStatic
     fun <M : Model> delete(
         model: M,
         predicate: QueryPredicate

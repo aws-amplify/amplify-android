@@ -16,6 +16,7 @@
         "isArray": false,
         "isEnum": false,
         "isModel": false,
+        "isLazyModel": false,
         "authRules": []
       },
       "name": {
@@ -28,6 +29,7 @@
         "isArray": false,
         "isEnum": false,
         "isModel": false,
+        "isLazyModel": false,
         "authRules": []
       },
       "owner": {
@@ -40,6 +42,7 @@
         "isArray": false,
         "isEnum": false,
         "isModel": true,
+        "isLazyModel": false,
         "authRules": []
       },
       "posts": {
@@ -52,6 +55,7 @@
         "isArray": true,
         "isEnum": false,
         "isModel": false,
+        "isLazyModel": false,
         "authRules": []
       }
     },
