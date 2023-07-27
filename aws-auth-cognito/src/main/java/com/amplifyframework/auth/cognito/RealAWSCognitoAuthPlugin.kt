@@ -678,6 +678,7 @@ internal class RealAWSCognitoAuthPlugin(
                 val authNState = authState.authNState
                 val authZState = authState.authZState
                 val signInState = (authNState as? AuthenticationState.SigningIn)?.signInState
+                val totpSetupState = (signInState as? SignInState.ResolvingTOTPSetup)?.setupTOTPState
                 when {
                     authNState is AuthenticationState.SignedIn &&
                         authZState is AuthorizationState.SessionEstablished -> {
@@ -703,12 +704,17 @@ internal class RealAWSCognitoAuthPlugin(
                         (signInState.challengeState as SignInChallengeState.WaitingForAnswer).hasNewResponse -> {
                         authStateMachine.cancel(token)
                         val signInChallengeState = signInState.challengeState as SignInChallengeState.WaitingForAnswer
+                        var allowedMFATypes: Set<MFAType>? = null
                         val signInStep = when (signInChallengeState.challenge.challengeName) {
                             "SMS_MFA" -> AuthSignInStep.CONFIRM_SIGN_IN_WITH_SMS_MFA_CODE
                             "NEW_PASSWORD_REQUIRED" -> AuthSignInStep.CONFIRM_SIGN_IN_WITH_NEW_PASSWORD
                             "SOFTWARE_TOKEN_MFA" -> AuthSignInStep.CONFIRM_SIGN_IN_WITH_TOTP_CODE
-                            "SELECT_MFA_TYPE" -> AuthSignInStep.CONTINUE_SIGN_IN_WITH_MFA_SELECTION
-                            "MFA_SETUP" -> AuthSignInStep.CONTINUE_SIGN_IN_WITH_TOTP_SETUP
+                            "SELECT_MFA_TYPE" -> {
+                                signInChallengeState.challenge.parameters?.get("MFAS_CAN_CHOOSE")?.let {
+                                    allowedMFATypes = SignInChallengeHelper.getAllowedMFATypes(it)
+                                }
+                                AuthSignInStep.CONTINUE_SIGN_IN_WITH_MFA_SELECTION
+                            }
                             else -> AuthSignInStep.CONFIRM_SIGN_IN_WITH_CUSTOM_CHALLENGE
                         }
                         val authSignInResult = AuthSignInResult(
@@ -718,11 +724,29 @@ internal class RealAWSCognitoAuthPlugin(
                                 signInChallengeState.challenge.parameters ?: mapOf(),
                                 null,
                                 null,
-                                null
+                                allowedMFATypes
                             )
                         )
                         onSuccess.accept(authSignInResult)
                         (signInState.challengeState as SignInChallengeState.WaitingForAnswer).hasNewResponse = false
+                    }
+
+                    signInState is SignInState.ResolvingTOTPSetup &&
+                        totpSetupState is SetupTOTPState.WaitingForAnswer &&
+                        totpSetupState.hasNewResponse -> {
+                        authStateMachine.cancel(token)
+                        SignInChallengeHelper.getNextStep(
+                            AuthChallenge(
+                                ChallengeNameType.MfaSetup.value,
+                                null,
+                                null,
+                                null
+                            ),
+                            onSuccess,
+                            onError,
+                            totpSetupState.signInTOTPSetupData
+                        )
+                        totpSetupState.hasNewResponse = false
                     }
 
                     signInState is SignInState.ResolvingChallenge &&
@@ -1412,8 +1436,8 @@ internal class RealAWSCognitoAuthPlugin(
             try {
                 authEnvironment.cognitoAuthService
                     .cognitoIdentityProviderClient?.changePassword(
-                    changePasswordRequest
-                )
+                        changePasswordRequest
+                    )
                 onSuccess.call()
             } catch (e: Exception) {
                 onError.accept(CognitoAuthExceptionConverter.lookup(e, e.toString()))
@@ -1539,8 +1563,8 @@ internal class RealAWSCognitoAuthPlugin(
                                     }
                                     val userAttributeResponse = authEnvironment.cognitoAuthService
                                         .cognitoIdentityProviderClient?.updateUserAttributes(
-                                        userAttributesRequest
-                                    )
+                                            userAttributesRequest
+                                        )
 
                                     continuation.resume(
                                         getUpdateUserAttributeResult(userAttributeResponse, userAttributes)
@@ -1626,8 +1650,8 @@ internal class RealAWSCognitoAuthPlugin(
 
                                 val getUserAttributeVerificationCodeResponse = authEnvironment.cognitoAuthService
                                     .cognitoIdentityProviderClient?.getUserAttributeVerificationCode(
-                                    getUserAttributeVerificationCodeRequest
-                                )
+                                        getUserAttributeVerificationCodeRequest
+                                    )
 
                                 getUserAttributeVerificationCodeResponse?.codeDeliveryDetails?.let {
                                     val codeDeliveryDetails = it
@@ -1693,8 +1717,8 @@ internal class RealAWSCognitoAuthPlugin(
                                 }
                                 authEnvironment.cognitoAuthService
                                     .cognitoIdentityProviderClient?.verifyUserAttribute(
-                                    verifyUserAttributeRequest
-                                )
+                                        verifyUserAttributeRequest
+                                    )
                                 onSuccess.call()
                             } ?: onError.accept(InvalidUserPoolConfigurationException())
                         } catch (e: Exception) {
@@ -2034,10 +2058,10 @@ internal class RealAWSCognitoAuthPlugin(
                         authNState is AuthenticationState.FederatedToIdentityPool &&
                             authZState is AuthorizationState.SessionEstablished
                         ) || (
-                        authZState is AuthorizationState.Error &&
-                            authZState.exception is SessionError &&
-                            authZState.exception.amplifyCredential is AmplifyCredential.IdentityPoolFederated
-                        ) -> {
+                    authZState is AuthorizationState.Error &&
+                        authZState.exception is SessionError &&
+                        authZState.exception.amplifyCredential is AmplifyCredential.IdentityPoolFederated
+                    ) -> {
                     val event = AuthenticationEvent(AuthenticationEvent.EventType.ClearFederationToIdentityPool())
                     authStateMachine.send(event)
                     _clearFederationToIdentityPool(onSuccess, onError)
@@ -2060,17 +2084,17 @@ internal class RealAWSCognitoAuthPlugin(
                                 SessionHelper.getUsername(token)?.let { username ->
                                     authEnvironment.cognitoAuthService
                                         .cognitoIdentityProviderClient?.associateSoftwareToken {
-                                        this.accessToken = token
-                                    }?.also { response ->
-                                        response.secretCode?.let { secret ->
-                                            onSuccess.accept(
-                                                TOTPSetupDetails(
-                                                    secret,
-                                                    username
+                                            this.accessToken = token
+                                        }?.also { response ->
+                                            response.secretCode?.let { secret ->
+                                                onSuccess.accept(
+                                                    TOTPSetupDetails(
+                                                        secret,
+                                                        username
+                                                    )
                                                 )
-                                            )
+                                            }
                                         }
-                                    }
                                 }
                             } ?: onError.accept(SignedOutException())
                         } catch (error: Exception) {
@@ -2120,21 +2144,21 @@ internal class RealAWSCognitoAuthPlugin(
                             accessToken?.let { token ->
                                 authEnvironment.cognitoAuthService
                                     .cognitoIdentityProviderClient?.getUser {
-                                    this.accessToken = token
-                                }?.also { response ->
-                                    var enabledSet: MutableSet<MFAType>? = null
-                                    var preferred: MFAType? = null
-                                    if (!response.userMfaSettingList.isNullOrEmpty()) {
-                                        enabledSet = mutableSetOf<MFAType>()
-                                        response.userMfaSettingList?.forEach { mfaType ->
-                                            enabledSet.add(MFAType.toMFAType(mfaType))
+                                        this.accessToken = token
+                                    }?.also { response ->
+                                        var enabledSet: MutableSet<MFAType>? = null
+                                        var preferred: MFAType? = null
+                                        if (!response.userMfaSettingList.isNullOrEmpty()) {
+                                            enabledSet = mutableSetOf<MFAType>()
+                                            response.userMfaSettingList?.forEach { mfaType ->
+                                                enabledSet.add(MFAType.toMFAType(mfaType))
+                                            }
                                         }
+                                        response.preferredMfaSetting?.let { preferredMFA ->
+                                            preferred = MFAType.toMFAType(preferredMFA)
+                                        }
+                                        onSuccess.accept(UserMFAPreference(enabledSet, preferred))
                                     }
-                                    response.preferredMfaSetting?.let { preferredMFA ->
-                                        preferred = MFAType.toMFAType(preferredMFA)
-                                    }
-                                    onSuccess.accept(UserMFAPreference(enabledSet, preferred))
-                                }
                             } ?: onError.accept(SignedOutException())
                         } catch (error: Exception) {
                             onError.accept(
@@ -2214,12 +2238,12 @@ internal class RealAWSCognitoAuthPlugin(
                             accessToken?.let { token ->
                                 authEnvironment.cognitoAuthService
                                     .cognitoIdentityProviderClient?.verifySoftwareToken {
-                                    this.userCode = code
-                                    this.friendlyDeviceName = friendlyDeviceName
-                                    this.accessToken = token
-                                }?.also {
-                                    onSuccess.call()
-                                }
+                                        this.userCode = code
+                                        this.friendlyDeviceName = friendlyDeviceName
+                                        this.accessToken = token
+                                    }?.also {
+                                        onSuccess.call()
+                                    }
                             } ?: onError.accept(SignedOutException())
                         } catch (error: Exception) {
                             onError.accept(

@@ -25,7 +25,10 @@ import com.amplifyframework.statemachine.codegen.events.SetupTOTPEvent
 internal sealed class SetupTOTPState : State {
     data class NotStarted(val id: String = "") : SetupTOTPState()
     data class SetupTOTP(val signInTOTPSetupData: SignInTOTPSetupData) : SetupTOTPState()
-    data class WaitingForAnswer(val signInTOTPSetupData: SignInTOTPSetupData) : SetupTOTPState()
+    data class WaitingForAnswer(
+        val signInTOTPSetupData: SignInTOTPSetupData,
+        var hasNewResponse: Boolean = false
+    ) : SetupTOTPState()
     data class Verifying(val code: String, val username: String, val session: String?) : SetupTOTPState()
     data class RespondingToAuthChallenge(val username: String, val session: String?) : SetupTOTPState()
     data class Success(val id: String = "") : SetupTOTPState()
@@ -55,7 +58,7 @@ internal sealed class SetupTOTPState : State {
 
                 is SetupTOTP -> when (challengeEvent) {
                     is SetupTOTPEvent.EventType.WaitForAnswer -> {
-                        StateResolution(WaitingForAnswer(challengeEvent.totpSetupDetails))
+                        StateResolution(WaitingForAnswer(challengeEvent.totpSetupDetails, true))
                     }
 
                     is SetupTOTPEvent.EventType.ThrowAuthError -> StateResolution(

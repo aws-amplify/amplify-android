@@ -199,7 +199,7 @@ internal object SignInChallengeHelper {
         }
     }
 
-    private fun getAllowedMFATypes(allowedMFAType: String): Set<MFAType> {
+    fun getAllowedMFATypes(allowedMFAType: String): Set<MFAType> {
         val result = mutableSetOf<MFAType>()
         allowedMFAType.replace(Regex("\\[|\\]|\""), "").split(",").forEach {
             when (it) {
