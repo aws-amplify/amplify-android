@@ -129,6 +129,10 @@ internal sealed class SetupTOTPState : State {
                         )
                     }
 
+                    is SetupTOTPEvent.EventType.WaitForAnswer -> {
+                        StateResolution(WaitingForAnswer(challengeEvent.totpSetupDetails, true))
+                    }
+
                     else -> defaultResolution
                 }
 

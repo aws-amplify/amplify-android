@@ -26,8 +26,4 @@ internal interface SetupTOTPActions {
     fun respondToAuthChallenge(
         eventType: SetupTOTPEvent.EventType.RespondToAuthChallenge
     ): Action
-
-    fun resetToWaitingForAnswer(
-        eventType: SetupTOTPEvent.EventType.ThrowAuthError
-    ): Action
 }

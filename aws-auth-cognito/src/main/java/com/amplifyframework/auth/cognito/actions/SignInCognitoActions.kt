@@ -139,7 +139,7 @@ internal object SignInCognitoActions : SignInActions {
             dispatcher.send(evt)
         }
 
-    override fun initiateTOTOSetupAction(event: SignInEvent.EventType.InitiateTOTPSetup) =
+    override fun initiateTOTPSetupAction(event: SignInEvent.EventType.InitiateTOTPSetup) =
         Action<AuthEnvironment>("initiateTOTOSetup") { id, dispatcher ->
             logger.verbose("$id Starting execution")
             val evt = SetupTOTPEvent(SetupTOTPEvent.EventType.SetupTOTP(event.signInTOTPSetupData))

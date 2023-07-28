@@ -36,7 +36,6 @@ internal object SetupTOTPCognitoActions : SetupTOTPActions {
                 session = eventType.totpSetupDetails.session
             }
             response?.secretCode?.let { secret ->
-                logger.verbose("New Session is ${response.session}")
                 SetupTOTPEvent(
                     SetupTOTPEvent.EventType.WaitForAnswer(
                         SignInTOTPSetupData(secret, response.session, eventType.totpSetupDetails.username)
@@ -131,11 +130,5 @@ internal object SetupTOTPCognitoActions : SetupTOTPActions {
                 )
             }
             dispatcher.send(evt)
-        }
-
-    override fun resetToWaitingForAnswer(eventType: SetupTOTPEvent.EventType.ThrowAuthError): Action =
-        Action<AuthEnvironment>("ResetToWaitingForAnswer") { id, dispatcher ->
-            logger.verbose("$id Starting execution")
-            // TODO: Reset to waiting for answer
         }
 }

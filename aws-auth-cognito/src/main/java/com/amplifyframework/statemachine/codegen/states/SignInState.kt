@@ -160,7 +160,7 @@ internal sealed class SignInState : State {
 
                     is SignInEvent.EventType.InitiateTOTPSetup -> StateResolution(
                         ResolvingTOTPSetup(oldState.setupTOTPState),
-                        listOf(signInActions.initiateTOTOSetupAction(signInEvent))
+                        listOf(signInActions.initiateTOTPSetupAction(signInEvent))
                     )
 
                     is SignInEvent.EventType.ThrowError -> StateResolution(Error(signInEvent.exception))
@@ -180,7 +180,7 @@ internal sealed class SignInState : State {
 
                     is SignInEvent.EventType.InitiateTOTPSetup -> StateResolution(
                         ResolvingTOTPSetup(oldState.setupTOTPState),
-                        listOf(signInActions.initiateTOTOSetupAction(signInEvent))
+                        listOf(signInActions.initiateTOTPSetupAction(signInEvent))
                     )
 
                     is SignInEvent.EventType.ThrowError -> StateResolution(Error(signInEvent.exception))
@@ -218,7 +218,7 @@ internal sealed class SignInState : State {
 
                     is SignInEvent.EventType.InitiateTOTPSetup -> StateResolution(
                         ResolvingTOTPSetup(SetupTOTPState.NotStarted()),
-                        listOf(signInActions.initiateTOTOSetupAction(signInEvent))
+                        listOf(signInActions.initiateTOTPSetupAction(signInEvent))
                     )
 
                     is SignInEvent.EventType.ThrowError -> StateResolution(Error(signInEvent.exception))
