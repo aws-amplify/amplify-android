@@ -17,7 +17,6 @@
 
 package com.amplifyframework.api.aws
 
-import com.amplifyframework.api.aws.SelectionSetDepth.Companion.onlyIncluded
 import com.amplifyframework.api.graphql.QueryType
 import com.amplifyframework.core.model.PropertyContainerPath
 
@@ -67,7 +66,7 @@ private fun getSelectionSet(node: PropertyContainerPath): SelectionSet {
     var selectionSet = SelectionSet.builder()
         .operation(QueryType.GET)
         .value(name)
-        .requestOptions(onlyIncluded())
+        .requestOptions(ApiGraphQLRequestOptions(0))
         .modelClass(node.getModelType())
         .build()
 
