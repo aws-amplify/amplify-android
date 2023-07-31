@@ -39,6 +39,8 @@ dependencies {
     implementation(dependency.aws.cognitoidentityprovider)
 
     testImplementation(project(":testutils"))
+    testImplementation(project(":core"))
+    testImplementation(project(":aws-core"))
     //noinspection GradleDependency
     testImplementation(testDependency.json)
 

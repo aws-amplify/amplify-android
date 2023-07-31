@@ -46,7 +46,7 @@ internal object SetupTOTPCognitoActions : SetupTOTPActions {
             )
         } catch (e: Exception) {
             SetupTOTPEvent(
-                SetupTOTPEvent.EventType.ThrowAuthError(Exception("Software token setup failed"))
+                SetupTOTPEvent.EventType.ThrowAuthError(e)
             )
         }
         logger.verbose("$id Sending event ${evt.type}")
@@ -68,7 +68,6 @@ internal object SetupTOTPCognitoActions : SetupTOTPActions {
                 response?.let {
                     when (it.status) {
                         is VerifySoftwareTokenResponseType.Success -> {
-                            logger.verbose("New Session is ${response.session}")
                             SetupTOTPEvent(
                                 SetupTOTPEvent.EventType.RespondToAuthChallenge(
                                     eventType.username,

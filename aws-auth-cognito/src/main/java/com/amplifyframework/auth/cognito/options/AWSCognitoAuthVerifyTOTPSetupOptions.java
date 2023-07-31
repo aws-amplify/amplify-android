@@ -47,6 +47,16 @@ public final class AWSCognitoAuthVerifyTOTPSetupOptions extends AuthVerifyTOTPSe
         }
 
         /**
+         * Friendly device name to be set in Cognito.
+         * @param friendlyDeviceName String input for friendlyDeviceName
+         * @return current CognitoBuilder instance
+         * */
+        public CognitoBuilder setFriendlyDeviceName(String friendlyDeviceName) {
+            this.friendlyDeviceName = friendlyDeviceName;
+            return this;
+        }
+
+        /**
          * Construct and return the object with the values set in the builder.
          * @return a new instance of AWSCognitoAuthVerifyTOTPSetupOptions with the values specified in the builder.
          */

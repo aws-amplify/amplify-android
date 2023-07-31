@@ -17,6 +17,7 @@ package com.amplifyframework.auth.cognito
 
 import android.app.Activity
 import android.content.Intent
+import com.amplifyframework.TOTPSetupDetails
 import com.amplifyframework.auth.AuthCodeDeliveryDetails
 import com.amplifyframework.auth.AuthDevice
 import com.amplifyframework.auth.AuthException
@@ -25,6 +26,7 @@ import com.amplifyframework.auth.AuthSession
 import com.amplifyframework.auth.AuthUser
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
+import com.amplifyframework.auth.cognito.options.AWSCognitoAuthVerifyTOTPSetupOptions
 import com.amplifyframework.auth.cognito.options.FederateToIdentityPoolOptions
 import com.amplifyframework.auth.cognito.result.FederateToIdentityPoolResult
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
@@ -679,6 +681,53 @@ class AWSCognitoAuthPluginTest {
         authPlugin.clearFederationToIdentityPool(expectedOnSuccess, expectedOnError)
 
         verify(timeout = CHANNEL_TIMEOUT) { realPlugin.clearFederationToIdentityPool(any(), any()) }
+    }
+
+    @Test
+    fun setUpTOTP() {
+        val expectedOnSuccess = Consumer<TOTPSetupDetails> { }
+        val expectedOnError = Consumer<AuthException> { }
+        authPlugin.setUpTOTP(expectedOnSuccess, expectedOnError)
+        verify(timeout = CHANNEL_TIMEOUT) { realPlugin.setUpTOTP(any(), any()) }
+    }
+
+    @Test
+    fun verifyTOTPSetup() {
+        val code = "123456"
+        val expectedOnSuccess = Action { }
+        val expectedOnError = Consumer<AuthException> { }
+        authPlugin.verifyTOTPSetup(code, expectedOnSuccess, expectedOnError)
+        verify(timeout = CHANNEL_TIMEOUT) { realPlugin.verifyTOTPSetup(code, any(), any(), any()) }
+    }
+
+    @Test
+    fun verifyTOTPSetupWithOptions() {
+        val code = "123456"
+        val options = AWSCognitoAuthVerifyTOTPSetupOptions.CognitoBuilder().setFriendlyDeviceName("DEVICE_NAME").build()
+        val expectedOnSuccess = Action { }
+        val expectedOnError = Consumer<AuthException> { }
+        authPlugin.verifyTOTPSetup(code, options, expectedOnSuccess, expectedOnError)
+        verify(timeout = CHANNEL_TIMEOUT) { realPlugin.verifyTOTPSetup(code, options, any(), any()) }
+    }
+
+    @Test
+    fun fetchMFAPreferences() {
+        val expectedOnSuccess = Consumer<UserMFAPreference> { }
+        val expectedOnError = Consumer<AuthException> { }
+        authPlugin.fetchMFAPreference(expectedOnSuccess, expectedOnError)
+        verify(timeout = CHANNEL_TIMEOUT) { realPlugin.fetchMFAPreference(any(), any()) }
+    }
+
+    @Test
+    fun updateMFAPreferences() {
+        val smsPreference = MFAPreference.Enabled
+        val totpPreference = MFAPreference.Preferred
+        val onSuccess = Action { }
+        val onError = Consumer<AuthException> { }
+        authPlugin.updateMFAPreference(smsPreference, totpPreference, onSuccess, onError)
+        verify(timeout = CHANNEL_TIMEOUT) {
+            realPlugin.updateMFAPreference(smsPreference, totpPreference, any(), any())
+        }
     }
 
     @Test

@@ -531,17 +531,6 @@ internal class KotlinAuthFacadeInternal(private val delegate: RealAWSCognitoAuth
             )
         }
     }
-
-    suspend fun verifyTOTPSetup(code: String) {
-        return suspendCoroutine { continuation ->
-            delegate.verifyTOTPSetup(
-                code,
-                { continuation.resume(Unit) },
-                { continuation.resumeWithException(it) }
-            )
-        }
-    }
-
     suspend fun verifyTOTPSetup(code: String, options: AuthVerifyTOTPSetupOptions) {
         return suspendCoroutine { continuation ->
             delegate.verifyTOTPSetup(
