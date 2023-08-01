@@ -112,6 +112,19 @@ Amplify's default interface renders results through async callbacks. We also pro
  - [Using RxJava with Amplify](https://docs.amplify.aws/lib/project-setup/rxjava/q/platform/android)
  - [Kotlin Coroutines Support](https://docs.amplify.aws/lib/project-setup/coroutines/q/platform/android)
 
+### Semantic versioning
+
+We follow [semantic versioning](https://semver.org/) for our releases.
+
+### Semantic versioning and enumeration cases
+
+When Amplify adds a new a new enumeration class entry or sealed class subtype, we
+will publish a new **minor** version of the library.
+
+Applications that use a `when` expression to evaluate all members of an enumerated
+type can add an `else` branch to prevent new cases from causing compile warnings
+ or errors.
+
 ## License
 
 This library is licensed under the [Apache 2.0 License](./LICENSE).
