@@ -23,7 +23,6 @@ import com.amplifyframework.statemachine.codegen.data.SignedInData
 
 internal interface FetchAuthSessionActions {
     fun refreshUserPoolTokensAction(signedInData: SignedInData): Action
-    fun refreshHostedUIUserPoolTokensAction(signedInData: SignedInData): Action
     fun refreshAuthSessionAction(logins: LoginsMapProvider): Action
     fun fetchIdentityAction(loginsMap: LoginsMapProvider): Action
     fun fetchAWSCredentialsAction(identityId: String, loginsMap: LoginsMapProvider): Action
