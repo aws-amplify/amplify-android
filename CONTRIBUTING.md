@@ -21,6 +21,7 @@ contribution.
     - [Test changes to CodeBuild build definitions](#test-changes-to-codebuild-build-definitions)
   - [Reporting Bugs/Feature Requests](#reporting-bugsfeature-requests)
   - [Contributing via Pull Requests](#contributing-via-pull-requests)
+    - [Semantic Versioning](#semantic-versioning) 	
   - [Troubleshooting](#troubleshooting)
     - [Environment Debugging](#environment-debugging)
     - [Problems with the Build](#problems-with-the-build)
