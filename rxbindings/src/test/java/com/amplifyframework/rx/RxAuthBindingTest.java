@@ -227,7 +227,7 @@ public final class RxAuthBindingTest {
         // Arrange a result on the result consumer
         AuthCodeDeliveryDetails details = new AuthCodeDeliveryDetails(RandomString.string(), DeliveryMedium.EMAIL);
         AuthSignInStep step = AuthSignInStep.CONFIRM_SIGN_IN_WITH_CUSTOM_CHALLENGE;
-        AuthNextSignInStep nextStep = new AuthNextSignInStep(step, Collections.emptyMap(), details);
+        AuthNextSignInStep nextStep = new AuthNextSignInStep(step, Collections.emptyMap(), details, null, null);
         AuthSignInResult result = new AuthSignInResult(false, nextStep);
         doAnswer(invocation -> {
             // 0 = username, 1 = password, 2 = onResult, 3 = onFailure
@@ -289,7 +289,7 @@ public final class RxAuthBindingTest {
         // Arrange a successful result.
         AuthSignInStep step = AuthSignInStep.CONFIRM_SIGN_IN_WITH_SMS_MFA_CODE;
         AuthCodeDeliveryDetails details = new AuthCodeDeliveryDetails(RandomString.string(), DeliveryMedium.UNKNOWN);
-        AuthNextSignInStep nextStep = new AuthNextSignInStep(step, Collections.emptyMap(), details);
+        AuthNextSignInStep nextStep = new AuthNextSignInStep(step, Collections.emptyMap(), details, null, null);
         AuthSignInResult expected = new AuthSignInResult(true, nextStep);
         doAnswer(invocation -> {
             // 0 = confirm code, 1 = onResult, 2 = onFailure
@@ -351,7 +351,7 @@ public final class RxAuthBindingTest {
         // Arrange a successful result
         AuthSignInStep step = AuthSignInStep.CONFIRM_SIGN_IN_WITH_SMS_MFA_CODE;
         AuthCodeDeliveryDetails details = new AuthCodeDeliveryDetails(RandomString.string(), DeliveryMedium.PHONE);
-        AuthNextSignInStep nextStep = new AuthNextSignInStep(step, Collections.emptyMap(), details);
+        AuthNextSignInStep nextStep = new AuthNextSignInStep(step, Collections.emptyMap(), details, null, null);
         AuthSignInResult result = new AuthSignInResult(false, nextStep);
         doAnswer(invocation -> {
             // 0 = provider, 1 = activity, 2 = result consumer, 3 = failure consumer
@@ -414,7 +414,7 @@ public final class RxAuthBindingTest {
         // Arrange a result
         AuthSignInStep step = AuthSignInStep.CONFIRM_SIGN_IN_WITH_CUSTOM_CHALLENGE;
         AuthCodeDeliveryDetails details = new AuthCodeDeliveryDetails(RandomString.string(), DeliveryMedium.PHONE);
-        AuthNextSignInStep nextStep = new AuthNextSignInStep(step, Collections.emptyMap(), details);
+        AuthNextSignInStep nextStep = new AuthNextSignInStep(step, Collections.emptyMap(), details, null, null);
         AuthSignInResult result = new AuthSignInResult(false, nextStep);
         doAnswer(invocation -> {
             // 0 = activity, 1 = result consumer, 2 = failure consumer
@@ -1048,10 +1048,10 @@ public final class RxAuthBindingTest {
             onCompletion.call();
             return null;
         }).when(delegate).deleteUser(anyAction(), anyConsumer());
-        
+
         // Act: call the binding
         TestObserver<Void> observer = auth.deleteUser().test();
-        
+
         // Assert: Completable completes with success
         observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
         observer.assertNoErrors()
@@ -1073,10 +1073,10 @@ public final class RxAuthBindingTest {
             onFailure.accept(failure);
             return null;
         }).when(delegate).deleteUser(anyAction(), anyConsumer());
-        
+
         // Act: call the binding
         TestObserver<Void> observer = auth.deleteUser().test();
-        
+
         // Assert: failure is furnished via Rx Completable.
         observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
         observer.assertNotComplete()
