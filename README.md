@@ -116,7 +116,7 @@ Amplify's default interface renders results through async callbacks. We also pro
 
 We follow [semantic versioning](https://semver.org/) for our releases.
 
-### Semantic versioning and enumeration cases
+#### Semantic versioning and enumeration cases
 
 When Amplify adds a new a new enumeration class entry or sealed class subtype, we
 will publish a new **minor** version of the library.
