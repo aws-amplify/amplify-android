@@ -34,7 +34,7 @@ public sealed class MFAPreference {
 
     object Enabled : MFAPreference() {
         override val mfaEnabled: Boolean
-            get() = false
+            get() = true
         override val mfaPreferred: Boolean
             get() = false
     }
