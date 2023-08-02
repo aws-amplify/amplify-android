@@ -18,6 +18,7 @@ package com.amplifyframework.core.model
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.core.Consumer
+import com.amplifyframework.core.NullableConsumer
 
 @InternalAmplifyApi
 class InMemoryLazyModel<M : Model>(model: M? = null) : LazyModel<M> {
@@ -36,7 +37,7 @@ class InMemoryLazyModel<M : Model>(model: M? = null) : LazyModel<M> {
         return value
     }
 
-    override fun getModel(onSuccess: (M?) -> Unit, onError: Consumer<AmplifyException>) {
-        onSuccess(value)
+    override fun getModel(onSuccess: NullableConsumer<M?>, onError: Consumer<AmplifyException>) {
+        onSuccess.accept(value)
     }
 }

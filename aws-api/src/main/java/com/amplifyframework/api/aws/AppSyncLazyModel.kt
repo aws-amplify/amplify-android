@@ -22,6 +22,7 @@ import com.amplifyframework.api.graphql.GraphQLResponse
 import com.amplifyframework.api.graphql.PaginatedResult
 import com.amplifyframework.core.Amplify as coreAmplify
 import com.amplifyframework.core.Consumer
+import com.amplifyframework.core.NullableConsumer
 import com.amplifyframework.core.model.LazyModel
 import com.amplifyframework.core.model.Model
 import com.amplifyframework.kotlin.core.Amplify
@@ -67,9 +68,9 @@ class AppSyncLazyModel<M : Model>(
         return value
     }
 
-    override fun getModel(onSuccess: (M?) -> Unit, onError: Consumer<AmplifyException>) {
+    override fun getModel(onSuccess: NullableConsumer<M?>, onError: Consumer<AmplifyException>) {
         if (loadedValue) {
-            onSuccess(value)
+            onSuccess.accept(value)
             return
         }
         val onQuerySuccess = Consumer<GraphQLResponse<PaginatedResult<M>>> {
@@ -80,7 +81,7 @@ class AppSyncLazyModel<M : Model>(
                 null
             }
             loadedValue = true
-            onSuccess(value)
+            onSuccess.accept(value)
         }
         val onApiFailure = Consumer<ApiException> { onError.accept(it) }
         coreAmplify.API.query(

@@ -13,21 +13,20 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.core.model
+package com.amplifyframework.core;
 
-import com.amplifyframework.AmplifyException
-import com.amplifyframework.annotations.InternalAmplifyApi
-import com.amplifyframework.core.Consumer
-import com.amplifyframework.core.NullableConsumer
+import androidx.annotation.Nullable;
 
-interface LazyModel<M : Model> {
-    fun getValue(): M?
+/**
+ * A consumer of a nullable value type.
+ * @param <T> Type of thing being consumed
+ */
+@SuppressWarnings("EmptyMethod") // Lint looks for class impl, not lambda (as almost all uses are)
+public interface NullableConsumer<T> {
 
-    @InternalAmplifyApi
-    fun getIdentifier(): Map<String, Any>
-
-    @Throws(AmplifyException::class)
-    suspend fun getModel(): M?
-
-    fun getModel(onSuccess: NullableConsumer<M?>, onError: Consumer<AmplifyException>)
+    /**
+     * Accept a value.
+     * @param value A value
+     */
+    void accept(@Nullable T value);
 }
