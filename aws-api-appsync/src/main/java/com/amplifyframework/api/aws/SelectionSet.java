@@ -240,10 +240,8 @@ public final class SelectionSet {
                     SerializedModel.class == modelClass
                             ? getModelFields(modelSchema, requestOptions.maxDepth(), operation)
                             : getModelFields(modelClass, requestOptions.maxDepth(), operation, false));
-            if (QueryType.LIST.equals(operation) || QueryType.SYNC.equals(operation)) {
-                node = wrapPagination(node);
-            }
 
+            // Associations need to be added before wrapping pagination
             if (includeAssociations != null) {
                 for (PropertyContainerPath association : includeAssociations) {
                     SelectionSet included = SelectionSetUtils.asSelectionSet(association, false);
@@ -251,6 +249,10 @@ public final class SelectionSet {
                         SelectionSetUtils.merge(node, included);
                     }
                 }
+            }
+
+            if (QueryType.LIST.equals(operation) || QueryType.SYNC.equals(operation)) {
+                node = wrapPagination(node);
             }
             return node;
         }
@@ -324,18 +326,15 @@ public final class SelectionSet {
                                                                 operation, false));
                             result.add(new SelectionSet(fieldName, fields));
                         }
+                    } else if (LazyModel.class.isAssignableFrom(field.getType())) {
+                        ParameterizedType pType = (ParameterizedType) field.getGenericType();
+                        Class<Model> modalClass = (Class<Model>) pType.getActualTypeArguments()[0];
+                        Set<SelectionSet> fields = getModelFields(modalClass, 0, operation, true);
+                        result.add(new SelectionSet(fieldName, fields));
                     } else if (depth >= 1) {
-                        Class<Model> modalClass;
-                        if (LazyModel.class.isAssignableFrom(field.getType())) {
-                            ParameterizedType pType = (ParameterizedType) field.getGenericType();
-                            modalClass = (Class<Model>) pType.getActualTypeArguments()[0];
-                            Set<SelectionSet> fields = getModelFields(modalClass, 0, operation, true);
-                            result.add(new SelectionSet(fieldName, fields));
-                        } else {
-                            modalClass = (Class<Model>) field.getType();
-                            Set<SelectionSet> fields = getModelFields(modalClass, depth - 1, operation, false);
-                            result.add(new SelectionSet(fieldName, fields));
-                        }
+                        Class<Model> modalClass = (Class<Model>) field.getType();
+                        Set<SelectionSet> fields = getModelFields(modalClass, depth - 1, operation, false);
+                        result.add(new SelectionSet(fieldName, fields));
                     }
                 } else if (isCustomType(field)) {
                     result.add(new SelectionSet(fieldName, getNestedCustomTypeFields(getClassForField(field))));
