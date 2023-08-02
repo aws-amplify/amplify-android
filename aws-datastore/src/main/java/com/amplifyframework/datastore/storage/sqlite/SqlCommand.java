@@ -29,7 +29,7 @@ import java.util.Objects;
  * An encapsulation of the information required to
  * create a SQL table.
  */
-final class SqlCommand {
+public final class SqlCommand {
     // The name of the SQL table
     private final String tableName;
 

@@ -26,7 +26,10 @@ import com.amplifyframework.core.Amplify;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.logging.Logger;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -81,6 +84,34 @@ final class SQLCommandProcessor {
             throw dataStoreException(sqlException, command.sqlStatement());
         }
     }
+
+    public List<Map<String, Object>> cursorToResult(Cursor cursor) {
+        List<Map<String, Object>> result = new ArrayList<>();
+        String[] columnNames = cursor.getColumnNames();
+
+        while (cursor.moveToNext()) {
+            Map<String, Object> row = new HashMap<>();
+            for (String name : columnNames) {
+                int columnIndex = cursor.getColumnIndex(name);
+                int type = cursor.getType(columnIndex);
+                if (type == Cursor.FIELD_TYPE_INTEGER) {
+                    row.put(name, cursor.getLong(columnIndex));
+                } else if (type == Cursor.FIELD_TYPE_FLOAT) {
+                    row.put(name, cursor.getFloat(columnIndex));
+                } else if (type == Cursor.FIELD_TYPE_STRING) {
+                    row.put(name, cursor.getString(columnIndex));
+                } else if (type == Cursor.FIELD_TYPE_BLOB) {
+                    row.put(name, cursor.getBlob(columnIndex));
+                } else {
+                    row.put(name, null);
+                }
+            }
+            result.add(row);
+        }
+
+        return result;
+    }
+
 
     private DataStoreException dataStoreException(SQLException sqlException, String sqlStatement) {
         return new DataStoreException(

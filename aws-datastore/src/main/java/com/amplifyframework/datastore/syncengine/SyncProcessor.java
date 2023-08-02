@@ -16,6 +16,7 @@
 package com.amplifyframework.datastore.syncengine;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.util.Supplier;
 
 import com.amplifyframework.api.ApiException;
@@ -117,12 +118,16 @@ final class SyncProcessor {
         return new Builder();
     }
 
+    Completable hydrate() {
+        return hydrate(false, null);
+    }
+
     /**
      * The task of hydrating the DataStore either succeeds (with no return value),
      * or it fails, with an explanation.
      * @return An Rx {@link Completable} which can be used to perform the operation.
      */
-    Completable hydrate() {
+    Completable hydrate(@Nullable Boolean forceBaseSync, @Nullable ArrayList<String> limitModelsToBeSynced) {
         final List<Completable> hydrationTasks = new ArrayList<>();
         final ConcurrentLinkedQueue<String> hydratedModels = new ConcurrentLinkedQueue<>();
         List<ModelSchema> modelSchemas = new ArrayList<>(
@@ -135,10 +140,15 @@ final class SyncProcessor {
         Collections.sort(modelSchemas, ordering::compare);
         ArrayList<String> toBeSyncedModelArray = new ArrayList<>();
         for (ModelSchema schema : modelSchemas) {
+            // if modelsToBeSynced is not null or not empty then we only want to sync the models that are in the list
+            if (limitModelsToBeSynced != null && !limitModelsToBeSynced.isEmpty() && !limitModelsToBeSynced.contains(schema.getName())) {
+                continue;
+            }
+
             //Check to see if query predicate for this schema is not equal to none. This means customer does
             // not want to sync the data for this model.
             if (!QueryPredicates.none().equals(queryPredicateProvider.getPredicate(schema.getName()))) {
-                hydrationTasks.add(createHydrationTask(schema, hydratedModels));
+                hydrationTasks.add(createHydrationTask(schema, hydratedModels, forceBaseSync));
                 toBeSyncedModelArray.add(schema.getName());
             }
         }
@@ -161,7 +171,7 @@ final class SyncProcessor {
             });
     }
 
-    private Completable createHydrationTask(ModelSchema schema, ConcurrentLinkedQueue<String> hydratedModels) {
+    private Completable createHydrationTask(ModelSchema schema, ConcurrentLinkedQueue<String> hydratedModels, @Nullable Boolean forceBaseSync) {
         ModelSyncMetricsAccumulator metricsAccumulator = new ModelSyncMetricsAccumulator(schema.getName());
         List<String> dependencies = new ArrayList<>(
                 schema.getAssociations().values().stream()
@@ -171,8 +181,15 @@ final class SyncProcessor {
 
         LOG.debug("Sync dependencies for model:" + schema.getName() + " - "
                 + dependencies.toString());
-        return syncTimeRegistry.lookupLastSyncTime(schema.getName())
-            .delaySubscription(
+
+        return Single.defer(() -> {
+            if (forceBaseSync != null && forceBaseSync == true) {
+                LOG.info("Forcing base sync for " + schema.getName() + " - " + forceBaseSync);
+                return Single.just(SyncTime.never());
+            } else {
+                return syncTimeRegistry.lookupLastSyncTime(schema.getName());
+            }
+                }).delaySubscription(
                     Flowable.interval(SYNC_SUBSCRIPTION_SWITCH_MILLISECONDS, TimeUnit.MILLISECONDS)
                             .doOnNext((i) -> {
                                 LOG.verbose("Waiting to meet dependency for " + schema.getName()

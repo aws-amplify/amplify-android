@@ -15,6 +15,7 @@
 
 package com.amplifyframework.datastore;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -47,6 +48,7 @@ import com.amplifyframework.datastore.storage.ItemChangeMapper;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter;
+import com.amplifyframework.datastore.storage.sqlite.SqlCommand;
 import com.amplifyframework.datastore.syncengine.Orchestrator;
 import com.amplifyframework.datastore.syncengine.ReachabilityMonitor;
 import com.amplifyframework.hub.HubChannel;
@@ -55,12 +57,16 @@ import com.amplifyframework.logging.Logger;
 import org.json.JSONObject;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
 /**
@@ -683,6 +689,10 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
         return orchestrator.saveDirectlyToLocalStorage(model);
     }
 
+    public Single<List<Map<String, Object>>> queryDirectlyToLocalStorage(SqlCommand command) {
+        return orchestrator.queryDirectlyToLocalStorage(command);
+    }
+
     public Completable mergeApiResponse(Model model, Integer version, Temporal.Timestamp lastChangedAt) {
         return orchestrator.mergeApiResponse(model, version, lastChangedAt);
     }
@@ -696,8 +706,12 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     }
 
     public synchronized void hydrate(@NonNull Action onComplete, @NonNull Consumer<DataStoreException> onError) {
+        hydrate(onComplete, onError, null, null);
+    }
+
+    public synchronized void hydrate(@NonNull Action onComplete, @NonNull Consumer<DataStoreException> onError, @Nullable Boolean forceBaseSync, @Nullable ArrayList<String> limitModelsToBeSynced) {
         waitForInitialization()
-                .andThen(orchestrator.hydrate())
+                .andThen(orchestrator.hydrate(forceBaseSync, limitModelsToBeSynced))
                 .subscribeOn(Schedulers.io())
                 .subscribe(
                         onComplete::call,

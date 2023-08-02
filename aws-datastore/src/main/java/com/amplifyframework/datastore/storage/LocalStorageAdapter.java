@@ -30,9 +30,11 @@ import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.DataStoreConfiguration;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.DataStoreQuerySnapshot;
+import com.amplifyframework.datastore.storage.sqlite.SqlCommand;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 /**
  * A LocalStorageAdapter provides a simple set of interactions to
@@ -115,6 +117,12 @@ public interface LocalStorageAdapter {
             @NonNull String modelName,
             @NonNull QueryOptions options,
             @NonNull Consumer<Iterator<? extends Model>> onSuccess,
+            @NonNull Consumer<DataStoreException> onError
+    );
+
+    void rawQuery(
+            @NonNull SqlCommand rawQuery,
+            @NonNull Consumer<List<Map<String, Object>>> onSuccess,
             @NonNull Consumer<DataStoreException> onError
     );
 

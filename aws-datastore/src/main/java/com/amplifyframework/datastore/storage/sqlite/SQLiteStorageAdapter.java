@@ -456,6 +456,38 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         });
     }
 
+    @Override
+    public void rawQuery(
+            @NonNull SqlCommand rawQuery,
+            @NonNull Consumer<List<Map<String, Object>>> onSuccess,
+            @NonNull Consumer<DataStoreException> onError) {
+        Objects.requireNonNull(rawQuery);
+        Objects.requireNonNull(onSuccess);
+        Objects.requireNonNull(onError);
+
+        threadPool.submit(() -> {
+            try (Cursor cursor = sqlCommandProcessor.rawQuery(rawQuery)) {
+                LOG.debug("Querying item for: " + rawQuery);
+
+                if (cursor == null) {
+                    onError.accept(new DataStoreException(
+                            "Error in getting a cursor to the table for command: " + rawQuery,
+                            AmplifyException.TODO_RECOVERY_SUGGESTION
+                    ));
+                    return;
+                }
+
+                final List<Map<String, Object>> cursorToResult = sqlCommandProcessor.cursorToResult(cursor);
+                onSuccess.accept(cursorToResult);
+            } catch (Exception exception) {
+                onError.accept(new DataStoreException(
+                        "Error in querying the model.", exception,
+                        "See attached exception for details."
+                ));
+            }
+        });
+    }
+
     /**
      * {@inheritDoc}
      */

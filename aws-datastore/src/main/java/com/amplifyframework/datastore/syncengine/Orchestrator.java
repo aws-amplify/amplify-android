@@ -17,6 +17,7 @@ package com.amplifyframework.datastore.syncengine;
 
 import android.content.Context;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.util.Supplier;
 
 import com.amplifyframework.AmplifyException;
@@ -38,18 +39,23 @@ import com.amplifyframework.datastore.appsync.ModelWithMetadata;
 import com.amplifyframework.datastore.events.NetworkStatusEvent;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
+import com.amplifyframework.datastore.storage.sqlite.SqlCommand;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.logging.Logger;
 
 import org.json.JSONObject;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.functions.Action;
 import io.reactivex.rxjava3.schedulers.Schedulers;
@@ -427,6 +433,18 @@ public final class Orchestrator {
         ));
     }
 
+    public Single<List<Map<String, Object>>> queryDirectlyToLocalStorage(SqlCommand command) {
+        return Single.defer(() -> Single.create(emitter ->
+                localStorageAdapter.rawQuery(
+                        command,
+                        storageItemChange -> {
+                            emitter.onSuccess(storageItemChange);
+                        },
+                        emitter::onError
+                )
+        ));
+    }
+
     public Completable mergeApiResponse(Model model, Integer version, Temporal.Timestamp lastChangedAt) {
         ModelMetadata metadata = new ModelMetadata(model.getPrimaryKeyString(), false, version, lastChangedAt);
         return merger.merge(new ModelWithMetadata<>(model, metadata));
@@ -440,24 +458,32 @@ public final class Orchestrator {
         mutationProcessor.startDrainingMutationOutbox();
     }
 
+    public synchronized void triggerHydrate() {
+        triggerHydrate(false, null);
+    }
+
     /**
      * Manually hydrate.
      *
      * */
-    public synchronized void triggerHydrate() {
+    public synchronized void triggerHydrate(@Nullable Boolean forceBaseSync, @Nullable ArrayList<String> limitModelsToBeSynced) {
         disposables.add(
             Completable.defer(() -> {
                 if (currentState.get() != State.SYNC_VIA_API) {
                     LOG.warn("Orchestrator not in SYNC_VIA_API so not hydrating");
                     return Completable.complete();
                 } else {
-                    return syncProcessor.hydrate();
+                    return syncProcessor.hydrate(forceBaseSync, limitModelsToBeSynced);
                 }
             })
             .doOnSubscribe(subscriber -> LOG.info("Attempting to manually triggering hydrate..."))
             .doOnError(failure -> LOG.warn("Unable to manually trigger hydration", failure))
             .subscribe()
         );
+    }
+
+    public Completable hydrate(@Nullable Boolean forceBaseSync, @Nullable ArrayList<String> limitModelsToBeSynced) {
+        return Completable.fromAction(() -> triggerHydrate(forceBaseSync, limitModelsToBeSynced));
     }
 
     public Completable hydrate() {
