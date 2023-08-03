@@ -21,14 +21,83 @@ import com.amplifyframework.api.ApiException
 import com.amplifyframework.api.graphql.GraphQLRequest
 import com.amplifyframework.api.graphql.GraphQLResponse
 import com.amplifyframework.api.graphql.PaginatedResult
-import com.amplifyframework.core.Amplify as coreAmplify
+import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
+import com.amplifyframework.core.NullableConsumer
 import com.amplifyframework.core.model.LazyList
+import com.amplifyframework.core.model.LazyModel
 import com.amplifyframework.core.model.Model
-import com.amplifyframework.kotlin.core.Amplify
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
 
 @InternalAmplifyApi
-class AppSyncLazyListModel<M : Model>(
+class ApiLazyModel<M : Model>(
+    private val clazz: Class<M>,
+    private val keyMap: Map<String, Any>
+) : LazyModel<M> {
+
+    private var value: M? = null
+    private var loadedValue = false
+    private val queryPredicate = AppSyncLazyQueryPredicate<M>().createPredicate(clazz, keyMap)
+
+    override fun getValue(): M? {
+        return value
+    }
+
+    override fun getIdentifier(): Map<String, Any> {
+        return keyMap
+    }
+
+    override suspend fun getModel(): M? {
+        if (loadedValue) {
+            return value
+        }
+        try {
+            val resultIterator = query(
+                AppSyncGraphQLRequestFactory.buildQuery<PaginatedResult<M>, M>(
+                    clazz,
+                    queryPredicate
+                )
+            ).data.items.iterator()
+            value = if (resultIterator.hasNext()) {
+                resultIterator.next()
+            } else {
+                null
+            }
+            loadedValue = true
+        } catch (error: ApiException) {
+            throw AmplifyException("Error lazy loading the model.", error, error.message ?: "")
+        }
+        return value
+    }
+
+    override fun getModel(onSuccess: NullableConsumer<M?>, onError: Consumer<AmplifyException>) {
+        if (loadedValue) {
+            onSuccess.accept(value)
+            return
+        }
+        val onQuerySuccess = Consumer<GraphQLResponse<PaginatedResult<M>>> {
+            val resultIterator = it.data.items.iterator()
+            value = if (resultIterator.hasNext()) {
+                resultIterator.next()
+            } else {
+                null
+            }
+            loadedValue = true
+            onSuccess.accept(value)
+        }
+        val onApiFailure = Consumer<ApiException> { onError.accept(it) }
+        Amplify.API.query(
+            AppSyncGraphQLRequestFactory.buildQuery(clazz, queryPredicate),
+            onQuerySuccess,
+            onApiFailure
+        )
+    }
+}
+
+@InternalAmplifyApi
+class ApiLazyListModel<M : Model>(
     private val clazz: Class<M>,
     keyMap: Map<String, Any>,
 ) : LazyList<M> {
@@ -46,7 +115,7 @@ class AppSyncLazyListModel<M : Model>(
             return emptyList()
         }
         val request = createGraphQLRequest()
-        paginatedResult = Amplify.API.query(request).data
+        paginatedResult = query(request).data
         val nextPageOfItems = paginatedResult!!.items.toList()
         value.addAll(nextPageOfItems)
         return nextPageOfItems
@@ -65,7 +134,7 @@ class AppSyncLazyListModel<M : Model>(
         }
         val onApiFailure = Consumer<ApiException> { onError.accept(it) }
         val request = createGraphQLRequest()
-        coreAmplify.API.query(request, onQuerySuccess, onApiFailure)
+        Amplify.API.query(request, onQuerySuccess, onApiFailure)
     }
 
     override fun hasNextPage(): Boolean {
@@ -81,5 +150,19 @@ class AppSyncLazyListModel<M : Model>(
                 queryPredicate
             )
         }
+    }
+}
+
+/*
+ Duplicating the query Kotlin Facade method so we aren't pulling in Kotlin Core
+ */
+@Throws(ApiException::class)
+private suspend fun <R> query(request: GraphQLRequest<R>): GraphQLResponse<R> {
+    return suspendCoroutine { continuation ->
+        Amplify.API.query(
+            request,
+            { continuation.resume(it) },
+            { continuation.resumeWithException(it) }
+        )
     }
 }

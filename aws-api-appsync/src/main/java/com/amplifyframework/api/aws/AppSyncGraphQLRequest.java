@@ -27,7 +27,6 @@ import com.amplifyframework.api.graphql.QueryType;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelOperation;
 import com.amplifyframework.core.model.ModelSchema;
-import com.amplifyframework.core.model.PropertyContainerPath;
 import com.amplifyframework.util.Casing;
 import com.amplifyframework.util.Immutable;
 import com.amplifyframework.util.Wrap;

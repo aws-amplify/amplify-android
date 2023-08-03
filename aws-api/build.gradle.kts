@@ -25,7 +25,6 @@ group = properties["POM_GROUP"].toString()
 
 dependencies {
     api(project(":core"))
-    api(project(":core-kotlin"))
     api(project(":aws-core"))
     implementation(project(":aws-api-appsync"))
 
