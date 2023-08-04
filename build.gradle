@@ -63,7 +63,7 @@ ext {
     compileSdkVersion = 30
     minSdkVersion = 16
     targetSdkVersion = 30
-    awsSDKReleaseVersion = '2.71.0'
+    awsSDKReleaseVersion = '2.73.0'
     awsSdkVersion = useAwsSdkReleaseBuild() ? awsSDKReleaseVersion : "latest.integration"
     fragmentVersion = '1.3.1'
     navigationVersion = '2.3.4'
