@@ -37,6 +37,7 @@ import featureTest.utilities.APICaptorFactory.Companion.onError
 import featureTest.utilities.APICaptorFactory.Companion.onSuccess
 
 import generated.model.ApiCall
+import generated.model.TypeResponse
 import io.mockk.CapturingSlot
 import io.mockk.coEvery
 import io.mockk.mockk
@@ -54,7 +55,7 @@ import kotlin.reflect.full.declaredFunctions
 /**
  * Executes the API on given [AWSCognitoAuthPlugin] instance
  */
-internal val apiExecutor: (AWSCognitoAuthPlugin, ApiCall) -> Any = { authPlugin: AWSCognitoAuthPlugin, api: ApiCall ->
+internal val apiExecutor: (AWSCognitoAuthPlugin, ApiCall, TypeResponse) -> Any = { authPlugin: AWSCognitoAuthPlugin, api: ApiCall, responseType : TypeResponse ->
 
     lateinit var result: Any
     val latch = CountDownLatch(1)
@@ -65,9 +66,12 @@ internal val apiExecutor: (AWSCognitoAuthPlugin, ApiCall) -> Any = { authPlugin:
     var targetApi: KFunction<*>? = null
     println(api.name)
 
+
     for (currentApi in targetApis) {
         try {
             val currentParams = currentApi.parameters.associateWith { kParam ->
+                val testing = kParam.type.classifier as KClass<*>
+
                 when {
                     kParam.kind == KParameter.Kind.INSTANCE -> authPlugin
                     kParam.type.classifier as KClass<*> == Action::class -> Action {
@@ -99,7 +103,7 @@ internal val apiExecutor: (AWSCognitoAuthPlugin, ApiCall) -> Any = { authPlugin:
     if (targetApi == null || requiredParams == null)
         throw Exception("No matching api function with required parameters found")
 
-    //val capturing = captureCaptorFactory().capture(api!!.name!!, authPlugin, authServ)
+    //val capturing = APICaptorFactory(api, latch, responseType)
 
 
 

@@ -196,6 +196,7 @@ class AWSCognitoAuthPluginFeatureTest(private val testCase: generated.model.Unit
     fun api_feature_test() {
         Dispatchers.setMain(newSingleThreadContext("Main thread"))
 
+
         setUp()
 
         var input: String = testCase.preConditions!!.amplifyconfiguration!!
@@ -252,19 +253,24 @@ class AWSCognitoAuthPluginFeatureTest(private val testCase: generated.model.Unit
         // WHEN
         assertTrue { latch.await(5, TimeUnit.SECONDS) }
 
-        apiExecutionResult = apiExecutor(sut, testCase.api!!)
+        apiExecutionResult = apiExecutor(sut, testCase.api!!, testCase!!.preConditions!!.mockedResponses!![0].responseType!!)
+
+        if (apiExecutionResult == "") { // for empty response api
+            val nameToCheck = testCase.api!!.name!!
+            val listCheck : List<String> = listOf("signUp", "signOut", "signIn", "resetPassword", "fetchUserAttributes", "fetchAuthSession")
+            if (nameToCheck in listCheck ) {
+                assert(false)
+
+            }
+            return
+        }
 
         // THEN
         if (testCase.preConditions!!.mockedResponses!![0].responseType == TypeResponse.Success) {
             testCase.validations!!.forEach(this::verify)
         }
         else {
-            if (apiExecutionResult.toStr().substringBefore('{') != testCase!!.preConditions!!.mockedResponses!![0].response!!.asError().errorType!!.substringBefore('[')) {
-                println(testCase.preConditions!!.state!!)
-                println(testCase.api!!.name)
-                println(currentState.toStr())
-                println(testCase!!.api!!.name)
-            }
+
             assertEquals(apiExecutionResult.toStr().substringBefore('{'),
                 testCase!!.preConditions!!.mockedResponses!![0].response!!.asError().errorType!!.substringBefore('[')
             )
@@ -304,9 +310,9 @@ class AWSCognitoAuthPluginFeatureTest(private val testCase: generated.model.Unit
             generated.model.ShapeType.Cognito -> verifyCognito(validation.shape!!.asCognito())
 
             generated.model.ShapeType.Amplify -> {
-                val apiExec = getResponse(apiExecutionResult!!)
+                val apiExecutionResponseClass = getResponse(apiExecutionResult!!)
 
-                if (apiExec is None) {
+                if (apiExecutionResponseClass is None) {
                     val nameToCheck = testCase.api!!.name!!
                     val listCheck : List<String> = listOf("signUp", "signOut", "signIn", "resetPassword", "fetchUserAttributes", "fetchAuthSession")
                     if (nameToCheck in listCheck ) {
@@ -317,7 +323,7 @@ class AWSCognitoAuthPluginFeatureTest(private val testCase: generated.model.Unit
                 }
 
 
-                var jsonOne = try {
+                var jsonAmplify = try {
                     JSONObject(validation.shape!!.asAmplify().response!!.asString())
                 }
                 catch (e : Exception) {
@@ -329,14 +335,14 @@ class AWSCognitoAuthPluginFeatureTest(private val testCase: generated.model.Unit
                     }
                 }
 
-                if (jsonOne is JSONArray) {
-                    for (i in 0 until jsonOne.length()) {
-                        verifyAmplify(JSONObject(jsonOne[i].toStr()))
+                if (jsonAmplify is JSONArray) {
+                    for (i in 0 until jsonAmplify.length()) {
+                        verifyAmplify(JSONObject(jsonAmplify[i].toStr()))
 
                     }
                     return
                 }
-                verifyAmplify(JSONObject(jsonOne.toStr()))
+                verifyAmplify(JSONObject(jsonAmplify.toStr()))
 
             }
 
@@ -351,33 +357,33 @@ class AWSCognitoAuthPluginFeatureTest(private val testCase: generated.model.Unit
         }
     }
 
-    private fun verifyAmplify(jsonOne: JSONObject) {
+    private fun verifyAmplify(jsonAmplify: JSONObject) {
 
-        val properties = apiExecutionResult!!::class.declaredMemberProperties
+        val propertiesOfAPIResponseClass = apiExecutionResult!!::class.declaredMemberProperties
         // Access and print the private property values
-        properties.forEach { property ->
+        propertiesOfAPIResponseClass.forEach { property ->
             // Mark the property as accessible so we can read its value
             property.isAccessible = true
 
             val name = property.name.toStr()
 
 
-            val functions = apiExecutionResult!!::class.functions
+            val functionsAPIResponse = apiExecutionResult!!::class.functions
 
             // Find the function with the given name
-            val function = functions.find {
+            val function = functionsAPIResponse.find {
                 it.name == name || it.name == "get${name[0].uppercaseChar()}${name.substring(1)}"
 
             }
-            val cur = function?.call(apiExecutionResult).toStr()
+            val functionReturn = function?.call(apiExecutionResult).toStr()
 
-            if (cur != null) {
-                val comparing = jsonOne[name].toStr()
+            if (functionReturn != null) {
+                val comparing = jsonAmplify[name].toStr()
                 if (comparing[0] !== '{') {
-                    assertEquals(comparing, cur)
+                    assertEquals(comparing, functionReturn)
                 }
                 else {
-                    var helper = cur.substring(cur.indexOf('{'))
+                    var helper = functionReturn.substring(functionReturn.indexOf('{'))
                     helper = helper.replace("=", ":")
 
                     val keys = JSONObject(helper).keys()
@@ -393,15 +399,7 @@ class AWSCognitoAuthPluginFeatureTest(private val testCase: generated.model.Unit
 
     private fun verifyCognito(validation: generated.model.Cognito) {
 
-        if (apiExecutionResult == {}) {
-            val nameToCheck = testCase.api!!.name!!
-            val listCheck : List<String> = listOf("signUp", "signOut", "signIn", "resetPassword", "fetchUserAttributes", "fetchAuthSession")
-            if (nameToCheck in listCheck ) {
-                assert(false)
 
-            }
-            return
-        }
 
 
         var expectedRequest =
