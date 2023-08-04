@@ -35,6 +35,7 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.SoftwareTokenMfaSet
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.UpdateDeviceStatusRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.UpdateUserAttributesRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.UpdateUserAttributesResponse
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.VerifySoftwareTokenResponseType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.VerifyUserAttributeRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.resendConfirmationCode
 import aws.sdk.kotlin.services.cognitoidentityprovider.setUserMfaPreference
@@ -2243,7 +2244,13 @@ internal class RealAWSCognitoAuthPlugin(
                                         this.friendlyDeviceName = friendlyDeviceName
                                         this.accessToken = token
                                     }?.also {
-                                        onSuccess.call()
+                                        when (it.status) {
+                                            is VerifySoftwareTokenResponseType.Success -> onSuccess.call()
+                                            else -> throw ServiceException(
+                                                message = "An unknown service error has occurred",
+                                                recoverySuggestion = AmplifyException.TODO_RECOVERY_SUGGESTION
+                                            )
+                                        }
                                     }
                             } ?: onError.accept(SignedOutException())
                         } catch (error: Exception) {

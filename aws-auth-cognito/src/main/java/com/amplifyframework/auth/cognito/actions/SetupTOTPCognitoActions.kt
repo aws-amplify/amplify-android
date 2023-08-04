@@ -19,8 +19,10 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.VerifySoftwareTokenResponseType
 import aws.sdk.kotlin.services.cognitoidentityprovider.respondToAuthChallenge
 import aws.sdk.kotlin.services.cognitoidentityprovider.verifySoftwareToken
+import com.amplifyframework.AmplifyException
 import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.auth.cognito.helpers.SignInChallengeHelper
+import com.amplifyframework.auth.exceptions.ServiceException
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.SetupTOTPActions
 import com.amplifyframework.statemachine.codegen.data.SignInTOTPSetupData
@@ -75,11 +77,13 @@ internal object SetupTOTPCognitoActions : SetupTOTPActions {
                                 )
                             )
                         }
-
                         else -> {
                             SetupTOTPEvent(
                                 SetupTOTPEvent.EventType.ThrowAuthError(
-                                    Exception("Software token verification failed")
+                                    ServiceException(
+                                        message = "An unknown service error has occurred",
+                                        recoverySuggestion = AmplifyException.TODO_RECOVERY_SUGGESTION
+                                    )
                                 )
                             )
                         }
