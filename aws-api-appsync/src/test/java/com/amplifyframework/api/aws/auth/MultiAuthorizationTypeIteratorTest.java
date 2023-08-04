@@ -36,7 +36,7 @@ public class MultiAuthorizationTypeIteratorTest {
     private static final String DEFAULT_OWNER_FIELD = "owner";
     private static final String DEFAULT_GROUP_CLAIM = "cognito:groups";
     private static final String DEFAULT_GROUP_FIELD = "groups";
-    private static final List<String> DEFAULT_GROUPS = Arrays.asList("Admins");
+    private static final List<String> DEFAULT_GROUPS = Collections.singletonList("Admins");
 
     private static final List<ModelOperation> DEFAULT_OPERATIONS = Arrays.asList(
         ModelOperation.CREATE,

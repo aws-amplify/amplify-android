@@ -17,6 +17,7 @@ plugins {
     id("com.android.library")
     id("kotlin-android")
     id("kotlin-parcelize")
+    id("org.jetbrains.kotlin.android")
 }
 apply(from = rootProject.file("configuration/checkstyle.gradle"))
 apply(from = rootProject.file("configuration/publishing.gradle"))
@@ -45,6 +46,7 @@ dependencies {
 
     implementation(dependency.androidx.lifecycle.runtime)
     implementation(dependency.google.material)
+    implementation("androidx.core:core-ktx:+")
 
     compileOnly(dependency.aws.location)
 

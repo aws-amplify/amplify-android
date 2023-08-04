@@ -1,0 +1,62 @@
+{
+  "description": "{description}",
+  "preConditions": {
+    "amplify-configuration": "authconfiguration.json",
+    "state": "SigningIn_SigningIn.json",
+    "mockedResponses": [
+      {
+        "type": "AWSCognitoIdentityProviderService",
+        "apiName": "signUp",
+        "responseType": "failure",
+        "response": {
+          "errorMessage": "Auth state is an invalid state, cannot process the request.",
+          "errorType": "InvalidStateException"
+        }
+      }
+    ]
+  },
+  "api": {
+    "name": "signUp",
+    "params": {
+      "username": "a*************3",
+      "password": "Somepassword13!"
+    },
+    "options": {
+      "userAttributes": {
+        "email": "joonwonc@amazon.com"
+      }
+    }
+  },
+  "validations": [
+    {
+      "type": "AWSCognitoIdentityProviderService",
+      "apiName": "signUp",
+      "request": {
+        "clientId": "4************************3",
+        "username": "a*************3",
+        "password": "Somepassword13!",
+        "userAttributes": [
+          {
+            "name": "email",
+            "value": "joonwonc@amazon.com"
+          }
+        ],
+        "secretHash": "4******************************************="
+      }
+    },
+    {
+      "type": "AWSCognitoIdentityProviderService",
+      "apiName": "signUp",
+      "responseType": "failure",
+      "response": {
+        "isSignUpComplete": false,
+        "nextStep": {
+          "signUpStep": "CONFIRM_SIGN_UP_STEP",
+          "additionalInfo": {},
+          "message": "Auth state is an invalid state, cannot process the request.",
+          "code": "InvalidStateException"
+        }
+      }
+    }
+  ]
+}

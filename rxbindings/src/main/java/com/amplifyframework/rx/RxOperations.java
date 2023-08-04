@@ -38,10 +38,10 @@ public final class RxOperations {
      * @param <T> The type representing the subscription data.
      */
     public static final class RxSubscriptionOperation<T> implements Cancelable {
-        private BehaviorSubject<ConnectionStateEvent> connectionStateSubject;
-        private Observable<T> subscriptionData;
+        private final BehaviorSubject<ConnectionStateEvent> connectionStateSubject;
+        private final Observable<T> subscriptionData;
         private Cancelable amplifyOperation;
-        private OnConnectedConsumer onConnected;
+        private final OnConnectedConsumer onConnected;
 
         /**
          * Constructor for RxSubscriptionOperation.
@@ -101,8 +101,8 @@ public final class RxOperations {
          * Describes events emitted by the {@link RxSubscriptionOperation} class.
          */
         public static final class ConnectionStateEvent {
-            private ConnectionState connectionState;
-            private String subscriptionId;
+            private final ConnectionState connectionState;
+            private final String subscriptionId;
 
             ConnectionStateEvent(@NonNull ConnectionState connectionState,
                                  @Nullable String subscriptionId) {

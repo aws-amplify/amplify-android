@@ -227,7 +227,7 @@ public abstract class StorageTransferOperation<R, T extends StorageTransferResul
      *
      */
     private class InternalOnError implements Consumer<StorageException> {
-        private Consumer<StorageException> onError;
+        private final Consumer<StorageException> onError;
 
         InternalOnError(Consumer<StorageException> onError) {
             this.onError = onError;

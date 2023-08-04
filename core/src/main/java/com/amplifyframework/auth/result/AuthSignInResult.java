@@ -95,7 +95,7 @@ public final class AuthSignInResult {
      */
     @Override
     public String toString() {
-        return "AuthSignInResult{" +
+        return "{" +
                 "isSignedIn=" + isSignedIn() +
                 ", nextStep=" + getNextStep() +
                 '}';

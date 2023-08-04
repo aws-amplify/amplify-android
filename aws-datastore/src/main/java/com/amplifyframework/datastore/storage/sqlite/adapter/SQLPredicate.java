@@ -198,7 +198,7 @@ public final class SQLPredicate {
                             op.type() == QueryOperator.Type.EQUAL ? SqlKeyword.IS_NULL : SqlKeyword.IS_NOT_NULL;
                     return builder.append(column)
                         .append(SqlKeyword.DELIMITER)
-                        .append(sqlNullCheck.toString());
+                        .append(sqlNullCheck);
                 }
             case LESS_THAN:
             case GREATER_THAN:

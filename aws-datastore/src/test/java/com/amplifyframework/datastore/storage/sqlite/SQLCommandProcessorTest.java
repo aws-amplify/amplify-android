@@ -38,6 +38,7 @@ import org.robolectric.RobolectricTestRunner;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -130,7 +131,7 @@ public class SQLCommandProcessorTest {
                 results.add(gson.fromJson(jsonString, BlogOwner.class));
             } while (cursor.moveToNext());
         }
-        assertEquals(Arrays.asList(abigailMcGregor), results);
+        assertEquals(Collections.singletonList(abigailMcGregor), results);
     }
 
     /**

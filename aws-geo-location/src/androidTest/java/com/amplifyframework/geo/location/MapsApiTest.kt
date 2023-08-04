@@ -92,11 +92,11 @@ class MapsApiTest {
     private fun signInWithCognito() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val (username, password) = Credentials.load(context)
-        auth?.signIn(username, password)
+        auth.signIn(username, password)
     }
 
     private fun signOutFromCognito() {
-        auth?.signOut()
+        auth.signOut()
     }
 
     companion object {

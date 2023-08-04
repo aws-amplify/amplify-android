@@ -179,8 +179,8 @@ public final class Temporal {
         @Override
         public String toString() {
             return "Temporal.Date{" +
-                    "localDate=\'" + localDate + "\'" +
-                    ", zoneOffset=\'" + zoneOffset + "\'" +
+                    "localDate='" + localDate + "'" +
+                    ", zoneOffset='" + zoneOffset + "'" +
                     '}';
         }
 
@@ -278,7 +278,7 @@ public final class Temporal {
         @Override
         public String toString() {
             return "Temporal.DateTime{" +
-                    "offsetDateTime=\'" + offsetDateTime + "\'" +
+                    "offsetDateTime='" + offsetDateTime + "'" +
                     '}';
         }
 
@@ -419,9 +419,9 @@ public final class Temporal {
         @Override
         public String toString() {
             return "Temporal.Time{" +
-                    "localTime=\'" +
-                    "" + localTime + "\'" +
-                    ", zoneOffset=\'" + zoneOffset + "\'" +
+                    "localTime='" +
+                    "" + localTime + "'" +
+                    ", zoneOffset='" + zoneOffset + "'" +
                     '}';
         }
 

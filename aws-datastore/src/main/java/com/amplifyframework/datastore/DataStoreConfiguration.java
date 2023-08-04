@@ -244,10 +244,7 @@ public final class DataStoreConfiguration {
         if (!ObjectsCompat.equals(getMaxTimeLapseForObserveQuery(), that.getMaxTimeLapseForObserveQuery())) {
             return false;
         }
-        if (!ObjectsCompat.equals(getObserveQueryMaxRecords(), that.getObserveQueryMaxRecords())) {
-            return false;
-        }
-        return true;
+        return ObjectsCompat.equals(getObserveQueryMaxRecords(), that.getObserveQueryMaxRecords());
     }
 
     @Override
@@ -494,7 +491,7 @@ public final class DataStoreConfiguration {
                             this.syncPageSize(pluginJson.getInt(ConfigKey.SYNC_PAGE_SIZE.toString()));
                             break;
                         default:
-                            throw new IllegalArgumentException("Unsupported config key = " + configKey.toString());
+                            throw new IllegalArgumentException("Unsupported config key = " + configKey);
                     }
                 } catch (JSONException jsonException) {
                     throw new DataStoreException(

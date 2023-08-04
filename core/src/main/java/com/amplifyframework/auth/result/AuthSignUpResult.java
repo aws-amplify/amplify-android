@@ -19,6 +19,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
 
+import com.amplifyframework.auth.result.step.AuthNextSignInStep;
 import com.amplifyframework.auth.result.step.AuthNextSignUpStep;
 
 import java.util.Objects;

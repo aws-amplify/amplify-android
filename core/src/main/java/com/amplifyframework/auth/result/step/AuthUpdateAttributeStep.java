@@ -34,5 +34,5 @@ public enum AuthUpdateAttributeStep {
     /**
      * The flow is completed and no further steps are needed.
      */
-    DONE;
+    DONE
 }

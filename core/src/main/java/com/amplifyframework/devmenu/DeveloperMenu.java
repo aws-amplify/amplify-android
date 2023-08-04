@@ -45,7 +45,7 @@ public final class DeveloperMenu implements ShakeDetector.Listener {
     // Action to take when the developer menu should be hidden.
     private HideAction hideAction;
     // Android Context associated with the application.
-    private Context context;
+    private final Context context;
     // Used to store the logs to be displayed on the developer menu.
     private PersistentLogStoragePlugin loggingPlugin;
 

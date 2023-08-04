@@ -55,10 +55,8 @@ public final class TodoOwner {
 
     @Override
     public int hashCode() {
-        return new StringBuilder()
-                .append(getName())
-                .append(getEmail())
-                .toString()
+        return (getName() +
+                getEmail())
                 .hashCode();
     }
 

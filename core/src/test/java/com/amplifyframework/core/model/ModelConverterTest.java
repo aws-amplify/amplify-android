@@ -60,7 +60,7 @@ public class ModelConverterTest {
      */
     @Test public void toMapForModelWithChildrenReturnsExpectedMap() throws AmplifyException {
         SchemaRegistry schemaRegistry = SchemaRegistry.instance();
-        schemaRegistry.register(new HashSet<>(Arrays.asList(BlogOwner.class)));
+        schemaRegistry.register(new HashSet<>(Collections.singletonList(BlogOwner.class)));
         Blog blog = Blog.builder()
                 .name("A neat blog")
                 .owner(BlogOwner.builder()

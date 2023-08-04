@@ -45,7 +45,7 @@ public enum AuthFlowType {
      * type for USER_PASSWORD_AUTH.
      */
     USER_PASSWORD_AUTH("USER_PASSWORD_AUTH");
-    private String value;
+    private final String value;
 
     AuthFlowType(String value) {
         this.value = value;

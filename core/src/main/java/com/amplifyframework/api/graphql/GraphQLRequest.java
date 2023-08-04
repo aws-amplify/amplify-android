@@ -126,8 +126,8 @@ public abstract class GraphQLRequest<R> {
     @Override
     public String toString() {
         return "GraphQLRequest{" +
-                ", responseType=\'" + responseType + "\'" +
-                ", variablesSerializer=\'" + variablesSerializer + "\'" +
+                ", responseType='" + responseType + "'" +
+                ", variablesSerializer='" + variablesSerializer + "'" +
                 '}';
     }
 

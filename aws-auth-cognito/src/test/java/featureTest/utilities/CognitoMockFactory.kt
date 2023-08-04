@@ -19,6 +19,7 @@ import aws.sdk.kotlin.services.cognitoidentity.CognitoIdentityClient
 import aws.sdk.kotlin.services.cognitoidentity.model.Credentials
 import aws.sdk.kotlin.services.cognitoidentity.model.GetCredentialsForIdentityResponse
 import aws.sdk.kotlin.services.cognitoidentity.model.GetIdResponse
+import aws.sdk.kotlin.services.cognitoidentity.model.NotAuthorizedException
 import aws.sdk.kotlin.services.cognitoidentityprovider.CognitoIdentityProviderClient
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AttributeType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AuthenticationResultType
@@ -39,218 +40,241 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.RevokeTokenResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.SignUpResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.UpdateDeviceStatusResponse
 import aws.smithy.kotlin.runtime.time.Instant
+import com.amplifyframework.auth.AuthException
+import com.amplifyframework.auth.cognito.featuretest.AuthAPI
 import com.amplifyframework.auth.cognito.featuretest.CognitoType
 import com.amplifyframework.auth.cognito.featuretest.MockResponse
 import com.amplifyframework.auth.cognito.featuretest.ResponseType
-import com.amplifyframework.auth.cognito.featuretest.serializers.CognitoIdentityExceptionSerializer
-import com.amplifyframework.auth.cognito.featuretest.serializers.CognitoIdentityProviderExceptionSerializer
+import com.amplifyframework.auth.exceptions.InvalidStateException
+import com.amplifyframework.auth.exceptions.ValidationException
+import generated.model.MockedResponse
+import generated.model.UnitTest
+import generated.model.TypeResponse
+import io.mockk.InternalPlatformDsl.toStr
 import io.mockk.coEvery
+import io.mockk.every
+import io.mockk.mockk
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.boolean
+import org.json.JSONObject
 
 /**
  * Factory to mock aws sdk's cognito API calls and responses.
  */
 class CognitoMockFactory(
     private val mockCognitoIPClient: CognitoIdentityProviderClient,
-    private val mockCognitoIdClient: CognitoIdentityClient
+    private val mockCognitoIdClient: CognitoIdentityClient,
+    private val test: generated.model.UnitTest
 ) {
-    fun mock(mockResponse: MockResponse) {
-        val responseObject = mockResponse.response as JsonObject
+    fun mock() {
+        val responseObject = test.preConditions!!.mockedResponses!!
 
-        when (mockResponse.apiName) {
-            "forgotPassword" -> {
-                coEvery { mockCognitoIPClient.forgotPassword(any()) } coAnswers {
-                    setupError(mockResponse, responseObject)
-                    ForgotPasswordResponse.invoke {
-                        this.codeDeliveryDetails = parseCodeDeliveryDetails(responseObject)
-                    }
-                }
-            }
-            "signUp" -> {
-                coEvery { mockCognitoIPClient.signUp(any()) } coAnswers {
-                    setupError(mockResponse, responseObject)
-                    SignUpResponse.invoke {
-                        this.codeDeliveryDetails = parseCodeDeliveryDetails(responseObject)
-                        this.userConfirmed = if (responseObject.containsKey("userConfirmed")) {
-                            (responseObject["userConfirmed"] as? JsonPrimitive)?.boolean ?: false
-                        } else false
-                    }
-                }
-            }
-            "initiateAuth" -> {
-                coEvery { mockCognitoIPClient.initiateAuth(any()) } coAnswers {
-                    setupError(mockResponse, responseObject)
-                    InitiateAuthResponse.invoke {
-                        this.challengeName = responseObject["challengeName"]?.let {
-                            ChallengeNameType.fromValue((it as JsonPrimitive).content)
+        for (resp in responseObject) {
+            when (resp.apiName) {
+                "forgotPassword" -> {
+                    coEvery { mockCognitoIPClient.forgotPassword(any()) } coAnswers {
+                        setupError(resp)
+                        ForgotPasswordResponse.invoke {
+                            this.codeDeliveryDetails = parseCodeDeliveryDetails(resp)
                         }
+                    }
+                }
+                "signUp" -> {
+                    coEvery { mockCognitoIPClient.signUp(any()) } coAnswers {
+                        setupError(resp)
+                        SignUpResponse.invoke {
+                            this.codeDeliveryDetails = parseCodeDeliveryDetails(resp)
+                            this.userConfirmed = false
+                            val userSubHelp = JSONObject(resp!!.response!!.asSuccess().asString())
+                            val userSub = userSubHelp["userId"].toStr()
+                            this.userSub = userSub
+                        }
+                    }
+                }
+                "initiateAuth" -> {
+                    coEvery { mockCognitoIPClient.initiateAuth(any()) } coAnswers {
+                        setupError(resp)
+                        InitiateAuthResponse.invoke {
+                            this.challengeName = JSONObject(resp.response!!.asSuccess().asString())["challengeName"]?.let {
+                                ChallengeNameType.fromValue(it.toStr())
+                            }
 
-                        this.challengeParameters = responseObject["challengeParameters"]?.let {
-                            parseChallengeParams(it as JsonObject)
-                        }
-                    }
-                }
-            }
-            "respondToAuthChallenge" -> {
-                coEvery { mockCognitoIPClient.respondToAuthChallenge(any()) } coAnswers {
-                    setupError(mockResponse, responseObject)
-                    RespondToAuthChallengeResponse.invoke {
-                        this.authenticationResult = responseObject["authenticationResult"]?.let {
-                            parseAuthenticationResult(it as JsonObject)
-                        }
-                        this.session = responseObject["session"]?.let { (it as JsonPrimitive).content }
-                        this.challengeName = responseObject["challengeName"]?.let {
-                            ChallengeNameType.fromValue((it as JsonPrimitive).content)
-                        }
-                        this.challengeParameters = responseObject["challengeParameters"]?.let {
-                            parseChallengeParams(it as JsonObject)
-                        }
-                    }
-                }
-            }
-            "confirmDevice" -> {
-                coEvery { mockCognitoIPClient.confirmDevice(any()) } coAnswers {
-                    setupError(mockResponse, responseObject)
-                    ConfirmDeviceResponse.invoke {}
-                }
-            }
-            "getId" -> {
-                coEvery { mockCognitoIdClient.getId(any()) } coAnswers {
-                    setupError(mockResponse, responseObject)
-                    GetIdResponse.invoke {
-                        this.identityId = (responseObject["identityId"] as JsonPrimitive).content
-                    }
-                }
-            }
-            "getUser" -> {
-                coEvery { mockCognitoIPClient.getUser(any()) } coAnswers {
-                    setupError(mockResponse, responseObject)
-                    GetUserResponse.invoke {
-                        userAttributes = listOf<AttributeType>(
-                            AttributeType.invoke {
-                                name = "email"
-                                value = "email@email.com"
-                            },
-                            AttributeType.invoke {
-                                name = "phone_number"
-                                value = "000-000-0000"
+                            this.challengeParameters = JSONObject(resp.response!!.asSuccess().asString())?.let {
+                                parseChallengeParams(it)
                             }
-                        )
+                        }
                     }
                 }
-            }
-            "getCredentialsForIdentity" -> {
-                coEvery { mockCognitoIdClient.getCredentialsForIdentity(any()) } coAnswers {
-                    setupError(mockResponse, responseObject)
-                    GetCredentialsForIdentityResponse.invoke {
-                        this.credentials = parseCredentials(responseObject["credentials"] as JsonObject)
-                    }
-                }
-            }
-            "deleteUser" -> {
-                coEvery { mockCognitoIPClient.deleteUser(any()) } coAnswers {
-                    setupError(mockResponse, responseObject)
-                    DeleteUserResponse.invoke {}
-                }
-            }
-            "revokeToken" -> {
-                coEvery { mockCognitoIPClient.revokeToken(any()) } coAnswers {
-                    setupError(mockResponse, responseObject)
-                    RevokeTokenResponse.invoke {}
-                }
-            }
-            "globalSignOut" -> {
-                coEvery { mockCognitoIPClient.globalSignOut(any()) } coAnswers {
-                    setupError(mockResponse, responseObject)
-                    GlobalSignOutResponse.invoke {}
-                }
-            }
-            "updateDeviceStatus" -> {
-                coEvery { mockCognitoIPClient.updateDeviceStatus(any()) } coAnswers {
-                    setupError(mockResponse, responseObject)
-                    UpdateDeviceStatusResponse.invoke { }
-                }
-            }
-            "forgetDevice" -> {
-                coEvery { mockCognitoIPClient.forgetDevice(any()) } coAnswers {
-                    setupError(mockResponse, responseObject)
-                    ForgetDeviceResponse.invoke {}
-                }
-            }
-            "listDevices" -> {
-                coEvery { mockCognitoIPClient.listDevices(any()) } coAnswers {
-                    setupError(mockResponse, responseObject)
-                    ListDevicesResponse.invoke {
-                        devices = listOf<DeviceType>(
-                            DeviceType.invoke {
-                                deviceAttributes = listOf<AttributeType>(
-                                    AttributeType.invoke {
-                                        name = "name"
-                                        value = "value"
-                                    }
-                                )
-                                deviceKey = "deviceKey"
-                                deviceCreateDate = Instant.now()
-                                deviceLastAuthenticatedDate = Instant.now()
-                                deviceLastModifiedDate = Instant.now()
+                "respondToAuthChallenge" -> {
+                    coEvery { mockCognitoIPClient.respondToAuthChallenge(any()) } coAnswers {
+                        setupError(resp)
+                        RespondToAuthChallengeResponse.invoke {
+                            this.authenticationResult = JSONObject(resp.response!!.asSuccess().asString())["authenticationResult"]?.let {
+                                parseAuthenticationResult(JSONObject(it.toStr()))
                             }
-                        )
+                            this.session = JSONObject(resp!!.response!!.asSuccess().asString())["session"]?.let { (it as String) }
+                            this.challengeName = JSONObject(resp!!.response!!.asSuccess().asString())["challengeName"]?.let {
+                                ChallengeNameType.fromValue(it as String)
+                            }
+                            this.challengeParameters = JSONObject(resp!!.response!!.asSuccess().asString())["challengeParameters"]?.let {
+                                parseChallengeParams(JSONObject(it.toStr()))
+                            }
+                        }
                     }
                 }
+                "confirmDevice" -> {
+                    coEvery { mockCognitoIPClient.confirmDevice(any()) } coAnswers {
+                        setupError(resp)
+                        ConfirmDeviceResponse.invoke {}
+                    }
+                }
+                "getId" -> {
+                    coEvery { mockCognitoIdClient.getId(any()) } coAnswers {
+                        setupError(resp)
+                        GetIdResponse.invoke {
+                            this.identityId = (JSONObject(resp!!.response!!.asSuccess().asString())["identityId"] as String)
+                        }
+                    }
+                }
+                "getUser" -> {
+                    coEvery { mockCognitoIPClient.getUser(any()) } coAnswers {
+                        setupError(resp)
+                        GetUserResponse.invoke {
+                            userAttributes = listOf<AttributeType>(
+                                AttributeType.invoke {
+                                    name = "email"
+                                    value = "email@email.com"
+                                },
+                                AttributeType.invoke {
+                                    name = "phone_number"
+                                    value = "000-000-0000"
+                                }
+                            )
+                        }
+                    }
+                }
+                "getCredentialsForIdentity" -> {
+                    coEvery { mockCognitoIdClient.getCredentialsForIdentity(any()) } coAnswers {
+                        setupError(resp)
+                        GetCredentialsForIdentityResponse.invoke {
+                            this.credentials = parseCredentials(JSONObject(JSONObject(resp!!.response!!.asSuccess().asString())["credentials"].toStr()))
+                        }
+                    }
+                }
+                "deleteUser" -> {
+                    coEvery { mockCognitoIPClient.deleteUser(any()) } coAnswers {
+                        setupError(resp)
+                        DeleteUserResponse.invoke {}
+                    }
+                }
+                "revokeToken" -> {
+                    coEvery { mockCognitoIPClient.revokeToken(any()) } coAnswers {
+                        setupError(resp)
+                        RevokeTokenResponse.invoke {}
+                    }
+                }
+                "globalSignOut" -> {
+                    coEvery { mockCognitoIPClient.globalSignOut(any()) } coAnswers {
+                        setupError(resp)
+                        GlobalSignOutResponse.invoke {}
+                    }
+                }
+                "updateDeviceStatus" -> {
+                    coEvery { mockCognitoIPClient.updateDeviceStatus(any()) } coAnswers {
+                        setupError(resp)
+                        UpdateDeviceStatusResponse.invoke { }
+                    }
+                }
+                "forgetDevice" -> {
+                    coEvery { mockCognitoIPClient.forgetDevice(any()) } coAnswers {
+                        setupError(resp)
+                        ForgetDeviceResponse.invoke {}
+                    }
+                }
+                "listDevices" -> {
+                    coEvery { mockCognitoIPClient.listDevices(any()) } coAnswers {
+                        setupError(resp)
+                        ListDevicesResponse.invoke {
+                            devices = listOf<DeviceType>(
+                                DeviceType.invoke {
+                                    deviceAttributes = listOf<AttributeType>(
+                                        AttributeType.invoke {
+                                            name = "name"
+                                            value = "value"
+                                        }
+                                    )
+                                    deviceKey = "deviceKey"
+                                    deviceCreateDate = Instant.now()
+                                    deviceLastAuthenticatedDate = Instant.now()
+                                    deviceLastModifiedDate = Instant.now()
+                                }
+                            )
+                        }
+                    }
+                }
+
+
+
+
+                else -> println("no mock for this")//throw Error("mock for ${test.api!!.name} not defined!")
+
             }
-            else -> throw Error("mock for ${mockResponse.apiName} not defined!")
+        }
+
+    }
+    private fun setupError(response: MockedResponse) {
+        if (response!!.responseType == TypeResponse.Error) {
+            val cur = response!!.response!!.asError()
+
+            when (cur.errorType) {
+                "NotAuthorizedException" -> throw NotAuthorizedException(mockk())
+                "InvalidStateException" -> throw InvalidStateException()
+                else -> throw ValidationException(cur.errorType!!, cur.errorMessage!!)
+
+            }
         }
     }
 
-    private fun setupError(
-        mockResponse: MockResponse,
-        responseObject: JsonObject
-    ) {
-        if (mockResponse.responseType == ResponseType.Failure) {
-            val response = Json.decodeFromString(
-                when (mockResponse.type) {
-                    CognitoType.CognitoIdentity -> CognitoIdentityExceptionSerializer
-                    CognitoType.CognitoIdentityProvider -> CognitoIdentityProviderExceptionSerializer
-                },
-                responseObject.toString()
-            )
-            throw response
+
+
+    private fun parseChallengeParams(params: JSONObject): Map<String, String> {
+        val keys = params.keys()
+        val curr : MutableMap<String, String> = mutableMapOf()
+        for (key in keys) {
+            curr[key.toStr()] = params[key.toStr()].toStr()
         }
+        return curr
     }
 
-    private fun parseChallengeParams(params: JsonObject): Map<String, String> {
-        return params.mapValues { (k, v) -> (v as JsonPrimitive).content }
-    }
-
-    private fun parseAuthenticationResult(result: JsonObject): AuthenticationResultType {
+    private fun parseAuthenticationResult(result: JSONObject): AuthenticationResultType {
         return AuthenticationResultType.invoke {
-            idToken = (result["idToken"] as JsonPrimitive).content
-            accessToken = (result["accessToken"] as JsonPrimitive).content
-            refreshToken = (result["refreshToken"] as JsonPrimitive).content
-            expiresIn = (result["expiresIn"] as JsonPrimitive).content.toInt()
+            idToken = (result["idToken"].toStr())
+            accessToken = (result["accessToken"].toStr())
+            refreshToken = (result["refreshToken"].toStr())
+            expiresIn = (result["expiresIn"].toStr().toInt())
         }
     }
 
-    private fun parseCredentials(result: JsonObject): Credentials {
+    private fun parseCredentials(result: JSONObject): Credentials {
         return Credentials.invoke {
-            accessKeyId = (result["accessKeyId"] as JsonPrimitive).content
-            secretKey = (result["secretKey"] as JsonPrimitive).content
-            sessionToken = (result["sessionToken"] as JsonPrimitive).content
-            expiration = Instant.fromEpochSeconds((result["expiration"] as JsonPrimitive).content)
+            accessKeyId = (result["accessKeyId"].toStr())
+            secretKey = (result["secretKey"].toStr())
+            sessionToken = (result["sessionToken"].toStr())
+            expiration = Instant.fromEpochSeconds((result["expiration"].toStr()))
         }
     }
 
-    private fun parseCodeDeliveryDetails(response: JsonObject): CodeDeliveryDetailsType {
-        val codeDeliveryDetails = response["codeDeliveryDetails"] as JsonObject
+    private fun parseCodeDeliveryDetails(response: MockedResponse): CodeDeliveryDetailsType {
+        val codeDeliveryDetails = JSONObject(JSONObject(response.response!!.asSuccess().asString())["codeDeliveryDetails"].toStr())
 
         return CodeDeliveryDetailsType.invoke {
-            destination = (codeDeliveryDetails["destination"] as JsonPrimitive).content
+            destination = (codeDeliveryDetails["destination"].toStr())
             deliveryMedium =
-                DeliveryMediumType.fromValue((codeDeliveryDetails["deliveryMedium"] as JsonPrimitive).content)
-            attributeName = (codeDeliveryDetails["attributeName"] as JsonPrimitive).content
+                DeliveryMediumType.fromValue((codeDeliveryDetails["deliveryMedium"].toStr()))
+            attributeName = (codeDeliveryDetails["attributeName"].toStr())
+
         }
     }
 }

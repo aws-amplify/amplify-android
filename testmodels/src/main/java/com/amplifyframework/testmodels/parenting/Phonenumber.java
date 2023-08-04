@@ -60,11 +60,9 @@ public final class Phonenumber {
   
   @Override
    public int hashCode() {
-    return new StringBuilder()
-      .append(getCode())
-      .append(getCarrier())
-      .append(getNumber())
-      .toString()
+    return (String.valueOf(getCode()) +
+            getCarrier() +
+            getNumber())
       .hashCode();
   }
   

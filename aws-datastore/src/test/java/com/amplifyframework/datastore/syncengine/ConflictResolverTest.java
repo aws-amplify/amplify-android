@@ -42,6 +42,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -196,7 +197,7 @@ public final class ConflictResolverTest {
         BlogOwner localModel = BlogOwner.builder()
                 .name("Local Blogger")
                 .build();
-        SchemaRegistry.instance().register(new HashSet<>(Arrays.asList(BlogOwner.class)));
+        SchemaRegistry.instance().register(new HashSet<>(Collections.singletonList(BlogOwner.class)));
         Map<String, Object> ownerData = new HashMap<>();
         ownerData.put("id", localModel.getId());
         ownerData.put("name", localModel.getName());
@@ -259,7 +260,7 @@ public final class ConflictResolverTest {
                 .serializedData(blogOwnerData)
                 .build();
         PendingMutation<SerializedModel> mutation = PendingMutation.update(serializedOwner, schema);
-        SchemaRegistry.instance().register(new HashSet<>(Arrays.asList(BlogOwner.class)));
+        SchemaRegistry.instance().register(new HashSet<>(Collections.singletonList(BlogOwner.class)));
         // Arrange server state for the model, in conflict to local data
         Map<String, Object> serverBlogOwnerData = new HashMap<>();
         serverBlogOwnerData.put("name", "A seasoned writer");

@@ -12,10 +12,12 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
+/*
 @file:Suppress("UNCHECKED_CAST")
 
 package com.amplifyframework.auth.cognito.featuretest.serializers
+
+
 
 import com.amplifyframework.auth.cognito.featuretest.serializers.AuthStatesProxy.Companion.format
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
@@ -203,7 +205,7 @@ internal data class AuthStatesProxy(
     }
 }
 
-internal fun AuthState.serialize(): String = format.encodeToString(this)
+//internal fun AuthState.serialize(): String = format.encodeToString(this)
 internal fun String.deserializeToAuthState(): AuthState = format.decodeFromString(this)
 
 private class AuthStatesSerializer<T> : KSerializer<T> {
@@ -219,3 +221,5 @@ private class AuthStatesSerializer<T> : KSerializer<T> {
         encoder.encodeSerializableValue(serializer, AuthStatesProxy.toProxy(value))
     }
 }
+
+*/

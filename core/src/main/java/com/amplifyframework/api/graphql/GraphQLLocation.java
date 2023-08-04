@@ -22,8 +22,8 @@ import androidx.annotation.Nullable;
  * Location mapping to a particular line and column in the request.
  */
 public final class GraphQLLocation {
-    private int line;
-    private int column;
+    private final int line;
+    private final int column;
 
     /**
      * Constructs a new GraphQLLocation.
@@ -78,8 +78,8 @@ public final class GraphQLLocation {
     @Override
     public String toString() {
         return "GraphQLLocation{" +
-                "line=\'" + line + "\'" +
-                ", column=\'" + column + "\'" +
+                "line='" + line + "'" +
+                ", column='" + column + "'" +
                 '}';
     }
 }

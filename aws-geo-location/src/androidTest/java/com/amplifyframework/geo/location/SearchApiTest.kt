@@ -95,7 +95,7 @@ class SearchApiTest {
     fun searchByTextReturnsResult() {
         signInWithCognito()
         val query = UUID.randomUUID().toString()
-        val result = geo?.searchByText(query, GeoSearchByTextOptions.defaults())
+        val result = geo.searchByText(query, GeoSearchByTextOptions.defaults())
         Assert.assertNotNull(result)
         Assert.assertNotNull(result!!.places)
     }
@@ -114,7 +114,7 @@ class SearchApiTest {
             nextDouble(-90.0, 90.0),
             nextDouble(-180.0, 180.0)
         )
-        val result = geo?.searchByCoordinates(coordinates, GeoSearchByCoordinatesOptions.defaults())
+        val result = geo.searchByCoordinates(coordinates, GeoSearchByCoordinatesOptions.defaults())
         Assert.assertNotNull(result)
         Assert.assertNotNull(result!!.places)
 

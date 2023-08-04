@@ -20,6 +20,7 @@ import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 /** 
@@ -49,7 +50,7 @@ public final class SchemaDriftModelProvider implements ModelProvider {
   @Override
    public Set<Class<? extends Model>> models() {
     final Set<Class<? extends Model>> modifiableSet = new HashSet<>(
-          Arrays.<Class<? extends Model>>asList(SchemaDrift.class)
+            Collections.<Class<? extends Model>>singletonList(SchemaDrift.class)
         );
     
         return Immutable.of(modifiableSet);

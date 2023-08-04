@@ -78,7 +78,7 @@ public final class AWSS3StorageListAccessLevelTest {
         Context context = getApplicationContext();
 
         WorkmanagerTestUtils.INSTANCE.initializeWorkmanagerTestUtil(context);
-        synchronousAuth = SynchronousAuth.delegatingToCognito(context, (AuthPlugin) new AWSCognitoAuthPlugin());
+        synchronousAuth = SynchronousAuth.delegatingToCognito(context, new AWSCognitoAuthPlugin());
         IdentityIdSource identityIdSource = MobileClientIdentityIdSource.create(synchronousAuth);
         UserCredentials credentials = UserCredentials.create(context, identityIdSource);
         Iterator<Credential> users = credentials.iterator();

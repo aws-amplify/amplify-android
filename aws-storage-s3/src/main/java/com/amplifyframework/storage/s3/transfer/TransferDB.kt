@@ -324,7 +324,7 @@ internal class TransferDB private constructor(context: Context) {
      * @param type The type of transfers to query for.
      * @return A Cursor pointing to records in the database with the given type.
      */
-    fun queryAllTransfersWithType(type: TransferType): Cursor? {
+    fun queryAllTransfersWithType(type: TransferType): Cursor {
         return if (type == TransferType.ANY) {
             transferDBHelper.query(transferDBHelper.contentUri)
         } else {
@@ -348,7 +348,7 @@ internal class TransferDB private constructor(context: Context) {
     fun queryTransfersWithTypeAndStates(
         type: TransferType,
         states: Array<TransferState>
-    ): Cursor? {
+    ): Cursor {
         val selection: String
         val selectionArgs: Array<String?>
         var index: Int
@@ -386,7 +386,7 @@ internal class TransferDB private constructor(context: Context) {
      * @param id The id of the transfer.
      * @return The result Cursor of the query.
      */
-    fun queryTransferById(id: Int): Cursor? {
+    fun queryTransferById(id: Int): Cursor {
         return transferDBHelper.query(getRecordUri(id))
     }
 

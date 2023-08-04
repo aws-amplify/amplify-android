@@ -253,8 +253,8 @@ public final class Casing {
      * A step where you can perform a case conversion.
      */
     public static final class CasingTarget {
-        private CaseType sourceCasing;
-        private CaseType targetCasing;
+        private final CaseType sourceCasing;
+        private final CaseType targetCasing;
 
         private CasingTarget(CaseType sourceCasing, CaseType targetCasing) {
             this.sourceCasing = sourceCasing;

@@ -121,7 +121,7 @@ public class SQLPredicateTest {
     @Test
     public void testNotNull() throws DataStoreException {
         SQLPredicate sqlPredicate = new SQLPredicate(Where.matches(Blog.NAME.ne(null)).getQueryPredicate());
-        System.out.println(sqlPredicate.toString());
+        System.out.println(sqlPredicate);
         assertEquals("name IS NOT NULL", sqlPredicate.toString());
     }
 
@@ -132,7 +132,7 @@ public class SQLPredicateTest {
     @Test
     public void testIsNull() throws DataStoreException {
         SQLPredicate sqlPredicate = new SQLPredicate(Where.matches(Blog.NAME.eq(null)).getQueryPredicate());
-        System.out.println(sqlPredicate.toString());
+        System.out.println(sqlPredicate);
         assertEquals("name IS NULL", sqlPredicate.toString());
     }
 

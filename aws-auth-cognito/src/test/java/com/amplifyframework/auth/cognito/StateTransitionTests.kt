@@ -646,7 +646,7 @@ class StateTransitionTests : StateTransitionTestBase() {
                 }
                 authState?.run {
                     configureLatch.countDown()
-                    token?.let(stateMachine::cancel)
+                    token.let(stateMachine::cancel)
 
                     stateMachine.send(AuthorizationEvent(AuthorizationEvent.EventType.RefreshSession(credentials)))
                     stateMachine.listen(

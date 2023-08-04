@@ -34,7 +34,7 @@ public final class AWSCognitoAuthSignOutOptions extends AuthSignOutOptions {
      *                      into with a web UI experience (example value: "org.mozilla.firefox").
      *                      Defaults to the Chrome package if not specified.
      */
-    protected AWSCognitoAuthSignOutOptions(boolean globalSignOut, String browserPackage) {
+    private AWSCognitoAuthSignOutOptions(boolean globalSignOut, String browserPackage) {
         super(globalSignOut);
         this.browserPackage = browserPackage;
     }

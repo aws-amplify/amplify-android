@@ -53,10 +53,8 @@ public final class Child {
   
   @Override
    public int hashCode() {
-    return new StringBuilder()
-      .append(getName())
-      .append(getAddress())
-      .toString()
+    return (getName() +
+            getAddress())
       .hashCode();
   }
   

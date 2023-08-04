@@ -43,5 +43,5 @@ public enum AuthChannelEventName {
     /**
      * The account for a user has been deleted.
      */
-    USER_DELETED;
+    USER_DELETED
 }

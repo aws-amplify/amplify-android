@@ -121,7 +121,7 @@ public final class GraphQLPathSegment {
     @Override
     public String toString() {
         return "GraphQLPathSegment{" +
-                "value=\'" + value + "\'" +
+                "value='" + value + "'" +
                 '}';
     }
 }

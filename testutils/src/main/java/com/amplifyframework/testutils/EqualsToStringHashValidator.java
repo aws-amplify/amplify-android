@@ -52,7 +52,7 @@ public final class EqualsToStringHashValidator {
         // as far as the equals method is concerned.
         Assert.assertEquals(reference, valueEqualsReferenceNotEquals);
         // Check that reference and valueEqualsReferenceNotEquals are not the same instance.
-        Assert.assertFalse(reference == valueEqualsReferenceNotEquals);
+        Assert.assertNotSame(reference, valueEqualsReferenceNotEquals);
 
         // Since reference and valueEqualsReferenceNotEquals are equals,
         // we should only have two items in the set.

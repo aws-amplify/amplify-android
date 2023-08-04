@@ -99,7 +99,7 @@ public final class MultiAuthorizationTypeIterator implements AuthorizationTypeIt
     public String toString() {
         return "PriorityBasedAuthRuleIterator - " +
             "items(" + authRules.size() + ") - " +
-            "[" + authRules.toString() + "] - " +
+            "[" + authRules + "] - " +
             "position:" + currentPosition;
     }
 

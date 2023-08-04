@@ -104,7 +104,7 @@ public final class StorageItem {
         return "StorageItem{" +
                 "key='" + key + '\'' +
                 ", size=" + size +
-                ", lastModified=" + lastModified.toString() +
+                ", lastModified=" + lastModified +
                 ", eTag='" + eTag + '\'' +
                 ", pluginResults=" + pluginResults +
                 '}';

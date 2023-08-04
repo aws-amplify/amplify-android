@@ -38,7 +38,7 @@ public final class AWSCognitoAuthWebUISignInOptions extends AuthWebUISignInOptio
      * @param browserPackage Specify which browser package should be used for web sign in (e.g. "org.mozilla.firefox").
      *                       Defaults to the Chrome package if not specified.
      */
-    protected AWSCognitoAuthWebUISignInOptions(
+    private AWSCognitoAuthWebUISignInOptions(
             List<String> scopes,
             String idpIdentifier,
             String browserPackage

@@ -15,62 +15,103 @@
 
 package featureTest.utilities
 
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.AnalyticsMetadataType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AttributeType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ForgotPasswordRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.SignUpRequest
+import aws.smithy.kotlin.runtime.content.Document
+import aws.smithy.kotlin.runtime.util.length
 import com.amplifyframework.auth.cognito.featuretest.ExpectationShapes
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
+import generated.model.Cognito
+import generated.model.Response
+import generated.model.Validation
+import io.mockk.InternalPlatformDsl.toStr
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.decodeFromJsonElement
+import org.json.JSONArray
+import org.json.JSONObject
+
 
 /**
  * Factory to generate request object for aws SDK's cognito APIs
  */
 object CognitoRequestFactory {
-    fun getExpectedRequestFor(targetApi: ExpectationShapes.Cognito): Any = when (targetApi.apiName) {
-        "forgotPassword" -> {
-            val params = targetApi.request as JsonObject
+    fun getExpectedRequestFor(apiName : String, targetApi: Map<String, Document?>): Any = when (apiName) {
+        "resetPassword" -> {
+            val params = JSONObject(targetApi["request"]!!.asString())
             val expectedRequestBuilder: ForgotPasswordRequest.Builder.() -> Unit = {
-                username = (params["username"] as JsonPrimitive).content
-                clientMetadata =
-                    Json.decodeFromJsonElement<Map<String, String>>(params["clientMetadata"] as JsonObject)
-                clientId = (params["clientId"] as JsonPrimitive).content
-                secretHash = (params["secretHash"] as JsonPrimitive).content
+                username = (params["username"]!!.toStr())
+                //clientMetadata =
+                    //Json.decodeFromJsonElement<Map<String, String>>(params["clientMetadata"] as JsonObject)
+                clientId = "app Client Id"
+                secretHash = AuthHelper.getSecretHash("", "", "")
+
+                analyticsMetadata = AnalyticsMetadataType.invoke {
+                    analyticsEndpointId = "test-endpoint-id"
+                }
+                clientMetadata = mapOf()
             }
 
+
+
             ForgotPasswordRequest.invoke(expectedRequestBuilder)
+
         }
 
         "signUp" -> {
-            val params = targetApi.request as JsonObject
-            val expectedRequest: SignUpRequest.Builder.() -> Unit = {
-                clientId = (params["clientId"] as JsonPrimitive).content
-                username = (params["username"] as JsonPrimitive).content
-                password = (params["password"] as JsonPrimitive).content
+            val params = JSONObject(targetApi["request"]!!.asString())
 
-                /*
-                 * "userAttributes": [
-                      {
-                        "name": "email",
-                        "value": "user@domain.com"
-                      }
-                    ]
-                 */
-                userAttributes = (params["userAttributes"] as JsonArray).mapNotNull {
-                    val entry = it as JsonObject
-                    AttributeType {
-                        name = (entry["name"] as JsonPrimitive).content
-                        value = (entry["value"] as JsonPrimitive).content
+            val expectedRequest: SignUpRequest.Builder.() -> Unit = {
+
+                clientId = "app Client Id"//(params["clientId"]!!.toStr())
+                username = (params["username"]!!.toStr())
+                password = (params["password"]!!.toStr())
+
+                    /*
+                     * "userAttributes": [
+                          {
+
+                            "name": "email",
+                            "value": "user@domain.com"
+                          }
+                        ]
+                     */
+                var curr = listOf<AttributeType>()
+                val curren = JSONArray(params["userAttributes"].toStr())
+
+                for (i in 0 until curren.length()){
+                    val att = AttributeType {
+                        name = JSONObject(curren[i].toStr())["name"].toStr()
+                        value = JSONObject(curren[i].toStr())["value"].toStr()
                     }
+                    curr = curr + att
+
                 }
+
+                userAttributes = curr
                 secretHash = AuthHelper.getSecretHash("", "", "")
+
+                analyticsMetadata = AnalyticsMetadataType.invoke {
+                    analyticsEndpointId = "test-endpoint-id"
+                }
+
+
             }
             SignUpRequest.invoke(expectedRequest)
         }
+        else -> {
+            error("Expected request for $targetApi for Cognito is undefined")
+        }
 
-        else -> error("Expected request for $targetApi for Cognito is not defined")
+
     }
+
+
+
+
 }
+

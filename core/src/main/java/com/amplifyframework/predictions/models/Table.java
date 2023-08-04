@@ -84,7 +84,7 @@ public final class Table extends ImageFeature<List<Cell>> {
             extends ImageFeature.Builder<Builder, Table, List<Cell>> {
         private int rowSize;
         private int columnSize;
-        private List<Cell> cells;
+        private final List<Cell> cells;
 
         private Builder() {
             this.cells = Collections.emptyList();

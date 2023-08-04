@@ -16,6 +16,7 @@
 plugins {
     id("com.android.library")
     id("kotlin-android")
+    id("org.jetbrains.kotlin.android")
 }
 apply(from = rootProject.file("configuration/publishing.gradle"))
 
@@ -27,6 +28,7 @@ dependencies {
     implementation(dependency.androidx.core.ktx)
     implementation(project(":core"))
     implementation(project(":common-core"))
+    implementation("androidx.core:core-ktx:+")
 
     testImplementation(testDependency.androidx.test.core)
     testImplementation(testDependency.junit)

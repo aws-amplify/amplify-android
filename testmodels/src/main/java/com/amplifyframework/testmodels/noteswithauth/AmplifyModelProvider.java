@@ -49,7 +49,7 @@ public final class AmplifyModelProvider implements ModelProvider {
   @Override
    public Set<Class<? extends Model>> models() {
     final Set<Class<? extends Model>> modifiableSet = new HashSet<>(
-          Arrays.<Class<? extends Model>>asList(Task.class, PrivateNote.class, PublicNote.class)
+          Arrays.asList(Task.class, PrivateNote.class, PublicNote.class)
         );
     
         return Immutable.of(modifiableSet);

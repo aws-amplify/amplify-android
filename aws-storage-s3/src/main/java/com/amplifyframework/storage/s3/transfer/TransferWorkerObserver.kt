@@ -64,7 +64,7 @@ internal class TransferWorkerObserver private constructor(
             transferStatusUpdater: TransferStatusUpdater,
             transferDB: TransferDB
         ): TransferWorkerObserver {
-            return TransferWorkerObserver.INSTANCE ?: run {
+            return INSTANCE ?: run {
                 val transferWorkerObserver = TransferWorkerObserver(
                     context,
                     pluginKey,

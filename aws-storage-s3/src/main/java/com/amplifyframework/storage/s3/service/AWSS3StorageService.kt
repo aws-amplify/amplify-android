@@ -155,7 +155,7 @@ internal class AWSS3StorageService(
      * @param path The path to list items from
      * @return A list of parsed items
      */
-    override fun listFiles(path: String, prefix: String): MutableList<StorageItem>? {
+    override fun listFiles(path: String, prefix: String): MutableList<StorageItem> {
         val items = mutableListOf<StorageItem>()
         runBlocking {
             val result = s3Client.listObjectsV2Paginated {

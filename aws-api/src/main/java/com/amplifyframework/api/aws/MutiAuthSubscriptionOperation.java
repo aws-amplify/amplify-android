@@ -50,7 +50,7 @@ final class MutiAuthSubscriptionOperation<T> extends GraphQLOperation<T> {
     private final AtomicBoolean canceled;
     private final AuthRuleRequestDecorator requestDecorator;
 
-    private AuthorizationTypeIterator authTypes;
+    private final AuthorizationTypeIterator authTypes;
     private String subscriptionId;
     private Future<?> subscriptionFuture;
 

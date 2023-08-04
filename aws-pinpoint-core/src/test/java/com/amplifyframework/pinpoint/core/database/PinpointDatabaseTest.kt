@@ -40,7 +40,7 @@ class PinpointDatabaseTest {
 
     @OptIn(ExperimentalCoroutinesApi::class)
     @Before
-    public fun setUp() = runTest {
+    fun setUp() = runTest {
         coroutineDispatcher = UnconfinedTestDispatcher(testScheduler)
         pinpointDatabase = PinpointDatabase(
             ApplicationProvider.getApplicationContext(),
@@ -50,7 +50,7 @@ class PinpointDatabaseTest {
 
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
-    public fun `test save event`() = runTest {
+    fun `test save event`() = runTest {
         val testEventType = "TestEvent"
         val pinpointEvent = getPinpointEvent(testEventType)
         pinpointDatabase.saveEvent(pinpointEvent)
@@ -64,7 +64,7 @@ class PinpointDatabaseTest {
 
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
-    public fun `test queryAllEvents`() = runTest {
+    fun `test queryAllEvents`() = runTest {
         val pinpointEventList = listOf<PinpointEvent>(
             getPinpointEvent("testEventType_1"),
             getPinpointEvent("testEventType_2"),
@@ -86,7 +86,7 @@ class PinpointDatabaseTest {
 
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
-    public fun `test delete event by ID`() = runTest {
+    fun `test delete event by ID`() = runTest {
         val pinpointEventList = listOf<PinpointEvent>(
             getPinpointEvent("testEventType_1"),
             getPinpointEvent("testEventType_2"),
@@ -106,7 +106,7 @@ class PinpointDatabaseTest {
     }
 
     @After
-    public fun tearDown() {
+    fun tearDown() {
         pinpointDatabase.closeDB()
     }
 

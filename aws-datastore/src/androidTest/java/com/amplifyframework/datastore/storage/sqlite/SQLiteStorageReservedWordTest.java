@@ -537,7 +537,7 @@ public final class SQLiteStorageReservedWordTest {
         @Override
         public Set<Class<? extends Model>> models() {
             final Set<Class<? extends Model>> modifiableSet = new HashSet<>(
-                    Arrays.<Class<? extends Model>>asList(Group.class, Alter.class)
+                    Arrays.asList(Group.class, Alter.class)
             );
 
             return Immutable.of(modifiableSet);

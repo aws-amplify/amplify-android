@@ -941,7 +941,6 @@ internal class RealAWSCognitoAuthPlugin(
                         "Received handleWebUIResponse but ignoring because the user is not currently signing in " +
                             "or signing out"
                     )
-                    Unit
                 }
             }
         }

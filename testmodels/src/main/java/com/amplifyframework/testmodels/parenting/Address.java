@@ -59,13 +59,11 @@ public final class Address {
   
   @Override
    public int hashCode() {
-    return new StringBuilder()
-      .append(getStreet())
-      .append(getStreet2())
-      .append(getCity())
-      .append(getPhonenumber())
-      .append(getCountry())
-      .toString()
+    return (getStreet() +
+            getStreet2() +
+            getCity() +
+            getPhonenumber() +
+            getCountry())
       .hashCode();
   }
   

@@ -53,7 +53,7 @@ internal open class ProgressListenerInterceptor(
     }
 
     internal class SourceContentWithProgressUpdates(
-        private val sourceContent: HttpBody.SourceContent,
+        private val sourceContent: SourceContent,
         private val progressListener: ProgressListener
     ) : HttpBody.SourceContent() {
         private val delegate = sourceContent.readFrom()

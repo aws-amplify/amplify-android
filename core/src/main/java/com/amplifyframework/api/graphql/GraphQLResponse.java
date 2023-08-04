@@ -109,8 +109,8 @@ public final class GraphQLResponse<R> {
     @Override
     public String toString() {
         return "GraphQLResponse{" +
-                "data=\'" + data + "\'" +
-                ", errors=\'" + errors + "\'" +
+                "data='" + data + "'" +
+                ", errors='" + errors + "'" +
                 '}';
     }
 
@@ -216,10 +216,10 @@ public final class GraphQLResponse<R> {
         @Override
         public String toString() {
             return "GraphQLResponse.Error{" +
-                    "message=\'" + message + "\'" +
-                    ", locations=\'" + locations + "\'" +
-                    ", path=\'" + path + "\'" +
-                    ", extensions=\'" + extensions + "\'" +
+                    "message='" + message + "'" +
+                    ", locations='" + locations + "'" +
+                    ", path='" + path + "'" +
+                    ", extensions='" + extensions + "'" +
                     '}';
         }
     }

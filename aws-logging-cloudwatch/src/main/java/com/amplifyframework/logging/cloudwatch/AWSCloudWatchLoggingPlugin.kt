@@ -80,7 +80,7 @@ class AWSCloudWatchLoggingPlugin @JvmOverloads constructor(
         awsCloudWatchLoggingPluginImplementation.disable()
     }
 
-    public fun flushLogs(
+    fun flushLogs(
         onSuccess: Action,
         onError: Consumer<AmplifyException>
     ) {

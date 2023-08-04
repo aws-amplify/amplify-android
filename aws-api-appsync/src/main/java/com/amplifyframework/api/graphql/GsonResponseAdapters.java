@@ -107,16 +107,10 @@ public final class GsonResponseAdapters {
                 if (ModelWithMetadata.class.equals(rawType)) {
                     return true;
                 }
-                if (Iterable.class.isAssignableFrom((Class<?>) rawType)) {
-                    return true;
-                }
+                return Iterable.class.isAssignableFrom((Class<?>) rawType);
             } else {
-                if (Model.class.isAssignableFrom((Class<?>) type)) {
-                    return true;
-                }
+                return Model.class.isAssignableFrom((Class<?>) type);
             }
-
-            return false;
         }
 
         // Skips a JSON level to get content of query, not query itself

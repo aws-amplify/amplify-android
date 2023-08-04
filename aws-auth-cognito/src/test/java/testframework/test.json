@@ -1,0 +1,5 @@
+{
+  "signUpStep:CONFIRM_SIGN_UP_STEP,
+  additionalInfo:{},
+  codeDeliveryDetails:AuthCodeDeliveryDetails{destination:'dunietzt@amazon.com', deliveryMedium:EMAIL, attributeName:'email'}"
+}

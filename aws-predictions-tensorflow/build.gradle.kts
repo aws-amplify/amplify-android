@@ -16,6 +16,7 @@
 plugins {
     id("com.android.library")
     id("kotlin-android")
+    id("org.jetbrains.kotlin.android")
 }
 
 apply(from = rootProject.file("configuration/checkstyle.gradle"))
@@ -28,6 +29,7 @@ dependencies {
     implementation(project(":aws-core"))
     implementation(dependency.androidx.appcompat)
     implementation(dependency.tensorflow)
+    implementation("androidx.core:core-ktx:+")
 
     testImplementation(project(":testutils"))
     testImplementation(testDependency.junit)

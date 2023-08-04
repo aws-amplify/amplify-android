@@ -16,6 +16,7 @@
 plugins {
     id("com.android.library")
     id("kotlin-android")
+    id("org.jetbrains.kotlin.android")
 }
 
 apply(from = rootProject.file("configuration/checkstyle.gradle"))
@@ -39,6 +40,7 @@ dependencies {
     implementation(dependency.kotlin.serializationJson)
 
     api(project(":common-core"))
+    implementation("androidx.core:core-ktx:+")
 
     testImplementation(project(":aws-api-appsync"))
     // Used to reference Temporal types in tests.

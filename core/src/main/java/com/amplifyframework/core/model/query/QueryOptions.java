@@ -31,9 +31,9 @@ import java.util.Objects;
  * options (e.g. predicates, pagination, etc) and allows consumers to build queries in a fluent way.
  */
 public final class QueryOptions {
-    private QueryPredicate queryPredicate;
-    private QueryPaginationInput paginationInput;
-    private List<QuerySortBy> sortBy;
+    private final QueryPredicate queryPredicate;
+    private final QueryPaginationInput paginationInput;
+    private final List<QuerySortBy> sortBy;
 
     /**
      * This class should be created using the factory methods such as {@link Where#matchesAll()}

@@ -24,8 +24,8 @@ import java.util.Objects;
  * Represents a logged in user with its locally cached attributes.
  */
 public final class AuthUser {
-    private String userId;
-    private String username;
+    private final String userId;
+    private final String username;
 
     /**
      * Object to represent a logged in user with its locally cached attributes.

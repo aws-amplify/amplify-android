@@ -99,7 +99,7 @@ public class AuthWebUISignInOptions {
      * @param <T> The type of builder - used to support plugin extensions of this.
      */
     public abstract static class Builder<T extends Builder<T>> {
-        private List<String> scopes;
+        private final List<String> scopes;
 
         /**
          * Initialize the builder object with fields initialized with empty collection objects.

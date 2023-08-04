@@ -36,7 +36,7 @@ public final class AWSPinpointUserProfile extends UserProfile implements AWSPinp
      * Constructor that mirrors the parent class.
      * @param builder An instance of the builder with the desired properties set.
      */
-    protected AWSPinpointUserProfile(@NonNull Builder builder) {
+    private AWSPinpointUserProfile(@NonNull Builder builder) {
         super(builder);
         this.userAttributes = builder.userAttributes;
     }

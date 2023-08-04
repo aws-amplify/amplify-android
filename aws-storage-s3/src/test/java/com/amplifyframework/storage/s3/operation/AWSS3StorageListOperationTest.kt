@@ -30,7 +30,7 @@ import org.junit.Before
 import org.junit.Test
 import org.mockito.Mockito
 
-public class AWSS3StorageListOperationTest {
+class AWSS3StorageListOperationTest {
 
     private lateinit var awsS3StorageListOperation: AWSS3StorageListOperation
     private lateinit var storageService: StorageService

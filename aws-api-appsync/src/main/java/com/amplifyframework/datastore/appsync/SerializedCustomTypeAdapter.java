@@ -64,7 +64,7 @@ public final class SerializedCustomTypeAdapter
             Object fieldValue = entry.getValue();
             if (fieldValue instanceof SerializedCustomType) {
                 // serialize by type SerializedCustomType
-                serializedData.add(entry.getKey(), context.serialize((SerializedCustomType) fieldValue));
+                serializedData.add(entry.getKey(), context.serialize(fieldValue));
             } else {
                 serializedData.add(entry.getKey(), context.serialize(fieldValue));
             }

@@ -119,7 +119,7 @@ public final class AnalyticsEvent implements AnalyticsEventBehavior {
      */
     public static final class Builder {
         private String name;
-        private AnalyticsProperties.Builder propertiesBuilder;
+        private final AnalyticsProperties.Builder propertiesBuilder;
 
         private Builder() {
             this.propertiesBuilder = AnalyticsProperties.builder();

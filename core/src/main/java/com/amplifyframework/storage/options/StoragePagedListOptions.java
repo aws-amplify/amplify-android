@@ -22,8 +22,8 @@ import androidx.annotation.NonNull;
  * Options to specify attributes of list API invocation.
  */
 public class StoragePagedListOptions extends StorageOptions {
-    private int pageSize;
-    private String nextToken;
+    private final int pageSize;
+    private final String nextToken;
 
     /**
      * Constructs a StoragePagedListOptions instance with the

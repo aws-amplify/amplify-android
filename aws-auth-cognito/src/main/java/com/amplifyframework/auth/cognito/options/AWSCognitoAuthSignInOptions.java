@@ -39,7 +39,7 @@ public final class AWSCognitoAuthSignInOptions extends AuthSignInOptions {
      * @param metadata Additional custom attributes to be sent to the service such as information about the client
      * @param authFlowType AuthFlowType to be used by signIn API
      */
-    protected AWSCognitoAuthSignInOptions(
+    private AWSCognitoAuthSignInOptions(
             @NonNull Map<String, String> metadata,
             AuthFlowType authFlowType
     ) {

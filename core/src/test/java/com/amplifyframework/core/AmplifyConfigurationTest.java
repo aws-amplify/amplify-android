@@ -29,7 +29,7 @@ import org.robolectric.RobolectricTestRunner;
  */
 @RunWith(RobolectricTestRunner.class)
 public class AmplifyConfigurationTest {
-    private Context context = ApplicationProvider.getApplicationContext();
+    private final Context context = ApplicationProvider.getApplicationContext();
 
     /**
      * Attempting to call {@link AmplifyConfiguration#fromConfigFile(Context)}

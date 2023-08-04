@@ -36,6 +36,7 @@ import org.skyscreamer.jsonassert.JSONAssert;
 
 import java.lang.reflect.Type;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -127,7 +128,7 @@ public final class ModelWithMetadataAdapterTest {
         postSerializedData.put("id", "21ee0180-60a4-45d9-b68e-018c260cc742");
         postSerializedData.put("updatedAt", "2022-03-04T05:36:26.629Z");
         SchemaRegistry schemaRegistry = SchemaRegistry.instance();
-        schemaRegistry.register(new HashSet<>(Arrays.asList(Post.class)));
+        schemaRegistry.register(new HashSet<>(Collections.singletonList(Post.class)));
         SerializedModel model = SerializedModel.builder()
                 .modelSchema(schemaRegistry.getModelSchemaForModelClass(Post.class))
                 .serializedData(postSerializedData)

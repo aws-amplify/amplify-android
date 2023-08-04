@@ -37,7 +37,7 @@ public final class ShakeDetector {
     // Listener to handle shake events.
     private final ShakeDetector.Listener listener;
     // Manager for the device's sensors.
-    private SensorManager sensorManager;
+    private final SensorManager sensorManager;
     // The accelerometer sensor associated with the device.
     private Sensor accelerometer;
     // The time (in milliseconds) that the device started shaking

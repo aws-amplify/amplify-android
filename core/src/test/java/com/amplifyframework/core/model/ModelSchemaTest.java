@@ -129,7 +129,7 @@ public final class ModelSchemaTest {
     @Test
     public void modelWithNoIndexesReturnsDefaultPrimaryIndexFields() throws AmplifyException {
         ModelSchema actualModelSchema = ModelSchema.fromModelClass(BlogOwner.class);
-        assertEquals(Arrays.asList("id"), actualModelSchema.getPrimaryIndexFields());
+        assertEquals(Collections.singletonList("id"), actualModelSchema.getPrimaryIndexFields());
     }
 
     /**
@@ -140,7 +140,7 @@ public final class ModelSchemaTest {
     @Test
     public void modelWithSecondaryIndexReturnsDefaultPrimaryIndexFields() throws AmplifyException {
         ModelSchema actualModelSchema = ModelSchema.fromModelClass(Person.class);
-        assertEquals(Arrays.asList("id"), actualModelSchema.getPrimaryIndexFields());
+        assertEquals(Collections.singletonList("id"), actualModelSchema.getPrimaryIndexFields());
     }
 
     /**

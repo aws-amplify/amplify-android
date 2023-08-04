@@ -28,6 +28,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 
 import static org.junit.Assert.assertEquals;
@@ -135,7 +136,7 @@ public final class GsonPendingMutationConverterTest {
                         .name("Joe Swanson")
                         .build())
                 .build();
-        schemaRegistry.register(new HashSet<>(Arrays.asList(BlogOwner.class)));
+        schemaRegistry.register(new HashSet<>(Collections.singletonList(BlogOwner.class)));
         ModelSchema schema = ModelSchema.fromModelClass(Blog.class);
         SerializedModel serializedBlog = SerializedModel.create(blog, schema);
         PendingMutation<SerializedModel> originalMutation = PendingMutation.creation(serializedBlog, schema);

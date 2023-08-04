@@ -17,6 +17,7 @@ plugins {
     id("org.jetbrains.kotlin.plugin.serialization") version "1.6.10"
     id("com.android.library")
     id("kotlin-android")
+    id("org.jetbrains.kotlin.android")
 }
 
 apply(from = rootProject.file("configuration/checkstyle.gradle"))
@@ -37,6 +38,7 @@ dependencies {
     implementation(dependency.kotlin.serializationJson)
     implementation(dependency.androidx.workmanager)
     implementation(dependency.kotlin.futures)
+    implementation("androidx.core:core-ktx:+")
 
     testImplementation(project(":testutils"))
     testImplementation(testDependency.junit)

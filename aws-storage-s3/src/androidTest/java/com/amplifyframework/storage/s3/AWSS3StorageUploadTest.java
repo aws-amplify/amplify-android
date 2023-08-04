@@ -83,7 +83,7 @@ public final class AWSS3StorageUploadTest {
         Context context = getApplicationContext();
 
         WorkmanagerTestUtils.INSTANCE.initializeWorkmanagerTestUtil(context);
-        SynchronousAuth.delegatingToCognito(context, (AuthPlugin) new AWSCognitoAuthPlugin());
+        SynchronousAuth.delegatingToCognito(context, new AWSCognitoAuthPlugin());
 
         // Get a handle to storage
         storageCategory = TestStorageCategory.create(context, R.raw.amplifyconfiguration);

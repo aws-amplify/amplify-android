@@ -93,7 +93,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
         stringBuilder.append("(").append(parseColumns(table))
                 .append(",")
                 .append(SqlKeyword.DELIMITER)
-                .append(createPrimaryKey(modelSchema).toString());
+                .append(createPrimaryKey(modelSchema));
         if (!table.getForeignKeys().isEmpty()) {
             stringBuilder.append(",")
                     .append(SqlKeyword.DELIMITER)
@@ -211,7 +211,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
         // SELECT columns FROM tableName
         rawQuery.append(SqlKeyword.SELECT)
                 .append(SqlKeyword.DELIMITER)
-                .append(selectColumns.toString())
+                .append(selectColumns)
                 .append(SqlKeyword.DELIMITER)
                 .append(SqlKeyword.FROM)
                 .append(SqlKeyword.DELIMITER)
@@ -222,7 +222,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
         // LEFT JOIN tableTwo ON tableName.id=tableTwo.foreignKey
         if (!joinStatement.toString().isEmpty()) {
             rawQuery.append(SqlKeyword.DELIMITER)
-                    .append(joinStatement.toString());
+                    .append(joinStatement);
         }
 
         // Append predicates.

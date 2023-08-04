@@ -27,5 +27,5 @@ public enum QuerySortOrder {
     /**
      * Sort descending.
      */
-    DESCENDING;
+    DESCENDING
 }

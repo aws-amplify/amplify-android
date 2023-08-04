@@ -118,7 +118,7 @@ final class JavaLogger implements Logger {
             lineBuilder.append("\n")
                     .append(throwable);
         }
-        System.out.println(lineBuilder.toString());
+        System.out.println(lineBuilder);
 
     }
 

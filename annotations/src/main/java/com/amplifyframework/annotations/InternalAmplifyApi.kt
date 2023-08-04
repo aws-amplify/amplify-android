@@ -34,4 +34,4 @@ package com.amplifyframework.annotations
     AnnotationTarget.FIELD,
     AnnotationTarget.CONSTRUCTOR,
 )
-public annotation class InternalAmplifyApi
+annotation class InternalAmplifyApi

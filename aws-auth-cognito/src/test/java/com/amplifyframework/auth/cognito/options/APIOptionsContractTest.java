@@ -23,13 +23,14 @@ import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
 public class APIOptionsContractTest {
 
     @SuppressWarnings("serial")
-    private HashMap<String, String> metadata = new HashMap<String, String>() {
+    private final HashMap<String, String> metadata = new HashMap<String, String>() {
         {
             put("testKey", "testValue");
         }
@@ -91,7 +92,7 @@ public class APIOptionsContractTest {
                 AWSCognitoAuthUpdateUserAttributesOptions.builder().metadata(metadata).build();
         Assert.assertEquals(updateUserAttributesOptions.getMetadata(), metadata);
 
-        List<String> scopes = Arrays.asList("name");
+        List<String> scopes = Collections.singletonList("name");
         AWSCognitoAuthWebUISignInOptions webUISignInOptions =
                 AWSCognitoAuthWebUISignInOptions.builder().browserPackage("chrome")
                         .scopes(scopes).build();

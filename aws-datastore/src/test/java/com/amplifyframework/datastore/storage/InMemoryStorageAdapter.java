@@ -163,7 +163,7 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
         final int index = indexOf(item);
         if (index < 0) {
             onError.accept(new DataStoreException(
-                    "This item was not found in the datastore: " + item.toString(),
+                    "This item was not found in the datastore: " + item,
                     "Use save() function to create models to store."
             ));
             return;

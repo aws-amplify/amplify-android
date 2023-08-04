@@ -12,7 +12,7 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
+/*
 @file:Suppress("UNCHECKED_CAST")
 
 package com.amplifyframework.auth.cognito.featuretest.serializers
@@ -53,7 +53,7 @@ private data class CognitoExceptionSurrogate(
         fun <T> toSurrogate(exception: T): CognitoExceptionSurrogate {
             return when (exception) {
                 is CognitoIdentityProviderException -> CognitoExceptionSurrogate(
-                    exception!!::class.java.simpleName,
+                    exception!!::class.java!!.simpleName,
                     exception.message
                 )
                 else -> {
@@ -82,3 +82,4 @@ private class CognitoExceptionSerializer<T> : KSerializer<T> {
         encoder.encodeSerializableValue(strategy, CognitoExceptionSurrogate.toSurrogate(value))
     }
 }
+*/

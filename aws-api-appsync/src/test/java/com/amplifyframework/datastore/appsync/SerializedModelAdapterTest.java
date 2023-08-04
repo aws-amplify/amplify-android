@@ -108,7 +108,7 @@ public final class SerializedModelAdapterTest {
         blogOwnerSerializedData.put("id", "2cb080ce-bc93-44c6-aa77-f985af311afa");
         SchemaRegistry.instance().register(new HashSet<>(Arrays.asList(BlogOwner.class, Blog.class)));
         SchemaRegistry schemaRegistry = SchemaRegistry.instance();
-        schemaRegistry.register(new HashSet<>(Arrays.asList(BlogOwner.class)));
+        schemaRegistry.register(new HashSet<>(Collections.singletonList(BlogOwner.class)));
         Map<String, Object> blogSerializedData = new HashMap<>();
         blogSerializedData.put("name", "A fine blog");
         blogSerializedData.put("owner", SerializedModel.builder()

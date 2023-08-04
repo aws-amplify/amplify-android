@@ -52,7 +52,7 @@ class AWSCredentialsFactoryTest {
         val credentials = createAWSCredentials("accessKey", "secret", "ST", expectedExpirationInSeconds)
 
         assertIs<AWSTemporaryCredentials>(credentials)
-        assertEquals(expectedExpirationInSeconds, credentials.expiration.toJvmInstant().epochSecond)
+        //assertEquals(expectedExpirationInSeconds, credentials.expiresAt.toJvmInstant().epochSecond)
         assertEquals(expectedExpirationInSeconds, credentials.expiresAt.epochSecond)
     }
 }

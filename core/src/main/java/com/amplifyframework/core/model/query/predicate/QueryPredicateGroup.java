@@ -69,7 +69,7 @@ public final class QueryPredicateGroup implements QueryPredicate {
      * @return a group with an AND type, containing only the provided predicate.
      */
     public static QueryPredicate andOf(QueryPredicate predicate) {
-        return new QueryPredicateGroup(Type.AND, Arrays.asList(predicate));
+        return new QueryPredicateGroup(Type.AND, Collections.singletonList(predicate));
     }
 
     /**

@@ -16,12 +16,14 @@
 plugins {
     id("com.android.library")
     id("kotlin-android")
+    id("org.jetbrains.kotlin.android")
 }
 
 dependencies {
     implementation(project(":core"))
     implementation(project(":aws-api-appsync"))
     implementation(dependency.androidx.core)
+    implementation("androidx.core:core-ktx:+")
 
     testImplementation(project(":testutils"))
     testImplementation(testDependency.junit)

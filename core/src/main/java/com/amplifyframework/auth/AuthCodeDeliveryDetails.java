@@ -25,9 +25,9 @@ import java.util.Objects;
  * Wrapper class for representing the various aspects of a confirmation code sent to a user.
  */
 public final class AuthCodeDeliveryDetails {
-    private String destination;
-    private DeliveryMedium deliveryMedium;
-    private String attributeName;
+    private final String destination;
+    private final DeliveryMedium deliveryMedium;
+    private final String attributeName;
 
     /**
      * Stores information about how a confirmation code is delivered.
@@ -109,7 +109,7 @@ public final class AuthCodeDeliveryDetails {
 
     @Override
     public String toString() {
-        return "AuthCodeDeliveryDetails{" +
+        return "{" +
                 "destination='" + destination + '\'' +
                 ", deliveryMedium=" + deliveryMedium +
                 ", attributeName='" + attributeName + '\'' +
@@ -129,7 +129,7 @@ public final class AuthCodeDeliveryDetails {
         /** Code was sent via some other method not listed here. */
         UNKNOWN("unknown");
 
-        private String value;
+        private final String value;
 
         DeliveryMedium(@NonNull String value) {
             this.value = Objects.requireNonNull(value);

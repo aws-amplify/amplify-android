@@ -839,7 +839,7 @@ public final class SyncProcessorTest {
         // QueryPredicates.none()
         assertEquals(
                 itemsInStorage.toString(),
-                expectedResponseItems.size() * 2 + (modelProvider.models().size() - 1),
+                expectedResponseItems.size() * 2L + (modelProvider.models().size() - 1),
                 itemsInStorage.size()
         );
         assertEquals(

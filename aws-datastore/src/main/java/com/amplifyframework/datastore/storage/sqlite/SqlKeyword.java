@@ -228,7 +228,7 @@ public enum SqlKeyword {
         final SqlKeyword sqlKeyword = QUERY_OPERATOR_TO_SQL.get(Objects.requireNonNull(queryOperatorType));
         if (null == sqlKeyword) {
             throw new IllegalArgumentException(
-                    "No SQL keyword mapping defined for query operator type = " + queryOperatorType.toString()
+                    "No SQL keyword mapping defined for query operator type = " + queryOperatorType
             );
         }
         return sqlKeyword;
@@ -244,7 +244,7 @@ public enum SqlKeyword {
         final SqlKeyword sqlKeyword = QUERY_PREDICATE_GROUP_TO_SQL.get(Objects.requireNonNull(groupType));
         if (null == sqlKeyword) {
             throw new IllegalArgumentException(
-                    "No SQL keyword mapping defined for query predicate group type = " + groupType.toString()
+                    "No SQL keyword mapping defined for query predicate group type = " + groupType
             );
         }
         return sqlKeyword;
@@ -260,7 +260,7 @@ public enum SqlKeyword {
         final SqlKeyword sqlKeyword = QUERY_SORT_BY_TO_SQL.get(Objects.requireNonNull(sortOrder));
         if (null == sqlKeyword) {
             throw new IllegalArgumentException(
-                    "No SQL keyword mapping defined for query sort order type = " + sortOrder.toString()
+                    "No SQL keyword mapping defined for query sort order type = " + sortOrder
             );
         }
         return sqlKeyword;

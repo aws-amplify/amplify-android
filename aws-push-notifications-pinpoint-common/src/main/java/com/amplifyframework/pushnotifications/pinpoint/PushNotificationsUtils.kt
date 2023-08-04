@@ -132,7 +132,7 @@ class PushNotificationsUtils(
                 setContentText(payload.body)
                 setSmallIcon(R.drawable.ic_launcher_foreground)
                 setContentIntent(pendingIntent)
-                setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                priority = NotificationCompat.PRIORITY_DEFAULT
                 setLargeIcon(largeImageIcon)
                 setAutoCancel(true)
             }

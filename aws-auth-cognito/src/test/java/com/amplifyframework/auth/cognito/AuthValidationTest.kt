@@ -24,7 +24,7 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.InvalidPasswordExce
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.RespondToAuthChallengeResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.UserNotFoundException
 import com.amplifyframework.auth.AuthException
-import com.amplifyframework.auth.cognito.featuretest.generators.authstategenerators.AuthStateJsonGenerator.dummyToken
+
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.auth.result.AuthSignInResult
 import com.amplifyframework.core.Consumer
@@ -86,6 +86,7 @@ private val validLogins = mapOf(
  */
 @OptIn(ExperimentalCoroutinesApi::class, DelicateCoroutinesApi::class)
 class AuthValidationTest {
+    val dummyToken = "123"
 
     private val logger = mockk<Logger>(relaxed = true)
 

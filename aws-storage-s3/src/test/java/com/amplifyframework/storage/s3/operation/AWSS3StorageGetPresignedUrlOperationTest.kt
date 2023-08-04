@@ -30,7 +30,7 @@ import org.junit.Before
 import org.junit.Test
 import org.mockito.Mockito
 
-public class AWSS3StorageGetPresignedUrlOperationTest {
+class AWSS3StorageGetPresignedUrlOperationTest {
 
     private lateinit var awsS3StorageGetPresignedUrlOperation: AWSS3StorageGetPresignedUrlOperation
     private lateinit var storageService: StorageService

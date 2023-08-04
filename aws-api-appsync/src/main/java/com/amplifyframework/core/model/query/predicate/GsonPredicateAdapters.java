@@ -84,7 +84,7 @@ public final class GsonPredicateAdapters {
                     return context.deserialize(json, BeginsWithQueryOperator.class);
                 default:
                     throw new JsonParseException("Unable to deserialize " +
-                            json.toString() + " to QueryOperator instance.");
+                            json + " to QueryOperator instance.");
             }
         }
 
@@ -154,7 +154,7 @@ public final class GsonPredicateAdapters {
                     return context.deserialize(json, MatchAllQueryPredicate.class);
                 default:
                     throw new JsonParseException("Unable to deserialize " +
-                            json.toString() + " to QueryPredicate instance.");
+                            json + " to QueryPredicate instance.");
             }
         }
 

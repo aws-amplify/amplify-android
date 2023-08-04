@@ -35,7 +35,7 @@ import java.util.concurrent.TimeUnit
  * The network changes are debounced with a 250 ms delay to allow some time for one network to connect after another
  * network has disconnected (for example, wifi is lost, then cellular connects) to reduce thrashing.
  */
-public interface ReachabilityMonitor {
+interface ReachabilityMonitor {
     fun configure(context: Context)
     @VisibleForTesting
     fun configure(context: Context, connectivityProvider: ConnectivityProvider)
@@ -98,7 +98,7 @@ private class ReachabilityMonitorImpl constructor(val schedulerProvider: Schedul
  * is a concrete class created within context.getSystemService() it can't be overridden with a test
  * implementation, so this interface works around that issue.
  */
-public interface ConnectivityProvider {
+interface ConnectivityProvider {
     val hasActiveNetwork: Boolean
     fun registerDefaultNetworkCallback(context: Context, callback: NetworkCallback)
 }

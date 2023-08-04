@@ -20,6 +20,7 @@ import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.logging.Logger;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -33,7 +34,7 @@ public final class RetryStrategy {
      * Simple defaults strategy that allows interruptions and has a max delay of 2^8.
      */
     public static final RxRetryStrategy RX_INTERRUPTIBLE_WITH_BACKOFF =
-        new RxCompletableExponentialBackoffStrategy(2, 8, Arrays.asList(InterruptedException.class));
+        new RxCompletableExponentialBackoffStrategy(2, 8, Collections.singletonList(InterruptedException.class));
 
     private static final Logger LOG = Amplify.Logging.logger(CategoryType.DATASTORE, "amplify:aws-datastore");
 

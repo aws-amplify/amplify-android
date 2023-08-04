@@ -188,7 +188,7 @@ public final class SubscriptionEndpointTest {
                     item -> {
                         final String message;
                         if (item.hasErrors()) {
-                            message = "Subscription error: " + item.getErrors().toString();
+                            message = "Subscription error: " + item.getErrors();
                         } else {
                             message = "Unexpected subscription data: " + item.getData();
                         }

@@ -83,7 +83,7 @@ public final class AddModelNameToModelMetadataKey implements ModelMigration {
 
     private Cursor duplicateIds(Set<String> modelNames) {
         Set<String> systemModelNames = SystemModelsProviderFactory.create().modelNames();
-        StringBuilder sb = new StringBuilder("");
+        StringBuilder sb = new StringBuilder();
         for (String modelName : modelNames) {
             // Exclude system tables
             if (systemModelNames.contains(modelName)) {
@@ -100,13 +100,13 @@ public final class AddModelNameToModelMetadataKey implements ModelMigration {
         }
         sb.insert(0, "SELECT id, tableName, count(id) as count FROM (");
         sb.append(") GROUP BY id HAVING count > 1");
-        LOG.debug("Check for duplicate IDs:" + sb.toString());
+        LOG.debug("Check for duplicate IDs:" + sb);
         return database.rawQuery(sb.toString(), new String[]{});
     }
 
     private String backfillModelMetadataQuery() {
         Set<String> systemModelNames = SystemModelsProviderFactory.create().modelNames();
-        StringBuilder sb = new StringBuilder("");
+        StringBuilder sb = new StringBuilder();
         for (String modelName : modelProvider.modelNames()) {
             // Exclude system tables
             if (systemModelNames.contains(modelName)) {
@@ -127,7 +127,7 @@ public final class AddModelNameToModelMetadataKey implements ModelMigration {
                 "mm._version from ModelMetadata mm INNER JOIN (");
         sb.append(") as models on mm.id=models.id;");
         sb.insert(0, "INSERT INTO ModelMetadataCopy(id,_deleted,_lastChangedAt,_version) ");
-        LOG.debug("Backfill query: " + sb.toString());
+        LOG.debug("Backfill query: " + sb);
         return sb.toString();
     }
 

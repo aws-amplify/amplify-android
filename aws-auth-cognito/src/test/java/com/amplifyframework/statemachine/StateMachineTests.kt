@@ -115,10 +115,10 @@ class StateMachineTests {
     fun testExecuteEffects() {
         val action1Latch = CountDownLatch(1)
         val action2Latch = CountDownLatch(1)
-        val action1 = com.amplifyframework.statemachine.BasicAction("basic") { _, _ ->
+        val action1 = BasicAction("basic") { _, _ ->
             action1Latch.countDown()
         }
-        val action2 = com.amplifyframework.statemachine.BasicAction("basic") { _, _ ->
+        val action2 = BasicAction("basic") { _, _ ->
             action2Latch.countDown()
         }
         val testMachine = CounterStateMachine.logging()
@@ -132,9 +132,9 @@ class StateMachineTests {
     fun testDispatchFromAction() {
         val action1Latch = CountDownLatch(1)
         val action2Latch = CountDownLatch(1)
-        val action1 = com.amplifyframework.statemachine.BasicAction("basic") { dispatcher, _ ->
+        val action1 = BasicAction("basic") { dispatcher, _ ->
             action1Latch.countDown()
-            val action2 = com.amplifyframework.statemachine.BasicAction("basic") { _, _ ->
+            val action2 = BasicAction("basic") { _, _ ->
                 action2Latch.countDown()
             }
             val event = Counter.Event("2", Counter.Event.EventType.IncrementAndDoActions(listOf(action2)))
