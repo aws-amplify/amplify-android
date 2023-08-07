@@ -22,6 +22,7 @@ import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.PaginatedResult;
+import com.amplifyframework.core.model.Model;
 import com.amplifyframework.util.Empty;
 import com.amplifyframework.util.TypeMaker;
 
@@ -73,7 +74,13 @@ final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
             Gson responseGson = gson.newBuilder()
                 .registerTypeHierarchyAdapter(Iterable.class, new IterableDeserializer<>(request))
                 .create();
-            return responseGson.fromJson(responseJson, responseType);
+
+
+            Gson modelDeserializerGson = responseGson.newBuilder()
+                    .registerTypeHierarchyAdapter(Model.class, new ModelDeserializer(responseGson))
+                    .create();
+
+            return modelDeserializerGson.fromJson(responseJson, responseType);
         } catch (JsonParseException jsonParseException) {
             throw new ApiException(
                     "Amplify encountered an error while deserializing an object.",

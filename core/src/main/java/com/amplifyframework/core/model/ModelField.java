@@ -57,6 +57,9 @@ public final class ModelField {
     // True if the field is an instance of lazy model.
     private final boolean isLazyModel;
 
+    // True if the field is an instance of lazy model.
+    private final boolean isLazyList;
+
     // True if the field is an instance of CustomType
     private final boolean isCustomType;
 
@@ -76,6 +79,7 @@ public final class ModelField {
         this.isEnum = builder.isEnum;
         this.isModel = builder.isModel;
         this.isLazyModel = builder.isLazyModel;
+        this.isLazyList = builder.isLazyList;
         this.isCustomType = builder.isCustomType;
         this.authRules = builder.authRules;
     }
@@ -166,6 +170,16 @@ public final class ModelField {
     public boolean isLazyModel() {
         return isLazyModel;
     }
+
+    /**
+     * Returns true if the field's target type is Model.
+     *
+     * @return True if the field's target type is Model.
+     */
+    public boolean isLazyList() {
+        return isLazyList;
+    }
+
 
     /**
      * Returns true if the field's target type is CustomType.
@@ -285,6 +299,9 @@ public final class ModelField {
         // True if the field's target type is LazyModel.
         private boolean isLazyModel = false;
 
+        // True if the field's target type is LazyModel.
+        private boolean isLazyList = false;
+
         // True if the field's target type is CustomType.
         private boolean isCustomType = false;
 
@@ -388,6 +405,16 @@ public final class ModelField {
          */
         public ModelFieldBuilder isLazyModel(boolean isLazyModel) {
             this.isLazyModel = isLazyModel;
+            return this;
+        }
+
+        /**
+         * Sets a flag indicating whether or not the field's type is a LazyList.
+         * @param isLazyList flag indicating if the field is a LazyList
+         * @return the builder object
+         */
+        public ModelFieldBuilder isLazyList(boolean isLazyList) {
+            this.isLazyList = isLazyList;
             return this;
         }
 

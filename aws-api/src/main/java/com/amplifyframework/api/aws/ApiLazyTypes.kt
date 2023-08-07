@@ -32,13 +32,13 @@ import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
 @InternalAmplifyApi
-class ApiLazyModel<M : Model>(
+class ApiLazyModel<M : Model> private constructor(
     private val clazz: Class<M>,
-    private val keyMap: Map<String, Any>
+    private val keyMap: Map<String, Any>,
+    private var loadedValue: Boolean = false,
+    private var value: M? = null
 ) : LazyModel<M> {
 
-    private var value: M? = null
-    private var loadedValue = false
     private val queryPredicate = AppSyncLazyQueryPredicate<M>().createPredicate(clazz, keyMap)
 
     override fun getValue(): M? {
@@ -53,6 +53,7 @@ class ApiLazyModel<M : Model>(
         if (loadedValue) {
             return value
         }
+
         try {
             val resultIterator = query(
                 AppSyncGraphQLRequestFactory.buildQuery<PaginatedResult<M>, M>(
@@ -94,15 +95,37 @@ class ApiLazyModel<M : Model>(
             onApiFailure
         )
     }
+
+    companion object {
+        @JvmStatic
+        fun <M : Model> createPreloaded(
+            clazz: Class<M>,
+            keyMap: Map<String, Any>,
+            value: M?
+
+        ): ApiLazyModel<M> {
+            return ApiLazyModel(clazz, keyMap, true, value)
+        }
+
+        @JvmStatic
+        fun <M : Model> createLazy(
+            clazz: Class<M>,
+            keyMap: Map<String, Any>
+
+        ): ApiLazyModel<M> {
+            return ApiLazyModel(clazz, keyMap)
+        }
+    }
 }
 
 @InternalAmplifyApi
-class ApiLazyListModel<M : Model>(
+class ApiLazyListModel<M : Model> private constructor(
     private val clazz: Class<M>,
     keyMap: Map<String, Any>,
+    preloadedValue: MutableList<M>? = null
 ) : LazyList<M> {
-
-    private var value: MutableList<M> = mutableListOf()
+    private var isPreloaded = preloadedValue != null
+    private var value: MutableList<M> = preloadedValue ?: mutableListOf()
     private var paginatedResult: PaginatedResult<M>? = null
     private val queryPredicate = AppSyncLazyQueryPredicate<M>().createPredicate(clazz, keyMap)
 
@@ -138,7 +161,7 @@ class ApiLazyListModel<M : Model>(
     }
 
     override fun hasNextPage(): Boolean {
-        return paginatedResult?.hasNextResult() ?: true
+        return !isPreloaded && paginatedResult?.hasNextResult() ?: true
     }
 
     private fun createGraphQLRequest(): GraphQLRequest<PaginatedResult<M>> {
@@ -149,6 +172,27 @@ class ApiLazyListModel<M : Model>(
                 clazz,
                 queryPredicate
             )
+        }
+    }
+
+    companion object {
+        @JvmStatic
+        fun <M : Model> createPreloaded(
+            clazz: Class<M>,
+            keyMap: Map<String, Any>,
+            value: List<M>
+
+        ): ApiLazyListModel<M> {
+            return ApiLazyListModel(clazz, keyMap, value.toMutableList())
+        }
+
+        @JvmStatic
+        fun <M : Model> createLazy(
+            clazz: Class<M>,
+            keyMap: Map<String, Any>
+
+        ): ApiLazyListModel<M> {
+            return ApiLazyListModel(clazz, keyMap)
         }
     }
 }

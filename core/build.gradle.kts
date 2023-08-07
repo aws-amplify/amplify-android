@@ -37,9 +37,6 @@ dependencies {
     implementation(dependency.androidx.nav.ui)
     implementation(dependency.androidx.security)
     implementation(dependency.kotlin.serializationJson)
-    implementation(dependency.kotlin.stdlib)
-    implementation(dependency.kotlin.coroutines)
-    implementation(dependency.androidx.core.ktx)
 
     api(project(":common-core"))
 
