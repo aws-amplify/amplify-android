@@ -34,7 +34,7 @@ dependencies {
     testImplementation(libs.test.junit)
     testImplementation(libs.test.mockito.core)
     testImplementation(libs.test.mockk)
-    testImplementation(libs.test.androidx.test.core)
+    testImplementation(libs.test.androidx.core)
     testImplementation(libs.test.robolectric)
     testImplementation(project(":rxbindings"))
 }

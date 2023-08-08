@@ -93,23 +93,23 @@ tensorflow = { module = "org.tensorflow:tensorflow-lite", version.ref="tensorflo
 uuidgen = { module = "com.fasterxml.uuid:java-uuid-generator", version.ref="uuid" }
 
 # Testing libraries
-test-androidx-test-core = { module = "androidx.test:core", version.ref="androidx-test-core" }
-test-androidx-test-core-ktx = { module = "androidx.test:core-ktx", version.ref="androidx-test-core" }
-test-androidx-test-espresso = { module = "androidx.test.espresso:espresso-core", version.ref="espresso" }
-test-androidx-test-fragment = { module = "androidx.fragment:fragment-testing", version.ref="androidx-fragment" }
-test-androidx-test-junit = { module = "androidx.test.ext:junit", version.ref="androidx-test-junit" }
-test-androidx-test-navigation = { module = "androidx.navigation:navigation-testing", version.ref = "navigation" }
-test-androidx-test-orchestrator = { module = "androidx.test:orchestrator", version.ref="androidx-test-orchestrator" }
-test-androidx-test-runner = { module = "androidx.test:runner", version.ref="androidx-test-runner" }
-test-androidx-test-workmanager = { module = "androidx.work:work-testing", version.ref="androidx-workmanager" }
+test-androidx-core = { module = "androidx.test:core", version.ref="androidx-test-core" }
+test-androidx-core-ktx = { module = "androidx.test:core-ktx", version.ref="androidx-test-core" }
+test-androidx-espresso = { module = "androidx.test.espresso:espresso-core", version.ref="espresso" }
+test-androidx-fragment = { module = "androidx.fragment:fragment-testing", version.ref="androidx-fragment" }
+test-androidx-junit = { module = "androidx.test.ext:junit", version.ref="androidx-test-junit" }
+test-androidx-navigation = { module = "androidx.navigation:navigation-testing", version.ref = "navigation" }
+test-androidx-orchestrator = { module = "androidx.test:orchestrator", version.ref="androidx-test-orchestrator" }
+test-androidx-runner = { module = "androidx.test:runner", version.ref="androidx-test-runner" }
+test-androidx-workmanager = { module = "androidx.work:work-testing", version.ref="androidx-workmanager" }
 test-aws-sdk-core = { module = "com.amazonaws:aws-android-sdk-core", version.ref="aws-sdk" }
 test-json = { module = "org.json:json", version.ref = "json" }
 test-jsonassert = { module = "org.skyscreamer:jsonassert", version.ref="jsonassert" }
 test-junit = { module = "junit:junit", version.ref = "junit" }
 test-kotlin-reflection = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref="kotlin" }
-test-kotlin-test-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref="coroutines" }
-test-kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref="kotlin" }
-test-kotlin-test-kotlinTest = { module = "org.jetbrains.kotlin:kotlin-test", version.ref="kotlin" }
+test-kotlin-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref="coroutines" }
+test-kotlin-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref="kotlin" }
+test-kotlin-kotlinTest = { module = "org.jetbrains.kotlin:kotlin-test", version.ref="kotlin" }
 test-mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockito" }
 test-mockito-inline = { module = "org.mockito:mockito-inline", version.ref = "mockito-inline" }
 test-mockk = { module = "io.mockk:mockk", version.ref = "mockk" }

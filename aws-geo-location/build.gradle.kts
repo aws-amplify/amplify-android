@@ -34,9 +34,9 @@ dependencies {
     androidTestImplementation(project(":testutils"))
     androidTestImplementation(project(":aws-auth-cognito"))
     androidTestImplementation(libs.androidx.annotation)
-    androidTestImplementation(libs.test.androidx.test.core)
-    androidTestImplementation(libs.test.androidx.test.runner)
-    androidTestImplementation(libs.test.androidx.test.junit)
+    androidTestImplementation(libs.test.androidx.core)
+    androidTestImplementation(libs.test.androidx.runner)
+    androidTestImplementation(libs.test.androidx.junit)
 }
 
 afterEvaluate {

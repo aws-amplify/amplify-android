@@ -42,12 +42,12 @@ dependencies {
     testImplementation(libs.rxjava)
     testImplementation(libs.test.mockwebserver)
     testImplementation(libs.test.mockk)
-    testImplementation(libs.test.kotlin.test.coroutines)
+    testImplementation(libs.test.kotlin.coroutines)
 
     androidTestImplementation(project(":testutils"))
     androidTestImplementation(project(":aws-auth-cognito"))
-    androidTestImplementation(libs.test.androidx.test.core)
-    androidTestImplementation(libs.test.androidx.test.runner)
+    androidTestImplementation(libs.test.androidx.core)
+    androidTestImplementation(libs.test.androidx.runner)
     androidTestImplementation(libs.test.mockk.android)
     androidTestImplementation(libs.rxjava)
 }

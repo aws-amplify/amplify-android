@@ -37,10 +37,10 @@ dependencies {
     testImplementation(libs.test.mockito.core)
     testImplementation(libs.test.mockito.inline)
     testImplementation(libs.test.robolectric)
-    testImplementation(libs.test.androidx.test.core)
-    testImplementation(libs.test.kotlin.test.coroutines)
+    testImplementation(libs.test.androidx.core)
+    testImplementation(libs.test.kotlin.coroutines)
 
-    androidTestImplementation(libs.test.androidx.test.core)
-    androidTestImplementation(libs.test.androidx.test.runner)
-    androidTestImplementation(libs.test.androidx.test.junit)
+    androidTestImplementation(libs.test.androidx.core)
+    androidTestImplementation(libs.test.androidx.runner)
+    androidTestImplementation(libs.test.androidx.junit)
 }

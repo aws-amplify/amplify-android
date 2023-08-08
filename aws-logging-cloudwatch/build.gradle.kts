@@ -42,8 +42,8 @@ dependencies {
     testImplementation(libs.test.junit)
     testImplementation(libs.test.mockk)
     testImplementation(libs.test.robolectric)
-    testImplementation(libs.test.androidx.test.core)
-    testImplementation(libs.test.kotlin.test.coroutines)
-    testImplementation(libs.test.androidx.test.workmanager)
+    testImplementation(libs.test.androidx.core)
+    testImplementation(libs.test.kotlin.coroutines)
+    testImplementation(libs.test.androidx.workmanager)
     testImplementation(project(":aws-logging-cloudwatch"))
 }

@@ -25,7 +25,7 @@ dependencies {
     implementation(project(":core"))
     implementation(libs.test.junit)
     implementation(libs.test.mockito.core)
-    implementation(libs.test.androidx.test.core)
+    implementation(libs.test.androidx.core)
     implementation(libs.rxjava)
 
     implementation(libs.kotlin.serializationJson)

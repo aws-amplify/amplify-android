@@ -42,24 +42,24 @@ dependencies {
     //noinspection GradleDependency
     testImplementation(libs.test.json)
 
-    testImplementation(libs.test.kotlin.test.junit)
-    testImplementation(libs.test.kotlin.test.kotlinTest)
-    testImplementation(libs.test.kotlin.test.coroutines)
+    testImplementation(libs.test.kotlin.junit)
+    testImplementation(libs.test.kotlin.kotlinTest)
+    testImplementation(libs.test.kotlin.coroutines)
 
     testImplementation(libs.gson)
     testImplementation(libs.test.junit)
     testImplementation(libs.test.mockito.core)
     testImplementation(libs.test.mockk)
     testImplementation(libs.test.robolectric)
-    testImplementation(libs.test.androidx.test.core)
+    testImplementation(libs.test.androidx.core)
     testImplementation(libs.test.kotlin.reflection)
 
     androidTestImplementation(libs.gson)
     //noinspection GradleDependency
     androidTestImplementation(libs.test.aws.sdk.core)
-    androidTestImplementation(libs.test.androidx.test.runner)
-    androidTestImplementation(libs.test.androidx.test.junit)
-    androidTestImplementation(libs.test.kotlin.test.coroutines)
+    androidTestImplementation(libs.test.androidx.runner)
+    androidTestImplementation(libs.test.androidx.junit)
+    androidTestImplementation(libs.test.kotlin.coroutines)
     androidTestImplementation(project(":aws-api"))
     androidTestImplementation(project(":testutils"))
 }

@@ -28,10 +28,10 @@ dependencies {
     implementation(project(":core"))
     implementation(project(":common-core"))
 
-    testImplementation(libs.test.androidx.test.core)
+    testImplementation(libs.test.androidx.core)
     testImplementation(libs.test.junit)
     testImplementation(libs.test.mockk)
-    testImplementation(libs.test.kotlin.test.coroutines)
+    testImplementation(libs.test.kotlin.coroutines)
     testImplementation(project(":testmodels"))
 }
 

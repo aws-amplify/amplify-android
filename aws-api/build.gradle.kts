@@ -35,7 +35,7 @@ dependencies {
 
     testImplementation(project(":testutils"))
     testImplementation(project(":testmodels"))
-    testImplementation(libs.test.androidx.test.core)
+    testImplementation(libs.test.androidx.core)
     testImplementation(libs.test.jsonassert)
     testImplementation(libs.test.junit)
     testImplementation(libs.test.mockito.core)
@@ -45,9 +45,9 @@ dependencies {
 
     androidTestImplementation(project(":testutils"))
     androidTestImplementation(project(":testmodels"))
-    androidTestImplementation(libs.test.androidx.test.core)
+    androidTestImplementation(libs.test.androidx.core)
     androidTestImplementation(project(":aws-auth-cognito"))
-    androidTestImplementation(libs.test.androidx.test.runner)
-    androidTestImplementation(libs.test.androidx.test.junit)
+    androidTestImplementation(libs.test.androidx.runner)
+    androidTestImplementation(libs.test.androidx.junit)
     androidTestImplementation(libs.rxjava)
 }
