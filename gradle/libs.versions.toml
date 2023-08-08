@@ -104,10 +104,10 @@ test-aws-sdk-core = { module = "com.amazonaws:aws-android-sdk-core", version.ref
 test-json = { module = "org.json:json", version.ref = "json" }
 test-jsonassert = { module = "org.skyscreamer:jsonassert", version.ref="jsonassert" }
 test-junit = { module = "junit:junit", version.ref = "junit" }
-test-kotlin-reflection = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref="kotlin" }
 test-kotlin-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref="coroutines" }
 test-kotlin-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref="kotlin" }
 test-kotlin-kotlinTest = { module = "org.jetbrains.kotlin:kotlin-test", version.ref="kotlin" }
+test-kotlin-reflection = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref="kotlin" }
 test-mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockito" }
 test-mockito-inline = { module = "org.mockito:mockito-inline", version.ref = "mockito-inline" }
 test-mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
