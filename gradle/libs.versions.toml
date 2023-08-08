@@ -1,0 +1,96 @@
+[versions]
+aws-kotlin = "0.28.0-beta" # ensure proper aws-smithy version also set
+aws-smithy = "0.22.0" # ensure proper aws-kotlin version also set
+coroutines = "1.6.3"
+kotlin = "1.7.10"
+junit = "4.13.2"
+mockito = "3.9.0"
+mockito-inline = "3.11.2"
+mockk = "1.12.3"
+navigation = "2.3.4"
+
+[libraries]
+
+android-desugartools = "com.android.tools:desugar_jdk_libs:1.2.0"
+
+androidx-v4support = "androidx.legacy:legacy-support-v4:1.0.0"
+androidx-activity = "androidx.activity:activity:1.2.0"
+androidx-annotation = "androidx.annotation:annotation:1.1.0"
+androidx-appcompat = "androidx.appcompat:appcompat:1.2.0"
+androidx-browser = "androidx.browser:browser:1.4.0"
+androidx-core = "androidx.core:core:1.3.2"
+androidx-core-ktx = "androidx.core:core-ktx:1.3.2"
+androidx-workmanager = "androidx.work:work-runtime-ktx:2.7.1"
+androidx-security = "androidx.security:security-crypto:1.0.0"
+androidx-nav-fragment = { module = "androidx.navigation:navigation-fragment", version.ref = "navigation" }
+androidx-nav-ui = { module = "androidx.navigation:navigation-ui", version.ref = "navigation" }
+androidx-lifecycle-runtime = "androidx.lifecycle:lifecycle-runtime:2.4.1"
+androidx-sqlite = "androidx.sqlite:sqlite:2.2.0"
+
+aws-credentials = { module = "aws.smithy.kotlin:aws-credentials", version.ref = "aws-smithy" }
+aws-signing = { module = "aws.smithy.kotlin:aws-signing-default", version.ref = "aws-smithy" }
+aws-http = { module = "aws.sdk.kotlin:aws-http", version.ref = "aws-kotlin" }
+aws-cognitoidentity = { module = "aws.sdk.kotlin:cognitoidentity", version.ref = "aws-kotlin" }
+aws-cognitoidentityprovider = { module = "aws.sdk.kotlin:cognitoidentityprovider", version.ref= "aws-kotlin" }
+aws-comprehend = { module = "aws.sdk.kotlin:comprehend", version.ref = "aws-kotlin" }
+aws-location = { module = "aws.sdk.kotlin:location", version.ref = "aws-kotlin" }
+aws-s3 = { module = "aws.sdk.kotlin:s3", version.ref = "aws-kotlin" }
+aws-pinpoint = { module = "aws.sdk.kotlin:pinpoint", version.ref = "aws-kotlin" }
+aws-polly = { module = "aws.sdk.kotlin:polly", version.ref = "aws-kotlin" }
+aws-rekognition = { module = "aws.sdk.kotlin:rekognition", version.ref = "aws-kotlin" }
+aws-textract = { module = "aws.sdk.kotlin:textract", version.ref = "aws-kotlin" }
+aws-translate = { module = "aws.sdk.kotlin:translate", version.ref = "aws-kotlin" }
+aws-cloudwatchlogs = { module = "aws.sdk.kotlin:cloudwatchlogs", version.ref = "aws-kotlin" }
+
+kotlin-stdlib = "org.jetbrains.kotlin:kotlin-stdlib:1.7.10"
+kotlin-coroutines = "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.3"
+kotlin-coroutines-android = "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.3"
+kotlin-serializationJson = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.3"
+kotlin-futures = "androidx.concurrent:concurrent-futures-ktx:1.1.0"
+
+maplibre-sdk = "org.maplibre.gl:android-sdk:9.6.0"
+maplibre-annotations = "org.maplibre.gl:android-plugin-annotation-v9:1.0.0"
+
+rxandroid = "io.reactivex.rxjava3:rxandroid:3.0.0"
+rxjava = "io.reactivex.rxjava3:rxjava:3.0.6"
+
+google-material = "com.google.android.material:material:1.8.0"
+firebasemessaging = "com.google.firebase:firebase-messaging-ktx:23.1.0"
+
+oauth2 = "com.google.auth:google-auth-library-oauth2-http:0.26.0"
+okhttp = "com.squareup.okhttp3:okhttp:5.0.0-alpha.11"
+gson = "com.google.code.gson:gson:2.8.9"
+tensorflow = "org.tensorflow:tensorflow-lite:2.0.0"
+uuidgen = "com.fasterxml.uuid:java-uuid-generator:4.0.1"
+sqlcipher= "net.zetetic:android-database-sqlcipher:4.5.4"
+
+# Testing libraries
+test-androidx-test-core = "androidx.test:core:1.3.0"
+test-androidx-test-core-ktx = "androidx.test:core-ktx:1.3.0"
+test-androidx-test-runner = "androidx.test:runner:1.3.0"
+test-androidx-test-junit = "androidx.test.ext:junit:1.1.2"
+test-androidx-test-espresso = "androidx.test.espresso:espresso-core:3.3.0"
+test-androidx-test-orchestrator = "androidx.test:orchestrator:1.3.0"
+test-androidx-test-navigation = { module = "androidx.navigation:navigation-testing", version.ref = "navigation" }
+test-androidx-test-fragment = "androidx.fragment:fragment-testing:1.3.1"
+test-androidx-test-workmanager = "androidx.work:work-testing:2.7.1"
+
+test-kotlin-test-junit = "org.jetbrains.kotlin:kotlin-test-junit:1.5.31"
+test-kotlin-test-coroutines = "org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.3"
+test-kotlin-test-kotlinTest = "org.jetbrains.kotlin:kotlin-test:1.7.10"
+test-kotlin-reflection = "org.jetbrains.kotlin:kotlin-reflect:1.7.10"
+
+test-junit = { module = "junit:junit", version.ref = "junit" }
+test-mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockito" }
+test-mockito-inline = { module = "org.mockito:mockito-inline", version.ref = "mockito-inline" }
+test-mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
+test-mockk-android = { module = "io.mockk:mockk-android", version.ref = "mockk" }
+
+
+test-mockwebserver = "com.squareup.okhttp3:mockwebserver:5.0.0-alpha.11"
+test-robolectric = "org.robolectric:robolectric:4.7"
+test-jsonassert = "org.skyscreamer:jsonassert:1.5.0"
+test-json = "org.json:json:20210307"
+
+
+test-aws-sdk-core = "com.amazonaws:aws-android-sdk-core:2.62.2"

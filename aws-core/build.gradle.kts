@@ -31,10 +31,10 @@ android {
 
 dependencies {
     implementation(project(":core"))
-    implementation(dependency.kotlin.stdlib)
-    implementation(dependency.kotlin.coroutines)
+    implementation(libs.kotlin.stdlib)
+    implementation(libs.kotlin.coroutines)
 
-    implementation(dependency.aws.credentials)
+    implementation(libs.aws.credentials)
 }
 
 afterEvaluate {
