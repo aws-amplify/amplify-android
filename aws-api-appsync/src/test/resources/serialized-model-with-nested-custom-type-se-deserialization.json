@@ -2,6 +2,68 @@
   "serializedData": {
     "contact": {
       "serializedData": {
+        "additionalPhoneNumbers": [
+          {
+            "serializedData": {
+              "number": "41555555555",
+              "countryCode": "+1"
+            },
+            "customTypeSchema": {
+              "pluralName": "Phones",
+              "name": "Phone",
+              "fields": {
+                "number": {
+                  "javaClassForValue": "java.lang.String",
+                  "isRequired": true,
+                  "isCustomType": false,
+                  "name": "number",
+                  "isEnum": false,
+                  "targetType": "String",
+                  "isArray": false
+                },
+                "countryCode": {
+                  "javaClassForValue": "java.lang.String",
+                  "isRequired": true,
+                  "isCustomType": false,
+                  "name": "countryCode",
+                  "isEnum": false,
+                  "targetType": "String",
+                  "isArray": false
+                }
+              }
+            }
+          },
+          {
+            "serializedData": {
+              "number": "41555555555",
+              "countryCode": "+1"
+            },
+            "customTypeSchema": {
+              "pluralName": "Phones",
+              "name": "Phone",
+              "fields": {
+                "number": {
+                  "javaClassForValue": "java.lang.String",
+                  "isRequired": true,
+                  "isCustomType": false,
+                  "name": "number",
+                  "isEnum": false,
+                  "targetType": "String",
+                  "isArray": false
+                },
+                "countryCode": {
+                  "javaClassForValue": "java.lang.String",
+                  "isRequired": true,
+                  "isCustomType": false,
+                  "name": "countryCode",
+                  "isEnum": false,
+                  "targetType": "String",
+                  "isArray": false
+                }
+              }
+            }
+          }
+        ],
         "phone": {
           "serializedData": {
             "number": "41555555555",
@@ -38,6 +100,15 @@
         "pluralName": "Contacts",
         "name": "Contact",
         "fields": {
+          "additionalPhoneNumbers": {
+            "javaClassForValue": "java.util.Map",
+            "isRequired": true,
+            "isCustomType": true,
+            "name": "additionalPhoneNumbers",
+            "isEnum": false,
+            "targetType": "Phone",
+            "isArray": true
+          },
           "phone": {
             "javaClassForValue": "java.util.Map",
             "isRequired": true,

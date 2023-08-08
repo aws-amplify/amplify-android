@@ -40,6 +40,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.skyscreamer.jsonassert.JSONAssert;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -154,9 +155,13 @@ public final class SerializedModelAdapterTest {
                 .customTypeSchema(phoneSchema)
                 .build();
 
+        List<SerializedCustomType> additionalPhoneNumbers = new ArrayList<>();
+        additionalPhoneNumbers.add(phone);
+        additionalPhoneNumbers.add(phone);
         Map<String, Object> contactSerializedData = new HashMap<>();
         contactSerializedData.put("email", "test@test.com");
         contactSerializedData.put("phone", phone);
+        contactSerializedData.put("additionalPhoneNumbers", additionalPhoneNumbers);
         SerializedCustomType contact = SerializedCustomType.builder()
                 .serializedData(contactSerializedData)
                 .customTypeSchema(contactSchema)
@@ -312,6 +317,14 @@ public final class SerializedModelAdapterTest {
                 .targetType("Phone")
                 .javaClassForValue(Map.class)
                 .isCustomType(true)
+                .isRequired(true)
+                .build());
+        contactFields.put("additionalPhoneNumbers", CustomTypeField.builder()
+                .name("additionalPhoneNumbers")
+                .targetType("Phone")
+                .javaClassForValue(Map.class)
+                .isCustomType(true)
+                .isArray(true)
                 .isRequired(true)
                 .build());
         return CustomTypeSchema.builder()
