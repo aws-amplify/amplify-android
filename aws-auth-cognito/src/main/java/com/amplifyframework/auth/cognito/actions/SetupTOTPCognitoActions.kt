@@ -29,6 +29,7 @@ import com.amplifyframework.statemachine.codegen.data.SignInTOTPSetupData
 import com.amplifyframework.statemachine.codegen.events.SetupTOTPEvent
 
 internal object SetupTOTPCognitoActions : SetupTOTPActions {
+    private const val KEY_DEVICE_KEY = "DEVICE_KEY"
     override fun initiateTOTPSetup(eventType: SetupTOTPEvent.EventType.SetupTOTP): Action = Action<AuthEnvironment>(
         "InitiateTOTPSetup"
     ) { id, dispatcher ->
@@ -107,13 +108,19 @@ internal object SetupTOTPCognitoActions : SetupTOTPActions {
             logger.verbose("$id Starting execution")
             val evt = try {
                 val challengeResponses = mutableMapOf<String, String>()
-
                 challengeResponses["USERNAME"] = eventType.username
+                val deviceMetadata = getDeviceMetadata(eventType.username)
+                deviceMetadata?.deviceKey?.let { challengeResponses[KEY_DEVICE_KEY] = it }
+                val encodedContextData = getUserContextData(eventType.username)
+                val pinpointEndpointId = getPinpointEndpointId()
+
                 val response = cognitoAuthService.cognitoIdentityProviderClient?.respondToAuthChallenge {
                     this.session = eventType.session
                     this.challengeResponses = challengeResponses
                     challengeName = ChallengeNameType.MfaSetup
                     clientId = configuration.userPool?.appClient
+                    pinpointEndpointId?.let { analyticsMetadata { analyticsEndpointId = it } }
+                    encodedContextData?.let { this.userContextData { encodedData = it } }
                 }
 
                 response?.let {
