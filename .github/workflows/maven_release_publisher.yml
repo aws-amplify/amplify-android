@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@aa26d1f8263bab82a43a78fc0492f30464b7e20f # v1
+        uses: aws-actions/configure-aws-credentials@67fbcbb121271f7775d2e7715933280b06314838 # v1
         with:
           role-to-assume: ${{ secrets.AMPLIFY_ANDROID_RELEASE_PUBLISHER_ROLE }}
           aws-region: us-east-1
@@ -26,7 +26,7 @@ jobs:
           ORG_GRADLE_PROJECT_useAwsSdkReleaseBuild: true
           NUMBER_OF_DEVICES_TO_TEST: 3
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@aa26d1f8263bab82a43a78fc0492f30464b7e20f # v1
+        uses: aws-actions/configure-aws-credentials@67fbcbb121271f7775d2e7715933280b06314838 # v1
         with:
           role-to-assume: ${{ secrets.AMPLIFY_ANDROID_RELEASE_PUBLISHER_ROLE }}
           aws-region: us-east-1
