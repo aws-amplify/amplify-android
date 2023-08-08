@@ -31,7 +31,6 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.gson)
     implementation(libs.rxjava)
-    implementation(libs.rxandroid)
     implementation(libs.uuidgen)
 
     testImplementation(project(":testmodels"))

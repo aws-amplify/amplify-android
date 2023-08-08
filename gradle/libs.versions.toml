@@ -40,7 +40,6 @@ oauth2 = "0.26.0"
 okhttp = "5.0.0-alpha.11"
 robolectric = "4.7"
 rxjava = "3.0.6"
-rxjava-android = "3.0.0"
 sqlcipher = "4.5.4"
 tensorflow = "2.0.0"
 uuid = "4.0.1"
@@ -86,7 +85,6 @@ maplibre-annotations = { module = "org.maplibre.gl:android-plugin-annotation-v9"
 maplibre-sdk = { module = "org.maplibre.gl:android-sdk", version.ref = "maplibre" }
 oauth2 = { module = "com.google.auth:google-auth-library-oauth2-http", version.ref = "oauth2" }
 okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
-rxandroid = { module = "io.reactivex.rxjava3:rxandroid", version.ref = "rxjava-android" }
 rxjava = { module = "io.reactivex.rxjava3:rxjava", version.ref = "rxjava" }
 sqlcipher= { module = "net.zetetic:android-database-sqlcipher", version.ref = "sqlcipher" }
 tensorflow = { module = "org.tensorflow:tensorflow-lite", version.ref="tensorflow" }
