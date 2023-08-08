@@ -123,7 +123,6 @@ internal sealed class SetupTOTPState : State {
                 is Error -> when (challengeEvent) {
                     is SetupTOTPEvent.EventType.VerifyChallengeAnswer -> {
                         StateResolution(
-                            // TODO: Fix this
                             Verifying(challengeEvent.answer, "", null),
                             listOf(setupTOTPActions.verifyChallengeAnswer(challengeEvent))
                         )

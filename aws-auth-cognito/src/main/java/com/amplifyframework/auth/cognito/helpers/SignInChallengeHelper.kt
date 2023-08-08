@@ -205,7 +205,7 @@ internal object SignInChallengeHelper {
             when (it) {
                 "SMS_MFA" -> result.add(MFAType.SMS)
                 "SOFTWARE_TOKEN_MFA" -> result.add(MFAType.TOTP)
-                else -> TODO("throw exception")
+                else -> throw UnknownException(cause = Exception("MFA type not supported."))
             }
         }
         return result
