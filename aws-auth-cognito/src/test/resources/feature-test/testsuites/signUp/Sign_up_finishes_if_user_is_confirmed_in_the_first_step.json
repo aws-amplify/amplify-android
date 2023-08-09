@@ -1,64 +1,59 @@
 {
-    "description": "Sign up finishes if user is confirmed in the first step",
-    "preConditions": {
-        "amplify-configuration": "authconfiguration.json",
-        "state": "SignedOut_Configured.json",
-        "mockedResponses": [
-            {
-                "type": "cognitoIdentityProvider",
-                "apiName": "signUp",
-                "responseType": "success",
-                "response": {
-                    "codeDeliveryDetails": {
-                        "destination": "",
-                        "deliveryMedium": "",
-                        "attributeName": ""
-                    },
-                    "userConfirmed": true
-                }
-            }
-        ]
+  "preConditions":
+  {
+    "mockedResponses":
+    [
+      {
+        "type":"cognitoUserPools",
+        "apiName":"signUp",
+        "responseType":"Success"
+      }
+    ],
+    "state":"SignedOut_Configured.json",
+    "amplifyconfiguration":"authconfiguration.json"
+  },
+  "api":
+  {
+    "name":"signUp",
+    "params":
+    {
+      "password":"password",
+      "username":"user"
     },
-    "api": {
-        "name": "signUp",
-        "params": {
-            "username": "user",
-            "password": "password"
-        },
-        "options": {
-            "userAttributes": {
-                "email": "user@domain.com"
-            }
+    "options":
+    {
+      "userAttributes":"{\"email\":\"user@domain.com\"}"
+    }
+  },
+  "validations":
+  [
+    {
+      "shapetype":"cognito",
+      "shape":
+      {
+        "cognito":
+        {
+          "apiName":"signUp",
+          "request":
+          {
+            "request":"{\"password\":\"password\",\"clientId\":\"testAppClientId\",\"userAttributes\":[{\"name\":\"email\",\"value\":\"user@domain.com\"}],\"username\":\"user\"}",
+            "apiName":"signUp",
+            "type":"cognitoIdentityProvider"
+          },
+          "type":"cognitoidentityprovider"
         }
+      }
     },
-    "validations": [
+    {
+      "shapetype":"amplify",
+      "shape":
+      {
+        "amplify":
         {
-            "type": "cognitoIdentityProvider",
-            "apiName": "signUp",
-            "request": {
-                "clientId": "testAppClientId",
-                "username": "user",
-                "password": "password",
-                "userAttributes": [
-                    {
-                        "name": "email",
-                        "value": "user@domain.com"
-                    }
-                ]
-            }
-        },
-        {
-            "type": "amplify",
-            "apiName": "signUp",
-            "responseType": "success",
-            "response": {
-                "isSignUpComplete": true,
-                "nextStep": {
-                    "signUpStep": "DONE",
-                    "additionalInfo": {
-                    }
-                }
-            }
+          "apiName":"signUp",
+          "response":"{\"isSignUpComplete\":true,\"nextStep\":{\"signUpStep\":\"DONE\",\"additionalInfo\":{}}}"
         }
-    ]
+      }
+    }
+  ]
 }

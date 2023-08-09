@@ -1,32 +1,35 @@
 {
-    "description": "Test that Cognito is called with given payload and returns successful data",
-    "preConditions": {
-        "amplify-configuration": "authconfiguration.json",
-        "state": "SignedIn_SessionEstablished.json",
-        "mockedResponses": [
-            {
-                "type": "cognitoIdentityProvider",
-                "apiName": "updateDeviceStatus",
-                "responseType": "success",
-                "response": {
-                }
-            }
-        ]
-    },
-    "api": {
-        "name": "rememberDevice",
-        "params": {
-        },
-        "options": {
-        }
-    },
-    "validations": [
+  "preConditions":
+  {
+    "mockedResponses":
+    [
+      {
+        "type":"cognitoUserPools",
+        "apiName":"updateDeviceStatus",
+        "responseType":"Success"
+      }
+    ],
+    "state":"SignedIn_SessionEstablished.json",
+    "amplifyconfiguration":"authconfiguration.json"
+  },
+  "api":
+  {
+    "name":"rememberDevice",
+    "params":{},
+    "options":{}
+  },
+  "validations":
+  [
+    {
+      "shapetype":"amplify",
+      "shape":
+      {
+        "amplify":
         {
-            "type": "amplify",
-            "apiName": "rememberDevice",
-            "responseType": "success",
-            "response": {
-            }
+          "apiName":"rememberDevice",
+          "response":"{}"
         }
-    ]
+      }
+    }
+  ]
 }

@@ -3,6 +3,7 @@ package com.amplifyframework.auth.cognito
 
 import aws.sdk.kotlin.services.cognitoidentity.CognitoIdentityClient
 import aws.sdk.kotlin.services.cognitoidentityprovider.CognitoIdentityProviderClient
+import aws.smithy.kotlin.runtime.serde.json.JsonSerializer
 import com.amplifyframework.auth.cognito.featuretest.AuthAPI
 import com.amplifyframework.auth.cognito.featuretest.ExpectationShapes
 import com.amplifyframework.auth.cognito.featuretest.ExpectationShapes.Cognito
@@ -12,6 +13,7 @@ import com.amplifyframework.auth.cognito.featuretest.FeatureTestCase
 
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.auth.cognito.helpers.SmithyMod
+
 
 import com.amplifyframework.logging.Logger
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
@@ -50,50 +52,48 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
-
 import io.mockk.InternalPlatformDsl.toStr
+import serializeWrapper
+
+import deserializeWrapper
 
 
 class NewTesting {
 
     @Test
-    fun running() {
-        val testingList = SmithyMod().getTest()
-        for (value in testingList) {
-            val testingCurr = AWSCognitoAuthPluginFeatureTest(value)
-            testingCurr.api_feature_test()
+    fun runAll() {
+        val testingList = SmithyMod().getTest() //get list of tests
+        for (value in testingList) { //iterate through list of tests
+            val testingCurrent = AWSCognitoAuthPluginFeatureTest(value) //init test runner
+            testingCurrent.api_feature_test() // run the test
         }
 
 
-        assertEquals(1, 1)
+    }
+
+
+    @Test
+    fun getDeleteUser() {
+        val list = SmithyMod().runApi("deleteUser")
+        for (value in list) { //iterate through list of tests
+            val testingCurrent = AWSCognitoAuthPluginFeatureTest(value) //init test runner
+            testingCurrent.api_feature_test() // run the test
+        }
+
     }
 
     @Test
-    fun getResetPassword() {
-        val smithy = SmithyMod().getApi("resetPassword")
+    fun initializeDeserialized() {
+        val listNeedConvert = listOf("fetchDevices", "fetchUserAttributes", "forgetDevice", "rememberDevice", "resetPassword", "signUp")
+        for (value in listNeedConvert) {
 
-        for (value in smithy) {
-            val testing = AWSCognitoAuthPluginFeatureTest(value)
-            testing.api_feature_test()
-
-        }
-
-
-
-    }
-    @Test
-    fun getSignIn() {
-        val smithy = SmithyMod().getApi("signIn")
-
-        for (value in smithy) {
-            val testing = AWSCognitoAuthPluginFeatureTest(value)
-            testing.api_feature_test()
+            SmithyMod().convertAPI(value)
 
         }
-
-
     }
-
 }
+//converts test information to a serialized json representing the direct smithy instance
+
+
 
 

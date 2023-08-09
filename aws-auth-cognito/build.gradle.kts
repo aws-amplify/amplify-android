@@ -32,6 +32,8 @@ dependencies {
     implementation(project(":aws-auth-plugins-core"))
     implementation(dependency.kotlin.coroutines)
 
+
+
     implementation(dependency.kotlin.serializationJson)
     implementation(dependency.androidx.appcompat)
     implementation(dependency.androidx.security)
@@ -41,9 +43,16 @@ dependencies {
     implementation(dependency.aws.http)
     implementation(dependency.aws.cognitoidentity)
     implementation(dependency.aws.cognitoidentityprovider)
+
+
+
     implementation("androidx.core:core-ktx:+")
 
     implementation("org.example:smithy-starter")
+
+    testImplementation("aws.smithy.kotlin:runtime-core:0.25.0-SNAPSHOT")
+    testImplementation("aws.smithy.kotlin:serde:0.25.0-SNAPSHOT")
+    testImplementation("aws.smithy.kotlin:serde-json:0.25.0-SNAPSHOT")
 
     testImplementation(project(":testutils"))
     //noinspection GradleDependency

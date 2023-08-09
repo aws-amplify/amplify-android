@@ -1,9 +1,15 @@
 package com.amplifyframework.auth.cognito.helpers
 
-import aws.smithy.kotlin.runtime.content.Document
+//import aws.smithy.kotlin.runtime.content.Document
 import com.google.gson.Gson
+
+import com.google.gson.JsonElement
 import com.google.gson.reflect.TypeToken
+
 import generated.model.Amplify
+
+
+
 
 import generated.model.AmplifyError
 import generated.model.ApiCall
@@ -18,15 +24,118 @@ import generated.model.ShapeType
 import generated.model.StateMachine
 import generated.model.UnitTest
 import generated.model.TypeResponse
+
 import generated.model.Validation
 import io.mockk.InternalPlatformDsl.toStr
+import org.bouncycastle.asn1.cmc.CMCStatus.success
 import org.json.JSONObject
+
+import aws.smithy.kotlin.runtime.content.Document
+import deserializeWrapper
+
+import kotlinx.serialization.json.Json
+import serializeWrapper
+//import testwrapper
 import java.io.File
 
 class SmithyMod {
     var signUpFailure = generated.model.UnitTest {}
 
     var signUpSuccess = generated.model.UnitTest {}
+
+
+    fun getFailSignUp() : UnitTest {
+        val pathName = "src/test/java"
+
+
+        var expectedFail = JSONObject(File("$pathName/testframework/signup_fail.json").readText())
+        signUpFailure = deserializeWrapper(expectedFail)
+        return signUpFailure
+    }
+    fun getSucceedSignUp() : UnitTest {
+        val pathName = "src/test/java"
+
+        var expected = JSONObject(File("$pathName/testframework/signup_success.json").readText())
+
+        signUpSuccess = deserializeWrapper(expected)
+
+        return signUpSuccess
+
+    }
+
+    private fun getJSONIterative(directory: File) : MutableList<UnitTest> {
+        val jsonFiles = mutableListOf<UnitTest>()
+        for (subdirectory in directory.listFiles()) {
+            for (jsonFile in subdirectory.listFiles()) {
+                jsonFiles += deserializeWrapper(JSONObject(jsonFile.readText())) //deserializes the json into smithy test directly
+
+            }
+
+        }
+        return jsonFiles
+    }
+
+
+    fun getTest(): List<UnitTest> {
+        val listOfTests = mutableListOf<UnitTest>(getSucceedSignUp(), getFailSignUp())
+        val directory = File("src/test/resources/feature-test/testsuites")
+        listOfTests += getJSONIterative(directory)
+        return listOfTests
+
+    }
+
+
+    fun runApi(apiName: String) : List<UnitTest> {
+        val listOfTests = mutableListOf<UnitTest>()
+        val directory = File("src/test/resources/feature-test/testsuites/${apiName}")
+        for (subdirectory in directory.listFiles()) {
+            listOfTests += deserializeWrapper(JSONObject(subdirectory.readText()))
+
+        }
+        return listOfTests
+
+    }
+    //The Lines below are only for adding additional APIs
+    //(1)Get all the information from generator, (2)store to directory, (3)then run convertAPI to serialize to smithy acceptable format
+
+
+
+
+
+
+    fun convertAPI(apiName : String) : List<String> {
+        val listOfTests = mutableListOf<String>()
+        val directory = File("src/test/resources/feature-test/testsuites/${apiName}")
+        for (subdirectory in directory.listFiles()) {
+
+            subdirectory.writeText(convertJSONToSerializeStructure(JSONObject(subdirectory.readText())).toStr())
+
+
+        }
+        return listOfTests
+
+
+    }
+
+
+    fun getOldTest(generated : JSONObject) : UnitTest{
+        return generatorInformationToSmithy(generated)
+
+    }
+
+    fun convertJSONToSerializeStructure(generated : JSONObject) : String {
+        return serializeWrapper(getOldTest(generated))
+
+
+
+    }
+    private fun apiNameToCognitoType(input_in : String) : CognitoType {
+        if (input_in == "getId" || input_in == "getCredentialsForIdentity") {
+            return CognitoType.Cognitoidentity
+        }
+        return CognitoType.Cognitoidentityprovider
+    }
+
     private fun obtainMockListSuccess(expected: JSONObject) : List<MockedResponse> {
         var mockList : List<MockedResponse> = mutableListOf()
 
@@ -100,82 +209,10 @@ class SmithyMod {
 
 
 
-    fun getFailed() : UnitTest {
-        val pathName = "src/test/java"
-
-
-        var expectedFail = JSONObject(File("$pathName/testframework/signup_fail.json").readText())
-        signUpFailure = generatorToSmithy(expectedFail)
-        return signUpFailure
-    }
-    fun getSucceed() : UnitTest {
-        val pathName = "src/test/java"
-
-        var expected = JSONObject(File("$pathName/testframework/signup_success.json").readText())
-
-        signUpSuccess = generatorToSmithy(expected)
-
-        return signUpSuccess
-
-    }
-    fun getSignUpSucceed() : UnitTest {
-        return signUpSuccess
-    }
-
-    fun getSignUpFail() : UnitTest {
-
-        return signUpFailure
-    }
-    private fun getJSONIterative(directory: File) : MutableList<UnitTest> {
-        val jsonFiles = mutableListOf<UnitTest>()
-        for (subdirectory in directory.listFiles()) {
-            for (jsonFile in subdirectory.listFiles()) {
-                jsonFiles.add(generatorToSmithy(JSONObject(jsonFile.readText())))
-
-            }
-
-        }
-        return jsonFiles
-    }
-
-    fun getTest(): List<UnitTest> {
-        val listOfTests = mutableListOf<UnitTest>(getSucceed(), getFailed())
-        val directory = File("src/test/resources/feature-test/testsuites")
-        listOfTests += getJSONIterative(directory)
-        return listOfTests
-
-    }
-    private fun apiNameToCognitoType(input_in : String) : CognitoType {
-        if (input_in == "getId" || input_in == "getCredentialsForIdentity") {
-            return CognitoType.Cognitoidentity
-        }
-        return CognitoType.Cognitoidentityprovider
-    }
-
-    fun getForgetDevice() : List<UnitTest> {
-        val listOfTests = mutableListOf<UnitTest>()
-        val directory = File("src/test/resources/feature-test/testsuites/forgetDevice")
-        for (subdirectory in directory.listFiles()) {
-            listOfTests += generatorToSmithy(JSONObject(subdirectory.readText()))
-        }
-        return listOfTests
-
-
-    }
-    fun getApi(apiName : String) : List<UnitTest> {
-        val listOfTests = mutableListOf<UnitTest>()
-        val directory = File("src/test/resources/feature-test/testsuites/${apiName}")
-        for (subdirectory in directory.listFiles()) {
-            listOfTests += generatorToSmithy(JSONObject(subdirectory.readText()))
-        }
-        return listOfTests
-
-
-    }
 
 
 
-    private fun generatorToSmithy(generated : JSONObject) : UnitTest {
+    private fun generatorInformationToSmithy(generated : JSONObject) : UnitTest {
         val testing = UnitTest {
             preConditions = Preconditions {
                 val mockedResponseList = JSONObject(generated["preConditions"].toStr()).getJSONArray("mockedResponses")
@@ -295,6 +332,8 @@ class SmithyMod {
         return testing
 
     }
+
+
 
 
 

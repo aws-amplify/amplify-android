@@ -1,39 +1,43 @@
 {
-    "description": "Nothing is returned when delete user succeeds",
-    "preConditions": {
-        "amplify-configuration": "authconfiguration.json",
-        "state": "SignedIn_SessionEstablished.json",
-        "mockedResponses": [
-            {
-                "type": "cognitoIdentityProvider",
-                "apiName": "deleteUser",
-                "responseType": "success",
-                "response": {
-                }
-            }
-        ]
-    },
-    "api": {
-        "name": "deleteUser",
-        "params": {
-        },
-        "options": {
+  "preConditions":
+  {
+    "mockedResponses":
+    [
+      {
+        "type":"cognitoUserPools",
+        "apiName":"deleteUser",
+        "responseType":"Success"
+      }
+    ],
+    "state":"SignedIn_SessionEstablished.json",
+    "amplifyconfiguration":"authconfiguration.json"
+  },
+  "api":
+  {
+    "name":"deleteUser",
+    "params":{},
+    "options":{}
+  },
+  "validations":
+  [
+    {"shapetype":"amplify",
+      "shape":
+      {
+        "amplify":
+        {"apiName":"deleteUser",
+          "response":"{}"
         }
+      }
     },
-    "validations": [
+    {"shapetype":"amplify",
+      "shape":
+      {
+        "amplify":
         {
-            "type": "amplify",
-            "apiName": "deleteUser",
-            "responseType": "success",
-            "response": {
-            }
-        },
-        {
-            "type": "amplify",
-            "apiName": "deleteUser",
-            "responseType": "success",
-            "response": {
-            }
+          "apiName":"deleteUser",
+          "response":"{}"
         }
-    ]
+      }
+    }
+  ]
 }

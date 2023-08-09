@@ -47,6 +47,7 @@ import com.amplifyframework.auth.cognito.featuretest.MockResponse
 import com.amplifyframework.auth.cognito.featuretest.ResponseType
 import com.amplifyframework.auth.exceptions.InvalidStateException
 import com.amplifyframework.auth.exceptions.ValidationException
+import com.amplifyframework.statemachine.codegen.data.UserPoolConfiguration
 import generated.model.MockedResponse
 import generated.model.UnitTest
 import generated.model.TypeResponse
@@ -80,6 +81,7 @@ class CognitoMockFactory(
                             this.codeDeliveryDetails = parseCodeDeliveryDetails(resp)
                         }
                     }
+
                 }
                 "signUp" -> {
                     coEvery { mockCognitoIPClient.signUp(any()) } coAnswers {
@@ -104,6 +106,7 @@ class CognitoMockFactory(
                             this.challengeParameters = JSONObject(resp.response!!.asSuccess().asString())?.let {
                                 parseChallengeParams(it)
                             }
+
                         }
                     }
                 }
@@ -226,6 +229,8 @@ class CognitoMockFactory(
     }
     private fun setupError(response: MockedResponse) {
         if (response!!.responseType == TypeResponse.Error) {
+
+
             val cur = response!!.response!!.asError()
 
             when (cur.errorType) {

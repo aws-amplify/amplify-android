@@ -41,7 +41,7 @@ import org.json.JSONObject
  */
 object CognitoRequestFactory {
     fun getExpectedRequestFor(apiName : String, targetApi: Map<String, Document?>): Any = when (apiName) {
-        "resetPassword" -> {
+        "forgotPassword" -> {
             val params = JSONObject(targetApi["request"]!!.asString())
             val expectedRequestBuilder: ForgotPasswordRequest.Builder.() -> Unit = {
                 username = (params["username"]!!.toStr())

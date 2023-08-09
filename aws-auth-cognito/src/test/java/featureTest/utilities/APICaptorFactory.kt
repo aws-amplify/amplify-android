@@ -15,6 +15,7 @@
 
 package featureTest.utilities
 
+import aws.smithy.kotlin.runtime.tracing.TraceEventData
 import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.AuthSession
 import com.amplifyframework.auth.AuthUser
@@ -33,6 +34,7 @@ import generated.model.TypeResponse
 import io.mockk.CapturingSlot
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.*
 import io.mockk.slot
 import java.util.concurrent.CountDownLatch
 
@@ -41,20 +43,17 @@ import java.util.concurrent.CountDownLatch
  */
 class APICaptorFactory(
     private val authApi: ApiCall,
-    private val latch: CountDownLatch,
-    private val responseType : TypeResponse
+    private val responseType : TypeResponse,
+    private val onSuccess : Any,
+    private val onError : Consumer<AuthException>,
+    val latch : CountDownLatch
 ) {
+    lateinit var result : Any
+
+
+
     companion object {
-        val onSuccess = mapOf(
-            AuthAPI.resetPassword.name to mockk<Consumer<AuthResetPasswordResult>>(),
-            AuthAPI.signUp.name to mockk<Consumer<AuthSignUpResult>>(),
-            AuthAPI.signIn.name to mockk<Consumer<AuthSignInResult>>(),
-            AuthAPI.deleteUser.name to mockk<Action>(),
-            AuthAPI.fetchAuthSession.name to mockk<AuthSession>(),
-            AuthAPI.getCurrentUser.name to mockk<AuthUser>(),
-            AuthAPI.rememberDevice.name to mockk<Action>(),
-            AuthAPI.forgetDevice.name to mockk<Action>()
-        )
+
         val onError = mockk<Consumer<AuthException>>()
         val onComplete = mapOf(
             AuthAPI.signOut.name to mockk<Consumer<AuthSignOutResult>>()
@@ -72,82 +71,94 @@ class APICaptorFactory(
         successCaptors.clear()
         completeCaptors.clear()
         if (responseType == TypeResponse.Success) setupOnSuccess()
-        else if(responseType == TypeResponse.Complete) setupOnComplete()
+        else if(responseType == TypeResponse.Complete || authApi.name == "signOut") setupOnComplete()
         else setupOnError()
     }
 
     private fun setupOnSuccess() {
+
         when (val apiName = authApi.name) {
+
             AuthAPI.resetPassword.name -> {
                 val resultCaptor = slot<AuthResetPasswordResult>()
-                val consumer = onSuccess[apiName] as Consumer<AuthResetPasswordResult>
+                val consumer = onSuccess as Consumer<AuthResetPasswordResult>
                 every { consumer.accept(capture(resultCaptor)) } answers { latch.countDown() }
-                successCaptors[apiName] = resultCaptor
+                result = resultCaptor
             }
             AuthAPI.signUp.name -> {
                 val resultCaptor = slot<AuthSignUpResult>()
-                val consumer = onSuccess[apiName] as Consumer<AuthSignUpResult>
-                every { consumer.accept(capture(resultCaptor)) } answers { latch.countDown() }
-                successCaptors[apiName] = resultCaptor
+                val onSuccess : Consumer<AuthSignUpResult> = mockk()
+                every { (onSuccess as Consumer<AuthSignUpResult>).accept(capture(resultCaptor)) } answers { latch.countDown() }
+                result = resultCaptor
             }
             AuthAPI.signIn.name -> {
                 val resultCaptor = slot<AuthSignInResult>()
-                val consumer = onSuccess[apiName] as Consumer<AuthSignInResult>
+                val consumer = onSuccess as Consumer<AuthSignInResult>
                 every { consumer.accept(capture(resultCaptor)) } answers { latch.countDown() }
-                successCaptors[apiName] = resultCaptor
+                result = resultCaptor
             }
             AuthAPI.deleteUser.name -> {
-                val consumer = onSuccess[apiName] as Action
+                val consumer = onSuccess as Action
                 every { consumer.call() } answers { latch.countDown() }
-                successCaptors[apiName] = actionCaptor
+                result = actionCaptor
             }
             AuthAPI.fetchAuthSession.name -> {
-                val consumer = onSuccess[apiName] as Action
+                val consumer = onSuccess as Action
                 every { consumer.call() } answers { latch.countDown() }
-                successCaptors[apiName] = actionCaptor
+                result = actionCaptor
             }
             AuthAPI.getCurrentUser.name -> {
-                val consumer = onSuccess[apiName] as Action
+                val consumer = onSuccess as Action
                 every { consumer.call() } answers { latch.countDown() }
-                successCaptors[apiName] = actionCaptor
+                result = actionCaptor
             }
             AuthAPI.rememberDevice.name -> {
-                val consumer = onSuccess[apiName] as Action
+                val consumer = onSuccess as Action
                 every { consumer.call() } answers { latch.countDown() }
-                successCaptors[apiName] = actionCaptor
+                result = actionCaptor
             }
             AuthAPI.forgetDevice.name -> {
-                val consumer = onSuccess[apiName] as Action
+                val consumer = onSuccess as Action
                 every { consumer.call() } answers { latch.countDown() }
-                successCaptors[apiName] = actionCaptor
+                result = actionCaptor
             }
             AuthAPI.fetchDevices.name -> {
-                val consumer = onSuccess[apiName] as Action
+                val consumer = onSuccess as Action
                 every { consumer.call() } answers { latch.countDown() }
-                successCaptors[apiName] = actionCaptor
+                result = actionCaptor
             }
             AuthAPI.fetchUserAttributes.name -> {
-                val consumer = onSuccess[apiName] as Action
+                val consumer = onSuccess as Action
                 every { consumer.call() } answers { latch.countDown() }
-                successCaptors[apiName] = actionCaptor
+                result = actionCaptor
             }
             else -> throw Error("onSuccess for $authApi is not defined!")
         }
+
     }
 
     private fun setupOnComplete() {
+
         when (val apiName = authApi.name) {
             AuthAPI.signOut.name -> {
                 val resultCaptor = slot<AuthSignOutResult>()
                 val consumer = onComplete[apiName] as Consumer<AuthSignOutResult>
                 every { consumer.accept(capture(resultCaptor)) } answers { latch.countDown() }
-                completeCaptors[apiName] = resultCaptor
+                result = resultCaptor
             }
             else -> throw Error("onComplete for $authApi is not defined!")
         }
+
     }
 
     private fun setupOnError() {
         every { onError.accept(capture(errorCaptor)) } answers { latch.countDown() }
+        result = errorCaptor
     }
+
+    fun getTheResult() : Any {
+        return result
+    }
+
+
 }

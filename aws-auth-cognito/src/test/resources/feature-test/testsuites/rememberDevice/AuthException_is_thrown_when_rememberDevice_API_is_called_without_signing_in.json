@@ -1,36 +1,35 @@
 {
-    "description": "AuthException is thrown when rememberDevice API is called without signing in",
-    "preConditions": {
-        "amplify-configuration": "authconfiguration.json",
-        "state": "SignedOut_Configured.json",
-        "mockedResponses": [
-            {
-                "type": "cognitoIdentityProvider",
-                "apiName": "updateDeviceStatus",
-                "responseType": "success",
-                "response": {
-                }
-            }
-        ]
-    },
-    "api": {
-        "name": "rememberDevice",
-        "params": {
-        },
-        "options": {
-        }
-    },
-    "validations": [
+  "preConditions":
+  {
+    "mockedResponses":
+    [
+      {
+        "type":"cognitoUserPools",
+        "apiName":"updateDeviceStatus",
+        "responseType":"Success"
+      }
+    ],
+    "state":"SignedOut_Configured.json",
+    "amplifyconfiguration":"authconfiguration.json"
+  },
+  "api":
+  {
+    "name":"rememberDevice",
+    "params":{},
+    "options":{}
+  },
+  "validations":
+  [
+    {
+      "shapetype":"amplify",
+      "shape":
+      {
+        "amplify":
         {
-            "type": "amplify",
-            "apiName": "rememberDevice",
-            "responseType": "failure",
-            "response": {
-                "errorType": "SignedOutException",
-                "errorMessage": "You are currently signed out.",
-                "recoverySuggestion": "Please sign in and reattempt the operation.",
-                "cause": null
-            }
+          "apiName":"rememberDevice",
+          "response":"{\"recoverySuggestion\":\"Please sign in and reattempt the operation.\",\"errorType\":\"SignedOutException\",\"errorMessage\":\"You are currently signed out.\",\"cause\":null}"
         }
-    ]
+      }
+    }
+  ]
 }

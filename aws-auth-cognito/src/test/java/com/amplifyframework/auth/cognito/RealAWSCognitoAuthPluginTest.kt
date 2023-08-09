@@ -202,52 +202,6 @@ class RealAWSCognitoAuthPluginTest {
     }
 
     @Test
-    fun testing() {
-
-        val testingSucc = SmithyMod().getSucceed()
-        currentState = AuthenticationState.SignedOut(mockk())
-
-
-
-        val testingCurr = AWSCognitoAuthPluginFeatureTest(testingSucc)
-
-        testingCurr.api_feature_test()
-
-
-
-
-        assertEquals(1, 1)
-
-    }
-
-    @Test
-    fun testSignUpFailsIfNotConfigured() {
-        val latch = CountDownLatch(1)
-        // GIVEN
-        val onSuccess = mockk<Consumer<AuthSignUpResult>>()
-        val onError = mockk<Consumer<AuthException>>(relaxed = true)
-        val expectedAuthError = InvalidUserPoolConfigurationException()
-
-
-
-        currentState = AuthenticationState.SignedOut(mockk())
-
-        every { onSuccess.accept(any()) } answers { latch.countDown() }
-
-
-
-        // WHEN
-        plugin.signUp("user", "pass",
-            AuthSignUpOptions.builder().build(), onSuccess, onError
-        )
-        assertTrue { latch.await(5, TimeUnit.SECONDS) }
-
-        // THEN
-        verify(exactly = 1) { onSuccess.accept(any()) }
-        //verify (exactly = 0){ onError.accept(expectedAuthError) }
-    }
-
-    @Test
     fun testFetchAuthSessionSucceedsIfSignedOut() {
         // GIVEN
         val onSuccess = mockk<Consumer<AuthSession>>()

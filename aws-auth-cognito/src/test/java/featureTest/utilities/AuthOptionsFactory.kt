@@ -51,7 +51,7 @@ object AuthOptionsFactory {
     fun <T> create(apiName: AuthAPI, optionsData : Map<String, Document?>): T = when (apiName) {
         AuthAPI.confirmResetPassword -> AuthConfirmResetPasswordOptions.defaults()
         resetPassword -> AuthResetPasswordOptions.defaults()
-        signUp -> getSignUpOptions(optionsData)//AuthSignUpOptions.builder().build() //userAttribute(AuthUserAttributeKey.email(), "{email}").build()//.builder().build()//getSignUpOptions(optionsData)
+        signUp -> getSignUpOptions(optionsData)//AuthSignUpOptions.builder().build()getSignUpOptions(optionsData) //userAttribute(AuthUserAttributeKey.email(), "{email}").build()//.builder().build()//getSignUpOptions(optionsData)
         AuthAPI.confirmSignIn -> AuthConfirmSignInOptions.defaults()
         AuthAPI.confirmSignUp -> AuthConfirmSignUpOptions.defaults()
         AuthAPI.confirmUserAttribute -> null
@@ -83,7 +83,7 @@ object AuthOptionsFactory {
 
     private fun getSignInOptions(optionsData: Map<String, Document?>): AuthSignInOptions {
         var option =
-            AWSCognitoAuthSignInOptions.builder().authFlowType(AuthFlowType.CUSTOM_AUTH_WITHOUT_SRP).build()
+            AWSCognitoAuthSignInOptions.builder().authFlowType(AuthFlowType.CUSTOM_AUTH_WITH_SRP).build()
 
         return option
 

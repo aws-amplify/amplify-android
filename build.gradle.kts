@@ -15,16 +15,25 @@
 
 import com.android.build.gradle.LibraryExtension
 import org.jetbrains.dokka.gradle.DokkaTask
+
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
+
+
 
 buildscript {
     repositories {
         google()
         mavenCentral()
         maven(url = "https://plugins.gradle.org/m2/")
+        mavenLocal()
+
     }
 
+
     dependencies {
+
+
         classpath("com.android.tools.build:gradle:7.3.1")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.0")
         classpath("org.jetbrains.dokka:dokka-gradle-plugin:1.7.10")
@@ -32,14 +41,17 @@ buildscript {
         classpath("org.jlleitschuh.gradle:ktlint-gradle:11.0.0")
         classpath("org.gradle:test-retry-gradle-plugin:1.4.1")
         classpath("org.jetbrains.kotlinx:kover:0.6.1")
+
+
     }
 }
 
 allprojects {
     repositories {
-        maven(url = "https://aws.oss.sonatype.org/content/repositories/snapshots/")
+//        maven(url = "https://aws.oss.sonatype.org/content/repositories/snapshots/")
         google()
         mavenCentral()
+        mavenLocal()
     }
 
     gradle.projectsEvaluated {
@@ -173,5 +185,7 @@ fun Project.configureAndroid() {
         add("coreLibraryDesugaring", dependency.android.desugartools)
     }
 }
+
+
 
 apply(from = rootProject.file("configuration/instrumentation-tests.gradle"))

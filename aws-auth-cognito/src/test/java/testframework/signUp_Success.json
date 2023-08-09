@@ -1,81 +1,59 @@
 {
-  "description": "{description}",
-  "preConditions": {
-    "amplify-configuration": "authconfiguration.json",
-    "state": "SignedOut_Configured.json",
-    "mockedResponses": [
+  "preConditions":
+  {
+    "mockedResponses":
+    [
       {
-        "type": "AWSCognitoIdentityProviderService",
-        "apiName": "signUp",
-        "responseType": "success",
-        "response": {
-          "codeDeliveryDetails": {
-            "destination": "dunietzt@amazon.com",
-            "deliveryMedium": "EMAIL",
-            "attributeName": "email"
+        "type":"cognitoUserPools",
+        "apiName":"signUp",
+        "responseType":"Success"
+      }
+    ],
+    "state":"SignedOut_Configured.json",
+    "amplifyconfiguration":"authconfiguration.json"
+  },
+  "api":
+  {
+    "name":"signUp",
+    "params":
+    {
+      "password":"password",
+      "username":"user"
+    },
+    "options":
+    {
+      "userAttributes":"{\"email\":\"user@domain.com\"}"
+    }
+  },
+  "validations":
+  [
+    {
+      "shapetype":"cognito",
+      "shape":
+      {
+        "cognito":
+        {
+          "apiName":"signUp",
+          "request":
+          {
+            "request":"{\"password\":\"password\",\"clientId\":\"testAppClientId\",\"userAttributes\":[{\"name\":\"email\",\"value\":\"user@domain.com\"}],\"username\":\"user\"}",
+            "apiName":"signUp",
+            "type":"cognitoIdentityProvider"
           },
-          "userId": "f******e-0**1-4**3-8**c-6**********8",
-          "userConfirmed": false
+          "type":"cognitoidentityprovider"
         }
       }
-    ]
-  },
-  "api": {
-    "name": "signUp",
-    "params": {
-      "username": "a*************4",
-      "password": "Somepassword13!"
-    },
-    "options": {
-      "userAttributes": {
-        "email": "dunietzt@amazon.com"
-      }
-    }
-  },
-  "validations": [
-    {
-      "type": "AWSCognitoIdentityProviderService",
-      "apiName": "signUp",
-      "request": {
-        "clientId": "4************************3",
-        "username": "a*************4",
-        "password": "Somepassword13!",
-        "userAttributes": [
-          {
-            "name": "email",
-            "value": "dunietzt@amazon.com"
-          }
-        ],
-        "secretHash": "W******************************************="
-      }
     },
     {
-      "type": "AWSCognitoIdentityProviderService",
-      "apiName": "signUp",
-      "responseType": "success",
-      "response": {
-        "isSignUpComplete": false,
-
-        "nextStep": {
-          "signUpStep": "CONFIRM_SIGN_UP_STEP",
-          "additionalInfo": {},
-          "codeDeliveryDetails": {
-            "destination": "dunietzt@amazon.com",
-            "deliveryMedium": "EMAIL",
-
-            "attributeName": "email"
-          }
-        },
-
-
-        "userConfirmed": false,
-        "userId": "f******e-0**1-4**3-8**c-6**********8"
-
-
-
+      "shapetype":"amplify",
+      "shape":
+      {
+        "amplify":
+        {
+          "apiName":"signUp",
+          "response":"{\"isSignUpComplete\":true,\"nextStep\":{\"signUpStep\":\"DONE\",\"additionalInfo\":{}}}"
+        }
       }
-
     }
-
   ]
 }

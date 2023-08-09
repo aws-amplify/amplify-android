@@ -1,40 +1,42 @@
 {
-    "description": "AuthException is thrown when fetchUserAttributes API is called without signing in",
-    "preConditions": {
-        "amplify-configuration": "authconfiguration.json",
-        "state": "SignedOut_Configured.json",
-        "mockedResponses": [
-            {
-                "type": "cognitoIdentityProvider",
-                "apiName": "getUser",
-                "responseType": "failure",
-                "response": {
-                    "errorType": "SignedOutException",
-                    "errorMessage": "You are currently signed out.",
-                    "recoverySuggestion": "Please sign in and reattempt the operation.",
-                    "cause": null
-                }
-            }
-        ]
-    },
-    "api": {
-        "name": "fetchUserAttributes",
-        "params": {
-        },
-        "options": {
-        }
-    },
-    "validations": [
+  "preConditions":
+  {
+    "mockedResponses":
+    [
+      {
+        "type":"cognitoUserPools",
+        "apiName":"getUser",
+        "response":
         {
-            "type": "amplify",
-            "apiName": "fetchUserAttributes",
-            "responseType": "failure",
-            "response": {
-                "errorType": "SignedOutException",
-                "errorMessage": "You are currently signed out.",
-                "recoverySuggestion": "Please sign in and reattempt the operation.",
-                "cause": null
-            }
+          "error":
+          {
+            "errorType":"SignedOutException"
+          }
+        },
+        "responseType":"Error"
+      }
+    ],
+    "state":"SignedOut_Configured.json",
+    "amplifyconfiguration":"authconfiguration.json"
+  },
+  "api":
+  {
+    "name":"fetchUserAttributes",
+    "params":{},
+    "options":{}
+  },
+  "validations":
+  [
+    {
+      "shapetype":"amplify",
+      "shape":
+      {
+        "amplify":
+        {
+          "apiName":"fetchUserAttributes",
+          "response":"{\"recoverySuggestion\":\"Please sign in and reattempt the operation.\",\"errorType\":\"SignedOutException\",\"errorMessage\":\"You are currently signed out.\",\"cause\":null}"
         }
-    ]
+      }
+    }
+  ]
 }

@@ -34,7 +34,7 @@ import com.amplifyframework.core.Action
 import com.amplifyframework.core.Consumer
 import com.google.gson.Gson
 import featureTest.utilities.APICaptorFactory.Companion.onError
-import featureTest.utilities.APICaptorFactory.Companion.onSuccess
+
 
 import generated.model.ApiCall
 import generated.model.TypeResponse

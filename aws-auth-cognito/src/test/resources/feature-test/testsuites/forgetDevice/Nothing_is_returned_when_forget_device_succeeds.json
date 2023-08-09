@@ -1,43 +1,47 @@
 {
-    "description": "Nothing is returned when forget device succeeds",
-    "preConditions": {
-        "amplify-configuration": "authconfiguration.json",
-        "state": "SignedIn_SessionEstablished.json",
-        "mockedResponses": [
-            {
-                "type": "cognitoIdentityProvider",
-                "apiName": "updateDeviceStatus",
-                "responseType": "success",
-                "response": {
-                }
-            }
-        ]
-    },
-    "api": {
-        "name": "forgetDevice",
-        "params": {
-            "device": {
-                "id": "id",
-                "name": "test"
-            }
-        },
-        "options": {
-        }
-    },
-    "validations": [
+  "preConditions":
+  {
+    "mockedResponses":
+    [
+      {
+        "type":"cognitoUserPools",
+        "apiName":"updateDeviceStatus",
+        "responseType":"Success"
+      }
+    ],
+    "state":"SignedIn_SessionEstablished.json",
+    "amplifyconfiguration":"authconfiguration.json"
+  },
+  "api":
+  {
+    "name":"forgetDevice",
+    "params":
+    {
+      "device":"{\"name\":\"test\",\"id\":\"id\"}"},
+    "options":{}
+  },
+  "validations":
+  [
+    {
+      "shapetype":"amplify",
+      "shape":
+      {
+        "amplify":
         {
-            "type": "amplify",
-            "apiName": "forgetDevice",
-            "responseType": "success",
-            "response": {
-            }
-        },
+          "apiName":"forgetDevice",
+          "response":"{}"}
+      }
+    },
+    {
+      "shapetype":"amplify",
+      "shape":
+      {
+        "amplify":
         {
-            "type": "amplify",
-            "apiName": "forgetDevice",
-            "responseType": "success",
-            "response": {
-            }
+          "apiName":"forgetDevice",
+          "response":"{}"
         }
-    ]
+      }
+    }
+  ]
 }

@@ -1,41 +1,40 @@
 {
-    "description": "AuthException is thrown when deleteUser API call fails",
-    "preConditions": {
-        "amplify-configuration": "authconfiguration.json",
-        "state": "SignedOut.json",
-        "mockedResponses": [
-            {
-                "type": "cognitoIdentityProvider",
-                "apiName": "deleteUser",
-                "responseType": "failure",
-                "response": {
-                    "errorType": "SignedOutException",
-                    "errorMessage": null
-                }
-            }
-        ]
-    },
-    "api": {
-        "name": "deleteUser",
-        "params": {
-        },
-        "options": {
-        }
-    },
-    "validations": [
+  "preConditions":
+  {
+    "mockedResponses":
+    [
+      {
+        "type":"cognitoUserPools",
+        "apiName":"deleteUser",
+        "response":
         {
-            "type": "amplify",
-            "apiName": "deleteUser",
-            "responseType": "failure",
-            "response": {
-                "errorType": "SignedOutException",
-                "errorMessage": "Failed since user is not authorized.",
-                "recoverySuggestion": "Check whether the given values are correct and the user is authorized to perform the operation.",
-                "cause": {
-                    "errorType": "SignedOutException",
-                    "errorMessage": null
-                }
-            }
+          "error":
+          {
+            "errorType":"SignedOutException"
+          }
+        },
+        "responseType":"Error"
+      }
+    ],
+    "state":"SignedOut.json",
+    "amplifyconfiguration":"authconfiguration.json"
+  },
+  "api":
+  {"name":"deleteUser",
+    "params":{},
+    "options":{}
+  },
+  "validations":
+  [
+    {"shapetype":"amplify",
+      "shape":
+      {
+        "amplify":
+        {
+          "apiName":"deleteUser",
+          "response":"{\"recoverySuggestion\":\"Check whether the given values are correct and the user is authorized to perform the operation.\",\"errorType\":\"SignedOutException\",\"errorMessage\":\"Failed since user is not authorized.\",\"cause\":{\"errorType\":\"SignedOutException\",\"errorMessage\":null}}"
         }
-    ]
+      }
+    }
+  ]
 }

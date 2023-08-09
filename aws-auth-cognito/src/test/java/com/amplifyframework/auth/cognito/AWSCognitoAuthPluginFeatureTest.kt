@@ -22,9 +22,7 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeliveryMediumType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.InitiateAuthResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.SignUpRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.SignUpResponse
-import aws.smithy.kotlin.runtime.client.SdkClient
-import aws.smithy.kotlin.runtime.content.Document
-import aws.smithy.kotlin.runtime.time.Instant
+
 import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.AuthSession
 import com.amplifyframework.auth.cognito.featuretest.AuthAPI
@@ -108,6 +106,7 @@ import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.boolean
+import net.bytebuddy.implementation.InvokeDynamic.lambda
 import org.bouncycastle.asn1.x500.style.RFC4519Style
 import org.bouncycastle.asn1.x500.style.RFC4519Style.name
 import org.json.JSONArray
@@ -189,23 +188,6 @@ class AWSCognitoAuthPluginFeatureTest(private val testCase: generated.model.Unit
             this.authStateMachine,
             this.logger
         )
-
-    }
-
-
-    fun api_feature_test() {
-        Dispatchers.setMain(newSingleThreadContext("Main thread"))
-
-
-        setUp()
-
-        var input: String = testCase.preConditions!!.amplifyconfiguration!!
-
-        if (input == "") {
-            input = "authconfiguration.json"
-
-        }
-
         mockkStatic("com.amplifyframework.auth.cognito.AWSCognitoAuthSessionKt")
         every { any<AmplifyCredential>().isValid() } returns true
 
@@ -221,37 +203,38 @@ class AWSCognitoAuthPluginFeatureTest(private val testCase: generated.model.Unit
         mockkObject(AuthHelper)
         coEvery { AuthHelper.getSecretHash(any(), any(), any()) } returns "dummy Hash"
 
-        // GIVEN
 
+    }
+
+
+    fun api_feature_test() {
+        Dispatchers.setMain(newSingleThreadContext("Main thread"))
+
+        setUp()
         mockAndroidAPIs()
 
-        val latch = CountDownLatch(1)
+
 
         if (testCase.preConditions!!.state!!.contains("SignedOut")) {
             currentState = AuthenticationState.SignedOut(mockk())
-            latch.countDown()
+
         }
         else if (testCase.preConditions!!.state!!.contains("SignedIn")) {
 
             currentState = AuthenticationState.SignedIn(credentials.signedInData, mockk())
-            latch.countDown()
+
         }
 
         else if (testCase.preConditions!!.state!!.contains("SigningIn")) {
             currentState = AuthenticationState.SigningIn()
-            latch.countDown()
+
 
         }
         else if (testCase.preConditions!!.state!!.contains("NotConfigured")) {
             currentState = AuthenticationState.NotConfigured()
-            latch.countDown()
+
 
         }
-        else {
-
-        }
-        // WHEN
-        assertTrue { latch.await(5, TimeUnit.SECONDS) }
 
         apiExecutionResult = apiExecutor(sut, testCase.api!!, testCase!!.preConditions!!.mockedResponses!![0].responseType!!)
 
@@ -259,7 +242,7 @@ class AWSCognitoAuthPluginFeatureTest(private val testCase: generated.model.Unit
             val nameToCheck = testCase.api!!.name!!
             val listCheck : List<String> = listOf("signUp", "signOut", "signIn", "resetPassword", "fetchUserAttributes", "fetchAuthSession")
             if (nameToCheck in listCheck ) {
-                assert(false)
+                assert(false) //these APIs should not have empty response
 
             }
             return
@@ -267,13 +250,14 @@ class AWSCognitoAuthPluginFeatureTest(private val testCase: generated.model.Unit
 
         // THEN
         if (testCase.preConditions!!.mockedResponses!![0].responseType == TypeResponse.Success) {
-            testCase.validations!!.forEach(this::verify)
+            testCase.validations!!.forEach(this::verify) //for success smithy test
         }
         else {
+            val apiExecutorException = apiExecutionResult.toStr().substringBefore('{')
 
-            assertEquals(apiExecutionResult.toStr().substringBefore('{'),
+            assertEquals(apiExecutorException,
                 testCase!!.preConditions!!.mockedResponses!![0].response!!.asError().errorType!!.substringBefore('[')
-            )
+            ) //for error smithy test
         }
         Dispatchers.resetMain()
         clearAllMocks()
@@ -284,11 +268,12 @@ class AWSCognitoAuthPluginFeatureTest(private val testCase: generated.model.Unit
     private fun mocking() {
         cognitoMockFactory.mock()
 
-        if (testCase!!.api!!.name == "resetPassword" && testCase.preConditions!!.mockedResponses!![0].responseType == TypeResponse.Error) {
+        if (testCase.preConditions!!.mockedResponses!![0].responseType == TypeResponse.Error) {
             every {authService.cognitoIdentityProviderClient} returns mockk()
 
             every {authConfig.userPool} returns UserPoolConfiguration.invoke { appClientId = null }
         }
+        //special mocking
 
 
     }
@@ -321,7 +306,7 @@ class AWSCognitoAuthPluginFeatureTest(private val testCase: generated.model.Unit
                     }
                     return
                 }
-
+                //try jsonObject or jsonArray
 
                 var jsonAmplify = try {
                     JSONObject(validation.shape!!.asAmplify().response!!.asString())
@@ -360,7 +345,7 @@ class AWSCognitoAuthPluginFeatureTest(private val testCase: generated.model.Unit
     private fun verifyAmplify(jsonAmplify: JSONObject) {
 
         val propertiesOfAPIResponseClass = apiExecutionResult!!::class.declaredMemberProperties
-        // Access and print the private property values
+        // Access the private property values
         propertiesOfAPIResponseClass.forEach { property ->
             // Mark the property as accessible so we can read its value
             property.isAccessible = true
@@ -378,17 +363,17 @@ class AWSCognitoAuthPluginFeatureTest(private val testCase: generated.model.Unit
             val functionReturn = function?.call(apiExecutionResult).toStr()
 
             if (functionReturn != null) {
-                val comparing = jsonAmplify[name].toStr()
-                if (comparing[0] !== '{') {
-                    assertEquals(comparing, functionReturn)
+                val smithyCompareResponse = jsonAmplify[name].toStr()
+                if (smithyCompareResponse[0] !== '{') {
+                    assertEquals(smithyCompareResponse, functionReturn)
                 }
                 else {
-                    var helper = functionReturn.substring(functionReturn.indexOf('{'))
-                    helper = helper.replace("=", ":")
+                    var resultObjectHelper = functionReturn.substring(functionReturn.indexOf('{'))
+                    resultObjectHelper = resultObjectHelper.replace("=", ":")
 
-                    val keys = JSONObject(helper).keys()
+                    val keys = JSONObject(resultObjectHelper).keys()
                     for (value in keys) {
-                        assertEquals(JSONObject(comparing)[value.toStr()].toStr(), JSONObject(helper)[value.toStr()].toStr())
+                        assertEquals(JSONObject(smithyCompareResponse)[value.toStr()].toStr(), JSONObject(resultObjectHelper)[value.toStr()].toStr())
 
                     }
                 }
@@ -399,20 +384,14 @@ class AWSCognitoAuthPluginFeatureTest(private val testCase: generated.model.Unit
 
     private fun verifyCognito(validation: generated.model.Cognito) {
 
-
-
-
         var expectedRequest =
             CognitoRequestFactory.getExpectedRequestFor(validation.apiName!!, validation!!.request!!.asMap())
 
         var apiName = validation.apiName
-        if (apiName == "resetPassword") {
-            apiName = "forgotPassword"
-        }
         coVerify {
             when (validation.type) {
-                is CognitoType.Cognitoidentityprovider -> mockCognitoIPClient to mockCognitoIPClient::class
-                else -> mockCognitoIdClient to mockCognitoIPClient::class
+                is CognitoType.Cognitoidentityprovider -> Pair(mockCognitoIPClient, mockCognitoIPClient::class)
+                else -> Pair(mockCognitoIdClient, mockCognitoIPClient::class)
             }.apply {
                 second.declaredFunctions.first {
 

@@ -1,73 +1,46 @@
 {
-    "description": "List of user attributes returned when fetch user attributes API succeeds",
-    "preConditions": {
-        "amplify-configuration": "authconfiguration.json",
-        "state": "SignedIn_SessionEstablished.json",
-        "mockedResponses": [
-            {
-                "type": "cognitoIdentityProvider",
-                "apiName": "getUser",
-                "responseType": "success",
-                "response": {
-                    "userAttributes": [
-                        {
-                            "name": "email",
-                            "value": "email@email.com"
-                        },
-                        {
-                            "name": "phone",
-                            "value": "000-000-0000"
-                        }
-                    ]
-                }
-            }
-        ]
-    },
-    "api": {
-        "name": "fetchUserAttributes",
-        "params": {
-        },
-        "options": {
-        }
-    },
-    "validations": [
+  "preConditions":
+  {
+    "mockedResponses":
+    [
+      {
+        "type":"cognitoUserPools",
+        "apiName":"getUser",
+        "responseType":"Success"
+      }
+    ],
+    "state":"SignedIn_SessionEstablished.json",
+    "amplifyconfiguration":"authconfiguration.json"
+  },
+  "api":
+  {
+    "name":"fetchUserAttributes",
+    "params":{},
+    "options":{}
+  },
+  "validations":
+  [
+    {
+      "shapetype":"amplify",
+      "shape":
+      {
+        "amplify":
         {
-            "type": "amplify",
-            "apiName": "fetchUserAttributes",
-            "responseType": "success",
-            "response": [
-                {
-                    "key": {
-                        "attributeKey": "email"
-                    },
-                    "value": "email@email.com"
-                },
-                {
-                    "key": {
-                        "attributeKey": "phone_number"
-                    },
-                    "value": "000-000-0000"
-                }
-            ]
-        },
-        {
-            "type": "amplify",
-            "apiName": "fetchUserAttributes",
-            "responseType": "success",
-            "response": [
-                {
-                    "key": {
-                        "attributeKey": "email"
-                    },
-                    "value": "email@email.com"
-                },
-                {
-                    "key": {
-                        "attributeKey": "phone_number"
-                    },
-                    "value": "000-000-0000"
-                }
-            ]
+          "apiName":"fetchUserAttributes",
+          "response":"[{\"value\":\"email@email.com\",\"key\":{\"attributeKey\":\"email\"}},{\"value\":\"000-000-0000\",\"key\":{\"attributeKey\":\"phone_number\"}}]"
         }
-    ]
+      }
+    },
+    {
+      "shapetype":"amplify",
+      "shape":
+      {
+        "amplify":
+        {
+          "apiName":"fetchUserAttributes",
+          "response":"[{\"value\":\"email@email.com\",\"key\":{\"attributeKey\":\"email\"}},{\"value\":\"000-000-0000\",\"key\":{\"attributeKey\":\"phone_number\"}}]"
+        }
+      }
+    }
+  ]
 }
