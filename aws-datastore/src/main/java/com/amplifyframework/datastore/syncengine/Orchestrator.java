@@ -67,6 +67,8 @@ public final class Orchestrator {
     private final ReachabilityMonitor reachabilityMonitor;
     private Disposable monitorNetworkChangesDisposable;
 
+    private final Object transitionLock = new Object();
+
     /**
      * Constructs a new Orchestrator.
      * The Orchestrator will synchronize data between the {@link AppSync}
@@ -153,10 +155,7 @@ public final class Orchestrator {
         return performSynchronized(() -> {
             switch (targetState.get()) {
                 case LOCAL_ONLY:
-                    if (monitorNetworkChangesDisposable != null) {
-                        monitorNetworkChangesDisposable.dispose();
-                        monitorNetworkChangesDisposable = null;
-                    }
+                    disposeNetworkChanges();
                     transitionToLocalOnly();
                     break;
                 case SYNC_VIA_API:
@@ -212,59 +211,82 @@ public final class Orchestrator {
     }
 
     private void transitionToStopped() throws DataStoreException {
-        switch (currentState.get()) {
-            case SYNC_VIA_API:
-                LOG.info("Orchestrator transitioning from SYNC_VIA_API to STOPPED");
-                stopApiSync();
-                stopObservingStorageChanges();
-                break;
-            case LOCAL_ONLY:
-                LOG.info("Orchestrator transitioning from LOCAL_ONLY to STOPPED");
-                stopObservingStorageChanges();
-                break;
-            case STOPPED:
-                break;
-            default:
-                unknownState(currentState.get());
-                break;
+        synchronized (transitionLock) {
+            switch (currentState.get()) {
+                case SYNC_VIA_API:
+                    LOG.info("Orchestrator transitioning from SYNC_VIA_API to STOPPED");
+                    stopApiSync();
+                    LOG.info("Setting currentState to LOCAL_ONLY");
+                    currentState.set(State.LOCAL_ONLY);
+                    stopObservingStorageChanges();
+                    LOG.info("Setting currentState to STOPPED");
+                    currentState.set(State.STOPPED);
+                    break;
+                case LOCAL_ONLY:
+                    LOG.info("Orchestrator transitioning from LOCAL_ONLY to STOPPED");
+                    stopObservingStorageChanges();
+                    LOG.info("Setting currentState to STOPPED");
+                    currentState.set(State.STOPPED);
+                    break;
+                case STOPPED:
+                    break;
+                default:
+                    unknownState(currentState.get());
+                    break;
+            }
         }
     }
 
     private void transitionToLocalOnly() throws DataStoreException {
-        switch (currentState.get()) {
-            case STOPPED:
-                LOG.info("Orchestrator transitioning from STOPPED to LOCAL_ONLY");
-                startObservingStorageChanges();
-                publishReadyEvent();
-                break;
-            case LOCAL_ONLY:
-                break;
-            case SYNC_VIA_API:
-                LOG.info("Orchestrator transitioning from SYNC_VIA_API to LOCAL_ONLY");
-                stopApiSync();
-                break;
-            default:
-                unknownState(currentState.get());
-                break;
+        synchronized (transitionLock) {
+            switch (currentState.get()) {
+                case STOPPED:
+                    LOG.info("Orchestrator transitioning from STOPPED to LOCAL_ONLY");
+                    startObservingStorageChanges();
+                    LOG.info("Setting currentState to LOCAL_ONLY");
+                    currentState.set(State.LOCAL_ONLY);
+                    publishReadyEvent();
+                    break;
+                case LOCAL_ONLY:
+                    break;
+                case SYNC_VIA_API:
+                    LOG.info("Orchestrator transitioning from SYNC_VIA_API to LOCAL_ONLY");
+                    stopApiSync();
+                    monitorNetworkChanges();
+                    LOG.info("Setting currentState to LOCAL_ONLY");
+                    currentState.set(State.LOCAL_ONLY);
+                    break;
+                default:
+                    unknownState(currentState.get());
+                    break;
+            }
         }
     }
 
     private void transitionToApiSync() throws DataStoreException {
-        switch (currentState.get()) {
-            case SYNC_VIA_API:
-                break;
-            case LOCAL_ONLY:
-                LOG.info("Orchestrator transitioning from LOCAL_ONLY to SYNC_VIA_API");
-                startApiSync();
-                break;
-            case STOPPED:
-                LOG.info("Orchestrator transitioning from STOPPED to SYNC_VIA_API");
-                startObservingStorageChanges();
-                startApiSync();
-                break;
-            default:
-                unknownState(currentState.get());
-                break;
+        synchronized (transitionLock) {
+            switch (currentState.get()) {
+                case SYNC_VIA_API:
+                    break;
+                case LOCAL_ONLY:
+                    LOG.info("Orchestrator transitioning from LOCAL_ONLY to SYNC_VIA_API");
+                    LOG.info("Setting currentState to SYNC_VIA_API");
+                    currentState.set(State.SYNC_VIA_API);
+                    startApiSync();
+                    break;
+                case STOPPED:
+                    LOG.info("Orchestrator transitioning from STOPPED to SYNC_VIA_API");
+                    startObservingStorageChanges();
+                    LOG.info("Setting currentState to LOCAL_ONLY");
+                    currentState.set(State.LOCAL_ONLY);
+                    LOG.info("Setting currentState to SYNC_VIA_API");
+                    currentState.set(State.SYNC_VIA_API);
+                    startApiSync();
+                    break;
+                default:
+                    unknownState(currentState.get());
+                    break;
+            }
         }
     }
 
@@ -278,8 +300,6 @@ public final class Orchestrator {
             mutationOutbox.load()
                 .andThen(Completable.create(emitter -> {
                     storageObserver.startObservingStorageChanges(emitter::onComplete);
-                    LOG.info("Setting currentState to LOCAL_ONLY");
-                    currentState.set(State.LOCAL_ONLY);
                 })).blockingAwait();
         } catch (Throwable throwable) {
             throw new DataStoreException("Timed out while starting to observe storage changes.",
@@ -294,8 +314,6 @@ public final class Orchestrator {
     private void stopObservingStorageChanges() {
         LOG.info("Stopping observation of local storage changes.");
         storageObserver.stopObservingStorageChanges();
-        LOG.info("Setting currentState to STOPPED");
-        currentState.set(State.STOPPED);
     }
 
     /**
@@ -303,8 +321,6 @@ public final class Orchestrator {
      */
     private void startApiSync() {
         monitorNetworkChanges();
-        LOG.info("Setting currentState to SYNC_VIA_API");
-        currentState.set(State.SYNC_VIA_API);
         disposables.add(
             Completable.create(emitter -> {
                 LOG.info("Starting API synchronization mode.");
@@ -379,19 +395,24 @@ public final class Orchestrator {
             .subscribe();
     }
 
-    private void monitorNetworkChanges() {
+    private void disposeNetworkChanges() {
         if (monitorNetworkChangesDisposable != null) {
             monitorNetworkChangesDisposable.dispose();
+            monitorNetworkChangesDisposable = null;
         }
+    }
+
+    private void monitorNetworkChanges() {
+        disposeNetworkChanges();
 
         monitorNetworkChangesDisposable = reachabilityMonitor.getObservable()
             .skip(1) // We skip the current online state, we only care about transitions
             .filter(ignore -> !State.STOPPED.equals(currentState.get()))
             .subscribe(isOnline -> {
                 if (isOnline) {
-                    startApiSync();
+                    transitionToApiSync();
                 } else {
-                    stopApiSync();
+                    transitionToLocalOnly();
                 }
             });
     }
@@ -400,9 +421,7 @@ public final class Orchestrator {
      * Stop all model synchronization with the remote API.
      */
     private void stopApiSync() {
-        monitorNetworkChanges();
-        LOG.info("Setting currentState to LOCAL_ONLY");
-        currentState.set(State.LOCAL_ONLY);
+        disposeNetworkChanges();
         disposables.clear();
         subscriptionProcessor.stopAllSubscriptionActivity();
         mutationProcessor.stopDrainingMutationOutbox();
