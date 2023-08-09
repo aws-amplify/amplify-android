@@ -78,7 +78,8 @@ internal object SignInChallengeHelper {
             }
             challengeNameType is ChallengeNameType.SmsMfa ||
                 challengeNameType is ChallengeNameType.CustomChallenge ||
-                challengeNameType is ChallengeNameType.NewPasswordRequired -> {
+                challengeNameType is ChallengeNameType.NewPasswordRequired ||
+                challengeNameType is ChallengeNameType.SoftwareTokenMfa -> {
                 val challenge =
                     AuthChallenge(challengeNameType.value, username, session, challengeParameters)
                 SignInEvent(SignInEvent.EventType.ReceivedChallenge(challenge))
