@@ -25,6 +25,7 @@ import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 import com.amplifyframework.statemachine.codegen.data.CredentialType
 import com.amplifyframework.statemachine.codegen.events.CredentialStoreEvent
 import com.amplifyframework.statemachine.codegen.states.CredentialStoreState
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
@@ -54,40 +55,21 @@ internal class CredentialStoreClient(configuration: AuthConfiguration, context: 
         onSuccess: (Result<AmplifyCredential>) -> Unit,
         onError: (Exception) -> Unit
     ) {
-        var capturedSuccess: Result<AmplifyCredential>? = null
-        var capturedError: Exception? = null
-        var token: StateChangeListenerToken? = StateChangeListenerToken()
-        credentialStoreStateMachine.listen(
-            token as StateChangeListenerToken,
-            { storeState ->
-                logger.verbose("Credential Store State Change: $storeState")
-                when (storeState) {
-                    is CredentialStoreState.Success -> {
-                        capturedSuccess = Result.success(storeState.storedCredentials)
-                    }
-                    is CredentialStoreState.Error -> {
-                        capturedError = storeState.error
-                    }
-                    is CredentialStoreState.Idle -> {
-                        val success = capturedSuccess
-                        val error = capturedError
-                        if (success != null && token != null) {
-                            credentialStoreStateMachine.cancel(token!!)
-                            token = null
-                            onSuccess(success)
-                        } else if (error != null && token != null) {
-                            credentialStoreStateMachine.cancel(token!!)
-                            token = null
-                            onError(error)
-                        }
-                    }
-                    else -> Unit
-                }
-            },
+        val token = StateChangeListenerToken()
+        val credentialStoreStateListener = OneShotCredentialStoreStateListener(
             {
-                credentialStoreStateMachine.send(event)
-            }
+                credentialStoreStateMachine.cancel(token)
+                onSuccess(it)
+            }, {
+            credentialStoreStateMachine.cancel(token)
+            onError(it)
+        },
+            logger
         )
+        credentialStoreStateMachine.listen(
+            token,
+            credentialStoreStateListener::listen
+        ) { credentialStoreStateMachine.send(event) }
     }
 
     override suspend fun loadCredentials(credentialType: CredentialType): AmplifyCredential {
@@ -119,6 +101,46 @@ internal class CredentialStoreClient(configuration: AuthConfiguration, context: 
                 { continuation.resumeWith(Result.success(Unit)) },
                 { continuation.resumeWithException(it) }
             )
+        }
+    }
+
+    /*
+    This class is a necessary workaround due to undesirable threading issues within the Auth State Machine. If state
+    machine threading is improved, this class should be considered for removal.
+     */
+    internal class OneShotCredentialStoreStateListener(
+        val onSuccess: (Result<AmplifyCredential>) -> Unit,
+        val onError: (Exception) -> Unit,
+        val logger: Logger
+    ) {
+        private var capturedSuccess: Result<AmplifyCredential>? = null
+        private var capturedError: Exception? = null
+        private val isActive = AtomicBoolean(true)
+        fun listen(storeState: CredentialStoreState) {
+            logger.verbose("Credential Store State Change: $storeState")
+            when (storeState) {
+                is CredentialStoreState.Success -> {
+                    capturedSuccess = Result.success(storeState.storedCredentials)
+                }
+
+                is CredentialStoreState.Error -> {
+                    capturedError = storeState.error
+                }
+
+                is CredentialStoreState.Idle -> {
+                    val success = capturedSuccess
+                    val error = capturedError
+
+                    if ((success != null || error != null) && isActive.getAndSet(false)) {
+                        if (success != null) {
+                            onSuccess(success)
+                        } else if (error != null) {
+                            onError(error)
+                        }
+                    }
+                }
+                else -> Unit
+            }
         }
     }
 }
