@@ -362,10 +362,15 @@ public final class Orchestrator {
                     return;
                 }
 
-                LOG.debug("Draining outbox...");
-                mutationProcessor.startDrainingMutationOutbox();
+                if (!emitter.isDisposed()) {
+                    LOG.debug("Draining outbox...");
+                    mutationProcessor.startDrainingMutationOutbox();
+                }
 
-                subscriptionProcessor.startDrainingMutationBuffer();
+                if (!emitter.isDisposed()) {
+                    LOG.debug("Draining mutation buffer...");
+                    subscriptionProcessor.startDrainingMutationBuffer();
+                }
 
                 emitter.onComplete();
             })
