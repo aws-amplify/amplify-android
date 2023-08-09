@@ -1,3 +1,10 @@
+## [Release 0.22.8](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.22.8)
+
+### Miscellaneous
+- Updated aws sdk version ([#2546](https://github.com/aws-amplify/amplify-android/issues/2546))
+
+[See all changes between 0.22.7 and 0.22.8](https://github.com/aws-amplify/amplify-android/compare/release-kotlin_v0.22.7...release-kotlin_v0.22.8)
+
 ## [Release 0.22.7](https://github.com/aws-amplify/amplify-android/releases/tag/release-kotlin_v0.22.7)
 
 ### Bug Fixes
