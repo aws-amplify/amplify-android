@@ -104,6 +104,10 @@ internal class CredentialStoreClient(configuration: AuthConfiguration, context: 
         }
     }
 
+    /*
+    This class is a necessary workaround due to undesirable threading issues within the Auth State Machine. If state
+    machine threading is improved, this class should be considered for removal.
+     */
     internal class OneShotCredentialStoreStateListener(
         val onSuccess: (Result<AmplifyCredential>) -> Unit,
         val onError: (Exception) -> Unit,
