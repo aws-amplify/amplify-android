@@ -177,4 +177,4 @@ include(":aws-push-notifications-pinpoint-common")
 include(":aws-logging-cloudwatch")
 
 
-includeBuild("../smithy-amplify")
+includeBuild("../smithy-starter")

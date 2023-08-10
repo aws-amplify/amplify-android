@@ -363,11 +363,13 @@ class AWSCognitoAuthPluginFeatureTest(private val testCase: generated.model.Unit
             val functionReturn = function?.call(apiExecutionResult).toStr()
 
             if (functionReturn != null) {
-                val smithyCompareResponse = jsonAmplify[name].toStr()
+                var smithyCompareResponse = jsonAmplify[name].toStr()
                 if (smithyCompareResponse[0] !== '{') {
                     assertEquals(smithyCompareResponse, functionReturn)
                 }
                 else {
+                    smithyCompareResponse = smithyCompareResponse.substringAfter('{')
+
                     var resultObjectHelper = functionReturn.substring(functionReturn.indexOf('{'))
                     resultObjectHelper = resultObjectHelper.replace("=", ":")
 

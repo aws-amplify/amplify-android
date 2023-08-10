@@ -93,7 +93,7 @@ public final class AuthResetPasswordResult {
      */
     @Override
     public String toString() {
-        return "{" +
+        return "AuthResetPasswordResult{" +
                 "isPasswordReset=" + isPasswordReset() +
                 ", nextStep=" + getNextStep() +
                 '}';

@@ -17,7 +17,6 @@ plugins {
     id("org.jetbrains.kotlin.plugin.serialization") version "1.6.10"
     id("com.android.library")
     id("kotlin-android")
-    id("org.jetbrains.kotlin.android")
 }
 
 apply(from = rootProject.file("configuration/checkstyle.gradle"))
@@ -34,7 +33,6 @@ dependencies {
     implementation(dependency.aws.cognitoidentity)
 
     implementation(dependency.kotlin.serializationJson)
-    implementation("androidx.core:core-ktx:+")
 
     testImplementation(testDependency.junit)
     testImplementation(testDependency.mockk)
