@@ -34,8 +34,6 @@ dependencies {
     implementation(libs.androidx.core)
     implementation(libs.firebasemessaging)
 
-    implementation(libs.google.material)
-
     testImplementation(libs.test.junit)
     testImplementation(libs.test.mockk)
 
