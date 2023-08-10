@@ -513,7 +513,8 @@ internal class RealAWSCognitoAuthPlugin(
                 )
                 // Continue sign in
                 is AuthenticationState.SignedOut,
-                is AuthenticationState.Configured -> {
+                is AuthenticationState.Configured
+                -> {
                     _signIn(username, password, signInOptions, onSuccess, onError)
                 }
                 is AuthenticationState.SignedIn -> onError.accept(SignedInException())
@@ -657,7 +658,7 @@ internal class RealAWSCognitoAuthPlugin(
             }
             if (signInState is SignInState.ResolvingTOTPSetup) {
                 when (signInState.setupTOTPState) {
-                    is SetupTOTPState.WaitingForAnswer -> {
+                    is SetupTOTPState.WaitingForAnswer, is SetupTOTPState.Error -> {
                         _confirmSignIn(signInState, challengeResponse, options, onSuccess, onError)
                     }
                     else -> onError.accept(InvalidStateException())
@@ -751,6 +752,19 @@ internal class RealAWSCognitoAuthPlugin(
                         totpSetupState.hasNewResponse = false
                     }
 
+                    signInState is SignInState.ResolvingTOTPSetup &&
+                        totpSetupState is SetupTOTPState.Error &&
+                        totpSetupState.hasNewResponse -> {
+                        authStateMachine.cancel(token)
+                        onError.accept(
+                            CognitoAuthExceptionConverter.lookup(
+                                totpSetupState.exception,
+                                "Confirm Sign in failed."
+                            )
+                        )
+                        totpSetupState.hasNewResponse = false
+                    }
+
                     signInState is SignInState.ResolvingChallenge &&
                         signInState.challengeState is SignInChallengeState.Error &&
                         (signInState.challengeState as SignInChallengeState.Error).hasNewResponse -> {
@@ -781,17 +795,40 @@ internal class RealAWSCognitoAuthPlugin(
                     }
 
                     is SignInState.ResolvingTOTPSetup -> {
-                        val setupData =
-                            (signInState.setupTOTPState as SetupTOTPState.WaitingForAnswer).signInTOTPSetupData
-                        val event = SetupTOTPEvent(
-                            SetupTOTPEvent.EventType.VerifyChallengeAnswer(
-                                challengeResponse,
-                                setupData.username,
-                                setupData.session,
-                                awsCognitoConfirmSignInOptions?.friendlyDeviceName
-                            )
-                        )
-                        authStateMachine.send(event)
+                        when (signInState.setupTOTPState) {
+                            is SetupTOTPState.WaitingForAnswer -> {
+                                val setupData =
+                                    (signInState.setupTOTPState as SetupTOTPState.WaitingForAnswer).signInTOTPSetupData
+
+                                val event = SetupTOTPEvent(
+                                    SetupTOTPEvent.EventType.VerifyChallengeAnswer(
+                                        challengeResponse,
+                                        setupData.username,
+                                        setupData.session,
+                                        awsCognitoConfirmSignInOptions?.friendlyDeviceName
+                                    )
+                                )
+                                authStateMachine.send(event)
+                            }
+                            is SetupTOTPState.Error -> {
+                                val username =
+                                    (signInState.setupTOTPState as SetupTOTPState.Error).username
+                                val session =
+                                    (signInState.setupTOTPState as SetupTOTPState.Error).session
+
+                                val event = SetupTOTPEvent(
+                                    SetupTOTPEvent.EventType.VerifyChallengeAnswer(
+                                        challengeResponse,
+                                        username,
+                                        session,
+                                        awsCognitoConfirmSignInOptions?.friendlyDeviceName
+                                    )
+                                )
+                                authStateMachine.send(event)
+                            }
+
+                            else -> onError.accept(InvalidStateException())
+                        }
                     }
 
                     else -> onError.accept(InvalidStateException())

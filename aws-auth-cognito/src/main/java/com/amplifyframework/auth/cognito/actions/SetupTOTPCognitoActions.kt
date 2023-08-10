@@ -45,11 +45,19 @@ internal object SetupTOTPCognitoActions : SetupTOTPActions {
                     )
                 )
             } ?: SetupTOTPEvent(
-                SetupTOTPEvent.EventType.ThrowAuthError(Exception("Software token setup failed"))
+                SetupTOTPEvent.EventType.ThrowAuthError(
+                    Exception("Software token setup failed"),
+                    eventType.totpSetupDetails.username,
+                    eventType.totpSetupDetails.session
+                )
             )
         } catch (e: Exception) {
             SetupTOTPEvent(
-                SetupTOTPEvent.EventType.ThrowAuthError(e)
+                SetupTOTPEvent.EventType.ThrowAuthError(
+                    e,
+                    eventType.totpSetupDetails.username,
+                    eventType.totpSetupDetails.session
+                )
             )
         }
         logger.verbose("$id Sending event ${evt.type}")
@@ -84,17 +92,27 @@ internal object SetupTOTPCognitoActions : SetupTOTPActions {
                                     ServiceException(
                                         message = "An unknown service error has occurred",
                                         recoverySuggestion = AmplifyException.TODO_RECOVERY_SUGGESTION
-                                    )
+                                    ),
+                                    eventType.username,
+                                    eventType.session
                                 )
                             )
                         }
                     }
                 } ?: SetupTOTPEvent(
-                    SetupTOTPEvent.EventType.ThrowAuthError(Exception("Software token verification failed"))
+                    SetupTOTPEvent.EventType.ThrowAuthError(
+                        Exception("Software token verification failed"),
+                        eventType.username,
+                        eventType.session
+                    )
                 )
             } catch (exception: Exception) {
                 SetupTOTPEvent(
-                    SetupTOTPEvent.EventType.ThrowAuthError(exception)
+                    SetupTOTPEvent.EventType.ThrowAuthError(
+                        exception,
+                        eventType.username,
+                        eventType.session
+                    )
                 )
             }
             logger.verbose("$id Sending event ${evt.type}")
@@ -132,11 +150,15 @@ internal object SetupTOTPCognitoActions : SetupTOTPActions {
                         authenticationResult = response.authenticationResult
                     )
                 } ?: SetupTOTPEvent(
-                    SetupTOTPEvent.EventType.ThrowAuthError(Exception("Software token verification failed"))
+                    SetupTOTPEvent.EventType.ThrowAuthError(
+                        Exception("Software token verification failed"),
+                        eventType.username,
+                        eventType.session
+                    )
                 )
             } catch (exception: Exception) {
                 SetupTOTPEvent(
-                    SetupTOTPEvent.EventType.ThrowAuthError(exception)
+                    SetupTOTPEvent.EventType.ThrowAuthError(exception, eventType.username, eventType.session)
                 )
             }
             dispatcher.send(evt)

@@ -133,7 +133,7 @@ class SetupTOTPCognitoActionsTest {
         initiateAction.execute(dispatcher, authEnvironment)
 
         val expectedEvent = SetupTOTPEvent(
-            SetupTOTPEvent.EventType.ThrowAuthError(serviceException)
+            SetupTOTPEvent.EventType.ThrowAuthError(serviceException, "USERNAME", "SESSION")
         )
         assertEquals(
             expectedEvent.type,
@@ -209,7 +209,11 @@ class SetupTOTPCognitoActionsTest {
             }
         }
         val expectedEvent = SetupTOTPEvent(
-            SetupTOTPEvent.EventType.ThrowAuthError(Exception("Software token verification failed"))
+            SetupTOTPEvent.EventType.ThrowAuthError(
+                Exception("An unknown service error has occurred"),
+                "USERNAME",
+                "SESSION"
+            )
         )
 
         val verifyChallengeAnswerAction = SetupTOTPCognitoActions.verifyChallengeAnswer(
@@ -254,7 +258,7 @@ class SetupTOTPCognitoActionsTest {
             throw serviceException
         }
         val expectedEvent = SetupTOTPEvent(
-            SetupTOTPEvent.EventType.ThrowAuthError(serviceException)
+            SetupTOTPEvent.EventType.ThrowAuthError(serviceException, "USERNAME", "SESSION")
         )
 
         val verifyChallengeAnswerAction = SetupTOTPCognitoActions.verifyChallengeAnswer(

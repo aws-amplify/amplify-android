@@ -24,7 +24,7 @@ internal class SetupTOTPEvent(val eventType: EventType, override val time: Date?
     sealed class EventType {
         data class SetupTOTP(val totpSetupDetails: SignInTOTPSetupData) : EventType()
         data class WaitForAnswer(val totpSetupDetails: SignInTOTPSetupData) : EventType()
-        data class ThrowAuthError(val exception: Exception) : EventType()
+        data class ThrowAuthError(val exception: Exception, val username: String, val session: String?) : EventType()
         data class VerifyChallengeAnswer(
             val answer: String,
             val username: String,

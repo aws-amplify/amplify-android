@@ -65,6 +65,8 @@ dependencyResolutionManagement {
 
             // AWS
             library("aws-sdk-core", "com.amazonaws:aws-android-sdk-core:2.62.2")
+
+            library("totp", "dev.robinohs:totp-kt:1.0.1")
         }
         // Library dependencies
         create("dependency") {
