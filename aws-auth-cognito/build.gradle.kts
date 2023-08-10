@@ -17,7 +17,7 @@ plugins {
     id("org.jetbrains.kotlin.plugin.serialization") version "1.6.10"
     id("com.android.library")
     id("kotlin-android")
-    id("org.jetbrains.kotlin.android")
+
 }
 
 
@@ -46,9 +46,9 @@ dependencies {
 
 
 
-    implementation("androidx.core:core-ktx:+")
+    testImplementation("androidx.core:core-ktx:+")
 
-    implementation("org.example:smithy-starter")
+    testImplementation("org.example:smithy-starter")
 
     testImplementation("aws.smithy.kotlin:runtime-core:0.25.0-SNAPSHOT")
     testImplementation("aws.smithy.kotlin:serde:0.25.0-SNAPSHOT")
@@ -78,9 +78,8 @@ dependencies {
     androidTestImplementation(testDependency.androidx.test.junit)
     androidTestImplementation(testDependency.kotlin.test.coroutines)
 
-    //androidTestImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:+")
 
     androidTestImplementation(project(":aws-api"))
     androidTestImplementation(project(":testutils"))
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.3")
+
 }

@@ -15,9 +15,9 @@
 
 dependencyResolutionManagement {
     repositories {
-//        maven {
-//            url = uri("https://aws.oss.sonatype.org/content/repositories/snapshots/")
-//        }
+        maven {
+            url = uri("https://aws.oss.sonatype.org/content/repositories/snapshots/")
+        }
         google()
         mavenCentral()
     }
@@ -175,6 +175,5 @@ include(":maplibre-adapter")
 include(":aws-pinpoint-core")
 include(":aws-push-notifications-pinpoint-common")
 include(":aws-logging-cloudwatch")
-
 
 includeBuild("../smithy-starter")
