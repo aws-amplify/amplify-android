@@ -603,7 +603,7 @@ public final class SynchronousAuth {
 
     /**
      * Get the current signed in user.
-     * @return current autherticated user
+     * @return current authenticated user
      * @throws AuthException exception
      */
     public AuthUser getCurrentUser() throws AuthException {
