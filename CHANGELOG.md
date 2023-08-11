@@ -1,3 +1,11 @@
+## [Release 2.11.2](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.11.2)
+
+### Bug Fixes
+- **datastore/flutter:** Custom type list serde ([#2545](https://github.com/aws-amplify/amplify-android/issues/2545))
+- **auth:** Prevent credential continuation from returning multiple times. ([#2541](https://github.com/aws-amplify/amplify-android/issues/2541))
+
+[See all changes between 2.11.1 and 2.11.2](https://github.com/aws-amplify/amplify-android/compare/release_v2.11.1...release_v2.11.2)
+
 ## [Release 2.11.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.11.1)
 
 ### Bug Fixes
