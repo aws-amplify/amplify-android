@@ -18,7 +18,9 @@ import android.content.Context
 import android.util.Log
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
+import com.amplifyframework.auth.MFAType
 import com.amplifyframework.auth.cognito.test.R
 import com.amplifyframework.auth.options.AuthSignUpOptions
 import com.amplifyframework.auth.result.step.AuthSignInStep
@@ -34,6 +36,8 @@ import dev.robinohs.totpkt.otp.totp.TotpGenerator
 import dev.robinohs.totpkt.otp.totp.timesupport.generateCode
 import java.util.Random
 import java.util.UUID
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import org.junit.After
 import org.junit.Assert
 import org.junit.Before
@@ -74,7 +78,7 @@ class AWSCognitoAuthPluginTOTPTests {
         Assert.assertEquals(AuthSignInStep.CONTINUE_SIGN_IN_WITH_TOTP_SETUP, result.nextStep.signInStep)
         val otp = TotpGenerator().generateCode(
             result.nextStep.totpSetupDetails!!.sharedSecret.toByteArray(),
-            System.currentTimeMillis(),
+            System.currentTimeMillis()
         )
         synchronousAuth.confirmSignIn(otp)
         val currentUser = synchronousAuth.currentUser
@@ -91,7 +95,7 @@ class AWSCognitoAuthPluginTOTPTests {
             Assert.assertEquals("Code mismatch", e.cause?.message)
             val otp = TotpGenerator().generateCode(
                 result.nextStep.totpSetupDetails!!.sharedSecret.toByteArray(),
-                System.currentTimeMillis(),
+                System.currentTimeMillis()
             )
             synchronousAuth.confirmSignIn(otp)
             val currentUser = synchronousAuth.currentUser
@@ -104,16 +108,15 @@ class AWSCognitoAuthPluginTOTPTests {
         val result = synchronousAuth.signIn(userName, password)
         Assert.assertEquals(AuthSignInStep.CONTINUE_SIGN_IN_WITH_TOTP_SETUP, result.nextStep.signInStep)
         val otp = TotpGenerator().generateCode(
-            result.nextStep.totpSetupDetails!!.sharedSecret.toByteArray(),
+            result.nextStep.totpSetupDetails!!.sharedSecret.toByteArray()
         )
-        Log.d("signIn_with_totp_after_mfa_setup", "otp is $otp")
         synchronousAuth.confirmSignIn(otp)
         synchronousAuth.signOut()
         Sleep.milliseconds(30 * 1000)
         val signInResult = synchronousAuth.signIn(userName, password)
         Assert.assertEquals(AuthSignInStep.CONFIRM_SIGN_IN_WITH_TOTP_CODE, signInResult.nextStep.signInStep)
         val otpCode = TotpGenerator().generateCode(
-            result.nextStep.totpSetupDetails!!.sharedSecret.toByteArray(),
+            result.nextStep.totpSetupDetails!!.sharedSecret.toByteArray()
         )
         Log.d("signIn_with_totp_after_mfa_setup", "otp is $otp")
         synchronousAuth.confirmSignIn(otpCode)
@@ -121,10 +124,43 @@ class AWSCognitoAuthPluginTOTPTests {
         Assert.assertEquals(userName.lowercase(), currentUser.username)
     }
 
+    @Test
+    fun select_mfa_type() {
+        val result = synchronousAuth.signIn(userName, password)
+        Assert.assertEquals(AuthSignInStep.CONTINUE_SIGN_IN_WITH_TOTP_SETUP, result.nextStep.signInStep)
+        val otp = TotpGenerator().generateCode(
+            result.nextStep.totpSetupDetails!!.sharedSecret.toByteArray()
+        )
+        synchronousAuth.confirmSignIn(otp)
+        synchronousAuth.updateUserAttribute(AuthUserAttribute(AuthUserAttributeKey.phoneNumber(), "+19876543210"))
+        updateMFAPreference(MFAPreference.Enabled, MFAPreference.Enabled)
+        synchronousAuth.signOut()
+        val signInResult = synchronousAuth.signIn(userName, password)
+        Assert.assertEquals(AuthSignInStep.CONTINUE_SIGN_IN_WITH_MFA_SELECTION, signInResult.nextStep.signInStep)
+        val totpSignInResult = synchronousAuth.confirmSignIn(MFAType.TOTP.value)
+        Assert.assertEquals(AuthSignInStep.CONFIRM_SIGN_IN_WITH_TOTP_CODE, totpSignInResult.nextStep.signInStep)
+        Sleep.milliseconds(30 * 1000)
+        val otpCode = TotpGenerator().generateCode(
+            result.nextStep.totpSetupDetails!!.sharedSecret.toByteArray()
+        )
+        synchronousAuth.confirmSignIn(otpCode)
+        val currentUser = synchronousAuth.currentUser
+        Assert.assertEquals(userName.lowercase(), currentUser.username)
+    }
+
     private fun signUpNewUser(userName: String, password: String, email: String) {
         val options = AuthSignUpOptions.builder()
-            .userAttribute(AuthUserAttributeKey.email(), email)
-            .build()
+            .userAttributes(
+                listOf(
+                    AuthUserAttribute(AuthUserAttributeKey.email(), email)
+                )
+            ).build()
         synchronousAuth.signUp(userName, password, options)
+    }
+
+    private fun updateMFAPreference(sms: MFAPreference, totp: MFAPreference) {
+        val latch = CountDownLatch(1)
+        authPlugin.updateMFAPreference(sms, totp, { latch.countDown() }, { latch.countDown() })
+        latch.await(5, TimeUnit.SECONDS)
     }
 }
