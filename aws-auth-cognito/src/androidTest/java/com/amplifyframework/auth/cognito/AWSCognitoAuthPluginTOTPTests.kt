@@ -15,7 +15,6 @@
 package com.amplifyframework.auth.cognito
 
 import android.content.Context
-import android.util.Log
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.amplifyframework.auth.AuthUserAttribute
@@ -30,7 +29,6 @@ import com.amplifyframework.core.category.CategoryConfiguration
 import com.amplifyframework.core.category.CategoryType
 import com.amplifyframework.logging.AndroidLoggingPlugin
 import com.amplifyframework.logging.LogLevel
-import com.amplifyframework.testutils.Sleep
 import com.amplifyframework.testutils.sync.SynchronousAuth
 import dev.robinohs.totpkt.otp.totp.TotpGenerator
 import dev.robinohs.totpkt.otp.totp.timesupport.generateCode
@@ -72,6 +70,9 @@ class AWSCognitoAuthPluginTOTPTests {
         synchronousAuth.deleteUser()
     }
 
+    /*
+    * This test signs up a new user and goes thru successful MFA Setup process.
+    * */
     @Test
     fun mfa_setup() {
         val result = synchronousAuth.signIn(userName, password)
@@ -85,6 +86,10 @@ class AWSCognitoAuthPluginTOTPTests {
         Assert.assertEquals(userName.lowercase(), currentUser.username)
     }
 
+    /*
+    * This test signs up a new user, enter incorrect MFA code during verification and
+    * then enter correct OTP code to successfully set TOTP MFA.
+    * */
     @Test
     fun mfasetup_with_incorrect_otp() {
         val result = synchronousAuth.signIn(userName, password)
@@ -103,6 +108,9 @@ class AWSCognitoAuthPluginTOTPTests {
         }
     }
 
+    /*
+    * This test signs up a new user, successfully setup MFA, sign-out and then goes thru sign-in with TOTP.
+    * */
     @Test
     fun signIn_with_totp_after_mfa_setup() {
         val result = synchronousAuth.signIn(userName, password)
@@ -112,18 +120,23 @@ class AWSCognitoAuthPluginTOTPTests {
         )
         synchronousAuth.confirmSignIn(otp)
         synchronousAuth.signOut()
-        Sleep.milliseconds(30 * 1000)
+
         val signInResult = synchronousAuth.signIn(userName, password)
         Assert.assertEquals(AuthSignInStep.CONFIRM_SIGN_IN_WITH_TOTP_CODE, signInResult.nextStep.signInStep)
         val otpCode = TotpGenerator().generateCode(
-            result.nextStep.totpSetupDetails!!.sharedSecret.toByteArray()
+            result.nextStep.totpSetupDetails!!.sharedSecret.toByteArray(),
+            System.currentTimeMillis() + 30 * 1000 // 30 sec is added to generate new OTP code 
         )
-        Log.d("signIn_with_totp_after_mfa_setup", "otp is $otp")
         synchronousAuth.confirmSignIn(otpCode)
         val currentUser = synchronousAuth.currentUser
         Assert.assertEquals(userName.lowercase(), currentUser.username)
     }
 
+    /*
+    * This test signs up a new user, successfully setup MFA, update user attribute to add phone number,
+    * sign-out the user, goes thru MFA selection flow during sign-in, select TOTP MFA type,
+    * successfully sign-in using TOTP
+    * */
     @Test
     fun select_mfa_type() {
         val result = synchronousAuth.signIn(userName, password)
@@ -139,9 +152,9 @@ class AWSCognitoAuthPluginTOTPTests {
         Assert.assertEquals(AuthSignInStep.CONTINUE_SIGN_IN_WITH_MFA_SELECTION, signInResult.nextStep.signInStep)
         val totpSignInResult = synchronousAuth.confirmSignIn(MFAType.TOTP.value)
         Assert.assertEquals(AuthSignInStep.CONFIRM_SIGN_IN_WITH_TOTP_CODE, totpSignInResult.nextStep.signInStep)
-        Sleep.milliseconds(30 * 1000)
         val otpCode = TotpGenerator().generateCode(
-            result.nextStep.totpSetupDetails!!.sharedSecret.toByteArray()
+            result.nextStep.totpSetupDetails!!.sharedSecret.toByteArray(),
+            System.currentTimeMillis() + 30 * 1000 // 30 sec is added to generate new OTP code 
         )
         synchronousAuth.confirmSignIn(otpCode)
         val currentUser = synchronousAuth.currentUser
