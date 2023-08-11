@@ -333,9 +333,9 @@ public final class Orchestrator {
                 synchronized (startApiLock) {
                     LOG.info("Starting API synchronization mode.");
 
-                    // Resolve any client provided DataStoreSyncExpressions, before starting sync and subscriptions, once
-                    // each time DataStore starts.  The QueryPredicateProvider caches the resolved QueryPredicates, which
-                    // are then used to filter data received from AppSync.
+                    // Resolve any client provided DataStoreSyncExpressions, before starting sync and subscriptions,
+                    // once each time DataStore starts.  The QueryPredicateProvider caches the resolved QueryPredicates,
+                    // which are then used to filter data received from AppSync.
                     queryPredicateProvider.resolvePredicates();
 
                     try {
