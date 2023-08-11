@@ -67,7 +67,14 @@ public final class Orchestrator {
     private final ReachabilityMonitor reachabilityMonitor;
     private Disposable monitorNetworkChangesDisposable;
 
+    // This lock is used to synchronize on any state changes made to current stae
     private final Object transitionLock = new Object();
+
+    /*
+    This lock is used to syncrhonize on the startApi block. clearing the disposable is not always enough to stop
+    the completable. This block is an additional safety net to ensure that startApi does not run multiple times.
+     */
+    private final Object startApiLock = new Object();
 
     /**
      * Constructs a new Orchestrator.
@@ -323,56 +330,58 @@ public final class Orchestrator {
         monitorNetworkChanges();
         disposables.add(
             Completable.create(emitter -> {
-                LOG.info("Starting API synchronization mode.");
+                synchronized (startApiLock) {
+                    LOG.info("Starting API synchronization mode.");
 
-                // Resolve any client provided DataStoreSyncExpressions, before starting sync and subscriptions, once
-                // each time DataStore starts.  The QueryPredicateProvider caches the resolved QueryPredicates, which
-                // are then used to filter data received from AppSync.
-                queryPredicateProvider.resolvePredicates();
+                    // Resolve any client provided DataStoreSyncExpressions, before starting sync and subscriptions, once
+                    // each time DataStore starts.  The QueryPredicateProvider caches the resolved QueryPredicates, which
+                    // are then used to filter data received from AppSync.
+                    queryPredicateProvider.resolvePredicates();
 
-                try {
-                    subscriptionProcessor.startSubscriptions();
-                } catch (Throwable failure) {
-                    if (!emitter.tryOnError(
+                    try {
+                        subscriptionProcessor.startSubscriptions();
+                    } catch (Throwable failure) {
+                        if (!emitter.tryOnError(
                             new DataStoreException("DataStore subscriptionProcessor failed to start.",
-                                    failure, "Check your internet."))) {
-                        LOG.warn("DataStore failed to start after emitter was disposed.",
+                                failure, "Check your internet."))) {
+                            LOG.warn("DataStore failed to start after emitter was disposed.",
                                 failure);
-                        emitter.onComplete();
+                            emitter.onComplete();
+                        }
+                        return;
                     }
-                    return;
-                }
 
-                long startTime = System.currentTimeMillis();
-                LOG.debug("About to hydrate...");
-                try {
-                    syncProcessor.hydrate()
+                    long startTime = System.currentTimeMillis();
+                    LOG.debug("About to hydrate...");
+                    try {
+                        syncProcessor.hydrate()
                             .blockingAwait();
-                    LOG.debug("Hydration complete in " + (System.currentTimeMillis() - startTime) + "ms");
-                } catch (Throwable failure) {
-                    if (!emitter.isDisposed()) {
-                        emitter.onError(new DataStoreException(
+                        LOG.debug("Hydration complete in " + (System.currentTimeMillis() - startTime) + "ms");
+                    } catch (Throwable failure) {
+                        if (!emitter.isDisposed()) {
+                            emitter.onError(new DataStoreException(
                                 "Initial sync during DataStore initialization failed.", failure,
                                 AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION
-                        ));
-                    } else {
-                        LOG.warn("Initial sync during DataStore initialization failed.", failure);
-                        emitter.onComplete();
+                            ));
+                        } else {
+                            LOG.warn("Initial sync during DataStore initialization failed.", failure);
+                            emitter.onComplete();
+                        }
+                        return;
                     }
-                    return;
-                }
 
-                if (!emitter.isDisposed()) {
-                    LOG.debug("Draining outbox...");
-                    mutationProcessor.startDrainingMutationOutbox();
-                }
+                    if (!emitter.isDisposed()) {
+                        LOG.debug("Draining outbox...");
+                        mutationProcessor.startDrainingMutationOutbox();
+                    }
 
-                if (!emitter.isDisposed()) {
-                    LOG.debug("Draining mutation buffer...");
-                    subscriptionProcessor.startDrainingMutationBuffer();
-                }
+                    if (!emitter.isDisposed()) {
+                        LOG.debug("Draining mutation buffer...");
+                        subscriptionProcessor.startDrainingMutationBuffer();
+                    }
 
-                emitter.onComplete();
+                    emitter.onComplete();
+                }
             })
             .doOnError(error -> LOG.error("Failure encountered while attempting to start API sync.", error))
             .doOnComplete(() -> LOG.info("Started the orchestrator in API sync mode."))
