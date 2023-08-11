@@ -15,6 +15,7 @@
 
 package com.amplifyframework.api.aws.sigv4
 
+import aws.smithy.kotlin.runtime.InternalApi
 import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider
 import aws.smithy.kotlin.runtime.auth.awssigning.AwsSignedBodyHeader
 import aws.smithy.kotlin.runtime.auth.awssigning.AwsSigningConfig
@@ -32,6 +33,7 @@ abstract class AWS4Signer(private val regionName: String) {
     /**
      * Async signing
      */
+    @OptIn(InternalApi::class)
     suspend fun sign(
         httpRequest: HttpRequest,
         credentialsProvider: CredentialsProvider,
@@ -50,6 +52,7 @@ abstract class AWS4Signer(private val regionName: String) {
     /**
      * Sign synchronously
      */
+    @OptIn(InternalApi::class)
     fun signBlocking(
         httpRequest: HttpRequest,
         credentialsProvider: CredentialsProvider,
