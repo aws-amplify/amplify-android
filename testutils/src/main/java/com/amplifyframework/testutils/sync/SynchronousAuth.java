@@ -601,6 +601,11 @@ public final class SynchronousAuth {
         );
     }
 
+    /**
+     * Get the current signed in user.
+     * @return current autherticated user
+     * @throws AuthException exception
+     */
     public AuthUser getCurrentUser() throws AuthException {
         return Await.<AuthUser, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
             asyncDelegate.getCurrentUser(onResult, onError)
