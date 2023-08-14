@@ -238,15 +238,6 @@ class AWSCognitoAuthPluginFeatureTest(private val testCase: generated.model.Unit
 
         apiExecutionResult = apiExecutor(sut, testCase.api!!, testCase!!.preConditions!!.mockedResponses!![0].responseType!!)
 
-        if (apiExecutionResult == "") { // for empty response api
-            val nameToCheck = testCase.api!!.name!!
-            val listCheck : List<String> = listOf("signUp", "signOut", "signIn", "resetPassword", "fetchUserAttributes", "fetchAuthSession")
-            if (nameToCheck in listCheck ) {
-                assert(false) //these APIs should not have empty response
-
-            }
-            return
-        }
 
         // THEN
         if (testCase.preConditions!!.mockedResponses!![0].responseType == TypeResponse.Success) {

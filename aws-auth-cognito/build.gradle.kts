@@ -50,9 +50,6 @@ dependencies {
 
     testImplementation("org.example:smithy-starter")
 
-    testImplementation("aws.smithy.kotlin:runtime-core:0.25.0-SNAPSHOT")
-    testImplementation("aws.smithy.kotlin:serde:0.25.0-SNAPSHOT")
-    testImplementation("aws.smithy.kotlin:serde-json:0.25.0-SNAPSHOT")
 
     testImplementation(project(":testutils"))
     //noinspection GradleDependency

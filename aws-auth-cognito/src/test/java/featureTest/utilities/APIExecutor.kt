@@ -70,7 +70,7 @@ internal val apiExecutor: (AWSCognitoAuthPlugin, ApiCall, TypeResponse) -> Any =
     for (currentApi in targetApis) {
         try {
             val currentParams = currentApi.parameters.associateWith { kParam ->
-                val testing = kParam.type.classifier as KClass<*>
+
 
                 when {
                     kParam.kind == KParameter.Kind.INSTANCE -> authPlugin
@@ -102,10 +102,6 @@ internal val apiExecutor: (AWSCognitoAuthPlugin, ApiCall, TypeResponse) -> Any =
 
     if (targetApi == null || requiredParams == null)
         throw Exception("No matching api function with required parameters found")
-
-    //val capturing = APICaptorFactory(api, latch, responseType)
-
-
 
 
     targetApi.callBy(requiredParams)

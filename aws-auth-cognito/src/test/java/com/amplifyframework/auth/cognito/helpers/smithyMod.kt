@@ -32,6 +32,8 @@ import org.bouncycastle.asn1.cmc.CMCStatus.success
 import org.json.JSONObject
 
 import aws.smithy.kotlin.runtime.content.Document
+import com.google.gson.GsonBuilder
+import com.google.gson.JsonParser
 import deserializeWrapper
 
 
@@ -80,7 +82,7 @@ class SmithyMod {
 
 
     fun getTest(): List<UnitTest> {
-        val listOfTests = mutableListOf<UnitTest>(getSucceedSignUp(), getFailSignUp())
+        val listOfTests = mutableListOf<UnitTest>()
         val directory = File("src/test/resources/feature-test/testsuites")
         listOfTests += getJSONIterative(directory)
         return listOfTests
@@ -106,12 +108,22 @@ class SmithyMod {
 
 
 
-    fun convertAPI(apiName : String) : List<String> {
+    fun convertAPI() : List<String> {
         val listOfTests = mutableListOf<String>()
-        val directory = File("src/test/resources/feature-test/testsuites/${apiName}")
+        val directory = File("src/test/java/testframework/")
         for (subdirectory in directory.listFiles()) {
+            val gson = GsonBuilder().setPrettyPrinting().create()
 
-            subdirectory.writeText(convertJSONToSerializeStructure(JSONObject(subdirectory.readText())).toStr())
+            val jsonString = convertJSONToSerializeStructure(JSONObject(subdirectory.readText())).toStr()
+            val jsonElement = JsonParser.parseString(jsonString)
+            val prettyJson = gson.toJson(jsonElement)
+
+
+            subdirectory.writeText(prettyJson)
+
+
+
+            //subdirectory.writeText(convertJSONToSerializeStructure(JSONObject(subdirectory.readText())).toStr())
 
 
         }
@@ -120,15 +132,8 @@ class SmithyMod {
 
     }
 
-
-    fun getOldTest(generated : JSONObject) : UnitTest{
-        return generatorInformationToSmithy(generated)
-
-    }
-
     fun convertJSONToSerializeStructure(generated : JSONObject) : String {
-        return serializeWrapper(getOldTest(generated))
-
+        return serializeWrapper(generatorInformationToSmithy(generated))
 
 
     }

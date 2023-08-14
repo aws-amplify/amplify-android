@@ -231,12 +231,12 @@ class CognitoMockFactory(
         if (response!!.responseType == TypeResponse.Error) {
 
 
-            val cur = response!!.response!!.asError()
+            val currentError = response!!.response!!.asError()
 
-            when (cur.errorType) {
+            when (currentError.errorType) {
                 "NotAuthorizedException" -> throw NotAuthorizedException(mockk())
                 "InvalidStateException" -> throw InvalidStateException()
-                else -> throw ValidationException(cur.errorType!!, cur.errorMessage!!)
+                else -> throw ValidationException(currentError.errorType!!, currentError.errorMessage!!)
 
             }
         }

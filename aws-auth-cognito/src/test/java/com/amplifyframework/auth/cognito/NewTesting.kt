@@ -33,12 +33,7 @@ class NewTesting {
 
     @Test
     fun initializeDeserialized() {
-        val listNeedConvert = listOf("fetchDevices", "fetchUserAttributes", "forgetDevice", "rememberDevice", "resetPassword", "signUp")
-        for (value in listNeedConvert) {
-
-            SmithyMod().convertAPI(value)
-
-        }
+        SmithyMod().convertAPI()
     }
 }
 //converts test information to a serialized json representing the direct smithy instance
