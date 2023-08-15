@@ -94,8 +94,8 @@ dependencyResolutionManagement {
             /* When updating kotlin sdk or kotlin smithy,
             ensure compatible versions used in aws-sdk-kotlin root gradle.properties
              */
-            version(awsKotlinSdk, "0.28.0-beta") // ensure proper awsSmithyKotlin version also set
-            version(awsSmithyKotlin, "0.22.0") // ensure proper awsKotlinSdk version also set
+            version(awsKotlinSdk, "0.29.1-beta") // ensure proper awsSmithyKotlin version also set
+            version(awsSmithyKotlin, "0.25.0") // ensure proper awsKotlinSdk version also set
 
             library("aws-credentials", "aws.smithy.kotlin", "aws-credentials").versionRef(awsSmithyKotlin)
             library("aws-signing", "aws.smithy.kotlin", "aws-signing-default").versionRef(awsSmithyKotlin)
@@ -104,7 +104,7 @@ dependencyResolutionManagement {
             library(
                 "aws-cognitoidentityprovider",
                 "aws.sdk.kotlin",
-                "cognitoidentityprovider",
+                "cognitoidentityprovider"
             ).versionRef(awsKotlinSdk)
             library("aws-comprehend", "aws.sdk.kotlin", "comprehend").versionRef(awsKotlinSdk)
             library("aws-location", "aws.sdk.kotlin", "location").versionRef(awsKotlinSdk)
@@ -142,6 +142,7 @@ dependencyResolutionManagement {
             library("tensorflow", "org.tensorflow:tensorflow-lite:2.0.0")
             library("uuidgen", "com.fasterxml.uuid:java-uuid-generator:4.0.1")
             library("sqlcipher", "net.zetetic:android-database-sqlcipher:4.5.4")
+            library("slf4j", "org.slf4j:slf4j-api:2.0.6")
         }
     }
 }
