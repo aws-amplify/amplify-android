@@ -21,9 +21,9 @@ data class TOTPSetupDetails(
     val username: String
 ) {
     fun getSetupURI(
-        issuer: String,
+        appName: String,
         accountName: String = username
     ): Uri {
-        return Uri.parse("otpauth://totp/cognito%3A$accountName?secret=$sharedSecret&issuer=$issuer")
+        return Uri.parse("otpauth://totp/cognito%3A$accountName?secret=$sharedSecret&issuer=$appName")
     }
 }
