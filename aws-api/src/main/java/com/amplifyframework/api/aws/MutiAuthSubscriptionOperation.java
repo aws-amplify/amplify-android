@@ -120,7 +120,7 @@ final class MutiAuthSubscriptionOperation<T> extends GraphQLOperation<T> {
                 },
                 response -> {
                     if (response.hasErrors() && hasAuthRelatedErrors(response) && authTypes.hasNext()) {
-                        // If there are auth-related errors, dispatch an ApiAuthException
+                        // If there are auth-related errors queue up a retry with the next authType
                         executorService.submit(this::dispatchRequest);
                     } else {
                         // Otherwise, we just want to dispatch it as a next item and
@@ -139,8 +139,10 @@ final class MutiAuthSubscriptionOperation<T> extends GraphQLOperation<T> {
                 onSubscriptionComplete
             );
         } else {
-            emitErrorAndCancelSubscription(new ApiException("Unable to establish subscription connection.",
-                                                        AmplifyException.TODO_RECOVERY_SUGGESTION));
+            emitErrorAndCancelSubscription(new ApiAuthException(
+                "Unable to establish subscription connection with any of the compatible auth types.",
+                "Check your application logs for detail."
+            ));
         }
 
     }
