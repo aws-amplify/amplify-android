@@ -35,6 +35,8 @@ dependencies {
     implementation(dependency.kotlin.coroutines)
 
     implementation(dependency.aws.credentials)
+    // slf4j dependency is added to fix https://github.com/awslabs/aws-sdk-kotlin/issues/993#issuecomment-1678885524
+    implementation(dependency.slf4j)
 }
 
 afterEvaluate {
