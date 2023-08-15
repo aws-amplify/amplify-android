@@ -24,6 +24,6 @@ data class TOTPSetupDetails(
         issuer: String,
         accountName: String = username
     ): Uri {
-        TODO()
+        return Uri.parse("otpauth://totp/cognito%3A$accountName?secret=$sharedSecret&issuer=$issuer")
     }
 }
