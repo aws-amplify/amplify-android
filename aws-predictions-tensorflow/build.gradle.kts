@@ -26,10 +26,10 @@ group = properties["POM_GROUP"].toString()
 dependencies {
     implementation(project(":core"))
     implementation(project(":aws-core"))
-    implementation(dependency.androidx.appcompat)
-    implementation(dependency.tensorflow)
+    implementation(libs.androidx.appcompat)
+    implementation(libs.tensorflow)
 
     testImplementation(project(":testutils"))
-    testImplementation(testDependency.junit)
-    testImplementation(testDependency.mockito)
+    testImplementation(libs.test.junit)
+    testImplementation(libs.test.mockito.core)
 }

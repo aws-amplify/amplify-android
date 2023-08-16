@@ -27,13 +27,13 @@ dependencies {
     implementation(project(":core"))
     implementation(project(":aws-core"))
 
-    implementation(dependency.androidx.annotation)
-    implementation(dependency.androidx.core)
-    implementation(dependency.gson)
+    implementation(libs.androidx.annotation)
+    implementation(libs.androidx.core)
+    implementation(libs.gson)
 
-    testImplementation(testDependency.junit)
-    testImplementation(testDependency.robolectric)
-    testImplementation(testDependency.jsonassert)
+    testImplementation(libs.test.junit)
+    testImplementation(libs.test.robolectric)
+    testImplementation(libs.test.jsonassert)
     testImplementation(project(":testmodels"))
     testImplementation(project(":testutils"))
 }

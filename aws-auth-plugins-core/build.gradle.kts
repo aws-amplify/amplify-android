@@ -28,14 +28,14 @@ dependencies {
     implementation(project(":core"))
     implementation(project(":aws-core"))
 
-    implementation(dependency.aws.http)
-    implementation(dependency.aws.credentials)
-    implementation(dependency.aws.cognitoidentity)
+    implementation(libs.aws.http)
+    implementation(libs.aws.credentials)
+    implementation(libs.aws.cognitoidentity)
 
-    implementation(dependency.kotlin.serializationJson)
+    implementation(libs.kotlin.serializationJson)
 
-    testImplementation(testDependency.junit)
-    testImplementation(testDependency.mockk)
-    testImplementation(testDependency.kotlin.test.junit)
-    testImplementation(testDependency.kotlin.test.coroutines)
+    testImplementation(libs.test.junit)
+    testImplementation(libs.test.mockk)
+    testImplementation(libs.test.kotlin.junit)
+    testImplementation(libs.test.kotlin.coroutines)
 }
