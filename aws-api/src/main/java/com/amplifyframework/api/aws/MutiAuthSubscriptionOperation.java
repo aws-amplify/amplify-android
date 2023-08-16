@@ -17,7 +17,6 @@ package com.amplifyframework.api.aws;
 
 import androidx.annotation.NonNull;
 
-import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.ApiException.ApiAuthException;
 import com.amplifyframework.api.aws.auth.AuthRuleRequestDecorator;

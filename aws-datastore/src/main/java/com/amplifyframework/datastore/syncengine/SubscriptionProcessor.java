@@ -198,8 +198,7 @@ final class SubscriptionProcessor {
                 emitter::onNext,
                 dataStoreException -> {
                     if (ErrorInspector.contains(dataStoreException, ApiException.ApiAuthException.class) ||
-                            isExceptionType(dataStoreException, AppSyncErrorType.UNAUTHORIZED))
-                    {
+                            isExceptionType(dataStoreException, AppSyncErrorType.UNAUTHORIZED)) {
                         // Ignore Unauthorized errors, so that DataStore can still be used even if the user is only
                         // authorized to read a subset of the models.
                         latch.countDown();
