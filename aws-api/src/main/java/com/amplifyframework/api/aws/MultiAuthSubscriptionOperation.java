@@ -37,7 +37,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-final class MutiAuthSubscriptionOperation<T> extends GraphQLOperation<T> {
+final class MultiAuthSubscriptionOperation<T> extends GraphQLOperation<T> {
     private static final Logger LOG = Amplify.Logging.logger(CategoryType.API, "amplify:aws-api");
 
     private final SubscriptionEndpoint subscriptionEndpoint;
@@ -53,7 +53,7 @@ final class MutiAuthSubscriptionOperation<T> extends GraphQLOperation<T> {
     private String subscriptionId;
     private Future<?> subscriptionFuture;
 
-    private MutiAuthSubscriptionOperation(Builder<T> builder) {
+    private MultiAuthSubscriptionOperation(Builder<T> builder) {
         super(builder.graphQlRequest, builder.responseFactory);
         this.subscriptionEndpoint = builder.subscriptionEndpoint;
         this.onSubscriptionStart = builder.onSubscriptionStart;
@@ -114,7 +114,7 @@ final class MutiAuthSubscriptionOperation<T> extends GraphQLOperation<T> {
                 request,
                 authorizationType,
                 subscriptionId -> {
-                    MutiAuthSubscriptionOperation.this.subscriptionId = subscriptionId;
+                    MultiAuthSubscriptionOperation.this.subscriptionId = subscriptionId;
                     onSubscriptionStart.accept(subscriptionId);
                 },
                 response -> {
@@ -245,8 +245,8 @@ final class MutiAuthSubscriptionOperation<T> extends GraphQLOperation<T> {
         }
 
         @NonNull
-        public MutiAuthSubscriptionOperation<T> build() {
-            return new MutiAuthSubscriptionOperation<>(this);
+        public MultiAuthSubscriptionOperation<T> build() {
+            return new MultiAuthSubscriptionOperation<>(this);
         }
     }
 }
