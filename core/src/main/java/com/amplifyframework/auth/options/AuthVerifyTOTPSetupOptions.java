@@ -22,6 +22,20 @@ package com.amplifyframework.auth.options;
 public class AuthVerifyTOTPSetupOptions {
 
     /**
+     * protected constructor.
+     */
+    protected AuthVerifyTOTPSetupOptions() {
+    }
+
+    /**
+     * Get a builder to construct an instance of this object.
+     * @return a builder to construct an instance of this object.
+     */
+    public static Builder<?> builder() {
+        return new CoreBuilder();
+    }
+
+    /**
      * The builder for this class.
      * @param <T> The type of builder - used to support plugin extensions of this.
      */
@@ -34,6 +48,13 @@ public class AuthVerifyTOTPSetupOptions {
         public AuthVerifyTOTPSetupOptions build() {
             return new AuthVerifyTOTPSetupOptions();
         }
+
+    }
+
+    /**
+     * The specific implementation of builder for this as the parent class.
+     */
+    public static final class CoreBuilder extends Builder<CoreBuilder> {
 
     }
 }

@@ -17,6 +17,7 @@ package com.amplifyframework.kotlin.auth
 
 import android.app.Activity
 import android.content.Intent
+import com.amplifyframework.TOTPSetupDetails
 import com.amplifyframework.auth.AuthCodeDeliveryDetails
 import com.amplifyframework.auth.AuthDevice
 import com.amplifyframework.auth.AuthException
@@ -37,6 +38,7 @@ import com.amplifyframework.auth.options.AuthSignOutOptions
 import com.amplifyframework.auth.options.AuthSignUpOptions
 import com.amplifyframework.auth.options.AuthUpdateUserAttributeOptions
 import com.amplifyframework.auth.options.AuthUpdateUserAttributesOptions
+import com.amplifyframework.auth.options.AuthVerifyTOTPSetupOptions
 import com.amplifyframework.auth.options.AuthWebUISignInOptions
 import com.amplifyframework.auth.result.AuthResetPasswordResult
 import com.amplifyframework.auth.result.AuthSignInResult
@@ -327,4 +329,20 @@ interface Auth {
      */
     @Throws(AuthException::class)
     suspend fun deleteUser()
+
+    /**
+     * Setup TOTP for the currently signed in user.
+     * @return TOTP Setup details
+     */
+    suspend fun setUpTOTP(): TOTPSetupDetails
+
+    /**
+     * Verify TOTP setup for the currently signed in user.
+     * @param code TOTP code to verify TOTP setup
+     * @param options additional options to verify totp setup
+     */
+    suspend fun verifyTOTPSetup(
+        code: String,
+        options: AuthVerifyTOTPSetupOptions = AuthVerifyTOTPSetupOptions.builder().build()
+    )
 }

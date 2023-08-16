@@ -17,6 +17,7 @@ package com.amplifyframework.kotlin.auth
 
 import android.app.Activity
 import android.content.Intent
+import com.amplifyframework.TOTPSetupDetails
 import com.amplifyframework.auth.AuthCategoryBehavior as Delegate
 import com.amplifyframework.auth.AuthCodeDeliveryDetails
 import com.amplifyframework.auth.AuthDevice
@@ -37,6 +38,7 @@ import com.amplifyframework.auth.options.AuthSignOutOptions
 import com.amplifyframework.auth.options.AuthSignUpOptions
 import com.amplifyframework.auth.options.AuthUpdateUserAttributeOptions
 import com.amplifyframework.auth.options.AuthUpdateUserAttributesOptions
+import com.amplifyframework.auth.options.AuthVerifyTOTPSetupOptions
 import com.amplifyframework.auth.options.AuthWebUISignInOptions
 import com.amplifyframework.auth.result.AuthResetPasswordResult
 import com.amplifyframework.auth.result.AuthSignInResult
@@ -334,6 +336,26 @@ class KotlinAuthFacade(private val delegate: Delegate = Amplify.Auth) : Auth {
                 { continuation.resume(Unit) },
                 { continuation.resumeWithException(it) }
             )
+        }
+    }
+
+    override suspend fun setUpTOTP(): TOTPSetupDetails {
+        return suspendCoroutine { continuation ->
+            delegate.setUpTOTP({
+                continuation.resume(it)
+            }, {
+                continuation.resumeWithException(it)
+            })
+        }
+    }
+
+    override suspend fun verifyTOTPSetup(code: String, options: AuthVerifyTOTPSetupOptions) {
+        return suspendCoroutine { continuation ->
+            delegate.verifyTOTPSetup(code, options, {
+                continuation.resume(Unit)
+            }, {
+                continuation.resumeWithException(it)
+            })
         }
     }
 }

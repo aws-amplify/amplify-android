@@ -125,7 +125,7 @@ class AWSCognitoAuthPluginTOTPTests {
         Assert.assertEquals(AuthSignInStep.CONFIRM_SIGN_IN_WITH_TOTP_CODE, signInResult.nextStep.signInStep)
         val otpCode = TotpGenerator().generateCode(
             result.nextStep.totpSetupDetails!!.sharedSecret.toByteArray(),
-            System.currentTimeMillis() + 30 * 1000 // 30 sec is added to generate new OTP code 
+            System.currentTimeMillis() + 30 * 1000 // 30 sec is added to generate new OTP code
         )
         synchronousAuth.confirmSignIn(otpCode)
         val currentUser = synchronousAuth.currentUser
@@ -154,7 +154,7 @@ class AWSCognitoAuthPluginTOTPTests {
         Assert.assertEquals(AuthSignInStep.CONFIRM_SIGN_IN_WITH_TOTP_CODE, totpSignInResult.nextStep.signInStep)
         val otpCode = TotpGenerator().generateCode(
             result.nextStep.totpSetupDetails!!.sharedSecret.toByteArray(),
-            System.currentTimeMillis() + 30 * 1000 // 30 sec is added to generate new OTP code 
+            System.currentTimeMillis() + 30 * 1000 // 30 sec is added to generate new OTP code
         )
         synchronousAuth.confirmSignIn(otpCode)
         val currentUser = synchronousAuth.currentUser
