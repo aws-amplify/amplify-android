@@ -171,17 +171,67 @@ public final class ConflictResolverTest {
             .awaitDone(TIMEOUT_SECONDS, TimeUnit.SECONDS)
             .assertValue(versionFromAppSyncResponse);
 
-        // The handler should have called up to AppSync to update hte model
+        // The handler should have called up to AppSync to update the model
         verify(appSync)
             .update(eq(localModel), any(), eq(metadata.getVersion()), any(), any());
     }
 
     /**
-     * When the user elects to retry the mutation using the local copy of the data,
-     * the following is expected:
-     * 1. The AppSync API is invoked, with the local mutation data
-     * 2. We assume that the AppSync API will respond differently
-     *    upon retry
+     * When the user elects to retry the mutation using the local copy of the data, and the mutation is a delete, the
+     * following is expected:
+     * 1. The AppSync delete API is invoked
+     * 2. We assume that the AppSync API will respond differently upon retry
+     * @throws DataStoreException On failure to arrange metadata into storage
+     */
+    @Test
+    public void conflictIsResolvedByRetryingLocalDeletion() throws DataStoreException {
+        // Arrange for the user-provided conflict handler to always request local retry.
+        when(configurationProvider.getConfiguration())
+            .thenReturn(DataStoreConfiguration.builder()
+                            .conflictHandler(DataStoreConflictHandler.alwaysRetryLocal())
+                            .build()
+            );
+
+        // Arrange a pending mutation that includes the local data
+        BlogOwner localModel = BlogOwner.builder()
+                                   .name("Local Blogger")
+                                   .build();
+        PendingMutation<BlogOwner> mutation = PendingMutation.deletion(localModel, schema);
+
+        // Arrange server state for the model, in conflict to local data
+        BlogOwner serverModel = localModel.copyOfBuilder()
+                                    .name("Server Blogger")
+                                    .build();
+        Temporal.Timestamp now = Temporal.Timestamp.now();
+        ModelMetadata metadata = new ModelMetadata(serverModel.getId(), false, 4, now);
+        ModelWithMetadata<BlogOwner> serverData = new ModelWithMetadata<>(serverModel, metadata);
+
+        // Arrange a hypothetical conflict error from AppSync
+        AppSyncConflictUnhandledError<BlogOwner> unhandledConflictError =
+            AppSyncConflictUnhandledErrorFactory.createUnhandledConflictError(serverData);
+
+        // Assume that the AppSync call succeeds this time.
+        ModelWithMetadata<BlogOwner> versionFromAppSyncResponse =
+            new ModelWithMetadata<>(localModel, metadata);
+        AppSyncMocking.delete(appSync)
+            .mockSuccessResponse(localModel, metadata.getVersion(), versionFromAppSyncResponse);
+
+        // Act: when the resolver is invoked, we expect the resolved version
+        // to include the server's metadata, but with the local data.
+        resolver.resolve(mutation, unhandledConflictError)
+            .test()
+            .awaitDone(TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            .assertValue(versionFromAppSyncResponse);
+
+        // The handler should have called up to AppSync to delete the model
+        verify(appSync)
+            .delete(eq(localModel), any(), eq(metadata.getVersion()), any(), any());
+    }
+
+    /**
+     * When the user elects to retry the mutation using the local copy of the data, the following is expected: 1. The
+     * AppSync API is invoked, with the local mutation data 2. We assume that the AppSync API will respond differently
+     * upon retry
      * @throws AmplifyException On failure to arrange metadata into storage
      */
     @Test

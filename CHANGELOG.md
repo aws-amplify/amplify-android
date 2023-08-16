@@ -1,3 +1,22 @@
+## [Release 2.11.2](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.11.2)
+
+### Bug Fixes
+- **datastore/flutter:** Custom type list serde ([#2545](https://github.com/aws-amplify/amplify-android/issues/2545))
+- **auth:** Prevent credential continuation from returning multiple times. ([#2541](https://github.com/aws-amplify/amplify-android/issues/2541))
+
+[See all changes between 2.11.1 and 2.11.2](https://github.com/aws-amplify/amplify-android/compare/release_v2.11.1...release_v2.11.2)
+
+## [Release 2.11.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.11.1)
+
+### Bug Fixes
+- **datastore:** Observe Query should not return deleted items, fixes - [#2069](https://github.com/aws-amplify/amplify-android/issues/2069) ([#2522](https://github.com/aws-amplify/amplify-android/issues/2522))
+- **predictions:** send close frame when error occurs ([#2519](https://github.com/aws-amplify/amplify-android/issues/2519))
+- **auth:** Fix for sending session expired when an invalid grant exception is received ([#2524](https://github.com/aws-amplify/amplify-android/issues/2524))
+- **auth:** Fix for when authstate goes to an invalid state on confirmSignIn when it should accept the error state as is ([#2534](https://github.com/aws-amplify/amplify-android/issues/2534))
+- **datastore:** Fix retry local after a deletion ([#2532](https://github.com/aws-amplify/amplify-android/issues/2532))
+
+[See all changes between 2.11.0 and 2.11.1](https://github.com/aws-amplify/amplify-android/compare/release_v2.11.0...release_v2.11.1)
+
 ## [Release 2.11.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.11.0)
 
 ### Features

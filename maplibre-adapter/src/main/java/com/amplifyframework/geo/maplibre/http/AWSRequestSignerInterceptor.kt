@@ -15,6 +15,7 @@
 
 package com.amplifyframework.geo.maplibre.http
 
+import aws.smithy.kotlin.runtime.InternalApi
 import aws.smithy.kotlin.runtime.auth.awssigning.AwsSigningConfig
 import aws.smithy.kotlin.runtime.auth.awssigning.DefaultAwsSigner
 import aws.smithy.kotlin.runtime.http.Headers as AwsHeaders
@@ -93,6 +94,7 @@ internal class AWSRequestSignerInterceptor(
         return this.url(urlBuilder.build())
     }
 
+    @OptIn(InternalApi::class)
     @Throws(SignCredentialsException::class)
     private suspend fun signRequest(request: Request): HttpRequest {
         val url = request.url
@@ -119,7 +121,7 @@ internal class AWSRequestSignerInterceptor(
                 url.queryParameterNames.map { name ->
                     url.queryParameter(name)?.let { append(name, it) }
                 }
-            },
+            }
         )
 
         val bodyBytes: ByteArray = getBytes(request.body)
