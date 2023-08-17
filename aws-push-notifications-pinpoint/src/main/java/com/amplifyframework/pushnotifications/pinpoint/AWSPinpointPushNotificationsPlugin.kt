@@ -184,6 +184,11 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
                         "https://stackoverflow.com/questions/47529977/firebase-token-error-too-many-registrations",
                     exception
                 )
+            } catch (exception: Exception) {
+                LOG.error(
+                    "Fetching token failed",
+                    exception
+                )
             }
         }
     }
