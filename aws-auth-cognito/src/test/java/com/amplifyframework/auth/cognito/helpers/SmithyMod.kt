@@ -1,10 +1,6 @@
 package com.amplifyframework.auth.cognito.helpers
 
 //import aws.smithy.kotlin.runtime.content.Document
-import com.google.gson.Gson
-
-import com.google.gson.JsonElement
-import com.google.gson.reflect.TypeToken
 
 import generated.model.Amplify
 
@@ -28,7 +24,6 @@ import generated.model.TypeResponse
 
 import generated.model.Validation
 import io.mockk.InternalPlatformDsl.toStr
-import org.bouncycastle.asn1.cmc.CMCStatus.success
 import org.json.JSONObject
 
 import aws.smithy.kotlin.runtime.content.Document
@@ -37,42 +32,20 @@ import com.google.gson.JsonParser
 import deserializeWrapper
 
 
-import kotlinx.serialization.json.Json
 import serializeWrapper
 
 //import testwrapper
 import java.io.File
 
 class SmithyMod {
-    var signUpFailure = generated.model.UnitTest {}
-
-    var signUpSuccess = generated.model.UnitTest {}
-
-
-    fun getFailSignUp() : UnitTest {
-        val pathName = "src/test/java"
-
-
-        var expectedFail = JSONObject(File("$pathName/testframework/signup_fail.json").readText())
-        signUpFailure = deserializeWrapper(expectedFail)
-        return signUpFailure
-    }
-    fun getSucceedSignUp() : UnitTest {
-        val pathName = "src/test/java"
-
-        var expected = JSONObject(File("$pathName/testframework/signup_success.json").readText())
-
-        signUpSuccess = deserializeWrapper(expected)
-
-        return signUpSuccess
-
-    }
 
     private fun getJSONIterative(directory: File) : MutableList<UnitTest> {
+        //iterates through directory, gets serialized representations
         val jsonFiles = mutableListOf<UnitTest>()
         for (subdirectory in directory.listFiles()) {
             for (jsonFile in subdirectory.listFiles()) {
-                jsonFiles += deserializeWrapper(JSONObject(jsonFile.readText())) //deserializes the json into smithy test directly
+                jsonFiles += deserializeWrapper(JSONObject(jsonFile.readText()))
+                //deserializes the json into smithy test directly
 
             }
 
@@ -82,6 +55,7 @@ class SmithyMod {
 
 
     fun getTest(): List<UnitTest> {
+        //gets all tests
         val listOfTests = mutableListOf<UnitTest>()
         val directory = File("src/test/resources/feature-test/testsuites")
         listOfTests += getJSONIterative(directory)
@@ -91,6 +65,7 @@ class SmithyMod {
 
 
     fun runApi(apiName: String) : List<UnitTest> {
+        //gets tests only for API specified
         val listOfTests = mutableListOf<UnitTest>()
         val directory = File("src/test/resources/feature-test/testsuites/${apiName}")
         for (subdirectory in directory.listFiles()) {
@@ -109,6 +84,7 @@ class SmithyMod {
 
 
     fun convertAPI() : List<String> {
+        //Converts instances of old generator to new one
         val listOfTests = mutableListOf<String>()
         val directory = File("src/test/java/testframework/")
         for (subdirectory in directory.listFiles()) {
@@ -123,9 +99,6 @@ class SmithyMod {
 
 
 
-            //subdirectory.writeText(convertJSONToSerializeStructure(JSONObject(subdirectory.readText())).toStr())
-
-
         }
         return listOfTests
 
@@ -133,6 +106,7 @@ class SmithyMod {
     }
 
     fun convertJSONToSerializeStructure(generated : JSONObject) : String {
+        //returns serialized representation of Smithy object
         return serializeWrapper(generatorInformationToSmithy(generated))
 
 
@@ -145,6 +119,7 @@ class SmithyMod {
     }
 
     private fun obtainMockListSuccess(expected: JSONObject) : List<MockedResponse> {
+        //helper function for old generator to new generator conversion
         var mockList : List<MockedResponse> = mutableListOf()
 
         val preConditions = expected.getJSONObject("preConditions")
@@ -155,9 +130,6 @@ class SmithyMod {
                 type = AwsService.CognitoUserPools
                 apiName = JSONObject(mockedResponses[i].toStr())["apiName"].toStr()
                 responseType = TypeResponse.Success
-
-
-
 
                 val currentResponse = mockedResponses.getJSONObject(i)
                 var responseType = currentResponse.getJSONObject("response")
@@ -180,6 +152,7 @@ class SmithyMod {
 
     }
     private fun obtainMockListError(expected_fail: JSONObject) : List<MockedResponse> {
+        //helper function for old generator to new generator conversion
         var mockList : List<MockedResponse> = mutableListOf()
 
         val preConditions = expected_fail.getJSONObject("preConditions")
@@ -221,6 +194,9 @@ class SmithyMod {
 
 
     private fun generatorInformationToSmithy(generated : JSONObject) : UnitTest {
+        //main helper function for old generator to new generator conversion
+        //builds new Smithy instance, then populates it with old generator info
+        //returns the smithy instance at the end
         val testing = UnitTest {
             preConditions = Preconditions {
                 val mockedResponseList = JSONObject(generated["preConditions"].toStr()).getJSONArray("mockedResponses")
@@ -340,9 +316,6 @@ class SmithyMod {
         return testing
 
     }
-
-
-
 
 
 }

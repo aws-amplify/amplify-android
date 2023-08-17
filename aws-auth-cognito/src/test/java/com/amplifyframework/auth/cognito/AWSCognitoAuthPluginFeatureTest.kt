@@ -210,11 +210,11 @@ class AWSCognitoAuthPluginFeatureTest(private val testCase: generated.model.Unit
     fun api_feature_test() {
         Dispatchers.setMain(newSingleThreadContext("Main thread"))
 
-        setUp()
-        mockAndroidAPIs()
+        setUp() //initialize plugin and basic mocking
+        mockAndroidAPIs() //more mocking
 
 
-
+        //set the state below
         if (testCase.preConditions!!.state!!.contains("SignedOut")) {
             currentState = AuthenticationState.SignedOut(mockk())
 
@@ -235,20 +235,20 @@ class AWSCognitoAuthPluginFeatureTest(private val testCase: generated.model.Unit
 
 
         }
-
+        //execute smithy specified API on smithy specified parameters
         apiExecutionResult = apiExecutor(sut, testCase.api!!, testCase!!.preConditions!!.mockedResponses!![0].responseType!!)
 
 
         // THEN
         if (testCase.preConditions!!.mockedResponses!![0].responseType == TypeResponse.Success) {
-            testCase.validations!!.forEach(this::verify) //for success smithy test
+            testCase.validations!!.forEach(this::verify) //for success smithy test run verification
         }
         else {
             val apiExecutorException = apiExecutionResult.toStr().substringBefore('{')
 
             assertEquals(apiExecutorException,
                 testCase!!.preConditions!!.mockedResponses!![0].response!!.asError().errorType!!.substringBefore('[')
-            ) //for error smithy test
+            ) //for error smithy test ensure exception is equal
         }
         Dispatchers.resetMain()
         clearAllMocks()
@@ -288,16 +288,8 @@ class AWSCognitoAuthPluginFeatureTest(private val testCase: generated.model.Unit
             generated.model.ShapeType.Amplify -> {
                 val apiExecutionResponseClass = getResponse(apiExecutionResult!!)
 
-                if (apiExecutionResponseClass is None) {
-                    val nameToCheck = testCase.api!!.name!!
-                    val listCheck : List<String> = listOf("signUp", "signOut", "signIn", "resetPassword", "fetchUserAttributes", "fetchAuthSession")
-                    if (nameToCheck in listCheck ) {
-                        assert(false)
 
-                    }
-                    return
-                }
-                //try jsonObject or jsonArray
+                //initialize jsonAmplify to jsonObject or jsonArray
 
                 var jsonAmplify = try {
                     JSONObject(validation.shape!!.asAmplify().response!!.asString())
@@ -314,6 +306,7 @@ class AWSCognitoAuthPluginFeatureTest(private val testCase: generated.model.Unit
                 if (jsonAmplify is JSONArray) {
                     for (i in 0 until jsonAmplify.length()) {
                         verifyAmplify(JSONObject(jsonAmplify[i].toStr()))
+                        //verify each Json object in the array
 
                     }
                     return
@@ -327,6 +320,7 @@ class AWSCognitoAuthPluginFeatureTest(private val testCase: generated.model.Unit
                 authStateMachine.getCurrentState { authState ->
                     assertEquals(validation.shape!!.asStateMachine().expectedState!!, authState.toStr())
                     getStateLatch.countDown()
+                    //ensure smithy expected state = environment state
                 }
                 getStateLatch.await(10, TimeUnit.SECONDS)
             }
@@ -336,27 +330,27 @@ class AWSCognitoAuthPluginFeatureTest(private val testCase: generated.model.Unit
     private fun verifyAmplify(jsonAmplify: JSONObject) {
 
         val propertiesOfAPIResponseClass = apiExecutionResult!!::class.declaredMemberProperties
-        // Access the private property values
+        // Access the private property values of the api execution result
         propertiesOfAPIResponseClass.forEach { property ->
             // Mark the property as accessible so we can read its value
             property.isAccessible = true
 
-            val name = property.name.toStr()
+            val name = property.name.toStr()  //name of private variable of api result
 
 
-            val functionsAPIResponse = apiExecutionResult!!::class.functions
+            val functionsAPIResponse = apiExecutionResult!!::class.functions //get list of functions in the class
 
-            // Find the function with the given name
+            // Find the function with the given name since this function retrieves value of property
             val function = functionsAPIResponse.find {
                 it.name == name || it.name == "get${name[0].uppercaseChar()}${name.substring(1)}"
 
             }
-            val functionReturn = function?.call(apiExecutionResult).toStr()
+            val functionReturn = function?.call(apiExecutionResult).toStr() //call function to get value
 
             if (functionReturn != null) {
                 var smithyCompareResponse = jsonAmplify[name].toStr()
                 if (smithyCompareResponse[0] !== '{') {
-                    assertEquals(smithyCompareResponse, functionReturn)
+                    assertEquals(smithyCompareResponse, functionReturn) //compare smithy value to apiexec value
                 }
                 else {
                     smithyCompareResponse = smithyCompareResponse.substringAfter('{')
@@ -366,7 +360,9 @@ class AWSCognitoAuthPluginFeatureTest(private val testCase: generated.model.Unit
 
                     val keys = JSONObject(resultObjectHelper).keys()
                     for (value in keys) {
-                        assertEquals(JSONObject(smithyCompareResponse)[value.toStr()].toStr(), JSONObject(resultObjectHelper)[value.toStr()].toStr())
+                        assertEquals(JSONObject(smithyCompareResponse)[value.toStr()].toStr(),
+                            JSONObject(resultObjectHelper)[value.toStr()].toStr())
+                        //compare smithy json value to apiexec json value
 
                     }
                 }
@@ -390,6 +386,7 @@ class AWSCognitoAuthPluginFeatureTest(private val testCase: generated.model.Unit
 
                     it.name == apiName
                 }.callSuspend(first, expectedRequest)
+            //ensure captured request on plugin in apiexec step == smithy request
             }
         }
 

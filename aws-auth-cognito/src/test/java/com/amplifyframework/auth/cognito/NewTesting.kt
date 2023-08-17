@@ -36,7 +36,7 @@ class NewTesting {
         SmithyMod().convertAPI()
     }
 }
-//converts test information to a serialized json representing the direct smithy instance
+//run this to convert test information to a serialized json representing the direct smithy instance
 
 
 
