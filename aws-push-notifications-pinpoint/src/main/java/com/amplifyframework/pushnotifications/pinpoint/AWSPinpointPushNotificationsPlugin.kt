@@ -42,6 +42,7 @@ import com.amplifyframework.pinpoint.core.data.AndroidAppDetails
 import com.amplifyframework.pinpoint.core.data.AndroidDeviceDetails
 import com.amplifyframework.pinpoint.core.database.PinpointDatabase
 import com.amplifyframework.pinpoint.core.util.getUniqueId
+import com.google.android.gms.tasks.RuntimeExecutionException
 import com.google.firebase.messaging.FirebaseMessaging
 import java.io.IOException
 import java.util.concurrent.ConcurrentHashMap
@@ -174,6 +175,13 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
                 LOG.error(
                     "Fetching token failed, this is a known issue in emulators, " +
                         "rerun the app: https://github.com/firebase/firebase-android-sdk/issues/3040",
+                    exception
+                )
+            } catch (exception: RuntimeExecutionException) {
+                LOG.error(
+                    "Fetching token failed, this may happen due to Playstore internal testing, " +
+                        "rerun the app: https://github.com/aws-amplify/amplify-android/issues/2555 and" +
+                        "https://stackoverflow.com/questions/47529977/firebase-token-error-too-many-registrations",
                     exception
                 )
             }
