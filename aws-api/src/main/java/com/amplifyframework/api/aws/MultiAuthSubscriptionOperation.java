@@ -16,6 +16,7 @@
 package com.amplifyframework.api.aws;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.VisibleForTesting;
 
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.ApiException.ApiAuthException;
@@ -48,7 +49,6 @@ final class MultiAuthSubscriptionOperation<T> extends GraphQLOperation<T> {
     private final Action onSubscriptionComplete;
     private final AtomicBoolean canceled;
     private final AuthRuleRequestDecorator requestDecorator;
-
     private AuthorizationTypeIterator authTypes;
     private String subscriptionId;
     private Future<?> subscriptionFuture;
@@ -178,6 +178,21 @@ final class MultiAuthSubscriptionOperation<T> extends GraphQLOperation<T> {
     private void emitErrorAndCancelSubscription(ApiException apiException) {
         cancel();
         onSubscriptionError.accept(apiException);
+    }
+
+    @VisibleForTesting
+    boolean isCanceled() {
+        return canceled.get();
+    }
+
+    @VisibleForTesting
+    void setCanceled(boolean canceled) {
+        this.canceled.set(canceled);
+    }
+
+    @VisibleForTesting
+    Future<?> getSubscriptionFuture() {
+        return subscriptionFuture;
     }
 
     static final class Builder<T> {
