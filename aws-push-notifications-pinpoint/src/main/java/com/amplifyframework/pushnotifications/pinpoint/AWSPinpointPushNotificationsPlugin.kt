@@ -42,9 +42,7 @@ import com.amplifyframework.pinpoint.core.data.AndroidAppDetails
 import com.amplifyframework.pinpoint.core.data.AndroidDeviceDetails
 import com.amplifyframework.pinpoint.core.database.PinpointDatabase
 import com.amplifyframework.pinpoint.core.util.getUniqueId
-import com.google.android.gms.tasks.RuntimeExecutionException
 import com.google.firebase.messaging.FirebaseMessaging
-import java.io.IOException
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.random.Random
 import org.json.JSONObject
