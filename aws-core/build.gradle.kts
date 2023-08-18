@@ -31,10 +31,12 @@ android {
 
 dependencies {
     implementation(project(":core"))
-    implementation(dependency.kotlin.stdlib)
-    implementation(dependency.kotlin.coroutines)
+    implementation(libs.kotlin.stdlib)
+    implementation(libs.kotlin.coroutines)
 
-    implementation(dependency.aws.credentials)
+    implementation(libs.aws.credentials)
+    // slf4j dependency is added to fix https://github.com/awslabs/aws-sdk-kotlin/issues/993#issuecomment-1678885524
+    implementation(libs.slf4j)
 }
 
 afterEvaluate {
