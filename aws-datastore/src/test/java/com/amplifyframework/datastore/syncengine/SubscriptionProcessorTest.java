@@ -114,7 +114,7 @@ public final class SubscriptionProcessorTest {
      * the {@link AppSync} client receives subscription requests.
      */
     @Test
-    public void appSyncInvokedWhenSubscriptionsStarted() {
+    public void appSyncInvokedWhenSubscriptionsStarted() throws DataStoreException {
         // For every Class-SubscriptionType pairing, use a CountDownLatch
         // to tell whether or not we've "seen" a subscription event for it.
         Map<Pair<ModelSchema, SubscriptionType>, CountDownLatch> seen = new HashMap<>();
@@ -129,19 +129,17 @@ public final class SubscriptionProcessorTest {
                 seen.put(Pair.create(pair.first, pair.second), latch);
                 Answer<Cancelable> answer = invocation -> {
                     latch.countDown();
+                    final int startConsumerIndex = 1;
+                    Consumer<String> onStart = invocation.getArgument(startConsumerIndex);
+                    onStart.accept(RandomString.string());
                     return new NoOpCancelable();
                 };
                 arrangeSubscription(appSync, answer, pair.first, pair.second);
             });
 
         // Act: start some subscriptions.
-        try {
-            subscriptionProcessor.startSubscriptions();
-        } catch (DataStoreException exception) {
-            // startSubscriptions throws this exception if it doesn't receive the start_ack messages after a time out.
-            // This test doesn't mock those start_ack messages, so this expection is expected.  That's okay though -
-            // we just want to verify that the subscriptions were requested.
-        }
+        subscriptionProcessor.startSubscriptions();
+
 
         // Make sure that all of the subscriptions have been
         Observable.fromIterable(seen.entrySet())
