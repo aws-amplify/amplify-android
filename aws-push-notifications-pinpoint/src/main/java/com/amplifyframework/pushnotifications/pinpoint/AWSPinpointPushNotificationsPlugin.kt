@@ -164,26 +164,14 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
             try {
                 if (!task.isSuccessful) {
                     LOG.error("Fetching FCM registration token failed: ${task.exception}")
+                } else {
+                    val token = task.result
+                    registerDevice(token, {
+                        LOG.info("Registering push notifications token: $token")
+                    }) {
+                        throw it
+                    }
                 }
-                val token = task.result
-                registerDevice(token, {
-                    LOG.info("Registering push notifications token: $token")
-                }, {
-                    throw it
-                })
-            } catch (exception: IOException) {
-                LOG.error(
-                    "Fetching token failed, this is a known issue in emulators, " +
-                        "rerun the app: https://github.com/firebase/firebase-android-sdk/issues/3040",
-                    exception
-                )
-            } catch (exception: RuntimeExecutionException) {
-                LOG.error(
-                    "Fetching token failed, this may happen due to Playstore internal testing, " +
-                        "rerun the app: https://github.com/aws-amplify/amplify-android/issues/2555 and" +
-                        "https://stackoverflow.com/questions/47529977/firebase-token-error-too-many-registrations",
-                    exception
-                )
             } catch (exception: Exception) {
                 LOG.error(
                     "Fetching token failed",
