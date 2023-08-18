@@ -64,7 +64,7 @@ public final class SerializedModelAdapterTest {
         GsonTemporalAdapters.register(builder);
         SerializedModelAdapter.register(builder);
         SerializedCustomTypeAdapter.register(builder);
-        gson = builder.create();
+        gson = builder.serializeNulls().create();
     }
 
     /**
@@ -162,6 +162,7 @@ public final class SerializedModelAdapterTest {
         contactSerializedData.put("email", "test@test.com");
         contactSerializedData.put("phone", phone);
         contactSerializedData.put("additionalPhoneNumbers", additionalPhoneNumbers);
+        contactSerializedData.put("aliases", null);
         SerializedCustomType contact = SerializedCustomType.builder()
                 .serializedData(contactSerializedData)
                 .customTypeSchema(contactSchema)
@@ -170,6 +171,7 @@ public final class SerializedModelAdapterTest {
         Map<String, Object> personSerializedData = new HashMap<>();
         personSerializedData.put("fullName", "Tester Test");
         personSerializedData.put("contact", contact);
+        personSerializedData.put("additionalContacts", null);
         personSerializedData.put("id", "some-unique-id");
         SerializedModel person = SerializedModel.builder()
                 .modelSchema(personSchema)
@@ -327,6 +329,14 @@ public final class SerializedModelAdapterTest {
                 .isArray(true)
                 .isRequired(true)
                 .build());
+        contactFields.put("aliases", CustomTypeField.builder()
+                .name("aliases")
+                .targetType("Contact")
+                .javaClassForValue(Map.class)
+                .isCustomType(true)
+                .isArray(true)
+                .isRequired(false)
+                .build());
         return CustomTypeSchema.builder()
                 .name("Contact")
                 .pluralName("Contacts")
@@ -354,6 +364,14 @@ public final class SerializedModelAdapterTest {
                 .javaClassForValue(Map.class)
                 .isRequired(true)
                 .isCustomType(true)
+                .build());
+        personFields.put("additionalContacts", ModelField.builder()
+                .name("additionalContacts")
+                .targetType("Contact")
+                .javaClassForValue(Map.class)
+                .isRequired(false)
+                .isCustomType(true)
+                .isArray(true)
                 .build());
         return ModelSchema.builder()
                 .name("Person")
