@@ -14,6 +14,7 @@
  */
 package com.amplifyframework.logging.cloudwatch
 
+import aws.smithy.kotlin.runtime.InternalApi
 import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider
 import aws.smithy.kotlin.runtime.auth.awssigning.AwsSigningConfig
 import aws.smithy.kotlin.runtime.auth.awssigning.DefaultAwsSigner
@@ -54,6 +55,7 @@ class DefaultRemoteLoggingConstraintProvider @JvmOverloads constructor(
         explicitNulls = false
     }
 
+    @OptIn(InternalApi::class)
     override fun fetchLoggingConfig(onSuccess: Consumer<LoggingConstraints>, onError: Consumer<Exception>) {
         coroutineScope.launch {
             try {

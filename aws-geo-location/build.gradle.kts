@@ -25,18 +25,18 @@ group = properties["POM_GROUP"].toString()
 dependencies {
     implementation(project(":core"))
     implementation(project(":aws-core"))
-    implementation(dependency.aws.location)
+    implementation(libs.aws.location)
 
     testImplementation(project(":testutils"))
-    testImplementation(testDependency.junit)
-    testImplementation(testDependency.robolectric)
+    testImplementation(libs.test.junit)
+    testImplementation(libs.test.robolectric)
 
     androidTestImplementation(project(":testutils"))
     androidTestImplementation(project(":aws-auth-cognito"))
-    androidTestImplementation(dependency.androidx.annotation)
-    androidTestImplementation(testDependency.androidx.test.core)
-    androidTestImplementation(testDependency.androidx.test.runner)
-    androidTestImplementation(testDependency.androidx.test.junit)
+    androidTestImplementation(libs.androidx.annotation)
+    androidTestImplementation(libs.test.androidx.core)
+    androidTestImplementation(libs.test.androidx.runner)
+    androidTestImplementation(libs.test.androidx.junit)
 }
 
 afterEvaluate {

@@ -21,8 +21,8 @@ plugins {
 dependencies {
     implementation(project(":core"))
     implementation(project(":aws-api-appsync"))
-    implementation(dependency.androidx.core)
+    implementation(libs.androidx.core)
 
     testImplementation(project(":testutils"))
-    testImplementation(testDependency.junit)
+    testImplementation(libs.test.junit)
 }
