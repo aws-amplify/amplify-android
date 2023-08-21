@@ -295,10 +295,11 @@ final class SubscriptionEndpoint {
         subscriptions.remove(subscriptionId);
 
         // If we have zero subscriptions, close the WebSocket
-        if (subscriptions.size() == 0) {
+        if (subscriptions.isEmpty() && pendingSubscriptionIds.isEmpty()) {
             LOG.info("No more active subscriptions. Closing web socket.");
             timeoutWatchdog.stop();
             webSocket.close(NORMAL_CLOSURE_STATUS, "No active subscriptions");
+            webSocketListener = null;
         }
     }
 
