@@ -38,6 +38,7 @@ import com.amplifyframework.statemachine.codegen.states.HostedUISignInState
 import com.amplifyframework.statemachine.codegen.states.MigrateSignInState
 import com.amplifyframework.statemachine.codegen.states.RefreshSessionState
 import com.amplifyframework.statemachine.codegen.states.SRPSignInState
+import com.amplifyframework.statemachine.codegen.states.SetupTOTPState
 import com.amplifyframework.statemachine.codegen.states.SignInChallengeState
 import com.amplifyframework.statemachine.codegen.states.SignInState
 import com.amplifyframework.statemachine.codegen.states.SignOutState
@@ -92,6 +93,7 @@ class StateTransitionTests : StateTransitionTestBase() {
                         SignInChallengeState.Resolver(mockSignInChallengeActions),
                         HostedUISignInState.Resolver(mockHostedUIActions),
                         DeviceSRPSignInState.Resolver(mockDeviceSRPSignInActions),
+                        SetupTOTPState.Resolver(mockSetupTOTPActions),
                         mockSignInActions
                     ),
                     SignOutState.Resolver(mockSignOutActions),

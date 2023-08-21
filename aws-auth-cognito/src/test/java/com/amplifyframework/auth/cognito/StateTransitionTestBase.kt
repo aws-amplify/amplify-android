@@ -27,6 +27,7 @@ import com.amplifyframework.statemachine.codegen.actions.FetchAuthSessionActions
 import com.amplifyframework.statemachine.codegen.actions.HostedUIActions
 import com.amplifyframework.statemachine.codegen.actions.MigrateAuthActions
 import com.amplifyframework.statemachine.codegen.actions.SRPActions
+import com.amplifyframework.statemachine.codegen.actions.SetupTOTPActions
 import com.amplifyframework.statemachine.codegen.actions.SignInActions
 import com.amplifyframework.statemachine.codegen.actions.SignInChallengeActions
 import com.amplifyframework.statemachine.codegen.actions.SignOutActions
@@ -117,13 +118,16 @@ open class StateTransitionTestBase {
     @Mock
     internal lateinit var mockDeleteUserActions: DeleteUserCognitoActions
 
+    @Mock
+    internal lateinit var mockSetupTOTPActions: SetupTOTPActions
+
     private val dummyCredential = AmplifyCredential.UserAndIdentityPool(
         SignedInData(
             "userId",
             "username",
             Date(0),
             SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH),
-            CognitoUserPoolTokens("idToken", "accessToken", "refreshToken", 123123L),
+            CognitoUserPoolTokens("idToken", "accessToken", "refreshToken", 123123L)
         ),
         "identityPool",
         AWSCredentials(
@@ -342,7 +346,9 @@ open class StateTransitionTestBase {
                     dispatcher.send(
                         SRPEvent(
                             SRPEvent.EventType.RespondPasswordVerifier(
-                                mapOf(), mapOf(), "sample_session"
+                                mapOf(),
+                                mapOf(),
+                                "sample_session"
                             )
                         )
                     )
