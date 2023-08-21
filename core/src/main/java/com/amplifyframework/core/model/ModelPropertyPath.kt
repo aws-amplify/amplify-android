@@ -112,32 +112,6 @@ open class ModelPath<ModelType : Model>(
 
     override fun getModelType(): Class<Model> = modelType as Class<Model>
 
-    protected fun <T : Any> field(name: String, type: Class<T>) = FieldPath(
-        name = name,
-        parent = this,
-        propertyType = type
-    )
-
-    protected inline fun <reified T : Any> field(name: String) = FieldPath(
-        name = name,
-        parent = this,
-        propertyType = T::class.java
-    )
-
-    protected fun string(name: String) = field<String>(name)
-
-    protected fun integer(name: String) = field<Int>(name)
-
-    protected fun double(name: String) = field<Double>(name)
-
-    protected fun boolean(name: String) = field<Boolean>(name)
-
-    protected inline fun <reified E : Enum<*>> enumeration(name: String) = FieldPath(
-        name = name,
-        parent = this,
-        propertyType = E::class.java
-    )
-
     companion object {
 
         /**
@@ -162,21 +136,6 @@ open class ModelPath<ModelType : Model>(
             return path ?: throw ModelException.PropertyPathNotFound(clazz.simpleName)
         }
     }
-}
-
-/**
- * Represents a scalar (i.e. data type) of a model property.
- */
-class FieldPath<Type : Any>(
-    private val name: String,
-    private val parent: PropertyPath? = null,
-    val propertyType: Class<Type>
-) : PropertyPath {
-
-    override fun getMetadata() = PropertyPathMetadata(
-        name = name,
-        parent = parent
-    )
 }
 
 /**

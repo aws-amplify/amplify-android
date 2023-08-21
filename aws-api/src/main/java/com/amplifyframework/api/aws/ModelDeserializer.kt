@@ -43,7 +43,7 @@ class ModelDeserializer(private val responseGson: Gson) : JsonDeserializer<Model
                     name to parentIdentifiers[idx]
                 }.toMap()
 
-                val lazyList = ApiLazyListModel.createLazy(lazyFieldModelSchema.modelClass, queryKeys)
+                val lazyList = LazyListHelper.createLazy(lazyFieldModelSchema.modelClass, queryKeys)
 
                 fieldToUpdate.isAccessible = true
                 fieldToUpdate.set(parent, lazyList)

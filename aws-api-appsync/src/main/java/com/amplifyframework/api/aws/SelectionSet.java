@@ -23,12 +23,12 @@ import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.graphql.Operation;
+import com.amplifyframework.api.graphql.PaginatedResult;
 import com.amplifyframework.api.graphql.QueryType;
 import com.amplifyframework.core.model.AuthRule;
 import com.amplifyframework.core.model.AuthStrategy;
 import com.amplifyframework.core.model.CustomTypeField;
 import com.amplifyframework.core.model.CustomTypeSchema;
-import com.amplifyframework.core.model.LazyList;
 import com.amplifyframework.core.model.LazyModel;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelAssociation;
@@ -315,7 +315,7 @@ public final class SelectionSet {
             for (Field field : FieldFinder.findModelFieldsIn(clazz)) {
                 String fieldName = field.getName();
                 if (schema.getAssociations().containsKey(fieldName)) {
-                    if (LazyList.class.isAssignableFrom(field.getType())) {
+                    if (PaginatedResult.class.isAssignableFrom(field.getType())) {
                         continue;
                     } else if (List.class.isAssignableFrom(field.getType())) {
                         if (depth >= 1) {

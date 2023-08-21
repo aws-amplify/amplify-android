@@ -24,7 +24,6 @@ import com.amplifyframework.api.graphql.PaginatedResult
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.core.NullableConsumer
-import com.amplifyframework.core.model.LazyList
 import com.amplifyframework.core.model.LazyModel
 import com.amplifyframework.core.model.Model
 import kotlin.coroutines.resume
@@ -118,72 +117,15 @@ class ApiLazyModel<M : Model> private constructor(
     }
 }
 
-@InternalAmplifyApi
-class ApiLazyListModel<M : Model> private constructor(
-    private val clazz: Class<M>,
-    keyMap: Map<String, Any>,
-    preloadedValue: MutableList<M>? = null
-) : LazyList<M> {
-    private var isPreloaded = preloadedValue != null
-    private var value: MutableList<M> = preloadedValue ?: mutableListOf()
-    private var paginatedResult: PaginatedResult<M>? = null
-    private val queryPredicate = AppSyncLazyQueryPredicate<M>().createPredicate(clazz, keyMap)
-
-    override fun getItems(): List<M> {
-        return value
-    }
-
-    override suspend fun getNextPage(): List<M> {
-        if (!hasNextPage()) {
-            return emptyList()
-        }
-        val request = createGraphQLRequest()
-        paginatedResult = query(request).data
-        val nextPageOfItems = paginatedResult!!.items.toList()
-        value.addAll(nextPageOfItems)
-        return nextPageOfItems
-    }
-
-    override fun getNextPage(onSuccess: Consumer<List<M>>, onError: Consumer<AmplifyException>) {
-        if (!hasNextPage()) {
-            onSuccess.accept(emptyList())
-            return
-        }
-        val onQuerySuccess = Consumer<GraphQLResponse<PaginatedResult<M>>> {
-            paginatedResult = it.data
-            val nextPageOfItems = paginatedResult!!.items.toList()
-            value.addAll(nextPageOfItems)
-            onSuccess.accept(nextPageOfItems)
-        }
-        val onApiFailure = Consumer<ApiException> { onError.accept(it) }
-        val request = createGraphQLRequest()
-        Amplify.API.query(request, onQuerySuccess, onApiFailure)
-    }
-
-    override fun hasNextPage(): Boolean {
-        return !isPreloaded && paginatedResult?.hasNextResult() ?: true
-    }
-
-    private fun createGraphQLRequest(): GraphQLRequest<PaginatedResult<M>> {
-        return if (paginatedResult != null) {
-            paginatedResult!!.requestForNextResult
-        } else {
-            AppSyncGraphQLRequestFactory.buildQuery(
-                clazz,
-                queryPredicate
-            )
-        }
-    }
+internal class LazyListHelper {
 
     companion object {
         @JvmStatic
         fun <M : Model> createPreloaded(
-            clazz: Class<M>,
-            keyMap: Map<String, Any>,
             value: List<M>
 
-        ): ApiLazyListModel<M> {
-            return ApiLazyListModel(clazz, keyMap, value.toMutableList())
+        ): PaginatedResult<M> {
+            return PaginatedResult(value, null)
         }
 
         @JvmStatic
@@ -191,8 +133,12 @@ class ApiLazyListModel<M : Model> private constructor(
             clazz: Class<M>,
             keyMap: Map<String, Any>
 
-        ): ApiLazyListModel<M> {
-            return ApiLazyListModel(clazz, keyMap)
+        ): PaginatedResult<M> {
+            val request: GraphQLRequest<PaginatedResult<M>> = AppSyncGraphQLRequestFactory.buildQuery(
+                clazz,
+                AppSyncLazyQueryPredicate<M>().createPredicate(clazz, keyMap)
+            )
+            return PaginatedResult(emptyList(), request)
         }
     }
 }

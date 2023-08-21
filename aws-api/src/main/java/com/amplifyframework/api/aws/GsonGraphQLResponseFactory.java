@@ -174,7 +174,7 @@ final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
 
         private PaginatedResult<Object> buildPaginatedResult(Iterable<Object> items, JsonElement nextTokenElement) {
             GraphQLRequest<PaginatedResult<Object>> requestForNextPage = null;
-            if (nextTokenElement.isJsonPrimitive()) {
+            if (nextTokenElement != null && nextTokenElement.isJsonPrimitive()) {
                 String nextToken = nextTokenElement.getAsJsonPrimitive().getAsString();
                 try {
                     if (request instanceof AppSyncGraphQLRequest) {

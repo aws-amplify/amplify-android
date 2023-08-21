@@ -21,6 +21,7 @@ import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.api.graphql.PaginatedResult;
 import com.amplifyframework.core.model.annotations.BelongsTo;
 import com.amplifyframework.core.model.annotations.HasMany;
 import com.amplifyframework.core.model.annotations.HasOne;
@@ -234,7 +235,7 @@ public final class ModelSchema {
                     .isEnum(Enum.class.isAssignableFrom(field.getType()))
                     .isModel(Model.class.isAssignableFrom(field.getType()))
                     .isLazyModel(LazyModel.class.isAssignableFrom(field.getType()))
-                    .isLazyList(LazyList.class.isAssignableFrom(field.getType()))
+                    .isLazyList(PaginatedResult.class.isAssignableFrom(field.getType()))
                     .authRules(authRules)
                     .build();
         }
