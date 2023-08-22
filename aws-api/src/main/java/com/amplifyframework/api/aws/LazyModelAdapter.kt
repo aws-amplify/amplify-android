@@ -30,7 +30,7 @@ import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
 
 @InternalAmplifyApi
-class LazyModelAdapter<M : Model> : JsonDeserializer<LazyModel<M>>,
+class LazyModelAdapter<M : Model>(val apiName: String?) : JsonDeserializer<LazyModel<M>>,
     JsonSerializer<LazyModel<M>> {
     @Throws(JsonParseException::class)
     override fun deserialize(
@@ -54,7 +54,7 @@ class LazyModelAdapter<M : Model> : JsonDeserializer<LazyModel<M>>,
                 // fallback to create lazy
             }
         }
-        return createLazy(type, predicateKeyMap)
+        return createLazy(type, predicateKeyMap, apiName)
     }
 
     override fun serialize(

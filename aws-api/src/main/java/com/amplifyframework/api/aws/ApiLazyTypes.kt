@@ -35,7 +35,8 @@ class ApiLazyModel<M : Model> private constructor(
     private val clazz: Class<M>,
     private val keyMap: Map<String, Any>,
     private var loadedValue: Boolean = false,
-    private var value: M? = null
+    private var value: M? = null,
+    private val apiName: String? = null
 ) : LazyModel<M> {
 
     private val queryPredicate = AppSyncLazyQueryPredicate<M>().createPredicate(clazz, keyMap)
@@ -58,7 +59,8 @@ class ApiLazyModel<M : Model> private constructor(
                 AppSyncGraphQLRequestFactory.buildQuery<PaginatedResult<M>, M>(
                     clazz,
                     queryPredicate
-                )
+                ),
+                apiName
             ).data.items.iterator()
             value = if (resultIterator.hasNext()) {
                 resultIterator.next()
@@ -101,7 +103,6 @@ class ApiLazyModel<M : Model> private constructor(
             clazz: Class<M>,
             keyMap: Map<String, Any>,
             value: M?
-
         ): ApiLazyModel<M> {
             return ApiLazyModel(clazz, keyMap, true, value)
         }
@@ -109,10 +110,10 @@ class ApiLazyModel<M : Model> private constructor(
         @JvmStatic
         fun <M : Model> createLazy(
             clazz: Class<M>,
-            keyMap: Map<String, Any>
-
+            keyMap: Map<String, Any>,
+            apiName: String?
         ): ApiLazyModel<M> {
-            return ApiLazyModel(clazz, keyMap)
+            return ApiLazyModel(clazz, keyMap, apiName = apiName)
         }
     }
 }
@@ -147,12 +148,22 @@ internal class LazyListHelper {
  Duplicating the query Kotlin Facade method so we aren't pulling in Kotlin Core
  */
 @Throws(ApiException::class)
-private suspend fun <R> query(request: GraphQLRequest<R>): GraphQLResponse<R> {
+private suspend fun <R> query(request: GraphQLRequest<R>, apiName: String?):
+        GraphQLResponse<R> {
     return suspendCoroutine { continuation ->
-        Amplify.API.query(
-            request,
-            { continuation.resume(it) },
-            { continuation.resumeWithException(it) }
-        )
+        if (apiName != null) {
+            Amplify.API.query(
+                apiName,
+                request,
+                { continuation.resume(it) },
+                { continuation.resumeWithException(it) }
+            )
+        } else {
+            Amplify.API.query(
+                request,
+                { continuation.resume(it) },
+                { continuation.resumeWithException(it) }
+            )
+        }
     }
 }

@@ -23,7 +23,6 @@ import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.aws.auth.ApiRequestDecoratorFactory;
 import com.amplifyframework.api.aws.auth.RequestDecorator;
-import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.Amplify;
@@ -50,7 +49,7 @@ import okhttp3.ResponseBody;
  * this is used for a LIST query vs. a GET query or most mutations.
  * @param <R> Casted type of GraphQL result data
  */
-public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
+public final class AppSyncGraphQLOperation<R> extends AWSGraphQLOperation<R> {
     private static final Logger LOG = Amplify.Logging.logger(CategoryType.API, "amplify:aws-api");
     private static final String CONTENT_TYPE = "application/json";
     private static final int START_OF_CLIENT_ERROR_CODE = 400;
@@ -70,7 +69,7 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
      * @param builder operation builder instance
      */
     private AppSyncGraphQLOperation(@NonNull Builder<R> builder) {
-        super(builder.request, builder.responseFactory);
+        super(builder.request, builder.responseFactory, builder.apiName);
         this.endpoint = Objects.requireNonNull(builder.endpoint);
         this.client = Objects.requireNonNull(builder.client);
         this.apiRequestDecoratorFactory = Objects.requireNonNull(builder.apiRequestDecoratorFactory);
@@ -176,6 +175,7 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
         private Consumer<GraphQLResponse<R>> onResponse;
         private Consumer<ApiException> onFailure;
         private ExecutorService executorService;
+        private String apiName;
 
         Builder<R> endpoint(@NonNull String endpoint) {
             this.endpoint = Objects.requireNonNull(endpoint);
@@ -214,6 +214,11 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
 
         Builder<R> executorService(@NonNull ExecutorService executorService) {
             this.executorService = executorService;
+            return this;
+        }
+
+        Builder<R> apiName(String apiName) {
+            this.apiName = apiName;
             return this;
         }
 

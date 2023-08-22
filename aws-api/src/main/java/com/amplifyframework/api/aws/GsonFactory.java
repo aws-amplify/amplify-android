@@ -16,8 +16,6 @@
 package com.amplifyframework.api.aws;
 
 import com.amplifyframework.api.graphql.GsonResponseAdapters;
-import com.amplifyframework.core.model.LazyModel;
-import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.query.predicate.GsonPredicateAdapters;
 import com.amplifyframework.core.model.temporal.GsonTemporalAdapters;
 import com.amplifyframework.core.model.types.GsonJavaTypeAdapters;
@@ -56,7 +54,6 @@ final class GsonFactory {
         ModelWithMetadataAdapter.register(builder);
         SerializedModelAdapter.register(builder);
         SerializedCustomTypeAdapter.register(builder);
-        builder.registerTypeAdapter(LazyModel.class, new LazyModelAdapter<Model>());
         builder.serializeNulls();
         return builder.create();
     }

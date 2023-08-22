@@ -194,7 +194,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
                         apiWebsocketUpgradeClientConfigurators.get(apiName);
                 final SubscriptionEndpoint subscriptionEndpoint =
                     new SubscriptionEndpoint(apiConfiguration, websocketUpgradeConfigurator, gqlResponseFactory,
-                            subscriptionAuthorizer);
+                            subscriptionAuthorizer, apiName);
                 clientDetails = new ClientDetails(apiConfiguration,
                                                   okHttpClientBuilder.build(),
                                                   subscriptionEndpoint,
@@ -625,6 +625,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             // If it gets here, we know that the request is an AppSyncGraphQLRequest because
             // getAuthModeStrategyType checks for that, so we can safely cast the graphQLRequest.
             return MutiAuthSubscriptionOperation.<R>builder()
+                                                .apiName(apiName)
                                                 .subscriptionEndpoint(clientDetails.getSubscriptionEndpoint())
                                                 .graphQlRequest((AppSyncGraphQLRequest<R>) graphQLRequest)
                                                 .responseFactory(gqlResponseFactory)
@@ -648,6 +649,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         // than passing in the requestDecorator and having to handle that in there. We can always refactor this.
         GraphQLRequest<R> authDecoratedRequest = requestDecorator.decorate(graphQLRequest, authType);
         return SubscriptionOperation.<R>builder()
+            .apiName(apiName)
             .subscriptionEndpoint(clientDetails.getSubscriptionEndpoint())
             .graphQlRequest(authDecoratedRequest)
             .responseFactory(gqlResponseFactory)
@@ -679,6 +681,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         AuthModeStrategyType authModeStrategyType = getAuthModeStrategyType(graphQLRequest);
         if (AuthModeStrategyType.MULTIAUTH.equals(authModeStrategyType)) {
             return MultiAuthAppSyncGraphQLOperation.<R>builder()
+                .apiName(apiName)
                 .endpoint(clientDetails.getApiConfiguration().getEndpoint())
                 .client(clientDetails.getOkHttpClient())
                 .request(graphQLRequest)
@@ -691,6 +694,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         }
         // Not multiauth, so just return the default operation.
         return AppSyncGraphQLOperation.<R>builder()
+            .apiName(apiName)
             .endpoint(clientDetails.getApiConfiguration().getEndpoint())
             .client(clientDetails.getOkHttpClient())
             .request(graphQLRequest)

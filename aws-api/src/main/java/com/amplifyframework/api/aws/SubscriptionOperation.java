@@ -32,7 +32,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-final class SubscriptionOperation<T> extends GraphQLOperation<T> {
+final class SubscriptionOperation<T> extends AWSGraphQLOperation<T> {
     private static final Logger LOG = Amplify.Logging.logger(CategoryType.API, "amplify:aws-api");
 
     private final SubscriptionEndpoint subscriptionEndpoint;
@@ -48,7 +48,7 @@ final class SubscriptionOperation<T> extends GraphQLOperation<T> {
     private Future<?> subscriptionFuture;
 
     private SubscriptionOperation(Builder<T> builder) {
-        super(builder.graphQlRequest, builder.responseFactory);
+        super(builder.graphQlRequest, builder.responseFactory, builder.apiName);
         this.subscriptionEndpoint = builder.subscriptionEndpoint;
         this.onSubscriptionStart = builder.onSubscriptionStart;
         this.onNextItem = builder.onNextItem;
@@ -121,7 +121,7 @@ final class SubscriptionOperation<T> extends GraphQLOperation<T> {
         private Consumer<ApiException> onSubscriptionError;
         private Action onSubscriptionComplete;
         private AuthorizationType authorizationType;
-
+        private String apiName;
         @NonNull
         public Builder<T> subscriptionEndpoint(@NonNull SubscriptionEndpoint subscriptionEndpoint) {
             this.subscriptionEndpoint = Objects.requireNonNull(subscriptionEndpoint);
@@ -173,6 +173,12 @@ final class SubscriptionOperation<T> extends GraphQLOperation<T> {
         @NonNull
         public Builder<T> authorizationType(AuthorizationType authorizationType) {
             this.authorizationType = authorizationType;
+            return this;
+        }
+
+        @NonNull
+        public Builder<T> apiName(String apiName) {
+            this.apiName = apiName;
             return this;
         }
 
