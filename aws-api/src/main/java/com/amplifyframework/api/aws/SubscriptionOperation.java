@@ -18,7 +18,6 @@ package com.amplifyframework.api.aws;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.api.ApiException;
-import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.Action;
@@ -122,6 +121,7 @@ final class SubscriptionOperation<T> extends AWSGraphQLOperation<T> {
         private Action onSubscriptionComplete;
         private AuthorizationType authorizationType;
         private String apiName;
+
         @NonNull
         public Builder<T> subscriptionEndpoint(@NonNull SubscriptionEndpoint subscriptionEndpoint) {
             this.subscriptionEndpoint = Objects.requireNonNull(subscriptionEndpoint);

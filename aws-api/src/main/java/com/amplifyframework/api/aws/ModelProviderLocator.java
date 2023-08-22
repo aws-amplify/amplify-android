@@ -19,7 +19,6 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.core.model.ModelProvider;
-import com.amplifyframework.datastore.DataStoreException;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;

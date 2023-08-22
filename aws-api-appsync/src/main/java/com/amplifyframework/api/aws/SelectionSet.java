@@ -16,7 +16,6 @@
 package com.amplifyframework.api.aws;
 
 import android.text.TextUtils;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
@@ -287,12 +286,17 @@ public final class SelectionSet {
          * 
          * @param clazz          Class from which to build selection set
          * @param depth          Number of children deep to explore
-         * @param primaryKeyOnly
-         * @return Selection Set
+         * @param primaryKeyOnly if keys should only be included
+         * @return SelectionSet for given class
          * @throws AmplifyException On failure to build selection set
          */
         @SuppressWarnings("unchecked") // Cast to Class<Model>
-        private Set<SelectionSet> getModelFields(Class<? extends Model> clazz, int depth, Operation operation, Boolean primaryKeyOnly)
+        private Set<SelectionSet> getModelFields(
+                Class<? extends Model> clazz,
+                int depth,
+                Operation operation,
+                Boolean primaryKeyOnly
+        )
                 throws AmplifyException {
             if (depth < 0) {
                 return new HashSet<>();
@@ -303,7 +307,9 @@ public final class SelectionSet {
 
             if (
                     (depth == 0
-                    && (LeafSerializationBehavior.JUST_ID.equals(requestOptions.leafSerializationBehavior()) || primaryKeyOnly)
+                    && (LeafSerializationBehavior.JUST_ID.equals(
+                            requestOptions.leafSerializationBehavior()
+                    ) || primaryKeyOnly)
                     && operation != QueryType.SYNC)
             ) {
                 for (String s : schema.getPrimaryIndexFields()) {

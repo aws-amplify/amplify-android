@@ -26,7 +26,7 @@ import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 
 /**
- * A Base AWS GraphQLOperation that also takes an apiName to allow LazyModel support
+ * A Base AWS GraphQLOperation that also takes an apiName to allow LazyModel support.
  * @param <R> The type of data contained in the GraphQLResponse.
  */
 @InternalAmplifyApi
@@ -38,6 +38,7 @@ public abstract class AWSGraphQLOperation<R> extends GraphQLOperation<R> {
      *
      * @param graphQLRequest  A GraphQL request
      * @param responseFactory an implementation of ResponseFactory
+     * @param apiName to use
      */
     public AWSGraphQLOperation(
             @NonNull GraphQLRequest<R> graphQLRequest,
@@ -49,7 +50,7 @@ public abstract class AWSGraphQLOperation<R> extends GraphQLOperation<R> {
     }
 
     @Override
-    protected GraphQLResponse<R> wrapResponse(String jsonResponse) throws ApiException {
+    protected final GraphQLResponse<R> wrapResponse(String jsonResponse) throws ApiException {
         return buildResponse(jsonResponse);
     }
 
@@ -57,14 +58,14 @@ public abstract class AWSGraphQLOperation<R> extends GraphQLOperation<R> {
     // apiName, we had to stop using the default GraphQLResponse.Factory buildResponse method
     // as there was no place to inject api name for adding to LazyModel
     private GraphQLResponse<R> buildResponse(String jsonResponse) throws ApiException {
-        if (!(responseFactory instanceof GsonGraphQLResponseFactory)) {
+        if (!(getResponseFactory() instanceof GsonGraphQLResponseFactory)) {
             throw new ApiException("Amplify encountered an error while deserializing an object. " +
                     "GraphQLResponse.Factory was not of type GsonGraphQLResponseFactory",
                     AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION);
         }
 
         try {
-            return ((GsonGraphQLResponseFactory) responseFactory)
+            return ((GsonGraphQLResponseFactory) getResponseFactory())
                     .buildResponse(getRequest(), jsonResponse, apiName);
         } catch (ClassCastException cce) {
             throw new ApiException("Amplify encountered an error while deserializing an object",

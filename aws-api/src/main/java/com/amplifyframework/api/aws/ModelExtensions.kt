@@ -5,7 +5,7 @@ import com.amplifyframework.core.model.ModelIdentifier
 import java.io.Serializable
 
 fun Model.getSortedIdentifiers(): List<Serializable> {
-    return when(val identifier = resolveIdentifier()) {
+    return when (val identifier = resolveIdentifier()) {
         is ModelIdentifier<*> -> { listOf(identifier.key()) + identifier.sortedKeys() }
         else -> listOf(identifier.toString())
     }

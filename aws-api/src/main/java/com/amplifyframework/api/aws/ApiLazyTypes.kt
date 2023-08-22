@@ -149,7 +149,7 @@ internal class LazyListHelper {
  */
 @Throws(ApiException::class)
 private suspend fun <R> query(request: GraphQLRequest<R>, apiName: String?):
-        GraphQLResponse<R> {
+    GraphQLResponse<R> {
     return suspendCoroutine { continuation ->
         if (apiName != null) {
             Amplify.API.query(

@@ -31,6 +31,9 @@ public final class ApiGraphQLRequestOptions implements GraphQLRequestOptions {
 
     private int maxDepth = DEFAULT_MAX_DEPTH;
 
+    /**
+     * Public constructor to create ApiGraphQLRequestOptions.
+     */
     public ApiGraphQLRequestOptions() {}
 
     ApiGraphQLRequestOptions(int maxDepth) {

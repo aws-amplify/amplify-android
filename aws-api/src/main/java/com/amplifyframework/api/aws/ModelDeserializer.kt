@@ -24,11 +24,10 @@ class ModelDeserializer(private val responseGson: Gson) : JsonDeserializer<Model
 
         parentModelSchema.fields.filter { it.value.isLazyList }.map { fieldMap ->
             val fieldToUpdate = parent.javaClass.getDeclaredField(fieldMap.key)
-            fieldToUpdate.isAccessible= true
+            fieldToUpdate.isAccessible = true
             if (fieldToUpdate.get(parent) == null) {
                 val lazyField = fieldMap.value
                 val lazyFieldModelSchema = SchemaRegistry.instance().getModelSchemaForModelClass(lazyField.targetType)
-
 
                 val lazyFieldTargetNames = lazyFieldModelSchema
                     .associations

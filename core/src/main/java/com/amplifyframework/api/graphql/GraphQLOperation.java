@@ -26,7 +26,9 @@ import com.amplifyframework.api.ApiOperation;
  * @param <R> The type of data contained in the GraphQLResponse.
  */
 public abstract class GraphQLOperation<R> extends ApiOperation<GraphQLRequest<R>> {
-    protected final GraphQLResponse.Factory responseFactory;
+
+    // responseFactory used to parse responses
+    private final GraphQLResponse.Factory responseFactory;
 
     /**
      * Constructs a new instance of a GraphQLOperation.
@@ -55,5 +57,13 @@ public abstract class GraphQLOperation<R> extends ApiOperation<GraphQLRequest<R>
             throw new ApiException("Amplify encountered an error while deserializing an object",
                     AmplifyException.TODO_RECOVERY_SUGGESTION);
         }
+    }
+
+    /**
+     * Provides the GraphQLResponse.Factory for extending methods.
+     * @return responseFactory provided
+     */
+    protected final GraphQLResponse.Factory getResponseFactory() {
+        return responseFactory;
     }
 }

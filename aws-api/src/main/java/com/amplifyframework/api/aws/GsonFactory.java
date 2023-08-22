@@ -22,6 +22,7 @@ import com.amplifyframework.core.model.types.GsonJavaTypeAdapters;
 import com.amplifyframework.datastore.appsync.ModelWithMetadataAdapter;
 import com.amplifyframework.datastore.appsync.SerializedCustomTypeAdapter;
 import com.amplifyframework.datastore.appsync.SerializedModelAdapter;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 

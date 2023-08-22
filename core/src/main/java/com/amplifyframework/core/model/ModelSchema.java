@@ -214,8 +214,8 @@ public final class ModelSchema {
             final String fieldName = field.getName();
             final Class<?> fieldType;
             if (field.getType() == LazyModel.class && field.getGenericType()
-                    instanceof ParameterizedType){
-                ParameterizedType pType = (ParameterizedType)field.getGenericType() ;
+                    instanceof ParameterizedType) {
+                ParameterizedType pType = (ParameterizedType) field.getGenericType();
                 fieldType = (Class<?>) pType.getActualTypeArguments()[0];
             } else {
                 fieldType = field.getType();

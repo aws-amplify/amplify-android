@@ -237,10 +237,11 @@ public class GraphQLRequestHelper {
             if (association == null) {
                 result.put(fieldName, fieldValue);
             } else if (association.isOwner()) {
-                if (
-                        (fieldValue == null || (modelField.isLazyModel() && underlyingFieldValue == null && identifiersIfLazyModel.isEmpty()))
-                                && MutationType.CREATE.equals(type)
-                ) {
+                if ((fieldValue == null ||
+                        (modelField.isLazyModel() &&
+                                underlyingFieldValue == null &&
+                                identifiersIfLazyModel.isEmpty())) &&
+                        MutationType.CREATE.equals(type)) {
                     // Do not set null values on associations for create mutations.
                 } else if (schema.getVersion() >= 1 && association.getTargetNames() != null
                         && association.getTargetNames().length > 0) {
@@ -270,9 +271,12 @@ public class GraphQLRequestHelper {
             }
         } else if ((modelField.isModel() || modelField.isLazyModel()) && underlyingFieldValue instanceof Model) {
             if (((Model) underlyingFieldValue).resolveIdentifier() instanceof ModelIdentifier<?>) {
-                final ModelIdentifier<?> primaryKey = (ModelIdentifier<?>) ((Model) underlyingFieldValue).resolveIdentifier();
-                ListIterator<String> targetNames = Arrays.asList(association.getTargetNames()).listIterator();
-                Iterator<? extends Serializable> sortedKeys = primaryKey.sortedKeys().listIterator();
+                final ModelIdentifier<?> primaryKey =
+                        (ModelIdentifier<?>) ((Model) underlyingFieldValue).resolveIdentifier();
+                ListIterator<String> targetNames =
+                        Arrays.asList(association.getTargetNames()).listIterator();
+                Iterator<? extends Serializable> sortedKeys =
+                        primaryKey.sortedKeys().listIterator();
 
                 result.put(targetNames.next(), primaryKey.key());
 
@@ -285,17 +289,24 @@ public class GraphQLRequestHelper {
                 if (serializedSchema != null &&
                         serializedSchema.getPrimaryIndexFields().size() > 1) {
 
-                    ListIterator<String> primaryKeyFieldsIterator = serializedSchema.getPrimaryIndexFields()
+                    ListIterator<String> primaryKeyFieldsIterator =
+                            serializedSchema.getPrimaryIndexFields()
                             .listIterator();
                     for (String targetName : association.getTargetNames()) {
                         result.put(targetName, serializedModel.getSerializedData()
                                 .get(primaryKeyFieldsIterator.next()));
                     }
                 } else {
-                    result.put(association.getTargetNames()[0], ((Model) underlyingFieldValue).resolveIdentifier().toString());
+                    result.put(
+                            association.getTargetNames()[0],
+                            ((Model) underlyingFieldValue).resolveIdentifier().toString()
+                    );
                 }
             } else {
-                result.put(association.getTargetNames()[0], ((Model) underlyingFieldValue).resolveIdentifier().toString());
+                result.put(
+                        association.getTargetNames()[0],
+                        ((Model) underlyingFieldValue).resolveIdentifier().toString()
+                );
             }
         } else if (modelField.isLazyModel() && fieldValue instanceof LazyModel) {
             Map<String, Object> identifiers = ((LazyModel<?>) fieldValue).getIdentifier();
@@ -327,7 +338,12 @@ public class GraphQLRequestHelper {
         }
     }
 
-    private static Object extractFieldValue(String fieldName, Model instance, ModelSchema schema, Boolean extractLazyValue)
+    private static Object extractFieldValue(
+            String fieldName,
+            Model instance,
+            ModelSchema schema,
+            Boolean extractLazyValue
+    )
             throws AmplifyException {
         if (instance instanceof SerializedModel) {
             SerializedModel serializedModel = (SerializedModel) instance;

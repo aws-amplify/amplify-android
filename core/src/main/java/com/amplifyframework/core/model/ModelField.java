@@ -180,7 +180,6 @@ public final class ModelField {
         return isLazyList;
     }
 
-
     /**
      * Returns true if the field's target type is CustomType.
      *
