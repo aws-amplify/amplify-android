@@ -1,6 +1,7 @@
 package com.amplifyframework.api.aws
 
 import com.amplifyframework.core.model.Model
+import com.amplifyframework.core.model.ModelSchema
 import com.amplifyframework.core.model.SchemaRegistry
 import com.google.gson.Gson
 import com.google.gson.JsonDeserializationContext
@@ -20,7 +21,7 @@ class ModelDeserializer(private val responseGson: Gson) : JsonDeserializer<Model
     override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext): Model {
         val parent = responseGson.fromJson<Model>(json, typeOfT)
         val parentType = (typeOfT as Class<*>).simpleName
-        val parentModelSchema = SchemaRegistry.instance().getModelSchemaForModelClass(parentType)
+        val parentModelSchema = ModelSchema.fromModelClass(parent.javaClass)
 
         parentModelSchema.fields.filter { it.value.isLazyList }.map { fieldMap ->
             val fieldToUpdate = parent.javaClass.getDeclaredField(fieldMap.key)
