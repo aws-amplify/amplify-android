@@ -39,6 +39,8 @@ dependencies {
     testImplementation(libs.test.jsonassert)
     testImplementation(libs.test.junit)
     testImplementation(libs.test.mockito.core)
+    testImplementation(libs.test.mockk)
+    testImplementation(libs.test.kotest.assertions)
     testImplementation(libs.test.mockwebserver)
     testImplementation(libs.rxjava)
     testImplementation(libs.test.robolectric)
