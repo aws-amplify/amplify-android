@@ -20,6 +20,8 @@ import android.content.Context
 import android.content.Intent
 import androidx.annotation.VisibleForTesting
 import com.amplifyframework.AmplifyException
+import com.amplifyframework.annotations.InternalAmplifyApi
+import com.amplifyframework.auth.AWSCognitoAuthMetadataType
 import com.amplifyframework.auth.AuthCodeDeliveryDetails
 import com.amplifyframework.auth.AuthDevice
 import com.amplifyframework.auth.AuthException
@@ -55,6 +57,7 @@ import com.amplifyframework.auth.result.AuthUpdateAttributeResult
 import com.amplifyframework.core.Action
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
+import com.amplifyframework.core.category.CategoryType
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
@@ -75,7 +78,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
     }
 
     private val logger =
-        Amplify.Logging.forNamespace(AWS_COGNITO_AUTH_LOG_NAMESPACE.format(this::class.java.simpleName))
+        Amplify.Logging.logger(CategoryType.AUTH, AWS_COGNITO_AUTH_LOG_NAMESPACE.format(this::class.java.simpleName))
 
     @VisibleForTesting
     internal lateinit var realPlugin: RealAWSCognitoAuthPlugin
@@ -89,6 +92,18 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         pluginScope.launch {
             consumeEach { it.join() }
         }
+    }
+
+    private lateinit var pluginConfigurationJSON: JSONObject
+
+    @InternalAmplifyApi
+    fun getPluginConfiguration(): JSONObject {
+        return pluginConfigurationJSON
+    }
+
+    @InternalAmplifyApi
+    fun addToUserAgent(type: AWSCognitoAuthMetadataType, value: String) {
+        realPlugin.addToUserAgent(type, value)
     }
 
     private fun Exception.toAuthException(): AuthException {
@@ -105,6 +120,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
 
     @Throws(AmplifyException::class)
     override fun configure(pluginConfiguration: JSONObject, context: Context) {
+        pluginConfigurationJSON = pluginConfiguration
         try {
             val configuration = AuthConfiguration.fromJson(pluginConfiguration)
             val credentialStoreClient = CredentialStoreClient(configuration, context, logger)
@@ -125,6 +141,8 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
                 authStateMachine,
                 logger
             )
+
+            blockQueueChannelWhileConfiguring()
         } catch (exception: Exception) {
             throw ConfigurationException(
                 "Failed to configure AWSCognitoAuthPlugin.",
@@ -132,6 +150,16 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
                 exception
             )
         }
+    }
+
+    // Auth configuration is an async process. Wait until the state machine is in a settled state before attempting
+    // to process any customer calls
+    private fun blockQueueChannelWhileConfiguring() {
+        queueChannel.trySend(
+            pluginScope.launch(start = CoroutineStart.LAZY) {
+                realPlugin.suspendWhileConfiguring()
+            }
+        )
     }
 
     override fun signUp(

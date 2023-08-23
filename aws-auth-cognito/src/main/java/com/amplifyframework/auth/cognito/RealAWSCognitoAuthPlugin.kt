@@ -34,6 +34,8 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.VerifyUserAttribute
 import aws.sdk.kotlin.services.cognitoidentityprovider.resendConfirmationCode
 import aws.sdk.kotlin.services.cognitoidentityprovider.signUp
 import com.amplifyframework.AmplifyException
+import com.amplifyframework.annotations.InternalAmplifyApi
+import com.amplifyframework.auth.AWSCognitoAuthMetadataType
 import com.amplifyframework.auth.AWSCredentials
 import com.amplifyframework.auth.AWSTemporaryCredentials
 import com.amplifyframework.auth.AuthCategoryBehavior
@@ -79,6 +81,8 @@ import com.amplifyframework.auth.cognito.result.RevokeTokenError
 import com.amplifyframework.auth.cognito.usecases.ResetPasswordUseCase
 import com.amplifyframework.auth.exceptions.ConfigurationException
 import com.amplifyframework.auth.exceptions.InvalidStateException
+import com.amplifyframework.auth.exceptions.NotAuthorizedException
+import com.amplifyframework.auth.exceptions.ServiceException
 import com.amplifyframework.auth.exceptions.SessionExpiredException
 import com.amplifyframework.auth.exceptions.SignedOutException
 import com.amplifyframework.auth.exceptions.UnknownException
@@ -165,6 +169,11 @@ internal class RealAWSCognitoAuthPlugin(
 
     fun escapeHatch() = authEnvironment.cognitoAuthService
 
+    @InternalAmplifyApi
+    fun addToUserAgent(type: AWSCognitoAuthMetadataType, value: String) {
+        authEnvironment.cognitoAuthService.customUserAgentPairs[type.key] = value
+    }
+
     @WorkerThread
     @Throws(AmplifyException::class)
     fun initialize() {
@@ -186,6 +195,22 @@ internal class RealAWSCognitoAuthPlugin(
             throw AmplifyException(
                 "Failed to configure auth plugin.",
                 "Make sure your amplifyconfiguration.json is valid"
+            )
+        }
+    }
+
+    internal suspend fun suspendWhileConfiguring() {
+        return suspendCoroutine { continuation ->
+            val token = StateChangeListenerToken()
+            authStateMachine.listen(
+                token,
+                {
+                    if (it is AuthState.Configured || it is AuthState.Error) {
+                        authStateMachine.cancel(token)
+                        continuation.resume(Unit)
+                    }
+                },
+                { }
             )
         }
     }
@@ -588,11 +613,17 @@ internal class RealAWSCognitoAuthPlugin(
         authStateMachine.getCurrentState { authState ->
             val authNState = authState.authNState
             val signInState = (authNState as? AuthenticationState.SigningIn)?.signInState
-            when ((signInState as? SignInState.ResolvingChallenge)?.challengeState) {
-                is SignInChallengeState.WaitingForAnswer -> {
-                    _confirmSignIn(challengeResponse, options, onSuccess, onError)
+            if (signInState is SignInState.ResolvingChallenge) {
+                when (signInState.challengeState) {
+                    is SignInChallengeState.WaitingForAnswer, is SignInChallengeState.Error -> {
+                        _confirmSignIn(challengeResponse, options, onSuccess, onError)
+                    }
+                    else -> {
+                        onError.accept(InvalidStateException())
+                    }
                 }
-                else -> onError.accept(InvalidStateException())
+            } else {
+                onError.accept(InvalidStateException())
             }
         }
     }
@@ -610,7 +641,6 @@ internal class RealAWSCognitoAuthPlugin(
                 val authNState = authState.authNState
                 val authZState = authState.authZState
                 val signInState = (authNState as? AuthenticationState.SigningIn)?.signInState
-                val challengeState = (signInState as? SignInState.ResolvingChallenge)?.challengeState
                 when {
                     authNState is AuthenticationState.SignedIn &&
                         authZState is AuthorizationState.SessionEstablished -> {
@@ -625,21 +655,56 @@ internal class RealAWSCognitoAuthPlugin(
                     signInState is SignInState.Error -> {
                         authStateMachine.cancel(token)
                         onError.accept(
-                            CognitoAuthExceptionConverter.lookup(signInState.exception, "Confirm Sign in failed.")
+                            CognitoAuthExceptionConverter.lookup(
+                                signInState.exception, "Confirm Sign in failed."
+                            )
                         )
                     }
+                    signInState is SignInState.ResolvingChallenge &&
+                        signInState.challengeState is SignInChallengeState.WaitingForAnswer &&
+                        (signInState.challengeState as SignInChallengeState.WaitingForAnswer).hasNewResponse -> {
+                        authStateMachine.cancel(token)
+                        val signInChallengeState = signInState.challengeState as SignInChallengeState.WaitingForAnswer
+                        var signInStep = AuthSignInStep.CONFIRM_SIGN_IN_WITH_CUSTOM_CHALLENGE
+                        if (signInChallengeState.challenge.challengeName == "SMS_MFA") {
+                            signInStep = AuthSignInStep.CONFIRM_SIGN_IN_WITH_SMS_MFA_CODE
+                        } else if (signInChallengeState.challenge.challengeName == "NEW_PASSWORD_REQUIRED") {
+                            signInStep = AuthSignInStep.CONFIRM_SIGN_IN_WITH_NEW_PASSWORD
+                        }
+
+                        val authSignInResult = AuthSignInResult(
+                            false,
+                            AuthNextSignInStep(signInStep, signInChallengeState.challenge.parameters ?: mapOf(), null)
+                        )
+                        onSuccess.accept(authSignInResult)
+                        (signInState.challengeState as SignInChallengeState.WaitingForAnswer).hasNewResponse = false
+                    }
+
+                    signInState is SignInState.ResolvingChallenge &&
+                        signInState.challengeState is SignInChallengeState.Error &&
+                        (signInState.challengeState as SignInChallengeState.Error).hasNewResponse -> {
+                        authStateMachine.cancel(token)
+                        onError.accept(
+                            CognitoAuthExceptionConverter.lookup(
+                                (
+                                    signInState.challengeState as SignInChallengeState.Error
+                                    ).exception,
+                                "Confirm Sign in failed."
+                            )
+                        )
+                        (signInState.challengeState as SignInChallengeState.Error).hasNewResponse = false
+                    }
                 }
-            },
-            {
-                val awsCognitoConfirmSignInOptions = options as? AWSCognitoAuthConfirmSignInOptions
-                val event = SignInChallengeEvent(
-                    SignInChallengeEvent.EventType.VerifyChallengeAnswer(
-                        challengeResponse,
-                        awsCognitoConfirmSignInOptions?.metadata ?: mapOf()
-                    )
+            }, {
+            val awsCognitoConfirmSignInOptions = options as? AWSCognitoAuthConfirmSignInOptions
+            val event = SignInChallengeEvent(
+                SignInChallengeEvent.EventType.VerifyChallengeAnswer(
+                    challengeResponse,
+                    awsCognitoConfirmSignInOptions?.metadata ?: mapOf()
                 )
-                authStateMachine.send(event)
-            }
+            )
+            authStateMachine.send(event)
+        }
         )
     }
 
@@ -815,7 +880,8 @@ internal class RealAWSCognitoAuthPlugin(
             when (val authNState = it.authNState) {
                 is AuthenticationState.SigningOut -> {
                     (authNState.signOutState as? SignOutState.SigningOutHostedUI)?.let { signOutState ->
-                        if (callbackUri == null && signOutState.signedInData.signInMethod !=
+                        if (callbackUri == null && !signOutState.bypassCancel &&
+                            signOutState.signedInData.signInMethod !=
                             SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.UNKNOWN)
                         ) {
                             authStateMachine.send(
@@ -991,9 +1057,15 @@ internal class RealAWSCognitoAuthPlugin(
                                         onSuccess.accept(AmplifyCredential.Empty.getCognitoSession(error.exception))
                                         sendHubEvent(AuthChannelEventName.SESSION_EXPIRED.toString())
                                     }
+                                    is ServiceException -> {
+                                        onSuccess.accept(AmplifyCredential.Empty.getCognitoSession(error.exception))
+                                    }
+                                    is NotAuthorizedException -> {
+                                        onSuccess.accept(AmplifyCredential.Empty.getCognitoSession(error.exception))
+                                    }
                                     else -> {
                                         val errorResult = UnknownException("Fetch auth session failed.", error)
-                                        onSuccess.accept(error.amplifyCredential.getCognitoSession(errorResult))
+                                        onSuccess.accept(AmplifyCredential.Empty.getCognitoSession(errorResult))
                                     }
                                 }
                             }
@@ -1716,40 +1788,35 @@ internal class RealAWSCognitoAuthPlugin(
 
     private fun _deleteUser(token: String, onSuccess: Action, onError: Consumer<AuthException>) {
         val listenerToken = StateChangeListenerToken()
+        var deleteUserException: Exception? = null
         authStateMachine.listen(
             listenerToken,
             { authState ->
-                when (val authNState = authState.authNState) {
-                    is AuthenticationState.SignedOut -> {
-                        val event = DeleteUserEvent(DeleteUserEvent.EventType.SignOutDeletedUser())
-                        authStateMachine.send(event)
-                    }
-                    is AuthenticationState.Error -> {
-                        val event = DeleteUserEvent(DeleteUserEvent.EventType.ThrowError(authNState.exception))
-                        authStateMachine.send(event)
-                    }
-                    else -> {
-                        // No-op
-                    }
-                }
-                val authZState = authState.authZState as? AuthorizationState.DeletingUser
-                when (val deleteUserState = authZState?.deleteUserState) {
-                    is DeleteUserState.UserDeleted -> {
-                        onSuccess.call()
-                        sendHubEvent(AuthChannelEventName.USER_DELETED.toString())
-                        authStateMachine.cancel(listenerToken)
-                    }
-                    is DeleteUserState.Error -> {
-                        authStateMachine.cancel(listenerToken)
-                        onError.accept(
-                            CognitoAuthExceptionConverter.lookup(
-                                deleteUserState.exception,
-                                "Request to delete user may have failed. Please check exception stack"
+                if (authState is AuthState.Configured) {
+                    val (authNState, authZState) = authState
+                    val exception = deleteUserException
+                    when {
+                        authZState is AuthorizationState.DeletingUser &&
+                            authZState.deleteUserState is DeleteUserState.Error -> {
+                            deleteUserException = authZState.deleteUserState.exception
+                        }
+                        authNState is AuthenticationState.SignedOut && authZState is AuthorizationState.Configured -> {
+                            sendHubEvent(AuthChannelEventName.USER_DELETED.toString())
+                            authStateMachine.cancel(listenerToken)
+                            onSuccess.call()
+                        }
+                        authZState is AuthorizationState.SessionEstablished && exception != null -> {
+                            authStateMachine.cancel(listenerToken)
+                            onError.accept(
+                                CognitoAuthExceptionConverter.lookup(
+                                    exception,
+                                    "Request to delete user may have failed. Please check exception stack"
+                                )
                             )
-                        )
-                    }
-                    else -> {
-                        // No-op
+                        }
+                        else -> {
+                            // No - op
+                        }
                     }
                 }
             },

@@ -21,6 +21,7 @@ import androidx.test.core.app.ApplicationProvider;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
+import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.SchemaRegistry;
 import com.amplifyframework.datastore.DataStoreConfiguration;
@@ -114,7 +115,7 @@ public final class ModelUpgradeSQLiteInstrumentedTest {
                                     .syncInterval(2L, TimeUnit.MINUTES)
                                     .build());
                 } catch (DataStoreException exception) {
-                    Amplify.Logging.forNamespace("amplify:aws-datastore").warn(exception.toString());
+                    Amplify.Logging.logger(CategoryType.DATASTORE, "amplify:aws-datastore").warn(exception.toString());
                 }
             }
         );
@@ -152,7 +153,7 @@ public final class ModelUpgradeSQLiteInstrumentedTest {
                             .syncInterval(2L, TimeUnit.MINUTES)
                             .build());
                 } catch (DataStoreException exception) {
-                    Amplify.Logging.forNamespace("amplify:aws-datastore").warn(exception.toString());
+                    Amplify.Logging.logger(CategoryType.DATASTORE, "amplify:aws-datastore").warn(exception.toString());
                 }
             }
         );

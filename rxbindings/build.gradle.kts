@@ -15,6 +15,7 @@
 
 plugins {
     id("com.android.library")
+    id("kotlin-android")
 }
 
 apply(from = rootProject.file("configuration/checkstyle.gradle"))
@@ -24,15 +25,16 @@ group = properties["POM_GROUP"].toString()
 
 dependencies {
     implementation(project(":core"))
-    implementation(dependency.androidx.annotation)
-    implementation(dependency.androidx.appcompat)
-    implementation(dependency.rxjava)
+    implementation(project(":common-core"))
+    implementation(libs.androidx.annotation)
+    implementation(libs.androidx.appcompat)
+    implementation(libs.rxjava)
 
     testImplementation(project(":testutils"))
-    testImplementation(testDependency.junit)
-    testImplementation(testDependency.mockito)
-    testImplementation(testDependency.mockk)
-    testImplementation(testDependency.androidx.test.core)
-    testImplementation(testDependency.robolectric)
+    testImplementation(libs.test.junit)
+    testImplementation(libs.test.mockito.core)
+    testImplementation(libs.test.mockk)
+    testImplementation(libs.test.androidx.core)
+    testImplementation(libs.test.robolectric)
     testImplementation(project(":rxbindings"))
 }

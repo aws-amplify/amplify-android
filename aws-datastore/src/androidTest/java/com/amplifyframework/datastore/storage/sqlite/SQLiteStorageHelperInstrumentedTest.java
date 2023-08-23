@@ -20,6 +20,7 @@ import android.database.sqlite.SQLiteDatabase;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.datastore.StrictMode;
 import com.amplifyframework.logging.Logger;
 
@@ -41,7 +42,7 @@ import static org.junit.Assert.assertTrue;
  * Test the functions of {@link SQLiteStorageHelper}.
  */
 public class SQLiteStorageHelperInstrumentedTest {
-    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore:test");
+    private static final Logger LOG = Amplify.Logging.logger(CategoryType.DATASTORE, "amplify:aws-datastore:test");
 
     private SQLiteStorageHelper sqLiteStorageHelper;
     private SQLiteDatabase sqLiteDatabase;

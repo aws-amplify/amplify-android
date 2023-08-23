@@ -52,7 +52,7 @@ class StorageStressTest {
         private val uploadOptions = StorageUploadFileOptions.builder().accessLevel(TESTING_ACCESS_LEVEL).build()
         private val downloadOptions = StorageDownloadFileOptions.builder().accessLevel(TESTING_ACCESS_LEVEL).build()
         private const val TRANSFER_TIMEOUT = 10 * 60_000L // 10 minutes
-        private const val STRESS_TEST_TIMEOUT = 60_000L
+        private const val STRESS_TEST_TIMEOUT = 10 * 60_000L
 
         /**
          * Initialize mobile client and configure the storage.
@@ -71,33 +71,6 @@ class StorageStressTest {
             // Get a handle to storage
             storageCategory = TestStorageCategory.create(context, R.raw.amplifyconfiguration)
             synchronousStorage = SynchronousStorage.delegatingTo(storageCategory)
-
-            // Upload to PUBLIC for consistency
-            val uploadOptions = StorageUploadFileOptions.builder()
-                .accessLevel(TESTING_ACCESS_LEVEL)
-                .build()
-
-            // Upload 25 small test files
-            var key: String
-            smallFiles = mutableListOf()
-            val uploadLatch = CountDownLatch(50)
-            repeat(50) {
-                key = "${SMALL_FILE_NAME}${UUID.randomUUID()}"
-                val smallFile = RandomTempFile(key, SMALL_FILE_SIZE)
-                synchronousStorage.uploadFile(key, smallFile, uploadOptions, TRANSFER_TIMEOUT)
-                uploadLatch.countDown()
-                Log.i("STORAGE_STRESS_TEST", "@BeforeClass Small Uploads Left: ${uploadLatch.count}")
-                smallFiles.add(smallFile)
-            }
-            uploadLatch.await(STRESS_TEST_TIMEOUT, TimeUnit.MILLISECONDS)
-
-            Sleep.milliseconds(1000)
-            // Upload 1 large test file
-            Log.i("STORAGE_STRESS_TEST", "@BeforeClass Large Upload Started")
-            key = "${LARGE_FILE_NAME}${UUID.randomUUID()}"
-            largeFile = RandomTempFile(key, LARGE_FILE_SIZE)
-            synchronousStorage.uploadFile(key, largeFile, uploadOptions, TRANSFER_TIMEOUT)
-            Log.i("STORAGE_STRESS_TEST", "@BeforeClass Large Upload Complete")
         }
     }
 
@@ -106,12 +79,35 @@ class StorageStressTest {
      */
     @Test
     fun testDownloadManyFiles() {
+        // Upload to PUBLIC for consistency
+        val uploadOptions = StorageUploadFileOptions.builder()
+            .accessLevel(TESTING_ACCESS_LEVEL)
+            .build()
+
+        // Upload 25 small test files
+        var key: String
+        smallFiles = mutableListOf()
+        val uploadLatch = CountDownLatch(50)
+        repeat(50) {
+            key = "${SMALL_FILE_NAME}${UUID.randomUUID()}"
+            val smallFile = RandomTempFile(key, SMALL_FILE_SIZE)
+            synchronousStorage.uploadFile(key, smallFile, uploadOptions, TRANSFER_TIMEOUT)
+            uploadLatch.countDown()
+            Log.i("STORAGE_STRESS_TEST", "@BeforeClass Small Uploads Left: ${uploadLatch.count}")
+            smallFiles.add(smallFile)
+        }
+        uploadLatch.await(STRESS_TEST_TIMEOUT, TimeUnit.MILLISECONDS)
+
+        Sleep.milliseconds(1000)
+        // Upload 1 large test file
+        Log.i("STORAGE_STRESS_TEST", "@BeforeClass Large Upload Started")
         val downloadLatch = CountDownLatch(50)
         smallFiles.forEach {
             Thread {
                 val downloadFile = RandomTempFile()
                 synchronousStorage.downloadFile(it.name, downloadFile, downloadOptions, TRANSFER_TIMEOUT)
                 FileAssert.assertEquals(it, downloadFile)
+
                 downloadLatch.countDown()
                 Log.i("STORAGE_STRESS_TEST", "Downloads Left: ${downloadLatch.count}")
             }.start()
@@ -153,6 +149,13 @@ class StorageStressTest {
      */
     @Test
     fun testDownloadLargeFile() {
+        val uploadOptions = StorageUploadFileOptions.builder()
+            .accessLevel(TESTING_ACCESS_LEVEL)
+            .build()
+        val key = "${LARGE_FILE_NAME}${UUID.randomUUID()}"
+        largeFile = RandomTempFile(key, LARGE_FILE_SIZE)
+        synchronousStorage.uploadFile(key, largeFile, uploadOptions, TRANSFER_TIMEOUT)
+        Log.i("STORAGE_STRESS_TEST", "@BeforeClass Large Upload Complete")
         val downloadLatch = CountDownLatch(1)
         val downloadFile = RandomTempFile()
         synchronousStorage.downloadFile(largeFile.name, downloadFile, downloadOptions, TRANSFER_TIMEOUT)

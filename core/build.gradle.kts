@@ -30,38 +30,37 @@ android {
 }
 
 dependencies {
-    implementation(dependency.androidx.v4support)
-    implementation(dependency.androidx.annotation)
-    implementation(dependency.androidx.nav.fragment)
-    implementation(dependency.androidx.nav.ui)
-    implementation(dependency.kotlin.serializationJson)
+    api(project(":annotations"))
+    implementation(libs.androidx.v4support)
+    implementation(libs.androidx.annotation)
+    implementation(libs.androidx.nav.fragment)
+    implementation(libs.androidx.nav.ui)
+    implementation(libs.androidx.security)
+    implementation(libs.kotlin.serializationJson)
 
-    implementation(dependency.aws.credentials)
+    api(project(":common-core"))
 
     testImplementation(project(":aws-api-appsync"))
     // Used to reference Temporal types in tests.
     testImplementation(project(":testmodels"))
-    testImplementation(project(":testutils")) {
-        isTransitive = false
-    }
-    testImplementation(testDependency.junit)
-    testImplementation(testDependency.mockito)
-    testImplementation(testDependency.robolectric)
-    testImplementation(dependency.rxjava)
-    testImplementation(testDependency.androidx.test.core)
-    testImplementation(testDependency.jsonassert)
-    testImplementation(dependency.gson)
+    testImplementation(project(":testutils"))
+    testImplementation(libs.test.junit)
+    testImplementation(libs.test.mockito.core)
+    testImplementation(libs.test.mockito.inline)
+    testImplementation(libs.test.robolectric)
+    testImplementation(libs.rxjava)
+    testImplementation(libs.test.androidx.core)
+    testImplementation(libs.test.jsonassert)
+    testImplementation(libs.gson)
 
-    androidTestImplementation(project(":testutils")) {
-        isTransitive = false
-    }
-    androidTestImplementation(dependency.androidx.annotation)
-    androidTestImplementation(testDependency.androidx.test.core)
-    androidTestImplementation(testDependency.androidx.test.runner)
-    androidTestImplementation(testDependency.androidx.test.junit)
-    androidTestImplementation(testDependency.androidx.test.espresso)
-    androidTestImplementation(testDependency.androidx.test.navigation)
-    androidTestImplementation(testDependency.androidx.test.fragment)
+    androidTestImplementation(project(":testutils"))
+    androidTestImplementation(libs.androidx.annotation)
+    androidTestImplementation(libs.test.androidx.core)
+    androidTestImplementation(libs.test.androidx.runner)
+    androidTestImplementation(libs.test.androidx.junit)
+    androidTestImplementation(libs.test.androidx.espresso)
+    androidTestImplementation(libs.test.androidx.navigation)
+    androidTestImplementation(libs.test.androidx.fragment)
 }
 
 afterEvaluate {

@@ -76,9 +76,7 @@ class MapViewStressTest {
                 signOutFromCognito() // first sign out to ensure we are in clean state
                 signInWithCognito()
             }
-            val result = block()
-            rule.scenario.onActivity { signOutFromCognito() }
-            result
+            block()
         }
     }
 

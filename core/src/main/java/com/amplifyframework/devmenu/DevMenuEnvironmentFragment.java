@@ -37,7 +37,7 @@ import com.amplifyframework.logging.Logger;
  * to display the environment information on the developer menu.
  */
 public final class DevMenuEnvironmentFragment extends Fragment {
-    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:devmenu");
+    private static final Logger LOG = Amplify.Logging.logger("amplify:devmenu");
 
     /**
      * Required empty public constructor.

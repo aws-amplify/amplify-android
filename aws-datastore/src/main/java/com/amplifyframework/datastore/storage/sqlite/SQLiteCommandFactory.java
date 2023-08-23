@@ -191,7 +191,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
             Iterator<SQLiteColumn> columnsIterator = Objects.requireNonNull(columns.get(tableAlias)).iterator();
             while (columnsIterator.hasNext()) {
                 final SQLiteColumn column = columnsIterator.next();
-                String columnName = column.getQuotedColumnName().replace(column.getTableName(), tableAlias);
+                String columnName = column.getQuotedColumnName().replaceFirst(column.getTableName(), tableAlias);
                 selectColumns.append(columnName);
                 // Alias columns with a unique alias to avoid duplicate column names or alias names
                 String columnAlias = column.getAliasedName()
@@ -542,8 +542,8 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
             }
 
             // Reference the foreign key and primary key using the corresponding table's alias.
-            String foreignKeyName = foreignKey.getQuotedColumnName().replace(table.getName(), tableAlias);
-            String ownedTablePrimaryKeyName = ownedTable.getPrimaryKeyColumnName().replace(ownedTableName,
+            String foreignKeyName = foreignKey.getQuotedColumnName().replaceFirst(table.getName(), tableAlias);
+            String ownedTablePrimaryKeyName = ownedTable.getPrimaryKeyColumnName().replaceFirst(ownedTableName,
                     ownedTableAlias);
             joinStatement.append(SqlKeyword.ON)
                 .append(SqlKeyword.DELIMITER)

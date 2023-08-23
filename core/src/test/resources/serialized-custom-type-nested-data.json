@@ -1,0 +1,27 @@
+{
+  "contact": {
+    "phone": {
+      "areaCode": "415",
+      "countryCode": "1"
+    },
+    "email": "tester@testing.com"
+  },
+  "name": "Tester Testing",
+  "mailingAddresses": [
+    {
+      "postalCode": "123456",
+      "state": "CA",
+      "line1": "222 Somewhere far"
+    },
+    {
+      "postalCode": "123456",
+      "state": "WA",
+      "line2": "Apt 3",
+      "line1": "444 Somewhere close"
+    }
+  ],
+  "tags": [
+    "string1",
+    "string2"
+  ]
+}

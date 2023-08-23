@@ -14,6 +14,7 @@
  */
 
 plugins {
+    id("org.jetbrains.kotlin.plugin.serialization") version "1.8.10"
     id("com.android.library")
     id("kotlin-android")
 }
@@ -25,22 +26,28 @@ group = properties["POM_GROUP"].toString()
 
 dependencies {
     implementation(project(":core"))
-    implementation(project(":aws-auth-cognito"))
-    implementation(dependency.androidx.appcompat)
-    implementation(dependency.aws.comprehend)
-    implementation(dependency.aws.polly)
-    implementation(dependency.aws.rekognition)
-    implementation(dependency.aws.textract)
-    implementation(dependency.aws.translate)
+    implementation(project(":aws-core"))
+    implementation(libs.androidx.appcompat)
+    implementation(libs.aws.comprehend)
+    implementation(libs.aws.polly)
+    implementation(libs.aws.rekognition)
+    implementation(libs.aws.textract)
+    implementation(libs.aws.translate)
+    implementation(libs.kotlin.serializationJson)
+    implementation(libs.okhttp)
 
     testImplementation(project(":testutils"))
-    testImplementation(testDependency.junit)
-    testImplementation(testDependency.robolectric)
-    testImplementation(dependency.rxjava)
+    testImplementation(libs.test.junit)
+    testImplementation(libs.test.robolectric)
+    testImplementation(libs.rxjava)
+    testImplementation(libs.test.mockwebserver)
+    testImplementation(libs.test.mockk)
+    testImplementation(libs.test.kotlin.coroutines)
 
     androidTestImplementation(project(":testutils"))
-    androidTestImplementation(testDependency.androidx.test.core)
-    androidTestImplementation(testDependency.androidx.test.runner)
-    androidTestImplementation(testDependency.mockk.android)
-    androidTestImplementation(dependency.rxjava)
+    androidTestImplementation(project(":aws-auth-cognito"))
+    androidTestImplementation(libs.test.androidx.core)
+    androidTestImplementation(libs.test.androidx.runner)
+    androidTestImplementation(libs.test.mockk.android)
+    androidTestImplementation(libs.rxjava)
 }

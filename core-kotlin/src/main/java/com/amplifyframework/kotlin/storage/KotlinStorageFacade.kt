@@ -23,6 +23,7 @@ import com.amplifyframework.storage.operation.StorageTransferOperation
 import com.amplifyframework.storage.options.StorageDownloadFileOptions
 import com.amplifyframework.storage.options.StorageGetUrlOptions
 import com.amplifyframework.storage.options.StorageListOptions
+import com.amplifyframework.storage.options.StoragePagedListOptions
 import com.amplifyframework.storage.options.StorageRemoveOptions
 import com.amplifyframework.storage.options.StorageUploadFileOptions
 import com.amplifyframework.storage.options.StorageUploadInputStreamOptions
@@ -147,7 +148,20 @@ class KotlinStorageFacade(private val delegate: Delegate = Amplify.Storage) : St
     }
 
     @Throws(StorageException::class)
+    @Deprecated("use the paged list api instead.", replaceWith = ReplaceWith("list(String, StoragePagedListOptions)"))
     override suspend fun list(path: String, options: StorageListOptions): StorageListResult {
+        return suspendCoroutine { continuation ->
+            delegate.list(
+                path,
+                options,
+                { continuation.resume(it) },
+                { continuation.resumeWithException(it) }
+            )
+        }
+    }
+
+    @Throws(StorageException::class)
+    override suspend fun list(path: String, options: StoragePagedListOptions): StorageListResult {
         return suspendCoroutine { continuation ->
             delegate.list(
                 path,

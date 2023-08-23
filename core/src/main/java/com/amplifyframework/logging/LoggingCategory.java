@@ -15,13 +15,19 @@
 
 package com.amplifyframework.logging;
 
+import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
+import com.amplifyframework.AmplifyException;
+import com.amplifyframework.core.Resources;
 import com.amplifyframework.core.category.Category;
+import com.amplifyframework.core.category.CategoryConfiguration;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.util.Environment;
+
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -64,19 +70,85 @@ public final class LoggingCategory extends Category<LoggingPlugin<?>> implements
 
     @NonNull
     @Override
+    @SuppressWarnings("deprecation")
     public Logger forNamespace(@Nullable String namespace) {
-        Set<LoggingPlugin<?>> loggingPlugins = new HashSet<>(getPlugins());
-        loggingPlugins.add(defaultPlugin);
+        return logger(namespace);
+    }
+
+    @NonNull
+    @Override
+    public Logger logger(@NonNull String namespace) {
+        Set<LoggingPlugin<?>> loggingPlugins = getPluginsWithDefault();
         List<Logger> delegates = new ArrayList<>();
         for (LoggingPlugin<?> plugin : loggingPlugins) {
-            delegates.add(plugin.forNamespace(namespace));
+            delegates.add(plugin.logger(namespace));
         }
         return new BroadcastLogger(delegates);
     }
 
     @NonNull
     @Override
+    public Logger logger(@NonNull CategoryType categoryType, @NonNull String namespace) {
+        Set<LoggingPlugin<?>> loggingPlugins = getPluginsWithDefault();
+        List<Logger> delegates = new ArrayList<>();
+        for (LoggingPlugin<?> plugin : loggingPlugins) {
+            delegates.add(plugin.logger(categoryType, namespace));
+        }
+        return new BroadcastLogger(delegates);
+    }
+
+    @Override
+    public void enable() {
+        Set<LoggingPlugin<?>> loggingPlugins = getPluginsWithDefault();
+        for (LoggingPlugin<?> plugin : loggingPlugins) {
+            plugin.enable();
+        }
+    }
+
+    @Override
+    public void disable() {
+        Set<LoggingPlugin<?>> loggingPlugins = getPluginsWithDefault();
+        for (LoggingPlugin<?> plugin : loggingPlugins) {
+            plugin.disable();
+        }
+    }
+
+    @NonNull
+    @Override
     protected LoggingPlugin<?> getSelectedPlugin() throws IllegalStateException {
         throw new UnsupportedOperationException("Getting the selected logging plugin is not supported.");
+    }
+
+    @Override
+    protected boolean configureFromDefaultConfigFile() {
+        return false;
+    }
+
+    @Override
+    public synchronized void configure(@NonNull CategoryConfiguration configuration, @NonNull Context context)
+        throws AmplifyException {
+        super.configure(configuration, context);
+        JSONObject loggingConfiguration = readConfigFile(context);
+        Set<LoggingPlugin<?>> loggingPlugins = new HashSet<>(getPlugins());
+        loggingPlugins.add(defaultPlugin);
+        for (LoggingPlugin<?> plugin : loggingPlugins) {
+            plugin.configure(loggingConfiguration, context);
+        }
+    }
+
+    private JSONObject readConfigFile(Context context) {
+        try {
+            String configName = "amplifyconfiguration_logging";
+            int resourceId = Resources.getRawResourceId(context, configName);
+            return Resources.readJsonResourceFromId(context, resourceId);
+        } catch (Exception exception) {
+            return null;
+        }
+    }
+
+    private Set<LoggingPlugin<?>> getPluginsWithDefault() {
+        Set<LoggingPlugin<?>> loggingPlugins = new HashSet<>(getPlugins());
+        loggingPlugins.add(defaultPlugin);
+        return loggingPlugins;
     }
 }

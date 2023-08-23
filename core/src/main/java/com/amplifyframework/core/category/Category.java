@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -73,7 +73,7 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
      * @param context An Android Context
      * @throws AmplifyException if already configured
      */
-    public final synchronized void configure(
+    public synchronized void configure(
             @NonNull CategoryConfiguration configuration, @NonNull Context context)
             throws AmplifyException {
         synchronized (state) {
@@ -86,9 +86,11 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
             state.set(State.CONFIGURING);
             try {
                 for (P plugin : getPlugins()) {
-                    String pluginKey = plugin.getPluginKey();
-                    JSONObject pluginConfig = configuration.getPluginConfig(pluginKey);
-                    plugin.configure(pluginConfig != null ? pluginConfig : new JSONObject(), context);
+                    if (configureFromDefaultConfigFile()) {
+                        String pluginKey = plugin.getPluginKey();
+                        JSONObject pluginConfig = configuration.getPluginConfig(pluginKey);
+                        plugin.configure(pluginConfig != null ? pluginConfig : new JSONObject(), context);
+                    }
                 }
                 state.set(State.CONFIGURED);
             } catch (Throwable anyError) {
@@ -107,7 +109,7 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
      */
     @NonNull
     @WorkerThread
-    public final synchronized CategoryInitializationResult initialize(@NonNull Context context) {
+    public synchronized CategoryInitializationResult initialize(@NonNull Context context) {
         final Map<String, InitializationResult> pluginInitializationResults = new HashMap<>();
         if (!State.CONFIGURED.equals(state.get())) {
             for (P plugin : getPlugins()) {
@@ -258,6 +260,16 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     protected synchronized boolean isInitialized() {
         return State.INITIALIZED.equals(state.get());
+    }
+
+    /**
+     * Return whether to configure the plugins using amplifyconfiguration.json.
+     * override this method for categories not configured using the default amplifyconfiguration.json
+     * For e.g., the Logging category
+     * @return whether to configure the plugins using amplifyconfiguration.json
+     */
+    protected boolean configureFromDefaultConfigFile() {
+        return true;
     }
 
     /**

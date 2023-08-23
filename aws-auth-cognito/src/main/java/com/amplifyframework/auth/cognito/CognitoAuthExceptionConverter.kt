@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.ResourceNotFoundExc
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.SoftwareTokenMfaNotFoundException
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.TooManyFailedAttemptsException
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.TooManyRequestsException
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.UserLambdaValidationException
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.UserNotConfirmedException
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.UserNotFoundException
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.UsernameExistsException
@@ -88,6 +89,11 @@ internal class CognitoAuthExceptionConverter {
                     com.amplifyframework.auth.cognito.exceptions.service.TooManyRequestsException(error)
                 is PasswordResetRequiredException ->
                     com.amplifyframework.auth.cognito.exceptions.service.PasswordResetRequiredException(error)
+                is UserLambdaValidationException ->
+                    com.amplifyframework.auth.cognito.exceptions.service.UserLambdaValidationException(
+                        error.message,
+                        error
+                    )
                 else -> UnknownException(fallbackMessage, error)
             }
         }

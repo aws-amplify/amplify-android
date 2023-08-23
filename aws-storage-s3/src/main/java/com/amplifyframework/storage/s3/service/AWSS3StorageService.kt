@@ -18,12 +18,15 @@ package com.amplifyframework.storage.s3.service
 import android.content.Context
 import aws.sdk.kotlin.services.s3.S3Client
 import aws.sdk.kotlin.services.s3.deleteObject
+import aws.sdk.kotlin.services.s3.listObjectsV2
 import aws.sdk.kotlin.services.s3.model.GetObjectRequest
 import aws.sdk.kotlin.services.s3.paginators.listObjectsV2Paginated
-import aws.sdk.kotlin.services.s3.presigners.presign
+import aws.sdk.kotlin.services.s3.presigners.presignGetObject
+import aws.sdk.kotlin.services.s3.withConfig
 import com.amplifyframework.auth.AuthCredentialsProvider
 import com.amplifyframework.storage.ObjectMetadata
 import com.amplifyframework.storage.StorageItem
+import com.amplifyframework.storage.result.StorageListResult
 import com.amplifyframework.storage.s3.transfer.TransferManager
 import com.amplifyframework.storage.s3.transfer.TransferObserver
 import com.amplifyframework.storage.s3.transfer.TransferRecord
@@ -65,12 +68,19 @@ internal class AWSS3StorageService(
      * @return A pre-signed URL
      */
     @OptIn(ExperimentalTime::class)
-    override fun getPresignedUrl(serviceKey: String, expires: Int): URL {
-        val presignUrlRequest = runBlocking {
-            GetObjectRequest {
-                bucket = s3BucketName
-                key = serviceKey
-            }.presign(s3Client.config, expires.seconds)
+    override fun getPresignedUrl(serviceKey: String, expires: Int, useAccelerateEndpoint: Boolean): URL {
+        val presignUrlRequest = s3Client.withConfig {
+            enableAccelerate = useAccelerateEndpoint
+        }.use {
+            runBlocking {
+                it.presignGetObject(
+                    GetObjectRequest {
+                        bucket = s3BucketName
+                        key = serviceKey
+                    },
+                    expires.seconds
+                )
+            }
         }
         return URL(presignUrlRequest.url.toString())
     }
@@ -79,10 +89,22 @@ internal class AWSS3StorageService(
      * Begin downloading a file.
      * @param serviceKey S3 service key
      * @param file Target file
+     * @param useAccelerateEndpoint Flag to use accelerate endpoint
      * @return A transfer observer
      */
-    override fun downloadToFile(transferId: String, serviceKey: String, file: File): TransferObserver {
-        return transferManager.download(transferId, s3BucketName, serviceKey, file)
+    override fun downloadToFile(
+        transferId: String,
+        serviceKey: String,
+        file: File,
+        useAccelerateEndpoint: Boolean
+    ): TransferObserver {
+        return transferManager.download(
+            transferId,
+            s3BucketName,
+            serviceKey,
+            file,
+            useAccelerateEndpoint = useAccelerateEndpoint
+        )
     }
 
     /**
@@ -96,9 +118,17 @@ internal class AWSS3StorageService(
         transferId: String,
         serviceKey: String,
         file: File,
-        metadata: ObjectMetadata
+        metadata: ObjectMetadata,
+        useAccelerateEndpoint: Boolean
     ): TransferObserver {
-        return transferManager.upload(transferId, s3BucketName, serviceKey, file, metadata)
+        return transferManager.upload(
+            transferId,
+            s3BucketName,
+            serviceKey,
+            file,
+            metadata,
+            useAccelerateEndpoint = useAccelerateEndpoint
+        )
     }
 
     /**
@@ -113,10 +143,11 @@ internal class AWSS3StorageService(
         transferId: String,
         serviceKey: String,
         inputStream: InputStream,
-        metadata: ObjectMetadata
+        metadata: ObjectMetadata,
+        useAccelerateEndpoint: Boolean
     ): TransferObserver {
         val uploadOptions = UploadOptions(s3BucketName, metadata)
-        return transferManager.upload(transferId, serviceKey, inputStream, uploadOptions)
+        return transferManager.upload(transferId, serviceKey, inputStream, uploadOptions, useAccelerateEndpoint)
     }
 
     /**
@@ -149,6 +180,34 @@ internal class AWSS3StorageService(
             }
         }
         return items
+    }
+
+    override fun listFiles(path: String, prefix: String, pageSize: Int, nextToken: String?): StorageListResult {
+        return runBlocking {
+            val result = s3Client.listObjectsV2 {
+                this.bucket = s3BucketName
+                this.prefix = path
+                this.maxKeys = pageSize
+                this.continuationToken = nextToken
+            }
+            val items = result.contents?.mapNotNull { value ->
+                val key = value.key
+                val lastModified = value.lastModified
+                val eTag = value.eTag
+                if (key != null && lastModified != null && eTag != null) {
+                    StorageItem(
+                        S3Keys.extractAmplifyKey(key, prefix),
+                        value.size,
+                        Date.from(Instant.ofEpochMilli(lastModified.epochSeconds)),
+                        eTag,
+                        null
+                    )
+                } else {
+                    null
+                }
+            }
+            StorageListResult.fromItems(items, result.nextContinuationToken)
+        }
     }
 
     /**

@@ -18,6 +18,7 @@ package com.amplifyframework.api.aws;
 import android.net.Uri;
 import android.util.Base64;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.AmplifyException;
@@ -28,6 +29,7 @@ import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
+import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.logging.Logger;
 import com.amplifyframework.util.UserAgent;
 
@@ -59,7 +61,7 @@ import okhttp3.WebSocketListener;
  * and multiple GraphQL subscriptions that work on top of it.
  */
 final class SubscriptionEndpoint {
-    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-api");
+    private static final Logger LOG = Amplify.Logging.logger(CategoryType.API, "amplify:aws-api");
     private static final int CONNECTION_ACKNOWLEDGEMENT_TIMEOUT = 30 /* seconds */;
     private static final int NORMAL_CLOSURE_STATUS = 1000;
     private static final String UNAUTHORIZED_EXCEPTION = "UnauthorizedException";
@@ -76,19 +78,25 @@ final class SubscriptionEndpoint {
 
     SubscriptionEndpoint(
             @NonNull ApiConfiguration apiConfiguration,
+            @Nullable OkHttpConfigurator configurator,
             @NonNull GraphQLResponse.Factory responseFactory,
             @NonNull SubscriptionAuthorizer authorizer
-    ) throws ApiException {
+    ) {
         this.apiConfiguration = Objects.requireNonNull(apiConfiguration);
         this.subscriptions = new ConcurrentHashMap<>();
         this.responseFactory = Objects.requireNonNull(responseFactory);
         this.authorizer = Objects.requireNonNull(authorizer);
         this.timeoutWatchdog = new TimeoutWatchdog();
         this.pendingSubscriptionIds = Collections.synchronizedSet(new HashSet<>());
-        this.okHttpClient = new OkHttpClient.Builder()
-            .addNetworkInterceptor(UserAgentInterceptor.using(UserAgent::string))
-            .retryOnConnectionFailure(true)
-            .build();
+
+        OkHttpClient.Builder okHttpClientBuilder = new OkHttpClient.Builder()
+                .retryOnConnectionFailure(true);
+
+        if (configurator != null) {
+            configurator.applyConfiguration(okHttpClientBuilder);
+        }
+
+        this.okHttpClient = okHttpClientBuilder.build();
     }
 
     synchronized <T> void requestSubscription(
@@ -126,6 +134,7 @@ final class SubscriptionEndpoint {
                 webSocket = okHttpClient.newWebSocket(new Request.Builder()
                     .url(buildConnectionRequestUrl(authType))
                     .addHeader("Sec-WebSocket-Protocol", "graphql-ws")
+                    .header("User-Agent", UserAgent.string())
                     .build(), webSocketListener);
             } catch (ApiException apiException) {
                 onSubscriptionError.accept(apiException);
@@ -332,7 +341,7 @@ final class SubscriptionEndpoint {
         return new Uri.Builder()
             .scheme("wss")
             .authority(authority)
-            .appendPath(path)
+            .path(path)
             .appendQueryParameter("header", Base64.encodeToString(rawHeader, Base64.DEFAULT))
             .appendQueryParameter("payload", "e30=")
             .build()
@@ -490,7 +499,6 @@ final class SubscriptionEndpoint {
     final class AmplifyWebSocketListener extends WebSocketListener {
         private final CountDownLatch connectionResponse;
         private final AtomicReference<EndpointStatus> endpointStatus;
-        private OkHttpClient okHttpClient;
 
         AmplifyWebSocketListener() {
             this(new CountDownLatch(1));

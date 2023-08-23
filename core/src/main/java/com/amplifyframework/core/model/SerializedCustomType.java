@@ -19,6 +19,9 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
 
+import com.amplifyframework.core.Amplify;
+import com.amplifyframework.core.category.CategoryType;
+import com.amplifyframework.logging.Logger;
 import com.amplifyframework.util.Immutable;
 
 import java.util.ArrayList;
@@ -32,7 +35,11 @@ import java.util.Objects;
  * Needs to be paired with an {@link CustomTypeSchema} to understand the structure.
  */
 public final class SerializedCustomType {
+    private static final Logger LOGGER = Amplify.Logging.logger(
+            CategoryType.DATASTORE, SerializedCustomType.class.getName());
+
     private final Map<String, Object> serializedData;
+    private Map<String, Object> flatSerializedData;
     private final CustomTypeSchema customTypeSchema;
 
     private SerializedCustomType(Map<String, Object> serializedData, CustomTypeSchema customTypeSchema) {
@@ -60,6 +67,10 @@ public final class SerializedCustomType {
      */
     public static Map<String, Object> parseSerializedData(Map<String, Object> serializedData,
                                                           String customTypeName, SchemaRegistry schemaRegistry) {
+        LOGGER.verbose(String.format(
+                "parseSerializedData: serializedData=%s, customTypeName=%s",
+                serializedData, customTypeName));
+
         Map<String, Object> result = new HashMap<>();
         CustomTypeSchema customTypeSchema = schemaRegistry.getCustomTypeSchemaForCustomTypeClass(customTypeName);
 
@@ -78,10 +89,14 @@ public final class SerializedCustomType {
                 continue;
             }
 
-            if (field.isCustomType()) {
-                CustomTypeSchema fieldCustomTypeSchema =
-                        schemaRegistry.getCustomTypeSchemaForCustomTypeClass(field.getTargetType());
-                if (field.isArray()) {
+            boolean isCustomType = field.isCustomType();
+            boolean isArray = field.isArray();
+            LOGGER.verbose(String.format(
+                    "Deserializing field %s: isCustomType=%s, isArray=%s",
+                    key, isCustomType, isArray));
+
+            if (isCustomType) {
+                if (isArray) {
                     @SuppressWarnings("unchecked")
                     List<Map<String, Object>> fieldListData = (List<Map<String, Object>>) fieldValue;
                     List<SerializedCustomType> fieldList = new ArrayList<>();
@@ -112,7 +127,6 @@ public final class SerializedCustomType {
                 result.put(key, fieldValue);
             }
         }
-
         return result;
     }
 
@@ -124,6 +138,56 @@ public final class SerializedCustomType {
     @NonNull
     public Map<String, Object> getSerializedData() {
         return serializedData;
+    }
+
+    /**
+     * Gets the serialized data that doesn't contain SerializedCustomType structure.
+     *
+     * @return Serialized data
+     */
+    @SuppressWarnings("unchecked")
+    @NonNull
+    public Map<String, Object> getFlatSerializedData() {
+        if (flatSerializedData != null) {
+            return flatSerializedData;
+        }
+
+        LOGGER.verbose(String.format("getFlatSerializedData: serializedData=%s", serializedData));
+
+        flatSerializedData = new HashMap<>();
+
+        for (Map.Entry<String, Object> entry : serializedData.entrySet()) {
+            CustomTypeField field = customTypeSchema.getFields().get(entry.getKey());
+
+            if (field == null) {
+                continue;
+            }
+
+            Object fieldValue = entry.getValue();
+
+            boolean isCustomType = field.isCustomType();
+            boolean isArray = field.isArray();
+            LOGGER.verbose(String.format(
+                    "Flattening field %s: isCustomType=%s, isArray=%s",
+                    field.getName(), isCustomType, isArray));
+
+            if (field.isCustomType() && fieldValue != null) {
+                if (field.isArray()) {
+                    ArrayList<SerializedCustomType> items = (ArrayList<SerializedCustomType>) fieldValue;
+                    ArrayList<Map<String, Object>> flattenItems = new ArrayList<>();
+                    for (SerializedCustomType item : items) {
+                        flattenItems.add(item.getFlatSerializedData());
+                    }
+                    flatSerializedData.put(entry.getKey(), flattenItems);
+                } else {
+                    flatSerializedData.put(entry.getKey(), ((SerializedCustomType) fieldValue).getFlatSerializedData());
+                }
+            } else {
+                flatSerializedData.put(entry.getKey(), fieldValue);
+            }
+        }
+
+        return flatSerializedData;
     }
 
     /**

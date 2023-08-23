@@ -18,11 +18,13 @@ import android.content.Context
 import androidx.work.WorkerParameters
 import aws.sdk.kotlin.services.s3.S3Client
 import aws.sdk.kotlin.services.s3.uploadPart
-import aws.smithy.kotlin.runtime.content.ByteStream
+import aws.sdk.kotlin.services.s3.withConfig
+import aws.smithy.kotlin.runtime.content.asByteStream
 import com.amplifyframework.storage.TransferState
 import com.amplifyframework.storage.s3.transfer.PartUploadProgressListener
 import com.amplifyframework.storage.s3.transfer.TransferDB
 import com.amplifyframework.storage.s3.transfer.TransferStatusUpdater
+import com.amplifyframework.storage.s3.transfer.UploadProgressListenerInterceptor
 import java.io.File
 
 /**
@@ -47,15 +49,16 @@ internal class PartUploadTransferWorker(
         transferStatusUpdater.updateTransferState(transferRecord.mainUploadId, TransferState.IN_PROGRESS)
         multiPartUploadId = inputData.keyValueMap[MULTI_PART_UPLOAD_ID] as String
         partUploadProgressListener = PartUploadProgressListener(transferRecord, transferStatusUpdater)
-        return s3.uploadPart {
+        return s3.withConfig {
+            interceptors += UploadProgressListenerInterceptor(partUploadProgressListener)
+            enableAccelerate = transferRecord.useAccelerateEndpoint == 1
+        }.uploadPart {
             bucket = transferRecord.bucketName
             key = transferRecord.key
             uploadId = multiPartUploadId
-            body = ByteStream.readWithProgressUpdates(
-                File(transferRecord.file),
-                transferRecord.fileOffset,
-                transferRecord.bytesTotal,
-                partUploadProgressListener
+            body = File(transferRecord.file).asByteStream(
+                start = transferRecord.fileOffset,
+                transferRecord.fileOffset + transferRecord.bytesTotal - 1
             )
             partNumber = transferRecord.partNumber
         }.let { response ->

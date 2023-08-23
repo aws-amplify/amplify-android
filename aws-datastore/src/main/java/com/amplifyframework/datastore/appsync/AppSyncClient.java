@@ -32,6 +32,7 @@ import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.async.NoOpCancelable;
+import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
@@ -51,7 +52,7 @@ import com.amplifyframework.logging.Logger;
  * assumptions about the structure of data types (unique IDs, versioning information), etc.
  */
 public final class AppSyncClient implements AppSync {
-    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
+    private static final Logger LOG = Amplify.Logging.logger(CategoryType.DATASTORE, "amplify:aws-datastore");
     private final GraphQLBehavior api;
     private final AuthModeStrategyType authModeStrategyType;
 
@@ -110,22 +111,12 @@ public final class AppSyncClient implements AppSync {
             @NonNull Consumer<GraphQLResponse<PaginatedResult<ModelWithMetadata<T>>>> onResponse,
             @NonNull Consumer<DataStoreException> onFailure
     ) {
-        final Consumer<GraphQLResponse<PaginatedResult<ModelWithMetadata<T>>>> responseConsumer = apiQueryResponse -> {
-            if (apiQueryResponse.hasErrors()) {
-                onFailure.accept(new DataStoreException(
-                    "Failure performing sync query to AppSync: " + apiQueryResponse.getErrors().toString(),
-                    AmplifyException.TODO_RECOVERY_SUGGESTION
-                ));
-            } else {
-                onResponse.accept(apiQueryResponse);
-            }
-        };
         final Consumer<ApiException> failureConsumer =
             failure -> onFailure.accept(new DataStoreException(
                         "Failure performing sync query to AppSync.",
                         failure, AmplifyException.TODO_RECOVERY_SUGGESTION));
 
-        final Cancelable cancelable = api.query(request, responseConsumer, failureConsumer);
+        final Cancelable cancelable = api.query(request, onResponse::accept, failureConsumer);
         if (cancelable != null) {
             return cancelable;
         }

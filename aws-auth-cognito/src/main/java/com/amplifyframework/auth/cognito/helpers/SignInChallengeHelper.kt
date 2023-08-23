@@ -96,6 +96,7 @@ internal object SignInChallengeHelper {
         onError: Consumer<AuthException>
     ) {
         val challengeParams = challenge.parameters?.toMutableMap() ?: mapOf()
+
         when (ChallengeNameType.fromValue(challenge.challengeName)) {
             is ChallengeNameType.SmsMfa -> {
                 val deliveryDetails = AuthCodeDeliveryDetails(

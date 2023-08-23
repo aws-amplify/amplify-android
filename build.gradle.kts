@@ -15,6 +15,7 @@
 
 import com.android.build.gradle.LibraryExtension
 import org.jetbrains.dokka.gradle.DokkaTask
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 buildscript {
     repositories {
@@ -27,8 +28,10 @@ buildscript {
         classpath("com.android.tools.build:gradle:7.3.1")
         classpath(kotlin("gradle-plugin", version = "1.7.10"))
         classpath("org.jetbrains.dokka:dokka-gradle-plugin:1.7.10")
+        classpath("com.google.gms:google-services:4.3.15")
         classpath("org.jlleitschuh.gradle:ktlint-gradle:11.0.0")
         classpath("org.gradle:test-retry-gradle-plugin:1.4.1")
+        classpath("org.jetbrains.kotlinx:kover:0.6.1")
     }
 }
 
@@ -62,6 +65,11 @@ tasks.register<Delete>("clean").configure {
     delete(rootProject.buildDir)
 }
 
+val optInAnnotations = listOf(
+    "com.amplifyframework.annotations.InternalApiWarning",
+    "com.amplifyframework.annotations.InternalAmplifyApi"
+)
+
 subprojects {
     apply(plugin = "org.jlleitschuh.gradle.ktlint")
 
@@ -71,7 +79,7 @@ subprojects {
 
     afterEvaluate {
         configureAndroid()
-        apply(from = "../jacoco.gradle")
+        apply(from = "../kover.gradle")
     }
 
     if (!name.contains("test")) {
@@ -93,9 +101,17 @@ subprojects {
 
     tasks.withType<Test>().configureEach {
         retry {
-            maxRetries.set(9)
+            maxRetries.set(1)
             maxFailures.set(100)
             failOnPassedAfterRetry.set(true)
+        }
+    }
+
+    tasks.withType<KotlinCompile> {
+        kotlinOptions {
+            optInAnnotations.forEach {
+                freeCompilerArgs += "-opt-in=$it"
+            }
         }
     }
 }
@@ -112,8 +128,8 @@ fun Project.configureAndroid() {
     }
 
     configure<LibraryExtension> {
-        buildToolsVersion = "30.0.2"
-        compileSdk = 31
+        buildToolsVersion = "30.0.3"
+        compileSdk = 32
 
         defaultConfig {
             minSdk = 24
@@ -153,7 +169,7 @@ fun Project.configureAndroid() {
     }
 
     dependencies {
-        add("coreLibraryDesugaring", dependency.android.desugartools)
+        add("coreLibraryDesugaring", libs.android.desugartools)
     }
 }
 

@@ -31,6 +31,8 @@ public interface Model {
      * Return the ID that is the primary key
      * of a Model.
      *
+     * This API is internal to Amplify and should not be used.
+     *
      * @return the ID that is the primary key of a Model.
      */
     @NonNull
@@ -68,11 +70,10 @@ public interface Model {
             if (resolveIdentifier() instanceof ModelIdentifier) {
                 return ((ModelIdentifier<?>) resolveIdentifier()).getIdentifier();
             } else {
-                return (String) resolveIdentifier();
+                return resolveIdentifier().toString();
             }
         } catch (Exception exception) {
-            throw (new IllegalStateException("Invalid Primary Key, " +
-                   "It should either be of type String or composite Primary Key." + exception));
+            throw (new IllegalStateException("Invalid Primary Key", exception));
         }
     }
 

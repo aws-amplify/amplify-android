@@ -24,7 +24,6 @@ import com.amplifyframework.statemachine.codegen.data.SignedOutData
 import com.amplifyframework.statemachine.codegen.events.AuthEvent
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
-import com.amplifyframework.statemachine.codegen.events.DeleteUserEvent
 import com.amplifyframework.statemachine.codegen.events.SignInChallengeEvent
 import com.amplifyframework.statemachine.codegen.events.SignInEvent
 import com.amplifyframework.statemachine.codegen.events.SignOutEvent
@@ -78,7 +77,6 @@ class StateTransitionTests : StateTransitionTestBase() {
         setupSRPActions()
         setupSignOutActions()
         setupFetchAuthActions()
-        setupDeleteAction()
         setupStateMachine()
         Dispatchers.setMain(mainThreadSurrogate)
     }
@@ -679,58 +677,6 @@ class StateTransitionTests : StateTransitionTestBase() {
             AuthEvent(AuthEvent.EventType.ConfigureAuth(configuration))
         )
 
-        assertTrue { configureLatch.await(5, TimeUnit.SECONDS) }
-        assertTrue { testLatch.await(5, TimeUnit.SECONDS) }
-    }
-
-    @Test
-    fun testDeleteUser() {
-        setupConfigureSignedIn()
-        val configureLatch = CountDownLatch(1)
-        val subscribeLatch = CountDownLatch(1)
-        val testLatch = CountDownLatch(1)
-        val token = StateChangeListenerToken()
-        stateMachine.listen(
-            token,
-            { it ->
-                val authState =
-                    it.takeIf { it is AuthState.Configured && it.authNState is AuthenticationState.SignedIn }
-                authState?.run {
-                    configureLatch.countDown()
-                    stateMachine.send(
-                        DeleteUserEvent(
-                            DeleteUserEvent.EventType.DeleteUser("TOKEN-123")
-                        )
-                    )
-                }
-                val signoutState = it.takeIf { it.authNState is AuthenticationState.SignedOut }
-                signoutState?.run {
-                    stateMachine.send(
-                        DeleteUserEvent(
-                            DeleteUserEvent.EventType.SignOutDeletedUser()
-                        )
-                    )
-                }
-                val deleteUserState = (it.authZState as? AuthorizationState.DeletingUser)?.deleteUserState
-                val userDeletedSuccess = deleteUserState?.takeIf {
-                    it is DeleteUserState.UserDeleted
-                }
-
-                userDeletedSuccess?.run {
-                    stateMachine.cancel(token)
-                    testLatch.countDown()
-                }
-            },
-            {
-                subscribeLatch.countDown()
-            }
-        )
-
-        assertTrue { subscribeLatch.await(5, TimeUnit.SECONDS) }
-
-        stateMachine.send(
-            AuthEvent(AuthEvent.EventType.ConfigureAuth(configuration))
-        )
         assertTrue { configureLatch.await(5, TimeUnit.SECONDS) }
         assertTrue { testLatch.await(5, TimeUnit.SECONDS) }
     }

@@ -48,3 +48,8 @@ type BlogWithCustomHasOne @model {
 type User @model {
   name: String
 }
+
+type Item @model {
+  customKey: String! @primaryKey
+  name: String!
+}

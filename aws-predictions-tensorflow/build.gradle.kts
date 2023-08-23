@@ -15,6 +15,7 @@
 
 plugins {
     id("com.android.library")
+    id("kotlin-android")
 }
 
 apply(from = rootProject.file("configuration/checkstyle.gradle"))
@@ -24,10 +25,11 @@ group = properties["POM_GROUP"].toString()
 
 dependencies {
     implementation(project(":core"))
-    implementation(dependency.androidx.appcompat)
-    implementation(dependency.tensorflow)
+    implementation(project(":aws-core"))
+    implementation(libs.androidx.appcompat)
+    implementation(libs.tensorflow)
 
     testImplementation(project(":testutils"))
-    testImplementation(testDependency.junit)
-    testImplementation(testDependency.mockito)
+    testImplementation(libs.test.junit)
+    testImplementation(libs.test.mockito.core)
 }
