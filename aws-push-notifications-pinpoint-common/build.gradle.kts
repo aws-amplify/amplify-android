@@ -24,30 +24,19 @@ apply(from = rootProject.file("configuration/publishing.gradle"))
 group = properties["POM_GROUP"].toString()
 
 dependencies {
-    val lifecycleVersion = "2.4.1"
-
     implementation(project(":annotations"))
     api(project(":common-core"))
 
-    implementation(dependency.androidx.core.ktx)
-    implementation(dependency.androidx.activity)
-    implementation(dependency.androidx.appcompat)
-    implementation(dependency.androidx.annotation)
-    implementation(dependency.androidx.core)
-    implementation(dependency.firebasemessaging)
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.activity)
+    implementation(libs.androidx.appcompat)
+    implementation(libs.androidx.annotation)
+    implementation(libs.androidx.core)
+    implementation(libs.firebasemessaging)
 
-    //noinspection GradleDependency
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:$lifecycleVersion")
-    //noinspection GradleDependency
-    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycleVersion")
-    //noinspection GradleDependency
-    implementation("androidx.lifecycle:lifecycle-livedata-ktx:$lifecycleVersion")
-    //noinspection GradleDependency
-    implementation(dependency.google.material)
+    testImplementation(libs.test.junit)
+    testImplementation(libs.test.mockk)
 
-    testImplementation(testDependency.junit)
-    testImplementation(testDependency.mockk)
-
-    androidTestImplementation(testDependency.androidx.test.runner)
-    androidTestImplementation(testDependency.androidx.test.junit)
+    androidTestImplementation(libs.test.androidx.runner)
+    androidTestImplementation(libs.test.androidx.junit)
 }

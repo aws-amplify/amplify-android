@@ -36,23 +36,23 @@ dependencies {
     implementation(project(":aws-auth-cognito"))
     implementation(project(":aws-geo-location"))
     implementation(project(":core"))
-    implementation(dependency.aws.signing)
-    implementation(dependency.maplibre.sdk)
-    implementation(dependency.gson) // forces maplibre to pull at least the same gson version as other amplify libs
-    implementation(dependency.maplibre.annotations)
-    implementation(dependency.okhttp)
-    implementation(dependency.kotlin.coroutines)
+    implementation(libs.aws.signing)
+    implementation(libs.maplibre.sdk)
+    implementation(libs.gson) // forces maplibre to pull at least the same gson version as other amplify libs
+    implementation(libs.maplibre.annotations)
+    implementation(libs.okhttp)
+    implementation(libs.kotlin.coroutines)
 
-    implementation(dependency.androidx.lifecycle.runtime)
-    implementation(dependency.google.material)
+    implementation(libs.androidx.lifecycle.runtime)
+    implementation(libs.google.material)
 
-    compileOnly(dependency.aws.location)
+    compileOnly(libs.aws.location)
 
     androidTestImplementation(project(":testutils"))
-    androidTestImplementation(dependency.androidx.appcompat)
-    androidTestImplementation(testDependency.androidx.test.junit)
-    androidTestImplementation(testDependency.androidx.test.core)
-    androidTestImplementation(testDependency.androidx.test.core.ktx)
-    androidTestImplementation(testDependency.androidx.test.runner)
-    androidTestImplementation(dependency.kotlin.coroutines.android)
+    androidTestImplementation(libs.androidx.appcompat)
+    androidTestImplementation(libs.test.androidx.junit)
+    androidTestImplementation(libs.test.androidx.core)
+    androidTestImplementation(libs.test.androidx.core.ktx)
+    androidTestImplementation(libs.test.androidx.runner)
+    androidTestImplementation(libs.kotlin.coroutines.android)
 }

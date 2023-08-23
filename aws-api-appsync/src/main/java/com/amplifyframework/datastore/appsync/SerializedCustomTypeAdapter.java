@@ -15,9 +15,12 @@
 
 package com.amplifyframework.datastore.appsync;
 
+import com.amplifyframework.core.Amplify;
+import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.CustomTypeField;
 import com.amplifyframework.core.model.CustomTypeSchema;
 import com.amplifyframework.core.model.SerializedCustomType;
+import com.amplifyframework.logging.Logger;
 import com.amplifyframework.util.GsonObjectConverter;
 
 import com.google.gson.GsonBuilder;
@@ -40,6 +43,9 @@ import java.util.Map;
  */
 public final class SerializedCustomTypeAdapter
         implements JsonDeserializer<SerializedCustomType>, JsonSerializer<SerializedCustomType> {
+    private static final Logger LOGGER = Amplify.Logging.logger(
+            CategoryType.DATASTORE, SerializedCustomTypeAdapter.class.getName());
+
     private SerializedCustomTypeAdapter() {
     }
 
@@ -54,6 +60,7 @@ public final class SerializedCustomTypeAdapter
 
     @Override
     public JsonElement serialize(SerializedCustomType src, Type typeOfSrc, JsonSerializationContext context) {
+        LOGGER.verbose(String.format("serialize: src=%s, typeOfSrc=%s", src, typeOfSrc));
         CustomTypeSchema schema = src.getCustomTypeSchema();
         JsonObject result = new JsonObject();
         result.add("customTypeSchema", context.serialize(schema));
@@ -77,6 +84,7 @@ public final class SerializedCustomTypeAdapter
     @Override
     public SerializedCustomType deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
             throws JsonParseException {
+        LOGGER.verbose(String.format("deserialize: json=%s, typeOfT=%s", json, typeOfT));
         JsonObject object = json.getAsJsonObject();
         CustomTypeSchema schema = context.deserialize(
                 object.get("customTypeSchema"), CustomTypeSchema.class);

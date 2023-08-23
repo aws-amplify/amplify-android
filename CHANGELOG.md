@@ -1,3 +1,19 @@
+## [Release 2.11.3](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.11.3)
+
+### Bug Fixes
+- **storage:** Upgrade SDK to fix EOF exception ([#2558](https://github.com/aws-amplify/amplify-android/issues/2558))
+- **data:** Resolve orchestrator transition threading issues. ([#2551](https://github.com/aws-amplify/amplify-android/issues/2551))
+
+[See all changes between 2.11.2 and 2.11.3](https://github.com/aws-amplify/amplify-android/compare/release_v2.11.2...release_v2.11.3)
+
+## [Release 2.11.2](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.11.2)
+
+### Bug Fixes
+- **datastore/flutter:** Custom type list serde ([#2545](https://github.com/aws-amplify/amplify-android/issues/2545))
+- **auth:** Prevent credential continuation from returning multiple times. ([#2541](https://github.com/aws-amplify/amplify-android/issues/2541))
+
+[See all changes between 2.11.1 and 2.11.2](https://github.com/aws-amplify/amplify-android/compare/release_v2.11.1...release_v2.11.2)
+
 ## [Release 2.11.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.11.1)
 
 ### Bug Fixes
