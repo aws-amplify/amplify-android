@@ -30,7 +30,6 @@ class InMemoryLazyModel<M : Model>(model: M? = null) : LazyModel<M> {
     }
 
     override fun getIdentifier(): Map<String, Any> {
-        // TODO: Should fill out map to be safe for future implementations
         return emptyMap()
     }
 
