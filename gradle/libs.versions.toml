@@ -26,6 +26,7 @@ gson = "2.8.9"
 json = "20210307"
 jsonassert = "1.5.0"
 junit = "4.13.2"
+kotest = "5.6.2"
 kotlin = "1.7.10"
 kotlin-serialization = "1.3.3"
 maplibre = "9.6.0"
@@ -106,6 +107,7 @@ test-aws-sdk-core = { module = "com.amazonaws:aws-android-sdk-core", version.ref
 test-json = { module = "org.json:json", version.ref = "json" }
 test-jsonassert = { module = "org.skyscreamer:jsonassert", version.ref="jsonassert" }
 test-junit = { module = "junit:junit", version.ref = "junit" }
+test-kotest-assertions = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }
 test-kotlin-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref="coroutines" }
 test-kotlin-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref="kotlin" }
 test-kotlin-kotlinTest = { module = "org.jetbrains.kotlin:kotlin-test", version.ref="kotlin" }
