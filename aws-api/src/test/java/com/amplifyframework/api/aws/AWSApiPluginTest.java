@@ -83,7 +83,7 @@ public final class AWSApiPluginTest {
 
     /**
      * Sets up the test.
-     * @throws ApiException On failure to configure plugin
+     * @throws AmplifyException on SchemaRegistry failure
      * @throws IOException On failure to start web server
      * @throws JSONException On failure to arrange configuration JSON
      */

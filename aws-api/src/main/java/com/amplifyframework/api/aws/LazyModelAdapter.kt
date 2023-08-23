@@ -14,7 +14,6 @@
  */
 package com.amplifyframework.api.aws
 
-import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.api.aws.ApiLazyModel.Companion.createLazy
 import com.amplifyframework.api.aws.ApiLazyModel.Companion.createPreloaded
 import com.amplifyframework.core.model.LazyModel
@@ -29,8 +28,7 @@ import com.google.gson.JsonSerializer
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
 
-@InternalAmplifyApi
-class LazyModelAdapter<M : Model>(val apiName: String?) :
+internal class LazyModelAdapter<M : Model>(val apiName: String?) :
     JsonDeserializer<LazyModel<M>>,
     JsonSerializer<LazyModel<M>> {
     @Throws(JsonParseException::class)

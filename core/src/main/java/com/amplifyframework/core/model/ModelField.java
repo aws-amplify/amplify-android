@@ -163,18 +163,18 @@ public final class ModelField {
     }
 
     /**
-     * Returns true if the field's target type is Model.
+     * Returns true if the field's target type is a lazy Model.
      *
-     * @return True if the field's target type is Model.
+     * @return True if the field's target type is a lazy Model.
      */
     public boolean isLazyModel() {
         return isLazyModel;
     }
 
     /**
-     * Returns true if the field's target type is Model.
+     * Returns true if the field's target type is a lazy list of Models.
      *
-     * @return True if the field's target type is Model.
+     * @return True if the field's target type is a lazy list of Models.
      */
     public boolean isLazyList() {
         return isLazyList;
@@ -298,7 +298,7 @@ public final class ModelField {
         // True if the field's target type is LazyModel.
         private boolean isLazyModel = false;
 
-        // True if the field's target type is LazyModel.
+        // True if the field's target type is a lazy list type (PaginatedResult).
         private boolean isLazyList = false;
 
         // True if the field's target type is CustomType.
@@ -398,8 +398,8 @@ public final class ModelField {
         }
 
         /**
-         * Sets a flag indicating whether or not the field's target type is a Model.
-         * @param isLazyModel flag indicating if the field is a model
+         * Sets a flag indicating whether or not the field's target type is a LazyModel.
+         * @param isLazyModel flag indicating if the field is a lazy model
          * @return the builder object
          */
         public ModelFieldBuilder isLazyModel(boolean isLazyModel) {
@@ -408,8 +408,8 @@ public final class ModelField {
         }
 
         /**
-         * Sets a flag indicating whether or not the field's type is a LazyList.
-         * @param isLazyList flag indicating if the field is a LazyList
+         * Sets a flag indicating whether or not the field's type is a a lazy list type.
+         * @param isLazyList flag indicating if the field is a lazy list type (PaginatedResult)
          * @return the builder object
          */
         public ModelFieldBuilder isLazyList(boolean isLazyList) {

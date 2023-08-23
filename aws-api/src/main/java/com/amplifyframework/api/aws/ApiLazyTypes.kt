@@ -90,15 +90,23 @@ class ApiLazyModel<M : Model> private constructor(
             onSuccess.accept(value)
         }
         val onApiFailure = Consumer<ApiException> { onError.accept(it) }
-        Amplify.API.query(
-            AppSyncGraphQLRequestFactory.buildQuery(clazz, queryPredicate),
-            onQuerySuccess,
-            onApiFailure
-        )
+        if (apiName != null) {
+            Amplify.API.query(
+                apiName,
+                AppSyncGraphQLRequestFactory.buildQuery(clazz, queryPredicate),
+                onQuerySuccess,
+                onApiFailure
+            )
+        } else {
+            Amplify.API.query(
+                AppSyncGraphQLRequestFactory.buildQuery(clazz, queryPredicate),
+                onQuerySuccess,
+                onApiFailure
+            )
+        }
     }
 
-    companion object {
-        @JvmStatic
+    internal companion object {
         fun <M : Model> createPreloaded(
             clazz: Class<M>,
             keyMap: Map<String, Any>,
@@ -107,7 +115,6 @@ class ApiLazyModel<M : Model> private constructor(
             return ApiLazyModel(clazz, keyMap, true, value)
         }
 
-        @JvmStatic
         fun <M : Model> createLazy(
             clazz: Class<M>,
             keyMap: Map<String, Any>,
@@ -121,14 +128,6 @@ class ApiLazyModel<M : Model> private constructor(
 internal class LazyListHelper {
 
     companion object {
-        @JvmStatic
-        fun <M : Model> createPreloaded(
-            value: List<M>
-
-        ): PaginatedResult<M> {
-            return PaginatedResult(value, null)
-        }
-
         @JvmStatic
         fun <M : Model> createLazy(
             clazz: Class<M>,

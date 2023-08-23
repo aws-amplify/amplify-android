@@ -16,14 +16,16 @@
 package com.amplifyframework.core.model
 
 import com.amplifyframework.AmplifyException
+import com.amplifyframework.annotations.InternalAmplifyApi
 
-sealed class ModelException(
+@InternalAmplifyApi
+internal sealed class ModelException(
     message: String,
     recoverySuggestion: String,
     cause: Exception? = null
 ) : AmplifyException(message, cause, recoverySuggestion) {
 
-    class PropertyPathNotFound(
+    internal class PropertyPathNotFound(
         val modelName: String,
         cause: Exception? = null
     ) : ModelException(

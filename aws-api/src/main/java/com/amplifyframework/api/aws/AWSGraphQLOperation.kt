@@ -12,64 +12,51 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
+package com.amplifyframework.api.aws
 
-package com.amplifyframework.api.aws;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
-import com.amplifyframework.AmplifyException;
-import com.amplifyframework.annotations.InternalAmplifyApi;
-import com.amplifyframework.api.ApiException;
-import com.amplifyframework.api.graphql.GraphQLOperation;
-import com.amplifyframework.api.graphql.GraphQLRequest;
-import com.amplifyframework.api.graphql.GraphQLResponse;
+import com.amplifyframework.AmplifyException
+import com.amplifyframework.annotations.InternalAmplifyApi
+import com.amplifyframework.api.ApiException
+import com.amplifyframework.api.graphql.GraphQLOperation
+import com.amplifyframework.api.graphql.GraphQLRequest
+import com.amplifyframework.api.graphql.GraphQLResponse
 
 /**
  * A Base AWS GraphQLOperation that also takes an apiName to allow LazyModel support.
  * @param <R> The type of data contained in the GraphQLResponse.
+ * @param graphQLRequest  A GraphQL request
+ * @param responseFactory an implementation of ResponseFactory
+ * @param apiName to use
  */
 @InternalAmplifyApi
-public abstract class AWSGraphQLOperation<R> extends GraphQLOperation<R> {
-    private String apiName;
+abstract class AWSGraphQLOperation<R>(
+    graphQLRequest: GraphQLRequest<R>,
+    responseFactory: GraphQLResponse.Factory,
+    private val apiName: String?
+) : GraphQLOperation<R>(graphQLRequest, responseFactory) {
 
-    /**
-     * Constructs a new instance of a GraphQLOperation.
-     *
-     * @param graphQLRequest  A GraphQL request
-     * @param responseFactory an implementation of ResponseFactory
-     * @param apiName to use
-     */
-    public AWSGraphQLOperation(
-            @NonNull GraphQLRequest<R> graphQLRequest,
-            @NonNull GraphQLResponse.Factory responseFactory,
-            @Nullable String apiName
-    ) {
-        super(graphQLRequest, responseFactory);
-        this.apiName = apiName;
-    }
-
-    @Override
-    protected final GraphQLResponse<R> wrapResponse(String jsonResponse) throws ApiException {
-        return buildResponse(jsonResponse);
+    @Throws(ApiException::class)
+    override fun wrapResponse(jsonResponse: String): GraphQLResponse<R> {
+        return buildResponse(jsonResponse)
     }
 
     // This method should be used in place of GraphQLOperation.wrapResponse. In order to pass
     // apiName, we had to stop using the default GraphQLResponse.Factory buildResponse method
     // as there was no place to inject api name for adding to LazyModel
-    private GraphQLResponse<R> buildResponse(String jsonResponse) throws ApiException {
-        if (!(getResponseFactory() instanceof GsonGraphQLResponseFactory)) {
-            throw new ApiException("Amplify encountered an error while deserializing an object. " +
-                    "GraphQLResponse.Factory was not of type GsonGraphQLResponseFactory",
-                    AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION);
-        }
-
-        try {
-            return ((GsonGraphQLResponseFactory) getResponseFactory())
-                    .buildResponse(getRequest(), jsonResponse, apiName);
-        } catch (ClassCastException cce) {
-            throw new ApiException("Amplify encountered an error while deserializing an object",
-                    AmplifyException.TODO_RECOVERY_SUGGESTION);
+    @Throws(ApiException::class)
+    private fun buildResponse(jsonResponse: String): GraphQLResponse<R> {
+        return try {
+            (responseFactory as? GsonGraphQLResponseFactory)?.buildResponse(request, jsonResponse, apiName)
+                ?: throw ApiException(
+                    "Amplify encountered an error while deserializing an object. " +
+                        "GraphQLResponse.Factory was not of type GsonGraphQLResponseFactory",
+                    AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION
+                )
+        } catch (cce: ClassCastException) {
+            throw ApiException(
+                "Amplify encountered an error while deserializing an object",
+                AmplifyException.TODO_RECOVERY_SUGGESTION
+            )
         }
     }
 }

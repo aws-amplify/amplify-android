@@ -1,12 +1,14 @@
 package com.amplifyframework.api.aws
 
 import com.amplifyframework.core.model.Model
+import com.amplifyframework.core.model.ModelIdentifier
 import com.amplifyframework.core.model.ModelSchema
 import com.amplifyframework.core.model.SchemaRegistry
 import com.google.gson.Gson
 import com.google.gson.JsonDeserializationContext
 import com.google.gson.JsonDeserializer
 import com.google.gson.JsonElement
+import java.io.Serializable
 import java.lang.reflect.Type
 
 /**
@@ -16,7 +18,7 @@ import java.lang.reflect.Type
  * @param responseGson is a Gson object that does not have the model deserializer. Otherwise context.fromJson would
  * cause a recursion issue.
  */
-class ModelDeserializer(private val responseGson: Gson) : JsonDeserializer<Model> {
+internal class ModelDeserializer(private val responseGson: Gson) : JsonDeserializer<Model> {
 
     override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext): Model {
         val parent = responseGson.fromJson<Model>(json, typeOfT)
@@ -50,5 +52,12 @@ class ModelDeserializer(private val responseGson: Gson) : JsonDeserializer<Model
             }
         }
         return parent
+    }
+}
+
+private fun Model.getSortedIdentifiers(): List<Serializable> {
+    return when (val identifier = resolveIdentifier()) {
+        is ModelIdentifier<*> -> { listOf(identifier.key()) + identifier.sortedKeys() }
+        else -> listOf(identifier.toString())
     }
 }

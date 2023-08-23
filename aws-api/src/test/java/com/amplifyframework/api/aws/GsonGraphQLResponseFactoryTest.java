@@ -63,6 +63,7 @@ public final class GsonGraphQLResponseFactoryTest {
 
     /**
      * Set up the object under test, a GsonGraphQLResponseFactory.
+     * @throws AmplifyException on SchemaRegistry failure
      */
     @Before
     public void setup() throws AmplifyException {
@@ -74,6 +75,9 @@ public final class GsonGraphQLResponseFactoryTest {
         responseFactory = new GsonGraphQLResponseFactory(gson);
     }
 
+    /**
+     * Clear schema registry.
+     */
     @After
     public void tearDown() {
         SchemaRegistry.instance().clear();
