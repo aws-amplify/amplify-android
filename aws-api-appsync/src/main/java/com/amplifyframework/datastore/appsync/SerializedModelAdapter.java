@@ -116,8 +116,13 @@ public final class SerializedModelAdapter
                 continue;
             }
 
-            JsonElement fieldValue = item.getValue();
             String fieldName = field.getName();
+            JsonElement fieldValue = item.getValue();
+            if (fieldValue.isJsonNull()) {
+                LOGGER.verbose(String.format("Field %s is null", fieldName));
+                serializedData.put(fieldName, null);
+                continue;
+            }
 
             boolean isModel = field.isModel();
             boolean isCustomType = field.isCustomType();
