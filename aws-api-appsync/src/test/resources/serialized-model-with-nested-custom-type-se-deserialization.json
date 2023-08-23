@@ -64,6 +64,7 @@
             }
           }
         ],
+        "aliases": null,
         "phone": {
           "serializedData": {
             "number": "41555555555",
@@ -109,6 +110,15 @@
             "targetType": "Phone",
             "isArray": true
           },
+          "aliases": {
+            "javaClassForValue": "java.util.Map",
+            "isRequired": false,
+            "isCustomType": true,
+            "name": "aliases",
+            "isEnum": false,
+            "targetType": "Contact",
+            "isArray": true
+          },
           "phone": {
             "javaClassForValue": "java.util.Map",
             "isRequired": true,
@@ -130,18 +140,34 @@
         }
       }
     },
+    "additionalContacts": null,
     "fullName": "Tester Test",
     "id": "some-unique-id"
   },
   "id": "some-unique-id",
   "modelSchema": {
     "associations": {},
+    "listPluralName": null,
     "pluralName": "People",
     "authRules": [],
     "indexes": {},
+    "modelClass": null,
     "name": "Person",
     "modelSchemaVersion": 0,
+    "modelType": null,
     "fields": {
+      "additionalContacts": {
+        "javaClassForValue": "java.util.Map",
+        "isRequired": false,
+        "isCustomType": true,
+        "isReadOnly": false,
+        "isModel": false,
+        "authRules": [],
+        "name": "additionalContacts",
+        "isEnum": false,
+        "targetType": "Contact",
+        "isArray": true
+      },
       "contact": {
         "javaClassForValue": "java.util.Map",
         "isRequired": true,
@@ -178,6 +204,7 @@
         "targetType": "ID",
         "isArray": false
       }
-    }
+    },
+    "syncPluralName": null
   }
 }
