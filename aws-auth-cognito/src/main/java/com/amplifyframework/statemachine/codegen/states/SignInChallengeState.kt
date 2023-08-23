@@ -31,7 +31,11 @@ internal sealed class SignInChallengeState : State {
     ) : SignInChallengeState()
     data class Verifying(val id: String = "") : SignInChallengeState()
     data class Verified(val id: String = "") : SignInChallengeState()
-    data class Error(val exception: Exception, val challenge: AuthChallenge) : SignInChallengeState()
+    data class Error(
+        val exception: Exception,
+        val challenge: AuthChallenge,
+        var hasNewResponse: Boolean = false
+    ) : SignInChallengeState()
 
     class Resolver(private val challengeActions: SignInChallengeActions) : StateMachineResolver<SignInChallengeState> {
         override val defaultState: SignInChallengeState = NotStarted()
@@ -63,7 +67,7 @@ internal sealed class SignInChallengeState : State {
                 is Verifying -> when (challengeEvent) {
                     is SignInChallengeEvent.EventType.Verified -> StateResolution(Verified())
                     is SignInChallengeEvent.EventType.ThrowError -> {
-                        StateResolution(Error(challengeEvent.exception, challengeEvent.challenge), listOf())
+                        StateResolution(Error(challengeEvent.exception, challengeEvent.challenge, true), listOf())
                     }
                     is SignInChallengeEvent.EventType.WaitForAnswer -> {
                         StateResolution(WaitingForAnswer(challengeEvent.challenge, true), listOf())

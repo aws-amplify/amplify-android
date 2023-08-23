@@ -30,18 +30,18 @@ dependencies {
     implementation(project(":aws-pinpoint-core"))
 
     implementation(project(":aws-push-notifications-pinpoint-common"))
-    api(dependency.firebasemessaging)
+    api(libs.firebasemessaging)
 
-    implementation(dependency.aws.http)
-    implementation(dependency.aws.pinpoint)
+    implementation(libs.aws.http)
+    implementation(libs.aws.pinpoint)
 
-    implementation(dependency.androidx.core.ktx)
-    implementation(dependency.androidx.appcompat)
-    implementation(dependency.kotlin.serializationJson)
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.appcompat)
+    implementation(libs.kotlin.serializationJson)
 
-    testImplementation(testDependency.junit)
+    testImplementation(libs.test.junit)
 
     androidTestImplementation(project(":aws-auth-cognito"))
-    androidTestImplementation(testDependency.androidx.test.runner)
-    androidTestImplementation(testDependency.androidx.test.junit)
+    androidTestImplementation(libs.test.androidx.runner)
+    androidTestImplementation(libs.test.androidx.junit)
 }

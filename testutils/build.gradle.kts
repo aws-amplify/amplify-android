@@ -23,14 +23,14 @@ apply(from = rootProject.file("configuration/checkstyle.gradle"))
 
 dependencies {
     implementation(project(":core"))
-    implementation(testDependency.junit)
-    implementation(testDependency.mockito)
-    implementation(testDependency.androidx.test.core)
-    implementation(dependency.rxjava)
+    implementation(libs.test.junit)
+    implementation(libs.test.mockito.core)
+    implementation(libs.test.androidx.core)
+    implementation(libs.rxjava)
 
-    implementation(dependency.kotlin.serializationJson)
-    implementation(dependency.aws.cognitoidentity)
-    implementation(dependency.aws.cognitoidentityprovider)
+    implementation(libs.kotlin.serializationJson)
+    implementation(libs.aws.cognitoidentity)
+    implementation(libs.aws.cognitoidentityprovider)
 
     // dependency on Model/GraphQL integration classes
     // remove when modules are re-organized to provide better isolation

@@ -67,6 +67,15 @@ public final class Orchestrator {
     private final ReachabilityMonitor reachabilityMonitor;
     private Disposable monitorNetworkChangesDisposable;
 
+    // This lock is used to synchronize on any state changes made to current stae
+    private final Object transitionLock = new Object();
+
+    /*
+    This lock is used to syncrhonize on the startApi block. clearing the disposable is not always enough to stop
+    the completable. This block is an additional safety net to ensure that startApi does not run multiple times.
+     */
+    private final Object startApiLock = new Object();
+
     /**
      * Constructs a new Orchestrator.
      * The Orchestrator will synchronize data between the {@link AppSync}
@@ -153,10 +162,7 @@ public final class Orchestrator {
         return performSynchronized(() -> {
             switch (targetState.get()) {
                 case LOCAL_ONLY:
-                    if (monitorNetworkChangesDisposable != null) {
-                        monitorNetworkChangesDisposable.dispose();
-                        monitorNetworkChangesDisposable = null;
-                    }
+                    disposeNetworkChanges();
                     transitionToLocalOnly();
                     break;
                 case SYNC_VIA_API:
@@ -212,59 +218,82 @@ public final class Orchestrator {
     }
 
     private void transitionToStopped() throws DataStoreException {
-        switch (currentState.get()) {
-            case SYNC_VIA_API:
-                LOG.info("Orchestrator transitioning from SYNC_VIA_API to STOPPED");
-                stopApiSync();
-                stopObservingStorageChanges();
-                break;
-            case LOCAL_ONLY:
-                LOG.info("Orchestrator transitioning from LOCAL_ONLY to STOPPED");
-                stopObservingStorageChanges();
-                break;
-            case STOPPED:
-                break;
-            default:
-                unknownState(currentState.get());
-                break;
+        synchronized (transitionLock) {
+            switch (currentState.get()) {
+                case SYNC_VIA_API:
+                    LOG.info("Orchestrator transitioning from SYNC_VIA_API to STOPPED");
+                    stopApiSync();
+                    LOG.info("Setting currentState to LOCAL_ONLY");
+                    currentState.set(State.LOCAL_ONLY);
+                    stopObservingStorageChanges();
+                    LOG.info("Setting currentState to STOPPED");
+                    currentState.set(State.STOPPED);
+                    break;
+                case LOCAL_ONLY:
+                    LOG.info("Orchestrator transitioning from LOCAL_ONLY to STOPPED");
+                    stopObservingStorageChanges();
+                    LOG.info("Setting currentState to STOPPED");
+                    currentState.set(State.STOPPED);
+                    break;
+                case STOPPED:
+                    break;
+                default:
+                    unknownState(currentState.get());
+                    break;
+            }
         }
     }
 
     private void transitionToLocalOnly() throws DataStoreException {
-        switch (currentState.get()) {
-            case STOPPED:
-                LOG.info("Orchestrator transitioning from STOPPED to LOCAL_ONLY");
-                startObservingStorageChanges();
-                publishReadyEvent();
-                break;
-            case LOCAL_ONLY:
-                break;
-            case SYNC_VIA_API:
-                LOG.info("Orchestrator transitioning from SYNC_VIA_API to LOCAL_ONLY");
-                stopApiSync();
-                break;
-            default:
-                unknownState(currentState.get());
-                break;
+        synchronized (transitionLock) {
+            switch (currentState.get()) {
+                case STOPPED:
+                    LOG.info("Orchestrator transitioning from STOPPED to LOCAL_ONLY");
+                    startObservingStorageChanges();
+                    LOG.info("Setting currentState to LOCAL_ONLY");
+                    currentState.set(State.LOCAL_ONLY);
+                    publishReadyEvent();
+                    break;
+                case LOCAL_ONLY:
+                    break;
+                case SYNC_VIA_API:
+                    LOG.info("Orchestrator transitioning from SYNC_VIA_API to LOCAL_ONLY");
+                    stopApiSync();
+                    monitorNetworkChanges();
+                    LOG.info("Setting currentState to LOCAL_ONLY");
+                    currentState.set(State.LOCAL_ONLY);
+                    break;
+                default:
+                    unknownState(currentState.get());
+                    break;
+            }
         }
     }
 
     private void transitionToApiSync() throws DataStoreException {
-        switch (currentState.get()) {
-            case SYNC_VIA_API:
-                break;
-            case LOCAL_ONLY:
-                LOG.info("Orchestrator transitioning from LOCAL_ONLY to SYNC_VIA_API");
-                startApiSync();
-                break;
-            case STOPPED:
-                LOG.info("Orchestrator transitioning from STOPPED to SYNC_VIA_API");
-                startObservingStorageChanges();
-                startApiSync();
-                break;
-            default:
-                unknownState(currentState.get());
-                break;
+        synchronized (transitionLock) {
+            switch (currentState.get()) {
+                case SYNC_VIA_API:
+                    break;
+                case LOCAL_ONLY:
+                    LOG.info("Orchestrator transitioning from LOCAL_ONLY to SYNC_VIA_API");
+                    LOG.info("Setting currentState to SYNC_VIA_API");
+                    currentState.set(State.SYNC_VIA_API);
+                    startApiSync();
+                    break;
+                case STOPPED:
+                    LOG.info("Orchestrator transitioning from STOPPED to SYNC_VIA_API");
+                    startObservingStorageChanges();
+                    LOG.info("Setting currentState to LOCAL_ONLY");
+                    currentState.set(State.LOCAL_ONLY);
+                    LOG.info("Setting currentState to SYNC_VIA_API");
+                    currentState.set(State.SYNC_VIA_API);
+                    startApiSync();
+                    break;
+                default:
+                    unknownState(currentState.get());
+                    break;
+            }
         }
     }
 
@@ -278,8 +307,6 @@ public final class Orchestrator {
             mutationOutbox.load()
                 .andThen(Completable.create(emitter -> {
                     storageObserver.startObservingStorageChanges(emitter::onComplete);
-                    LOG.info("Setting currentState to LOCAL_ONLY");
-                    currentState.set(State.LOCAL_ONLY);
                 })).blockingAwait();
         } catch (Throwable throwable) {
             throw new DataStoreException("Timed out while starting to observe storage changes.",
@@ -294,8 +321,6 @@ public final class Orchestrator {
     private void stopObservingStorageChanges() {
         LOG.info("Stopping observation of local storage changes.");
         storageObserver.stopObservingStorageChanges();
-        LOG.info("Setting currentState to STOPPED");
-        currentState.set(State.STOPPED);
     }
 
     /**
@@ -303,55 +328,60 @@ public final class Orchestrator {
      */
     private void startApiSync() {
         monitorNetworkChanges();
-        LOG.info("Setting currentState to SYNC_VIA_API");
-        currentState.set(State.SYNC_VIA_API);
         disposables.add(
             Completable.create(emitter -> {
-                LOG.info("Starting API synchronization mode.");
+                synchronized (startApiLock) {
+                    LOG.info("Starting API synchronization mode.");
 
-                // Resolve any client provided DataStoreSyncExpressions, before starting sync and subscriptions, once
-                // each time DataStore starts.  The QueryPredicateProvider caches the resolved QueryPredicates, which
-                // are then used to filter data received from AppSync.
-                queryPredicateProvider.resolvePredicates();
+                    // Resolve any client provided DataStoreSyncExpressions, before starting sync and subscriptions,
+                    // once each time DataStore starts.  The QueryPredicateProvider caches the resolved QueryPredicates,
+                    // which are then used to filter data received from AppSync.
+                    queryPredicateProvider.resolvePredicates();
 
-                try {
-                    subscriptionProcessor.startSubscriptions();
-                } catch (Throwable failure) {
-                    if (!emitter.tryOnError(
+                    try {
+                        subscriptionProcessor.startSubscriptions();
+                    } catch (Throwable failure) {
+                        if (!emitter.tryOnError(
                             new DataStoreException("DataStore subscriptionProcessor failed to start.",
-                                    failure, "Check your internet."))) {
-                        LOG.warn("DataStore failed to start after emitter was disposed.",
+                                failure, "Check your internet."))) {
+                            LOG.warn("DataStore failed to start after emitter was disposed.",
                                 failure);
-                        emitter.onComplete();
+                            emitter.onComplete();
+                        }
+                        return;
                     }
-                    return;
-                }
 
-                long startTime = System.currentTimeMillis();
-                LOG.debug("About to hydrate...");
-                try {
-                    syncProcessor.hydrate()
+                    long startTime = System.currentTimeMillis();
+                    LOG.debug("About to hydrate...");
+                    try {
+                        syncProcessor.hydrate()
                             .blockingAwait();
-                    LOG.debug("Hydration complete in " + (System.currentTimeMillis() - startTime) + "ms");
-                } catch (Throwable failure) {
-                    if (!emitter.isDisposed()) {
-                        emitter.onError(new DataStoreException(
+                        LOG.debug("Hydration complete in " + (System.currentTimeMillis() - startTime) + "ms");
+                    } catch (Throwable failure) {
+                        if (!emitter.isDisposed()) {
+                            emitter.onError(new DataStoreException(
                                 "Initial sync during DataStore initialization failed.", failure,
                                 AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION
-                        ));
-                    } else {
-                        LOG.warn("Initial sync during DataStore initialization failed.", failure);
-                        emitter.onComplete();
+                            ));
+                        } else {
+                            LOG.warn("Initial sync during DataStore initialization failed.", failure);
+                            emitter.onComplete();
+                        }
+                        return;
                     }
-                    return;
+
+                    if (!emitter.isDisposed()) {
+                        LOG.debug("Draining outbox...");
+                        mutationProcessor.startDrainingMutationOutbox();
+                    }
+
+                    if (!emitter.isDisposed()) {
+                        LOG.debug("Draining mutation buffer...");
+                        subscriptionProcessor.startDrainingMutationBuffer();
+                    }
+
+                    emitter.onComplete();
                 }
-
-                LOG.debug("Draining outbox...");
-                mutationProcessor.startDrainingMutationOutbox();
-
-                subscriptionProcessor.startDrainingMutationBuffer();
-
-                emitter.onComplete();
             })
             .doOnError(error -> LOG.error("Failure encountered while attempting to start API sync.", error))
             .doOnComplete(() -> LOG.info("Started the orchestrator in API sync mode."))
@@ -379,19 +409,24 @@ public final class Orchestrator {
             .subscribe();
     }
 
-    private void monitorNetworkChanges() {
+    private void disposeNetworkChanges() {
         if (monitorNetworkChangesDisposable != null) {
             monitorNetworkChangesDisposable.dispose();
+            monitorNetworkChangesDisposable = null;
         }
+    }
+
+    private void monitorNetworkChanges() {
+        disposeNetworkChanges();
 
         monitorNetworkChangesDisposable = reachabilityMonitor.getObservable()
             .skip(1) // We skip the current online state, we only care about transitions
             .filter(ignore -> !State.STOPPED.equals(currentState.get()))
             .subscribe(isOnline -> {
                 if (isOnline) {
-                    startApiSync();
+                    transitionToApiSync();
                 } else {
-                    stopApiSync();
+                    transitionToLocalOnly();
                 }
             });
     }
@@ -400,9 +435,7 @@ public final class Orchestrator {
      * Stop all model synchronization with the remote API.
      */
     private void stopApiSync() {
-        monitorNetworkChanges();
-        LOG.info("Setting currentState to LOCAL_ONLY");
-        currentState.set(State.LOCAL_ONLY);
+        disposeNetworkChanges();
         disposables.clear();
         subscriptionProcessor.stopAllSubscriptionActivity();
         mutationProcessor.stopDrainingMutationOutbox();
