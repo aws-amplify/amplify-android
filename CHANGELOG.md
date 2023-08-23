@@ -9,10 +9,8 @@
 - **datastore:** Ignore ApiAuthExceptions when subscribing or syncing models ([#2561](https://github.com/aws-amplify/amplify-android/issues/2561))
 - add granular read ops enum ([#2265](https://github.com/aws-amplify/amplify-android/issues/2265))
 - **flutter/datastore:** Nullable custom type arrays ([#2565](https://github.com/aws-amplify/amplify-android/issues/2565))
-
-### Miscellaneous
-- fix (push): also catch `RuntimeExecutionException` for google play store device use case ([#2562](https://github.com/aws-amplify/amplify-android/issues/2562))
-
+- **notifications:** also catch `RuntimeExecutionException` for google play store device use case ([#2562](https://github.com/aws-amplify/amplify-android/issues/2562))
+ 
 [See all changes between 2.11.3 and 2.12.0](https://github.com/aws-amplify/amplify-android/compare/release_v2.11.3...release_v2.12.0)
 
 ## [Release 2.11.3](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.11.3)
