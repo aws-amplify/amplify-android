@@ -17,6 +17,7 @@ package com.amplifyframework.datastore.syncengine;
 
 import android.util.Pair;
 
+import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.core.Action;
@@ -60,6 +61,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 
 /**
  * Tests the {@link SubscriptionProcessor}.
@@ -73,11 +76,13 @@ public final class SubscriptionProcessorTest {
     private Merger merger;
     private SubscriptionProcessor subscriptionProcessor;
     private SchemaRegistry schemaRegistry;
+    private Consumer<Throwable> onFailure;
 
     /**
      * Sets up an {@link SubscriptionProcessor} and associated test dependencies.
      * @throws DataStoreException on error building the {@link DataStoreConfiguration}
      */
+    @SuppressWarnings("unchecked")
     @Before
     public void setup() throws DataStoreException {
         ModelProvider modelProvider = AmplifyModelProvider.getInstance();
@@ -86,6 +91,7 @@ public final class SubscriptionProcessorTest {
         this.modelSchemas = sortedModels(modelProvider);
         this.appSync = mock(AppSync.class);
         this.merger = mock(Merger.class);
+        this.onFailure = (Consumer<Throwable>) mock(Consumer.class);
         DataStoreConfiguration dataStoreConfiguration = DataStoreConfiguration.builder()
                 .syncExpression(BlogOwner.class, () -> BlogOwner.NAME.beginsWith("John"))
                 .build();
@@ -97,7 +103,7 @@ public final class SubscriptionProcessorTest {
                 .schemaRegistry(schemaRegistry)
                 .merger(merger)
                 .queryPredicateProvider(queryPredicateProvider)
-                .onFailure(throwable -> { })
+                .onFailure(onFailure)
                 .build();
     }
 
@@ -112,9 +118,10 @@ public final class SubscriptionProcessorTest {
     /**
      * When {@link SubscriptionProcessor#startSubscriptions()} is invoked,
      * the {@link AppSync} client receives subscription requests.
+     * @throws DataStoreException If test is broken
      */
     @Test
-    public void appSyncInvokedWhenSubscriptionsStarted() {
+    public void appSyncInvokedWhenSubscriptionsStarted() throws DataStoreException {
         // For every Class-SubscriptionType pairing, use a CountDownLatch
         // to tell whether or not we've "seen" a subscription event for it.
         Map<Pair<ModelSchema, SubscriptionType>, CountDownLatch> seen = new HashMap<>();
@@ -129,19 +136,16 @@ public final class SubscriptionProcessorTest {
                 seen.put(Pair.create(pair.first, pair.second), latch);
                 Answer<Cancelable> answer = invocation -> {
                     latch.countDown();
+                    final int startConsumerIndex = 1;
+                    Consumer<String> onStart = invocation.getArgument(startConsumerIndex);
+                    onStart.accept(RandomString.string());
                     return new NoOpCancelable();
                 };
                 arrangeSubscription(appSync, answer, pair.first, pair.second);
             });
 
         // Act: start some subscriptions.
-        try {
-            subscriptionProcessor.startSubscriptions();
-        } catch (DataStoreException exception) {
-            // startSubscriptions throws this exception if it doesn't receive the start_ack messages after a time out.
-            // This test doesn't mock those start_ack messages, so this expection is expected.  That's okay though -
-            // we just want to verify that the subscriptions were requested.
-        }
+        subscriptionProcessor.startSubscriptions();
 
         // Make sure that all of the subscriptions have been
         Observable.fromIterable(seen.entrySet())
@@ -175,13 +179,46 @@ public final class SubscriptionProcessorTest {
     }
 
     /**
+     * Verifies that an exception caused by an ApiAuthException will NOT call onFailure. This is because models may
+     * fail to subscribe due to authorization failure, but we want to continue to subscribe the other models.
+     * @throws DataStoreException On failure to arrange mocking
+     */
+    @Test
+    public void apiAuthExceptionIsIgnored() throws DataStoreException {
+        Answer<Cancelable> answer = invocation -> {
+            final int modelSchemaIndex = 0;
+            final int startConsumerIndex = 1;
+            final int errorConsumerIndex = 3;
+            ModelSchema modelSchema = invocation.getArgument(modelSchemaIndex);
+            Consumer<String> onStart = invocation.getArgument(startConsumerIndex);
+            Consumer<DataStoreException> onError = invocation.getArgument(errorConsumerIndex);
+            onStart.accept(RandomString.string());
+            if (modelSchema.equals(modelSchemas.get(1))) {
+                onError.accept(
+                    new DataStoreException(
+                        "Failure for model",
+                        new ApiException.ApiAuthException("Simulated auth failure", "This is intentional"),
+                        "This is intentional"
+                    )
+                );
+            }
+            return new NoOpCancelable();
+        };
+        arrangeSubscriptions(appSync, answer, modelSchemas, SubscriptionType.values());
+
+        subscriptionProcessor.startSubscriptions();
+
+        verify(onFailure, never()).accept(any());
+    }
+
+    /**
      * Return whether a response with a BlogOwner with the given name gets merged with the merger.
      * @param name name of the BlogOwner returned in the subscription
      * @return whether the data was merged
      * @throws DataStoreException On failure to arrange mocking
      * @throws InterruptedException On failure to await latch
      */
-    private boolean isDataMergedWhenBufferDrainedForBlogOwnerNamed(String name) 
+    private boolean isDataMergedWhenBufferDrainedForBlogOwnerNamed(String name)
             throws DataStoreException, InterruptedException {
         // By default, start the subscriptions up.
         arrangeStartedSubscriptions(appSync, modelSchemas, SubscriptionType.values());

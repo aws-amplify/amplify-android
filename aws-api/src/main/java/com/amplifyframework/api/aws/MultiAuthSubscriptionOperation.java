@@ -16,8 +16,8 @@
 package com.amplifyframework.api.aws;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.VisibleForTesting;
 
-import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.ApiException.ApiAuthException;
 import com.amplifyframework.api.aws.auth.AuthRuleRequestDecorator;
@@ -38,7 +38,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-final class MutiAuthSubscriptionOperation<T> extends GraphQLOperation<T> {
+final class MultiAuthSubscriptionOperation<T> extends GraphQLOperation<T> {
     private static final Logger LOG = Amplify.Logging.logger(CategoryType.API, "amplify:aws-api");
 
     private final SubscriptionEndpoint subscriptionEndpoint;
@@ -49,12 +49,11 @@ final class MutiAuthSubscriptionOperation<T> extends GraphQLOperation<T> {
     private final Action onSubscriptionComplete;
     private final AtomicBoolean canceled;
     private final AuthRuleRequestDecorator requestDecorator;
-
     private AuthorizationTypeIterator authTypes;
     private String subscriptionId;
     private Future<?> subscriptionFuture;
 
-    private MutiAuthSubscriptionOperation(Builder<T> builder) {
+    private MultiAuthSubscriptionOperation(Builder<T> builder) {
         super(builder.graphQlRequest, builder.responseFactory);
         this.subscriptionEndpoint = builder.subscriptionEndpoint;
         this.onSubscriptionStart = builder.onSubscriptionStart;
@@ -115,12 +114,12 @@ final class MutiAuthSubscriptionOperation<T> extends GraphQLOperation<T> {
                 request,
                 authorizationType,
                 subscriptionId -> {
-                    MutiAuthSubscriptionOperation.this.subscriptionId = subscriptionId;
+                    MultiAuthSubscriptionOperation.this.subscriptionId = subscriptionId;
                     onSubscriptionStart.accept(subscriptionId);
                 },
                 response -> {
                     if (response.hasErrors() && hasAuthRelatedErrors(response) && authTypes.hasNext()) {
-                        // If there are auth-related errors, dispatch an ApiAuthException
+                        // If there are auth-related errors queue up a retry with the next authType
                         executorService.submit(this::dispatchRequest);
                     } else {
                         // Otherwise, we just want to dispatch it as a next item and
@@ -139,8 +138,10 @@ final class MutiAuthSubscriptionOperation<T> extends GraphQLOperation<T> {
                 onSubscriptionComplete
             );
         } else {
-            emitErrorAndCancelSubscription(new ApiException("Unable to establish subscription connection.",
-                                                        AmplifyException.TODO_RECOVERY_SUGGESTION));
+            emitErrorAndCancelSubscription(new ApiAuthException(
+                "Unable to establish subscription connection with any of the compatible auth types.",
+                "Check your application logs for detail."
+            ));
         }
 
     }
@@ -177,6 +178,21 @@ final class MutiAuthSubscriptionOperation<T> extends GraphQLOperation<T> {
     private void emitErrorAndCancelSubscription(ApiException apiException) {
         cancel();
         onSubscriptionError.accept(apiException);
+    }
+
+    @VisibleForTesting
+    boolean isCanceled() {
+        return canceled.get();
+    }
+
+    @VisibleForTesting
+    void setCanceled(boolean canceled) {
+        this.canceled.set(canceled);
+    }
+
+    @VisibleForTesting
+    Future<?> getSubscriptionFuture() {
+        return subscriptionFuture;
     }
 
     static final class Builder<T> {
@@ -244,8 +260,8 @@ final class MutiAuthSubscriptionOperation<T> extends GraphQLOperation<T> {
         }
 
         @NonNull
-        public MutiAuthSubscriptionOperation<T> build() {
-            return new MutiAuthSubscriptionOperation<>(this);
+        public MultiAuthSubscriptionOperation<T> build() {
+            return new MultiAuthSubscriptionOperation<>(this);
         }
     }
 }
