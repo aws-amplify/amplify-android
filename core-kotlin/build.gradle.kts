@@ -22,16 +22,16 @@ apply(from = rootProject.file("configuration/publishing.gradle"))
 group = properties["POM_GROUP"].toString()
 
 dependencies {
-    implementation(dependency.kotlin.stdlib)
-    implementation(dependency.kotlin.coroutines)
-    implementation(dependency.androidx.core.ktx)
+    implementation(libs.kotlin.stdlib)
+    implementation(libs.kotlin.coroutines)
+    implementation(libs.androidx.core.ktx)
     implementation(project(":core"))
     implementation(project(":common-core"))
 
-    testImplementation(testDependency.androidx.test.core)
-    testImplementation(testDependency.junit)
-    testImplementation(testDependency.mockk)
-    testImplementation(testDependency.kotlin.test.coroutines)
+    testImplementation(libs.test.androidx.core)
+    testImplementation(libs.test.junit)
+    testImplementation(libs.test.mockk)
+    testImplementation(libs.test.kotlin.coroutines)
     testImplementation(project(":testmodels"))
 }
 

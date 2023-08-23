@@ -169,7 +169,7 @@ fun Project.configureAndroid() {
     }
 
     dependencies {
-        add("coreLibraryDesugaring", dependency.android.desugartools)
+        add("coreLibraryDesugaring", libs.android.desugartools)
     }
 }
 
