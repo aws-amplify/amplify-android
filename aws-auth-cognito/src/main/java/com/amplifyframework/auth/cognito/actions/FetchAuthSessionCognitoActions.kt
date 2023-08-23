@@ -21,13 +21,11 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.initiateAuth
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AuthFlowType
 import aws.smithy.kotlin.runtime.time.Instant
 import com.amplifyframework.auth.cognito.AuthEnvironment
-import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidOauthConfigurationException
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.auth.cognito.helpers.SessionHelper
 import com.amplifyframework.auth.exceptions.NotAuthorizedException
 import com.amplifyframework.auth.exceptions.SessionExpiredException
 import com.amplifyframework.auth.exceptions.SignedOutException
-import com.amplifyframework.auth.exceptions.UnknownException
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.FetchAuthSessionActions
 import com.amplifyframework.statemachine.codegen.data.AWSCredentials
@@ -100,50 +98,6 @@ internal object FetchAuthSessionCognitoActions : FetchAuthSessionActions {
                     RefreshSessionEvent(RefreshSessionEvent.EventType.Refreshed(updatedSignedInData))
                 }
             } catch (notAuthorized: aws.sdk.kotlin.services.cognitoidentityprovider.model.NotAuthorizedException) {
-                val error = SessionExpiredException(cause = notAuthorized)
-                AuthorizationEvent(AuthorizationEvent.EventType.ThrowError(error))
-            } catch (e: Exception) {
-                AuthorizationEvent(AuthorizationEvent.EventType.ThrowError(e))
-            }
-            logger.verbose("$id Sending event ${evt.type}")
-            dispatcher.send(evt)
-        }
-
-    override fun refreshHostedUIUserPoolTokensAction(signedInData: SignedInData) =
-        Action<AuthEnvironment>("RefreshHostedUITokens") { id, dispatcher ->
-            logger.verbose("$id Starting execution")
-            val evt = try {
-                val username = signedInData.username
-                val refreshToken = signedInData.cognitoUserPoolTokens.refreshToken
-                if (hostedUIClient == null) throw InvalidOauthConfigurationException()
-                if (refreshToken == null) throw UnknownException("Unable to refresh token due to missing refreshToken.")
-
-                val refreshedUserPoolTokens = hostedUIClient.fetchRefreshedToken(
-                    signedInData.cognitoUserPoolTokens.refreshToken
-                ).copy(
-                    // A refresh does not provide a new refresh token,
-                    // so we rebuild the new token with the old refresh token.
-                    refreshToken = signedInData.cognitoUserPoolTokens.refreshToken
-                )
-
-                val updatedSignedInData = signedInData.copy(
-                    userId = refreshedUserPoolTokens.accessToken?.let(SessionHelper::getUserSub) ?: signedInData.userId,
-                    username = refreshedUserPoolTokens.accessToken?.let(SessionHelper::getUsername) ?: username,
-                    cognitoUserPoolTokens = refreshedUserPoolTokens
-                )
-
-                if (configuration.identityPool != null) {
-                    val logins = LoginsMapProvider.CognitoUserPoolLogins(
-                        configuration.userPool?.region,
-                        configuration.userPool?.poolId,
-                        refreshedUserPoolTokens.idToken!!
-                    )
-                    RefreshSessionEvent(RefreshSessionEvent.EventType.RefreshAuthSession(updatedSignedInData, logins))
-                } else {
-                    RefreshSessionEvent(RefreshSessionEvent.EventType.Refreshed(updatedSignedInData))
-                }
-            } catch (notAuthorized: aws.sdk.kotlin.services.cognitoidentityprovider.model.NotAuthorizedException) {
-                // TODO: identity not authorized exception from response
                 val error = SessionExpiredException(cause = notAuthorized)
                 AuthorizationEvent(AuthorizationEvent.EventType.ThrowError(error))
             } catch (e: Exception) {
