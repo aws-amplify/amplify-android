@@ -19,6 +19,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.core.Action;
@@ -40,6 +41,7 @@ import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.appsync.AppSyncExtensions;
 import com.amplifyframework.datastore.appsync.AppSyncExtensions.AppSyncErrorType;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
+import com.amplifyframework.datastore.utils.ErrorInspector;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.logging.Logger;
@@ -195,7 +197,8 @@ final class SubscriptionProcessor {
                 },
                 emitter::onNext,
                 dataStoreException -> {
-                    if (isExceptionType(dataStoreException, AppSyncErrorType.UNAUTHORIZED)) {
+                    if (ErrorInspector.contains(dataStoreException, ApiException.ApiAuthException.class) ||
+                            isExceptionType(dataStoreException, AppSyncErrorType.UNAUTHORIZED)) {
                         // Ignore Unauthorized errors, so that DataStore can still be used even if the user is only
                         // authorized to read a subset of the models.
                         latch.countDown();
