@@ -27,6 +27,7 @@ import com.amplifyframework.auth.AWSCredentialsProviderKt;
 import com.amplifyframework.auth.CognitoCredentialsProvider;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
+import com.amplifyframework.predictions.AWSPredictionsMetadataType;
 import com.amplifyframework.predictions.PredictionsException;
 import com.amplifyframework.predictions.PredictionsPlugin;
 import com.amplifyframework.predictions.aws.models.AWSVoiceType;
@@ -61,6 +62,8 @@ import com.amplifyframework.predictions.result.TranslateTextResult;
 
 import org.json.JSONObject;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -71,6 +74,8 @@ import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider;
  */
 public final class AWSPredictionsPlugin extends PredictionsPlugin<AWSPredictionsEscapeHatch> {
     private static final String AWS_PREDICTIONS_PLUGIN_KEY = "awsPredictionsPlugin";
+
+    private static Map<String, String> userAgentPairs = new HashMap<>();
 
     private final ExecutorService executorService;
 
@@ -98,6 +103,16 @@ public final class AWSPredictionsPlugin extends PredictionsPlugin<AWSPredictions
     @Override
     public String getPluginKey() {
         return AWS_PREDICTIONS_PLUGIN_KEY;
+    }
+
+    /**
+     * Add version to liveness websocket user agent.
+     * @param type The type of version we're adding
+     * @param value The version
+     */
+    @InternalAmplifyApi
+    public static void addToUserAgent(AWSPredictionsMetadataType type, String value) {
+        userAgentPairs.put(type.name(), value);
     }
 
     @Override
@@ -358,6 +373,6 @@ public final class AWSPredictionsPlugin extends PredictionsPlugin<AWSPredictions
                     .convertToSdkCredentialsProvider(awsCredentialsProvider);
         }
         new RunFaceLivenessSession(sessionId, sessionInformation, credentialsProvider,
-                onSessionStarted, onComplete, onError);
+                userAgentPairs, onSessionStarted, onComplete, onError);
     }
 }
