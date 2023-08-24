@@ -103,12 +103,13 @@ internal class AuthEnvironment internal constructor(
     }
 
     suspend fun getDeviceMetadata(username: String): DeviceMetadata.Metadata? {
-        val deviceCredentials =
+        var deviceCredentials =
             credentialStoreClient.loadCredentials(CredentialType.Device(username)) as? AmplifyCredential.DeviceData
         if (deviceCredentials == null) {
             logger.warn("loadCredentials returned unexpected AmplifyCredential Type.")
+            deviceCredentials = AmplifyCredential.DeviceData(DeviceMetadata.Empty)
         }
-        return (deviceCredentials as AmplifyCredential.DeviceData).deviceMetadata as? DeviceMetadata.Metadata
+        return deviceCredentials.deviceMetadata as? DeviceMetadata.Metadata
     }
 }
 

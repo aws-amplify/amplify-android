@@ -172,7 +172,7 @@ public final class SQLiteTable {
                     if (column.getName().equals(PRIMARY_KEY_FIELD_NAME)) {
                         return column;
                     }
-                } else if (primaryKeyColumns.size() == 1 && primaryKeyColumns.contains(column)) {
+                } else if (primaryKeyColumns.size() == 1 && primaryKeyColumns.contains(column.getName())) {
                     return column;
                 }
             }

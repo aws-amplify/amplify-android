@@ -79,7 +79,10 @@ import static org.junit.Assert.fail;
  * verify behavior when in multi-auth mode.
  */
 public final class MultiAuthSyncEngineNoAuthInstrumentationTest {
-    private static final Logger LOG = Amplify.Logging.forNamespace("MultiAuthSyncEngineInstrumentationTest");
+    private static final Logger LOG = Amplify.Logging.logger(
+        CategoryType.DATASTORE,
+        "MultiAuthSyncEngineInstrumentationTest"
+    );
     private static final int TIMEOUT_SECONDS = 20;
     private static final String GOOGLE_ISS_CLAIM = "https://accounts.google.com";
 

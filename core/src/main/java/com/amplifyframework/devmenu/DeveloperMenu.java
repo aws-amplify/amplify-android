@@ -37,7 +37,7 @@ import java.util.Locale;
  * developer menu.
  */
 public final class DeveloperMenu implements ShakeDetector.Listener {
-    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:devmenu");
+    private static final Logger LOG = Amplify.Logging.logger("amplify:devmenu");
     // An instance of DeveloperMenu.
     private static DeveloperMenu sInstance;
     // Indicates whether the developer menu is visible.

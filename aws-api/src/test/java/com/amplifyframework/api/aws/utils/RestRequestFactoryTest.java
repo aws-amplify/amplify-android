@@ -190,6 +190,7 @@ public final class RestRequestFactoryTest {
                 null,
                 HttpMethod.DELETE);
         assertNotNull("Request should not be null", request);
+        assertEquals(HttpMethod.DELETE.name(), request.method());
     }
 
     /**
@@ -207,6 +208,7 @@ public final class RestRequestFactoryTest {
                 null,
                 HttpMethod.DELETE);
         assertNotNull("Request should not be null", request);
+        assertEquals(HttpMethod.DELETE.name(), request.method());
     }
 
     /**

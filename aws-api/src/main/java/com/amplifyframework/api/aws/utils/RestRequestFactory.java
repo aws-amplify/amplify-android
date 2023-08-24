@@ -125,10 +125,14 @@ public final class RestRequestFactory {
                 );
                 break;
             case DELETE:
-                populateBody(
-                        requestBuilder,
-                        requestData, (builder, data) -> builder.delete(RequestBody.create(data))
-                );
+                if (requestData != null) {
+                    populateBody(
+                            requestBuilder,
+                            requestData, (builder, data) -> builder.delete(RequestBody.create(data))
+                    );
+                } else {
+                    requestBuilder.delete();
+                }
                 break;
             default:
                 break;

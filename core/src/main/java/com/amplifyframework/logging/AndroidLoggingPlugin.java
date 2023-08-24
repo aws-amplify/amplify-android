@@ -21,6 +21,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.amplifyframework.core.BuildConfig;
+import com.amplifyframework.core.category.CategoryType;
 
 import org.json.JSONObject;
 
@@ -53,9 +54,32 @@ public final class AndroidLoggingPlugin extends LoggingPlugin<Void> {
 
     @NonNull
     @Override
+    @SuppressWarnings("deprecation")
     public Logger forNamespace(@Nullable String namespace) {
         String usedNamespace = namespace == null ? AMPLIFY_NAMESPACE : namespace;
         return new AndroidLogger(usedNamespace, defaultLoggerThreshold);
+    }
+
+    @NonNull
+    @Override
+    public Logger logger(@NonNull String namespace) {
+        return new AndroidLogger(namespace, defaultLoggerThreshold);
+    }
+
+    @NonNull
+    @Override
+    public Logger logger(@NonNull CategoryType categoryType, @NonNull String namespace) {
+        return new AndroidLogger(namespace, defaultLoggerThreshold);
+    }
+
+    @Override
+    public void enable() {
+        AndroidLogger.setIsEnabled(true);
+    }
+
+    @Override
+    public void disable() {
+        AndroidLogger.setIsEnabled(false);
     }
 
     @NonNull
@@ -68,7 +92,7 @@ public final class AndroidLoggingPlugin extends LoggingPlugin<Void> {
     public void configure(
             JSONObject pluginConfiguration,
             @NonNull Context context) {
-        // In the future, accept a log level configuration from JSON?
+        AndroidLogger.setIsEnabled(readConfigFile(pluginConfiguration));
     }
 
     @Nullable
@@ -81,5 +105,15 @@ public final class AndroidLoggingPlugin extends LoggingPlugin<Void> {
     @Override
     public String getVersion() {
         return BuildConfig.VERSION_NAME;
+    }
+
+    private boolean readConfigFile(JSONObject pluginConfiguration) {
+        try {
+            return pluginConfiguration.getJSONObject("consoleLoggingPlugin")
+                .getBoolean("enable");
+        } catch (Exception exception) {
+            // default to true for backward compatibility
+            return true;
+        }
     }
 }

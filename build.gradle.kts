@@ -101,7 +101,7 @@ subprojects {
 
     tasks.withType<Test>().configureEach {
         retry {
-            maxRetries.set(9)
+            maxRetries.set(1)
             maxFailures.set(100)
             failOnPassedAfterRetry.set(true)
         }
@@ -169,7 +169,7 @@ fun Project.configureAndroid() {
     }
 
     dependencies {
-        add("coreLibraryDesugaring", dependency.android.desugartools)
+        add("coreLibraryDesugaring", libs.android.desugartools)
     }
 }
 

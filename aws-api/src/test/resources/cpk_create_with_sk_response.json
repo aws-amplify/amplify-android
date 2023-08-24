@@ -1,0 +1,21 @@
+{
+  "data": {
+    "createBlog": {
+      "author": {
+        "createdAt": "2023-06-12T14:52:19.678Z",
+        "id": "a1",
+        "updatedAt": "2023-06-12T14:52:19.678Z"
+      },
+      "blogAuthorId": "a1",
+      "blogId": "b1",
+      "createdAt": "2023-06-12T14:52:19.863Z",
+      "name": "name1",
+      "posts": {
+        "items": [],
+        "nextToken": null
+      },
+      "siteId": "s1",
+      "updatedAt": "2023-06-12T14:52:19.863Z"
+    }
+  }
+}

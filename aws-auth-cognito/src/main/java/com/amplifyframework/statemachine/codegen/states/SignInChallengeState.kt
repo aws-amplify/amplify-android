@@ -25,10 +25,17 @@ import com.amplifyframework.statemachine.codegen.events.SignInChallengeEvent
 
 internal sealed class SignInChallengeState : State {
     data class NotStarted(val id: String = "") : SignInChallengeState()
-    data class WaitingForAnswer(val challenge: AuthChallenge) : SignInChallengeState()
+    data class WaitingForAnswer(
+        val challenge: AuthChallenge,
+        var hasNewResponse: Boolean = false
+    ) : SignInChallengeState()
     data class Verifying(val id: String = "") : SignInChallengeState()
     data class Verified(val id: String = "") : SignInChallengeState()
-    data class Error(val exception: Exception, val challenge: AuthChallenge) : SignInChallengeState()
+    data class Error(
+        val exception: Exception,
+        val challenge: AuthChallenge,
+        var hasNewResponse: Boolean = false
+    ) : SignInChallengeState()
 
     class Resolver(private val challengeActions: SignInChallengeActions) : StateMachineResolver<SignInChallengeState> {
         override val defaultState: SignInChallengeState = NotStarted()
@@ -60,8 +67,10 @@ internal sealed class SignInChallengeState : State {
                 is Verifying -> when (challengeEvent) {
                     is SignInChallengeEvent.EventType.Verified -> StateResolution(Verified())
                     is SignInChallengeEvent.EventType.ThrowError -> {
-                        val action = challengeActions.resetToWaitingForAnswer(challengeEvent, challengeEvent.challenge)
-                        StateResolution(Error(challengeEvent.exception, challengeEvent.challenge), listOf(action))
+                        StateResolution(Error(challengeEvent.exception, challengeEvent.challenge, true), listOf())
+                    }
+                    is SignInChallengeEvent.EventType.WaitForAnswer -> {
+                        StateResolution(WaitingForAnswer(challengeEvent.challenge, true), listOf())
                     }
 
                     else -> defaultResolution
@@ -73,7 +82,7 @@ internal sealed class SignInChallengeState : State {
                             StateResolution(Verifying(oldState.challenge.challengeName), listOf(action))
                         }
                         is SignInChallengeEvent.EventType.WaitForAnswer -> {
-                            StateResolution(WaitingForAnswer(challengeEvent.challenge))
+                            StateResolution(WaitingForAnswer(challengeEvent.challenge), listOf())
                         }
                         else -> defaultResolution
                     }

@@ -174,7 +174,7 @@ internal class AWSComprehendService(
         // Convert AWS Comprehend's detection result to Amplify-compatible format
         val comprehendSentiment = result.sentiment
         val sentimentScore = result.sentimentScore
-        val predominantSentiment = SentimentTypeAdapter.fromComprehend(comprehendSentiment.toString())
+        val predominantSentiment = SentimentTypeAdapter.fromComprehend(comprehendSentiment?.value ?: "")
         val score = when (predominantSentiment) {
             SentimentType.POSITIVE -> sentimentScore?.positive
             SentimentType.NEGATIVE -> sentimentScore?.negative
@@ -254,7 +254,7 @@ internal class AWSComprehendService(
         val entities: MutableList<Entity> = ArrayList()
         result.entities?.forEach { comprehendEntity ->
             val entityType: EntityType =
-                EntityTypeAdapter.fromComprehend(comprehendEntity.type.toString())
+                EntityTypeAdapter.fromComprehend(comprehendEntity.type?.value ?: "")
             val entityScore = comprehendEntity.score
             val entityText = comprehendEntity.text
             val entityOffset = comprehendEntity.beginOffset
@@ -294,7 +294,7 @@ internal class AWSComprehendService(
         // Convert AWS Comprehend's detection result to Amplify-compatible format
         val syntaxTokens: MutableList<Syntax> = ArrayList()
         result.syntaxTokens?.forEach { comprehendSyntax ->
-            val partOfSpeech = SpeechTypeAdapter.fromComprehend(comprehendSyntax.partOfSpeech?.tag.toString())
+            val partOfSpeech = SpeechTypeAdapter.fromComprehend(comprehendSyntax.partOfSpeech?.tag?.value ?: "")
             val partOfSpeechScore = comprehendSyntax.partOfSpeech?.score
             val syntaxText = comprehendSyntax.text
             val syntaxOffset = comprehendSyntax.beginOffset

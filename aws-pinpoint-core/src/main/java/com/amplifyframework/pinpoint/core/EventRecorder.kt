@@ -32,6 +32,7 @@ import aws.sdk.kotlin.services.pinpoint.model.Session
 import com.amplifyframework.analytics.AnalyticsEvent
 import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.core.Amplify
+import com.amplifyframework.core.category.CategoryType
 import com.amplifyframework.logging.Logger
 import com.amplifyframework.pinpoint.core.database.EventTable
 import com.amplifyframework.pinpoint.core.database.PinpointDatabase
@@ -52,7 +53,8 @@ class EventRecorder(
     private val targetingClient: TargetingClient,
     private val coroutineDispatcher: CoroutineDispatcher = Dispatchers.Default,
     private val logger: Logger =
-        Amplify.Logging.forNamespace(
+        Amplify.Logging.logger(
+            CategoryType.ANALYTICS,
             AWS_PINPOINT_ANALYTICS_LOG_NAMESPACE.format(EventRecorder::class.java.simpleName)
         )
 ) {
@@ -109,8 +111,9 @@ class EventRecorder(
             var currentSubmissions = 0
             val maxSubmissionsAllowed = defaultMaxSubmissionAllowed
             do {
-                if (!cursor.moveToFirst())
+                if (!cursor.moveToFirst()) {
                     return emptyList()
+                }
 
                 val pinpointEvents = getNextBatchOfEvents(cursor)
                 val eventToColumnIdMap = mutableMapOf<String, Int>()
@@ -198,7 +201,7 @@ class EventRecorder(
         return eventIdToDelete
     }
 
-    private fun isRetryableError(code: Int): Boolean {
+    private fun isRetryableError(code: Int?): Boolean {
         return code in 500..599
     }
 

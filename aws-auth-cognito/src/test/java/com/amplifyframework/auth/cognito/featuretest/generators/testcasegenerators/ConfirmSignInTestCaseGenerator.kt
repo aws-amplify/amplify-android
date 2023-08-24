@@ -47,6 +47,21 @@ object ConfirmSignInTestCaseGenerator : SerializableProvider {
         ).toJsonElement()
     )
 
+    private val mockedRespondToAuthCustomChallengeResponse = MockResponse(
+        CognitoType.CognitoIdentityProvider,
+        "respondToAuthChallenge",
+        ResponseType.Success,
+        mapOf(
+            "session" to "someSession",
+            "challengeName" to "CUSTOM_CHALLENGE",
+            "challengeParameters" to mapOf(
+                "SALT" to "abc",
+                "SECRET_BLOCK" to "secretBlock",
+                "SRP_B" to "def"
+            )
+        ).toJsonElement()
+    )
+
     private val mockedIdentityIdResponse = MockResponse(
         CognitoType.CognitoIdentity,
         "getId",
@@ -76,6 +91,22 @@ object ConfirmSignInTestCaseGenerator : SerializableProvider {
             "nextStep" to mapOf(
                 "signInStep" to "DONE",
                 "additionalInfo" to JsonObject(emptyMap()),
+            )
+        ).toJsonElement()
+    )
+
+    private val mockedConfirmSignInSuccessWithChallengeExpectation = ExpectationShapes.Amplify(
+        apiName = AuthAPI.confirmSignIn,
+        responseType = ResponseType.Success,
+        response = mapOf(
+            "isSignedIn" to false,
+            "nextStep" to mapOf(
+                "signInStep" to "CONFIRM_SIGN_IN_WITH_CUSTOM_CHALLENGE",
+                "additionalInfo" to mapOf(
+                    "SALT" to "abc",
+                    "SECRET_BLOCK" to "secretBlock",
+                    "SRP_B" to "def"
+                ),
             )
         ).toJsonElement()
     )
@@ -136,5 +167,27 @@ object ConfirmSignInTestCaseGenerator : SerializableProvider {
             )
         }
 
-    override val serializables: List<Any> = listOf(baseCase, errorCase)
+    private val successCaseWithSecondaryChallenge = FeatureTestCase(
+        description = "Test that confirmsignin secondary challenge processes the custom challenge returned",
+        preConditions = PreConditions(
+            "authconfiguration.json",
+            "SigningIn_SigningIn.json",
+            mockedResponses = listOf(
+                mockedRespondToAuthCustomChallengeResponse
+            )
+        ),
+        api = API(
+            AuthAPI.confirmSignIn,
+            params = mapOf(
+                "challengeResponse" to challengeCode
+            ).toJsonElement(),
+            options = JsonObject(emptyMap())
+        ),
+        validations = listOf(
+            mockedConfirmSignInSuccessWithChallengeExpectation,
+            ExpectationShapes.State("SigningIn_SigningIn.json")
+        )
+    )
+
+    override val serializables: List<Any> = listOf(baseCase, errorCase, successCaseWithSecondaryChallenge)
 }

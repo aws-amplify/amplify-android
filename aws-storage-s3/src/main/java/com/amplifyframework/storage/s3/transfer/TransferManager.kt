@@ -23,6 +23,7 @@ import androidx.work.WorkManager
 import aws.sdk.kotlin.services.s3.S3Client
 import aws.sdk.kotlin.services.s3.model.ObjectCannedAcl
 import com.amplifyframework.core.Amplify
+import com.amplifyframework.core.category.CategoryType
 import com.amplifyframework.storage.ObjectMetadata
 import com.amplifyframework.storage.s3.AWSS3StoragePlugin
 import com.amplifyframework.storage.s3.TransferOperations
@@ -52,7 +53,8 @@ internal class TransferManager @JvmOverloads constructor(
     private val transferDB: TransferDB = TransferDB.getInstance(context)
     val transferStatusUpdater: TransferStatusUpdater = TransferStatusUpdater.getInstance(context)
     private val logger =
-        Amplify.Logging.forNamespace(
+        Amplify.Logging.logger(
+            CategoryType.STORAGE,
             AWSS3StoragePlugin.AWS_S3_STORAGE_LOG_NAMESPACE.format(this::class.java.simpleName)
         )
     private val transferWorkerObserver =

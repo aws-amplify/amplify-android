@@ -21,12 +21,18 @@ import androidx.annotation.Nullable;
 import java.util.Objects;
 
 final class JavaLogger implements Logger {
+
+    private static boolean isEnabled = true;
     private final LogLevel threshold;
     private final String namespace;
 
     JavaLogger(@NonNull String namespace, @NonNull LogLevel threshold) {
         this.threshold = Objects.requireNonNull(threshold);
         this.namespace = Objects.requireNonNull(namespace);
+    }
+
+    static void setIsEnabled(boolean enabled) {
+        isEnabled = enabled;
     }
 
     @NonNull
@@ -43,7 +49,7 @@ final class JavaLogger implements Logger {
 
     @Override
     public void error(@Nullable String message) {
-        if (threshold.above(LogLevel.ERROR)) {
+        if (shouldNotLogMessage(LogLevel.ERROR)) {
             return;
         }
         log(LogLevel.ERROR, message);
@@ -51,7 +57,7 @@ final class JavaLogger implements Logger {
 
     @Override
     public void error(@Nullable String message, @Nullable Throwable error) {
-        if (threshold.above(LogLevel.ERROR)) {
+        if (shouldNotLogMessage(LogLevel.ERROR)) {
             return;
         }
         log(LogLevel.ERROR, message, error);
@@ -59,7 +65,7 @@ final class JavaLogger implements Logger {
 
     @Override
     public void warn(@Nullable String message) {
-        if (threshold.above(LogLevel.WARN)) {
+        if (shouldNotLogMessage(LogLevel.WARN)) {
             return;
         }
         log(LogLevel.WARN, message);
@@ -67,7 +73,7 @@ final class JavaLogger implements Logger {
 
     @Override
     public void warn(@Nullable String message, @Nullable Throwable issue) {
-        if (threshold.above(LogLevel.WARN)) {
+        if (shouldNotLogMessage(LogLevel.WARN)) {
             return;
         }
         log(LogLevel.WARN, message, issue);
@@ -75,7 +81,7 @@ final class JavaLogger implements Logger {
 
     @Override
     public void info(@Nullable String message) {
-        if (threshold.above(LogLevel.INFO)) {
+        if (shouldNotLogMessage(LogLevel.INFO)) {
             return;
         }
         log(LogLevel.INFO, message);
@@ -83,7 +89,7 @@ final class JavaLogger implements Logger {
 
     @Override
     public void debug(@Nullable String message) {
-        if (threshold.above(LogLevel.DEBUG)) {
+        if (shouldNotLogMessage(LogLevel.DEBUG)) {
             return;
         }
         log(LogLevel.DEBUG, message);
@@ -91,7 +97,7 @@ final class JavaLogger implements Logger {
 
     @Override
     public void verbose(@Nullable String message) {
-        if (threshold.above(LogLevel.VERBOSE)) {
+        if (shouldNotLogMessage(LogLevel.VERBOSE)) {
             return;
         }
         log(LogLevel.VERBOSE, message);
@@ -114,6 +120,10 @@ final class JavaLogger implements Logger {
         }
         System.out.println(lineBuilder.toString());
 
+    }
+
+    private boolean shouldNotLogMessage(LogLevel logLevel) {
+        return !isEnabled || threshold.above(logLevel);
     }
 
 }

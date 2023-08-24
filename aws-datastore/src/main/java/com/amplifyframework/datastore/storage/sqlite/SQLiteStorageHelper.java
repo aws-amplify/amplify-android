@@ -23,6 +23,7 @@ import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.logging.Logger;
 import com.amplifyframework.util.Empty;
 import com.amplifyframework.util.Wrap;
@@ -36,7 +37,7 @@ import java.util.Set;
  */
 final class SQLiteStorageHelper extends SQLiteOpenHelper implements ModelUpdateStrategy<SQLiteDatabase, String> {
 
-    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
+    private static final Logger LOG = Amplify.Logging.logger(CategoryType.DATASTORE, "amplify:aws-datastore");
 
     // SQLiteDatabase Metadata is stored in tables prefixed by this prefix.
     private static final String SQLITE_SYSTEM_TABLE_PREFIX = "sqlite_";

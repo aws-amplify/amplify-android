@@ -15,6 +15,7 @@
 
 package com.amplifyframework.geo.maplibre.http
 
+import aws.smithy.kotlin.runtime.InternalApi
 import aws.smithy.kotlin.runtime.auth.awssigning.AwsSigningConfig
 import aws.smithy.kotlin.runtime.auth.awssigning.DefaultAwsSigner
 import aws.smithy.kotlin.runtime.http.Headers as AwsHeaders
@@ -26,6 +27,7 @@ import aws.smithy.kotlin.runtime.net.QueryParameters
 import aws.smithy.kotlin.runtime.net.Scheme
 import aws.smithy.kotlin.runtime.net.Url
 import aws.smithy.kotlin.runtime.net.toUrlString
+import aws.smithy.kotlin.runtime.util.emptyAttributes
 import com.amplifyframework.geo.location.AWSLocationGeoPlugin
 import java.io.ByteArrayOutputStream
 import java.io.IOException
@@ -54,7 +56,9 @@ internal class AWSRequestSignerInterceptor(
 
         val awsRequest = try {
             // OkHttpRequest -> Signed AWSRequest
-            signRequest(request)
+            runBlocking {
+                signRequest(request)
+            }
         } catch (e: SignCredentialsException) {
             return Response.Builder()
                 .code(401)
@@ -90,8 +94,9 @@ internal class AWSRequestSignerInterceptor(
         return this.url(urlBuilder.build())
     }
 
+    @OptIn(InternalApi::class)
     @Throws(SignCredentialsException::class)
-    private fun signRequest(request: Request): HttpRequest {
+    private suspend fun signRequest(request: Request): HttpRequest {
         val url = request.url
         val headers: AwsHeaders = AwsHeaders.invoke {
             request.headers.forEach { (name, value) ->
@@ -104,7 +109,7 @@ internal class AWSRequestSignerInterceptor(
         val signingConfig = AwsSigningConfig.invoke {
             region = client.config.region
             service = "geo"
-            credentialsProvider = plugin.credentialsProvider
+            credentials = plugin.credentialsProvider.resolve(emptyAttributes())
         }
 
         val httpUrl = Url(
@@ -116,7 +121,7 @@ internal class AWSRequestSignerInterceptor(
                 url.queryParameterNames.map { name ->
                     url.queryParameter(name)?.let { append(name, it) }
                 }
-            },
+            }
         )
 
         val bodyBytes: ByteArray = getBytes(request.body)

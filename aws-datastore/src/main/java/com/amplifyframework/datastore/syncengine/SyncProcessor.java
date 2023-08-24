@@ -18,12 +18,14 @@ package com.amplifyframework.datastore.syncengine;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.api.ApiException;
+import com.amplifyframework.api.ApiException.ApiAuthException;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.PaginatedResult;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.async.Cancelable;
+import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
@@ -40,6 +42,7 @@ import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
 import com.amplifyframework.datastore.events.NonApplicableDataReceivedEvent;
 import com.amplifyframework.datastore.events.SyncQueriesStartedEvent;
+import com.amplifyframework.datastore.utils.ErrorInspector;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.logging.Logger;
@@ -66,7 +69,7 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
  * the {@link Merger}.
  */
 final class SyncProcessor {
-    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
+    private static final Logger LOG = Amplify.Logging.logger(CategoryType.DATASTORE, "amplify:aws-datastore");
 
     private final ModelProvider modelProvider;
     private final SchemaRegistry schemaRegistry;
@@ -159,6 +162,13 @@ final class SyncProcessor {
                 return syncModel(schema, lastSyncTime)
                     // Switch to a new thread so that subsequent API fetches will happen in parallel with DB writes.
                     .observeOn(Schedulers.io())
+                    // Ignore ApiAuthExceptions so that we can continue to sync down other models
+                    .materialize()
+                    .filter(notification ->
+                        !notification.isOnError() ||
+                        !(ErrorInspector.contains(notification.getError(), ApiAuthException.class))
+                    )
+                    .dematerialize(notification -> notification)
                     // Flatten to a stream of ModelWithMetadata objects
                     .concatMap(Flowable::fromIterable)
                     .concatMapCompletable(item -> merger.merge(item, metricsAccumulator::increment))

@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -17,6 +17,8 @@ package com.amplifyframework.auth
 
 import aws.smithy.kotlin.runtime.auth.awscredentials.Credentials
 import aws.smithy.kotlin.runtime.time.Instant
+import aws.smithy.kotlin.runtime.time.toJvmInstant
+import aws.smithy.kotlin.runtime.time.toSdkInstant
 
 /**
  * Provides access to the AWS credentials used for accessing AWS services: AWS
@@ -65,7 +67,7 @@ open class AWSCredentials(
     }
 }
 
-class AWSTemporaryCredentials(
+data class AWSTemporaryCredentials(
     /**
      * {@inheritDoc}
      */
@@ -81,17 +83,33 @@ class AWSTemporaryCredentials(
      */
     val sessionToken: String,
 
+    @Deprecated(
+        "Use expiresAt instead, which is based off java.time.Instant",
+        ReplaceWith("expiresAt", "java.time.Instant")
+    )
+    val expiration: Instant
+) : AWSCredentials(accessKeyId, secretAccessKey) {
+
     /**
      * The expiration.
      */
-    val expiration: Instant
-) : AWSCredentials(accessKeyId, secretAccessKey)
+    val expiresAt: java.time.Instant
+
+    init {
+
+        // Assigning and suppressing expiration usage here instead of inline assignment, as the suppress annotation was
+        // showing in code highlighting.
+        @Suppress("DEPRECATION")
+        expiresAt = expiration.toJvmInstant()
+    }
+}
 
 internal fun AWSCredentials.toSdkCredentials(): Credentials {
+    @Suppress("DEPRECATION")
     return Credentials(
         accessKeyId = this.accessKeyId,
         secretAccessKey = this.secretAccessKey,
         sessionToken = (this as? AWSTemporaryCredentials)?.sessionToken,
-        expiration = (this as? AWSTemporaryCredentials)?.expiration
+        expiration = (this as? AWSTemporaryCredentials)?.expiresAt?.toSdkInstant()
     )
 }

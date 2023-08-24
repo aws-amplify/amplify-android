@@ -12,22 +12,18 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
+package com.amplifyframework.predictions.aws.models.liveness
 
-package com.amplifyframework.auth.cognito.data
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
-import com.amplifyframework.core.store.KeyValueRepository
-import java.util.concurrent.ConcurrentHashMap
-
-internal class InMemoryKeyValueRepository : KeyValueRepository {
-    private val cache = ConcurrentHashMap<String, String?>()
-
-    override fun put(dataKey: String, value: String?) {
-        value?.run { cache.put(dataKey, value) }
-    }
-
-    override fun get(dataKey: String): String? = cache.getOrDefault(dataKey, null)
-
-    override fun remove(dataKey: String) {
-        cache.remove(dataKey)
-    }
-}
+/**
+ * Constructs a new ServiceQuotaExceededException with the specified error
+ * message.
+ *
+ * @param message Describes the error encountered.
+ */
+@Serializable
+internal data class ServiceQuotaExceededException(
+    @SerialName("Message") override val message: String
+) : Exception(message)

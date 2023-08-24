@@ -423,6 +423,7 @@ public final class StorageComponentTest {
      *                          files inside storage
      */
     @Test
+    @SuppressWarnings("deprecation")
     public void testListObject() throws StorageException {
         final String path = RandomString.string();
         final StorageItem item = new StorageItem(

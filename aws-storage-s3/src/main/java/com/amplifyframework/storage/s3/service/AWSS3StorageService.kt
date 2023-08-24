@@ -18,13 +18,15 @@ package com.amplifyframework.storage.s3.service
 import android.content.Context
 import aws.sdk.kotlin.services.s3.S3Client
 import aws.sdk.kotlin.services.s3.deleteObject
+import aws.sdk.kotlin.services.s3.listObjectsV2
 import aws.sdk.kotlin.services.s3.model.GetObjectRequest
 import aws.sdk.kotlin.services.s3.paginators.listObjectsV2Paginated
-import aws.sdk.kotlin.services.s3.presigners.presign
+import aws.sdk.kotlin.services.s3.presigners.presignGetObject
 import aws.sdk.kotlin.services.s3.withConfig
 import com.amplifyframework.auth.AuthCredentialsProvider
 import com.amplifyframework.storage.ObjectMetadata
 import com.amplifyframework.storage.StorageItem
+import com.amplifyframework.storage.result.StorageListResult
 import com.amplifyframework.storage.s3.transfer.TransferManager
 import com.amplifyframework.storage.s3.transfer.TransferObserver
 import com.amplifyframework.storage.s3.transfer.TransferRecord
@@ -71,10 +73,13 @@ internal class AWSS3StorageService(
             enableAccelerate = useAccelerateEndpoint
         }.use {
             runBlocking {
-                GetObjectRequest {
-                    bucket = s3BucketName
-                    key = serviceKey
-                }.presign(it.config, expires.seconds)
+                it.presignGetObject(
+                    GetObjectRequest {
+                        bucket = s3BucketName
+                        key = serviceKey
+                    },
+                    expires.seconds
+                )
             }
         }
         return URL(presignUrlRequest.url.toString())
@@ -175,6 +180,34 @@ internal class AWSS3StorageService(
             }
         }
         return items
+    }
+
+    override fun listFiles(path: String, prefix: String, pageSize: Int, nextToken: String?): StorageListResult {
+        return runBlocking {
+            val result = s3Client.listObjectsV2 {
+                this.bucket = s3BucketName
+                this.prefix = path
+                this.maxKeys = pageSize
+                this.continuationToken = nextToken
+            }
+            val items = result.contents?.mapNotNull { value ->
+                val key = value.key
+                val lastModified = value.lastModified
+                val eTag = value.eTag
+                if (key != null && lastModified != null && eTag != null) {
+                    StorageItem(
+                        S3Keys.extractAmplifyKey(key, prefix),
+                        value.size,
+                        Date.from(Instant.ofEpochMilli(lastModified.epochSeconds)),
+                        eTag,
+                        null
+                    )
+                } else {
+                    null
+                }
+            }
+            StorageListResult.fromItems(items, result.nextContinuationToken)
+        }
     }
 
     /**

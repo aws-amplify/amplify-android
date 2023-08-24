@@ -29,6 +29,7 @@ import com.amplifyframework.auth.CognitoCredentialsProvider
 import com.amplifyframework.core.Action
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
+import com.amplifyframework.core.category.CategoryType
 import com.amplifyframework.core.store.EncryptedKeyValueRepository
 import com.amplifyframework.core.store.KeyValueRepository
 import com.amplifyframework.notifications.pushnotifications.NotificationPayload
@@ -42,7 +43,6 @@ import com.amplifyframework.pinpoint.core.data.AndroidDeviceDetails
 import com.amplifyframework.pinpoint.core.database.PinpointDatabase
 import com.amplifyframework.pinpoint.core.util.getUniqueId
 import com.google.firebase.messaging.FirebaseMessaging
-import java.io.IOException
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.random.Random
 import org.json.JSONObject
@@ -50,7 +50,7 @@ import org.json.JSONObject
 class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClient>() {
 
     companion object {
-        private val LOG = Amplify.Logging.forNamespace("amplify:aws-push-notifications-pinpoint")
+        private val LOG = Amplify.Logging.logger(CategoryType.NOTIFICATIONS, "amplify:aws-push-notifications-pinpoint")
         private const val AWS_PINPOINT_PUSHNOTIFICATIONS_PLUGIN_KEY = "awsPinpointPushNotificationsPlugin"
 
         private const val DATABASE_NAME = "awspushnotifications.db"
@@ -162,17 +162,17 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
             try {
                 if (!task.isSuccessful) {
                     LOG.error("Fetching FCM registration token failed: ${task.exception}")
+                } else {
+                    val token = task.result
+                    registerDevice(token, {
+                        LOG.info("Registering push notifications token: $token")
+                    }) {
+                        throw it
+                    }
                 }
-                val token = task.result
-                registerDevice(token, {
-                    LOG.info("Registering push notifications token: $token")
-                }, {
-                    throw it
-                })
-            } catch (exception: IOException) {
+            } catch (exception: Exception) {
                 LOG.error(
-                    "Fetching token failed, this is a known issue in emulators, " +
-                        "rerun the app: https://github.com/firebase/firebase-android-sdk/issues/3040",
+                    "Fetching token failed",
                     exception
                 )
             }
@@ -313,7 +313,9 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
                 canShowNotification(pinpointPayload) -> {
                     val notificationId = getNotificationRequestId(eventSourceAttributes, eventSourceType)
                     pushNotificationsUtils.showNotification(
-                        notificationId, pinpointPayload, AWSPinpointPushNotificationsActivity::class.java
+                        notificationId,
+                        pinpointPayload,
+                        AWSPinpointPushNotificationsActivity::class.java
                     )
                     PushNotificationResult.NotificationPosted
                 }

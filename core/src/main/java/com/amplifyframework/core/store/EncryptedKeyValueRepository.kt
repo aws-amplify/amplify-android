@@ -27,7 +27,7 @@ import java.util.UUID
 
 class EncryptedKeyValueRepository(
     private val context: Context,
-    private val sharedPreferencesName: String,
+    private val sharedPreferencesName: String
 ) : KeyValueRepository {
 
     @VisibleForTesting
@@ -58,6 +58,13 @@ class EncryptedKeyValueRepository(
     override fun remove(dataKey: String) {
         with(editor) {
             remove(dataKey)
+            apply()
+        }
+    }
+
+    override fun removeAll() {
+        with(editor) {
+            clear()
             apply()
         }
     }

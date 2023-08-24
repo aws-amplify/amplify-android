@@ -30,7 +30,7 @@ android {
 }
 
 dependencies {
-    implementation(dependency.kotlin.stdlib)
+    implementation(libs.kotlin.stdlib)
 }
 
 afterEvaluate {

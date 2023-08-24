@@ -12,17 +12,9 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package com.amplifyframework.auth
+package com.amplifyframework.predictions.aws.models.liveness
 
-import com.amplifyframework.annotations.InternalApiWarning
-import com.amplifyframework.auth.result.AuthSessionResult
+import kotlinx.serialization.SerialName
 
-@InternalApiWarning
-open class AWSAuthSessionInternal(
-    @get:JvmName("getSignedIn")
-    open val isSignedIn: Boolean,
-    open val identityIdResult: AuthSessionResult<String>,
-    open val awsCredentialsResult: AuthSessionResult<AWSCredentials>,
-    open val userSubResult: AuthSessionResult<String>,
-    open val userPoolTokensResult: AuthSessionResult<AWSCognitoUserPoolTokens>,
-) : AuthSession(isSignedIn)
+@kotlinx.serialization.Serializable
+internal data class FreshnessColor(@SerialName("RGB") val rGB: List<Int>)

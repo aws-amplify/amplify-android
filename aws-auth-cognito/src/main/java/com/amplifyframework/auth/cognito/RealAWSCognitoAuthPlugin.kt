@@ -34,6 +34,8 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.VerifyUserAttribute
 import aws.sdk.kotlin.services.cognitoidentityprovider.resendConfirmationCode
 import aws.sdk.kotlin.services.cognitoidentityprovider.signUp
 import com.amplifyframework.AmplifyException
+import com.amplifyframework.annotations.InternalAmplifyApi
+import com.amplifyframework.auth.AWSCognitoAuthMetadataType
 import com.amplifyframework.auth.AWSCredentials
 import com.amplifyframework.auth.AWSTemporaryCredentials
 import com.amplifyframework.auth.AuthCategoryBehavior
@@ -79,6 +81,8 @@ import com.amplifyframework.auth.cognito.result.RevokeTokenError
 import com.amplifyframework.auth.cognito.usecases.ResetPasswordUseCase
 import com.amplifyframework.auth.exceptions.ConfigurationException
 import com.amplifyframework.auth.exceptions.InvalidStateException
+import com.amplifyframework.auth.exceptions.NotAuthorizedException
+import com.amplifyframework.auth.exceptions.ServiceException
 import com.amplifyframework.auth.exceptions.SessionExpiredException
 import com.amplifyframework.auth.exceptions.SignedOutException
 import com.amplifyframework.auth.exceptions.UnknownException
@@ -165,6 +169,11 @@ internal class RealAWSCognitoAuthPlugin(
 
     fun escapeHatch() = authEnvironment.cognitoAuthService
 
+    @InternalAmplifyApi
+    fun addToUserAgent(type: AWSCognitoAuthMetadataType, value: String) {
+        authEnvironment.cognitoAuthService.customUserAgentPairs[type.key] = value
+    }
+
     @WorkerThread
     @Throws(AmplifyException::class)
     fun initialize() {
@@ -186,6 +195,22 @@ internal class RealAWSCognitoAuthPlugin(
             throw AmplifyException(
                 "Failed to configure auth plugin.",
                 "Make sure your amplifyconfiguration.json is valid"
+            )
+        }
+    }
+
+    internal suspend fun suspendWhileConfiguring() {
+        return suspendCoroutine { continuation ->
+            val token = StateChangeListenerToken()
+            authStateMachine.listen(
+                token,
+                {
+                    if (it is AuthState.Configured || it is AuthState.Error) {
+                        authStateMachine.cancel(token)
+                        continuation.resume(Unit)
+                    }
+                },
+                { }
             )
         }
     }
@@ -590,7 +615,7 @@ internal class RealAWSCognitoAuthPlugin(
             val signInState = (authNState as? AuthenticationState.SigningIn)?.signInState
             if (signInState is SignInState.ResolvingChallenge) {
                 when (signInState.challengeState) {
-                    is SignInChallengeState.WaitingForAnswer -> {
+                    is SignInChallengeState.WaitingForAnswer, is SignInChallengeState.Error -> {
                         _confirmSignIn(challengeResponse, options, onSuccess, onError)
                     }
                     else -> {
@@ -636,7 +661,28 @@ internal class RealAWSCognitoAuthPlugin(
                         )
                     }
                     signInState is SignInState.ResolvingChallenge &&
-                        signInState.challengeState is SignInChallengeState.Error -> {
+                        signInState.challengeState is SignInChallengeState.WaitingForAnswer &&
+                        (signInState.challengeState as SignInChallengeState.WaitingForAnswer).hasNewResponse -> {
+                        authStateMachine.cancel(token)
+                        val signInChallengeState = signInState.challengeState as SignInChallengeState.WaitingForAnswer
+                        var signInStep = AuthSignInStep.CONFIRM_SIGN_IN_WITH_CUSTOM_CHALLENGE
+                        if (signInChallengeState.challenge.challengeName == "SMS_MFA") {
+                            signInStep = AuthSignInStep.CONFIRM_SIGN_IN_WITH_SMS_MFA_CODE
+                        } else if (signInChallengeState.challenge.challengeName == "NEW_PASSWORD_REQUIRED") {
+                            signInStep = AuthSignInStep.CONFIRM_SIGN_IN_WITH_NEW_PASSWORD
+                        }
+
+                        val authSignInResult = AuthSignInResult(
+                            false,
+                            AuthNextSignInStep(signInStep, signInChallengeState.challenge.parameters ?: mapOf(), null)
+                        )
+                        onSuccess.accept(authSignInResult)
+                        (signInState.challengeState as SignInChallengeState.WaitingForAnswer).hasNewResponse = false
+                    }
+
+                    signInState is SignInState.ResolvingChallenge &&
+                        signInState.challengeState is SignInChallengeState.Error &&
+                        (signInState.challengeState as SignInChallengeState.Error).hasNewResponse -> {
                         authStateMachine.cancel(token)
                         onError.accept(
                             CognitoAuthExceptionConverter.lookup(
@@ -646,6 +692,7 @@ internal class RealAWSCognitoAuthPlugin(
                                 "Confirm Sign in failed."
                             )
                         )
+                        (signInState.challengeState as SignInChallengeState.Error).hasNewResponse = false
                     }
                 }
             }, {
@@ -1010,9 +1057,15 @@ internal class RealAWSCognitoAuthPlugin(
                                         onSuccess.accept(AmplifyCredential.Empty.getCognitoSession(error.exception))
                                         sendHubEvent(AuthChannelEventName.SESSION_EXPIRED.toString())
                                     }
+                                    is ServiceException -> {
+                                        onSuccess.accept(AmplifyCredential.Empty.getCognitoSession(error.exception))
+                                    }
+                                    is NotAuthorizedException -> {
+                                        onSuccess.accept(AmplifyCredential.Empty.getCognitoSession(error.exception))
+                                    }
                                     else -> {
                                         val errorResult = UnknownException("Fetch auth session failed.", error)
-                                        onSuccess.accept(error.amplifyCredential.getCognitoSession(errorResult))
+                                        onSuccess.accept(AmplifyCredential.Empty.getCognitoSession(errorResult))
                                     }
                                 }
                             }
