@@ -135,7 +135,7 @@ public final class AuthRule {
     @NonNull
     public String getIdentityClaimOrDefault() {
         final String cliGeneratedIdentityClaim = "sub";
-        return Empty.check(identityClaim) || cliGeneratedIdentityClaim.equals(identityClaim)
+        return cliGeneratedIdentityClaim.equals(identityClaim)
             ? identityClaim
             : DEFAULT_IDENTITY_CLAIM;
     }
