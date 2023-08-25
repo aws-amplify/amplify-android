@@ -1,3 +1,26 @@
+## [Release 2.12.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.12.0)
+
+### Features
+- **auth:** Removed dependency on oauth2 token for refreshToken and move to initiateAuth for hostedUI ([#2543](https://github.com/aws-amplify/amplify-android/issues/2543))
+
+### Bug Fixes
+- **auth:** Fix for missing exception type for sign in ([#2567](https://github.com/aws-amplify/amplify-android/issues/2567))
+- **datastore:** Prevent stop from interrupting subsequent start call ([#2569](https://github.com/aws-amplify/amplify-android/issues/2569))
+- **datastore:** Ignore ApiAuthExceptions when subscribing or syncing models ([#2561](https://github.com/aws-amplify/amplify-android/issues/2561))
+- add granular read ops enum ([#2265](https://github.com/aws-amplify/amplify-android/issues/2265))
+- **flutter/datastore:** Nullable custom type arrays ([#2565](https://github.com/aws-amplify/amplify-android/issues/2565))
+- **notifications:** also catch `RuntimeExecutionException` for google play store device use case ([#2562](https://github.com/aws-amplify/amplify-android/issues/2562))
+ 
+[See all changes between 2.11.3 and 2.12.0](https://github.com/aws-amplify/amplify-android/compare/release_v2.11.3...release_v2.12.0)
+
+## [Release 2.11.3](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.11.3)
+
+### Bug Fixes
+- **storage:** Upgrade SDK to fix EOF exception ([#2558](https://github.com/aws-amplify/amplify-android/issues/2558))
+- **data:** Resolve orchestrator transition threading issues. ([#2551](https://github.com/aws-amplify/amplify-android/issues/2551))
+
+[See all changes between 2.11.2 and 2.11.3](https://github.com/aws-amplify/amplify-android/compare/release_v2.11.2...release_v2.11.3)
+
 ## [Release 2.11.2](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.11.2)
 
 ### Bug Fixes
