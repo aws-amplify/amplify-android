@@ -94,6 +94,7 @@ internal class LivenessWebSocketTest {
             server.url("/").toString(),
             "",
             sessionInformation,
+            mapOf(),
             onSessionInformationReceived,
             onErrorReceived,
             onComplete

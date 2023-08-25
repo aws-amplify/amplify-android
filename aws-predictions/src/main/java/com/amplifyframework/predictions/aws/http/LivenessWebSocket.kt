@@ -205,7 +205,7 @@ internal class LivenessWebSocket(
         var userAgent = "${UserAgent.string()} os/Android/${Build.VERSION.SDK_INT} md/device/$deviceName " +
             "md/device-manufacturer/$deviceManufacturer api/rekognitionstreaming/$amplifyVersion"
 
-        userAgentPairs.forEach {kv ->
+        userAgentPairs.forEach { kv ->
             val key = kv.key
             val value = kv.value
             userAgent += " $key:$value"
