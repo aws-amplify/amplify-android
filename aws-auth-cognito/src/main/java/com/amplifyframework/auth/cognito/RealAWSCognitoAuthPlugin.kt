@@ -80,7 +80,7 @@ import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignOutOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignUpOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttributeOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttributesOptions
-import com.amplifyframework.auth.cognito.options.AWSCognitoAuthVerifyTOTPSetupOptions
+import com.amplifyframework.auth.cognito.options.AWSAuthVerifyTOTPSetupOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthWebUISignInOptions
 import com.amplifyframework.auth.cognito.options.AuthFlowType
 import com.amplifyframework.auth.cognito.options.FederateToIdentityPoolOptions
@@ -2167,7 +2167,7 @@ internal class RealAWSCognitoAuthPlugin(
         onSuccess: Action,
         onError: Consumer<AuthException>
     ) {
-        val cognitoOptions = options as? AWSCognitoAuthVerifyTOTPSetupOptions
+        val cognitoOptions = options as? AWSAuthVerifyTOTPSetupOptions
         verifyTotp(code, cognitoOptions?.friendlyDeviceName, onSuccess, onError)
     }
 

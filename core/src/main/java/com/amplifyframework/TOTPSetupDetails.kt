@@ -21,9 +21,9 @@ data class TOTPSetupDetails(
     val username: String
 ) {
     fun getSetupURI(
-        appName: String,
+        issuer: String,
         accountName: String = username
     ): Uri {
-        return Uri.parse("otpauth://totp/$appName:$accountName?secret=$sharedSecret&issuer=$appName")
+        return Uri.parse("otpauth://totp/$issuer:$accountName?secret=$sharedSecret&issuer=$issuer")
     }
 }

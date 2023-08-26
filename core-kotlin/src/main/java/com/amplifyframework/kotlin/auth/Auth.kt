@@ -334,6 +334,7 @@ interface Auth {
      * Setup TOTP for the currently signed in user.
      * @return TOTP Setup details
      */
+    @Throws(AuthException::class)
     suspend fun setUpTOTP(): TOTPSetupDetails
 
     /**
@@ -341,6 +342,7 @@ interface Auth {
      * @param code TOTP code to verify TOTP setup
      * @param options additional options to verify totp setup
      */
+    @Throws(AuthException::class)
     suspend fun verifyTOTPSetup(
         code: String,
         options: AuthVerifyTOTPSetupOptions = AuthVerifyTOTPSetupOptions.builder().build()

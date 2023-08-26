@@ -20,7 +20,7 @@ import com.amplifyframework.auth.AuthException
  * Software Token MFA is not enabled for the user.
  * @param cause The underlying cause of this exception
  */
-open class EnableSoftwareTokenMfaException(cause: Throwable?) :
+open class EnableSoftwareTokenMFAException(cause: Throwable?) :
     AuthException(
         "Software token TOTP multi-factor authentication (MFA) is not enabled for the user pool.",
         "Enable the software token MFA for the user.",

@@ -63,7 +63,7 @@ import com.amplifyframework.auth.cognito.options.AWSCognitoAuthResendUserAttribu
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttributeOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttributesOptions
-import com.amplifyframework.auth.cognito.options.AWSCognitoAuthVerifyTOTPSetupOptions
+import com.amplifyframework.auth.cognito.options.AWSAuthVerifyTOTPSetupOptions
 import com.amplifyframework.auth.cognito.options.AuthFlowType
 import com.amplifyframework.auth.cognito.usecases.ResetPasswordUseCase
 import com.amplifyframework.auth.exceptions.InvalidStateException
@@ -1736,7 +1736,7 @@ class RealAWSCognitoAuthPluginTest {
 
         plugin.verifyTOTPSetup(
             code,
-            AWSCognitoAuthVerifyTOTPSetupOptions.CognitoBuilder().setFriendlyDeviceName(friendlyDeviceName).build(),
+            AWSAuthVerifyTOTPSetupOptions.CognitoBuilder().friendlyDeviceName(friendlyDeviceName).build(),
             onSuccess,
             onError
         )
@@ -1781,7 +1781,7 @@ class RealAWSCognitoAuthPluginTest {
 
         plugin.verifyTOTPSetup(
             code,
-            AWSCognitoAuthVerifyTOTPSetupOptions.CognitoBuilder().build(),
+            AWSAuthVerifyTOTPSetupOptions.CognitoBuilder().build(),
             onSuccess,
             onError
         )

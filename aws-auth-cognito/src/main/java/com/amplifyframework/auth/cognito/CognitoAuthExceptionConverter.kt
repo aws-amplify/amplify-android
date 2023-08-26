@@ -91,7 +91,7 @@ internal class CognitoAuthExceptionConverter {
                 is PasswordResetRequiredException ->
                     com.amplifyframework.auth.cognito.exceptions.service.PasswordResetRequiredException(error)
                 is EnableSoftwareTokenMfaException ->
-                    com.amplifyframework.auth.cognito.exceptions.service.EnableSoftwareTokenMfaException(error)
+                    com.amplifyframework.auth.cognito.exceptions.service.EnableSoftwareTokenMFAException(error)
                 is UserLambdaValidationException ->
                     com.amplifyframework.auth.cognito.exceptions.service.UserLambdaValidationException(
                         error.message,

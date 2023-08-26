@@ -523,7 +523,7 @@ internal class KotlinAuthFacadeInternal(private val delegate: RealAWSCognitoAuth
         }
     }
 
-    suspend fun setupMFA(): TOTPSetupDetails {
+    suspend fun setUpTOTP(): TOTPSetupDetails {
         return suspendCoroutine { continuation ->
             delegate.setUpTOTP(
                 { continuation.resume(it) },
