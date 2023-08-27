@@ -23,12 +23,9 @@ import com.amplifyframework.auth.MFAType
 import com.amplifyframework.auth.cognito.test.R
 import com.amplifyframework.auth.options.AuthSignUpOptions
 import com.amplifyframework.auth.result.step.AuthSignInStep
-import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.AmplifyConfiguration
 import com.amplifyframework.core.category.CategoryConfiguration
 import com.amplifyframework.core.category.CategoryType
-import com.amplifyframework.logging.AndroidLoggingPlugin
-import com.amplifyframework.logging.LogLevel
 import com.amplifyframework.testutils.sync.SynchronousAuth
 import dev.robinohs.totpkt.otp.totp.TotpGenerator
 import dev.robinohs.totpkt.otp.totp.timesupport.generateCode
@@ -54,7 +51,6 @@ class AWSCognitoAuthPluginTOTPTests {
     @Before
     fun setup() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        Amplify.addPlugin(AndroidLoggingPlugin(LogLevel.VERBOSE))
         val config = AmplifyConfiguration.fromConfigFile(context, R.raw.amplifyconfiguration_totp)
         val authConfig: CategoryConfiguration = config.forCategoryType(CategoryType.AUTH)
         val authConfigJson = authConfig.getPluginConfig("awsCognitoAuthPlugin")
