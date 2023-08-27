@@ -20,11 +20,11 @@ import com.amplifyframework.auth.options.AuthVerifyTOTPSetupOptions;
 /**
  * Cognito extension of update verify totp setup options to add the platform specific fields.
  */
-public final class AWSAuthVerifyTOTPSetupOptions extends AuthVerifyTOTPSetupOptions {
+public final class AWSCognitoAuthVerifyTOTPSetupOptions extends AuthVerifyTOTPSetupOptions {
 
     private String friendlyDeviceName;
 
-    private AWSAuthVerifyTOTPSetupOptions(String friendlyDeviceName) {
+    private AWSCognitoAuthVerifyTOTPSetupOptions(String friendlyDeviceName) {
         this.friendlyDeviceName = friendlyDeviceName;
     }
 
@@ -56,8 +56,8 @@ public final class AWSAuthVerifyTOTPSetupOptions extends AuthVerifyTOTPSetupOpti
          * Construct and return the object with the values set in the builder.
          * @return a new instance of AWSCognitoAuthVerifyTOTPSetupOptions with the values specified in the builder.
          */
-        public AWSAuthVerifyTOTPSetupOptions build() {
-            return new AWSAuthVerifyTOTPSetupOptions(friendlyDeviceName);
+        public AWSCognitoAuthVerifyTOTPSetupOptions build() {
+            return new AWSCognitoAuthVerifyTOTPSetupOptions(friendlyDeviceName);
         }
     }
 }

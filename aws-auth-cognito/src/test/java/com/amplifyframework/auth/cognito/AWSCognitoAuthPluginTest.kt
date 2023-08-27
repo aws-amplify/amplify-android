@@ -26,7 +26,7 @@ import com.amplifyframework.auth.AuthSession
 import com.amplifyframework.auth.AuthUser
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
-import com.amplifyframework.auth.cognito.options.AWSAuthVerifyTOTPSetupOptions
+import com.amplifyframework.auth.cognito.options.AWSCognitoAuthVerifyTOTPSetupOptions
 import com.amplifyframework.auth.cognito.options.FederateToIdentityPoolOptions
 import com.amplifyframework.auth.cognito.result.FederateToIdentityPoolResult
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
@@ -703,7 +703,7 @@ class AWSCognitoAuthPluginTest {
     @Test
     fun verifyTOTPSetupWithOptions() {
         val code = "123456"
-        val options = AWSAuthVerifyTOTPSetupOptions.CognitoBuilder().friendlyDeviceName("DEVICE_NAME").build()
+        val options = AWSCognitoAuthVerifyTOTPSetupOptions.CognitoBuilder().friendlyDeviceName("DEVICE_NAME").build()
         val expectedOnSuccess = Action { }
         val expectedOnError = Consumer<AuthException> { }
         authPlugin.verifyTOTPSetup(code, options, expectedOnSuccess, expectedOnError)

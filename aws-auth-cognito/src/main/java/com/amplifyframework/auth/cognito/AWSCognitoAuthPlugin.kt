@@ -33,7 +33,7 @@ import com.amplifyframework.auth.AuthUser
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.cognito.asf.UserContextDataProvider
-import com.amplifyframework.auth.cognito.options.AWSAuthVerifyTOTPSetupOptions
+import com.amplifyframework.auth.cognito.options.AWSCognitoAuthVerifyTOTPSetupOptions
 import com.amplifyframework.auth.cognito.options.FederateToIdentityPoolOptions
 import com.amplifyframework.auth.cognito.result.FederateToIdentityPoolResult
 import com.amplifyframework.auth.exceptions.ConfigurationException
@@ -785,7 +785,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
     }
 
     override fun verifyTOTPSetup(code: String, onSuccess: Action, onError: Consumer<AuthException>) {
-        verifyTOTPSetup(code, AWSAuthVerifyTOTPSetupOptions.CognitoBuilder().build(), onSuccess, onError)
+        verifyTOTPSetup(code, AWSCognitoAuthVerifyTOTPSetupOptions.CognitoBuilder().build(), onSuccess, onError)
     }
 
     override fun verifyTOTPSetup(

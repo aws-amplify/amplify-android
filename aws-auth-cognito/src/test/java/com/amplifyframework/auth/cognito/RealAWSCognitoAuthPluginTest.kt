@@ -59,11 +59,11 @@ import com.amplifyframework.auth.MFAType
 import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidUserPoolConfigurationException
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.auth.cognito.helpers.SRPHelper
-import com.amplifyframework.auth.cognito.options.AWSAuthVerifyTOTPSetupOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthResendUserAttributeConfirmationCodeOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttributeOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttributesOptions
+import com.amplifyframework.auth.cognito.options.AWSCognitoAuthVerifyTOTPSetupOptions
 import com.amplifyframework.auth.cognito.options.AuthFlowType
 import com.amplifyframework.auth.cognito.usecases.ResetPasswordUseCase
 import com.amplifyframework.auth.exceptions.InvalidStateException
@@ -1736,7 +1736,7 @@ class RealAWSCognitoAuthPluginTest {
 
         plugin.verifyTOTPSetup(
             code,
-            AWSAuthVerifyTOTPSetupOptions.CognitoBuilder().friendlyDeviceName(friendlyDeviceName).build(),
+            AWSCognitoAuthVerifyTOTPSetupOptions.CognitoBuilder().friendlyDeviceName(friendlyDeviceName).build(),
             onSuccess,
             onError
         )
@@ -1781,7 +1781,7 @@ class RealAWSCognitoAuthPluginTest {
 
         plugin.verifyTOTPSetup(
             code,
-            AWSAuthVerifyTOTPSetupOptions.CognitoBuilder().build(),
+            AWSCognitoAuthVerifyTOTPSetupOptions.CognitoBuilder().build(),
             onSuccess,
             onError
         )
