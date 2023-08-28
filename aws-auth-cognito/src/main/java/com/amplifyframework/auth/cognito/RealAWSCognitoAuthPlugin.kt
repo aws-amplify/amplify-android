@@ -2235,13 +2235,13 @@ internal class RealAWSCognitoAuthPlugin(
                                     this.smsMfaSettings = sms?.let {
                                         SmsMfaSettingsType.invoke {
                                             enabled = it.mfaEnabled
-                                            preferredMfa = it.mfaPreferred
+                                            it.mfaPreferred ?.let { preferred -> preferredMfa = preferred }
                                         }
                                     }
                                     this.softwareTokenMfaSettings = totp?.let {
                                         SoftwareTokenMfaSettingsType.invoke {
                                             enabled = it.mfaEnabled
-                                            preferredMfa = it.mfaPreferred
+                                            it.mfaPreferred ?.let { preferred -> preferredMfa = preferred }
                                         }
                                     }
                                 }?.also {

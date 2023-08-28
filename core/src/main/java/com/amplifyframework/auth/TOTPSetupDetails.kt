@@ -28,11 +28,11 @@ data class TOTPSetupDetails(
 ) {
 
     /**
-     * Returns a TOTP setup URI that can help the customers avoid barcode scanning and use native password manager
+     * Returns a TOTP setup URI that can help avoid barcode scanning and use native password manager
      * to handle TOTP association.
      *
      * @param appName of TOTP manager
-     * @param accountName for TOTP manager
+     * @param accountName for TOTP manager. Defaults to stored username value.
      */
     @JvmOverloads
     fun getSetupURI(
