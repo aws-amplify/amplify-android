@@ -21,7 +21,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
-import com.amplifyframework.TOTPSetupDetails;
 import com.amplifyframework.auth.AuthCategoryBehavior;
 import com.amplifyframework.auth.AuthCodeDeliveryDetails;
 import com.amplifyframework.auth.AuthDevice;
@@ -31,6 +30,7 @@ import com.amplifyframework.auth.AuthSession;
 import com.amplifyframework.auth.AuthUser;
 import com.amplifyframework.auth.AuthUserAttribute;
 import com.amplifyframework.auth.AuthUserAttributeKey;
+import com.amplifyframework.auth.TOTPSetupDetails;
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions;
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions;
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions;

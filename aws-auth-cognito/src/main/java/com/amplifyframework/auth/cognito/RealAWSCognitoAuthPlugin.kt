@@ -42,7 +42,6 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.setUserMfaPreference
 import aws.sdk.kotlin.services.cognitoidentityprovider.signUp
 import aws.sdk.kotlin.services.cognitoidentityprovider.verifySoftwareToken
 import com.amplifyframework.AmplifyException
-import com.amplifyframework.TOTPSetupDetails
 import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.auth.AWSCognitoAuthMetadataType
 import com.amplifyframework.auth.AWSCredentials
@@ -58,6 +57,7 @@ import com.amplifyframework.auth.AuthUser
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.MFAType
+import com.amplifyframework.auth.TOTPSetupDetails
 import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidOauthConfigurationException
 import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidUserPoolConfigurationException
 import com.amplifyframework.auth.cognito.exceptions.invalidstate.SignedInException
@@ -69,6 +69,7 @@ import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.auth.cognito.helpers.HostedUIHelper
 import com.amplifyframework.auth.cognito.helpers.SessionHelper
 import com.amplifyframework.auth.cognito.helpers.SignInChallengeHelper
+import com.amplifyframework.auth.cognito.helpers.getMFAType
 import com.amplifyframework.auth.cognito.helpers.identityProviderName
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthConfirmSignInOptions
@@ -2191,11 +2192,11 @@ internal class RealAWSCognitoAuthPlugin(
                                         if (!response.userMfaSettingList.isNullOrEmpty()) {
                                             enabledSet = mutableSetOf<MFAType>()
                                             response.userMfaSettingList?.forEach { mfaType ->
-                                                enabledSet.add(MFAType.toMFAType(mfaType))
+                                                enabledSet.add(getMFAType(mfaType))
                                             }
                                         }
                                         response.preferredMfaSetting?.let { preferredMFA ->
-                                            preferred = MFAType.toMFAType(preferredMFA)
+                                            preferred = getMFAType(preferredMFA)
                                         }
                                         onSuccess.accept(UserMFAPreference(enabledSet, preferred))
                                     }
@@ -2234,13 +2235,13 @@ internal class RealAWSCognitoAuthPlugin(
                                     this.smsMfaSettings = sms?.let {
                                         SmsMfaSettingsType.invoke {
                                             enabled = it.mfaEnabled
-                                            preferredMfa = it.mfaPreferred
+                                            it.mfaPreferred ?.let { preferred -> preferredMfa = preferred }
                                         }
                                     }
                                     this.softwareTokenMfaSettings = totp?.let {
                                         SoftwareTokenMfaSettingsType.invoke {
                                             enabled = it.mfaEnabled
-                                            preferredMfa = it.mfaPreferred
+                                            it.mfaPreferred ?.let { preferred -> preferredMfa = preferred }
                                         }
                                     }
                                 }?.also {

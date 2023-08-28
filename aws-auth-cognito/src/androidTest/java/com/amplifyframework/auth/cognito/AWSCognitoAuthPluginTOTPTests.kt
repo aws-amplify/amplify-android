@@ -20,6 +20,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.MFAType
+import com.amplifyframework.auth.cognito.helpers.value
 import com.amplifyframework.auth.cognito.test.R
 import com.amplifyframework.auth.options.AuthSignUpOptions
 import com.amplifyframework.auth.result.step.AuthSignInStep
@@ -142,7 +143,7 @@ class AWSCognitoAuthPluginTOTPTests {
         )
         synchronousAuth.confirmSignIn(otp)
         synchronousAuth.updateUserAttribute(AuthUserAttribute(AuthUserAttributeKey.phoneNumber(), "+19876543210"))
-        updateMFAPreference(MFAPreference.Enabled, MFAPreference.Enabled)
+        updateMFAPreference(MFAPreference.ENABLED, MFAPreference.ENABLED)
         synchronousAuth.signOut()
         val signInResult = synchronousAuth.signIn(userName, password)
         Assert.assertEquals(AuthSignInStep.CONTINUE_SIGN_IN_WITH_MFA_SELECTION, signInResult.nextStep.signInStep)

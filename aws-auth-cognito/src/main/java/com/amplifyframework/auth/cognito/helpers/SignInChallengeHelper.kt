@@ -18,10 +18,10 @@ package com.amplifyframework.auth.cognito.helpers
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AuthenticationResultType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
 import aws.smithy.kotlin.runtime.time.Instant
-import com.amplifyframework.TOTPSetupDetails
 import com.amplifyframework.auth.AuthCodeDeliveryDetails
 import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.MFAType
+import com.amplifyframework.auth.TOTPSetupDetails
 import com.amplifyframework.auth.exceptions.UnknownException
 import com.amplifyframework.auth.result.AuthSignInResult
 import com.amplifyframework.auth.result.step.AuthNextSignInStep

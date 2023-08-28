@@ -49,13 +49,13 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.VerifySoftwareToken
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.VerifySoftwareTokenResponseType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.VerifyUserAttributeRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.VerifyUserAttributeResponse
-import com.amplifyframework.TOTPSetupDetails
 import com.amplifyframework.auth.AuthCodeDeliveryDetails
 import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.AuthSession
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.MFAType
+import com.amplifyframework.auth.TOTPSetupDetails
 import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidUserPoolConfigurationException
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.auth.cognito.helpers.SRPHelper
@@ -1843,7 +1843,7 @@ class RealAWSCognitoAuthPluginTest {
             SetUserMfaPreferenceResponse.invoke {
             }
         }
-        plugin.updateMFAPreference(MFAPreference.Enabled, MFAPreference.Preferred, onSuccess, onError)
+        plugin.updateMFAPreference(MFAPreference.ENABLED, MFAPreference.PREFERRED, onSuccess, onError)
 
         assertTrue { listenLatch.await(5, TimeUnit.SECONDS) }
         assertTrue(setUserMFAPreferenceRequest.isCaptured)

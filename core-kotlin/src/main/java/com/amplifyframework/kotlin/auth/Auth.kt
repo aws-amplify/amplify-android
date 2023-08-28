@@ -17,7 +17,6 @@ package com.amplifyframework.kotlin.auth
 
 import android.app.Activity
 import android.content.Intent
-import com.amplifyframework.TOTPSetupDetails
 import com.amplifyframework.auth.AuthCodeDeliveryDetails
 import com.amplifyframework.auth.AuthDevice
 import com.amplifyframework.auth.AuthException
@@ -26,6 +25,7 @@ import com.amplifyframework.auth.AuthSession
 import com.amplifyframework.auth.AuthUser
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
+import com.amplifyframework.auth.TOTPSetupDetails
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
@@ -345,6 +345,6 @@ interface Auth {
     @Throws(AuthException::class)
     suspend fun verifyTOTPSetup(
         code: String,
-        options: AuthVerifyTOTPSetupOptions = AuthVerifyTOTPSetupOptions.builder().build()
+        options: AuthVerifyTOTPSetupOptions = AuthVerifyTOTPSetupOptions.defaults()
     )
 }

@@ -14,16 +14,18 @@
  */
 package com.amplifyframework.auth
 
-enum class MFAType(val value: String) {
-    SMS("SMS_MFA"),
-    TOTP("SOFTWARE_TOKEN_MFA");
-    companion object {
-        fun toMFAType(value: String): MFAType {
-            return when (value) {
-                MFAType.SMS.value -> MFAType.SMS
-                MFAType.TOTP.value -> MFAType.TOTP
-                else -> throw IllegalArgumentException("Unsupported MFA type")
-            }
-        }
-    }
+/**
+ * Type of MFA for authentication.
+ */
+enum class MFAType {
+
+    /**
+     * Short Messaging Service linked with a phone number
+     */
+    SMS,
+
+    /**
+     * Time-based One Time Password linked with an authenticator app
+     */
+    TOTP;
 }

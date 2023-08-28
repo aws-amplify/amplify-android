@@ -15,24 +15,21 @@
 
 package com.amplifyframework.auth.options;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 /**
  * The shared options among all Auth plugins.
  * Note: This is currently empty but exists here to support common verify totp setup options.
  */
-public class AuthVerifyTOTPSetupOptions {
+public abstract class AuthVerifyTOTPSetupOptions {
 
     /**
-     * protected constructor.
+     * Use the default verify totp setup options.
+     * @return Default verify totp setup options.
      */
-    protected AuthVerifyTOTPSetupOptions() {
-    }
-
-    /**
-     * Get a builder to construct an instance of this object.
-     * @return a builder to construct an instance of this object.
-     */
-    public static Builder<?> builder() {
-        return new CoreBuilder();
+    public static DefaultAuthVerifyTOTPSetupOptions defaults() {
+        return new DefaultAuthVerifyTOTPSetupOptions();
     }
 
     /**
@@ -42,19 +39,39 @@ public class AuthVerifyTOTPSetupOptions {
     public abstract static class Builder<T extends Builder<T>> {
 
         /**
+         * Return the type of builder this is so that chaining can work correctly without implicit casting.
+         * @return the type of builder this is
+         */
+        public abstract T getThis();
+
+        /**
          * Build an instance of AuthVerifyTOTPSetupOptions (or one of its subclasses).
          * @return an instance of AuthVerifyTOTPSetupOptions (or one of its subclasses)
          */
-        public AuthVerifyTOTPSetupOptions build() {
-            return new AuthVerifyTOTPSetupOptions();
-        }
-
+        public abstract AuthVerifyTOTPSetupOptions build();
     }
 
     /**
-     * The specific implementation of builder for this as the parent class.
+     * Default verify totp setup options. This works like a sentinel, to be used instead of "null".
+     * The only way to create this is by calling {@link AuthVerifyTOTPSetupOptions#defaults()}.
      */
-    public static final class CoreBuilder extends Builder<CoreBuilder> {
+    public static final class DefaultAuthVerifyTOTPSetupOptions extends AuthVerifyTOTPSetupOptions {
+        private DefaultAuthVerifyTOTPSetupOptions() {}
 
+        @Override
+        public int hashCode() {
+            return DefaultAuthVerifyTOTPSetupOptions.class.hashCode();
+        }
+
+        @Override
+        public boolean equals(@Nullable Object obj) {
+            return obj instanceof DefaultAuthVerifyTOTPSetupOptions;
+        }
+
+        @NonNull
+        @Override
+        public String toString() {
+            return DefaultAuthVerifyTOTPSetupOptions.class.getSimpleName();
+        }
     }
 }

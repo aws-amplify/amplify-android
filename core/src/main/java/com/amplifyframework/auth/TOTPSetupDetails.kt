@@ -12,18 +12,33 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package com.amplifyframework
+package com.amplifyframework.auth
 
 import android.net.Uri
 
+/**
+ * Details of TOTP Setup that help launch into TOTP manager.
+ *
+ * @param sharedSecret Secret code returned by the service to help setting up TOTP
+ * @param username username that will be used to construct the URI
+ */
 data class TOTPSetupDetails(
     val sharedSecret: String,
     val username: String
 ) {
+
+    /**
+     * Returns a TOTP setup URI that can help avoid barcode scanning and use native password manager
+     * to handle TOTP association.
+     *
+     * @param appName of TOTP manager
+     * @param accountName for TOTP manager. Defaults to stored username value.
+     */
+    @JvmOverloads
     fun getSetupURI(
-        issuer: String,
+        appName: String,
         accountName: String = username
     ): Uri {
-        return Uri.parse("otpauth://totp/$issuer:$accountName?secret=$sharedSecret&issuer=$issuer")
+        return Uri.parse("otpauth://totp/$appName:$accountName?secret=$sharedSecret&issuer=$appName")
     }
 }
