@@ -49,7 +49,7 @@ class ApiLazyModel<M : Model> private constructor(
         return keyMap
     }
 
-    override suspend fun getModel(): M? {
+    override suspend fun fetchModel(): M? {
         if (loadedValue) {
             return value
         }
@@ -74,7 +74,7 @@ class ApiLazyModel<M : Model> private constructor(
         return value
     }
 
-    override fun getModel(onSuccess: NullableConsumer<M?>, onError: Consumer<AmplifyException>) {
+    override fun fetchModel(onSuccess: NullableConsumer<M?>, onError: Consumer<AmplifyException>) {
         if (loadedValue) {
             onSuccess.accept(value)
             return
@@ -105,6 +105,8 @@ class ApiLazyModel<M : Model> private constructor(
             )
         }
     }
+
+    override fun isLoaded() = loadedValue
 
     internal companion object {
         fun <M : Model> createPreloaded(

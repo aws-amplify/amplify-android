@@ -27,7 +27,9 @@ interface LazyModel<M : Model> {
     fun getIdentifier(): Map<String, Any>
 
     @Throws(AmplifyException::class)
-    suspend fun getModel(): M?
+    suspend fun fetchModel(): M?
 
-    fun getModel(onSuccess: NullableConsumer<M?>, onError: Consumer<AmplifyException>)
+    fun fetchModel(onSuccess: NullableConsumer<M?>, onError: Consumer<AmplifyException>)
+
+    fun isLoaded(): Boolean
 }

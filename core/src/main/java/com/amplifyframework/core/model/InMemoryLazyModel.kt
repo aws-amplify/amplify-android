@@ -33,11 +33,13 @@ class InMemoryLazyModel<M : Model>(model: M? = null) : LazyModel<M> {
         return emptyMap()
     }
 
-    override suspend fun getModel(): M? {
+    override suspend fun fetchModel(): M? {
         return value
     }
 
-    override fun getModel(onSuccess: NullableConsumer<M?>, onError: Consumer<AmplifyException>) {
+    override fun fetchModel(onSuccess: NullableConsumer<M?>, onError: Consumer<AmplifyException>) {
         onSuccess.accept(value)
     }
+
+    override fun isLoaded() = true
 }
