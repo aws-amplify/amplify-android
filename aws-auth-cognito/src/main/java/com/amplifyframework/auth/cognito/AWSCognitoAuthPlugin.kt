@@ -20,7 +20,6 @@ import android.content.Context
 import android.content.Intent
 import androidx.annotation.VisibleForTesting
 import com.amplifyframework.AmplifyException
-import com.amplifyframework.TOTPSetupDetails
 import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.auth.AWSCognitoAuthMetadataType
 import com.amplifyframework.auth.AuthCodeDeliveryDetails
@@ -32,6 +31,7 @@ import com.amplifyframework.auth.AuthSession
 import com.amplifyframework.auth.AuthUser
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
+import com.amplifyframework.auth.TOTPSetupDetails
 import com.amplifyframework.auth.cognito.asf.UserContextDataProvider
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthVerifyTOTPSetupOptions
 import com.amplifyframework.auth.cognito.options.FederateToIdentityPoolOptions

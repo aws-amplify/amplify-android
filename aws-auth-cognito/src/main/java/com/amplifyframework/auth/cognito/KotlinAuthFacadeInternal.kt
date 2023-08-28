@@ -17,7 +17,6 @@ package com.amplifyframework.auth.cognito
 
 import android.app.Activity
 import android.content.Intent
-import com.amplifyframework.TOTPSetupDetails
 import com.amplifyframework.auth.AuthCodeDeliveryDetails
 import com.amplifyframework.auth.AuthDevice
 import com.amplifyframework.auth.AuthProvider
@@ -25,6 +24,7 @@ import com.amplifyframework.auth.AuthSession
 import com.amplifyframework.auth.AuthUser
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
+import com.amplifyframework.auth.TOTPSetupDetails
 import com.amplifyframework.auth.cognito.options.FederateToIdentityPoolOptions
 import com.amplifyframework.auth.cognito.result.FederateToIdentityPoolResult
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions

@@ -16,40 +16,38 @@ package com.amplifyframework.auth.cognito
 
 import com.amplifyframework.auth.MFAType
 
-public data class UserMFAPreference(
+/**
+ * Output for fetching MFA preference.
+ *
+ * @param enabled MFA types
+ * @param preferred MFA type. null if not set
+ */
+data class UserMFAPreference(
     val enabled: Set<MFAType>?,
     val preferred: MFAType?
 )
 
-public sealed class MFAPreference {
-    abstract val mfaEnabled: Boolean
-    abstract val mfaPreferred: Boolean
+/**
+ * Input for updating the MFA preference for a MFA Type
+ */
+enum class MFAPreference(internal val mfaEnabled: Boolean, internal val mfaPreferred: Boolean) {
+    /**
+     * MFA not enabled
+     */
+    DISABLED(false, false),
 
-    object Disabled : MFAPreference() {
-        override val mfaEnabled: Boolean
-            get() = false
-        override val mfaPreferred: Boolean
-            get() = false
-    }
+    /**
+     * MFA enabled
+     */
+    ENABLED(true, false),
 
-    object Enabled : MFAPreference() {
-        override val mfaEnabled: Boolean
-            get() = true
-        override val mfaPreferred: Boolean
-            get() = false
-    }
+    /**
+     * MFA enabled and preferred
+     */
+    PREFERRED(true, true),
 
-    object Preferred : MFAPreference() {
-        override val mfaEnabled: Boolean
-            get() = true
-        override val mfaPreferred: Boolean
-            get() = true
-    }
-
-    object NotPreferred : MFAPreference() {
-        override val mfaEnabled: Boolean
-            get() = true
-        override val mfaPreferred: Boolean
-            get() = false
-    }
+    /**
+     * MFA enabled and not preferred
+     */
+    NOT_PREFERRED(true, false)
 }

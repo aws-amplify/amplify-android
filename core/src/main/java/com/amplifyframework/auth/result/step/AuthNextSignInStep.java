@@ -19,9 +19,9 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
 
-import com.amplifyframework.TOTPSetupDetails;
 import com.amplifyframework.auth.AuthCodeDeliveryDetails;
 import com.amplifyframework.auth.MFAType;
+import com.amplifyframework.auth.TOTPSetupDetails;
 
 import java.util.HashMap;
 import java.util.Map;

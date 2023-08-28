@@ -22,7 +22,6 @@ import com.amplifyframework.statemachine.StateResolution
 import com.amplifyframework.statemachine.codegen.actions.SignInChallengeActions
 import com.amplifyframework.statemachine.codegen.data.AuthChallenge
 import com.amplifyframework.statemachine.codegen.events.SignInChallengeEvent
-import com.amplifyframework.statemachine.codegen.events.SignInEvent
 
 internal sealed class SignInChallengeState : State {
     data class NotStarted(val id: String = "") : SignInChallengeState()
@@ -51,7 +50,6 @@ internal sealed class SignInChallengeState : State {
         ): StateResolution<SignInChallengeState> {
             val defaultResolution = StateResolution(oldState)
             val challengeEvent = asSignInChallengeEvent(event)
-            val signInEvent = (event as? SignInEvent)?.eventType
             return when (oldState) {
                 is NotStarted -> when (challengeEvent) {
                     is SignInChallengeEvent.EventType.WaitForAnswer -> {
