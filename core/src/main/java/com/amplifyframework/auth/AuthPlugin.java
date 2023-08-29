@@ -20,7 +20,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.WorkerThread;
 
 import com.amplifyframework.AmplifyException;
-import com.amplifyframework.TOTPSetupDetails;
 import com.amplifyframework.auth.options.AuthVerifyTOTPSetupOptions;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
