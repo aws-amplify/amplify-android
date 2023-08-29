@@ -18,4 +18,20 @@ internal data class SignInTOTPSetupData(
     val secretCode: String,
     val session: String?,
     val username: String
-)
+) {
+    override fun toString(): String {
+        return "SignInTOTPSetupData(" +
+            "secretCode = ${mask(secretCode)}, " +
+            "session = ${mask(session)}, " +
+            "username = ${mask(username)}" +
+            ")"
+    }
+
+    private fun mask(value: String?): String {
+        return if (value == null || value.length <= 4) {
+            "***"
+        } else {
+            "${value.substring(0..4)}***"
+        }
+    }
+}
