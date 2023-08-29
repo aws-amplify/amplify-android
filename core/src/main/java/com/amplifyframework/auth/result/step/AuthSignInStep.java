@@ -27,7 +27,7 @@ public enum AuthSignInStep {
      * with the code sent via SMS text message to proceed with the sign in flow.
      */
     CONFIRM_SIGN_IN_WITH_SMS_MFA_CODE,
-    
+
     /**
      * Custom multifactor authentication is enabled on this account and requires you to call
      * {@link com.amplifyframework.auth.AuthCategoryBehavior#confirmSignIn(String, Consumer, Consumer)}
@@ -57,6 +57,27 @@ public enum AuthSignInStep {
      * to confirm the user's account and then attempt sign in again.
      */
     CONFIRM_SIGN_UP,
+
+    /**
+     * Admin requires user to setup TOTP.
+     * Call {@link com.amplifyframework.auth.AuthCategoryBehavior#confirmSignIn(String, Consumer, Consumer)}
+     * with TOTP code to verify.
+     */
+    CONTINUE_SIGN_IN_WITH_TOTP_SETUP,
+
+    /**
+     * The user account is required to set MFA selection.
+     * Call {@link com.amplifyframework.auth.AuthCategoryBehavior#confirmSignIn(String, Consumer, Consumer)}
+     * with preferred MFA option.
+     */
+    CONTINUE_SIGN_IN_WITH_MFA_SELECTION,
+
+    /**
+     * TOTP is enabled on this account and requires the user to confirm with the TOTP code.
+     * Call {@link com.amplifyframework.auth.AuthCategoryBehavior#confirmSignIn(String, Consumer, Consumer)}
+     * with TOTP Code.
+     */
+    CONFIRM_SIGN_IN_WITH_TOTP_CODE,
 
     /**
      * No further steps are needed in the sign in flow.

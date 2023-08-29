@@ -25,6 +25,7 @@ import com.amplifyframework.auth.AuthSession
 import com.amplifyframework.auth.AuthUser
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
+import com.amplifyframework.auth.TOTPSetupDetails
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
@@ -37,6 +38,7 @@ import com.amplifyframework.auth.options.AuthSignOutOptions
 import com.amplifyframework.auth.options.AuthSignUpOptions
 import com.amplifyframework.auth.options.AuthUpdateUserAttributeOptions
 import com.amplifyframework.auth.options.AuthUpdateUserAttributesOptions
+import com.amplifyframework.auth.options.AuthVerifyTOTPSetupOptions
 import com.amplifyframework.auth.options.AuthWebUISignInOptions
 import com.amplifyframework.auth.result.AuthResetPasswordResult
 import com.amplifyframework.auth.result.AuthSignInResult
@@ -327,4 +329,22 @@ interface Auth {
      */
     @Throws(AuthException::class)
     suspend fun deleteUser()
+
+    /**
+     * Setup TOTP for the currently signed in user.
+     * @return TOTP Setup details
+     */
+    @Throws(AuthException::class)
+    suspend fun setUpTOTP(): TOTPSetupDetails
+
+    /**
+     * Verify TOTP setup for the currently signed in user.
+     * @param code TOTP code to verify TOTP setup
+     * @param options additional options to verify totp setup
+     */
+    @Throws(AuthException::class)
+    suspend fun verifyTOTPSetup(
+        code: String,
+        options: AuthVerifyTOTPSetupOptions = AuthVerifyTOTPSetupOptions.defaults()
+    )
 }

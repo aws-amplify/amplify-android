@@ -53,6 +53,7 @@ readonly config_files=(
 
     # Auth
     "aws-auth-cognito/src/androidTest/res/raw/amplifyconfiguration.json"
+    "aws-auth-cognito/src/androidTest/res/raw/amplifyconfiguration_totp.json"
     "aws-auth-cognito/src/androidTest/res/raw/awsconfiguration.json"
     "aws-auth-cognito/src/androidTest/res/raw/credentials.json"
 )

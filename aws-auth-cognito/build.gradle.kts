@@ -39,6 +39,8 @@ dependencies {
     implementation(libs.aws.cognitoidentityprovider)
 
     testImplementation(project(":testutils"))
+    testImplementation(project(":core"))
+    testImplementation(project(":aws-core"))
     //noinspection GradleDependency
     testImplementation(libs.test.json)
 
@@ -60,6 +62,8 @@ dependencies {
     androidTestImplementation(libs.test.androidx.runner)
     androidTestImplementation(libs.test.androidx.junit)
     androidTestImplementation(libs.test.kotlin.coroutines)
+    androidTestImplementation(libs.test.totp)
+
     androidTestImplementation(project(":aws-api"))
     androidTestImplementation(project(":testutils"))
 }

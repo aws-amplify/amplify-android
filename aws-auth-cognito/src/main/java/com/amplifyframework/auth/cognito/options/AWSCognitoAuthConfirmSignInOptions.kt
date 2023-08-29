@@ -31,7 +31,12 @@ data class AWSCognitoAuthConfirmSignInOptions internal constructor(
      * Get additional user attributes which should be associated with this user on confirmSignIn.
      * @return additional user attributes which should be associated with this user on confirmSignIn
      */
-    val userAttributes: List<AuthUserAttribute>
+    val userAttributes: List<AuthUserAttribute>,
+    /**
+     * Get the friendly device name used to setup TOTP.
+     * @return friendly device name
+     */
+    val friendlyDeviceName: String?
 ) : AuthConfirmSignInOptions() {
 
     companion object {
@@ -53,6 +58,7 @@ data class AWSCognitoAuthConfirmSignInOptions internal constructor(
     class CognitoBuilder : Builder<CognitoBuilder?>() {
         private var metadata: Map<String, String> = mapOf()
         private var userAttributes: List<AuthUserAttribute> = listOf()
+        private var friendlyDeviceName: String? = null
 
         /**
          * Returns the type of builder this is to support proper flow with it being an extended class.
@@ -78,9 +84,16 @@ data class AWSCognitoAuthConfirmSignInOptions internal constructor(
         fun userAttributes(userAttributes: List<AuthUserAttribute>) = apply { this.userAttributes = userAttributes }
 
         /**
+         * Set the friendlyDeviceName field for the object being built.
+         * @param friendlyDeviceName friendly name of the device used to setup totp.
+         * @return the instance of the builder.
+         */
+        fun friendlyDeviceName(friendlyDeviceName: String) = apply { this.friendlyDeviceName = friendlyDeviceName }
+
+        /**
          * Construct and return the object with the values set in the builder.
          * @return a new instance of AWSCognitoAuthConfirmSignInOptions with the values specified in the builder.
          */
-        override fun build() = AWSCognitoAuthConfirmSignInOptions(metadata, userAttributes)
+        override fun build() = AWSCognitoAuthConfirmSignInOptions(metadata, userAttributes, friendlyDeviceName)
     }
 }
