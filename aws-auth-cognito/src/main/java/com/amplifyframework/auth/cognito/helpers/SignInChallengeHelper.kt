@@ -89,8 +89,18 @@ internal object SignInChallengeHelper {
                 SignInEvent(SignInEvent.EventType.ReceivedChallenge(challenge))
             }
             challengeNameType is ChallengeNameType.MfaSetup -> {
-                val setupTOTPData = SignInTOTPSetupData("", session, username)
-                SignInEvent(SignInEvent.EventType.InitiateTOTPSetup(setupTOTPData))
+                val allowedMFASetupTypes = challengeParameters?.get("MFAS_CAN_SETUP")
+                    ?.let { getAllowedMFATypes(it) } ?: emptySet()
+                if (allowedMFASetupTypes.contains(MFAType.TOTP)) {
+                    val setupTOTPData = SignInTOTPSetupData("", session, username)
+                    SignInEvent(SignInEvent.EventType.InitiateTOTPSetup(setupTOTPData))
+                } else {
+                    SignInEvent(
+                        SignInEvent.EventType.ThrowError(
+                            Exception("Cannot initiate MFA setup from available Types: $allowedMFASetupTypes")
+                        )
+                    )
+                }
             }
             challengeNameType is ChallengeNameType.DeviceSrpAuth -> {
                 SignInEvent(SignInEvent.EventType.InitiateSignInWithDeviceSRP(username, mapOf()))
