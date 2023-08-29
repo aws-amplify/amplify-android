@@ -23,7 +23,7 @@ internal data class SignInTOTPSetupData(
         return "SignInTOTPSetupData(" +
             "secretCode = ${mask(secretCode)}, " +
             "session = ${mask(session)}, " +
-            "username = ${mask(username)}" +
+            "username = $username}" +
             ")"
     }
 
@@ -31,7 +31,7 @@ internal data class SignInTOTPSetupData(
         return if (value == null || value.length <= 4) {
             "***"
         } else {
-            "${value.substring(0..4)}***"
+            "${value.substring(0 until 4)}***"
         }
     }
 }

@@ -24,7 +24,7 @@ import com.amplifyframework.statemachine.codegen.events.SetupTOTPEvent
 
 internal sealed class SetupTOTPState : State {
     data class NotStarted(val id: String = "") : SetupTOTPState()
-    data class SetupTOTP(val signInTOTPSetupData: SignInTOTPSetupData) : SetupTOTPState()
+    data class SetupTOTP(val id: String = "") : SetupTOTPState()
     data class WaitingForAnswer(
         val signInTOTPSetupData: SignInTOTPSetupData,
         var hasNewResponse: Boolean = false
@@ -49,7 +49,7 @@ internal sealed class SetupTOTPState : State {
                 is NotStarted -> when (challengeEvent) {
                     is SetupTOTPEvent.EventType.SetupTOTP -> {
                         StateResolution(
-                            SetupTOTP(challengeEvent.totpSetupDetails),
+                            SetupTOTP(),
                             listOf(setupTOTPActions.initiateTOTPSetup(challengeEvent))
                         )
                     }
