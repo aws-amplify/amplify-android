@@ -128,7 +128,7 @@ internal sealed class SetupTOTPState : State {
                 is Error -> when (challengeEvent) {
                     is SetupTOTPEvent.EventType.VerifyChallengeAnswer -> {
                         StateResolution(
-                            Verifying(challengeEvent.answer, "", null),
+                            Verifying(challengeEvent.answer, challengeEvent.username, challengeEvent.session),
                             listOf(setupTOTPActions.verifyChallengeAnswer(challengeEvent))
                         )
                     }
