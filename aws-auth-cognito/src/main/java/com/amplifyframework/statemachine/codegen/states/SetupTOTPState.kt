@@ -29,8 +29,8 @@ internal sealed class SetupTOTPState : State {
         val signInTOTPSetupData: SignInTOTPSetupData,
         var hasNewResponse: Boolean = false
     ) : SetupTOTPState()
-    data class Verifying(val code: String, val username: String, val session: String?) : SetupTOTPState()
-    data class RespondingToAuthChallenge(val username: String, val session: String?) : SetupTOTPState()
+    data class Verifying(val id: String = "") : SetupTOTPState()
+    data class RespondingToAuthChallenge(val id: String = "") : SetupTOTPState()
     data class Success(val id: String = "") : SetupTOTPState()
     data class Error(
         val exception: Exception,
@@ -76,11 +76,7 @@ internal sealed class SetupTOTPState : State {
                 is WaitingForAnswer -> when (challengeEvent) {
                     is SetupTOTPEvent.EventType.VerifyChallengeAnswer -> {
                         StateResolution(
-                            Verifying(
-                                challengeEvent.answer,
-                                oldState.signInTOTPSetupData.username,
-                                oldState.signInTOTPSetupData.session
-                            ),
+                            Verifying(),
                             listOf(setupTOTPActions.verifyChallengeAnswer(challengeEvent))
                         )
                     }
@@ -95,7 +91,7 @@ internal sealed class SetupTOTPState : State {
                 is Verifying -> when (challengeEvent) {
                     is SetupTOTPEvent.EventType.RespondToAuthChallenge -> {
                         StateResolution(
-                            RespondingToAuthChallenge(oldState.username, oldState.session),
+                            RespondingToAuthChallenge(),
                             listOf(
                                 setupTOTPActions.respondToAuthChallenge(
                                     challengeEvent
@@ -128,7 +124,7 @@ internal sealed class SetupTOTPState : State {
                 is Error -> when (challengeEvent) {
                     is SetupTOTPEvent.EventType.VerifyChallengeAnswer -> {
                         StateResolution(
-                            Verifying(challengeEvent.answer, challengeEvent.username, challengeEvent.session),
+                            Verifying(),
                             listOf(setupTOTPActions.verifyChallengeAnswer(challengeEvent))
                         )
                     }
