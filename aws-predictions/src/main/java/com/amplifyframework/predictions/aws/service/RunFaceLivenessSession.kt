@@ -87,7 +87,8 @@ internal class RunFaceLivenessSession(
             challengeConfig.ovalIouWidthThreshold,
             challengeConfig.ovalIouHeightThreshold,
             challengeConfig.faceIouWidthThreshold,
-            challengeConfig.faceIouHeightThreshold
+            challengeConfig.faceIouHeightThreshold,
+            challengeConfig.ovalFitTimeout
         )
         val faceTargetChallenge = FaceTargetChallenge(
             ovalParameters.width,
