@@ -105,10 +105,6 @@ import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.slot
 import io.mockk.verify
-import org.json.JSONObject
-import org.junit.Before
-import org.junit.Ignore
-import org.junit.Test
 import java.util.Date
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -117,6 +113,10 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import org.json.JSONObject
+import org.junit.Before
+import org.junit.Ignore
+import org.junit.Test
 
 class RealAWSCognitoAuthPluginTest {
 
@@ -1855,7 +1855,6 @@ class RealAWSCognitoAuthPluginTest {
         }
         plugin.updateMFAPreference(MFAPreference.ENABLED, MFAPreference.PREFERRED, onSuccess, onError)
 
-
         assertTrue { listenLatch.await(5, TimeUnit.SECONDS) }
         assertTrue(setUserMFAPreferenceRequest.isCaptured)
         assertEquals(
@@ -1873,7 +1872,6 @@ class RealAWSCognitoAuthPluginTest {
             setUserMFAPreferenceRequest.captured.softwareTokenMfaSettings
         )
     }
-
 
     @Test
     fun `updateMFAPreferences when currentpreference is totp both provided sms and totp preference are enabled`() {
@@ -2356,6 +2354,4 @@ class RealAWSCognitoAuthPluginTest {
             setUserMFAPreferenceRequest.captured.softwareTokenMfaSettings
         )
     }
-
-
 }
