@@ -68,7 +68,7 @@ tasks.register<Delete>("clean").configure {
 
 val optInAnnotations = listOf(
     "com.amplifyframework.annotations.InternalApiWarning",
-    "com.amplifyframework.annotations.InternalAmplifyApi",
+    "com.amplifyframework.annotations.InternalAmplifyApi"
 )
 
 subprojects {
