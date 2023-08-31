@@ -64,6 +64,7 @@ import com.amplifyframework.auth.cognito.exceptions.invalidstate.SignedInExcepti
 import com.amplifyframework.auth.cognito.exceptions.service.CodeDeliveryFailureException
 import com.amplifyframework.auth.cognito.exceptions.service.HostedUISignOutException
 import com.amplifyframework.auth.cognito.exceptions.service.InvalidAccountTypeException
+import com.amplifyframework.auth.cognito.exceptions.service.InvalidParameterException
 import com.amplifyframework.auth.cognito.exceptions.service.UserCancelledException
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.auth.cognito.helpers.HostedUIHelper
@@ -158,16 +159,16 @@ import com.amplifyframework.statemachine.codegen.states.SetupTOTPState
 import com.amplifyframework.statemachine.codegen.states.SignInChallengeState
 import com.amplifyframework.statemachine.codegen.states.SignInState
 import com.amplifyframework.statemachine.codegen.states.SignOutState
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.async
-import kotlinx.coroutines.launch
 
 internal class RealAWSCognitoAuthPlugin(
     private val configuration: AuthConfiguration,
@@ -2190,7 +2191,7 @@ internal class RealAWSCognitoAuthPlugin(
                                         var enabledSet: MutableSet<MFAType>? = null
                                         var preferred: MFAType? = null
                                         if (!response.userMfaSettingList.isNullOrEmpty()) {
-                                            enabledSet = mutableSetOf<MFAType>()
+                                            enabledSet = mutableSetOf()
                                             response.userMfaSettingList?.forEach { mfaType ->
                                                 enabledSet.add(getMFAType(mfaType))
                                             }
@@ -2223,45 +2224,57 @@ internal class RealAWSCognitoAuthPlugin(
         onSuccess: Action,
         onError: Consumer<AuthException>
     ) {
-        authStateMachine.getCurrentState { authState ->
-            when (authState.authNState) {
-                is AuthenticationState.SignedIn -> {
-                    GlobalScope.launch {
-                        try {
-                            val accessToken = getSession().userPoolTokensResult.value?.accessToken
-                            accessToken?.let { token ->
-                                authEnvironment.cognitoAuthService.cognitoIdentityProviderClient?.setUserMfaPreference {
-                                    this.accessToken = token
-                                    this.smsMfaSettings = sms?.let {
-                                        SmsMfaSettingsType.invoke {
-                                            enabled = it.mfaEnabled
-                                            it.mfaPreferred ?.let { preferred -> preferredMfa = preferred }
+        if(sms == null && totp == null) {
+            onError.accept(InvalidParameterException())
+        }
+        fetchMFAPreference({ userPreference ->
+            authStateMachine.getCurrentState { authState ->
+                when (authState.authNState) {
+                    is AuthenticationState.SignedIn -> {
+                        GlobalScope.launch {
+                            try {
+                                val accessToken = getSession().userPoolTokensResult.value?.accessToken
+                                accessToken?.let { token ->
+                                    authEnvironment
+                                        .cognitoAuthService
+                                        .cognitoIdentityProviderClient
+                                        ?.setUserMfaPreference {
+                                            this.accessToken = token
+                                            this.smsMfaSettings = sms?.let { it ->
+                                                val preferredMFASetting = it.mfaPreferred
+                                                    ?: (userPreference.preferred == MFAType.SMS)
+                                                SmsMfaSettingsType.invoke {
+                                                    enabled = it.mfaEnabled
+                                                    preferredMfa = preferredMFASetting
+                                                }
+                                            }
+                                            this.softwareTokenMfaSettings = totp?.let { it ->
+                                                val preferredMFASetting = it.mfaPreferred
+                                                    ?: (userPreference.preferred == MFAType.TOTP)
+                                                SoftwareTokenMfaSettingsType.invoke {
+                                                    enabled = it.mfaEnabled
+                                                    preferredMfa = preferredMFASetting
+                                                }
+                                            }
+                                        }?.also {
+                                            onSuccess.call()
                                         }
-                                    }
-                                    this.softwareTokenMfaSettings = totp?.let {
-                                        SoftwareTokenMfaSettingsType.invoke {
-                                            enabled = it.mfaEnabled
-                                            it.mfaPreferred ?.let { preferred -> preferredMfa = preferred }
-                                        }
-                                    }
-                                }?.also {
-                                    onSuccess.call()
-                                }
-                            } ?: onError.accept(SignedOutException())
-                        } catch (error: Exception) {
-                            onError.accept(
-                                CognitoAuthExceptionConverter.lookup(
-                                    error,
-                                    "Amazon Cognito cannot update the MFA preferences"
+                                } ?: onError.accept(SignedOutException())
+                            } catch (error: Exception) {
+                                onError.accept(
+                                    CognitoAuthExceptionConverter.lookup(
+                                        error,
+                                        "Amazon Cognito cannot update the MFA preferences"
+                                    )
                                 )
-                            )
+                            }
                         }
                     }
-                }
 
-                else -> onError.accept(InvalidStateException())
+                    else -> onError.accept(InvalidStateException())
+                }
             }
-        }
+        }, {})
     }
 
     private fun verifyTotp(

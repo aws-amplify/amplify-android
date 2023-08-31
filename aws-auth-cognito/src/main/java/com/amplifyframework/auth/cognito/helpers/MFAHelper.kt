@@ -1,7 +1,6 @@
 package com.amplifyframework.auth.cognito.helpers
 
 import com.amplifyframework.auth.MFAType
-import kotlin.jvm.Throws
 
 @Throws(IllegalArgumentException::class)
 internal fun getMFAType(value: String): MFAType {
