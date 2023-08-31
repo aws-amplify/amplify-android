@@ -32,6 +32,7 @@ buildscript {
         classpath("org.jlleitschuh.gradle:ktlint-gradle:11.0.0")
         classpath("org.gradle:test-retry-gradle-plugin:1.4.1")
         classpath("org.jetbrains.kotlinx:kover:0.6.1")
+        classpath("app.cash.licensee:licensee-gradle-plugin:1.7.0")
     }
 }
 
@@ -67,7 +68,7 @@ tasks.register<Delete>("clean").configure {
 
 val optInAnnotations = listOf(
     "com.amplifyframework.annotations.InternalApiWarning",
-    "com.amplifyframework.annotations.InternalAmplifyApi"
+    "com.amplifyframework.annotations.InternalAmplifyApi",
 )
 
 subprojects {
@@ -75,6 +76,25 @@ subprojects {
 
     configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {
         android.set(true)
+    }
+
+    apply(plugin = "app.cash.licensee")
+    configure<app.cash.licensee.LicenseeExtension> {
+        allow("Apache-2.0")
+        allow("MIT")
+        allow("BSD-2-Clause")
+        allow("CC0-1.0")
+        allowUrl("https://www.zetetic.net/sqlcipher/license/")
+        allowUrl("https://developer.android.com/studio/terms.html")
+        allowDependency("org.jetbrains", "annotations", "16.0.1") {
+            "Apache-2.0, but typo in license URL fixed in newer versions"
+        }
+        allowDependency("org.mockito", "mockito-core", "3.9.0") {
+            "MIT license"
+        }
+        allowDependency("junit", "junit", "4.13.2") {
+            "Test Dependency"
+        }
     }
 
     afterEvaluate {
