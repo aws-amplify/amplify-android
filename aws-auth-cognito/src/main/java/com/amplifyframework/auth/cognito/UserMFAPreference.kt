@@ -24,7 +24,7 @@ import com.amplifyframework.auth.MFAType
  */
 data class UserMFAPreference(
     val enabled: Set<MFAType>?,
-    var preferred: MFAType?
+    val preferred: MFAType?
 )
 
 /**
