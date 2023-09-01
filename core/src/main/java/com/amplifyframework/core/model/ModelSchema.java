@@ -235,7 +235,7 @@ public final class ModelSchema {
                     .isEnum(Enum.class.isAssignableFrom(field.getType()))
                     .isModel(Model.class.isAssignableFrom(field.getType()))
                     .isLazyModel(LazyModel.class.isAssignableFrom(field.getType()))
-                    .isLazyList(PaginatedResult.class.isAssignableFrom(field.getType()))
+                    .isLazyList(ModelList.class.isAssignableFrom(field.getType()))
                     .authRules(authRules)
                     .build();
         }

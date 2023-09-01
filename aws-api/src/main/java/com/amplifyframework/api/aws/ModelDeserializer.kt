@@ -18,7 +18,10 @@ import java.lang.reflect.Type
  * @param responseGson is a Gson object that does not have the model deserializer. Otherwise context.fromJson would
  * cause a recursion issue.
  */
-internal class ModelDeserializer(private val responseGson: Gson) : JsonDeserializer<Model> {
+internal class ModelDeserializer(
+    private val responseGson: Gson,
+    private val apiName: String?
+) : JsonDeserializer<Model> {
 
     override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext): Model {
         val parent = responseGson.fromJson<Model>(json, typeOfT)
@@ -45,10 +48,10 @@ internal class ModelDeserializer(private val responseGson: Gson) : JsonDeseriali
                     name to parentIdentifiers[idx]
                 }.toMap()
 
-                val lazyList = LazyListHelper.createLazy(lazyFieldModelSchema.modelClass, queryKeys)
+                val modelList = ApiLazyModelList(lazyFieldModelSchema.modelClass, queryKeys, apiName)
 
                 fieldToUpdate.isAccessible = true
-                fieldToUpdate.set(parent, lazyList)
+                fieldToUpdate.set(parent, modelList)
             }
         }
         return parent

@@ -242,6 +242,15 @@ object AppSyncGraphQLRequestFactory {
         return buildListQueryInternal(modelClass, predicate, DEFAULT_QUERY_LIMIT, dataType, null)
     }
 
+    internal fun <R, T : Model> buildModelPageQuery(
+        modelClass: Class<T>,
+        predicate: QueryPredicate,
+        pageToken: String?
+    ): GraphQLRequest<R> {
+        val dataType = TypeMaker.getParameterizedType(ApiModelPage::class.java, modelClass)
+        return buildListQueryInternal(modelClass, predicate, DEFAULT_QUERY_LIMIT, dataType, null, pageToken)
+    }
+
     /**
      * Creates a [GraphQLRequest] that represents a query that expects multiple values as a result. The request
      * will be created with the correct document based on the model schema and variables for filtering based on the
@@ -338,7 +347,8 @@ object AppSyncGraphQLRequestFactory {
         predicate: QueryPredicate,
         limit: Int,
         responseType: Type,
-        includes: ((P) -> List<PropertyContainerPath>)?
+        includes: ((P) -> List<PropertyContainerPath>)?,
+        pageToken: String? = null
     ): GraphQLRequest<R> {
         return try {
             val modelName = ModelSchema.fromModelClass(
@@ -358,6 +368,10 @@ object AppSyncGraphQLRequestFactory {
                 )
             }
             builder.variable("limit", "Int", limit)
+
+            if (pageToken != null) {
+                builder.variable("nextToken", "String", pageToken)
+            }
 
             val customSelectionSet = includes?.let { createApiSelectionSet(modelClass, QueryType.LIST, it) }
             customSelectionSet?.let { builder.selectionSet(it) }

@@ -21,13 +21,9 @@ import com.amplifyframework.core.Consumer
 import com.amplifyframework.core.NullableConsumer
 
 @InternalAmplifyApi
-class InMemoryLazyModel<M : Model>(model: M? = null) : LazyModel<M> {
-
-    private var value: M? = model
-
-    override fun getValue(): M? {
-        return value
-    }
+class InMemoryLazyModel<M : Model>(
+    override val value: M? = null
+) : LazyModel<M> {
 
     override fun getIdentifier(): Map<String, Any> {
         return emptyMap()
@@ -40,6 +36,4 @@ class InMemoryLazyModel<M : Model>(model: M? = null) : LazyModel<M> {
     override fun fetchModel(onSuccess: NullableConsumer<M?>, onError: Consumer<AmplifyException>) {
         onSuccess.accept(value)
     }
-
-    override fun isLoaded() = true
 }

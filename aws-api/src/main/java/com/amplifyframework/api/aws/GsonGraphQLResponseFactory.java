@@ -24,6 +24,8 @@ import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.PaginatedResult;
 import com.amplifyframework.core.model.LazyModel;
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.ModelList;
+import com.amplifyframework.core.model.ModelPage;
 import com.amplifyframework.util.Empty;
 import com.amplifyframework.util.TypeMaker;
 
@@ -77,18 +79,29 @@ final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
         );
         try {
             Gson responseGson = gson.newBuilder()
+                    .registerTypeAdapter(
+                            ModelList.class,
+                            new ModelListAdapter<Model>()
+                    )
+                    .registerTypeHierarchyAdapter(
+                            ModelPage.class,
+                            new ModelPageDeserializer<Model>()
+                    )
                     .registerTypeHierarchyAdapter(
                             Iterable.class,
                             new IterableDeserializer<>(request)
                     )
                     .registerTypeAdapter(
                             LazyModel.class,
-                            new LazyModelAdapter<Model>(apiName)
+                            new LazyModelDeserializer<Model>(apiName)
                     )
                     .create();
 
             Gson modelDeserializerGson = responseGson.newBuilder()
-                    .registerTypeHierarchyAdapter(Model.class, new ModelDeserializer(responseGson))
+                    .registerTypeHierarchyAdapter(
+                            Model.class,
+                            new ModelDeserializer(responseGson, apiName)
+                    )
                     .create();
 
             return modelDeserializerGson.fromJson(responseJson, responseType);

@@ -21,15 +21,28 @@ import com.amplifyframework.core.Consumer
 import com.amplifyframework.core.NullableConsumer
 
 interface LazyModel<M : Model> {
-    fun getValue(): M?
+
+    /** The loaded model value */
+    val value: M?
 
     @InternalAmplifyApi
     fun getIdentifier(): Map<String, Any>
 
+    /**
+     * Load the model represented by this LazyModel instance if not already loaded.
+     *
+     * @throws AmplifyException If loading the model fails.
+     * @return The lazily loaded model or null if no such model exists.
+     */
+    @JvmSynthetic
     @Throws(AmplifyException::class)
     suspend fun fetchModel(): M?
 
+    /**
+     * Load the model represented by this LazyModel instance if not already loaded.
+     *
+     * @param onSuccess Called upon successfully loading the model.
+     * @param onError Called when loading the model fails.
+     */
     fun fetchModel(onSuccess: NullableConsumer<M?>, onError: Consumer<AmplifyException>)
-
-    fun isLoaded(): Boolean
 }

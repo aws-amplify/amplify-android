@@ -34,16 +34,15 @@ import kotlin.coroutines.suspendCoroutine
 class ApiLazyModel<M : Model> private constructor(
     private val clazz: Class<M>,
     private val keyMap: Map<String, Any>,
+    private var model: M? = null,
     private var loadedValue: Boolean = false,
-    private var value: M? = null,
     private val apiName: String? = null
 ) : LazyModel<M> {
 
     private val queryPredicate = AppSyncLazyQueryPredicate<M>().createPredicate(clazz, keyMap)
 
-    override fun getValue(): M? {
-        return value
-    }
+    override val value: M?
+        get() = model
 
     override fun getIdentifier(): Map<String, Any> {
         return keyMap
@@ -62,7 +61,7 @@ class ApiLazyModel<M : Model> private constructor(
                 ),
                 apiName
             ).data.items.iterator()
-            value = if (resultIterator.hasNext()) {
+            model = if (resultIterator.hasNext()) {
                 resultIterator.next()
             } else {
                 null
@@ -81,7 +80,7 @@ class ApiLazyModel<M : Model> private constructor(
         }
         val onQuerySuccess = Consumer<GraphQLResponse<PaginatedResult<M>>> {
             val resultIterator = it.data.items.iterator()
-            value = if (resultIterator.hasNext()) {
+            model = if (resultIterator.hasNext()) {
                 resultIterator.next()
             } else {
                 null
@@ -106,15 +105,13 @@ class ApiLazyModel<M : Model> private constructor(
         }
     }
 
-    override fun isLoaded() = loadedValue
-
     internal companion object {
         fun <M : Model> createPreloaded(
             clazz: Class<M>,
             keyMap: Map<String, Any>,
             value: M?
         ): ApiLazyModel<M> {
-            return ApiLazyModel(clazz, keyMap, true, value)
+            return ApiLazyModel(clazz, keyMap, value, true)
         }
 
         fun <M : Model> createLazy(
@@ -123,24 +120,6 @@ class ApiLazyModel<M : Model> private constructor(
             apiName: String?
         ): ApiLazyModel<M> {
             return ApiLazyModel(clazz, keyMap, apiName = apiName)
-        }
-    }
-}
-
-internal class LazyListHelper {
-
-    companion object {
-        @JvmStatic
-        fun <M : Model> createLazy(
-            clazz: Class<M>,
-            keyMap: Map<String, Any>
-
-        ): PaginatedResult<M> {
-            val request: GraphQLRequest<PaginatedResult<M>> = AppSyncGraphQLRequestFactory.buildQuery(
-                clazz,
-                AppSyncLazyQueryPredicate<M>().createPredicate(clazz, keyMap)
-            )
-            return PaginatedResult(emptyList(), request)
         }
     }
 }

@@ -16,6 +16,7 @@
 package com.amplifyframework.api.graphql;
 
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.ModelPage;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
 import com.amplifyframework.util.GsonObjectConverter;
 import com.amplifyframework.util.TypeMaker;
@@ -108,6 +109,9 @@ public final class GsonResponseAdapters {
                     return true;
                 }
                 if (Iterable.class.isAssignableFrom((Class<?>) rawType)) {
+                    return true;
+                }
+                if (ModelPage.class.isAssignableFrom((Class<?>) rawType)) {
                     return true;
                 }
             } else {

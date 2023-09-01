@@ -1,0 +1,82 @@
+package com.amplifyframework.core.model
+
+import com.amplifyframework.AmplifyException
+import com.amplifyframework.core.Consumer
+import kotlin.jvm.Throws
+
+/**
+ * The base wrapper class for providing a list of models.
+ */
+sealed interface ModelList<out M : Model>
+
+/**
+ * A wrapped list of preloaded models that were included in the selection set.
+ */
+interface LoadedModelList<out M : Model> : ModelList<M> {
+
+    /** The list of preloaded models. */
+    val items: List<M>
+}
+
+/**
+ * A wrapped list of models that must be fetched.
+ */
+interface LazyModelList<out M : Model> : ModelList<M> {
+
+    /**
+     * Loads the next page of models.
+     *
+     * @throws AmplifyException when loading the page fails.
+     * @param paginationToken the pagination token to use during load.
+     * @return the next page of models.
+     */
+    @JvmSynthetic
+    @Throws(AmplifyException::class)
+    suspend fun loadPage(paginationToken: PaginationToken? = null): ModelPage<M>
+
+    /**
+     * Loads the next page of models.
+     *
+     * @param onSuccess called upon successfully loading the next page of models.
+     * @param onError called when loading the page fails.
+     */
+    fun loadPage(
+        onSuccess: Consumer<ModelPage<@UnsafeVariance M>>,
+        onError: Consumer<AmplifyException>
+    )
+
+    /**
+     * Loads the next page of models.
+     *
+     * @param paginationToken the pagination token to use during load.
+     * @param onSuccess called upon successfully loading the next page of models.
+     * @param onError called when loading the page fails.
+     */
+    fun loadPage(
+        paginationToken: PaginationToken,
+        onSuccess: Consumer<ModelPage<@UnsafeVariance M>>,
+        onError: Consumer<AmplifyException>
+    )
+}
+
+/**
+ * Token providing information on the next page to load.
+ */
+interface PaginationToken
+
+/**
+ * A page of loaded models.
+ */
+interface ModelPage<out M : Model>  {
+
+    /** The list of loaded models. */
+    val items: List<M>
+
+    /** The token that can be used to load the next page. */
+    val nextToken: PaginationToken?
+
+    /** Whether the next page is available. */
+    val hasNextPage: Boolean
+        get() = nextToken != null
+}
+
