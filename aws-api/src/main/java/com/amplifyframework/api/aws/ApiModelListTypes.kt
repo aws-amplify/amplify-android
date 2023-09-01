@@ -34,17 +34,17 @@ internal class ApiLazyModelList<out M : Model>  constructor(
 
     private val queryPredicate = AppSyncLazyQueryPredicate<M>().createPredicate(clazz, keyMap)
 
-    override suspend fun loadPage(paginationToken: PaginationToken?): ModelPage<M> {
+    override suspend fun fetchPage(paginationToken: PaginationToken?): ModelPage<M> {
         val response = query(apiName, createRequest(paginationToken))
         return response.data
     }
 
-    override fun loadPage(onSuccess: Consumer<ModelPage<@UnsafeVariance M>>, onError: Consumer<AmplifyException>) {
+    override fun fetchPage(onSuccess: Consumer<ModelPage<@UnsafeVariance M>>, onError: Consumer<AmplifyException>) {
         query(apiName, createRequest(), onSuccess, onError)
     }
 
-    override fun loadPage(
-        paginationToken: PaginationToken,
+    override fun fetchPage(
+        paginationToken: PaginationToken?,
         onSuccess: Consumer<ModelPage<@UnsafeVariance M>>,
         onError: Consumer<AmplifyException>
     ) {

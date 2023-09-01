@@ -58,7 +58,7 @@ public final class ModelField {
     private final boolean isLazyModel;
 
     // True if the field is an instance of lazy model.
-    private final boolean isLazyList;
+    private final boolean isModelList;
 
     // True if the field is an instance of CustomType
     private final boolean isCustomType;
@@ -79,7 +79,7 @@ public final class ModelField {
         this.isEnum = builder.isEnum;
         this.isModel = builder.isModel;
         this.isLazyModel = builder.isLazyModel;
-        this.isLazyList = builder.isLazyList;
+        this.isModelList = builder.isModelList;
         this.isCustomType = builder.isCustomType;
         this.authRules = builder.authRules;
     }
@@ -172,12 +172,12 @@ public final class ModelField {
     }
 
     /**
-     * Returns true if the field's target type is a lazy list of Models.
+     * Returns true if the field's target type is ModelList.
      *
-     * @return True if the field's target type is a lazy list of Models.
+     * @return True if the field's target type is ModelList.
      */
-    public boolean isLazyList() {
-        return isLazyList;
+    public boolean isModelList() {
+        return isModelList;
     }
 
     /**
@@ -298,8 +298,8 @@ public final class ModelField {
         // True if the field's target type is LazyModel.
         private boolean isLazyModel = false;
 
-        // True if the field's target type is a lazy list type (PaginatedResult).
-        private boolean isLazyList = false;
+        // True if the field's target type is a ModelList type.
+        private boolean isModelList = false;
 
         // True if the field's target type is CustomType.
         private boolean isCustomType = false;
@@ -408,12 +408,12 @@ public final class ModelField {
         }
 
         /**
-         * Sets a flag indicating whether or not the field's type is a a lazy list type.
-         * @param isLazyList flag indicating if the field is a lazy list type (PaginatedResult)
+         * Sets a flag indicating whether or not the field's type is a ModelList type.
+         * @param isModelList flag indicating if the field is a ModelList type
          * @return the builder object
          */
-        public ModelFieldBuilder isLazyList(boolean isLazyList) {
-            this.isLazyList = isLazyList;
+        public ModelFieldBuilder isModelList(boolean isModelList) {
+            this.isModelList = isModelList;
             return this;
         }
 

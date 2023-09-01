@@ -28,7 +28,7 @@ internal class ModelDeserializer(
         val parentType = (typeOfT as Class<*>).simpleName
         val parentModelSchema = ModelSchema.fromModelClass(parent.javaClass)
 
-        parentModelSchema.fields.filter { it.value.isLazyList }.map { fieldMap ->
+        parentModelSchema.fields.filter { it.value.isModelList }.map { fieldMap ->
             val fieldToUpdate = parent.javaClass.getDeclaredField(fieldMap.key)
             fieldToUpdate.isAccessible = true
             if (fieldToUpdate.get(parent) == null) {

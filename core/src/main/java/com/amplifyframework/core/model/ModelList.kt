@@ -32,7 +32,7 @@ interface LazyModelList<out M : Model> : ModelList<M> {
      */
     @JvmSynthetic
     @Throws(AmplifyException::class)
-    suspend fun loadPage(paginationToken: PaginationToken? = null): ModelPage<M>
+    suspend fun fetchPage(paginationToken: PaginationToken? = null): ModelPage<M>
 
     /**
      * Loads the next page of models.
@@ -40,7 +40,7 @@ interface LazyModelList<out M : Model> : ModelList<M> {
      * @param onSuccess called upon successfully loading the next page of models.
      * @param onError called when loading the page fails.
      */
-    fun loadPage(
+    fun fetchPage(
         onSuccess: Consumer<ModelPage<@UnsafeVariance M>>,
         onError: Consumer<AmplifyException>
     )
@@ -52,8 +52,8 @@ interface LazyModelList<out M : Model> : ModelList<M> {
      * @param onSuccess called upon successfully loading the next page of models.
      * @param onError called when loading the page fails.
      */
-    fun loadPage(
-        paginationToken: PaginationToken,
+    fun fetchPage(
+        paginationToken: PaginationToken?,
         onSuccess: Consumer<ModelPage<@UnsafeVariance M>>,
         onError: Consumer<AmplifyException>
     )

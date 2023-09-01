@@ -59,9 +59,20 @@ interface PropertyPath {
  * Runtime information about a property. Its `name` and `parent` property reference,
  * as well as whether the property represents a collection of the type or not.
  */
-data class PropertyPathMetadata(
+data class PropertyPathMetadata internal constructor(
+    /**
+     * Name of node path
+     */
     val name: String,
+
+    /**
+     * Whether or not the path is a collection
+     */
     val isCollection: Boolean = false,
+
+    /**
+     * Parent node path, if any
+     */
     val parent: PropertyPath? = null
 )
 
@@ -74,42 +85,29 @@ data class PropertyPathMetadata(
 interface PropertyContainerPath : PropertyPath {
 
     /**
-     *
+     * Returns the model type of the property container.
      */
     fun getModelType(): Class<Model>
 }
 
 /**
  * Represents the `Model` structure itself, a container of property references.
- *
- * ```kotlin
- * class Path(name: String = "root", isCollection: Boolean = false, parent: PropertyPath? = null)
- *    : ModelPath<Post>(name, isCollection, modelType = Post::class.java, parent = parent) {
- *
- *    val id = string("id")
- *    val title = string("title")
- *    val blog by lazy { Blog.Path("blog", parent = this) }
- *    val comments by lazy { Comment.Path("comments", isCollection = true, parent = this) }
- *  }
- *
- *  companion object {
- *    val rootPath = Path()
- *  }
- * ```
  */
-open class ModelPath<ModelType : Model>(
+open class ModelPath<ModelType : Model> protected constructor(
     private val name: String,
     private val isCollection: Boolean = false,
     private val parent: PropertyPath? = null,
     private val modelType: Class<ModelType>
 ) : PropertyContainerPath {
 
+    @InternalAmplifyApi
     override fun getMetadata() = PropertyPathMetadata(
         name = name,
         isCollection = isCollection,
         parent = parent
     )
 
+    @InternalAmplifyApi
     override fun getModelType(): Class<Model> = modelType as Class<Model>
 
     companion object {
