@@ -21,6 +21,7 @@ contribution.
     - [Test changes to CodeBuild build definitions](#test-changes-to-codebuild-build-definitions)
   - [Reporting Bugs/Feature Requests](#reporting-bugsfeature-requests)
   - [Contributing via Pull Requests](#contributing-via-pull-requests)
+    - [Semantic Versioning](#semantic-versioning) 	
   - [Troubleshooting](#troubleshooting)
     - [Environment Debugging](#environment-debugging)
     - [Problems with the Build](#problems-with-the-build)
@@ -454,6 +455,19 @@ will run all build tasks (Checkstyle, Lint, unit tests).
 - Usually all these are going to be **squashed** when you merge to main.
 - Make sure to update the PR title/description if things change.
 - Rebase with the `main` branch if it has commits ahead of your fork.
+
+### Semantic versioning
+
+We follow [semantic versioning](https://semver.org/) for our releases.
+
+#### Semantic versioning and enumeration cases
+
+When Amplify adds a new a new enumeration class entry or sealed class subtype, we
+will publish a new **minor** version of the library.
+
+Applications that use a `when` expression to evaluate all members of an enumerated
+type can add an `else` branch to prevent new cases from causing compile warnings
+ or errors.
 
 ## Troubleshooting
 

@@ -32,6 +32,7 @@ import com.amplifyframework.auth.options.AuthSignOutOptions;
 import com.amplifyframework.auth.options.AuthSignUpOptions;
 import com.amplifyframework.auth.options.AuthUpdateUserAttributeOptions;
 import com.amplifyframework.auth.options.AuthUpdateUserAttributesOptions;
+import com.amplifyframework.auth.options.AuthVerifyTOTPSetupOptions;
 import com.amplifyframework.auth.options.AuthWebUISignInOptions;
 import com.amplifyframework.auth.result.AuthResetPasswordResult;
 import com.amplifyframework.auth.result.AuthSignInResult;
@@ -512,4 +513,39 @@ public interface AuthCategoryBehavior {
     void deleteUser(
             @NonNull Action onSuccess,
             @NonNull Consumer<AuthException> onError);
+
+    /**
+     * Setup TOTP for the currently signed in user.
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     */
+    void setUpTOTP(
+        @NonNull Consumer<TOTPSetupDetails> onSuccess,
+        @NonNull Consumer<AuthException> onError);
+
+    /**
+     * Verify TOTP setup for the currently signed in user.
+     * @param code TOTP code to verify TOTP setup
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     */
+    void verifyTOTPSetup(
+        @NonNull String code,
+        @NonNull Action onSuccess,
+        @NonNull Consumer<AuthException> onError
+    );
+
+    /**
+     * Verify TOTP setup for the currently signed in user.
+     * @param code TOTP code to verify TOTP setup
+     * @param options additional options to verify totp setup
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     */
+    void verifyTOTPSetup(
+        @NonNull String code,
+        @NonNull AuthVerifyTOTPSetupOptions options,
+        @NonNull Action onSuccess,
+        @NonNull Consumer<AuthException> onError
+    );
 }

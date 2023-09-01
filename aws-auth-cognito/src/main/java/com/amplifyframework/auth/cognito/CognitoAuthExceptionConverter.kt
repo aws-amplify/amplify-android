@@ -18,6 +18,7 @@ package com.amplifyframework.auth.cognito
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AliasExistsException
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.CodeDeliveryFailureException
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.CodeMismatchException
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.EnableSoftwareTokenMfaException
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ExpiredCodeException
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.InvalidParameterException
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.InvalidPasswordException
@@ -89,6 +90,8 @@ internal class CognitoAuthExceptionConverter {
                     com.amplifyframework.auth.cognito.exceptions.service.TooManyRequestsException(error)
                 is PasswordResetRequiredException ->
                     com.amplifyframework.auth.cognito.exceptions.service.PasswordResetRequiredException(error)
+                is EnableSoftwareTokenMfaException ->
+                    com.amplifyframework.auth.cognito.exceptions.service.EnableSoftwareTokenMFAException(error)
                 is UserLambdaValidationException ->
                     com.amplifyframework.auth.cognito.exceptions.service.UserLambdaValidationException(
                         error.message,

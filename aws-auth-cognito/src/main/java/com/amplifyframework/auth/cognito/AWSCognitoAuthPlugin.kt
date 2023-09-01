@@ -31,7 +31,9 @@ import com.amplifyframework.auth.AuthSession
 import com.amplifyframework.auth.AuthUser
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
+import com.amplifyframework.auth.TOTPSetupDetails
 import com.amplifyframework.auth.cognito.asf.UserContextDataProvider
+import com.amplifyframework.auth.cognito.options.AWSCognitoAuthVerifyTOTPSetupOptions
 import com.amplifyframework.auth.cognito.options.FederateToIdentityPoolOptions
 import com.amplifyframework.auth.cognito.result.FederateToIdentityPoolResult
 import com.amplifyframework.auth.exceptions.ConfigurationException
@@ -48,6 +50,7 @@ import com.amplifyframework.auth.options.AuthSignOutOptions
 import com.amplifyframework.auth.options.AuthSignUpOptions
 import com.amplifyframework.auth.options.AuthUpdateUserAttributeOptions
 import com.amplifyframework.auth.options.AuthUpdateUserAttributesOptions
+import com.amplifyframework.auth.options.AuthVerifyTOTPSetupOptions
 import com.amplifyframework.auth.options.AuthWebUISignInOptions
 import com.amplifyframework.auth.result.AuthResetPasswordResult
 import com.amplifyframework.auth.result.AuthSignInResult
@@ -768,6 +771,40 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         )
     }
 
+    override fun setUpTOTP(onSuccess: Consumer<TOTPSetupDetails>, onError: Consumer<AuthException>) {
+        queueChannel.trySend(
+            pluginScope.launch(start = CoroutineStart.LAZY) {
+                try {
+                    val result = queueFacade.setUpTOTP()
+                    onSuccess.accept(result)
+                } catch (e: Exception) {
+                    onError.accept(e.toAuthException())
+                }
+            }
+        )
+    }
+
+    override fun verifyTOTPSetup(code: String, onSuccess: Action, onError: Consumer<AuthException>) {
+        verifyTOTPSetup(code, AWSCognitoAuthVerifyTOTPSetupOptions.CognitoBuilder().build(), onSuccess, onError)
+    }
+
+    override fun verifyTOTPSetup(
+        code: String,
+        options: AuthVerifyTOTPSetupOptions,
+        onSuccess: Action,
+        onError: Consumer<AuthException>
+    ) {
+        queueChannel.trySend(
+            pluginScope.launch(start = CoroutineStart.LAZY) {
+                try {
+                    queueFacade.verifyTOTPSetup(code, options)
+                    onSuccess.call()
+                } catch (e: Exception) {
+                    onError.accept(e.toAuthException())
+                }
+            }
+        )
+    }
     override fun getEscapeHatch() = realPlugin.escapeHatch()
 
     override fun getPluginKey() = AWS_COGNITO_AUTH_PLUGIN_KEY
@@ -845,6 +882,40 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
             pluginScope.launch(start = CoroutineStart.LAZY) {
                 try {
                     queueFacade.clearFederationToIdentityPool()
+                    onSuccess.call()
+                } catch (e: Exception) {
+                    onError.accept(e.toAuthException())
+                }
+            }
+        )
+    }
+
+    fun fetchMFAPreference(
+        onSuccess: Consumer<UserMFAPreference>,
+        onError: Consumer<AuthException>
+    ) {
+        queueChannel.trySend(
+            pluginScope.launch(start = CoroutineStart.LAZY) {
+                try {
+                    val result = queueFacade.fetchMFAPreference()
+                    onSuccess.accept(result)
+                } catch (e: Exception) {
+                    onError.accept(e.toAuthException())
+                }
+            }
+        )
+    }
+
+    fun updateMFAPreference(
+        sms: MFAPreference?,
+        totp: MFAPreference?,
+        onSuccess: Action,
+        onError: Consumer<AuthException>
+    ) {
+        queueChannel.trySend(
+            pluginScope.launch(start = CoroutineStart.LAZY) {
+                try {
+                    queueFacade.updateMFAPreference(sms, totp)
                     onSuccess.call()
                 } catch (e: Exception) {
                     onError.accept(e.toAuthException())

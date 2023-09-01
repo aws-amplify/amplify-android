@@ -30,6 +30,7 @@ import com.amplifyframework.auth.AuthSession;
 import com.amplifyframework.auth.AuthUser;
 import com.amplifyframework.auth.AuthUserAttribute;
 import com.amplifyframework.auth.AuthUserAttributeKey;
+import com.amplifyframework.auth.TOTPSetupDetails;
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions;
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions;
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions;
@@ -42,6 +43,7 @@ import com.amplifyframework.auth.options.AuthSignOutOptions;
 import com.amplifyframework.auth.options.AuthSignUpOptions;
 import com.amplifyframework.auth.options.AuthUpdateUserAttributeOptions;
 import com.amplifyframework.auth.options.AuthUpdateUserAttributesOptions;
+import com.amplifyframework.auth.options.AuthVerifyTOTPSetupOptions;
 import com.amplifyframework.auth.options.AuthWebUISignInOptions;
 import com.amplifyframework.auth.result.AuthResetPasswordResult;
 import com.amplifyframework.auth.result.AuthSignInResult;
@@ -308,10 +310,25 @@ final class RxAuthBinding implements RxAuthCategoryBehavior {
     public Single<AuthSignOutResult> signOut(@NonNull AuthSignOutOptions options) {
         return toSingle((onComplete, onError) -> delegate.signOut(options, onComplete));
     }
-    
+
     @Override
     public Completable deleteUser() {
         return toCompletable(delegate::deleteUser);
+    }
+
+    @Override
+    public Single<TOTPSetupDetails> setUpTOTP() {
+        return toSingle(delegate::setUpTOTP);
+    }
+
+    @Override
+    public Completable verifyTOTPSetup(@NonNull String code) {
+        return toCompletable((onComplete, onError) -> delegate.verifyTOTPSetup(code, onComplete, onError));
+    }
+
+    @Override
+    public Completable verifyTOTPSetup(@NonNull String code, @NonNull AuthVerifyTOTPSetupOptions options) {
+        return toCompletable((onComplete, onError) -> delegate.verifyTOTPSetup(code, options, onComplete, onError));
     }
 
     private <T> Single<T> toSingle(VoidBehaviors.ResultEmitter<T, AuthException> behavior) {

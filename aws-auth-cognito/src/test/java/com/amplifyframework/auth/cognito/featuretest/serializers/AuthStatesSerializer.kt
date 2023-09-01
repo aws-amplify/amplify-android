@@ -44,13 +44,17 @@ import kotlinx.serialization.modules.contextual
 @Serializable
 internal data class AuthStatesProxy(
     val type: String = "AuthState",
-    @Contextual @SerialName("AuthenticationState")
+    @Contextual
+    @SerialName("AuthenticationState")
     val authNState: AuthenticationState? = null,
-    @Contextual @SerialName("AuthorizationState")
+    @Contextual
+    @SerialName("AuthorizationState")
     val authZState: AuthorizationState? = null,
-    @Contextual @SerialName("SignInState")
+    @Contextual
+    @SerialName("SignInState")
     val signInState: SignInState = SignInState.NotStarted(),
-    @Contextual @SerialName("SignInChallengeState")
+    @Contextual
+    @SerialName("SignInChallengeState")
     val signInChallengeState: SignInChallengeState? = null,
     @Contextual
     val signedInData: SignedInData? = null,
@@ -142,7 +146,7 @@ internal data class AuthStatesProxy(
                             amplifyCredential = authState.amplifyCredential
                         )
                         is AuthorizationState.SigningIn -> AuthStatesProxy(
-                            type = "AuthorizationState.SigningIn",
+                            type = "AuthorizationState.SigningIn"
                         )
                         is AuthorizationState.SigningOut -> TODO()
                         is AuthorizationState.StoringCredentials -> TODO()
@@ -166,6 +170,7 @@ internal data class AuthStatesProxy(
                         is SignInState.SigningInWithHostedUI -> TODO()
                         is SignInState.SigningInWithSRP -> TODO()
                         is SignInState.SigningInWithSRPCustom -> TODO()
+                        is SignInState.ResolvingTOTPSetup -> TODO()
                     }
                 }
                 is SignInChallengeState -> {
