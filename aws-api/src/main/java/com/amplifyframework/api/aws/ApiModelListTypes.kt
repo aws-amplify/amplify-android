@@ -1,7 +1,6 @@
 package com.amplifyframework.api.aws
 
 import com.amplifyframework.AmplifyException
-import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.api.ApiException
 import com.amplifyframework.api.graphql.GraphQLRequest
 import com.amplifyframework.api.graphql.GraphQLResponse
@@ -16,18 +15,18 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
-@InternalAmplifyApi
-class ApiLoadedModelList<out M : Model>(
+internal class ApiLoadedModelList<out M : Model>(
     override val items: List<M>
 ) : LoadedModelList<M>
 
-class ApiModelPage<out M : Model>(
+internal class ApiModelPage<out M : Model>(
     override val items: List<M>,
     override val nextToken: ApiPaginationToken?
 ): ModelPage<M>
-class ApiPaginationToken(val nextToken: String) : PaginationToken
 
-class ApiLazyModelList<out M : Model>  constructor(
+internal class ApiPaginationToken(val nextToken: String) : PaginationToken
+
+internal class ApiLazyModelList<out M : Model>  constructor(
     private val clazz: Class<M>,
     keyMap: Map<String, Any>,
     private val apiName: String?

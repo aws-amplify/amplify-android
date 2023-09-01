@@ -16,7 +16,6 @@
 package com.amplifyframework.api.aws
 
 import com.amplifyframework.AmplifyException
-import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.api.ApiException
 import com.amplifyframework.api.graphql.GraphQLRequest
 import com.amplifyframework.api.graphql.GraphQLResponse
@@ -30,8 +29,7 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
-@InternalAmplifyApi
-class ApiLazyModel<M : Model> private constructor(
+internal class ApiLazyModel<M : Model> private constructor(
     private val clazz: Class<M>,
     private val keyMap: Map<String, Any>,
     private var model: M? = null,
