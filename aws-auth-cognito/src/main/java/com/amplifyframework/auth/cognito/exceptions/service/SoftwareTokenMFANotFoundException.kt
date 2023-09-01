@@ -21,4 +21,8 @@ import com.amplifyframework.auth.exceptions.ServiceException
  * @param cause The underlying cause of this exception
  */
 open class SoftwareTokenMFANotFoundException(cause: Throwable?) :
-    ServiceException("Could not find software token MFA.", "Enable the software token MFA for the user.", cause)
+    ServiceException(
+        "Software token TOTP multi-factor authentication (MFA) is not enabled for the user pool.",
+        "Enable the software token MFA for the user.",
+        cause
+    )

@@ -67,17 +67,23 @@
       "owner": {
         "name": "BelongsTo",
         "targetName": "blogOwnerId",
+        "targetNames": null,
+        "associatedName": null,
         "associatedType": "BlogOwner"
       },
       "posts": {
         "name": "HasMany",
         "associatedName": "blog",
-        "associatedType": "Post"
+        "associatedType": "Post",
+        "targetNames": null,
+        "targetName": null
       }
     },
     "indexes": {},
     "modelClass": "com.amplifyframework.core.model.SerializedModel",
-    "modelSchemaVersion": 0
+    "listPluralName": null,
+    "modelType": null,
+    "syncPluralName": null
   },
   "serializedData": {
     "owner": {

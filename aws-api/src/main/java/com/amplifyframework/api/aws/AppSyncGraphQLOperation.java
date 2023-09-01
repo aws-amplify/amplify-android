@@ -146,6 +146,7 @@ public final class AppSyncGraphQLOperation<R> extends AWSGraphQLOperation<R> {
                 onFailure.accept(new ApiException
                         .NonRetryableException("OkHttp client request failed.", "Irrecoverable error")
                 );
+                return;
             }
 
             try {

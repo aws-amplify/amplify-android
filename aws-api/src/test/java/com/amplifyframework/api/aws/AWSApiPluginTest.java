@@ -38,6 +38,7 @@ import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testutils.Await;
 import com.amplifyframework.testutils.HubAccumulator;
+import com.amplifyframework.testutils.Latch;
 import com.amplifyframework.testutils.Resources;
 import com.amplifyframework.testutils.random.RandomString;
 import com.amplifyframework.util.TypeMaker;
@@ -55,7 +56,9 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import io.reactivex.rxjava3.core.Observable;
 import okhttp3.HttpUrl;
@@ -277,6 +280,75 @@ public final class AWSApiPluginTest {
         assertTrue(event.getData() instanceof ApiEndpointStatusChangeEvent);
         ApiEndpointStatusChangeEvent eventData = (ApiEndpointStatusChangeEvent) event.getData();
         assertEquals(ApiEndpointStatusChangeEvent.ApiEndpointStatus.REACHABLE, eventData.getCurrentStatus());
+    }
+
+    /**
+     * When the server returns a client error code in response to calling
+     * {@link AWSApiPlugin#mutate(GraphQLRequest, Consumer, Consumer)}.
+     * only the onFailure callback should be called.
+     *
+     * @throws InterruptedException if the thread performing the mutation is interrupted.
+     */
+    @Test
+    public void graphQlMutationWithClientErrorResponseCodeShouldNotCallOnResponse() throws InterruptedException {
+        final int CLIENT_ERROR_CODE = 400;
+        webServer.enqueue(new MockResponse().setResponseCode(CLIENT_ERROR_CODE));
+
+        final CountDownLatch latch = new CountDownLatch(2);
+        final AtomicReference<Throwable> unexpectedErrorContainer = new AtomicReference<>();
+        final AtomicReference<GraphQLResponse<BlogOwner>> responseContainer = new AtomicReference<>();
+        final AtomicReference<ApiException> failureContainer = new AtomicReference<>();
+
+        final Consumer<GraphQLResponse<BlogOwner>> onResponse = (response) -> {
+            responseContainer.set(response);
+            latch.countDown();
+        };
+        final Consumer<ApiException> onFailure = (failure) -> {
+            failureContainer.set(failure);
+            latch.countDown();
+        };
+
+        final Thread thread = new Thread(() -> {
+            try {
+                // Try to perform a mutation.
+                final BlogOwner tony = BlogOwner.builder()
+                        .name(RandomString.string())
+                        .build();
+                plugin.mutate(ModelMutation.create(tony), onResponse, onFailure);
+            } catch (Throwable unexpectedFailure) {
+                unexpectedErrorContainer.set(unexpectedFailure);
+                do {
+                    latch.countDown();
+                } while (latch.getCount() > 0);
+            }
+        });
+        thread.setDaemon(true);
+        thread.start();
+
+        try {
+            Latch.await(latch);
+            thread.join();
+        } catch (RuntimeException runtimeException) {
+            // We expect a RuntimeException here.
+            //  That means awaiting the latch timed out and both callbacks were not called.
+        }
+
+        assertNull(
+                "An unexpected error occurred while performing the mutation.",
+                unexpectedErrorContainer.get()
+        );
+        assertTrue(
+                "Latch count == 0; both onFailure and onResponse were called.",
+                latch.getCount() > 0
+        );
+        assertTrue(
+                "Expected client error response code to result in NonRetryableException.",
+                failureContainer.get() instanceof ApiException.NonRetryableException
+        );
+        assertNull(
+                "There was a non-null response but the response code indicates client error.",
+                responseContainer.get()
+        );
     }
 
     /**

@@ -29,6 +29,7 @@ import com.amplifyframework.auth.AuthException;
 import com.amplifyframework.auth.AuthPlugin;
 import com.amplifyframework.auth.AuthProvider;
 import com.amplifyframework.auth.AuthSession;
+import com.amplifyframework.auth.AuthUser;
 import com.amplifyframework.auth.AuthUserAttribute;
 import com.amplifyframework.auth.AuthUserAttributeKey;
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions;
@@ -597,6 +598,17 @@ public final class SynchronousAuth {
     public void deleteUser() throws AuthException {
         Await.<Object, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
                 asyncDelegate.deleteUser(() -> onResult.accept(VoidResult.instance()), onError)
+        );
+    }
+
+    /**
+     * Get the current signed in user.
+     * @return current authenticated user
+     * @throws AuthException exception
+     */
+    public AuthUser getCurrentUser() throws AuthException {
+        return Await.<AuthUser, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
+            asyncDelegate.getCurrentUser(onResult, onError)
         );
     }
 }

@@ -121,16 +121,6 @@ internal class HostedUIClient private constructor(
         return HostedUIHttpHelper.fetchTokens(createFetchTokenUrl(), createFetchTokenHeaders(), body)
     }
 
-    fun fetchRefreshedToken(refreshToken: String): CognitoUserPoolTokens {
-        val body = mapOf(
-            "grant_type" to "refresh_token",
-            "client_id" to configuration.appClient,
-            "redirect_uri" to configuration.signInRedirectURI,
-            "refresh_token" to refreshToken
-        )
-        return HostedUIHttpHelper.fetchTokens(createFetchTokenUrl(), createFetchTokenHeaders(), body)
-    }
-
     private fun createAuthorizeUri(hostedUIOptions: HostedUIOptions): Uri {
         // Build the complete web domain to launch the login screen
         val builder = Uri.Builder()

@@ -624,7 +624,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         if (AuthModeStrategyType.MULTIAUTH.equals(authModeStrategyType)) {
             // If it gets here, we know that the request is an AppSyncGraphQLRequest because
             // getAuthModeStrategyType checks for that, so we can safely cast the graphQLRequest.
-            return MutiAuthSubscriptionOperation.<R>builder()
+            return MultiAuthSubscriptionOperation.<R>builder()
                                                 .apiName(apiName)
                                                 .subscriptionEndpoint(clientDetails.getSubscriptionEndpoint())
                                                 .graphQlRequest((AppSyncGraphQLRequest<R>) graphQLRequest)

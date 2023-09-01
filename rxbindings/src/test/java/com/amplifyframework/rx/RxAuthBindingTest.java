@@ -28,7 +28,9 @@ import com.amplifyframework.auth.AuthSession;
 import com.amplifyframework.auth.AuthUser;
 import com.amplifyframework.auth.AuthUserAttribute;
 import com.amplifyframework.auth.AuthUserAttributeKey;
+import com.amplifyframework.auth.TOTPSetupDetails;
 import com.amplifyframework.auth.options.AuthSignUpOptions;
+import com.amplifyframework.auth.options.AuthVerifyTOTPSetupOptions;
 import com.amplifyframework.auth.result.AuthResetPasswordResult;
 import com.amplifyframework.auth.result.AuthSignInResult;
 import com.amplifyframework.auth.result.AuthSignOutResult;
@@ -62,6 +64,7 @@ import static com.amplifyframework.rx.Matchers.anyAction;
 import static com.amplifyframework.rx.Matchers.anyConsumer;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.matches;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -227,7 +230,7 @@ public final class RxAuthBindingTest {
         // Arrange a result on the result consumer
         AuthCodeDeliveryDetails details = new AuthCodeDeliveryDetails(RandomString.string(), DeliveryMedium.EMAIL);
         AuthSignInStep step = AuthSignInStep.CONFIRM_SIGN_IN_WITH_CUSTOM_CHALLENGE;
-        AuthNextSignInStep nextStep = new AuthNextSignInStep(step, Collections.emptyMap(), details);
+        AuthNextSignInStep nextStep = new AuthNextSignInStep(step, Collections.emptyMap(), details, null, null);
         AuthSignInResult result = new AuthSignInResult(false, nextStep);
         doAnswer(invocation -> {
             // 0 = username, 1 = password, 2 = onResult, 3 = onFailure
@@ -289,7 +292,7 @@ public final class RxAuthBindingTest {
         // Arrange a successful result.
         AuthSignInStep step = AuthSignInStep.CONFIRM_SIGN_IN_WITH_SMS_MFA_CODE;
         AuthCodeDeliveryDetails details = new AuthCodeDeliveryDetails(RandomString.string(), DeliveryMedium.UNKNOWN);
-        AuthNextSignInStep nextStep = new AuthNextSignInStep(step, Collections.emptyMap(), details);
+        AuthNextSignInStep nextStep = new AuthNextSignInStep(step, Collections.emptyMap(), details, null, null);
         AuthSignInResult expected = new AuthSignInResult(true, nextStep);
         doAnswer(invocation -> {
             // 0 = confirm code, 1 = onResult, 2 = onFailure
@@ -351,7 +354,7 @@ public final class RxAuthBindingTest {
         // Arrange a successful result
         AuthSignInStep step = AuthSignInStep.CONFIRM_SIGN_IN_WITH_SMS_MFA_CODE;
         AuthCodeDeliveryDetails details = new AuthCodeDeliveryDetails(RandomString.string(), DeliveryMedium.PHONE);
-        AuthNextSignInStep nextStep = new AuthNextSignInStep(step, Collections.emptyMap(), details);
+        AuthNextSignInStep nextStep = new AuthNextSignInStep(step, Collections.emptyMap(), details, null, null);
         AuthSignInResult result = new AuthSignInResult(false, nextStep);
         doAnswer(invocation -> {
             // 0 = provider, 1 = activity, 2 = result consumer, 3 = failure consumer
@@ -414,7 +417,7 @@ public final class RxAuthBindingTest {
         // Arrange a result
         AuthSignInStep step = AuthSignInStep.CONFIRM_SIGN_IN_WITH_CUSTOM_CHALLENGE;
         AuthCodeDeliveryDetails details = new AuthCodeDeliveryDetails(RandomString.string(), DeliveryMedium.PHONE);
-        AuthNextSignInStep nextStep = new AuthNextSignInStep(step, Collections.emptyMap(), details);
+        AuthNextSignInStep nextStep = new AuthNextSignInStep(step, Collections.emptyMap(), details, null, null);
         AuthSignInResult result = new AuthSignInResult(false, nextStep);
         doAnswer(invocation -> {
             // 0 = activity, 1 = result consumer, 2 = failure consumer
@@ -1048,10 +1051,10 @@ public final class RxAuthBindingTest {
             onCompletion.call();
             return null;
         }).when(delegate).deleteUser(anyAction(), anyConsumer());
-        
+
         // Act: call the binding
         TestObserver<Void> observer = auth.deleteUser().test();
-        
+
         // Assert: Completable completes with success
         observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
         observer.assertNoErrors()
@@ -1073,11 +1076,170 @@ public final class RxAuthBindingTest {
             onFailure.accept(failure);
             return null;
         }).when(delegate).deleteUser(anyAction(), anyConsumer());
-        
+
         // Act: call the binding
         TestObserver<Void> observer = auth.deleteUser().test();
-        
+
         // Assert: failure is furnished via Rx Completable.
+        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        observer.assertNotComplete()
+                .assertError(failure);
+    }
+
+    /**
+     * Tests that a successful request to set up totp will
+     * propagate a completion back through the binding.
+     * @throws InterruptedException If test observer is interrupted while awaiting terminal event
+     */
+    @Test
+    public void testSetUpTOTPSucceeds() throws InterruptedException {
+        // Arrange an invocation of the success action
+        doAnswer(invocation -> {
+            // 0 = onComplete, 1 = onFailure
+            int positionOfCompletionConsumer = 0;
+            Consumer<TOTPSetupDetails> onComplete = invocation.getArgument(positionOfCompletionConsumer);
+            onComplete.accept(new TOTPSetupDetails("ss", "u"));
+            return null;
+        }).when(delegate).setUpTOTP(anyConsumer(), anyConsumer());
+
+        // Act: call the binding
+        TestObserver<TOTPSetupDetails> observer = auth.setUpTOTP().test();
+
+        // Assert: Completable completes successfully
+        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        observer.assertComplete();
+    }
+
+    /**
+     * Validate that a setUp TOTP failure is propagated up through the binding.
+     * @throws InterruptedException If test observer is interrupted while awaiting terminal event
+     */
+    @Test
+    public void testSetUpTOTPFails() throws InterruptedException {
+        AuthException failure = new AuthException("", "", new Exception());
+
+        // Arrange an invocation of the success action
+        doAnswer(invocation -> {
+            // 0 = onComplete, 1 = onFailure
+            int positionOfCompletionConsumer = 1;
+            Consumer<AuthException> onError = invocation.getArgument(positionOfCompletionConsumer);
+            onError.accept(failure);
+            return null;
+        }).when(delegate).setUpTOTP(anyConsumer(), anyConsumer());
+
+        // Act: call the binding
+        TestObserver<TOTPSetupDetails> observer = auth.setUpTOTP().test();
+
+        // Assert: Completable completes successfully
+        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        observer.assertNotComplete()
+                .assertError(failure);
+    }
+
+    /**
+     * Tests that a successful request to verify totp setup will
+     * propagate a completion back through the binding.
+     * @throws InterruptedException If test observer is interrupted while awaiting terminal event
+     */
+    @Test
+    public void testVerifyTOTPSetupSucceeds() throws InterruptedException {
+        // Arrange an invocation of the success action
+        String myCode = "123";
+        doAnswer(invocation -> {
+            // 0 = code, 1 = onComplete, 2 = onFailure
+            int positionOfCompletionConsumer = 1;
+            Action onComplete = invocation.getArgument(positionOfCompletionConsumer);
+            onComplete.call();
+            return null;
+        }).when(delegate).verifyTOTPSetup(matches(myCode), anyAction(), anyConsumer());
+
+        // Act: call the binding
+        TestObserver<Void> observer = auth.verifyTOTPSetup(myCode).test();
+
+        // Assert: Completable completes successfully
+        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        observer.assertComplete();
+    }
+
+    /**
+     * Validate that a verify TOTP setup failure is propagated up through the binding.
+     * @throws InterruptedException If test observer is interrupted while awaiting terminal event
+     */
+    @Test
+    public void testVerifyTOTPSetupFails() throws InterruptedException {
+        // Arrange an invocation of the success action
+        String myCode = "123";
+        AuthException failure = new AuthException("", "", new Exception());
+        doAnswer(invocation -> {
+            // 0 = code, 1 = onComplete, 2 = onFailure
+            int positionOfCompletionConsumer = 2;
+            Consumer<AuthException> onError = invocation.getArgument(positionOfCompletionConsumer);
+            onError.accept(failure);
+            return null;
+        }).when(delegate).verifyTOTPSetup(matches(myCode), anyAction(), anyConsumer());
+
+        // Act: call the binding
+        TestObserver<Void> observer = auth.verifyTOTPSetup(myCode).test();
+
+        // Assert: Completable completes successfully
+        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        observer.assertNotComplete()
+                .assertError(failure);
+    }
+
+    /**
+     * Tests that a successful request to verify totp setup will
+     * propagate a completion back through the binding.
+     * @throws InterruptedException If test observer is interrupted while awaiting terminal event
+     */
+    @Test
+    public void testVerifyTOTPSetupWithOptionsSucceeds() throws InterruptedException {
+        // Arrange an invocation of the success action
+        String myCode = "123";
+        AuthVerifyTOTPSetupOptions myOptions = AuthVerifyTOTPSetupOptions.defaults();
+        doAnswer(invocation -> {
+            // 0 = code, 1 = options, 2 = onComplete, 3 = onFailure
+            int positionOfCompletionConsumer = 2;
+            Action onComplete = invocation.getArgument(positionOfCompletionConsumer);
+            onComplete.call();
+            return null;
+        }).when(delegate).verifyTOTPSetup(
+                matches(myCode),
+                any(),
+                anyAction(),
+                anyConsumer()
+        );
+
+        // Act: call the binding
+        TestObserver<Void> observer = auth.verifyTOTPSetup(myCode, myOptions).test();
+
+        // Assert: Completable completes successfully
+        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        observer.assertComplete();
+    }
+
+    /**
+     * Validate that a verify TOTP setup failure is propagated up through the binding.
+     * @throws InterruptedException If test observer is interrupted while awaiting terminal event
+     */
+    @Test
+    public void testVerifyTOTPSetupWithOptionsFails() throws InterruptedException {
+        // Arrange an invocation of the success action
+        String myCode = "123";
+        AuthVerifyTOTPSetupOptions myOptions = AuthVerifyTOTPSetupOptions.defaults();
+        AuthException failure = new AuthException("", "", new Exception());
+        doAnswer(invocation -> {
+            // 0 = code, 1 = options, 2 = onComplete, 3 = onFailure
+            int positionOfCompletionConsumer = 3;
+            Consumer<AuthException> onError = invocation.getArgument(positionOfCompletionConsumer);
+            onError.accept(failure);
+            return null;
+        }).when(delegate).verifyTOTPSetup(matches(myCode), any(), anyAction(), anyConsumer());
+
+        // Act: call the binding
+        TestObserver<Void> observer = auth.verifyTOTPSetup(myCode, myOptions).test();
+
+        // Assert: Completable completes successfully
         observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
         observer.assertNotComplete()
                 .assertError(failure);

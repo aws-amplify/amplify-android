@@ -73,6 +73,7 @@ final class SubscriptionEndpoint {
     private final TimeoutWatchdog timeoutWatchdog;
     private final Set<String> pendingSubscriptionIds;
     private final OkHttpClient okHttpClient;
+    private final Object webSocketLock = new Object();
     private WebSocket webSocket;
     private AmplifyWebSocketListener webSocketListener;
     private String apiName;
@@ -129,26 +130,35 @@ final class SubscriptionEndpoint {
         Objects.requireNonNull(onSubscriptionError);
         Objects.requireNonNull(onSubscriptionComplete);
 
-        // The first call to subscribe OR a disconnected websocket listener will
-        // force a new connection to be created.
-        if (webSocketListener == null || webSocketListener.isDisconnectedState()) {
-            webSocketListener = new AmplifyWebSocketListener();
-            try {
-                webSocket = okHttpClient.newWebSocket(new Request.Builder()
-                    .url(buildConnectionRequestUrl(authType))
-                    .addHeader("Sec-WebSocket-Protocol", "graphql-ws")
-                    .header("User-Agent", UserAgent.string())
-                    .build(), webSocketListener);
-            } catch (ApiException apiException) {
-                onSubscriptionError.accept(apiException);
-                return;
+        final String subscriptionId = UUID.randomUUID().toString();
+        final AmplifyWebSocketListener socketListener;
+        final WebSocket socket;
+
+        synchronized (webSocketLock) {
+            // The first call to subscribe OR a disconnected websocket listener will
+            // force a new connection to be created.
+            if (webSocketListener == null || webSocketListener.isDisconnectedState()) {
+                webSocketListener = new AmplifyWebSocketListener();
+                try {
+                    webSocket = okHttpClient.newWebSocket(new Request.Builder()
+                                                              .url(buildConnectionRequestUrl(authType))
+                                                              .addHeader("Sec-WebSocket-Protocol", "graphql-ws")
+                                                              .header("User-Agent", UserAgent.string())
+                                                              .build(), webSocketListener);
+                } catch (ApiException apiException) {
+                    onSubscriptionError.accept(apiException);
+                    return;
+                }
+
             }
 
+            pendingSubscriptionIds.add(subscriptionId);
+            socketListener = webSocketListener;
+            socket = webSocket;
         }
-        final String subscriptionId = UUID.randomUUID().toString();
-        pendingSubscriptionIds.add(subscriptionId);
+
         // Every request waits here for the connection to be ready.
-        Connection connection = webSocketListener.waitForConnectionReady();
+        Connection connection = socketListener.waitForConnectionReady();
         if (connection.hasFailure()) {
             // If the latch didn't count all the way down
             if (pendingSubscriptionIds.remove(subscriptionId)) {
@@ -169,7 +179,7 @@ final class SubscriptionEndpoint {
                 .put("authorization", authorizer.createHeadersForSubscription(request, authType))))
                 .toString();
 
-            webSocket.send(jsonMessage);
+            socket.send(jsonMessage);
         } catch (JSONException | ApiException exception) {
             // If the subscriptionId was still pending, then we can call the onSubscriptionError
             if (pendingSubscriptionIds.remove(subscriptionId)) {
@@ -276,8 +286,8 @@ final class SubscriptionEndpoint {
 
         // Only do this if the subscription was NOT pending.
         // Otherwise it would probably fail since it was never established in the first place.
-
-        if (!wasSubscriptionPending && !webSocketListener.isDisconnectedState()) {
+        final AmplifyWebSocketListener socketListener = webSocketListener;
+        if (!wasSubscriptionPending && socketListener != null && !socketListener.isDisconnectedState()) {
             try {
                 String jsonMessage = new JSONObject()
                     .put("type", "stop")
@@ -295,13 +305,15 @@ final class SubscriptionEndpoint {
             subscription.awaitSubscriptionCompleted();
         }
 
-        subscriptions.remove(subscriptionId);
-
         // If we have zero subscriptions, close the WebSocket
-        if (subscriptions.size() == 0) {
-            LOG.info("No more active subscriptions. Closing web socket.");
-            timeoutWatchdog.stop();
-            webSocket.close(NORMAL_CLOSURE_STATUS, "No active subscriptions");
+        synchronized (webSocketLock) {
+            subscriptions.remove(subscriptionId);
+            if (subscriptions.isEmpty() && pendingSubscriptionIds.isEmpty()) {
+                LOG.info("No more active subscriptions. Closing web socket.");
+                timeoutWatchdog.stop();
+                webSocket.close(NORMAL_CLOSURE_STATUS, "No active subscriptions");
+                webSocketListener = null;
+            }
         }
     }
 
