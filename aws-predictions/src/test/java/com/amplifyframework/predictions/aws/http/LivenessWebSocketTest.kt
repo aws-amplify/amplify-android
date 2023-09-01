@@ -15,10 +15,12 @@
 
 package com.amplifyframework.predictions.aws.http
 
+import android.os.Build
 import aws.smithy.kotlin.runtime.auth.awscredentials.Credentials
 import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider
 import aws.smithy.kotlin.runtime.util.Attributes
 import com.amplifyframework.core.Action
+import com.amplifyframework.core.BuildConfig
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.predictions.PredictionsException
 import com.amplifyframework.predictions.aws.models.liveness.ChallengeConfig
@@ -94,7 +96,7 @@ internal class LivenessWebSocketTest {
             server.url("/").toString(),
             "",
             sessionInformation,
-            mapOf(),
+            emptyMap(),
             onSessionInformationReceived,
             onErrorReceived,
             onComplete
@@ -277,6 +279,17 @@ internal class LivenessWebSocketTest {
     }
 
     @Test
+    fun `web socket user agent base`() {
+        livenessWebSocket.webSocket = mockk()
+
+        val version = BuildConfig.VERSION_NAME
+        val os = Build.VERSION.SDK_INT
+        val baseline = "amplify-android:$version md/unknown/robolectric md/locale/en_UNKNOWN os/Android/$os " +
+            "md/device/robolectric md/device-manufacturer/unknown api/rekognitionstreaming/$version"
+        assertEquals(livenessWebSocket.getUserAgent(), baseline)
+    }
+
+    @Test
     @Ignore("Need to work on parsing the onMessage byteString from ServerWebSocketListener")
     fun `sendInitialFaceDetectedEvent test`() {
     }
@@ -302,9 +315,72 @@ internal class LivenessWebSocketTest {
     }
 }
 
+@OptIn(ExperimentalCoroutinesApi::class)
+@RunWith(RobolectricTestRunner::class)
+internal class LivenessWebSocketTestUserAgent {
+    private val json = Json { encodeDefaults = true }
+
+    private lateinit var livenessWebSocket: LivenessWebSocket
+    private lateinit var server: MockWebServer
+
+    private val onComplete = mockk<Action>(relaxed = true)
+    private val onSessionInformationReceived = mockk<Consumer<SessionInformation>>(relaxed = true)
+    private val onErrorReceived = mockk<Consumer<PredictionsException>>(relaxed = true)
+    private val credentialsProvider = object : CredentialsProvider {
+        override suspend fun resolve(attributes: Attributes): Credentials {
+            return Credentials(
+                "",
+                "",
+                "",
+                null,
+                ""
+            )
+        }
+    }
+    private val sessionInformation = FaceLivenessSessionInformation(1f, 1f, "1", "3")
+
+    @Before
+    fun setUp() {
+        Dispatchers.setMain(Dispatchers.Unconfined)
+
+        server = MockWebServer()
+
+        livenessWebSocket = LivenessWebSocket(
+            credentialsProvider,
+            server.url("/").toString(),
+            "",
+            sessionInformation,
+            mapOf(Pair("liveness", "1.1.1")),
+            onSessionInformationReceived,
+            onErrorReceived,
+            onComplete
+        )
+    }
+
+    @After
+    fun shutDown() {
+        server.shutdown()
+        Dispatchers.resetMain()
+    }
+
+    @Test
+    fun `web socket user agent includes added UI version`() {
+        livenessWebSocket.webSocket = mockk()
+
+        val version = BuildConfig.VERSION_NAME
+        val os = Build.VERSION.SDK_INT
+        val baseline = "amplify-android:$version md/unknown/robolectric md/locale/en_UNKNOWN os/Android/$os " +
+            "md/device/robolectric md/device-manufacturer/unknown api/rekognitionstreaming/$version"
+        val additional = livenessWebSocket.userAgentPairs.entries.joinToString {
+            "${it.key}:${it.value}"
+        }
+        assertEquals(livenessWebSocket.getUserAgent(), "$baseline $additional")
+    }
+}
+
 class LatchingWebSocketResponseListener(
     private val webSocketListener: WebSocketListener,
-    private val openLatch: CountDownLatch = CountDownLatch(1),
+    private val openLatch: CountDownLatch = CountDownLatch(1)
 ) : WebSocketListener() {
 
     override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {

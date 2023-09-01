@@ -198,18 +198,18 @@ internal class LivenessWebSocket(
         }
     }
 
-    private fun getUserAgent(): String {
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    fun getUserAgent(): String {
         val amplifyVersion = BuildConfig.VERSION_NAME
         val deviceManufacturer = Build.MANUFACTURER.replace(" ", "_")
         val deviceName = Build.MODEL.replace(" ", "_")
         var userAgent = "${UserAgent.string()} os/Android/${Build.VERSION.SDK_INT} md/device/$deviceName " +
             "md/device-manufacturer/$deviceManufacturer api/rekognitionstreaming/$amplifyVersion"
 
-        userAgentPairs.forEach { kv ->
-            val key = kv.key
-            val value = kv.value
-            userAgent += " $key:$value"
+        val additional = userAgentPairs.entries.joinToString(separator = "") {
+            " ${it.key}:${it.value}"
         }
+        userAgent += "$additional"
 
         return userAgent.replace(Build.MANUFACTURER, deviceManufacturer).replace(Build.MODEL, deviceName)
             .replace("+", "_")
