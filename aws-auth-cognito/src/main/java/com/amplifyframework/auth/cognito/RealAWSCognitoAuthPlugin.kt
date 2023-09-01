@@ -64,7 +64,6 @@ import com.amplifyframework.auth.cognito.exceptions.invalidstate.SignedInExcepti
 import com.amplifyframework.auth.cognito.exceptions.service.CodeDeliveryFailureException
 import com.amplifyframework.auth.cognito.exceptions.service.HostedUISignOutException
 import com.amplifyframework.auth.cognito.exceptions.service.InvalidAccountTypeException
-import com.amplifyframework.auth.cognito.exceptions.service.InvalidParameterException
 import com.amplifyframework.auth.cognito.exceptions.service.UserCancelledException
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.auth.cognito.helpers.HostedUIHelper
@@ -2224,9 +2223,6 @@ internal class RealAWSCognitoAuthPlugin(
         onSuccess: Action,
         onError: Consumer<AuthException>
     ) {
-        if (sms == null && totp == null) {
-            onError.accept(InvalidParameterException())
-        }
         fetchMFAPreference({ userPreference ->
             authStateMachine.getCurrentState { authState ->
                 when (authState.authNState) {
@@ -2242,7 +2238,7 @@ internal class RealAWSCognitoAuthPlugin(
                                             this.accessToken = token
                                             this.smsMfaSettings = sms?.let { it ->
                                                 val preferredMFASetting = it.mfaPreferred
-                                                    ?: (userPreference.preferred == MFAType.SMS)
+                                                    ?: (userPreference.preferred == MFAType.SMS && it.mfaEnabled)
                                                 SmsMfaSettingsType.invoke {
                                                     enabled = it.mfaEnabled
                                                     preferredMfa = preferredMFASetting
@@ -2250,7 +2246,7 @@ internal class RealAWSCognitoAuthPlugin(
                                             }
                                             this.softwareTokenMfaSettings = totp?.let { it ->
                                                 val preferredMFASetting = it.mfaPreferred
-                                                    ?: (userPreference.preferred == MFAType.TOTP)
+                                                    ?: (userPreference.preferred == MFAType.TOTP && it.mfaEnabled)
                                                 SoftwareTokenMfaSettingsType.invoke {
                                                     enabled = it.mfaEnabled
                                                     preferredMfa = preferredMFASetting
@@ -2274,7 +2270,9 @@ internal class RealAWSCognitoAuthPlugin(
                     else -> onError.accept(InvalidStateException())
                 }
             }
-        }, {})
+        }, {
+            onError.accept(it)
+        })
     }
 
     private fun verifyTotp(

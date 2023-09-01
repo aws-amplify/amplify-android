@@ -1974,7 +1974,7 @@ class RealAWSCognitoAuthPluginTest {
     }
 
     @Test
-    fun `updateMFAPreferences when both provided sms and totp preference are null`() {
+    fun `updateMFAPreferences when both provided sms and totp preference are null and cognito throws an exception`() {
         val currentAuthState = mockk<AuthState> {
             every { authNState } returns AuthenticationState.SignedIn(mockk(), mockk())
             every { authZState } returns AuthorizationState.SessionEstablished(credentials)
@@ -1987,16 +1987,38 @@ class RealAWSCognitoAuthPluginTest {
         val onError = mockk<Consumer<AuthException>>()
         val authException = slot<AuthException>()
         every { onError.accept(capture(authException)) }.answers { listenLatch.countDown() }
+        val setUserMFAPreferenceRequest = slot<SetUserMfaPreferenceRequest>()
+        coEvery { mockCognitoIPClient.setUserMfaPreference(capture(setUserMFAPreferenceRequest)) }.answers {
+            throw Exception()
+        }
+        plugin.updateMFAPreference(null, null, onSuccess, onError)
 
+        assertTrue { listenLatch.await(5, TimeUnit.SECONDS) }
+        assertTrue(authException.isCaptured)
+        verify(exactly = 1) { onError.accept(any()) }
+    }
+
+    @Test
+    fun `updateMFAPreferences when fetch preferences throws an exception`() {
+        val currentAuthState = mockk<AuthState> {
+            every { authNState } returns AuthenticationState.SignedIn(mockk(), mockk())
+            every { authZState } returns AuthorizationState.SessionEstablished(credentials)
+        }
+        every { authStateMachine.getCurrentState(captureLambda()) } answers {
+            lambda<(AuthState) -> Unit>().invoke(currentAuthState)
+        }
+        val listenLatch = CountDownLatch(1)
+        val onSuccess = mockk<Action>()
+        val onError = mockk<Consumer<AuthException>>()
+        val authException = slot<AuthException>()
+        every { onError.accept(capture(authException)) }.answers { listenLatch.countDown() }
+        val setUserMFAPreferenceRequest = slot<SetUserMfaPreferenceRequest>()
         coEvery {
             mockCognitoIPClient.getUser {
                 accessToken = credentials.signedInData.cognitoUserPoolTokens.accessToken
             }
         }.answers {
-            GetUserResponse.invoke {
-                userMfaSettingList = listOf("SMS_MFA", "SOFTWARE_TOKEN_MFA")
-                preferredMfaSetting = "SOFTWARE_TOKEN_MFA"
-            }
+            throw Exception()
         }
         plugin.updateMFAPreference(null, null, onSuccess, onError)
 
@@ -2349,6 +2371,156 @@ class RealAWSCognitoAuthPluginTest {
         assertEquals(
             SoftwareTokenMfaSettingsType.invoke {
                 enabled = false
+                preferredMfa = false
+            },
+            setUserMFAPreferenceRequest.captured.softwareTokenMfaSettings
+        )
+    }
+
+    @Test
+    fun `updatepref  when currentpref is TOTP preferred and TOTP parameter is disabled`() {
+        val currentAuthState = mockk<AuthState> {
+            every { authNState } returns AuthenticationState.SignedIn(mockk(), mockk())
+            every { authZState } returns AuthorizationState.SessionEstablished(credentials)
+        }
+        every { authStateMachine.getCurrentState(captureLambda()) } answers {
+            lambda<(AuthState) -> Unit>().invoke(currentAuthState)
+        }
+        val listenLatch = CountDownLatch(1)
+        val onSuccess = mockk<Action>()
+        every { onSuccess.call() }.answers { listenLatch.countDown() }
+        val onError = mockk<Consumer<AuthException>>()
+        val setUserMFAPreferenceRequest = slot<SetUserMfaPreferenceRequest>()
+
+        coEvery {
+            mockCognitoIPClient.getUser {
+                accessToken = credentials.signedInData.cognitoUserPoolTokens.accessToken
+            }
+        }.answers {
+            GetUserResponse.invoke {
+                userMfaSettingList = listOf("SOFTWARE_TOKEN_MFA")
+                preferredMfaSetting = "SOFTWARE_TOKEN_MFA"
+            }
+        }
+
+        coEvery { mockCognitoIPClient.setUserMfaPreference(capture(setUserMFAPreferenceRequest)) }.answers {
+            SetUserMfaPreferenceResponse.invoke {
+            }
+        }
+        plugin.updateMFAPreference(MFAPreference.ENABLED, MFAPreference.DISABLED, onSuccess, onError)
+
+        assertTrue { listenLatch.await(5, TimeUnit.SECONDS) }
+        assertTrue(setUserMFAPreferenceRequest.isCaptured)
+        assertEquals(
+            SmsMfaSettingsType.invoke {
+                enabled = true
+                preferredMfa = false
+            },
+            setUserMFAPreferenceRequest.captured.smsMfaSettings
+        )
+        assertEquals(
+            SoftwareTokenMfaSettingsType.invoke {
+                enabled = false
+                preferredMfa = false
+            },
+            setUserMFAPreferenceRequest.captured.softwareTokenMfaSettings
+        )
+    }
+
+    @Test
+    fun `updatepref  when currentpref is SMS preferred and SMS parameter is disabled`() {
+        val currentAuthState = mockk<AuthState> {
+            every { authNState } returns AuthenticationState.SignedIn(mockk(), mockk())
+            every { authZState } returns AuthorizationState.SessionEstablished(credentials)
+        }
+        every { authStateMachine.getCurrentState(captureLambda()) } answers {
+            lambda<(AuthState) -> Unit>().invoke(currentAuthState)
+        }
+        val listenLatch = CountDownLatch(1)
+        val onSuccess = mockk<Action>()
+        every { onSuccess.call() }.answers { listenLatch.countDown() }
+        val onError = mockk<Consumer<AuthException>>()
+        val setUserMFAPreferenceRequest = slot<SetUserMfaPreferenceRequest>()
+
+        coEvery {
+            mockCognitoIPClient.getUser {
+                accessToken = credentials.signedInData.cognitoUserPoolTokens.accessToken
+            }
+        }.answers {
+            GetUserResponse.invoke {
+                userMfaSettingList = listOf("SMS_MFA")
+                preferredMfaSetting = "SMS_MFA"
+            }
+        }
+
+        coEvery { mockCognitoIPClient.setUserMfaPreference(capture(setUserMFAPreferenceRequest)) }.answers {
+            SetUserMfaPreferenceResponse.invoke {
+            }
+        }
+        plugin.updateMFAPreference(MFAPreference.DISABLED, MFAPreference.ENABLED, onSuccess, onError)
+
+        assertTrue { listenLatch.await(5, TimeUnit.SECONDS) }
+        assertTrue(setUserMFAPreferenceRequest.isCaptured)
+        assertEquals(
+            SmsMfaSettingsType.invoke {
+                enabled = false
+                preferredMfa = false
+            },
+            setUserMFAPreferenceRequest.captured.smsMfaSettings
+        )
+        assertEquals(
+            SoftwareTokenMfaSettingsType.invoke {
+                enabled = true
+                preferredMfa = false
+            },
+            setUserMFAPreferenceRequest.captured.softwareTokenMfaSettings
+        )
+    }
+
+    @Test
+    fun `updatepref errors out when fetchMFA fails`() {
+        val currentAuthState = mockk<AuthState> {
+            every { authNState } returns AuthenticationState.SignedIn(mockk(), mockk())
+            every { authZState } returns AuthorizationState.SessionEstablished(credentials)
+        }
+        every { authStateMachine.getCurrentState(captureLambda()) } answers {
+            lambda<(AuthState) -> Unit>().invoke(currentAuthState)
+        }
+        val listenLatch = CountDownLatch(1)
+        val onSuccess = mockk<Action>()
+        every { onSuccess.call() }.answers { listenLatch.countDown() }
+        val onError = mockk<Consumer<AuthException>>()
+        val setUserMFAPreferenceRequest = slot<SetUserMfaPreferenceRequest>()
+
+        coEvery {
+            mockCognitoIPClient.getUser {
+                accessToken = credentials.signedInData.cognitoUserPoolTokens.accessToken
+            }
+        }.answers {
+            GetUserResponse.invoke {
+                userMfaSettingList = listOf("SMS_MFA")
+                preferredMfaSetting = "SMS_MFA"
+            }
+        }
+
+        coEvery { mockCognitoIPClient.setUserMfaPreference(capture(setUserMFAPreferenceRequest)) }.answers {
+            SetUserMfaPreferenceResponse.invoke {
+            }
+        }
+        plugin.updateMFAPreference(MFAPreference.DISABLED, MFAPreference.ENABLED, onSuccess, onError)
+
+        assertTrue { listenLatch.await(5, TimeUnit.SECONDS) }
+        assertTrue(setUserMFAPreferenceRequest.isCaptured)
+        assertEquals(
+            SmsMfaSettingsType.invoke {
+                enabled = false
+                preferredMfa = false
+            },
+            setUserMFAPreferenceRequest.captured.smsMfaSettings
+        )
+        assertEquals(
+            SoftwareTokenMfaSettingsType.invoke {
+                enabled = true
                 preferredMfa = false
             },
             setUserMFAPreferenceRequest.captured.softwareTokenMfaSettings
