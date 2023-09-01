@@ -45,6 +45,7 @@ slf4j = "2.0.6"
 sqlcipher = "4.5.4"
 tensorflow = "2.0.0"
 uuid = "4.0.1"
+totp = "1.0.1"
 
 [libraries]
 android-desugartools = { module = "com.android.tools:desugar_jdk_libs", version.ref = "desugar" }
@@ -118,3 +119,4 @@ test-mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 test-mockk-android = { module = "io.mockk:mockk-android", version.ref = "mockk" }
 test-mockwebserver = { module = "com.squareup.okhttp3:mockwebserver", version.ref = "mockwebserver" }
 test-robolectric = { module = "org.robolectric:robolectric", version.ref="robolectric" }
+test-totp = { module = "dev.robinohs:totp-kt", version.ref="totp" }

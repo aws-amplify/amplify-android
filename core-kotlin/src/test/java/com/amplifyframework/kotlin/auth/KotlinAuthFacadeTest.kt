@@ -27,9 +27,11 @@ import com.amplifyframework.auth.AuthSession
 import com.amplifyframework.auth.AuthUser
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
+import com.amplifyframework.auth.TOTPSetupDetails
 import com.amplifyframework.auth.exceptions.SessionExpiredException
 import com.amplifyframework.auth.exceptions.SignedOutException
 import com.amplifyframework.auth.options.AuthFetchSessionOptions
+import com.amplifyframework.auth.options.AuthVerifyTOTPSetupOptions
 import com.amplifyframework.auth.result.AuthResetPasswordResult
 import com.amplifyframework.auth.result.AuthSignInResult
 import com.amplifyframework.auth.result.AuthSignOutResult
@@ -963,5 +965,76 @@ class KotlinAuthFacadeTest {
             onError.accept(error)
         }
         auth.deleteUser()
+    }
+
+    /**
+     * When the setUpTOTP() delegate emits a success, it should
+     * be bubbled up through the coroutine API as well.
+     */
+    @Test
+    fun setUpTOTPSucceeds(): Unit = runBlocking {
+        val setupDetails = TOTPSetupDetails("ss", "u")
+        every {
+            delegate.setUpTOTP(any(), any())
+        } answers {
+            val indexOfErrorConsumer = 0
+            val onComplete = it.invocation.args[indexOfErrorConsumer] as Consumer<TOTPSetupDetails>
+            onComplete.accept(setupDetails)
+        }
+        auth.setUpTOTP()
+    }
+
+    /**
+     * When the setUpTOTP() delegate emits an error, it should
+     * be bubbled up through the coroutine API as well.
+     */
+    @Test(expected = AuthException::class)
+    fun setUpTOTPThrows(): Unit = runBlocking {
+        val error = AuthException("uh", "oh")
+        every {
+            delegate.setUpTOTP(any(), any())
+        } answers {
+            val indexOfErrorConsumer = 1
+            val onError = it.invocation.args[indexOfErrorConsumer] as Consumer<AuthException>
+            onError.accept(error)
+        }
+        auth.setUpTOTP()
+    }
+
+    /**
+     * When the verifyTOTPSetup() delegate emits a success, it should
+     * be bubbled up through the coroutine API as well.
+     */
+    @Test
+    fun verifyTOTPSetupSucceeds(): Unit = runBlocking {
+        val code = "abc123"
+        val options = AuthVerifyTOTPSetupOptions.defaults()
+        every {
+            delegate.verifyTOTPSetup(code, options, any(), any())
+        } answers {
+            val indexOfErrorConsumer = 2
+            val onComplete = it.invocation.args[indexOfErrorConsumer] as Action
+            onComplete.call()
+        }
+        auth.verifyTOTPSetup(code, options)
+    }
+
+    /**
+     * When the verifyTOTPSetup() delegate emits an error, it should
+     * be bubbled up through the coroutine API as well.
+     */
+    @Test(expected = AuthException::class)
+    fun verifyTOTPSetupThrows(): Unit = runBlocking {
+        val code = "abc123"
+        val options = AuthVerifyTOTPSetupOptions.defaults()
+        val error = AuthException("uh", "oh")
+        every {
+            delegate.verifyTOTPSetup(code, options, any(), any())
+        } answers {
+            val indexOfErrorConsumer = 3
+            val onError = it.invocation.args[indexOfErrorConsumer] as Consumer<AuthException>
+            onError.accept(error)
+        }
+        auth.verifyTOTPSetup(code)
     }
 }

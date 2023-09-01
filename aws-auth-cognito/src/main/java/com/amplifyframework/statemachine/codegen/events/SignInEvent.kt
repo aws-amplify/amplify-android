@@ -19,6 +19,7 @@ import com.amplifyframework.statemachine.StateMachineEvent
 import com.amplifyframework.statemachine.codegen.data.AuthChallenge
 import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.data.SignInData
+import com.amplifyframework.statemachine.codegen.data.SignInTOTPSetupData
 import com.amplifyframework.statemachine.codegen.data.SignedInData
 import java.util.Date
 
@@ -61,6 +62,7 @@ internal class SignInEvent(val eventType: EventType, override val time: Date? = 
         data class FinalizeSignIn(val id: String = "") : EventType()
         data class ReceivedChallenge(val challenge: AuthChallenge) : EventType()
         data class ThrowError(val exception: Exception) : EventType()
+        data class InitiateTOTPSetup(val signInTOTPSetupData: SignInTOTPSetupData) : EventType()
     }
 
     override val type: String = eventType.javaClass.simpleName

@@ -29,6 +29,7 @@ import com.amplifyframework.auth.AuthSession;
 import com.amplifyframework.auth.AuthUser;
 import com.amplifyframework.auth.AuthUserAttribute;
 import com.amplifyframework.auth.AuthUserAttributeKey;
+import com.amplifyframework.auth.TOTPSetupDetails;
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions;
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions;
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions;
@@ -41,6 +42,7 @@ import com.amplifyframework.auth.options.AuthSignOutOptions;
 import com.amplifyframework.auth.options.AuthSignUpOptions;
 import com.amplifyframework.auth.options.AuthUpdateUserAttributeOptions;
 import com.amplifyframework.auth.options.AuthUpdateUserAttributesOptions;
+import com.amplifyframework.auth.options.AuthVerifyTOTPSetupOptions;
 import com.amplifyframework.auth.options.AuthWebUISignInOptions;
 import com.amplifyframework.auth.result.AuthResetPasswordResult;
 import com.amplifyframework.auth.result.AuthSignInResult;
@@ -436,4 +438,28 @@ public interface RxAuthCategoryBehavior {
      *         emits an {@link AuthException} otherwise
      */
     Completable deleteUser();
+
+    /**
+     * Setup TOTP for the currently signed in user.
+     * @return An Rx {@link Single} which emits {@link TOTPSetupDetails} on completion
+     */
+    Single<TOTPSetupDetails> setUpTOTP();
+
+    /**
+     * Verify TOTP setup for the currently signed in user.
+     * @param code TOTP code to verify TOTP setup
+     * @return An Rx {@link Completable} which completes upon successfully verifying totp code;
+     *         emits an {@link AuthException} otherwise
+     */
+    Completable verifyTOTPSetup(@NonNull String code);
+
+    /**
+     * Verify TOTP setup for the currently signed in user.
+     * @param code TOTP code to verify TOTP setup
+     * @param options additional options to verify totp setup
+     * @return An Rx {@link Completable} which completes upon successfully verifying totp code;
+     *         emits an {@link AuthException} otherwise
+     */
+    Completable verifyTOTPSetup(@NonNull String code, @NonNull AuthVerifyTOTPSetupOptions options);
+
 }
