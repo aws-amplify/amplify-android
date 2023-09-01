@@ -1,3 +1,13 @@
+## [Release 2.13.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.13.0)
+
+### Features
+- **Auth:** Add TOTP Support ([#2537](https://github.com/aws-amplify/amplify-android/issues/2537)) ([#2568](https://github.com/aws-amplify/amplify-android/issues/2568))
+
+### Miscellaneous
+- Update readme & contributing guide to add versioning ([#2544](https://github.com/aws-amplify/amplify-android/issues/2544))
+
+[See all changes between 2.12.0 and 2.13.0](https://github.com/aws-amplify/amplify-android/compare/release_v2.12.0...release_v2.13.0)
+
 ## [Release 2.12.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.12.0)
 
 ### Features

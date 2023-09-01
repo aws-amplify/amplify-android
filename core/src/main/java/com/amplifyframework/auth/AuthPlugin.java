@@ -20,6 +20,9 @@ import androidx.annotation.NonNull;
 import androidx.annotation.WorkerThread;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.auth.options.AuthVerifyTOTPSetupOptions;
+import com.amplifyframework.core.Action;
+import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.plugin.Plugin;
 
@@ -39,4 +42,46 @@ public abstract class AuthPlugin<E> implements AuthCategoryBehavior, Plugin<E> {
     @WorkerThread
     @Override
     public void initialize(@NonNull Context context) throws AmplifyException {}
+
+    /**
+     * Default implementation that throws UnsupportedOperationException.
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     */
+    @Override
+    public void setUpTOTP(@NonNull Consumer<TOTPSetupDetails> onSuccess, @NonNull Consumer<AuthException> onError) {
+        throw new UnsupportedOperationException("TOTP is not implemented in this plugin");
+    }
+
+    /**
+     * Default implementation that throws UnsupportedOperationException.
+     * @param code TOTP code to verify TOTP setup
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     */
+    @Override
+    public void verifyTOTPSetup(
+        @NonNull String code,
+        @NonNull Action onSuccess,
+        @NonNull Consumer<AuthException> onError
+    ) {
+        throw new UnsupportedOperationException("TOTP is not implemented in this plugin");
+    }
+
+    /**
+     * Default implementation that throws UnsupportedOperationException.
+     * @param code TOTP code to verify TOTP setup
+     * @param options additional options to verify totp setup
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     */
+    @Override
+    public void verifyTOTPSetup(
+        @NonNull String code,
+        @NonNull AuthVerifyTOTPSetupOptions options,
+        @NonNull Action onSuccess,
+        @NonNull Consumer<AuthException> onError
+    ) {
+        throw new UnsupportedOperationException("TOTP is not implemented in this plugin");
+    }
 }
