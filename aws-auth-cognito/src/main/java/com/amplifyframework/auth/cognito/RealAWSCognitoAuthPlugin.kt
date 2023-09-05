@@ -64,6 +64,7 @@ import com.amplifyframework.auth.cognito.exceptions.invalidstate.SignedInExcepti
 import com.amplifyframework.auth.cognito.exceptions.service.CodeDeliveryFailureException
 import com.amplifyframework.auth.cognito.exceptions.service.HostedUISignOutException
 import com.amplifyframework.auth.cognito.exceptions.service.InvalidAccountTypeException
+import com.amplifyframework.auth.cognito.exceptions.service.InvalidParameterException
 import com.amplifyframework.auth.cognito.exceptions.service.UserCancelledException
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.auth.cognito.helpers.HostedUIHelper
@@ -2223,6 +2224,10 @@ internal class RealAWSCognitoAuthPlugin(
         onSuccess: Action,
         onError: Consumer<AuthException>
     ) {
+        if (sms == null && totp == null) {
+            onError.accept(InvalidParameterException("No valid MFA Preferences were provided. Please try again."))
+            return
+        }
         fetchMFAPreference({ userPreference ->
             authStateMachine.getCurrentState { authState ->
                 when (authState.authNState) {
@@ -2271,7 +2276,14 @@ internal class RealAWSCognitoAuthPlugin(
                 }
             }
         }, {
-            onError.accept(it)
+            onError.accept(
+                AuthException(
+                    message = "Failed to fetch current MFA preferences " +
+                        "which is a pre-requisite to update MFA preferences",
+                    recoverySuggestion = AmplifyException.TODO_RECOVERY_SUGGESTION,
+                    cause = it
+                )
+            )
         })
     }
 
