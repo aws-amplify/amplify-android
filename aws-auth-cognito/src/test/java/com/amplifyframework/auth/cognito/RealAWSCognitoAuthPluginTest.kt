@@ -29,9 +29,7 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.ConfirmForgotPasswo
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ConfirmSignUpRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ConfirmSignUpResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeliveryMediumType
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetUserAttributeVerificationCodeRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetUserAttributeVerificationCodeResponse
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetUserRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetUserResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ResendConfirmationCodeRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ResendConfirmationCodeResponse
@@ -42,12 +40,10 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.SignUpResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.SmsMfaSettingsType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.SoftwareTokenMfaNotFoundException
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.SoftwareTokenMfaSettingsType
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.UpdateUserAttributesRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.UpdateUserAttributesResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.VerifySoftwareTokenRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.VerifySoftwareTokenResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.VerifySoftwareTokenResponseType
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.VerifyUserAttributeRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.VerifyUserAttributeResponse
 import com.amplifyframework.auth.AuthCodeDeliveryDetails
 import com.amplifyframework.auth.AuthException
@@ -105,6 +101,10 @@ import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.slot
 import io.mockk.verify
+import org.json.JSONObject
+import org.junit.Before
+import org.junit.Ignore
+import org.junit.Test
 import java.util.Date
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -113,10 +113,6 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
-import org.json.JSONObject
-import org.junit.Before
-import org.junit.Ignore
-import org.junit.Test
 
 class RealAWSCognitoAuthPluginTest {
 
@@ -513,7 +509,7 @@ class RealAWSCognitoAuthPluginTest {
         }
 
         coEvery {
-            authService.cognitoIdentityProviderClient?.getUser(any<GetUserRequest>())
+            authService.cognitoIdentityProviderClient?.getUser(any())
         } returns GetUserResponse.invoke {
             this.userAttributes = userAttributes
         }
@@ -916,7 +912,6 @@ class RealAWSCognitoAuthPluginTest {
         // GIVEN
         val onSuccess = mockk<Consumer<AuthCodeDeliveryDetails>>()
         val onError = mockk<Consumer<AuthException>>()
-        val userId = "123456"
         val username = "user"
 
         val resultCaptor = slot<AuthCodeDeliveryDetails>()
@@ -1023,7 +1018,7 @@ class RealAWSCognitoAuthPluginTest {
         }
 
         coEvery {
-            authService.cognitoIdentityProviderClient?.updateUserAttributes(any<UpdateUserAttributesRequest>())
+            authService.cognitoIdentityProviderClient?.updateUserAttributes(any())
         } returns UpdateUserAttributesResponse.invoke {
         }
 
@@ -1071,7 +1066,7 @@ class RealAWSCognitoAuthPluginTest {
         }
 
         coEvery {
-            authService.cognitoIdentityProviderClient?.updateUserAttributes(any<UpdateUserAttributesRequest>())
+            authService.cognitoIdentityProviderClient?.updateUserAttributes(any())
         } returns UpdateUserAttributesResponse.invoke {
         }
 
@@ -1123,7 +1118,7 @@ class RealAWSCognitoAuthPluginTest {
         }
 
         coEvery {
-            authService.cognitoIdentityProviderClient?.updateUserAttributes(any<UpdateUserAttributesRequest>())
+            authService.cognitoIdentityProviderClient?.updateUserAttributes(any())
         } returns UpdateUserAttributesResponse.invoke {
             codeDeliveryDetailsList = listOf(
                 CodeDeliveryDetailsType.invoke {
@@ -1295,7 +1290,7 @@ class RealAWSCognitoAuthPluginTest {
 
         val expectedException = CognitoIdentityProviderException("Some Cognito Message")
         coEvery {
-            authService.cognitoIdentityProviderClient?.verifyUserAttribute(any<VerifyUserAttributeRequest>())
+            authService.cognitoIdentityProviderClient?.verifyUserAttribute(any())
         } answers {
             throw expectedException
         }
@@ -1332,7 +1327,7 @@ class RealAWSCognitoAuthPluginTest {
         }
 
         coEvery {
-            authService.cognitoIdentityProviderClient?.verifyUserAttribute(any<VerifyUserAttributeRequest>())
+            authService.cognitoIdentityProviderClient?.verifyUserAttribute(any())
         } returns VerifyUserAttributeResponse.invoke {
         }
         every {
@@ -1441,7 +1436,7 @@ class RealAWSCognitoAuthPluginTest {
         val expectedException = CognitoIdentityProviderException("Some Cognito Message")
         coEvery {
             authService.cognitoIdentityProviderClient?.getUserAttributeVerificationCode(
-                any<GetUserAttributeVerificationCodeRequest>()
+                any()
             )
         } answers {
             throw expectedException
@@ -1479,7 +1474,7 @@ class RealAWSCognitoAuthPluginTest {
 
         coEvery {
             authService.cognitoIdentityProviderClient?.getUserAttributeVerificationCode(
-                any<GetUserAttributeVerificationCodeRequest>()
+                any()
             )
         } returns GetUserAttributeVerificationCodeResponse.invoke {
             codeDeliveryDetails = CodeDeliveryDetailsType.invoke {
@@ -1548,7 +1543,7 @@ class RealAWSCognitoAuthPluginTest {
         configJsonObject.put("Endpoint", invalidEndpoint)
         val expectedErrorMessage = "Invalid endpoint value $invalidEndpoint. Expected fully qualified hostname with " +
             "no scheme, no path and no query"
-        var message = try {
+        val message = try {
             UserPoolConfiguration.fromJson(configJsonObject).build()
         } catch (ex: Exception) {
             ex.message
@@ -1566,7 +1561,7 @@ class RealAWSCognitoAuthPluginTest {
         configJsonObject.put("Endpoint", invalidEndpoint)
         val expectedErrorMessage = "Invalid endpoint value $invalidEndpoint. Expected fully qualified hostname with " +
             "no scheme, no path and no query"
-        var message = try {
+        val message = try {
             UserPoolConfiguration.fromJson(configJsonObject).build()
         } catch (ex: Exception) {
             ex.message
@@ -1585,7 +1580,7 @@ class RealAWSCognitoAuthPluginTest {
         configJsonObject.put("Endpoint", invalidEndpoint)
         val expectedErrorMessage = "Invalid endpoint value $invalidEndpoint. Expected fully qualified hostname with " +
             "no scheme, no path and no query"
-        var message = try {
+        val message = try {
             UserPoolConfiguration.fromJson(configJsonObject).build()
         } catch (ex: Exception) {
             ex.message
@@ -1716,8 +1711,6 @@ class RealAWSCognitoAuthPluginTest {
         val onSuccess = mockk<Action>()
         every { onSuccess.call() }.answers { listenLatch.countDown() }
         val onError = mockk<Consumer<AuthException>>()
-
-        val session = "SESSION"
         val code = "123456"
         val friendlyDeviceName = "DEVICE_NAME"
         coEvery {
@@ -1760,9 +1753,7 @@ class RealAWSCognitoAuthPluginTest {
         val authException = slot<AuthException>()
         every { onError.accept(capture(authException)) }.answers { listenLatch.countDown() }
 
-        val session = "SESSION"
         val code = "123456"
-        val friendlyDeviceName = "DEVICE_NAME"
         val errorMessage = "Invalid code"
         coEvery {
             mockCognitoIPClient.verifySoftwareToken(
@@ -2012,7 +2003,6 @@ class RealAWSCognitoAuthPluginTest {
         val onError = mockk<Consumer<AuthException>>()
         val authException = slot<AuthException>()
         every { onError.accept(capture(authException)) }.answers { listenLatch.countDown() }
-        val setUserMFAPreferenceRequest = slot<SetUserMfaPreferenceRequest>()
         coEvery {
             mockCognitoIPClient.getUser {
                 accessToken = credentials.signedInData.cognitoUserPoolTokens.accessToken

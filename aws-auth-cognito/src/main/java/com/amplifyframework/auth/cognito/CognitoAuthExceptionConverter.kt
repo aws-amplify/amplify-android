@@ -69,7 +69,7 @@ internal class CognitoAuthExceptionConverter {
                 is InvalidPasswordException ->
                     com.amplifyframework.auth.cognito.exceptions.service.InvalidPasswordException(error)
                 is InvalidParameterException ->
-                    com.amplifyframework.auth.cognito.exceptions.service.InvalidParameterException(error)
+                    com.amplifyframework.auth.cognito.exceptions.service.InvalidParameterException(cause = error)
                 is ExpiredCodeException -> CodeExpiredException(error)
                 is CodeMismatchException -> com.amplifyframework.auth.cognito.exceptions.service.CodeMismatchException(
                     error

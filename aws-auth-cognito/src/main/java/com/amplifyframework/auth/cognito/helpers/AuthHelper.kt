@@ -36,10 +36,10 @@ internal open class AuthHelper {
         fun getSecretHash(userId: String?, clientId: String?, clientSecret: String?): String? {
             return when {
                 userId == null -> throw InvalidParameterException(
-                    Exception("user ID cannot be null")
+                    cause = Exception("user ID cannot be null")
                 )
                 clientId == null -> throw InvalidParameterException(
-                    Exception("client ID cannot be null")
+                    cause = Exception("client ID cannot be null")
                 )
                 clientSecret.isNullOrEmpty() -> null
                 else ->
