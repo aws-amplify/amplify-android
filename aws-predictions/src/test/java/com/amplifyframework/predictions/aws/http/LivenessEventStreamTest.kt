@@ -100,7 +100,10 @@ internal class LivenessEventStreamTest {
         val event = ServerSessionInformationEvent(
             sessionInformation = SessionInformation(
                 challenge = ServerChallenge(
-                    faceMovementAndLightChallenge = FaceMovementAndLightServerChallenge(ovalParameters = OvalParameters(1.0f, 2.0f, .5f, .7f), lightChallengeType = LightChallengeType.SEQUENTIAL, challengeConfig = ChallengeConfig(
+                    faceMovementAndLightChallenge = FaceMovementAndLightServerChallenge(
+                        ovalParameters = OvalParameters(1.0f, 2.0f, .5f, .7f),
+                        lightChallengeType = LightChallengeType.SEQUENTIAL,
+                        challengeConfig = ChallengeConfig(
                             1.0f,
                             1.1f,
                             1.2f,
@@ -112,9 +115,11 @@ internal class LivenessEventStreamTest {
                             1.8f,
                             1.9f,
                             10
-                        ), colorSequences = listOf(
+                        ),
+                        colorSequences = listOf(
                             ColorSequence(FreshnessColor(listOf(0, 1, 2)), 4.0f, 5.0f)
-                        ))
+                        )
+                    )
                 )
             )
         )
