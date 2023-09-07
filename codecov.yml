@@ -2,12 +2,12 @@ coverage:
   status:
     project:
       default:
-	      target: auto
-	      threshold: 0.1%
+        target: auto
+        threshold: 0.1%
     patch:
       default:
-      	target: auto
-      	threshold: 0%
+        target: auto
+        threshold: 0%
 comment:
   layout: diff
   behavior: default
