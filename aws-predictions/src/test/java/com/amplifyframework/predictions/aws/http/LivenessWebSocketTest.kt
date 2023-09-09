@@ -96,7 +96,7 @@ internal class LivenessWebSocketTest {
             server.url("/").toString(),
             "",
             sessionInformation,
-            emptyMap(),
+            "",
             onSessionInformationReceived,
             onErrorReceived,
             onComplete
@@ -290,6 +290,18 @@ internal class LivenessWebSocketTest {
     }
 
     @Test
+    fun `web socket user agent includes added UI version`() {
+        livenessWebSocket.webSocket = mockk()
+
+        val version = BuildConfig.VERSION_NAME
+        val os = Build.VERSION.SDK_INT
+        val baseline = "amplify-android:$version md/unknown/robolectric md/locale/en_UNKNOWN os/Android/$os " +
+            "md/device/robolectric md/device-manufacturer/unknown api/rekognitionstreaming/$version"
+        val additional = "api/liveness/1.1.1"
+        assertEquals(livenessWebSocket.getUserAgent("1.1.1"), "$baseline $additional")
+    }
+
+    @Test
     @Ignore("Need to work on parsing the onMessage byteString from ServerWebSocketListener")
     fun `sendInitialFaceDetectedEvent test`() {
     }
@@ -312,69 +324,6 @@ internal class LivenessWebSocketTest {
     @Test
     @Ignore("Need to work on parsing the onMessage byteString from ServerWebSocketListener")
     fun `sendVideoEvent test`() {
-    }
-}
-
-@OptIn(ExperimentalCoroutinesApi::class)
-@RunWith(RobolectricTestRunner::class)
-internal class LivenessWebSocketTestUserAgent {
-    private val json = Json { encodeDefaults = true }
-
-    private lateinit var livenessWebSocket: LivenessWebSocket
-    private lateinit var server: MockWebServer
-
-    private val onComplete = mockk<Action>(relaxed = true)
-    private val onSessionInformationReceived = mockk<Consumer<SessionInformation>>(relaxed = true)
-    private val onErrorReceived = mockk<Consumer<PredictionsException>>(relaxed = true)
-    private val credentialsProvider = object : CredentialsProvider {
-        override suspend fun resolve(attributes: Attributes): Credentials {
-            return Credentials(
-                "",
-                "",
-                "",
-                null,
-                ""
-            )
-        }
-    }
-    private val sessionInformation = FaceLivenessSessionInformation(1f, 1f, "1", "3")
-
-    @Before
-    fun setUp() {
-        Dispatchers.setMain(Dispatchers.Unconfined)
-
-        server = MockWebServer()
-
-        livenessWebSocket = LivenessWebSocket(
-            credentialsProvider,
-            server.url("/").toString(),
-            "",
-            sessionInformation,
-            mapOf(Pair("liveness", "1.1.1")),
-            onSessionInformationReceived,
-            onErrorReceived,
-            onComplete
-        )
-    }
-
-    @After
-    fun shutDown() {
-        server.shutdown()
-        Dispatchers.resetMain()
-    }
-
-    @Test
-    fun `web socket user agent includes added UI version`() {
-        livenessWebSocket.webSocket = mockk()
-
-        val version = BuildConfig.VERSION_NAME
-        val os = Build.VERSION.SDK_INT
-        val baseline = "amplify-android:$version md/unknown/robolectric md/locale/en_UNKNOWN os/Android/$os " +
-            "md/device/robolectric md/device-manufacturer/unknown api/rekognitionstreaming/$version"
-        val additional = livenessWebSocket.userAgentPairs.entries.joinToString {
-            "${it.key}:${it.value}"
-        }
-        assertEquals(livenessWebSocket.getUserAgent(), "$baseline $additional")
     }
 }
 

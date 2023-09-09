@@ -27,7 +27,6 @@ import com.amplifyframework.auth.AWSCredentialsProviderKt;
 import com.amplifyframework.auth.CognitoCredentialsProvider;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
-import com.amplifyframework.predictions.AWSPredictionsMetadataType;
 import com.amplifyframework.predictions.PredictionsException;
 import com.amplifyframework.predictions.PredictionsPlugin;
 import com.amplifyframework.predictions.aws.models.AWSVoiceType;
@@ -62,8 +61,6 @@ import com.amplifyframework.predictions.result.TranslateTextResult;
 
 import org.json.JSONObject;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -74,8 +71,6 @@ import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider;
  */
 public final class AWSPredictionsPlugin extends PredictionsPlugin<AWSPredictionsEscapeHatch> {
     private static final String AWS_PREDICTIONS_PLUGIN_KEY = "awsPredictionsPlugin";
-
-    private static Map<String, String> userAgentPairs = new HashMap<>();
 
     private final ExecutorService executorService;
 
@@ -103,16 +98,6 @@ public final class AWSPredictionsPlugin extends PredictionsPlugin<AWSPredictions
     @Override
     public String getPluginKey() {
         return AWS_PREDICTIONS_PLUGIN_KEY;
-    }
-
-    /**
-     * Add version to liveness websocket user agent.
-     * @param type The type of version we're adding
-     * @param value The version
-     */
-    @InternalAmplifyApi
-    public static void addToUserAgent(AWSPredictionsMetadataType type, String value) {
-        userAgentPairs.put(type.name(), value);
     }
 
     @Override
@@ -329,6 +314,7 @@ public final class AWSPredictionsPlugin extends PredictionsPlugin<AWSPredictions
      * Starts a Liveness session.
      * @param sessionId ID for the session to start.
      * @param sessionInformation Information about the face liveness session.
+     * @param livenessVersion The version of liveness, which will be attached to the user agent.
      * @param onSessionStarted Called when the face liveness session has been started.
      * @param onComplete Called when the session is complete.
      * @param onError Called when an error occurs during the session.
@@ -336,17 +322,19 @@ public final class AWSPredictionsPlugin extends PredictionsPlugin<AWSPredictions
     @InternalAmplifyApi
     public static void startFaceLivenessSession(@NonNull String sessionId,
                                          @NonNull FaceLivenessSessionInformation sessionInformation,
+                                         @NonNull String livenessVersion,
                                          @NonNull Consumer<FaceLivenessSession> onSessionStarted,
                                          @NonNull Action onComplete,
                                          @NonNull Consumer<PredictionsException> onError) {
         startFaceLivenessSession(sessionId, sessionInformation, FaceLivenessSessionOptions.defaults(),
-                onSessionStarted, onComplete, onError);
+                livenessVersion, onSessionStarted, onComplete, onError);
     }
 
     /**
      * Starts a Liveness session with the given options.
      * @param sessionId ID for the session to start.
      * @param sessionInformation Information about the face liveness session.
+     * @param livenessVersion The version of liveness, which will be attached to the user agent.
      * @param options The options for this session.
      * @param onSessionStarted Called when the face liveness session has been started.
      * @param onComplete Called when the session is complete.
@@ -356,6 +344,7 @@ public final class AWSPredictionsPlugin extends PredictionsPlugin<AWSPredictions
     public static void startFaceLivenessSession(@NonNull String sessionId,
                                          @NonNull FaceLivenessSessionInformation sessionInformation,
                                          @NonNull FaceLivenessSessionOptions options,
+                                         @NonNull String livenessVersion,
                                          @NonNull Consumer<FaceLivenessSession> onSessionStarted,
                                          @NonNull Action onComplete,
                                          @NonNull Consumer<PredictionsException> onError) {
@@ -373,6 +362,6 @@ public final class AWSPredictionsPlugin extends PredictionsPlugin<AWSPredictions
                     .convertToSdkCredentialsProvider(awsCredentialsProvider);
         }
         new RunFaceLivenessSession(sessionId, sessionInformation, credentialsProvider,
-                userAgentPairs, onSessionStarted, onComplete, onError);
+                livenessVersion, onSessionStarted, onComplete, onError);
     }
 }

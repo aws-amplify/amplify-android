@@ -41,7 +41,7 @@ internal class RunFaceLivenessSession(
     sessionId: String,
     sessionInformation: FaceLivenessSessionInformation,
     val credentialsProvider: CredentialsProvider,
-    val userAgentPairs: Map<String, String> = mapOf(),
+    livenessVersion: String,
     onSessionStarted: Consumer<FaceLivenessSession>,
     onComplete: Action,
     onError: Consumer<PredictionsException>
@@ -56,7 +56,7 @@ internal class RunFaceLivenessSession(
             "${sessionInformation.videoWidth.toInt()}&video-height=${sessionInformation.videoHeight.toInt()}",
         region = sessionInformation.region,
         sessionInformation = sessionInformation,
-        userAgentPairs = userAgentPairs,
+        livenessVersion = livenessVersion,
         onSessionInformationReceived = { sessionInformation ->
             val challenges = processSessionInformation(sessionInformation)
             val faceLivenessSession = FaceLivenessSession(
