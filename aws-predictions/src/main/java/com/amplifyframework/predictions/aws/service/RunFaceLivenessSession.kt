@@ -41,7 +41,7 @@ internal class RunFaceLivenessSession(
     sessionId: String,
     sessionInformation: FaceLivenessSessionInformation,
     val credentialsProvider: CredentialsProvider,
-    livenessVersion: String,
+    livenessVersion: String?,
     onSessionStarted: Consumer<FaceLivenessSession>,
     onComplete: Action,
     onError: Consumer<PredictionsException>
