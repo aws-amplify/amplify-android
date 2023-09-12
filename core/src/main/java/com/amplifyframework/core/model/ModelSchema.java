@@ -266,7 +266,6 @@ public final class ModelSchema {
             HasMany association = Objects.requireNonNull(field.getAnnotation(HasMany.class));
             return ModelAssociation.builder()
                     .name(HasMany.class.getSimpleName())
-                    .targetNames(association.targetNames())
                     .associatedName(association.associatedWith())
                     .associatedType(association.type().getSimpleName())
                     .build();
