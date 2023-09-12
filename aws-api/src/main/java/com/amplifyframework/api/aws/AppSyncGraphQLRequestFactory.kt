@@ -549,7 +549,7 @@ object AppSyncGraphQLRequestFactory {
                 .modelClass(modelClass)
                 .operation(operationType)
                 .requestOptions(ApiGraphQLRequestOptions())
-                .includeAssociations(associations)
+                .includeRelationships(associations)
                 .build()
         }
     }
