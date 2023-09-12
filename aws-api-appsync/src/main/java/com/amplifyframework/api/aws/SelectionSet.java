@@ -190,7 +190,7 @@ public final class SelectionSet {
         private Operation operation;
         private GraphQLRequestOptions requestOptions;
         private ModelSchema modelSchema;
-        private List<PropertyContainerPath> includeAssociations;
+        private List<PropertyContainerPath> includeRelationships;
 
         Builder() { }
 
@@ -219,8 +219,8 @@ public final class SelectionSet {
             return Builder.this;
         }
 
-        public Builder includeAssociations(@NonNull List<PropertyContainerPath> associations) {
-            this.includeAssociations = associations;
+        public Builder includeRelationships(@NonNull List<PropertyContainerPath> relationships) {
+            this.includeRelationships = relationships;
             return Builder.this;
         }
 
@@ -240,9 +240,9 @@ public final class SelectionSet {
                             ? getModelFields(modelSchema, requestOptions.maxDepth(), operation)
                             : getModelFields(modelClass, requestOptions.maxDepth(), operation, false));
 
-            // Associations need to be added before wrapping pagination
-            if (includeAssociations != null) {
-                for (PropertyContainerPath association : includeAssociations) {
+            // Relationships need to be added before wrapping pagination
+            if (includeRelationships != null) {
+                for (PropertyContainerPath association : includeRelationships) {
                     SelectionSet included = SelectionSetUtils.asSelectionSet(association, false);
                     if (included != null) {
                         SelectionSetUtils.merge(node, included);
