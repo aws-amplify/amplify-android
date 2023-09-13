@@ -18,6 +18,7 @@ package com.amplifyframework.predictions.aws;
 import android.content.Context;
 import android.graphics.Bitmap;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
 import com.amplifyframework.annotations.InternalAmplifyApi;
@@ -320,12 +321,12 @@ public final class AWSPredictionsPlugin extends PredictionsPlugin<AWSPredictions
      */
     @InternalAmplifyApi
     public static void startFaceLivenessSession(@NonNull String sessionId,
-                                         @NonNull FaceLivenessSessionInformation sessionInformation,
-                                         @NonNull Consumer<FaceLivenessSession> onSessionStarted,
-                                         @NonNull Action onComplete,
-                                         @NonNull Consumer<PredictionsException> onError) {
+                                                @NonNull FaceLivenessSessionInformation sessionInformation,
+                                                @NonNull Consumer<FaceLivenessSession> onSessionStarted,
+                                                @NonNull Action onComplete,
+                                                @NonNull Consumer<PredictionsException> onError) {
         startFaceLivenessSession(sessionId, sessionInformation, FaceLivenessSessionOptions.defaults(),
-                onSessionStarted, onComplete, onError);
+            onSessionStarted, onComplete, onError);
     }
 
     /**
@@ -339,8 +340,51 @@ public final class AWSPredictionsPlugin extends PredictionsPlugin<AWSPredictions
      */
     @InternalAmplifyApi
     public static void startFaceLivenessSession(@NonNull String sessionId,
+                                                @NonNull FaceLivenessSessionInformation sessionInformation,
+                                                @NonNull FaceLivenessSessionOptions options,
+                                                @NonNull Consumer<FaceLivenessSession> onSessionStarted,
+                                                @NonNull Action onComplete,
+                                                @NonNull Consumer<PredictionsException> onError) {
+
+        startFaceLivenessSession(sessionId, sessionInformation, options, null,
+            onSessionStarted, onComplete, onError);
+    }
+
+    /**
+     * Starts a Liveness session.
+     * @param sessionId ID for the session to start.
+     * @param sessionInformation Information about the face liveness session.
+     * @param livenessVersion The version of liveness, which will be attached to the user agent.
+     * @param onSessionStarted Called when the face liveness session has been started.
+     * @param onComplete Called when the session is complete.
+     * @param onError Called when an error occurs during the session.
+     */
+    @InternalAmplifyApi
+    public static void startFaceLivenessSession(@NonNull String sessionId,
+                                         @NonNull FaceLivenessSessionInformation sessionInformation,
+                                         @Nullable String livenessVersion,
+                                         @NonNull Consumer<FaceLivenessSession> onSessionStarted,
+                                         @NonNull Action onComplete,
+                                         @NonNull Consumer<PredictionsException> onError) {
+        startFaceLivenessSession(sessionId, sessionInformation, FaceLivenessSessionOptions.defaults(),
+                livenessVersion, onSessionStarted, onComplete, onError);
+    }
+
+    /**
+     * Starts a Liveness session with the given options.
+     * @param sessionId ID for the session to start.
+     * @param sessionInformation Information about the face liveness session.
+     * @param livenessVersion The version of liveness, which will be attached to the user agent.
+     * @param options The options for this session.
+     * @param onSessionStarted Called when the face liveness session has been started.
+     * @param onComplete Called when the session is complete.
+     * @param onError Called when an error occurs during the session.
+     */
+    @InternalAmplifyApi
+    public static void startFaceLivenessSession(@NonNull String sessionId,
                                          @NonNull FaceLivenessSessionInformation sessionInformation,
                                          @NonNull FaceLivenessSessionOptions options,
+                                         @Nullable String livenessVersion,
                                          @NonNull Consumer<FaceLivenessSession> onSessionStarted,
                                          @NonNull Action onComplete,
                                          @NonNull Consumer<PredictionsException> onError) {
@@ -358,6 +402,6 @@ public final class AWSPredictionsPlugin extends PredictionsPlugin<AWSPredictions
                     .convertToSdkCredentialsProvider(awsCredentialsProvider);
         }
         new RunFaceLivenessSession(sessionId, sessionInformation, credentialsProvider,
-                onSessionStarted, onComplete, onError);
+                livenessVersion, onSessionStarted, onComplete, onError);
     }
 }
