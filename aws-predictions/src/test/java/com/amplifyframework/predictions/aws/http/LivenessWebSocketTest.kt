@@ -216,7 +216,8 @@ internal class LivenessWebSocketTest {
                             1.6f,
                             1.7f,
                             1.8f,
-                            1.9f
+                            1.9f,
+                            10
                         ),
                         colorSequences = listOf(
                             ColorSequence(FreshnessColor(listOf(0, 1, 2)), 4.0f, 5.0f)
