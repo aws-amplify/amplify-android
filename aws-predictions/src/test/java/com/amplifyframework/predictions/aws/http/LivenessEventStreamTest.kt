@@ -103,7 +103,19 @@ internal class LivenessEventStreamTest {
                     faceMovementAndLightChallenge = FaceMovementAndLightServerChallenge(
                         ovalParameters = OvalParameters(1.0f, 2.0f, .5f, .7f),
                         lightChallengeType = LightChallengeType.SEQUENTIAL,
-                        challengeConfig = ChallengeConfig(1.0f, 1.1f, 1.2f, 1.3f, 1.4f, 1.5f, 1.6f, 1.7f, 1.8f, 1.9f),
+                        challengeConfig = ChallengeConfig(
+                            1.0f,
+                            1.1f,
+                            1.2f,
+                            1.3f,
+                            1.4f,
+                            1.5f,
+                            1.6f,
+                            1.7f,
+                            1.8f,
+                            1.9f,
+                            10
+                        ),
                         colorSequences = listOf(
                             ColorSequence(FreshnessColor(listOf(0, 1, 2)), 4.0f, 5.0f)
                         )
