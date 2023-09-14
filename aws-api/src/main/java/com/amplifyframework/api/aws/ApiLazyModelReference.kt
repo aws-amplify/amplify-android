@@ -25,6 +25,12 @@ import com.amplifyframework.core.Consumer
 import com.amplifyframework.core.NullableConsumer
 import com.amplifyframework.core.model.LazyModelReference
 import com.amplifyframework.core.model.Model
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
+import java.util.concurrent.atomic.AtomicReference
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
@@ -34,71 +40,76 @@ internal class ApiLazyModelReference<M : Model> internal constructor(
     private val keyMap: Map<String, Any>,
     private val apiName: String? = null
 ) : LazyModelReference<M> {
-
-    private val queryPredicate = AppSyncLazyQueryPredicate<M>().createPredicate(clazz, keyMap)
-
-    private var value: M? = null
-    private var loadedValue = false
+    private val cachedValue = AtomicReference<LoadedValue<M>?>(null)
+    private val semaphore = Semaphore(1) // prevents multiple fetches
+    private val callbackScope = CoroutineScope(Dispatchers.IO)
 
     override fun getIdentifier(): Map<String, Any> {
         return keyMap
     }
 
     override suspend fun fetchModel(): M? {
-        if (loadedValue) {
-            return value
+        val cached = cachedValue.get()
+        if (cached != null) {
+            // Quick return if value is already present
+            return cached.value
         }
 
-        try {
-            val resultIterator = query(
-                AppSyncGraphQLRequestFactory.buildQuery<PaginatedResult<M>, M>(
-                    clazz,
-                    queryPredicate
-                ),
-                apiName
-            ).data.items.iterator()
-            value = if (resultIterator.hasNext()) {
-                resultIterator.next()
-            } else {
-                null
-            }
-            loadedValue = true
-        } catch (error: ApiException) {
-            throw AmplifyException("Error lazy loading the model.", error, error.message ?: "")
-        }
-        return value
+        return fetchInternal()
     }
 
     override fun fetchModel(onSuccess: NullableConsumer<M?>, onError: Consumer<AmplifyException>) {
-        if (loadedValue) {
-            onSuccess.accept(value)
-            return
+        val cached = cachedValue.get()
+        if (cached != null) {
+            // Quick return if value is already present
+            onSuccess.accept(cached.value)
         }
-        val onQuerySuccess = Consumer<GraphQLResponse<PaginatedResult<M>>> {
-            val resultIterator = it.data.items.iterator()
-            value = if (resultIterator.hasNext()) {
-                resultIterator.next()
-            } else {
-                null
+
+        // To ensure we only have 1 live request at a time, we jump to our own single threaded scope
+        callbackScope.launch {
+            try {
+                val model = fetchInternal()
+                onSuccess.accept(model)
+            } catch (e: AmplifyException) {
+                onError.accept(e)
             }
-            loadedValue = true
-            onSuccess.accept(value)
         }
-        val onApiFailure = Consumer<ApiException> { onError.accept(it) }
-        if (apiName != null) {
-            Amplify.API.query(
-                apiName,
-                AppSyncGraphQLRequestFactory.buildQuery(clazz, queryPredicate),
-                onQuerySuccess,
-                onApiFailure
-            )
-        } else {
-            Amplify.API.query(
-                AppSyncGraphQLRequestFactory.buildQuery(clazz, queryPredicate),
-                onQuerySuccess,
-                onApiFailure
-            )
+    }
+
+    private suspend fun fetchInternal(): M? {
+        // Use Semaphore with 1 permit to only allow 1 execution at a time
+        semaphore.withPermit {
+
+            // Quick return if value is already present
+            val cached = cachedValue.get()
+            if (cached != null) {
+                return cached.value
+            }
+
+            return try {
+                val resultIterator = query(
+                    AppSyncGraphQLRequestFactory.buildQuery<PaginatedResult<M>, M>(
+                        clazz,
+                        AppSyncLazyQueryPredicate<M>().createPredicate(clazz, keyMap)
+                    ),
+                    apiName
+                ).data.items.iterator()
+                val value = if (resultIterator.hasNext()) {
+                    resultIterator.next()
+                } else {
+                    null
+                }
+                cachedValue.set(LoadedValue(value))
+                value
+            } catch (error: ApiException) {
+                throw AmplifyException("Error lazy loading the model.", error, error.message ?: "")
+            }
         }
+    }
+
+    private companion object {
+        // Wraps the value to determine difference between null/unloaded and null/loaded
+        private class LoadedValue<M: Model>(val value: M?)
     }
 }
 
