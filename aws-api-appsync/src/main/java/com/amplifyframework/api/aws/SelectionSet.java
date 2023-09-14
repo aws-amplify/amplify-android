@@ -27,11 +27,11 @@ import com.amplifyframework.core.model.AuthRule;
 import com.amplifyframework.core.model.AuthStrategy;
 import com.amplifyframework.core.model.CustomTypeField;
 import com.amplifyframework.core.model.CustomTypeSchema;
-import com.amplifyframework.core.model.LazyModel;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelAssociation;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelList;
+import com.amplifyframework.core.model.ModelReference;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.PropertyContainerPath;
 import com.amplifyframework.core.model.SchemaRegistry;
@@ -332,7 +332,7 @@ public final class SelectionSet {
                                                                 operation, false));
                             result.add(new SelectionSet(fieldName, fields));
                         }
-                    } else if (LazyModel.class.isAssignableFrom(field.getType())) {
+                    } else if (ModelReference.class.isAssignableFrom(field.getType())) {
                         ParameterizedType pType = (ParameterizedType) field.getGenericType();
                         Class<Model> modalClass = (Class<Model>) pType.getActualTypeArguments()[0];
                         Set<SelectionSet> fields = getModelFields(modalClass, 0, operation, true);

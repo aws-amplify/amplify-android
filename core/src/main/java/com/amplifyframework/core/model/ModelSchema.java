@@ -212,7 +212,7 @@ public final class ModelSchema {
         if (annotation != null) {
             final String fieldName = field.getName();
             final Class<?> fieldType;
-            if (field.getType() == LazyModel.class && field.getGenericType()
+            if (field.getType() == ModelReference.class && field.getGenericType()
                     instanceof ParameterizedType) {
                 ParameterizedType pType = (ParameterizedType) field.getGenericType();
                 fieldType = (Class<?>) pType.getActualTypeArguments()[0];
@@ -233,7 +233,7 @@ public final class ModelSchema {
                     .isArray(Collection.class.isAssignableFrom(field.getType()))
                     .isEnum(Enum.class.isAssignableFrom(field.getType()))
                     .isModel(Model.class.isAssignableFrom(field.getType()))
-                    .isLazyModel(LazyModel.class.isAssignableFrom(field.getType()))
+                    .isModelReference(ModelReference.class.isAssignableFrom(field.getType()))
                     .isModelList(ModelList.class.isAssignableFrom(field.getType()))
                     .authRules(authRules)
                     .build();

@@ -1,9 +1,9 @@
 package com.amplifyframework.api.aws
 
+import com.amplifyframework.api.ApiException
 import com.amplifyframework.core.model.Model
 import com.amplifyframework.core.model.ModelIdentifier
 import com.amplifyframework.core.model.ModelSchema
-import com.amplifyframework.core.model.SchemaRegistry
 import com.google.gson.Gson
 import com.google.gson.JsonDeserializationContext
 import com.google.gson.JsonDeserializer
@@ -33,7 +33,7 @@ internal class ModelDeserializer(
             fieldToUpdate.isAccessible = true
             if (fieldToUpdate.get(parent) == null) {
                 val lazyField = fieldMap.value
-                val lazyFieldModelSchema = SchemaRegistry.instance().getModelSchemaForModelClass(lazyField.targetType)
+                val lazyFieldModelSchema = AWSSchemaRegistry.getModelSchemaForModelClass(lazyField.targetType)
 
                 val lazyFieldTargetNames = lazyFieldModelSchema
                     .associations

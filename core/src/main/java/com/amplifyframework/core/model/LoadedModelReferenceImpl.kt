@@ -15,25 +15,12 @@
 
 package com.amplifyframework.core.model
 
-import com.amplifyframework.AmplifyException
 import com.amplifyframework.annotations.InternalAmplifyApi
-import com.amplifyframework.core.Consumer
-import com.amplifyframework.core.NullableConsumer
 
 @InternalAmplifyApi
-class InMemoryLazyModel<M : Model>(
+class LoadedModelReferenceImpl<M : Model>(
     override val value: M? = null
-) : LazyModel<M> {
+) : LoadedModelReference<M> {
 
-    override fun getIdentifier(): Map<String, Any> {
-        return emptyMap()
-    }
-
-    override suspend fun fetchModel(): M? {
-        return value
-    }
-
-    override fun fetchModel(onSuccess: NullableConsumer<M?>, onError: Consumer<AmplifyException>) {
-        onSuccess.accept(value)
-    }
+    override fun getIdentifier() = emptyMap<String, Any>()
 }

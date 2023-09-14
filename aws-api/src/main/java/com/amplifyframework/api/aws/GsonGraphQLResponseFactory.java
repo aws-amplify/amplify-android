@@ -22,10 +22,10 @@ import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.PaginatedResult;
-import com.amplifyframework.core.model.LazyModel;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelList;
 import com.amplifyframework.core.model.ModelPage;
+import com.amplifyframework.core.model.ModelReference;
 import com.amplifyframework.util.Empty;
 import com.amplifyframework.util.TypeMaker;
 
@@ -92,8 +92,8 @@ final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
                             new IterableDeserializer<>(request)
                     )
                     .registerTypeAdapter(
-                            LazyModel.class,
-                            new LazyModelDeserializer<Model>(apiName)
+                            ModelReference.class,
+                            new ModelReferenceDeserializer<Model>(apiName)
                     )
                     .create();
 

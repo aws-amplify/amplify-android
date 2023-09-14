@@ -23,24 +23,22 @@ import com.amplifyframework.api.graphql.PaginatedResult
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.core.NullableConsumer
-import com.amplifyframework.core.model.LazyModel
+import com.amplifyframework.core.model.LazyModelReference
 import com.amplifyframework.core.model.Model
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
-internal class ApiLazyModel<M : Model> private constructor(
+internal class ApiLazyModelReference<M : Model> internal constructor(
     private val clazz: Class<M>,
     private val keyMap: Map<String, Any>,
-    private var model: M? = null,
-    private var loadedValue: Boolean = false,
     private val apiName: String? = null
-) : LazyModel<M> {
+) : LazyModelReference<M> {
 
     private val queryPredicate = AppSyncLazyQueryPredicate<M>().createPredicate(clazz, keyMap)
 
-    override val value: M?
-        get() = model
+    private var value: M? = null
+    private var loadedValue = false
 
     override fun getIdentifier(): Map<String, Any> {
         return keyMap
@@ -59,7 +57,7 @@ internal class ApiLazyModel<M : Model> private constructor(
                 ),
                 apiName
             ).data.items.iterator()
-            model = if (resultIterator.hasNext()) {
+            value = if (resultIterator.hasNext()) {
                 resultIterator.next()
             } else {
                 null
@@ -78,7 +76,7 @@ internal class ApiLazyModel<M : Model> private constructor(
         }
         val onQuerySuccess = Consumer<GraphQLResponse<PaginatedResult<M>>> {
             val resultIterator = it.data.items.iterator()
-            model = if (resultIterator.hasNext()) {
+            value = if (resultIterator.hasNext()) {
                 resultIterator.next()
             } else {
                 null
@@ -100,24 +98,6 @@ internal class ApiLazyModel<M : Model> private constructor(
                 onQuerySuccess,
                 onApiFailure
             )
-        }
-    }
-
-    internal companion object {
-        fun <M : Model> createPreloaded(
-            clazz: Class<M>,
-            keyMap: Map<String, Any>,
-            value: M?
-        ): ApiLazyModel<M> {
-            return ApiLazyModel(clazz, keyMap, value, true)
-        }
-
-        fun <M : Model> createLazy(
-            clazz: Class<M>,
-            keyMap: Map<String, Any>,
-            apiName: String?
-        ): ApiLazyModel<M> {
-            return ApiLazyModel(clazz, keyMap, apiName = apiName)
         }
     }
 }

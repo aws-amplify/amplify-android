@@ -14,11 +14,11 @@
  */
 package com.amplifyframework.api.aws
 
-import com.amplifyframework.core.model.LazyModel
+import com.amplifyframework.core.model.LoadedModelReferenceImpl
 import com.amplifyframework.core.model.Model
 import com.amplifyframework.core.model.ModelList
 import com.amplifyframework.core.model.ModelPage
-import com.amplifyframework.core.model.SchemaRegistry
+import com.amplifyframework.core.model.ModelReference
 import com.google.gson.JsonDeserializationContext
 import com.google.gson.JsonDeserializer
 import com.google.gson.JsonElement
@@ -30,21 +30,21 @@ import java.lang.reflect.Type
 const val ITEMS_KEY = "items"
 const val NEXT_TOKEN_KEY = "nextToken"
 
-internal class LazyModelDeserializer<M : Model>(val apiName: String?) :
-    JsonDeserializer<LazyModel<M>> {
+internal class ModelReferenceDeserializer<M : Model>(val apiName: String?) :
+    JsonDeserializer<ModelReference<M>> {
     @Throws(JsonParseException::class)
     override fun deserialize(
         json: JsonElement,
         typeOfT: Type,
         context: JsonDeserializationContext
-    ): LazyModel<M> {
+    ): ModelReference<M> {
         val pType = typeOfT as? ParameterizedType ?:
         throw JsonParseException("Expected a parameterized type during list deserialization.")
         val type = pType.actualTypeArguments[0] as Class<M>
 
         val jsonObject = getJsonObject(json)
 
-        val predicateKeyMap = SchemaRegistry.instance()
+        val predicateKeyMap = AWSSchemaRegistry
             .getModelSchemaForModelClass(type)
             .primaryIndexFields
             .associateWith { jsonObject[it] }
@@ -52,12 +52,12 @@ internal class LazyModelDeserializer<M : Model>(val apiName: String?) :
         if (jsonObject.size() > predicateKeyMap.size) {
             try {
                 val preloadedValue = context.deserialize<M>(json, type)
-                return ApiLazyModel.createPreloaded(type, predicateKeyMap, preloadedValue)
+                return LoadedModelReferenceImpl(preloadedValue)
             } catch (e: Exception) {
                 // fallback to create lazy
             }
         }
-        return ApiLazyModel.createLazy(type, predicateKeyMap, apiName)
+        return ApiLazyModelReference(type, predicateKeyMap, apiName)
     }
 }
 

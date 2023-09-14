@@ -20,16 +20,31 @@ import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.core.NullableConsumer
 
-interface LazyModel<M : Model> {
+
+/**
+ * Base interface for a class holding a Model type
+ */
+sealed interface ModelReference<M : Model> {
+    @InternalAmplifyApi
+    fun getIdentifier(): Map<String, Any>
+}
+
+/**
+ * A reference holder that holds an in-memory model
+ */
+interface LoadedModelReference<M: Model>: ModelReference<M> {
 
     /** The loaded model value */
     val value: M?
+}
 
-    @InternalAmplifyApi
-    fun getIdentifier(): Map<String, Any>
+/**
+ * A reference holder that allows lazily loading a model
+ */
+interface LazyModelReference<M: Model>: ModelReference<M> {
 
     /**
-     * Load the model represented by this LazyModel instance if not already loaded.
+     * Load the model instance represented by this LazyModelReference.
      *
      * @throws AmplifyException If loading the model fails.
      * @return The lazily loaded model or null if no such model exists.
@@ -39,7 +54,7 @@ interface LazyModel<M : Model> {
     suspend fun fetchModel(): M?
 
     /**
-     * Load the model represented by this LazyModel instance if not already loaded.
+     * Load the model instance represented by this LazyModelReference.
      *
      * @param onSuccess Called upon successfully loading the model.
      * @param onError Called when loading the model fails.

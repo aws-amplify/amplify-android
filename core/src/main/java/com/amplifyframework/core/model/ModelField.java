@@ -54,10 +54,10 @@ public final class ModelField {
     // True if the field is an instance of model.
     private final boolean isModel;
 
-    // True if the field is an instance of lazy model.
-    private final boolean isLazyModel;
+    // True if the field is an instance of ModelReference.
+    private final boolean isModelReference;
 
-    // True if the field is an instance of lazy model.
+    // True if the field is an instance of ModelList.
     private final boolean isModelList;
 
     // True if the field is an instance of CustomType
@@ -78,7 +78,7 @@ public final class ModelField {
         this.isArray = builder.isArray;
         this.isEnum = builder.isEnum;
         this.isModel = builder.isModel;
-        this.isLazyModel = builder.isLazyModel;
+        this.isModelReference = builder.isModelReference;
         this.isModelList = builder.isModelList;
         this.isCustomType = builder.isCustomType;
         this.authRules = builder.authRules;
@@ -163,12 +163,12 @@ public final class ModelField {
     }
 
     /**
-     * Returns true if the field's target type is a lazy Model.
+     * Returns true if the field's target type is ModelReference.
      *
-     * @return True if the field's target type is a lazy Model.
+     * @return True if the field's target type is ModelReference.
      */
-    public boolean isLazyModel() {
-        return isLazyModel;
+    public boolean isModelReference() {
+        return isModelReference;
     }
 
     /**
@@ -295,8 +295,8 @@ public final class ModelField {
         // True if the field's target type is Model.
         private boolean isModel = false;
 
-        // True if the field's target type is LazyModel.
-        private boolean isLazyModel = false;
+        // True if the field's target type is a ModelReference type.
+        private boolean isModelReference = false;
 
         // True if the field's target type is a ModelList type.
         private boolean isModelList = false;
@@ -398,12 +398,12 @@ public final class ModelField {
         }
 
         /**
-         * Sets a flag indicating whether or not the field's target type is a LazyModel.
-         * @param isLazyModel flag indicating if the field is a lazy model
+         * Sets a flag indicating whether or not the field's target type is a ModelReference.
+         * @param isModelReference flag indicating if the field is a ModelReference type
          * @return the builder object
          */
-        public ModelFieldBuilder isLazyModel(boolean isLazyModel) {
-            this.isLazyModel = isLazyModel;
+        public ModelFieldBuilder isModelReference(boolean isModelReference) {
+            this.isModelReference = isModelReference;
             return this;
         }
 

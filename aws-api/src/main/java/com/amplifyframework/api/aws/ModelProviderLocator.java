@@ -38,7 +38,7 @@ import java.util.Objects;
  */
 public final class ModelProviderLocator {
     private static final String DEFAULT_MODEL_PROVIDER_CLASS_NAME =
-            "com.amplifyframework.api.generated.model.AmplifyModelProvider";
+            "com.amplifyframework.datastore.generated.model.AmplifyModelProvider";
     private static final String GET_INSTANCE_ACCESSOR_METHOD_NAME = "getInstance";
 
     private ModelProviderLocator() {}

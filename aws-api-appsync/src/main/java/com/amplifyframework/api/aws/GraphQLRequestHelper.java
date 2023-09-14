@@ -22,11 +22,12 @@ import com.amplifyframework.annotations.InternalAmplifyApi;
 import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.core.model.AuthRule;
 import com.amplifyframework.core.model.AuthStrategy;
-import com.amplifyframework.core.model.LazyModel;
+import com.amplifyframework.core.model.LoadedModelReference;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelAssociation;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelIdentifier;
+import com.amplifyframework.core.model.ModelReference;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.SerializedCustomType;
 import com.amplifyframework.core.model.SerializedModel;
@@ -228,17 +229,19 @@ public class GraphQLRequestHelper {
             Object fieldValue = extractFieldValue(modelField.getName(), instance, schema, false);
             Object underlyingFieldValue = fieldValue;
             Map<String, Object> identifiersIfLazyModel = new HashMap<>();
-            if (modelField.isLazyModel() && fieldValue != null) {
-                LazyModel<?> lazyModel = (LazyModel<?>) fieldValue;
-                underlyingFieldValue = lazyModel.getValue();
-                identifiersIfLazyModel = lazyModel.getIdentifier();
+            if (modelField.isModelReference() && fieldValue != null) {
+                ModelReference<?> modelReference = (ModelReference<?>) fieldValue;
+                if (modelReference instanceof LoadedModelReference) {
+                    underlyingFieldValue = ((LoadedModelReference)modelReference).getValue();
+                }
+                identifiersIfLazyModel = modelReference.getIdentifier();
             }
 
             if (association == null) {
                 result.put(fieldName, fieldValue);
             } else if (association.isOwner()) {
                 if ((fieldValue == null ||
-                        (modelField.isLazyModel() &&
+                        (modelField.isModelReference() &&
                                 underlyingFieldValue == null &&
                                 identifiersIfLazyModel.isEmpty())) &&
                         MutationType.CREATE.equals(type)) {
@@ -269,7 +272,7 @@ public class GraphQLRequestHelper {
             for (String key : association.getTargetNames()) {
                 result.put(key, null);
             }
-        } else if ((modelField.isModel() || modelField.isLazyModel()) && underlyingFieldValue instanceof Model) {
+        } else if ((modelField.isModel() || modelField.isModelReference()) && underlyingFieldValue instanceof Model) {
             if (((Model) underlyingFieldValue).resolveIdentifier() instanceof ModelIdentifier<?>) {
                 final ModelIdentifier<?> primaryKey =
                         (ModelIdentifier<?>) ((Model) underlyingFieldValue).resolveIdentifier();
@@ -308,8 +311,8 @@ public class GraphQLRequestHelper {
                         ((Model) underlyingFieldValue).resolveIdentifier().toString()
                 );
             }
-        } else if (modelField.isLazyModel() && fieldValue instanceof LazyModel) {
-            Map<String, Object> identifiers = ((LazyModel<?>) fieldValue).getIdentifier();
+        } else if (modelField.isModelReference() && fieldValue instanceof ModelReference) {
+            Map<String, Object> identifiers = ((ModelReference<?>) fieldValue).getIdentifier();
             if (identifiers.isEmpty()) {
                 for (String key : association.getTargetNames()) {
                     result.put(key, null);
@@ -319,15 +322,15 @@ public class GraphQLRequestHelper {
     }
 
     private static Object extractAssociateId(ModelField modelField, Object fieldValue, Object underlyingFieldValue) {
-        if ((modelField.isModel() || modelField.isLazyModel()) && underlyingFieldValue instanceof Model) {
+        if ((modelField.isModel() || modelField.isModelReference()) && underlyingFieldValue instanceof Model) {
             return ((Model) underlyingFieldValue).resolveIdentifier();
         } else if (modelField.isModel() && fieldValue instanceof Map) {
             return ((Map<?, ?>) fieldValue).get("id");
         } else if (modelField.isModel() && fieldValue == null) {
             // When there is no model field value, set null for removal of values or deassociation.
             return null;
-        } else if (modelField.isLazyModel() && fieldValue instanceof LazyModel) {
-            Map<String, Object> identifiers = ((LazyModel<?>) fieldValue).getIdentifier();
+        } else if (modelField.isModelReference() && fieldValue instanceof ModelReference) {
+            Map<String, Object> identifiers = ((ModelReference<?>) fieldValue).getIdentifier();
             if (identifiers.isEmpty()) {
                 return null;
             } else {
@@ -359,8 +362,8 @@ public class GraphQLRequestHelper {
             Field privateField = instance.getClass().getDeclaredField(fieldName);
             privateField.setAccessible(true);
             Object fieldInstance = privateField.get(instance);
-            if (extractLazyValue && fieldInstance != null && privateField.getType() == LazyModel.class) {
-                return ((LazyModel<?>) fieldInstance).getValue();
+            if (extractLazyValue && fieldInstance != null && privateField.getType() == LoadedModelReference.class) {
+                return ((LoadedModelReference<?>) fieldInstance).getValue();
             }
             return fieldInstance;
         } catch (Exception exception) {
