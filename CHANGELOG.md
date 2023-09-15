@@ -1,3 +1,10 @@
+## [Release 2.13.2](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.13.2)
+
+### Bug Fixes
+- **push:** Prevent Unintended OptOuts ([#2587](https://github.com/aws-amplify/amplify-android/issues/2587))
+
+[See all changes between 2.13.1 and 2.13.2](https://github.com/aws-amplify/amplify-android/compare/release_v2.13.1...release_v2.13.2)
+
 ## [Release 2.13.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.13.1)
 
 ### Bug Fixes
