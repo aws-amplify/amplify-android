@@ -17,6 +17,7 @@ package com.amplifyframework.pinpoint.core
 import android.content.Context
 import android.content.SharedPreferences
 import aws.sdk.kotlin.services.pinpoint.PinpointClient
+import aws.sdk.kotlin.services.pinpoint.model.ChannelType
 import aws.sdk.kotlin.services.pinpoint.model.EndpointDemographic
 import aws.sdk.kotlin.services.pinpoint.model.EndpointLocation
 import aws.sdk.kotlin.services.pinpoint.model.EndpointRequest
@@ -31,6 +32,7 @@ import com.amplifyframework.analytics.UserProfile
 import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.category.CategoryType
+import com.amplifyframework.core.store.KeyValueRepository
 import com.amplifyframework.pinpoint.core.data.AndroidAppDetails
 import com.amplifyframework.pinpoint.core.data.AndroidDeviceDetails
 import com.amplifyframework.pinpoint.core.endpointProfile.EndpointProfile
@@ -52,12 +54,13 @@ import org.json.JSONObject
 class TargetingClient(
     context: Context,
     private val pinpointClient: PinpointClient,
+    store: KeyValueRepository,
     private val prefs: SharedPreferences,
     appDetails: AndroidAppDetails,
     deviceDetails: AndroidDeviceDetails,
-    coroutineDispatcher: CoroutineDispatcher = Dispatchers.Default
+    coroutineDispatcher: CoroutineDispatcher = Dispatchers.Default,
 ) {
-    private val endpointProfile = EndpointProfile(prefs.getUniqueId(), appDetails, deviceDetails, context)
+    private val endpointProfile = EndpointProfile(prefs.getUniqueId(), appDetails, deviceDetails, context, store)
     private val globalAttributes: MutableMap<String, List<String>>
     private val globalMetrics: MutableMap<String, Double>
     private val coroutineScope = CoroutineScope(coroutineDispatcher)
@@ -211,12 +214,10 @@ class TargetingClient(
             this.location = location
             this.demographic = demographic
             effectiveDate = endpointProfile.effectiveDate.millisToIsoDate()
-            if (endpointProfile.address != "" && endpointProfile.channelType != null) {
+            if (endpointProfile.address != "" && endpointProfile.channelType == ChannelType.Gcm) {
                 optOut = "NONE" // no opt out, send notifications
                 address = endpointProfile.address
                 channelType = endpointProfile.channelType
-            } else {
-                optOut = "ALL" // opt out from all notifications
             }
 
             attributes = endpointProfile.allAttributes
@@ -371,6 +372,9 @@ class TargetingClient(
     }
 
     companion object {
+        @InternalAmplifyApi
+        const val AWS_PINPOINT_PUSHNOTIFICATIONS_DEVICE_TOKEN_KEY = "FCMDeviceToken"
+
         private val LOG = Amplify.Logging.logger(CategoryType.ANALYTICS, "amplify:aws-analytics-pinpoint")
         private const val CUSTOM_ATTRIBUTES_KEY = "ENDPOINT_PROFILE_CUSTOM_ATTRIBUTES"
         private const val CUSTOM_METRICS_KEY = "ENDPOINT_PROFILE_CUSTOM_METRICS"
