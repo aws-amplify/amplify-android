@@ -15,8 +15,8 @@
 package com.amplifyframework.pinpoint.core
 
 import android.content.Context
-import android.content.SharedPreferences
 import aws.sdk.kotlin.services.pinpoint.PinpointClient
+import aws.sdk.kotlin.services.pinpoint.model.ChannelType
 import aws.sdk.kotlin.services.pinpoint.model.EndpointDemographic
 import aws.sdk.kotlin.services.pinpoint.model.EndpointLocation
 import aws.sdk.kotlin.services.pinpoint.model.EndpointRequest
@@ -31,41 +31,32 @@ import com.amplifyframework.analytics.UserProfile
 import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.category.CategoryType
+import com.amplifyframework.core.store.KeyValueRepository
 import com.amplifyframework.pinpoint.core.data.AndroidAppDetails
 import com.amplifyframework.pinpoint.core.data.AndroidDeviceDetails
 import com.amplifyframework.pinpoint.core.endpointProfile.EndpointProfile
 import com.amplifyframework.pinpoint.core.endpointProfile.EndpointProfileLocation
 import com.amplifyframework.pinpoint.core.endpointProfile.EndpointProfileUser
 import com.amplifyframework.pinpoint.core.models.AWSPinpointUserProfileBehavior
-import com.amplifyframework.pinpoint.core.util.getUniqueId
 import com.amplifyframework.pinpoint.core.util.millisToIsoDate
-import com.amplifyframework.pinpoint.core.util.putString
-import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import org.json.JSONException
-import org.json.JSONObject
 
 @InternalAmplifyApi
 class TargetingClient(
     context: Context,
     private val pinpointClient: PinpointClient,
-    private val prefs: SharedPreferences,
+    store: KeyValueRepository,
+    uniqueId: String,
     appDetails: AndroidAppDetails,
     deviceDetails: AndroidDeviceDetails,
-    coroutineDispatcher: CoroutineDispatcher = Dispatchers.Default
+    coroutineDispatcher: CoroutineDispatcher = Dispatchers.Default,
 ) {
-    private val endpointProfile = EndpointProfile(prefs.getUniqueId(), appDetails, deviceDetails, context)
-    private val globalAttributes: MutableMap<String, List<String>>
-    private val globalMetrics: MutableMap<String, Double>
+    private val endpointProfile = EndpointProfile(uniqueId, appDetails, deviceDetails, context, store)
     private val coroutineScope = CoroutineScope(coroutineDispatcher)
 
-    init {
-        globalAttributes = loadAttributes()
-        globalMetrics = loadMetrics()
-    }
 
     /**
      * Allows you to tie a user to their actions and record traits about them. It includes
@@ -135,17 +126,6 @@ class TargetingClient(
      * @return The current device endpoint profile
      */
     fun currentEndpoint(): EndpointProfile {
-        // Add global attributes.
-        if (globalAttributes.isNotEmpty()) {
-            for ((key, value) in globalAttributes) {
-                endpointProfile.addAttribute(key, value)
-            }
-        }
-        if (globalMetrics.isNotEmpty()) {
-            for ((key, value) in globalMetrics) {
-                endpointProfile.addMetric(key, value)
-            }
-        }
         return endpointProfile
     }
 
@@ -164,13 +144,6 @@ class TargetingClient(
      * @param endpointProfile An instance of an EndpointProfile to be updated
      */
     fun updateEndpointProfile(endpointProfile: EndpointProfile) {
-        // Add global attributes.
-        for ((key, value) in globalAttributes) {
-            endpointProfile.addAttribute(key, value)
-        }
-        for ((key, value) in globalMetrics) {
-            endpointProfile.addMetric(key, value)
-        }
         executeUpdate(endpointProfile)
     }
 
@@ -211,12 +184,12 @@ class TargetingClient(
             this.location = location
             this.demographic = demographic
             effectiveDate = endpointProfile.effectiveDate.millisToIsoDate()
-            if (endpointProfile.address != "" && endpointProfile.channelType != null) {
+            if (endpointProfile.address == "" && endpointProfile.channelType == ChannelType.Gcm) {
+                optOut = "ALL" // opt out from all notifications if we have a push channel type but no token
+            } else if (endpointProfile.address != "" && endpointProfile.channelType != null) {
                 optOut = "NONE" // no opt out, send notifications
                 address = endpointProfile.address
                 channelType = endpointProfile.channelType
-            } else {
-                optOut = "ALL" // opt out from all notifications
             }
 
             attributes = endpointProfile.allAttributes
@@ -242,138 +215,11 @@ class TargetingClient(
         }
     }
 
-    private fun saveAttributes() {
-        val jsonObject = JSONObject(globalAttributes as MutableMap<*, *>)
-        val jsonString = jsonObject.toString()
-        prefs.putString(CUSTOM_ATTRIBUTES_KEY, jsonString)
-    }
-
-    private fun loadAttributes(): MutableMap<String, List<String>> {
-        val outputMap: MutableMap<String, List<String>> = ConcurrentHashMap()
-        val jsonString: String? = prefs.getString(CUSTOM_ATTRIBUTES_KEY, null)
-        if (jsonString.isNullOrBlank()) {
-            return outputMap
-        }
-        try {
-            val jsonObject = JSONObject(jsonString)
-            val keysItr = jsonObject.keys()
-            while (keysItr.hasNext()) {
-                val key = keysItr.next()
-                val jsonArray = jsonObject.getJSONArray(key)
-                val listValues: MutableList<String> = ArrayList()
-                for (i in 0 until jsonArray.length()) {
-                    listValues.add(jsonArray.getString(i))
-                }
-                outputMap[key] = listValues
-            }
-        } catch (e: JSONException) {
-            e.printStackTrace()
-        }
-        return outputMap
-    }
-
-    private fun saveMetrics() {
-        val jsonObject = JSONObject(globalMetrics as MutableMap<*, *>)
-        val jsonString = jsonObject.toString()
-        prefs.putString(CUSTOM_METRICS_KEY, jsonString)
-    }
-
-    private fun loadMetrics(): MutableMap<String, Double> {
-        val outputMap: MutableMap<String, Double> = ConcurrentHashMap()
-        val jsonString: String? = prefs.getString(CUSTOM_METRICS_KEY, null)
-        if (jsonString.isNullOrBlank()) {
-            return outputMap
-        }
-        try {
-            val jsonObject = JSONObject(jsonString)
-            val keysItr = jsonObject.keys()
-            while (keysItr.hasNext()) {
-                val key = keysItr.next()
-                val value = jsonObject.getDouble(key)
-                outputMap[key] = value
-            }
-        } catch (e: JSONException) {
-            e.printStackTrace()
-        }
-        return outputMap
-    }
-
-    /**
-     * Adds the specified attribute to the current endpoint profile generated by this client.
-     * Note: The maximum allowed attributes/metrics is 250. Attempts to add more may be ignored
-     *
-     * @param attributeName   the name of the  attribute to add
-     * @param attributeValues the value of the  attribute
-     */
-    fun addAttribute(attributeName: String?, attributeValues: List<String>?) {
-        if (attributeName == null) {
-            LOG.debug("Null attribute name provided to addGlobalAttribute.")
-            return
-        }
-        if (attributeValues == null) {
-            LOG.debug("Null attribute values provided to addGlobalAttribute.")
-            return
-        }
-        globalAttributes[attributeName] = attributeValues
-        saveAttributes()
-    }
-
-    /**
-     * Removes the specified attribute. All subsequently created events will no
-     * longer have this global attribute. from the current endpoint profile generated by this client.
-     *
-     * @param attributeName the name of the attribute to remove
-     */
-    fun removeAttribute(attributeName: String?) {
-        if (attributeName == null) {
-            LOG.warn("Null attribute name provided to removeGlobalAttribute.")
-            return
-        }
-        endpointProfile.addAttribute(attributeName, null)
-        globalAttributes.remove(attributeName)
-        saveAttributes()
-    }
-
-    /**
-     * Adds the specified metric to the current endpoint profile generated by this client. Note: The
-     * maximum allowed attributes and metrics on an endpoint update is 250. Attempts
-     * to add more may be ignored
-     *
-     * @param metricName  the name of the metric to add
-     * @param metricValue the value of the metric
-     */
-    fun addMetric(metricName: String?, metricValue: Double?) {
-        if (metricName == null) {
-            LOG.warn("Null metric name provided to addGlobalMetric.")
-            return
-        }
-        if (metricValue == null) {
-            LOG.warn("Null metric value provided to addGlobalMetric.")
-            return
-        }
-        globalMetrics[metricName] = metricValue
-        saveMetrics()
-    }
-
-    /**
-     * Removes the specified metric from the current endpoint profile generated by this client.
-     *
-     * @param metricName the name of the metric to remove
-     */
-    fun removeMetric(metricName: String?) {
-        if (metricName == null) {
-            LOG.warn("Null metric name provided to removeGlobalMetric.")
-            return
-        }
-        endpointProfile.addMetric(metricName, null)
-        globalMetrics.remove(metricName)
-        saveMetrics()
-    }
-
     companion object {
+        @InternalAmplifyApi
+        const val AWS_PINPOINT_PUSHNOTIFICATIONS_DEVICE_TOKEN_KEY = "FCMDeviceToken"
+
         private val LOG = Amplify.Logging.logger(CategoryType.ANALYTICS, "amplify:aws-analytics-pinpoint")
-        private const val CUSTOM_ATTRIBUTES_KEY = "ENDPOINT_PROFILE_CUSTOM_ATTRIBUTES"
-        private const val CUSTOM_METRICS_KEY = "ENDPOINT_PROFILE_CUSTOM_METRICS"
 
         private const val USER_NAME_KEY = "name"
         private const val USER_PLAN_KEY = "plan"

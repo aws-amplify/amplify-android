@@ -18,11 +18,13 @@ package com.amplifyframework.pinpoint.core
 
 import android.os.Build
 import aws.sdk.kotlin.services.pinpoint.PinpointClient
+import aws.sdk.kotlin.services.pinpoint.model.ChannelType
 import aws.sdk.kotlin.services.pinpoint.model.EndpointRequest
 import aws.sdk.kotlin.services.pinpoint.model.UpdateEndpointRequest
 import aws.sdk.kotlin.services.pinpoint.model.UpdateEndpointResponse
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -47,21 +49,12 @@ class TargetingClientTest {
     }
 
     @Test
-    fun testCurrentEndpoint() {
-        targetingClient.addAttribute("attribute", listOf("a", "b", "c"))
-        targetingClient.addMetric("metric", 2.0)
-        val endpoint = targetingClient.currentEndpoint()
-        assertEquals(endpoint.getAttribute("attribute"), listOf("a", "b", "c"))
-        assertEquals(endpoint.getMetric("metric"), 2.0)
-    }
-
-    @Test
     fun testUpdateEndpointProfile() = runTest {
         setup()
         targetingClient = constructTargetingClient()
 
-        targetingClient.addAttribute("attribute", listOf("a1", "a2"))
-        targetingClient.addMetric("metric", 1.0)
+        val expectedToken = "token123"
+        every { store.get(TargetingClient.AWS_PINPOINT_PUSHNOTIFICATIONS_DEVICE_TOKEN_KEY) } returns expectedToken
 
         val updateEndpointResponse = UpdateEndpointResponse.invoke {}
         coEvery { pinpointClient.updateEndpoint(ofType(UpdateEndpointRequest::class)) }.returns(updateEndpointResponse)
@@ -69,12 +62,91 @@ class TargetingClientTest {
 
         coVerify {
             pinpointClient.updateEndpoint(
-                coWithArg<UpdateEndpointRequest> {
+                coWithArg {
                     assertNotNull(it.endpointRequest)
                     val request: EndpointRequest = it.endpointRequest!!
                     assertEquals("app id", it.applicationId)
-                    assertEquals(listOf("a1", "a2"), request.attributes?.get("attribute") ?: listOf("wrong"))
-                    assertEquals(1.0, request.metrics?.get("metric") ?: -1.0, 0.01)
+                    assertEquals(expectedToken, request.address)
+                }
+            )
+        }
+    }
+
+    @Test
+    fun testUpdateEndpointProfileOptsIn() = runTest {
+        setup()
+        targetingClient = constructTargetingClient()
+        targetingClient.currentEndpoint().channelType = ChannelType.Gcm
+
+        val expectedToken = "token123"
+        every { store.get(TargetingClient.AWS_PINPOINT_PUSHNOTIFICATIONS_DEVICE_TOKEN_KEY) } returns expectedToken
+
+
+        val updateEndpointResponse = UpdateEndpointResponse.invoke {}
+        coEvery { pinpointClient.updateEndpoint(ofType(UpdateEndpointRequest::class)) }.returns(updateEndpointResponse)
+        targetingClient.updateEndpointProfile()
+
+        coVerify {
+            pinpointClient.updateEndpoint(
+                coWithArg {
+                    assertNotNull(it.endpointRequest)
+                    val request: EndpointRequest = it.endpointRequest!!
+                    assertEquals("app id", it.applicationId)
+                    assertEquals(expectedToken, request.address)
+                    assertEquals("NONE", request.optOut)
+                }
+            )
+        }
+    }
+
+    @Test
+    fun testUpdateEndpointProfileOptsOut() = runTest {
+        setup()
+        targetingClient = constructTargetingClient()
+        targetingClient.currentEndpoint().channelType = ChannelType.Gcm
+
+        val expectedToken = ""
+        every { store.get(TargetingClient.AWS_PINPOINT_PUSHNOTIFICATIONS_DEVICE_TOKEN_KEY) } returns expectedToken
+
+
+        val updateEndpointResponse = UpdateEndpointResponse.invoke {}
+        coEvery { pinpointClient.updateEndpoint(ofType(UpdateEndpointRequest::class)) }.returns(updateEndpointResponse)
+        targetingClient.updateEndpointProfile()
+
+        coVerify {
+            pinpointClient.updateEndpoint(
+                coWithArg {
+                    assertNotNull(it.endpointRequest)
+                    val request: EndpointRequest = it.endpointRequest!!
+                    assertEquals("app id", it.applicationId)
+                    assertEquals(expectedToken, request.address)
+                    assertEquals("ALL", request.optOut)
+                }
+            )
+        }
+    }
+
+    @Test
+    fun testUpdateEndpointProfileOptOutNotTouched() = runTest {
+        setup()
+        targetingClient = constructTargetingClient()
+        targetingClient.currentEndpoint().channelType = null
+
+        val expectedToken = ""
+        every { store.get(TargetingClient.AWS_PINPOINT_PUSHNOTIFICATIONS_DEVICE_TOKEN_KEY) } returns expectedToken
+
+
+        val updateEndpointResponse = UpdateEndpointResponse.invoke {}
+        coEvery { pinpointClient.updateEndpoint(ofType(UpdateEndpointRequest::class)) }.returns(updateEndpointResponse)
+        targetingClient.updateEndpointProfile()
+
+        coVerify {
+            pinpointClient.updateEndpoint(
+                coWithArg {
+                    assertNotNull(it.endpointRequest)
+                    val request: EndpointRequest = it.endpointRequest!!
+                    assertEquals("app id", it.applicationId)
+                    assertEquals(expectedToken, request.address)
                 }
             )
         }

@@ -57,7 +57,6 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
         private const val DEFAULT_AUTO_FLUSH_INTERVAL = 30000L
         private const val AWS_PINPOINT_PUSHNOTIFICATIONS_PREFERENCES_SUFFIX = "515d6767-01b7-49e5-8273-c8d11b0f331d"
         private const val AWS_PINPOINT_PUSHNOTIFICATIONS_DEVICE_TOKEN_LEGACY_KEY = "AWSPINPOINT.GCMTOKEN"
-        private const val AWS_PINPOINT_PUSHNOTIFICATIONS_DEVICE_TOKEN_KEY = "FCMDeviceToken"
     }
 
     private lateinit var preferences: SharedPreferences
@@ -116,7 +115,7 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
 
         val deviceToken = preferences.getString(AWS_PINPOINT_PUSHNOTIFICATIONS_DEVICE_TOKEN_LEGACY_KEY, null)
         deviceToken?.let {
-            store.put(AWS_PINPOINT_PUSHNOTIFICATIONS_DEVICE_TOKEN_KEY, it)
+            store.put(TargetingClient.AWS_PINPOINT_PUSHNOTIFICATIONS_DEVICE_TOKEN_KEY, it)
             preferences.edit { remove(AWS_PINPOINT_PUSHNOTIFICATIONS_DEVICE_TOKEN_LEGACY_KEY).apply() }
         }
     }
@@ -136,7 +135,14 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
         androidAppDetails: AndroidAppDetails,
         androidDeviceDetails: AndroidDeviceDetails
     ): TargetingClient {
-        return TargetingClient(context, pinpointClient, preferences, androidAppDetails, androidDeviceDetails)
+        return TargetingClient(
+            context,
+            pinpointClient,
+            store,
+            preferences.getUniqueId(),
+            androidAppDetails,
+            androidDeviceDetails
+        )
     }
 
     private fun createAnalyticsClient(
@@ -214,11 +220,10 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
 
     override fun registerDevice(token: String, onSuccess: Action, onError: Consumer<PushNotificationsException>) {
         try {
-            store.put(AWS_PINPOINT_PUSHNOTIFICATIONS_DEVICE_TOKEN_KEY, token)
+            store.put(TargetingClient.AWS_PINPOINT_PUSHNOTIFICATIONS_DEVICE_TOKEN_KEY, token)
             // targetingClient needs to send the address, optOut etc. to Pinpoint so we can receive campaigns/journeys
             val endpointProfile = targetingClient.currentEndpoint().apply {
                 channelType = ChannelType.Gcm
-                address = token
             }
 
             targetingClient.updateEndpointProfile(endpointProfile)

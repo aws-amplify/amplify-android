@@ -150,7 +150,8 @@ class AWSPinpointAnalyticsPluginBehaviorTest {
                 sharedPrefs.getUniqueId(),
                 androidAppDetails,
                 androidDeviceDetails,
-                ApplicationProvider.getApplicationContext()
+                ApplicationProvider.getApplicationContext(),
+                mockk()
             )
         }
         val actualEndpoint = slot<EndpointProfile>()
