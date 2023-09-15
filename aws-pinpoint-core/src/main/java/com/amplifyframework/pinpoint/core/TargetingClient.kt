@@ -42,13 +42,13 @@ import com.amplifyframework.pinpoint.core.models.AWSPinpointUserProfileBehavior
 import com.amplifyframework.pinpoint.core.util.getUniqueId
 import com.amplifyframework.pinpoint.core.util.millisToIsoDate
 import com.amplifyframework.pinpoint.core.util.putString
+import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.json.JSONException
 import org.json.JSONObject
-import java.util.concurrent.ConcurrentHashMap
 
 @InternalAmplifyApi
 class TargetingClient(
@@ -157,13 +157,6 @@ class TargetingClient(
      * TargetingClient attributes and Metrics are added to the endpoint profile.
      */
     fun updateEndpointProfile() {
-        // Add global attributes.
-        for ((key, value) in globalAttributes) {
-            endpointProfile.addAttribute(key, value)
-        }
-        for ((key, value) in globalMetrics) {
-            endpointProfile.addMetric(key, value)
-        }
         executeUpdate(currentEndpoint())
     }
 
@@ -174,6 +167,13 @@ class TargetingClient(
      * @param endpointProfile An instance of an EndpointProfile to be updated
      */
     fun updateEndpointProfile(endpointProfile: EndpointProfile) {
+        // Add global attributes.
+        for ((key, value) in globalAttributes) {
+            endpointProfile.addAttribute(key, value)
+        }
+        for ((key, value) in globalMetrics) {
+            endpointProfile.addMetric(key, value)
+        }
         executeUpdate(endpointProfile)
     }
 
