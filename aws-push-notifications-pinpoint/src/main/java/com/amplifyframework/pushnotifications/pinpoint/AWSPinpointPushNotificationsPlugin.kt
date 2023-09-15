@@ -139,7 +139,7 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
             context,
             pinpointClient,
             store,
-            preferences.getUniqueId(),
+            preferences,
             androidAppDetails,
             androidDeviceDetails
         )

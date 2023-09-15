@@ -88,7 +88,7 @@ internal fun constructTargetingClient(): TargetingClient {
         applicationContext,
         pinpointClient,
         store,
-        prefs.getUniqueId(),
+        prefs,
         appDetails,
         deviceDetails,
     )

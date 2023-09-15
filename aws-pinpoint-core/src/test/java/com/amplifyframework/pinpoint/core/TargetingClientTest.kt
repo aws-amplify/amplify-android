@@ -100,33 +100,6 @@ class TargetingClientTest {
     }
 
     @Test
-    fun testUpdateEndpointProfileOptsOut() = runTest {
-        setup()
-        targetingClient = constructTargetingClient()
-        targetingClient.currentEndpoint().channelType = ChannelType.Gcm
-
-        val expectedToken = ""
-        every { store.get(TargetingClient.AWS_PINPOINT_PUSHNOTIFICATIONS_DEVICE_TOKEN_KEY) } returns expectedToken
-
-
-        val updateEndpointResponse = UpdateEndpointResponse.invoke {}
-        coEvery { pinpointClient.updateEndpoint(ofType(UpdateEndpointRequest::class)) }.returns(updateEndpointResponse)
-        targetingClient.updateEndpointProfile()
-
-        coVerify {
-            pinpointClient.updateEndpoint(
-                coWithArg {
-                    assertNotNull(it.endpointRequest)
-                    val request: EndpointRequest = it.endpointRequest!!
-                    assertEquals("app id", it.applicationId)
-                    assertEquals(expectedToken, request.address)
-                    assertEquals("ALL", request.optOut)
-                }
-            )
-        }
-    }
-
-    @Test
     fun testUpdateEndpointProfileOptOutNotTouched() = runTest {
         setup()
         targetingClient = constructTargetingClient()

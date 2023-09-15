@@ -73,7 +73,7 @@ internal class PinpointManager constructor(
             context,
             pinpointClient,
             encryptedStore,
-            sharedPrefs.getUniqueId(),
+            sharedPrefs,
             androidAppDetails,
             androidDeviceDetails,
         )
