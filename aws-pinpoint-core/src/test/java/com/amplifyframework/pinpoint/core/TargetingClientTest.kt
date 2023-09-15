@@ -81,7 +81,6 @@ class TargetingClientTest {
         val expectedToken = "token123"
         every { store.get(TargetingClient.AWS_PINPOINT_PUSHNOTIFICATIONS_DEVICE_TOKEN_KEY) } returns expectedToken
 
-
         val updateEndpointResponse = UpdateEndpointResponse.invoke {}
         coEvery { pinpointClient.updateEndpoint(ofType(UpdateEndpointRequest::class)) }.returns(updateEndpointResponse)
         targetingClient.updateEndpointProfile()
@@ -107,7 +106,6 @@ class TargetingClientTest {
 
         val expectedToken = ""
         every { store.get(TargetingClient.AWS_PINPOINT_PUSHNOTIFICATIONS_DEVICE_TOKEN_KEY) } returns expectedToken
-
 
         val updateEndpointResponse = UpdateEndpointResponse.invoke {}
         coEvery { pinpointClient.updateEndpoint(ofType(UpdateEndpointRequest::class)) }.returns(updateEndpointResponse)
