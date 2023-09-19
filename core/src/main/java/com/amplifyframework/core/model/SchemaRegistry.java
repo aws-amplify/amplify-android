@@ -48,7 +48,7 @@ public final class SchemaRegistry {
         for (Class<? extends Model> modelClass : models) {
             final String modelClassName = modelClass.getSimpleName();
             final ModelSchema modelSchema = ModelSchema.fromModelClass(modelClass);
-            modelSchemaMap.put(modelClassName, modelSchema);
+            SchemaRegistryUtils.registerSchema(modelSchemaMap, modelClassName, modelSchema);
         }
     }
 
@@ -57,7 +57,7 @@ public final class SchemaRegistry {
      * @param modelSchemas the map that contains mapping of ModelName to ModelSchema.
      */
     public synchronized void register(@NonNull Map<String, ModelSchema> modelSchemas) {
-        modelSchemaMap.putAll(modelSchemas);
+        SchemaRegistryUtils.registerSchemas(modelSchemaMap, modelSchemas);
     }
 
     /**
@@ -69,7 +69,7 @@ public final class SchemaRegistry {
     public synchronized void register(
             @NonNull Map<String, ModelSchema> modelSchemas,
             @NonNull Map<String, CustomTypeSchema> customTypeSchemas) {
-        modelSchemaMap.putAll(modelSchemas);
+        SchemaRegistryUtils.registerSchemas(modelSchemaMap, modelSchemas);
         customTypeSchemaMap.putAll(customTypeSchemas);
     }
 
@@ -79,7 +79,7 @@ public final class SchemaRegistry {
      * @param modelSchema schema of the model to be registered.
      */
     public synchronized void register(@NonNull String modelName, @NonNull ModelSchema modelSchema) {
-        modelSchemaMap.put(modelName, modelSchema);
+        SchemaRegistryUtils.registerSchema(modelSchemaMap, modelName, modelSchema);
     }
 
     /**

@@ -19,10 +19,8 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
-import androidx.annotation.WorkerThread;
 import androidx.core.util.ObjectsCompat;
 
-import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.ApiPlugin;
 import com.amplifyframework.api.aws.auth.ApiRequestDecoratorFactory;
@@ -42,8 +40,6 @@ import com.amplifyframework.api.rest.RestResponse;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
-import com.amplifyframework.core.model.ModelProvider;
-import com.amplifyframework.core.model.SchemaRegistry;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.util.Immutable;
 import com.amplifyframework.util.UserAgent;
@@ -127,16 +123,6 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     @Override
     public String getPluginKey() {
         return "awsAPIPlugin";
-    }
-
-    @WorkerThread
-    @Override
-    public void initialize(@NonNull Context context) throws AmplifyException {
-        SchemaRegistry schemaRegistry = SchemaRegistry.instance();
-        if (schemaRegistry.getModelSchemaMap().isEmpty()) {
-            ModelProvider modelProvider = ModelProviderLocator.locate();
-            schemaRegistry.register(modelProvider.modelSchemas(), modelProvider.customTypeSchemas());
-        }
     }
 
     @Override
