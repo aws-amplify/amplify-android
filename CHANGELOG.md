@@ -1,3 +1,18 @@
+## [Release 2.13.2](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.13.2)
+
+### Bug Fixes
+- **push:** Prevent Unintended OptOuts ([#2587](https://github.com/aws-amplify/amplify-android/issues/2587))
+
+[See all changes between 2.13.1 and 2.13.2](https://github.com/aws-amplify/amplify-android/compare/release_v2.13.1...release_v2.13.2)
+
+## [Release 2.13.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.13.1)
+
+### Bug Fixes
+- **liveness:** Read facematch timeout from server event JSON ([#2577](https://github.com/aws-amplify/amplify-android/issues/2577))
+- **liveness:** API to add liveness version to websocket ([#2572](https://github.com/aws-amplify/amplify-android/issues/2572))
+
+[See all changes between 2.13.0 and 2.13.1](https://github.com/aws-amplify/amplify-android/compare/release_v2.13.0...release_v2.13.1)
+
 ## [Release 2.13.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.13.0)
 
 ### Features

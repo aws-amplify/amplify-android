@@ -20,6 +20,8 @@ import aws.sdk.kotlin.services.pinpoint.model.ChannelType
 import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.category.CategoryType
+import com.amplifyframework.core.store.KeyValueRepository
+import com.amplifyframework.pinpoint.core.TargetingClient
 import com.amplifyframework.pinpoint.core.data.AndroidAppDetails
 import com.amplifyframework.pinpoint.core.data.AndroidDeviceDetails
 import com.amplifyframework.pinpoint.core.util.millisToIsoDate
@@ -39,14 +41,17 @@ class EndpointProfile(
     uniqueId: String,
     appDetails: AndroidAppDetails,
     deviceDetails: AndroidDeviceDetails,
-    applicationContext: Context
+    applicationContext: Context,
+    private val store: KeyValueRepository
 ) {
     private val attributes: MutableMap<String, List<String>> = ConcurrentHashMap()
     private val metrics: MutableMap<String, Double> = ConcurrentHashMap()
     private val currentNumOfAttributesAndMetrics = AtomicInteger(0)
 
     var channelType: ChannelType? = null
-    var address: String = ""
+    val address: String get() {
+        return store.get(TargetingClient.AWS_PINPOINT_PUSHNOTIFICATIONS_DEVICE_TOKEN_KEY) ?: ""
+    }
 
     private val country: String = try {
         applicationContext.resources.configuration.locales[0].isO3Country

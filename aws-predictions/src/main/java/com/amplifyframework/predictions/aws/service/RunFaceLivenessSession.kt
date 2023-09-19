@@ -41,6 +41,7 @@ internal class RunFaceLivenessSession(
     sessionId: String,
     sessionInformation: FaceLivenessSessionInformation,
     val credentialsProvider: CredentialsProvider,
+    livenessVersion: String?,
     onSessionStarted: Consumer<FaceLivenessSession>,
     onComplete: Action,
     onError: Consumer<PredictionsException>
@@ -55,6 +56,7 @@ internal class RunFaceLivenessSession(
             "${sessionInformation.videoWidth.toInt()}&video-height=${sessionInformation.videoHeight.toInt()}",
         region = sessionInformation.region,
         sessionInformation = sessionInformation,
+        livenessVersion = livenessVersion,
         onSessionInformationReceived = { sessionInformation ->
             val challenges = processSessionInformation(sessionInformation)
             val faceLivenessSession = FaceLivenessSession(
@@ -87,7 +89,8 @@ internal class RunFaceLivenessSession(
             challengeConfig.ovalIouWidthThreshold,
             challengeConfig.ovalIouHeightThreshold,
             challengeConfig.faceIouWidthThreshold,
-            challengeConfig.faceIouHeightThreshold
+            challengeConfig.faceIouHeightThreshold,
+            challengeConfig.ovalFitTimeout
         )
         val faceTargetChallenge = FaceTargetChallenge(
             ovalParameters.width,
