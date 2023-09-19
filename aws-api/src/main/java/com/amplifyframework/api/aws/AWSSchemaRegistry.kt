@@ -18,7 +18,7 @@ internal object AWSSchemaRegistry {
     @Synchronized
     fun getModelSchemaForModelClass(classSimpleName: String): ModelSchema {
         return modelSchemaMap[classSimpleName] ?: throw ApiException(
-            "Model type of `${classSimpleName}` not found.",
+            "Model type of `$classSimpleName` not found.",
             "Please regenerate codegen models and verify the class is found in AmplifyModelProvider."
         )
     }

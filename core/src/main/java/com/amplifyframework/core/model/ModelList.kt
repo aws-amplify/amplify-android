@@ -67,7 +67,7 @@ interface PaginationToken
 /**
  * A page of loaded models.
  */
-interface ModelPage<out M : Model>  {
+interface ModelPage<out M : Model> {
 
     /** The list of loaded models. */
     val items: List<M>
@@ -79,4 +79,3 @@ interface ModelPage<out M : Model>  {
     val hasNextPage: Boolean
         get() = nextToken != null
 }
-

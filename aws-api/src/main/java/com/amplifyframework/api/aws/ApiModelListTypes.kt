@@ -22,11 +22,11 @@ internal class ApiLoadedModelList<out M : Model>(
 internal class ApiModelPage<out M : Model>(
     override val items: List<M>,
     override val nextToken: ApiPaginationToken?
-): ModelPage<M>
+) : ModelPage<M>
 
 internal class ApiPaginationToken(val nextToken: String) : PaginationToken
 
-internal class ApiLazyModelList<out M : Model>  constructor(
+internal class ApiLazyModelList<out M : Model> constructor(
     private val clazz: Class<M>,
     keyMap: Map<String, Any>,
     private val apiName: String?
@@ -63,7 +63,8 @@ internal class ApiLazyModelList<out M : Model>  constructor(
         apiName: String?,
         request: GraphQLRequest<ModelPage<M>>,
         onSuccess: Consumer<ModelPage<@UnsafeVariance M>>,
-        onError: Consumer<AmplifyException>) {
+        onError: Consumer<AmplifyException>
+    ) {
 
         if (apiName != null) {
             Amplify.API.query(
@@ -79,12 +80,11 @@ internal class ApiLazyModelList<out M : Model>  constructor(
                 { onError.accept(it) }
             )
         }
-
     }
 
     @Throws(ApiException::class)
     private suspend fun <R> query(apiName: String?, request: GraphQLRequest<R>):
-            GraphQLResponse<R> {
+        GraphQLResponse<R> {
         return suspendCoroutine { continuation ->
             if (apiName != null) {
                 Amplify.API.query(
@@ -103,4 +103,3 @@ internal class ApiLazyModelList<out M : Model>  constructor(
         }
     }
 }
-

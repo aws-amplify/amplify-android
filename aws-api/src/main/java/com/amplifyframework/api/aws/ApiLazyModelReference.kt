@@ -25,15 +25,15 @@ import com.amplifyframework.core.Consumer
 import com.amplifyframework.core.NullableConsumer
 import com.amplifyframework.core.model.LazyModelReference
 import com.amplifyframework.core.model.Model
+import java.util.concurrent.atomic.AtomicReference
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
-import java.util.concurrent.atomic.AtomicReference
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
-import kotlin.coroutines.suspendCoroutine
 
 internal class ApiLazyModelReference<M : Model> internal constructor(
     private val clazz: Class<M>,
@@ -109,7 +109,7 @@ internal class ApiLazyModelReference<M : Model> internal constructor(
 
     private companion object {
         // Wraps the value to determine difference between null/unloaded and null/loaded
-        private class LoadedValue<M: Model>(val value: M?)
+        private class LoadedValue<M : Model>(val value: M?)
     }
 }
 

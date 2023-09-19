@@ -25,7 +25,8 @@ internal object SchemaRegistryUtils {
     fun registerSchema(
         modelSchemaMap: MutableMap<String, ModelSchema>,
         modelName: String,
-        modelSchema: ModelSchema) {
+        modelSchema: ModelSchema
+    ) {
         if (modelSchema.modelClass.getAnnotation(ModelConfig::class.java)?.hasLazySupport == true) {
             throw IrRecoverableException(
                 "Unsupported model type. Lazy model types are not yet supported on DataStore.",

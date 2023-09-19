@@ -1,6 +1,5 @@
 package com.amplifyframework.api.aws
 
-import com.amplifyframework.api.ApiException
 import com.amplifyframework.core.model.Model
 import com.amplifyframework.core.model.ModelIdentifier
 import com.amplifyframework.core.model.ModelSchema

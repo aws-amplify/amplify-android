@@ -20,7 +20,6 @@ import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.core.NullableConsumer
 
-
 /**
  * Base interface for a class holding a Model type
  */
@@ -32,7 +31,7 @@ sealed interface ModelReference<M : Model> {
 /**
  * A reference holder that holds an in-memory model
  */
-interface LoadedModelReference<M: Model>: ModelReference<M> {
+interface LoadedModelReference<M : Model> : ModelReference<M> {
 
     /** The loaded model value */
     val value: M?
@@ -41,7 +40,7 @@ interface LoadedModelReference<M: Model>: ModelReference<M> {
 /**
  * A reference holder that allows lazily loading a model
  */
-interface LazyModelReference<M: Model>: ModelReference<M> {
+interface LazyModelReference<M : Model> : ModelReference<M> {
 
     /**
      * Load the model instance represented by this LazyModelReference.

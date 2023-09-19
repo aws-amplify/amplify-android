@@ -38,8 +38,8 @@ internal class ModelReferenceDeserializer<M : Model>(val apiName: String?) :
         typeOfT: Type,
         context: JsonDeserializationContext
     ): ModelReference<M> {
-        val pType = typeOfT as? ParameterizedType ?:
-        throw JsonParseException("Expected a parameterized type during list deserialization.")
+        val pType = typeOfT as? ParameterizedType
+            ?: throw JsonParseException("Expected a parameterized type during list deserialization.")
         val type = pType.actualTypeArguments[0] as Class<M>
 
         val jsonObject = getJsonObject(json)
@@ -73,7 +73,6 @@ internal class ModelListAdapter<M : Model> : JsonDeserializer<ModelList<M>> {
     }
 }
 
-
 internal class ModelPageDeserializer<M : Model> : JsonDeserializer<ModelPage<M>> {
     @Throws(JsonParseException::class)
     override fun deserialize(
@@ -91,18 +90,18 @@ internal class ModelPageDeserializer<M : Model> : JsonDeserializer<ModelPage<M>>
 private fun getJsonObject(json: JsonElement): JsonObject {
     return json as? JsonObject ?: throw JsonParseException(
         "Got a JSON value that was not an object " +
-                "Unable to deserialize the response"
+            "Unable to deserialize the response"
     )
 }
 
 @Throws(JsonParseException::class)
-private fun <M: Model> deserializeItems(
+private fun <M : Model> deserializeItems(
     json: JsonElement,
     typeOfT: Type,
     context: JsonDeserializationContext
 ): List<M> {
-    val pType = typeOfT as? ParameterizedType ?:
-    throw JsonParseException("Expected a parameterized type during list deserialization.")
+    val pType = typeOfT as? ParameterizedType
+        ?: throw JsonParseException("Expected a parameterized type during list deserialization.")
     val type = pType.actualTypeArguments[0]
 
     val jsonObject = getJsonObject(json)
@@ -112,10 +111,10 @@ private fun <M: Model> deserializeItems(
     } else {
         throw JsonParseException(
             "Got JSON from an API call which was supposed to go with a List " +
-                    "but is in the form of an object rather than an array. " +
-                    "It also is not in the standard format of having an items " +
-                    "property with the actual array of data so we do not know how " +
-                    "to deserialize it."
+                "but is in the form of an object rather than an array. " +
+                "It also is not in the standard format of having an items " +
+                "property with the actual array of data so we do not know how " +
+                "to deserialize it."
         )
     }
 
@@ -126,6 +125,6 @@ private fun <M: Model> deserializeItems(
 @Throws(JsonParseException::class)
 private fun deserializeNextToken(json: JsonElement): ApiPaginationToken? {
     return getJsonObject(json).get(NEXT_TOKEN_KEY)
-        ?.let {if (it.isJsonPrimitive) it.asString else null }
+        ?.let { if (it.isJsonPrimitive) it.asString else null }
         ?.let { ApiPaginationToken(it) }
 }
