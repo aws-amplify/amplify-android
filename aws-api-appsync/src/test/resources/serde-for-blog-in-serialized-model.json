@@ -16,8 +16,8 @@
         "isArray": false,
         "isEnum": false,
         "isModel": false,
-        "isLazyModel": false,
-        "isLazyList": false,
+        "isModelReference": false,
+        "isModelList": false,
         "authRules": []
       },
       "name": {
@@ -30,8 +30,8 @@
         "isArray": false,
         "isEnum": false,
         "isModel": false,
-        "isLazyModel": false,
-        "isLazyList": false,
+        "isModelReference": false,
+        "isModelList": false,
         "authRules": []
       },
       "owner": {
@@ -44,8 +44,8 @@
         "isArray": false,
         "isEnum": false,
         "isModel": true,
-        "isLazyModel": false,
-        "isLazyList": false,
+        "isModelReference": false,
+        "isModelList": false,
         "authRules": []
       },
       "posts": {
@@ -58,8 +58,8 @@
         "isArray": true,
         "isEnum": false,
         "isModel": false,
-        "isLazyModel": false,
-        "isLazyList": false,
+        "isModelReference": false,
+        "isModelList": false,
         "authRules": []
       }
     },

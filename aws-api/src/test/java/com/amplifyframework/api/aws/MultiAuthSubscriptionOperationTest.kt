@@ -211,6 +211,7 @@ class MultiAuthSubscriptionOperationTest {
             .executorService(executorService)
             .requestDecorator(requestDecorator)
             .graphQlRequest(graphQlRequest)
+            .responseFactory(mockk())
             .build()
         return operation
     }
