@@ -62,7 +62,7 @@ public final class GsonGraphQLResponseFactoryTest {
      * Set up the object under test, a GsonGraphQLResponseFactory.
      */
     @Before
-    public void setup() throws AmplifyException {
+    public void setup() {
         Gson gson = GsonFactory.instance();
         responseFactory = new GsonGraphQLResponseFactory(gson);
     }

@@ -86,6 +86,7 @@ public final class AWSApiPluginTest {
      * Sets up the test.
      * @throws IOException On failure to start web server
      * @throws JSONException On failure to arrange configuration JSON
+     * @throws AmplifyException On failure to create request
      */
     @Before
     public void setup() throws AmplifyException, IOException, JSONException {

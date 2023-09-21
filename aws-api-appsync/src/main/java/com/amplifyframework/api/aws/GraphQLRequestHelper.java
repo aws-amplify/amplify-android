@@ -232,7 +232,7 @@ public class GraphQLRequestHelper {
             if (modelField.isModelReference() && fieldValue != null) {
                 ModelReference<?> modelReference = (ModelReference<?>) fieldValue;
                 if (modelReference instanceof LoadedModelReference) {
-                    underlyingFieldValue = ((LoadedModelReference)modelReference).getValue();
+                    underlyingFieldValue = ((LoadedModelReference) modelReference).getValue();
                 }
                 identifiersIfLazyModel = modelReference.getIdentifier();
             }
