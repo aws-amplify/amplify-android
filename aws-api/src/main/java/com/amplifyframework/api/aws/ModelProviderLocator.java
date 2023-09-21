@@ -36,7 +36,7 @@ import java.util.Objects;
  * needed to begin using the API category. This utility class is used from
  * {@link com.amplifyframework.api.aws.AWSApiPlugin#initialize}.
  */
-public final class ModelProviderLocator {
+final class ModelProviderLocator {
     private static final String DEFAULT_MODEL_PROVIDER_CLASS_NAME =
             "com.amplifyframework.datastore.generated.model.AmplifyModelProvider";
     private static final String GET_INSTANCE_ACCESSOR_METHOD_NAME = "getInstance";
@@ -48,7 +48,7 @@ public final class ModelProviderLocator {
      * @return The code-generated model provider, if found
      * @throws ApiException If unable to find the code-generated model provider
      */
-    public static ModelProvider locate() throws ApiException {
+    static ModelProvider locate() throws ApiException {
         return locate(DEFAULT_MODEL_PROVIDER_CLASS_NAME);
     }
 

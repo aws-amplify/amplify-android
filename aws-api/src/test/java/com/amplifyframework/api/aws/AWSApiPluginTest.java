@@ -31,10 +31,8 @@ import com.amplifyframework.api.graphql.model.ModelMutation;
 import com.amplifyframework.api.graphql.model.ModelPagination;
 import com.amplifyframework.api.graphql.model.ModelQuery;
 import com.amplifyframework.core.Consumer;
-import com.amplifyframework.core.model.SchemaRegistry;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
-import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testutils.Await;
 import com.amplifyframework.testutils.HubAccumulator;
@@ -86,13 +84,11 @@ public final class AWSApiPluginTest {
 
     /**
      * Sets up the test.
-     * @throws AmplifyException on SchemaRegistry failure
      * @throws IOException On failure to start web server
      * @throws JSONException On failure to arrange configuration JSON
      */
     @Before
     public void setup() throws AmplifyException, IOException, JSONException {
-        SchemaRegistry.instance().register(AmplifyModelProvider.getInstance().models());
         webServer = new MockWebServer();
         webServer.start(8080);
         baseUrl = webServer.url("/");
@@ -143,7 +139,6 @@ public final class AWSApiPluginTest {
     @After
     public void cleanup() throws IOException {
         webServer.shutdown();
-        SchemaRegistry.instance().clear();
     }
 
     /**

@@ -23,8 +23,6 @@ import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.PaginatedResult;
 import com.amplifyframework.api.graphql.QueryType;
-import com.amplifyframework.core.model.ModelSchema;
-import com.amplifyframework.core.model.SchemaRegistry;
 import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.testmodels.meeting.Meeting;
 import com.amplifyframework.testutils.Resources;
@@ -34,7 +32,6 @@ import com.amplifyframework.util.TypeMaker;
 import com.google.gson.Gson;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -63,24 +60,11 @@ public final class GsonGraphQLResponseFactoryTest {
 
     /**
      * Set up the object under test, a GsonGraphQLResponseFactory.
-     * @throws AmplifyException on SchemaRegistry failure
      */
     @Before
     public void setup() throws AmplifyException {
-        SchemaRegistry registry = SchemaRegistry.instance();
-        registry.register(Todo.class.getSimpleName(), ModelSchema.fromModelClass(Todo.class));
-        registry.register(Meeting.class.getSimpleName(), ModelSchema.fromModelClass(Meeting.class));
-
         Gson gson = GsonFactory.instance();
         responseFactory = new GsonGraphQLResponseFactory(gson);
-    }
-
-    /**
-     * Clear schema registry.
-     */
-    @After
-    public void tearDown() {
-        SchemaRegistry.instance().clear();
     }
 
     /**

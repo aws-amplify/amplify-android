@@ -42,7 +42,7 @@ object ModelMutation {
     /**
      * Creates a [GraphQLRequest] that represents a create mutation for a given `model` instance.
      * @param model the model instance populated with values.
-     * @param includes lambda returning list of associations that should be included in the selection set
+     * @param includes lambda returning list of relationships that should be included in the selection set
      * @param <M> the model concrete type.
      * @param <P> the concrete model path for the M model type
      * @return a valid `GraphQLRequest` instance.
@@ -76,7 +76,7 @@ object ModelMutation {
      * Creates a [GraphQLRequest] that represents an update mutation for a given `model` instance.
      * @param model the model instance populated with values.
      * @param predicate a predicate passed as the condition to apply the mutation.
-     * @param includes lambda returning list of associations that should be included in the selection set
+     * @param includes lambda returning list of relationships that should be included in the selection set
      * @param <M> the model concrete type.
      * @param <P> the concrete model path for the M model type
      * @return a valid `GraphQLRequest` instance.
@@ -108,7 +108,7 @@ object ModelMutation {
     /**
      * Creates a [GraphQLRequest] that represents an update mutation for a given `model` instance.
      * @param model the model instance populated with values.
-     * @param includes lambda returning list of associations that should be included in the selection set
+     * @param includes lambda returning list of relationships that should be included in the selection set
      * @param <M> the model concrete type.
      * @param <P> the concrete model path for the M model type
      * @return a valid `GraphQLRequest` instance.
@@ -142,7 +142,7 @@ object ModelMutation {
      * Creates a [GraphQLRequest] that represents a delete mutation for a given `model` instance.
      * @param model the model instance populated with values.
      * @param predicate a predicate passed as the condition to apply the mutation.
-     * @param includes lambda returning list of associations that should be included in the selection set
+     * @param includes lambda returning list of relationships that should be included in the selection set
      * @param <M> the model concrete type.
      * @param <P> the concrete model path for the M model type
      * @return a valid `GraphQLRequest` instance.
@@ -174,7 +174,7 @@ object ModelMutation {
     /**
      * Creates a [GraphQLRequest] that represents a delete mutation for a given `model` instance.
      * @param model the model instance populated with values.
-     * @param includes lambda returning list of associations that should be included in the selection set
+     * @param includes lambda returning list of relationships that should be included in the selection set
      * @param <M> the model concrete type.
      * @param <P> the concrete model path for the M model type
      * @return a valid `GraphQLRequest` instance.

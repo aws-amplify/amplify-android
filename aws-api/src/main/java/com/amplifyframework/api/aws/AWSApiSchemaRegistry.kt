@@ -5,7 +5,7 @@ import com.amplifyframework.core.model.CustomTypeSchema
 import com.amplifyframework.core.model.Model
 import com.amplifyframework.core.model.ModelSchema
 
-internal object AWSSchemaRegistry {
+internal object AWSApiSchemaRegistry {
     private val modelSchemaMap = mutableMapOf<String, ModelSchema>()
     // CustomType name => CustomTypeSchema map
     private val customTypeSchemaMap = mutableMapOf<String, CustomTypeSchema>()

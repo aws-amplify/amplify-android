@@ -76,7 +76,7 @@ object AppSyncGraphQLRequestFactory {
      * `objectId`.
      * @param modelClass the model class.
      * @param objectId the model identifier.
-     * @param includes lambda returning list of associations that should be included in the selection set
+     * @param includes lambda returning list of relationships that should be included in the selection set
      * @param <R> the response type.
      * @param <T> the concrete model type.
      * @param <P> the concrete model path for the M model type
@@ -154,7 +154,7 @@ object AppSyncGraphQLRequestFactory {
      * `modelIdentifier`.
      * @param modelClass the model class.
      * @param modelIdentifier the model identifier.
-     * @param includes lambda returning list of associations that should be included in the selection set
+     * @param includes lambda returning list of relationships that should be included in the selection set
      * @param <R> the response type.
      * @param <T> the concrete model type.
      * @param <P> the concrete model path for the M model type
@@ -257,7 +257,7 @@ object AppSyncGraphQLRequestFactory {
      * given predicate.
      * @param modelClass the model class.
      * @param predicate the model predicate.
-     * @param includes lambda returning list of associations that should be included in the selection set
+     * @param includes lambda returning list of relationships that should be included in the selection set
      * @param <R> the response type.
      * @param <T> the concrete model type.
      * @param <P> the concrete model path for the M model type
@@ -308,7 +308,7 @@ object AppSyncGraphQLRequestFactory {
      * @param modelClass the model class.
      * @param predicate the predicate for filtering.
      * @param limit the page size/limit.
-     * @param includes lambda returning list of associations that should be included in the selection set
+     * @param includes lambda returning list of relationships that should be included in the selection set
      * @param <R> the response type.
      * @param <T> the concrete model type.
      * @param <P> the concrete model path for the M model type
@@ -336,7 +336,7 @@ object AppSyncGraphQLRequestFactory {
      * @param predicate the predicate for filtering.
      * @param limit the page size/limit.
      * @param responseType the response type
-     * @param includes lambda returning list of associations that should be included in the selection set
+     * @param includes lambda returning list of relationships that should be included in the selection set
      * @param <R> the response type.
      * @param <T> the concrete model type.
      * @param <P> the concrete model path for the M model type
@@ -409,7 +409,7 @@ object AppSyncGraphQLRequestFactory {
      * @param model the model instance.
      * @param predicate the model predicate.
      * @param type the mutation type.
-     * @param includes lambda returning list of associations that should be included in the selection set
+     * @param includes lambda returning list of relationships that should be included in the selection set
      * @param <R> the response type.
      * @param <T> the concrete model type.
      * @param <P> the concrete model path for the M model type
@@ -499,7 +499,7 @@ object AppSyncGraphQLRequestFactory {
      * Creates a [GraphQLRequest] that represents a subscription of a given type.
      * @param modelClass the model type.
      * @param subscriptionType the subscription type.
-     * @param includes lambda returning list of associations that should be included in the selection set
+     * @param includes lambda returning list of relationships that should be included in the selection set
      * @param <R> the response type.
      * @param <T> the concrete model type.
      * @param <P> the concrete model path for the M model type
@@ -544,12 +544,12 @@ object AppSyncGraphQLRequestFactory {
         operationType: Operation,
         includes: ((P) -> List<PropertyContainerPath>)
     ): SelectionSet {
-        includes(ModelPath.getRootPath(modelClass)).let { associations ->
+        includes(ModelPath.getRootPath(modelClass)).let { relationships ->
             return SelectionSet.builder()
                 .modelClass(modelClass)
                 .operation(operationType)
                 .requestOptions(ApiGraphQLRequestOptions())
-                .includeRelationships(associations)
+                .includeRelationships(relationships)
                 .build()
         }
     }

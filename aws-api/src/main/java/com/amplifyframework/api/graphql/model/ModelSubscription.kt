@@ -44,7 +44,7 @@ object ModelSubscription {
      * Builds a subscriptions request of a given `type` for a `modelType`.
      * @param modelType the model class.
      * @param type the subscription type.
-     * @param includes lambda returning list of associations that should be included in the selection set
+     * @param includes lambda returning list of relationships that should be included in the selection set
      * @param <M> the concrete type of the model.
      * @param <P> the concrete model path for the M model type
      * @return a valid [GraphQLRequest] instance.
@@ -72,7 +72,7 @@ object ModelSubscription {
     /**
      * Creates a subscription request of type [SubscriptionType.ON_CREATE].
      * @param modelType the model class.
-     * @param includes lambda returning list of associations that should be included in the selection set
+     * @param includes lambda returning list of relationships that should be included in the selection set
      * @param <M> the concrete type of the model.
      * @param <P> the concrete model path for the M model type
      * @return a valid [GraphQLRequest] instance.
@@ -100,7 +100,7 @@ object ModelSubscription {
     /**
      * Creates a subscription request of type [SubscriptionType.ON_DELETE].
      * @param modelType the model class.
-     * @param includes lambda returning list of associations that should be included in the selection set
+     * @param includes lambda returning list of relationships that should be included in the selection set
      * @param <M> the concrete type of the model.
      * @param <P> the concrete model path for the M model type
      * @return a valid [GraphQLRequest] instance.
@@ -128,7 +128,7 @@ object ModelSubscription {
     /**
      * Creates a subscription request of type [SubscriptionType.ON_UPDATE].
      * @param modelType the model class.
-     * @param includes lambda returning list of associations that should be included in the selection set
+     * @param includes lambda returning list of relationships that should be included in the selection set
      * @param <M> the concrete type of the model.
      * @param <P> the concrete model path for the M model type
      * @return a valid [GraphQLRequest] instance.

@@ -194,7 +194,7 @@ public final class SelectionSet {
 
         Builder() { }
 
-        public Builder value(@Nullable String value) {
+        Builder value(@Nullable String value) {
             this.value = value;
             return Builder.this;
         }
@@ -327,9 +327,14 @@ public final class SelectionSet {
                         if (depth >= 1) {
                             ParameterizedType listType = (ParameterizedType) field.getGenericType();
                             Class<Model> listTypeClass = (Class<Model>) listType.getActualTypeArguments()[0];
-                            Set<SelectionSet> fields = wrapPagination(getModelFields(listTypeClass,
-                                                                depth - 1,
-                                                                operation, false));
+                            Set<SelectionSet> fields = wrapPagination(
+                                    getModelFields(
+                                            listTypeClass,
+                                            depth - 1,
+                                            operation,
+                                            false
+                                    )
+                            );
                             result.add(new SelectionSet(fieldName, fields));
                         }
                     } else if (ModelReference.class.isAssignableFrom(field.getType())) {
@@ -357,7 +362,6 @@ public final class SelectionSet {
             for (String fieldName : requestOptions.modelMetaFields()) {
                 result.add(new SelectionSet(fieldName));
             }
-
             return result;
         }
 

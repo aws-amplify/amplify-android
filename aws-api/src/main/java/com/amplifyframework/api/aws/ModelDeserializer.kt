@@ -32,7 +32,7 @@ internal class ModelDeserializer(
             fieldToUpdate.isAccessible = true
             if (fieldToUpdate.get(parent) == null) {
                 val lazyField = fieldMap.value
-                val lazyFieldModelSchema = AWSSchemaRegistry.getModelSchemaForModelClass(lazyField.targetType)
+                val lazyFieldModelSchema = AWSApiSchemaRegistry.getModelSchemaForModelClass(lazyField.targetType)
 
                 val lazyFieldTargetNames = lazyFieldModelSchema
                     .associations

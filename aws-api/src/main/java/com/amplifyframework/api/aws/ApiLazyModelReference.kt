@@ -65,7 +65,6 @@ internal class ApiLazyModelReference<M : Model> internal constructor(
             onSuccess.accept(cached.value)
         }
 
-        // To ensure we only have 1 live request at a time, we jump to our own single threaded scope
         callbackScope.launch {
             try {
                 val model = fetchInternal()

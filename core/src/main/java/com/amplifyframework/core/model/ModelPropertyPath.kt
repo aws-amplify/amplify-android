@@ -34,25 +34,6 @@ interface PropertyPath {
      * @return the property metadata, that contains the name and a reference to its parent.
      */
     fun getMetadata(): PropertyPathMetadata
-
-    /**
-     * Returns the full path of the property, e.g. `"post.author.name"`.
-     *
-     * @param includesRoot whether it should include the root name or not. It's `false` by default.
-     * @return path as a string
-     */
-    fun getKeyPath(includesRoot: Boolean = false): String {
-        var metadata = getMetadata()
-        val path = mutableListOf<String>()
-        while (metadata.parent != null) {
-            path.add(index = 0, element = metadata.name)
-            metadata = metadata.parent!!.getMetadata()
-        }
-        if (includesRoot) {
-            path.add(index = 0, metadata.name)
-        }
-        return path.joinToString(separator = ".")
-    }
 }
 
 /**
@@ -137,17 +118,19 @@ open class ModelPath<ModelType : Model> protected constructor(
 }
 
 /**
- * Function used to define which associations are included in the selection set
+ * Function used to define which relationships are included in the selection set
  * in an idiomatic manner. It's a simple delegation to `listOf` with the main
  * goal of improved code readability.
  *
  * Example:
  *
  * ```kotlin
- * getById<Post>("id") { includes(it.comments) }
+ * ModelQuery.get<Post, PostPath>(Post::class.java, "id") { postPath ->
+ *   includes(postPath.comments)
+ * }
  * ```
  *
- * @param associations the associations that should be included
+ * @param relationships the relationships that should be included
  * @return the passed associations as an array
  */
-fun includes(vararg associations: PropertyContainerPath) = listOf(*associations)
+fun includes(vararg relationships: PropertyContainerPath) = listOf(*relationships)

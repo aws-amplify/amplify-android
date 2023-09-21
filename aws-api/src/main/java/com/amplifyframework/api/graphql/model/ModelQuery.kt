@@ -53,7 +53,7 @@ object ModelQuery {
      * variables based on given `modelId`.
      * @param modelType the model class.
      * @param modelId the model identifier.
-     * @param includes lambda returning list of associations that should be included in the selection set
+     * @param includes lambda returning list of relationships that should be included in the selection set
      * @param <M> the concrete model type.
      * @param <P> the concrete model path for the M model type
      * @return a valid [GraphQLRequest] instance.
@@ -90,7 +90,7 @@ object ModelQuery {
      * variables based on given `modelIdentifier`.
      * @param modelType the model class.
      * @param modelIdentifier the model identifier.
-     * @param includes lambda returning list of associations that should be included in the selection set
+     * @param includes lambda returning list of relationships that should be included in the selection set
      * @param <M> the concrete model type.
      * @param <P> the concrete model path for the M model type
      * @return a valid [GraphQLRequest] instance.
@@ -127,7 +127,7 @@ object ModelQuery {
      * for filtering based on the given predicate.
      * @param modelType the model class.
      * @param predicate the predicate for filtering.
-     * @param includes lambda returning list of associations that should be included in the selection set
+     * @param includes lambda returning list of relationships that should be included in the selection set
      * @param <M> the concrete model type.
      * @param <P> the concrete model path for the M model type
      * @return a valid [GraphQLRequest] instance.
@@ -158,7 +158,7 @@ object ModelQuery {
      * Creates a [GraphQLRequest] that represents a query that expects multiple values as a result.
      * The request will be created with the correct document based on the model schema.
      * @param modelType the model class.
-     * @param includes lambda returning list of associations that should be included in the selection set
+     * @param includes lambda returning list of relationships that should be included in the selection set
      * @param <M> the concrete model type.
      * @param <P> the concrete model path for the M model type
      * @return a valid [GraphQLRequest] instance.
@@ -207,7 +207,7 @@ object ModelQuery {
      * @param modelType the model class.
      * @param predicate the predicate for filtering.
      * @param pagination the pagination settings.
-     * @param includes lambda returning list of associations that should be included in the selection set
+     * @param includes lambda returning list of relationships that should be included in the selection set
      * @param <M> the concrete model type.
      * @param <P> the concrete model path for the M model type
      * @return a valid [GraphQLRequest] instance.
@@ -257,7 +257,7 @@ object ModelQuery {
      *
      * @param modelType the model class.
      * @param pagination the pagination settings.
-     * @param includes lambda returning list of associations that should be included in the selection set
+     * @param includes lambda returning list of relationships that should be included in the selection set
      * @param <M> the concrete model type.
      * @param <P> the concrete model path for the M model type
      * @return a valid [GraphQLRequest] instance.

@@ -44,7 +44,7 @@ internal class ModelReferenceDeserializer<M : Model>(val apiName: String?) :
 
         val jsonObject = getJsonObject(json)
 
-        val predicateKeyMap = AWSSchemaRegistry
+        val predicateKeyMap = AWSApiSchemaRegistry
             .getModelSchemaForModelClass(type)
             .primaryIndexFields
             .associateWith { jsonObject[it] }
