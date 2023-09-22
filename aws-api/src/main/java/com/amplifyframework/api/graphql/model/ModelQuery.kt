@@ -116,7 +116,7 @@ object ModelQuery {
     @JvmStatic
     fun <M : Model> list(
         modelType: Class<M>,
-        predicate: QueryPredicate = QueryPredicates.all()
+        predicate: QueryPredicate
     ): GraphQLRequest<PaginatedResult<M>> {
         return AppSyncGraphQLRequestFactory.buildQuery(modelType, predicate)
     }
@@ -135,7 +135,7 @@ object ModelQuery {
     @JvmStatic
     fun <M : Model, P : ModelPath<M>> list(
         modelType: Class<M>,
-        predicate: QueryPredicate = QueryPredicates.all(),
+        predicate: QueryPredicate,
         includes: ((P) -> List<PropertyContainerPath>)
     ): GraphQLRequest<PaginatedResult<M>> {
         return AppSyncGraphQLRequestFactory.buildQuery(modelType, predicate, includes)
