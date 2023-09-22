@@ -19,7 +19,8 @@ import java.lang.reflect.Type
  */
 internal class ModelDeserializer(
     private val responseGson: Gson,
-    private val apiName: String?
+    private val apiName: String?,
+    private val schemaRegistry: AWSApiSchemaRegistry
 ) : JsonDeserializer<Model> {
 
     override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext): Model {
@@ -32,7 +33,7 @@ internal class ModelDeserializer(
             fieldToUpdate.isAccessible = true
             if (fieldToUpdate.get(parent) == null) {
                 val lazyField = fieldMap.value
-                val lazyFieldModelSchema = AWSApiSchemaRegistry.getModelSchemaForModelClass(lazyField.targetType)
+                val lazyFieldModelSchema = schemaRegistry.getModelSchemaForModelClass(lazyField.targetType)
 
                 val lazyFieldTargetNames = lazyFieldModelSchema
                     .associations

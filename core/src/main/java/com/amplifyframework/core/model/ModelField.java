@@ -224,6 +224,12 @@ public final class ModelField {
         if (isModel != that.isModel) {
             return false;
         }
+        if (isModelReference != that.isModelReference) {
+            return false;
+        }
+        if (isModelList != that.isModelList) {
+            return false;
+        }
         if (isCustomType != that.isCustomType) {
             return false;
         }
@@ -246,6 +252,8 @@ public final class ModelField {
         result = 31 * result + (isArray ? 1 : 0);
         result = 31 * result + (isEnum ? 1 : 0);
         result = 31 * result + (isModel ? 1 : 0);
+        result = 31 * result + (isModelReference ? 1 : 0);
+        result = 31 * result + (isModelList ? 1 : 0);
         result = 31 * result + (isCustomType ? 1 : 0);
         return result;
     }
@@ -261,6 +269,8 @@ public final class ModelField {
             ", isArray=" + isArray +
             ", isEnum=" + isEnum +
             ", isModel=" + isModel +
+            ", isModelReference=" + isModelReference +
+            ", isModelList=" + isModelList +
             ", isCustomType=" + isCustomType +
             '}';
     }

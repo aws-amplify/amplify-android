@@ -48,6 +48,8 @@ import java.util.List;
 final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
     private final Gson gson;
 
+    private final AWSApiSchemaRegistry schemaRegistry = new AWSApiSchemaRegistry();
+
     GsonGraphQLResponseFactory() {
         this(GsonFactory.instance());
     }
@@ -93,14 +95,14 @@ final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
                     )
                     .registerTypeAdapter(
                             ModelReference.class,
-                            new ModelReferenceDeserializer<Model>(apiName)
+                            new ModelReferenceDeserializer<Model>(apiName, schemaRegistry)
                     )
                     .create();
 
             Gson modelDeserializerGson = responseGson.newBuilder()
                     .registerTypeHierarchyAdapter(
                             Model.class,
-                            new ModelDeserializer(responseGson, apiName)
+                            new ModelDeserializer(responseGson, apiName, schemaRegistry)
                     )
                     .create();
 

@@ -30,7 +30,10 @@ import java.lang.reflect.Type
 const val ITEMS_KEY = "items"
 const val NEXT_TOKEN_KEY = "nextToken"
 
-internal class ModelReferenceDeserializer<M : Model>(val apiName: String?) :
+internal class ModelReferenceDeserializer<M : Model>(
+    val apiName: String?,
+    private val schemaRegistry: AWSApiSchemaRegistry
+) :
     JsonDeserializer<ModelReference<M>> {
     @Throws(JsonParseException::class)
     override fun deserialize(
@@ -44,7 +47,7 @@ internal class ModelReferenceDeserializer<M : Model>(val apiName: String?) :
 
         val jsonObject = getJsonObject(json)
 
-        val predicateKeyMap = AWSApiSchemaRegistry
+        val predicateKeyMap = schemaRegistry
             .getModelSchemaForModelClass(type)
             .primaryIndexFields
             .associateWith { jsonObject[it] }

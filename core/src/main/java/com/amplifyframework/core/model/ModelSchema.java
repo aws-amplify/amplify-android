@@ -258,7 +258,6 @@ public final class ModelSchema {
             return ModelAssociation.builder()
                     .name(HasOne.class.getSimpleName())
                     .associatedName(association.associatedWith())
-                    .targetNames(association.targetNames())
                     .associatedType(association.type().getSimpleName())
                     .build();
         }
