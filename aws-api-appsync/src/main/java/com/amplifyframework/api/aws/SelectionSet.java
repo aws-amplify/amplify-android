@@ -243,7 +243,7 @@ public final class SelectionSet {
             // Relationships need to be added before wrapping pagination
             if (includeRelationships != null) {
                 for (PropertyContainerPath association : includeRelationships) {
-                    SelectionSet included = SelectionSetUtils.asSelectionSet(association, false);
+                    SelectionSet included = SelectionSetUtils.asSelectionSetWithoutRoot(association);
                     if (included != null) {
                         SelectionSetUtils.merge(node, included);
                     }

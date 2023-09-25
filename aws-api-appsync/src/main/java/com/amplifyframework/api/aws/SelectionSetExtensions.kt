@@ -44,10 +44,10 @@ internal fun SelectionSet.replaceChild(selectionSet: SelectionSet) {
 /**
  * Transforms the entire property path (walking up the tree) into a `SelectionSet`.
  */
-internal fun PropertyContainerPath.asSelectionSet(includeRoot: Boolean = true): SelectionSet? {
+internal fun PropertyContainerPath.asSelectionSetWithoutRoot(): SelectionSet? {
     // create a lookup to hold info on whether or not the selection set is a collection or not
     val isCollectionLookup = mutableListOf<Boolean>()
-    val selectionSets = nodesInPath(this, includeRoot).map {
+    val selectionSets = nodesInPath(this, false).map {
         // always add to lookup list so that indexes match
         isCollectionLookup.add(it.getMetadata().isCollection)
         getSelectionSet(it)

@@ -1,0 +1,9 @@
+ {
+  blog {
+    id
+  }
+  createdAt
+  id
+  name
+  updatedAt
+}

@@ -1,11 +1,11 @@
 /*
- * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
  * A copy of the License is located at
  *
- *  http://aws.amazon.com/apache2.0
+ *   http://aws.amazon.com/apache2.0
  *
  * or in the "license" file accompanying this file. This file is distributed
  * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
@@ -14,6 +14,8 @@
  */
 
 package com.amplifyframework.api.aws;
+
+import static com.amplifyframework.core.model.ModelPropertyPathKt.includes;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.graphql.QueryType;
@@ -28,6 +30,7 @@ import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.SchemaRegistry;
 import com.amplifyframework.core.model.SerializedModel;
 import com.amplifyframework.testmodels.commentsblog.Post;
+import com.amplifyframework.testmodels.lazy.PostPath;
 import com.amplifyframework.testmodels.ownerauth.OwnerAuth;
 import com.amplifyframework.testmodels.ownerauth.OwnerAuthExplicit;
 import com.amplifyframework.testmodels.parenting.Parent;
@@ -339,5 +342,38 @@ public class SelectionSetTest {
                 .build();
 
         assertEquals(Resources.readAsString("selection-set-post-nested.txt"), selectionSet.toString() + "\n");
+    }
+
+    /**
+     * Test that selection set serialization works as expected for lazy types.
+     * @throws AmplifyException if a ModelSchema can't be derived from Post.class
+     */
+    @Test
+    public void simpleLazyTypesSerializeToExpectedValue() throws AmplifyException {
+        PostPath postPath = com.amplifyframework.testmodels.lazy.Post.rootPath;
+        SelectionSet selectionSet = SelectionSet.builder()
+                .modelClass(com.amplifyframework.testmodels.lazy.Post.class)
+                .operation(QueryType.GET)
+                .requestOptions(new ApiGraphQLRequestOptions(0))
+                .includeRelationships(
+                        includes(postPath.getBlog().getPosts(), postPath.getComments().getPost())
+                )
+                .build();
+        assertEquals(Resources.readAsString("selection-set-lazy-with-includes.txt"), selectionSet.toString() + "\n");
+    }
+
+    /**
+     * Test that selection set serialization works as expected for lazy types without includes.
+     * @throws AmplifyException if a ModelSchema can't be derived from Post.class
+     */
+    @Test
+    public void simpleLazyTypesSerializeToExpectedValueWithEmptyIncludes() throws AmplifyException {
+        SelectionSet selectionSet = SelectionSet.builder()
+                .modelClass(com.amplifyframework.testmodels.lazy.Post.class)
+                .operation(QueryType.GET)
+                .requestOptions(new ApiGraphQLRequestOptions(0))
+                .includeRelationships(includes())
+                .build();
+        assertEquals(Resources.readAsString("selection-set-lazy-empty-includes.txt"), selectionSet.toString() + "\n");
     }
 }
