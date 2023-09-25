@@ -257,6 +257,7 @@ public final class ModelSchema {
             HasOne association = Objects.requireNonNull(field.getAnnotation(HasOne.class));
             return ModelAssociation.builder()
                     .name(HasOne.class.getSimpleName())
+                    .targetNames(association.targetNames())
                     .associatedName(association.associatedWith())
                     .associatedType(association.type().getSimpleName())
                     .build();

@@ -19,12 +19,12 @@ import com.amplifyframework.AmplifyException
 import com.amplifyframework.api.ApiException
 import com.amplifyframework.api.graphql.GraphQLRequest
 import com.amplifyframework.api.graphql.GraphQLResponse
-import com.amplifyframework.api.graphql.PaginatedResult
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.core.NullableConsumer
 import com.amplifyframework.core.model.LazyModelReference
 import com.amplifyframework.core.model.Model
+import com.amplifyframework.core.model.ModelSchema
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
@@ -86,18 +86,29 @@ internal class ApiLazyModelReference<M : Model> internal constructor(
             }
 
             return try {
-                val resultIterator = query(
-                    AppSyncGraphQLRequestFactory.buildQuery<PaginatedResult<M>, M>(
-                        clazz,
-                        AppSyncLazyQueryPredicate<M>().createPredicate(clazz, keyMap)
-                    ),
-                    apiName
-                ).data.items.iterator()
-                val value = if (resultIterator.hasNext()) {
-                    resultIterator.next()
-                } else {
-                    null
+                val modelSchema = ModelSchema.fromModelClass(clazz)
+                val primaryIndexFields = modelSchema.primaryIndexFields
+                val variables = primaryIndexFields.map { key ->
+                    // Find target field to pull type info
+                    val targetField = requireNotNull(modelSchema.fields[key])
+                    val requiredSuffix = if (targetField.isRequired) "!" else ""
+                    val targetTypeString = "${targetField.targetType}$requiredSuffix"
+                    val value = requireNotNull(keyMap[key])
+                    GraphQLRequestVariable(key, value, targetTypeString)
                 }
+
+                val request: GraphQLRequest<M?> = AppSyncGraphQLRequestFactory.buildQueryInternal(
+                    clazz,
+                    null,
+                    *variables.toTypedArray()
+                )
+
+                request
+
+                val value = query(
+                    request,
+                    apiName
+                ).data
                 cachedValue.set(LoadedValue(value))
                 value
             } catch (error: ApiException) {

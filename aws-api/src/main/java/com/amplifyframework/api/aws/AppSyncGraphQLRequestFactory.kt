@@ -195,7 +195,7 @@ object AppSyncGraphQLRequestFactory {
         }
     }
 
-    private fun <R, T : Model, P : ModelPath<T>> buildQueryInternal(
+    internal fun <R, T : Model, P : ModelPath<T>> buildQueryInternal(
         modelClass: Class<T>,
         includes: ((P) -> List<PropertyContainerPath>)?,
         vararg variables: GraphQLRequestVariable
