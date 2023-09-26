@@ -103,8 +103,6 @@ internal class ApiLazyModelReference<M : Model> internal constructor(
                     *variables.toTypedArray()
                 )
 
-                request
-
                 val value = query(
                     request,
                     apiName
