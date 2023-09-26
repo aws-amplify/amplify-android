@@ -64,6 +64,7 @@ dependencies {
     androidTestImplementation(libs.test.androidx.runner)
     androidTestImplementation(libs.test.androidx.junit)
     androidTestImplementation(libs.rxjava)
+    androidTestImplementation(libs.test.kotlin.coroutines)
 
     androidTestUtil(libs.test.androidx.orchestrator)
 }

@@ -5,7 +5,7 @@
  * You may not use this file except in compliance with the License.
  * A copy of the License is located at
  *
- *  http://aws.amazon.com/apache2.0
+ *   http://aws.amazon.com/apache2.0
  *
  * or in the "license" file accompanying this file. This file is distributed
  * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.testmodels.lazyinstrumented;
+package com.amplifyframework.datastore.generated.model;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -21,9 +21,17 @@ import androidx.annotation.Nullable;
 import com.amplifyframework.core.model.ModelPath;
 import com.amplifyframework.core.model.PropertyPath;
 
-/** This is an auto generated class representing the ModelPath for the HasOneChild type in your schema. */
-public final class HasOneChildPath extends ModelPath<HasOneChild> {
-  HasOneChildPath(@NonNull String name, @NonNull Boolean isCollection, @Nullable PropertyPath parent) {
-    super(name, isCollection, parent, HasOneChild.class);
+/** This is an auto generated class representing the ModelPath for the HasManyChild type in your schema. */
+public final class HasManyChildPath extends ModelPath<HasManyChild> {
+  private ParentPath parent;
+  HasManyChildPath(@NonNull String name, @NonNull Boolean isCollection, @Nullable PropertyPath parent) {
+    super(name, isCollection, parent, HasManyChild.class);
+  }
+  
+  public synchronized ParentPath getParent() {
+    if (parent == null) {
+      parent = new ParentPath("parent", false, this);
+    }
+    return parent;
   }
 }

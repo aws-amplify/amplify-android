@@ -5,7 +5,7 @@
  * You may not use this file except in compliance with the License.
  * A copy of the License is located at
  *
- *  http://aws.amazon.com/apache2.0
+ *   http://aws.amazon.com/apache2.0
  *
  * or in the "license" file accompanying this file. This file is distributed
  * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
@@ -13,18 +13,17 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.testmodels.lazyinstrumented;
+package com.amplifyframework.datastore.generated.model;
 
 import static com.amplifyframework.core.model.query.predicate.QueryField.field;
 
 import androidx.core.util.ObjectsCompat;
 
+import com.amplifyframework.core.model.LoadedModelReferenceImpl;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelIdentifier;
-import com.amplifyframework.core.model.ModelList;
 import com.amplifyframework.core.model.ModelReference;
-import com.amplifyframework.core.model.annotations.HasMany;
-import com.amplifyframework.core.model.annotations.HasOne;
+import com.amplifyframework.core.model.annotations.BelongsTo;
 import com.amplifyframework.core.model.annotations.Index;
 import com.amplifyframework.core.model.annotations.ModelConfig;
 import com.amplifyframework.core.model.annotations.ModelField;
@@ -33,20 +32,20 @@ import com.amplifyframework.core.model.temporal.Temporal;
 
 import java.util.UUID;
 
-/** This is an auto generated class representing the Parent type in your schema. */
+/** This is an auto generated class representing the HasManyChild type in your schema. */
 @SuppressWarnings("all")
-@ModelConfig(pluralName = "Parents", type = Model.Type.USER, version = 1, hasLazySupport = true)
+@ModelConfig(pluralName = "HasManyChildren", type = Model.Type.USER, version = 1, hasLazySupport = true)
 @Index(name = "undefined", fields = {"id"})
-public final class Parent implements Model {
-  public static final ParentPath rootPath = new ParentPath("root", false, null);
-  public static final QueryField ID = field("Parent", "id");
-  public static final QueryField PARENT_CHILD_ID = field("Parent", "parentChildId");
+public final class HasManyChild implements Model {
+  public static final HasManyChildPath rootPath = new HasManyChildPath("root", false, null);
+  public static final QueryField ID = field("HasManyChild", "id");
+  public static final QueryField CONTENT = field("HasManyChild", "content");
+  public static final QueryField PARENT = field("HasManyChild", "parentChildrenId");
   private final @ModelField(targetType="ID", isRequired = true) String id;
-  private final @ModelField(targetType="HasOneChild") @HasOne(associatedWith = "id", targetNames = {"parentChildId"}, type = HasOneChild.class) ModelReference<HasOneChild> child = null;
-  private final @ModelField(targetType="HasManyChild") @HasMany(associatedWith = "parent", type = HasManyChild.class) ModelList<HasManyChild> children = null;
+  private final @ModelField(targetType="String") String content;
+  private final @ModelField(targetType="Parent") @BelongsTo(targetName = "parentChildrenId", targetNames = {"parentChildrenId"}, type = Parent.class) ModelReference<Parent> parent;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime updatedAt;
-  private final @ModelField(targetType="ID") String parentChildId;
   /** @deprecated This API is internal to Amplify and should not be used. */
   @Deprecated
    public String resolveIdentifier() {
@@ -57,12 +56,12 @@ public final class Parent implements Model {
       return id;
   }
   
-  public ModelReference<HasOneChild> getChild() {
-      return child;
+  public String getContent() {
+      return content;
   }
   
-  public ModelList<HasManyChild> getChildren() {
-      return children;
+  public ModelReference<Parent> getParent() {
+      return parent;
   }
   
   public Temporal.DateTime getCreatedAt() {
@@ -73,13 +72,10 @@ public final class Parent implements Model {
       return updatedAt;
   }
   
-  public String getParentChildId() {
-      return parentChildId;
-  }
-  
-  private Parent(String id, String parentChildId) {
+  private HasManyChild(String id, String content, ModelReference<Parent> parent) {
     this.id = id;
-    this.parentChildId = parentChildId;
+    this.content = content;
+    this.parent = parent;
   }
   
   @Override
@@ -89,11 +85,12 @@ public final class Parent implements Model {
       } else if(obj == null || getClass() != obj.getClass()) {
         return false;
       } else {
-      Parent parent = (Parent) obj;
-      return ObjectsCompat.equals(getId(), parent.getId()) &&
-              ObjectsCompat.equals(getCreatedAt(), parent.getCreatedAt()) &&
-              ObjectsCompat.equals(getUpdatedAt(), parent.getUpdatedAt()) &&
-              ObjectsCompat.equals(getParentChildId(), parent.getParentChildId());
+      HasManyChild hasManyChild = (HasManyChild) obj;
+      return ObjectsCompat.equals(getId(), hasManyChild.getId()) &&
+              ObjectsCompat.equals(getContent(), hasManyChild.getContent()) &&
+              ObjectsCompat.equals(getParent(), hasManyChild.getParent()) &&
+              ObjectsCompat.equals(getCreatedAt(), hasManyChild.getCreatedAt()) &&
+              ObjectsCompat.equals(getUpdatedAt(), hasManyChild.getUpdatedAt());
       }
   }
   
@@ -101,9 +98,10 @@ public final class Parent implements Model {
    public int hashCode() {
     return new StringBuilder()
       .append(getId())
+      .append(getContent())
+      .append(getParent())
       .append(getCreatedAt())
       .append(getUpdatedAt())
-      .append(getParentChildId())
       .toString()
       .hashCode();
   }
@@ -111,11 +109,12 @@ public final class Parent implements Model {
   @Override
    public String toString() {
     return new StringBuilder()
-      .append("Parent {")
+      .append("HasManyChild {")
       .append("id=" + String.valueOf(getId()) + ", ")
+      .append("content=" + String.valueOf(getContent()) + ", ")
+      .append("parent=" + String.valueOf(getParent()) + ", ")
       .append("createdAt=" + String.valueOf(getCreatedAt()) + ", ")
-      .append("updatedAt=" + String.valueOf(getUpdatedAt()) + ", ")
-      .append("parentChildId=" + String.valueOf(getParentChildId()))
+      .append("updatedAt=" + String.valueOf(getUpdatedAt()))
       .append("}")
       .toString();
   }
@@ -132,48 +131,60 @@ public final class Parent implements Model {
    * @param id the id of the existing item this instance will represent
    * @return an instance of this model with only ID populated
    */
-  public static Parent justId(String id) {
-    return new Parent(
+  public static HasManyChild justId(String id) {
+    return new HasManyChild(
       id,
+      null,
       null
     );
   }
   
   public CopyOfBuilder copyOfBuilder() {
     return new CopyOfBuilder(id,
-      parentChildId);
+      content,
+      parent);
   }
   public interface BuildStep {
-    Parent build();
+    HasManyChild build();
     BuildStep id(String id);
-    BuildStep parentChildId(String parentChildId);
+    BuildStep content(String content);
+    BuildStep parent(Parent parent);
   }
   
 
   public static class Builder implements BuildStep {
     private String id;
-    private String parentChildId;
+    private String content;
+    private ModelReference<Parent> parent;
     public Builder() {
       
     }
     
-    private Builder(String id, String parentChildId) {
+    private Builder(String id, String content, ModelReference<Parent> parent) {
       this.id = id;
-      this.parentChildId = parentChildId;
+      this.content = content;
+      this.parent = parent;
     }
     
     @Override
-     public Parent build() {
+     public HasManyChild build() {
         String id = this.id != null ? this.id : UUID.randomUUID().toString();
         
-        return new Parent(
+        return new HasManyChild(
           id,
-          parentChildId);
+          content,
+          parent);
     }
     
     @Override
-     public BuildStep parentChildId(String parentChildId) {
-        this.parentChildId = parentChildId;
+     public BuildStep content(String content) {
+        this.content = content;
+        return this;
+    }
+    
+    @Override
+     public BuildStep parent(Parent parent) {
+        this.parent = new LoadedModelReferenceImpl<>(parent);
         return this;
     }
     
@@ -189,21 +200,26 @@ public final class Parent implements Model {
   
 
   public final class CopyOfBuilder extends Builder {
-    private CopyOfBuilder(String id, String parentChildId) {
-      super(id, parentChildId);
+    private CopyOfBuilder(String id, String content, ModelReference<Parent> parent) {
+      super(id, content, parent);
       
     }
     
     @Override
-     public CopyOfBuilder parentChildId(String parentChildId) {
-      return (CopyOfBuilder) super.parentChildId(parentChildId);
+     public CopyOfBuilder content(String content) {
+      return (CopyOfBuilder) super.content(content);
+    }
+    
+    @Override
+     public CopyOfBuilder parent(Parent parent) {
+      return (CopyOfBuilder) super.parent(parent);
     }
   }
   
 
-  public static class ParentIdentifier extends ModelIdentifier<Parent> {
+  public static class HasManyChildIdentifier extends ModelIdentifier<HasManyChild> {
     private static final long serialVersionUID = 1L;
-    public ParentIdentifier(String id) {
+    public HasManyChildIdentifier(String id) {
       super(id);
     }
   }
