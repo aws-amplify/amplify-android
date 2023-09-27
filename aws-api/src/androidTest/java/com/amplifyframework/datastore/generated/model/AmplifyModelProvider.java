@@ -1,18 +1,3 @@
-/*
- * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License").
- * You may not use this file except in compliance with the License.
- * A copy of the License is located at
- *
- *   http://aws.amazon.com/apache2.0
- *
- * or in the "license" file accompanying this file. This file is distributed
- * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
- * express or implied. See the License for the specific language governing
- * permissions and limitations under the License.
- */
-
 package com.amplifyframework.datastore.generated.model;
 
 import com.amplifyframework.core.model.Model;
@@ -28,7 +13,7 @@ import java.util.Set;
  */
 
 public final class AmplifyModelProvider implements ModelProvider {
-  private static final String AMPLIFY_MODEL_VERSION = "c169331ddfff87d2c8885b0e7aa0de68";
+  private static final String AMPLIFY_MODEL_VERSION = "8217f08a06a711a8c8d65895bbe74b4f";
   private static AmplifyModelProvider amplifyGeneratedModelInstance;
   private AmplifyModelProvider() {
     
@@ -49,7 +34,7 @@ public final class AmplifyModelProvider implements ModelProvider {
   @Override
    public Set<Class<? extends Model>> models() {
     final Set<Class<? extends Model>> modifiableSet = new HashSet<>(
-          Arrays.<Class<? extends Model>>asList(Parent.class, HasOneChild.class, HasManyChild.class)
+          Arrays.<Class<? extends Model>>asList(Parent.class, HasOneChild.class, HasManyChild.class, Project.class, Team.class, Blog.class, Post.class, Comment.class)
         );
     
         return Immutable.of(modifiableSet);
