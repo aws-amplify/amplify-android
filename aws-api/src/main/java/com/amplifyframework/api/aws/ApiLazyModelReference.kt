@@ -44,15 +44,22 @@ internal class ApiLazyModelReference<M : Model> internal constructor(
     private val semaphore = Semaphore(1) // prevents multiple fetches
     private val callbackScope = CoroutineScope(Dispatchers.IO)
 
+    init {
+        // If we have no keys, we have nothing to loads
+        if (keyMap.isEmpty()) {
+            cachedValue.set(null)
+        }
+    }
+
     override fun getIdentifier(): Map<String, Any> {
         return keyMap
     }
 
     override suspend fun fetchModel(): M? {
         val cached = cachedValue.get()
-        if (cached != null) {
+        if (cached != null || keyMap.isEmpty()) {
             // Quick return if value is already present
-            return cached.value
+            return cached?.value
         }
 
         return fetchInternal()
@@ -60,9 +67,9 @@ internal class ApiLazyModelReference<M : Model> internal constructor(
 
     override fun fetchModel(onSuccess: NullableConsumer<M?>, onError: Consumer<AmplifyException>) {
         val cached = cachedValue.get()
-        if (cached != null) {
+        if (cached != null || keyMap.isEmpty()) {
             // Quick return if value is already present
-            onSuccess.accept(cached.value)
+            onSuccess.accept(cached?.value)
         }
 
         callbackScope.launch {
@@ -81,8 +88,8 @@ internal class ApiLazyModelReference<M : Model> internal constructor(
 
             // Quick return if value is already present
             val cached = cachedValue.get()
-            if (cached != null) {
-                return cached.value
+            if (cached != null || keyMap.isEmpty()) {
+                return cached?.value
             }
 
             return try {

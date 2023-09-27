@@ -30,7 +30,7 @@ import com.amplifyframework.datastore.generated.model.HasOneChild
 import com.amplifyframework.datastore.generated.model.Parent
 import com.amplifyframework.datastore.generated.model.ParentPath
 import com.amplifyframework.kotlin.core.Amplify
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.fail
 import org.junit.Before
@@ -49,7 +49,7 @@ class GraphQLLazyUpdateInstrumentationTest {
     }
 
     @Test
-    fun update_with_no_includes() = runBlocking {
+    fun update_with_no_includes() = runTest {
         // GIVEN
         val hasOneChild = HasOneChild.builder().content("Child1").build()
         Amplify.API.mutate(ModelMutation.create(hasOneChild))
@@ -84,11 +84,10 @@ class GraphQLLazyUpdateInstrumentationTest {
         Amplify.API.mutate(ModelMutation.delete(hasOneChild2))
         Amplify.API.mutate(ModelMutation.delete(hasManyChild))
         Amplify.API.mutate(ModelMutation.delete(parent))
-        return@runBlocking
     }
 
     @Test
-    fun update_with_includes() = runBlocking {
+    fun update_with_includes() = runTest {
         // GIVEN
         val hasOneChild = HasOneChild.builder().content("Child1").build()
         Amplify.API.mutate(ModelMutation.create(hasOneChild))
@@ -125,6 +124,5 @@ class GraphQLLazyUpdateInstrumentationTest {
         Amplify.API.mutate(ModelMutation.delete(hasOneChild2))
         Amplify.API.mutate(ModelMutation.delete(hasManyChild))
         Amplify.API.mutate(ModelMutation.delete(parent))
-        return@runBlocking
     }
 }

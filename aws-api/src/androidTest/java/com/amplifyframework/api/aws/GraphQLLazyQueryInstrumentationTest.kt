@@ -29,9 +29,10 @@ import com.amplifyframework.core.model.includes
 import com.amplifyframework.datastore.generated.model.Parent
 import com.amplifyframework.datastore.generated.model.ParentPath
 import com.amplifyframework.kotlin.core.Amplify
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Ignore
@@ -82,10 +83,13 @@ class GraphQLLazyQueryInstrumentationTest {
 //                .build()
 //            Amplify.API.mutate(ModelMutation.create(hasManyChild))
 //        }
+//
+//        val parent = Parent.builder().id("GraphQLLazyQueryInstrumentationTest.ParentWithNoChildren").build()
+//        Amplify.API.mutate(ModelMutation.create(parent))
 //    }
 
     @Test
-    fun query_parent_no_includes() = runBlocking {
+    fun query_parent_no_includes() = runTest {
         // GIVEN
         val request = ModelQuery[Parent::class.java, Parent.ParentIdentifier(PARENT1_ID)]
 
@@ -110,11 +114,10 @@ class GraphQLLazyQueryInstrumentationTest {
             children1Count += page.items.size
         }
         assertEquals(1001, children1Count)
-        return@runBlocking
     }
 
     @Test
-    fun query_parent_with_includes() = runBlocking {
+    fun query_parent_with_includes() = runTest {
         // GIVEN
         val request = ModelQuery.get<Parent, ParentPath>(
             Parent::class.java, Parent.ParentIdentifier(PARENT1_ID)
@@ -135,11 +138,10 @@ class GraphQLLazyQueryInstrumentationTest {
 
         val children = responseParent.children as LoadedModelList
         assertEquals(100, children.items.size)
-        return@runBlocking
     }
 
     @Test
-    fun query_list_with_no_includes() = runBlocking {
+    fun query_list_with_no_includes() = runTest {
 
         val request = ModelQuery.list(
             Parent::class.java,
@@ -195,11 +197,10 @@ class GraphQLLazyQueryInstrumentationTest {
             children2Count += page.items.size
         }
         assertEquals(0, children2Count)
-        return@runBlocking
     }
 
     @Test
-    fun query_list_with_includes() = runBlocking {
+    fun query_list_with_includes() = runTest {
 
         val request = ModelQuery.list<Parent, ParentPath>(
             Parent::class.java,
@@ -238,6 +239,48 @@ class GraphQLLazyQueryInstrumentationTest {
 
         val children = parent2.children as LoadedModelList
         assertEquals(0, children.items.size)
-        return@runBlocking
+    }
+
+    @Test
+    fun query_parent_with_no_child_with_includes() = runTest {
+        // GIVEN
+        val request = ModelQuery.get<Parent, ParentPath>(
+            Parent::class.java, Parent.ParentIdentifier("GraphQLLazyQueryInstrumentationTest.ParentWithNoChildren")
+        ) {
+            includes(it.child, it.children)
+        }
+
+        // WHEN
+        val responseParent = Amplify.API.query(request).data
+
+        // THEN
+        assertNull(responseParent.parentChildId)
+        (responseParent.child as? LoadedModelReference)?.let { childRef ->
+            assertNull(childRef.value)
+        } ?: fail("Response child was null or not a LoadedModelReference")
+
+        val children = responseParent.children as LoadedModelList
+        assertEquals(0, children.items.size)
+    }
+
+    @Test
+    fun query_parent_with_no_child_no_includes() = runTest {
+        // GIVEN
+        val request = ModelQuery[
+            Parent::class.java,
+            Parent.ParentIdentifier("GraphQLLazyQueryInstrumentationTest.ParentWithNoChildren")
+        ]
+
+        // WHEN
+        val responseParent = Amplify.API.query(request).data
+
+        // THEN
+        assertNull(responseParent.parentChildId)
+        (responseParent.child as? LoadedModelReference)?.let { childRef ->
+            assertNull(childRef.value)
+        } ?: fail("Response child was null or not a LoadedModelReference")
+
+        val children = responseParent.children as LazyModelList
+        assertEquals(0, children.fetchPage().items.size)
     }
 }

@@ -15,6 +15,7 @@
 
 package com.amplifyframework.api.aws
 
+import com.amplifyframework.core.model.LoadedModelReferenceImpl
 import com.amplifyframework.core.model.Model
 import com.amplifyframework.core.model.ModelIdentifier
 import com.amplifyframework.core.model.ModelSchema
@@ -43,30 +44,37 @@ internal class ModelDeserializer(
         val parentType = (typeOfT as Class<*>).simpleName
         val parentModelSchema = ModelSchema.fromModelClass(parent.javaClass)
 
-        parentModelSchema.fields.filter { it.value.isModelList }.map { fieldMap ->
+        parentModelSchema.fields.filter { it.value.isModelList || it.value.isModelReference }.map { fieldMap ->
             val fieldToUpdate = parent.javaClass.getDeclaredField(fieldMap.key)
             fieldToUpdate.isAccessible = true
             if (fieldToUpdate.get(parent) == null) {
                 val lazyField = fieldMap.value
                 val lazyFieldModelSchema = schemaRegistry.getModelSchemaForModelClass(lazyField.targetType)
 
-                val lazyFieldTargetNames = lazyFieldModelSchema
-                    .associations
-                    .entries
-                    .first { it.value.associatedType == parentType }
-                    .value
-                    .targetNames
+                when {
+                    fieldMap.value.isModelReference -> {
+                        val modelReference = LoadedModelReferenceImpl(null)
+                        fieldToUpdate.set(parent, modelReference)
+                    }
+                    fieldMap.value.isModelList -> {
+                        val lazyFieldTargetNames = lazyFieldModelSchema
+                            .associations
+                            .entries
+                            .first { it.value.associatedType == parentType }
+                            .value
+                            .targetNames
 
-                val parentIdentifiers = parent.getSortedIdentifiers()
+                        val parentIdentifiers = parent.getSortedIdentifiers()
 
-                val queryKeys = lazyFieldTargetNames.mapIndexed { idx, name ->
-                    name to parentIdentifiers[idx]
-                }.toMap()
+                        val queryKeys = lazyFieldTargetNames.mapIndexed { idx, name ->
+                            name to parentIdentifiers[idx]
+                        }.toMap()
 
-                val modelList = ApiLazyModelList(lazyFieldModelSchema.modelClass, queryKeys, apiName)
+                        val modelList = ApiLazyModelList(lazyFieldModelSchema.modelClass, queryKeys, apiName)
 
-                fieldToUpdate.isAccessible = true
-                fieldToUpdate.set(parent, modelList)
+                        fieldToUpdate.set(parent, modelList)
+                    }
+                }
             }
         }
         return parent
