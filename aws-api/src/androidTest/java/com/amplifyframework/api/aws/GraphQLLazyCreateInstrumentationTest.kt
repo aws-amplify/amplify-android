@@ -26,11 +26,11 @@ import com.amplifyframework.core.model.LoadedModelList
 import com.amplifyframework.core.model.LoadedModelReference
 import com.amplifyframework.core.model.PaginationToken
 import com.amplifyframework.core.model.includes
-import com.amplifyframework.kotlin.core.Amplify
 import com.amplifyframework.datastore.generated.model.HasManyChild
 import com.amplifyframework.datastore.generated.model.HasOneChild
 import com.amplifyframework.datastore.generated.model.Parent
 import com.amplifyframework.datastore.generated.model.ParentPath
+import com.amplifyframework.kotlin.core.Amplify
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.fail

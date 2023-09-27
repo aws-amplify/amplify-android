@@ -28,6 +28,8 @@ import com.amplifyframework.datastore.generated.model.HasOneChild
 import com.amplifyframework.datastore.generated.model.Parent
 import com.amplifyframework.datastore.generated.model.ParentPath
 import com.amplifyframework.kotlin.core.Amplify
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -39,8 +41,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Ignore
 import org.junit.Test
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
 
 @Ignore("Waiting to add test config")
 class GraphQLLazySubscribeInstrumentationTest {
@@ -55,13 +55,12 @@ class GraphQLLazySubscribeInstrumentationTest {
 
     @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
     @Test
-    fun subscribe_with_no_includes_crate() = runTest {
+    fun subscribe_with_no_includes_create() = runTest {
         // GIVEN
         val hasOneChild = HasOneChild.builder()
             .content("Child1")
             .build()
         val parent = Parent.builder().parentChildId(hasOneChild.id).build()
-
 
         val latch = CountDownLatch(1)
 
@@ -87,7 +86,7 @@ class GraphQLLazySubscribeInstrumentationTest {
 
         assertEquals(parent.id, capturedParent!!.id)
         assertEquals(hasOneChild.content, capturedChild!!.content)
-        assertEquals(hasOneChild.content, capturedChild!!.content)
+        assertEquals(hasOneChild.id, capturedChild!!.id)
 
         // CLEANUP
         Amplify.API.mutate(ModelMutation.delete(hasOneChild))
@@ -102,7 +101,6 @@ class GraphQLLazySubscribeInstrumentationTest {
             .content("Child1")
             .build()
         val parent = Parent.builder().parentChildId(hasOneChild.id).build()
-
 
         val latch = CountDownLatch(1)
 
@@ -134,10 +132,204 @@ class GraphQLLazySubscribeInstrumentationTest {
 
         assertEquals(parent.id, capturedParent!!.id)
         assertEquals(hasOneChild.content, capturedChild!!.content)
-        assertEquals(hasOneChild.content, capturedChild!!.content)
+        assertEquals(hasOneChild.id, capturedChild!!.id)
 
         // CLEANUP
         Amplify.API.mutate(ModelMutation.delete(hasOneChild))
         Amplify.API.mutate(ModelMutation.delete(parent))
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
+    @Test
+    fun subscribe_with_no_includes_update() = runTest {
+        // GIVEN
+        val hasOneChild = HasOneChild.builder()
+            .content("Child1")
+            .build()
+        val hasOneChild2 = HasOneChild.builder()
+            .content("Child2")
+            .build()
+        val parent = Parent.builder().parentChildId(hasOneChild.id).build()
+
+        val latch = CountDownLatch(1)
+
+        var capturedParent: Parent? = null
+        var capturedChild: HasOneChild? = null
+        CoroutineScope(Dispatchers.IO).launch {
+            Amplify.API.subscribe(ModelSubscription.onUpdate(Parent::class.java)).collect {
+                assertEquals(parent.id, it.data.id)
+                capturedParent = it.data
+                capturedChild = (it.data.child as LazyModelReference).fetchModel()!!
+                latch.countDown()
+            }
+        }
+
+        Amplify.API.mutate(ModelMutation.create(hasOneChild))
+        Amplify.API.mutate(ModelMutation.create(hasOneChild2))
+        val parentFromResponse = Amplify.API.mutate(ModelMutation.create(parent)).data
+        assertEquals(hasOneChild.id, parentFromResponse.parentChildId)
+
+        // WHEN
+        val updateParent = parent.copyOfBuilder().parentChildId(hasOneChild2.id).build()
+        Amplify.API.mutate(ModelMutation.update(updateParent))
+
+        // THEN
+        withContext(this.coroutineContext) {
+            latch.await(10, TimeUnit.SECONDS)
+        }
+
+        assertEquals(parent.id, capturedParent!!.id)
+        assertEquals(capturedParent!!.parentChildId, capturedChild!!.id)
+        assertEquals(hasOneChild2.content, capturedChild!!.content)
+        assertEquals(hasOneChild2.id, capturedChild!!.id)
+
+        // CLEANUP
+        Amplify.API.mutate(ModelMutation.delete(hasOneChild))
+        Amplify.API.mutate(ModelMutation.delete(hasOneChild2))
+        Amplify.API.mutate(ModelMutation.delete(parent))
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
+    @Test
+    fun subscribe_with_includes_update() = runTest {
+        // GIVEN
+        val hasOneChild = HasOneChild.builder()
+            .content("Child1")
+            .build()
+        val hasOneChild2 = HasOneChild.builder()
+            .content("Child2")
+            .build()
+        val parent = Parent.builder().parentChildId(hasOneChild.id).build()
+
+        val latch = CountDownLatch(1)
+
+        var capturedParent: Parent? = null
+        var capturedChild: HasOneChild? = null
+        CoroutineScope(Dispatchers.IO).launch {
+            val request = ModelSubscription.onUpdate<Parent, ParentPath>(Parent::class.java) {
+                includes(it.child)
+            }
+            Amplify.API.subscribe(request).collect {
+                assertEquals(parent.id, it.data.id)
+                capturedParent = it.data
+                capturedChild = (it.data.child as LoadedModelReference).value
+                latch.countDown()
+            }
+        }
+
+        Amplify.API.mutate(ModelMutation.create(hasOneChild))
+        Amplify.API.mutate(ModelMutation.create(hasOneChild2))
+        Amplify.API.mutate(ModelMutation.create(parent))
+
+        // WHEN
+        val updateParent = parent.copyOfBuilder().parentChildId(hasOneChild2.id).build()
+        val updateRequest = ModelMutation.update<Parent, ParentPath>(updateParent) {
+            includes(it.child)
+        }
+        Amplify.API.mutate(updateRequest)
+
+        // THEN
+        withContext(this.coroutineContext) {
+            latch.await(10, TimeUnit.SECONDS)
+        }
+
+        assertEquals(parent.id, capturedParent!!.id)
+        assertEquals(capturedParent!!.parentChildId, capturedChild!!.id)
+        assertEquals(hasOneChild2.content, capturedChild!!.content)
+        assertEquals(hasOneChild2.id, capturedChild!!.id)
+
+        // CLEANUP
+        Amplify.API.mutate(ModelMutation.delete(hasOneChild))
+        Amplify.API.mutate(ModelMutation.delete(hasOneChild2))
+        Amplify.API.mutate(ModelMutation.delete(parent))
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
+    @Test
+    fun subscribe_with_no_includes_delete() = runTest {
+        // GIVEN
+        val hasOneChild = HasOneChild.builder()
+            .content("Child1")
+            .build()
+        val parent = Parent.builder().parentChildId(hasOneChild.id).build()
+
+        val latch = CountDownLatch(1)
+
+        var capturedParent: Parent? = null
+        var capturedChild: HasOneChild? = null
+        CoroutineScope(Dispatchers.IO).launch {
+            Amplify.API.subscribe(ModelSubscription.onDelete(Parent::class.java)).collect {
+                assertEquals(parent.id, it.data.id)
+                capturedParent = it.data
+                capturedChild = (it.data.child as LazyModelReference).fetchModel()!!
+                latch.countDown()
+            }
+        }
+
+        Amplify.API.mutate(ModelMutation.create(hasOneChild))
+        val parentFromResponse = Amplify.API.mutate(ModelMutation.create(parent)).data
+        assertEquals(hasOneChild.id, parentFromResponse.parentChildId)
+
+        // WHEN
+        Amplify.API.mutate(ModelMutation.delete(parent))
+
+        // THEN
+        withContext(this.coroutineContext) {
+            latch.await(10, TimeUnit.SECONDS)
+        }
+
+        assertEquals(parent.id, capturedParent!!.id)
+        assertEquals(hasOneChild.content, capturedChild!!.content)
+        assertEquals(hasOneChild.id, capturedChild!!.id)
+
+        // CLEANUP
+        Amplify.API.mutate(ModelMutation.delete(hasOneChild))
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
+    @Test
+    fun subscribe_with_includes_delete() = runTest {
+        // GIVEN
+        val hasOneChild = HasOneChild.builder()
+            .content("Child1")
+            .build()
+        val parent = Parent.builder().parentChildId(hasOneChild.id).build()
+
+        val latch = CountDownLatch(1)
+
+        var capturedParent: Parent? = null
+        var capturedChild: HasOneChild? = null
+        CoroutineScope(Dispatchers.IO).launch {
+            val request = ModelSubscription.onDelete<Parent, ParentPath>(Parent::class.java) {
+                includes(it.child)
+            }
+            Amplify.API.subscribe(request).collect {
+                assertEquals(parent.id, it.data.id)
+                capturedParent = it.data
+                capturedChild = (it.data.child as LoadedModelReference).value
+                latch.countDown()
+            }
+        }
+
+        Amplify.API.mutate(ModelMutation.create(hasOneChild))
+        Amplify.API.mutate(ModelMutation.create(parent))
+
+        // WHEN
+        val deleteRequest = ModelMutation.delete<Parent, ParentPath>(parent) {
+            includes(it.child)
+        }
+        Amplify.API.mutate(deleteRequest)
+
+        // THEN
+        withContext(this.coroutineContext) {
+            latch.await(10, TimeUnit.SECONDS)
+        }
+
+        assertEquals(parent.id, capturedParent!!.id)
+        assertEquals(hasOneChild.content, capturedChild!!.content)
+        assertEquals(hasOneChild.id, capturedChild!!.id)
+
+        // CLEANUP
+        Amplify.API.mutate(ModelMutation.delete(hasOneChild))
     }
 }
