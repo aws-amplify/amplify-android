@@ -55,6 +55,7 @@ dependencies {
     testImplementation(libs.test.mockwebserver)
     testImplementation(libs.rxjava)
     testImplementation(libs.test.robolectric)
+    testImplementation(libs.test.kotlin.coroutines)
 
     androidTestImplementation(project(":testutils"))
     androidTestImplementation(project(":testmodels"))

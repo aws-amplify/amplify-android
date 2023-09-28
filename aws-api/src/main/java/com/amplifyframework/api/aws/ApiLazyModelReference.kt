@@ -16,6 +16,7 @@
 package com.amplifyframework.api.aws
 
 import com.amplifyframework.AmplifyException
+import com.amplifyframework.api.ApiCategory
 import com.amplifyframework.api.ApiException
 import com.amplifyframework.api.graphql.GraphQLRequest
 import com.amplifyframework.api.graphql.GraphQLResponse
@@ -38,7 +39,8 @@ import kotlinx.coroutines.sync.withPermit
 internal class ApiLazyModelReference<M : Model> internal constructor(
     private val clazz: Class<M>,
     private val keyMap: Map<String, Any>,
-    private val apiName: String? = null
+    private val apiName: String? = null,
+    private val apiCategory: ApiCategory = Amplify.API
 ) : LazyModelReference<M> {
     private val cachedValue = AtomicReference<LoadedValue<M>?>(null)
     private val semaphore = Semaphore(1) // prevents multiple fetches
@@ -111,6 +113,7 @@ internal class ApiLazyModelReference<M : Model> internal constructor(
                 )
 
                 val value = query(
+                    apiCategory,
                     request,
                     apiName
                 ).data
@@ -132,18 +135,18 @@ internal class ApiLazyModelReference<M : Model> internal constructor(
  Duplicating the query Kotlin Facade method so we aren't pulling in Kotlin Core
  */
 @Throws(ApiException::class)
-private suspend fun <R> query(request: GraphQLRequest<R>, apiName: String?):
+private suspend fun <R> query(apiCategory: ApiCategory, request: GraphQLRequest<R>, apiName: String?):
     GraphQLResponse<R> {
     return suspendCoroutine { continuation ->
         if (apiName != null) {
-            Amplify.API.query(
+            apiCategory.query(
                 apiName,
                 request,
                 { continuation.resume(it) },
                 { continuation.resumeWithException(it) }
             )
         } else {
-            Amplify.API.query(
+            apiCategory.query(
                 request,
                 { continuation.resume(it) },
                 { continuation.resumeWithException(it) }
