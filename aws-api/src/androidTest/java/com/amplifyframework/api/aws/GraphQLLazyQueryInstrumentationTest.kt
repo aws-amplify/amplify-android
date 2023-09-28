@@ -437,8 +437,8 @@ class GraphQLLazyQueryInstrumentationTest {
         val expectedTeamId = "GraphQLLazyQueryInstrumentationTest-Team1"
         val expectedTeamName = "Team 1"
         val projectRequest = ModelQuery[
-                Project::class.java,
-                Project.ProjectIdentifier(expectedProjectId, expectedProjectName)
+            Project::class.java,
+            Project.ProjectIdentifier(expectedProjectId, expectedProjectName)
         ]
 
         // WHEN
@@ -615,7 +615,6 @@ class GraphQLLazyQueryInstrumentationTest {
         val s1l3Comments = (s1l2Posts[0].comments as LazyModelList).fetchPage().items
         assertEquals(1, s1l3Comments.size)
         assertEquals(expectedCommentConent, s1l3Comments[0].content)
-
 
         // Scenario 1: Start loads from model list of comments
         val s2l1Comments = (post.comments as LazyModelList).fetchPage().items
