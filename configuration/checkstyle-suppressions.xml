@@ -33,5 +33,6 @@
     <suppress checks="AvoidStaticImport" files="src[\\/](androidTest|test)" />
     <suppress checks="MagicNumber" files="src[\\/](androidTest|test)" />
     <suppress checks="MissingJavadocType" files="src[\\/](androidTest|test)" />
+    <suppress checks="[a-zA-Z0-9]*" files="[\\/]datastore.generated.model[\\/]" />
 </suppressions>
 
