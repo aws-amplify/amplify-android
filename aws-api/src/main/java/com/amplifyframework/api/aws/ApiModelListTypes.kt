@@ -30,6 +30,9 @@ import com.amplifyframework.core.model.PaginationToken
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 internal class ApiLoadedModelList<out M : Model>(
     override val items: List<M>
@@ -49,15 +52,27 @@ internal class ApiLazyModelList<out M : Model> constructor(
     private val apiCategory: ApiCategory = Amplify.API
 ) : LazyModelList<M> {
 
+    private val callbackScope = CoroutineScope(Dispatchers.IO)
     private val queryPredicate = AppSyncLazyQueryPredicate<M>().createPredicate(clazz, keyMap)
 
     override suspend fun fetchPage(paginationToken: PaginationToken?): ModelPage<M> {
-        val response = query(apiCategory, apiName, createRequest(paginationToken))
-        return response.data
+        try {
+            val response = query(apiCategory, apiName, createRequest(paginationToken))
+            return response.data
+        } catch (error: AmplifyException) {
+            throw createLazyException(error)
+        }
     }
 
     override fun fetchPage(onSuccess: Consumer<ModelPage<@UnsafeVariance M>>, onError: Consumer<AmplifyException>) {
-        query(apiCategory, apiName, createRequest(), onSuccess, onError)
+        callbackScope.launch {
+            try {
+                val page = fetchPage()
+                onSuccess.accept(page)
+            } catch (e: AmplifyException) {
+                onError.accept(e)
+            }
+        }
     }
 
     override fun fetchPage(
@@ -65,7 +80,14 @@ internal class ApiLazyModelList<out M : Model> constructor(
         onSuccess: Consumer<ModelPage<@UnsafeVariance M>>,
         onError: Consumer<AmplifyException>
     ) {
-        query(apiCategory, apiName, createRequest(paginationToken), onSuccess, onError)
+        callbackScope.launch {
+            try {
+                val page = fetchPage(paginationToken)
+                onSuccess.accept(page)
+            } catch (e: AmplifyException) {
+                onError.accept(e)
+            }
+        }
     }
 
     private fun createRequest(paginationToken: PaginationToken? = null): GraphQLRequest<ModelPage<M>> {
@@ -74,30 +96,6 @@ internal class ApiLazyModelList<out M : Model> constructor(
             queryPredicate,
             (paginationToken as? ApiPaginationToken)?.nextToken
         )
-    }
-
-    private fun query(
-        apiCategory: ApiCategory,
-        apiName: String?,
-        request: GraphQLRequest<ModelPage<M>>,
-        onSuccess: Consumer<ModelPage<@UnsafeVariance M>>,
-        onError: Consumer<AmplifyException>
-    ) {
-
-        if (apiName != null) {
-            apiCategory.query(
-                apiName,
-                request,
-                { onSuccess.accept(it.data) },
-                { onError.accept(it) }
-            )
-        } else {
-            apiCategory.query(
-                request,
-                { onSuccess.accept(it.data) },
-                { onError.accept(it) }
-            )
-        }
     }
 
     @Throws(ApiException::class)
@@ -120,4 +118,7 @@ internal class ApiLazyModelList<out M : Model> constructor(
             }
         }
     }
+
+    private fun createLazyException(exception: AmplifyException) =
+        AmplifyException("Error lazy loading the model list.", exception, exception.message ?: "")
 }
