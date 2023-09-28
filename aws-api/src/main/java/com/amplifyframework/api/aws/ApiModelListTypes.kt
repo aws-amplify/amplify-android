@@ -16,6 +16,7 @@
 package com.amplifyframework.api.aws
 
 import com.amplifyframework.AmplifyException
+import com.amplifyframework.api.ApiCategory
 import com.amplifyframework.api.ApiException
 import com.amplifyframework.api.graphql.GraphQLRequest
 import com.amplifyframework.api.graphql.GraphQLResponse
@@ -44,18 +45,19 @@ internal class ApiPaginationToken(val nextToken: String) : PaginationToken
 internal class ApiLazyModelList<out M : Model> constructor(
     private val clazz: Class<M>,
     keyMap: Map<String, Any>,
-    private val apiName: String?
+    private val apiName: String?,
+    private val apiCategory: ApiCategory = Amplify.API
 ) : LazyModelList<M> {
 
     private val queryPredicate = AppSyncLazyQueryPredicate<M>().createPredicate(clazz, keyMap)
 
     override suspend fun fetchPage(paginationToken: PaginationToken?): ModelPage<M> {
-        val response = query(apiName, createRequest(paginationToken))
+        val response = query(apiCategory, apiName, createRequest(paginationToken))
         return response.data
     }
 
     override fun fetchPage(onSuccess: Consumer<ModelPage<@UnsafeVariance M>>, onError: Consumer<AmplifyException>) {
-        query(apiName, createRequest(), onSuccess, onError)
+        query(apiCategory, apiName, createRequest(), onSuccess, onError)
     }
 
     override fun fetchPage(
@@ -63,7 +65,7 @@ internal class ApiLazyModelList<out M : Model> constructor(
         onSuccess: Consumer<ModelPage<@UnsafeVariance M>>,
         onError: Consumer<AmplifyException>
     ) {
-        query(apiName, createRequest(paginationToken), onSuccess, onError)
+        query(apiCategory, apiName, createRequest(paginationToken), onSuccess, onError)
     }
 
     private fun createRequest(paginationToken: PaginationToken? = null): GraphQLRequest<ModelPage<M>> {
@@ -75,6 +77,7 @@ internal class ApiLazyModelList<out M : Model> constructor(
     }
 
     private fun query(
+        apiCategory: ApiCategory,
         apiName: String?,
         request: GraphQLRequest<ModelPage<M>>,
         onSuccess: Consumer<ModelPage<@UnsafeVariance M>>,
@@ -82,14 +85,14 @@ internal class ApiLazyModelList<out M : Model> constructor(
     ) {
 
         if (apiName != null) {
-            Amplify.API.query(
+            apiCategory.query(
                 apiName,
                 request,
                 { onSuccess.accept(it.data) },
                 { onError.accept(it) }
             )
         } else {
-            Amplify.API.query(
+            apiCategory.query(
                 request,
                 { onSuccess.accept(it.data) },
                 { onError.accept(it) }
@@ -98,18 +101,18 @@ internal class ApiLazyModelList<out M : Model> constructor(
     }
 
     @Throws(ApiException::class)
-    private suspend fun <R> query(apiName: String?, request: GraphQLRequest<R>):
+    private suspend fun <R> query(apiCategory: ApiCategory, apiName: String?, request: GraphQLRequest<R>):
         GraphQLResponse<R> {
         return suspendCoroutine { continuation ->
             if (apiName != null) {
-                Amplify.API.query(
+                apiCategory.query(
                     apiName,
                     request,
                     { continuation.resume(it) },
                     { continuation.resumeWithException(it) }
                 )
             } else {
-                Amplify.API.query(
+                apiCategory.query(
                     request,
                     { continuation.resume(it) },
                     { continuation.resumeWithException(it) }
