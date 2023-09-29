@@ -50,8 +50,6 @@ class GraphQLLazyCreateInstrumentationTest {
         }
     }
 
-
-
     @Test
     fun create_with_no_includes() = runTest {
         // GIVEN
