@@ -99,6 +99,7 @@ final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
                     )
                     .create();
 
+            // TODO: Comment why we have to do this
             Gson modelDeserializerGson = responseGson.newBuilder()
                     .registerTypeHierarchyAdapter(
                             Model.class,

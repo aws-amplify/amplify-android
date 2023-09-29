@@ -64,6 +64,7 @@ class GraphQLLazySubscribeInstrumentationTest {
         val parent = Parent.builder().parentChildId(hasOneChild.id).build()
 
         val latch = CountDownLatch(1)
+        val collectRunningLatch = CountDownLatch(1)
 
         var capturedParent: Parent? = null
         var capturedChild: HasOneChild? = null
@@ -75,7 +76,9 @@ class GraphQLLazySubscribeInstrumentationTest {
                 capturedChild = (it.data.child as LazyModelReference).fetchModel()!!
                 latch.countDown()
             }
+            collectRunningLatch.countDown()
         }
+        collectRunningLatch.await(1, TimeUnit.SECONDS)
 
         // WHEN
         Amplify.API.mutate(ModelMutation.create(hasOneChild))
@@ -105,6 +108,7 @@ class GraphQLLazySubscribeInstrumentationTest {
         val parent = Parent.builder().parentChildId(hasOneChild.id).build()
 
         val latch = CountDownLatch(1)
+        val collectRunningLatch = CountDownLatch(1)
 
         val request = ModelSubscription.onCreate<Parent, ParentPath>(Parent::class.java) {
             includes(it.child)
@@ -120,7 +124,9 @@ class GraphQLLazySubscribeInstrumentationTest {
                 capturedChild = (it.data.child as LoadedModelReference).value
                 latch.countDown()
             }
+            collectRunningLatch.countDown()
         }
+        collectRunningLatch.await(1, TimeUnit.SECONDS)
 
         // WHEN
         Amplify.API.mutate(ModelMutation.create(hasOneChild))
