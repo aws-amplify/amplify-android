@@ -1,131 +1,131 @@
-///*
-// * Copyright 2013 Chris Banes
-// * Modifications copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
-// *
-// * Licensed under the Apache License, Version 2.0 (the "License").
-// * You may not use this file except in compliance with the License.
-// * A copy of the License is located at
-// *
-// *  http://aws.amazon.com/apache2.0
-// *
-// * or in the "license" file accompanying this file. This file is distributed
-// * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
-// * express or implied. See the License for the specific language governing
-// * permissions and limitations under the License.
-// */
-//
-//apply plugin: 'signing'
-//apply plugin: 'maven-publish'
-//
-//version = project.ext.VERSION_NAME
-//
-//def isReleaseBuild() {
-//    return VERSION_NAME.contains("SNAPSHOT") == false
-//}
-//
-//def getReleaseRepositoryUrl() {
-//    return hasProperty('RELEASE_REPOSITORY_URL') ? RELEASE_REPOSITORY_URL :
-//            "https://aws.oss.sonatype.org/service/local/staging/deploy/maven2/"
-//}
-//
-//def getSnapshotRepositoryUrl() {
-//    return hasProperty('SNAPSHOT_REPOSITORY_URL') ? SNAPSHOT_REPOSITORY_URL :
-//            "https://aws.oss.sonatype.org/content/repositories/snapshots/"
-//}
-//
-//def getRepositoryUsername() {
-//    return hasProperty('SONATYPE_NEXUS_USERNAME') ? SONATYPE_NEXUS_USERNAME : ""
-//}
-//
-//def getRepositoryPassword() {
-//    return hasProperty('SONATYPE_NEXUS_PASSWORD') ? SONATYPE_NEXUS_PASSWORD : ""
-//}
-//
-//afterEvaluate { project ->
-//    task androidSourcesJar(type: Jar) {
-//        classifier = 'sources'
-//        from android.sourceSets.main.java.source
-//    }
-//
-//
-//    publishing {
-//        publications {
-//            library(MavenPublication) {
-//                groupId POM_GROUP
-//                artifactId POM_ARTIFACT_ID
-//                version VERSION_NAME
-//
-//                artifact("${buildDir}/outputs/aar/${artifactId}-release.aar")
-//                if (project.getPlugins().hasPlugin('com.android.application') ||
-//                        project.getPlugins().hasPlugin('com.android.library')) {
-//                    artifact(androidSourcesJar)
-//                } else {
-//                    artifact(sourcesJar)
-//                }
-//
-//                pom {
-//                    name = POM_NAME
-//                    packaging = POM_PACKAGING
-//                    description = POM_DESCRIPTION
-//                    url = POM_URL
-//
-//                    scm {
-//                        url = POM_SCM_URL
-//                        connection = POM_SCM_CONNECTION
-//                        developerConnection = POM_SCM_DEV_CONNECTION
-//                    }
-//
-//                    licenses {
-//                        license {
-//                            name = POM_LICENSE_NAME
-//                            url = POM_LICENSE_URL
-//                            distribution = POM_LICENSE_DIST
-//                        }
-//                    }
-//
-//                    developers {
-//                        developer {
-//                            id = POM_DEVELOPER_ID
-//                            organizationUrl = POM_DEVELOPER_ORGANIZATION_URL
-//                            roles = ["developer"]
-//                        }
-//                    }
-//
-//                    withXml {
-//                        def dependenciesNode = asNode().appendNode('dependencies')
-//                        // Note that this only handles implementation
-//                        // dependencies. In the future, may need to add api,
-//                        // etc.
-//                        configurations.implementation.allDependencies.each {
-//                            def dependencyNode = dependenciesNode.appendNode('dependency')
-//                            dependencyNode.appendNode('groupId', it.group)
-//                            dependencyNode.appendNode('artifactId', it.name)
-//                            dependencyNode.appendNode('version', it.version)
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//        repositories {
-//            maven {
-//                url = isReleaseBuild() ? getReleaseRepositoryUrl() : getSnapshotRepositoryUrl()
-//                credentials {
-//                    username = getRepositoryUsername()
-//                    password = getRepositoryPassword()
-//                }
-//            }
-//        }
-//    }
-//
-//
-//    signing {
-//        required { isReleaseBuild() && gradle.taskGraph.hasTask("publish") }
-//        if (project.hasProperty('signing.inMemoryKey')) {
-//            def signingKey = findProperty("signing.inMemoryKey").replace("\\n", "\n")
-//            def signingPassword = findProperty("signing.password")
-//            def keyId = findProperty("signing.keyId")
-//            useInMemoryPgpKeys(keyId, signingKey, signingPassword)
-//        }
-//        sign publishing.publications.library
-//    }
-//}
+/*
+ * Copyright 2013 Chris Banes
+ * Modifications copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
+apply plugin: 'signing'
+apply plugin: 'maven-publish'
+
+version = project.ext.VERSION_NAME
+
+def isReleaseBuild() {
+    return VERSION_NAME.contains("SNAPSHOT") == false
+}
+
+def getReleaseRepositoryUrl() {
+    return hasProperty('RELEASE_REPOSITORY_URL') ? RELEASE_REPOSITORY_URL :
+            "https://aws.oss.sonatype.org/service/local/staging/deploy/maven2/"
+}
+
+def getSnapshotRepositoryUrl() {
+    return hasProperty('SNAPSHOT_REPOSITORY_URL') ? SNAPSHOT_REPOSITORY_URL :
+            "https://aws.oss.sonatype.org/content/repositories/snapshots/"
+}
+
+def getRepositoryUsername() {
+    return hasProperty('SONATYPE_NEXUS_USERNAME') ? SONATYPE_NEXUS_USERNAME : ""
+}
+
+def getRepositoryPassword() {
+    return hasProperty('SONATYPE_NEXUS_PASSWORD') ? SONATYPE_NEXUS_PASSWORD : ""
+}
+
+afterEvaluate { project ->
+    task androidSourcesJar(type: Jar) {
+        classifier = 'sources'
+        from android.sourceSets.main.java.source
+    }
+
+
+    publishing {
+        publications {
+            library(MavenPublication) {
+                groupId POM_GROUP
+                artifactId POM_ARTIFACT_ID
+                version VERSION_NAME
+
+                artifact("${buildDir}/outputs/aar/${artifactId}-release.aar")
+                if (project.getPlugins().hasPlugin('com.android.application') ||
+                        project.getPlugins().hasPlugin('com.android.library')) {
+                    artifact(androidSourcesJar)
+                } else {
+                    artifact(sourcesJar)
+                }
+
+                pom {
+                    name = POM_NAME
+                    packaging = POM_PACKAGING
+                    description = POM_DESCRIPTION
+                    url = POM_URL
+
+                    scm {
+                        url = POM_SCM_URL
+                        connection = POM_SCM_CONNECTION
+                        developerConnection = POM_SCM_DEV_CONNECTION
+                    }
+
+                    licenses {
+                        license {
+                            name = POM_LICENSE_NAME
+                            url = POM_LICENSE_URL
+                            distribution = POM_LICENSE_DIST
+                        }
+                    }
+
+                    developers {
+                        developer {
+                            id = POM_DEVELOPER_ID
+                            organizationUrl = POM_DEVELOPER_ORGANIZATION_URL
+                            roles = ["developer"]
+                        }
+                    }
+
+                    withXml {
+                        def dependenciesNode = asNode().appendNode('dependencies')
+                        // Note that this only handles implementation
+                        // dependencies. In the future, may need to add api,
+                        // etc.
+                        configurations.implementation.allDependencies.each {
+                            def dependencyNode = dependenciesNode.appendNode('dependency')
+                            dependencyNode.appendNode('groupId', it.group)
+                            dependencyNode.appendNode('artifactId', it.name)
+                            dependencyNode.appendNode('version', it.version)
+                        }
+                    }
+                }
+            }
+        }
+        repositories {
+            maven {
+                url = isReleaseBuild() ? getReleaseRepositoryUrl() : getSnapshotRepositoryUrl()
+                credentials {
+                    username = getRepositoryUsername()
+                    password = getRepositoryPassword()
+                }
+            }
+        }
+    }
+
+
+    signing {
+        required { isReleaseBuild() && gradle.taskGraph.hasTask("publish") }
+        if (project.hasProperty('signing.inMemoryKey')) {
+            def signingKey = findProperty("signing.inMemoryKey").replace("\\n", "\n")
+            def signingPassword = findProperty("signing.password")
+            def keyId = findProperty("signing.keyId")
+            useInMemoryPgpKeys(keyId, signingKey, signingPassword)
+        }
+        sign publishing.publications.library
+    }
+}
