@@ -67,8 +67,9 @@ class GraphQLLazySubscribeInstrumentationTest {
 
         var capturedParent: Parent? = null
         var capturedChild: HasOneChild? = null
+        val subscription = Amplify.API.subscribe(ModelSubscription.onCreate(Parent::class.java))
         CoroutineScope(Dispatchers.IO).launch {
-            Amplify.API.subscribe(ModelSubscription.onCreate(Parent::class.java)).collect {
+            subscription.collect {
                 assertEquals(parent.id, it.data.id)
                 capturedParent = it.data
                 capturedChild = (it.data.child as LazyModelReference).fetchModel()!!
@@ -105,13 +106,15 @@ class GraphQLLazySubscribeInstrumentationTest {
 
         val latch = CountDownLatch(1)
 
+        val request = ModelSubscription.onCreate<Parent, ParentPath>(Parent::class.java) {
+            includes(it.child)
+        }
+        val subscription = Amplify.API.subscribe(request)
+
         var capturedParent: Parent? = null
         var capturedChild: HasOneChild? = null
         CoroutineScope(Dispatchers.IO).launch {
-            val request = ModelSubscription.onCreate<Parent, ParentPath>(Parent::class.java) {
-                includes(it.child)
-            }
-            Amplify.API.subscribe(request).collect {
+            subscription.collect {
                 assertEquals(parent.id, it.data.id)
                 capturedParent = it.data
                 capturedChild = (it.data.child as LoadedModelReference).value
@@ -152,12 +155,13 @@ class GraphQLLazySubscribeInstrumentationTest {
             .build()
         val parent = Parent.builder().parentChildId(hasOneChild.id).build()
 
-        val latch = CountDownLatch(1)
+        val subscription = Amplify.API.subscribe(ModelSubscription.onUpdate(Parent::class.java))
 
+        val latch = CountDownLatch(1)
         var capturedParent: Parent? = null
         var capturedChild: HasOneChild? = null
         CoroutineScope(Dispatchers.IO).launch {
-            Amplify.API.subscribe(ModelSubscription.onUpdate(Parent::class.java)).collect {
+            subscription.collect {
                 assertEquals(parent.id, it.data.id)
                 capturedParent = it.data
                 capturedChild = (it.data.child as LazyModelReference).fetchModel()!!
@@ -202,15 +206,17 @@ class GraphQLLazySubscribeInstrumentationTest {
             .build()
         val parent = Parent.builder().parentChildId(hasOneChild.id).build()
 
-        val latch = CountDownLatch(1)
+        val request = ModelSubscription.onUpdate<Parent, ParentPath>(Parent::class.java) {
+            includes(it.child)
+        }
+        val subscription = Amplify.API.subscribe(request)
 
+        val latch = CountDownLatch(1)
         var capturedParent: Parent? = null
         var capturedChild: HasOneChild? = null
         CoroutineScope(Dispatchers.IO).launch {
-            val request = ModelSubscription.onUpdate<Parent, ParentPath>(Parent::class.java) {
-                includes(it.child)
-            }
-            Amplify.API.subscribe(request).collect {
+
+            subscription.collect {
                 assertEquals(parent.id, it.data.id)
                 capturedParent = it.data
                 capturedChild = (it.data.child as LoadedModelReference).value
@@ -254,12 +260,13 @@ class GraphQLLazySubscribeInstrumentationTest {
             .build()
         val parent = Parent.builder().parentChildId(hasOneChild.id).build()
 
-        val latch = CountDownLatch(1)
+        val subscription = Amplify.API.subscribe(ModelSubscription.onDelete(Parent::class.java))
 
+        val latch = CountDownLatch(1)
         var capturedParent: Parent? = null
         var capturedChild: HasOneChild? = null
         CoroutineScope(Dispatchers.IO).launch {
-            Amplify.API.subscribe(ModelSubscription.onDelete(Parent::class.java)).collect {
+            subscription.collect {
                 assertEquals(parent.id, it.data.id)
                 capturedParent = it.data
                 capturedChild = (it.data.child as LazyModelReference).fetchModel()!!
@@ -296,15 +303,16 @@ class GraphQLLazySubscribeInstrumentationTest {
             .build()
         val parent = Parent.builder().parentChildId(hasOneChild.id).build()
 
-        val latch = CountDownLatch(1)
+        val request = ModelSubscription.onDelete<Parent, ParentPath>(Parent::class.java) {
+            includes(it.child)
+        }
+        val subscription = Amplify.API.subscribe(request)
 
+        val latch = CountDownLatch(1)
         var capturedParent: Parent? = null
         var capturedChild: HasOneChild? = null
         CoroutineScope(Dispatchers.IO).launch {
-            val request = ModelSubscription.onDelete<Parent, ParentPath>(Parent::class.java) {
-                includes(it.child)
-            }
-            Amplify.API.subscribe(request).collect {
+            subscription.collect {
                 assertEquals(parent.id, it.data.id)
                 capturedParent = it.data
                 capturedChild = (it.data.child as LoadedModelReference).value
