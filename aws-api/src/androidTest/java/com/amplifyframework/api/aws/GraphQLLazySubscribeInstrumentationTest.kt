@@ -38,19 +38,20 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
 import org.junit.Assert.assertEquals
-import org.junit.Before
-import org.junit.Ignore
+import org.junit.BeforeClass
 import org.junit.Test
 
-@Ignore("Waiting to add test config")
 class GraphQLLazySubscribeInstrumentationTest {
 
-    @Before
-    fun setUp() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val config = AmplifyConfiguration.fromConfigFile(context, R.raw.amplifyconfigurationlazy)
-        Amplify.addPlugin(AWSApiPlugin())
-        Amplify.configure(config, context)
+    companion object {
+        @JvmStatic
+        @BeforeClass
+        fun setUp() {
+            val context = ApplicationProvider.getApplicationContext<Context>()
+            val config = AmplifyConfiguration.fromConfigFile(context, R.raw.amplifyconfigurationlazy)
+            Amplify.addPlugin(AWSApiPlugin())
+            Amplify.configure(config, context)
+        }
     }
 
     @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)

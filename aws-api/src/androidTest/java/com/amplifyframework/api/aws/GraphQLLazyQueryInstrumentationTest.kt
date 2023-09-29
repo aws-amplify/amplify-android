@@ -44,28 +44,28 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
-import org.junit.Before
-import org.junit.Ignore
+import org.junit.BeforeClass
 import org.junit.Test
 
-@Ignore("Waiting to add test config")
 class GraphQLLazyQueryInstrumentationTest {
 
     companion object {
+
         const val PARENT1_ID = "GraphQLLazyQueryInstrumentationTest-Parent"
         const val PARENT2_ID = "GraphQLLazyQueryInstrumentationTest-Parent2"
         const val HAS_ONE_CHILD1_ID = "GraphQLLazyQueryInstrumentationTest-HasOneChild1"
         const val HAS_ONE_CHILD2_ID = "GraphQLLazyQueryInstrumentationTest-HasOneChild2"
+        @JvmStatic
+        @BeforeClass
+        fun setUp() {
+            val context = ApplicationProvider.getApplicationContext<Context>()
+            val config = AmplifyConfiguration.fromConfigFile(context, R.raw.amplifyconfigurationlazy)
+            Amplify.addPlugin(AWSApiPlugin())
+            Amplify.configure(config, context)
+        }
     }
 
-    @Before
-    fun setUp() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val config = AmplifyConfiguration.fromConfigFile(context, R.raw.amplifyconfigurationlazy)
-        Amplify.addPlugin(AWSApiPlugin())
-        Amplify.configure(config, context)
-    }
-
+    // run this method once to populate all the data necessary to run the tests
 //    private suspend fun populate() {
 //        val hasOneChild = HasOneChild.builder()
 //            .content("Child1")
