@@ -19,6 +19,7 @@ import com.amplifyframework.core.model.Model
 import com.amplifyframework.core.model.ModelList
 import com.amplifyframework.core.model.ModelPage
 import com.amplifyframework.core.model.ModelReference
+import com.google.gson.GsonBuilder
 import com.google.gson.JsonDeserializationContext
 import com.google.gson.JsonDeserializer
 import com.google.gson.JsonElement
@@ -64,7 +65,7 @@ internal class ModelReferenceDeserializer<M : Model>(
     }
 }
 
-internal class ModelListAdapter<M : Model> : JsonDeserializer<ModelList<M>> {
+internal class ModelListDeserializer<M : Model> : JsonDeserializer<ModelList<M>> {
     @Throws(JsonParseException::class)
     override fun deserialize(
         json: JsonElement,
@@ -73,6 +74,13 @@ internal class ModelListAdapter<M : Model> : JsonDeserializer<ModelList<M>> {
     ): ModelList<M> {
         val items = deserializeItems<M>(json, typeOfT, context)
         return ApiLoadedModelList(items)
+    }
+
+    companion object {
+        @JvmStatic
+        fun register(builder: GsonBuilder) {
+            builder.registerTypeAdapter(ModelList::class.java, ModelListDeserializer<Model>())
+        }
     }
 }
 
@@ -86,6 +94,13 @@ internal class ModelPageDeserializer<M : Model> : JsonDeserializer<ModelPage<M>>
         val items = deserializeItems<M>(json, typeOfT, context)
         val nextToken = deserializeNextToken(json)
         return ApiModelPage(items, nextToken)
+    }
+
+    companion object {
+        @JvmStatic
+        fun register(builder: GsonBuilder) {
+            builder.registerTypeHierarchyAdapter(ModelPage::class.java, ModelPageDeserializer<Model>())
+        }
     }
 }
 

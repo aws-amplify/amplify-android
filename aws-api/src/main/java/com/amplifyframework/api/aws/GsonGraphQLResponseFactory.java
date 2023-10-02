@@ -23,8 +23,6 @@ import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.PaginatedResult;
 import com.amplifyframework.core.model.Model;
-import com.amplifyframework.core.model.ModelList;
-import com.amplifyframework.core.model.ModelPage;
 import com.amplifyframework.core.model.ModelReference;
 import com.amplifyframework.util.Empty;
 import com.amplifyframework.util.TypeMaker;
@@ -81,14 +79,6 @@ final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
         );
         try {
             Gson responseGson = gson.newBuilder()
-                    .registerTypeAdapter(
-                            ModelList.class,
-                            new ModelListAdapter<Model>()
-                    )
-                    .registerTypeHierarchyAdapter(
-                            ModelPage.class,
-                            new ModelPageDeserializer<Model>()
-                    )
                     .registerTypeHierarchyAdapter(
                             Iterable.class,
                             new IterableDeserializer<>(request)
@@ -97,17 +87,11 @@ final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
                             ModelReference.class,
                             new ModelReferenceDeserializer<Model>(apiName, schemaRegistry)
                     )
-                    .create();
-
-            // TODO: Comment why we have to do this
-            Gson modelDeserializerGson = responseGson.newBuilder()
-                    .registerTypeHierarchyAdapter(
-                            Model.class,
-                            new ModelDeserializer(responseGson, apiName, schemaRegistry)
+                    .registerTypeAdapterFactory(
+                            new ModelPostProcessingTypeAdapter(apiName, schemaRegistry)
                     )
                     .create();
-
-            return modelDeserializerGson.fromJson(responseJson, responseType);
+            return responseGson.fromJson(responseJson, responseType);
         } catch (JsonParseException jsonParseException) {
             throw new ApiException(
                     "Amplify encountered an error while deserializing an object.",
