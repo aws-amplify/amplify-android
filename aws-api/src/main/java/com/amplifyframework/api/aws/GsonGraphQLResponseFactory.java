@@ -88,6 +88,8 @@ final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
                             new ModelReferenceDeserializer<Model>(apiName, schemaRegistry)
                     )
                     .registerTypeAdapterFactory(
+                            // register Model post processing to inject lazy types for fields that
+                            // were missing from json response
                             new ModelPostProcessingTypeAdapter(apiName, schemaRegistry)
                     )
                     .create();

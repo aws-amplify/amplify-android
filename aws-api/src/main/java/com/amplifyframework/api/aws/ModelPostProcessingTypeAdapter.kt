@@ -28,6 +28,14 @@ import com.google.gson.stream.JsonWriter
 import java.io.IOException
 import java.io.Serializable
 
+/**
+ * This class is used to inject values into lazy model/list reference types when the fields were not included
+ * in the json response.
+ *
+ * If a ModelReference is not included in the response json, it means the reference value is null.
+ * If a ModelList is not included in the response json, it means that the list must be lazily loaded.
+ * We must create the ModelList type, injecting required values such as query keys, api name.
+ */
 internal class ModelPostProcessingTypeAdapter(
     private val apiName: String?,
     private val schemaRegistry: AWSApiSchemaRegistry
