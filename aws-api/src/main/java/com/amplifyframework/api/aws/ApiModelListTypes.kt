@@ -48,6 +48,8 @@ internal class ApiPaginationToken(val nextToken: String) : PaginationToken
 internal class ApiLazyModelList<out M : Model> constructor(
     private val clazz: Class<M>,
     keyMap: Map<String, Any>,
+    // API name is important to provide to future query calls. If a custom API name was used for the original call,
+    // the apiName to fetch the lazy list
     private val apiName: String?,
     private val apiCategory: ApiCategory = Amplify.API
 ) : LazyModelList<M> {

@@ -104,7 +104,9 @@ final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
     }
 
 
-    // Do not use this method. Instead opt for overload with apiName
+    // Do not use this method. Instead opt for overload with apiName API name is important for
+    // lazy model types because the apiName must be passed into the response builder in order
+    // to construct the lazy model reference types.
     @Deprecated
     @Override
     public <T> GraphQLResponse<T> buildResponse(GraphQLRequest<T> request, String responseJson)

@@ -39,6 +39,8 @@ import kotlinx.coroutines.sync.withPermit
 internal class ApiLazyModelReference<M : Model> internal constructor(
     private val clazz: Class<M>,
     private val keyMap: Map<String, Any>,
+    // API name is important to provide to future query calls. If a custom API name was used for the original call,
+    // the apiName to fetch to lazy value
     private val apiName: String? = null,
     private val apiCategory: ApiCategory = Amplify.API
 ) : LazyModelReference<M> {

@@ -19,6 +19,10 @@ import com.amplifyframework.api.ApiException
 import com.amplifyframework.core.model.Model
 import com.amplifyframework.core.model.ModelSchema
 
+/**
+ * This registry is only used for API category and is capable of registering models with lazy support.
+ * The DataStore schema registry restricts to non-lazy types
+ */
 internal class AWSApiSchemaRegistry {
     private val modelSchemaMap: MutableMap<String, ModelSchema> by lazy {
         val modelProvider = ModelProviderLocator.locate()
