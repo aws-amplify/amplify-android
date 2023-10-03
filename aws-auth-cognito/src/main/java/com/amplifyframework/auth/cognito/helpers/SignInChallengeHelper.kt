@@ -42,6 +42,7 @@ import kotlin.time.Duration.Companion.seconds
 internal object SignInChallengeHelper {
     fun evaluateNextStep(
         username: String,
+        oldDeviceMetadata: DeviceMetadata?,
         challengeNameType: ChallengeNameType?,
         session: String?,
         challengeParameters: Map<String, String>?,
@@ -71,12 +72,25 @@ internal object SignInChallengeHelper {
                                 signedInData
                             )
                         )
-                    } ?: AuthenticationEvent(
-                        AuthenticationEvent.EventType.SignInCompleted(
-                            signedInData,
-                            DeviceMetadata.Empty
+                    } ?: run {
+                        var metadata: DeviceMetadata = DeviceMetadata.Empty
+                        val keyDeviceKey = "DEVICE_KEY"
+                        val keyDeviceGroupKey = "DEVICE_GROUP_KEY"
+                        val deviceKey = challengeParameters?.get(keyDeviceKey)
+                        val deviceGroupKey = challengeParameters?.get(keyDeviceGroupKey)
+                        if (!deviceKey.isNullOrEmpty() || !deviceGroupKey.isNullOrEmpty()) {
+                            metadata = DeviceMetadata.Metadata(
+                                deviceKey ?: "",
+                                deviceGroupKey ?: ""
+                            )
+                        }
+                        AuthenticationEvent(
+                            AuthenticationEvent.EventType.SignInCompleted(
+                                signedInData,
+                                metadata
+                            )
                         )
-                    )
+                    }
                 }
             }
             challengeNameType is ChallengeNameType.SmsMfa ||

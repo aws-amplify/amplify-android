@@ -65,6 +65,7 @@ internal object SignInCustomCognitoActions : CustomSignInActions {
                 ) {
                     SignInChallengeHelper.evaluateNextStep(
                         username = event.username,
+                        oldDeviceMetadata = deviceMetadata,
                         challengeNameType = initiateAuthResponse.challengeName,
                         session = initiateAuthResponse.session,
                         challengeParameters = initiateAuthResponse.challengeParameters,

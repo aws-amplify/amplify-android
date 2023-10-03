@@ -27,6 +27,7 @@ import com.amplifyframework.auth.cognito.helpers.SignInChallengeHelper
 import com.amplifyframework.auth.exceptions.ServiceException
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.SRPActions
+import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.SRPEvent
 import com.amplifyframework.statemachine.codegen.events.SignInEvent
@@ -212,6 +213,8 @@ internal object SRPCognitoActions : SRPActions {
                 if (response != null) {
                     SignInChallengeHelper.evaluateNextStep(
                         username,
+                        if (deviceKey != null) DeviceMetadata.Metadata(deviceKey, "")
+                        else DeviceMetadata.Empty,
                         response.challengeName,
                         response.session,
                         response.challengeParameters,

@@ -68,6 +68,7 @@ internal object SignInChallengeCognitoActions : SignInChallengeActions {
             response?.let {
                 SignInChallengeHelper.evaluateNextStep(
                     username = username ?: "",
+                    oldDeviceMetadata = null,
                     challengeNameType = response.challengeName,
                     session = response.session,
                     challengeParameters = response.challengeParameters,
