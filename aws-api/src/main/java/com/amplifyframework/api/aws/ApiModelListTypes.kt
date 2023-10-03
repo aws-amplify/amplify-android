@@ -27,6 +27,9 @@ import com.amplifyframework.core.model.LoadedModelList
 import com.amplifyframework.core.model.Model
 import com.amplifyframework.core.model.ModelPage
 import com.amplifyframework.core.model.PaginationToken
+import com.amplifyframework.core.model.query.predicate.QueryField
+import com.amplifyframework.core.model.query.predicate.QueryPredicate
+import com.amplifyframework.core.model.query.predicate.QueryPredicates
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
@@ -49,13 +52,13 @@ internal class ApiLazyModelList<out M : Model> constructor(
     private val clazz: Class<M>,
     keyMap: Map<String, Any>,
     // API name is important to provide to future query calls. If a custom API name was used for the original call,
-    // the apiName to fetch the lazy list
+    // the apiName must be provided to the following lazy calls to fetch the lazy list
     private val apiName: String?,
     private val apiCategory: ApiCategory = Amplify.API
 ) : LazyModelList<M> {
 
     private val callbackScope = CoroutineScope(Dispatchers.IO)
-    private val queryPredicate = AppSyncLazyQueryPredicate<M>().createPredicate(clazz, keyMap)
+    private val queryPredicate = createPredicate(clazz, keyMap)
 
     override suspend fun fetchPage(paginationToken: PaginationToken?): ModelPage<M> {
         try {
@@ -123,4 +126,14 @@ internal class ApiLazyModelList<out M : Model> constructor(
 
     private fun createLazyException(exception: AmplifyException) =
         AmplifyException("Error lazy loading the model list.", exception, exception.message ?: "")
+
+    internal companion object {
+        fun <M : Model> createPredicate(clazz: Class<M>, keyMap: Map<String, Any>): QueryPredicate {
+            var queryPredicate = QueryPredicates.all()
+            keyMap.forEach {
+                queryPredicate = queryPredicate.and(QueryField.field(clazz.simpleName, it.key).eq(it.value))
+            }
+            return queryPredicate
+        }
+    }
 }

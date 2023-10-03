@@ -38,7 +38,7 @@ class LazyTypeTest {
         assertFalse(
             ModelSchema.fromModelClass(Todo::class.java)
                 .modelClass.getAnnotation(ModelConfig::class.java)
-                ?.hasLazySupport ?: false
+                ?.hasLazySupport ?: true
         )
     }
 }

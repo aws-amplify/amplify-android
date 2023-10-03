@@ -65,7 +65,6 @@ internal class ModelPostProcessingTypeAdapter(
                     fieldToUpdate.isAccessible = true
                     if (fieldToUpdate.get(parent) == null) {
                         val lazyField = fieldMap.value
-                        val lazyFieldModelSchema = schemaRegistry.getModelSchemaForModelClass(lazyField.targetType)
 
                         when {
                             fieldMap.value.isModelReference -> {
@@ -73,11 +72,13 @@ internal class ModelPostProcessingTypeAdapter(
                                 fieldToUpdate.set(parent, modelReference)
                             }
                             fieldMap.value.isModelList -> {
+                                val lazyFieldModelSchema = schemaRegistry
+                                    .getModelSchemaForModelClass(lazyField.targetType)
+
                                 val lazyFieldTargetNames = lazyFieldModelSchema
                                     .associations
-                                    .entries
-                                    .first { it.value.associatedType == parentType }
-                                    .value
+                                    .values
+                                    .first { it.associatedType == parentType }
                                     .targetNames
 
                                 val parentIdentifiers = parent.getSortedIdentifiers()

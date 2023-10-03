@@ -245,7 +245,7 @@ public final class SelectionSet {
                 for (PropertyContainerPath association : includeRelationships) {
                     SelectionSet included = SelectionSetUtils.asSelectionSetWithoutRoot(association);
                     if (included != null) {
-                        SelectionSetUtils.merge(node, included);
+                        SelectionSetUtils.mergeChild(node, included);
                     }
                 }
             }

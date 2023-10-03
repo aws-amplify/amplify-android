@@ -110,8 +110,8 @@ private fun nodesInPath(node: PropertyContainerPath, includeRoot: Boolean): List
  * @see findChildByName
  * @see replaceChild
  */
-@JvmName("merge")
-internal fun SelectionSet.mergeWith(selectionSet: SelectionSet) {
+@JvmName("mergeChild")
+internal fun SelectionSet.mergeChild(selectionSet: SelectionSet) {
     val name = selectionSet.value ?: ""
     val existingField = findChildByName(name)
 
@@ -121,7 +121,7 @@ internal fun SelectionSet.mergeWith(selectionSet: SelectionSet) {
             val childName = child.value
             if (child.nodes.isNotEmpty() && childName != null) {
                 if (existingField.findChildByName(childName) != null) {
-                    existingField.mergeWith(child)
+                    existingField.mergeChild(child)
                 } else {
                     replaceFields.add(child)
                 }

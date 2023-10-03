@@ -15,6 +15,8 @@
 
 package com.amplifyframework.api.aws;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
 import com.amplifyframework.AmplifyException;
@@ -58,9 +60,9 @@ final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
     }
 
     public <T> GraphQLResponse<T> buildResponse(
-            GraphQLRequest<T> request,
-            String responseJson,
-            String apiName
+            @NonNull GraphQLRequest<T> request,
+            @Nullable String responseJson,
+            @Nullable String apiName
     ) throws ApiException {
         // On empty strings, Gson returns null instead of throwing JsonSyntaxException. See:
         // https://github.com/google/gson/issues/457

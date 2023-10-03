@@ -26,12 +26,14 @@ import com.amplifyframework.core.model.LoadedModelList
 import com.amplifyframework.core.model.LoadedModelReference
 import com.amplifyframework.core.model.includes
 import com.amplifyframework.datastore.generated.model.HasManyChild
+import com.amplifyframework.datastore.generated.model.HasManyChildPath
 import com.amplifyframework.datastore.generated.model.HasOneChild
 import com.amplifyframework.datastore.generated.model.Parent
 import com.amplifyframework.datastore.generated.model.ParentPath
 import com.amplifyframework.kotlin.core.Amplify
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.fail
 import org.junit.BeforeClass
 import org.junit.Test
@@ -123,6 +125,110 @@ class GraphQLLazyUpdateInstrumentationTest {
         // CLEANUP
         Amplify.API.mutate(ModelMutation.delete(hasOneChild))
         Amplify.API.mutate(ModelMutation.delete(hasOneChild2))
+        Amplify.API.mutate(ModelMutation.delete(hasManyChild))
+        Amplify.API.mutate(ModelMutation.delete(parent))
+    }
+
+    @Test
+    fun update_without_includes_does_not_remove_relationship() = runTest {
+        // GIVEN
+        val parent = Parent.builder().build()
+        Amplify.API.mutate(ModelMutation.create(parent)).data
+
+        val hasManyChild = HasManyChild.builder().content("Child2").parent(parent).build()
+        Amplify.API.mutate(ModelMutation.create(hasManyChild))
+
+        // WHEN
+        val hasManyChildToUpdate = hasManyChild.copyOfBuilder().content("Child2-Updated").build()
+        val request = ModelMutation.update(hasManyChildToUpdate)
+        val updatedHasManyChild = Amplify.API.mutate(request).data
+
+        // THEN
+        assertEquals(hasManyChild.id, updatedHasManyChild.id)
+        assertEquals("Child2-Updated", updatedHasManyChild.content)
+        (updatedHasManyChild.parent as? LazyModelReference)?.fetchModel()?.let {
+            assertEquals(parent.id, it.id)
+        } ?: fail("Response child was null or not a LazyModelReference")
+
+        // CLEANUP
+        Amplify.API.mutate(ModelMutation.delete(hasManyChild))
+        Amplify.API.mutate(ModelMutation.delete(parent))
+    }
+
+    @Test
+    fun update_with_includes_does_not_remove_relationship() = runTest {
+        // GIVEN
+        val parent = Parent.builder().build()
+        Amplify.API.mutate(ModelMutation.create(parent)).data
+
+        val hasManyChild = HasManyChild.builder().content("Child2").parent(parent).build()
+        Amplify.API.mutate(ModelMutation.create(hasManyChild))
+
+        // WHEN
+        val hasManyChildToUpdate = hasManyChild.copyOfBuilder().content("Child2-Updated").build()
+        val request = ModelMutation.update<HasManyChild, HasManyChildPath>(hasManyChildToUpdate) {
+            includes(it.parent)
+        }
+        val updatedHasManyChild = Amplify.API.mutate(request).data
+
+        // THEN
+        assertEquals(hasManyChild.id, updatedHasManyChild.id)
+        assertEquals("Child2-Updated", updatedHasManyChild.content)
+        (updatedHasManyChild.parent as? LoadedModelReference)?.value?.let {
+            assertEquals(parent.id, it.id)
+        } ?: fail("Response child was null or not a LoadedModelReference")
+
+        // CLEANUP
+        Amplify.API.mutate(ModelMutation.delete(hasManyChild))
+        Amplify.API.mutate(ModelMutation.delete(parent))
+    }
+
+    @Test
+    fun update_without_includes_explicit_remove_relationship() = runTest {
+        // GIVEN
+        val parent = Parent.builder().build()
+        Amplify.API.mutate(ModelMutation.create(parent)).data
+
+        val hasManyChild = HasManyChild.builder().content("Child2").parent(parent).build()
+        Amplify.API.mutate(ModelMutation.create(hasManyChild))
+
+        // WHEN
+        val hasManyChildToUpdate = hasManyChild.copyOfBuilder().parent(null).content("Child2-Updated").build()
+        val request = ModelMutation.update(hasManyChildToUpdate)
+        val updatedHasManyChild = Amplify.API.mutate(request).data
+
+        // THEN
+        assertEquals(hasManyChild.id, updatedHasManyChild.id)
+        assertEquals("Child2-Updated", updatedHasManyChild.content)
+        assertNull((updatedHasManyChild.parent as LoadedModelReference).value)
+
+        // CLEANUP
+        Amplify.API.mutate(ModelMutation.delete(hasManyChild))
+        Amplify.API.mutate(ModelMutation.delete(parent))
+    }
+
+    @Test
+    fun update_with_includes_explicit_remove_relationship() = runTest {
+        // GIVEN
+        val parent = Parent.builder().build()
+        Amplify.API.mutate(ModelMutation.create(parent)).data
+
+        val hasManyChild = HasManyChild.builder().content("Child2").parent(parent).build()
+        Amplify.API.mutate(ModelMutation.create(hasManyChild))
+
+        // WHEN
+        val hasManyChildToUpdate = hasManyChild.copyOfBuilder().parent(null).content("Child2-Updated").build()
+        val request = ModelMutation.update<HasManyChild, HasManyChildPath>(hasManyChildToUpdate) {
+            includes(it.parent)
+        }
+        val updatedHasManyChild = Amplify.API.mutate(request).data
+
+        // THEN
+        assertEquals(hasManyChild.id, updatedHasManyChild.id)
+        assertEquals("Child2-Updated", updatedHasManyChild.content)
+        assertNull((updatedHasManyChild.parent as LoadedModelReference).value)
+
+        // CLEANUP
         Amplify.API.mutate(ModelMutation.delete(hasManyChild))
         Amplify.API.mutate(ModelMutation.delete(parent))
     }

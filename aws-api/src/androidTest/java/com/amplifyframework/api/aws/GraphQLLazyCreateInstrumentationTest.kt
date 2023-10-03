@@ -33,6 +33,7 @@ import com.amplifyframework.datastore.generated.model.ParentPath
 import com.amplifyframework.kotlin.core.Amplify
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.fail
 import org.junit.BeforeClass
 import org.junit.Test
@@ -115,5 +116,39 @@ class GraphQLLazyCreateInstrumentationTest {
         // CLEANUP
         Amplify.API.mutate(ModelMutation.delete(hasOneChild))
         Amplify.API.mutate(ModelMutation.delete(parent))
+    }
+
+    @Test
+    fun create_with_no_includes_null_optional_relationship() = runTest {
+        // GIVEN
+        val hasManyChild = HasManyChild.builder().content("Child1").parent(null).build()
+        val request = ModelMutation.create(hasManyChild)
+        // WHEN
+        val responseChild = Amplify.API.mutate(request).data
+
+        // THEN
+        assertEquals(hasManyChild.id, responseChild.id)
+        assertEquals("Child1", responseChild.content)
+        assertNull((responseChild.parent as LoadedModelReference).value)
+
+        // CLEANUP
+        Amplify.API.mutate(ModelMutation.delete(hasManyChild))
+    }
+
+    @Test
+    fun create_with_no_includes_missing_optional_relationship() = runTest {
+        // GIVEN
+        val hasManyChild = HasManyChild.builder().content("Child1").build()
+        val request = ModelMutation.create(hasManyChild)
+        // WHEN
+        val responseChild = Amplify.API.mutate(request).data
+
+        // THEN
+        assertEquals(hasManyChild.id, responseChild.id)
+        assertEquals("Child1", responseChild.content)
+        assertNull((responseChild.parent as LoadedModelReference).value)
+
+        // CLEANUP
+        Amplify.API.mutate(ModelMutation.delete(hasManyChild))
     }
 }

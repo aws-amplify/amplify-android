@@ -40,7 +40,7 @@ internal class ApiLazyModelReference<M : Model> internal constructor(
     private val clazz: Class<M>,
     private val keyMap: Map<String, Any>,
     // API name is important to provide to future query calls. If a custom API name was used for the original call,
-    // the apiName to fetch to lazy value
+    // the apiName must be provided to the following lazy call to fetch the value.
     private val apiName: String? = null,
     private val apiCategory: ApiCategory = Amplify.API
 ) : LazyModelReference<M> {
@@ -51,7 +51,7 @@ internal class ApiLazyModelReference<M : Model> internal constructor(
     init {
         // If we have no keys, we have nothing to loads
         if (keyMap.isEmpty()) {
-            cachedValue.set(null)
+            cachedValue.set(LoadedValue(null))
         }
     }
 

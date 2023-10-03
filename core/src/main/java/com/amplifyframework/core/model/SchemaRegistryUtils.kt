@@ -55,7 +55,7 @@ internal object SchemaRegistryUtils {
             /*
             modelSchema.modelClass could throw if modelClass was not set from builder.
             This is likely not a valid scenario, as modelClass should be required, but
-            we have a number of test cases that don't provide on. Since the builder is public and
+            we have a number of test cases that don't provide one. Since the builder is public and
             modelClass isn't a mandatory builder param, we add this block for additional safety.
             */
         }

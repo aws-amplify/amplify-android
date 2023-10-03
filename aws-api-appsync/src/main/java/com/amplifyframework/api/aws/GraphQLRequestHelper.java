@@ -228,22 +228,18 @@ public class GraphQLRequestHelper {
 
             Object fieldValue = extractFieldValue(modelField.getName(), instance, schema, false);
             Object underlyingFieldValue = fieldValue;
-            Map<String, Object> identifiersIfLazyModel = new HashMap<>();
             if (modelField.isModelReference() && fieldValue != null) {
                 ModelReference<?> modelReference = (ModelReference<?>) fieldValue;
                 if (modelReference instanceof LoadedModelReference) {
                     underlyingFieldValue = ((LoadedModelReference) modelReference).getValue();
                 }
-                identifiersIfLazyModel = modelReference.getIdentifier();
             }
 
             if (association == null) {
                 result.put(fieldName, fieldValue);
             } else if (association.isOwner()) {
                 if ((fieldValue == null ||
-                        (modelField.isModelReference() &&
-                                underlyingFieldValue == null &&
-                                identifiersIfLazyModel.isEmpty())) &&
+                        (modelField.isModelReference() && underlyingFieldValue == null)) &&
                         MutationType.CREATE.equals(type)) {
                     // Do not set null values on associations for create mutations.
                 } else if (schema.getVersion() >= 1 && association.getTargetNames() != null
@@ -268,12 +264,15 @@ public class GraphQLRequestHelper {
             Object underlyingFieldValue,
             ModelAssociation association) {
         if (modelField.isModel() && fieldValue == null) {
-            // When there is no model field value, set null for removal of values or deassociation.
+            // When there is no model field value, set null for removal of values or association.
             for (String key : association.getTargetNames()) {
                 result.put(key, null);
             }
         } else if ((modelField.isModel() || modelField.isModelReference()) && underlyingFieldValue instanceof Model) {
             if (((Model) underlyingFieldValue).resolveIdentifier() instanceof ModelIdentifier<?>) {
+                // Here, we are unwrapping our ModelReference to grab our foreign keys.
+                // If we have a ModelIdentifier, we can pull all the key values, but we don't have
+                // the key names. We must grab those from the association target names
                 final ModelIdentifier<?> primaryKey =
                         (ModelIdentifier<?>) ((Model) underlyingFieldValue).resolveIdentifier();
                 ListIterator<String> targetNames =
@@ -300,18 +299,21 @@ public class GraphQLRequestHelper {
                                 .get(primaryKeyFieldsIterator.next()));
                     }
                 } else {
+                    // our key was not a ModelIdentifier type, so it must be a singular primary key
                     result.put(
                             association.getTargetNames()[0],
                             ((Model) underlyingFieldValue).resolveIdentifier().toString()
                     );
                 }
             } else {
+                // our key was not a ModelIdentifier type, so it must be a singular primary key
                 result.put(
                         association.getTargetNames()[0],
                         ((Model) underlyingFieldValue).resolveIdentifier().toString()
                 );
             }
         } else if (modelField.isModelReference() && fieldValue instanceof ModelReference) {
+            // Here we are unwrapping our ModelReference and inserting
             Map<String, Object> identifiers = ((ModelReference<?>) fieldValue).getIdentifier();
             if (identifiers.isEmpty()) {
                 for (String key : association.getTargetNames()) {
@@ -362,6 +364,8 @@ public class GraphQLRequestHelper {
             Field privateField = instance.getClass().getDeclaredField(fieldName);
             privateField.setAccessible(true);
             Object fieldInstance = privateField.get(instance);
+            // In some cases, we don't want to return a ModelReference value. If extractLazyValue
+            // is set, we unwrap the reference to grab to value underneath
             if (extractLazyValue && fieldInstance != null && privateField.getType() == LoadedModelReference.class) {
                 return ((LoadedModelReference<?>) fieldInstance).getValue();
             }
