@@ -42,7 +42,7 @@ import kotlin.time.Duration.Companion.seconds
 internal object SignInChallengeHelper {
     fun evaluateNextStep(
         username: String,
-        oldDeviceMetadata: DeviceMetadata?,
+        oldDeviceMetadata: DeviceMetadata.Metadata?,
         challengeNameType: ChallengeNameType?,
         session: String?,
         challengeParameters: Map<String, String>?,
@@ -74,10 +74,8 @@ internal object SignInChallengeHelper {
                         )
                     } ?: run {
                         var metadata: DeviceMetadata = DeviceMetadata.Empty
-                        val keyDeviceKey = "DEVICE_KEY"
-                        val keyDeviceGroupKey = "DEVICE_GROUP_KEY"
-                        val deviceKey = challengeParameters?.get(keyDeviceKey)
-                        val deviceGroupKey = challengeParameters?.get(keyDeviceGroupKey)
+                        val deviceKey = oldDeviceMetadata?.deviceKey
+                        val deviceGroupKey = oldDeviceMetadata?.deviceGroupKey
                         if (!deviceKey.isNullOrEmpty() || !deviceGroupKey.isNullOrEmpty()) {
                             metadata = DeviceMetadata.Metadata(
                                 deviceKey ?: "",

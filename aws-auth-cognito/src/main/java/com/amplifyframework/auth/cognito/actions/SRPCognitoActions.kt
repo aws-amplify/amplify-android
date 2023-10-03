@@ -213,8 +213,7 @@ internal object SRPCognitoActions : SRPActions {
                 if (response != null) {
                     SignInChallengeHelper.evaluateNextStep(
                         username,
-                        if (deviceKey != null) DeviceMetadata.Metadata(deviceKey, "")
-                        else DeviceMetadata.Empty,
+                        DeviceMetadata.Metadata(deviceKey, ""),
                         response.challengeName,
                         response.session,
                         response.challengeParameters,
