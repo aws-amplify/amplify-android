@@ -2228,6 +2228,8 @@ internal class RealAWSCognitoAuthPlugin(
             onError.accept(InvalidParameterException("No mfa settings given"))
             return
         }
+        // If either of the params have preferred setting set then ignore fetched preference preferred property
+        val overridePreferredSetting: Boolean = !(sms?.mfaPreferred == true || totp?.mfaPreferred == true)
         fetchMFAPreference({ userPreference ->
             authStateMachine.getCurrentState { authState ->
                 when (authState.authNState) {
@@ -2243,7 +2245,11 @@ internal class RealAWSCognitoAuthPlugin(
                                             this.accessToken = token
                                             this.smsMfaSettings = sms?.let { it ->
                                                 val preferredMFASetting = it.mfaPreferred
-                                                    ?: (userPreference.preferred == MFAType.SMS && it.mfaEnabled)
+                                                    ?: (
+                                                        overridePreferredSetting &&
+                                                            userPreference.preferred == MFAType.SMS &&
+                                                            it.mfaEnabled
+                                                        )
                                                 SmsMfaSettingsType.invoke {
                                                     enabled = it.mfaEnabled
                                                     preferredMfa = preferredMFASetting
@@ -2251,7 +2257,11 @@ internal class RealAWSCognitoAuthPlugin(
                                             }
                                             this.softwareTokenMfaSettings = totp?.let { it ->
                                                 val preferredMFASetting = it.mfaPreferred
-                                                    ?: (userPreference.preferred == MFAType.TOTP && it.mfaEnabled)
+                                                    ?: (
+                                                        overridePreferredSetting &&
+                                                            userPreference.preferred == MFAType.TOTP &&
+                                                            it.mfaEnabled
+                                                        )
                                                 SoftwareTokenMfaSettingsType.invoke {
                                                     enabled = it.mfaEnabled
                                                     preferredMfa = preferredMFASetting
