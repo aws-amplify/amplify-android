@@ -133,7 +133,6 @@ import com.amplifyframework.statemachine.StateChangeListenerToken
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.AuthChallenge
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
-import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.data.FederatedToken
 import com.amplifyframework.statemachine.codegen.data.HostedUIErrorData
 import com.amplifyframework.statemachine.codegen.data.SignInData
@@ -168,6 +167,7 @@ import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
 internal class RealAWSCognitoAuthPlugin(
     private val configuration: AuthConfiguration,
@@ -1224,7 +1224,9 @@ internal class RealAWSCognitoAuthPlugin(
             when (val state = authState.authNState) {
                 is AuthenticationState.SignedIn -> {
                     updateDevice(
-                        (state.deviceMetadata as? DeviceMetadata.Metadata)?.deviceKey,
+                        runBlocking {
+                            authEnvironment.getDeviceMetadata(state.signedInData.username)?.deviceKey
+                        },
                         DeviceRememberedStatusType.Remembered,
                         onSuccess,
                         onError
@@ -1276,7 +1278,9 @@ internal class RealAWSCognitoAuthPlugin(
             when (val authState = authState.authNState) {
                 is AuthenticationState.SignedIn -> {
                     if (device.id.isEmpty()) {
-                        val deviceKey = (authState.deviceMetadata as? DeviceMetadata.Metadata)?.deviceKey
+                        val deviceKey = runBlocking {
+                            authEnvironment.getDeviceMetadata(authState.signedInData.username)?.deviceKey
+                        }
                         updateDevice(deviceKey, DeviceRememberedStatusType.NotRemembered, onSuccess, onError)
                     } else {
                         updateDevice(device.id, DeviceRememberedStatusType.NotRemembered, onSuccess, onError)

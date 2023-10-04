@@ -16,7 +16,6 @@
 package com.amplifyframework.auth.cognito.actions
 
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.NewDeviceMetadataType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.NotAuthorizedException
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.RespondToAuthChallengeRequest
 import com.amplifyframework.AmplifyException
@@ -29,7 +28,6 @@ import com.amplifyframework.auth.exceptions.ServiceException
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.DeviceSRPSignInActions
 import com.amplifyframework.statemachine.codegen.data.CredentialType
-import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.data.SignInMethod
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.DeviceSRPSignInEvent
@@ -168,7 +166,6 @@ internal object DeviceSRPCognitoSignInActions : DeviceSRPSignInActions {
                     DeviceSRPSignInEvent(DeviceSRPSignInEvent.EventType.FinalizeSignIn())
                     SignInChallengeHelper.evaluateNextStep(
                         username = username,
-                        oldDeviceMetadata = DeviceMetadata.Metadata(deviceKey, deviceGroupKey),
                         signInMethod = SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH),
                         authenticationResult = respondToAuthChallenge.authenticationResult,
                         challengeNameType = respondToAuthChallenge.challengeName,
