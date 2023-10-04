@@ -18,6 +18,7 @@ import android.content.Context
 import android.database.Cursor
 import android.net.Uri
 import aws.sdk.kotlin.services.pinpoint.PinpointClient
+import aws.sdk.kotlin.services.pinpoint.model.ChannelType
 import aws.sdk.kotlin.services.pinpoint.model.EndpointDemographic
 import aws.sdk.kotlin.services.pinpoint.model.EndpointItemResponse
 import aws.sdk.kotlin.services.pinpoint.model.EndpointLocation
@@ -286,12 +287,10 @@ class EventRecorder(
             demographic = endpointDemographic
             effectiveDate = endpointProfile.effectiveDate.millisToIsoDate()
 
-            if (endpointProfile.address != "" && endpointProfile.channelType != null) {
+            if (endpointProfile.address != "" && endpointProfile.channelType == ChannelType.Gcm) {
                 optOut = "NONE" // no opt out, send notifications
                 address = endpointProfile.address
                 channelType = endpointProfile.channelType
-            } else {
-                optOut = "ALL" // opt out from all notifications
             }
 
             attributes = endpointProfile.allAttributes
