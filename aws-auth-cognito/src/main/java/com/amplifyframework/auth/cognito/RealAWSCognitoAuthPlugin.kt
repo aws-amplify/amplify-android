@@ -2258,7 +2258,6 @@ internal class RealAWSCognitoAuthPlugin(
                                                 }
                                             }
                                         }?.also {
-                                            println("Ankit's test $it")
                                             onSuccess.call()
                                         }
                                 } ?: onError.accept(SignedOutException())
