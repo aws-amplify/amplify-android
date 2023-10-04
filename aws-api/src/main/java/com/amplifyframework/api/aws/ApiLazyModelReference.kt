@@ -33,8 +33,8 @@ import kotlin.coroutines.suspendCoroutine
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.sync.Semaphore
-import kotlinx.coroutines.sync.withPermit
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 internal class ApiLazyModelReference<M : Model> internal constructor(
     private val clazz: Class<M>,
@@ -45,7 +45,7 @@ internal class ApiLazyModelReference<M : Model> internal constructor(
     private val apiCategory: ApiCategory = Amplify.API
 ) : LazyModelReference<M> {
     private val cachedValue = AtomicReference<LoadedValue<M>?>(null)
-    private val semaphore = Semaphore(1) // prevents multiple fetches
+    private val mutex = Mutex() // prevents multiple fetches
     private val callbackScope = CoroutineScope(Dispatchers.IO)
 
     init {
@@ -88,7 +88,7 @@ internal class ApiLazyModelReference<M : Model> internal constructor(
 
     private suspend fun fetchInternal(): M? {
         // Use Semaphore with 1 permit to only allow 1 execution at a time
-        semaphore.withPermit {
+        mutex.withLock {
 
             // Quick return if value is already present
             val cached = cachedValue.get()
