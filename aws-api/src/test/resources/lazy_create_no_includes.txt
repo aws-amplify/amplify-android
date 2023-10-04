@@ -1,0 +1,1 @@
+{"query": "mutation CreatePost($input: CreatePostInput!) {\n  createPost(input: $input) {\n    blog {\n      id\n    }\n    createdAt\n    id\n    name\n    updatedAt\n  }\n}\n", "variables": {"input":{"blogPostsId":"b1","name":"My Post","id":"p1"}}}
