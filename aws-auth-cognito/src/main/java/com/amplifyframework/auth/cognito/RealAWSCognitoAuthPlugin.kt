@@ -167,7 +167,6 @@ import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 
 internal class RealAWSCognitoAuthPlugin(
     private val configuration: AuthConfiguration,
@@ -1223,14 +1222,14 @@ internal class RealAWSCognitoAuthPlugin(
         authStateMachine.getCurrentState { authState ->
             when (val state = authState.authNState) {
                 is AuthenticationState.SignedIn -> {
-                    updateDevice(
-                        runBlocking {
-                            authEnvironment.getDeviceMetadata(state.signedInData.username)?.deviceKey
-                        },
-                        DeviceRememberedStatusType.Remembered,
-                        onSuccess,
-                        onError
-                    )
+                    GlobalScope.launch {
+                        updateDevice(
+                            authEnvironment.getDeviceMetadata(state.signedInData.username)?.deviceKey,
+                            DeviceRememberedStatusType.Remembered,
+                            onSuccess,
+                            onError
+                        )
+                    }
                 }
                 is AuthenticationState.SignedOut -> {
                     onError.accept(SignedOutException())
@@ -1278,10 +1277,11 @@ internal class RealAWSCognitoAuthPlugin(
             when (val authState = authState.authNState) {
                 is AuthenticationState.SignedIn -> {
                     if (device.id.isEmpty()) {
-                        val deviceKey = runBlocking {
-                            authEnvironment.getDeviceMetadata(authState.signedInData.username)?.deviceKey
+                        GlobalScope.launch {
+                            val deviceKey = authEnvironment.getDeviceMetadata(authState.signedInData.username)
+                                ?.deviceKey
+                            updateDevice(deviceKey, DeviceRememberedStatusType.NotRemembered, onSuccess, onError)
                         }
-                        updateDevice(deviceKey, DeviceRememberedStatusType.NotRemembered, onSuccess, onError)
                     } else {
                         updateDevice(device.id, DeviceRememberedStatusType.NotRemembered, onSuccess, onError)
                     }
