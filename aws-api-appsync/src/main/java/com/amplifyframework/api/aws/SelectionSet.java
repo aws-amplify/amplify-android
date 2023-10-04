@@ -322,6 +322,9 @@ public final class SelectionSet {
                 String fieldName = field.getName();
                 if (schema.getAssociations().containsKey(fieldName)) {
                     if (ModelList.class.isAssignableFrom(field.getType())) {
+                        // Default behavior is to not include ModeList to allow for lazy loading
+                        // We do not need to inject any keys since ModelList values are pulled
+                        // from parent information.
                         continue;
                     } else if (List.class.isAssignableFrom(field.getType())) {
                         if (depth >= 1) {

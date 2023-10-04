@@ -19,7 +19,6 @@ import com.amplifyframework.AmplifyException
 import com.amplifyframework.api.ApiCategory
 import com.amplifyframework.api.ApiException
 import com.amplifyframework.api.graphql.GraphQLRequest
-import com.amplifyframework.api.graphql.GraphQLResponse
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.core.NullableConsumer
@@ -27,9 +26,6 @@ import com.amplifyframework.core.model.LazyModelReference
 import com.amplifyframework.core.model.Model
 import com.amplifyframework.core.model.ModelSchema
 import java.util.concurrent.atomic.AtomicReference
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
-import kotlin.coroutines.suspendCoroutine
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -61,9 +57,9 @@ internal class ApiLazyModelReference<M : Model> internal constructor(
 
     override suspend fun fetchModel(): M? {
         val cached = cachedValue.get()
-        if (cached != null || keyMap.isEmpty()) {
+        if (cached != null) {
             // Quick return if value is already present
-            return cached?.value
+            return cached.value
         }
 
         return fetchInternal()
@@ -71,9 +67,9 @@ internal class ApiLazyModelReference<M : Model> internal constructor(
 
     override fun fetchModel(onSuccess: NullableConsumer<M?>, onError: Consumer<AmplifyException>) {
         val cached = cachedValue.get()
-        if (cached != null || keyMap.isEmpty()) {
+        if (cached != null) {
             // Quick return if value is already present
-            onSuccess.accept(cached?.value)
+            onSuccess.accept(cached.value)
         }
 
         callbackScope.launch {
@@ -92,8 +88,8 @@ internal class ApiLazyModelReference<M : Model> internal constructor(
 
             // Quick return if value is already present
             val cached = cachedValue.get()
-            if (cached != null || keyMap.isEmpty()) {
-                return cached?.value
+            if (cached != null) {
+                return cached.value
             }
 
             return try {
@@ -130,29 +126,5 @@ internal class ApiLazyModelReference<M : Model> internal constructor(
     private companion object {
         // Wraps the value to determine difference between null/unloaded and null/loaded
         private class LoadedValue<M : Model>(val value: M?)
-    }
-}
-
-/*
- Duplicating the query Kotlin Facade method so we aren't pulling in Kotlin Core
- */
-@Throws(ApiException::class)
-private suspend fun <R> query(apiCategory: ApiCategory, request: GraphQLRequest<R>, apiName: String?):
-    GraphQLResponse<R> {
-    return suspendCoroutine { continuation ->
-        if (apiName != null) {
-            apiCategory.query(
-                apiName,
-                request,
-                { continuation.resume(it) },
-                { continuation.resumeWithException(it) }
-            )
-        } else {
-            apiCategory.query(
-                request,
-                { continuation.resume(it) },
-                { continuation.resumeWithException(it) }
-            )
-        }
     }
 }

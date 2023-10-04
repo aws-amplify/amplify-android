@@ -17,9 +17,7 @@ package com.amplifyframework.api.aws
 
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.api.ApiCategory
-import com.amplifyframework.api.ApiException
 import com.amplifyframework.api.graphql.GraphQLRequest
-import com.amplifyframework.api.graphql.GraphQLResponse
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.core.model.LazyModelList
@@ -30,9 +28,6 @@ import com.amplifyframework.core.model.PaginationToken
 import com.amplifyframework.core.model.query.predicate.QueryField
 import com.amplifyframework.core.model.query.predicate.QueryPredicate
 import com.amplifyframework.core.model.query.predicate.QueryPredicates
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
-import kotlin.coroutines.suspendCoroutine
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -62,7 +57,7 @@ internal class ApiLazyModelList<out M : Model> constructor(
 
     override suspend fun fetchPage(paginationToken: PaginationToken?): ModelPage<M> {
         try {
-            val response = query(apiCategory, apiName, createRequest(paginationToken))
+            val response = query(apiCategory, createRequest(paginationToken), apiName)
             return response.data
         } catch (error: AmplifyException) {
             throw createLazyException(error)
@@ -101,27 +96,6 @@ internal class ApiLazyModelList<out M : Model> constructor(
             queryPredicate,
             (paginationToken as? ApiPaginationToken)?.nextToken
         )
-    }
-
-    @Throws(ApiException::class)
-    private suspend fun <R> query(apiCategory: ApiCategory, apiName: String?, request: GraphQLRequest<R>):
-        GraphQLResponse<R> {
-        return suspendCoroutine { continuation ->
-            if (apiName != null) {
-                apiCategory.query(
-                    apiName,
-                    request,
-                    { continuation.resume(it) },
-                    { continuation.resumeWithException(it) }
-                )
-            } else {
-                apiCategory.query(
-                    request,
-                    { continuation.resume(it) },
-                    { continuation.resumeWithException(it) }
-                )
-            }
-        }
     }
 
     private fun createLazyException(exception: AmplifyException) =
