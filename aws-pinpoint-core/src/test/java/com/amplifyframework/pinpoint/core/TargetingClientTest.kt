@@ -49,12 +49,24 @@ class TargetingClientTest {
     }
 
     @Test
+    fun testCurrentEndpoint() {
+        targetingClient.addAttribute("attribute", listOf("a", "b", "c"))
+        targetingClient.addMetric("metric", 2.0)
+        val endpoint = targetingClient.currentEndpoint()
+        assertEquals(endpoint.getAttribute("attribute"), listOf("a", "b", "c"))
+        assertEquals(endpoint.getMetric("metric"), 2.0)
+    }
+
+    @Test
     fun testUpdateEndpointProfile() = runTest {
         setup()
         targetingClient = constructTargetingClient()
 
         val expectedToken = "token123"
         every { store.get(TargetingClient.AWS_PINPOINT_PUSHNOTIFICATIONS_DEVICE_TOKEN_KEY) } returns expectedToken
+
+        targetingClient.addAttribute("attribute", listOf("a1", "a2"))
+        targetingClient.addMetric("metric", 1.0)
 
         val updateEndpointResponse = UpdateEndpointResponse.invoke {}
         coEvery { pinpointClient.updateEndpoint(ofType(UpdateEndpointRequest::class)) }.returns(updateEndpointResponse)
