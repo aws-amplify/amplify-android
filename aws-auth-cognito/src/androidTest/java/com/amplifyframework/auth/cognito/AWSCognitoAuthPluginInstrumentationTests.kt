@@ -179,6 +179,70 @@ class AWSCognitoAuthPluginInstrumentationTests {
         }
     }
 
+    @Test
+    fun rememberDevice_succeeds_after_signIn_and_signOut() {
+        signInWithCognito()
+
+        val rememberLatch = CountDownLatch(1)
+
+        auth.rememberDevice(
+            {
+                rememberLatch.countDown()
+            },
+            {
+                rememberLatch.countDown()
+                assertTrue(false)
+            }
+        )
+
+        rememberLatch.await(10, TimeUnit.SECONDS)
+
+        val forgetLatch = CountDownLatch(1)
+
+        auth.forgetDevice(
+            {
+                forgetLatch.countDown()
+            },
+            {
+                forgetLatch.countDown()
+                assertTrue(false)
+            }
+        )
+
+        forgetLatch.await(10, TimeUnit.SECONDS)
+
+        signOut()
+        signInWithCognito()
+
+        val rememberLatch2 = CountDownLatch(1)
+
+        auth.rememberDevice(
+            {
+                rememberLatch2.countDown()
+            },
+            {
+                assertTrue(false)
+                rememberLatch2.countDown()
+            }
+        )
+
+        rememberLatch2.await(10, TimeUnit.SECONDS)
+
+        val forgetLatch2 = CountDownLatch(1)
+
+        auth.forgetDevice(
+            {
+                forgetLatch2.countDown()
+            },
+            {
+                assertTrue(false)
+                forgetLatch2.countDown()
+            }
+        )
+
+        forgetLatch2.await(10, TimeUnit.SECONDS)
+    }
+
     private fun signInWithCognito(synchronous: Boolean = true) {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val (username, password) = Credentials.load(context)
