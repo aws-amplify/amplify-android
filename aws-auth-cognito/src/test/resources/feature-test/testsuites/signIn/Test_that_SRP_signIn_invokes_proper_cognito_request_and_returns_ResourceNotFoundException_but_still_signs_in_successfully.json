@@ -9,7 +9,7 @@
                 "apiName": "initiateAuth",
                 "responseType": "success",
                 "response": {
-                    "challengeName": "PasswordVerifier",
+                    "challengeName": "PASSWORD_VERIFIER",
                     "challengeParameters": {
                         "SALT": "abc",
                         "SECRET_BLOCK": "secretBlock",
