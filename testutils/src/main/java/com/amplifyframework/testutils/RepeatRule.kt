@@ -1,5 +1,3 @@
-package com.amplifyframework.testutils
-
 /*
  * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
@@ -14,6 +12,8 @@ package com.amplifyframework.testutils
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
+
+package com.amplifyframework.testutils
 
 import org.junit.rules.TestRule
 import org.junit.runner.Description

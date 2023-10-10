@@ -17,6 +17,7 @@ package com.amplifyframework.api.aws;
 
 import android.text.TextUtils;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.AmplifyException;
@@ -29,7 +30,10 @@ import com.amplifyframework.core.model.CustomTypeSchema;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelAssociation;
 import com.amplifyframework.core.model.ModelField;
+import com.amplifyframework.core.model.ModelList;
+import com.amplifyframework.core.model.ModelReference;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.PropertyContainerPath;
 import com.amplifyframework.core.model.SchemaRegistry;
 import com.amplifyframework.core.model.SerializedModel;
 import com.amplifyframework.core.model.types.JavaFieldType;
@@ -84,6 +88,15 @@ public final class SelectionSet {
     public SelectionSet(String value, @NonNull Set<SelectionSet> nodes) {
         this.value = value;
         this.nodes = Objects.requireNonNull(nodes);
+    }
+
+    /**
+     * Returns node value.
+     * @return node value
+     */
+    @Nullable
+    protected String getValue() {
+        return value;
     }
 
     /**
@@ -172,12 +185,19 @@ public final class SelectionSet {
      * Factory class for creating and serializing a selection set within a GraphQL document.
      */
     static final class Builder {
+        private String value;
         private Class<? extends Model> modelClass;
         private Operation operation;
         private GraphQLRequestOptions requestOptions;
         private ModelSchema modelSchema;
+        private List<PropertyContainerPath> includeRelationships;
 
         Builder() { }
+
+        Builder value(@Nullable String value) {
+            this.value = value;
+            return Builder.this;
+        }
 
         public Builder modelClass(@NonNull Class<? extends Model> modelClass) {
             this.modelClass = Objects.requireNonNull(modelClass);
@@ -199,6 +219,11 @@ public final class SelectionSet {
             return Builder.this;
         }
 
+        public Builder includeRelationships(@NonNull List<PropertyContainerPath> relationships) {
+            this.includeRelationships = relationships;
+            return Builder.this;
+        }
+
         /**
          * Builds the SelectionSet containing all of the fields of the provided model class.
          * @return selection set
@@ -210,10 +235,21 @@ public final class SelectionSet {
                         "Provide either a modelClass or a modelSchema to build the selection set");
             }
             Objects.requireNonNull(this.operation);
-            SelectionSet node = new SelectionSet(null,
+            SelectionSet node = new SelectionSet(value,
                     SerializedModel.class == modelClass
                             ? getModelFields(modelSchema, requestOptions.maxDepth(), operation)
-                            : getModelFields(modelClass, requestOptions.maxDepth(), operation));
+                            : getModelFields(modelClass, requestOptions.maxDepth(), operation, false));
+
+            // Relationships need to be added before wrapping pagination
+            if (includeRelationships != null) {
+                for (PropertyContainerPath association : includeRelationships) {
+                    SelectionSet included = SelectionSetUtils.asSelectionSetWithoutRoot(association);
+                    if (included != null) {
+                        SelectionSetUtils.mergeChild(node, included);
+                    }
+                }
+            }
+
             if (QueryType.LIST.equals(operation) || QueryType.SYNC.equals(operation)) {
                 node = wrapPagination(node);
             }
@@ -247,13 +283,20 @@ public final class SelectionSet {
          * TODO: this is mostly duplicative of {@link #getModelFields(ModelSchema, int, Operation)}.
          * Long-term, we want to remove this current method and rely only on the ModelSchema-based
          * version.
-         * @param clazz Class from which to build selection set
-         * @param depth Number of children deep to explore
-         * @return Selection Set
+         * 
+         * @param clazz          Class from which to build selection set
+         * @param depth          Number of children deep to explore
+         * @param primaryKeyOnly if keys should only be included
+         * @return SelectionSet for given class
          * @throws AmplifyException On failure to build selection set
          */
         @SuppressWarnings("unchecked") // Cast to Class<Model>
-        private Set<SelectionSet> getModelFields(Class<? extends Model> clazz, int depth, Operation operation)
+        private Set<SelectionSet> getModelFields(
+                Class<? extends Model> clazz,
+                int depth,
+                Operation operation,
+                Boolean primaryKeyOnly
+        )
                 throws AmplifyException {
             if (depth < 0) {
                 return new HashSet<>();
@@ -262,9 +305,12 @@ public final class SelectionSet {
             Set<SelectionSet> result = new HashSet<>();
             ModelSchema schema = ModelSchema.fromModelClass(clazz);
 
-            if (depth == 0
-                    && LeafSerializationBehavior.JUST_ID.equals(requestOptions.leafSerializationBehavior())
-                    && operation != QueryType.SYNC
+            if (
+                    (depth == 0
+                    && (LeafSerializationBehavior.JUST_ID.equals(
+                            requestOptions.leafSerializationBehavior()
+                    ) || primaryKeyOnly)
+                    && operation != QueryType.SYNC)
             ) {
                 for (String s : schema.getPrimaryIndexFields()) {
                     result.add(new SelectionSet(s));
@@ -275,17 +321,33 @@ public final class SelectionSet {
             for (Field field : FieldFinder.findModelFieldsIn(clazz)) {
                 String fieldName = field.getName();
                 if (schema.getAssociations().containsKey(fieldName)) {
-                    if (List.class.isAssignableFrom(field.getType())) {
+                    if (ModelList.class.isAssignableFrom(field.getType())) {
+                        // Default behavior is to not include ModeList to allow for lazy loading
+                        // We do not need to inject any keys since ModelList values are pulled
+                        // from parent information.
+                        continue;
+                    } else if (List.class.isAssignableFrom(field.getType())) {
                         if (depth >= 1) {
                             ParameterizedType listType = (ParameterizedType) field.getGenericType();
                             Class<Model> listTypeClass = (Class<Model>) listType.getActualTypeArguments()[0];
-                            Set<SelectionSet> fields = wrapPagination(getModelFields(listTypeClass,
-                                                                depth - 1,
-                                                                operation));
+                            Set<SelectionSet> fields = wrapPagination(
+                                    getModelFields(
+                                            listTypeClass,
+                                            depth - 1,
+                                            operation,
+                                            false
+                                    )
+                            );
                             result.add(new SelectionSet(fieldName, fields));
                         }
+                    } else if (ModelReference.class.isAssignableFrom(field.getType())) {
+                        ParameterizedType pType = (ParameterizedType) field.getGenericType();
+                        Class<Model> modalClass = (Class<Model>) pType.getActualTypeArguments()[0];
+                        Set<SelectionSet> fields = getModelFields(modalClass, 0, operation, true);
+                        result.add(new SelectionSet(fieldName, fields));
                     } else if (depth >= 1) {
-                        Set<SelectionSet> fields = getModelFields((Class<Model>) field.getType(), depth - 1, operation);
+                        Class<Model> modalClass = (Class<Model>) field.getType();
+                        Set<SelectionSet> fields = getModelFields(modalClass, depth - 1, operation, false);
                         result.add(new SelectionSet(fieldName, fields));
                     }
                 } else if (isCustomType(field)) {

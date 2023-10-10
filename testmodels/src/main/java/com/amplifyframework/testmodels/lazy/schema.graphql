@@ -1,0 +1,19 @@
+# This "input" configures a global authorization rule to enable public access to
+# all models in this schema. Learn more about authorization rules here: https://docs.amplify.aws/cli/graphql/authorization-rules
+input AMPLIFY { globalAuthRule: AuthRule = { allow: public } } # FOR TESTING ONLY!
+
+type Blog @model {
+  name: String!
+  posts: [Post!]! @hasMany
+}
+
+type Post @model {
+  name: String!
+  blog: Blog! @belongsTo
+  comments: [Comment] @hasMany
+}
+
+type Comment @model {
+  text: String!
+  post: Post! @belongsTo
+}
