@@ -126,7 +126,7 @@ public final class SerializedModelAdapterTest {
         String expectedJson = new JSONObject(Resources.readAsString(resourcePath)).toString(2);
         String actualJson = new JSONObject(gson.toJson(blogAsSerializedModel)).toString(2);
 
-        Assert.assertEquals(expectedJson, actualJson);
+        JSONAssert.assertEquals(expectedJson, actualJson, true);
 
         SerializedModel recovered = gson.fromJson(expectedJson, SerializedModel.class);
         Assert.assertEquals(blogAsSerializedModel, recovered);
@@ -182,7 +182,7 @@ public final class SerializedModelAdapterTest {
         String expectedJson = new JSONObject(Resources.readAsString(resourcePath)).toString(2);
         String actualJson = new JSONObject(gson.toJson(person)).toString(2);
 
-        Assert.assertEquals(expectedJson, actualJson);
+        JSONAssert.assertEquals(expectedJson, actualJson, true);
 
         SerializedModel recovered = gson.fromJson(expectedJson, SerializedModel.class);
         Assert.assertEquals(person, recovered);

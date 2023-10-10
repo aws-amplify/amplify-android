@@ -32,6 +32,7 @@ import com.amplifyframework.util.Immutable;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -210,7 +211,14 @@ public final class ModelSchema {
                 field.getAnnotation(com.amplifyframework.core.model.annotations.ModelField.class);
         if (annotation != null) {
             final String fieldName = field.getName();
-            final Class<?> fieldType = field.getType();
+            final Class<?> fieldType;
+            if (field.getType() == ModelReference.class && field.getGenericType()
+                    instanceof ParameterizedType) {
+                ParameterizedType pType = (ParameterizedType) field.getGenericType();
+                fieldType = (Class<?>) pType.getActualTypeArguments()[0];
+            } else {
+                fieldType = field.getType();
+            }
             final String targetType = annotation.targetType();
             final List<AuthRule> authRules = new ArrayList<>();
             for (com.amplifyframework.core.model.annotations.AuthRule ruleAnnotation : annotation.authRules()) {
@@ -225,6 +233,8 @@ public final class ModelSchema {
                     .isArray(Collection.class.isAssignableFrom(field.getType()))
                     .isEnum(Enum.class.isAssignableFrom(field.getType()))
                     .isModel(Model.class.isAssignableFrom(field.getType()))
+                    .isModelReference(ModelReference.class.isAssignableFrom(field.getType()))
+                    .isModelList(ModelList.class.isAssignableFrom(field.getType()))
                     .authRules(authRules)
                     .build();
         }
@@ -247,6 +257,7 @@ public final class ModelSchema {
             HasOne association = Objects.requireNonNull(field.getAnnotation(HasOne.class));
             return ModelAssociation.builder()
                     .name(HasOne.class.getSimpleName())
+                    .targetNames(association.targetNames())
                     .associatedName(association.associatedWith())
                     .associatedType(association.type().getSimpleName())
                     .build();
