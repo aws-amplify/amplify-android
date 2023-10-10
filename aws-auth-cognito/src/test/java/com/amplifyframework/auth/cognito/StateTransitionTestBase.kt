@@ -265,7 +265,15 @@ open class StateTransitionTestBase {
         Mockito.`when`(mockSignInActions.startSRPAuthAction(MockitoHelper.anyObject()))
             .thenReturn(
                 Action { dispatcher, _ ->
-                    dispatcher.send(SRPEvent(SRPEvent.EventType.InitiateSRP("username", "password", mapOf())))
+                    dispatcher.send(
+                        SRPEvent(
+                            SRPEvent.EventType.InitiateSRP(
+                                "username",
+                                "password",
+                                mapOf()
+                            )
+                        )
+                    )
                 }
             )
 
@@ -320,6 +328,7 @@ open class StateTransitionTestBase {
         Mockito.`when`(
             mockSignInChallengeActions.verifyChallengeAuthAction(
                 MockitoHelper.anyObject(),
+                MockitoHelper.anyObject(),
                 MockitoHelper.anyObject()
             )
         )
@@ -355,7 +364,13 @@ open class StateTransitionTestBase {
                 }
             )
 
-        Mockito.`when`(mockSRPActions.verifyPasswordSRPAction(MockitoHelper.anyObject()))
+        Mockito.`when`(
+            mockSRPActions.verifyPasswordSRPAction(
+                MockitoHelper.anyObject(),
+                MockitoHelper.anyObject(),
+                MockitoHelper.anyObject()
+            )
+        )
             .thenReturn(
                 Action { dispatcher, _ ->
                     dispatcher.send(
