@@ -32,6 +32,9 @@ import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.testmodels.ecommerce.Item;
 import com.amplifyframework.testmodels.ecommerce.Status;
+import com.amplifyframework.testmodels.lazy.Blog;
+import com.amplifyframework.testmodels.lazy.Post;
+import com.amplifyframework.testmodels.lazy.PostPath;
 import com.amplifyframework.testmodels.meeting.Meeting;
 import com.amplifyframework.testmodels.personcar.MaritalStatus;
 import com.amplifyframework.testmodels.personcar.Person;
@@ -49,6 +52,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import static com.amplifyframework.core.model.ModelPropertyPathKt.includes;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -125,6 +129,98 @@ public final class AppSyncGraphQLRequestFactoryTest {
             true
         );
     }
+
+    /**
+     * Validate construction of a GraphQL create mutation for a lazy model.
+     * @throws JSONException from JSONAssert.assertEquals
+     */
+    @Test
+    public void buildCreateMutationWithLazyModel() throws JSONException {
+        // Act: generate query
+        Blog blog = Blog.builder().name("My Blog").id("b1").build();
+        Post post = Post.builder().name("My Post").blog(blog).id("p1").build();
+
+        GraphQLRequest<Post> request =
+                AppSyncGraphQLRequestFactory.buildMutation(
+                        post,
+                        QueryPredicates.all(),
+                        MutationType.CREATE
+                );
+
+        // Validate request is expected request
+        JSONAssert.assertEquals(
+                Resources.readAsString("lazy_create_no_includes.txt"),
+                request.getContent(),
+                true
+        );
+    }
+
+    /**
+     * Validate construction of a GraphQL create mutation for a lazy model with includes.
+     * @throws JSONException from JSONAssert.assertEquals
+     */
+    @Test
+    public void buildCreateMutationWithLazyModelAndIncludes() throws JSONException {
+        // Act: generate query
+        Blog blog = Blog.builder().name("My Blog").id("b1").build();
+        Post post = Post.builder().name("My Post").blog(blog).id("p1").build();
+
+        GraphQLRequest<Post> request =
+                AppSyncGraphQLRequestFactory.<Post, Post, PostPath>buildMutation(
+                        post,
+                        QueryPredicates.all(),
+                        MutationType.CREATE,
+                        ((path) -> includes(path.getBlog(), path.getComments()))
+                );
+
+        // Validate request is expected request
+        JSONAssert.assertEquals(
+                Resources.readAsString("lazy_create_with_includes.txt"),
+                request.getContent(),
+                true
+        );
+    }
+
+    /**
+     * Validate construction of a GraphQL query for a lazy model.
+     * @throws JSONException from JSONAssert.assertEquals
+     */
+    @Test
+    public void buildQueryFromLazyModel() throws JSONException {
+        // Act: generate query
+        GraphQLRequest<Post> request =
+                AppSyncGraphQLRequestFactory.buildQuery(Post.class, "p1");
+
+        // Validate request is expected request
+        JSONAssert.assertEquals(
+                Resources.readAsString("lazy_query_no_includes.json"),
+                request.getContent(),
+                true
+        );
+    }
+
+    /**
+     * Validate construction of a GraphQL query for a lazy model with includes.
+     * @throws JSONException from JSONAssert.assertEquals
+     */
+    @Test
+    public void buildQueryFromLazyModelWithIncludes() throws JSONException {
+        // Act: generate query
+        GraphQLRequest<Post> request =
+                AppSyncGraphQLRequestFactory.<Post, Post, PostPath>buildQuery(
+                        Post.class,
+                        "p1",
+                        ((path) -> includes(path.getBlog(), path.getComments()))
+                );
+
+        // Validate request is expected request
+        JSONAssert.assertEquals(
+                Resources.readAsString("lazy_query_with_includes.json"),
+                request.getContent(),
+                true
+        );
+    }
+
 
     /**
      * Validates construction of a delete mutation query from a Person instance, a predicate.
