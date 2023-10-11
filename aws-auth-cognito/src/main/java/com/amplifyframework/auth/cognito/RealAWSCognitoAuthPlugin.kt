@@ -134,7 +134,6 @@ import com.amplifyframework.statemachine.StateChangeListenerToken
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.AuthChallenge
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
-import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.data.FederatedToken
 import com.amplifyframework.statemachine.codegen.data.HostedUIErrorData
 import com.amplifyframework.statemachine.codegen.data.SignInData
@@ -1224,12 +1223,14 @@ internal class RealAWSCognitoAuthPlugin(
         authStateMachine.getCurrentState { authState ->
             when (val state = authState.authNState) {
                 is AuthenticationState.SignedIn -> {
-                    updateDevice(
-                        (state.deviceMetadata as? DeviceMetadata.Metadata)?.deviceKey,
-                        DeviceRememberedStatusType.Remembered,
-                        onSuccess,
-                        onError
-                    )
+                    GlobalScope.launch {
+                        updateDevice(
+                            authEnvironment.getDeviceMetadata(state.signedInData.username)?.deviceKey,
+                            DeviceRememberedStatusType.Remembered,
+                            onSuccess,
+                            onError
+                        )
+                    }
                 }
                 is AuthenticationState.SignedOut -> {
                     onError.accept(SignedOutException())
@@ -1277,8 +1278,11 @@ internal class RealAWSCognitoAuthPlugin(
             when (val authState = authState.authNState) {
                 is AuthenticationState.SignedIn -> {
                     if (device.id.isEmpty()) {
-                        val deviceKey = (authState.deviceMetadata as? DeviceMetadata.Metadata)?.deviceKey
-                        updateDevice(deviceKey, DeviceRememberedStatusType.NotRemembered, onSuccess, onError)
+                        GlobalScope.launch {
+                            val deviceKey = authEnvironment.getDeviceMetadata(authState.signedInData.username)
+                                ?.deviceKey
+                            updateDevice(deviceKey, DeviceRememberedStatusType.NotRemembered, onSuccess, onError)
+                        }
                     } else {
                         updateDevice(device.id, DeviceRememberedStatusType.NotRemembered, onSuccess, onError)
                     }
