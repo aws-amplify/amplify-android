@@ -1,3 +1,14 @@
+## [Release 2.14.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.14.0)
+
+### Features
+- **api:** Lazy Loading and Custom Selection Set ([#2592](https://github.com/aws-amplify/amplify-android/issues/2592))
+
+### Bug Fixes
+- **push:** Add previously removed tests ([#2589](https://github.com/aws-amplify/amplify-android/issues/2589))
+- **auth:** fetch device metadata from credential store for `remember` and `forgetDevice` ([#2601](https://github.com/aws-amplify/amplify-android/issues/2601))
+
+[See all changes between 2.13.2 and 2.14.0](https://github.com/aws-amplify/amplify-android/compare/release_v2.13.2...release_v2.14.0)
+
 ## [Release 2.13.2](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.13.2)
 
 ### Bug Fixes
