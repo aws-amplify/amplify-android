@@ -30,7 +30,10 @@ data class UserMFAPreference(
 /**
  * Input for updating the MFA preference for a MFA Type
  */
-enum class MFAPreference(internal val mfaEnabled: Boolean, internal val mfaPreferred: Boolean? = null) {
+enum class MFAPreference(
+    internal val mfaEnabled: Boolean,
+    internal val mfaPreferred: Boolean? = null
+) {
     /**
      * MFA not enabled
      */
