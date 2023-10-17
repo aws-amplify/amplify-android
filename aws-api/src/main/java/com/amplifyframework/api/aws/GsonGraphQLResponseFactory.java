@@ -15,6 +15,8 @@
 
 package com.amplifyframework.api.aws;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
 import com.amplifyframework.AmplifyException;
@@ -22,8 +24,9 @@ import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.PaginatedResult;
+import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.ModelReference;
 import com.amplifyframework.util.Empty;
-import com.amplifyframework.util.GsonFactory;
 import com.amplifyframework.util.TypeMaker;
 
 import com.google.gson.Gson;
@@ -45,6 +48,8 @@ import java.util.List;
 final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
     private final Gson gson;
 
+    private final AWSApiSchemaRegistry schemaRegistry = new AWSApiSchemaRegistry();
+
     GsonGraphQLResponseFactory() {
         this(GsonFactory.instance());
     }
@@ -54,26 +59,42 @@ final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
         this.gson = gson;
     }
 
-    @Override
-    public <T> GraphQLResponse<T> buildResponse(GraphQLRequest<T> request, String responseJson)
-            throws ApiException {
-
+    public <T> GraphQLResponse<T> buildResponse(
+            @NonNull GraphQLRequest<T> request,
+            @Nullable String responseJson,
+            @Nullable String apiName
+    ) throws ApiException {
         // On empty strings, Gson returns null instead of throwing JsonSyntaxException. See:
         // https://github.com/google/gson/issues/457
         // https://github.com/google/gson/issues/1697
         if (Empty.check(responseJson)) {
             throw new ApiException(
-                "Amplify encountered an error while deserializing an object.",
-                new JsonParseException("Empty response."),
-                AmplifyException.TODO_RECOVERY_SUGGESTION
+                    "Amplify encountered an error while deserializing an object.",
+                    new JsonParseException("Empty response."),
+                    AmplifyException.TODO_RECOVERY_SUGGESTION
             );
         }
 
-        Type responseType = TypeMaker.getParameterizedType(GraphQLResponse.class, request.getResponseType());
+        Type responseType = TypeMaker.getParameterizedType(
+                GraphQLResponse.class,
+                request.getResponseType()
+        );
         try {
             Gson responseGson = gson.newBuilder()
-                .registerTypeHierarchyAdapter(Iterable.class, new IterableDeserializer<>(request))
-                .create();
+                    .registerTypeHierarchyAdapter(
+                            Iterable.class,
+                            new IterableDeserializer<>(request)
+                    )
+                    .registerTypeAdapter(
+                            ModelReference.class,
+                            new ModelReferenceDeserializer<Model>(apiName, schemaRegistry)
+                    )
+                    .registerTypeAdapterFactory(
+                            // register Model post processing to inject lazy types for fields that
+                            // were missing from json response
+                            new ModelPostProcessingTypeAdapter(apiName, schemaRegistry)
+                    )
+                    .create();
             return responseGson.fromJson(responseJson, responseType);
         } catch (JsonParseException jsonParseException) {
             throw new ApiException(
@@ -82,6 +103,17 @@ final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
                     AmplifyException.TODO_RECOVERY_SUGGESTION
             );
         }
+    }
+
+
+    // Do not use this method. Instead opt for overload with apiName API name is important for
+    // lazy model types because the apiName must be passed into the response builder in order
+    // to construct the lazy model reference types.
+    @Deprecated
+    @Override
+    public <T> GraphQLResponse<T> buildResponse(GraphQLRequest<T> request, String responseJson)
+            throws ApiException {
+        return buildResponse(request, responseJson, null);
     }
 
     static final class IterableDeserializer<R> implements JsonDeserializer<Iterable<Object>> {
@@ -168,7 +200,7 @@ final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
 
         private PaginatedResult<Object> buildPaginatedResult(Iterable<Object> items, JsonElement nextTokenElement) {
             GraphQLRequest<PaginatedResult<Object>> requestForNextPage = null;
-            if (nextTokenElement.isJsonPrimitive()) {
+            if (nextTokenElement != null && nextTokenElement.isJsonPrimitive()) {
                 String nextToken = nextTokenElement.getAsJsonPrimitive().getAsString();
                 try {
                     if (request instanceof AppSyncGraphQLRequest) {

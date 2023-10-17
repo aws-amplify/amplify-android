@@ -20,6 +20,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.test.core.app.ApplicationProvider
 import aws.sdk.kotlin.services.pinpoint.PinpointClient
+import com.amplifyframework.core.store.KeyValueRepository
 import com.amplifyframework.pinpoint.core.data.AndroidAppDetails
 import com.amplifyframework.pinpoint.core.data.AndroidDeviceDetails
 import com.amplifyframework.pinpoint.core.endpointProfile.EndpointProfile
@@ -48,6 +49,7 @@ internal val country = "en_US"
 internal val effectiveDate = 0L
 
 internal val preferences = mockk<SharedPreferences>()
+internal val store = mockk<KeyValueRepository>()
 internal val appDetails = AndroidAppDetails(appID, appTitle, packageName, versionCode, versionName)
 internal val deviceDetails = AndroidDeviceDetails(carrier = carrier, locale = locale)
 internal val applicationContext = mockk<Context>()
@@ -55,6 +57,7 @@ internal val applicationContext = mockk<Context>()
 internal fun setup() {
     mockkStatic("com.amplifyframework.pinpoint.core.util.SharedPreferencesUtilKt")
     every { preferences.getUniqueId() }.returns(uniqueID)
+    every { store.get(TargetingClient.AWS_PINPOINT_PUSHNOTIFICATIONS_DEVICE_TOKEN_KEY) } returns ""
     every { applicationContext.resources.configuration.locales[0].isO3Country }
         .returns(country)
 }
@@ -65,7 +68,8 @@ internal fun constructEndpointProfile(): EndpointProfile {
         preferences.getUniqueId(),
         appDetails,
         deviceDetails,
-        applicationContext
+        applicationContext,
+        store
     )
     endpointProfile.effectiveDate = effectiveDate
     return endpointProfile
@@ -83,8 +87,9 @@ internal fun constructTargetingClient(): TargetingClient {
     return TargetingClient(
         applicationContext,
         pinpointClient,
+        store,
         prefs,
         appDetails,
-        deviceDetails
+        deviceDetails,
     )
 }

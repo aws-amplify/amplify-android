@@ -23,6 +23,17 @@ apply(from = rootProject.file("configuration/publishing.gradle"))
 
 group = properties["POM_GROUP"].toString()
 
+android {
+
+    defaultConfig {
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    testOptions {
+        execution = "ANDROIDX_TEST_ORCHESTRATOR"
+    }
+}
+
 dependencies {
     api(project(":core"))
     api(project(":aws-core"))
@@ -44,12 +55,17 @@ dependencies {
     testImplementation(libs.test.mockwebserver)
     testImplementation(libs.rxjava)
     testImplementation(libs.test.robolectric)
+    testImplementation(libs.test.kotlin.coroutines)
 
     androidTestImplementation(project(":testutils"))
     androidTestImplementation(project(":testmodels"))
     androidTestImplementation(libs.test.androidx.core)
     androidTestImplementation(project(":aws-auth-cognito"))
+    androidTestImplementation(project(":core-kotlin"))
     androidTestImplementation(libs.test.androidx.runner)
     androidTestImplementation(libs.test.androidx.junit)
     androidTestImplementation(libs.rxjava)
+    androidTestImplementation(libs.test.kotlin.coroutines)
+
+    androidTestUtil(libs.test.androidx.orchestrator)
 }

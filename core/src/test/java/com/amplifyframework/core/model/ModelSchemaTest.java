@@ -20,6 +20,8 @@ import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testmodels.ecommerce.Item;
 import com.amplifyframework.testmodels.ecommerce.Order;
+import com.amplifyframework.testmodels.lazy.Blog;
+import com.amplifyframework.testmodels.lazy.Post;
 import com.amplifyframework.testmodels.personcar.MaritalStatus;
 import com.amplifyframework.testmodels.personcar.Person;
 
@@ -33,7 +35,9 @@ import java.util.Map;
 import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Tests the {@link ModelSchema}.
@@ -120,6 +124,104 @@ public final class ModelSchemaTest {
         // The call to add expectedModelSchema was a no-op since hashCode()
         // showed that the object was already in the collection.
         assertSame(actualModelSchema, modelSchemaSet.iterator().next());
+    }
+
+    /**
+     * The factory {@link ModelSchema#fromModelClass(Class)} will produce
+     * an {@link ModelSchema} that meets our expectations for the {@link Post} model.
+     * @throws AmplifyException from model schema parsing
+     */
+    @Test
+    public void modelSchemaAllowsLazyTypes() throws AmplifyException {
+        Map<String, ModelField> expectedFields = new HashMap<>();
+
+        expectedFields.put("id", ModelField.builder()
+                .targetType("ID")
+                .name("id")
+                .javaClassForValue(String.class)
+                .isRequired(true)
+                .build());
+        expectedFields.put("name", ModelField.builder()
+                .targetType("String")
+                .name("name")
+                .javaClassForValue(String.class)
+                .isRequired(true)
+                .build());
+        expectedFields.put("createdAt", ModelField.builder()
+                .targetType("AWSDateTime")
+                .name("createdAt")
+                .javaClassForValue(Temporal.DateTime.class)
+                .isReadOnly(true)
+                .build());
+        expectedFields.put("updatedAt", ModelField.builder()
+                .targetType("AWSDateTime")
+                .name("updatedAt")
+                .javaClassForValue(Temporal.DateTime.class)
+                .isReadOnly(true)
+                .build());
+        expectedFields.put("blog", ModelField.builder()
+                .targetType("Blog")
+                .name("blog")
+                .javaClassForValue(Blog.class)
+                .isRequired(true)
+                .isModelReference(true)
+                .isModelList(false)
+                .build());
+        expectedFields.put("comments", ModelField.builder()
+                .targetType("Comment")
+                .name("comments")
+                .javaClassForValue(ModelList.class)
+                .isRequired(false)
+                .isModelReference(false)
+                .isModelList(true)
+                .build());
+
+        Map<String, ModelAssociation> expectedAssociations = new HashMap<>();
+
+        expectedAssociations.put("blog", ModelAssociation.builder()
+                .name("BelongsTo")
+                .targetName("blogPostsId")
+                .associatedName("blog")
+                .associatedType("Blog")
+                .build());
+        expectedAssociations.put("comments", ModelAssociation.builder()
+                .name("HasMany")
+                .targetName(null)
+                .associatedName("post")
+                .associatedType("Comment")
+                .build());
+
+        ModelSchema expectedModelSchema = ModelSchema.builder()
+                .fields(expectedFields)
+                .name("Post")
+                .modelClass(Post.class)
+                .pluralName("Posts")
+                .associations(expectedAssociations)
+                .version(1)
+                .build();
+        ModelSchema actualModelSchema = ModelSchema.fromModelClass(Post.class);
+        assertEquals(expectedModelSchema, actualModelSchema);
+
+        // Sneaking in a cheeky lil' hashCode() test here, while we have two equals()
+        // ModelSchema in scope....
+        Set<ModelSchema> modelSchemaSet = new HashSet<>();
+        modelSchemaSet.add(actualModelSchema);
+        modelSchemaSet.add(expectedModelSchema);
+        assertEquals(1, modelSchemaSet.size());
+
+        // The object reference is the first one that was put into map
+        // (actualModelSchema was first call).
+        // The call to add expectedModelSchema was a no-op since hashCode()
+        // showed that the object was already in the collection.
+        assertSame(actualModelSchema, modelSchemaSet.iterator().next());
+
+        // Double check lazy field reference values are correct
+        ModelField blogField = actualModelSchema.getFields().get("blog");
+        assertTrue(blogField.isModelReference());
+        assertFalse(blogField.isModelList());
+        ModelField commentsField = actualModelSchema.getFields().get("comments");
+        assertFalse(commentsField.isModelReference());
+        assertTrue(commentsField.isModelList());
     }
 
     /**

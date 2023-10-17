@@ -22,5 +22,6 @@ data class FaceTargetMatchingParameters internal constructor(
     val targetIouWidthThreshold: Float,
     val targetIouHeightThreshold: Float,
     val faceIouWidthThreshold: Float,
-    val faceIouHeightThreshold: Float
+    val faceIouHeightThreshold: Float,
+    val ovalFitTimeout: Int
 )

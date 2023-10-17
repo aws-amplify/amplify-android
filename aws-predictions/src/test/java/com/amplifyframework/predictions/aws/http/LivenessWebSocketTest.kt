@@ -15,10 +15,12 @@
 
 package com.amplifyframework.predictions.aws.http
 
+import android.os.Build
 import aws.smithy.kotlin.runtime.auth.awscredentials.Credentials
 import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider
 import aws.smithy.kotlin.runtime.util.Attributes
 import com.amplifyframework.core.Action
+import com.amplifyframework.core.BuildConfig
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.predictions.PredictionsException
 import com.amplifyframework.predictions.aws.models.liveness.ChallengeConfig
@@ -68,7 +70,6 @@ import org.robolectric.RobolectricTestRunner
 internal class LivenessWebSocketTest {
     private val json = Json { encodeDefaults = true }
 
-    private lateinit var livenessWebSocket: LivenessWebSocket
     private lateinit var server: MockWebServer
 
     private val onComplete = mockk<Action>(relaxed = true)
@@ -77,7 +78,11 @@ internal class LivenessWebSocketTest {
     private val credentialsProvider = object : CredentialsProvider {
         override suspend fun resolve(attributes: Attributes): Credentials {
             return Credentials(
-                "", "", "", null, ""
+                "",
+                "",
+                "",
+                null,
+                ""
             )
         }
     }
@@ -86,18 +91,7 @@ internal class LivenessWebSocketTest {
     @Before
     fun setUp() {
         Dispatchers.setMain(Dispatchers.Unconfined)
-
         server = MockWebServer()
-
-        livenessWebSocket = LivenessWebSocket(
-            credentialsProvider,
-            server.url("/").toString(),
-            "",
-            sessionInformation,
-            onSessionInformationReceived,
-            onErrorReceived,
-            onComplete
-        )
     }
 
     @After
@@ -109,6 +103,7 @@ internal class LivenessWebSocketTest {
     @Test
     fun `onClosing informs webSocket`() {
         val webSocket = mockk<WebSocket>(relaxed = true)
+        val livenessWebSocket = createLivenessWebSocket()
         livenessWebSocket.webSocket = webSocket
 
         livenessWebSocket.webSocketListener.onClosing(webSocket, 4, "closing")
@@ -118,6 +113,7 @@ internal class LivenessWebSocketTest {
 
     @Test
     fun `normal status onClosed calls onComplete`() {
+        val livenessWebSocket = createLivenessWebSocket()
         livenessWebSocket.webSocketListener.onClosed(mockk(), 1000, "closing")
 
         verify { onComplete.call() }
@@ -125,6 +121,7 @@ internal class LivenessWebSocketTest {
 
     @Test
     fun `bad status onClosed calls onError`() {
+        val livenessWebSocket = createLivenessWebSocket()
         livenessWebSocket.webSocketListener.onClosed(mockk(), 5000, "closing")
 
         verify { onErrorReceived.accept(any()) }
@@ -132,6 +129,7 @@ internal class LivenessWebSocketTest {
 
     @Test
     fun `onClosed does not call onError if client stopped`() {
+        val livenessWebSocket = createLivenessWebSocket()
         livenessWebSocket.clientStoppedSession = true
 
         livenessWebSocket.webSocketListener.onClosed(mockk(), 5000, "closing")
@@ -141,6 +139,7 @@ internal class LivenessWebSocketTest {
 
     @Test
     fun `onFailure calls onError`() {
+        val livenessWebSocket = createLivenessWebSocket()
         // Response does noted like to be mockk
         val response = Response.Builder()
             .code(200)
@@ -156,6 +155,7 @@ internal class LivenessWebSocketTest {
 
     @Test
     fun `onFailure does not call onError if client stopped`() {
+        val livenessWebSocket = createLivenessWebSocket()
         livenessWebSocket.clientStoppedSession = true
         // Response does noted like to be mockk
         val response = Response.Builder()
@@ -172,6 +172,7 @@ internal class LivenessWebSocketTest {
 
     @Test
     fun `web socket assigned on open`() {
+        val livenessWebSocket = createLivenessWebSocket()
         val openLatch = CountDownLatch(1)
         val latchingListener = LatchingWebSocketResponseListener(
             livenessWebSocket.webSocketListener,
@@ -200,6 +201,7 @@ internal class LivenessWebSocketTest {
 
     @Test
     fun `server session event tracked`() {
+        val livenessWebSocket = createLivenessWebSocket()
         val event = ServerSessionInformationEvent(
             sessionInformation = SessionInformation(
                 challenge = ServerChallenge(
@@ -216,7 +218,8 @@ internal class LivenessWebSocketTest {
                             1.6f,
                             1.7f,
                             1.8f,
-                            1.9f
+                            1.9f,
+                            10
                         ),
                         colorSequences = listOf(
                             ColorSequence(FreshnessColor(listOf(0, 1, 2)), 4.0f, 5.0f)
@@ -241,6 +244,7 @@ internal class LivenessWebSocketTest {
 
     @Test
     fun `disconnect event stops websocket`() {
+        val livenessWebSocket = createLivenessWebSocket()
         livenessWebSocket.webSocket = mockk()
         val event = DisconnectionEvent(1)
         val headers = mapOf(
@@ -259,6 +263,7 @@ internal class LivenessWebSocketTest {
 
     @Test
     fun `web socket error closes websocket`() {
+        val livenessWebSocket = createLivenessWebSocket()
         livenessWebSocket.webSocket = mockk()
         val event = ValidationException("ValidationException")
         val headers = mapOf(
@@ -273,6 +278,43 @@ internal class LivenessWebSocketTest {
         livenessWebSocket.webSocketListener.onMessage(mockk(), encodedByteString)
 
         verify { livenessWebSocket.webSocket!!.close(1000, any()) }
+    }
+
+    @Test
+    fun `web socket user agent with null UI version`() {
+        val livenessWebSocket = createLivenessWebSocket(livenessVersion = null)
+        livenessWebSocket.webSocket = mockk()
+
+        val version = BuildConfig.VERSION_NAME
+        val os = Build.VERSION.SDK_INT
+        val baseline = "amplify-android:$version md/unknown/robolectric md/locale/en_UNKNOWN os/Android/$os " +
+            "md/device/robolectric md/device-manufacturer/unknown api/rekognitionstreaming/$version"
+        assertEquals(livenessWebSocket.getUserAgent(), baseline)
+    }
+
+    @Test
+    fun `web socket user agent with blank UI version`() {
+        val livenessWebSocket = createLivenessWebSocket(livenessVersion = " ")
+        livenessWebSocket.webSocket = mockk()
+
+        val version = BuildConfig.VERSION_NAME
+        val os = Build.VERSION.SDK_INT
+        val baseline = "amplify-android:$version md/unknown/robolectric md/locale/en_UNKNOWN os/Android/$os " +
+            "md/device/robolectric md/device-manufacturer/unknown api/rekognitionstreaming/$version"
+        assertEquals(livenessWebSocket.getUserAgent(), baseline)
+    }
+
+    @Test
+    fun `web socket user agent includes added UI version`() {
+        val livenessWebSocket = createLivenessWebSocket(livenessVersion = "1.1.1")
+        livenessWebSocket.webSocket = mockk()
+
+        val version = BuildConfig.VERSION_NAME
+        val os = Build.VERSION.SDK_INT
+        val baseline = "amplify-android:$version md/unknown/robolectric md/locale/en_UNKNOWN os/Android/$os " +
+            "md/device/robolectric md/device-manufacturer/unknown api/rekognitionstreaming/$version"
+        val additional = "api/liveness/1.1.1"
+        assertEquals(livenessWebSocket.getUserAgent(), "$baseline $additional")
     }
 
     @Test
@@ -299,11 +341,24 @@ internal class LivenessWebSocketTest {
     @Ignore("Need to work on parsing the onMessage byteString from ServerWebSocketListener")
     fun `sendVideoEvent test`() {
     }
+
+    private fun createLivenessWebSocket(
+        livenessVersion: String? = null
+    ) = LivenessWebSocket(
+        credentialsProvider,
+        server.url("/").toString(),
+        "",
+        sessionInformation,
+        livenessVersion,
+        onSessionInformationReceived,
+        onErrorReceived,
+        onComplete
+    )
 }
 
 class LatchingWebSocketResponseListener(
     private val webSocketListener: WebSocketListener,
-    private val openLatch: CountDownLatch = CountDownLatch(1),
+    private val openLatch: CountDownLatch = CountDownLatch(1)
 ) : WebSocketListener() {
 
     override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
