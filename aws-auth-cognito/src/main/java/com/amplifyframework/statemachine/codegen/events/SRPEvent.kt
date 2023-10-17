@@ -37,6 +37,12 @@ internal class SRPEvent(val eventType: EventType, override val time: Date? = nul
             val session: String?
         ) : EventType()
 
+        data class RetryRespondPasswordVerifier(
+            val challengeParameters: Map<String, String>,
+            val metadata: Map<String, String>,
+            val session: String?
+        ) : EventType()
+
         data class ThrowAuthError(val exception: Exception) : EventType()
         data class CancelSRPSignIn(val id: String = "") : EventType()
         data class ThrowPasswordVerifierError(val exception: Exception) : EventType()
