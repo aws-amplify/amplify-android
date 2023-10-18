@@ -1,3 +1,10 @@
+## [Release 2.14.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.14.1)
+
+### Bug Fixes
+- **auth:** Fix for retry sign in when resourceNotFoundException is raised ([#2605](https://github.com/aws-amplify/amplify-android/issues/2605))
+
+[See all changes between 2.14.0 and 2.14.1](https://github.com/aws-amplify/amplify-android/compare/release_v2.14.0...release_v2.14.1)
+
 ## [Release 2.14.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.14.0)
 
 ### Features
