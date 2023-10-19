@@ -50,7 +50,7 @@ interface MutationOutbox {
      * @param modelId ID of any model in the system
      * @return true if there is a pending mutation for the model id, false if not.
      */
-    boolean hasPendingMutation(@NonNull String modelId);
+    boolean hasPendingMutation(@NonNull String modelId, @NonNull String modelClass);
 
     /**
      * Write a new {@link PendingMutation} into the outbox.
