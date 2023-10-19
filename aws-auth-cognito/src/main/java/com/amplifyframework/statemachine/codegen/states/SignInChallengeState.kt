@@ -59,7 +59,9 @@ internal sealed class SignInChallengeState : State {
                 }
                 is WaitingForAnswer -> when (challengeEvent) {
                     is SignInChallengeEvent.EventType.VerifyChallengeAnswer -> {
-                        val action = challengeActions.verifyChallengeAuthAction(challengeEvent, oldState.challenge)
+                        val action = challengeActions.verifyChallengeAuthAction(
+                            challengeEvent.answer, challengeEvent.metadata, oldState.challenge
+                        )
                         StateResolution(Verifying(oldState.challenge.challengeName), listOf(action))
                     }
                     else -> defaultResolution
@@ -67,7 +69,18 @@ internal sealed class SignInChallengeState : State {
                 is Verifying -> when (challengeEvent) {
                     is SignInChallengeEvent.EventType.Verified -> StateResolution(Verified())
                     is SignInChallengeEvent.EventType.ThrowError -> {
-                        StateResolution(Error(challengeEvent.exception, challengeEvent.challenge, true), listOf())
+                        StateResolution(
+                            Error(
+                                challengeEvent.exception, challengeEvent.challenge, true
+                            ),
+                            listOf()
+                        )
+                    }
+                    is SignInChallengeEvent.EventType.RetryVerifyChallengeAnswer -> {
+                        val action = challengeActions.verifyChallengeAuthAction(
+                            challengeEvent.answer, challengeEvent.metadata, challengeEvent.authChallenge
+                        )
+                        StateResolution(Verifying(challengeEvent.authChallenge.challengeName), listOf(action))
                     }
                     is SignInChallengeEvent.EventType.WaitForAnswer -> {
                         StateResolution(WaitingForAnswer(challengeEvent.challenge, true), listOf())
@@ -78,7 +91,9 @@ internal sealed class SignInChallengeState : State {
                 is Error -> {
                     when (challengeEvent) {
                         is SignInChallengeEvent.EventType.VerifyChallengeAnswer -> {
-                            val action = challengeActions.verifyChallengeAuthAction(challengeEvent, oldState.challenge)
+                            val action = challengeActions.verifyChallengeAuthAction(
+                                challengeEvent.answer, challengeEvent.metadata, oldState.challenge
+                            )
                             StateResolution(Verifying(oldState.challenge.challengeName), listOf(action))
                         }
                         is SignInChallengeEvent.EventType.WaitForAnswer -> {

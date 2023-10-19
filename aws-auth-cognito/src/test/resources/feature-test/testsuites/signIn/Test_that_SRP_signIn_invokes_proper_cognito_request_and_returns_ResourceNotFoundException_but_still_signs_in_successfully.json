@@ -1,0 +1,95 @@
+{
+    "description": "Test that SRP signIn invokes proper cognito request and returns ResourceNotFoundException but still signs in successfully",
+    "preConditions": {
+        "amplify-configuration": "authconfiguration.json",
+        "state": "SignedOut_Configured.json",
+        "mockedResponses": [
+            {
+                "type": "cognitoIdentityProvider",
+                "apiName": "initiateAuth",
+                "responseType": "success",
+                "response": {
+                    "challengeName": "PASSWORD_VERIFIER",
+                    "challengeParameters": {
+                        "SALT": "abc",
+                        "SECRET_BLOCK": "secretBlock",
+                        "SRP_B": "def",
+                        "USERNAME": "username",
+                        "USER_ID_FOR_SRP": "userId"
+                    }
+                }
+            },
+            {
+                "type": "cognitoIdentityProvider",
+                "apiName": "respondToAuthChallenge",
+                "responseType": "failure",
+                "response": {
+                    "errorType": "ResourceNotFoundException",
+                    "errorMessage": null
+                }
+            },
+            {
+                "type": "cognitoIdentityProvider",
+                "apiName": "respondToAuthChallenge",
+                "responseType": "success",
+                "response": {
+                    "authenticationResult": {
+                        "idToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNTE2MjM5MDIyLCJvcmlnaW5fanRpIjoib3JpZ2luX2p0aSJ9.Xqa-vjJe5wwwsqeRAdHf8kTBn_rYSkDn2lB7xj9Z1xU",
+                        "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNTE2MjM5MDIyLCJvcmlnaW5fanRpIjoib3JpZ2luX2p0aSJ9.Xqa-vjJe5wwwsqeRAdHf8kTBn_rYSkDn2lB7xj9Z1xU",
+                        "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNTE2MjM5MDIyLCJvcmlnaW5fanRpIjoib3JpZ2luX2p0aSJ9.Xqa-vjJe5wwwsqeRAdHf8kTBn_rYSkDn2lB7xj9Z1xU",
+                        "expiresIn": 300
+                    }
+                }
+            },
+            {
+                "type": "cognitoIdentity",
+                "apiName": "getId",
+                "responseType": "success",
+                "response": {
+                    "identityId": "someIdentityId"
+                }
+            },
+            {
+                "type": "cognitoIdentity",
+                "apiName": "getCredentialsForIdentity",
+                "responseType": "success",
+                "response": {
+                    "credentials": {
+                        "accessKeyId": "someAccessKey",
+                        "secretKey": "someSecretKey",
+                        "sessionToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNTE2MjM5MDIyLCJvcmlnaW5fanRpIjoib3JpZ2luX2p0aSJ9.Xqa-vjJe5wwwsqeRAdHf8kTBn_rYSkDn2lB7xj9Z1xU",
+                        "expiration": 2342134
+                    }
+                }
+            }
+        ]
+    },
+    "api": {
+        "name": "signIn",
+        "params": {
+            "username": "username",
+            "password": "password"
+        },
+        "options": {
+        }
+    },
+    "validations": [
+        {
+            "type": "amplify",
+            "apiName": "signIn",
+            "responseType": "success",
+            "response": {
+                "isSignedIn": true,
+                "nextStep": {
+                    "signInStep": "DONE",
+                    "additionalInfo": {
+                    }
+                }
+            }
+        },
+        {
+            "type": "state",
+            "expectedState": "SignedIn_SessionEstablished.json"
+        }
+    ]
+}

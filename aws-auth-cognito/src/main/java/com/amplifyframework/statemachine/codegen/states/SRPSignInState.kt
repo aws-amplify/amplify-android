@@ -54,7 +54,9 @@ internal sealed class SRPSignInState : State {
                 }
                 is InitiatingSRPA -> when (srpEvent) {
                     is SRPEvent.EventType.RespondPasswordVerifier -> {
-                        val action = srpActions.verifyPasswordSRPAction(srpEvent)
+                        val action = srpActions.verifyPasswordSRPAction(
+                            srpEvent.challengeParameters, srpEvent.metadata, srpEvent.session
+                        )
                         StateResolution(RespondingPasswordVerifier(), listOf(action))
                     }
                     is SRPEvent.EventType.ThrowAuthError -> StateResolution(Error(srpEvent.exception))
@@ -62,6 +64,12 @@ internal sealed class SRPSignInState : State {
                     else -> defaultResolution
                 }
                 is RespondingPasswordVerifier -> when (srpEvent) {
+                    is SRPEvent.EventType.RetryRespondPasswordVerifier -> {
+                        val action = srpActions.verifyPasswordSRPAction(
+                            srpEvent.challengeParameters, srpEvent.metadata, srpEvent.session
+                        )
+                        StateResolution(RespondingPasswordVerifier(), listOf(action))
+                    }
                     is SRPEvent.EventType.ThrowPasswordVerifierError -> StateResolution(Error(srpEvent.exception))
                     is SRPEvent.EventType.CancelSRPSignIn -> StateResolution(Cancelling())
                     else -> defaultResolution

@@ -15,8 +15,10 @@
 
 package com.amplifyframework.auth.cognito
 
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.StateChangeListenerToken
+import com.amplifyframework.statemachine.codegen.data.AuthChallenge
 import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.data.SignInData
 import com.amplifyframework.statemachine.codegen.data.SignOutData
@@ -313,6 +315,102 @@ class StateTransitionTests : StateTransitionTestBase() {
                 val authNState = it.authNState.takeIf { itN ->
                     itN is AuthenticationState.SignedIn && it.authZState is AuthorizationState.SessionEstablished
                 }
+                authNState?.apply {
+                    stateMachine.cancel(token)
+                    testLatch.countDown()
+                }
+            },
+            {
+                subscribeLatch.countDown()
+            }
+        )
+
+        assertTrue { subscribeLatch.await(5, TimeUnit.SECONDS) }
+
+        stateMachine.send(
+            AuthEvent(AuthEvent.EventType.ConfigureAuth(configuration))
+        )
+
+        assertTrue { testLatch.await(5, TimeUnit.SECONDS) }
+        assertTrue { configureLatch.await(5, TimeUnit.SECONDS) }
+    }
+
+    @Test
+    fun testSignInWithCustomWithRetry() {
+        setupConfigureSignedOut()
+        setupSignInActionWithCustomAuth()
+        setupCustomAuthActions()
+
+        Mockito.`when`(mockAuthenticationActions.initiateSignInAction(MockitoHelper.anyObject()))
+            .thenReturn(
+                Action { dispatcher, _ ->
+                    dispatcher.send(
+                        SignInEvent(
+                            SignInEvent.EventType.InitiateSignInWithCustom(
+                                "username",
+                                mapOf()
+                            )
+                        )
+                    )
+                }
+            )
+
+        val testLatch = CountDownLatch(1)
+        val configureLatch = CountDownLatch(1)
+        val subscribeLatch = CountDownLatch(1)
+        val token = StateChangeListenerToken()
+        stateMachine.listen(
+            token,
+            {
+                val authState =
+                    it.takeIf { it is AuthState.Configured && it.authNState is AuthenticationState.SignedOut }
+                authState?.run {
+                    configureLatch.countDown()
+                    stateMachine.send(
+                        AuthenticationEvent(
+                            AuthenticationEvent.EventType.SignInRequested(
+                                SignInData.CustomAuthSignInData(
+                                    "username",
+                                    emptyMap()
+                                )
+                            )
+                        )
+                    )
+                }
+
+                val signInState = (it.authNState as? AuthenticationState.SigningIn)?.signInState
+                val challengeState = signInState?.challengeState.takeIf { signInChallengeState ->
+                    signInChallengeState is SignInChallengeState.WaitingForAnswer
+                }
+                challengeState?.apply {
+                    stateMachine.send(
+                        SignInChallengeEvent(
+                            SignInChallengeEvent.EventType.RetryVerifyChallengeAnswer(
+                                "test",
+                                mapOf(),
+                                AuthChallenge(
+                                    ChallengeNameType.CustomChallenge.toString(),
+                                    "Test",
+                                    "session_mock_value",
+                                    mapOf()
+                                )
+                            )
+                        )
+                    )
+                    stateMachine.send(
+                        SignInChallengeEvent(
+                            SignInChallengeEvent.EventType.VerifyChallengeAnswer(
+                                "test",
+                                mapOf()
+                            )
+                        )
+                    )
+                }
+
+                val authNState =
+                    it.authNState.takeIf { itN ->
+                        itN is AuthenticationState.SignedIn && it.authZState is AuthorizationState.SessionEstablished
+                    }
                 authNState?.apply {
                     stateMachine.cancel(token)
                     testLatch.countDown()

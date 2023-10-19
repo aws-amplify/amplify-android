@@ -16,6 +16,7 @@
 package com.amplifyframework.auth.cognito.actions
 
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.ResourceNotFoundException
 import aws.sdk.kotlin.services.cognitoidentityprovider.respondToAuthChallenge
 import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
@@ -24,6 +25,7 @@ import com.amplifyframework.auth.exceptions.UnknownException
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.SignInChallengeActions
 import com.amplifyframework.statemachine.codegen.data.AuthChallenge
+import com.amplifyframework.statemachine.codegen.data.CredentialType
 import com.amplifyframework.statemachine.codegen.events.CustomSignInEvent
 import com.amplifyframework.statemachine.codegen.events.SignInChallengeEvent
 
@@ -31,7 +33,8 @@ internal object SignInChallengeCognitoActions : SignInChallengeActions {
     private const val KEY_SECRET_HASH = "SECRET_HASH"
     private const val KEY_USERNAME = "USERNAME"
     override fun verifyChallengeAuthAction(
-        event: SignInChallengeEvent.EventType.VerifyChallengeAnswer,
+        answer: String,
+        metadata: Map<String, String>,
         challenge: AuthChallenge
     ): Action = Action<AuthEnvironment>("VerifySignInChallenge") { id, dispatcher ->
         logger.verbose("$id Starting execution")
@@ -44,7 +47,7 @@ internal object SignInChallengeCognitoActions : SignInChallengeActions {
             }
 
             getChallengeResponseKey(challenge.challengeName)?.also { responseKey ->
-                challengeResponses[responseKey] = event.answer
+                challengeResponses[responseKey] = answer
             }
 
             val secretHash = AuthHelper.getSecretHash(
@@ -61,7 +64,7 @@ internal object SignInChallengeCognitoActions : SignInChallengeActions {
                 challengeName = ChallengeNameType.fromValue(challenge.challengeName)
                 this.challengeResponses = challengeResponses
                 session = challenge.session
-                clientMetadata = event.metadata
+                clientMetadata = metadata
                 pinpointEndpointId?.let { analyticsMetadata { analyticsEndpointId = it } }
                 encodedContextData?.let { this.userContextData { encodedData = it } }
             }
@@ -79,7 +82,20 @@ internal object SignInChallengeCognitoActions : SignInChallengeActions {
                 )
             )
         } catch (e: Exception) {
-            SignInChallengeEvent(SignInChallengeEvent.EventType.ThrowError(e, challenge, true))
+            if (e is ResourceNotFoundException) {
+                challenge.username?.let { username ->
+                    credentialStoreClient.clearCredentials(CredentialType.Device(username))
+                }
+                SignInChallengeEvent(
+                    SignInChallengeEvent.EventType.RetryVerifyChallengeAnswer(
+                        answer,
+                        metadata,
+                        challenge
+                    )
+                )
+            } else {
+                SignInChallengeEvent(SignInChallengeEvent.EventType.ThrowError(e, challenge, true))
+            }
         }
         logger.verbose("$id Sending event ${evt.type}")
         dispatcher.send(evt)
