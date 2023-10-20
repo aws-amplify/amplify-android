@@ -358,7 +358,8 @@ public final class PersistentMutationOutboxTest {
         );
 
         assertFalse(mutationOutbox.hasPendingMutation(joeId, joe.getClass().getName()));
-        assertFalse(mutationOutbox.hasPendingMutation(unrelatedMutation.getMutationId().toString(), unrelatedMutation.getClass().getName()));
+        assertFalse(mutationOutbox.hasPendingMutation(unrelatedMutation.getMutationId().toString(),
+                unrelatedMutation.getClass().getName()));
     }
 
     /**
@@ -519,7 +520,8 @@ public final class PersistentMutationOutboxTest {
                 Where.identifier(PersistentRecord.class, incomingCreationId)).isEmpty());
 
         // Existing mutation still attainable as next mutation (right now, its the ONLY mutation in outbox)
-        assertTrue(mutationOutbox.hasPendingMutation(modelInExistingMutation.getPrimaryKeyString(), modelInExistingMutation.getClass().getName()));
+        assertTrue(mutationOutbox.hasPendingMutation(modelInExistingMutation.getPrimaryKeyString(),
+                modelInExistingMutation.getClass().getName()));
         assertEquals(existingCreation, mutationOutbox.peek());
     }
 
@@ -564,7 +566,8 @@ public final class PersistentMutationOutboxTest {
                 incomingCreationId)).isEmpty());
 
         // Existing mutation still attainable as next mutation (right now, its the ONLY mutation in outbox)
-        assertTrue(mutationOutbox.hasPendingMutation(modelInExistingMutation.getPrimaryKeyString(), modelInExistingMutation.getClass().getName()));
+        assertTrue(mutationOutbox.hasPendingMutation(modelInExistingMutation.getPrimaryKeyString(),
+                modelInExistingMutation.getClass().getName()));
         assertEquals(existingUpdate, mutationOutbox.peek());
     }
 
@@ -610,7 +613,8 @@ public final class PersistentMutationOutboxTest {
                 Where.identifier(PersistentRecord.class, incomingCreationId)).isEmpty());
 
         // Existing mutation still attainable as next mutation (right now, its the ONLY mutation in outbox)
-        assertTrue(mutationOutbox.hasPendingMutation(modelInExistingMutation.getPrimaryKeyString(), modelInExistingMutation.getClass().getName()));
+        assertTrue(mutationOutbox.hasPendingMutation(modelInExistingMutation.getPrimaryKeyString(),
+                modelInExistingMutation.getClass().getName()));
         assertEquals(existingDeletion, mutationOutbox.peek());
     }
 
@@ -655,7 +659,8 @@ public final class PersistentMutationOutboxTest {
                 incomingUpdateId)).isEmpty());
 
         // Existing mutation still attainable as next mutation (right now, its the ONLY mutation in outbox)
-        assertTrue(mutationOutbox.hasPendingMutation(modelInExistingMutation.getPrimaryKeyString(), modelInExistingMutation.getClass().getName()));
+        assertTrue(mutationOutbox.hasPendingMutation(modelInExistingMutation.getPrimaryKeyString(),
+                modelInExistingMutation.getClass().getName()));
         assertEquals(existingDeletion, mutationOutbox.peek());
     }
 
@@ -788,7 +793,7 @@ public final class PersistentMutationOutboxTest {
      */
     @Test
     public void
-    existingSerializedModelUpdateIncomingUpdateWithoutConditionMergesWithExistingMutation()
+        existingSerializedModelUpdateIncomingUpdateWithoutConditionMergesWithExistingMutation()
             throws AmplifyException, InterruptedException {
         // Arrange an existing update mutation
         BlogOwner modelInSqlLite = BlogOwner.builder()
