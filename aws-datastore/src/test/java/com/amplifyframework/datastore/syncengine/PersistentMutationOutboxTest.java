@@ -29,6 +29,8 @@ import com.amplifyframework.datastore.syncengine.PendingMutation.PersistentRecor
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.testmodels.commentsblog.Author;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
+import com.amplifyframework.testmodels.commentsblog.Post;
+import com.amplifyframework.testmodels.commentsblog.PostStatus;
 import com.amplifyframework.testutils.HubAccumulator;
 import com.amplifyframework.testutils.random.RandomString;
 
@@ -393,14 +395,34 @@ public final class PersistentMutationOutboxTest {
         // Check hasPendingMutation returns False for Author with same Primary Key (id) as BlogOwner
         assertFalse(mutationOutbox.hasPendingMutation(modelId, author.getClass().getName()));
 
-        PendingMutation<Author> pendingTeamMutation = PendingMutation.instance(
+        PendingMutation<Author> pendingAuthorMutation = PendingMutation.instance(
                 mutationId, author, ModelSchema.fromModelClass(Author.class),
                 PendingMutation.Type.CREATE, QueryPredicates.all()
         );
-        assertTrue(mutationOutbox.enqueue(pendingTeamMutation).blockingAwait(TIMEOUT_MS, TimeUnit.MILLISECONDS));
+        assertTrue(mutationOutbox.enqueue(pendingAuthorMutation).blockingAwait(TIMEOUT_MS, TimeUnit.MILLISECONDS));
 
-        // Make sure Author Muatation is stored
+        // Make sure Author Mutation is stored
         assertTrue(mutationOutbox.hasPendingMutation(modelId, author.getClass().getName()));
+
+        // Act & Assert: Enqueue and verify Author
+        Post post = Post.builder()
+                .title("Sample Author")
+                .status(PostStatus.ACTIVE)
+                .rating(1)
+                .id(modelId)
+                .build();
+
+        // Check hasPendingMutation returns False for Post with same Primary Key (id) as BlogOwner
+        assertFalse(mutationOutbox.hasPendingMutation(modelId, post.getClass().getName()));
+
+        PendingMutation<Post> pendingPostMutation = PendingMutation.instance(
+                mutationId, post, ModelSchema.fromModelClass(Post.class),
+                PendingMutation.Type.CREATE, QueryPredicates.all()
+        );
+        assertTrue(mutationOutbox.enqueue(pendingPostMutation).blockingAwait(TIMEOUT_MS, TimeUnit.MILLISECONDS));
+
+        // Make sure Post Mutation is stored
+        assertTrue(mutationOutbox.hasPendingMutation(modelId, post.getClass().getName()));
     }
 
     /**
