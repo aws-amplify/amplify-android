@@ -14,7 +14,6 @@
  */
 
 import com.android.build.gradle.LibraryExtension
-import org.jetbrains.dokka.gradle.DokkaTask
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 buildscript {
@@ -27,7 +26,6 @@ buildscript {
     dependencies {
         classpath("com.android.tools.build:gradle:7.3.1")
         classpath(kotlin("gradle-plugin", version = "1.7.10"))
-        classpath("org.jetbrains.dokka:dokka-gradle-plugin:1.7.10")
         classpath("com.google.gms:google-services:4.3.15")
         classpath("org.jlleitschuh.gradle:ktlint-gradle:11.0.0")
         classpath("org.gradle:test-retry-gradle-plugin:1.4.1")
@@ -55,11 +53,6 @@ allprojects {
             maxHeapSize = "4g"
         }
     }
-}
-
-apply(plugin = "org.jetbrains.dokka")
-tasks.withType<DokkaTask>().configureEach {
-    outputDirectory.set(rootProject.buildDir)
 }
 
 tasks.register<Delete>("clean").configure {
@@ -100,21 +93,6 @@ subprojects {
     afterEvaluate {
         configureAndroid()
         apply(from = "../kover.gradle")
-    }
-
-    if (!name.contains("test")) {
-        apply(plugin = "org.jetbrains.dokka")
-        tasks.withType<DokkaTask>().configureEach {
-            dokkaSourceSets {
-                configureEach {
-                    includeNonPublic.set(false)
-                    skipEmptyPackages.set(true)
-                    skipDeprecated.set(true)
-                    reportUndocumented.set(true)
-                    jdkVersion.set(8)
-                }
-            }
-        }
     }
 
     apply(plugin = "org.gradle.test-retry")
