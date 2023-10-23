@@ -447,7 +447,8 @@ object SignInTestCaseGenerator : SerializableProvider {
     )
 
     private val customAuthWithSRPCaseWhenAliasIsUsedToSignIn = FeatureTestCase(
-        description = "Test that Custom Auth signIn invokes proper cognito request and returns password challenge when alias is used",
+        description = "Test that Custom Auth signIn invokes proper cognito request " +
+            "and returns password challenge when alias is used",
         preConditions = PreConditions(
             "authconfiguration.json",
             "SignedOut_Configured.json",
