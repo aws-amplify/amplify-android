@@ -65,7 +65,7 @@ internal object SRPCognitoActions : SRPActions {
                 secretHash?.let { authParams[KEY_SECRET_HASH] = it }
 
                 val encodedContextData = getUserContextData(event.username)
-                var deviceMetadata = getDeviceMetadata(event.username)
+                val deviceMetadata = getDeviceMetadata(event.username)
                 deviceMetadata?.let { authParams[KEY_DEVICE_KEY] = it.deviceKey }
                 val pinpointEndpointId = getPinpointEndpointId()
 
@@ -80,7 +80,7 @@ internal object SRPCognitoActions : SRPActions {
 
                 when (initiateAuthResponse?.challengeName) {
                     ChallengeNameType.PasswordVerifier -> {
-                        deviceMetadata = getDeviceMetadata(
+                        val updatedDeviceMetadata = getDeviceMetadata(
                             AuthHelper.getActiveUsername(
                                 username = event.username,
                                 alternateUsername = initiateAuthResponse.challengeParameters?.get(KEY_USERNAME),
@@ -91,7 +91,7 @@ internal object SRPCognitoActions : SRPActions {
                         )
 
                         initiateAuthResponse.challengeParameters?.let { params ->
-                            val challengeParams = deviceMetadata?.deviceKey?.let {
+                            val challengeParams = updatedDeviceMetadata?.deviceKey?.let {
                                 params.plus(KEY_DEVICE_KEY to it)
                             } ?: params
 
@@ -99,7 +99,7 @@ internal object SRPCognitoActions : SRPActions {
                                 SRPEvent.EventType.RespondPasswordVerifier(
                                     challengeParams,
                                     event.metadata,
-                                    initiateAuthResponse?.session
+                                    initiateAuthResponse.session
                                 )
                             )
                         } ?: throw Exception("Auth challenge parameters are empty.")
