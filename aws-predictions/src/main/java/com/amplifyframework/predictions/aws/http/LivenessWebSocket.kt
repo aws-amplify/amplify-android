@@ -92,13 +92,30 @@ internal class LivenessWebSocket(
     private var webSocketError: PredictionsException? = null
     internal var clientStoppedSession = false
     val json = Json { ignoreUnknownKeys = true }
+    val FIVE_MINUTES = 1000 * 60 * 5
 
     @VisibleForTesting
     internal var webSocketListener = object : WebSocketListener() {
         override fun onOpen(webSocket: WebSocket, response: Response) {
             LOG.debug("WebSocket onOpen")
-            super.onOpen(webSocket, response)
-            this@LivenessWebSocket.webSocket = webSocket
+
+            // device time may be set incorrectly; read the header to skew time and retry
+            val sdf = SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss z", Locale.US)
+            val date = response.header("Date")?.let { sdf.parse(it) }
+            val tempOffset = if (date != null) {
+                date.time - (Date().time + offset)
+            } else 0
+
+            // if offset is > 5 minutes, server will reject the request
+            if (kotlin.math.abs(tempOffset) < FIVE_MINUTES) {
+                super.onOpen(webSocket, response)
+                this@LivenessWebSocket.webSocket = webSocket
+            } else {
+                // server will close this websocket, don't report that failure back
+                closeExpected = true
+                offset = tempOffset
+                start()
+            }
         }
 
         override fun onMessage(webSocket: WebSocket, text: String) {
@@ -117,18 +134,6 @@ internal class LivenessWebSocket(
                         )
                     } else if (livenessResponse.disconnectionEvent != null) {
                         this@LivenessWebSocket.webSocket?.close(1000, "Liveness flow completed.")
-                    } else if (livenessResponse.invalidSignatureException != null) {
-                        // server will close the websocket first
-                        closeExpected = true
-                        // device time is set incorrectly; skew time and retry
-                        val regex = (
-                            """Signature not yet current: (\d+T\d+)Z is still later than (\d+T\d+)Z""" +
-                                """ \((\d+T\d+)Z \+ 5 min\.\)"""
-                            ).toRegex()
-                        val matchResult = regex.find(livenessResponse.invalidSignatureException.message)!!
-                        val (sent, _, real) = matchResult.destructured
-                        offset = parse(real) - parse(sent)
-                        start()
                     } else {
                         handleWebSocketError(livenessResponse)
                     }
