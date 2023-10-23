@@ -55,5 +55,9 @@ internal open class AuthHelper {
                     }
             }
         }
+
+        fun getActiveUsername(username: String, alternateUsername: String?, userIDForSRP: String?): String {
+            return alternateUsername ?: (userIDForSRP ?: username)
+        }
     }
 }

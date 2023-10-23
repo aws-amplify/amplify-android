@@ -33,6 +33,7 @@ internal object SignInCustomCognitoActions : CustomSignInActions {
     private const val KEY_SECRET_HASH = "SECRET_HASH"
     private const val KEY_USERNAME = "USERNAME"
     private const val KEY_DEVICE_KEY = "DEVICE_KEY"
+    private const val KEY_USERID_FOR_SRP = "USER_ID_FOR_SRP"
     override fun initiateCustomSignInAuthAction(event: CustomSignInEvent.EventType.InitiateCustomSignIn): Action =
         Action<AuthEnvironment>("InitCustomAuth") { id, dispatcher ->
             logger.verbose("$id Starting execution")
@@ -63,8 +64,15 @@ internal object SignInCustomCognitoActions : CustomSignInActions {
                 if (initiateAuthResponse?.challengeName == ChallengeNameType.CustomChallenge &&
                     initiateAuthResponse.challengeParameters != null
                 ) {
-                    SignInChallengeHelper.evaluateNextStep(
+                    val activeUserName = AuthHelper.getActiveUsername(
                         username = event.username,
+                        alternateUsername = initiateAuthResponse.challengeParameters?.get(KEY_USERNAME),
+                        userIDForSRP = initiateAuthResponse.challengeParameters?.get(
+                            KEY_USERID_FOR_SRP
+                        )
+                    )
+                    SignInChallengeHelper.evaluateNextStep(
+                        username = activeUserName,
                         challengeNameType = initiateAuthResponse.challengeName,
                         session = initiateAuthResponse.session,
                         challengeParameters = initiateAuthResponse.challengeParameters,
