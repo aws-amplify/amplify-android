@@ -45,12 +45,15 @@ interface MutationOutbox {
     Completable load();
 
     /**
-     * Checks to see if there is a pending mutation for a model with the given ID.
+     * Checks to see if there is a pending mutation for a model with the given ID and Class.
      *
      * @param modelId ID of any model in the system
-     * @return true if there is a pending mutation for the model id, false if not.
+     * @param modelClass The fully qualified class name of the model for which you want to check
+     *                   pending mutations. This should match the name returned by the model's
+     *                   getClass().getName() method.
+     * @return true if there is a pending mutation for the model with the given ID and class, false if not.
      */
-    boolean hasPendingMutation(@NonNull String modelId);
+    boolean hasPendingMutation(@NonNull String modelId, @NonNull String modelClass);
 
     /**
      * Write a new {@link PendingMutation} into the outbox.

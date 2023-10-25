@@ -82,13 +82,13 @@ final class PersistentMutationOutbox implements MutationOutbox {
     }
 
     @Override
-    public boolean hasPendingMutation(@NonNull String modelId) {
+    public boolean hasPendingMutation(@NonNull String modelId, @NonNull String modelClass) {
         Objects.requireNonNull(modelId);
-        return getMutationForModelId(modelId) != null;
+        return getMutationForModelId(modelId, modelClass) != null;
     }
 
     @VisibleForTesting
-    PendingMutation<? extends Model> getMutationForModelId(@NonNull String modelId) {
+    PendingMutation<? extends Model> getMutationForModelId(@NonNull String modelId, @NonNull String modelClass) {
         Objects.requireNonNull(modelId);
         AtomicReference<PendingMutation<? extends Model>> mutationResult = new AtomicReference<>();
         Completable.create(emitter -> {
@@ -98,7 +98,10 @@ final class PersistentMutationOutbox implements MutationOutbox {
                     if (results.hasNext()) {
                         try {
                             PendingMutation.PersistentRecord persistentRecord = results.next();
-                            mutationResult.set(converter.fromRecord(persistentRecord));
+                            PendingMutation<?> pendingMutation = converter.fromRecord(persistentRecord);
+                            if (pendingMutation.getModelSchema().getModelClass().getName().equals(modelClass)) {
+                                mutationResult.set(pendingMutation);
+                            }
                         } catch (Throwable throwable) {
                             emitter.onError(throwable);
                         }
@@ -150,8 +153,9 @@ final class PersistentMutationOutbox implements MutationOutbox {
             // If there is no existing mutation for the model, then just apply the incoming
             // mutation, and be done with this.
             String modelId = incomingMutation.getMutatedItem().getPrimaryKeyString();
+            String modelClass = incomingMutation.getModelSchema().getModelClass().getName();
             @SuppressWarnings("unchecked")
-            PendingMutation<T> existingMutation = (PendingMutation<T>) getMutationForModelId(modelId);
+            PendingMutation<T> existingMutation = (PendingMutation<T>) getMutationForModelId(modelId, modelClass);
             if (existingMutation == null || inFlightMutations.contains(existingMutation.getMutationId())) {
                 return save(incomingMutation, true)
                     .andThen(notifyContentAvailable());
