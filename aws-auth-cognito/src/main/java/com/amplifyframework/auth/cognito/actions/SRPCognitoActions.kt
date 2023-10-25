@@ -45,6 +45,7 @@ internal object SRPCognitoActions : SRPActions {
     private const val KEY_USER_ID_FOR_SRP = "USER_ID_FOR_SRP"
     private const val KEY_SECRET_HASH = "SECRET_HASH"
     private const val KEY_USERNAME = "USERNAME"
+    private const val KEY_USERID_FOR_SRP = "USER_ID_FOR_SRP"
     private const val KEY_DEVICE_KEY = "DEVICE_KEY"
     private const val KEY_CHALLENGE_NAME = "CHALLENGE_NAME"
 
@@ -78,19 +79,31 @@ internal object SRPCognitoActions : SRPActions {
                 }
 
                 when (initiateAuthResponse?.challengeName) {
-                    ChallengeNameType.PasswordVerifier -> initiateAuthResponse.challengeParameters?.let { params ->
-                        val challengeParams = deviceMetadata?.deviceKey?.let {
-                            params.plus(KEY_DEVICE_KEY to it)
-                        } ?: params
-
-                        SRPEvent(
-                            SRPEvent.EventType.RespondPasswordVerifier(
-                                challengeParams,
-                                event.metadata,
-                                initiateAuthResponse.session
+                    ChallengeNameType.PasswordVerifier -> {
+                        val updatedDeviceMetadata = getDeviceMetadata(
+                            AuthHelper.getActiveUsername(
+                                username = event.username,
+                                alternateUsername = initiateAuthResponse.challengeParameters?.get(KEY_USERNAME),
+                                userIDForSRP = initiateAuthResponse.challengeParameters?.get(
+                                    KEY_USERID_FOR_SRP
+                                )
                             )
                         )
-                    } ?: throw Exception("Auth challenge parameters are empty.")
+
+                        initiateAuthResponse.challengeParameters?.let { params ->
+                            val challengeParams = updatedDeviceMetadata?.deviceKey?.let {
+                                params.plus(KEY_DEVICE_KEY to it)
+                            } ?: params
+
+                            SRPEvent(
+                                SRPEvent.EventType.RespondPasswordVerifier(
+                                    challengeParams,
+                                    event.metadata,
+                                    initiateAuthResponse.session
+                                )
+                            )
+                        } ?: throw Exception("Auth challenge parameters are empty.")
+                    }
                     else -> throw Exception("Not yet implemented.")
                 }
             } catch (e: Exception) {
@@ -143,7 +156,6 @@ internal object SRPCognitoActions : SRPActions {
                             val challengeParams = deviceMetadata?.deviceKey?.let {
                                 params.plus(KEY_DEVICE_KEY to it)
                             } ?: params
-
                             SRPEvent(
                                 SRPEvent.EventType.RespondPasswordVerifier(
                                     challengeParams,
