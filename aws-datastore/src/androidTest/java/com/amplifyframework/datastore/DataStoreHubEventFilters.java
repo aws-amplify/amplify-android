@@ -77,7 +77,7 @@ public final class DataStoreHubEventFilters {
             String modelId
     ) {
         return event -> {
-            if (!eventType.name().equals(event.getName())) {
+            if (!eventType.toString().equals(event.getName())) {
                 return false;
             }
             if (!(event.getData() instanceof OutboxMutationEvent)) {
