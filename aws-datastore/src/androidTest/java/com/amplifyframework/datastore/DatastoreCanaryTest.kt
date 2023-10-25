@@ -23,14 +23,14 @@ import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider
 import com.amplifyframework.testmodels.commentsblog.Post
 import com.amplifyframework.testmodels.commentsblog.PostStatus
 import com.amplifyframework.testutils.HubAccumulator
+import java.util.UUID
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import org.junit.After
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.BeforeClass
 import org.junit.Test
-import java.util.UUID
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
 
 class DatastoreCanaryTest {
     companion object {
