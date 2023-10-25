@@ -53,6 +53,31 @@ public final class DataStoreHubEventFilters {
     }
 
     /**
+     * Watches for publication (out of mutation queue) of a given model.
+     * Creates a filter that catches events from the mutation processor.
+     * Events will pass if they mention the provided model by its name and ID,
+     * and state that it has successfully been published off of the mutation queue.
+     * @param modelName Model name, e.g. "Post"
+     * @param modelId The ID of a model instance that might be published
+     * @return A filter that watches for publication of the provided model.
+     */
+    public static HubEventFilter enqueueOf(String modelName, String modelId) {
+        return event -> {
+            if (!DataStoreChannelEventName.OUTBOX_MUTATION_ENQUEUED.toString().equals(event.getName())) {
+                return false;
+            }
+            if (!(event.getData() instanceof OutboxMutationEvent)) {
+                return false;
+            }
+            OutboxMutationEvent<? extends Model> outboxMutationEvent =
+                    (OutboxMutationEvent<? extends Model>) event.getData();
+
+            return modelId.equals(outboxMutationEvent.getElement().getModel().getPrimaryKeyString()) &&
+                    modelName.equals(outboxMutationEvent.getModelName());
+        };
+    }
+
+    /**
      * Watches for the receipt of a given model, from the cloud.
      * Creates a filter that catches events from the subscription processor.
      * Events will pass if they mention the provided model by its name and ID,
