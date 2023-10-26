@@ -46,12 +46,13 @@ class GraphQLLazySubscribeInstrumentationTest {
 
     companion object {
 
-        lateinit var instrumentationRunId: String
+        val instrumentationRunId by lazy {
+            UUID.randomUUID().toString()
+        }
 
         @JvmStatic
         @BeforeClass
         fun setUp() {
-            instrumentationRunId = UUID.randomUUID().toString()
             val context = ApplicationProvider.getApplicationContext<Context>()
             val config = AmplifyConfiguration.fromConfigFile(context, R.raw.amplifyconfigurationlazy)
             Amplify.addPlugin(AWSApiPlugin())
