@@ -93,6 +93,7 @@ internal class LivenessWebSocket(
     internal var clientStoppedSession = false
     val json = Json { ignoreUnknownKeys = true }
     val FIVE_MINUTES = 1000 * 60 * 5
+    val datePattern = "EEE, d MMM yyyy HH:mm:ss z"
 
     @VisibleForTesting
     internal var webSocketListener = object : WebSocketListener() {
@@ -100,7 +101,7 @@ internal class LivenessWebSocket(
             LOG.debug("WebSocket onOpen")
 
             // device time may be set incorrectly; read the header to skew time and retry
-            val sdf = SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss z", Locale.US)
+            val sdf = SimpleDateFormat(datePattern, Locale.US)
             val date = response.header("Date")?.let { sdf.parse(it) }
             val tempOffset = if (date != null) {
                 date.time - (Date().time + offset)
@@ -178,11 +179,6 @@ internal class LivenessWebSocket(
                 onErrorReceived.accept(faceLivenessException)
             }
         }
-    }
-
-    private fun parse(timestamp: String): Long {
-        val cleanedTimestamp = timestamp.filterNot { it == 'T' || it == 'Z' }
-        return sdf.parse(cleanedTimestamp)?.time!!
     }
 
     fun start() {
