@@ -37,18 +37,57 @@ public final class DataStoreHubEventFilters {
      * @return A filter that watches for publication of the provided model.
      */
     public static HubEventFilter publicationOf(String modelName, String modelId) {
+        return outboxEventOf(
+                DataStoreChannelEventName.OUTBOX_MUTATION_PROCESSED,
+                modelName,
+                modelId
+        );
+    }
+
+    /**
+     * Watches for enqueue (out of mutation queue) of a given model.
+     * Creates a filter that catches events from the mutation processor.
+     * Events will pass if they mention the provided model by its name and ID,
+     * and state that it has successfully been enqueued off of the mutation queue.
+     * @param modelName Model name, e.g. "Post"
+     * @param modelId The ID of a model instance that might be published
+     * @return A filter that watches for publication of the provided model.
+     */
+    public static HubEventFilter enqueueOf(String modelName, String modelId) {
+        return outboxEventOf(
+                DataStoreChannelEventName.OUTBOX_MUTATION_ENQUEUED,
+                modelName,
+                modelId
+        );
+    }
+
+    /**
+     * Watches for the passed event (out of mutation queue) of a given model.
+     * Creates a filter that catches events from the mutation processor.
+     * Events will pass if they mention the provided model by its name and ID,
+     * and state that it has successfully received passed event type off of the mutation queue.
+     * @param eventType Either OUTBOX_MUTATION_ENQUEUED or OUTBOX_MUTATION_PROCESSED
+     * @param modelName Model name, e.g. "Post"
+     * @param modelId The ID of a model instance that might be published
+     * @return A filter that watches for publication of the provided model.
+     */
+    private static HubEventFilter outboxEventOf(
+            DataStoreChannelEventName eventType,
+            String modelName,
+            String modelId
+    ) {
         return event -> {
-            if (!DataStoreChannelEventName.OUTBOX_MUTATION_PROCESSED.toString().equals(event.getName())) {
+            if (!eventType.toString().equals(event.getName())) {
                 return false;
             }
             if (!(event.getData() instanceof OutboxMutationEvent)) {
                 return false;
             }
             OutboxMutationEvent<? extends Model> outboxMutationEvent =
-                (OutboxMutationEvent<? extends Model>) event.getData();
+                    (OutboxMutationEvent<? extends Model>) event.getData();
 
             return modelId.equals(outboxMutationEvent.getElement().getModel().getPrimaryKeyString()) &&
-                modelName.equals(outboxMutationEvent.getModelName());
+                    modelName.equals(outboxMutationEvent.getModelName());
         };
     }
 

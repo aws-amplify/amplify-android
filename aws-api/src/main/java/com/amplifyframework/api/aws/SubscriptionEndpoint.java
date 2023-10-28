@@ -76,12 +76,14 @@ final class SubscriptionEndpoint {
     private final Object webSocketLock = new Object();
     private WebSocket webSocket;
     private AmplifyWebSocketListener webSocketListener;
+    private String apiName;
 
     SubscriptionEndpoint(
             @NonNull ApiConfiguration apiConfiguration,
             @Nullable OkHttpConfigurator configurator,
             @NonNull GraphQLResponse.Factory responseFactory,
-            @NonNull SubscriptionAuthorizer authorizer
+            @NonNull SubscriptionAuthorizer authorizer,
+            @Nullable String apiName
     ) {
         this.apiConfiguration = Objects.requireNonNull(apiConfiguration);
         this.subscriptions = new ConcurrentHashMap<>();
@@ -89,6 +91,7 @@ final class SubscriptionEndpoint {
         this.authorizer = Objects.requireNonNull(authorizer);
         this.timeoutWatchdog = new TimeoutWatchdog();
         this.pendingSubscriptionIds = Collections.synchronizedSet(new HashSet<>());
+        this.apiName = apiName;
 
         OkHttpClient.Builder okHttpClientBuilder = new OkHttpClient.Builder()
                 .retryOnConnectionFailure(true);
@@ -197,7 +200,7 @@ final class SubscriptionEndpoint {
 
         Subscription<T> subscription = new Subscription<>(
             onNextItem, onSubscriptionError, onSubscriptionComplete,
-            responseFactory, request.getResponseType(), request
+            responseFactory, request.getResponseType(), request, apiName
         );
         subscriptions.put(subscriptionId, subscription);
         if (subscription.awaitSubscriptionReady()) {
@@ -372,6 +375,7 @@ final class SubscriptionEndpoint {
         private final CountDownLatch subscriptionReadyAcknowledgment;
         private final CountDownLatch subscriptionCompletionAcknowledgement;
         private boolean failed;
+        private String apiName;
 
         Subscription(
                 Consumer<GraphQLResponse<T>> onNextItem,
@@ -379,13 +383,16 @@ final class SubscriptionEndpoint {
                 Action onSubscriptionComplete,
                 GraphQLResponse.Factory responseFactory,
                 Type responseType,
-                GraphQLRequest<T> request) {
+                GraphQLRequest<T> request,
+                String apiName
+        ) {
             this.onNextItem = onNextItem;
             this.onSubscriptionError = onSubscriptionError;
             this.onSubscriptionComplete = onSubscriptionComplete;
             this.responseFactory = responseFactory;
             this.responseType = responseType;
             this.request = request;
+            this.apiName = apiName;
             this.subscriptionReadyAcknowledgment = new CountDownLatch(1);
             this.subscriptionCompletionAcknowledgement = new CountDownLatch(1);
             this.failed = false;
@@ -444,9 +451,28 @@ final class SubscriptionEndpoint {
             }
         }
 
+        // This method should be used in place of GraphQLResponse.Factory buildResponse.
+        // We need to use this method to pass apiName for LazyModel
+        private GraphQLResponse<T> buildResponse(String jsonResponse) throws ApiException {
+            if (!(responseFactory instanceof GsonGraphQLResponseFactory)) {
+                throw new ApiException(
+                        "Amplify encountered an error while deserializing an object. " +
+                        "GraphQLResponse.Factory was not of type GsonGraphQLResponseFactory",
+                        AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION);
+            }
+
+            try {
+                return ((GsonGraphQLResponseFactory) responseFactory)
+                        .buildResponse(request, jsonResponse, apiName);
+            } catch (ClassCastException cce) {
+                throw new ApiException("Amplify encountered an error while deserializing an object",
+                        AmplifyException.TODO_RECOVERY_SUGGESTION);
+            }
+        }
+
         void dispatchNextMessage(String message) {
             try {
-                onNextItem.accept(responseFactory.buildResponse(request, message));
+                onNextItem.accept(buildResponse(message));
             } catch (ApiException exception) {
                 dispatchError(exception);
             }

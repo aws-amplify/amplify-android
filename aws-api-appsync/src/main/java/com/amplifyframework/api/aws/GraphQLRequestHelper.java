@@ -22,10 +22,12 @@ import com.amplifyframework.annotations.InternalAmplifyApi;
 import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.core.model.AuthRule;
 import com.amplifyframework.core.model.AuthStrategy;
+import com.amplifyframework.core.model.LoadedModelReference;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelAssociation;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelIdentifier;
+import com.amplifyframework.core.model.ModelReference;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.SerializedCustomType;
 import com.amplifyframework.core.model.SerializedModel;
@@ -171,7 +173,7 @@ public class GraphQLRequestHelper {
             @NonNull ModelSchema schema, @NonNull Model instance) throws AmplifyException {
         final Map<String, Object> input = new HashMap<>();
         for (String fieldName : schema.getPrimaryIndexFields()) {
-            input.put(fieldName, extractFieldValue(fieldName, instance, schema));
+            input.put(fieldName, extractFieldValue(fieldName, instance, schema, true));
         }
         return input;
     }
@@ -224,21 +226,30 @@ public class GraphQLRequestHelper {
                 continue;
             }
 
-            Object fieldValue = extractFieldValue(modelField.getName(), instance, schema);
+            Object fieldValue = extractFieldValue(modelField.getName(), instance, schema, false);
+            Object underlyingFieldValue = fieldValue;
+            if (modelField.isModelReference() && fieldValue != null) {
+                ModelReference<?> modelReference = (ModelReference<?>) fieldValue;
+                if (modelReference instanceof LoadedModelReference) {
+                    underlyingFieldValue = ((LoadedModelReference) modelReference).getValue();
+                }
+            }
 
             if (association == null) {
                 result.put(fieldName, fieldValue);
             } else if (association.isOwner()) {
-                if (fieldValue == null && MutationType.CREATE.equals(type)) {
+                if ((fieldValue == null ||
+                        (modelField.isModelReference() && underlyingFieldValue == null)) &&
+                        MutationType.CREATE.equals(type)) {
                     // Do not set null values on associations for create mutations.
                 } else if (schema.getVersion() >= 1 && association.getTargetNames() != null
                         && association.getTargetNames().length > 0) {
                     // When target name length is more than 0 there are two scenarios, one is when
                     // there is custom primary key and other is when we have composite primary key.
-                    insertForeignKeyValues(result, modelField, fieldValue, association);
+                    insertForeignKeyValues(result, modelField, fieldValue, underlyingFieldValue, association);
                 } else {
                     String targetName = association.getTargetName();
-                    result.put(targetName, extractAssociateId(modelField, fieldValue));
+                    result.put(targetName, extractAssociateId(modelField, fieldValue, underlyingFieldValue));
                 }
             }
             // Ignore if field is associated, but is not a "belongsTo" relationship
@@ -250,58 +261,94 @@ public class GraphQLRequestHelper {
             Map<String, Object> result,
             ModelField modelField,
             Object fieldValue,
+            Object underlyingFieldValue,
             ModelAssociation association) {
         if (modelField.isModel() && fieldValue == null) {
-            // When there is no model field value, set null for removal of values or deassociation.
+            // When there is no model field value, set null for removal of values or association.
             for (String key : association.getTargetNames()) {
                 result.put(key, null);
             }
-        } else if (modelField.isModel() && fieldValue instanceof Model) {
-            if (((Model) fieldValue).resolveIdentifier() instanceof ModelIdentifier<?>) {
-                final ModelIdentifier<?> primaryKey = (ModelIdentifier<?>) ((Model) fieldValue).resolveIdentifier();
-                ListIterator<String> targetNames = Arrays.asList(association.getTargetNames()).listIterator();
-                Iterator<? extends Serializable> sortedKeys = primaryKey.sortedKeys().listIterator();
+        } else if ((modelField.isModel() || modelField.isModelReference()) && underlyingFieldValue instanceof Model) {
+            if (((Model) underlyingFieldValue).resolveIdentifier() instanceof ModelIdentifier<?>) {
+                // Here, we are unwrapping our ModelReference to grab our foreign keys.
+                // If we have a ModelIdentifier, we can pull all the key values, but we don't have
+                // the key names. We must grab those from the association target names
+                final ModelIdentifier<?> primaryKey =
+                        (ModelIdentifier<?>) ((Model) underlyingFieldValue).resolveIdentifier();
+                ListIterator<String> targetNames =
+                        Arrays.asList(association.getTargetNames()).listIterator();
+                Iterator<? extends Serializable> sortedKeys =
+                        primaryKey.sortedKeys().listIterator();
 
                 result.put(targetNames.next(), primaryKey.key());
 
                 while (targetNames.hasNext()) {
                     result.put(targetNames.next(), sortedKeys.next());
                 }
-            } else if ((fieldValue instanceof SerializedModel)) {
-                SerializedModel serializedModel = ((SerializedModel) fieldValue);
+            } else if ((underlyingFieldValue instanceof SerializedModel)) {
+                SerializedModel serializedModel = ((SerializedModel) underlyingFieldValue);
                 ModelSchema serializedSchema = serializedModel.getModelSchema();
                 if (serializedSchema != null &&
                         serializedSchema.getPrimaryIndexFields().size() > 1) {
 
-                    ListIterator<String> primaryKeyFieldsIterator = serializedSchema.getPrimaryIndexFields()
+                    ListIterator<String> primaryKeyFieldsIterator =
+                            serializedSchema.getPrimaryIndexFields()
                             .listIterator();
                     for (String targetName : association.getTargetNames()) {
                         result.put(targetName, serializedModel.getSerializedData()
                                 .get(primaryKeyFieldsIterator.next()));
                     }
                 } else {
-                    result.put(association.getTargetNames()[0], ((Model) fieldValue).resolveIdentifier().toString());
+                    // our key was not a ModelIdentifier type, so it must be a singular primary key
+                    result.put(
+                            association.getTargetNames()[0],
+                            ((Model) underlyingFieldValue).resolveIdentifier().toString()
+                    );
                 }
             } else {
-                result.put(association.getTargetNames()[0], ((Model) fieldValue).resolveIdentifier().toString());
+                // our key was not a ModelIdentifier type, so it must be a singular primary key
+                result.put(
+                        association.getTargetNames()[0],
+                        ((Model) underlyingFieldValue).resolveIdentifier().toString()
+                );
+            }
+        } else if (modelField.isModelReference() && fieldValue instanceof ModelReference) {
+            // Here we are unwrapping our ModelReference and inserting
+            Map<String, Object> identifiers = ((ModelReference<?>) fieldValue).getIdentifier();
+            if (identifiers.isEmpty()) {
+                for (String key : association.getTargetNames()) {
+                    result.put(key, null);
+                }
             }
         }
     }
 
-    private static Object extractAssociateId(ModelField modelField, Object fieldValue) {
-        if (modelField.isModel() && fieldValue instanceof Model) {
-            return ((Model) fieldValue).resolveIdentifier();
+    private static Object extractAssociateId(ModelField modelField, Object fieldValue, Object underlyingFieldValue) {
+        if ((modelField.isModel() || modelField.isModelReference()) && underlyingFieldValue instanceof Model) {
+            return ((Model) underlyingFieldValue).resolveIdentifier();
         } else if (modelField.isModel() && fieldValue instanceof Map) {
             return ((Map<?, ?>) fieldValue).get("id");
         } else if (modelField.isModel() && fieldValue == null) {
             // When there is no model field value, set null for removal of values or deassociation.
             return null;
+        } else if (modelField.isModelReference() && fieldValue instanceof ModelReference) {
+            Map<String, Object> identifiers = ((ModelReference<?>) fieldValue).getIdentifier();
+            if (identifiers.isEmpty()) {
+                return null;
+            } else {
+                return identifiers.get("id");
+            }
         } else {
             throw new IllegalStateException("Associated data is not Model or Map.");
         }
     }
 
-    private static Object extractFieldValue(String fieldName, Model instance, ModelSchema schema)
+    private static Object extractFieldValue(
+            String fieldName,
+            Model instance,
+            ModelSchema schema,
+            Boolean extractLazyValue
+    )
             throws AmplifyException {
         if (instance instanceof SerializedModel) {
             SerializedModel serializedModel = (SerializedModel) instance;
@@ -316,7 +363,13 @@ public class GraphQLRequestHelper {
         try {
             Field privateField = instance.getClass().getDeclaredField(fieldName);
             privateField.setAccessible(true);
-            return privateField.get(instance);
+            Object fieldInstance = privateField.get(instance);
+            // In some cases, we don't want to return a ModelReference value. If extractLazyValue
+            // is set, we unwrap the reference to grab to value underneath
+            if (extractLazyValue && fieldInstance != null && privateField.getType() == LoadedModelReference.class) {
+                return ((LoadedModelReference<?>) fieldInstance).getValue();
+            }
+            return fieldInstance;
         } catch (Exception exception) {
             throw new AmplifyException(
                     "An invalid field was provided. " + fieldName + " is not present in " + schema.getName(),

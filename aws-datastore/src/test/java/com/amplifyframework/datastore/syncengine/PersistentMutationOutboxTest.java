@@ -27,7 +27,10 @@ import com.amplifyframework.datastore.storage.SynchronousStorageAdapter;
 import com.amplifyframework.datastore.syncengine.MutationOutbox.OutboxEvent;
 import com.amplifyframework.datastore.syncengine.PendingMutation.PersistentRecord;
 import com.amplifyframework.hub.HubChannel;
+import com.amplifyframework.testmodels.commentsblog.Author;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
+import com.amplifyframework.testmodels.commentsblog.Post;
+import com.amplifyframework.testmodels.commentsblog.PostStatus;
 import com.amplifyframework.testutils.HubAccumulator;
 import com.amplifyframework.testutils.random.RandomString;
 
@@ -144,7 +147,7 @@ public final class PersistentMutationOutboxTest {
             Collections.singletonList(converter.toRecord(createJameson)),
             storage.query(PersistentRecord.class)
         );
-        assertTrue(mutationOutbox.hasPendingMutation(jameson.getId()));
+        assertTrue(mutationOutbox.hasPendingMutation(jameson.getId(), jameson.getClass().getName()));
         assertEquals(createJameson, mutationOutbox.peek());
     }
 
@@ -205,8 +208,8 @@ public final class PersistentMutationOutboxTest {
         loadObserver.dispose();
 
         // Assert: items are in the outbox.
-        assertTrue(mutationOutbox.hasPendingMutation(tony.getId()));
-        assertTrue(mutationOutbox.hasPendingMutation(sam.getId()));
+        assertTrue(mutationOutbox.hasPendingMutation(tony.getId(), tony.getClass().getName()));
+        assertTrue(mutationOutbox.hasPendingMutation(sam.getId(), sam.getClass().getName()));
 
         // Tony is first, since he is the older of the two mutations.
         assertEquals(updateTony, mutationOutbox.peek());
@@ -237,7 +240,7 @@ public final class PersistentMutationOutboxTest {
         assertEquals(0, storage.query(PersistentRecord.class).size());
 
         assertNull(mutationOutbox.peek());
-        assertFalse(mutationOutbox.hasPendingMutation(bill.getId()));
+        assertFalse(mutationOutbox.hasPendingMutation(bill.getId(), bill.getClass().getName()));
     }
 
     /**
@@ -327,8 +330,8 @@ public final class PersistentMutationOutboxTest {
         boolean completed = mutationOutbox.enqueue(pendingMutation).blockingAwait(TIMEOUT_MS, TimeUnit.MILLISECONDS);
 
         assertTrue(completed);
-        assertTrue(mutationOutbox.hasPendingMutation(modelId));
-        assertFalse(mutationOutbox.hasPendingMutation(mutationId.toString()));
+        assertTrue(mutationOutbox.hasPendingMutation(modelId, joe.getClass().getName()));
+        assertFalse(mutationOutbox.hasPendingMutation(mutationId.toString(), mutationId.getClass().getName()));
     }
 
     /**
@@ -354,9 +357,127 @@ public final class PersistentMutationOutboxTest {
             mutationId, joe, schema, PendingMutation.Type.CREATE, QueryPredicates.all()
         );
 
-        assertFalse(mutationOutbox.hasPendingMutation(joeId));
-        assertFalse(mutationOutbox.hasPendingMutation(unrelatedMutation.getMutationId().toString()));
+        assertFalse(mutationOutbox.hasPendingMutation(joeId, joe.getClass().getName()));
+        assertFalse(mutationOutbox.hasPendingMutation(unrelatedMutation.getMutationId().toString(),
+                unrelatedMutation.getClass().getName()));
     }
+
+    /**
+     * When queuing record to mutationOutbox for a model, hasPendingMutation should return false
+     * for other existing models with same primary key values.
+     *
+     * @throws AmplifyException On failure to convert the modelClass item to ModelSchema
+     */
+    @Test
+    public void hasPendingMutationReturnsFalseForModelMutationWithSamePrimaryKeyForDifferentModels()
+            throws AmplifyException {
+
+        String modelId = RandomString.string();
+        BlogOwner blogOwner = BlogOwner.builder()
+                .name("Sample BlogOwner")
+                .id(modelId)
+                .build();
+        TimeBasedUuid mutationId = TimeBasedUuid.create();
+
+        PendingMutation<BlogOwner> pendingBlogOwnerMutation = PendingMutation.instance(
+                mutationId, blogOwner, schema, PendingMutation.Type.CREATE, QueryPredicates.all()
+        );
+
+        // Act & Assert: Enqueue and verify BlogOwner
+        assertTrue(mutationOutbox.enqueue(pendingBlogOwnerMutation).blockingAwait(TIMEOUT_MS, TimeUnit.MILLISECONDS));
+        assertTrue(mutationOutbox.hasPendingMutation(modelId, blogOwner.getClass().getName()));
+
+        // Act & Assert: Enqueue and verify Author
+        Author author = Author.builder()
+                .name("Sample Author")
+                .id(modelId)
+                .build();
+
+        // Check hasPendingMutation returns False for Author with same Primary Key (id) as BlogOwner
+        assertFalse(mutationOutbox.hasPendingMutation(modelId, author.getClass().getName()));
+
+        PendingMutation<Author> pendingAuthorMutation = PendingMutation.instance(
+                mutationId, author, ModelSchema.fromModelClass(Author.class),
+                PendingMutation.Type.CREATE, QueryPredicates.all()
+        );
+        assertTrue(mutationOutbox.enqueue(pendingAuthorMutation).blockingAwait(TIMEOUT_MS, TimeUnit.MILLISECONDS));
+
+        // Make sure Author Mutation is stored
+        assertTrue(mutationOutbox.hasPendingMutation(modelId, author.getClass().getName()));
+
+        // Act & Assert: Enqueue and verify Author
+        Post post = Post.builder()
+                .title("Sample Author")
+                .status(PostStatus.ACTIVE)
+                .rating(1)
+                .id(modelId)
+                .build();
+
+        // Check hasPendingMutation returns False for Post with same Primary Key (id) as BlogOwner
+        assertFalse(mutationOutbox.hasPendingMutation(modelId, post.getClass().getName()));
+
+        PendingMutation<Post> pendingPostMutation = PendingMutation.instance(
+                mutationId, post, ModelSchema.fromModelClass(Post.class),
+                PendingMutation.Type.CREATE, QueryPredicates.all()
+        );
+        assertTrue(mutationOutbox.enqueue(pendingPostMutation).blockingAwait(TIMEOUT_MS, TimeUnit.MILLISECONDS));
+
+        // Make sure Post Mutation is stored
+        assertTrue(mutationOutbox.hasPendingMutation(modelId, post.getClass().getName()));
+    }
+
+    /**
+     * Validates that attempting to enqueue a mutation for a model with a duplicate primary key results
+     * in a DataStoreException. Also checks that the original mutation is still in the outbox.
+     *
+     * @throws DataStoreException On failure to query storage to assert post-action value of mutation
+     * @throws InterruptedException If interrupted while awaiting terminal result in test observer
+     * @throws AmplifyException If schema cannot be found in the registry
+     */
+    @Test
+    public void mutationEnqueueForModelWithDuplicatePrimaryKeyThrowsDatastoreException() throws
+            AmplifyException, InterruptedException {
+
+        // Arrange: Create and enqueue an initial BlogOwner mutation
+        String modelId = RandomString.string();
+        BlogOwner existingBlogOwner = BlogOwner.builder()
+                .name("Sample BlogOwner")
+                .id(modelId)
+                .build();
+
+        PendingMutation<BlogOwner> existingCreation = PendingMutation.creation(existingBlogOwner, schema);
+        String existingCreationId = existingCreation.getMutationId().toString();
+        assertTrue(mutationOutbox.enqueue(existingCreation).blockingAwait(TIMEOUT_MS, TimeUnit.MILLISECONDS));
+
+        // Arrange: Create a new BlogOwner with the same ID as the existing one
+        BlogOwner duplicateBlogOwner = BlogOwner.builder()
+                .name("Sample BlogOwner")
+                .id(modelId)
+                .build();
+        PendingMutation<BlogOwner> duplicateMutation =
+                PendingMutation.creation(duplicateBlogOwner, schema);
+        String duplicateMutationId = duplicateMutation.getMutationId().toString();
+
+        // Act: Attempt to enqueue the duplicate mutation
+        TestObserver<Void> enqueueObserver = mutationOutbox.enqueue(duplicateMutation).test();
+
+        // Assert: Verify that a DataStoreException is thrown
+        enqueueObserver.await(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        enqueueObserver.assertError(throwable -> throwable instanceof DataStoreException);
+
+        // Assert: original mutation is present, but the new one isn't.
+        PersistentRecord storedMutation = storage.query(PersistentRecord.class,
+                Where.identifier(PersistentRecord.class, existingCreationId)).get(0);
+        assertEquals(existingBlogOwner, converter.fromRecord(storedMutation).getMutatedItem());
+        assertTrue(storage.query(PersistentRecord.class,
+                Where.identifier(PersistentRecord.class, duplicateMutationId)).isEmpty());
+
+        // Additional Checks: Peek the Mutation outbox, existing mutation should be present.
+        assertTrue(mutationOutbox.hasPendingMutation(existingBlogOwner.getPrimaryKeyString(),
+                existingBlogOwner.getClass().getName()));
+        assertEquals(existingCreation, mutationOutbox.peek());
+    }
+
 
     /**
      * When there is an existing creation for a model, and a new creation for that
@@ -399,7 +520,8 @@ public final class PersistentMutationOutboxTest {
                 Where.identifier(PersistentRecord.class, incomingCreationId)).isEmpty());
 
         // Existing mutation still attainable as next mutation (right now, its the ONLY mutation in outbox)
-        assertTrue(mutationOutbox.hasPendingMutation(modelInExistingMutation.getPrimaryKeyString()));
+        assertTrue(mutationOutbox.hasPendingMutation(modelInExistingMutation.getPrimaryKeyString(),
+                modelInExistingMutation.getClass().getName()));
         assertEquals(existingCreation, mutationOutbox.peek());
     }
 
@@ -444,7 +566,8 @@ public final class PersistentMutationOutboxTest {
                 incomingCreationId)).isEmpty());
 
         // Existing mutation still attainable as next mutation (right now, its the ONLY mutation in outbox)
-        assertTrue(mutationOutbox.hasPendingMutation(modelInExistingMutation.getPrimaryKeyString()));
+        assertTrue(mutationOutbox.hasPendingMutation(modelInExistingMutation.getPrimaryKeyString(),
+                modelInExistingMutation.getClass().getName()));
         assertEquals(existingUpdate, mutationOutbox.peek());
     }
 
@@ -490,7 +613,8 @@ public final class PersistentMutationOutboxTest {
                 Where.identifier(PersistentRecord.class, incomingCreationId)).isEmpty());
 
         // Existing mutation still attainable as next mutation (right now, its the ONLY mutation in outbox)
-        assertTrue(mutationOutbox.hasPendingMutation(modelInExistingMutation.getPrimaryKeyString()));
+        assertTrue(mutationOutbox.hasPendingMutation(modelInExistingMutation.getPrimaryKeyString(),
+                modelInExistingMutation.getClass().getName()));
         assertEquals(existingDeletion, mutationOutbox.peek());
     }
 
@@ -535,7 +659,8 @@ public final class PersistentMutationOutboxTest {
                 incomingUpdateId)).isEmpty());
 
         // Existing mutation still attainable as next mutation (right now, its the ONLY mutation in outbox)
-        assertTrue(mutationOutbox.hasPendingMutation(modelInExistingMutation.getPrimaryKeyString()));
+        assertTrue(mutationOutbox.hasPendingMutation(modelInExistingMutation.getPrimaryKeyString(),
+                modelInExistingMutation.getClass().getName()));
         assertEquals(existingDeletion, mutationOutbox.peek());
     }
 
@@ -667,7 +792,8 @@ public final class PersistentMutationOutboxTest {
      * @throws InterruptedException If interrupted while awaiting terminal result in test observer
      */
     @Test
-    public void existingSerializedModelUpdateIncomingUpdateWithoutConditionMergesWithExistingMutation()
+    public void
+        existingSerializedModelUpdateIncomingUpdateWithoutConditionMergesWithExistingMutation()
             throws AmplifyException, InterruptedException {
         // Arrange an existing update mutation
         BlogOwner modelInSqlLite = BlogOwner.builder()
@@ -1060,7 +1186,7 @@ public final class PersistentMutationOutboxTest {
         assertTrue(completed);
         assertEquals(
             firstMutation,
-            mutationOutbox.getMutationForModelId(originalJoe.getId())
+            mutationOutbox.getMutationForModelId(originalJoe.getId(), originalJoe.getClass().getName())
         );
     }
 

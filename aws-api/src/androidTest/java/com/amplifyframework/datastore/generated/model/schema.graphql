@@ -1,0 +1,61 @@
+# This "input" configures a global authorization rule to enable public access to
+# all models in this schema. Learn more about authorization rules here: https://docs.amplify.aws/cli/graphql/authorization-rules
+input AMPLIFY { globalAuthRule: AuthRule = { allow: public } } # FOR TESTING ONLY!
+
+input AMPLIFY { globalAuthRule: AuthRule = { allow: public } } # FOR TESTING ONLY!
+
+
+type Parent @model {
+  id: ID! @primaryKey
+  child: HasOneChild @hasOne
+  children: [HasManyChild] @hasMany
+}
+
+type HasOneChild @model {
+  id: ID! @primaryKey
+  content: String
+}
+
+type HasManyChild @model {
+  id: ID! @primaryKey
+  content: String
+  parent: Parent @belongsTo
+}
+
+# Start Implicit Bi-directional Has One
+
+type Project @model {
+  projectId: ID! @primaryKey(sortKeyFields:["name"])
+  name: String!
+  team: Team @hasOne
+}
+type Team @model {
+  teamId: ID! @primaryKey(sortKeyFields:["name"])
+  name: String!
+  project: Project @belongsTo
+}
+
+# End Implicit Bi-directional Has One
+
+# Start CPK Multiple Use Case
+
+type Blog @model {
+  blogId: String! @primaryKey
+  name: String!
+  posts: [Post!]! @hasMany
+}
+
+type Post @model {
+  postId: ID! @primaryKey(sortKeyFields:["title"])
+  title: String!
+  blog: Blog! @belongsTo
+  comments: [Comment]! @hasMany
+}
+
+type Comment @model {
+  commentId: ID! @primaryKey(sortKeyFields:["content"])
+  content: String!
+  post: Post! @belongsTo
+}
+
+# End CPK Multiple Use Case

@@ -31,6 +31,7 @@ internal object MigrateAuthCognitoActions : MigrateAuthActions {
     private const val KEY_USERNAME = "USERNAME"
     private const val KEY_PASSWORD = "PASSWORD"
     private const val KEY_SECRET_HASH = "SECRET_HASH"
+    private const val KEY_USERID_FOR_SRP = "USER_ID_FOR_SRP"
 
     override fun initiateMigrateAuthAction(event: SignInEvent.EventType.InitiateMigrateAuth) =
         Action<AuthEnvironment>("InitMigrateAuth") { id, dispatcher ->
@@ -58,8 +59,15 @@ internal object MigrateAuthCognitoActions : MigrateAuthActions {
                 }
 
                 if (response != null) {
+                    val username = AuthHelper.getActiveUsername(
+                        username = event.username,
+                        alternateUsername = response.challengeParameters?.get(KEY_USERNAME),
+                        userIDForSRP = response.challengeParameters?.get(
+                            KEY_USERID_FOR_SRP
+                        )
+                    )
                     SignInChallengeHelper.evaluateNextStep(
-                        event.username,
+                        username,
                         response.challengeName,
                         response.session,
                         response.challengeParameters,

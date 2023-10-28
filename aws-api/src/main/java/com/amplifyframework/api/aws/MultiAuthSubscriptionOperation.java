@@ -21,7 +21,6 @@ import androidx.annotation.VisibleForTesting;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.ApiException.ApiAuthException;
 import com.amplifyframework.api.aws.auth.AuthRuleRequestDecorator;
-import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.Action;
@@ -38,7 +37,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-final class MultiAuthSubscriptionOperation<T> extends GraphQLOperation<T> {
+final class MultiAuthSubscriptionOperation<T> extends AWSGraphQLOperation<T> {
     private static final Logger LOG = Amplify.Logging.logger(CategoryType.API, "amplify:aws-api");
 
     private final SubscriptionEndpoint subscriptionEndpoint;
@@ -54,7 +53,7 @@ final class MultiAuthSubscriptionOperation<T> extends GraphQLOperation<T> {
     private Future<?> subscriptionFuture;
 
     private MultiAuthSubscriptionOperation(Builder<T> builder) {
-        super(builder.graphQlRequest, builder.responseFactory);
+        super(builder.graphQlRequest, builder.responseFactory, builder.apiName);
         this.subscriptionEndpoint = builder.subscriptionEndpoint;
         this.onSubscriptionStart = builder.onSubscriptionStart;
         this.onNextItem = builder.onNextItem;
@@ -205,6 +204,7 @@ final class MultiAuthSubscriptionOperation<T> extends GraphQLOperation<T> {
         private Consumer<ApiException> onSubscriptionError;
         private Action onSubscriptionComplete;
         private AuthRuleRequestDecorator requestDecorator;
+        private String apiName;
 
         @NonNull
         public Builder<T> subscriptionEndpoint(@NonNull SubscriptionEndpoint subscriptionEndpoint) {
@@ -256,6 +256,12 @@ final class MultiAuthSubscriptionOperation<T> extends GraphQLOperation<T> {
 
         public Builder<T> requestDecorator(AuthRuleRequestDecorator requestDecorator) {
             this.requestDecorator = requestDecorator;
+            return this;
+        }
+
+        @NonNull
+        public Builder<T> apiName(String apiName) {
+            this.apiName = apiName;
             return this;
         }
 

@@ -21,5 +21,9 @@ import com.amplifyframework.statemachine.codegen.events.SRPEvent
 internal interface SRPActions {
     fun initiateSRPAuthAction(event: SRPEvent.EventType.InitiateSRP): Action
     fun initiateSRPWithCustomAuthAction(event: SRPEvent.EventType.InitiateSRPWithCustom): Action
-    fun verifyPasswordSRPAction(event: SRPEvent.EventType.RespondPasswordVerifier): Action
+    fun verifyPasswordSRPAction(
+        challengeParameters: Map<String, String>,
+        metadata: Map<String, String>,
+        session: String?
+    ): Action
 }

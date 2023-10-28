@@ -20,5 +20,5 @@ import com.amplifyframework.auth.exceptions.ServiceException
  * Could not perform the action because there are incorrect parameters.
  * @param cause The underlying cause of this exception
  */
-open class InvalidParameterException(cause: Throwable?) :
-    ServiceException("One or more parameters are incorrect.", "Enter correct parameters.", cause)
+open class InvalidParameterException(message: String? = null, cause: Throwable? = null) :
+    ServiceException(message ?: "One or more parameters are incorrect.", "Enter correct parameters.", cause)

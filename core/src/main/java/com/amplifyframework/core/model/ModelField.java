@@ -54,6 +54,12 @@ public final class ModelField {
     // True if the field is an instance of model.
     private final boolean isModel;
 
+    // True if the field is an instance of ModelReference.
+    private final boolean isModelReference;
+
+    // True if the field is an instance of ModelList.
+    private final boolean isModelList;
+
     // True if the field is an instance of CustomType
     private final boolean isCustomType;
 
@@ -72,6 +78,8 @@ public final class ModelField {
         this.isArray = builder.isArray;
         this.isEnum = builder.isEnum;
         this.isModel = builder.isModel;
+        this.isModelReference = builder.isModelReference;
+        this.isModelList = builder.isModelList;
         this.isCustomType = builder.isCustomType;
         this.authRules = builder.authRules;
     }
@@ -155,6 +163,24 @@ public final class ModelField {
     }
 
     /**
+     * Returns true if the field's target type is ModelReference.
+     *
+     * @return True if the field's target type is ModelReference.
+     */
+    public boolean isModelReference() {
+        return isModelReference;
+    }
+
+    /**
+     * Returns true if the field's target type is ModelList.
+     *
+     * @return True if the field's target type is ModelList.
+     */
+    public boolean isModelList() {
+        return isModelList;
+    }
+
+    /**
      * Returns true if the field's target type is CustomType.
      *
      * @return True if the field's target type is CustomType.
@@ -198,6 +224,12 @@ public final class ModelField {
         if (isModel != that.isModel) {
             return false;
         }
+        if (isModelReference != that.isModelReference) {
+            return false;
+        }
+        if (isModelList != that.isModelList) {
+            return false;
+        }
         if (isCustomType != that.isCustomType) {
             return false;
         }
@@ -220,6 +252,8 @@ public final class ModelField {
         result = 31 * result + (isArray ? 1 : 0);
         result = 31 * result + (isEnum ? 1 : 0);
         result = 31 * result + (isModel ? 1 : 0);
+        result = 31 * result + (isModelReference ? 1 : 0);
+        result = 31 * result + (isModelList ? 1 : 0);
         result = 31 * result + (isCustomType ? 1 : 0);
         return result;
     }
@@ -235,6 +269,8 @@ public final class ModelField {
             ", isArray=" + isArray +
             ", isEnum=" + isEnum +
             ", isModel=" + isModel +
+            ", isModelReference=" + isModelReference +
+            ", isModelList=" + isModelList +
             ", isCustomType=" + isCustomType +
             '}';
     }
@@ -268,6 +304,12 @@ public final class ModelField {
 
         // True if the field's target type is Model.
         private boolean isModel = false;
+
+        // True if the field's target type is a ModelReference type.
+        private boolean isModelReference = false;
+
+        // True if the field's target type is a ModelList type.
+        private boolean isModelList = false;
 
         // True if the field's target type is CustomType.
         private boolean isCustomType = false;
@@ -362,6 +404,26 @@ public final class ModelField {
          */
         public ModelFieldBuilder isModel(boolean isModel) {
             this.isModel = isModel;
+            return this;
+        }
+
+        /**
+         * Sets a flag indicating whether or not the field's target type is a ModelReference.
+         * @param isModelReference flag indicating if the field is a ModelReference type
+         * @return the builder object
+         */
+        public ModelFieldBuilder isModelReference(boolean isModelReference) {
+            this.isModelReference = isModelReference;
+            return this;
+        }
+
+        /**
+         * Sets a flag indicating whether or not the field's type is a ModelList type.
+         * @param isModelList flag indicating if the field is a ModelList type
+         * @return the builder object
+         */
+        public ModelFieldBuilder isModelList(boolean isModelList) {
+            this.isModelList = isModelList;
             return this;
         }
 

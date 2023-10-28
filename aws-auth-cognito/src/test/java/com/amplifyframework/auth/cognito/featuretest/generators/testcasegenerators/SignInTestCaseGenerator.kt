@@ -16,6 +16,7 @@
 package com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerators
 
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.ResourceNotFoundException
 import com.amplifyframework.auth.cognito.featuretest.API
 import com.amplifyframework.auth.cognito.featuretest.AuthAPI
 import com.amplifyframework.auth.cognito.featuretest.CognitoType
@@ -81,6 +82,13 @@ object SignInTestCaseGenerator : SerializableProvider {
         ).toJsonElement()
     )
 
+    private val mockedRespondToAuthChallengeResponseWhenResourceNotFoundException = MockResponse(
+        CognitoType.CognitoIdentityProvider,
+        "respondToAuthChallenge",
+        ResponseType.Failure,
+        ResourceNotFoundException.invoke {}.toJsonElement()
+    )
+
     private val mockedRespondToAuthChallengeWithDeviceMetadataResponse = MockResponse(
         CognitoType.CognitoIdentityProvider,
         "respondToAuthChallenge",
@@ -125,6 +133,22 @@ object SignInTestCaseGenerator : SerializableProvider {
                 "SECRET_BLOCK" to "secretBlock",
                 "SRP_B" to "def",
                 "USERNAME" to username
+            )
+        ).toJsonElement()
+    )
+
+    private val mockedRespondToAuthCustomChallengeResponseWithAlias = MockResponse(
+        CognitoType.CognitoIdentityProvider,
+        "respondToAuthChallenge",
+        ResponseType.Success,
+        mapOf(
+            "session" to "someSession",
+            "challengeName" to "CUSTOM_CHALLENGE",
+            "challengeParameters" to mapOf(
+                "SALT" to "abc",
+                "SECRET_BLOCK" to "secretBlock",
+                "SRP_B" to "def",
+                "USERNAME" to "alternateUsername"
             )
         ).toJsonElement()
     )
@@ -195,6 +219,23 @@ object SignInTestCaseGenerator : SerializableProvider {
         ).toJsonElement()
     )
 
+    private val mockedSignInCustomAuthChallengeExpectationWithAlias = ExpectationShapes.Amplify(
+        apiName = AuthAPI.signIn,
+        responseType = ResponseType.Success,
+        response = mapOf(
+            "isSignedIn" to false,
+            "nextStep" to mapOf(
+                "signInStep" to "CONFIRM_SIGN_IN_WITH_CUSTOM_CHALLENGE",
+                "additionalInfo" to mapOf(
+                    "SALT" to "abc",
+                    "SECRET_BLOCK" to "secretBlock",
+                    "SRP_B" to "def",
+                    "USERNAME" to "alternateUsername"
+                )
+            )
+        ).toJsonElement()
+    )
+
     private val mockConfirmDeviceResponse = MockResponse(
         CognitoType.CognitoIdentityProvider,
         "confirmDevice",
@@ -209,6 +250,34 @@ object SignInTestCaseGenerator : SerializableProvider {
             "SignedOut_Configured.json",
             mockedResponses = listOf(
                 mockedInitiateAuthResponse,
+                mockedRespondToAuthChallengeResponse,
+                mockedIdentityIdResponse,
+                mockedAWSCredentialsResponse,
+            )
+        ),
+        api = API(
+            AuthAPI.signIn,
+            params = mapOf(
+                "username" to username,
+                "password" to password
+            ).toJsonElement(),
+            options = JsonObject(emptyMap())
+        ),
+        validations = listOf(
+            mockedSignInSuccessExpectation,
+            ExpectationShapes.State("SignedIn_SessionEstablished.json")
+        )
+    )
+
+    private val signInWhenResourceNotFoundExceptionCase = FeatureTestCase(
+        description = "Test that SRP signIn invokes proper cognito request and returns " +
+            "ResourceNotFoundException but still signs in successfully",
+        preConditions = PreConditions(
+            "authconfiguration.json",
+            "SignedOut_Configured.json",
+            mockedResponses = listOf(
+                mockedInitiateAuthResponse,
+                mockedRespondToAuthChallengeResponseWhenResourceNotFoundException,
                 mockedRespondToAuthChallengeResponse,
                 mockedIdentityIdResponse,
                 mockedAWSCredentialsResponse,
@@ -322,6 +391,35 @@ object SignInTestCaseGenerator : SerializableProvider {
         )
     )
 
+    private val customAuthCaseWhenResourceNotFoundExceptionCase = FeatureTestCase(
+        description = "Test that Custom Auth signIn invokes ResourceNotFoundException " +
+            "and then receive proper cognito request and returns custom challenge",
+        preConditions = PreConditions(
+            "authconfiguration.json",
+            "SignedOut_Configured.json",
+            mockedResponses = listOf(
+                mockedInitiateAuthForCustomAuthWithoutSRPResponse,
+                mockedRespondToAuthChallengeResponseWhenResourceNotFoundException,
+                mockedRespondToAuthCustomChallengeResponse
+            )
+        ),
+        api = API(
+            AuthAPI.signIn,
+            params = mapOf(
+                "username" to username,
+                "password" to "",
+            ).toJsonElement(),
+            options = mapOf(
+                "signInOptions" to
+                    mapOf("authFlow" to AuthFlowType.CUSTOM_AUTH_WITHOUT_SRP.toString())
+            ).toJsonElement()
+        ),
+        validations = listOf(
+            mockedSignInCustomAuthChallengeExpectation,
+            ExpectationShapes.State("CustomSignIn_SigningIn.json")
+        )
+    )
+
     private val customAuthWithSRPCase = FeatureTestCase(
         description = "Test that Custom Auth signIn invokes proper cognito request and returns password challenge",
         preConditions = PreConditions(
@@ -348,12 +446,71 @@ object SignInTestCaseGenerator : SerializableProvider {
         )
     )
 
+    private val customAuthWithSRPCaseWhenAliasIsUsedToSignIn = FeatureTestCase(
+        description = "Test that Custom Auth signIn invokes proper cognito request " +
+            "and returns password challenge when alias is used",
+        preConditions = PreConditions(
+            "authconfiguration.json",
+            "SignedOut_Configured.json",
+            mockedResponses = listOf(
+                mockedInitiateAuthResponse,
+                mockedRespondToAuthCustomChallengeResponseWithAlias
+            )
+        ),
+        api = API(
+            AuthAPI.signIn,
+            params = mapOf(
+                "username" to username,
+                "password" to "",
+            ).toJsonElement(),
+            options = mapOf(
+                "signInOptions" to mapOf("authFlow" to AuthFlowType.CUSTOM_AUTH_WITH_SRP.toString())
+            ).toJsonElement()
+        ),
+        validations = listOf(
+            mockedSignInCustomAuthChallengeExpectationWithAlias,
+            ExpectationShapes.State("CustomSignIn_SigningIn.json")
+        )
+    )
+
+    private val customAuthWithSRPWhenResourceNotFoundExceptionCase = FeatureTestCase(
+        description = "Test that Custom Auth signIn invokes ResourceNotFoundException" +
+            " and then received proper cognito request and returns password challenge",
+        preConditions = PreConditions(
+            "authconfiguration.json",
+            "SignedOut_Configured.json",
+            mockedResponses = listOf(
+                mockedInitiateAuthResponse,
+                mockedRespondToAuthChallengeResponseWhenResourceNotFoundException,
+                mockedRespondToAuthCustomChallengeResponse
+            )
+        ),
+        api = API(
+            AuthAPI.signIn,
+            params = mapOf(
+                "username" to username,
+                "password" to "",
+            ).toJsonElement(),
+            options = mapOf(
+                "signInOptions" to mapOf("authFlow" to AuthFlowType.CUSTOM_AUTH_WITH_SRP.toString())
+            ).toJsonElement()
+        ),
+        validations = listOf(
+            mockedSignInCustomAuthChallengeExpectation,
+            ExpectationShapes.State("CustomSignIn_SigningIn.json")
+        )
+    )
+
     override val serializables: List<Any> = listOf(
         baseCase,
         challengeCase,
         deviceSRPTestCase,
         customAuthCase,
         customAuthWithSRPCase,
-        signInWhenAlreadySigningInAuthCase
+        signInWhenAlreadySigningInAuthCase,
+        customAuthWithSRPWhenResourceNotFoundExceptionCase,
+        customAuthCaseWhenResourceNotFoundExceptionCase,
+        signInWhenResourceNotFoundExceptionCase,
+        customAuthWithSRPCaseWhenAliasIsUsedToSignIn
     )
 }
