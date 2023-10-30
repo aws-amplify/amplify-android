@@ -18,7 +18,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- * Constructs a new AccessDeniedException with the specified error message.
+ * Constructs a new InvalidSignatureException with the specified error message.
  *
  * @param message Describes the error encountered.
  */
