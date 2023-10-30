@@ -75,7 +75,7 @@ class StorageCanaryTest {
     fun uploadFile() {
         val latch = CountDownLatch(1)
         val file = createFile(1)
-        val fileKey = "ExampleKey"
+        val fileKey = UUID.randomUUID().toString()
         Amplify.Storage.uploadFile(
             fileKey,
             file,

@@ -1,3 +1,12 @@
+## [Release 2.14.2](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.14.2)
+
+### Bug Fixes
+- **auth:** Fix for when alias is used to sign in and deviceKey is stored with the entered username instead of retrieved username ([#2614](https://github.com/aws-amplify/amplify-android/issues/2614))
+- **datastore:** Add Model Class Check in getMutationById() to Prevent Cross-Model Primary Key Collisions ([#2612](https://github.com/aws-amplify/amplify-android/issues/2612))
+- **datastore:** Temporary workaround to stabilize DataStore test. ([#2618](https://github.com/aws-amplify/amplify-android/issues/2618))
+
+[See all changes between 2.14.1 and 2.14.2](https://github.com/aws-amplify/amplify-android/compare/release_v2.14.1...release_v2.14.2)
+
 ## [Release 2.14.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.14.1)
 
 ### Bug Fixes
