@@ -12,62 +12,46 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
+package com.amplifyframework.datastore.syncengine
 
-package com.amplifyframework.datastore.syncengine;
-
-import androidx.annotation.NonNull;
-
-import com.amplifyframework.core.model.Model;
-import com.amplifyframework.core.model.query.Where;
-import com.amplifyframework.datastore.DataStoreException;
-import com.amplifyframework.datastore.appsync.ModelMetadata;
-import com.amplifyframework.datastore.storage.LocalStorageAdapter;
-
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Objects;
-
-import io.reactivex.rxjava3.core.Single;
+import com.amplifyframework.core.model.Model
+import com.amplifyframework.core.model.query.Where
+import com.amplifyframework.datastore.DataStoreException
+import com.amplifyframework.datastore.appsync.ModelMetadata
+import com.amplifyframework.datastore.storage.LocalStorageAdapter
+import io.reactivex.rxjava3.core.Single
+import io.reactivex.rxjava3.core.SingleEmitter
+import java.util.Objects
 
 /**
  * The VersionRepository provides a higher-level facade to lookup the version
  * of the various models in the local storage.
  */
-@SuppressWarnings("CodeBlock2Expr")
-final class VersionRepository {
-    private final LocalStorageAdapter localStorageAdapter;
-
-    /**
-     * Constructs a new VersionRepository.
-     * @param localStorageAdapter A local storage repository, where model metadata can be found
-     */
-    VersionRepository(@NonNull LocalStorageAdapter localStorageAdapter) {
-        this.localStorageAdapter = Objects.requireNonNull(localStorageAdapter);
-    }
+internal class VersionRepository(private val localStorageAdapter: LocalStorageAdapter) {
 
     /**
      * Find the current version of a model, that we have in the local store.
      * @param model A model
      * @param <T> Type of model
      * @return Current version known locally
-     */
-    <T extends Model> Single<Integer> findModelVersion(T model) {
-        return Single.create(emitter -> {
+    </T> */
+    fun <T : Model> findModelVersion(model: T): Single<Int> {
+        return Single.create { emitter: SingleEmitter<Int> ->
             // The ModelMetadata for the model uses the same ID as an identifier.
             localStorageAdapter.query(
-                ModelMetadata.class,
-                Where.identifier(ModelMetadata.class,
-                        model.getModelName() + "|" + model.getPrimaryKeyString()),
-                iterableResults -> {
+                ModelMetadata::class.java,
+                Where.identifier(
+                    ModelMetadata::class.java,
+                    model.modelName + "|" + model.primaryKeyString
+                ),
+                { iterableResults: Iterator<ModelMetadata> ->
                     try {
-                        emitter.onSuccess(extractVersion(model, iterableResults));
-                    } catch (DataStoreException badVersionFailure) {
-                        emitter.onError(badVersionFailure);
+                        emitter.onSuccess(extractVersion(model, iterableResults))
+                    } catch (badVersionFailure: DataStoreException) {
+                        emitter.onError(badVersionFailure)
                     }
-                },
-                emitter::onError);
-        });
+                }) { t: DataStoreException -> emitter.onError(t) }
+        }
     }
 
     /**
@@ -77,29 +61,29 @@ final class VersionRepository {
      * @param <T> The type of model
      * @return The version of the model, if available
      * @throws DataStoreException If there is no version for the model, or if the version cannot be obtained
-     */
-    private <T extends Model> int extractVersion(T model, Iterator<ModelMetadata> metadataIterator)
-            throws DataStoreException {
-        final List<ModelMetadata> results = new ArrayList<>();
+    </T> */
+    @Throws(DataStoreException::class)
+    private fun <T : Model> extractVersion(
+        model: T,
+        metadataIterator: Iterator<ModelMetadata>
+    ): Int {
+        val results: MutableList<ModelMetadata> =
+            ArrayList()
         while (metadataIterator.hasNext()) {
-            results.add(metadataIterator.next());
+            results.add(metadataIterator.next())
         }
 
         // There should be only one metadata for the model....
-        if (results.size() != 1) {
-            throw new DataStoreException(
-                "Wanted 1 metadata for item with id = " + model.getPrimaryKeyString() + ", but had " + results.size()
+        if (results.size != 1) {
+            throw DataStoreException(
+                "Wanted 1 metadata for item with id = " + model.primaryKeyString + ", but had " + results.size
                         + ".", "This is likely a bug. please report to AWS."
-            );
+            )
         }
-        final Integer version = results.get(0).getVersion();
-        if (version == null) {
-            throw new DataStoreException(
-                "Metadata for item with id = " + model.getPrimaryKeyString() + " had null version.",
+        return results[0].version
+            ?: throw DataStoreException(
+                "Metadata for item with id = " + model.primaryKeyString + " had null version.",
                 "This is likely a bug. Please report to AWS."
-            );
-        }
-
-        return version;
+            )
     }
 }
