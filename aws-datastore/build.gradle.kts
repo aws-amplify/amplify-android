@@ -30,6 +30,7 @@ dependencies {
 
     implementation(libs.androidx.appcompat)
     implementation(libs.gson)
+    implementation(libs.kotlin.coroutines.rx3)
     implementation(libs.rxjava)
     implementation(libs.uuidgen)
 

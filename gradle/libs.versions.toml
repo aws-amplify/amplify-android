@@ -81,6 +81,7 @@ google-material = { module = "com.google.android.material:material", version.ref
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 kotlin-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
 kotlin-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutines" }
+kotlin-coroutines-rx3 = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-rx3", version.ref = "coroutines" }
 kotlin-futures = { module = "androidx.concurrent:concurrent-futures-ktx", version.ref = "androidx-concurrent" }
 kotlin-serializationJson = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlin-serialization" }
 kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref="kotlin" }
