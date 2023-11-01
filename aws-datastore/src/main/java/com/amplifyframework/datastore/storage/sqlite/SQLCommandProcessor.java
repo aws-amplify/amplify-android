@@ -31,9 +31,7 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Responsible for compiling, binding values to, and executing SQLiteStatements.   Currently, each statement is run in
- * its own transaction.  In the future, we can extend this class to support batching  multiple commands in the same
- * transaction to improve performance.
+ * Responsible for compiling, binding values to, and executing SQLiteStatements.
  */
 final class SQLCommandProcessor {
     private static final Logger LOG = Amplify.Logging.logger(CategoryType.DATASTORE, "amplify:aws-datastore");
@@ -131,5 +129,17 @@ final class SQLCommandProcessor {
                     AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION
             );
         }
+    }
+
+    void beginTransaction() {
+        sqliteDatabase.beginTransaction();
+    }
+
+    void setTransactionSuccessful() {
+        sqliteDatabase.setTransactionSuccessful();
+    }
+
+    void endTransaction() {
+        sqliteDatabase.endTransaction();
     }
 }
