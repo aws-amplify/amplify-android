@@ -78,7 +78,6 @@ internal class LivenessWebSocket(
     private val signer = AWSV4Signer()
     private var credentials: Credentials? = null
 
-    private val sdf = SimpleDateFormat("yyyymmddhhmmss", Locale.US)
     internal var offset = 0L
     internal var closeExpected = false
 
