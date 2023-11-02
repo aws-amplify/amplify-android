@@ -512,6 +512,7 @@ class RealAWSCognitoAuthPluginTest {
             authService.cognitoIdentityProviderClient?.getUser(any())
         } returns GetUserResponse.invoke {
             this.userAttributes = userAttributes
+            username = ""
         }
 
         every {
@@ -1806,6 +1807,8 @@ class RealAWSCognitoAuthPluginTest {
             GetUserResponse.invoke {
                 userMfaSettingList = listOf("SMS_MFA", "SOFTWARE_TOKEN_MFA")
                 preferredMfaSetting = "SOFTWARE_TOKEN_MFA"
+                userAttributes = listOf()
+                username = ""
             }
         }
         plugin.fetchMFAPreference(onSuccess, onError)
@@ -1842,6 +1845,8 @@ class RealAWSCognitoAuthPluginTest {
             GetUserResponse.invoke {
                 userMfaSettingList = null
                 preferredMfaSetting = null
+                userAttributes = listOf()
+                username = ""
             }
         }
         plugin.updateMFAPreference(MFAPreference.ENABLED, MFAPreference.PREFERRED, onSuccess, onError)
@@ -1887,6 +1892,8 @@ class RealAWSCognitoAuthPluginTest {
             GetUserResponse.invoke {
                 userMfaSettingList = listOf("SMS_MFA", "SOFTWARE_TOKEN_MFA")
                 preferredMfaSetting = "SOFTWARE_TOKEN_MFA"
+                userAttributes = listOf()
+                username = ""
             }
         }
 
@@ -1937,6 +1944,8 @@ class RealAWSCognitoAuthPluginTest {
             GetUserResponse.invoke {
                 userMfaSettingList = listOf("SMS_MFA", "SOFTWARE_TOKEN_MFA")
                 preferredMfaSetting = "SMS_MFA"
+                userAttributes = listOf()
+                username = ""
             }
         }
 
@@ -2040,6 +2049,8 @@ class RealAWSCognitoAuthPluginTest {
             GetUserResponse.invoke {
                 userMfaSettingList = null
                 preferredMfaSetting = null
+                userAttributes = listOf()
+                username = ""
             }
         }
 
@@ -2090,6 +2101,8 @@ class RealAWSCognitoAuthPluginTest {
             GetUserResponse.invoke {
                 userMfaSettingList = null
                 preferredMfaSetting = null
+                userAttributes = listOf()
+                username = ""
             }
         }
 
@@ -2140,6 +2153,8 @@ class RealAWSCognitoAuthPluginTest {
             GetUserResponse.invoke {
                 userMfaSettingList = null
                 preferredMfaSetting = null
+                userAttributes = listOf()
+                username = ""
             }
         }
 
@@ -2190,6 +2205,8 @@ class RealAWSCognitoAuthPluginTest {
             GetUserResponse.invoke {
                 userMfaSettingList = null
                 preferredMfaSetting = null
+                userAttributes = listOf()
+                username = ""
             }
         }
 
@@ -2240,6 +2257,8 @@ class RealAWSCognitoAuthPluginTest {
             GetUserResponse.invoke {
                 userMfaSettingList = null
                 preferredMfaSetting = null
+                userAttributes = listOf()
+                username = ""
             }
         }
 
@@ -2290,6 +2309,8 @@ class RealAWSCognitoAuthPluginTest {
             GetUserResponse.invoke {
                 userMfaSettingList = null
                 preferredMfaSetting = null
+                userAttributes = listOf()
+                username = ""
             }
         }
 
@@ -2340,6 +2361,8 @@ class RealAWSCognitoAuthPluginTest {
             GetUserResponse.invoke {
                 userMfaSettingList = null
                 preferredMfaSetting = null
+                userAttributes = listOf()
+                username = ""
             }
         }
 
@@ -2390,6 +2413,8 @@ class RealAWSCognitoAuthPluginTest {
             GetUserResponse.invoke {
                 userMfaSettingList = listOf("SOFTWARE_TOKEN_MFA")
                 preferredMfaSetting = "SOFTWARE_TOKEN_MFA"
+                userAttributes = listOf()
+                username = ""
             }
         }
 
@@ -2440,6 +2465,8 @@ class RealAWSCognitoAuthPluginTest {
             GetUserResponse.invoke {
                 userMfaSettingList = listOf("SMS_MFA")
                 preferredMfaSetting = "SMS_MFA"
+                userAttributes = listOf()
+                username = ""
             }
         }
 
@@ -2490,6 +2517,8 @@ class RealAWSCognitoAuthPluginTest {
             GetUserResponse.invoke {
                 userMfaSettingList = listOf("SMS_MFA")
                 preferredMfaSetting = "SMS_MFA"
+                userAttributes = listOf()
+                username = ""
             }
         }
 
@@ -2540,6 +2569,8 @@ class RealAWSCognitoAuthPluginTest {
             GetUserResponse.invoke {
                 userMfaSettingList = listOf("SOFTWARE_TOKEN_MFA")
                 preferredMfaSetting = "SOFTWARE_TOKEN_MFA"
+                userAttributes = listOf()
+                username = ""
             }
         }
 
@@ -2590,6 +2621,8 @@ class RealAWSCognitoAuthPluginTest {
             GetUserResponse.invoke {
                 userMfaSettingList = listOf("SMS_MFA")
                 preferredMfaSetting = "SMS_MFA"
+                userAttributes = listOf()
+                username = ""
             }
         }
 
