@@ -15,12 +15,11 @@
 
 package com.amplifyframework.geo.maplibre.http
 
-import aws.smithy.kotlin.runtime.InternalApi
 import aws.smithy.kotlin.runtime.auth.awssigning.AwsSigningConfig
 import aws.smithy.kotlin.runtime.auth.awssigning.DefaultAwsSigner
+import aws.smithy.kotlin.runtime.http.HttpBody
 import aws.smithy.kotlin.runtime.http.Headers as AwsHeaders
 import aws.smithy.kotlin.runtime.http.HttpMethod
-import aws.smithy.kotlin.runtime.http.content.ByteArrayContent
 import aws.smithy.kotlin.runtime.http.request.HttpRequest
 import aws.smithy.kotlin.runtime.net.Host
 import aws.smithy.kotlin.runtime.net.QueryParameters
@@ -28,6 +27,7 @@ import aws.smithy.kotlin.runtime.net.Scheme
 import aws.smithy.kotlin.runtime.net.Url
 import aws.smithy.kotlin.runtime.net.toUrlString
 import aws.smithy.kotlin.runtime.util.emptyAttributes
+import aws.smithy.kotlin.runtime.InternalApi
 import com.amplifyframework.geo.location.AWSLocationGeoPlugin
 import java.io.ByteArrayOutputStream
 import java.io.IOException
@@ -40,6 +40,12 @@ import okhttp3.Response
 import okio.Buffer
 
 internal const val AMAZON_HOST = "amazonaws.com"
+
+// Kotlin SDK made ByteArrayContent internal
+internal class ByteArrayContent(private val bytes: ByteArray) : HttpBody.Bytes() {
+    override val contentLength: Long = bytes.size.toLong()
+    override fun bytes(): ByteArray = bytes
+}
 
 /**
  * Interceptor that can authorize requests using AWS Signature V4 signer.

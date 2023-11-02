@@ -86,7 +86,7 @@ internal class LivenessWebSocket(
 
         companion object {
             fun next(state: ReconnectState): ReconnectState {
-                return when(state) {
+                return when (state) {
                     INITIAL -> RECONNECTING
                     RECONNECTING -> RECONNECTING_AGAIN
                     RECONNECTING_AGAIN -> RECONNECTING_AGAIN
