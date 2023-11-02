@@ -413,7 +413,6 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         Objects.requireNonNull(onSuccess);
         Objects.requireNonNull(onError);
         threadPool.submit(() -> {
-            saveInternal(item, initiator, predicate);
             StorageResult<T> result = saveInternal(item, initiator, predicate);
             if (result instanceof StorageResult.Success) {
                 StorageResult.Success<T> success = (StorageResult.Success<T>) result;
