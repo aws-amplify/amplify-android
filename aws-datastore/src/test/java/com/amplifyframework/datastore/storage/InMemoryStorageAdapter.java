@@ -236,6 +236,14 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
         onSuccess.call();
     }
 
+    @Override
+    public <T extends Model> void batchSyncOperations(
+            @NonNull List<StorageOperation<T>> sqLiteOperations,
+            @NonNull Action onComplete,
+            @NonNull Consumer<DataStoreException> onError) {
+        // TODO: Implement
+    }
+
     @NonNull
     @Override
     public Cancelable observe(

@@ -24,6 +24,7 @@ import com.amplifyframework.core.model.SerializedModel
 import com.amplifyframework.core.model.query.Page
 import com.amplifyframework.core.model.query.Where
 import com.amplifyframework.core.model.query.predicate.QueryPredicate
+import com.amplifyframework.core.model.query.predicate.QueryPredicateGroup
 import com.amplifyframework.core.model.query.predicate.QueryPredicates
 import com.amplifyframework.datastore.DataStoreException
 import com.amplifyframework.datastore.events.OutboxStatusEvent
@@ -42,6 +43,9 @@ import io.reactivex.rxjava3.subjects.Subject
 import java.util.Objects
 import java.util.concurrent.Semaphore
 import java.util.concurrent.atomic.AtomicReference
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
 
 /**
  * The [MutationOutbox] is a persistently-backed in-order staging ground
@@ -72,7 +76,8 @@ internal class PersistentMutationOutbox(localStorageAdapter: LocalStorageAdapter
         Objects.requireNonNull(modelId)
         val mutationResult = AtomicReference<PendingMutation<out Model>>()
         Completable.create { emitter: CompletableEmitter ->
-            storage.query(PersistentRecord::class.java,
+            storage.query(
+                PersistentRecord::class.java,
                 Where.matches(PersistentRecord.CONTAINED_MODEL_ID.eq(modelId)),
                 { results: Iterator<PersistentRecord?> ->
                     if (results.hasNext()) {
@@ -88,7 +93,8 @@ internal class PersistentMutationOutbox(localStorageAdapter: LocalStorageAdapter
                         }
                     }
                     emitter.onComplete()
-                }) { t: DataStoreException -> emitter.onError(t) }
+                }
+            ) { t: DataStoreException -> emitter.onError(t) }
         }
             .doOnSubscribe { semaphore.acquire() }
             .doOnTerminate { semaphore.release() }
@@ -96,11 +102,51 @@ internal class PersistentMutationOutbox(localStorageAdapter: LocalStorageAdapter
         return mutationResult.get()
     }
 
+    override suspend fun <T : Model> fetchPendingMutations(models: List<T>, modelClass: String): Set<String> {
+        // We chunk sql query to 950 items to prevent hitting 1k sqlite predicate limit
+        // Improvement would be to use IN, but not currently supported in our query builders
+        return models.chunked(950).fold(mutableSetOf()) { acc, chunk ->
+            val queryOptions = Where.matches(
+                QueryPredicateGroup(
+                    QueryPredicateGroup.Type.OR,
+                    chunk.map {
+                        PersistentRecord.CONTAINED_MODEL_ID.eq(it.primaryKeyString)
+                    }
+                )
+            )
+
+            // Fetch chunk list of sqlite results
+            val chunkResult = suspendCoroutine { continuation ->
+                storage.query(
+                    PersistentRecord::class.java,
+                    queryOptions,
+                    {
+                        continuation.resume(it)
+                    },
+                    {
+                        LOG.debug("Failed to query PersistentRecord outbox.")
+                        continuation.resume(emptyList<PersistentRecord>().iterator())
+                    }
+                )
+            }
+
+            // Add id to the accumulator set
+            chunkResult.forEach {
+                val pendingMutation: PendingMutation<*> = converter.fromRecord<Model>(it)
+                if (pendingMutation.modelSchema.modelClass.name == modelClass) {
+                    acc.add(it.primaryKeyString)
+                }
+            }
+            acc
+        }
+    }
+
     private fun getMutationById(mutationId: String): PendingMutation<out Model>? {
         Objects.requireNonNull(mutationId)
         val mutationResult = AtomicReference<PendingMutation<out Model>>()
         Completable.create { emitter: CompletableEmitter ->
-            storage.query(PersistentRecord::class.java,
+            storage.query(
+                PersistentRecord::class.java,
                 Where.matches(PersistentRecord.ID.eq(mutationId)),
                 { results: Iterator<PersistentRecord?> ->
                     if (results.hasNext()) {
@@ -112,7 +158,8 @@ internal class PersistentMutationOutbox(localStorageAdapter: LocalStorageAdapter
                         }
                     }
                     emitter.onComplete()
-                }) { t: DataStoreException -> emitter.onError(t) }
+                }
+            ) { t: DataStoreException -> emitter.onError(t) }
         }
             .doOnSubscribe { semaphore.acquire() }
             .doOnTerminate { semaphore.release() }
@@ -172,7 +219,8 @@ internal class PersistentMutationOutbox(localStorageAdapter: LocalStorageAdapter
                     announceEventEnqueued(pendingMutation)
                     publishCurrentOutboxStatus()
                     emitter.onComplete()
-                }) { t: DataStoreException -> emitter.onError(t) }
+                }
+            ) { t: DataStoreException -> emitter.onError(t) }
         }
     }
 
@@ -188,7 +236,7 @@ internal class PersistentMutationOutbox(localStorageAdapter: LocalStorageAdapter
             val pendingMutation = getMutationById(pendingMutationId.toString())
                 ?: throw DataStoreException(
                     "Outbox was asked to remove a mutation with ID = " + pendingMutationId + ". " +
-                            "However, there was no mutation with that ID in the outbox, to begin with.",
+                        "However, there was no mutation with that ID in the outbox, to begin with.",
                     AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION
                 )
             Maybe.create { subscriber: MaybeEmitter<OutboxEvent> ->
@@ -206,7 +254,8 @@ internal class PersistentMutationOutbox(localStorageAdapter: LocalStorageAdapter
                         } else {
                             subscriber.onComplete()
                         }
-                    }) { t: DataStoreException? -> subscriber.onError(t) }
+                    }
+                ) { t: DataStoreException? -> subscriber.onError(t) }
             }
                 .flatMapCompletable { notifyContentAvailable() }
         }
@@ -219,7 +268,9 @@ internal class PersistentMutationOutbox(localStorageAdapter: LocalStorageAdapter
             if (!countMutations) {
                 queryOptions = queryOptions.paginated(Page.firstResult())
             }
-            storage.query(PersistentRecord::class.java, queryOptions,
+            storage.query(
+                PersistentRecord::class.java,
+                queryOptions,
                 { results: Iterator<PersistentRecord?> ->
                     if (!results.hasNext()) {
                         loadedMutation = null
@@ -250,7 +301,8 @@ internal class PersistentMutationOutbox(localStorageAdapter: LocalStorageAdapter
                     // Publish outbox status upon loading
                     publishCurrentOutboxStatus()
                     emitter.onComplete()
-                }) { t: DataStoreException? -> emitter.onError(t) }
+                }
+            ) { t: DataStoreException? -> emitter.onError(t) }
         }
             .doOnSubscribe { semaphore.acquire() }
             .doOnTerminate { semaphore.release() }
@@ -280,7 +332,7 @@ internal class PersistentMutationOutbox(localStorageAdapter: LocalStorageAdapter
             emitter.onError(
                 DataStoreException(
                     "Outbox was asked to mark a mutation with ID = " + pendingMutationId + " as in-flight. " +
-                            "However, there was no mutation with that ID in the outbox, to begin with.",
+                        "However, there was no mutation with that ID in the outbox, to begin with.",
                     AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION
                 )
             )
@@ -291,7 +343,7 @@ internal class PersistentMutationOutbox(localStorageAdapter: LocalStorageAdapter
      * Announce over hub that a mutation has been enqueued to the outbox.
      * @param pendingMutation A mutation that has been successfully enqueued to outbox
      * @param <T> Type of model
-    </T> */
+     </T> */
     private fun <T : Model?> announceEventEnqueued(pendingMutation: PendingMutation<T>) {
         val mutationEvent = OutboxMutationEvent.fromPendingMutation(pendingMutation)
         Amplify.Hub.publish(HubChannel.DATASTORE, mutationEvent.toHubEvent())
@@ -312,25 +364,22 @@ internal class PersistentMutationOutbox(localStorageAdapter: LocalStorageAdapter
      * mutations. Non-static so we can access instance methods of the outer class. Private because
      * we don't want this logic called from anywhere else.
      * @param <T> the model type
-    </T> */
+     </T> */
     private inner class IncomingMutationConflictHandler<T : Model>
     /**
      * Constructor for a IncomingMutationConflictHandler.
      * @param existing The existing mutation.
      * @param incoming The incoming mutation.
-     */ constructor(
-        private val existing: PendingMutation<T>,
-        private val incoming: PendingMutation<T>
-    ) {
+     */ constructor(private val existing: PendingMutation<T>, private val incoming: PendingMutation<T>) {
         /**
          * Handle the conflict based on the incoming mutation type.
          * @return A completable with the actions to resolve the conflict.
          */
         fun resolve(): Completable {
             LOG.debug(
-                "IncomingMutationConflict - "
-                        + " existing " + existing.mutationType
-                        + " incoming " + incoming.mutationType
+                "IncomingMutationConflict - " +
+                    " existing " + existing.mutationType +
+                    " incoming " + incoming.mutationType
             )
             return when (incoming.mutationType) {
                 PendingMutation.Type.CREATE -> handleIncomingCreate()
@@ -346,12 +395,14 @@ internal class PersistentMutationOutbox(localStorageAdapter: LocalStorageAdapter
          */
         private fun handleIncomingCreate(): Completable {
             return when (existing.mutationType) {
-                PendingMutation.Type.CREATE ->                     // Double create, return an different error than in the default block of the switch
+                PendingMutation.Type.CREATE ->
+                    // Double create, return an different error than in the default block of the switch
                     // statement. This way, we can differentiate between an incoming create being processed
                     // multiple times (this case), versus outgoing mutations being processed out of order.
                     conflictingCreationError()
 
-                PendingMutation.Type.DELETE, PendingMutation.Type.UPDATE ->                     // A create mutation should never show up after an update or delete for the same modelId.
+                PendingMutation.Type.DELETE, PendingMutation.Type.UPDATE ->
+                    // A create mutation should never show up after an update or delete for the same modelId.
                     unexpectedMutationScenario()
 
                 else -> unexpectedMutationScenario()
@@ -364,13 +415,13 @@ internal class PersistentMutationOutbox(localStorageAdapter: LocalStorageAdapter
          */
         private fun handleIncomingUpdate(): Completable {
             return when (existing.mutationType) {
-                PendingMutation.Type.CREATE ->                     // Update after the create -> if the incoming & existing is of type SerializedModel
-                    // then merge the existing model.
+                PendingMutation.Type.CREATE -> // Update after the create ->
+                    // if the incoming & existing is of type SerializedModel, then merge the existing model.
                     // If not, then replace the item of the create mutation (and keep it as a create).
                     // No condition needs to be provided, because as far as the remote store is concerned,
                     // we're simply performing the create (with the updated item item contents)
-                    if (incoming.mutatedItem is SerializedModel
-                        && existing.mutatedItem is SerializedModel
+                    if (incoming.mutatedItem is SerializedModel &&
+                        existing.mutatedItem is SerializedModel
                     ) {
                         val mergedPendingMutation = mergeAndCreatePendingMutation(
                             incoming.mutatedItem as SerializedModel,
@@ -387,13 +438,13 @@ internal class PersistentMutationOutbox(localStorageAdapter: LocalStorageAdapter
                         )
                     }
 
-                PendingMutation.Type.UPDATE ->                     // If the incoming update does not have a condition, we want to delete any
-                    // existing mutations for the modelId before saving the incoming one.
+                PendingMutation.Type.UPDATE -> // If the incoming update does not have a condition,
+                    // we want to delete any existing mutations for the modelId before saving the incoming one.
                     if (QueryPredicates.all() == incoming.predicate) {
                         // If the incoming & existing update is of type serializedModel
                         // then merge the existing model data into incoming.
-                        if (incoming.mutatedItem is SerializedModel
-                            && existing.mutatedItem is SerializedModel
+                        if (incoming.mutatedItem is SerializedModel &&
+                            existing.mutatedItem is SerializedModel
                         ) {
                             val mergedPendingMutation = mergeAndCreatePendingMutation(
                                 incoming.mutatedItem as SerializedModel,
@@ -416,7 +467,7 @@ internal class PersistentMutationOutbox(localStorageAdapter: LocalStorageAdapter
                         saveAndNotify(incoming, true)
                     }
 
-                PendingMutation.Type.DELETE ->                     // Incoming update after a delete -> throw exception
+                PendingMutation.Type.DELETE -> // Incoming update after a delete -> throw exception
                     modelAlreadyScheduledForDeletion()
 
                 else -> unexpectedMutationScenario()
@@ -429,7 +480,7 @@ internal class PersistentMutationOutbox(localStorageAdapter: LocalStorageAdapter
          */
         private fun handleIncomingDelete(): Completable {
             return when (existing.mutationType) {
-                PendingMutation.Type.CREATE ->                     //
+                PendingMutation.Type.CREATE -> //
                     if (inFlightMutations.contains(existing.mutationId)) {
                         // Existing create is already in flight, then save the delete
                         save(incoming, true)
@@ -439,7 +490,8 @@ internal class PersistentMutationOutbox(localStorageAdapter: LocalStorageAdapter
                         removeNotLocking(existing.mutationId)
                     }
 
-                PendingMutation.Type.UPDATE, PendingMutation.Type.DELETE ->                     // If there's a pending update OR delete, we want to replace it with the incoming delete.
+                PendingMutation.Type.UPDATE, PendingMutation.Type.DELETE ->
+                    // If there's a pending update OR delete, we want to replace it with the incoming delete.
                     overwriteExistingAndNotify(PendingMutation.Type.DELETE, incoming.predicate)
 
                 else -> unexpectedMutationScenario()
@@ -498,7 +550,7 @@ internal class PersistentMutationOutbox(localStorageAdapter: LocalStorageAdapter
             return Completable.error(
                 DataStoreException(
                     "Unable to handle existing mutation of type = " + existing.mutationType +
-                            " and incoming mutation of type = " + incoming.mutationType,
+                        " and incoming mutation of type = " + incoming.mutationType,
                     "Please report at https://github.com/aws-amplify/amplify-android/issues."
                 )
             )

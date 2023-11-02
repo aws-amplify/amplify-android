@@ -49,6 +49,18 @@ internal interface MutationOutbox {
     fun hasPendingMutation(modelId: String, modelClass: String): Boolean
 
     /**
+     * Returns a set of ids for the provided models that have pending mutations
+     *
+     * @param T Model Type
+     * @param models list of Models to search for p ending mutations
+     * @param modelClass The fully qualified class name of the models for which you want to check
+     * pending mutations. This should match the name returned by the model's
+     * getClass().getName() method.
+     * @return set of model ids that contained pending mutations
+     */
+    suspend fun <T : Model> fetchPendingMutations(models: List<T>, modelClass: String): Set<String>
+
+    /**
      * Write a new [PendingMutation] into the outbox.
      *
      *
@@ -67,7 +79,7 @@ internal interface MutationOutbox {
      * is intending to create Person object, this type could be Person.
      * @return A Completable that emits success upon successful enqueue, or failure if it is not
      * possible to enqueue the mutation
-    </T> */
+     </T> */
     fun <T : Model> enqueue(incomingMutation: PendingMutation<T>): Completable
 
     /**

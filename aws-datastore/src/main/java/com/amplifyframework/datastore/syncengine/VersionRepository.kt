@@ -14,14 +14,22 @@
  */
 package com.amplifyframework.datastore.syncengine
 
+import com.amplifyframework.core.Amplify
+import com.amplifyframework.core.category.CategoryType
 import com.amplifyframework.core.model.Model
+import com.amplifyframework.core.model.ModelSchema
 import com.amplifyframework.core.model.query.Where
+import com.amplifyframework.core.model.query.predicate.QueryField
+import com.amplifyframework.core.model.query.predicate.QueryPredicateGroup
 import com.amplifyframework.datastore.DataStoreException
 import com.amplifyframework.datastore.appsync.ModelMetadata
+import com.amplifyframework.datastore.appsync.ModelWithMetadata
 import com.amplifyframework.datastore.storage.LocalStorageAdapter
 import io.reactivex.rxjava3.core.Single
 import io.reactivex.rxjava3.core.SingleEmitter
-import java.util.Objects
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
 
 /**
  * The VersionRepository provides a higher-level facade to lookup the version
@@ -34,7 +42,7 @@ internal class VersionRepository(private val localStorageAdapter: LocalStorageAd
      * @param model A model
      * @param <T> Type of model
      * @return Current version known locally
-    </T> */
+     </T> */
     fun <T : Model> findModelVersion(model: T): Single<Int> {
         return Single.create { emitter: SingleEmitter<Int> ->
             // The ModelMetadata for the model uses the same ID as an identifier.
@@ -50,7 +58,60 @@ internal class VersionRepository(private val localStorageAdapter: LocalStorageAd
                     } catch (badVersionFailure: DataStoreException) {
                         emitter.onError(badVersionFailure)
                     }
-                }) { t: DataStoreException -> emitter.onError(t) }
+                }
+            ) { t: DataStoreException -> emitter.onError(t) }
+        }
+    }
+
+    suspend fun <T : Model> fetchModelVersions(modelsWithMetadata: List<ModelWithMetadata<T>>): Map<String, Int> {
+        // Create query field once, to be used for building QueryOptions
+        val idField = QueryField.field(
+            ModelMetadata::class.java.simpleName,
+            ModelSchema.fromModelClass(ModelMetadata::class.java).primaryKeyName
+        )
+
+        // We chunk sql query to 950 items to prevent hitting 1k sqlite predicate limit
+        // Improvement would be to use IN, but not currently supported in our query builders
+        return modelsWithMetadata.chunked(950).fold(mutableMapOf()) { acc, chunk ->
+            val queryOptions = Where.matches(
+                QueryPredicateGroup(
+                    QueryPredicateGroup.Type.OR,
+                    chunk.map {
+                        idField.eq("${it.model.modelName}|${it.model.primaryKeyString}")
+                    }
+                )
+            )
+
+            // Fetch chunk list of sqlite results
+            val chunkResult = suspendCoroutine { continuation ->
+                localStorageAdapter.query(
+                    ModelMetadata::class.java,
+                    queryOptions,
+                    { continuation.resume(it) },
+                    { continuation.resumeWithException(it) }
+                )
+            }
+
+            // Add version of each ModelMetadata item to accumulator map
+            chunkResult.forEach {
+                val version = if (it.version == null) {
+                    LOG.info(
+                        "Metadata for item with id = ${it.primaryKeyString} had null version. " +
+                            "This is likely a bug. Please report to AWS."
+                    )
+                    -1
+                } else if (acc.contains(it.primaryKeyString)) {
+                    LOG.info(
+                        "Fetched more than 1 metadata for item with id = ${it.primaryKeyString}. " +
+                            "This is likely a bug. please report to AWS."
+                    )
+                    -1
+                } else {
+                    it.version ?: -1
+                }
+                acc[it.primaryKeyString] = version
+            }
+            acc
         }
     }
 
@@ -61,7 +122,7 @@ internal class VersionRepository(private val localStorageAdapter: LocalStorageAd
      * @param <T> The type of model
      * @return The version of the model, if available
      * @throws DataStoreException If there is no version for the model, or if the version cannot be obtained
-    </T> */
+     </T> */
     @Throws(DataStoreException::class)
     private fun <T : Model> extractVersion(
         model: T,
@@ -76,8 +137,9 @@ internal class VersionRepository(private val localStorageAdapter: LocalStorageAd
         // There should be only one metadata for the model....
         if (results.size != 1) {
             throw DataStoreException(
-                "Wanted 1 metadata for item with id = " + model.primaryKeyString + ", but had " + results.size
-                        + ".", "This is likely a bug. please report to AWS."
+                "Wanted 1 metadata for item with id = " + model.primaryKeyString + ", but had " + results.size +
+                    ".",
+                "This is likely a bug. please report to AWS."
             )
         }
         return results[0].version
@@ -85,5 +147,9 @@ internal class VersionRepository(private val localStorageAdapter: LocalStorageAd
                 "Metadata for item with id = " + model.primaryKeyString + " had null version.",
                 "This is likely a bug. Please report to AWS."
             )
+    }
+
+    companion object {
+        private val LOG = Amplify.Logging.logger(CategoryType.DATASTORE, "amplify:aws-datastore")
     }
 }
