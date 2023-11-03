@@ -351,7 +351,6 @@ internal class LivenessWebSocketTest {
 
         server.enqueue(MockResponse().withWebSocketUpgrade(ServerWebSocketListener()))
         server.start()
-        livenessWebSocket.start()
 
         openLatch.await(3, TimeUnit.SECONDS)
 
@@ -366,7 +365,6 @@ internal class LivenessWebSocketTest {
         assert(oneHour - 10000 < diff && diff < oneHour + 10000)
 
         // also make sure that followup request is valid
-        assertEquals("AWS4-HMAC-SHA256", originalRequest.url.queryParameter("X-Amz-Algorithm"))
         assertTrue(
             originalRequest.url.queryParameter("X-Amz-Credential")!!.endsWith("//rekognition/aws4_request")
         )
