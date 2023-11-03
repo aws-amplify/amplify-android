@@ -60,9 +60,9 @@
                         "destination": "user@domain.com",
                         "deliveryMedium": "EMAIL",
                         "attributeName": "attributeName"
-                    },
-                    "userId": ""
-                }
+                    }
+                },
+                "userId": ""
             }
         }
     ]
