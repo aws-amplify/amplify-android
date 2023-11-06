@@ -106,7 +106,7 @@ class DatastoreCanaryTest {
         val saveLatch = CountDownLatch(1)
         val createHub = HubAccumulator.create(
             HubChannel.DATASTORE,
-            DataStoreHubEventFilters.enqueueOf(Post::class.simpleName, post.id),
+            DataStoreHubEventFilters.enqueueOf(Post::class.simpleName!!, post.id),
             1
         ).start()
 

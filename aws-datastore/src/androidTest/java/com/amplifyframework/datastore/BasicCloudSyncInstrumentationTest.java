@@ -35,6 +35,7 @@ import com.amplifyframework.datastore.appsync.ModelMetadata;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
 import com.amplifyframework.datastore.appsync.SynchronousAppSync;
 import com.amplifyframework.hub.HubChannel;
+import com.amplifyframework.hub.HubEventFilter;
 import com.amplifyframework.logging.AndroidLoggingPlugin;
 import com.amplifyframework.logging.LogLevel;
 import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider;
@@ -53,7 +54,6 @@ import com.amplifyframework.testutils.sync.SynchronousDataStore;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -233,11 +233,25 @@ public final class BasicCloudSyncInstrumentationTest {
         BlogOwner updatedRichard = richard.copyOfBuilder()
                 .name("Richard McClellan")
                 .build();
-        String modelName = BlogOwner.class.getSimpleName();
 
-        // Expect at least 1 mutation to be published to AppSync.
+        HubEventFilter hubEventFilter = DataStoreHubEventFilters.filterOutboxEvent(
+                DataStoreChannelEventName.OUTBOX_MUTATION_PROCESSED,
+                model -> {
+                    if (model instanceof BlogOwner) {
+                        BlogOwner published = (BlogOwner) model;
+                        if (published.getId().equals(updatedRichard.getId()) &&
+                                published.getName().equals(updatedRichard.getName())) {
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    }
+                    return false;
+                }
+        );
+
         HubAccumulator richardAccumulator =
-            HubAccumulator.create(HubChannel.DATASTORE, publicationOf(modelName, richard.getId()), 1)
+            HubAccumulator.create(HubChannel.DATASTORE, hubEventFilter, 1)
                 .start();
 
         // Create an item, then update it and save it again.
@@ -319,11 +333,27 @@ public final class BasicCloudSyncInstrumentationTest {
         BlogOwner updatedOwner = owner.copyOfBuilder()
                 .wea("pon")
                 .build();
-        String modelName = BlogOwner.class.getSimpleName();
 
-        // Expect at least 1 mutation to be published to AppSync.
+        HubEventFilter hubEventFilter = DataStoreHubEventFilters.filterOutboxEvent(
+                DataStoreChannelEventName.OUTBOX_MUTATION_PROCESSED,
+                model -> {
+                    if (model instanceof BlogOwner) {
+                        BlogOwner published = (BlogOwner) model;
+                        if (published.getId().equals(updatedOwner.getId()) &&
+                                published.getWea() != null &&
+                                published.getWea().equals(updatedOwner.getWea())) {
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    }
+                    return false;
+                }
+        );
+
+        // Check for HubEvent on expected final state
         HubAccumulator accumulator =
-                HubAccumulator.create(HubChannel.DATASTORE, publicationOf(modelName, owner.getId()), 1)
+                HubAccumulator.create(HubChannel.DATASTORE, hubEventFilter, 1)
                         .start();
 
         // Create an item, then update it with different field and save it again.
@@ -391,7 +421,6 @@ public final class BasicCloudSyncInstrumentationTest {
      * @throws DataStoreException On failure to save or query items from DataStore.
      * @throws ApiException On failure to query the API.
      */
-    @Ignore("Test passes locally but fails inconsistently on CI. Ignoring the test pending further investigation.")
     @Test
     public void create1ThenCreate2ThenUpdate2() throws DataStoreException, ApiException {
         // Setup
@@ -404,11 +433,27 @@ public final class BasicCloudSyncInstrumentationTest {
         BlogOwner updatedOwner = anotherOwner.copyOfBuilder()
                 .wea("pon")
                 .build();
-        String modelName = BlogOwner.class.getSimpleName();
 
-        // Expect two mutations to be published to AppSync.
+        HubEventFilter hubEventFilter = DataStoreHubEventFilters.filterOutboxEvent(
+                DataStoreChannelEventName.OUTBOX_MUTATION_PROCESSED,
+                model -> {
+                    if (model instanceof BlogOwner) {
+                        BlogOwner published = (BlogOwner) model;
+                        if (published.getId().equals(updatedOwner.getId()) &&
+                                published.getWea() != null &&
+                                published.getWea().equals(updatedOwner.getWea())) {
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    }
+                    return false;
+                }
+        );
+
+        // Verify final state accumulated
         HubAccumulator accumulator =
-                HubAccumulator.create(HubChannel.DATASTORE, publicationOf(modelName, anotherOwner.getId()), 2)
+                HubAccumulator.create(HubChannel.DATASTORE, hubEventFilter, 1)
                         .start();
 
         // Create an item, then update it with different field and save it again.
@@ -416,7 +461,7 @@ public final class BasicCloudSyncInstrumentationTest {
         dataStore.save(anotherOwner);
         dataStore.save(updatedOwner);
 
-        // Verify that 2 mutations were published.
+        // Verify that mutations were published.
         accumulator.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
         // Verify that the updatedOwner is saved in the DataStore.
@@ -434,8 +479,7 @@ public final class BasicCloudSyncInstrumentationTest {
      * @throws ApiException On failure to query the API.
      */
     @Test
-    @Ignore("Inconsistent Test. Needs investigation")
-    public void createThenDelete() throws DataStoreException, ApiException {
+    public void createThenDelete() throws DataStoreException, InterruptedException {
         // Setup
         BlogOwner owner = BlogOwner.builder()
                 .name("Jean")
@@ -443,6 +487,12 @@ public final class BasicCloudSyncInstrumentationTest {
 
         dataStore.save(owner);
         dataStore.delete(owner);
+
+        // Sleeping isn't ideal here. However, we don't currently have a way to detect if there is
+        // still a pending event in the outbox. In a current scenario, if the save is being returned
+        // from appsync, but delete outbox event still pending send, we end up with a momentary
+        // state where owner re-exists to be quicly removed again
+        Thread.sleep(2000);
 
         // Verify that the owner is deleted from the local data store.
         assertThrows(NoSuchElementException.class, () -> dataStore.get(BlogOwner.class, owner.getId()));
@@ -587,21 +637,51 @@ public final class BasicCloudSyncInstrumentationTest {
         // Setup
         BlogOwner owner = BlogOwner.builder().name("ownerName").build();
         BlogOwner updatedOwner = owner.copyOfBuilder().wea("pon").build();
-        String modelName = BlogOwner.class.getSimpleName();
 
-        // Expect at least 1 update (2 is possible)
+        HubEventFilter hubEventFilter = DataStoreHubEventFilters.filterOutboxEvent(
+                DataStoreChannelEventName.OUTBOX_MUTATION_PROCESSED,
+                model -> {
+                    if (model instanceof BlogOwner) {
+                        BlogOwner published = (BlogOwner) model;
+                        return published.getId().equals(updatedOwner.getId()) &&
+                                published.getWea() != null &&
+                                published.getWea().equals(updatedOwner.getWea());
+                    }
+                    return false;
+                }
+        );
+
+        // Check for HubEvent on expected final state
         HubAccumulator accumulator =
-                HubAccumulator.create(HubChannel.DATASTORE, publicationOf(modelName, owner.getId()), 1)
+                HubAccumulator.create(HubChannel.DATASTORE, hubEventFilter, 1)
                         .start();
         // Create new and then immediately update
         dataStore.save(owner);
         dataStore.save(updatedOwner);
         accumulator.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
-        
+
         // Update the field
         BlogOwner diffFieldUpdated = updatedOwner.copyOfBuilder().name("ownerUpdatedName").build();
-        accumulator = HubAccumulator.create(HubChannel.DATASTORE, 
-                publicationOf(modelName, diffFieldUpdated.getId()), 1).start();
+
+        HubEventFilter hubEventFilter2 = DataStoreHubEventFilters.filterOutboxEvent(
+                DataStoreChannelEventName.OUTBOX_MUTATION_PROCESSED,
+                model -> {
+                    if (model instanceof BlogOwner) {
+                        BlogOwner published = (BlogOwner) model;
+                        if (published.getId().equals(diffFieldUpdated.getId()) &&
+                                published.getName().equals(diffFieldUpdated.getName())) {
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    }
+                    return false;
+                }
+        );
+
+
+        accumulator = HubAccumulator.create(HubChannel.DATASTORE,
+                hubEventFilter2, 1).start();
         dataStore.save(diffFieldUpdated);
         accumulator.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
