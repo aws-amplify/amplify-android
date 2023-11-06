@@ -22,8 +22,10 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mock
 import org.mockito.Mockito
+import org.mockito.Mockito.anyString
 import org.mockito.Mockito.times
 import org.mockito.junit.MockitoJUnitRunner
+import java.security.GeneralSecurityException
 
 @RunWith(MockitoJUnitRunner::class)
 class EncryptedKeyValueRepositoryTest {
@@ -45,6 +47,7 @@ class EncryptedKeyValueRepositoryTest {
     companion object {
         private const val TEST_KEY = "test Data"
         private const val TEST_VAL = "test Val"
+        private const val TEST_STRING = "test"
     }
 
     @Before
@@ -55,7 +58,7 @@ class EncryptedKeyValueRepositoryTest {
 
     @Test
     fun testPut() {
-        Mockito.`when`(repository.put(Mockito.anyString(), Mockito.anyString())).thenCallRealMethod()
+        Mockito.`when`(repository.put(anyString(), anyString())).thenCallRealMethod()
         repository.put(TEST_KEY, TEST_VAL)
         Mockito.verify(mockPrefsEditor, times(1)).putString(TEST_KEY, TEST_VAL)
         Mockito.verify(mockPrefsEditor, times(1)).apply()
@@ -63,16 +66,25 @@ class EncryptedKeyValueRepositoryTest {
 
     @Test
     fun testGet() {
-        Mockito.`when`(repository.get(Mockito.anyString())).thenCallRealMethod()
+        Mockito.`when`(repository.get(anyString())).thenCallRealMethod()
         repository.get(TEST_KEY)
         Mockito.verify(mockPrefs, times(1)).getString(TEST_KEY, null)
     }
 
     @Test
     fun testRemove() {
-        Mockito.`when`(repository.remove(Mockito.anyString())).thenCallRealMethod()
+        Mockito.`when`(repository.remove(anyString())).thenCallRealMethod()
         repository.remove(TEST_KEY)
         Mockito.verify(mockPrefsEditor, times(1)).remove(TEST_KEY)
         Mockito.verify(mockPrefsEditor, times(1)).apply()
+    }
+
+    @Test
+    fun testCorruptionOfMasterKey(){
+        Mockito.`when`(repository.createEncryptedSharedPreferences(TEST_KEY)).thenThrow(GeneralSecurityException())
+        Mockito.`when`(repository.getInstallationIdentifier(context, TEST_STRING)).thenReturn(TEST_STRING)
+        Mockito.`when`(repository.get(anyString())).thenCallRealMethod()
+        repository.get(TEST_KEY)
+        Mockito.verify(mockPrefs, times(1)).getString(TEST_KEY, null)
     }
 }

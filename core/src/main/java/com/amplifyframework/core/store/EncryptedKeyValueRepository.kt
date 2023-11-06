@@ -23,6 +23,7 @@ import androidx.security.crypto.EncryptedSharedPreferences.PrefKeyEncryptionSche
 import androidx.security.crypto.EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
 import androidx.security.crypto.MasterKeys
 import java.io.File
+import java.security.GeneralSecurityException
 import java.util.UUID
 
 class EncryptedKeyValueRepository(
@@ -32,9 +33,30 @@ class EncryptedKeyValueRepository(
 
     @VisibleForTesting
     internal val sharedPreferences: SharedPreferences by lazy {
-        EncryptedSharedPreferences.create(
-            "$sharedPreferencesName.${getInstallationIdentifier(context, sharedPreferencesName)}",
-            MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC),
+        getOrCreateEncryptedSharedPreferences()
+    }
+
+    @VisibleForTesting
+    internal fun getOrCreateEncryptedSharedPreferences(
+    ): SharedPreferences {
+        return try {
+            createEncryptedSharedPreferences()
+        } catch (e: GeneralSecurityException) {
+            context.deleteSharedPreferences(sharedPreferencesName)
+            createEncryptedSharedPreferences()
+        }
+
+    }
+
+    @Throws(GeneralSecurityException::class)
+    @VisibleForTesting
+    internal fun createEncryptedSharedPreferences(
+        keyAlias: String = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC),
+        fileName: String = "$sharedPreferencesName.${getInstallationIdentifier(context, sharedPreferencesName)}"
+    ): SharedPreferences {
+        return EncryptedSharedPreferences.create(
+            fileName,
+            keyAlias,
             context,
             AES256_SIV,
             AES256_GCM
@@ -75,7 +97,8 @@ class EncryptedKeyValueRepository(
      * with a UUID created in the noBackupFilesDir
      */
     @Synchronized
-    private fun getInstallationIdentifier(context: Context, keyValueRepoID: String): String {
+    @VisibleForTesting
+    internal fun getInstallationIdentifier(context: Context, keyValueRepoID: String): String {
         val identifierFile = File(context.noBackupFilesDir, "$keyValueRepoID.installationIdentifier")
         val previousIdentifier = getExistingInstallationIdentifier(identifierFile)
 
