@@ -328,7 +328,7 @@ internal class LivenessWebSocketTest {
         mockkConstructor(WebSocket::class)
         val socket: WebSocket = mockk()
         livenessWebSocket.webSocket = socket
-        val sdf = SimpleDateFormat(livenessWebSocket.datePattern, Locale.US)
+        val sdf = SimpleDateFormat(LivenessWebSocket.datePattern, Locale.US)
 
         // server responds saying time is actually 1 hour in the future
         val oneHour = 1000 * 3600
