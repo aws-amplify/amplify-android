@@ -115,19 +115,19 @@ internal class LivenessWebSocket(
             LOG.debug("WebSocket onOpen")
 
             // device time may be set incorrectly; read the header to skew time and retry
-            val sdf = SimpleDateFormat(datePattern, Locale.getDefault())
+            val sdf = SimpleDateFormat(datePattern, Locale.US)
             val date = response.header("Date")?.let { sdf.parse(it) }
             val tempOffset = if (date != null) {
                 date.time - adjustedDate()
             } else 0
 
+            reconnectState = ReconnectState.next(reconnectState)
             // if offset is > 5 minutes, server will reject the request
             if (kotlin.math.abs(tempOffset) < FIVE_MINUTES) {
                 super.onOpen(webSocket, response)
                 this@LivenessWebSocket.webSocket = webSocket
             } else {
                 // server will close this websocket, don't report that failure back
-                reconnectState = ReconnectState.next(reconnectState)
                 offset = tempOffset
                 start()
             }

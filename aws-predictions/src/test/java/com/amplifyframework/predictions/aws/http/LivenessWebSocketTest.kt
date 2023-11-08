@@ -331,7 +331,7 @@ internal class LivenessWebSocketTest {
         mockkConstructor(WebSocket::class)
         val socket: WebSocket = mockk()
         livenessWebSocket.webSocket = socket
-        val sdf = SimpleDateFormat(livenessWebSocket.datePattern, Locale.getDefault())
+        val sdf = SimpleDateFormat(livenessWebSocket.datePattern, Locale.US)
 
         // server responds saying time is actually 1 hour in the future
         val oneHour = 1000 * 3600
@@ -358,7 +358,7 @@ internal class LivenessWebSocketTest {
         val originalRequest = livenessWebSocket.webSocket!!.request()
 
         // make sure that followup request sends offset date
-        val sdfGMT = SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'", Locale.getDefault())
+        val sdfGMT = SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'", Locale.US)
         sdfGMT.timeZone = TimeZone.getTimeZone("GMT")
         val sentDate = originalRequest.url.queryParameter("X-Amz-Date") ?.let { sdfGMT.parse(it) }
         val diff = abs(Date().time - sentDate?.time!!)
