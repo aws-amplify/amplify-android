@@ -89,9 +89,10 @@ object DataStoreHubEventFilters {
     }
 
     @JvmStatic
-    fun <T: Model>filterOutboxEvent(
+    fun <T : Model> filterOutboxEvent(
         eventType: DataStoreChannelEventName,
-        filter: (model: Model) -> Boolean): HubEventFilter {
+        filter: (model: Model) -> Boolean
+    ): HubEventFilter {
         return HubEventFilter { event: HubEvent<*> ->
             if (eventType.toString() != event.name) {
                 return@HubEventFilter false
@@ -104,7 +105,6 @@ object DataStoreHubEventFilters {
             return@HubEventFilter (model)?.let {
                 filter(it)
             } ?: false
-
         }
     }
 

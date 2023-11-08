@@ -235,19 +235,15 @@ public final class BasicCloudSyncInstrumentationTest {
                 .build();
 
         HubEventFilter hubEventFilter = DataStoreHubEventFilters.filterOutboxEvent(
-                DataStoreChannelEventName.OUTBOX_MUTATION_PROCESSED,
-                model -> {
-                    if (model instanceof BlogOwner) {
-                        BlogOwner published = (BlogOwner) model;
-                        if (published.getId().equals(updatedRichard.getId()) &&
-                                published.getName().equals(updatedRichard.getName())) {
-                            return true;
-                        } else {
-                            return false;
-                        }
-                    }
-                    return false;
+            DataStoreChannelEventName.OUTBOX_MUTATION_PROCESSED,
+            model -> {
+                if (model instanceof BlogOwner) {
+                    BlogOwner published = (BlogOwner) model;
+                    return published.getId().equals(updatedRichard.getId()) &&
+                            published.getName().equals(updatedRichard.getName());
                 }
+                return false;
+            }
         );
 
         HubAccumulator richardAccumulator =
@@ -335,20 +331,16 @@ public final class BasicCloudSyncInstrumentationTest {
                 .build();
 
         HubEventFilter hubEventFilter = DataStoreHubEventFilters.filterOutboxEvent(
-                DataStoreChannelEventName.OUTBOX_MUTATION_PROCESSED,
-                model -> {
-                    if (model instanceof BlogOwner) {
-                        BlogOwner published = (BlogOwner) model;
-                        if (published.getId().equals(updatedOwner.getId()) &&
-                                published.getWea() != null &&
-                                published.getWea().equals(updatedOwner.getWea())) {
-                            return true;
-                        } else {
-                            return false;
-                        }
-                    }
-                    return false;
+            DataStoreChannelEventName.OUTBOX_MUTATION_PROCESSED,
+            model -> {
+                if (model instanceof BlogOwner) {
+                    BlogOwner published = (BlogOwner) model;
+                    return published.getId().equals(updatedOwner.getId()) &&
+                            published.getWea() != null &&
+                            published.getWea().equals(updatedOwner.getWea());
                 }
+                return false;
+            }
         );
 
         // Check for HubEvent on expected final state
@@ -435,20 +427,16 @@ public final class BasicCloudSyncInstrumentationTest {
                 .build();
 
         HubEventFilter hubEventFilter = DataStoreHubEventFilters.filterOutboxEvent(
-                DataStoreChannelEventName.OUTBOX_MUTATION_PROCESSED,
-                model -> {
-                    if (model instanceof BlogOwner) {
-                        BlogOwner published = (BlogOwner) model;
-                        if (published.getId().equals(updatedOwner.getId()) &&
-                                published.getWea() != null &&
-                                published.getWea().equals(updatedOwner.getWea())) {
-                            return true;
-                        } else {
-                            return false;
-                        }
-                    }
-                    return false;
+            DataStoreChannelEventName.OUTBOX_MUTATION_PROCESSED,
+            model -> {
+                if (model instanceof BlogOwner) {
+                    BlogOwner published = (BlogOwner) model;
+                    return published.getId().equals(updatedOwner.getId()) &&
+                            published.getWea() != null &&
+                            published.getWea().equals(updatedOwner.getWea());
                 }
+                return false;
+            }
         );
 
         // Verify final state accumulated
@@ -476,6 +464,7 @@ public final class BasicCloudSyncInstrumentationTest {
     /**
      * Verify that creating a new item, then immediately deleting succeeds.
      * @throws DataStoreException On failure to save or query items from DataStore.
+     * @throws InterruptedException If sleep interrupted
      * @throws ApiException On failure to query the API.
      */
     @Test
@@ -491,7 +480,7 @@ public final class BasicCloudSyncInstrumentationTest {
         // Sleeping isn't ideal here. However, we don't currently have a way to detect if there is
         // still a pending event in the outbox. In a current scenario, if the save is being returned
         // from appsync, but delete outbox event still pending send, we end up with a momentary
-        // state where owner re-exists to be quicly removed again
+        // state where owner re-exists to be quickly removed again
         Thread.sleep(2000);
 
         // Verify that the owner is deleted from the local data store.
@@ -639,16 +628,16 @@ public final class BasicCloudSyncInstrumentationTest {
         BlogOwner updatedOwner = owner.copyOfBuilder().wea("pon").build();
 
         HubEventFilter hubEventFilter = DataStoreHubEventFilters.filterOutboxEvent(
-                DataStoreChannelEventName.OUTBOX_MUTATION_PROCESSED,
-                model -> {
-                    if (model instanceof BlogOwner) {
-                        BlogOwner published = (BlogOwner) model;
-                        return published.getId().equals(updatedOwner.getId()) &&
-                                published.getWea() != null &&
-                                published.getWea().equals(updatedOwner.getWea());
-                    }
-                    return false;
+            DataStoreChannelEventName.OUTBOX_MUTATION_PROCESSED,
+            model -> {
+                if (model instanceof BlogOwner) {
+                    BlogOwner published = (BlogOwner) model;
+                    return published.getId().equals(updatedOwner.getId()) &&
+                            published.getWea() != null &&
+                            published.getWea().equals(updatedOwner.getWea());
                 }
+                return false;
+            }
         );
 
         // Check for HubEvent on expected final state
@@ -664,21 +653,16 @@ public final class BasicCloudSyncInstrumentationTest {
         BlogOwner diffFieldUpdated = updatedOwner.copyOfBuilder().name("ownerUpdatedName").build();
 
         HubEventFilter hubEventFilter2 = DataStoreHubEventFilters.filterOutboxEvent(
-                DataStoreChannelEventName.OUTBOX_MUTATION_PROCESSED,
-                model -> {
-                    if (model instanceof BlogOwner) {
-                        BlogOwner published = (BlogOwner) model;
-                        if (published.getId().equals(diffFieldUpdated.getId()) &&
-                                published.getName().equals(diffFieldUpdated.getName())) {
-                            return true;
-                        } else {
-                            return false;
-                        }
-                    }
-                    return false;
+            DataStoreChannelEventName.OUTBOX_MUTATION_PROCESSED,
+            model -> {
+                if (model instanceof BlogOwner) {
+                    BlogOwner published = (BlogOwner) model;
+                    return published.getId().equals(diffFieldUpdated.getId()) &&
+                            published.getName().equals(diffFieldUpdated.getName());
                 }
+                return false;
+            }
         );
-
 
         accumulator = HubAccumulator.create(HubChannel.DATASTORE,
                 hubEventFilter2, 1).start();
