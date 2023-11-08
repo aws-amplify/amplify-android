@@ -77,8 +77,10 @@ subprojects {
         allow("MIT")
         allow("BSD-2-Clause")
         allow("CC0-1.0")
-        allowUrl("https://www.zetetic.net/sqlcipher/license/")
         allowUrl("https://developer.android.com/studio/terms.html")
+        allowDependency("net.zetetic", "android-database-sqlcipher", "4.5.4") {
+            "BSD style License"
+        }
         allowDependency("org.jetbrains", "annotations", "16.0.1") {
             "Apache-2.0, but typo in license URL fixed in newer versions"
         }
