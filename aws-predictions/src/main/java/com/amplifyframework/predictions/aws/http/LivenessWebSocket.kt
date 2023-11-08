@@ -146,7 +146,10 @@ internal class LivenessWebSocket(
                             livenessResponse.serverSessionInformationEvent.sessionInformation
                         )
                     } else if (livenessResponse.disconnectionEvent != null) {
-                        this@LivenessWebSocket.webSocket?.close(NORMAL_SOCKET_CLOSURE_STATUS_CODE, "Liveness flow completed.")
+                        this@LivenessWebSocket.webSocket?.close(
+                            NORMAL_SOCKET_CLOSURE_STATUS_CODE,
+                            "Liveness flow completed."
+                        )
                     } else {
                         handleWebSocketError(livenessResponse)
                     }
@@ -195,10 +198,12 @@ internal class LivenessWebSocket(
 
     fun start() {
         if (reconnectState == ReconnectState.RECONNECTING_AGAIN) {
-            onErrorReceived.accept(PredictionsException(
-                "Invalid device time",
-                "Too many attempts were made to correct device time"
-            ))
+            onErrorReceived.accept(
+                PredictionsException(
+                    "Invalid device time",
+                    "Too many attempts were made to correct device time"
+                )
+            )
         }
         val userAgent = getUserAgent()
 

@@ -65,7 +65,6 @@ import okio.ByteString
 import okio.ByteString.Companion.toByteString
 import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Ignore
@@ -197,14 +196,12 @@ internal class LivenessWebSocketTest {
         assertTrue(livenessWebSocket.webSocket != null)
         val originalRequest = livenessWebSocket.webSocket!!.request()
 
-        assertEquals("AWS4-HMAC-SHA256", originalRequest.url.queryParameter("X-Amz-Algorithm"))
         assertTrue(
             originalRequest.url.queryParameter("X-Amz-Credential")!!.endsWith("//rekognition/aws4_request")
         )
         assertEquals("299", originalRequest.url.queryParameter("X-Amz-Expires"))
         assertEquals("host", originalRequest.url.queryParameter("X-Amz-SignedHeaders"))
         assertEquals("AWS4-HMAC-SHA256", originalRequest.url.queryParameter("X-Amz-Algorithm"))
-        assertNotNull("x-amz-user-agent")
     }
 
     @Test
@@ -371,7 +368,6 @@ internal class LivenessWebSocketTest {
         assertEquals("299", originalRequest.url.queryParameter("X-Amz-Expires"))
         assertEquals("host", originalRequest.url.queryParameter("X-Amz-SignedHeaders"))
         assertEquals("AWS4-HMAC-SHA256", originalRequest.url.queryParameter("X-Amz-Algorithm"))
-        assertNotNull("x-amz-user-agent")
     }
 
     @Test
