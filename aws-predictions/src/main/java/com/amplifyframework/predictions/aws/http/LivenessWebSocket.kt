@@ -106,8 +106,6 @@ internal class LivenessWebSocket(
     private var webSocketError: PredictionsException? = null
     internal var clientStoppedSession = false
     val json = Json { ignoreUnknownKeys = true }
-    val FIVE_MINUTES = 1000 * 60 * 5
-    val datePattern = "EEE, d MMM yyyy HH:mm:ss z"
 
     @VisibleForTesting
     internal var webSocketListener = object : WebSocketListener() {
@@ -148,7 +146,7 @@ internal class LivenessWebSocket(
                             livenessResponse.serverSessionInformationEvent.sessionInformation
                         )
                     } else if (livenessResponse.disconnectionEvent != null) {
-                        this@LivenessWebSocket.webSocket?.close(1000, "Liveness flow completed.")
+                        this@LivenessWebSocket.webSocket?.close(NORMAL_SOCKET_CLOSURE_STATUS_CODE, "Liveness flow completed.")
                     } else {
                         handleWebSocketError(livenessResponse)
                     }
@@ -170,7 +168,7 @@ internal class LivenessWebSocket(
             super.onClosed(webSocket, code, reason)
             if (reconnectState == ReconnectState.RECONNECTING) {
                 // do nothing; we expected the server to close the connection
-            } else if (code != 1000 && !clientStoppedSession) {
+            } else if (code != NORMAL_SOCKET_CLOSURE_STATUS_CODE && !clientStoppedSession) {
                 val faceLivenessException = webSocketError ?: PredictionsException(
                     "An error occurred during the face liveness check.",
                     reason
@@ -196,6 +194,12 @@ internal class LivenessWebSocket(
     }
 
     fun start() {
+        if (reconnectState == ReconnectState.RECONNECTING_AGAIN) {
+            onErrorReceived.accept(PredictionsException(
+                "Invalid device time",
+                "Too many attempts were made to correct device time"
+            ))
+        }
         val userAgent = getUserAgent()
 
         val okHttpClient = OkHttpClient.Builder()
@@ -463,8 +467,8 @@ internal class LivenessWebSocket(
     }
 
     fun destroy() {
-        // Close gracefully; 1000 means "normal closure"
-        webSocket?.close(1000, null)
+        // Close gracefully
+        webSocket?.close(NORMAL_SOCKET_CLOSURE_STATUS_CODE, null)
     }
 
     fun adjustedDate(date: Long = Date().time): Long {
@@ -472,6 +476,9 @@ internal class LivenessWebSocket(
     }
 
     companion object {
+        private const val NORMAL_SOCKET_CLOSURE_STATUS_CODE = 1000
+        private val FIVE_MINUTES = 1000 * 60 * 5
+        private val datePattern = "EEE, d MMM yyyy HH:mm:ss z"
         private val LOG = Amplify.Logging.logger(CategoryType.PREDICTIONS, "amplify:aws-predictions")
     }
 }
