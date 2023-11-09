@@ -24,7 +24,7 @@ data class AWSCognitoAuthConfirmSignUpOptions
  * Advanced options for confirming sign up.
  * @param clientMetadata Additional custom attributes to be sent to the service such as information about the client
  */
-internal constructor(val clientMetadata: Map<String, String>, val forceAliasCreation: Boolean) :
+internal constructor(val clientMetadata: Map<String, String>, val forceAliasCreation: Boolean = false) :
     AuthConfirmSignUpOptions() {
 
     companion object {
