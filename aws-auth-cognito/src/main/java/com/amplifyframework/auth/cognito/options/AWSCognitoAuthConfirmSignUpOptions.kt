@@ -24,7 +24,8 @@ data class AWSCognitoAuthConfirmSignUpOptions
  * Advanced options for confirming sign up.
  * @param clientMetadata Additional custom attributes to be sent to the service such as information about the client
  */
-internal constructor(val clientMetadata: Map<String, String>) : AuthConfirmSignUpOptions() {
+internal constructor(val clientMetadata: Map<String, String>, val forceAliasCreation: Boolean = false) :
+    AuthConfirmSignUpOptions() {
 
     companion object {
         /**
@@ -44,6 +45,7 @@ internal constructor(val clientMetadata: Map<String, String>) : AuthConfirmSignU
      */
     class CognitoBuilder : Builder<CognitoBuilder?>() {
         private var clientMetadata: Map<String, String> = mapOf()
+        private var forceAliasCreation: Boolean = false
 
         /**
          * Returns the type of builder this is to support proper flow with it being an extended class.
@@ -58,7 +60,13 @@ internal constructor(val clientMetadata: Map<String, String>) : AuthConfirmSignU
          * @param clientMetadata Custom user metadata to be sent with the sign up request.
          * @return The builder object to continue building.
          */
-        fun clientMetadata(clientMetadata: Map<String, String>) = apply { this.clientMetadata = clientMetadata }
+        fun clientMetadata(clientMetadata: Map<String, String>) = apply {
+            this.clientMetadata = clientMetadata
+        }
+
+        fun forceAliasCreation(forceAliasCreation: Boolean) = apply {
+            this.forceAliasCreation = forceAliasCreation
+        }
 
         /**
          * Construct and return the object with the values set in the builder.

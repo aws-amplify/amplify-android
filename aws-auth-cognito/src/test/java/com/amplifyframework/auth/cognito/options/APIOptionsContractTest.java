@@ -55,8 +55,12 @@ public class APIOptionsContractTest {
         Assert.assertEquals(confirmSignInOptions.getMetadata(), metadata);
 
         AWSCognitoAuthConfirmSignUpOptions confirmSignUpOptions =
-                AWSCognitoAuthConfirmSignUpOptions.builder().clientMetadata(metadata).build();
+                AWSCognitoAuthConfirmSignUpOptions.builder().
+                        clientMetadata(metadata).
+                        forceAliasCreation(true).
+                        build();
         Assert.assertEquals(confirmSignUpOptions.getClientMetadata(), metadata);
+        Assert.assertEquals(confirmSignUpOptions.getForceAliasCreation(), true);
 
         AWSCognitoAuthResendSignUpCodeOptions resendSignUpCodeOptions =
                 AWSCognitoAuthResendSignUpCodeOptions.builder().metadata(metadata).build();

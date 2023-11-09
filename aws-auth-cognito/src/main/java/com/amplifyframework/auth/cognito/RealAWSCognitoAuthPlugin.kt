@@ -395,6 +395,7 @@ internal class RealAWSCognitoAuthPlugin(
 
                 (options as? AWSCognitoAuthConfirmSignUpOptions)?.let {
                     this.clientMetadata = it.clientMetadata
+                    this.forceAliasCreation = it.forceAliasCreation
                 }
             }
 
