@@ -22,14 +22,14 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
 public class APIOptionsContractTest {
 
     @SuppressWarnings("serial")
-    private HashMap<String, String> metadata = new HashMap<String, String>() {
+    private final HashMap<String, String> metadata = new HashMap<String, String>() {
         {
             put("testKey", "testValue");
         }
@@ -60,7 +60,17 @@ public class APIOptionsContractTest {
                         forceAliasCreation(true).
                         build();
         Assert.assertEquals(confirmSignUpOptions.getClientMetadata(), metadata);
-        Assert.assertEquals(confirmSignUpOptions.getForceAliasCreation(), true);
+        Assert.assertTrue(confirmSignUpOptions.getForceAliasCreation());
+
+        AWSCognitoAuthConfirmSignUpOptions confirmSignUpOptionsWithDefaultForceAliasCreation =
+                AWSCognitoAuthConfirmSignUpOptions.builder().
+                        clientMetadata(metadata).
+                        build();
+
+        Assert.assertEquals(
+                confirmSignUpOptionsWithDefaultForceAliasCreation.getClientMetadata(), metadata);
+        Assert.assertFalse(confirmSignUpOptionsWithDefaultForceAliasCreation.
+                getForceAliasCreation());
 
         AWSCognitoAuthResendSignUpCodeOptions resendSignUpCodeOptions =
                 AWSCognitoAuthResendSignUpCodeOptions.builder().metadata(metadata).build();
@@ -95,7 +105,7 @@ public class APIOptionsContractTest {
                 AWSCognitoAuthUpdateUserAttributesOptions.builder().metadata(metadata).build();
         Assert.assertEquals(updateUserAttributesOptions.getMetadata(), metadata);
 
-        List<String> scopes = Arrays.asList("name");
+        List<String> scopes = Collections.singletonList("name");
         AWSCognitoAuthWebUISignInOptions webUISignInOptions =
                 AWSCognitoAuthWebUISignInOptions.builder().browserPackage("chrome")
                         .scopes(scopes).build();
