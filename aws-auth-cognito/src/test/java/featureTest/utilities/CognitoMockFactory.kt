@@ -77,7 +77,6 @@ class CognitoMockFactory(
                         this.userConfirmed = if (responseObject.containsKey("userConfirmed")) {
                             (responseObject["userConfirmed"] as? JsonPrimitive)?.boolean ?: false
                         } else false
-                        this.userSub = ""
                     }
                 }
             }
@@ -140,7 +139,6 @@ class CognitoMockFactory(
                                 value = "000-000-0000"
                             }
                         )
-                        username = ""
                     }
                 }
             }

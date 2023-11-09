@@ -29,6 +29,5 @@ internal data class LivenessResponseStream(
         ServiceQuotaExceededException? = null,
     @SerialName("ServiceUnavailableException") val serviceUnavailableException: ServiceUnavailableException? = null,
     @SerialName("SessionNotFoundException") val sessionNotFoundException: SessionNotFoundException? = null,
-    @SerialName("AccessDeniedException") val accessDeniedException: AccessDeniedException? = null,
-    @SerialName("InvalidSignatureException") val invalidSignatureException: InvalidSignatureException? = null
+    @SerialName("AccessDeniedException") val accessDeniedException: AccessDeniedException? = null
 )
