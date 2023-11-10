@@ -57,7 +57,8 @@
                     "signUpStep": "DONE",
                     "additionalInfo": {
                     }
-                }
+                },
+                "userId": ""
             }
         }
     ]
