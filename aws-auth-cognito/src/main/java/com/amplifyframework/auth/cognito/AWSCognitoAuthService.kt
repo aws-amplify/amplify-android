@@ -18,9 +18,9 @@ package com.amplifyframework.auth.cognito
 import aws.sdk.kotlin.runtime.http.operation.customUserAgentMetadata
 import aws.sdk.kotlin.services.cognitoidentity.CognitoIdentityClient
 import aws.sdk.kotlin.services.cognitoidentityprovider.CognitoIdentityProviderClient
+import aws.sdk.kotlin.services.cognitoidentityprovider.endpoints.CognitoIdentityProviderEndpointProvider
 import aws.smithy.kotlin.runtime.client.RequestInterceptorContext
 import aws.smithy.kotlin.runtime.client.endpoints.Endpoint
-import aws.smithy.kotlin.runtime.client.endpoints.EndpointProvider
 import aws.smithy.kotlin.runtime.http.interceptors.HttpInterceptor
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 
@@ -36,7 +36,7 @@ interface AWSCognitoAuthService {
                 CognitoIdentityProviderClient {
                     this.region = it.region
                     this.endpointProvider = it.endpoint?.let { endpoint ->
-                        EndpointProvider { Endpoint(endpoint) }
+                        CognitoIdentityProviderEndpointProvider { Endpoint(endpoint) }
                     }
                     this.interceptors += object : HttpInterceptor {
                         override suspend fun modifyBeforeSerialization(context: RequestInterceptorContext<Any>): Any {

@@ -35,11 +35,18 @@ import com.amplifyframework.predictions.aws.models.liveness.ServerSessionInforma
 import com.amplifyframework.predictions.aws.models.liveness.SessionInformation
 import com.amplifyframework.predictions.aws.models.liveness.ValidationException
 import com.amplifyframework.predictions.models.FaceLivenessSessionInformation
+import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkConstructor
 import io.mockk.verify
 import java.net.URL
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
+import kotlin.math.abs
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.resetMain
@@ -48,6 +55,7 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import mockwebserver3.MockResponse
 import mockwebserver3.MockWebServer
+import okhttp3.Headers
 import okhttp3.Protocol
 import okhttp3.Request
 import okhttp3.Response
@@ -57,7 +65,6 @@ import okio.ByteString
 import okio.ByteString.Companion.toByteString
 import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Ignore
@@ -189,14 +196,12 @@ internal class LivenessWebSocketTest {
         assertTrue(livenessWebSocket.webSocket != null)
         val originalRequest = livenessWebSocket.webSocket!!.request()
 
-        assertEquals("AWS4-HMAC-SHA256", originalRequest.url.queryParameter("X-Amz-Algorithm"))
         assertTrue(
             originalRequest.url.queryParameter("X-Amz-Credential")!!.endsWith("//rekognition/aws4_request")
         )
         assertEquals("299", originalRequest.url.queryParameter("X-Amz-Expires"))
         assertEquals("host", originalRequest.url.queryParameter("X-Amz-SignedHeaders"))
         assertEquals("AWS4-HMAC-SHA256", originalRequest.url.queryParameter("X-Amz-Algorithm"))
-        assertNotNull("x-amz-user-agent")
     }
 
     @Test
@@ -315,6 +320,54 @@ internal class LivenessWebSocketTest {
             "md/device/robolectric md/device-manufacturer/unknown api/rekognitionstreaming/$version"
         val additional = "api/liveness/1.1.1"
         assertEquals(livenessWebSocket.getUserAgent(), "$baseline $additional")
+    }
+
+    @Test
+    fun `web socket detects clock skew from server response`() {
+        val livenessWebSocket = createLivenessWebSocket()
+        mockkConstructor(WebSocket::class)
+        val socket: WebSocket = mockk()
+        livenessWebSocket.webSocket = socket
+        val sdf = SimpleDateFormat(LivenessWebSocket.datePattern, Locale.US)
+
+        // server responds saying time is actually 1 hour in the future
+        val oneHour = 1000 * 3600
+        val futureDate = sdf.format(Date(Date().time + oneHour))
+        val response: Response = mockk()
+        every { response.headers }.returns(Headers.headersOf("Date", futureDate))
+        every { response.header("Date") }.returns(futureDate)
+        livenessWebSocket.webSocketListener.onOpen(socket, response)
+
+        // now we should restart the websocket with an adjusted time
+        val openLatch = CountDownLatch(1)
+        val latchingListener = LatchingWebSocketResponseListener(
+            livenessWebSocket.webSocketListener,
+            openLatch = openLatch
+        )
+        livenessWebSocket.webSocketListener = latchingListener
+
+        server.enqueue(MockResponse().withWebSocketUpgrade(ServerWebSocketListener()))
+        server.start()
+
+        openLatch.await(3, TimeUnit.SECONDS)
+
+        assertTrue(livenessWebSocket.webSocket != null)
+        val originalRequest = livenessWebSocket.webSocket!!.request()
+
+        // make sure that followup request sends offset date
+        val sdfGMT = SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'", Locale.US)
+        sdfGMT.timeZone = TimeZone.getTimeZone("GMT")
+        val sentDate = originalRequest.url.queryParameter("X-Amz-Date") ?.let { sdfGMT.parse(it) }
+        val diff = abs(Date().time - sentDate?.time!!)
+        assert(oneHour - 10000 < diff && diff < oneHour + 10000)
+
+        // also make sure that followup request is valid
+        assertTrue(
+            originalRequest.url.queryParameter("X-Amz-Credential")!!.endsWith("//rekognition/aws4_request")
+        )
+        assertEquals("299", originalRequest.url.queryParameter("X-Amz-Expires"))
+        assertEquals("host", originalRequest.url.queryParameter("X-Amz-SignedHeaders"))
+        assertEquals("AWS4-HMAC-SHA256", originalRequest.url.queryParameter("X-Amz-Algorithm"))
     }
 
     @Test
