@@ -160,26 +160,29 @@ internal class LivenessWebSocket(
         override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
             LOG.debug("WebSocket onClosed")
             super.onClosed(webSocket, code, reason)
-            val recordedError = webSocketError
-            /*
-            If the server reports an invalid signature due to a time difference between the local clock and the
-            server clock, AND we haven't already tried to reconnect, then we should try to reconnect with an offset
-             */
-            if (reconnectState == ConnectionState.NORMAL &&
-                !isTimeDiffSafe(timeDiffOffsetInMillis) &&
-                recordedError is PredictionsException &&
-                recordedError.cause is InvalidSignatureException
-            ) {
-                LOG.info("The server rejected the connection due to a likely time difference. Attempting reconnect.")
-                reconnectState = ConnectionState.ATTEMPT_RECONNECT
-                webSocketError = null
-                start()
-            } else if (code != NORMAL_SOCKET_CLOSURE_STATUS_CODE && !clientStoppedSession) {
-                val faceLivenessException = recordedError ?: PredictionsException(
-                    "An error occurred during the face liveness check.",
-                    reason
-                )
-                onErrorReceived.accept(faceLivenessException)
+            if (code != NORMAL_SOCKET_CLOSURE_STATUS_CODE && !clientStoppedSession) {
+                val recordedError = webSocketError
+
+                /*
+                If the server reports an invalid signature due to a time difference between the local clock and the
+                server clock, AND we haven't already tried to reconnect, then we should try to reconnect with an offset
+                */
+                if (reconnectState == ConnectionState.NORMAL &&
+                    !isTimeDiffSafe(timeDiffOffsetInMillis) &&
+                    recordedError is PredictionsException &&
+                    recordedError.cause is InvalidSignatureException
+                ) {
+                    LOG.info("The server rejected the connection due to a likely time difference. Attempting reconnect")
+                    reconnectState = ConnectionState.ATTEMPT_RECONNECT
+                    webSocketError = null
+                    start()
+                } else {
+                    val faceLivenessException = recordedError ?: PredictionsException(
+                        "An error occurred during the face liveness check.",
+                        reason
+                    )
+                    onErrorReceived.accept(faceLivenessException)
+                }
             } else {
                 onComplete.call()
             }
