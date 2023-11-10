@@ -352,7 +352,11 @@ internal class LivenessWebSocketTest {
         server.enqueue(MockResponse().withWebSocketUpgrade(ServerWebSocketListener()))
         server.start()
 
-        livenessWebSocket.webSocketError = PredictionsException("invalid signature", InvalidSignatureException("invalid signature"), "invalid signature")
+        livenessWebSocket.webSocketError = PredictionsException(
+            "invalid signature",
+            InvalidSignatureException("invalid signature"),
+            "invalid signature"
+        )
         livenessWebSocket.webSocketListener.onClosed(mockk(), 1011, "closing")
 
         openLatch.await(3, TimeUnit.SECONDS)
