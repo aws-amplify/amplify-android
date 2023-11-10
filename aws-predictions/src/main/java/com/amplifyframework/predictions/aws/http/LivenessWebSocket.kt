@@ -79,22 +79,12 @@ internal class LivenessWebSocket(
     private var credentials: Credentials? = null
 
     internal var offset = 0L
-    internal enum class ReconnectState {
-        INITIAL,
-        RECONNECTING,
-        RECONNECTING_AGAIN;
-
-        companion object {
-            fun next(state: ReconnectState): ReconnectState {
-                return when (state) {
-                    INITIAL -> RECONNECTING
-                    RECONNECTING -> RECONNECTING_AGAIN
-                    RECONNECTING_AGAIN -> RECONNECTING_AGAIN
-                }
-            }
-        }
+    internal enum class ConnectionState {
+        NORMAL,
+        ATTEMPT_RECONNECT,
+        TOO_MANY_RECONNECTS;
     }
-    internal var reconnectState = ReconnectState.INITIAL
+    internal var reconnectState = ConnectionState.NORMAL
 
     @VisibleForTesting
     internal var webSocket: WebSocket? = null
@@ -119,15 +109,23 @@ internal class LivenessWebSocket(
                 date.time - adjustedDate()
             } else 0
 
-            reconnectState = ReconnectState.next(reconnectState)
+            super.onOpen(webSocket, response)
+
             // if offset is > 5 minutes, server will reject the request
             if (kotlin.math.abs(tempOffset) < FIVE_MINUTES) {
-                super.onOpen(webSocket, response)
+                reconnectState = ConnectionState.NORMAL
                 this@LivenessWebSocket.webSocket = webSocket
             } else {
-                // server will close this websocket, don't report that failure back
-                offset = tempOffset
-                start()
+                // server will close this websocket
+                if (reconnectState == ConnectionState.ATTEMPT_RECONNECT) {
+                    // this is not the first try, report that failure back
+                    reconnectState = ConnectionState.TOO_MANY_RECONNECTS
+                } else {
+                    // this is the first try, don't report that failure back
+                    reconnectState = ConnectionState.ATTEMPT_RECONNECT
+                    offset = tempOffset
+                    start()
+                }
             }
         }
 
@@ -169,7 +167,7 @@ internal class LivenessWebSocket(
         override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
             LOG.debug("WebSocket onClosed")
             super.onClosed(webSocket, code, reason)
-            if (reconnectState == ReconnectState.RECONNECTING) {
+            if (reconnectState == ConnectionState.ATTEMPT_RECONNECT) {
                 // do nothing; we expected the server to close the connection
             } else if (code != NORMAL_SOCKET_CLOSURE_STATUS_CODE && !clientStoppedSession) {
                 val faceLivenessException = webSocketError ?: PredictionsException(
@@ -197,14 +195,6 @@ internal class LivenessWebSocket(
     }
 
     fun start() {
-        if (reconnectState == ReconnectState.RECONNECTING_AGAIN) {
-            onErrorReceived.accept(
-                PredictionsException(
-                    "Invalid device time",
-                    "Too many attempts were made to correct device time"
-                )
-            )
-        }
         val userAgent = getUserAgent()
 
         val okHttpClient = OkHttpClient.Builder()
