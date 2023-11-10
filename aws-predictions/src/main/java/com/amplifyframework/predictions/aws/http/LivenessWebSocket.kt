@@ -94,7 +94,7 @@ internal class LivenessWebSocket(
     private var faceDetectedStart = 0L
     private var videoStartTimestamp = 0L
     private var videoEndTimestamp = 0L
-    private var webSocketError: PredictionsException? = null
+    @VisibleForTesting internal var webSocketError: PredictionsException? = null
     internal var clientStoppedSession = false
     val json = Json { ignoreUnknownKeys = true }
 
