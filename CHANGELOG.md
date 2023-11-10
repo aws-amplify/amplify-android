@@ -12,7 +12,7 @@
 - **liveness:** Liveness web socket expiration retry ([#2615](https://github.com/aws-amplify/amplify-android/issues/2615))
 
 [See all changes between 2.14.2 and 2.14.3](https://github.com/aws-amplify/amplify-android/compare/release_v2.14.2...release_v2.14.3)
->>>>>>> main
+
 
 ## [Release 2.14.2](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.14.2)
 
