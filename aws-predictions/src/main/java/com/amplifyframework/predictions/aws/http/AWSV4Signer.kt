@@ -56,6 +56,11 @@ internal class AWSV4Signer {
         timeFormatter.isLenient = false
     }
 
+    // used in incorrect time flow where we send an invalid response first to get time offset
+    fun resetPriorSignature() {
+        priorSignature = ""
+    }
+
     fun getSignedUri(
         uri: URI,
         credentials: Credentials,

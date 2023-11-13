@@ -1,3 +1,17 @@
+## [Release 2.14.5](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.14.5)
+
+### Bug Fixes
+- **liveness:** correct websocket retry logic ([#2634](https://github.com/aws-amplify/amplify-android/issues/2634))
+
+[See all changes between 2.14.4 and 2.14.5](https://github.com/aws-amplify/amplify-android/compare/release_v2.14.4...release_v2.14.5)
+
+## [Release 2.14.4](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.14.4)
+
+### Bug Fixes
+- Re-release of 2.14.2. Do not use 2.14.3 due to regression in aws-predictions for Liveness
+
+[See all changes between 2.14.2 and 2.14.4](https://github.com/aws-amplify/amplify-android/compare/release_v2.14.2...release_v2.14.4)
+
 ## [Release 2.14.2](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.14.2)
 
 ### Bug Fixes
