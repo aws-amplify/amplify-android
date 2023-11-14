@@ -14,7 +14,7 @@
  */
 
 plugins {
-    id("org.jetbrains.kotlin.plugin.serialization") version "1.6.10"
+    id("org.jetbrains.kotlin.plugin.serialization") version "1.9.10"
     id("com.android.library")
     id("kotlin-android")
 }

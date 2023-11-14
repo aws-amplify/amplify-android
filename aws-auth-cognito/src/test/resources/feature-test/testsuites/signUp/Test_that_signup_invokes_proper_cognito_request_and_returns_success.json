@@ -61,7 +61,8 @@
                         "deliveryMedium": "EMAIL",
                         "attributeName": "attributeName"
                     }
-                }
+                },
+                "userId": ""
             }
         }
     ]

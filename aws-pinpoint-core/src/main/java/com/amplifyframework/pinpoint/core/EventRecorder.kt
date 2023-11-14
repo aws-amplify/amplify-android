@@ -40,6 +40,7 @@ import com.amplifyframework.pinpoint.core.database.PinpointDatabase
 import com.amplifyframework.pinpoint.core.endpointProfile.EndpointProfile
 import com.amplifyframework.pinpoint.core.models.PinpointEvent
 import com.amplifyframework.pinpoint.core.util.millisToIsoDate
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -59,7 +60,7 @@ class EventRecorder(
             AWS_PINPOINT_ANALYTICS_LOG_NAMESPACE.format(EventRecorder::class.java.simpleName)
         )
 ) {
-    private var isSyncInProgress = false
+    private var isSyncInProgress = AtomicBoolean(false)
     private val defaultMaxSubmissionAllowed = 3
     private val defaultMaxSubmissionSize = 1024 * 100
     private val serviceDefinedMaxEventsPerBatch: Int = 100
@@ -79,12 +80,10 @@ class EventRecorder(
         }
     }
 
-    @Synchronized
     internal suspend fun submitEvents(): List<AnalyticsEvent> {
         return withContext(coroutineDispatcher) {
             val result = runCatching {
-                if (!isSyncInProgress) {
-                    isSyncInProgress = true
+                if (isSyncInProgress.compareAndSet(false, true)) {
                     processEvents()
                 } else {
                     logger.info("Sync is already in progress, skipping")
@@ -93,11 +92,11 @@ class EventRecorder(
             }
             when {
                 result.isSuccess -> {
-                    isSyncInProgress = false
+                    isSyncInProgress.set(false)
                     result.getOrNull() ?: emptyList()
                 }
                 else -> {
-                    isSyncInProgress = false
+                    isSyncInProgress.set(false)
                     logger.error("Failed to submit events ${result.exceptionOrNull()}")
                     emptyList()
                 }
