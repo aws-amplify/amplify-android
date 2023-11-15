@@ -28,6 +28,7 @@ import com.amplifyframework.predictions.aws.models.liveness.ColorSequence
 import com.amplifyframework.predictions.aws.models.liveness.DisconnectionEvent
 import com.amplifyframework.predictions.aws.models.liveness.FaceMovementAndLightServerChallenge
 import com.amplifyframework.predictions.aws.models.liveness.FreshnessColor
+import com.amplifyframework.predictions.aws.models.liveness.InvalidSignatureException
 import com.amplifyframework.predictions.aws.models.liveness.LightChallengeType
 import com.amplifyframework.predictions.aws.models.liveness.OvalParameters
 import com.amplifyframework.predictions.aws.models.liveness.ServerChallenge
@@ -326,7 +327,9 @@ internal class LivenessWebSocketTest {
     fun `web socket detects clock skew from server response`() {
         val livenessWebSocket = createLivenessWebSocket()
         mockkConstructor(WebSocket::class)
-        val socket: WebSocket = mockk()
+        val socket: WebSocket = mockk {
+            every { close(any(), any()) } returns true
+        }
         livenessWebSocket.webSocket = socket
         val sdf = SimpleDateFormat(LivenessWebSocket.datePattern, Locale.US)
 
@@ -339,7 +342,7 @@ internal class LivenessWebSocketTest {
         livenessWebSocket.webSocketListener.onOpen(socket, response)
 
         // now we should restart the websocket with an adjusted time
-        val openLatch = CountDownLatch(1)
+        val openLatch = CountDownLatch(2)
         val latchingListener = LatchingWebSocketResponseListener(
             livenessWebSocket.webSocketListener,
             openLatch = openLatch
@@ -349,25 +352,32 @@ internal class LivenessWebSocketTest {
         server.enqueue(MockResponse().withWebSocketUpgrade(ServerWebSocketListener()))
         server.start()
 
+        livenessWebSocket.webSocketError = PredictionsException(
+            "invalid signature",
+            InvalidSignatureException("invalid signature"),
+            "invalid signature"
+        )
+        livenessWebSocket.webSocketListener.onClosed(mockk(), 1011, "closing")
+
         openLatch.await(3, TimeUnit.SECONDS)
 
         assertTrue(livenessWebSocket.webSocket != null)
-        val originalRequest = livenessWebSocket.webSocket!!.request()
+        val reconnectRequest = livenessWebSocket.webSocket!!.request()
 
         // make sure that followup request sends offset date
         val sdfGMT = SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'", Locale.US)
         sdfGMT.timeZone = TimeZone.getTimeZone("GMT")
-        val sentDate = originalRequest.url.queryParameter("X-Amz-Date") ?.let { sdfGMT.parse(it) }
+        val sentDate = reconnectRequest.url.queryParameter("X-Amz-Date") ?.let { sdfGMT.parse(it) }
         val diff = abs(Date().time - sentDate?.time!!)
         assert(oneHour - 10000 < diff && diff < oneHour + 10000)
 
         // also make sure that followup request is valid
         assertTrue(
-            originalRequest.url.queryParameter("X-Amz-Credential")!!.endsWith("//rekognition/aws4_request")
+            reconnectRequest.url.queryParameter("X-Amz-Credential")!!.endsWith("//rekognition/aws4_request")
         )
-        assertEquals("299", originalRequest.url.queryParameter("X-Amz-Expires"))
-        assertEquals("host", originalRequest.url.queryParameter("X-Amz-SignedHeaders"))
-        assertEquals("AWS4-HMAC-SHA256", originalRequest.url.queryParameter("X-Amz-Algorithm"))
+        assertEquals("299", reconnectRequest.url.queryParameter("X-Amz-Expires"))
+        assertEquals("host", reconnectRequest.url.queryParameter("X-Amz-SignedHeaders"))
+        assertEquals("AWS4-HMAC-SHA256", reconnectRequest.url.queryParameter("X-Amz-Algorithm"))
     }
 
     @Test
