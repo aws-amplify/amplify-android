@@ -24,6 +24,8 @@ import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions;
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions;
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions;
 import com.amplifyframework.auth.options.AuthFetchSessionOptions;
+import com.amplifyframework.auth.options.AuthMagicLinkOptions;
+import com.amplifyframework.auth.options.AuthOTPOptions;
 import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions;
 import com.amplifyframework.auth.options.AuthResendUserAttributeConfirmationCodeOptions;
 import com.amplifyframework.auth.options.AuthResetPasswordOptions;
@@ -95,6 +97,94 @@ public interface AuthCategoryBehavior {
             @NonNull String confirmationCode,
             @NonNull Consumer<AuthSignUpResult> onSuccess,
             @NonNull Consumer<AuthException> onError);
+
+    /**
+     * TBD documentation.
+     * @param username TODO
+     * @param flow TODO
+     * @param redirectURL TODO
+     * @param options TODO
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     * */
+    void signInWithMagicLink(
+            @NonNull String username,
+            @NonNull AuthPasswordlessFlow flow,
+            @NonNull String redirectURL,
+            @NonNull AuthMagicLinkOptions options,
+            @NonNull Consumer<AuthSignInResult> onSuccess,
+            @NonNull Consumer<AuthException> onError
+    );
+
+    /**
+     * TBD documentation.
+     * @param challengeResponse TODO
+     * @param options TODO
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     * */
+    void confirmSignInWithMagicLink(
+            @NonNull String challengeResponse,
+            @NonNull AuthConfirmSignInOptions options,
+            @NonNull Consumer<AuthSignInResult> onSuccess,
+            @NonNull Consumer<AuthException> onError
+    );
+
+    /**
+     * TBD documentation.
+     * @param challengeResponse TODO
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     * */
+    void confirmSignInWithMagicLink(
+            @NonNull String challengeResponse,
+            @NonNull Consumer<AuthSignInResult> onSuccess,
+            @NonNull Consumer<AuthException> onError
+    );
+
+    /**
+     * TBD documentation.
+     * @param username TODO
+     * @param flow TODO
+     * @param destination TODO
+     * @param options TODO
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     * */
+    void signInWithOTP(
+            @NonNull String username,
+            @NonNull AuthPasswordlessFlow flow,
+            @NonNull AuthPasswordlessDeliveryDestination destination,
+            @NonNull AuthOTPOptions options,
+            @NonNull Consumer<AuthSignInResult> onSuccess,
+            @NonNull Consumer<AuthException> onError
+    );
+
+    /**
+     * TBD documentation.
+     * @param challengeResponse TODO
+     * @param options TODO
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     * */
+    void confirmSignInWithOTP(
+            @NonNull String challengeResponse,
+            @NonNull AuthConfirmSignInOptions options,
+            @NonNull Consumer<AuthSignInResult> onSuccess,
+            @NonNull Consumer<AuthException> onError
+    );
+
+    /**
+     * TBD documentation.
+     * @param challengeResponse TODO
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     * */
+    void confirmSignInWithOTP(
+            @NonNull String challengeResponse,
+            @NonNull Consumer<AuthSignInResult> onSuccess,
+            @NonNull Consumer<AuthException> onError
+    );
 
     /**
      * If the user's code expires or they just missed it, this method can

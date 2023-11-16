@@ -22,6 +22,8 @@ import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
 import com.amplifyframework.auth.options.AuthFetchSessionOptions
+import com.amplifyframework.auth.options.AuthMagicLinkOptions
+import com.amplifyframework.auth.options.AuthOTPOptions
 import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions
 import com.amplifyframework.auth.options.AuthResendUserAttributeConfirmationCodeOptions
 import com.amplifyframework.auth.options.AuthResetPasswordOptions
@@ -80,6 +82,51 @@ class AuthPluginTest {
             onSuccess: Consumer<AuthSignUpResult>,
             onError: Consumer<AuthException>
         ) {}
+
+        override fun signInWithMagicLink(
+            username: String,
+            flow: AuthPasswordlessFlow,
+            redirectURL: String,
+            options: AuthMagicLinkOptions,
+            onSuccess: Consumer<AuthSignInResult>,
+            onError: Consumer<AuthException>
+        ) {}
+
+        override fun confirmSignInWithMagicLink(
+            challengeResponse: String,
+            options: AuthConfirmSignInOptions,
+            onSuccess: Consumer<AuthSignInResult>,
+            onError: Consumer<AuthException>
+        ) {}
+
+        override fun signInWithOTP(
+            username: String,
+            flow: AuthPasswordlessFlow,
+            destination: AuthPasswordlessDeliveryDestination,
+            options: AuthOTPOptions,
+            onSuccess: Consumer<AuthSignInResult>,
+            onError: Consumer<AuthException>
+        ) {}
+
+        override fun confirmSignInWithOTP(
+            challengeResponse: String,
+            options: AuthConfirmSignInOptions,
+            onSuccess: Consumer<AuthSignInResult>,
+            onError: Consumer<AuthException>
+        ) {}
+
+        override fun confirmSignInWithOTP(
+            challengeResponse: String,
+            onSuccess: Consumer<AuthSignInResult>,
+            onError: Consumer<AuthException>
+        ) {}
+
+        override fun confirmSignInWithMagicLink(
+            challengeResponse: String,
+            onSuccess: Consumer<AuthSignInResult>,
+            onError: Consumer<AuthException>
+        ) {}
+
         override fun resendSignUpCode(
             username: String,
             options: AuthResendSignUpCodeOptions,

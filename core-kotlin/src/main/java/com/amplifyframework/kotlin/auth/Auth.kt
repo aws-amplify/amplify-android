@@ -20,6 +20,8 @@ import android.content.Intent
 import com.amplifyframework.auth.AuthCodeDeliveryDetails
 import com.amplifyframework.auth.AuthDevice
 import com.amplifyframework.auth.AuthException
+import com.amplifyframework.auth.AuthPasswordlessDeliveryDestination
+import com.amplifyframework.auth.AuthPasswordlessFlow
 import com.amplifyframework.auth.AuthProvider
 import com.amplifyframework.auth.AuthSession
 import com.amplifyframework.auth.AuthUser
@@ -30,6 +32,8 @@ import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
 import com.amplifyframework.auth.options.AuthFetchSessionOptions
+import com.amplifyframework.auth.options.AuthMagicLinkOptions
+import com.amplifyframework.auth.options.AuthOTPOptions
 import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions
 import com.amplifyframework.auth.options.AuthResendUserAttributeConfirmationCodeOptions
 import com.amplifyframework.auth.options.AuthResetPasswordOptions
@@ -139,6 +143,52 @@ interface Auth {
     suspend fun confirmSignIn(
         challengeResponse: String,
         options: AuthConfirmSignInOptions = AuthConfirmSignInOptions.defaults()
+    ):
+        AuthSignInResult
+
+    /**
+     * Basic authentication to the app with a username and password or, if custom auth is setup,
+     * you can send null for those and the necessary authentication details in the options object.
+     * @param username A login identifier e.g. `tony44`; or an email/phone number, depending on configuration.
+     *                 May be omitted or null when using custom auth.
+     * @param flow User's password for normal sign-up. May be omitted or null if custom auth or
+     *                 password-less configurations are in use
+     * @param redirectURL The redirectURL used for passwordless flow
+     *
+     * @param options Advanced options such as a map of auth information for custom auth,
+     *                If not provided, default options will be used
+     * @return A sign-in result. The nextStep field may indicate additional actions to be taken
+     *         to confirm the sign-in, or it may show isSignInComplete as true, in which case
+     *         an authenticated session is available
+     */
+    @Throws(AuthException::class)
+    suspend fun signInWithMagicLink(
+        username: String? = null,
+        flow: AuthPasswordlessFlow,
+        redirectURL: String,
+        options: AuthMagicLinkOptions = AuthMagicLinkOptions.defaults()
+    ):
+        AuthSignInResult
+
+    /**
+     * Basic authentication to the app with a username and password or, if custom auth is setup,
+     * you can send null for those and the necessary authentication details in the options object.
+     * @param username A login identifier e.g. `tony44`; or an email/phone number, depending on configuration.
+     *                 May be omitted or null when using custom auth.
+     * @param password User's password for normal sign-up. May be omitted or null if custom auth or
+     *                 password-less configurations are in use
+     * @param options Advanced options such as a map of auth information for custom auth,
+     *                If not provided, default options will be used
+     * @return A sign-in result. The nextStep field may indicate additional actions to be taken
+     *         to confirm the sign-in, or it may show isSignInComplete as true, in which case
+     *         an authenticated session is available
+     */
+    @Throws(AuthException::class)
+    suspend fun signInWithOTP(
+        username: String? = null,
+        flow: AuthPasswordlessFlow,
+        destination: AuthPasswordlessDeliveryDestination,
+        options: AuthOTPOptions = AuthOTPOptions.defaults()
     ):
         AuthSignInResult
 

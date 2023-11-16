@@ -25,6 +25,8 @@ import com.amplifyframework.auth.AWSCognitoAuthMetadataType
 import com.amplifyframework.auth.AuthCodeDeliveryDetails
 import com.amplifyframework.auth.AuthDevice
 import com.amplifyframework.auth.AuthException
+import com.amplifyframework.auth.AuthPasswordlessDeliveryDestination
+import com.amplifyframework.auth.AuthPasswordlessFlow
 import com.amplifyframework.auth.AuthPlugin
 import com.amplifyframework.auth.AuthProvider
 import com.amplifyframework.auth.AuthSession
@@ -42,6 +44,8 @@ import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
 import com.amplifyframework.auth.options.AuthFetchSessionOptions
+import com.amplifyframework.auth.options.AuthMagicLinkOptions
+import com.amplifyframework.auth.options.AuthOTPOptions
 import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions
 import com.amplifyframework.auth.options.AuthResendUserAttributeConfirmationCodeOptions
 import com.amplifyframework.auth.options.AuthResetPasswordOptions
@@ -200,6 +204,62 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
                 }
             }
         )
+    }
+
+    override fun signInWithMagicLink(
+        username: String,
+        flow: AuthPasswordlessFlow,
+        redirectURL: String,
+        options: AuthMagicLinkOptions,
+        onSuccess: Consumer<AuthSignInResult>,
+        onError: Consumer<AuthException>
+    ) {
+        TODO("Not yet implemented")
+    }
+
+    override fun confirmSignInWithMagicLink(
+        challengeResponse: String,
+        options: AuthConfirmSignInOptions,
+        onSuccess: Consumer<AuthSignInResult>,
+        onError: Consumer<AuthException>
+    ) {
+        TODO("Not yet implemented")
+    }
+
+    override fun confirmSignInWithMagicLink(
+        challengeResponse: String,
+        onSuccess: Consumer<AuthSignInResult>,
+        onError: Consumer<AuthException>
+    ) {
+        TODO("Not yet implemented")
+    }
+
+    override fun signInWithOTP(
+        username: String,
+        flow: AuthPasswordlessFlow,
+        destination: AuthPasswordlessDeliveryDestination,
+        options: AuthOTPOptions,
+        onSuccess: Consumer<AuthSignInResult>,
+        onError: Consumer<AuthException>
+    ) {
+        TODO("Not yet implemented")
+    }
+
+    override fun confirmSignInWithOTP(
+        challengeResponse: String,
+        options: AuthConfirmSignInOptions,
+        onSuccess: Consumer<AuthSignInResult>,
+        onError: Consumer<AuthException>
+    ) {
+        TODO("Not yet implemented")
+    }
+
+    override fun confirmSignInWithOTP(
+        challengeResponse: String,
+        onSuccess: Consumer<AuthSignInResult>,
+        onError: Consumer<AuthException>
+    ) {
+        TODO("Not yet implemented")
     }
 
     override fun confirmSignUp(

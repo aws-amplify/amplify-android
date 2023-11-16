@@ -24,6 +24,8 @@ import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions;
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions;
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions;
 import com.amplifyframework.auth.options.AuthFetchSessionOptions;
+import com.amplifyframework.auth.options.AuthMagicLinkOptions;
+import com.amplifyframework.auth.options.AuthOTPOptions;
 import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions;
 import com.amplifyframework.auth.options.AuthResendUserAttributeConfirmationCodeOptions;
 import com.amplifyframework.auth.options.AuthResetPasswordOptions;
@@ -90,6 +92,68 @@ public final class AuthCategory extends Category<AuthPlugin<?>> implements AuthC
             @NonNull Consumer<AuthException> onError
     ) {
         getSelectedPlugin().confirmSignUp(username, confirmationCode, onSuccess, onError);
+    }
+
+    @Override
+    public void signInWithMagicLink(@NonNull String username,
+                                    @NonNull AuthPasswordlessFlow flow,
+                                    @NonNull String redirectURL,
+                                    @NonNull AuthMagicLinkOptions options,
+                                    @NonNull Consumer<AuthSignInResult> onSuccess,
+                                    @NonNull Consumer<AuthException> onError) {
+        getSelectedPlugin().signInWithMagicLink(
+                username, flow, redirectURL, options, onSuccess, onError
+        );
+    }
+
+    @Override
+    public void confirmSignInWithMagicLink(@NonNull String challengeResponse,
+                                       @NonNull AuthConfirmSignInOptions options,
+                                       @NonNull Consumer<AuthSignInResult> onSuccess,
+                                       @NonNull Consumer<AuthException> onError) {
+        getSelectedPlugin().confirmSignInWithMagicLink(
+                challengeResponse, options, onSuccess, onError
+        );
+    }
+
+    @Override
+    public void signInWithOTP(@NonNull String username,
+                              @NonNull AuthPasswordlessFlow flow,
+                              @NonNull AuthPasswordlessDeliveryDestination destination,
+                              @NonNull AuthOTPOptions options,
+                              @NonNull Consumer<AuthSignInResult> onSuccess,
+                              @NonNull Consumer<AuthException> onError) {
+        getSelectedPlugin().signInWithOTP(
+                username, flow, destination, options, onSuccess, onError
+        );
+    }
+
+    @Override
+    public void confirmSignInWithOTP(@NonNull String challengeResponse,
+                                 @NonNull AuthConfirmSignInOptions options,
+                                 @NonNull Consumer<AuthSignInResult> onSuccess,
+                                 @NonNull Consumer<AuthException> onError) {
+        getSelectedPlugin().confirmSignInWithOTP(
+                challengeResponse, options, onSuccess, onError
+        );
+    }
+
+    @Override
+    public void confirmSignInWithOTP(@NonNull String challengeResponse,
+                                     @NonNull Consumer<AuthSignInResult> onSuccess,
+                                     @NonNull Consumer<AuthException> onError) {
+        getSelectedPlugin().confirmSignInWithOTP(
+                challengeResponse, onSuccess, onError
+        );
+    }
+
+    @Override
+    public void confirmSignInWithMagicLink(@NonNull String challengeResponse,
+                                           @NonNull Consumer<AuthSignInResult> onSuccess,
+                                           @NonNull Consumer<AuthException> onError) {
+        getSelectedPlugin().confirmSignInWithMagicLink(
+                challengeResponse, onSuccess, onError
+        );
     }
 
     @Override
