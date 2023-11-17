@@ -17,7 +17,6 @@ package com.amplifyframework.rx;
 
 import android.app.Activity;
 import android.content.Intent;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -153,6 +152,8 @@ public interface RxAuthCategoryBehavior {
      *             AuthPasswordlessFlow.SIGNIN for signing in.
      * @param redirectURL This is the custom URL that your app can recognize and open from an external source
      * @param options Advanced options such as a map of auth information for custom auth
+     * @return An Rx {@link Single} which emits {@link AuthSignInResult} on success,
+     * {@link AuthException} on failure
      * */
     Single<AuthSignInResult> signInWithMagicLink(
             @NonNull String username,
@@ -166,6 +167,8 @@ public interface RxAuthCategoryBehavior {
      * activate their account.
      * @param challengeResponse challenge response that is sent to specified source
      * @param options Advanced options such as a map of auth information for custom auth
+     * @return An Rx {@link Single} which emits {@link AuthSignInResult} on success,
+     * {@link AuthException} on failure
      * */
     Single<AuthSignInResult> confirmSignInWithMagicLink(
             @NonNull String challengeResponse,
@@ -181,6 +184,8 @@ public interface RxAuthCategoryBehavior {
      *             AuthPasswordlessFlow.SIGNIN for signing in.
      * @param destination AuthPasswordlessDeliveryDestination where OTP is sent
      * @param options Advanced options such as a map of auth information for OTP authentication
+     * @return An Rx {@link Single} which emits {@link AuthSignInResult} on success,
+     * {@link AuthException} on failure
      * */
     Single<AuthSignInResult> signInWithOTP(
             @NonNull String username,
@@ -194,6 +199,8 @@ public interface RxAuthCategoryBehavior {
      * their account.
      * @param challengeResponse challenge response that is sent to specified source
      * @param options Advanced options such as a map of auth information for OTP authentication
+     * @return An Rx {@link Single} which emits {@link AuthSignInResult} on success,
+     * {@link AuthException} on failure
      * */
     Single<AuthSignInResult> confirmSignInWithOTP(
             @NonNull String challengeResponse,
