@@ -24,8 +24,8 @@ import androidx.annotation.Nullable;
  */
 public abstract class AuthOTPOptions {
     /**
-     * Use the default conirm sign-in options.
-     * @return Default confirm sign-in options.
+     * Use the default auth otp options.
+     * @return Default auth otp options.
      */
     public static DefaultAuthOTPOptions defaults() {
         return new DefaultAuthOTPOptions();
@@ -43,8 +43,8 @@ public abstract class AuthOTPOptions {
         public abstract T getThis();
 
         /**
-         * Build an instance of AuthConfirmSignInOptions (or one of its subclasses).
-         * @return an instance of AuthConfirmSignInOptions (or one of its subclasses)
+         * Build an instance of AuthOTPOptions (or one of its subclasses).
+         * @return an instance of AuthOTPOptions (or one of its subclasses)
          */
         @NonNull
         public abstract AuthOTPOptions build();
@@ -52,7 +52,7 @@ public abstract class AuthOTPOptions {
 
     /**
      * Default sign-in options. This works like a sentinel, to be used instead of "null".
-     * The only way to create this is by calling {@link AuthConfirmSignInOptions#defaults()}.
+     * The only way to create this is by calling {@link AuthOTPOptions#defaults()}.
      */
     public static final class DefaultAuthOTPOptions extends AuthOTPOptions {
         private DefaultAuthOTPOptions() {}

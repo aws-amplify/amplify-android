@@ -24,8 +24,8 @@ import androidx.annotation.Nullable;
  */
 public abstract class AuthMagicLinkOptions {
     /**
-     * Use the default conirm sign-in options.
-     * @return Default confirm sign-in options.
+     * Use the default sign-in options.
+     * @return Default sign-in options.
      */
     public static DefaultAuthMagicLinkOptions defaults() {
         return new DefaultAuthMagicLinkOptions();
@@ -43,8 +43,8 @@ public abstract class AuthMagicLinkOptions {
         public abstract T getThis();
 
         /**
-         * Build an instance of AuthConfirmSignInOptions (or one of its subclasses).
-         * @return an instance of AuthConfirmSignInOptions (or one of its subclasses)
+         * Build an instance of AuthMagicLinkOptions (or one of its subclasses).
+         * @return an instance of AuthMagicLinkOptions (or one of its subclasses)
          */
         @NonNull
         public abstract AuthMagicLinkOptions build();
