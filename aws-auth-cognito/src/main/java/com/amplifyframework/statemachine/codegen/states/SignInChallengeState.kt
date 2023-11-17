@@ -60,7 +60,10 @@ internal sealed class SignInChallengeState : State {
                 is WaitingForAnswer -> when (challengeEvent) {
                     is SignInChallengeEvent.EventType.VerifyChallengeAnswer -> {
                         val action = challengeActions.verifyChallengeAuthAction(
-                            challengeEvent.answer, challengeEvent.metadata, oldState.challenge
+                            challengeEvent.answer,
+                            challengeEvent.metadata,
+                            challengeEvent.userAttributes,
+                            oldState.challenge
                         )
                         StateResolution(Verifying(oldState.challenge.challengeName), listOf(action))
                     }
@@ -78,7 +81,10 @@ internal sealed class SignInChallengeState : State {
                     }
                     is SignInChallengeEvent.EventType.RetryVerifyChallengeAnswer -> {
                         val action = challengeActions.verifyChallengeAuthAction(
-                            challengeEvent.answer, challengeEvent.metadata, challengeEvent.authChallenge
+                            challengeEvent.answer,
+                            challengeEvent.metadata,
+                            challengeEvent.userAttributes,
+                            challengeEvent.authChallenge,
                         )
                         StateResolution(Verifying(challengeEvent.authChallenge.challengeName), listOf(action))
                     }
@@ -92,7 +98,10 @@ internal sealed class SignInChallengeState : State {
                     when (challengeEvent) {
                         is SignInChallengeEvent.EventType.VerifyChallengeAnswer -> {
                             val action = challengeActions.verifyChallengeAuthAction(
-                                challengeEvent.answer, challengeEvent.metadata, oldState.challenge
+                                challengeEvent.answer,
+                                challengeEvent.metadata,
+                                challengeEvent.userAttributes,
+                                oldState.challenge,
                             )
                             StateResolution(Verifying(oldState.challenge.challengeName), listOf(action))
                         }

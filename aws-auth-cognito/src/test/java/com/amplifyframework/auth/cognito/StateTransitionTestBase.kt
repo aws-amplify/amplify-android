@@ -329,8 +329,9 @@ open class StateTransitionTestBase {
             mockSignInChallengeActions.verifyChallengeAuthAction(
                 MockitoHelper.anyObject(),
                 MockitoHelper.anyObject(),
-                MockitoHelper.anyObject()
-            )
+                MockitoHelper.anyObject(),
+                MockitoHelper.anyObject(),
+                )
         )
             .thenReturn(
                 Action { dispatcher, _ ->
