@@ -330,8 +330,8 @@ open class StateTransitionTestBase {
                 MockitoHelper.anyObject(),
                 MockitoHelper.anyObject(),
                 MockitoHelper.anyObject(),
-                MockitoHelper.anyObject(),
-                )
+                MockitoHelper.anyObject()
+            )
         )
             .thenReturn(
                 Action { dispatcher, _ ->
