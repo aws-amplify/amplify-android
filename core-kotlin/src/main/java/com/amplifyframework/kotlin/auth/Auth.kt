@@ -147,20 +147,15 @@ interface Auth {
         AuthSignInResult
 
     /**
-     * Basic authentication to the app with a username and password or, if custom auth is setup,
-     * you can send null for those and the necessary authentication details in the options object.
-     * @param username A login identifier e.g. `tony44`; or an email/phone number, depending on configuration.
-     *                 May be omitted or null when using custom auth.
-     * @param flow User's password for normal sign-up. May be omitted or null if custom auth or
-     *                 password-less configurations are in use
-     * @param redirectURL The redirectURL used for passwordless flow
-     *
-     * @param options Advanced options such as a map of auth information for custom auth,
-     *                If not provided, default options will be used
-     * @return A sign-in result. The nextStep field may indicate additional actions to be taken
-     *         to confirm the sign-in, or it may show isSignInComplete as true, in which case
-     *         an authenticated session is available
-     */
+     * Authentication using the magiclink passwordless flow. This method can be used for both Signup or Signin.
+     * Note: This method will signin the user after signing up if AuthPasswordlessFlow.SIGNUP_AND_SIGNIN is used.
+     * @param username A login identifier e.g. `superdog22`; or an email/phone number, depending on configuration
+     * @param flow Specification on if the flow is going to sign up and signin vs signin.
+     *             AuthPasswordlessFlow.SIGNUP_AND_SIGNIN for sign up and sign in or
+     *             AuthPasswordlessFlow.SIGNIN for signing in.
+     * @param redirectURL This is the custom URL that your app can recognize and open from an external source
+     * @param options Advanced options such as a map of auth information for custom auth
+     * */
     @Throws(AuthException::class)
     suspend fun signInWithMagicLink(
         username: String? = null,
@@ -171,18 +166,15 @@ interface Auth {
         AuthSignInResult
 
     /**
-     * Basic authentication to the app with a username and password or, if custom auth is setup,
-     * you can send null for those and the necessary authentication details in the options object.
-     * @param username A login identifier e.g. `tony44`; or an email/phone number, depending on configuration.
-     *                 May be omitted or null when using custom auth.
-     * @param password User's password for normal sign-up. May be omitted or null if custom auth or
-     *                 password-less configurations are in use
-     * @param options Advanced options such as a map of auth information for custom auth,
-     *                If not provided, default options will be used
-     * @return A sign-in result. The nextStep field may indicate additional actions to be taken
-     *         to confirm the sign-in, or it may show isSignInComplete as true, in which case
-     *         an authenticated session is available
-     */
+     * Authentication using the OTP passwordless flow. This method can be used for both Signup or Signin.
+     * Note: This method will signin the user after signing up if AuthPasswordlessFlow.SIGNUP_AND_SIGNIN is used.
+     * @param username A login identifier e.g. `superdog22`; or an email/phone number, depending on configuration
+     * @param flow Specification on if the flow is going to sign up and signin vs signin
+     *             AuthPasswordlessFlow.SIGNUP_AND_SIGNIN for sign up and sign in or
+     *             AuthPasswordlessFlow.SIGNIN for signing in.
+     * @param destination AuthPasswordlessDeliveryDestination where OTP is sent
+     * @param options Advanced options such as a map of auth information for OTP authentication
+     * */
     @Throws(AuthException::class)
     suspend fun signInWithOTP(
         username: String? = null,
