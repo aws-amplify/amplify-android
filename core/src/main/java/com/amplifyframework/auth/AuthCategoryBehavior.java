@@ -99,11 +99,14 @@ public interface AuthCategoryBehavior {
             @NonNull Consumer<AuthException> onError);
 
     /**
-     * TBD documentation.
-     * @param username TODO
-     * @param flow TODO
-     * @param redirectURL TODO
-     * @param options TODO
+     * Authentication using the magiclink passwordless flow. This method can be used for both Signup or Signin.
+     * Note: This method will signin the user after signing up if AuthPasswordlessFlow.SIGNUP_AND_SIGNIN is used.
+     * @param username A login identifier e.g. `superdog22`; or an email/phone number, depending on configuration
+     * @param flow Specification on if the flow is going to sign up and signin vs signin.
+     *             AuthPasswordlessFlow.SIGNUP_AND_SIGNIN for sign up and sign in or
+     *             AuthPasswordlessFlow.SIGNIN for signing in.
+     * @param redirectURL This is the custom URL that your app can recognize and open from an external source
+     * @param options Advanced options such as a map of auth information for custom auth
      * @param onSuccess Success callback
      * @param onError Error callback
      * */
@@ -117,9 +120,10 @@ public interface AuthCategoryBehavior {
     );
 
     /**
-     * TBD documentation.
-     * @param challengeResponse TODO
-     * @param options TODO
+     * This will allow the user to enter the confirmation code they received to
+     * activate their account.
+     * @param challengeResponse challenge response that is sent to specified source
+     * @param options Advanced options such as a map of auth information for custom auth
      * @param onSuccess Success callback
      * @param onError Error callback
      * */
@@ -131,8 +135,9 @@ public interface AuthCategoryBehavior {
     );
 
     /**
-     * TBD documentation.
-     * @param challengeResponse TODO
+     * This will allow the user to enter the confirmation code they received to
+     * activate their account.
+     * @param challengeResponse challenge response that is sent to specified source
      * @param onSuccess Success callback
      * @param onError Error callback
      * */
@@ -143,11 +148,14 @@ public interface AuthCategoryBehavior {
     );
 
     /**
-     * TBD documentation.
-     * @param username TODO
-     * @param flow TODO
-     * @param destination TODO
-     * @param options TODO
+     * Authentication using the OTP passwordless flow. This method can be used for both Signup or Signin.
+     * Note: This method will signin the user after signing up if AuthPasswordlessFlow.SIGNUP_AND_SIGNIN is used.
+     * @param username A login identifier e.g. `superdog22`; or an email/phone number, depending on configuration
+     * @param flow Specification on if the flow is going to sign up and signin vs signin
+     *             AuthPasswordlessFlow.SIGNUP_AND_SIGNIN for sign up and sign in or
+     *             AuthPasswordlessFlow.SIGNIN for signing in.
+     * @param destination AuthPasswordlessDeliveryDestination where OTP is sent
+     * @param options Advanced options such as a map of auth information for OTP authentication
      * @param onSuccess Success callback
      * @param onError Error callback
      * */
@@ -161,9 +169,10 @@ public interface AuthCategoryBehavior {
     );
 
     /**
-     * TBD documentation.
-     * @param challengeResponse TODO
-     * @param options TODO
+     * This will allow the user to enter the confirmation code they received to activate
+     * their account.
+     * @param challengeResponse challenge response that is sent to specified source
+     * @param options Advanced options such as a map of auth information for OTP authentication
      * @param onSuccess Success callback
      * @param onError Error callback
      * */
@@ -175,8 +184,9 @@ public interface AuthCategoryBehavior {
     );
 
     /**
-     * TBD documentation.
-     * @param challengeResponse TODO
+     * This will allow the user to enter the confirmation code they received to
+     * activate their account.
+     * @param challengeResponse challenge response that is sent to specified source
      * @param onSuccess Success callback
      * @param onError Error callback
      * */

@@ -16,7 +16,7 @@
 package com.amplifyframework.auth;
 
 /**
- * AuthPasswordlessFlow to differentiate between signup and signin.
+ * AuthPasswordlessFlow to differentiate between signup and signin or signin.
  */
 public enum AuthPasswordlessFlow {
 
