@@ -19,8 +19,9 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 /**
- * The shared options among all Auth plugins.
- * Note: This is currently empty but exists here to support common sign in options in the future.
+ /**
+ * The shared options for Passwordless magiclink among all Auth plugins.
+ * Note: This is currently empty but exists here to support passwordless magiclink sign in options in the future.
  */
 public abstract class AuthMagicLinkOptions {
     /**

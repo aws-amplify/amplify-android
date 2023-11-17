@@ -100,11 +100,11 @@ public interface AuthCategoryBehavior {
 
     /**
      * Authentication using the magiclink passwordless flow. This method can be used for both Signup or Signin.
-     * Note: This method will signin the user after signing up if AuthPasswordlessFlow.SIGNUP_AND_SIGNIN is used.
+     * Note: This method will signin the user after signing up if AuthPasswordlessFlow.SIGNUP_AND_SIGN_IN is used.
      * @param username A login identifier e.g. `superdog22`; or an email/phone number, depending on configuration
      * @param flow Specification on if the flow is going to sign up and signin vs signin.
-     *             AuthPasswordlessFlow.SIGNUP_AND_SIGNIN for sign up and sign in or
-     *             AuthPasswordlessFlow.SIGNIN for signing in.
+     *             AuthPasswordlessFlow.SIGNUP_AND_SIGN_IN for sign up and sign in or
+     *             AuthPasswordlessFlow.SIGN_IN for signing in.
      * @param redirectURL This is the custom URL that your app can recognize and open from an external source
      * @param options Advanced options such as a map of auth information for custom auth
      * @param onSuccess Success callback
@@ -149,11 +149,11 @@ public interface AuthCategoryBehavior {
 
     /**
      * Authentication using the OTP passwordless flow. This method can be used for both Signup or Signin.
-     * Note: This method will signin the user after signing up if AuthPasswordlessFlow.SIGNUP_AND_SIGNIN is used.
+     * Note: This method will signin the user after signing up if AuthPasswordlessFlow.SIGNUP_AND_SIGN_IN is used.
      * @param username A login identifier e.g. `superdog22`; or an email/phone number, depending on configuration
      * @param flow Specification on if the flow is going to sign up and signin vs signin
-     *             AuthPasswordlessFlow.SIGNUP_AND_SIGNIN for sign up and sign in or
-     *             AuthPasswordlessFlow.SIGNIN for signing in.
+     *             AuthPasswordlessFlow.SIGNUP_AND_SIGN_IN for sign up and sign in or
+     *             AuthPasswordlessFlow.SIGN_IN for signing in.
      * @param destination AuthPasswordlessDeliveryDestination where OTP is sent
      * @param options Advanced options such as a map of auth information for OTP authentication
      * @param onSuccess Success callback

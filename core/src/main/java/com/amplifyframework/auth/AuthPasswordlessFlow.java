@@ -23,10 +23,10 @@ public enum AuthPasswordlessFlow {
     /**
      * Sign up and Sign in.
      */
-    SIGNUP_AND_SIGNIN,
+    SIGNUP_AND_SIGN_IN,
 
     /**
      * Sign In only.
      */
-    SIGNIN
+    SIGN_IN
 }

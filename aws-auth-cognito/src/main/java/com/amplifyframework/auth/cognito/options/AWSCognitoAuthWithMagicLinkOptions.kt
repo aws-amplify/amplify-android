@@ -23,7 +23,7 @@ import com.amplifyframework.auth.options.AuthMagicLinkOptions
 data class AWSCognitoAuthWithMagicLinkOptions
 /**
  * Advanced options for signing up using Passwordless.
- * @param userMetadata Optional user attributes to be sent to the service such as information about the user
+ * @param userMetadata user attributes to be sent to the service such as information about the user
  * @param clientMetadata Additional custom attributes to be sent to the service such as information about the client
  */
 internal constructor(
@@ -33,8 +33,8 @@ internal constructor(
      */
     val clientMetadata: Map<String, String>?,
     /**
-     * Get optional user attributes to be sent to the service such as information about the user
-     * @return optional user attributes to be sent to the service such as information about the user
+     * Get user attributes to be sent to the service such as information about the user
+     * @return user attributes to be sent to the service such as information about the user
      */
     val userMetadata: Map<String, String>?
 ) : AuthMagicLinkOptions() {
@@ -74,8 +74,8 @@ internal constructor(
         fun clientMetadata(clientMetadata: Map<String, String>) = apply { this.clientMetadata = clientMetadata }
 
         /**
-         * A map of optional user attributes to be sent to the service such as information about the user.
-         * @param userMetadata A map of optional user attributes to be sent to the service such as information
+         * A map of user attributes to be sent to the service such as information about the user.
+         * @param userMetadata A map of user attributes to be sent to the service such as information
          * about the user
          * @return the instance of the builder.
          */

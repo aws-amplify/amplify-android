@@ -24,7 +24,7 @@ data class AWSCognitoAuthWithOTPOptions
 /**
  * Advanced options for signing up using Passwordless.
  * @param clientMetadata Additional custom attributes to be sent to the service such as information about the client
- * @param userMetadata Optional user attributes to be sent to the service such as information about the user
+ * @param userMetadata User attributes to be sent to the service such as information about the user
  */
 internal constructor(
 
@@ -34,8 +34,8 @@ internal constructor(
      */
     val clientMetadata: Map<String, String>?,
     /**
-     * Get optional user attributes to be sent to the service such as information about the user
-     * @return a map of optional user attributes to be sent to the service such as information about the user
+     * Get user attributes to be sent to the service such as information about the user
+     * @return a map of user attributes to be sent to the service such as information about the user
      */
     val userMetadata: Map<String, String>?
 ) : AuthOTPOptions() {
@@ -76,8 +76,8 @@ internal constructor(
         fun clientMetadata(clientMetadata: Map<String, String>) = apply { this.clientMetadata = clientMetadata }
 
         /**
-         * A map of optional user attributes to be sent to the service such as information about the user.
-         * @param userMetadata A map of optional user attributes to be sent to the service such as information
+         * A map of user attributes to be sent to the service such as information about the user.
+         * @param userMetadata A map of user attributes to be sent to the service such as information
          * about the user
          * @return the instance of the builder.
          */

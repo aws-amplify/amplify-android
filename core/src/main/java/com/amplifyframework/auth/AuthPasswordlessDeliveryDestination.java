@@ -16,7 +16,7 @@
 package com.amplifyframework.auth;
 
 /**
- * AuthPasswordless delivery destination where we want the confirmationcode to go.
+ * AuthPasswordless delivery destination where we want the confirmation code to go.
  */
 
 public enum AuthPasswordlessDeliveryDestination {
