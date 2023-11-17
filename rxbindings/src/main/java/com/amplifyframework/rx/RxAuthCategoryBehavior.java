@@ -17,6 +17,7 @@ package com.amplifyframework.rx;
 
 import android.app.Activity;
 import android.content.Intent;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -24,6 +25,8 @@ import com.amplifyframework.auth.AuthCategoryBehavior;
 import com.amplifyframework.auth.AuthCodeDeliveryDetails;
 import com.amplifyframework.auth.AuthDevice;
 import com.amplifyframework.auth.AuthException;
+import com.amplifyframework.auth.AuthPasswordlessDeliveryDestination;
+import com.amplifyframework.auth.AuthPasswordlessFlow;
 import com.amplifyframework.auth.AuthProvider;
 import com.amplifyframework.auth.AuthSession;
 import com.amplifyframework.auth.AuthUser;
@@ -34,6 +37,8 @@ import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions;
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions;
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions;
 import com.amplifyframework.auth.options.AuthFetchSessionOptions;
+import com.amplifyframework.auth.options.AuthMagicLinkOptions;
+import com.amplifyframework.auth.options.AuthOTPOptions;
 import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions;
 import com.amplifyframework.auth.options.AuthResendUserAttributeConfirmationCodeOptions;
 import com.amplifyframework.auth.options.AuthResetPasswordOptions;
@@ -137,6 +142,62 @@ public interface RxAuthCategoryBehavior {
             @Nullable String username,
             @Nullable String password,
             @NonNull AuthSignInOptions options
+    );
+
+    /**
+     * Authentication using the magiclink passwordless flow. This method can be used for both Signup or Signin.
+     * Note: This method will signin the user after signing up if AuthPasswordlessFlow.SIGNUP_AND_SIGNIN is used.
+     * @param username A login identifier e.g. `superdog22`; or an email/phone number, depending on configuration
+     * @param flow Specification on if the flow is going to sign up and signin vs signin.
+     *             AuthPasswordlessFlow.SIGNUP_AND_SIGNIN for sign up and sign in or
+     *             AuthPasswordlessFlow.SIGNIN for signing in.
+     * @param redirectURL This is the custom URL that your app can recognize and open from an external source
+     * @param options Advanced options such as a map of auth information for custom auth
+     * */
+    Single<AuthSignInResult> signInWithMagicLink(
+            @NonNull String username,
+            @NonNull AuthPasswordlessFlow flow,
+            @NonNull String redirectURL,
+            @NonNull AuthMagicLinkOptions options
+    );
+
+    /**
+     * This will allow the user to enter the confirmation code they received to
+     * activate their account.
+     * @param challengeResponse challenge response that is sent to specified source
+     * @param options Advanced options such as a map of auth information for custom auth
+     * */
+    Single<AuthSignInResult> confirmSignInWithMagicLink(
+            @NonNull String challengeResponse,
+            @NonNull AuthConfirmSignInOptions options
+    );
+
+    /**
+     * Authentication using the OTP passwordless flow. This method can be used for both Signup or Signin.
+     * Note: This method will signin the user after signing up if AuthPasswordlessFlow.SIGNUP_AND_SIGNIN is used.
+     * @param username A login identifier e.g. `superdog22`; or an email/phone number, depending on configuration
+     * @param flow Specification on if the flow is going to sign up and signin vs signin
+     *             AuthPasswordlessFlow.SIGNUP_AND_SIGNIN for sign up and sign in or
+     *             AuthPasswordlessFlow.SIGNIN for signing in.
+     * @param destination AuthPasswordlessDeliveryDestination where OTP is sent
+     * @param options Advanced options such as a map of auth information for OTP authentication
+     * */
+    Single<AuthSignInResult> signInWithOTP(
+            @NonNull String username,
+            @NonNull AuthPasswordlessFlow flow,
+            @NonNull AuthPasswordlessDeliveryDestination destination,
+            @NonNull AuthOTPOptions options
+    );
+
+    /**
+     * This will allow the user to enter the confirmation code they received to activate
+     * their account.
+     * @param challengeResponse challenge response that is sent to specified source
+     * @param options Advanced options such as a map of auth information for OTP authentication
+     * */
+    Single<AuthSignInResult> confirmSignInWithOTP(
+            @NonNull String challengeResponse,
+            @NonNull AuthConfirmSignInOptions options
     );
 
     /**
