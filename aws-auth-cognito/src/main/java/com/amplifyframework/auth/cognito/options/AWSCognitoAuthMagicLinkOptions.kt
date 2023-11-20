@@ -15,30 +15,29 @@
 
 package com.amplifyframework.auth.cognito.options
 
-import com.amplifyframework.auth.options.AuthOTPOptions
+import com.amplifyframework.auth.options.AuthMagicLinkOptions
 
 /**
- * Cognito extension of passwordless OTP options to add the platform specific fields.
+ * Cognito extension of passwordless Magic Link options to add the platform specific fields.
  */
-data class AWSCognitoAuthWithOTPOptions
+data class AWSCognitoAuthMagicLinkOptions
 /**
  * Advanced options for signing up using Passwordless.
+ * @param userMetadata user attributes to be sent to the service such as information about the user
  * @param clientMetadata Additional custom attributes to be sent to the service such as information about the client
- * @param userMetadata User attributes to be sent to the service such as information about the user
  */
 internal constructor(
-
     /**
-     * Get additional custom attributes to be sent to the service such as information about the client.
+     * Get additional custom attributes to be sent to the service such a Fs information about the client.
      * @return a map of additional custom attributes to be sent to the service such as information about the client
      */
     val clientMetadata: Map<String, String>?,
     /**
      * Get user attributes to be sent to the service such as information about the user
-     * @return a map of user attributes to be sent to the service such as information about the user
+     * @return user attributes to be sent to the service such as information about the user
      */
     val userMetadata: Map<String, String>?
-) : AuthOTPOptions() {
+) : AuthMagicLinkOptions() {
 
     companion object {
         /**
@@ -66,7 +65,6 @@ internal constructor(
         override fun getThis(): CognitoBuilder {
             return this
         }
-
         /**
          * A map of additional custom attributes to be sent to the service such as information about the client.
          * @param clientMetadata A map of additional custom attributes to be sent to the service such as information
@@ -85,8 +83,8 @@ internal constructor(
 
         /**
          * Build the object.
-         * @return a new instance of AWSCognitoAuthOTPOptions.
+         * @return a new instance of AWSCognitoAuthMagicLinkOptions.
          */
-        override fun build() = AWSCognitoAuthWithOTPOptions(clientMetadata, userMetadata)
+        override fun build() = AWSCognitoAuthMagicLinkOptions(clientMetadata, userMetadata)
     }
 }
