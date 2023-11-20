@@ -149,6 +149,22 @@ class KotlinAuthFacade(private val delegate: Delegate = Amplify.Auth) : Auth {
         }
     }
 
+    override suspend fun signInWithMagicLink(
+        username: String,
+        flow: AuthPasswordlessFlow,
+        redirectURL: String
+    ): AuthSignInResult {
+        return suspendCoroutine { continuation ->
+            delegate.signInWithMagicLink(
+                username,
+                flow,
+                redirectURL,
+                { continuation.resume(it) },
+                { continuation.resumeWithException(it) }
+            )
+        }
+    }
+
     override suspend fun confirmSignInWithMagicLink(
         challengeResponse: String,
         options: AuthConfirmSignInOptions
@@ -175,6 +191,22 @@ class KotlinAuthFacade(private val delegate: Delegate = Amplify.Auth) : Auth {
                 flow,
                 destination,
                 options,
+                { continuation.resume(it) },
+                { continuation.resumeWithException(it) }
+            )
+        }
+    }
+
+    override suspend fun signInWithOTP(
+        username: String,
+        flow: AuthPasswordlessFlow,
+        destination: AuthPasswordlessDeliveryDestination
+    ): AuthSignInResult {
+        return suspendCoroutine { continuation ->
+            delegate.signInWithOTP(
+                username,
+                flow,
+                destination,
                 { continuation.resume(it) },
                 { continuation.resumeWithException(it) }
             )

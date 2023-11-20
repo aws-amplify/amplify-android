@@ -107,6 +107,17 @@ public final class AuthCategory extends Category<AuthPlugin<?>> implements AuthC
     }
 
     @Override
+    public void signInWithMagicLink(@NonNull String username,
+                                    @NonNull AuthPasswordlessFlow flow,
+                                    @NonNull String redirectURL,
+                                    @NonNull Consumer<AuthSignInResult> onSuccess,
+                                    @NonNull Consumer<AuthException> onError) {
+        getSelectedPlugin().signInWithMagicLink(
+                username, flow, redirectURL, onSuccess, onError
+        );
+    }
+
+    @Override
     public void confirmSignInWithMagicLink(@NonNull String challengeResponse,
                                        @NonNull AuthConfirmSignInOptions options,
                                        @NonNull Consumer<AuthSignInResult> onSuccess,
@@ -134,6 +145,17 @@ public final class AuthCategory extends Category<AuthPlugin<?>> implements AuthC
                               @NonNull Consumer<AuthException> onError) {
         getSelectedPlugin().signInWithOTP(
                 username, flow, destination, options, onSuccess, onError
+        );
+    }
+
+    @Override
+    public void signInWithOTP(@NonNull String username,
+                              @NonNull AuthPasswordlessFlow flow,
+                              @NonNull AuthPasswordlessDeliveryDestination destination,
+                              @NonNull Consumer<AuthSignInResult> onSuccess,
+                              @NonNull Consumer<AuthException> onError) {
+        getSelectedPlugin().signInWithOTP(
+                username, flow, destination, onSuccess, onError
         );
     }
 

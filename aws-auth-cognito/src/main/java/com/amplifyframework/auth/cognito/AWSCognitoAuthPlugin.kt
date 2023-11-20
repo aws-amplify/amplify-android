@@ -226,6 +226,25 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         )
     }
 
+    override fun signInWithMagicLink(
+        username: String,
+        flow: AuthPasswordlessFlow,
+        redirectURL: String,
+        onSuccess: Consumer<AuthSignInResult>,
+        onError: Consumer<AuthException>
+    ) {
+        queueChannel.trySend(
+            pluginScope.launch(start = CoroutineStart.LAZY) {
+                try {
+                    val result = queueFacade.signInWithMagicLink(username, flow, redirectURL)
+                    onSuccess.accept(result)
+                } catch (e: Exception) {
+                    onError.accept(e.toAuthException())
+                }
+            }
+        )
+    }
+
     override fun confirmSignInWithMagicLink(
         challengeResponse: String,
         options: AuthConfirmSignInOptions,
@@ -273,6 +292,25 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
             pluginScope.launch(start = CoroutineStart.LAZY) {
                 try {
                     val result = queueFacade.signInWithOTP(username, flow, destination, options)
+                    onSuccess.accept(result)
+                } catch (e: Exception) {
+                    onError.accept(e.toAuthException())
+                }
+            }
+        )
+    }
+
+    override fun signInWithOTP(
+        username: String,
+        flow: AuthPasswordlessFlow,
+        destination: AuthPasswordlessDeliveryDestination,
+        onSuccess: Consumer<AuthSignInResult>,
+        onError: Consumer<AuthException>
+    ) {
+        queueChannel.trySend(
+            pluginScope.launch(start = CoroutineStart.LAZY) {
+                try {
+                    val result = queueFacade.signInWithOTP(username, flow, destination)
                     onSuccess.accept(result)
                 } catch (e: Exception) {
                     onError.accept(e.toAuthException())

@@ -92,6 +92,14 @@ class AuthPluginTest {
             onError: Consumer<AuthException>
         ) {}
 
+        override fun signInWithMagicLink(
+            username: String,
+            flow: AuthPasswordlessFlow,
+            redirectURL: String,
+            onSuccess: Consumer<AuthSignInResult>,
+            onError: Consumer<AuthException>
+        ) {}
+
         override fun confirmSignInWithMagicLink(
             challengeResponse: String,
             options: AuthConfirmSignInOptions,
@@ -110,6 +118,14 @@ class AuthPluginTest {
             flow: AuthPasswordlessFlow,
             destination: AuthPasswordlessDeliveryDestination,
             options: AuthOTPOptions,
+            onSuccess: Consumer<AuthSignInResult>,
+            onError: Consumer<AuthException>
+        ) {}
+
+        override fun signInWithOTP(
+            username: String,
+            flow: AuthPasswordlessFlow,
+            destination: AuthPasswordlessDeliveryDestination,
             onSuccess: Consumer<AuthSignInResult>,
             onError: Consumer<AuthException>
         ) {}

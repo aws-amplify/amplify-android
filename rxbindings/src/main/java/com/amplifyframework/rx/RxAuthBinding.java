@@ -126,6 +126,16 @@ final class RxAuthBinding implements RxAuthCategoryBehavior {
     }
 
     @Override
+    public Single<AuthSignInResult> signInWithMagicLink(@NonNull String username,
+                                                        @NonNull AuthPasswordlessFlow flow,
+                                                        @NonNull String redirectURL) {
+        return toSingle((onResult, onError) ->
+                delegate.signInWithMagicLink(
+                        username, flow, redirectURL, onResult, onError)
+        );
+    }
+
+    @Override
     public Single<AuthSignInResult> confirmSignInWithMagicLink(@NonNull String challengeResponse,
                                                                @NonNull
                                                                AuthConfirmSignInOptions options) {
@@ -141,6 +151,15 @@ final class RxAuthBinding implements RxAuthCategoryBehavior {
                                                   @NonNull AuthOTPOptions options) {
         return toSingle((onResult, onError) ->
                 delegate.signInWithOTP(username, flow, destination, options, onResult, onError));
+    }
+
+    @Override
+    public Single<AuthSignInResult> signInWithOTP(@NonNull String username,
+                                                  @NonNull AuthPasswordlessFlow flow,
+                                                  @NonNull AuthPasswordlessDeliveryDestination
+                                                          destination) {
+        return toSingle((onResult, onError) ->
+                delegate.signInWithOTP(username, flow, destination, onResult, onError));
     }
 
     @Override

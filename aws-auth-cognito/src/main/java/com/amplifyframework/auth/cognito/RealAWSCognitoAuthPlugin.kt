@@ -362,6 +362,16 @@ internal class RealAWSCognitoAuthPlugin(
         TODO("Not yet implemented")
     }
 
+    override fun signInWithMagicLink(
+        username: String,
+        flow: AuthPasswordlessFlow,
+        redirectURL: String,
+        onSuccess: Consumer<AuthSignInResult>,
+        onError: Consumer<AuthException>
+    ) {
+        TODO("Not yet implemented")
+    }
+
     override fun confirmSignInWithMagicLink(
         challengeResponse: String,
         options: AuthConfirmSignInOptions,
@@ -384,6 +394,16 @@ internal class RealAWSCognitoAuthPlugin(
         flow: AuthPasswordlessFlow,
         destination: AuthPasswordlessDeliveryDestination,
         options: AuthOTPOptions,
+        onSuccess: Consumer<AuthSignInResult>,
+        onError: Consumer<AuthException>
+    ) {
+        TODO("Not yet implemented")
+    }
+
+    override fun signInWithOTP(
+        username: String,
+        flow: AuthPasswordlessFlow,
+        destination: AuthPasswordlessDeliveryDestination,
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
     ) {

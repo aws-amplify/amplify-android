@@ -163,6 +163,23 @@ public interface RxAuthCategoryBehavior {
     );
 
     /**
+     * Authentication using the magiclink passwordless flow. This method can be used for both Signup or Signin.
+     * Note: This method will signin the user after signing up if AuthPasswordlessFlow.SIGN_UP_AND_SIGN_IN is used.
+     * @param username A login identifier e.g. `superdog22`; or an email/phone number, depending on configuration
+     * @param flow Specification on if the flow is going to sign up and signin vs signin.
+     *             AuthPasswordlessFlow.SIGN_UP_AND_SIGN_IN for sign up and sign in or
+     *             AuthPasswordlessFlow.SIGN_IN for signing in.
+     * @param redirectURL This is the custom URL that your app can recognize and open from an external source
+     * @return An Rx {@link Single} which emits {@link AuthSignInResult} on success,
+     * {@link AuthException} on failure
+     * */
+    Single<AuthSignInResult> signInWithMagicLink(
+            @NonNull String username,
+            @NonNull AuthPasswordlessFlow flow,
+            @NonNull String redirectURL
+    );
+
+    /**
      * This will allow the user to enter the confirmation code they received to
      * activate their account.
      * @param challengeResponse challenge response that is sent to specified source
@@ -192,6 +209,23 @@ public interface RxAuthCategoryBehavior {
             @NonNull AuthPasswordlessFlow flow,
             @NonNull AuthPasswordlessDeliveryDestination destination,
             @NonNull AuthOTPOptions options
+    );
+
+    /**
+     * Authentication using the OTP passwordless flow. This method can be used for both Signup or Signin.
+     * Note: This method will signin the user after signing up if AuthPasswordlessFlow.SIGN_UP_AND_SIGN_IN is used.
+     * @param username A login identifier e.g. `superdog22`; or an email/phone number, depending on configuration
+     * @param flow Specification on if the flow is going to sign up and signin vs signin
+     *             AuthPasswordlessFlow.SIGN_UP_AND_SIGN_IN for sign up and sign in or
+     *             AuthPasswordlessFlow.SIGN_IN for signing in.
+     * @param destination AuthPasswordlessDeliveryDestination where OTP is sent
+     * @return An Rx {@link Single} which emits {@link AuthSignInResult} on success,
+     * {@link AuthException} on failure
+     * */
+    Single<AuthSignInResult> signInWithOTP(
+            @NonNull String username,
+            @NonNull AuthPasswordlessFlow flow,
+            @NonNull AuthPasswordlessDeliveryDestination destination
     );
 
     /**
