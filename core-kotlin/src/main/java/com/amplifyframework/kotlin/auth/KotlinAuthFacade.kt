@@ -132,21 +132,67 @@ class KotlinAuthFacade(private val delegate: Delegate = Amplify.Auth) : Auth {
     }
 
     override suspend fun signInWithMagicLink(
-        username: String?,
+        username: String,
         flow: AuthPasswordlessFlow,
         redirectURL: String,
         options: AuthMagicLinkOptions
     ): AuthSignInResult {
-        TODO("Not yet implemented")
+        return suspendCoroutine { continuation ->
+            delegate.signInWithMagicLink(
+                username,
+                flow,
+                redirectURL,
+                options,
+                { continuation.resume(it) },
+                { continuation.resumeWithException(it) }
+            )
+        }
+    }
+
+    override suspend fun confirmSignInWithMagicLink(
+        confirmationCode: String,
+        options: AuthConfirmSignInOptions
+    ): AuthSignInResult {
+        return suspendCoroutine { continuation ->
+            delegate.confirmSignInWithMagicLink(
+                confirmationCode,
+                options,
+                { continuation.resume(it) },
+                { continuation.resumeWithException(it) }
+            )
+        }
     }
 
     override suspend fun signInWithOTP(
-        username: String?,
+        username: String,
         flow: AuthPasswordlessFlow,
         destination: AuthPasswordlessDeliveryDestination,
         options: AuthOTPOptions
     ): AuthSignInResult {
-        TODO("Not yet implemented")
+        return suspendCoroutine { continuation ->
+            delegate.signInWithOTP(
+                username,
+                flow,
+                destination,
+                options,
+                { continuation.resume(it) },
+                { continuation.resumeWithException(it) }
+            )
+        }
+    }
+
+    override suspend fun confirmSignInWithOTP(
+        confirmationCode: String,
+        options: AuthConfirmSignInOptions
+    ): AuthSignInResult {
+        return suspendCoroutine { continuation ->
+            delegate.confirmSignInWithOTP(
+                confirmationCode,
+                options,
+                { continuation.resume(it) },
+                { continuation.resumeWithException(it) }
+            )
+        }
     }
 
     override suspend fun signInWithSocialWebUI(

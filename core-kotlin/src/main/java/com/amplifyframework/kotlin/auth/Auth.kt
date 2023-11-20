@@ -158,12 +158,24 @@ interface Auth {
      * */
     @Throws(AuthException::class)
     suspend fun signInWithMagicLink(
-        username: String? = null,
+        username: String,
         flow: AuthPasswordlessFlow,
         redirectURL: String,
         options: AuthMagicLinkOptions = AuthMagicLinkOptions.defaults()
     ):
         AuthSignInResult
+
+    @Throws(AuthException::class)
+    suspend fun confirmSignInWithMagicLink(
+        confirmationCode: String,
+        options: AuthConfirmSignInOptions = AuthConfirmSignInOptions.defaults()
+    ): AuthSignInResult
+
+    @Throws(AuthException::class)
+    suspend fun confirmSignInWithOTP(
+        confirmationCode: String,
+        options: AuthConfirmSignInOptions = AuthConfirmSignInOptions.defaults()
+    ): AuthSignInResult
 
     /**
      * Authentication using the OTP passwordless flow. This method can be used for both Signup or Signin.
@@ -177,7 +189,7 @@ interface Auth {
      * */
     @Throws(AuthException::class)
     suspend fun signInWithOTP(
-        username: String? = null,
+        username: String,
         flow: AuthPasswordlessFlow,
         destination: AuthPasswordlessDeliveryDestination,
         options: AuthOTPOptions = AuthOTPOptions.defaults()
