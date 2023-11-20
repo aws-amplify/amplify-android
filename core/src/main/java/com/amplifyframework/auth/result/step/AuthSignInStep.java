@@ -81,7 +81,9 @@ public enum AuthSignInStep {
 
     /**
      * Passwordless is enabled on this account and requires the user to confirm with the OTP code.
-     * Call {@link com.amplifyframework.auth.AuthCategoryBehavior#confirmSignInWithOTP (String, Consumer, Consumer)}
+     * Call {@link
+     * com.amplifyframework.auth.AuthCategoryBehavior#confirmSignInWithOTP(String, Consumer, Consumer)
+     * }
      * with OTP Code.
      */
     CONFIRM_SIGN_IN_WITH_OTP,
@@ -91,7 +93,7 @@ public enum AuthSignInStep {
      * Call {@link
      * com.amplifyframework.auth.AuthCategoryBehavior#confirmSignInWithMagicLink(String, Consumer, Consumer)
      * }
-     * with OTP Code.
+     * with magic link Code.
      */
     CONFIRM_SIGN_IN_WITH_MAGIC_LINK,
 
