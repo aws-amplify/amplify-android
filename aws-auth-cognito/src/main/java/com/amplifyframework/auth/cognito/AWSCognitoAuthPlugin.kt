@@ -214,7 +214,16 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
     ) {
-        TODO("Not yet implemented")
+        queueChannel.trySend(
+            pluginScope.launch(start = CoroutineStart.LAZY) {
+                try {
+                    val result = queueFacade.signInWithMagicLink(username, flow, redirectURL, options)
+                    onSuccess.accept(result)
+                } catch (e: Exception) {
+                    onError.accept(e.toAuthException())
+                }
+            }
+        )
     }
 
     override fun confirmSignInWithMagicLink(
@@ -223,7 +232,16 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
     ) {
-        TODO("Not yet implemented")
+        queueChannel.trySend(
+            pluginScope.launch(start = CoroutineStart.LAZY) {
+                try {
+                    val result = queueFacade.confirmSignInWithMagicLink(challengeResponse, options)
+                    onSuccess.accept(result)
+                } catch (e: Exception) {
+                    onError.accept(e.toAuthException())
+                }
+            }
+        )
     }
 
     override fun confirmSignInWithMagicLink(
@@ -231,7 +249,16 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
     ) {
-        TODO("Not yet implemented")
+        queueChannel.trySend(
+            pluginScope.launch(start = CoroutineStart.LAZY) {
+                try {
+                    val result = queueFacade.confirmSignInWithMagicLink(challengeResponse)
+                    onSuccess.accept(result)
+                } catch (e: Exception) {
+                    onError.accept(e.toAuthException())
+                }
+            }
+        )
     }
 
     override fun signInWithOTP(
@@ -242,7 +269,16 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
     ) {
-        TODO("Not yet implemented")
+        queueChannel.trySend(
+            pluginScope.launch(start = CoroutineStart.LAZY) {
+                try {
+                    val result = queueFacade.signInWithOTP(username, flow, destination, options)
+                    onSuccess.accept(result)
+                } catch (e: Exception) {
+                    onError.accept(e.toAuthException())
+                }
+            }
+        )
     }
 
     override fun confirmSignInWithOTP(
@@ -251,7 +287,16 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
     ) {
-        TODO("Not yet implemented")
+        queueChannel.trySend(
+            pluginScope.launch(start = CoroutineStart.LAZY) {
+                try {
+                    val result = queueFacade.confirmSignInWithOTP(challengeResponse, options)
+                    onSuccess.accept(result)
+                } catch (e: Exception) {
+                    onError.accept(e.toAuthException())
+                }
+            }
+        )
     }
 
     override fun confirmSignInWithOTP(
@@ -259,7 +304,16 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
     ) {
-        TODO("Not yet implemented")
+        queueChannel.trySend(
+            pluginScope.launch(start = CoroutineStart.LAZY) {
+                try {
+                    val result = queueFacade.confirmSignInWithOTP(challengeResponse)
+                    onSuccess.accept(result)
+                } catch (e: Exception) {
+                    onError.accept(e.toAuthException())
+                }
+            }
+        )
     }
 
     override fun confirmSignUp(

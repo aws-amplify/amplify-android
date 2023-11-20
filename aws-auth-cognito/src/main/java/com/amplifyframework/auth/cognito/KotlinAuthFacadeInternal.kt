@@ -19,6 +19,8 @@ import android.app.Activity
 import android.content.Intent
 import com.amplifyframework.auth.AuthCodeDeliveryDetails
 import com.amplifyframework.auth.AuthDevice
+import com.amplifyframework.auth.AuthPasswordlessDeliveryDestination
+import com.amplifyframework.auth.AuthPasswordlessFlow
 import com.amplifyframework.auth.AuthProvider
 import com.amplifyframework.auth.AuthSession
 import com.amplifyframework.auth.AuthUser
@@ -31,6 +33,8 @@ import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
 import com.amplifyframework.auth.options.AuthFetchSessionOptions
+import com.amplifyframework.auth.options.AuthMagicLinkOptions
+import com.amplifyframework.auth.options.AuthOTPOptions
 import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions
 import com.amplifyframework.auth.options.AuthResendUserAttributeConfirmationCodeOptions
 import com.amplifyframework.auth.options.AuthResetPasswordOptions
@@ -174,6 +178,94 @@ internal class KotlinAuthFacadeInternal(private val delegate: RealAWSCognitoAuth
             delegate.confirmSignIn(
                 challengeResponse,
                 options,
+                { continuation.resume(it) },
+                { continuation.resumeWithException(it) }
+            )
+        }
+    }
+
+    suspend fun signInWithMagicLink(
+        username: String,
+        flow: AuthPasswordlessFlow,
+        redirectURL: String,
+        options: AuthMagicLinkOptions
+    ): AuthSignInResult {
+        return suspendCoroutine { continuation ->
+            delegate.signInWithMagicLink(
+                username,
+                flow,
+                redirectURL,
+                options,
+                { continuation.resume(it) },
+                { continuation.resumeWithException(it) }
+            )
+        }
+    }
+
+    suspend fun confirmSignInWithMagicLink(
+        confirmationCode: String,
+        options: AuthConfirmSignInOptions
+    ): AuthSignInResult {
+        return suspendCoroutine { continuation ->
+            delegate.confirmSignInWithMagicLink(
+                confirmationCode,
+                options,
+                { continuation.resume(it) },
+                { continuation.resumeWithException(it) }
+            )
+        }
+    }
+
+    suspend fun confirmSignInWithMagicLink(
+        confirmationCode: String
+    ): AuthSignInResult {
+        return suspendCoroutine { continuation ->
+            delegate.confirmSignInWithMagicLink(
+                confirmationCode,
+                { continuation.resume(it) },
+                { continuation.resumeWithException(it) }
+            )
+        }
+    }
+
+    suspend fun signInWithOTP(
+        username: String,
+        flow: AuthPasswordlessFlow,
+        destination: AuthPasswordlessDeliveryDestination,
+        options: AuthOTPOptions
+    ): AuthSignInResult {
+        return suspendCoroutine { continuation ->
+            delegate.signInWithOTP(
+                username,
+                flow,
+                destination,
+                options,
+                { continuation.resume(it) },
+                { continuation.resumeWithException(it) }
+            )
+        }
+    }
+
+    suspend fun confirmSignInWithOTP(
+        challengeResponse: String,
+        options: AuthConfirmSignInOptions
+    ): AuthSignInResult {
+        return suspendCoroutine { continuation ->
+            delegate.confirmSignInWithOTP(
+                challengeResponse,
+                options,
+                { continuation.resume(it) },
+                { continuation.resumeWithException(it) }
+            )
+        }
+    }
+
+    suspend fun confirmSignInWithOTP(
+        challengeResponse: String
+    ): AuthSignInResult {
+        return suspendCoroutine { continuation ->
+            delegate.confirmSignInWithOTP(
+                challengeResponse,
                 { continuation.resume(it) },
                 { continuation.resumeWithException(it) }
             )

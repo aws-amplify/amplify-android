@@ -37,6 +37,7 @@ dependencies {
     implementation(libs.aws.http)
     implementation(libs.aws.cognitoidentity)
     implementation(libs.aws.cognitoidentityprovider)
+    implementation(libs.okhttp)
 
     testImplementation(project(":testutils"))
     testImplementation(project(":core"))
