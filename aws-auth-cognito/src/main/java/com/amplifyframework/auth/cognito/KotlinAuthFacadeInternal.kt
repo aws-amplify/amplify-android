@@ -203,12 +203,12 @@ internal class KotlinAuthFacadeInternal(private val delegate: RealAWSCognitoAuth
     }
 
     suspend fun confirmSignInWithMagicLink(
-        confirmationCode: String,
+        challengeResponse: String,
         options: AuthConfirmSignInOptions
     ): AuthSignInResult {
         return suspendCoroutine { continuation ->
             delegate.confirmSignInWithMagicLink(
-                confirmationCode,
+                challengeResponse,
                 options,
                 { continuation.resume(it) },
                 { continuation.resumeWithException(it) }
@@ -217,11 +217,11 @@ internal class KotlinAuthFacadeInternal(private val delegate: RealAWSCognitoAuth
     }
 
     suspend fun confirmSignInWithMagicLink(
-        confirmationCode: String
+        challengeResponse: String
     ): AuthSignInResult {
         return suspendCoroutine { continuation ->
             delegate.confirmSignInWithMagicLink(
-                confirmationCode,
+                challengeResponse,
                 { continuation.resume(it) },
                 { continuation.resumeWithException(it) }
             )

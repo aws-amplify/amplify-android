@@ -165,15 +165,29 @@ interface Auth {
     ):
         AuthSignInResult
 
+    /**
+     * Submit the confirmation code received as part of multi-factor Authentication during sign in.
+     * @param challengeResponse The code received as part of the multi-factor authentication process
+     * @param options Advanced options such as a map of auth information for custom auth,
+     *                If not provided, default options will be used
+     * @return A sign-in result; check the nextStep field for cues on additional sign-in challenges
+     */
     @Throws(AuthException::class)
     suspend fun confirmSignInWithMagicLink(
-        confirmationCode: String,
+        challengeResponse: String,
         options: AuthConfirmSignInOptions = AuthConfirmSignInOptions.defaults()
     ): AuthSignInResult
 
+    /**
+     * Submit the confirmation code received as part of multi-factor Authentication during sign in.
+     * @param challengeResponse The code received as part of the multi-factor authentication process
+     * @param options Advanced options such as a map of auth information for custom auth,
+     *                If not provided, default options will be used
+     * @return A sign-in result; check the nextStep field for cues on additional sign-in challenges
+     */
     @Throws(AuthException::class)
     suspend fun confirmSignInWithOTP(
-        confirmationCode: String,
+        challengeResponse: String,
         options: AuthConfirmSignInOptions = AuthConfirmSignInOptions.defaults()
     ): AuthSignInResult
 

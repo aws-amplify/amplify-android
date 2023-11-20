@@ -17,6 +17,7 @@ package com.amplifyframework.kotlin.auth
 
 import android.app.Activity
 import android.content.Intent
+import com.amplifyframework.auth.AuthCategoryBehavior as Delegate
 import com.amplifyframework.auth.AuthCodeDeliveryDetails
 import com.amplifyframework.auth.AuthDevice
 import com.amplifyframework.auth.AuthPasswordlessDeliveryDestination
@@ -52,7 +53,6 @@ import com.amplifyframework.core.Amplify
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
-import com.amplifyframework.auth.AuthCategoryBehavior as Delegate
 
 class KotlinAuthFacade(private val delegate: Delegate = Amplify.Auth) : Auth {
     override suspend fun signUp(
@@ -150,12 +150,12 @@ class KotlinAuthFacade(private val delegate: Delegate = Amplify.Auth) : Auth {
     }
 
     override suspend fun confirmSignInWithMagicLink(
-        confirmationCode: String,
+        challengeResponse: String,
         options: AuthConfirmSignInOptions
     ): AuthSignInResult {
         return suspendCoroutine { continuation ->
             delegate.confirmSignInWithMagicLink(
-                confirmationCode,
+                challengeResponse,
                 options,
                 { continuation.resume(it) },
                 { continuation.resumeWithException(it) }
@@ -182,12 +182,12 @@ class KotlinAuthFacade(private val delegate: Delegate = Amplify.Auth) : Auth {
     }
 
     override suspend fun confirmSignInWithOTP(
-        confirmationCode: String,
+        challengeResponse: String,
         options: AuthConfirmSignInOptions
     ): AuthSignInResult {
         return suspendCoroutine { continuation ->
             delegate.confirmSignInWithOTP(
-                confirmationCode,
+                challengeResponse,
                 options,
                 { continuation.resume(it) },
                 { continuation.resumeWithException(it) }
