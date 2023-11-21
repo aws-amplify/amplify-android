@@ -20,6 +20,8 @@ import android.content.Intent
 import com.amplifyframework.auth.AuthCategoryBehavior as Delegate
 import com.amplifyframework.auth.AuthCodeDeliveryDetails
 import com.amplifyframework.auth.AuthDevice
+import com.amplifyframework.auth.AuthPasswordlessDeliveryDestination
+import com.amplifyframework.auth.AuthPasswordlessFlow
 import com.amplifyframework.auth.AuthProvider
 import com.amplifyframework.auth.AuthSession
 import com.amplifyframework.auth.AuthUser
@@ -30,6 +32,8 @@ import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
 import com.amplifyframework.auth.options.AuthFetchSessionOptions
+import com.amplifyframework.auth.options.AuthMagicLinkOptions
+import com.amplifyframework.auth.options.AuthOTPOptions
 import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions
 import com.amplifyframework.auth.options.AuthResendUserAttributeConfirmationCodeOptions
 import com.amplifyframework.auth.options.AuthResetPasswordOptions
@@ -119,6 +123,102 @@ class KotlinAuthFacade(private val delegate: Delegate = Amplify.Auth) : Auth {
     ): AuthSignInResult {
         return suspendCoroutine { continuation ->
             delegate.confirmSignIn(
+                challengeResponse,
+                options,
+                { continuation.resume(it) },
+                { continuation.resumeWithException(it) }
+            )
+        }
+    }
+
+    override suspend fun signInWithMagicLink(
+        username: String,
+        flow: AuthPasswordlessFlow,
+        redirectURL: String,
+        options: AuthMagicLinkOptions
+    ): AuthSignInResult {
+        return suspendCoroutine { continuation ->
+            delegate.signInWithMagicLink(
+                username,
+                flow,
+                redirectURL,
+                options,
+                { continuation.resume(it) },
+                { continuation.resumeWithException(it) }
+            )
+        }
+    }
+
+    override suspend fun signInWithMagicLink(
+        username: String,
+        flow: AuthPasswordlessFlow,
+        redirectURL: String
+    ): AuthSignInResult {
+        return suspendCoroutine { continuation ->
+            delegate.signInWithMagicLink(
+                username,
+                flow,
+                redirectURL,
+                { continuation.resume(it) },
+                { continuation.resumeWithException(it) }
+            )
+        }
+    }
+
+    override suspend fun confirmSignInWithMagicLink(
+        challengeResponse: String,
+        options: AuthConfirmSignInOptions
+    ): AuthSignInResult {
+        return suspendCoroutine { continuation ->
+            delegate.confirmSignInWithMagicLink(
+                challengeResponse,
+                options,
+                { continuation.resume(it) },
+                { continuation.resumeWithException(it) }
+            )
+        }
+    }
+
+    override suspend fun signInWithOTP(
+        username: String,
+        flow: AuthPasswordlessFlow,
+        destination: AuthPasswordlessDeliveryDestination,
+        options: AuthOTPOptions
+    ): AuthSignInResult {
+        return suspendCoroutine { continuation ->
+            delegate.signInWithOTP(
+                username,
+                flow,
+                destination,
+                options,
+                { continuation.resume(it) },
+                { continuation.resumeWithException(it) }
+            )
+        }
+    }
+
+    override suspend fun signInWithOTP(
+        username: String,
+        flow: AuthPasswordlessFlow,
+        destination: AuthPasswordlessDeliveryDestination
+    ): AuthSignInResult {
+        return suspendCoroutine { continuation ->
+            delegate.signInWithOTP(
+                username,
+                flow,
+                destination,
+                { continuation.resume(it) },
+                { continuation.resumeWithException(it) }
+            )
+        }
+    }
+
+    override suspend fun confirmSignInWithOTP(
+        challengeResponse: String,
+        options: AuthConfirmSignInOptions
+    ): AuthSignInResult {
+        return suspendCoroutine { continuation ->
+            delegate.confirmSignInWithOTP(
                 challengeResponse,
                 options,
                 { continuation.resume(it) },

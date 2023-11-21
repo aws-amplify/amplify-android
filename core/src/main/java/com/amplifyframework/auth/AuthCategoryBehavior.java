@@ -24,6 +24,8 @@ import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions;
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions;
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions;
 import com.amplifyframework.auth.options.AuthFetchSessionOptions;
+import com.amplifyframework.auth.options.AuthMagicLinkOptions;
+import com.amplifyframework.auth.options.AuthOTPOptions;
 import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions;
 import com.amplifyframework.auth.options.AuthResendUserAttributeConfirmationCodeOptions;
 import com.amplifyframework.auth.options.AuthResetPasswordOptions;
@@ -95,6 +97,142 @@ public interface AuthCategoryBehavior {
             @NonNull String confirmationCode,
             @NonNull Consumer<AuthSignUpResult> onSuccess,
             @NonNull Consumer<AuthException> onError);
+
+    /**
+     * Authentication using the magiclink passwordless flow. This method can be used for both Signup or Signin.
+     * Note: This method will signin the user after signing up if AuthPasswordlessFlow.SIGN_UP_AND_SIGN_IN is used.
+     * @param username A login identifier e.g. `superdog22`; or an email/phone number, depending on configuration
+     * @param flow Specification on if the flow is going to sign up and signin vs signin.
+     *             AuthPasswordlessFlow.SIGN_UP_AND_SIGN_IN for sign up and sign in or
+     *             AuthPasswordlessFlow.SIGN_IN for signing in.
+     * @param redirectURL This is the custom URL that your app can recognize and open from an external source
+     * @param options Advanced options such as a map of auth information for custom auth
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     * */
+    void signInWithMagicLink(
+            @NonNull String username,
+            @NonNull AuthPasswordlessFlow flow,
+            @NonNull String redirectURL,
+            @NonNull AuthMagicLinkOptions options,
+            @NonNull Consumer<AuthSignInResult> onSuccess,
+            @NonNull Consumer<AuthException> onError
+    );
+
+    /**
+     * Authentication using the magiclink passwordless flow. This method can be used for both Signup or Signin.
+     * Note: This method will signin the user after signing up if AuthPasswordlessFlow.SIGN_UP_AND_SIGN_IN is used.
+     * @param username A login identifier e.g. `superdog22`; or an email/phone number, depending on configuration
+     * @param flow Specification on if the flow is going to sign up and signin vs signin.
+     *             AuthPasswordlessFlow.SIGN_UP_AND_SIGN_IN for sign up and sign in or
+     *             AuthPasswordlessFlow.SIGN_IN for signing in.
+     * @param redirectURL This is the custom URL that your app can recognize and open from an external source
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     * */
+    void signInWithMagicLink(
+            @NonNull String username,
+            @NonNull AuthPasswordlessFlow flow,
+            @NonNull String redirectURL,
+            @NonNull Consumer<AuthSignInResult> onSuccess,
+            @NonNull Consumer<AuthException> onError
+    );
+
+    /**
+     * This will allow the user to enter the confirmation code they received to
+     * activate their account.
+     * @param challengeResponse challenge response that is sent to specified source
+     * @param options Advanced options such as a map of auth information for custom auth
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     * */
+    void confirmSignInWithMagicLink(
+            @NonNull String challengeResponse,
+            @NonNull AuthConfirmSignInOptions options,
+            @NonNull Consumer<AuthSignInResult> onSuccess,
+            @NonNull Consumer<AuthException> onError
+    );
+
+    /**
+     * This will allow the user to enter the confirmation code they received to
+     * activate their account.
+     * @param challengeResponse challenge response that is sent to specified source
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     * */
+    void confirmSignInWithMagicLink(
+            @NonNull String challengeResponse,
+            @NonNull Consumer<AuthSignInResult> onSuccess,
+            @NonNull Consumer<AuthException> onError
+    );
+
+    /**
+     * Authentication using the OTP passwordless flow. This method can be used for both Signup or Signin.
+     * Note: This method will signin the user after signing up if AuthPasswordlessFlow.SIGN_UP_AND_SIGN_IN is used.
+     * @param username A login identifier e.g. `superdog22`; or an email/phone number, depending on configuration
+     * @param flow Specification on if the flow is going to sign up and signin vs signin
+     *             AuthPasswordlessFlow.SIGN_UP_AND_SIGN_IN for sign up and sign in or
+     *             AuthPasswordlessFlow.SIGN_IN for signing in.
+     * @param destination AuthPasswordlessDeliveryDestination where OTP is sent
+     * @param options Advanced options such as a map of auth information for OTP authentication
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     * */
+    void signInWithOTP(
+            @NonNull String username,
+            @NonNull AuthPasswordlessFlow flow,
+            @NonNull AuthPasswordlessDeliveryDestination destination,
+            @NonNull AuthOTPOptions options,
+            @NonNull Consumer<AuthSignInResult> onSuccess,
+            @NonNull Consumer<AuthException> onError
+    );
+
+    /**
+     * Authentication using the OTP passwordless flow. This method can be used for both Signup or Signin.
+     * Note: This method will signin the user after signing up if AuthPasswordlessFlow.SIGN_UP_AND_SIGN_IN is used.
+     * @param username A login identifier e.g. `superdog22`; or an email/phone number, depending on configuration
+     * @param flow Specification on if the flow is going to sign up and signin vs signin
+     *             AuthPasswordlessFlow.SIGN_UP_AND_SIGN_IN for sign up and sign in or
+     *             AuthPasswordlessFlow.SIGN_IN for signing in.
+     * @param destination AuthPasswordlessDeliveryDestination where OTP is sent
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     * */
+    void signInWithOTP(
+            @NonNull String username,
+            @NonNull AuthPasswordlessFlow flow,
+            @NonNull AuthPasswordlessDeliveryDestination destination,
+            @NonNull Consumer<AuthSignInResult> onSuccess,
+            @NonNull Consumer<AuthException> onError
+    );
+
+    /**
+     * This will allow the user to enter the confirmation code they received to activate
+     * their account.
+     * @param challengeResponse challenge response that is sent to specified source
+     * @param options Advanced options such as a map of auth information for OTP authentication
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     * */
+    void confirmSignInWithOTP(
+            @NonNull String challengeResponse,
+            @NonNull AuthConfirmSignInOptions options,
+            @NonNull Consumer<AuthSignInResult> onSuccess,
+            @NonNull Consumer<AuthException> onError
+    );
+
+    /**
+     * This will allow the user to enter the confirmation code they received to
+     * activate their account.
+     * @param challengeResponse challenge response that is sent to specified source
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     * */
+    void confirmSignInWithOTP(
+            @NonNull String challengeResponse,
+            @NonNull Consumer<AuthSignInResult> onSuccess,
+            @NonNull Consumer<AuthException> onError
+    );
 
     /**
      * If the user's code expires or they just missed it, this method can

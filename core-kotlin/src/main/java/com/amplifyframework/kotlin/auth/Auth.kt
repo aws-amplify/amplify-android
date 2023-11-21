@@ -20,6 +20,8 @@ import android.content.Intent
 import com.amplifyframework.auth.AuthCodeDeliveryDetails
 import com.amplifyframework.auth.AuthDevice
 import com.amplifyframework.auth.AuthException
+import com.amplifyframework.auth.AuthPasswordlessDeliveryDestination
+import com.amplifyframework.auth.AuthPasswordlessFlow
 import com.amplifyframework.auth.AuthProvider
 import com.amplifyframework.auth.AuthSession
 import com.amplifyframework.auth.AuthUser
@@ -30,6 +32,8 @@ import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
 import com.amplifyframework.auth.options.AuthFetchSessionOptions
+import com.amplifyframework.auth.options.AuthMagicLinkOptions
+import com.amplifyframework.auth.options.AuthOTPOptions
 import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions
 import com.amplifyframework.auth.options.AuthResendUserAttributeConfirmationCodeOptions
 import com.amplifyframework.auth.options.AuthResetPasswordOptions
@@ -139,6 +143,104 @@ interface Auth {
     suspend fun confirmSignIn(
         challengeResponse: String,
         options: AuthConfirmSignInOptions = AuthConfirmSignInOptions.defaults()
+    ):
+        AuthSignInResult
+
+    /**
+     * Authentication using the magiclink passwordless flow. This method can be used for both Signup or Signin.
+     * Note: This method will signin the user after signing up if AuthPasswordlessFlow.SIGN_UP_AND_SIGN_IN is used.
+     * @param username A login identifier e.g. `superdog22`; or an email/phone number, depending on configuration
+     * @param flow Specification on if the flow is going to sign up and signin vs signin.
+     *             AuthPasswordlessFlow.SIGN_UP_AND_SIGN_IN for sign up and sign in or
+     *             AuthPasswordlessFlow.SIGN_IN for signing in.
+     * @param redirectURL This is the custom URL that your app can recognize and open from an external source
+     * @param options Advanced options such as a map of auth information for custom auth
+     * */
+    @Throws(AuthException::class)
+    suspend fun signInWithMagicLink(
+        username: String,
+        flow: AuthPasswordlessFlow,
+        redirectURL: String,
+        options: AuthMagicLinkOptions = AuthMagicLinkOptions.defaults()
+    ):
+        AuthSignInResult
+
+    /**
+     * Authentication using the magiclink passwordless flow. This method can be used for both Signup or Signin.
+     * Note: This method will signin the user after signing up if AuthPasswordlessFlow.SIGN_UP_AND_SIGN_IN is used.
+     * @param username A login identifier e.g. `superdog22`; or an email/phone number, depending on configuration
+     * @param flow Specification on if the flow is going to sign up and signin vs signin.
+     *             AuthPasswordlessFlow.SIGN_UP_AND_SIGN_IN for sign up and sign in or
+     *             AuthPasswordlessFlow.SIGN_IN for signing in.
+     * @param redirectURL This is the custom URL that your app can recognize and open from an external source
+     * */
+    @Throws(AuthException::class)
+    suspend fun signInWithMagicLink(
+        username: String,
+        flow: AuthPasswordlessFlow,
+        redirectURL: String
+    ):
+        AuthSignInResult
+
+    /**
+     * Submit the confirmation code received as part of multi-factor Authentication during sign in.
+     * @param challengeResponse The code received as part of the multi-factor authentication process
+     * @param options Advanced options such as a map of auth information for custom auth,
+     *                If not provided, default options will be used
+     * @return A sign-in result; check the nextStep field for cues on additional sign-in challenges
+     */
+    @Throws(AuthException::class)
+    suspend fun confirmSignInWithMagicLink(
+        challengeResponse: String,
+        options: AuthConfirmSignInOptions = AuthConfirmSignInOptions.defaults()
+    ): AuthSignInResult
+
+    /**
+     * Submit the confirmation code received as part of multi-factor Authentication during sign in.
+     * @param challengeResponse The code received as part of the multi-factor authentication process
+     * @param options Advanced options such as a map of auth information for custom auth,
+     *                If not provided, default options will be used
+     * @return A sign-in result; check the nextStep field for cues on additional sign-in challenges
+     */
+    @Throws(AuthException::class)
+    suspend fun confirmSignInWithOTP(
+        challengeResponse: String,
+        options: AuthConfirmSignInOptions = AuthConfirmSignInOptions.defaults()
+    ): AuthSignInResult
+
+    /**
+     * Authentication using the OTP passwordless flow. This method can be used for both Signup or Signin.
+     * Note: This method will signin the user after signing up if AuthPasswordlessFlow.SIGN_UP_AND_SIGN_IN is used.
+     * @param username A login identifier e.g. `superdog22`; or an email/phone number, depending on configuration
+     * @param flow Specification on if the flow is going to sign up and signin vs signin
+     *             AuthPasswordlessFlow.SIGN_UP_AND_SIGN_IN for sign up and sign in or
+     *             AuthPasswordlessFlow.SIGN_IN for signing in.
+     * @param destination AuthPasswordlessDeliveryDestination where OTP is sent
+     * @param options Advanced options such as a map of auth information for OTP authentication
+     * */
+    @Throws(AuthException::class)
+    suspend fun signInWithOTP(
+        username: String,
+        flow: AuthPasswordlessFlow,
+        destination: AuthPasswordlessDeliveryDestination,
+        options: AuthOTPOptions = AuthOTPOptions.defaults()
+    ):
+        AuthSignInResult
+
+    /**
+     * Authentication using the OTP passwordless flow. This method can be used for both Signup or Signin.
+     * Note: This method will signin the user after signing up if AuthPasswordlessFlow.SIGN_UP_AND_SIGN_IN is used.
+     * @param username A login identifier e.g. `superdog22`; or an email/phone number, depending on configuration
+     * @param flow Specification on if the flow is going to sign up and signin vs signin
+     *             AuthPasswordlessFlow.SIGN_UP_AND_SIGN_IN for sign up and sign in or
+     *             AuthPasswordlessFlow.SIGN_IN for signing in.
+     * @param destination AuthPasswordlessDeliveryDestination where OTP is sent
+     * */
+    @Throws(AuthException::class)
+    suspend fun signInWithOTP(
+        username: String,
+        flow: AuthPasswordlessFlow,
+        destination: AuthPasswordlessDeliveryDestination
     ):
         AuthSignInResult
 

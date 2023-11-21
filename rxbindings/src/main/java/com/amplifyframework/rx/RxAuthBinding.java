@@ -25,6 +25,8 @@ import com.amplifyframework.auth.AuthCategoryBehavior;
 import com.amplifyframework.auth.AuthCodeDeliveryDetails;
 import com.amplifyframework.auth.AuthDevice;
 import com.amplifyframework.auth.AuthException;
+import com.amplifyframework.auth.AuthPasswordlessDeliveryDestination;
+import com.amplifyframework.auth.AuthPasswordlessFlow;
 import com.amplifyframework.auth.AuthProvider;
 import com.amplifyframework.auth.AuthSession;
 import com.amplifyframework.auth.AuthUser;
@@ -35,6 +37,8 @@ import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions;
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions;
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions;
 import com.amplifyframework.auth.options.AuthFetchSessionOptions;
+import com.amplifyframework.auth.options.AuthMagicLinkOptions;
+import com.amplifyframework.auth.options.AuthOTPOptions;
 import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions;
 import com.amplifyframework.auth.options.AuthResendUserAttributeConfirmationCodeOptions;
 import com.amplifyframework.auth.options.AuthResetPasswordOptions;
@@ -111,8 +115,78 @@ final class RxAuthBinding implements RxAuthCategoryBehavior {
     }
 
     @Override
+    public Single<AuthSignInResult> signInWithMagicLink(@NonNull String username,
+                                                        @NonNull AuthPasswordlessFlow flow,
+                                                        @NonNull String redirectURL,
+                                                        @NonNull AuthMagicLinkOptions options) {
+        return toSingle((onResult, onError) ->
+                delegate.signInWithMagicLink(
+                        username, flow, redirectURL, options, onResult, onError)
+        );
+    }
+
+    @Override
+    public Single<AuthSignInResult> signInWithMagicLink(@NonNull String username,
+                                                        @NonNull AuthPasswordlessFlow flow,
+                                                        @NonNull String redirectURL) {
+        return toSingle((onResult, onError) ->
+                delegate.signInWithMagicLink(
+                        username, flow, redirectURL, onResult, onError)
+        );
+    }
+
+    @Override
+    public Single<AuthSignInResult> confirmSignInWithMagicLink(@NonNull String challengeResponse,
+                                                               @NonNull
+                                                               AuthConfirmSignInOptions options) {
+        return toSingle((onResult, onError) ->
+                delegate.confirmSignInWithMagicLink(challengeResponse, options, onResult, onError));
+    }
+
+    @Override
+    public Single<AuthSignInResult> confirmSignInWithMagicLink(@NonNull String challengeResponse) {
+        return toSingle((onResult, onError) ->
+                delegate.confirmSignInWithMagicLink(challengeResponse, onResult, onError));
+    }
+
+    @Override
+    public Single<AuthSignInResult> signInWithOTP(@NonNull String username,
+                                                  @NonNull AuthPasswordlessFlow flow,
+                                                  @NonNull AuthPasswordlessDeliveryDestination
+                                                              destination,
+                                                  @NonNull AuthOTPOptions options) {
+        return toSingle((onResult, onError) ->
+                delegate.signInWithOTP(username, flow, destination, options, onResult, onError));
+    }
+
+    @Override
+    public Single<AuthSignInResult> signInWithOTP(@NonNull String username,
+                                                  @NonNull AuthPasswordlessFlow flow,
+                                                  @NonNull AuthPasswordlessDeliveryDestination
+                                                          destination) {
+        return toSingle((onResult, onError) ->
+                delegate.signInWithOTP(username, flow, destination, onResult, onError));
+    }
+
+    @Override
+    public Single<AuthSignInResult> confirmSignInWithOTP(@NonNull String challengeResponse,
+                                                         @NonNull AuthConfirmSignInOptions
+                                                                 options) {
+        return toSingle((onResult, onError) ->
+                delegate.confirmSignInWithOTP(challengeResponse, options, onResult, onError));
+    }
+
+    @Override
+    public Single<AuthSignInResult> confirmSignInWithOTP(@NonNull String challengeResponse) {
+        return toSingle((onResult, onError) ->
+                delegate.confirmSignInWithOTP(challengeResponse, onResult, onError));
+    }
+
+    @Override
     public Single<AuthSignInResult> signIn(@Nullable String username, @Nullable String password) {
-        return toSingle((onResult, onError) -> delegate.signIn(username, password, onResult, onError));
+        return toSingle((onResult, onError) -> delegate.signIn(
+                username, password, onResult, onError)
+        );
     }
 
     @Override
@@ -124,7 +198,9 @@ final class RxAuthBinding implements RxAuthCategoryBehavior {
 
     @Override
     public Single<AuthSignInResult> confirmSignIn(@NonNull String challengeResponse) {
-        return toSingle((onResult, onError) -> delegate.confirmSignIn(challengeResponse, onResult, onError));
+        return toSingle((onResult, onError) -> delegate.confirmSignIn(
+                challengeResponse, onResult, onError)
+        );
     }
 
     @Override

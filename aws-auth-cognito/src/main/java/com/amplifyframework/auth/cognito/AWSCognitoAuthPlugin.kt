@@ -25,6 +25,8 @@ import com.amplifyframework.auth.AWSCognitoAuthMetadataType
 import com.amplifyframework.auth.AuthCodeDeliveryDetails
 import com.amplifyframework.auth.AuthDevice
 import com.amplifyframework.auth.AuthException
+import com.amplifyframework.auth.AuthPasswordlessDeliveryDestination
+import com.amplifyframework.auth.AuthPasswordlessFlow
 import com.amplifyframework.auth.AuthPlugin
 import com.amplifyframework.auth.AuthProvider
 import com.amplifyframework.auth.AuthSession
@@ -42,6 +44,8 @@ import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
 import com.amplifyframework.auth.options.AuthFetchSessionOptions
+import com.amplifyframework.auth.options.AuthMagicLinkOptions
+import com.amplifyframework.auth.options.AuthOTPOptions
 import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions
 import com.amplifyframework.auth.options.AuthResendUserAttributeConfirmationCodeOptions
 import com.amplifyframework.auth.options.AuthResetPasswordOptions
@@ -194,6 +198,154 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
             pluginScope.launch(start = CoroutineStart.LAZY) {
                 try {
                     val result = queueFacade.confirmSignUp(username, confirmationCode)
+                    onSuccess.accept(result)
+                } catch (e: Exception) {
+                    onError.accept(e.toAuthException())
+                }
+            }
+        )
+    }
+
+    override fun signInWithMagicLink(
+        username: String,
+        flow: AuthPasswordlessFlow,
+        redirectURL: String,
+        options: AuthMagicLinkOptions,
+        onSuccess: Consumer<AuthSignInResult>,
+        onError: Consumer<AuthException>
+    ) {
+        queueChannel.trySend(
+            pluginScope.launch(start = CoroutineStart.LAZY) {
+                try {
+                    val result = queueFacade.signInWithMagicLink(username, flow, redirectURL, options)
+                    onSuccess.accept(result)
+                } catch (e: Exception) {
+                    onError.accept(e.toAuthException())
+                }
+            }
+        )
+    }
+
+    override fun signInWithMagicLink(
+        username: String,
+        flow: AuthPasswordlessFlow,
+        redirectURL: String,
+        onSuccess: Consumer<AuthSignInResult>,
+        onError: Consumer<AuthException>
+    ) {
+        queueChannel.trySend(
+            pluginScope.launch(start = CoroutineStart.LAZY) {
+                try {
+                    val result = queueFacade.signInWithMagicLink(username, flow, redirectURL)
+                    onSuccess.accept(result)
+                } catch (e: Exception) {
+                    onError.accept(e.toAuthException())
+                }
+            }
+        )
+    }
+
+    override fun confirmSignInWithMagicLink(
+        challengeResponse: String,
+        options: AuthConfirmSignInOptions,
+        onSuccess: Consumer<AuthSignInResult>,
+        onError: Consumer<AuthException>
+    ) {
+        queueChannel.trySend(
+            pluginScope.launch(start = CoroutineStart.LAZY) {
+                try {
+                    val result = queueFacade.confirmSignInWithMagicLink(challengeResponse, options)
+                    onSuccess.accept(result)
+                } catch (e: Exception) {
+                    onError.accept(e.toAuthException())
+                }
+            }
+        )
+    }
+
+    override fun confirmSignInWithMagicLink(
+        challengeResponse: String,
+        onSuccess: Consumer<AuthSignInResult>,
+        onError: Consumer<AuthException>
+    ) {
+        queueChannel.trySend(
+            pluginScope.launch(start = CoroutineStart.LAZY) {
+                try {
+                    val result = queueFacade.confirmSignInWithMagicLink(challengeResponse)
+                    onSuccess.accept(result)
+                } catch (e: Exception) {
+                    onError.accept(e.toAuthException())
+                }
+            }
+        )
+    }
+
+    override fun signInWithOTP(
+        username: String,
+        flow: AuthPasswordlessFlow,
+        destination: AuthPasswordlessDeliveryDestination,
+        options: AuthOTPOptions,
+        onSuccess: Consumer<AuthSignInResult>,
+        onError: Consumer<AuthException>
+    ) {
+        queueChannel.trySend(
+            pluginScope.launch(start = CoroutineStart.LAZY) {
+                try {
+                    val result = queueFacade.signInWithOTP(username, flow, destination, options)
+                    onSuccess.accept(result)
+                } catch (e: Exception) {
+                    onError.accept(e.toAuthException())
+                }
+            }
+        )
+    }
+
+    override fun signInWithOTP(
+        username: String,
+        flow: AuthPasswordlessFlow,
+        destination: AuthPasswordlessDeliveryDestination,
+        onSuccess: Consumer<AuthSignInResult>,
+        onError: Consumer<AuthException>
+    ) {
+        queueChannel.trySend(
+            pluginScope.launch(start = CoroutineStart.LAZY) {
+                try {
+                    val result = queueFacade.signInWithOTP(username, flow, destination)
+                    onSuccess.accept(result)
+                } catch (e: Exception) {
+                    onError.accept(e.toAuthException())
+                }
+            }
+        )
+    }
+
+    override fun confirmSignInWithOTP(
+        challengeResponse: String,
+        options: AuthConfirmSignInOptions,
+        onSuccess: Consumer<AuthSignInResult>,
+        onError: Consumer<AuthException>
+    ) {
+        queueChannel.trySend(
+            pluginScope.launch(start = CoroutineStart.LAZY) {
+                try {
+                    val result = queueFacade.confirmSignInWithOTP(challengeResponse, options)
+                    onSuccess.accept(result)
+                } catch (e: Exception) {
+                    onError.accept(e.toAuthException())
+                }
+            }
+        )
+    }
+
+    override fun confirmSignInWithOTP(
+        challengeResponse: String,
+        onSuccess: Consumer<AuthSignInResult>,
+        onError: Consumer<AuthException>
+    ) {
+        queueChannel.trySend(
+            pluginScope.launch(start = CoroutineStart.LAZY) {
+                try {
+                    val result = queueFacade.confirmSignInWithOTP(challengeResponse)
                     onSuccess.accept(result)
                 } catch (e: Exception) {
                     onError.accept(e.toAuthException())
