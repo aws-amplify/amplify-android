@@ -28,15 +28,15 @@ data class AWSCognitoAuthMagicLinkOptions
  */
 internal constructor(
     /**
-     * Get additional custom attributes to be sent to the service such a Fs information about the client.
+     * Get additional custom attributes to be sent to the service such as information about the client.
      * @return a map of additional custom attributes to be sent to the service such as information about the client
      */
-    val clientMetadata: Map<String, String>?,
+    val clientMetadata: Map<String, String>,
     /**
      * Get user attributes to be sent to the service such as information about the user
      * @return user attributes to be sent to the service such as information about the user
      */
-    val userMetadata: Map<String, String>?
+    val userMetadata: Map<String, String>
 ) : AuthMagicLinkOptions() {
 
     companion object {

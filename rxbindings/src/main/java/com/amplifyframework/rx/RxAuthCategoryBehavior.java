@@ -193,6 +193,17 @@ public interface RxAuthCategoryBehavior {
     );
 
     /**
+     * This will allow the user to enter the confirmation code they received to
+     * activate their account.
+     * @param challengeResponse challenge response that is sent to specified source
+     * @return An Rx {@link Single} which emits {@link AuthSignInResult} on success,
+     * {@link AuthException} on failure
+     * */
+    Single<AuthSignInResult> confirmSignInWithMagicLink(
+            @NonNull String challengeResponse
+    );
+
+    /**
      * Authentication using the OTP passwordless flow. This method can be used for both Signup or Signin.
      * Note: This method will signin the user after signing up if AuthPasswordlessFlow.SIGN_UP_AND_SIGN_IN is used.
      * @param username A login identifier e.g. `superdog22`; or an email/phone number, depending on configuration
@@ -239,6 +250,17 @@ public interface RxAuthCategoryBehavior {
     Single<AuthSignInResult> confirmSignInWithOTP(
             @NonNull String challengeResponse,
             @NonNull AuthConfirmSignInOptions options
+    );
+
+    /**
+     * This will allow the user to enter the confirmation code they received to activate
+     * their account.
+     * @param challengeResponse challenge response that is sent to specified source
+     * @return An Rx {@link Single} which emits {@link AuthSignInResult} on success,
+     * {@link AuthException} on failure
+     * */
+    Single<AuthSignInResult> confirmSignInWithOTP(
+            @NonNull String challengeResponse
     );
 
     /**

@@ -23,7 +23,7 @@ public enum AuthPasswordlessDeliveryDestination {
     /**
      * confirmation code to be sent to phone.
      */
-    PHONE,
+    SMS,
     /**
      * confirmation code to be sent to email.
      */
