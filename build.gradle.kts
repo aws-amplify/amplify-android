@@ -25,7 +25,7 @@ buildscript {
 
     dependencies {
         classpath("com.android.tools.build:gradle:7.3.1")
-        classpath(kotlin("gradle-plugin", version = "1.7.10"))
+        classpath(kotlin("gradle-plugin", version = "1.9.10"))
         classpath("com.google.gms:google-services:4.3.15")
         classpath("org.jlleitschuh.gradle:ktlint-gradle:11.0.0")
         classpath("org.gradle:test-retry-gradle-plugin:1.4.1")
@@ -77,8 +77,10 @@ subprojects {
         allow("MIT")
         allow("BSD-2-Clause")
         allow("CC0-1.0")
-        allowUrl("https://www.zetetic.net/sqlcipher/license/")
         allowUrl("https://developer.android.com/studio/terms.html")
+        allowDependency("net.zetetic", "android-database-sqlcipher", "4.5.4") {
+            "BSD style License"
+        }
         allowDependency("org.jetbrains", "annotations", "16.0.1") {
             "Apache-2.0, but typo in license URL fixed in newer versions"
         }
