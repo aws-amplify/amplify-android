@@ -23,7 +23,6 @@ import com.amplifyframework.core.NoOpConsumer;
 import org.json.JSONObject;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
@@ -87,28 +86,6 @@ public final class AWSApiPluginUserAgentTest {
     @After
     public void tearDown() throws IOException {
         server.shutdown();
-    }
-
-    /**
-     * Make an API request to the mock server and check the user agent
-     * header format on the request. Verify that the Android version is
-     * accurately reflected on the user agent.
-     * @throws Exception if API call fails or thread is interrupted while
-     *          waiting for request
-     */
-    @Test
-    @Config(sdk = 16)
-    @Ignore("minSDKVersion changed to 24 in favor of AWS Kotlin SDK dependency")
-    public void testUserAgentWithApi16() throws Exception {
-        String userAgent = checkUserAgent();
-
-        // Assert the correct format and content
-        assertNotNull(userAgent);
-        Matcher regexMatcher = USER_AGENT_PATTERN.matcher(userAgent);
-        assertTrue(regexMatcher.matches());
-        assertEquals("amplify-android", regexMatcher.group("libraryName"));
-        assertEquals("Android", regexMatcher.group("systemName"));
-        assertEquals("4.1.2", regexMatcher.group("systemVersion"));
     }
 
     /**

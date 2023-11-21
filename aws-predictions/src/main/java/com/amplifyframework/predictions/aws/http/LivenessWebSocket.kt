@@ -37,6 +37,7 @@ import com.amplifyframework.predictions.aws.models.liveness.ColorDisplayed
 import com.amplifyframework.predictions.aws.models.liveness.FaceMovementAndLightClientChallenge
 import com.amplifyframework.predictions.aws.models.liveness.FreshnessColor
 import com.amplifyframework.predictions.aws.models.liveness.InitialFace
+import com.amplifyframework.predictions.aws.models.liveness.InvalidSignatureException
 import com.amplifyframework.predictions.aws.models.liveness.LivenessResponseStream
 import com.amplifyframework.predictions.aws.models.liveness.SessionInformation
 import com.amplifyframework.predictions.aws.models.liveness.TargetFace
@@ -46,7 +47,9 @@ import com.amplifyframework.util.UserAgent
 import java.net.URI
 import java.net.URLDecoder
 import java.nio.ByteBuffer
+import java.text.SimpleDateFormat
 import java.util.Date
+import java.util.Locale
 import java.util.UUID
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -76,6 +79,14 @@ internal class LivenessWebSocket(
     private val signer = AWSV4Signer()
     private var credentials: Credentials? = null
 
+    // The reported time difference between the server and client. Only set if diff is higher than 4 minutes
+    internal var timeDiffOffsetInMillis = 0L
+    internal enum class ConnectionState {
+        NORMAL,
+        ATTEMPT_RECONNECT,
+    }
+    internal var reconnectState = ConnectionState.NORMAL
+
     @VisibleForTesting
     internal var webSocket: WebSocket? = null
     internal val challengeId = UUID.randomUUID().toString()
@@ -83,7 +94,7 @@ internal class LivenessWebSocket(
     private var faceDetectedStart = 0L
     private var videoStartTimestamp = 0L
     private var videoEndTimestamp = 0L
-    private var webSocketError: PredictionsException? = null
+    @VisibleForTesting internal var webSocketError: PredictionsException? = null
     internal var clientStoppedSession = false
     val json = Json { ignoreUnknownKeys = true }
 
@@ -91,8 +102,24 @@ internal class LivenessWebSocket(
     internal var webSocketListener = object : WebSocketListener() {
         override fun onOpen(webSocket: WebSocket, response: Response) {
             LOG.debug("WebSocket onOpen")
+
+            // device time may be set incorrectly; read the header to skew time and retry
+            val sdf = SimpleDateFormat(datePattern, Locale.US)
+            val date = response.header("Date")?.let { sdf.parse(it) }
+            val tempOffset = if (date != null) {
+                date.time - adjustedDate()
+            } else 0
+
             super.onOpen(webSocket, response)
+
             this@LivenessWebSocket.webSocket = webSocket
+
+            // If offset is > 4 minutes, server may reject the request
+            // The real allowed diff from serer is < 5 but we check for 4 to add a buffer
+            if (!isTimeDiffSafe(tempOffset)) {
+                LOG.info("Server reported a time difference between client and server of > 4 minutes")
+                timeDiffOffsetInMillis = tempOffset
+            }
         }
 
         override fun onMessage(webSocket: WebSocket, text: String) {
@@ -110,7 +137,10 @@ internal class LivenessWebSocket(
                             livenessResponse.serverSessionInformationEvent.sessionInformation
                         )
                     } else if (livenessResponse.disconnectionEvent != null) {
-                        this@LivenessWebSocket.webSocket?.close(1000, "Liveness flow completed.")
+                        this@LivenessWebSocket.webSocket?.close(
+                            NORMAL_SOCKET_CLOSURE_STATUS_CODE,
+                            "Liveness flow completed."
+                        )
                     } else {
                         handleWebSocketError(livenessResponse)
                     }
@@ -130,12 +160,29 @@ internal class LivenessWebSocket(
         override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
             LOG.debug("WebSocket onClosed")
             super.onClosed(webSocket, code, reason)
-            if (code != 1000 && !clientStoppedSession) {
-                val faceLivenessException = webSocketError ?: PredictionsException(
-                    "An error occurred during the face liveness check.",
-                    reason
-                )
-                onErrorReceived.accept(faceLivenessException)
+            if (code != NORMAL_SOCKET_CLOSURE_STATUS_CODE && !clientStoppedSession) {
+                val recordedError = webSocketError
+
+                /*
+                If the server reports an invalid signature due to a time difference between the local clock and the
+                server clock, AND we haven't already tried to reconnect, then we should try to reconnect with an offset
+                */
+                if (reconnectState == ConnectionState.NORMAL &&
+                    !isTimeDiffSafe(timeDiffOffsetInMillis) &&
+                    recordedError is PredictionsException &&
+                    recordedError.cause is InvalidSignatureException
+                ) {
+                    LOG.info("The server rejected the connection due to a likely time difference. Attempting reconnect")
+                    reconnectState = ConnectionState.ATTEMPT_RECONNECT
+                    webSocketError = null
+                    start()
+                } else {
+                    val faceLivenessException = recordedError ?: PredictionsException(
+                        "An error occurred during the face liveness check.",
+                        reason
+                    )
+                    onErrorReceived.accept(faceLivenessException)
+                }
             } else {
                 onComplete.call()
             }
@@ -173,7 +220,10 @@ internal class LivenessWebSocket(
             try {
                 val credentials = credentialsProvider.resolve(emptyAttributes())
                 this@LivenessWebSocket.credentials = credentials
-                val signedUri = signer.getSignedUri(URI.create(endpoint), credentials, region, userAgent)
+                signer.resetPriorSignature()
+                val signedUri = signer.getSignedUri(
+                    URI.create(endpoint), credentials, region, userAgent, adjustedDate()
+                )
                 if (signedUri != null) {
                     val signedEndpoint = URLDecoder.decode(signedUri.toString(), "UTF-8")
                     val signedEndpointNoSpaces = signedEndpoint.replace(" ", signer.encodedSpace)
@@ -260,6 +310,18 @@ internal class LivenessWebSocket(
             AccessDeniedException(
                 cause = livenessResponse.accessDeniedException
             )
+        } else if (livenessResponse.unrecognizedClientException != null) {
+            PredictionsException(
+                "Unrecognized client",
+                livenessResponse.unrecognizedClientException,
+                "Please check your credentials"
+            )
+        } else if (livenessResponse.invalidSignatureException != null) {
+            PredictionsException(
+                "Invalid signature",
+                livenessResponse.invalidSignatureException,
+                "Please check your credentials"
+            )
         } else {
             PredictionsException(
                 "An unknown error occurred during the Liveness flow.",
@@ -274,14 +336,14 @@ internal class LivenessWebSocket(
         videoStartTime: Long
     ) {
         // Send initial ClientSessionInformationEvent
-        videoStartTimestamp = videoStartTime
+        videoStartTimestamp = adjustedDate(videoStartTime)
         initialDetectedFace = BoundingBox(
             left = initialFaceRect.left / sessionInformation.videoWidth,
             top = initialFaceRect.top / sessionInformation.videoHeight,
             height = initialFaceRect.height() / sessionInformation.videoHeight,
             width = initialFaceRect.width() / sessionInformation.videoWidth
         )
-        faceDetectedStart = videoStartTime
+        faceDetectedStart = adjustedDate(videoStartTime)
         val clientInfoEvent =
             ClientSessionInformationEvent(
                 challenge = ClientChallenge(
@@ -309,8 +371,8 @@ internal class LivenessWebSocket(
                         initialFaceDetectedTimestamp = faceDetectedStart
                     ),
                     targetFace = TargetFace(
-                        faceDetectedInTargetPositionStartTimestamp = faceMatchedStart,
-                        faceDetectedInTargetPositionEndTimestamp = faceMatchedEnd,
+                        faceDetectedInTargetPositionStartTimestamp = adjustedDate(faceMatchedStart),
+                        faceDetectedInTargetPositionEndTimestamp = adjustedDate(faceMatchedEnd),
                         boundingBox = BoundingBox(
                             left = targetFaceRect.left / sessionInformation.videoWidth,
                             top = targetFaceRect.top / sessionInformation.videoHeight,
@@ -338,7 +400,7 @@ internal class LivenessWebSocket(
                         currentColor = currentColor,
                         previousColor = previousColor,
                         sequenceNumber = sequenceNumber,
-                        currentColorStartTimestamp = colorStartTime
+                        currentColorStartTimestamp = adjustedDate(colorStartTime)
                     )
                 )
             )
@@ -358,7 +420,7 @@ internal class LivenessWebSocket(
                     ":content-type" to "application/json"
                 )
             )
-            val eventDate = Date()
+            val eventDate = Date(adjustedDate())
             val signedPayload = signer.getSignedFrame(
                 region,
                 encodedPayload.array(),
@@ -381,12 +443,12 @@ internal class LivenessWebSocket(
 
     fun sendVideoEvent(videoBytes: ByteArray, videoEventTime: Long) {
         if (videoBytes.isNotEmpty()) {
-            videoEndTimestamp = videoEventTime
+            videoEndTimestamp = adjustedDate(videoEventTime)
         }
         credentials?.let {
             val videoBuffer = ByteBuffer.wrap(videoBytes)
             val videoEvent = VideoEvent(
-                timestampMillis = videoEventTime,
+                timestampMillis = adjustedDate(videoEventTime),
                 videoChunk = videoBuffer
             )
             val videoJsonString = Json.encodeToString(videoEvent)
@@ -399,7 +461,7 @@ internal class LivenessWebSocket(
                     ":content-type" to "application/json"
                 )
             )
-            val videoEventDate = Date()
+            val videoEventDate = Date(adjustedDate())
             val signedVideoPayload = signer.getSignedFrame(
                 region,
                 encodedVideoPayload.array(),
@@ -420,11 +482,20 @@ internal class LivenessWebSocket(
     }
 
     fun destroy() {
-        // Close gracefully; 1000 means "normal closure"
-        webSocket?.close(1000, null)
+        // Close gracefully
+        webSocket?.close(NORMAL_SOCKET_CLOSURE_STATUS_CODE, null)
     }
 
+    fun adjustedDate(date: Long = Date().time): Long {
+        return date + timeDiffOffsetInMillis
+    }
+
+    private fun isTimeDiffSafe(diffInMillis: Long) = kotlin.math.abs(diffInMillis) < FOUR_MINUTES
+
     companion object {
+        private const val NORMAL_SOCKET_CLOSURE_STATUS_CODE = 1000
+        private const val FOUR_MINUTES = 1000 * 60 * 4
+        @VisibleForTesting val datePattern = "EEE, d MMM yyyy HH:mm:ss z"
         private val LOG = Amplify.Logging.logger(CategoryType.PREDICTIONS, "amplify:aws-predictions")
     }
 }
