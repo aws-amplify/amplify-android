@@ -134,7 +134,7 @@ internal class PersistentMutationOutbox(localStorageAdapter: LocalStorageAdapter
             chunkResult.forEach {
                 val pendingMutation: PendingMutation<*> = converter.fromRecord<Model>(it)
                 if (pendingMutation.modelSchema.modelClass.name == modelClass) {
-                    acc.add(it.primaryKeyString)
+                    acc.add(it.containedModelId)
                 }
             }
             acc
@@ -255,7 +255,7 @@ internal class PersistentMutationOutbox(localStorageAdapter: LocalStorageAdapter
                             subscriber.onComplete()
                         }
                     }
-                ) { t: DataStoreException? -> subscriber.onError(t) }
+                ) { t: DataStoreException -> subscriber.onError(t) }
             }
                 .flatMapCompletable { notifyContentAvailable() }
         }
@@ -302,7 +302,7 @@ internal class PersistentMutationOutbox(localStorageAdapter: LocalStorageAdapter
                     publishCurrentOutboxStatus()
                     emitter.onComplete()
                 }
-            ) { t: DataStoreException? -> emitter.onError(t) }
+            ) { t: DataStoreException -> emitter.onError(t) }
         }
             .doOnSubscribe { semaphore.acquire() }
             .doOnTerminate { semaphore.release() }
