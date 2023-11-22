@@ -111,6 +111,18 @@ internal class AuthEnvironment internal constructor(
         }
         return deviceCredentials.deviceMetadata as? DeviceMetadata.Metadata
     }
+
+    suspend fun getOrStoreActivePasswordlessUsername(username: String? = null): String {
+        username?.let {
+            credentialStoreClient.storeCredentials(
+                CredentialType.Passwordless, AmplifyCredential.Passwordless(username)
+            )
+            return it
+        } ?: return (credentialStoreClient.loadCredentials(CredentialType.Passwordless)
+                as? AmplifyCredential.Passwordless)?.username
+                ?: ""
+    }
+
 }
 
 internal fun StateMachineEvent.isAuthEvent(): AuthEvent.EventType? {

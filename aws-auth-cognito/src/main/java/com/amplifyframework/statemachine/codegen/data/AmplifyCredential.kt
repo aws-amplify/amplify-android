@@ -34,6 +34,10 @@ internal sealed class AmplifyCredential {
         val deviceMetadata: DeviceMetadata
     }
 
+    interface PasswordlessCredential {
+        val username: String
+    }
+
     @Serializable
     @SerialName("empty")
     object Empty : AmplifyCredential()
@@ -41,6 +45,10 @@ internal sealed class AmplifyCredential {
     @Serializable
     @SerialName("userPool")
     data class UserPool(override val signedInData: SignedInData) : AmplifyCredential(), UserPoolTypeCredential
+
+    @Serializable
+    @SerialName("passwordless")
+    data class Passwordless(override val username: String) : AmplifyCredential(), PasswordlessCredential
 
     @Serializable
     @SerialName("identityPool")
@@ -153,4 +161,6 @@ internal sealed class CredentialType {
     object Amplify : CredentialType()
     data class Device(val username: String) : CredentialType()
     object ASF : CredentialType()
+
+    object Passwordless : CredentialType()
 }
