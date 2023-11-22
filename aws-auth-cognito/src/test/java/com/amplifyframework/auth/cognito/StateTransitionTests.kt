@@ -387,12 +387,13 @@ class StateTransitionTests : StateTransitionTestBase() {
                         SignInChallengeEvent(
                             SignInChallengeEvent.EventType.RetryVerifyChallengeAnswer(
                                 "test",
-                                mapOf(),
+                                emptyMap(),
+                                emptyList(),
                                 AuthChallenge(
                                     ChallengeNameType.CustomChallenge.toString(),
                                     "Test",
                                     "session_mock_value",
-                                    mapOf()
+                                    emptyMap(),
                                 )
                             )
                         )
@@ -401,7 +402,8 @@ class StateTransitionTests : StateTransitionTestBase() {
                         SignInChallengeEvent(
                             SignInChallengeEvent.EventType.VerifyChallengeAnswer(
                                 "test",
-                                mapOf()
+                                emptyMap(),
+                                emptyList()
                             )
                         )
                     )
@@ -481,7 +483,7 @@ class StateTransitionTests : StateTransitionTestBase() {
                 challengeState?.apply {
                     stateMachine.send(
                         SignInChallengeEvent(
-                            SignInChallengeEvent.EventType.VerifyChallengeAnswer("test", mapOf())
+                            SignInChallengeEvent.EventType.VerifyChallengeAnswer("test", emptyMap(), emptyList())
                         )
                     )
                 }
