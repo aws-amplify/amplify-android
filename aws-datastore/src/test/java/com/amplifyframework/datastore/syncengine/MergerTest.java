@@ -19,14 +19,18 @@ import android.database.sqlite.SQLiteConstraintException;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.SchemaRegistry;
 import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.core.model.temporal.Temporal;
+import com.amplifyframework.datastore.DataStoreConfiguration;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.appsync.ModelMetadata;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
 import com.amplifyframework.datastore.storage.InMemoryStorageAdapter;
 import com.amplifyframework.datastore.storage.SynchronousStorageAdapter;
+import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter;
+import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider;
 import com.amplifyframework.testmodels.commentsblog.Blog;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testutils.random.RandomString;
@@ -35,6 +39,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
+import org.robolectric.android.util.concurrent.InlineExecutorService;
 
 import java.util.Collections;
 import java.util.List;
@@ -49,6 +54,8 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.spy;
 
+import androidx.test.core.app.ApplicationProvider;
+
 /**
  * Tests the {@link Merger}.
  */
@@ -56,7 +63,7 @@ import static org.mockito.Mockito.spy;
 public final class MergerTest {
     private static final long REASONABLE_WAIT_TIME = TimeUnit.SECONDS.toMillis(2);
 
-    private InMemoryStorageAdapter inMemoryStorageAdapter;
+    private SQLiteStorageAdapter sqliteStorageAdapter;
     private SynchronousStorageAdapter storageAdapter;
     private MutationOutbox mutationOutbox;
     private Merger merger;
@@ -69,12 +76,21 @@ public final class MergerTest {
      * components.
      */
     @Before
-    public void setup() {
-        this.inMemoryStorageAdapter = spy(InMemoryStorageAdapter.create());
-        this.storageAdapter = SynchronousStorageAdapter.delegatingTo(inMemoryStorageAdapter);
-        this.mutationOutbox = new PersistentMutationOutbox(inMemoryStorageAdapter);
-        VersionRepository versionRepository = new VersionRepository(inMemoryStorageAdapter);
-        this.merger = new Merger(mutationOutbox, versionRepository, inMemoryStorageAdapter);
+    public void setup() throws DataStoreException {
+        SQLiteStorageAdapter sqLiteStorageAdapter = SQLiteStorageAdapter.forTest(
+                SchemaRegistry.instance(),
+                AmplifyModelProvider.getInstance(),
+                new InlineExecutorService()
+        );
+
+        sqLiteStorageAdapter.initialize(ApplicationProvider.getApplicationContext()
+                , (c) -> {}, (b) -> {}, DataStoreConfiguration.defaults());
+
+        this.sqliteStorageAdapter = spy(sqLiteStorageAdapter);
+        this.storageAdapter = SynchronousStorageAdapter.delegatingTo(sqliteStorageAdapter);
+        this.mutationOutbox = new PersistentMutationOutbox(sqliteStorageAdapter);
+        VersionRepository versionRepository = new VersionRepository(sqliteStorageAdapter);
+        this.merger = new Merger(mutationOutbox, versionRepository, sqliteStorageAdapter);
     }
 
     /**
@@ -221,7 +237,8 @@ public final class MergerTest {
             .build();
         ModelMetadata localMetadata =
             new ModelMetadata(blogOwner.getId(), false, 1, Temporal.Timestamp.now());
-        storageAdapter.save(blogOwner, localMetadata);
+        ModelWithMetadata<BlogOwner> modelWithMetadata = new ModelWithMetadata<>(blogOwner, localMetadata);
+        storageAdapter.save(modelWithMetadata.getModel(), modelWithMetadata.getSyncMetadata());
 
         ModelSchema schema = ModelSchema.fromModelClass(BlogOwner.class);
         PendingMutation<BlogOwner> pendingMutation = PendingMutation.instance(
@@ -444,7 +461,7 @@ public final class MergerTest {
 
         // Enforce foreign key constraint on in-memory storage adapter
         doThrow(SQLiteConstraintException.class)
-                .when(inMemoryStorageAdapter)
+                .when(sqliteStorageAdapter)
                 .save(eq(orphanedBlog), any(), any(), any(), any());
 
         // Act: merge a creation for an item
