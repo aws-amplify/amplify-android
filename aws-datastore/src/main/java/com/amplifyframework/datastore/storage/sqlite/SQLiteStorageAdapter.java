@@ -24,6 +24,7 @@ import androidx.annotation.VisibleForTesting;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.annotations.InternalAmplifyApi;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
@@ -160,21 +161,24 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     private SQLiteStorageAdapter(
             SchemaRegistry schemaRegistry,
             ModelProvider userModelsProvider,
-            ModelProvider systemModelsProvider) {
-        this(schemaRegistry, userModelsProvider, systemModelsProvider, DEFAULT_DATABASE_NAME);
+            ModelProvider systemModelsProvider,
+            ExecutorService executorService) {
+        this(schemaRegistry, userModelsProvider, systemModelsProvider, DEFAULT_DATABASE_NAME, executorService);
     }
 
     private SQLiteStorageAdapter(
         SchemaRegistry schemaRegistry,
         ModelProvider userModelsProvider,
         ModelProvider systemModelsProvider,
-        String databaseName) {
+        String databaseName,
+        ExecutorService executorService) {
         this.schemaRegistry = schemaRegistry;
         this.modelsProvider = CompoundModelProvider.of(systemModelsProvider, userModelsProvider);
         this.gson = GsonFactory.instance();
         this.itemChangeSubject = PublishSubject.<StorageItemChange<? extends Model>>create().toSerialized();
         this.toBeDisposed = new CompositeDisposable();
         this.databaseName = databaseName;
+        this.threadPool = executorService;
     }
 
     /**
@@ -190,7 +194,28 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         return new SQLiteStorageAdapter(
             schemaRegistry,
             Objects.requireNonNull(userModelsProvider),
-            SystemModelsProviderFactory.create()
+            SystemModelsProviderFactory.create(),
+            null
+        );
+    }
+
+    /**
+     * Gets a SQLiteStorageAdapter that can be initialized to use the provided models.
+     * @param schemaRegistry Registry of schema for all models and custom types in the system
+     * @param userModelsProvider A provider of models that will be represented in SQL
+     * @param executorService to execute operations on
+     * @return A SQLiteStorageAdapter that will host the provided models in SQL tables
+     */
+    @InternalAmplifyApi
+    public static SQLiteStorageAdapter forTest(
+            @NonNull SchemaRegistry schemaRegistry,
+            @NonNull ModelProvider userModelsProvider,
+            @NonNull ExecutorService executorService) {
+        return new SQLiteStorageAdapter(
+                schemaRegistry,
+                Objects.requireNonNull(userModelsProvider),
+                SystemModelsProviderFactory.create(),
+                executorService
         );
     }
 
@@ -210,7 +235,8 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             schemaRegistry,
             Objects.requireNonNull(userModelsProvider),
             SystemModelsProviderFactory.create(),
-            databaseName
+            databaseName,
+            null
         );
     }
 
@@ -226,10 +252,13 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         Objects.requireNonNull(context);
         Objects.requireNonNull(onSuccess);
         Objects.requireNonNull(onError);
-        // Create a thread pool large enough to take advantage of parallelization, but small enough to avoid
-        // OutOfMemoryError and CursorWindowAllocationException issues.
-        this.threadPool = Executors.newFixedThreadPool(
-                Runtime.getRuntime().availableProcessors() * THREAD_POOL_SIZE_MULTIPLIER);
+
+        if (threadPool == null) {
+            // Create a thread pool large enough to take advantage of parallelization, but small enough to avoid
+            // OutOfMemoryError and CursorWindowAllocationException issues.
+            this.threadPool = Executors.newFixedThreadPool(
+                    Runtime.getRuntime().availableProcessors() * THREAD_POOL_SIZE_MULTIPLIER);
+        }
         this.context = context;
         this.dataStoreConfiguration = dataStoreConfiguration;
         threadPool.submit(() -> {
