@@ -18,6 +18,7 @@ package com.amplifyframework.auth.cognito.actions
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ResourceNotFoundException
 import aws.sdk.kotlin.services.cognitoidentityprovider.respondToAuthChallenge
+import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.auth.cognito.helpers.SignInChallengeHelper
@@ -32,9 +33,11 @@ import com.amplifyframework.statemachine.codegen.events.SignInChallengeEvent
 internal object SignInChallengeCognitoActions : SignInChallengeActions {
     private const val KEY_SECRET_HASH = "SECRET_HASH"
     private const val KEY_USERNAME = "USERNAME"
+    private const val KEY_PREFIX_USER_ATTRIBUTE = "userAttributes."
     override fun verifyChallengeAuthAction(
         answer: String,
         metadata: Map<String, String>,
+        attributes: List<AuthUserAttribute>,
         challenge: AuthChallenge
     ): Action = Action<AuthEnvironment>("VerifySignInChallenge") { id, dispatcher ->
         logger.verbose("$id Starting execution")
@@ -49,6 +52,12 @@ internal object SignInChallengeCognitoActions : SignInChallengeActions {
             getChallengeResponseKey(challenge.challengeName)?.also { responseKey ->
                 challengeResponses[responseKey] = answer
             }
+
+            challengeResponses.putAll(
+                attributes.map {
+                    Pair("${KEY_PREFIX_USER_ATTRIBUTE}${it.key.keyString}", it.value)
+                }
+            )
 
             val secretHash = AuthHelper.getSecretHash(
                 username,
@@ -90,6 +99,7 @@ internal object SignInChallengeCognitoActions : SignInChallengeActions {
                     SignInChallengeEvent.EventType.RetryVerifyChallengeAnswer(
                         answer,
                         metadata,
+                        attributes,
                         challenge
                     )
                 )
