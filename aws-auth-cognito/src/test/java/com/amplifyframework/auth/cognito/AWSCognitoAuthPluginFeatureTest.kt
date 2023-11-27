@@ -53,7 +53,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.newSingleThreadContext
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import org.json.JSONObject
 import org.junit.After
@@ -167,6 +166,10 @@ class AWSCognitoAuthPluginFeatureTest(private val testCase: FeatureTestCase) {
         val credentialStoreClient = mockk<CredentialStoreClient>(relaxed = true)
         coEvery { credentialStoreClient.loadCredentials(capture(slot<CredentialType.Device>())) } coAnswers {
             AmplifyCredential.DeviceData(DeviceMetadata.Empty)
+        }
+
+        coEvery { credentialStoreClient.loadCredentials(capture(slot<CredentialType.Passwordless>())) } coAnswers {
+            AmplifyCredential.Passwordless("username")
         }
 
         val logger = mockk<Logger>(relaxed = true)
