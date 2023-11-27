@@ -164,16 +164,26 @@ import com.amplifyframework.statemachine.codegen.states.SetupTOTPState
 import com.amplifyframework.statemachine.codegen.states.SignInChallengeState
 import com.amplifyframework.statemachine.codegen.states.SignInState
 import com.amplifyframework.statemachine.codegen.states.SignOutState
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
+import okhttp3.Call
+import okhttp3.Callback
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.Response
+import java.io.IOException
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.async
-import kotlinx.coroutines.launch
 
 internal class RealAWSCognitoAuthPlugin(
     private val configuration: AuthConfiguration,
@@ -361,7 +371,83 @@ internal class RealAWSCognitoAuthPlugin(
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
     ) {
-        TODO("Not yet implemented")
+        val magicLinkOptions = options as? AWSCognitoAuthMagicLinkOptions
+        if(flow == AuthPasswordlessFlow.SIGN_IN)
+        {
+            val signInOptions = AWSCognitoAuthSignInOptions.CognitoBuilder().authFlowType(AuthFlowType.CUSTOM_AUTH_WITHOUT_SRP).metadata(
+                magicLinkOptions?.clientMetadata?: mapOf()
+            ).build()
+            signIn(
+                username,
+                "",
+                signInOptions,
+                {
+                    onSuccess.accept(
+                        AuthSignInResult(
+                            true,
+                            AuthNextSignInStep(
+                                AuthSignInStep.CONFIRM_SIGN_IN_WITH_MAGIC_LINK,
+                                it.nextStep.additionalInfo ?: mapOf(),
+                                it.nextStep.codeDeliveryDetails,
+                                it.nextStep.totpSetupDetails,
+                                it.nextStep.allowedMFATypes
+                            )
+                        )
+                    )
+                },
+                onError
+            )
+        } else {
+            signUpWithMagicLink(
+                username,
+                "", //TODO: This will be added in the configuration and will be captured from there.
+                redirectURL,
+                magicLinkOptions,
+                {
+                    signInWithMagicLink(
+                        username, AuthPasswordlessFlow.SIGN_IN, "", options, onSuccess, onError
+                    )
+                },
+                onError
+            )
+        }
+    }
+
+    private fun signUpWithMagicLink(
+        username: String,
+        apigatewayURL: String,
+        redirectURL: String,
+        magicLinkOptions: AWSCognitoAuthMagicLinkOptions?,
+        onSuccess: Action,
+        onError: Consumer<AuthException>
+    ) {
+        if (configuration.userPool == null) {
+            onError.accept(InvalidUserPoolConfigurationException())
+            return
+        }
+        val payload = buildJsonObject {
+            put("userPoolId", configuration.userPool.poolId)
+            put("region", configuration.userPool.region)
+            put("user", buildJsonObject {
+                "username" to username
+                magicLinkOptions?.userMetadata
+            })
+        }
+
+
+        val okHttpClient = OkHttpClient()
+        val mediaType = "application/json; charset=utf-8".toMediaType()
+        val body = payload.toString().toRequestBody(mediaType)
+        val request = Request.Builder().post(body).url(apigatewayURL).build()
+        okHttpClient.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                onError.accept(AuthException("Sign Up failed", AmplifyException.TODO_RECOVERY_SUGGESTION, e))
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                onSuccess.call()
+            }
+        })
     }
 
     override fun signInWithMagicLink(
@@ -423,7 +509,84 @@ internal class RealAWSCognitoAuthPlugin(
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
     ) {
-        TODO("Not yet implemented")
+        val otpOptions = options as? AWSCognitoAuthOTPOptions
+        if (flow == AuthPasswordlessFlow.SIGN_IN) {
+            val signInOptions =
+                AWSCognitoAuthSignInOptions.CognitoBuilder().authFlowType(AuthFlowType.CUSTOM_AUTH_WITHOUT_SRP)
+                    .metadata(
+                        otpOptions?.clientMetadata ?: mapOf()
+                    ).build()
+            signIn(
+                username,
+                "",
+                signInOptions,
+                {
+                    GlobalScope.launch {
+                        authEnvironment.getOrStoreActivePasswordlessUsername(username)
+                        onSuccess.accept(
+                            AuthSignInResult(
+                                true,
+                                AuthNextSignInStep(
+                                    AuthSignInStep.CONFIRM_SIGN_IN_WITH_MAGIC_LINK,
+                                    it.nextStep.additionalInfo ?: mapOf(),
+                                    it.nextStep.codeDeliveryDetails,
+                                    it.nextStep.totpSetupDetails,
+                                    it.nextStep.allowedMFATypes
+                                )
+                            )
+                        )
+                    }
+                },
+                onError
+            )
+        } else {
+            signUpWithOTP(
+                username,
+                "",
+                otpOptions,
+                {
+                    signInWithOTP(
+                        username, AuthPasswordlessFlow.SIGN_IN, destination, options, onSuccess, onError
+                    )
+                },
+                onError
+            )
+        }
+    }
+
+    private fun signUpWithOTP(
+        username: String,
+        apigatewayURL: String,
+        otpOptions: AWSCognitoAuthOTPOptions?,
+        onSuccess: Action,
+        onError: Consumer<AuthException>
+    ) {
+        if (configuration.userPool == null) {
+            onError.accept(InvalidUserPoolConfigurationException())
+            return
+        }
+        val payload = buildJsonObject {
+            put("userPoolId", configuration.userPool.poolId)
+            put("region", configuration.userPool.region)
+            put("user", buildJsonObject {
+                "username" to username
+                otpOptions?.userMetadata
+            })
+        }
+
+        val okHttpClient = OkHttpClient()
+        val mediaType = "application/json; charset=utf-8".toMediaType()
+        val body = payload.toString().toRequestBody(mediaType)
+        val request = Request.Builder().post(body).url(apigatewayURL).build()
+        okHttpClient.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                onError.accept(AuthException("Sign Up failed", AmplifyException.TODO_RECOVERY_SUGGESTION, e))
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                onSuccess.call()
+            }
+        })
     }
 
     override fun signInWithOTP(
