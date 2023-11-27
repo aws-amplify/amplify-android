@@ -100,7 +100,7 @@ object ConfirmSignInMagicLinkTestCaseGenerator : SerializableProvider {
         ),
         validations = listOf(
             mockedSignInSuccessExpectation,
-            ExpectationShapes.State("PasswordlessSignIn_SigningIn.json")
+            ExpectationShapes.State("SignedIn_SessionEstablished.json")
         )
     )
 

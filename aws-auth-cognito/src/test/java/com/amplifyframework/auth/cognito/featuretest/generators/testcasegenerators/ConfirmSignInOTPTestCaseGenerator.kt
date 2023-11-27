@@ -84,7 +84,7 @@ object ConfirmSignInOTPTestCaseGenerator : SerializableProvider {
         description = "Test that confirm signIn with OTP invokes proper cognito request and returns success",
         preConditions = PreConditions(
             "authconfiguration.json",
-            "SigningIn_SigningIn.json",
+            "PasswordlessSignIn_SigningIn.json",
             mockedResponses = listOf(
                 mockedRespondToAuthChallengeResponse,
                 mockedIdentityIdResponse,
@@ -113,7 +113,7 @@ object ConfirmSignInOTPTestCaseGenerator : SerializableProvider {
                 description = "Test that invalid code on confirm SignIn with OTP errors out",
                 preConditions = PreConditions(
                     "authconfiguration.json",
-                    "SigningIn_SigningIn.json",
+                    "PasswordlessSignIn_SigningIn.json",
                     mockedResponses = listOf(
                         MockResponse(
                             CognitoType.CognitoIdentityProvider,
