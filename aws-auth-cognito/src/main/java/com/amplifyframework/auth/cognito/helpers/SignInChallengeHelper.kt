@@ -135,8 +135,7 @@ internal object SignInChallengeHelper {
                 )
             )
             onSuccess.accept(authSignInResult)
-        }
-        else {
+        } else {
             when (ChallengeNameType.fromValue(challenge.challengeName)) {
                 is ChallengeNameType.SmsMfa -> {
                     val deliveryDetails = AuthCodeDeliveryDetails(

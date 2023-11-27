@@ -162,5 +162,5 @@ internal sealed class CredentialType {
     data class Device(val username: String) : CredentialType()
     object ASF : CredentialType()
 
-    object Passwordless : CredentialType()
+    data class Passwordless(val username: String) : CredentialType()
 }

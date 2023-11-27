@@ -47,21 +47,6 @@ object ConfirmSignInMagicLinkTestCaseGenerator : SerializableProvider {
         ).toJsonElement()
     )
 
-    private val mockedRespondToAuthCustomChallengeResponse = MockResponse(
-        CognitoType.CognitoIdentityProvider,
-        "respondToAuthChallenge",
-        ResponseType.Success,
-        mapOf(
-            "session" to "someSession",
-            "challengeName" to "CUSTOM_CHALLENGE",
-            "challengeParameters" to mapOf(
-                "SALT" to "abc",
-                "SECRET_BLOCK" to "secretBlock",
-                "SRP_B" to "def"
-            )
-        ).toJsonElement()
-    )
-
     private val mockedIdentityIdResponse = MockResponse(
         CognitoType.CognitoIdentity,
         "getId",
@@ -95,24 +80,8 @@ object ConfirmSignInMagicLinkTestCaseGenerator : SerializableProvider {
         ).toJsonElement()
     )
 
-    private val mockedConfirmSignInSuccessWithChallengeExpectation = ExpectationShapes.Amplify(
-        apiName = AuthAPI.confirmSignInWithMagicLink,
-        responseType = ResponseType.Success,
-        response = mapOf(
-            "isSignedIn" to false,
-            "nextStep" to mapOf(
-                "signInStep" to "CONFIRM_SIGN_IN_WITH_CUSTOM_CHALLENGE",
-                "additionalInfo" to mapOf(
-                    "SALT" to "abc",
-                    "SECRET_BLOCK" to "secretBlock",
-                    "SRP_B" to "def"
-                ),
-            )
-        ).toJsonElement()
-    )
-
     private val baseCase = FeatureTestCase(
-        description = "Test that SignIn with SMS challenge invokes proper cognito request and returns success",
+        description = "Test that confirm SignIn with magic link invokes proper cognito request and returns success",
         preConditions = PreConditions(
             "authconfiguration.json",
             "SigningIn_SigningIn.json",
@@ -141,7 +110,7 @@ object ConfirmSignInMagicLinkTestCaseGenerator : SerializableProvider {
                 message = "Confirmation code entered is not correct."
             }
             return baseCase.copy(
-                description = "Test that invalid code on confirm SignIn with SMS challenge errors out",
+                description = "Test that invalid code on confirm SignIn with magic link errors out",
                 preConditions = PreConditions(
                     "authconfiguration.json",
                     "SigningIn_SigningIn.json",
@@ -167,27 +136,5 @@ object ConfirmSignInMagicLinkTestCaseGenerator : SerializableProvider {
             )
         }
 
-    private val successCaseWithSecondaryChallenge = FeatureTestCase(
-        description = "Test that confirmsignin secondary challenge processes the custom challenge returned",
-        preConditions = PreConditions(
-            "authconfiguration.json",
-            "SigningIn_SigningIn.json",
-            mockedResponses = listOf(
-                mockedRespondToAuthCustomChallengeResponse
-            )
-        ),
-        api = API(
-            AuthAPI.confirmSignInWithMagicLink,
-            params = mapOf(
-                "challengeResponse" to challengeCode
-            ).toJsonElement(),
-            options = JsonObject(emptyMap())
-        ),
-        validations = listOf(
-            mockedConfirmSignInSuccessWithChallengeExpectation,
-            ExpectationShapes.State("SigningIn_SigningIn.json")
-        )
-    )
-
-    override val serializables: List<Any> = listOf(baseCase, errorCase, successCaseWithSecondaryChallenge)
+    override val serializables: List<Any> = listOf(baseCase, errorCase)
 }

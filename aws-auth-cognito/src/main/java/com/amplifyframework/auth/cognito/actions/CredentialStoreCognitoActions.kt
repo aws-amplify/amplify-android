@@ -66,9 +66,11 @@ internal object CredentialStoreCognitoActions : CredentialStoreActions {
             logger.verbose("$id Starting execution")
             val evt = try {
                 when (credentialType) {
-                    CredentialType.Amplify -> credentialStore.deleteCredential()
+                    is CredentialType.Amplify -> credentialStore.deleteCredential()
                     is CredentialType.Device -> credentialStore.deleteDeviceKeyCredential(credentialType.username)
-                    CredentialType.ASF -> credentialStore.deleteASFDevice()
+                    is CredentialType.ASF -> credentialStore.deleteASFDevice()
+                    is CredentialType.Passwordless ->
+                        credentialStore.deletePasswordlessDeviceKeyCredential(credentialType.username)
                 }
                 CredentialStoreEvent(CredentialStoreEvent.EventType.CompletedOperation(AmplifyCredential.Empty))
             } catch (error: CredentialStoreError) {
@@ -83,11 +85,13 @@ internal object CredentialStoreCognitoActions : CredentialStoreActions {
             logger.verbose("$id Starting execution")
             val evt = try {
                 val credentials: AmplifyCredential = when (credentialType) {
-                    CredentialType.Amplify -> credentialStore.retrieveCredential()
+                    is CredentialType.Amplify -> credentialStore.retrieveCredential()
                     is CredentialType.Device -> {
                         AmplifyCredential.DeviceData(credentialStore.retrieveDeviceMetadata(credentialType.username))
                     }
-                    CredentialType.ASF -> credentialStore.retrieveASFDevice()
+                    is CredentialType.ASF -> credentialStore.retrieveASFDevice()
+                    is CredentialType.Passwordless ->
+                        credentialStore.retrievePasswordlessDeviceKeyCredential(credentialType.username)
                 }
                 CredentialStoreEvent(CredentialStoreEvent.EventType.CompletedOperation(credentials))
             } catch (error: CredentialStoreError) {
@@ -109,9 +113,15 @@ internal object CredentialStoreCognitoActions : CredentialStoreActions {
                             credentialStore.saveDeviceMetadata(credentialType.username, it.deviceMetadata)
                         }
                     }
-                    CredentialType.ASF -> {
+                    is CredentialType.ASF -> {
                         val asfDevice = credentials as? AmplifyCredential.ASFDevice
                         asfDevice?.id?.let { credentialStore.saveASFDevice(asfDevice) }
+                    }
+                    is CredentialType.Passwordless -> {
+                        val passwordlessCredential = credentials as? AmplifyCredential.Passwordless
+                        passwordlessCredential?.let {
+                            credentialStore.savePasswordlessCredential(it)
+                        }
                     }
                 }
                 CredentialStoreEvent(CredentialStoreEvent.EventType.CompletedOperation(credentials))

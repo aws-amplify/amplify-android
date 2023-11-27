@@ -164,16 +164,16 @@ import com.amplifyframework.statemachine.codegen.states.SetupTOTPState
 import com.amplifyframework.statemachine.codegen.states.SignInChallengeState
 import com.amplifyframework.statemachine.codegen.states.SignInState
 import com.amplifyframework.statemachine.codegen.states.SignOutState
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.async
-import kotlinx.coroutines.launch
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 
 internal class RealAWSCognitoAuthPlugin(
     private val configuration: AuthConfiguration,
@@ -371,13 +371,13 @@ internal class RealAWSCognitoAuthPlugin(
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
     ) {
-       signInWithMagicLink(
-           username,
-           flow,
-           redirectURL,
-           AWSCognitoAuthMagicLinkOptions.CognitoBuilder().build(),
-           onSuccess, onError
-       )
+        signInWithMagicLink(
+            username,
+            flow,
+            redirectURL,
+            AWSCognitoAuthMagicLinkOptions.CognitoBuilder().build(),
+            onSuccess, onError
+        )
     }
 
     override fun confirmSignInWithMagicLink(
@@ -845,7 +845,6 @@ internal class RealAWSCognitoAuthPlugin(
                             "SMS_MFA" -> AuthSignInStep.CONFIRM_SIGN_IN_WITH_SMS_MFA_CODE
                             "NEW_PASSWORD_REQUIRED" -> AuthSignInStep.CONFIRM_SIGN_IN_WITH_NEW_PASSWORD
                             "SOFTWARE_TOKEN_MFA" -> AuthSignInStep.CONFIRM_SIGN_IN_WITH_TOTP_CODE
-                            "PROVIDE_PARAMETERS" -> AuthSignInStep.CONFIRM_SIGN_IN_WITH_OTP
                             "SELECT_MFA_TYPE" -> {
                                 signInChallengeState.challenge.parameters?.get("MFAS_CAN_CHOOSE")?.let {
                                     allowedMFATypes = SignInChallengeHelper.getAllowedMFATypes(it)

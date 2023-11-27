@@ -49,6 +49,8 @@ object AuthOptionsFactory {
         resetPassword -> AuthResetPasswordOptions.defaults()
         signUp -> getSignUpOptions(optionsData)
         AuthAPI.confirmSignIn -> AuthConfirmSignInOptions.defaults()
+        AuthAPI.confirmSignInWithMagicLink -> AuthConfirmSignInOptions.defaults()
+        AuthAPI.confirmSignInWithOTP -> AuthConfirmSignInOptions.defaults()
         AuthAPI.confirmSignUp -> AuthConfirmSignUpOptions.defaults()
         AuthAPI.confirmUserAttribute -> null
         AuthAPI.deleteUser -> null
@@ -62,6 +64,8 @@ object AuthOptionsFactory {
         AuthAPI.resendSignUpCode -> AuthResendSignUpCodeOptions.defaults()
         AuthAPI.resendUserAttributeConfirmationCode -> AuthResendUserAttributeConfirmationCodeOptions.defaults()
         signIn -> getSignInOptions(optionsData)
+        AuthAPI.signInWithOTP -> TODO()
+        AuthAPI.signInWithMagicLink -> TODO()
         AuthAPI.signInWithSocialWebUI -> AuthWebUISignInOptions.builder().build()
         AuthAPI.signInWithWebUI -> AuthWebUISignInOptions.builder().build()
         AuthAPI.signOut -> getSignOutOptions(optionsData)
