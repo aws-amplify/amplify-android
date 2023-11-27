@@ -84,7 +84,7 @@ object ConfirmSignInMagicLinkTestCaseGenerator : SerializableProvider {
         description = "Test that confirm SignIn with magic link invokes proper cognito request and returns success",
         preConditions = PreConditions(
             "authconfiguration.json",
-            "SigningIn_SigningIn.json",
+            "PasswordlessSignIn_SigningIn.json",
             mockedResponses = listOf(
                 mockedRespondToAuthChallengeResponse,
                 mockedIdentityIdResponse,
@@ -100,7 +100,7 @@ object ConfirmSignInMagicLinkTestCaseGenerator : SerializableProvider {
         ),
         validations = listOf(
             mockedSignInSuccessExpectation,
-            ExpectationShapes.State("SignedIn_SessionEstablished.json")
+            ExpectationShapes.State("PasswordlessSignIn_SigningIn.json")
         )
     )
 
@@ -113,7 +113,7 @@ object ConfirmSignInMagicLinkTestCaseGenerator : SerializableProvider {
                 description = "Test that invalid code on confirm SignIn with magic link errors out",
                 preConditions = PreConditions(
                     "authconfiguration.json",
-                    "SigningIn_SigningIn.json",
+                    "PasswordlessSignIn_SigningIn.json",
                     mockedResponses = listOf(
                         MockResponse(
                             CognitoType.CognitoIdentityProvider,
