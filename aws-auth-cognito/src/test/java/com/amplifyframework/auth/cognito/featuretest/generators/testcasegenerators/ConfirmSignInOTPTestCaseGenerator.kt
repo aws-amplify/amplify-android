@@ -15,9 +15,12 @@
 
 package com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerators
 
+import aws.sdk.kotlin.services.cognitoidentity.model.Credentials
+import aws.sdk.kotlin.services.cognitoidentity.model.GetCredentialsForIdentityResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AuthenticationResultType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.CodeMismatchException
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.RespondToAuthChallengeResponse
+import aws.smithy.kotlin.runtime.time.Instant
 import com.amplifyframework.auth.cognito.CognitoAuthExceptionConverter
 import com.amplifyframework.auth.cognito.featuretest.API
 import com.amplifyframework.auth.cognito.featuretest.AuthAPI
@@ -60,14 +63,15 @@ object ConfirmSignInOTPTestCaseGenerator : SerializableProvider {
         CognitoType.CognitoIdentity,
         "getCredentialsForIdentity",
         ResponseType.Success,
-        mapOf(
-            "credentials" to mapOf(
-                "accessKeyId" to "someAccessKey",
-                "secretKey" to "someSecretKey",
-                "sessionToken" to AuthStateJsonGenerator.dummyToken,
-                "expiration" to 2342134
-            )
-        ).toJsonElement()
+        GetCredentialsForIdentityResponse.invoke {
+            credentials = Credentials.invoke {
+                accessKeyId = "someAccessKey"
+                secretKey = "someAccessKey"
+                sessionToken = AuthStateJsonGenerator.dummyToken
+                expiration = Instant.MAX_VALUE
+            }
+        }.toJsonElement()
+
     )
 
     private val mockedSignInSuccessExpectation = ExpectationShapes.Amplify(
