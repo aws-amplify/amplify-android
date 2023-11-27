@@ -15,7 +15,9 @@
 
 package com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerators
 
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.AuthenticationResultType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.CodeMismatchException
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.RespondToAuthChallengeResponse
 import com.amplifyframework.auth.cognito.CognitoAuthExceptionConverter
 import com.amplifyframework.auth.cognito.featuretest.API
 import com.amplifyframework.auth.cognito.featuretest.AuthAPI
@@ -37,14 +39,14 @@ object ConfirmSignInOTPTestCaseGenerator : SerializableProvider {
         CognitoType.CognitoIdentityProvider,
         "respondToAuthChallenge",
         ResponseType.Success,
-        mapOf(
-            "authenticationResult" to mapOf(
-                "idToken" to AuthStateJsonGenerator.dummyToken,
-                "accessToken" to AuthStateJsonGenerator.dummyToken,
-                "refreshToken" to AuthStateJsonGenerator.dummyToken,
-                "expiresIn" to 300
-            )
-        ).toJsonElement()
+        RespondToAuthChallengeResponse.invoke {
+            authenticationResult = AuthenticationResultType.invoke {
+                idToken = AuthStateJsonGenerator.dummyToken
+                accessToken = AuthStateJsonGenerator.dummyToken
+                refreshToken = AuthStateJsonGenerator.dummyToken
+                expiresIn = 300
+            }
+        }.toJsonElement()
     )
 
     private val mockedIdentityIdResponse = MockResponse(
