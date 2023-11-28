@@ -74,6 +74,8 @@ import com.amplifyframework.auth.cognito.helpers.SessionHelper
 import com.amplifyframework.auth.cognito.helpers.SignInChallengeHelper
 import com.amplifyframework.auth.cognito.helpers.getMFAType
 import com.amplifyframework.auth.cognito.helpers.identityProviderName
+import com.amplifyframework.auth.cognito.options.AWSAuthCognitoAuthConfirmSignInMagicLinkOptions
+import com.amplifyframework.auth.cognito.options.AWSAuthCognitoAuthConfirmSignInOTPOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthConfirmSignInOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthConfirmSignUpOptions
@@ -389,7 +391,8 @@ internal class RealAWSCognitoAuthPlugin(
         onError: Consumer<AuthException>
     ) {
         val providedOptions =
-            options as? AWSCognitoAuthConfirmSignInOptions ?: AWSCognitoAuthConfirmSignInOptions.builder().build()
+            options as? AWSAuthCognitoAuthConfirmSignInMagicLinkOptions
+                ?: AWSAuthCognitoAuthConfirmSignInMagicLinkOptions.builder().build()
 
         val signInOptions = AWSCognitoAuthSignInOptions.builder()
             .metadata(providedOptions.metadata).authFlowType(AuthFlowType.CUSTOM_AUTH_WITHOUT_SRP).build()
@@ -402,7 +405,7 @@ internal class RealAWSCognitoAuthPlugin(
                 updatedPasswordlessMetadata[KEY_PASSWORDLESS_SIGNINMETHOD] = "MAGIC_LINK"
                 updatedPasswordlessMetadata[KEY_PASSWORDLESS_ACTION] = "CONFIRM"
 
-                val confirmSignInOptions = AWSCognitoAuthConfirmSignInOptions.builder()
+                val confirmSignInOptions = AWSAuthCognitoAuthConfirmSignInMagicLinkOptions.builder()
                     .metadata(updatedPasswordlessMetadata)
                     .build()
 
@@ -463,13 +466,14 @@ internal class RealAWSCognitoAuthPlugin(
         onError: Consumer<AuthException>
     ) {
         val providedOptions =
-            options as? AWSCognitoAuthConfirmSignInOptions ?: AWSCognitoAuthConfirmSignInOptions.builder().build()
+            options as? AWSAuthCognitoAuthConfirmSignInOTPOptions
+                ?: AWSAuthCognitoAuthConfirmSignInOTPOptions.builder().build()
         val metadata: MutableMap<String, String> = providedOptions.metadata.toMutableMap()
 
         metadata[KEY_PASSWORDLESS_SIGNINMETHOD] = "OTP"
         metadata[KEY_PASSWORDLESS_ACTION] = "CONFIRM"
 
-        val confirmSignInOptions = AWSCognitoAuthConfirmSignInOptions.builder().metadata(metadata)
+        val confirmSignInOptions = AWSAuthCognitoAuthConfirmSignInOTPOptions.builder().metadata(metadata)
             .build()
 
         confirmSignIn(
