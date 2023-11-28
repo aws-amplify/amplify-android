@@ -64,7 +64,7 @@ data class AWSAuthCognitoAuthConfirmSignInOTPOptions internal constructor(
 
         /**
          * Construct and return the object with the values set in the builder.
-         * @return a new instance of AWSCognitoAuthConfirmSignInOptions with the values specified in the builder.
+         * @return a new instance of AWSAuthCognitoAuthConfirmSignInOTPOptions with the values specified in the builder.
          */
         override fun build() = AWSAuthCognitoAuthConfirmSignInOTPOptions(metadata)
     }
