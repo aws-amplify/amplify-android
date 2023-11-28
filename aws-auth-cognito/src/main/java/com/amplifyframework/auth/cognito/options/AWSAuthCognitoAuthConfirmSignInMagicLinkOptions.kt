@@ -64,7 +64,7 @@ data class AWSAuthCognitoAuthConfirmSignInMagicLinkOptions internal constructor(
 
         /**
          * Construct and return the object with the values set in the builder.
-         * @return a new instance of AWSCognitoAuthConfirmSignInOptions with the values specified in the builder.
+         * @return a new instance of AWSAuthCognitoAuthConfirmSignInMagicLinkOptions with the values specified in the builder.
          */
         override fun build() = AWSAuthCognitoAuthConfirmSignInMagicLinkOptions(metadata)
     }
