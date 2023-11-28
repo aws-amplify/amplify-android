@@ -74,6 +74,8 @@ import com.amplifyframework.auth.cognito.helpers.SessionHelper
 import com.amplifyframework.auth.cognito.helpers.SignInChallengeHelper
 import com.amplifyframework.auth.cognito.helpers.getMFAType
 import com.amplifyframework.auth.cognito.helpers.identityProviderName
+import com.amplifyframework.auth.cognito.options.AWSAuthCognitoAuthConfirmSignInMagicLinkOptions
+import com.amplifyframework.auth.cognito.options.AWSAuthCognitoAuthConfirmSignInOTPOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthConfirmSignInOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthConfirmSignUpOptions
@@ -193,6 +195,8 @@ internal class RealAWSCognitoAuthPlugin(
 ) : AuthCategoryBehavior {
 
     private val lastPublishedHubEventName = AtomicReference<String>()
+    private val KEY_PASSWORDLESS_SIGNINMETHOD = "amplify.passwordless.signInMethod"
+    private val KEY_PASSWORDLESS_ACTION = "amplify.passwordless.action"
 
     init {
         addAuthStateChangeListener()
@@ -472,20 +476,32 @@ internal class RealAWSCognitoAuthPlugin(
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
     ) {
-        GlobalScope.launch {
-            signIn(
-                authEnvironment.getOrStoreActivePasswordlessUsername(),
-                "",
-                AWSCognitoAuthSignInOptions.builder().authFlowType(AuthFlowType.CUSTOM_AUTH_WITHOUT_SRP).build(),
-                {
-                    confirmSignIn(
-                        challengeResponse,
-                        options, onSuccess, onError
-                    )
-                },
-                onError
-            )
-        }
+        val providedOptions =
+            options as? AWSAuthCognitoAuthConfirmSignInMagicLinkOptions
+                ?: AWSAuthCognitoAuthConfirmSignInMagicLinkOptions.builder().build()
+
+        val signInOptions = AWSCognitoAuthSignInOptions.builder()
+            .metadata(providedOptions.metadata).authFlowType(AuthFlowType.CUSTOM_AUTH_WITHOUT_SRP).build()
+        signIn(
+            AuthHelper.getUsernameFromMagicLink(challengeResponse),
+            "",
+            signInOptions,
+            {
+                val updatedPasswordlessMetadata: MutableMap<String, String> = providedOptions.metadata.toMutableMap()
+                updatedPasswordlessMetadata[KEY_PASSWORDLESS_SIGNINMETHOD] = "MAGIC_LINK"
+                updatedPasswordlessMetadata[KEY_PASSWORDLESS_ACTION] = "CONFIRM"
+
+                val confirmSignInOptions = AWSAuthCognitoAuthConfirmSignInMagicLinkOptions.builder()
+                    .metadata(updatedPasswordlessMetadata)
+                    .build()
+
+                confirmSignIn(
+                    challengeResponse,
+                    confirmSignInOptions, onSuccess, onError
+                )
+            },
+            onError
+        )
     }
 
     override fun confirmSignInWithMagicLink(
@@ -521,21 +537,18 @@ internal class RealAWSCognitoAuthPlugin(
                 "",
                 signInOptions,
                 {
-                    GlobalScope.launch {
-                        authEnvironment.getOrStoreActivePasswordlessUsername(username)
-                        onSuccess.accept(
-                            AuthSignInResult(
-                                true,
-                                AuthNextSignInStep(
-                                    AuthSignInStep.CONFIRM_SIGN_IN_WITH_MAGIC_LINK,
-                                    it.nextStep.additionalInfo ?: mapOf(),
-                                    it.nextStep.codeDeliveryDetails,
-                                    it.nextStep.totpSetupDetails,
-                                    it.nextStep.allowedMFATypes
-                                )
+                    onSuccess.accept(
+                        AuthSignInResult(
+                            true,
+                            AuthNextSignInStep(
+                                AuthSignInStep.CONFIRM_SIGN_IN_WITH_MAGIC_LINK,
+                                it.nextStep.additionalInfo ?: mapOf(),
+                                it.nextStep.codeDeliveryDetails,
+                                it.nextStep.totpSetupDetails,
+                                it.nextStep.allowedMFATypes
                             )
                         )
-                    }
+                    )
                 },
                 onError
             )
@@ -612,20 +625,21 @@ internal class RealAWSCognitoAuthPlugin(
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
     ) {
-        GlobalScope.launch {
-            signIn(
-                authEnvironment.getOrStoreActivePasswordlessUsername(),
-                "",
-                AWSCognitoAuthSignInOptions.builder().authFlowType(AuthFlowType.CUSTOM_AUTH_WITHOUT_SRP).build(),
-                {
-                    confirmSignIn(
-                        challengeResponse,
-                        options, onSuccess, onError
-                    )
-                },
-                onError
-            )
-        }
+        val providedOptions =
+            options as? AWSAuthCognitoAuthConfirmSignInOTPOptions
+                ?: AWSAuthCognitoAuthConfirmSignInOTPOptions.builder().build()
+        val metadata: MutableMap<String, String> = providedOptions.metadata.toMutableMap()
+
+        metadata[KEY_PASSWORDLESS_SIGNINMETHOD] = "OTP"
+        metadata[KEY_PASSWORDLESS_ACTION] = "CONFIRM"
+
+        val confirmSignInOptions = AWSAuthCognitoAuthConfirmSignInOTPOptions.builder().metadata(metadata)
+            .build()
+
+        confirmSignIn(
+            challengeResponse,
+            confirmSignInOptions, onSuccess, onError
+        )
     }
 
     override fun confirmSignInWithOTP(

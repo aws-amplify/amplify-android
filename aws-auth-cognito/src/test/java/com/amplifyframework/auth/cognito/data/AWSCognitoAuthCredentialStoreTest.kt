@@ -46,11 +46,8 @@ class AWSCognitoAuthCredentialStoreTest {
     companion object {
         private const val IDENTITY_POOL_ID: String = "identityPoolID"
         private const val USER_POOL_ID: String = "userPoolID"
-        private const val USERNAME: String = "username"
         private const val KEY_WITH_IDENTITY_POOL: String = "amplify.$IDENTITY_POOL_ID.session"
         private const val KEY_WITH_USER_POOL: String = "amplify.$USER_POOL_ID.session"
-        private const val KEY_WITH_USER_POOL_USERNAME_PASSWORDLESS: String =
-            "amplify.$USER_POOL_ID.username.passwordless"
         private const val KEY_WITH_USER_AND_IDENTITY_POOL: String = "amplify.$USER_POOL_ID.$IDENTITY_POOL_ID.session"
     }
 
@@ -118,17 +115,6 @@ class AWSCognitoAuthCredentialStoreTest {
     }
 
     @Test
-    fun testSavePasswordlessCredential() {
-        setupUserPoolConfig()
-        setupIdentityPoolConfig()
-        persistentStore = AWSCognitoAuthCredentialStore(mockContext, mockConfig, true, mockFactory)
-        persistentStore.savePasswordlessCredential(AmplifyCredential.Passwordless(USERNAME))
-
-        val actual = persistentStore.retrievePasswordlessDeviceKeyCredential(USERNAME)
-        Assert.assertEquals(actual, getCredential())
-    }
-
-    @Test
     fun testRetrieveCredential() {
         setupUserPoolConfig()
         setupIdentityPoolConfig()
@@ -147,16 +133,6 @@ class AWSCognitoAuthCredentialStoreTest {
         persistentStore.deleteCredential()
 
         verify(mockKeyValue, times(1)).remove(KEY_WITH_USER_POOL)
-    }
-
-    @Test
-    fun testDeletePasswordlessCredential() {
-        setupUserPoolConfig()
-        persistentStore = AWSCognitoAuthCredentialStore(mockContext, mockConfig, true, mockFactory)
-
-        persistentStore.deletePasswordlessDeviceKeyCredential(USERNAME)
-
-        verify(mockKeyValue, times(1)).remove(KEY_WITH_USER_POOL_USERNAME_PASSWORDLESS)
     }
 
     @Test

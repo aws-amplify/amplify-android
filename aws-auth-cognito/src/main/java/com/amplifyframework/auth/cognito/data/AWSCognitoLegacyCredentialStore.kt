@@ -91,7 +91,6 @@ internal class AWSCognitoLegacyCredentialStore(
     override fun saveCredential(credential: AmplifyCredential) = Unit
     override fun saveDeviceMetadata(username: String, deviceMetadata: DeviceMetadata) = Unit
     override fun saveASFDevice(device: AmplifyCredential.ASFDevice) = Unit
-    override fun savePasswordlessCredential(passwordless: AmplifyCredential.Passwordless) = Unit
 
     @Synchronized
     fun retrieveLastAuthUserId(): String? {
@@ -134,8 +133,6 @@ internal class AWSCognitoLegacyCredentialStore(
         return AmplifyCredential.ASFDevice(deviceId)
     }
 
-    override fun retrievePasswordlessDeviceKeyCredential(username: String): AmplifyCredential = AmplifyCredential.Empty
-
     override fun deleteCredential() {
         deleteAWSCredentials()
         deleteIdentityId()
@@ -157,8 +154,6 @@ internal class AWSCognitoLegacyCredentialStore(
         val sharedPreferences = context.getSharedPreferences(LOCAL_STORAGE_PATH, Context.MODE_PRIVATE)
         sharedPreferences.edit().remove(LOCAL_STORAGE_DEVICE_ID_KEY).apply()
     }
-
-    override fun deletePasswordlessDeviceKeyCredential(username: String) = Unit
 
     private fun deleteCognitoUserPoolTokens() {
         val keys = getTokenKeys()

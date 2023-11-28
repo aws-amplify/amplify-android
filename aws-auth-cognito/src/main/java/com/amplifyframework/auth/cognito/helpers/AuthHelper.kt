@@ -19,11 +19,13 @@ import com.amplifyframework.auth.cognito.exceptions.service.InvalidParameterExce
 import com.amplifyframework.auth.exceptions.UnknownException
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
+import org.json.JSONObject
 
 internal open class AuthHelper {
 
     companion object {
         val HMAC_SHA_256 = "HmacSHA256"
+        val USERNAME_KEY = "username"
 
         /**
          * Generates secret hash. Uses HMAC SHA256.
@@ -65,6 +67,22 @@ internal open class AuthHelper {
          * */
         fun getActiveUsername(username: String, alternateUsername: String?, userIDForSRP: String?): String {
             return alternateUsername ?: (userIDForSRP ?: username)
+        }
+
+        /**
+         * This method is used to capture the username from the magic link.
+         * @param magicLinkCode the code from the magic link.
+         * @return the username from the magic link.
+         * */
+        fun getUsernameFromMagicLink(magicLinkCode: String): String? {
+            val header = magicLinkCode.split(".")[0]
+            val jsonString = android.util.Base64.decode(header, android.util.Base64.NO_WRAP)
+            return try {
+                println("Anshul " + jsonString.toString(Charsets.UTF_8))
+                JSONObject(jsonString.toString(Charsets.UTF_8)).getString(USERNAME_KEY)
+            } catch (e: Exception) {
+                null
+            }
         }
     }
 }

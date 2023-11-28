@@ -69,8 +69,6 @@ internal object CredentialStoreCognitoActions : CredentialStoreActions {
                     is CredentialType.Amplify -> credentialStore.deleteCredential()
                     is CredentialType.Device -> credentialStore.deleteDeviceKeyCredential(credentialType.username)
                     is CredentialType.ASF -> credentialStore.deleteASFDevice()
-                    is CredentialType.Passwordless ->
-                        credentialStore.deletePasswordlessDeviceKeyCredential(credentialType.username)
                 }
                 CredentialStoreEvent(CredentialStoreEvent.EventType.CompletedOperation(AmplifyCredential.Empty))
             } catch (error: CredentialStoreError) {
@@ -90,8 +88,6 @@ internal object CredentialStoreCognitoActions : CredentialStoreActions {
                         AmplifyCredential.DeviceData(credentialStore.retrieveDeviceMetadata(credentialType.username))
                     }
                     is CredentialType.ASF -> credentialStore.retrieveASFDevice()
-                    is CredentialType.Passwordless ->
-                        credentialStore.retrievePasswordlessDeviceKeyCredential(credentialType.username)
                 }
                 CredentialStoreEvent(CredentialStoreEvent.EventType.CompletedOperation(credentials))
             } catch (error: CredentialStoreError) {
@@ -116,12 +112,6 @@ internal object CredentialStoreCognitoActions : CredentialStoreActions {
                     is CredentialType.ASF -> {
                         val asfDevice = credentials as? AmplifyCredential.ASFDevice
                         asfDevice?.id?.let { credentialStore.saveASFDevice(asfDevice) }
-                    }
-                    is CredentialType.Passwordless -> {
-                        val passwordlessCredential = credentials as? AmplifyCredential.Passwordless
-                        passwordlessCredential?.let {
-                            credentialStore.savePasswordlessCredential(it)
-                        }
                     }
                 }
                 CredentialStoreEvent(CredentialStoreEvent.EventType.CompletedOperation(credentials))

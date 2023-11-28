@@ -127,7 +127,7 @@ object AuthStateJsonGenerator : SerializableProvider {
             SignInState.ResolvingChallenge(
                 SignInChallengeState.WaitingForAnswer(
                     AuthChallenge(
-                        challengeName = "PROVIDE_PARAMETERS",
+                        challengeName = "PROVIDE_CHALLENGE_RESPONSE",
                         username = username,
                         session = "someSession",
                         parameters = mapOf(
