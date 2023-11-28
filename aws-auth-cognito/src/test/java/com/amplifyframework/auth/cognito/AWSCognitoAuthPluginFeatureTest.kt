@@ -168,10 +168,6 @@ class AWSCognitoAuthPluginFeatureTest(private val testCase: FeatureTestCase) {
             AmplifyCredential.DeviceData(DeviceMetadata.Empty)
         }
 
-        coEvery { credentialStoreClient.loadCredentials(capture(slot<CredentialType.Passwordless>())) } coAnswers {
-            AmplifyCredential.Passwordless("username")
-        }
-
         val logger = mockk<Logger>(relaxed = true)
 
         val authEnvironment = AuthEnvironment(

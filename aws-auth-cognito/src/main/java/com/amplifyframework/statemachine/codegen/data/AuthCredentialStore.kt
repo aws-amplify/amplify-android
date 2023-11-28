@@ -30,9 +30,4 @@ internal interface AuthCredentialStore {
     fun saveASFDevice(device: AmplifyCredential.ASFDevice)
     fun retrieveASFDevice(): AmplifyCredential.ASFDevice
     fun deleteASFDevice()
-
-    // Passwordless
-    fun savePasswordlessCredential(passwordless: AmplifyCredential.Passwordless)
-    fun retrievePasswordlessDeviceKeyCredential(username: String): AmplifyCredential
-    fun deletePasswordlessDeviceKeyCredential(username: String)
 }

@@ -36,7 +36,6 @@ internal class AWSCognitoAuthCredentialStore(
         private const val Key_Session = "session"
         private const val Key_DeviceMetadata = "deviceMetadata"
         private const val Key_ASFDevice = "asfDevice"
-        private const val Key_Passwordless = "passwordless"
     }
 
     private var keyValue: KeyValueRepository =
@@ -58,10 +57,6 @@ internal class AWSCognitoAuthCredentialStore(
         serializeASFDevice(device)
     )
 
-    override fun savePasswordlessCredential(passwordless: AmplifyCredential.Passwordless) = keyValue.put(
-        generateKey("${passwordless.username}.$Key_Passwordless"),
-        serializePasswordless(passwordless)
-    )
     //endregion
 
     //region Retrieve Credentials
@@ -74,10 +69,6 @@ internal class AWSCognitoAuthCredentialStore(
     override fun retrieveASFDevice(): AmplifyCredential.ASFDevice = deserializeASFDevice(
         keyValue.get(generateKey(Key_ASFDevice))
     )
-
-    override fun retrievePasswordlessDeviceKeyCredential(username: String): AmplifyCredential = deserializeCredential(
-        keyValue.get(generateKey("$username.$Key_Passwordless"))
-    )
     //endregion
 
     //region Delete Credentials
@@ -88,9 +79,6 @@ internal class AWSCognitoAuthCredentialStore(
     )
 
     override fun deleteASFDevice() = keyValue.remove(generateKey(Key_ASFDevice))
-
-    override fun deletePasswordlessDeviceKeyCredential(username: String) =
-        keyValue.remove(generateKey("$username.$Key_Passwordless"))
     //endregion
 
     private fun generateKey(keySuffix: String): String {
@@ -146,10 +134,6 @@ internal class AWSCognitoAuthCredentialStore(
 
     private fun serializeASFDevice(device: AmplifyCredential.ASFDevice): String {
         return Json.encodeToString(device)
-    }
-
-    private fun serializePasswordless(passwordless: AmplifyCredential.Passwordless): String {
-        return Json.encodeToString(passwordless)
     }
     //endregion
 }

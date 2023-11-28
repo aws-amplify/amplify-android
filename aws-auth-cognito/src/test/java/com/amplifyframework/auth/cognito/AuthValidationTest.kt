@@ -571,4 +571,30 @@ class AuthValidationTest {
         )
         assertEquals(username, "userID12322")
     }
+
+    @Test
+    fun `test getUsernameFromMagicLink returns correct username when username in code is empty`() {
+        val username = AuthHelper.getUsernameFromMagicLink(
+            "eyJ1c2VybmFtZSI6IiIsImlhdCI6MTcwMTE4OTIyMiwiZXhwIjoxNzAxMTg5ODIyfQ.AQIDBAUGBwgJ"
+        )
+        assertTrue { username?.isEmpty() ?: false }
+    }
+
+    @Test
+    fun `test getUsernameFromMagicLink returns correct username when username in code is valid`() {
+        val username = AuthHelper
+            .getUsernameFromMagicLink(
+                "eyJ1c2VybmFtZSI6InRlc3RAZXhhbXBsZS5jb20iLCJpYXQiOjE3MDExODkwODksImV4cCI6MTcwMTE4OTY4OX0." +
+                    "AQIDBAUGBwgJ"
+            )
+        assertTrue { username == "test@example.com" }
+    }
+
+    @Test
+    fun `test getUsernameFromMagicLink returns correct username when username in code is null`() {
+        val username = AuthHelper.getUsernameFromMagicLink(
+            "eyJpYXQiOjE3MDExODkyNjcsImV4cCI6MTcwMTE4OTg2N30.AQIDBAUGBwgJ"
+        )
+        assertTrue { username == null }
+    }
 }
