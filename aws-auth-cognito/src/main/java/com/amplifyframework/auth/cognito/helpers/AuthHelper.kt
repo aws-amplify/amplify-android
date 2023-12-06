@@ -78,7 +78,6 @@ internal open class AuthHelper {
             val header = magicLinkCode.split(".")[0]
             val jsonString = android.util.Base64.decode(header, android.util.Base64.NO_WRAP)
             return try {
-                println("Anshul " + jsonString.toString(Charsets.UTF_8))
                 JSONObject(jsonString.toString(Charsets.UTF_8)).getString(USERNAME_KEY)
             } catch (e: Exception) {
                 null

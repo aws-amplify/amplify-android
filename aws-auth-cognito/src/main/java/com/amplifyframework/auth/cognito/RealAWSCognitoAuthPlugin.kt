@@ -166,6 +166,13 @@ import com.amplifyframework.statemachine.codegen.states.SetupTOTPState
 import com.amplifyframework.statemachine.codegen.states.SignInChallengeState
 import com.amplifyframework.statemachine.codegen.states.SignInState
 import com.amplifyframework.statemachine.codegen.states.SignOutState
+import java.io.IOException
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicReference
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
@@ -179,13 +186,6 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
-import java.io.IOException
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicReference
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
-import kotlin.coroutines.suspendCoroutine
 
 internal class RealAWSCognitoAuthPlugin(
     private val configuration: AuthConfiguration,
@@ -195,8 +195,11 @@ internal class RealAWSCognitoAuthPlugin(
 ) : AuthCategoryBehavior {
 
     private val lastPublishedHubEventName = AtomicReference<String>()
-    private val KEY_PASSWORDLESS_SIGNINMETHOD = "amplify.passwordless.signInMethod"
-    private val KEY_PASSWORDLESS_ACTION = "amplify.passwordless.action"
+    private val KEY_PASSWORDLESS_SIGNINMETHOD = "Amplify.Passwordless.signInMethod"
+    private val KEY_PASSWORDLESS_ACTION = "Amplify.Passwordless.action"
+    private val KEY_PASSWORDLESS_DELIVERYMEDIUM = "Amplify.Passwordless.deliveryMedium"
+    private val KEY_PASSWORDLESS_REDIRECT_URI = "Amplify.Passwordless.redirectUri"
+    private val VALUE_PASSWORDLESS_CHALLENGE_NEXT_STEP = "PROVIDE_AUTH_PARAMETERS"
 
     init {
         addAuthStateChangeListener()
@@ -376,35 +379,54 @@ internal class RealAWSCognitoAuthPlugin(
         onError: Consumer<AuthException>
     ) {
         val magicLinkOptions = options as? AWSCognitoAuthMagicLinkOptions
-        if(flow == AuthPasswordlessFlow.SIGN_IN)
-        {
-            val signInOptions = AWSCognitoAuthSignInOptions.CognitoBuilder().authFlowType(AuthFlowType.CUSTOM_AUTH_WITHOUT_SRP).metadata(
-                magicLinkOptions?.clientMetadata?: mapOf()
+        if (flow == AuthPasswordlessFlow.SIGN_IN) {
+            val updatedPasswordlessMetadata: MutableMap<String, String> =
+                magicLinkOptions?.clientMetadata?.toMutableMap() ?: mutableMapOf()
+            updatedPasswordlessMetadata[KEY_PASSWORDLESS_SIGNINMETHOD] = "MAGIC_LINK"
+            updatedPasswordlessMetadata[KEY_PASSWORDLESS_ACTION] = "REQUEST"
+            updatedPasswordlessMetadata[KEY_PASSWORDLESS_DELIVERYMEDIUM] = "EMAIL"
+            updatedPasswordlessMetadata[KEY_PASSWORDLESS_REDIRECT_URI] = redirectURL
+
+            val signInOptions = AWSCognitoAuthSignInOptions.CognitoBuilder().authFlowType(
+                AuthFlowType.CUSTOM_AUTH_WITHOUT_SRP
+            ).metadata(
+                updatedPasswordlessMetadata
             ).build()
             signIn(
                 username,
                 "",
                 signInOptions,
                 {
-                    onSuccess.accept(
-                        AuthSignInResult(
-                            true,
-                            AuthNextSignInStep(
-                                AuthSignInStep.CONFIRM_SIGN_IN_WITH_MAGIC_LINK,
-                                it.nextStep.additionalInfo ?: mapOf(),
-                                it.nextStep.codeDeliveryDetails,
-                                it.nextStep.totpSetupDetails,
-                                it.nextStep.allowedMFATypes
+                    if (it.nextStep.additionalInfo?.get("nextStep") == VALUE_PASSWORDLESS_CHALLENGE_NEXT_STEP) {
+                        val event = SignInChallengeEvent(
+                            SignInChallengeEvent.EventType.VerifyChallengeAnswer(
+                                "DUMMY",
+                                signInOptions.metadata,
+                                emptyList()
                             )
                         )
-                    )
+                        authStateMachine.send(event)
+                    } else {
+                        onSuccess.accept(
+                            AuthSignInResult(
+                                false,
+                                AuthNextSignInStep(
+                                    AuthSignInStep.CONFIRM_SIGN_IN_WITH_MAGIC_LINK,
+                                    it.nextStep.additionalInfo ?: mapOf(),
+                                    it.nextStep.codeDeliveryDetails,
+                                    it.nextStep.totpSetupDetails,
+                                    it.nextStep.allowedMFATypes
+                                )
+                            )
+                        )
+                    }
                 },
                 onError
             )
         } else {
             signUpWithMagicLink(
                 username,
-                "", //TODO: This will be added in the configuration and will be captured from there.
+                "", // TODO: This will be added in the configuration and will be captured from there.
                 redirectURL,
                 magicLinkOptions,
                 {
@@ -432,12 +454,14 @@ internal class RealAWSCognitoAuthPlugin(
         val payload = buildJsonObject {
             put("userPoolId", configuration.userPool.poolId)
             put("region", configuration.userPool.region)
-            put("user", buildJsonObject {
-                "username" to username
-                magicLinkOptions?.userMetadata
-            })
+            put(
+                "user",
+                buildJsonObject {
+                    "username" to username
+                    magicLinkOptions?.userMetadata
+                }
+            )
         }
-
 
         val okHttpClient = OkHttpClient()
         val mediaType = "application/json; charset=utf-8".toMediaType()
@@ -527,28 +551,44 @@ internal class RealAWSCognitoAuthPlugin(
     ) {
         val otpOptions = options as? AWSCognitoAuthOTPOptions
         if (flow == AuthPasswordlessFlow.SIGN_IN) {
+            val updatedPasswordlessMetadata: MutableMap<String, String> =
+                otpOptions?.clientMetadata?.toMutableMap() ?: mutableMapOf()
+            updatedPasswordlessMetadata[KEY_PASSWORDLESS_SIGNINMETHOD] = "OTP"
+            updatedPasswordlessMetadata[KEY_PASSWORDLESS_ACTION] = "REQUEST"
+            updatedPasswordlessMetadata[KEY_PASSWORDLESS_DELIVERYMEDIUM] = destination.name
             val signInOptions =
                 AWSCognitoAuthSignInOptions.CognitoBuilder().authFlowType(AuthFlowType.CUSTOM_AUTH_WITHOUT_SRP)
                     .metadata(
-                        otpOptions?.clientMetadata ?: mapOf()
+                        updatedPasswordlessMetadata
                     ).build()
             signIn(
                 username,
                 "",
                 signInOptions,
                 {
-                    onSuccess.accept(
-                        AuthSignInResult(
-                            true,
-                            AuthNextSignInStep(
-                                AuthSignInStep.CONFIRM_SIGN_IN_WITH_MAGIC_LINK,
-                                it.nextStep.additionalInfo ?: mapOf(),
-                                it.nextStep.codeDeliveryDetails,
-                                it.nextStep.totpSetupDetails,
-                                it.nextStep.allowedMFATypes
+                    if (it.nextStep.additionalInfo?.get("nextStep") == VALUE_PASSWORDLESS_CHALLENGE_NEXT_STEP) {
+                        val event = SignInChallengeEvent(
+                            SignInChallengeEvent.EventType.VerifyChallengeAnswer(
+                                "DUMMY",
+                                signInOptions.metadata,
+                                emptyList()
                             )
                         )
-                    )
+                        authStateMachine.send(event)
+                    } else {
+                        onSuccess.accept(
+                            AuthSignInResult(
+                                false,
+                                AuthNextSignInStep(
+                                    AuthSignInStep.CONFIRM_SIGN_IN_WITH_OTP,
+                                    it.nextStep.additionalInfo ?: mapOf(),
+                                    it.nextStep.codeDeliveryDetails,
+                                    it.nextStep.totpSetupDetails,
+                                    it.nextStep.allowedMFATypes
+                                )
+                            )
+                        )
+                    }
                 },
                 onError
             )
@@ -581,10 +621,13 @@ internal class RealAWSCognitoAuthPlugin(
         val payload = buildJsonObject {
             put("userPoolId", configuration.userPool.poolId)
             put("region", configuration.userPool.region)
-            put("user", buildJsonObject {
-                "username" to username
-                otpOptions?.userMetadata
-            })
+            put(
+                "user",
+                buildJsonObject {
+                    "username" to username
+                    otpOptions?.userMetadata
+                }
+            )
         }
 
         val okHttpClient = OkHttpClient()
@@ -914,7 +957,9 @@ internal class RealAWSCognitoAuthPlugin(
                         onSuccess.accept(authSignInResult)
                         sendHubEvent(AuthChannelEventName.SIGNED_IN.toString())
                     }
-                    else -> Unit
+                    else -> {
+                        Unit
+                    }
                 }
             },
             {

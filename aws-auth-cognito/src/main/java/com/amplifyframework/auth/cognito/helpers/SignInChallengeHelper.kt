@@ -117,20 +117,18 @@ internal object SignInChallengeHelper {
         allowedMFAType: Set<MFAType>? = null
     ) {
         val challengeParams = challenge.parameters?.toMutableMap() ?: mapOf()
-        if (challenge.challengeName == "PROVIDE_AUTH_PARAMETERS" ||
-            challenge.challengeName == "PROVIDE_CHALLENGE_RESPONSE") {
-            val deliveryDetails = AuthCodeDeliveryDetails(
-                challengeParams.getValue("CODE_DELIVERY_DESTINATION"),
-                AuthCodeDeliveryDetails.DeliveryMedium.fromString(
-                    challengeParams.getValue("CODE_DELIVERY_DELIVERY_MEDIUM")
+        if (challengeParams.containsKey("nextStep") &&
+            (
+                challengeParams["nextStep"] == "PROVIDE_AUTH_PARAMETERS" ||
+                    challengeParams["nextStep"] == "PROVIDE_CHALLENGE_RESPONSE"
                 )
-            )
+        ) {
             val authSignInResult = AuthSignInResult(
                 false,
                 AuthNextSignInStep(
                     AuthSignInStep.CONFIRM_SIGN_IN_WITH_CUSTOM_CHALLENGE,
-                    mapOf(),
-                    deliveryDetails,
+                    mapOf("nextStep" to challengeParams["nextStep"]),
+                    null,
                     null,
                     null
                 )
