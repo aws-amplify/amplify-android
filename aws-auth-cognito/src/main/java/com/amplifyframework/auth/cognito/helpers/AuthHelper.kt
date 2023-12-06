@@ -17,9 +17,9 @@ package com.amplifyframework.auth.cognito.helpers
 
 import com.amplifyframework.auth.cognito.exceptions.service.InvalidParameterException
 import com.amplifyframework.auth.exceptions.UnknownException
+import org.json.JSONObject
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
-import org.json.JSONObject
 
 internal open class AuthHelper {
 
@@ -75,9 +75,9 @@ internal open class AuthHelper {
          * @return the username from the magic link.
          * */
         fun getUsernameFromMagicLink(magicLinkCode: String): String? {
-            val header = magicLinkCode.split(".")[0]
-            val jsonString = android.util.Base64.decode(header, android.util.Base64.NO_WRAP)
             return try {
+                val header = magicLinkCode.split(".")[0]
+                val jsonString = android.util.Base64.decode(header, android.util.Base64.NO_WRAP)
                 JSONObject(jsonString.toString(Charsets.UTF_8)).getString(USERNAME_KEY)
             } catch (e: Exception) {
                 null
