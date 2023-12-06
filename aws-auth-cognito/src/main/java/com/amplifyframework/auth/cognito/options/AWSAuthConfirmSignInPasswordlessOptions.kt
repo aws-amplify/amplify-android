@@ -20,7 +20,7 @@ import com.amplifyframework.auth.options.AuthConfirmSignInOptions
 /**
  * Cognito extension of confirm sign in options to add the platform specific fields.
  */
-data class AWSAuthCognitoAuthConfirmSignInOTPOptions internal constructor(
+data class AWSAuthConfirmSignInPasswordlessOptions internal constructor(
     /**
      * Get custom attributes to be sent to the service such as information about the client.
      * @return custom attributes to be sent to the service such as information about the client
@@ -64,8 +64,8 @@ data class AWSAuthCognitoAuthConfirmSignInOTPOptions internal constructor(
 
         /**
          * Construct and return the object with the values set in the builder.
-         * @return a new instance of AWSAuthCognitoAuthConfirmSignInOTPOptions with the values specified in the builder.
+         * @return a new instance of AWSAuthConfirmSignInPasswordlessOptions with the values specified in the builder.
          */
-        override fun build() = AWSAuthCognitoAuthConfirmSignInOTPOptions(metadata)
+        override fun build() = AWSAuthConfirmSignInPasswordlessOptions(metadata)
     }
 }
