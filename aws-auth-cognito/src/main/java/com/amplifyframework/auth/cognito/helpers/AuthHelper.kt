@@ -17,15 +17,14 @@ package com.amplifyframework.auth.cognito.helpers
 
 import com.amplifyframework.auth.cognito.exceptions.service.InvalidParameterException
 import com.amplifyframework.auth.exceptions.UnknownException
-import org.json.JSONObject
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
-
+import org.json.JSONObject
 internal open class AuthHelper {
 
     companion object {
         val HMAC_SHA_256 = "HmacSHA256"
-        val USERNAME_KEY = "username"
+        val KEY_USERNAME = "username"
 
         /**
          * Generates secret hash. Uses HMAC SHA256.
@@ -78,7 +77,7 @@ internal open class AuthHelper {
             return try {
                 val header = magicLinkCode.split(".")[0]
                 val jsonString = android.util.Base64.decode(header, android.util.Base64.NO_WRAP)
-                JSONObject(jsonString.toString(Charsets.UTF_8)).getString(USERNAME_KEY)
+                JSONObject(jsonString.toString(Charsets.UTF_8)).getString(KEY_USERNAME)
             } catch (e: Exception) {
                 null
             }

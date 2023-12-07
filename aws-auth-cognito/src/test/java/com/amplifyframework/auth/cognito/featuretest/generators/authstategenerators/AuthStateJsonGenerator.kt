@@ -95,7 +95,7 @@ object AuthStateJsonGenerator : SerializableProvider {
                             "CODE_DELIVERY_DESTINATION" to "+12345678900"
                         )
                     ),
-                        hasNewResponse = false
+                    hasNewResponse = false
                 )
             )
         ),
@@ -117,7 +117,7 @@ object AuthStateJsonGenerator : SerializableProvider {
                             "USERNAME" to "username"
                         )
                     ),
-                        hasNewResponse = false
+                    hasNewResponse = false
                 )
             )
         ),
@@ -139,7 +139,7 @@ object AuthStateJsonGenerator : SerializableProvider {
                             "USERNAME" to "username"
                         )
                     ),
-                        hasNewResponse = false
+                    hasNewResponse = false
                 )
             )
         ),
