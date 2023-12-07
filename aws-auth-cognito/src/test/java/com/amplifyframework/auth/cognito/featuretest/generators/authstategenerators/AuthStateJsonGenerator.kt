@@ -94,7 +94,8 @@ object AuthStateJsonGenerator : SerializableProvider {
                             "CODE_DELIVERY_DELIVERY_MEDIUM" to "SMS",
                             "CODE_DELIVERY_DESTINATION" to "+12345678900"
                         )
-                    )
+                    ),
+                        hasNewResponse = false
                 )
             )
         ),
@@ -115,7 +116,8 @@ object AuthStateJsonGenerator : SerializableProvider {
                             "SRP_B" to "def",
                             "USERNAME" to "username"
                         )
-                    )
+                    ),
+                        hasNewResponse = false
                 )
             )
         ),
@@ -136,7 +138,8 @@ object AuthStateJsonGenerator : SerializableProvider {
                             "SRP_B" to "def",
                             "USERNAME" to "username"
                         )
-                    )
+                    ),
+                        hasNewResponse = false
                 )
             )
         ),

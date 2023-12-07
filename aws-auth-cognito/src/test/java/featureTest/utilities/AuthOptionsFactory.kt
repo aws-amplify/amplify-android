@@ -21,6 +21,8 @@ import com.amplifyframework.auth.cognito.featuretest.AuthAPI
 import com.amplifyframework.auth.cognito.featuretest.AuthAPI.resetPassword
 import com.amplifyframework.auth.cognito.featuretest.AuthAPI.signIn
 import com.amplifyframework.auth.cognito.featuretest.AuthAPI.signUp
+import com.amplifyframework.auth.cognito.options.AWSCognitoAuthMagicLinkOptions
+import com.amplifyframework.auth.cognito.options.AWSCognitoAuthOTPOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions
 import com.amplifyframework.auth.cognito.options.AuthFlowType
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
@@ -64,8 +66,8 @@ object AuthOptionsFactory {
         AuthAPI.resendSignUpCode -> AuthResendSignUpCodeOptions.defaults()
         AuthAPI.resendUserAttributeConfirmationCode -> AuthResendUserAttributeConfirmationCodeOptions.defaults()
         signIn -> getSignInOptions(optionsData)
-        AuthAPI.signInWithOTP -> TODO()
-        AuthAPI.signInWithMagicLink -> TODO()
+        AuthAPI.signInWithOTP -> AWSCognitoAuthOTPOptions.builder().build()
+        AuthAPI.signInWithMagicLink -> AWSCognitoAuthMagicLinkOptions.builder().build()
         AuthAPI.signInWithSocialWebUI -> AuthWebUISignInOptions.builder().build()
         AuthAPI.signInWithWebUI -> AuthWebUISignInOptions.builder().build()
         AuthAPI.signOut -> getSignOutOptions(optionsData)
