@@ -785,12 +785,15 @@ internal class RealAWSCognitoAuthPlugin(
             },
             {
                 val awsCognitoConfirmSignInOptions = options as? AWSCognitoAuthConfirmSignInOptions
+                val metadata = awsCognitoConfirmSignInOptions?.metadata ?: emptyMap()
+                val userAttributes = awsCognitoConfirmSignInOptions?.userAttributes ?: emptyList()
                 when (signInState) {
                     is SignInState.ResolvingChallenge -> {
                         val event = SignInChallengeEvent(
                             SignInChallengeEvent.EventType.VerifyChallengeAnswer(
                                 challengeResponse,
-                                awsCognitoConfirmSignInOptions?.metadata ?: mapOf()
+                                metadata,
+                                userAttributes
                             )
                         )
                         authStateMachine.send(event)
