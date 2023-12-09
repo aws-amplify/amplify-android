@@ -116,7 +116,7 @@ internal class AWSCloudWatchLoggingPluginImplementationTest {
     }
 
     @Test
-    fun `on flush logs error`() = runTest(timeout = 30.seconds) {
+    fun `on flush logs error`() = runTest(timeout = 25.seconds) {
         val onSuccess = mockk<Action>()
         val onError = mockk<Consumer<AmplifyException>>()
         val exception = slot<AmplifyException>()
