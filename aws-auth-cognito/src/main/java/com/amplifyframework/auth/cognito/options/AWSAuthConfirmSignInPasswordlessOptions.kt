@@ -45,7 +45,7 @@ data class AWSAuthConfirmSignInPasswordlessOptions internal constructor(
      * The builder for this class.
      */
     class CognitoBuilder : Builder<CognitoBuilder?>() {
-        private var metadata: Map<String, String> = mapOf()
+        private var metadata: Map<String, String> = emptyMap()
 
         /**
          * Returns the type of builder this is to support proper flow with it being an extended class.

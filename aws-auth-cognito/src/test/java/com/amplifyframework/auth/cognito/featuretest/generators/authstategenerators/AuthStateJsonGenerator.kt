@@ -129,14 +129,11 @@ object AuthStateJsonGenerator : SerializableProvider {
             SignInState.ResolvingChallenge(
                 SignInChallengeState.WaitingForAnswer(
                     AuthChallenge(
-                        challengeName = "PROVIDE_CHALLENGE_RESPONSE",
+                        challengeName = "CUSTOM_CHALLENGE",
                         username = username,
                         session = "someSession",
                         parameters = mapOf(
-                            "SALT" to "abc",
-                            "SECRET_BLOCK" to "secretBlock",
-                            "SRP_B" to "def",
-                            "USERNAME" to "username"
+                            "nextStep" to "PROVIDE_CHALLENGE_RESPONSE"
                         )
                     ),
                     hasNewResponse = false

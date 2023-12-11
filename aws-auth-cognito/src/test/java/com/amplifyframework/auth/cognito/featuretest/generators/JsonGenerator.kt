@@ -27,6 +27,8 @@ import com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerato
 import com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerators.ForgetDeviceTestCaseGenerator
 import com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerators.RememberDeviceTestCaseGenerator
 import com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerators.ResetPasswordTestCaseGenerator
+import com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerators.SignInMagicLinkTestCaseGenerator
+import com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerators.SignInOTPTestCaseGenerator
 import com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerators.SignInTestCaseGenerator
 import com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerators.SignOutTestCaseGenerator
 import com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerators.SignUpTestCaseGenerator
@@ -45,6 +47,8 @@ object JsonGenerator {
         ResetPasswordTestCaseGenerator,
         SignUpTestCaseGenerator,
         SignInTestCaseGenerator,
+        SignInMagicLinkTestCaseGenerator,
+        SignInOTPTestCaseGenerator,
         SignOutTestCaseGenerator,
         ConfirmSignInTestCaseGenerator,
         ConfirmSignInMagicLinkTestCaseGenerator,

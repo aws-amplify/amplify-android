@@ -19,7 +19,9 @@ import com.amplifyframework.auth.cognito.exceptions.service.InvalidParameterExce
 import com.amplifyframework.auth.exceptions.UnknownException
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
+import org.json.JSONException
 import org.json.JSONObject
+
 internal open class AuthHelper {
 
     companion object {
@@ -72,14 +74,21 @@ internal open class AuthHelper {
          * This method is used to capture the username from the magic link.
          * @param magicLinkCode the code from the magic link.
          * @return the username from the magic link.
+         * @throws InvalidParameterException if the magiclink provided is malformed or invalid
          * */
-        fun getUsernameFromMagicLink(magicLinkCode: String): String? {
+        @Throws(InvalidParameterException::class)
+        fun getUsernameFromMagicLink(magicLinkCode: String): String {
             return try {
-                val header = magicLinkCode.split(".")[0]
-                val jsonString = android.util.Base64.decode(header, android.util.Base64.NO_WRAP)
+                val header = magicLinkCode.split(".")
+                if (header.size != 2) {
+                    throw InvalidParameterException("Magic Link is malformed.")
+                }
+                val jsonString = android.util.Base64.decode(header[0], android.util.Base64.NO_WRAP)
                 JSONObject(jsonString.toString(Charsets.UTF_8)).getString(KEY_USERNAME)
+            } catch (e: JSONException) {
+                throw InvalidParameterException("Did not find username object in magic link token. Please try again", e)
             } catch (e: Exception) {
-                null
+                throw InvalidParameterException("There was an error parsing the magicLink code. Please try again", e)
             }
         }
     }

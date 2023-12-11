@@ -24,6 +24,7 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.InvalidPasswordExce
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.RespondToAuthChallengeResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.UserNotFoundException
 import com.amplifyframework.auth.AuthException
+import com.amplifyframework.auth.cognito.exceptions.service.InvalidParameterException
 import com.amplifyframework.auth.cognito.featuretest.generators.authstategenerators.AuthStateJsonGenerator.dummyToken
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.auth.result.AuthSignInResult
@@ -49,6 +50,7 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.test.assertEquals
 import kotlin.test.assertFails
+import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -577,7 +579,7 @@ class AuthValidationTest {
         val username = AuthHelper.getUsernameFromMagicLink(
             "eyJ1c2VybmFtZSI6IiIsImlhdCI6MTcwMTE4OTIyMiwiZXhwIjoxNzAxMTg5ODIyfQ.AQIDBAUGBwgJ"
         )
-        assertTrue { username?.isEmpty() ?: false }
+        assertTrue { username.isEmpty() }
     }
 
     @Test
@@ -592,9 +594,40 @@ class AuthValidationTest {
 
     @Test
     fun `test getUsernameFromMagicLink returns correct username when username in code is null`() {
-        val username = AuthHelper.getUsernameFromMagicLink(
-            "eyJpYXQiOjE3MDExODkyNjcsImV4cCI6MTcwMTE4OTg2N30.AQIDBAUGBwgJ"
+        assertFailsWith(
+            exceptionClass = InvalidParameterException::class,
+            message = "Did not find username object in magic link token. Please try again",
+            block = {
+                AuthHelper.getUsernameFromMagicLink(
+                    "eyJpYXQiOjE3MDExODkyNjcsImV4cCI6MTcwMTE4OTg2N30.AQIDBAUGBwgJ"
+                )
+            }
         )
-        assertTrue { username == null }
+    }
+
+    @Test
+    fun `test getUsernameFromMagicLink returns correct username when magiclink is not formatted correctly`() {
+        assertFailsWith(
+            exceptionClass = InvalidParameterException::class,
+            message = "Magic Link is malformed.",
+            block = {
+                AuthHelper.getUsernameFromMagicLink(
+                    "eyJpYXQiOjJUMP4cCI6M$.TcwMTE4OTg2N30.AQID.BAUGBwgJ"
+                )
+            }
+        )
+    }
+
+    @Test
+    fun `test getUsernameFromMagicLink returns correct username when magiclink is not coded correctly`() {
+        assertFailsWith(
+            exceptionClass = InvalidParameterException::class,
+            message = "There was an error parsing the magicLink code. Please try again",
+            block = {
+                AuthHelper.getUsernameFromMagicLink(
+                    "AMAZON.CODING"
+                )
+            }
+        )
     }
 }
