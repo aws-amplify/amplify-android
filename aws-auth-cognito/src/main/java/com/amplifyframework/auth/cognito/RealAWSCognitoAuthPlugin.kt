@@ -195,6 +195,8 @@ internal class RealAWSCognitoAuthPlugin(
     private val VALUE_PASSWORDLESS_ACTION_REQUEST = "REQUEST"
     private val VALUE_PASSWORDLESS_DELIVERYMEDIUM_EMAIL = "EMAIL"
     private val VALUE_PASSWORDLESS_ACTION_CONFIRM = "CONFIRM"
+    private val KEY_ERROR_CODE = "errorCode"
+    private val KEY_NEXT_STEP = "nextStep"
 
     init {
         addAuthStateChangeListener()
@@ -906,10 +908,10 @@ internal class RealAWSCognitoAuthPlugin(
                             }
                             challengeState is SignInChallengeState.WaitingForAnswer -> {
                                 if (challengeState.challenge.challengeName == ChallengeNameType.CustomChallenge.value &&
-                                    challengeState.challenge.parameters?.containsKey("nextStep") == true &&
-                                    challengeState.challenge.parameters["nextStep"] ==
+                                    challengeState.challenge.parameters?.containsKey(KEY_NEXT_STEP) == true &&
+                                    challengeState.challenge.parameters[KEY_NEXT_STEP] ==
                                     VALUE_NEXT_STEP_PASSWORDLESS_PROVIDE_AUTH_PARAMETERS &&
-                                    options.metadata[KEY_PASSWORDLESS_ACTION] == "REQUEST"
+                                    options.metadata[KEY_PASSWORDLESS_ACTION] == VALUE_PASSWORDLESS_ACTION_REQUEST
                                 ) {
                                     // because this event is only responsible for initializing the passwordless OTP
                                     // workflow but since Cognito needs a value for challenge answer,
@@ -925,10 +927,13 @@ internal class RealAWSCognitoAuthPlugin(
                                     )
                                 }
                                 if (challengeState.challenge.challengeName == ChallengeNameType.CustomChallenge.value &&
-                                    challengeState.challenge.parameters?.containsKey("errorCode") == true &&
-                                    challengeState.challenge.parameters["errorCode"] ==
-                                    VALUE_NEXT_STEP_PASSWORDLESS_ERROR &&
-                                    options.metadata[KEY_PASSWORDLESS_ACTION] == "CONFIRM"
+                                    challengeState.challenge.parameters?.containsKey(KEY_NEXT_STEP) == true &&
+                                    challengeState.challenge.parameters[KEY_NEXT_STEP] ==
+                                    VALUE_NEXT_STEP_PASSWORDLESS_PROVIDE_CHALLENGE_RESPONSE &&
+                                    challengeState.challenge.parameters.containsKey(KEY_ERROR_CODE) &&
+                                    challengeState.challenge.parameters[KEY_ERROR_CODE] ==
+                                    VALUE_NEXT_STEP_PASSWORDLESS_ERROR && options.metadata[KEY_PASSWORDLESS_ACTION]
+                                    == VALUE_PASSWORDLESS_ACTION_CONFIRM
                                 ) {
                                     authStateMachine.cancel(token)
                                     onError.accept(CodeMismatchException(null))
