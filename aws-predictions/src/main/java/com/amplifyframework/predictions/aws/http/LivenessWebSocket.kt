@@ -254,7 +254,7 @@ internal class LivenessWebSocket(
         val deviceManufacturer = Build.MANUFACTURER.replace(" ", "_")
         val deviceName = Build.MODEL.replace(" ", "_")
         var userAgent = "${UserAgent.string()} os/Android/${Build.VERSION.SDK_INT} md/device/$deviceName " +
-                "md/device-manufacturer/$deviceManufacturer api/rekognitionstreaming/$amplifyVersion"
+            "md/device-manufacturer/$deviceManufacturer api/rekognitionstreaming/$amplifyVersion"
 
         if (!livenessVersion.isNullOrBlank()) {
             userAgent += " api/liveness/$livenessVersion"
