@@ -64,6 +64,7 @@ import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidOauthCo
 import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidUserPoolConfigurationException
 import com.amplifyframework.auth.cognito.exceptions.invalidstate.SignedInException
 import com.amplifyframework.auth.cognito.exceptions.service.CodeDeliveryFailureException
+import com.amplifyframework.auth.cognito.exceptions.service.CodeMismatchException
 import com.amplifyframework.auth.cognito.exceptions.service.HostedUISignOutException
 import com.amplifyframework.auth.cognito.exceptions.service.InvalidAccountTypeException
 import com.amplifyframework.auth.cognito.exceptions.service.InvalidParameterException
@@ -164,16 +165,16 @@ import com.amplifyframework.statemachine.codegen.states.SetupTOTPState
 import com.amplifyframework.statemachine.codegen.states.SignInChallengeState
 import com.amplifyframework.statemachine.codegen.states.SignInState
 import com.amplifyframework.statemachine.codegen.states.SignOutState
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.async
-import kotlinx.coroutines.launch
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 
 internal class RealAWSCognitoAuthPlugin(
     private val configuration: AuthConfiguration,
@@ -189,6 +190,7 @@ internal class RealAWSCognitoAuthPlugin(
     private val KEY_PASSWORDLESS_REDIRECT_URI = "Amplify.Passwordless.redirectUri"
     private val VALUE_NEXT_STEP_PASSWORDLESS_PROVIDE_AUTH_PARAMETERS = "PROVIDE_AUTH_PARAMETERS"
     private val VALUE_NEXT_STEP_PASSWORDLESS_PROVIDE_CHALLENGE_RESPONSE = "PROVIDE_CHALLENGE_RESPONSE"
+    private val VALUE_NEXT_STEP_PASSWORDLESS_ERROR = "CodeMismatchException"
     private val VALUE_MAGIC_LINK = "MAGIC_LINK"
     private val VALUE_PASSWORDLESS_ACTION_REQUEST = "REQUEST"
     private val VALUE_PASSWORDLESS_DELIVERYMEDIUM_EMAIL = "EMAIL"
@@ -921,6 +923,15 @@ internal class RealAWSCognitoAuthPlugin(
                                             )
                                         )
                                     )
+                                }
+                                if (challengeState.challenge.challengeName == ChallengeNameType.CustomChallenge.value &&
+                                    challengeState.challenge.parameters?.containsKey("errorCode") == true &&
+                                    challengeState.challenge.parameters["errorCode"] ==
+                                    VALUE_NEXT_STEP_PASSWORDLESS_ERROR &&
+                                    options.metadata[KEY_PASSWORDLESS_ACTION] == "CONFIRM"
+                                ) {
+                                    authStateMachine.cancel(token)
+                                    onError.accept(CodeMismatchException(null))
                                 } else {
                                     authStateMachine.cancel(token)
                                     SignInChallengeHelper.getNextStep(challengeState.challenge, onSuccess, onError)
