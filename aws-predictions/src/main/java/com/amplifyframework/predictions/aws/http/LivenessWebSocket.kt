@@ -254,7 +254,7 @@ internal class LivenessWebSocket(
         val deviceManufacturer = Build.MANUFACTURER.replace(" ", "_")
         val deviceName = Build.MODEL.replace(" ", "_")
         var userAgent = "${UserAgent.string()} os/Android/${Build.VERSION.SDK_INT} md/device/$deviceName " +
-            "md/device-manufacturer/$deviceManufacturer api/rekognitionstreaming/$amplifyVersion"
+                "md/device-manufacturer/$deviceManufacturer api/rekognitionstreaming/$amplifyVersion"
 
         if (!livenessVersion.isNullOrBlank()) {
             userAgent += " api/liveness/$livenessVersion"
@@ -481,9 +481,9 @@ internal class LivenessWebSocket(
         }
     }
 
-    fun destroy() {
-        // Close gracefully
-        webSocket?.close(NORMAL_SOCKET_CLOSURE_STATUS_CODE, null)
+    fun destroy(reasonCode: Int = NORMAL_SOCKET_CLOSURE_STATUS_CODE) {
+        // Close with provided reason code
+        webSocket?.close(reasonCode, null)
     }
 
     fun adjustedDate(date: Long = Date().time): Long {
@@ -493,7 +493,7 @@ internal class LivenessWebSocket(
     private fun isTimeDiffSafe(diffInMillis: Long) = kotlin.math.abs(diffInMillis) < FOUR_MINUTES
 
     companion object {
-        private const val NORMAL_SOCKET_CLOSURE_STATUS_CODE = 1000
+        internal const val NORMAL_SOCKET_CLOSURE_STATUS_CODE = 1000
         private const val FOUR_MINUTES = 1000 * 60 * 4
         @VisibleForTesting val datePattern = "EEE, d MMM yyyy HH:mm:ss z"
         private val LOG = Amplify.Logging.logger(CategoryType.PREDICTIONS, "amplify:aws-predictions")
