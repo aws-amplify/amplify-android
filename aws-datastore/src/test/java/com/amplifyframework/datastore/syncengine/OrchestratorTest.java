@@ -27,10 +27,11 @@ import com.amplifyframework.datastore.appsync.AppSyncClient;
 import com.amplifyframework.datastore.appsync.ModelMetadata;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
 import com.amplifyframework.datastore.model.SimpleModelProvider;
-import com.amplifyframework.datastore.storage.InMemoryStorageAdapter;
 import com.amplifyframework.datastore.storage.SynchronousStorageAdapter;
+import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
+import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testutils.HubAccumulator;
 import com.amplifyframework.testutils.mocks.ApiMocking;
@@ -57,6 +58,9 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import androidx.test.core.app.ApplicationProvider;
+
+
 /**
  * Tests the {@link Orchestrator}.
  */
@@ -66,7 +70,7 @@ public final class OrchestratorTest {
     private Orchestrator orchestrator;
     private HubAccumulator orchestratorInitObserver;
     private final GraphQLBehavior mockApi = mock(GraphQLBehavior.class);
-    private final InMemoryStorageAdapter localStorageAdapter = InMemoryStorageAdapter.create();
+    private SynchronousStorageAdapter storageAdapter;
     private final BlogOwner susan = BlogOwner.builder().name("Susan Quimby").build();
 
     private final ReachabilityMonitor reachabilityMonitor = mock(ReachabilityMonitor.class);
@@ -105,10 +109,21 @@ public final class OrchestratorTest {
 
         when(reachabilityMonitor.getObservable()).thenReturn(Observable.just(true));
 
+        SQLiteStorageAdapter sqliteStorageAdapter = SQLiteStorageAdapter.forModels(
+                SchemaRegistry.instance(),
+                AmplifyModelProvider.getInstance()
+        );
+
+        storageAdapter = SynchronousStorageAdapter.delegatingTo(sqliteStorageAdapter);
+        storageAdapter.initialize(
+                ApplicationProvider.getApplicationContext(),
+                DataStoreConfiguration.defaults()
+        );
+
         orchestrator = new Orchestrator(
             modelProvider,
             schemaRegistry,
-            localStorageAdapter,
+            sqliteStorageAdapter,
             appSync,
             DataStoreConfiguration::defaults,
             () -> Orchestrator.State.SYNC_VIA_API,
@@ -133,7 +148,7 @@ public final class OrchestratorTest {
         HubAccumulator accumulator = HubAccumulator.create(HubChannel.DATASTORE, isProcessed(susan), 1).start();
 
         // Act: Put BlogOwner into storage, and wait for it to complete.
-        SynchronousStorageAdapter.delegatingTo(localStorageAdapter).save(susan);
+        storageAdapter.save(susan);
 
         // Assert that the event is published out to the API
         assertEquals(
