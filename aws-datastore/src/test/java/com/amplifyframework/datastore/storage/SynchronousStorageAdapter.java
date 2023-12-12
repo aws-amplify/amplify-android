@@ -266,4 +266,8 @@ public final class SynchronousStorageAdapter {
             asyncDelegate.observe(emitter::onNext, emitter::onError, emitter::onComplete)
         );
     }
+
+    public void terminate() throws DataStoreException {
+        asyncDelegate.terminate();
+    }
 }
