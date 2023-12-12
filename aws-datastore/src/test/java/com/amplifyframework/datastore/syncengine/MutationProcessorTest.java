@@ -33,15 +33,17 @@ import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.appsync.AppSyncMocking;
 import com.amplifyframework.datastore.appsync.ModelMetadata;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
-import com.amplifyframework.datastore.storage.InMemoryStorageAdapter;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.SynchronousStorageAdapter;
+import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter;
 import com.amplifyframework.hub.HubChannel;
+import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testutils.HubAccumulator;
 import com.amplifyframework.testutils.Latch;
 
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatchers;
@@ -70,6 +72,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import androidx.test.core.app.ApplicationProvider;
 
 /**
  * Tests the {@link MutationProcessor}.
@@ -78,12 +81,18 @@ import static org.mockito.Mockito.when;
 public final class MutationProcessorTest {
     private static final long TIMEOUT_SECONDS = 5;
 
-    private SchemaRegistry schemaRegistry;
+    private static SchemaRegistry schemaRegistry;
     private SynchronousStorageAdapter synchronousStorageAdapter;
     private MutationOutbox mutationOutbox;
     private AppSync appSync;
     private MutationProcessor mutationProcessor;
     private DataStoreConfigurationProvider configurationProvider;
+
+    @BeforeClass
+    public static void setupBeforeClass() throws AmplifyException {
+        schemaRegistry = SchemaRegistry.instance();
+        schemaRegistry.register(Collections.singleton(BlogOwner.class));
+    }
 
     /**
      * A {@link MutationProcessor} is being tested. To do so, we arrange mutations into
@@ -91,18 +100,25 @@ public final class MutationProcessorTest {
      * @throws AmplifyException When loading SchemaRegistry
      */
     @Before
-    public void setup() throws AmplifyException {
+    public void setup() throws AmplifyException, InterruptedException {
         ShadowLog.stream = System.out;
-        LocalStorageAdapter localStorageAdapter = InMemoryStorageAdapter.create();
+
+        LocalStorageAdapter localStorageAdapter = SQLiteStorageAdapter.forModels(
+                schemaRegistry,
+                AmplifyModelProvider.getInstance()
+        );
         this.synchronousStorageAdapter = SynchronousStorageAdapter.delegatingTo(localStorageAdapter);
+        synchronousStorageAdapter.initialize(
+                ApplicationProvider.getApplicationContext(),
+                DataStoreConfiguration.defaults()
+        );
+
         this.mutationOutbox = new PersistentMutationOutbox(localStorageAdapter);
         VersionRepository versionRepository = new VersionRepository(localStorageAdapter);
         Merger merger = new Merger(mutationOutbox, versionRepository, localStorageAdapter);
         this.appSync = mock(AppSync.class);
         this.configurationProvider = mock(DataStoreConfigurationProvider.class);
         RetryHandler retryHandler = new RetryHandler(0, Duration.ofMinutes(1).toMillis());
-        schemaRegistry = SchemaRegistry.instance();
-        schemaRegistry.register(Collections.singleton(BlogOwner.class));
         this.mutationProcessor = MutationProcessor.builder()
                 .merger(merger)
                 .versionRepository(versionRepository)

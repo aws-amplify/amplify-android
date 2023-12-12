@@ -28,6 +28,7 @@ import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.appsync.ModelMetadata;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
 import com.amplifyframework.datastore.storage.InMemoryStorageAdapter;
+import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.SynchronousStorageAdapter;
 import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter;
 import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider;
@@ -39,7 +40,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
-import org.robolectric.android.util.concurrent.InlineExecutorService;
 
 import java.util.Collections;
 import java.util.List;
@@ -63,7 +63,7 @@ import androidx.test.core.app.ApplicationProvider;
 public final class MergerTest {
     private static final long REASONABLE_WAIT_TIME = TimeUnit.SECONDS.toMillis(2);
 
-    private SQLiteStorageAdapter sqliteStorageAdapter;
+    private LocalStorageAdapter spiedStorageAdapter;
     private SynchronousStorageAdapter storageAdapter;
     private MutationOutbox mutationOutbox;
     private Merger merger;
@@ -77,17 +77,17 @@ public final class MergerTest {
      */
     @Before
     public void setup() throws DataStoreException {
-        SQLiteStorageAdapter sqLiteStorageAdapter = SQLiteStorageAdapter.forTest(
+        SQLiteStorageAdapter sqliteStorageAdapter = SQLiteStorageAdapter.forModels(
                 SchemaRegistry.instance(),
-                AmplifyModelProvider.getInstance(),
-                new InlineExecutorService()
+                AmplifyModelProvider.getInstance()
         );
 
-        sqLiteStorageAdapter.initialize(ApplicationProvider.getApplicationContext()
-                , (c) -> {}, (b) -> {}, DataStoreConfiguration.defaults());
-
-        this.sqliteStorageAdapter = spy(sqLiteStorageAdapter);
-        this.storageAdapter = SynchronousStorageAdapter.delegatingTo(sqliteStorageAdapter);
+        storageAdapter = SynchronousStorageAdapter.delegatingTo(sqliteStorageAdapter);
+        storageAdapter.initialize(
+                ApplicationProvider.getApplicationContext(),
+                DataStoreConfiguration.defaults()
+        );
+        this.spiedStorageAdapter = spy(sqliteStorageAdapter);
         this.mutationOutbox = new PersistentMutationOutbox(sqliteStorageAdapter);
         VersionRepository versionRepository = new VersionRepository(sqliteStorageAdapter);
         this.merger = new Merger(mutationOutbox, versionRepository, sqliteStorageAdapter);
@@ -461,7 +461,7 @@ public final class MergerTest {
 
         // Enforce foreign key constraint on in-memory storage adapter
         doThrow(SQLiteConstraintException.class)
-                .when(sqliteStorageAdapter)
+                .when(spiedStorageAdapter)
                 .save(eq(orphanedBlog), any(), any(), any(), any());
 
         // Act: merge a creation for an item

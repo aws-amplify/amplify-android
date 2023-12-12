@@ -15,15 +15,19 @@
 
 package com.amplifyframework.datastore.storage;
 
+import android.content.Context;
+
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
+import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.query.QueryOptions;
 import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
+import com.amplifyframework.datastore.DataStoreConfiguration;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.testutils.Await;
 
@@ -78,6 +82,27 @@ public final class SynchronousStorageAdapter {
         @NonNull LocalStorageAdapter asyncDelegate, long operationTimeoutMs) {
         Objects.requireNonNull(asyncDelegate);
         return new SynchronousStorageAdapter(asyncDelegate, operationTimeoutMs);
+    }
+
+    /**
+     * Initialize the storage adapter
+     * @param context App Context
+     * @param dataStoreConfiguration DataStore configuration
+     * @throws DataStoreException On any failure to initialize storage adapter
+     */
+    public <T extends Model> void initialize(
+            @NonNull Context context,
+            @NonNull DataStoreConfiguration dataStoreConfiguration) throws DataStoreException {
+        Await.result(
+                operationTimeoutMs,
+                (Consumer<List<ModelSchema>> onResult, Consumer<DataStoreException> onError) ->
+                        asyncDelegate.initialize(
+                                context,
+                                onResult,
+                                onError,
+                                dataStoreConfiguration
+                        )
+        );
     }
 
     /**

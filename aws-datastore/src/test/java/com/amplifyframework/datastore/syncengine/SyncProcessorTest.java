@@ -40,9 +40,9 @@ import com.amplifyframework.datastore.events.ModelSyncedEvent;
 import com.amplifyframework.datastore.events.SyncQueriesStartedEvent;
 import com.amplifyframework.datastore.model.SimpleModelProvider;
 import com.amplifyframework.datastore.model.SystemModelsProviderFactory;
-import com.amplifyframework.datastore.storage.InMemoryStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.datastore.storage.SynchronousStorageAdapter;
+import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.hub.HubEventFilter;
@@ -97,6 +97,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import androidx.test.core.app.ApplicationProvider;
+
 /**
  * Tests the {@link SyncProcessor}.
  */
@@ -142,13 +144,20 @@ public final class SyncProcessorTest {
         schemaRegistry.clear();
         schemaRegistry.register(modelProvider.models());
 
-        InMemoryStorageAdapter inMemoryStorageAdapter = InMemoryStorageAdapter.create();
-        this.storageAdapter = SynchronousStorageAdapter.delegatingTo(inMemoryStorageAdapter);
+        SQLiteStorageAdapter sqliteStorageAdapter = SQLiteStorageAdapter.forModels(
+                schemaRegistry,
+                AmplifyModelProvider.getInstance()
+        );
+        this.storageAdapter = SynchronousStorageAdapter.delegatingTo(sqliteStorageAdapter);
+        storageAdapter.initialize(
+                ApplicationProvider.getApplicationContext(),
+                DataStoreConfiguration.defaults()
+        );
 
-        final SyncTimeRegistry syncTimeRegistry = new SyncTimeRegistry(inMemoryStorageAdapter);
-        final MutationOutbox mutationOutbox = new PersistentMutationOutbox(inMemoryStorageAdapter);
-        final VersionRepository versionRepository = new VersionRepository(inMemoryStorageAdapter);
-        final Merger merger = new Merger(mutationOutbox, versionRepository, inMemoryStorageAdapter);
+        final SyncTimeRegistry syncTimeRegistry = new SyncTimeRegistry(sqliteStorageAdapter);
+        final MutationOutbox mutationOutbox = new PersistentMutationOutbox(sqliteStorageAdapter);
+        final VersionRepository versionRepository = new VersionRepository(sqliteStorageAdapter);
+        final Merger merger = new Merger(mutationOutbox, versionRepository, sqliteStorageAdapter);
 
         DataStoreConfigurationProvider dataStoreConfigurationProvider = () -> DataStoreConfiguration
                 .builder()

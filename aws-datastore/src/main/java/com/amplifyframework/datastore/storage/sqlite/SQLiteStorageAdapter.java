@@ -24,7 +24,6 @@ import androidx.annotation.VisibleForTesting;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.AmplifyException;
-import com.amplifyframework.annotations.InternalAmplifyApi;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
@@ -196,26 +195,6 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             Objects.requireNonNull(userModelsProvider),
             SystemModelsProviderFactory.create(),
             null
-        );
-    }
-
-    /**
-     * Gets a SQLiteStorageAdapter that can be initialized to use the provided models.
-     * @param schemaRegistry Registry of schema for all models and custom types in the system
-     * @param userModelsProvider A provider of models that will be represented in SQL
-     * @param executorService to execute operations on
-     * @return A SQLiteStorageAdapter that will host the provided models in SQL tables
-     */
-    @InternalAmplifyApi
-    public static SQLiteStorageAdapter forTest(
-            @NonNull SchemaRegistry schemaRegistry,
-            @NonNull ModelProvider userModelsProvider,
-            @NonNull ExecutorService executorService) {
-        return new SQLiteStorageAdapter(
-                schemaRegistry,
-                Objects.requireNonNull(userModelsProvider),
-                SystemModelsProviderFactory.create(),
-                executorService
         );
     }
 
