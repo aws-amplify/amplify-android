@@ -15,6 +15,7 @@
 
 package com.amplifyframework.statemachine.codegen.actions
 
+import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.data.AuthChallenge
 
@@ -22,6 +23,7 @@ internal interface SignInChallengeActions {
     fun verifyChallengeAuthAction(
         answer: String,
         metadata: Map<String, String>,
+        userAttributes: List<AuthUserAttribute>,
         challenge: AuthChallenge
     ): Action
 }

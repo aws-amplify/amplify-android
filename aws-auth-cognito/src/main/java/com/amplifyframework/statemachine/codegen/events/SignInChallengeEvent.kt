@@ -15,6 +15,7 @@
 
 package com.amplifyframework.statemachine.codegen.events
 
+import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.statemachine.StateMachineEvent
 import com.amplifyframework.statemachine.codegen.data.AuthChallenge
 import java.util.Date
@@ -22,11 +23,16 @@ import java.util.Date
 internal class SignInChallengeEvent(val eventType: EventType, override val time: Date? = null) : StateMachineEvent {
     sealed class EventType {
         data class WaitForAnswer(val challenge: AuthChallenge, val hasNewResponse: Boolean = false) : EventType()
-        data class VerifyChallengeAnswer(val answer: String, val metadata: Map<String, String>) : EventType()
+        data class VerifyChallengeAnswer(
+            val answer: String,
+            val metadata: Map<String, String>,
+            val userAttributes: List<AuthUserAttribute>
+        ) : EventType()
 
         data class RetryVerifyChallengeAnswer(
             val answer: String,
             val metadata: Map<String, String>,
+            val userAttributes: List<AuthUserAttribute>,
             val authChallenge: AuthChallenge
         ) : EventType()
         data class FinalizeSignIn(val accessToken: String) : EventType()
