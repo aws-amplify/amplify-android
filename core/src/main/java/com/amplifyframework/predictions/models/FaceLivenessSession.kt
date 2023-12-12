@@ -22,7 +22,7 @@ class FaceLivenessSession(
     val challenges: List<FaceLivenessSessionChallenge>,
     private val onVideoEvent: (VideoEvent) -> Unit,
     private val onChallengeResponseEvent: (ChallengeResponseEvent) -> Unit,
-    private val stopLivenessSession: (Int) -> Unit
+    private val stopLivenessSession: (Int?) -> Unit
 ) {
 
     fun sendVideoEvent(videoEvent: VideoEvent) {
@@ -33,7 +33,7 @@ class FaceLivenessSession(
         onChallengeResponseEvent(challengeResponseEvent)
     }
 
-    fun stopSession(reasonCode: Int) {
+    fun stopSession(reasonCode: Int?) {
         stopLivenessSession(reasonCode)
     }
 }
