@@ -16,6 +16,7 @@
 package com.amplifyframework.datastore.syncengine;
 
 import android.util.Range;
+import androidx.test.core.app.ApplicationProvider;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.graphql.GraphQLRequest;
@@ -55,7 +56,6 @@ import com.amplifyframework.util.ForEach;
 import com.amplifyframework.util.Time;
 
 import com.google.common.collect.Lists;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -97,8 +97,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import androidx.test.core.app.ApplicationProvider;
-
 /**
  * Tests the {@link SyncProcessor}.
  */
@@ -137,14 +135,16 @@ public final class SyncProcessorTest {
         initSyncProcessor(10_000);
     }
 
+    /**
+     * Test Cleanup.
+     * @throws DataStoreException On storage adapter terminate failure
+     */
     @After
     public void tearDown() throws DataStoreException {
         storageAdapter.terminate();
     }
 
     private void initSyncProcessor(int syncMaxRecords) throws AmplifyException {
-
-
         SQLiteStorageAdapter sqliteStorageAdapter = SQLiteStorageAdapter.forModels(
                 SchemaRegistry.instance(),
                 AmplifyModelProvider.getInstance()
@@ -685,7 +685,7 @@ public final class SyncProcessorTest {
      * @throws AmplifyException On failure to build GraphQLRequest for sync query.
      */
     @Test
-    public void retriedOnAppSyncFailure() throws AmplifyException, InterruptedException {
+    public void retriedOnAppSyncFailure() throws AmplifyException {
         // Arrange: mock failure when invoking hydrate on the mock object.
         requestRetry = mock(RetryHandler.class);
         when(requestRetry.retry(any(), any())).thenReturn(Single.error(
@@ -707,6 +707,7 @@ public final class SyncProcessorTest {
      * Verify that retry is called on appsync failure when syncRetry is set to true.
      *
      * @throws AmplifyException On failure to build GraphQLRequest for sync query.
+     * @throws InterruptedException if await is interrupted.
      */
     @Test
     public void shouldNotRetryOnAppSyncFailureWhenSynRetryIsSetToFalse() throws AmplifyException, InterruptedException {
@@ -830,7 +831,10 @@ public final class SyncProcessorTest {
         // Since hydrate() completed, the storage adapter observer should see some values.
         // The number should match expectedResponseItems * 2 (1 for model, 1 for metadata)
         // Additionally, there should be 1 LastSyncMetadata record for each model in the provider
-        adapterObserver.awaitCount(expectedResponseItems.size() * 2 + AmplifyModelProvider.getInstance().models().size());
+        adapterObserver.awaitCount(
+                expectedResponseItems.size() * 2 +
+                        AmplifyModelProvider.getInstance().models().size()
+        );
 
         // Validate the changes emitted from the storage adapter's observe().
         assertEquals(
@@ -872,20 +876,23 @@ public final class SyncProcessorTest {
                 .toList()
                 .blockingGet();
 
-        List<? extends Model> actualModels = Observable.fromIterable(storageAdapter.query(modelProvider))
+        List<? extends Model> actualModels =
+                Observable.fromIterable(storageAdapter.query(modelProvider))
                 .filter(item -> !LastSyncMetadata.class.isAssignableFrom(item.getClass()))
                 .toList()
                 .blockingGet();
 
-        List<? extends Model> actualMetadata = Observable.fromIterable(storageAdapter.query(SystemModelsProviderFactory.create()))
-                .filter(item -> ModelMetadata.class.isAssignableFrom(item.getClass()))
-                .toList()
-                .blockingGet();
+        List<? extends Model> actualMetadata =
+                Observable.fromIterable(storageAdapter.query(SystemModelsProviderFactory.create()))
+                    .filter(item -> ModelMetadata.class.isAssignableFrom(item.getClass()))
+                    .toList()
+                    .blockingGet();
 
-        List<? extends Model> additionalSystemModels = Observable.fromIterable(storageAdapter.query(SystemModelsProviderFactory.create()))
-                .filter(item -> !ModelMetadata.class.isAssignableFrom(item.getClass()))
-                .toList()
-                .blockingGet();
+        List<? extends Model> additionalSystemModels =
+                Observable.fromIterable(storageAdapter.query(SystemModelsProviderFactory.create()))
+                    .filter(item -> !ModelMetadata.class.isAssignableFrom(item.getClass()))
+                    .toList()
+                    .blockingGet();
 
         assertContentEquals(actualModels, expectedModels);
         assertContentEquals(actualMetadata, expectedMetadata);
@@ -939,6 +946,18 @@ public final class SyncProcessorTest {
         };
     }
 
+    private void assertContentEquals(
+            List<? extends Object> expected,
+            List<? extends Object> actual) {
+        assertEquals(expected.size(), actual.size());
+        actual.forEach(model ->
+            assertTrue(
+                    "Model Assertion Failed: " + model.toString(),
+                    expected.contains(model)
+            )
+        );
+    }
+
     static final class RecentTimeWindow {
         private static final long ACCEPTABLE_DRIFT_MS = TimeUnit.SECONDS.toMillis(1);
 
@@ -971,17 +990,5 @@ public final class SyncProcessorTest {
         static int compare(Model left, Model right) {
             return left.getPrimaryKeyString().compareTo(right.getPrimaryKeyString());
         }
-    }
-
-    private void assertContentEquals(
-            List<? extends Object> expected,
-            List<? extends Object> actual) {
-        assertEquals(expected.size(), actual.size());
-        actual.forEach((model ->
-                assertTrue(
-                        "Model Assertion Failed: " + model.toString(),
-                        expected.contains(model)
-                )
-        ));
     }
 }

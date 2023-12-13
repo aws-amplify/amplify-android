@@ -15,6 +15,8 @@
 
 package com.amplifyframework.datastore.syncengine;
 
+import androidx.test.core.app.ApplicationProvider;
+
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.graphql.GraphQLBehavior;
 import com.amplifyframework.api.graphql.MutationType;
@@ -23,6 +25,7 @@ import com.amplifyframework.core.model.SchemaRegistry;
 import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.datastore.DataStoreChannelEventName;
 import com.amplifyframework.datastore.DataStoreConfiguration;
+import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.appsync.AppSyncClient;
 import com.amplifyframework.datastore.appsync.ModelMetadata;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
@@ -36,6 +39,7 @@ import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testutils.HubAccumulator;
 import com.amplifyframework.testutils.mocks.ApiMocking;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -57,9 +61,6 @@ import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
-import androidx.test.core.app.ApplicationProvider;
-
 
 /**
  * Tests the {@link Orchestrator}.
@@ -130,6 +131,15 @@ public final class OrchestratorTest {
             reachabilityMonitor,
             true
         );
+    }
+
+    /**
+     * Test Cleanup.
+     * @throws DataStoreException On storage adapter terminate failure
+     */
+    @After
+    public void tearDown() throws DataStoreException {
+        storageAdapter.terminate();
     }
 
     /**

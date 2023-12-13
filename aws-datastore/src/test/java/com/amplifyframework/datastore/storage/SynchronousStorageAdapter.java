@@ -16,7 +16,6 @@
 package com.amplifyframework.datastore.storage;
 
 import android.content.Context;
-
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.Consumer;
@@ -85,23 +84,23 @@ public final class SynchronousStorageAdapter {
     }
 
     /**
-     * Initialize the storage adapter
+     * Initialize the storage adapter.
      * @param context App Context
      * @param dataStoreConfiguration DataStore configuration
      * @throws DataStoreException On any failure to initialize storage adapter
      */
-    public <T extends Model> void initialize(
+    public void initialize(
             @NonNull Context context,
             @NonNull DataStoreConfiguration dataStoreConfiguration) throws DataStoreException {
         Await.result(
-                operationTimeoutMs,
-                (Consumer<List<ModelSchema>> onResult, Consumer<DataStoreException> onError) ->
-                        asyncDelegate.initialize(
-                                context,
-                                onResult,
-                                onError,
-                                dataStoreConfiguration
-                        )
+            operationTimeoutMs,
+            (Consumer<List<ModelSchema>> onResult, Consumer<DataStoreException> onError) ->
+                asyncDelegate.initialize(
+                    context,
+                    onResult,
+                    onError,
+                    dataStoreConfiguration
+                )
         );
     }
 
@@ -267,6 +266,10 @@ public final class SynchronousStorageAdapter {
         );
     }
 
+    /**
+     * Pass terminate to delegate.
+     * @throws DataStoreException if termination fails
+     */
     public void terminate() throws DataStoreException {
         asyncDelegate.terminate();
     }

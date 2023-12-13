@@ -14,7 +14,6 @@
  */
 package com.amplifyframework.datastore.syncengine
 
-import android.database.sqlite.SQLiteConstraintException
 import android.util.Log
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
@@ -29,16 +28,10 @@ import com.amplifyframework.datastore.appsync.ModelWithMetadata
 import com.amplifyframework.datastore.storage.LocalStorageAdapter
 import com.amplifyframework.datastore.storage.StorageItemChange
 import com.amplifyframework.datastore.storage.StorageOperation
-import com.amplifyframework.datastore.utils.ErrorInspector
 import com.amplifyframework.hub.HubChannel
 import com.amplifyframework.hub.HubEvent
 import io.reactivex.rxjava3.core.Completable
 import io.reactivex.rxjava3.core.CompletableEmitter
-import java.lang.Boolean
-import java.util.concurrent.atomic.AtomicReference
-import kotlin.Int
-import kotlin.Long
-import kotlin.Throwable
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine

@@ -15,6 +15,8 @@
 
 package com.amplifyframework.datastore.syncengine;
 
+import androidx.test.core.app.ApplicationProvider;
+
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.graphql.GraphQLLocation;
 import com.amplifyframework.api.graphql.GraphQLOperation;
@@ -42,6 +44,7 @@ import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testutils.HubAccumulator;
 import com.amplifyframework.testutils.Latch;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -72,7 +75,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import androidx.test.core.app.ApplicationProvider;
 
 /**
  * Tests the {@link MutationProcessor}.
@@ -88,6 +90,10 @@ public final class MutationProcessorTest {
     private MutationProcessor mutationProcessor;
     private DataStoreConfigurationProvider configurationProvider;
 
+    /**
+     * Sets up test before class.
+     * @throws AmplifyException When loading SchemaRegistry
+     */
     @BeforeClass
     public static void setupBeforeClass() throws AmplifyException {
         schemaRegistry = SchemaRegistry.instance();
@@ -100,7 +106,7 @@ public final class MutationProcessorTest {
      * @throws AmplifyException When loading SchemaRegistry
      */
     @Before
-    public void setup() throws AmplifyException, InterruptedException {
+    public void setup() throws AmplifyException {
         ShadowLog.stream = System.out;
 
         LocalStorageAdapter localStorageAdapter = SQLiteStorageAdapter.forModels(
@@ -128,6 +134,15 @@ public final class MutationProcessorTest {
                 .dataStoreConfigurationProvider(configurationProvider)
                 .retryHandler(retryHandler)
                 .build();
+    }
+
+    /**
+     * Test Cleanup.
+     * @throws DataStoreException On storage adapter terminate failure
+     */
+    @After
+    public void tearDown() throws DataStoreException {
+        synchronousStorageAdapter.terminate();
     }
 
     /**

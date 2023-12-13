@@ -16,6 +16,7 @@
 package com.amplifyframework.datastore.syncengine;
 
 import android.database.sqlite.SQLiteConstraintException;
+import androidx.test.core.app.ApplicationProvider;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.model.ModelSchema;
@@ -54,8 +55,6 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.spy;
 
-import androidx.test.core.app.ApplicationProvider;
-
 /**
  * Tests the {@link Merger}.
  */
@@ -74,6 +73,7 @@ public final class MergerTest {
      * to arrange state. A {@link SynchronousStorageAdapter} is crated to facilitate
      * arranging model data into the {@link InMemoryStorageAdapter} which backs the various
      * components.
+     * @throws DataStoreException if DataStoreConfiguration fails
      */
     @Before
     public void setup() throws DataStoreException {
