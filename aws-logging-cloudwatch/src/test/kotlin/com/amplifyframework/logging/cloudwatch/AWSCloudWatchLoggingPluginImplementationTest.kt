@@ -60,7 +60,7 @@ internal class AWSCloudWatchLoggingPluginImplementationTest {
             region = "REGION",
             logGroupName = "LOG_GROUP"
         )
-        every { loggingConstraintsResolver::localLoggingConstraint.set(capture(loggingConstraintsSlot)) }.answers { }
+        every { loggingConstraintsResolver::localLoggingConstraint.set(capture(loggingConstraintsSlot)) } returns Unit
         coEvery { cloudWatchLogManager.startSync() } returns Unit
         awsCloudWatchLoggingPluginImplementation.configure(
             awsLoggingConfig
@@ -77,7 +77,7 @@ internal class AWSCloudWatchLoggingPluginImplementationTest {
             region = "REGION",
             logGroupName = "LOG_GROUP"
         )
-        every { loggingConstraintsResolver::localLoggingConstraint.set(any()) }.answers { }
+        every { loggingConstraintsResolver::localLoggingConstraint.set(any()) } returns Unit
         coEvery { cloudWatchLogManager.startSync() } returns Unit
         awsCloudWatchLoggingPluginImplementation.configure(
             awsLoggingConfig
