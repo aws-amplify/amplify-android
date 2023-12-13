@@ -25,7 +25,6 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
-import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
@@ -116,7 +115,7 @@ internal class AWSCloudWatchLoggingPluginImplementationTest {
     }
 
     @Test
-    fun `on flush logs error`() = runTest(timeout = 30.seconds) {
+    fun `on flush logs error`() = runTest {
         val onSuccess = mockk<Action>()
         val onError = mockk<Consumer<AmplifyException>>()
         val exception = slot<AmplifyException>()
