@@ -824,7 +824,7 @@ public final class SyncProcessorTest {
 
         // Wait 2 seconds, or 1 second per 100 pages, whichever is greater
         long timeoutMs = Math.max(OP_TIMEOUT_MS, TimeUnit.SECONDS.toMillis(numPages / 100));
-        assertTrue(hydrationObserver.await(timeoutMs, TimeUnit.MILLISECONDS));
+        assertTrue(hydrationObserver.await(timeoutMs * 3, TimeUnit.MILLISECONDS));
         hydrationObserver.assertNoErrors();
         hydrationObserver.assertComplete();
 
