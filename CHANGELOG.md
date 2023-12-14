@@ -1,6 +1,8 @@
 ## [Release 2.14.7](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.14.7)
 
-
+### Miscellaneous
+- chore: pin github actions by commit hash ([#2648](https://github.com/aws-amplify/amplify-android/pull/2648))
+- chore: bump min Device Farm version for canaries ([#2650](https://github.com/aws-amplify/amplify-android/pull/2650))
 
 [See all changes between 2.14.6 and 2.14.7](https://github.com/aws-amplify/amplify-android/compare/release_v2.14.6...release_v2.14.7)
 
