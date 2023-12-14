@@ -1,3 +1,9 @@
+## [Release 2.14.7](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.14.7)
+
+
+
+[See all changes between 2.14.6 and 2.14.7](https://github.com/aws-amplify/amplify-android/compare/release_v2.14.6...release_v2.14.7)
+
 ## [Release 2.14.6](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.14.6)
 
 ### Bug Fixes
