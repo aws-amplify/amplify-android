@@ -147,7 +147,7 @@ public final class PersistentMutationOutboxTest {
             Collections.singletonList(converter.toRecord(createJameson)),
             storage.query(PersistentRecord.class)
         );
-        assertTrue(mutationOutbox.hasPendingMutation(jameson.getId(), jameson.getClass().getName()));
+        assertTrue(mutationOutbox.hasPendingMutation(jameson.getId(), jameson.getClass().getSimpleName()));
         assertEquals(createJameson, mutationOutbox.peek());
     }
 
@@ -208,8 +208,8 @@ public final class PersistentMutationOutboxTest {
         loadObserver.dispose();
 
         // Assert: items are in the outbox.
-        assertTrue(mutationOutbox.hasPendingMutation(tony.getId(), tony.getClass().getName()));
-        assertTrue(mutationOutbox.hasPendingMutation(sam.getId(), sam.getClass().getName()));
+        assertTrue(mutationOutbox.hasPendingMutation(tony.getId(), tony.getClass().getSimpleName()));
+        assertTrue(mutationOutbox.hasPendingMutation(sam.getId(), sam.getClass().getSimpleName()));
 
         // Tony is first, since he is the older of the two mutations.
         assertEquals(updateTony, mutationOutbox.peek());
@@ -240,7 +240,7 @@ public final class PersistentMutationOutboxTest {
         assertEquals(0, storage.query(PersistentRecord.class).size());
 
         assertNull(mutationOutbox.peek());
-        assertFalse(mutationOutbox.hasPendingMutation(bill.getId(), bill.getClass().getName()));
+        assertFalse(mutationOutbox.hasPendingMutation(bill.getId(), bill.getClass().getSimpleName()));
     }
 
     /**
@@ -330,8 +330,8 @@ public final class PersistentMutationOutboxTest {
         boolean completed = mutationOutbox.enqueue(pendingMutation).blockingAwait(TIMEOUT_MS, TimeUnit.MILLISECONDS);
 
         assertTrue(completed);
-        assertTrue(mutationOutbox.hasPendingMutation(modelId, joe.getClass().getName()));
-        assertFalse(mutationOutbox.hasPendingMutation(mutationId.toString(), mutationId.getClass().getName()));
+        assertTrue(mutationOutbox.hasPendingMutation(modelId, joe.getClass().getSimpleName()));
+        assertFalse(mutationOutbox.hasPendingMutation(mutationId.toString(), mutationId.getClass().getSimpleName()));
     }
 
     /**
@@ -357,9 +357,9 @@ public final class PersistentMutationOutboxTest {
             mutationId, joe, schema, PendingMutation.Type.CREATE, QueryPredicates.all()
         );
 
-        assertFalse(mutationOutbox.hasPendingMutation(joeId, joe.getClass().getName()));
+        assertFalse(mutationOutbox.hasPendingMutation(joeId, joe.getClass().getSimpleName()));
         assertFalse(mutationOutbox.hasPendingMutation(unrelatedMutation.getMutationId().toString(),
-                unrelatedMutation.getClass().getName()));
+                unrelatedMutation.getClass().getSimpleName()));
     }
 
     /**
@@ -385,7 +385,7 @@ public final class PersistentMutationOutboxTest {
 
         // Act & Assert: Enqueue and verify BlogOwner
         assertTrue(mutationOutbox.enqueue(pendingBlogOwnerMutation).blockingAwait(TIMEOUT_MS, TimeUnit.MILLISECONDS));
-        assertTrue(mutationOutbox.hasPendingMutation(modelId, blogOwner.getClass().getName()));
+        assertTrue(mutationOutbox.hasPendingMutation(modelId, blogOwner.getClass().getSimpleName()));
 
         // Act & Assert: Enqueue and verify Author
         Author author = Author.builder()
@@ -394,7 +394,7 @@ public final class PersistentMutationOutboxTest {
                 .build();
 
         // Check hasPendingMutation returns False for Author with same Primary Key (id) as BlogOwner
-        assertFalse(mutationOutbox.hasPendingMutation(modelId, author.getClass().getName()));
+        assertFalse(mutationOutbox.hasPendingMutation(modelId, author.getClass().getSimpleName()));
 
         PendingMutation<Author> pendingAuthorMutation = PendingMutation.instance(
                 mutationId, author, ModelSchema.fromModelClass(Author.class),
@@ -403,7 +403,7 @@ public final class PersistentMutationOutboxTest {
         assertTrue(mutationOutbox.enqueue(pendingAuthorMutation).blockingAwait(TIMEOUT_MS, TimeUnit.MILLISECONDS));
 
         // Make sure Author Mutation is stored
-        assertTrue(mutationOutbox.hasPendingMutation(modelId, author.getClass().getName()));
+        assertTrue(mutationOutbox.hasPendingMutation(modelId, author.getClass().getSimpleName()));
 
         // Act & Assert: Enqueue and verify Author
         Post post = Post.builder()
@@ -414,7 +414,7 @@ public final class PersistentMutationOutboxTest {
                 .build();
 
         // Check hasPendingMutation returns False for Post with same Primary Key (id) as BlogOwner
-        assertFalse(mutationOutbox.hasPendingMutation(modelId, post.getClass().getName()));
+        assertFalse(mutationOutbox.hasPendingMutation(modelId, post.getClass().getSimpleName()));
 
         PendingMutation<Post> pendingPostMutation = PendingMutation.instance(
                 mutationId, post, ModelSchema.fromModelClass(Post.class),
@@ -423,7 +423,7 @@ public final class PersistentMutationOutboxTest {
         assertTrue(mutationOutbox.enqueue(pendingPostMutation).blockingAwait(TIMEOUT_MS, TimeUnit.MILLISECONDS));
 
         // Make sure Post Mutation is stored
-        assertTrue(mutationOutbox.hasPendingMutation(modelId, post.getClass().getName()));
+        assertTrue(mutationOutbox.hasPendingMutation(modelId, post.getClass().getSimpleName()));
     }
 
     /**
@@ -474,7 +474,7 @@ public final class PersistentMutationOutboxTest {
 
         // Additional Checks: Peek the Mutation outbox, existing mutation should be present.
         assertTrue(mutationOutbox.hasPendingMutation(existingBlogOwner.getPrimaryKeyString(),
-                existingBlogOwner.getClass().getName()));
+                existingBlogOwner.getClass().getSimpleName()));
         assertEquals(existingCreation, mutationOutbox.peek());
     }
 
@@ -521,7 +521,7 @@ public final class PersistentMutationOutboxTest {
 
         // Existing mutation still attainable as next mutation (right now, its the ONLY mutation in outbox)
         assertTrue(mutationOutbox.hasPendingMutation(modelInExistingMutation.getPrimaryKeyString(),
-                modelInExistingMutation.getClass().getName()));
+                modelInExistingMutation.getClass().getSimpleName()));
         assertEquals(existingCreation, mutationOutbox.peek());
     }
 
@@ -567,7 +567,7 @@ public final class PersistentMutationOutboxTest {
 
         // Existing mutation still attainable as next mutation (right now, its the ONLY mutation in outbox)
         assertTrue(mutationOutbox.hasPendingMutation(modelInExistingMutation.getPrimaryKeyString(),
-                modelInExistingMutation.getClass().getName()));
+                modelInExistingMutation.getClass().getSimpleName()));
         assertEquals(existingUpdate, mutationOutbox.peek());
     }
 
@@ -614,7 +614,7 @@ public final class PersistentMutationOutboxTest {
 
         // Existing mutation still attainable as next mutation (right now, its the ONLY mutation in outbox)
         assertTrue(mutationOutbox.hasPendingMutation(modelInExistingMutation.getPrimaryKeyString(),
-                modelInExistingMutation.getClass().getName()));
+                modelInExistingMutation.getClass().getSimpleName()));
         assertEquals(existingDeletion, mutationOutbox.peek());
     }
 
@@ -660,7 +660,7 @@ public final class PersistentMutationOutboxTest {
 
         // Existing mutation still attainable as next mutation (right now, its the ONLY mutation in outbox)
         assertTrue(mutationOutbox.hasPendingMutation(modelInExistingMutation.getPrimaryKeyString(),
-                modelInExistingMutation.getClass().getName()));
+                modelInExistingMutation.getClass().getSimpleName()));
         assertEquals(existingDeletion, mutationOutbox.peek());
     }
 
@@ -1186,7 +1186,7 @@ public final class PersistentMutationOutboxTest {
         assertTrue(completed);
         assertEquals(
             firstMutation,
-            mutationOutbox.getMutationForModelId(originalJoe.getId(), originalJoe.getClass().getName())
+            mutationOutbox.getMutationForModelId(originalJoe.getId(), originalJoe.getClass().getSimpleName())
         );
     }
 
