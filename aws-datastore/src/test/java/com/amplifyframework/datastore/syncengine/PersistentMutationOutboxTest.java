@@ -18,15 +18,18 @@ package com.amplifyframework.datastore.syncengine;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.SchemaRegistry;
 import com.amplifyframework.core.model.SerializedModel;
 import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
+import com.amplifyframework.datastore.DataStoreConfiguration;
 import com.amplifyframework.datastore.DataStoreException;
-import com.amplifyframework.datastore.storage.InMemoryStorageAdapter;
 import com.amplifyframework.datastore.storage.SynchronousStorageAdapter;
+import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter;
 import com.amplifyframework.datastore.syncengine.MutationOutbox.OutboxEvent;
 import com.amplifyframework.datastore.syncengine.PendingMutation.PersistentRecord;
 import com.amplifyframework.hub.HubChannel;
+import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider;
 import com.amplifyframework.testmodels.commentsblog.Author;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testmodels.commentsblog.Post;
@@ -34,6 +37,7 @@ import com.amplifyframework.testmodels.commentsblog.PostStatus;
 import com.amplifyframework.testutils.HubAccumulator;
 import com.amplifyframework.testutils.random.RandomString;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -55,6 +59,8 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import androidx.test.core.app.ApplicationProvider;
+
 /**
  * Tests the {@link MutationOutbox}.
  */
@@ -75,10 +81,29 @@ public final class PersistentMutationOutboxTest {
     @Before
     public void setup() throws AmplifyException {
         schema = ModelSchema.fromModelClass(BlogOwner.class);
-        InMemoryStorageAdapter inMemoryStorageAdapter = InMemoryStorageAdapter.create();
-        storage = SynchronousStorageAdapter.delegatingTo(inMemoryStorageAdapter);
-        mutationOutbox = new PersistentMutationOutbox(inMemoryStorageAdapter);
+
+        SQLiteStorageAdapter sqliteStorageAdapter = SQLiteStorageAdapter.forModels(
+                SchemaRegistry.instance(),
+                AmplifyModelProvider.getInstance()
+        );
+
+        storage = SynchronousStorageAdapter.delegatingTo(sqliteStorageAdapter);
+        storage.initialize(
+                ApplicationProvider.getApplicationContext(),
+                DataStoreConfiguration.defaults()
+        );
+
+        mutationOutbox = new PersistentMutationOutbox(sqliteStorageAdapter);
         converter = new GsonPendingMutationConverter();
+    }
+
+    /**
+     * Tear down test suite.
+     * @throws DataStoreException if terminate fails
+     */
+    @After
+    public void tearDown() throws DataStoreException {
+        storage.terminate();
     }
 
     /**

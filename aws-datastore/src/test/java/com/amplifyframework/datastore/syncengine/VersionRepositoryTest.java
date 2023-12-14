@@ -15,15 +15,21 @@
 
 package com.amplifyframework.datastore.syncengine;
 
+import com.amplifyframework.core.model.SchemaRegistry;
 import com.amplifyframework.core.model.temporal.Temporal;
+import com.amplifyframework.datastore.DataStoreConfiguration;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.appsync.ModelMetadata;
-import com.amplifyframework.datastore.storage.InMemoryStorageAdapter;
 import com.amplifyframework.datastore.storage.SynchronousStorageAdapter;
+import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter;
+import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.robolectric.RobolectricTestRunner;
 
 import java.util.Locale;
 import java.util.Random;
@@ -33,9 +39,12 @@ import io.reactivex.rxjava3.observers.TestObserver;
 
 import static org.junit.Assert.assertTrue;
 
+import androidx.test.core.app.ApplicationProvider;
+
 /**
  * Tests the {@link VersionRepository}.
  */
+@RunWith(RobolectricTestRunner.class)
 public final class VersionRepositoryTest {
     private static final long REASONABLE_WAIT_TIME = TimeUnit.SECONDS.toMillis(1);
 
@@ -44,17 +53,35 @@ public final class VersionRepositoryTest {
 
     /**
      * Sets up the test. A {@link VersionRepository} is tested with respect to the varying
-     * state of its dependency, the {@link InMemoryStorageAdapter}.
+     * state of its dependency, the {@link SQLiteStorageAdapter}.
      *
-     * An {@link InMemoryStorageAdapter} is used as a test fake. Versions can be arranged into
+     * An {@link SQLiteStorageAdapter} is used as a test fake. Versions can be arranged into
      * it, and validated against it. To facilitate that arrangement, an {@link SynchronousStorageAdapter}
-     * utility is used to wrap the {@link InMemoryStorageAdapter}.
+     * utility is used to wrap the {@link SQLiteStorageAdapter}.
+     *
+     * @throws DataStoreException if initialize fails
      */
     @Before
-    public void setup() {
-        InMemoryStorageAdapter inMemoryStorageAdapter = InMemoryStorageAdapter.create();
-        this.storageAdapter = SynchronousStorageAdapter.delegatingTo(inMemoryStorageAdapter);
-        this.versionRepository = new VersionRepository(inMemoryStorageAdapter);
+    public void setup() throws DataStoreException {
+        SQLiteStorageAdapter sqliteStorageAdapter = SQLiteStorageAdapter.forModels(
+                SchemaRegistry.instance(),
+                AmplifyModelProvider.getInstance()
+        );
+        storageAdapter = SynchronousStorageAdapter.delegatingTo(sqliteStorageAdapter);
+        storageAdapter.initialize(
+                ApplicationProvider.getApplicationContext(),
+                DataStoreConfiguration.defaults()
+        );
+        this.versionRepository = new VersionRepository(sqliteStorageAdapter);
+    }
+
+    /**
+     * Tear down test suite.
+     * @throws DataStoreException if terminate fails
+     */
+    @After
+    public void tearDown() throws DataStoreException {
+        storageAdapter.terminate();
     }
 
     /**

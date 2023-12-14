@@ -28,7 +28,6 @@ import com.amplifyframework.datastore.DataStoreConfiguration;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.appsync.ModelMetadata;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
-import com.amplifyframework.datastore.storage.InMemoryStorageAdapter;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.SynchronousStorageAdapter;
 import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter;
@@ -71,7 +70,7 @@ public final class MergerTest {
      * Sets up the test. A {@link Merger} is being tested. To construct one, several
      * intermediary objects are needed. A reference is held to a {@link MutationOutbox},
      * to arrange state. A {@link SynchronousStorageAdapter} is crated to facilitate
-     * arranging model data into the {@link InMemoryStorageAdapter} which backs the various
+     * arranging model data into the {@link SQLiteStorageAdapter} which backs the various
      * components.
      * @throws DataStoreException if DataStoreConfiguration fails
      */
