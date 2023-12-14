@@ -20,7 +20,6 @@ import com.amplifyframework.core.Consumer
 import com.amplifyframework.core.NoOpConsumer
 import com.amplifyframework.core.category.CategoryType
 import com.amplifyframework.core.model.Model
-import com.amplifyframework.core.model.query.predicate.QueryPredicates
 import com.amplifyframework.datastore.DataStoreChannelEventName
 import com.amplifyframework.datastore.DataStoreException
 import com.amplifyframework.datastore.appsync.ModelMetadata
@@ -31,7 +30,6 @@ import com.amplifyframework.datastore.storage.StorageOperation
 import com.amplifyframework.hub.HubChannel
 import com.amplifyframework.hub.HubEvent
 import io.reactivex.rxjava3.core.Completable
-import io.reactivex.rxjava3.core.CompletableEmitter
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
@@ -162,49 +160,6 @@ internal class Merger(
                 modelWithMetadata
             )
         )
-    }
-
-    // Delete a model.
-    private fun <T : Model> delete(
-        model: T,
-        changeTypeConsumer: Consumer<StorageItemChange.Type>
-    ): Completable {
-        return Completable.create { emitter: CompletableEmitter ->
-            localStorageAdapter.delete(
-                model,
-                StorageItemChange.Initiator.SYNC_ENGINE,
-                QueryPredicates.all(),
-                { storageItemChange: StorageItemChange<T> ->
-                    changeTypeConsumer.accept(storageItemChange.type())
-                    emitter.onComplete()
-                }
-            ) { failure: DataStoreException? ->
-                LOG.verbose(
-                    "Failed to delete a model while merging. Perhaps it was already gone? " +
-                        Log.getStackTraceString(failure)
-                )
-                changeTypeConsumer.accept(StorageItemChange.Type.DELETE)
-                emitter.onComplete()
-            }
-        }
-    }
-
-    // Create or update a model.
-    private fun <T : Model> save(
-        model: T,
-        changeTypeConsumer: Consumer<StorageItemChange.Type>
-    ): Completable {
-        return Completable.create { emitter: CompletableEmitter ->
-            localStorageAdapter.save(
-                model,
-                StorageItemChange.Initiator.SYNC_ENGINE,
-                QueryPredicates.all(),
-                { storageItemChange: StorageItemChange<T> ->
-                    changeTypeConsumer.accept(storageItemChange.type())
-                    emitter.onComplete()
-                }
-            ) { t: DataStoreException -> emitter.onError(t) }
-        }
     }
 
     companion object {
