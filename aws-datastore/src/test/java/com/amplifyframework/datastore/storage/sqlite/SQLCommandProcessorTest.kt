@@ -12,161 +12,149 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
+package com.amplifyframework.datastore.storage.sqlite
 
-package com.amplifyframework.datastore.storage.sqlite;
-
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
-
-import com.amplifyframework.AmplifyException;
-import com.amplifyframework.core.model.ModelProvider;
-import com.amplifyframework.core.model.ModelSchema;
-import com.amplifyframework.core.model.SchemaRegistry;
-import com.amplifyframework.core.model.query.Where;
-import com.amplifyframework.core.model.query.predicate.QueryPredicate;
-import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider;
-import com.amplifyframework.testmodels.commentsblog.BlogOwner;
-import com.amplifyframework.testmodels.customprimarykey.Comment;
-import com.amplifyframework.util.GsonFactory;
-
-import com.google.gson.Gson;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.robolectric.RobolectricTestRunner;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import android.database.sqlite.SQLiteDatabase
+import android.database.sqlite.SQLiteDatabase.OpenParams
+import com.amplifyframework.AmplifyException
+import com.amplifyframework.core.model.ModelProvider
+import com.amplifyframework.core.model.ModelSchema
+import com.amplifyframework.core.model.SchemaRegistry
+import com.amplifyframework.core.model.query.Where
+import com.amplifyframework.core.model.query.predicate.QueryPredicate
+import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider
+import com.amplifyframework.testmodels.commentsblog.BlogOwner
+import com.amplifyframework.testmodels.customprimarykey.Comment
+import com.amplifyframework.util.GsonFactory
+import com.google.gson.Gson
+import org.junit.After
+import org.junit.Assert
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import java.util.Arrays
 
 /**
  * Asserts that the SQLCommandProcessor executes SqlCommand objects as expected.
  */
-@RunWith(RobolectricTestRunner.class)
-public class SQLCommandProcessorTest {
-    private SQLCommandFactory sqlCommandFactory;
-    private SQLCommandProcessor sqlCommandProcessor;
-    private SQLiteDatabase sqliteDatabase;
-    private SchemaRegistry schemaRegistry;
-    private Gson gson;
-
-    /**
-     * Sets up model registry and in-memory database.
-     * @throws AmplifyException if model fails to register.
-     */
-    @Before
-    public void setup() throws AmplifyException {
-        ModelProvider modelProvider = AmplifyModelProvider.getInstance();
-        schemaRegistry = SchemaRegistry.instance();
-        schemaRegistry.register(modelProvider.models());
-        sqlCommandFactory = new SQLiteCommandFactory(schemaRegistry, GsonFactory.instance());
-        sqliteDatabase = createDatabase(modelProvider, schemaRegistry);
-        sqlCommandProcessor = new SQLCommandProcessor(sqliteDatabase);
-        gson = GsonFactory.instance();
+@RunWith(RobolectricTestRunner::class)
+class SQLCommandProcessorTest {
+    private val modelProvider: ModelProvider = AmplifyModelProvider.getInstance()
+    private val schemaRegistry: SchemaRegistry = SchemaRegistry.instance().apply {
+        register(modelProvider.models())
     }
+    private val sqlCommandFactory: SQLCommandFactory = SQLiteCommandFactory(schemaRegistry, GsonFactory.instance())
+    private val gson: Gson = GsonFactory.instance()
+    private val sqliteDatabase = createDatabase(AmplifyModelProvider.getInstance(), schemaRegistry)
+    private val sqlCommandProcessor = SQLCommandProcessor(sqliteDatabase)
 
-    private SQLiteDatabase createDatabase(ModelProvider modelProvider, SchemaRegistry registry) {
-        SQLiteDatabase.OpenParams openParams = new SQLiteDatabase.OpenParams.Builder().build();
-        SQLiteDatabase db = SQLiteDatabase.createInMemory(openParams);
-        db.beginTransaction();
+    private fun createDatabase(
+        modelProvider: ModelProvider,
+        registry: SchemaRegistry
+    ): SQLiteDatabase {
+        val openParams = OpenParams.Builder().build()
+        val db = SQLiteDatabase.createInMemory(openParams)
+        db.beginTransaction()
         try {
-            for (String modelName : modelProvider.modelNames()) {
-                final ModelSchema modelSchema = registry.getModelSchemaForModelClass(modelName);
-                db.execSQL(sqlCommandFactory.createTableFor(modelSchema).sqlStatement());
-                for (SqlCommand command : sqlCommandFactory.createIndexesFor(modelSchema)) {
-                    db.execSQL(command.sqlStatement());
+            for (modelName in modelProvider.modelNames()) {
+                val modelSchema = registry.getModelSchemaForModelClass(modelName)
+                db.execSQL(sqlCommandFactory.createTableFor(modelSchema).sqlStatement())
+                for (command in sqlCommandFactory.createIndexesFor(modelSchema)) {
+                    db.execSQL(command.sqlStatement())
                 }
             }
-            db.setTransactionSuccessful();
+            db.setTransactionSuccessful()
         } finally {
-            db.endTransaction();
+            db.endTransaction()
         }
-        return db;
+        return db
     }
-
-    /**
-     * Closes in-memory database.
-     */
+    
     @After
-    public void clear() {
-        schemaRegistry.clear();
-        sqliteDatabase.close();
+    fun clear() {
+        schemaRegistry.clear()
+        sqliteDatabase.close()
     }
 
     /**
      * Create and insert a BlogOwner, and then verify that a rawQuery returns a Cursor with one result, containing the
      * previously inserted BlogOwner.
-     * @throws AmplifyException on failure to create ModelSchema from class
      */
     @Test
-    public void rawQueryReturnsResults() throws AmplifyException {
+    fun rawQueryReturnsResults() {
         // Insert a BlogOwner
-        ModelSchema blogOwnerSchema = ModelSchema.fromModelClass(BlogOwner.class);
-        BlogOwner abigailMcGregor = BlogOwner.builder()
-                .name("Abigail McGregor")
-                .build();
-        sqlCommandProcessor.execute(sqlCommandFactory.insertFor(blogOwnerSchema, abigailMcGregor));
+        val blogOwnerSchema = ModelSchema.fromModelClass(
+            BlogOwner::class.java
+        )
+        val abigailMcGregor = BlogOwner.builder()
+            .name("Abigail McGregor")
+            .build()
+        sqlCommandProcessor.execute(
+            sqlCommandFactory.insertFor(
+                blogOwnerSchema,
+                abigailMcGregor
+            )
+        )
 
         // Query for all BlogOwners, and verify that there is one result.
-        SqlCommand queryCommand = sqlCommandFactory.queryFor(blogOwnerSchema, Where.matchesAll());
-        Cursor cursor = sqlCommandProcessor.rawQuery(queryCommand);
-        List<BlogOwner> results = new ArrayList<>();
-
-        SQLiteModelFieldTypeConverter converter = new SQLiteModelFieldTypeConverter(blogOwnerSchema,
-                schemaRegistry,
-                GsonFactory.instance());
-
+        val queryCommand = sqlCommandFactory.queryFor(blogOwnerSchema, Where.matchesAll())
+        val cursor = sqlCommandProcessor.rawQuery(queryCommand)
+        val results: MutableList<BlogOwner> = ArrayList()
+        val converter = SQLiteModelFieldTypeConverter(
+            blogOwnerSchema,
+            schemaRegistry,
+            GsonFactory.instance()
+        )
         if (cursor.moveToFirst()) {
             do {
-                Map<String, Object> map = converter.buildMapForModel(cursor);
-                String jsonString = gson.toJson(map);
-                results.add(gson.fromJson(jsonString, BlogOwner.class));
-            } while (cursor.moveToNext());
+                val map = converter.buildMapForModel(cursor)
+                val jsonString = gson.toJson(map)
+                results.add(gson.fromJson(jsonString, BlogOwner::class.java))
+            } while (cursor.moveToNext())
         }
-        assertEquals(Arrays.asList(abigailMcGregor), results);
+        Assert.assertEquals(Arrays.asList(abigailMcGregor), results)
     }
 
     /**
      * Create and insert a BlogOwner, and then verify that executeExists return true.
-     * @throws AmplifyException on failure to create ModelSchema from class.
      */
     @Test
-    public void executeExistsReturnsTrueWhenItemExists() throws AmplifyException {
+    fun executeExistsReturnsTrueWhenItemExists() {
         // Insert a BlogOwner
-        ModelSchema blogOwnerSchema = ModelSchema.fromModelClass(BlogOwner.class);
-        BlogOwner abigailMcGregor = BlogOwner.builder()
-                .name("Abigail McGregor")
-                .build();
-        sqlCommandProcessor.execute(sqlCommandFactory.insertFor(blogOwnerSchema, abigailMcGregor));
+        val blogOwnerSchema = ModelSchema.fromModelClass(
+            BlogOwner::class.java
+        )
+        val abigailMcGregor = BlogOwner.builder()
+            .name("Abigail McGregor")
+            .build()
+        sqlCommandProcessor.execute(
+            sqlCommandFactory.insertFor(
+                blogOwnerSchema,
+                abigailMcGregor
+            )
+        )
 
         // Check that the BlogOwner exists
-        QueryPredicate predicate = BlogOwner.ID.eq(abigailMcGregor.getId());
-        SqlCommand existsCommand = sqlCommandFactory.existsFor(blogOwnerSchema, predicate);
-        assertTrue(sqlCommandProcessor.executeExists(existsCommand));
+        val predicate: QueryPredicate = BlogOwner.ID.eq(abigailMcGregor.id)
+        val existsCommand = sqlCommandFactory.existsFor(blogOwnerSchema, predicate)
+        Assert.assertTrue(sqlCommandProcessor.executeExists(existsCommand))
     }
 
     /**
      * Create a BlogOwner, but don't insert it.  Then verify that executeExists returns false.
-     * @throws AmplifyException on failure to create ModelSchema from class.
      */
     @Test
-    public void executeExistsReturnsFalseWhenItemDoesntExist() throws AmplifyException {
+    fun executeExistsReturnsFalseWhenItemDoesntExist() {
         // Create a BlogOwner, but don't insert it
-        ModelSchema blogOwnerSchema = ModelSchema.fromModelClass(BlogOwner.class);
-        BlogOwner abigailMcGregor = BlogOwner.builder()
-                .name("Abigail McGregor")
-                .build();
-
-        QueryPredicate predicate = BlogOwner.ID.eq(abigailMcGregor.getId());
-        SqlCommand existsCommand = sqlCommandFactory.existsFor(blogOwnerSchema, predicate);
-        assertFalse(sqlCommandProcessor.executeExists(existsCommand));
+        val blogOwnerSchema = ModelSchema.fromModelClass(
+            BlogOwner::class.java
+        )
+        val abigailMcGregor = BlogOwner.builder()
+            .name("Abigail McGregor")
+            .build()
+        val predicate: QueryPredicate = BlogOwner.ID.eq(abigailMcGregor.id)
+        val existsCommand = sqlCommandFactory.existsFor(blogOwnerSchema, predicate)
+        Assert.assertFalse(sqlCommandProcessor.executeExists(existsCommand))
     }
 
     /**
@@ -174,31 +162,78 @@ public class SQLCommandProcessorTest {
      * @throws AmplifyException on failure to create ModelSchema from class.
      */
     @Test
-    public void testIndexNotCreatedWhenFieldsInBelongsTo() throws AmplifyException {
-        ModelSchema commentSchema = ModelSchema.fromModelClass(Comment.class);
-        sqlCommandFactory.createIndexesFor(commentSchema);
-        Set<SqlCommand> sqlCommands = sqlCommandFactory.createIndexesFor(commentSchema);
-        assertEquals(1, sqlCommands.size());
-        String sqlCommand = sqlCommands.iterator().next().sqlStatement();
-        assertTrue(sqlCommand.contains("CREATE INDEX IF NOT EXISTS" +
-                " `undefined_title_content_likes` ON `Comment` (`title`, `content`, `likes`);"));
-        assertFalse(sqlCommand.contains("`postCommentsId`, `content`"));
+    fun testIndexNotCreatedWhenFieldsInBelongsTo() {
+        val commentSchema = ModelSchema.fromModelClass(
+            Comment::class.java
+        )
+        sqlCommandFactory.createIndexesFor(commentSchema)
+        val sqlCommands = sqlCommandFactory.createIndexesFor(commentSchema)
+        Assert.assertEquals(1, sqlCommands.size.toLong())
+        val sqlCommand = sqlCommands.iterator().next().sqlStatement()
+        Assert.assertTrue(
+            sqlCommand.contains(
+                "CREATE INDEX IF NOT EXISTS" +
+                        " `undefined_title_content_likes` ON `Comment` (`title`, `content`, `likes`);"
+            )
+        )
+        Assert.assertFalse(sqlCommand.contains("`postCommentsId`, `content`"))
     }
-
 
     /**
      * Verify that index for foreign key fields is included in the commands.
-     * @throws AmplifyException on failure to create ModelSchema from class.
      */
     @Test
-    public void testForeignKeyIndexCreated() throws AmplifyException {
-        ModelSchema commentSchema = ModelSchema.fromModelClass(Comment.class);
-        sqlCommandFactory.createIndexesFor(commentSchema);
-        Set<SqlCommand> sqlCommands = sqlCommandFactory.createIndexesForForeignKeys(commentSchema);
-        assertEquals(1, sqlCommands.size());
-        String sqlCommand = sqlCommands.iterator().next().sqlStatement();
-        assertTrue(sqlCommand.contains("CREATE INDEX IF NOT EXISTS `Comment@@postForeignKey` " +
-                "ON `Comment` (`@@postForeignKey`);"));
+    fun testForeignKeyIndexCreated() {
+        val commentSchema = ModelSchema.fromModelClass(
+            Comment::class.java
+        )
+        sqlCommandFactory.createIndexesFor(commentSchema)
+        val sqlCommands = sqlCommandFactory.createIndexesForForeignKeys(commentSchema)
+        Assert.assertEquals(1, sqlCommands.size.toLong())
+        val sqlCommand = sqlCommands.iterator().next().sqlStatement()
+        Assert.assertTrue(
+            sqlCommand.contains(
+                "CREATE INDEX IF NOT EXISTS `Comment@@postForeignKey` " +
+                        "ON `Comment` (`@@postForeignKey`);"
+            )
+        )
+    }
 
+    @Test
+    fun testBeginTransactionToDatabase() {
+        Assert.assertFalse(sqliteDatabase.inTransaction())
+        sqlCommandProcessor.beginTransaction()
+        Assert.assertTrue(sqliteDatabase.inTransaction())
+    }
+
+    @Test
+    fun testEndTransactionToDatabase() {
+        sqlCommandProcessor.beginTransaction()
+        Assert.assertTrue(sqliteDatabase.inTransaction())
+        sqlCommandProcessor.endTransaction()
+        Assert.assertFalse(sqliteDatabase.inTransaction())
+    }
+
+    @Test
+    /**
+     * Asserts that write in transaction is successful if setTransactionSuccessful if called.
+     */
+    fun testMarkSuccessfulToDatabase() {
+        // Insert a BlogOwner
+        val blogOwnerSchema = ModelSchema.fromModelClass(
+            BlogOwner::class.java
+        )
+        val owner = BlogOwner.builder()
+            .name("My Name")
+            .build()
+        sqlCommandProcessor.beginTransaction()
+        sqlCommandProcessor.execute(sqlCommandFactory.insertFor(blogOwnerSchema, owner))
+        sqlCommandProcessor.setTransactionSuccessful()
+        sqlCommandProcessor.endTransaction()
+
+        // Check that the BlogOwner exists
+        val predicate: QueryPredicate = BlogOwner.ID.eq(owner.id)
+        val existsCommand = sqlCommandFactory.existsFor(blogOwnerSchema, predicate)
+        Assert.assertTrue(sqlCommandProcessor.executeExists(existsCommand))
     }
 }
