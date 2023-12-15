@@ -25,6 +25,9 @@ import com.amplifyframework.datastore.storage.SynchronousStorageAdapter
 import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter
 import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider
 import com.amplifyframework.testmodels.commentsblog.BlogOwner
+import java.util.Locale
+import java.util.Random
+import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert
@@ -33,9 +36,6 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import java.util.Locale
-import java.util.Random
-import java.util.concurrent.TimeUnit
 
 /**
  * Tests the [VersionRepository].
@@ -217,7 +217,6 @@ class VersionRepositoryTest {
             assertEquals(i, result[modelsWithMetadata[i].syncMetadata.primaryKeyString])
         }
     }
-
 
     companion object {
         private val REASONABLE_WAIT_TIME = TimeUnit.SECONDS.toMillis(1)

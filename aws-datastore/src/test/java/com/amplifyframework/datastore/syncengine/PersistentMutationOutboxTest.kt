@@ -36,6 +36,7 @@ import com.amplifyframework.testmodels.commentsblog.Post
 import com.amplifyframework.testmodels.commentsblog.PostStatus
 import com.amplifyframework.testutils.HubAccumulator
 import com.amplifyframework.testutils.random.RandomString
+import java.util.concurrent.TimeUnit
 import org.junit.After
 import org.junit.Assert
 import org.junit.Assert.assertEquals
@@ -43,7 +44,6 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import java.util.concurrent.TimeUnit
 
 /**
  * Tests the [MutationOutbox].
@@ -69,7 +69,6 @@ class PersistentMutationOutboxTest {
         )
         mutationOutbox = PersistentMutationOutbox(sqliteStorageAdapter)
     }
-
 
     @After
     @Throws(DataStoreException::class)
@@ -535,7 +534,8 @@ class PersistentMutationOutboxTest {
 
         // Assert: original mutation is present, but the new one isn't.
         val storedMutation = storage.query(
-            PersistentRecord::class.java, Where.identifier(
+            PersistentRecord::class.java,
+            Where.identifier(
                 PersistentRecord::class.java,
                 existingCreationId
             )
@@ -596,7 +596,8 @@ class PersistentMutationOutboxTest {
 
         // Assert: original mutation is present, but the new one isn't.
         val storedMutation = storage.query(
-            PersistentRecord::class.java, Where.identifier(
+            PersistentRecord::class.java,
+            Where.identifier(
                 PersistentRecord::class.java,
                 exitingUpdateId
             )
@@ -607,7 +608,8 @@ class PersistentMutationOutboxTest {
         )
         Assert.assertTrue(
             storage.query(
-                PersistentRecord::class.java, Where.identifier(
+                PersistentRecord::class.java,
+                Where.identifier(
                     PersistentRecord::class.java,
                     incomingCreationId
                 )
@@ -728,7 +730,8 @@ class PersistentMutationOutboxTest {
         )
         Assert.assertTrue(
             storage.query(
-                PersistentRecord::class.java, Where.identifier(
+                PersistentRecord::class.java,
+                Where.identifier(
                     PersistentRecord::class.java,
                     incomingUpdateId
                 )
@@ -790,7 +793,8 @@ class PersistentMutationOutboxTest {
 
         // Assert: And the new one is also there
         val recordsForIncomingMutationId = storage.query(
-            PersistentRecord::class.java, Where.identifier(
+            PersistentRecord::class.java,
+            Where.identifier(
                 PersistentRecord::class.java, incomingUpdateId
             )
         )
@@ -896,7 +900,8 @@ class PersistentMutationOutboxTest {
                 initialUpdate,
                 modelInSqlLite,
                 schema
-            ), schema
+            ),
+            schema
         )
         val existingUpdateId = initialUpdatePendingMutation.mutationId.toString()
         mutationOutbox.enqueue(initialUpdatePendingMutation).blockingAwait()
@@ -970,7 +975,8 @@ class PersistentMutationOutboxTest {
                 initialUpdate,
                 modelInSqlLite,
                 schema
-            ), schema
+            ),
+            schema
         )
         val existingUpdateId = initialUpdatePendingMutation.mutationId.toString()
         mutationOutbox.enqueue(initialUpdatePendingMutation).blockingAwait()
@@ -1056,7 +1062,8 @@ class PersistentMutationOutboxTest {
 
         // Assert: the existing mutation is still there, by id ....
         val recordsForExistingMutationId = storage.query(
-            PersistentRecord::class.java, Where.identifier(
+            PersistentRecord::class.java,
+            Where.identifier(
                 PersistentRecord::class.java, existingCreationId
             )
         )
@@ -1064,7 +1071,8 @@ class PersistentMutationOutboxTest {
 
         // And the new one is not, by ID...
         val recordsForIncomingMutationId = storage.query(
-            PersistentRecord::class.java, Where.identifier(
+            PersistentRecord::class.java,
+            Where.identifier(
                 PersistentRecord::class.java, incomingUpdateId
             )
         )
@@ -1120,7 +1128,8 @@ class PersistentMutationOutboxTest {
         )
         Assert.assertTrue(
             storage.query(
-                PersistentRecord::class.java, Where.identifier(
+                PersistentRecord::class.java,
+                Where.identifier(
                     PersistentRecord::class.java,
                     incomingDeletionId
                 )
@@ -1157,7 +1166,8 @@ class PersistentMutationOutboxTest {
 
         // The original mutation ID is preserved.
         val existingMutationRecords = storage.query(
-            PersistentRecord::class.java, Where.identifier(
+            PersistentRecord::class.java,
+            Where.identifier(
                 PersistentRecord::class.java, existingUpdateId
             )
         )
@@ -1165,7 +1175,8 @@ class PersistentMutationOutboxTest {
 
         // The new ID was discarded ....
         val incomingMutationRecords = storage.query(
-            PersistentRecord::class.java, Where.identifier(
+            PersistentRecord::class.java,
+            Where.identifier(
                 PersistentRecord::class.java, incomingDeletionId
             )
         )
@@ -1217,7 +1228,8 @@ class PersistentMutationOutboxTest {
 
         // Existing record is still there
         val existingMutationRecords = storage.query(
-            PersistentRecord::class.java, Where.identifier(
+            PersistentRecord::class.java,
+            Where.identifier(
                 PersistentRecord::class.java,
                 exitingDeletion.mutationId.toString()
             )
@@ -1226,7 +1238,8 @@ class PersistentMutationOutboxTest {
 
         // Incoming is not present
         val incomingMutationRecords = storage.query(
-            PersistentRecord::class.java, Where.identifier(
+            PersistentRecord::class.java,
+            Where.identifier(
                 PersistentRecord::class.java,
                 incomingDeletion.mutationId.toString()
             )
@@ -1285,7 +1298,8 @@ class PersistentMutationOutboxTest {
             PendingMutation.deletion(
                 BlogOwner.builder()
                     .name("Tony Swanson")
-                    .build(), schema
+                    .build(),
+                schema
             )
         ).blockingAwait(TIMEOUT_MS, TimeUnit.MILLISECONDS)
         Assert.assertTrue(completed)
@@ -1388,7 +1402,7 @@ class PersistentMutationOutboxTest {
             .assertError(DataStoreException::class.java)
             .assertError { error: Throwable ->
                 error.message != null &&
-                        error.message!!.contains("there was no mutation with that ID in the outbox")
+                    error.message!!.contains("there was no mutation with that ID in the outbox")
             }
     }
 
@@ -1440,7 +1454,7 @@ class PersistentMutationOutboxTest {
             .assertError(DataStoreException::class.java)
             .assertError { error: Throwable ->
                 error.message != null &&
-                        error.message!!.contains("there was no mutation with that ID in the outbox")
+                    error.message!!.contains("there was no mutation with that ID in the outbox")
             }
     }
 
@@ -1471,7 +1485,7 @@ class PersistentMutationOutboxTest {
             .assertError(DataStoreException::class.java)
             .assertError { error: Throwable ->
                 error.message != null &&
-                        error.message!!.contains("there was no mutation with that ID in the outbox")
+                    error.message!!.contains("there was no mutation with that ID in the outbox")
             }
     }
 
@@ -1508,7 +1522,8 @@ class PersistentMutationOutboxTest {
 
     private fun getPendingMutationRecordFromStorage(mutationId: String): List<PersistentRecord> {
         return storage.query(
-            PersistentRecord::class.java, Where.identifier(
+            PersistentRecord::class.java,
+            Where.identifier(
                 PersistentRecord::class.java, mutationId
             )
         )

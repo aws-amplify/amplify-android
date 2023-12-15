@@ -910,40 +910,6 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         }
     }
 
-    private boolean modelExists(Model model, QueryPredicate predicate) throws DataStoreException {
-        final String modelName = model.getModelName();
-        final ModelSchema schema = schemaRegistry.getModelSchemaForModelClass(modelName);
-        final SQLiteTable table = SQLiteTable.fromSchema(schema);
-        final String tableName = table.getName();
-        final String primaryKeyName = table.getPrimaryKey().getName();
-        final QueryPredicate matchId = QueryField.field(tableName, primaryKeyName).eq(model.getPrimaryKeyString());
-        final QueryPredicate condition = predicate.and(matchId);
-        return sqlCommandProcessor.executeExists(sqlCommandFactory.existsFor(schema, condition));
-    }
-
-    /**
-     * Helper method to synchronously query for a single model instance.  Used before any save initiated by
-     * DATASTORE_API in order to determine which fields have changed.
-     * @param model a Model that we want to query for the same type and id in SQLite.
-     * @return the Model instance from SQLite, if it exists, otherwise null.
-     */
-    private Model query(Model model) {
-        final String modelName = model.getModelName();
-        final ModelSchema schema = schemaRegistry.getModelSchemaForModelClass(modelName);
-        final SQLiteTable table = SQLiteTable.fromSchema(schema);
-        final String primaryKeyName = table.getPrimaryKey().getName();
-        final QueryPredicate matchId = QueryField.field(modelName, primaryKeyName).eq(model.getPrimaryKeyString());
-
-        Iterator<? extends Model> result = Single.<Iterator<? extends Model>>create(emitter -> {
-            if (model instanceof SerializedModel) {
-                query(model.getModelName(), Where.matches(matchId), emitter::onSuccess, emitter::onError);
-            } else {
-                query(model.getClass(), Where.matches(matchId), emitter::onSuccess, emitter::onError);
-            }
-        }).blockingGet();
-        return result.hasNext() ? result.next() : null;
-    }
-
     /*
      * Detect if the version of the models stored in SQLite is different
      * from the version passed in through {@link ModelProvider#version()}.

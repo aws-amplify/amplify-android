@@ -27,12 +27,12 @@ import com.amplifyframework.testmodels.commentsblog.BlogOwner
 import com.amplifyframework.testmodels.customprimarykey.Comment
 import com.amplifyframework.util.GsonFactory
 import com.google.gson.Gson
+import java.util.Arrays
 import org.junit.After
 import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import java.util.Arrays
 
 /**
  * Asserts that the SQLCommandProcessor executes SqlCommand objects as expected.
@@ -69,7 +69,7 @@ class SQLCommandProcessorTest {
         }
         return db
     }
-    
+
     @After
     fun clear() {
         schemaRegistry.clear()
@@ -173,7 +173,7 @@ class SQLCommandProcessorTest {
         Assert.assertTrue(
             sqlCommand.contains(
                 "CREATE INDEX IF NOT EXISTS" +
-                        " `undefined_title_content_likes` ON `Comment` (`title`, `content`, `likes`);"
+                    " `undefined_title_content_likes` ON `Comment` (`title`, `content`, `likes`);"
             )
         )
         Assert.assertFalse(sqlCommand.contains("`postCommentsId`, `content`"))
@@ -194,7 +194,7 @@ class SQLCommandProcessorTest {
         Assert.assertTrue(
             sqlCommand.contains(
                 "CREATE INDEX IF NOT EXISTS `Comment@@postForeignKey` " +
-                        "ON `Comment` (`@@postForeignKey`);"
+                    "ON `Comment` (`@@postForeignKey`);"
             )
         )
     }
