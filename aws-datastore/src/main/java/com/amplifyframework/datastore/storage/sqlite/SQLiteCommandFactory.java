@@ -15,6 +15,8 @@
 
 package com.amplifyframework.datastore.storage.sqlite;
 
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.model.Model;
@@ -164,46 +166,45 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
     @Override
     public SqlCommand queryFor(@NonNull ModelSchema modelSchema,
                                @NonNull QueryOptions options) throws DataStoreException {
+        // Initialize table schema and name
         final SQLiteTable table = SQLiteTable.fromSchema(modelSchema);
         final String tableName = table.getName();
+
+        // Builders for different parts of the SQL query
         StringBuilder rawQuery = new StringBuilder();
         StringBuilder selectColumns = new StringBuilder();
         StringBuilder joinStatement = new StringBuilder();
+
+        // To hold query parameters for prepared statements
         final List<Object> bindings = new ArrayList<>();
 
-        // Track the list of columns to return, along with the alias for the corresponding table
+        // Map to hold columns to be selected from each table
         Map<String, List<SQLiteColumn>> columns = new HashMap<>();
-        columns.put(table.getName(), table.getSortedColumns());
-        Map<String, Integer> tableCount = new HashMap<>();
-        tableCount.put(tableName, 1);
+        columns.put(tableName, table.getSortedColumns());
 
-        // Joins the foreign keys
-        recursivelyBuildJoins(table, columns, joinStatement, tableCount, tableName);
+        // Set to track tables that have already been joined
+        Set<String> joinedTables = new HashSet<>();
+        recursivelyBuildJoins(table, columns, joinStatement, "", joinedTables, new ArrayList<>());
 
-        // Convert columns to comma-separated column names
-        boolean firstTable = true;
-        for (String tableAlias : columns.keySet()) {
-            if (!firstTable) {
-                selectColumns.append(",").append(SqlKeyword.DELIMITER);
-            } else {
-                firstTable = false;
-            }
-            Iterator<SQLiteColumn> columnsIterator = Objects.requireNonNull(columns.get(tableAlias)).iterator();
-            while (columnsIterator.hasNext()) {
-                final SQLiteColumn column = columnsIterator.next();
+        // Constructing the SELECT part of the SQL query
+        for (Map.Entry<String, List<SQLiteColumn>> entry : columns.entrySet()) {
+            String tableAlias = entry.getKey();
+            // Ensure that the column list is not null
+            List<SQLiteColumn> columnList = Objects.requireNonNull(columns.get(tableAlias),
+                    "Column list cannot be null for table alias: " + tableAlias);
+
+            for (SQLiteColumn column : columnList) {
+                if (selectColumns.length() > 0) {
+                    selectColumns.append(",").append(SqlKeyword.DELIMITER);;
+                }
                 String columnName = column.getQuotedColumnName().replaceFirst(column.getTableName(), tableAlias);
-                selectColumns.append(columnName);
-                // Alias columns with a unique alias to avoid duplicate column names or alias names
-                String columnAlias = column.getAliasedName()
-                        + tableAlias.substring(column.getTableName().length());
-                selectColumns.append(SqlKeyword.DELIMITER)
+                String columnAlias = column.getAliasedName();
+
+                selectColumns.append(columnName)
+                        .append(SqlKeyword.DELIMITER)
                         .append(SqlKeyword.AS)
                         .append(SqlKeyword.DELIMITER)
                         .append(Wrap.inBackticks(columnAlias));
-
-                if (columnsIterator.hasNext()) {
-                    selectColumns.append(",").append(SqlKeyword.DELIMITER);
-                }
             }
         }
 
@@ -211,18 +212,19 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
         // SELECT columns FROM tableName
         rawQuery.append(SqlKeyword.SELECT)
                 .append(SqlKeyword.DELIMITER)
-                .append(selectColumns.toString())
+                .append(selectColumns)
                 .append(SqlKeyword.DELIMITER)
                 .append(SqlKeyword.FROM)
                 .append(SqlKeyword.DELIMITER)
                 .append(Wrap.inBackticks(tableName));
+
 
         // Append join statements.
         // INNER JOIN tableOne ON tableName.id=tableOne.foreignKey
         // LEFT JOIN tableTwo ON tableName.id=tableTwo.foreignKey
         if (!joinStatement.toString().isEmpty()) {
             rawQuery.append(SqlKeyword.DELIMITER)
-                    .append(joinStatement.toString());
+                    .append(joinStatement);
         }
 
         // Append predicates.
@@ -292,6 +294,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
 
         rawQuery.append(";");
         final String queryString = rawQuery.toString();
+        Log.d("SQLiteCommandFactory","Query: "+queryString);
         return new SqlCommand(table.getName(), queryString, bindings);
     }
 
@@ -500,65 +503,73 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
     }
 
     /**
-     * Recursively build joins for multilevel nested joins.
+     * Recursively builds SQL JOIN statements for a given table and its related tables.
      *
+     * @param table The SQLiteTable object representing the current table.
+     * @param columns A map that accumulates columns from each table with their respective aliases.
+     * @param joinStatement The StringBuilder object to accumulate the JOIN clause of the SQL query.
+     * @param parentAlias The alias of the parent table in the JOIN relationship.
+     * @param joinedTables A set to keep track of tables that have already been joined to avoid duplicate joins.
+     * @param joinPath A list tracking the current path of joins to detect circular references.
      */
     private void recursivelyBuildJoins(SQLiteTable table, Map<String, List<SQLiteColumn>> columns,
-                                       StringBuilder joinStatement, Map<String, Integer> tableCount,
-                                       String tableAlias) {
-        // Joins the foreign keys
-        // LEFT JOIN if foreign key is optional, INNER JOIN otherwise.
-        final Iterator<SQLiteColumn> foreignKeyIterator = table.getForeignKeys().iterator();
-        while (foreignKeyIterator.hasNext()) {
-            final SQLiteColumn foreignKey = foreignKeyIterator.next();
-            final String ownedTableName = foreignKey.getOwnedType();
-            final ModelSchema ownedSchema = schemaRegistry.getModelSchemaForModelClass(ownedTableName);
-            final SQLiteTable ownedTable = SQLiteTable.fromSchema(ownedSchema);
-            
-            int newOwnedTableCount = 1;
-            String ownedTableAlias = ownedTableName;
-            if (tableCount.containsKey(ownedTableName)) {
-                Integer currentOwnedTableCount = tableCount.get(ownedTableName);
-                newOwnedTableCount += currentOwnedTableCount == null ? 0 : currentOwnedTableCount;
-                ownedTableAlias += newOwnedTableCount;
-            }
-            tableCount.put(ownedTableName, newOwnedTableCount);
-            columns.put(ownedTableAlias, ownedTable.getSortedColumns());
+                                       StringBuilder joinStatement, String parentAlias, Set<String> joinedTables, List<String> joinPath) {
+        if(joinPath.contains(table.getName()))
+            return;  // Circular reference detected, stop recursion
 
-            SqlKeyword joinType = foreignKey.isNonNull()
-                ? SqlKeyword.INNER_JOIN
-                : SqlKeyword.LEFT_JOIN;
+        // Add the current table to the join path
+        joinPath.add(table.getName());
+
+        for (SQLiteColumn foreignKey : table.getForeignKeys()) {
+            String ownedTableName = foreignKey.getOwnedType();
+            ModelSchema ownedSchema = schemaRegistry.getModelSchemaForModelClass(ownedTableName);
+            // Check if the schema is null and handle the error
+            if (ownedSchema == null) {
+                throw new IllegalStateException("Could not retrieve schema for the model " + ownedTableName + ", verify that datastore is initialized.");
+            }
+            SQLiteTable ownedTable = SQLiteTable.fromSchema(ownedSchema);
+
+            String ownedTableAlias = parentAlias.isEmpty() ? ownedTableName : parentAlias + "." + ownedTableName;
+
+            // Check if this join is already performed
+            if (joinedTables.contains(ownedTableAlias)) {
+                continue;
+            }
+            joinedTables.add(ownedTableAlias);
+
+            for (SQLiteColumn column : ownedTable.getSortedColumns()) {
+                columns.computeIfAbsent(ownedTableAlias, k -> new ArrayList<>()).add(column);
+            }
+
+            String joinType = foreignKey.isNonNull() ? String.valueOf(SqlKeyword.INNER_JOIN) : String.valueOf(SqlKeyword.LEFT_JOIN);
 
             joinStatement.append(joinType)
-                .append(SqlKeyword.DELIMITER)
-                .append(Wrap.inBackticks(ownedTableName))
-                .append(SqlKeyword.DELIMITER);
-            
-            if (!ownedTableName.equals(ownedTableAlias)) {
-                joinStatement.append(SqlKeyword.AS)
-                        .append(SqlKeyword.DELIMITER)
-                        .append(Wrap.inBackticks(ownedTableAlias))
-                        .append(SqlKeyword.DELIMITER);
-            }
+                    .append(SqlKeyword.DELIMITER)
+                    .append(Wrap.inBackticks(ownedTableName))
+                    .append(SqlKeyword.DELIMITER)
+                    .append(SqlKeyword.AS)
+                    .append(SqlKeyword.DELIMITER)
+                    .append(Wrap.inBackticks(ownedTableAlias))
+                    .append(SqlKeyword.DELIMITER)
+                    .append(SqlKeyword.ON)
+                    .append(SqlKeyword.DELIMITER)
+                    .append(Wrap.inBackticks(parentAlias.isEmpty() ? table.getName() : parentAlias))
+                    .append(".")
+                    .append(Wrap.inBackticks(foreignKey.getName()))
+                    .append(SqlKeyword.DELIMITER)
+                    .append(SqlKeyword.EQUAL)
+                    .append(SqlKeyword.DELIMITER)
+                    .append(Wrap.inBackticks(ownedTableAlias))
+                    .append(".")
+                    .append(Wrap.inBackticks(ownedTable.getPrimaryKey().getName()))
+                    .append(" ");
 
-            // Reference the foreign key and primary key using the corresponding table's alias.
-            String foreignKeyName = foreignKey.getQuotedColumnName().replaceFirst(table.getName(), tableAlias);
-            String ownedTablePrimaryKeyName = ownedTable.getPrimaryKeyColumnName().replaceFirst(ownedTableName,
-                    ownedTableAlias);
-            joinStatement.append(SqlKeyword.ON)
-                .append(SqlKeyword.DELIMITER)
-                .append(foreignKeyName)
-                .append(SqlKeyword.EQUAL)
-                .append(ownedTablePrimaryKeyName);
-
-            if (foreignKeyIterator.hasNext()) {
-                joinStatement.append(SqlKeyword.DELIMITER);
-            }
-
-            // important that this comes last to maintain the order of the joins
-            recursivelyBuildJoins(ownedTable, columns, joinStatement, tableCount, ownedTableAlias);
+            recursivelyBuildJoins(ownedTable, columns, joinStatement, ownedTableAlias, joinedTables, new ArrayList<>(joinPath));
         }
+        // Remove the current table from the join path before returning
+        joinPath.remove(joinPath.size() - 1);
     }
+
 
     // Utility method to parse columns in CREATE TABLE
     private StringBuilder parseColumns(SQLiteTable table) {
