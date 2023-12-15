@@ -14,7 +14,6 @@
  */
 package com.amplifyframework.datastore.syncengine
 
-import android.util.Log
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.core.NoOpConsumer
