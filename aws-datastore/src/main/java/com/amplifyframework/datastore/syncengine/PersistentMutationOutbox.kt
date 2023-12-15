@@ -45,6 +45,7 @@ import java.util.concurrent.Semaphore
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
+import kotlinx.coroutines.runBlocking
 
 /**
  * The [MutationOutbox] is a persistently-backed in-order staging ground
@@ -64,11 +65,6 @@ internal class PersistentMutationOutbox(localStorageAdapter: LocalStorageAdapter
     private var countMutations: Boolean = true
     private var loadedMutation: PendingMutation<out Model>? = null
     private var numMutationsInOutbox = 0
-
-    override fun hasPendingMutation(modelId: String, modelClass: String): Boolean {
-        Objects.requireNonNull(modelId)
-        return getMutationForModelId(modelId, modelClass) != null
-    }
 
     @VisibleForTesting
     fun getMutationForModelId(modelId: String, modelClass: String): PendingMutation<out Model>? {
@@ -101,10 +97,11 @@ internal class PersistentMutationOutbox(localStorageAdapter: LocalStorageAdapter
         return mutationResult.get()
     }
 
-    override suspend fun <T : Model> fetchPendingMutations(models: List<T>, modelClass: String): Set<String> {
+    override fun <T : Model> fetchPendingMutations(models: List<T>, modelClass: String): Set<String> {
         // We chunk sql query to 950 items to prevent hitting 1k sqlite predicate limit
         // Improvement would be to use IN, but not currently supported in our query builders
-        return models.chunked(950).fold(mutableSetOf()) { acc, chunk ->
+        semaphore.acquire()
+        val pendingMutations: Set<String> = models.chunked(950).fold(mutableSetOf()) { acc, chunk ->
             val queryOptions = Where.matches(
                 QueryPredicateGroup(
                     QueryPredicateGroup.Type.OR,
@@ -115,18 +112,20 @@ internal class PersistentMutationOutbox(localStorageAdapter: LocalStorageAdapter
             )
 
             // Fetch chunk list of sqlite results
-            val chunkResult = suspendCoroutine { continuation ->
-                storage.query(
-                    PersistentRecord::class.java,
-                    queryOptions,
-                    {
-                        continuation.resume(it)
-                    },
-                    {
-                        LOG.debug("Failed to query PersistentRecord outbox.")
-                        continuation.resume(emptyList<PersistentRecord>().iterator())
-                    }
-                )
+            val chunkResult = runBlocking {
+                suspendCoroutine { continuation ->
+                    storage.query(
+                        PersistentRecord::class.java,
+                        queryOptions,
+                        {
+                            continuation.resume(it)
+                        },
+                        {
+                            LOG.debug("Failed to query PersistentRecord outbox.")
+                            continuation.resume(emptyList<PersistentRecord>().iterator())
+                        }
+                    )
+                }
             }
 
             // Add id to the accumulator set
@@ -138,6 +137,8 @@ internal class PersistentMutationOutbox(localStorageAdapter: LocalStorageAdapter
             }
             acc
         }
+        semaphore.release()
+        return pendingMutations
     }
 
     private fun getMutationById(mutationId: String): PendingMutation<out Model>? {
