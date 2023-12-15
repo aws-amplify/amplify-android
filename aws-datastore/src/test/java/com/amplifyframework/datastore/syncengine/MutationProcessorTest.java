@@ -23,6 +23,7 @@ import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLPathSegment;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.Consumer;
+import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.SchemaRegistry;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
@@ -54,10 +55,12 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.shadows.ShadowLog;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -208,7 +211,7 @@ public final class MutationProcessorTest {
         assertEquals(1, accumulator.await().size());
 
         // And that it is no longer in the outbox.
-        assertFalse(mutationOutbox.hasPendingMutation(tony.getPrimaryKeyString(),
+        assertFalse(hasPendingMutation(tony,
                 tony.getClass().getName()));
 
         // And that it was passed to AppSync for publication.
@@ -472,5 +475,12 @@ public final class MutationProcessorTest {
         // Wait for the retry handler to be called.
         assertTrue(retryHandlerInvocationCount.await(300, TimeUnit.SECONDS));
         mutationProcessor.stopDrainingMutationOutbox();
+    }
+
+    private <T extends Model>Boolean hasPendingMutation(T model, String modelClass) {
+        List<T> modelIdList = new ArrayList<>();
+        modelIdList.add(model);
+        Set<String> results = mutationOutbox.fetchPendingMutations(modelIdList, modelClass);
+        return results.contains(model.getPrimaryKeyString());
     }
 }
