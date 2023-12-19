@@ -79,3 +79,32 @@ type BlogOwner2 @model
   createdAt: AWSDateTime
 }
 
+type BlogOwner3 @model
+{
+  id: ID!
+  name: String!
+  blogs: [Blog3] @hasMany(indexName: "byBlogOwner3", fields: ["id"])
+  posts: [Post2] @hasMany(indexName: "byBlogOwner3", fields: ["id"])
+  createdAt: AWSDateTime
+}
+
+type Blog3 @model {
+  id: ID!
+  blogOwnerID: ID! @index(name: "byBlogOwner3")
+  name: String!
+  createdAt: AWSDateTime
+  posts: [Post2] @hasMany(indexName: "byBlog3", fields: ["id"])
+  owner: BlogOwner3 @belongsTo(fields: ["blogOwnerID"])
+}
+
+type Post2 @model {
+  id: ID!
+  blogID: ID! @index(name: "byBlog3")
+  blogOwnerID: ID! @index(name: "byBlogOwner3")
+  title: String!
+  status: PostStatus!
+  rating: Int!
+  createdAt: AWSDateTime
+  blog: Blog3 @belongsTo(fields: ["blogID"])
+  blogOwner: BlogOwner3 @belongsTo(fields: ["blogOwnerID"])
+}
