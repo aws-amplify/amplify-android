@@ -15,8 +15,6 @@
 
 package com.amplifyframework.datastore.storage.sqlite;
 
-import android.util.Log;
-
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.model.Model;
@@ -195,11 +193,10 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
 
             for (SQLiteColumn column : columnList) {
                 if (selectColumns.length() > 0) {
-                    selectColumns.append(",").append(SqlKeyword.DELIMITER);;
+                    selectColumns.append(",").append(SqlKeyword.DELIMITER);
                 }
                 String columnName = column.getQuotedColumnName().replaceFirst(column.getTableName(), tableAlias);
-                String columnAlias = column.getAliasedName();
-
+                String columnAlias = column.getAliasedName(tableAlias);
                 selectColumns.append(columnName)
                         .append(SqlKeyword.DELIMITER)
                         .append(SqlKeyword.AS)
@@ -217,7 +214,6 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
                 .append(SqlKeyword.FROM)
                 .append(SqlKeyword.DELIMITER)
                 .append(Wrap.inBackticks(tableName));
-
 
         // Append join statements.
         // INNER JOIN tableOne ON tableName.id=tableOne.foreignKey
@@ -294,7 +290,6 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
 
         rawQuery.append(";");
         final String queryString = rawQuery.toString();
-        Log.d("SQLiteCommandFactory","Query: "+queryString);
         return new SqlCommand(table.getName(), queryString, bindings);
     }
 
@@ -513,10 +508,11 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
      * @param joinPath A list tracking the current path of joins to detect circular references.
      */
     private void recursivelyBuildJoins(SQLiteTable table, Map<String, List<SQLiteColumn>> columns,
-                                       StringBuilder joinStatement, String parentAlias, Set<String> joinedTables, List<String> joinPath) {
-        if(joinPath.contains(table.getName()))
+                                       StringBuilder joinStatement, String parentAlias,
+                                       Set<String> joinedTables, List<String> joinPath) {
+        if (joinPath.contains(table.getName())) {
             return;  // Circular reference detected, stop recursion
-
+        }
         // Add the current table to the join path
         joinPath.add(table.getName());
 
@@ -525,7 +521,8 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
             ModelSchema ownedSchema = schemaRegistry.getModelSchemaForModelClass(ownedTableName);
             // Check if the schema is null and handle the error
             if (ownedSchema == null) {
-                throw new IllegalStateException("Could not retrieve schema for the model " + ownedTableName + ", verify that datastore is initialized.");
+                throw new IllegalStateException("Could not retrieve schema for the model " +
+                        ownedTableName + ", verify that datastore is initialized.");
             }
             SQLiteTable ownedTable = SQLiteTable.fromSchema(ownedSchema);
 
@@ -541,7 +538,8 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
                 columns.computeIfAbsent(ownedTableAlias, k -> new ArrayList<>()).add(column);
             }
 
-            String joinType = foreignKey.isNonNull() ? String.valueOf(SqlKeyword.INNER_JOIN) : String.valueOf(SqlKeyword.LEFT_JOIN);
+            String joinType = foreignKey.isNonNull() ? String.valueOf(SqlKeyword.INNER_JOIN) :
+                    String.valueOf(SqlKeyword.LEFT_JOIN);
 
             joinStatement.append(joinType)
                     .append(SqlKeyword.DELIMITER)
@@ -564,12 +562,12 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
                     .append(Wrap.inBackticks(ownedTable.getPrimaryKey().getName()))
                     .append(" ");
 
-            recursivelyBuildJoins(ownedTable, columns, joinStatement, ownedTableAlias, joinedTables, new ArrayList<>(joinPath));
+            recursivelyBuildJoins(ownedTable, columns, joinStatement, ownedTableAlias, joinedTables,
+                    new ArrayList<>(joinPath));
         }
         // Remove the current table from the join path before returning
         joinPath.remove(joinPath.size() - 1);
     }
-
 
     // Utility method to parse columns in CREATE TABLE
     private StringBuilder parseColumns(SQLiteTable table) {
