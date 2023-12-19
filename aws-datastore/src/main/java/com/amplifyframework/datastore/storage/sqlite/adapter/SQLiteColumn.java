@@ -81,11 +81,18 @@ public final class SQLiteColumn {
     }
 
     /**
-     * Returns the aliased name of column.
-     * @return the aliased name of column.
+     * Generates an aliased name for the current object by combining a qualifier and the object's name
+     * with a custom delimiter. The method allows for a custom qualifier to be specified. If the
+     * custom qualifier is null or empty, the object's default table name is used as the qualifier.
+     *
+     * @param customQualifier The custom qualifier to be used for generating the aliased name. If this
+     *                        parameter is null or empty, the default table name is used as the qualifier.
+     * @return The aliased name of the column
      */
-    public String getAliasedName() {
-        return tableName + CUSTOM_ALIAS_DELIMITER + name;
+    public String getAliasedName(String customQualifier) {
+        String effectiveQualifier = (customQualifier == null || customQualifier.isEmpty()) ?
+                tableName : customQualifier;
+        return effectiveQualifier + CUSTOM_ALIAS_DELIMITER + name;
     }
 
     /**
