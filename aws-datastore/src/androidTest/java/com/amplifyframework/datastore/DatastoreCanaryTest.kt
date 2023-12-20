@@ -18,9 +18,11 @@ import android.util.Log
 import androidx.test.core.app.ApplicationProvider
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.core.Amplify
+import com.amplifyframework.hub.HubChannel
 import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider
 import com.amplifyframework.testmodels.commentsblog.Post
 import com.amplifyframework.testmodels.commentsblog.PostStatus
+import com.amplifyframework.testutils.HubAccumulator
 import java.util.UUID
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -98,21 +100,32 @@ class DatastoreCanaryTest {
             .title("Post" + UUID.randomUUID().toString())
             .status(PostStatus.ACTIVE)
             .rating(3)
+            .id(UUID.randomUUID().toString())
             .build()
 
         val saveLatch = CountDownLatch(1)
+        val createHub = HubAccumulator.create(
+            HubChannel.DATASTORE,
+            DataStoreHubEventFilters.enqueueOf(Post::class.simpleName, post.id),
+            1
+        ).start()
+
         Amplify.DataStore.save(
             post,
             { saveLatch.countDown() },
             { fail("Error creating post: $it") }
         )
         saveLatch.await(TIMEOUT_S, TimeUnit.SECONDS)
+        createHub.await(TIMEOUT_S.toInt(), TimeUnit.SECONDS)
+
         val deleteLatch = CountDownLatch(1)
         Amplify.DataStore.delete(
             post,
             { deleteLatch.countDown() },
             { fail("Failed to delete post: $it") }
         )
+        // Temporarily prevent https://github.com/aws-amplify/amplify-android/issues/2617
+        Thread.sleep(1000)
         assertTrue(deleteLatch.await(TIMEOUT_S, TimeUnit.SECONDS))
     }
 

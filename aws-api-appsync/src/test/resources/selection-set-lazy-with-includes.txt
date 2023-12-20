@@ -1,0 +1,40 @@
+ {
+  blog {
+    createdAt
+    id
+    name
+    posts {
+      items {
+        blog {
+          id
+        }
+        createdAt
+        id
+        name
+        updatedAt
+      }
+    }
+    updatedAt
+  }
+  comments {
+    items {
+      createdAt
+      id
+      post {
+        blog {
+          id
+        }
+        createdAt
+        id
+        name
+        updatedAt
+      }
+      text
+      updatedAt
+    }
+  }
+  createdAt
+  id
+  name
+  updatedAt
+}

@@ -28,5 +28,6 @@ internal data class ChallengeConfig(
     @SerialName("OvalIouWidthThreshold") val ovalIouWidthThreshold: Float,
     @SerialName("OvalIouHeightThreshold") val ovalIouHeightThreshold: Float,
     @SerialName("FaceIouWidthThreshold") val faceIouWidthThreshold: Float,
-    @SerialName("FaceIouHeightThreshold") val faceIouHeightThreshold: Float
+    @SerialName("FaceIouHeightThreshold") val faceIouHeightThreshold: Float,
+    @SerialName("OvalFitTimeout") val ovalFitTimeout: Int
 )

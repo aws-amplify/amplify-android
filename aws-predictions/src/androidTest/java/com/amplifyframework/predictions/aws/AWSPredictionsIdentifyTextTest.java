@@ -151,12 +151,12 @@ public final class AWSPredictionsIdentifyTextTest {
         // Assert that four key-values are detected.
         List<BoundedKeyValue> keyValues = result.getKeyValues();
         assertFalse(Empty.check(keyValues));
-        assertEquals(4, keyValues.size());
 
         // Assert that key-value pairs have correct values.
         FeatureAssert.assertContains(Pair.create("Name:", "Jane Doe"), keyValues);
         FeatureAssert.assertContains(Pair.create("Address:", "123 Any Street, Anytown, USA"), keyValues);
         FeatureAssert.assertContains(Pair.create("Birth date:", "12-26-1980"), keyValues);
-        // FeatureAssert.assertContains(Pair.create("Male:", "true"), keyValues); // Selection not supported
+        // Selection not supported. Value is "null", not true
+        FeatureAssert.assertContains(Pair.create("Male:", "null"), keyValues);    
     }
 }

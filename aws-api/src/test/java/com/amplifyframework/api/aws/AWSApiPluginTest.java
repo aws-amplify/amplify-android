@@ -84,12 +84,12 @@ public final class AWSApiPluginTest {
 
     /**
      * Sets up the test.
-     * @throws ApiException On failure to configure plugin
      * @throws IOException On failure to start web server
      * @throws JSONException On failure to arrange configuration JSON
+     * @throws AmplifyException On failure to create request
      */
     @Before
-    public void setup() throws ApiException, IOException, JSONException {
+    public void setup() throws AmplifyException, IOException, JSONException {
         webServer = new MockWebServer();
         webServer.start(8080);
         baseUrl = webServer.url("/");

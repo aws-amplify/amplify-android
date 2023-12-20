@@ -23,7 +23,6 @@ import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.ApiException.ApiAuthException;
 import com.amplifyframework.api.aws.auth.ApiRequestDecoratorFactory;
 import com.amplifyframework.api.aws.auth.RequestDecorator;
-import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.Amplify;
@@ -53,7 +52,7 @@ import okhttp3.ResponseBody;
  * this is used for a LIST query vs. a GET query or most mutations.
  * @param <R> Casted type of GraphQL result data
  */
-public final class MultiAuthAppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
+public final class MultiAuthAppSyncGraphQLOperation<R> extends AWSGraphQLOperation<R> {
     private static final Logger LOG = Amplify.Logging.logger(CategoryType.API, "amplify:aws-api");
     private static final String CONTENT_TYPE = "application/json";
 
@@ -72,7 +71,7 @@ public final class MultiAuthAppSyncGraphQLOperation<R> extends GraphQLOperation<
      * @param builder An instance of the {@link Builder} object.
      */
     private MultiAuthAppSyncGraphQLOperation(Builder<R> builder) {
-        super(builder.request, builder.responseFactory);
+        super(builder.request, builder.responseFactory, builder.apiName);
         this.apiRequestDecoratorFactory = builder.apiRequestDecoratorFactory;
         this.endpoint = builder.endpoint;
         this.client = builder.client;
@@ -205,6 +204,7 @@ public final class MultiAuthAppSyncGraphQLOperation<R> extends GraphQLOperation<
         private Consumer<GraphQLResponse<R>> onResponse;
         private Consumer<ApiException> onFailure;
         private ExecutorService executorService;
+        private String apiName;
 
         Builder<R> endpoint(@NonNull String endpoint) {
             this.endpoint = Objects.requireNonNull(endpoint);
@@ -243,6 +243,11 @@ public final class MultiAuthAppSyncGraphQLOperation<R> extends GraphQLOperation<
 
         Builder<R> executorService(ExecutorService executorService) {
             this.executorService = executorService;
+            return this;
+        }
+
+        Builder<R> apiName(String apiName) {
+            this.apiName = apiName;
             return this;
         }
 

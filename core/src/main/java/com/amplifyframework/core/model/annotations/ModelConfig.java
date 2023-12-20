@@ -71,4 +71,10 @@ public @interface ModelConfig {
      * @return Version of Model.
      */
     int version() default 0;
+
+    /**
+     * Specifies if a Model supports fields with lazy types.
+     * @return true if model support fields with lazy types.
+     */
+    boolean hasLazySupport() default false;
 }

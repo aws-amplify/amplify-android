@@ -1,0 +1,1 @@
+{"query": "query GetPost($id: ID!) {\n  getPost(id: $id) {\n    blog {\n      createdAt\n      id\n      name\n      updatedAt\n    }\n    comments {\n      items {\n        createdAt\n        id\n        post {\n          id\n        }\n        text\n        updatedAt\n      }\n    }\n    createdAt\n    id\n    name\n    updatedAt\n  }\n}\n", "variables": {"id":"p1"}}

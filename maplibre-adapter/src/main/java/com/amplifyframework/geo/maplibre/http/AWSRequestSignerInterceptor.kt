@@ -19,8 +19,8 @@ import aws.smithy.kotlin.runtime.InternalApi
 import aws.smithy.kotlin.runtime.auth.awssigning.AwsSigningConfig
 import aws.smithy.kotlin.runtime.auth.awssigning.DefaultAwsSigner
 import aws.smithy.kotlin.runtime.http.Headers as AwsHeaders
+import aws.smithy.kotlin.runtime.http.HttpBody
 import aws.smithy.kotlin.runtime.http.HttpMethod
-import aws.smithy.kotlin.runtime.http.content.ByteArrayContent
 import aws.smithy.kotlin.runtime.http.request.HttpRequest
 import aws.smithy.kotlin.runtime.net.Host
 import aws.smithy.kotlin.runtime.net.QueryParameters
@@ -125,7 +125,7 @@ internal class AWSRequestSignerInterceptor(
         )
 
         val bodyBytes: ByteArray = getBytes(request.body)
-        val body2 = ByteArrayContent(bodyBytes)
+        val body2 = HttpBody.fromBytes(bodyBytes)
         val method = HttpMethod.parse(request.method)
         val awsRequest = HttpRequest(method, httpUrl, headers, body2)
 

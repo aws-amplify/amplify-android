@@ -15,13 +15,15 @@
 
 package com.amplifyframework.statemachine.codegen.actions
 
+import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.data.AuthChallenge
-import com.amplifyframework.statemachine.codegen.events.SignInChallengeEvent
 
 internal interface SignInChallengeActions {
     fun verifyChallengeAuthAction(
-        event: SignInChallengeEvent.EventType.VerifyChallengeAnswer,
+        answer: String,
+        metadata: Map<String, String>,
+        userAttributes: List<AuthUserAttribute>,
         challenge: AuthChallenge
     ): Action
 }

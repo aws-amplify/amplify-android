@@ -36,10 +36,10 @@ internal open class AuthHelper {
         fun getSecretHash(userId: String?, clientId: String?, clientSecret: String?): String? {
             return when {
                 userId == null -> throw InvalidParameterException(
-                    Exception("user ID cannot be null")
+                    cause = Exception("user ID cannot be null")
                 )
                 clientId == null -> throw InvalidParameterException(
-                    Exception("client ID cannot be null")
+                    cause = Exception("client ID cannot be null")
                 )
                 clientSecret.isNullOrEmpty() -> null
                 else ->
@@ -54,6 +54,17 @@ internal open class AuthHelper {
                         throw UnknownException(cause = Exception("errors in HMAC calculation"))
                     }
             }
+        }
+
+        /**
+         * This method is used to capture the activeUsername we should be using to store and retreive device Metadata.
+         * This becomes more important when an alias is used to signin instead of a username where cognito then
+         * generates the username on the customers behalf and returns it. We need to then use that username to store
+         * and retrieve device information as the username that the customer entered will no longer be available when
+         * respondToAuthChallenge/confirmSignIn calls are made.
+         * */
+        fun getActiveUsername(username: String, alternateUsername: String?, userIDForSRP: String?): String {
+            return alternateUsername ?: (userIDForSRP ?: username)
         }
     }
 }

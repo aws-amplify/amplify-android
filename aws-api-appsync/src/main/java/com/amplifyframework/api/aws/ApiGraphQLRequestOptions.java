@@ -27,6 +27,19 @@ public final class ApiGraphQLRequestOptions implements GraphQLRequestOptions {
     private static final String ITEMS_KEY = "items";
     private static final String NEXT_TOKEN_KEY = "nextToken";
 
+    private static final int DEFAULT_MAX_DEPTH = 2;
+
+    private int maxDepth = DEFAULT_MAX_DEPTH;
+
+    /**
+     * Public constructor to create ApiGraphQLRequestOptions.
+     */
+    public ApiGraphQLRequestOptions() {}
+
+    ApiGraphQLRequestOptions(int maxDepth) {
+        this.maxDepth = maxDepth;
+    }
+
     @NonNull
     @Override
     public List<String> paginationFields() {
@@ -47,7 +60,7 @@ public final class ApiGraphQLRequestOptions implements GraphQLRequestOptions {
 
     @Override
     public int maxDepth() {
-        return 2;
+        return maxDepth;
     }
 
     @NonNull
