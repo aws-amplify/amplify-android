@@ -30,8 +30,13 @@ import com.amplifyframework.core.model.query.QuerySortBy;
 import com.amplifyframework.core.model.query.QuerySortOrder;
 import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
+import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.syncengine.PendingMutation;
+import com.amplifyframework.testmodels.commentsblog.Blog3;
+import com.amplifyframework.testmodels.commentsblog.BlogOwner3;
+import com.amplifyframework.testmodels.commentsblog.Post2;
+import com.amplifyframework.testmodels.commentsblog.PostStatus;
 import com.amplifyframework.testmodels.personcar.Person;
 import com.amplifyframework.testmodels.personcar.PersonWithCPK;
 import com.amplifyframework.testutils.random.RandomString;
@@ -52,6 +57,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -502,5 +508,184 @@ public class SqlCommandTest {
         Map<UserAgent.Platform, String> map = new HashMap<>();
         map.put(UserAgent.Platform.FLUTTER, "1.0");
         UserAgent.configure(map);
+    }
+
+    /**
+     * Validates the generation of SQL queries involving nested schemas, ensuring the correct formation
+     * of JOIN clauses and WHERE conditions. This method specifically tests queries that span multiple
+     * related tables (e.g., BlogOwner3 -> Blog3 -> Post2), verifying that the query correctly selects
+     * data from Post2 based on a condition on BlogId and BlogOwnerId that involves a foreign key relationship.
+     *
+     * <p>Example scenario: The method tests a query for selecting data from Post2, using a
+     * condition on BlogId and BlogOwnerId which are foreign keys in Post2 for Blog3 and BlogOwner3 resp.
+     * It ensures that the join and WHERE clause are formed as expected.
+     *
+     * <p>Primary focus:
+     * <ul>
+     *   <li>Correct formation of JOIN clauses between nested tables.</li>
+     *   <li>Appropriate referencing of column names in the WHERE clause to ensure the use of relevant
+     *       foreign key relationships.</li>
+     * </ul>
+     *
+     * @throws AmplifyException From {@link SQLCommandFactory#queryFor(ModelSchema, QueryOptions)}
+     */
+    @Test
+    public void validNestedSchemaReturnQueryWithExpectedJoinsAndNestedWhereClause() throws AmplifyException {
+        UUID blogOwnerId = UUID.randomUUID();
+        UUID blogId = UUID.randomUUID();
+        SchemaRegistry schemaRegistry = SchemaRegistry.instance();
+        schemaRegistry.register(Collections.singleton(BlogOwner3.class));
+        schemaRegistry.register(Collections.singleton(Blog3.class));
+        schemaRegistry.register(Collections.singleton(Post2.class));
+
+        final ModelSchema postSchema = schemaRegistry.getModelSchemaForModelClass(Post2.class);
+
+        final BlogOwner3 blogOwner = BlogOwner3.builder()
+                .name("Owner")
+                .id(blogOwnerId.toString())
+                .createdAt(new Temporal.DateTime("2023-12-15T16:22:30.48Z"))
+                .build();
+
+        final Blog3 blog = Blog3.builder()
+                .name("Blog")
+                .id(blogId.toString())
+                .owner(blogOwner)
+                .createdAt(new Temporal.DateTime("2023-12-15T16:22:35.48Z"))
+                .build();
+
+        final Post2 post = Post2.builder()
+                .title("Test Post")
+                .status(PostStatus.ACTIVE)
+                .rating(5)
+                .blogOwner(blogOwner)
+                .blog(blog)
+                .createdAt(new Temporal.DateTime("2023-12-15T16:22:38.48Z"))
+                .build();
+
+        // Create an instance of SQLiteCommandFactory
+        SQLiteCommandFactory sqlCommandFactory = new SQLiteCommandFactory(schemaRegistry, GsonFactory.instance());
+        // Create QueryOptions with a predicate to filter Posts by BlogOwnerId
+        QueryPredicate predicate = Post2.BLOG.eq(blog.getId()).and(Post2.BLOG_OWNER.eq(blogOwner.getId()));
+        QueryOptions options = Where.matches(predicate);
+
+        // Call queryFor for the Post entity
+        SqlCommand sqlCommand = sqlCommandFactory.queryFor(postSchema, options);
+
+        // The expected SQL query
+        String expectedQuery = "SELECT `BlogOwner3`.`id` AS `BlogOwner3_id`, " +
+                "`BlogOwner3`.`createdAt` AS `BlogOwner3_createdAt`, `BlogOwner3`.`name` " +
+                "AS `BlogOwner3_name`, `BlogOwner3`.`updatedAt` AS `BlogOwner3_updatedAt`, " +
+                "`Blog3.BlogOwner3`.`id` AS `Blog3.BlogOwner3_id`, `Blog3.BlogOwner3`.`createdAt` AS" +
+                " `Blog3.BlogOwner3_createdAt`, `Blog3.BlogOwner3`.`name` AS `Blog3.BlogOwner3_name`," +
+                " `Blog3.BlogOwner3`.`updatedAt` AS `Blog3.BlogOwner3_updatedAt`, `Blog3`.`id` " +
+                "AS `Blog3_id`, `Blog3`.`createdAt` AS `Blog3_createdAt`, `Blog3`.`name` " +
+                "AS `Blog3_name`, `Blog3`.`updatedAt` AS `Blog3_updatedAt`, `Blog3`.`blogOwnerID` " +
+                "AS `Blog3_blogOwnerID`, `Post2`.`id` AS `Post2_id`, `Post2`.`createdAt` AS" +
+                " `Post2_createdAt`, `Post2`.`rating` AS `Post2_rating`, `Post2`.`status` AS " +
+                "`Post2_status`, `Post2`.`title` AS `Post2_title`, `Post2`.`updatedAt` AS " +
+                "`Post2_updatedAt`, `Post2`.`blogID` AS `Post2_blogID`, `Post2`.`blogOwnerID` AS " +
+                "`Post2_blogOwnerID` " +
+                "FROM `Post2` " +
+                "LEFT JOIN `Blog3` AS `Blog3` ON `Post2`.`blogID` = `Blog3`.`id` " +
+                "LEFT JOIN `BlogOwner3` AS `Blog3.BlogOwner3` ON `Blog3`.`blogOwnerID` = `Blog3.BlogOwner3`.`id` " +
+                "LEFT JOIN `BlogOwner3` AS `BlogOwner3` ON `Post2`.`blogOwnerID` = `BlogOwner3`.`id`  " +
+                "WHERE (`Post2`.`blogID` = ? AND `Post2`.`blogOwnerID` = ?);";
+
+        // Assert the SQL command is as expected
+        assertEquals(expectedQuery, sqlCommand.sqlStatement());
+        assertEquals(sqlCommand.getBindings().size(), 2);
+        assertEquals(blog.getId(), sqlCommand.getBindings().get(0));
+        assertEquals(blogOwner.getId(), sqlCommand.getBindings().get(1));
+
+    }
+
+    /**
+     * Validates the generation of SQL queries involving nested schemas, ensuring the correct formation
+     * of JOIN clauses and WHERE conditions. This method specifically tests queries that span multiple
+     * related tables (e.g., BlogOwner3 -> Blog3 -> Post2), verifying that the query correctly selects
+     * data from Post2 based on a condition that involves a foreign key relationship.
+     *
+     * <p>Example scenario: The method tests a query for selecting data from Post2, using a
+     * condition on BlogOwnerId column which is a foreign key in Post2 pointing to primary key in BlogOwner3.
+     * It ensures that the WHERE clause correctly utilizes the BlogOwner3's foreign key in Post2
+     * and not from Blog3.
+     *
+     * <p>Primary focus:
+     * <ul>
+     *   <li>Correct formation of JOIN clauses between nested tables.</li>
+     *   <li>Appropriate referencing of column names in the WHERE clause to ensure the use of relevant
+     *       foreign key relationships.</li>
+     * </ul>
+     *
+     * @throws AmplifyException From {@link SQLCommandFactory#queryFor(ModelSchema, QueryOptions)}
+     */
+    @Test
+    public void validNestedSchemaReturnQueryWithExpectedJoinsAndWhereClause() throws AmplifyException {
+        UUID blogOwnerId = UUID.randomUUID();
+        UUID blogId = UUID.randomUUID();
+        SchemaRegistry schemaRegistry = SchemaRegistry.instance();
+        schemaRegistry.register(Collections.singleton(BlogOwner3.class));
+        schemaRegistry.register(Collections.singleton(Blog3.class));
+        schemaRegistry.register(Collections.singleton(Post2.class));
+
+        final ModelSchema postSchema = schemaRegistry.getModelSchemaForModelClass(Post2.class);
+
+        final BlogOwner3 blogOwner = BlogOwner3.builder()
+                .name("Owner")
+                .id(blogOwnerId.toString())
+                .createdAt(new Temporal.DateTime("2023-12-15T16:22:30.48Z"))
+                .build();
+
+        final Blog3 blog = Blog3.builder()
+                .name("Blog")
+                .id(blogId.toString())
+                .owner(blogOwner)
+                .createdAt(new Temporal.DateTime("2023-12-15T16:22:35.48Z"))
+                .build();
+
+        final Post2 post = Post2.builder()
+                .title("Test Post")
+                .status(PostStatus.ACTIVE)
+                .rating(5)
+                .blogOwner(blogOwner)
+                .blog(blog)
+                .createdAt(new Temporal.DateTime("2023-12-15T16:22:38.48Z"))
+                .build();
+
+        // Create an instance of SQLiteCommandFactory
+        SQLiteCommandFactory sqlCommandFactory = new SQLiteCommandFactory(schemaRegistry, GsonFactory.instance());
+        // Create QueryOptions with a predicate to filter Posts by BlogOwnerId
+        QueryPredicate predicate = Post2.BLOG_OWNER.eq(blogOwner.getId());
+        QueryOptions options = Where.matches(predicate);
+
+        // Call queryFor for the Post entity
+        SqlCommand sqlCommand = sqlCommandFactory.queryFor(postSchema, options);
+
+        // The expected SQL query
+        String expectedQuery = "SELECT `BlogOwner3`.`id` AS `BlogOwner3_id`, `BlogOwner3`.`createdAt`" +
+                " AS `BlogOwner3_createdAt`, " +
+                "`BlogOwner3`.`name` AS `BlogOwner3_name`, `BlogOwner3`.`updatedAt` AS `BlogOwner3_updatedAt`, " +
+                "`Blog3.BlogOwner3`.`id` AS `Blog3.BlogOwner3_id`, `Blog3.BlogOwner3`.`createdAt` AS" +
+                " `Blog3.BlogOwner3_createdAt`, `Blog3.BlogOwner3`.`name` AS `Blog3.BlogOwner3_name`," +
+                " `Blog3.BlogOwner3`.`updatedAt` AS `Blog3.BlogOwner3_updatedAt`, " +
+                "`Blog3`.`id` AS `Blog3_id`, `Blog3`.`createdAt` AS `Blog3_createdAt`, `Blog3`.`name`" +
+                " AS `Blog3_name`, " +
+                "`Blog3`.`updatedAt` AS `Blog3_updatedAt`, " +
+                "`Blog3`.`blogOwnerID` AS `Blog3_blogOwnerID`, " +
+                "`Post2`.`id` AS `Post2_id`, `Post2`.`createdAt` AS `Post2_createdAt`, `Post2`.`rating`" +
+                " AS `Post2_rating`, " +
+                "`Post2`.`status` AS `Post2_status`, `Post2`.`title` AS `Post2_title`, " +
+                "`Post2`.`updatedAt` AS `Post2_updatedAt`, `Post2`.`blogID` AS `Post2_blogID`, `Post2`.`blogOwnerID`" +
+                " AS `Post2_blogOwnerID` " +
+                "FROM `Post2` " +
+                "LEFT JOIN `Blog3` AS `Blog3` ON `Post2`.`blogID` = `Blog3`.`id` " +
+                "LEFT JOIN `BlogOwner3` AS `Blog3.BlogOwner3` ON `Blog3`.`blogOwnerID` = `Blog3.BlogOwner3`.`id` " +
+                "LEFT JOIN `BlogOwner3` AS `BlogOwner3` ON `Post2`.`blogOwnerID` = `BlogOwner3`.`id`  " +
+                "WHERE `Post2`.`blogOwnerID` = ?;";
+
+        // Assert the SQL command is as expected
+        assertEquals(expectedQuery, sqlCommand.sqlStatement());
+        assertEquals(sqlCommand.getBindings().size(), 1);
+        assertEquals(blogOwner.getId(), sqlCommand.getBindings().get(0));
     }
 }
