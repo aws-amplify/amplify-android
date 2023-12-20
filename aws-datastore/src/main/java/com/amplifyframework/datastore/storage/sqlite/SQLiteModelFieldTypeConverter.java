@@ -210,7 +210,7 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
                 return null;
             }
 
-            String columnName = column.getAliasedName();
+            String columnName = column.getAliasedName(null);
             if (javaFieldType == JavaFieldType.MODEL) {
                 int newInnerModelCount = 1;
                 String fieldTargetType = field.getTargetType();
