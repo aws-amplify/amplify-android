@@ -493,7 +493,7 @@ internal class LivenessWebSocket(
     private fun isTimeDiffSafe(diffInMillis: Long) = kotlin.math.abs(diffInMillis) < FOUR_MINUTES
 
     companion object {
-        internal const val NORMAL_SOCKET_CLOSURE_STATUS_CODE = 1000
+        private const val NORMAL_SOCKET_CLOSURE_STATUS_CODE = 1000
         private const val FOUR_MINUTES = 1000 * 60 * 4
         @VisibleForTesting val datePattern = "EEE, d MMM yyyy HH:mm:ss z"
         private val LOG = Amplify.Logging.logger(CategoryType.PREDICTIONS, "amplify:aws-predictions")
