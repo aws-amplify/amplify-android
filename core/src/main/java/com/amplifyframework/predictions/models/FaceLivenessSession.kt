@@ -33,6 +33,7 @@ class FaceLivenessSession(
         onChallengeResponseEvent(challengeResponseEvent)
     }
 
+    @JvmOverloads
     fun stopSession(reasonCode: Int? = null) {
         stopLivenessSession(reasonCode)
     }
