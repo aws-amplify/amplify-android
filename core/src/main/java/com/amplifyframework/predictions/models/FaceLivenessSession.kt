@@ -33,7 +33,7 @@ class FaceLivenessSession(
         onChallengeResponseEvent(challengeResponseEvent)
     }
 
-    fun stopSession(reasonCode: Int?) {
+    fun stopSession(reasonCode: Int? = null) {
         stopLivenessSession(reasonCode)
     }
 }
