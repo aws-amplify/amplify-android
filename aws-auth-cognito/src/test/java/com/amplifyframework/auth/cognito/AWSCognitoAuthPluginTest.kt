@@ -26,6 +26,7 @@ import com.amplifyframework.auth.AuthUser
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.TOTPSetupDetails
+import com.amplifyframework.auth.cognito.exceptions.service.InvalidParameterException
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthVerifyTOTPSetupOptions
 import com.amplifyframework.auth.cognito.options.FederateToIdentityPoolOptions
 import com.amplifyframework.auth.cognito.result.FederateToIdentityPoolResult
@@ -54,6 +55,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlin.test.assertEquals
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Test
 
 class AWSCognitoAuthPluginTest {
@@ -197,6 +199,23 @@ class AWSCognitoAuthPluginTest {
         val expectedOnError = Consumer<AuthException> { }
 
         authPlugin.confirmSignIn(expectedChallengeResponse, expectedOnSuccess, expectedOnError)
+
+        verify(timeout = CHANNEL_TIMEOUT) { realPlugin.confirmSignIn(expectedChallengeResponse, any(), any()) }
+    }
+
+    @Ignore("ConfirmSignIn is notImplemented in this PR")
+    @Test
+    fun verifyConfirmSignInWithMagicLinkFailsOnMalformedChallenge() {
+        val expectedChallengeResponse = "aaab2323"
+        val expectedOnSuccess = Consumer<AuthSignInResult> { }
+        val expectedOnError = Consumer<AuthException> {
+            InvalidParameterException(
+                "There was an error parsing the magicLink code. Please try again",
+                InvalidParameterException("Magic Link is malformed.")
+            )
+        }
+
+        authPlugin.confirmSignInWithMagicLink(expectedChallengeResponse, expectedOnSuccess, expectedOnError)
 
         verify(timeout = CHANNEL_TIMEOUT) { realPlugin.confirmSignIn(expectedChallengeResponse, any(), any()) }
     }
