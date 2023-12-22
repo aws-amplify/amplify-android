@@ -30,7 +30,7 @@ jobs:
     - name: Install dependencies
       run: |
         cd scripts
-        gem install bundler
+        gem install bundler -v '~>1'
         bundle install --full-index
     - name: Configure git options
       run: |
