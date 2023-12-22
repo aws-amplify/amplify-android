@@ -99,7 +99,7 @@ final class PersistentMutationOutbox implements MutationOutbox {
                         try {
                             PendingMutation.PersistentRecord persistentRecord = results.next();
                             PendingMutation<?> pendingMutation = converter.fromRecord(persistentRecord);
-                            if (pendingMutation.getModelSchema().getModelClass().getName().equals(modelClass)) {
+                            if (pendingMutation.getModelSchema().getName().equals(modelClass)) {
                                 mutationResult.set(pendingMutation);
                             }
                         } catch (Throwable throwable) {
@@ -153,7 +153,7 @@ final class PersistentMutationOutbox implements MutationOutbox {
             // If there is no existing mutation for the model, then just apply the incoming
             // mutation, and be done with this.
             String modelId = incomingMutation.getMutatedItem().getPrimaryKeyString();
-            String modelClass = incomingMutation.getModelSchema().getModelClass().getName();
+            String modelClass = incomingMutation.getMutatedItem().getModelName();
             @SuppressWarnings("unchecked")
             PendingMutation<T> existingMutation = (PendingMutation<T>) getMutationForModelId(modelId, modelClass);
             if (existingMutation == null || inFlightMutations.contains(existingMutation.getMutationId())) {

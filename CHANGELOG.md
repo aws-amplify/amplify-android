@@ -1,3 +1,17 @@
+## [Release 2.14.7](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.14.7)
+
+### Bug Fixes
+- **datastore:** Update Model Class Check in getMutationForModelId() from using ModelSchema class name to mutatedItem modelName ([#2637](https://github.com/aws-amplify/amplify-android/issues/2637))
+
+[See all changes between 2.14.6 and 2.14.7](https://github.com/aws-amplify/amplify-android/compare/release_v2.14.6...release_v2.14.7)
+
+## [Release 2.14.6](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.14.6)
+
+### Bug Fixes
+- **auth:** Add userAttributes to confirmSignIn call ([#2640](https://github.com/aws-amplify/amplify-android/issues/2640))
+
+[See all changes between 2.14.5 and 2.14.6](https://github.com/aws-amplify/amplify-android/compare/release_v2.14.5...release_v2.14.6)
+
 ## [Release 2.14.5](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.14.5)
 
 ### Bug Fixes
