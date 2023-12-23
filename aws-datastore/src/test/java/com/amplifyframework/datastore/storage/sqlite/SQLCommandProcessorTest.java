@@ -116,7 +116,12 @@ public class SQLCommandProcessorTest {
 
         // Query for all BlogOwners, and verify that there is one result.
         SqlCommand queryCommand = sqlCommandFactory.queryFor(blogOwnerSchema, Where.matchesAll());
-        Cursor cursor = sqlCommandProcessor.rawQuery(queryCommand);
+        Cursor cursor = null;
+        try {
+            cursor = sqlCommandProcessor.rawQuery(queryCommand);
+        } catch (Exception e) {
+            throw new AmplifyException("DB already closed", e, "Wait until DB is reopened");
+        }
         List<BlogOwner> results = new ArrayList<>();
 
         SQLiteModelFieldTypeConverter converter = new SQLiteModelFieldTypeConverter(blogOwnerSchema,
