@@ -1,7 +1,7 @@
 ## [Release 2.14.8](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.14.8)
 
 ### Miscellaneous
-- **liveness:** add close codes to websocket apis ([#2638](https://github.com/aws-amplify/amplify-android/issues/2638))
+- **liveness:** add close codes to websocket apis ([#2658](https://github.com/aws-amplify/amplify-android/issues/2658))
 
 [See all changes between 2.14.7 and 2.14.8](https://github.com/aws-amplify/amplify-android/compare/release_v2.14.7...release_v2.14.8)
 
