@@ -40,8 +40,7 @@ import okio.Buffer;
  * Request decorator implementatioon that uses AWS SigV4 signing.
  */
 public class IamRequestDecorator implements RequestDecorator {
-    private static final String CONTENT_TYPE = "application/json";
-    private static final MediaType JSON_MEDIA_TYPE = MediaType.parse(CONTENT_TYPE);
+    private static final String DEFAULT_CONTENT_TYPE = "application/json";
     private final CredentialsProvider credentialsProvider;
     private final AWS4Signer v4Signer;
     private final String serviceName;
@@ -89,8 +88,25 @@ public class IamRequestDecorator implements RequestDecorator {
         //Copy the signed/credentialed request back into an OKHTTP Request object.
         okhttp3.Request.Builder okReqBuilder = new okhttp3.Request.Builder();
 
+        // By default, we send application/json content-type
+        String contentType = DEFAULT_CONTENT_TYPE;
+
         for (Map.Entry<String, List<String>> e : request.getHeaders().entries()) {
-            okReqBuilder.addHeader(e.getKey(), e.getValue().get(0));
+            String key = e.getKey();
+            String value = e.getValue().get(0);
+            okReqBuilder.addHeader(key, value);
+
+            // If content-type detected in headers, capture to use later
+            if (key.equalsIgnoreCase("content-type")) {
+                contentType = value;
+            }
+        }
+
+        // Set MediaType for OkHttp request body, because it will overwrite content-type headers.
+        MediaType mediaType = MediaType.parse(contentType);
+        // If the provided content-type is not valid, reset to default MediaType
+        if (mediaType == null) {
+            mediaType = MediaType.parse(DEFAULT_CONTENT_TYPE);
         }
 
         //Set the URL and Method
@@ -99,7 +115,7 @@ public class IamRequestDecorator implements RequestDecorator {
         if (req.body() == null) {
             requestBody = null;
         } else {
-            requestBody = RequestBody.create(bodyBytes, JSON_MEDIA_TYPE);
+            requestBody = RequestBody.create(bodyBytes, mediaType);
         }
 
         okReqBuilder.method(req.method(), requestBody);
