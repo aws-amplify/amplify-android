@@ -14,15 +14,21 @@
  */
 package com.amplifyframework.api.aws.auth
 
+import aws.smithy.kotlin.runtime.auth.awscredentials.Credentials
+import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider
+import aws.smithy.kotlin.runtime.util.Attributes
 import com.amplifyframework.api.ApiException
 import com.amplifyframework.api.ApiException.ApiAuthException
 import com.amplifyframework.api.aws.ApiAuthProviders
 import com.amplifyframework.api.aws.AuthorizationType
 import com.amplifyframework.api.aws.EndpointType
 import com.amplifyframework.api.aws.sigv4.FunctionAuthProvider
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.Request
 import okhttp3.Request.Builder
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.junit.Assert
+import org.junit.Assert.assertEquals
 import org.junit.Test
 
 /**
@@ -215,6 +221,89 @@ class ApiRequestDecoratorFactoryTest {
         val request: Request = Builder().url("https://localhost/").build()
         val decoratedRequest = factory.forAuthType(AuthorizationType.AWS_LAMBDA).decorate(request)
         Assert.assertEquals(customToken, decoratedRequest.header(AUTHORIZATION))
+    }
+
+    @Test
+    fun testProvidedRestContentTypeHeaderUsed() {
+        val expectedContentType =  "text/plain"
+        val credentialsProvider = object : CredentialsProvider {
+            override suspend fun resolve(attributes: Attributes): Credentials {
+                return Credentials("testA", "testB")
+            }
+        }
+        val providers = ApiAuthProviders.builder()
+            .awsCredentialsProvider(credentialsProvider)
+            .build()
+        val factory = ApiRequestDecoratorFactory(
+            providers,
+            AuthorizationType.AWS_IAM,
+            "",
+            EndpointType.REST,
+            "CONFIG_API_KEY"
+        )
+        val request: Request = Builder().url("https://localhost/")
+            .post("hello".toByteArray().toRequestBody())
+            .header("Content-Type", expectedContentType)
+            .build()
+
+        val decoratedRequest = factory.forAuthType(AuthorizationType.AWS_IAM).decorate(request)
+
+        assertEquals(expectedContentType.toMediaType(), decoratedRequest.body!!.contentType())
+    }
+
+    @Test
+    fun testProvidedRestContentTypeIgnoreCaseHeaderUsed() {
+        val expectedContentType =  "tExT/pLaIn"
+        val credentialsProvider = object : CredentialsProvider {
+            override suspend fun resolve(attributes: Attributes): Credentials {
+                return Credentials("testA", "testB")
+            }
+        }
+        val providers = ApiAuthProviders.builder()
+            .awsCredentialsProvider(credentialsProvider)
+            .build()
+        val factory = ApiRequestDecoratorFactory(
+            providers,
+            AuthorizationType.AWS_IAM,
+            "",
+            EndpointType.REST,
+            "CONFIG_API_KEY"
+        )
+        val request: Request = Builder().url("https://localhost/")
+            .post("hello".toByteArray().toRequestBody())
+            .header("CoNtENT-tYpE", expectedContentType)
+            .build()
+
+        val decoratedRequest = factory.forAuthType(AuthorizationType.AWS_IAM).decorate(request)
+
+        assertEquals(expectedContentType.toMediaType(), decoratedRequest.body!!.contentType())
+    }
+
+    @Test
+    fun testDefaultRestContentTypeHeaderUsed() {
+        val expectedContentType =  "application/json"
+        val credentialsProvider = object : CredentialsProvider {
+            override suspend fun resolve(attributes: Attributes): Credentials {
+                return Credentials("testA", "testB")
+            }
+        }
+        val providers = ApiAuthProviders.builder()
+            .awsCredentialsProvider(credentialsProvider)
+            .build()
+        val factory = ApiRequestDecoratorFactory(
+            providers,
+            AuthorizationType.AWS_IAM,
+            "",
+            EndpointType.REST,
+            "CONFIG_API_KEY"
+        )
+        val request: Request = Builder().url("https://localhost/")
+            .post("hello".toByteArray().toRequestBody())
+            .build()
+
+        val decoratedRequest = factory.forAuthType(AuthorizationType.AWS_IAM).decorate(request)
+
+        assertEquals(expectedContentType.toMediaType(), decoratedRequest.body!!.contentType())
     }
 
     companion object {
