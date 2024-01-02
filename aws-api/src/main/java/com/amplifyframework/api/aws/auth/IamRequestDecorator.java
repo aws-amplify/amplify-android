@@ -97,7 +97,7 @@ public class IamRequestDecorator implements RequestDecorator {
             okReqBuilder.addHeader(key, value);
 
             // If content-type detected in headers, capture to use later
-            if (key.equalsIgnoreCase("content-type")) {
+            if ("content-type".equalsIgnoreCase(key)) {
                 contentType = value;
             }
         }
