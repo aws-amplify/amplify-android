@@ -32,7 +32,6 @@ import kotlinx.serialization.Contextual
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.encoding.Decoder
@@ -63,7 +62,9 @@ internal data class AuthStatesProxy(
     @Contextual
     val authChallenge: AuthChallenge? = null,
     @Contextual
-    val amplifyCredential: AmplifyCredential? = null
+    val amplifyCredential: AmplifyCredential? = null,
+    @Contextual
+    val hasNewResponse: Boolean = false
 ) {
 
     internal fun <T> toRealAuthState(): T {
@@ -81,7 +82,7 @@ internal data class AuthStatesProxy(
             "AuthorizationState.SigningIn" -> AuthorizationState.SigningIn() as T
             "SignInState.ResolvingChallenge" -> SignInState.ResolvingChallenge(signInChallengeState) as T
             "SignInChallengeState.WaitingForAnswer" -> authChallenge?.let {
-                SignInChallengeState.WaitingForAnswer(it)
+                SignInChallengeState.WaitingForAnswer(it, false)
             } as T
             else -> {
                 error("Cannot get real type!")
@@ -180,7 +181,8 @@ internal data class AuthStatesProxy(
                         is SignInChallengeState.Verifying -> TODO()
                         is SignInChallengeState.WaitingForAnswer -> AuthStatesProxy(
                             type = "SignInChallengeState.WaitingForAnswer",
-                            authChallenge = authState.challenge
+                            authChallenge = authState.challenge,
+                            hasNewResponse = false
                         )
                         is SignInChallengeState.Error -> TODO()
                     }

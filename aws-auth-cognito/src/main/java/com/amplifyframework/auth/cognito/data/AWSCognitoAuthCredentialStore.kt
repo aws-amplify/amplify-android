@@ -21,7 +21,6 @@ import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 import com.amplifyframework.statemachine.codegen.data.AuthCredentialStore
 import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
@@ -57,6 +56,7 @@ internal class AWSCognitoAuthCredentialStore(
         generateKey(Key_ASFDevice),
         serializeASFDevice(device)
     )
+
     //endregion
 
     //region Retrieve Credentials

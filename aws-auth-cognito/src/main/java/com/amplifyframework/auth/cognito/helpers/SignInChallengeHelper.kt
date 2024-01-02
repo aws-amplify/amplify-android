@@ -117,7 +117,6 @@ internal object SignInChallengeHelper {
         allowedMFAType: Set<MFAType>? = null
     ) {
         val challengeParams = challenge.parameters?.toMutableMap() ?: mapOf()
-
         when (ChallengeNameType.fromValue(challenge.challengeName)) {
             is ChallengeNameType.SmsMfa -> {
                 val deliveryDetails = AuthCodeDeliveryDetails(
@@ -138,6 +137,7 @@ internal object SignInChallengeHelper {
                 )
                 onSuccess.accept(authSignInResult)
             }
+
             is ChallengeNameType.NewPasswordRequired -> {
                 val authSignInResult = AuthSignInResult(
                     false,
@@ -151,6 +151,7 @@ internal object SignInChallengeHelper {
                 )
                 onSuccess.accept(authSignInResult)
             }
+
             is ChallengeNameType.CustomChallenge -> {
                 val authSignInResult = AuthSignInResult(
                     false,
@@ -164,6 +165,7 @@ internal object SignInChallengeHelper {
                 )
                 onSuccess.accept(authSignInResult)
             }
+
             is ChallengeNameType.SoftwareTokenMfa -> {
                 val authSignInResult = AuthSignInResult(
                     false,
@@ -177,6 +179,7 @@ internal object SignInChallengeHelper {
                 )
                 onSuccess.accept(authSignInResult)
             }
+
             is ChallengeNameType.MfaSetup -> {
                 signInTOTPSetupData?.let {
                     val authSignInResult = AuthSignInResult(
@@ -192,6 +195,7 @@ internal object SignInChallengeHelper {
                     onSuccess.accept(authSignInResult)
                 } ?: onError.accept(UnknownException(cause = Exception("Challenge type not supported.")))
             }
+
             is ChallengeNameType.SelectMfaType -> {
                 val authSignInResult = AuthSignInResult(
                     false,

@@ -17,6 +17,8 @@ package com.amplifyframework.auth.cognito.featuretest.generators
 
 import com.amplifyframework.auth.cognito.featuretest.FeatureTestCase
 import com.amplifyframework.auth.cognito.featuretest.generators.authstategenerators.AuthStateJsonGenerator
+import com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerators.ConfirmSignInMagicLinkTestCaseGenerator
+import com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerators.ConfirmSignInOTPTestCaseGenerator
 import com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerators.ConfirmSignInTestCaseGenerator
 import com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerators.DeleteUserTestCaseGenerator
 import com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerators.FetchAuthSessionTestCaseGenerator
@@ -25,6 +27,8 @@ import com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerato
 import com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerators.ForgetDeviceTestCaseGenerator
 import com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerators.RememberDeviceTestCaseGenerator
 import com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerators.ResetPasswordTestCaseGenerator
+import com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerators.SignInMagicLinkTestCaseGenerator
+import com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerators.SignInOTPTestCaseGenerator
 import com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerators.SignInTestCaseGenerator
 import com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerators.SignOutTestCaseGenerator
 import com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerators.SignUpTestCaseGenerator
@@ -43,8 +47,12 @@ object JsonGenerator {
         ResetPasswordTestCaseGenerator,
         SignUpTestCaseGenerator,
         SignInTestCaseGenerator,
+        SignInMagicLinkTestCaseGenerator,
+        SignInOTPTestCaseGenerator,
         SignOutTestCaseGenerator,
         ConfirmSignInTestCaseGenerator,
+        ConfirmSignInMagicLinkTestCaseGenerator,
+        ConfirmSignInOTPTestCaseGenerator,
         DeleteUserTestCaseGenerator,
         FetchAuthSessionTestCaseGenerator,
         RememberDeviceTestCaseGenerator,

@@ -64,6 +64,7 @@ import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidOauthCo
 import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidUserPoolConfigurationException
 import com.amplifyframework.auth.cognito.exceptions.invalidstate.SignedInException
 import com.amplifyframework.auth.cognito.exceptions.service.CodeDeliveryFailureException
+import com.amplifyframework.auth.cognito.exceptions.service.CodeMismatchException
 import com.amplifyframework.auth.cognito.exceptions.service.HostedUISignOutException
 import com.amplifyframework.auth.cognito.exceptions.service.InvalidAccountTypeException
 import com.amplifyframework.auth.cognito.exceptions.service.InvalidParameterException
@@ -77,6 +78,8 @@ import com.amplifyframework.auth.cognito.helpers.identityProviderName
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthConfirmSignInOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthConfirmSignUpOptions
+import com.amplifyframework.auth.cognito.options.AWSCognitoAuthMagicLinkOptions
+import com.amplifyframework.auth.cognito.options.AWSCognitoAuthOTPOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthResendSignUpCodeOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthResendUserAttributeConfirmationCodeOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions
@@ -181,6 +184,19 @@ internal class RealAWSCognitoAuthPlugin(
 ) : AuthCategoryBehavior {
 
     private val lastPublishedHubEventName = AtomicReference<String>()
+    private val KEY_PASSWORDLESS_SIGNINMETHOD = "Amplify.Passwordless.signInMethod"
+    private val KEY_PASSWORDLESS_ACTION = "Amplify.Passwordless.action"
+    private val KEY_PASSWORDLESS_DELIVERYMEDIUM = "Amplify.Passwordless.deliveryMedium"
+    private val KEY_PASSWORDLESS_REDIRECT_URI = "Amplify.Passwordless.redirectUri"
+    private val VALUE_NEXT_STEP_PASSWORDLESS_PROVIDE_AUTH_PARAMETERS = "PROVIDE_AUTH_PARAMETERS"
+    private val VALUE_NEXT_STEP_PASSWORDLESS_PROVIDE_CHALLENGE_RESPONSE = "PROVIDE_CHALLENGE_RESPONSE"
+    private val VALUE_NEXT_STEP_PASSWORDLESS_ERROR = "CodeMismatchException"
+    private val VALUE_MAGIC_LINK = "MAGIC_LINK"
+    private val VALUE_PASSWORDLESS_ACTION_REQUEST = "REQUEST"
+    private val VALUE_PASSWORDLESS_DELIVERYMEDIUM_EMAIL = "EMAIL"
+    private val VALUE_PASSWORDLESS_ACTION_CONFIRM = "CONFIRM"
+    private val KEY_ERROR_CODE = "errorCode"
+    private val KEY_NEXT_STEP = "nextStep"
 
     init {
         addAuthStateChangeListener()
@@ -359,7 +375,92 @@ internal class RealAWSCognitoAuthPlugin(
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
     ) {
-        TODO("Not yet implemented")
+        val magicLinkOptions = options as? AWSCognitoAuthMagicLinkOptions
+        if (flow == AuthPasswordlessFlow.SIGN_IN) {
+            val updatedPasswordlessMetadata: MutableMap<String, String> =
+                magicLinkOptions?.clientMetadata?.toMutableMap() ?: mutableMapOf()
+            updatedPasswordlessMetadata[KEY_PASSWORDLESS_SIGNINMETHOD] = VALUE_MAGIC_LINK
+            updatedPasswordlessMetadata[KEY_PASSWORDLESS_ACTION] = VALUE_PASSWORDLESS_ACTION_REQUEST
+            updatedPasswordlessMetadata[KEY_PASSWORDLESS_DELIVERYMEDIUM] = VALUE_PASSWORDLESS_DELIVERYMEDIUM_EMAIL
+            updatedPasswordlessMetadata[KEY_PASSWORDLESS_REDIRECT_URI] = redirectURL
+
+            val signInOptions = AWSCognitoAuthSignInOptions.CognitoBuilder().authFlowType(
+                AuthFlowType.CUSTOM_AUTH_WITHOUT_SRP
+            ).metadata(
+                updatedPasswordlessMetadata
+            ).build()
+            signIn(
+                username,
+                "",
+                signInOptions,
+                {
+                    onSuccess.accept(
+                        AuthSignInResult(
+                            false,
+                            AuthNextSignInStep(
+                                AuthSignInStep.CONFIRM_SIGN_IN_WITH_MAGIC_LINK,
+                                it.nextStep.additionalInfo ?: emptyMap(),
+                                it.nextStep.codeDeliveryDetails,
+                                it.nextStep.totpSetupDetails,
+                                it.nextStep.allowedMFATypes
+                            )
+                        )
+                    )
+                },
+                onError
+            )
+        } else {
+            signUpWithMagicLink(
+                username,
+                "", // TODO: This will be added in the configuration and will be captured from there.
+                magicLinkOptions,
+                {
+                    signInWithMagicLink(
+                        username, AuthPasswordlessFlow.SIGN_IN, redirectURL, options, onSuccess, onError
+                    )
+                },
+                onError
+            )
+        }
+    }
+
+    private fun signUpWithMagicLink(
+        username: String,
+        apigatewayURL: String,
+        magicLinkOptions: AWSCognitoAuthMagicLinkOptions?,
+        onSuccess: Action,
+        onError: Consumer<AuthException>
+    ) {
+        TODO("Not ready for PR")
+//        if (configuration.userPool == null) {
+//            onError.accept(InvalidUserPoolConfigurationException())
+//            return
+//        }
+//        val payload = buildJsonObject {
+//            put("userPoolId", configuration.userPool.poolId)
+//            put("region", configuration.userPool.region)
+//            put(
+//                "user",
+//                buildJsonObject {
+//                    "username" to username
+//                    magicLinkOptions?.userMetadata
+//                }
+//            )
+//        }
+//
+//        val okHttpClient = OkHttpClient()
+//        val mediaType = "application/json; charset=utf-8".toMediaType()
+//        val body = payload.toString().toRequestBody(mediaType)
+//        val request = Request.Builder().post(body).url(apigatewayURL).build()
+//        okHttpClient.newCall(request).enqueue(object : Callback {
+//            override fun onFailure(call: Call, e: IOException) {
+//                onError.accept(AuthException("Sign Up failed", AmplifyException.TODO_RECOVERY_SUGGESTION, e))
+//            }
+//
+//            override fun onResponse(call: Call, response: Response) {
+//                onSuccess.call()
+//            }
+//        })
     }
 
     override fun signInWithMagicLink(
@@ -369,7 +470,13 @@ internal class RealAWSCognitoAuthPlugin(
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
     ) {
-        TODO("Not yet implemented")
+        signInWithMagicLink(
+            username,
+            flow,
+            redirectURL,
+            AWSCognitoAuthMagicLinkOptions.CognitoBuilder().build(),
+            onSuccess, onError
+        )
     }
 
     override fun confirmSignInWithMagicLink(
@@ -378,7 +485,33 @@ internal class RealAWSCognitoAuthPlugin(
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
     ) {
-        TODO("Not yet implemented")
+        TODO("Not valid for this PR")
+//        val providedOptions =
+//            options as? AWSAuthConfirmSignInPasswordlessOptions
+//                ?: AWSAuthConfirmSignInPasswordlessOptions.builder().build()
+//
+//        val updatedPasswordlessMetadata: MutableMap<String, String> = providedOptions.metadata.toMutableMap()
+//        updatedPasswordlessMetadata[KEY_PASSWORDLESS_SIGNINMETHOD] = "MAGIC_LINK"
+//        updatedPasswordlessMetadata[KEY_PASSWORDLESS_ACTION] = "CONFIRM"
+//        val signInOptions = AWSCognitoAuthSignInOptions.builder()
+//            .metadata(mapOf(KEY_PASSWORDLESS_SIGNINMETHOD to "MAGIC_LINK", KEY_PASSWORDLESS_ACTION to "CONFIRM")).authFlowType(AuthFlowType.CUSTOM_AUTH_WITHOUT_SRP).build()
+//
+//        signIn(
+//            AuthHelper.getUsernameFromMagicLink(challengeResponse),
+//            "",
+//            signInOptions,
+//            {
+//                val confirmSignInOptions = AWSCognitoAuthConfirmSignInOptions.builder()
+//                    .metadata(updatedPasswordlessMetadata)
+//                    .build()
+//
+//                confirmSignIn(
+//                    challengeResponse,
+//                    confirmSignInOptions, onSuccess, onError
+//                )
+//            },
+//            onError
+//        )
     }
 
     override fun confirmSignInWithMagicLink(
@@ -386,7 +519,12 @@ internal class RealAWSCognitoAuthPlugin(
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
     ) {
-        TODO("Not yet implemented")
+        confirmSignInWithMagicLink(
+            challengeResponse,
+            AWSCognitoAuthConfirmSignInOptions.CognitoBuilder().build(),
+            onSuccess,
+            onError
+        )
     }
 
     override fun signInWithOTP(
@@ -397,7 +535,90 @@ internal class RealAWSCognitoAuthPlugin(
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
     ) {
-        TODO("Not yet implemented")
+        val otpOptions = options as? AWSCognitoAuthOTPOptions
+        if (flow == AuthPasswordlessFlow.SIGN_IN) {
+            val updatedPasswordlessMetadata: MutableMap<String, String> =
+                otpOptions?.clientMetadata?.toMutableMap() ?: mutableMapOf()
+            updatedPasswordlessMetadata[KEY_PASSWORDLESS_SIGNINMETHOD] = "OTP"
+            updatedPasswordlessMetadata[KEY_PASSWORDLESS_ACTION] = "REQUEST"
+            updatedPasswordlessMetadata[KEY_PASSWORDLESS_DELIVERYMEDIUM] = destination.name
+            val signInOptions =
+                AWSCognitoAuthSignInOptions.CognitoBuilder().authFlowType(AuthFlowType.CUSTOM_AUTH_WITHOUT_SRP)
+                    .metadata(
+                        updatedPasswordlessMetadata
+                    ).build()
+            signIn(
+                username,
+                "",
+                signInOptions,
+                {
+                    onSuccess.accept(
+                        AuthSignInResult(
+                            false,
+                            AuthNextSignInStep(
+                                AuthSignInStep.CONFIRM_SIGN_IN_WITH_OTP,
+                                it.nextStep.additionalInfo ?: emptyMap(),
+                                it.nextStep.codeDeliveryDetails,
+                                it.nextStep.totpSetupDetails,
+                                it.nextStep.allowedMFATypes
+                            )
+                        )
+                    )
+                },
+                onError
+            )
+        } else {
+            signUpWithOTP(
+                username,
+                "",
+                otpOptions,
+                {
+                    signInWithOTP(
+                        username, AuthPasswordlessFlow.SIGN_IN, destination, options, onSuccess, onError
+                    )
+                },
+                onError
+            )
+        }
+    }
+
+    private fun signUpWithOTP(
+        username: String,
+        apigatewayURL: String,
+        otpOptions: AWSCognitoAuthOTPOptions?,
+        onSuccess: Action,
+        onError: Consumer<AuthException>
+    ) {
+        TODO("This is not valid for this PR")
+//        if (configuration.userPool == null) {
+//            onError.accept(InvalidUserPoolConfigurationException())
+//            return
+//        }
+//        val payload = buildJsonObject {
+//            put("userPoolId", configuration.userPool.poolId)
+//            put("region", configuration.userPool.region)
+//            put(
+//                "user",
+//                buildJsonObject {
+//                    "username" to username
+//                    otpOptions?.userMetadata
+//                }
+//            )
+//        }
+//
+//        val okHttpClient = OkHttpClient()
+//        val mediaType = "application/json; charset=utf-8".toMediaType()
+//        val body = payload.toString().toRequestBody(mediaType)
+//        val request = Request.Builder().post(body).url(apigatewayURL).build()
+//        okHttpClient.newCall(request).enqueue(object : Callback {
+//            override fun onFailure(call: Call, e: IOException) {
+//                onError.accept(AuthException("Sign Up failed", AmplifyException.TODO_RECOVERY_SUGGESTION, e))
+//            }
+//
+//            override fun onResponse(call: Call, response: Response) {
+//                onSuccess.call()
+//            }
+//        })
     }
 
     override fun signInWithOTP(
@@ -407,7 +628,14 @@ internal class RealAWSCognitoAuthPlugin(
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
     ) {
-        TODO("Not yet implemented")
+        signInWithOTP(
+            username,
+            flow,
+            destination,
+            AWSCognitoAuthOTPOptions.CognitoBuilder().build(),
+            onSuccess,
+            onError
+        )
     }
 
     override fun confirmSignInWithOTP(
@@ -416,7 +644,22 @@ internal class RealAWSCognitoAuthPlugin(
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
     ) {
-        TODO("Not yet implemented")
+        TODO("Not valid for this PR")
+//        val providedOptions =
+//            options as? AWSAuthConfirmSignInPasswordlessOptions
+//                ?: AWSAuthConfirmSignInPasswordlessOptions.builder().build()
+//        val metadata: MutableMap<String, String> = providedOptions.metadata.toMutableMap()
+//
+//        metadata[KEY_PASSWORDLESS_SIGNINMETHOD] = "OTP"
+//        metadata[KEY_PASSWORDLESS_ACTION] = "CONFIRM"
+//
+//        val confirmSignInOptions = AWSCognitoAuthConfirmSignInOptions.builder().metadata(metadata)
+//            .build()
+//
+//        confirmSignIn(
+//            challengeResponse,
+//            confirmSignInOptions, onSuccess, onError
+//        )
     }
 
     override fun confirmSignInWithOTP(
@@ -424,7 +667,12 @@ internal class RealAWSCognitoAuthPlugin(
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
     ) {
-        TODO("Not yet implemented")
+        confirmSignInWithOTP(
+            challengeResponse,
+            AWSCognitoAuthConfirmSignInOptions.CognitoBuilder().build(),
+            onSuccess,
+            onError
+        )
     }
 
     override fun confirmSignUp(
@@ -645,18 +893,54 @@ internal class RealAWSCognitoAuthPlugin(
                             srpSignInState is SRPSignInState.Error -> {
                                 authStateMachine.cancel(token)
                                 onError.accept(
-                                    CognitoAuthExceptionConverter.lookup(srpSignInState.exception, "Sign in failed.")
+                                    CognitoAuthExceptionConverter.lookup(
+                                        srpSignInState.exception, "Sign in failed."
+                                    )
                                 )
                             }
                             signInState is SignInState.Error -> {
                                 authStateMachine.cancel(token)
                                 onError.accept(
-                                    CognitoAuthExceptionConverter.lookup(signInState.exception, "Sign in failed.")
+                                    CognitoAuthExceptionConverter.lookup(
+                                        signInState.exception, "Sign in failed."
+                                    )
                                 )
                             }
                             challengeState is SignInChallengeState.WaitingForAnswer -> {
-                                authStateMachine.cancel(token)
-                                SignInChallengeHelper.getNextStep(challengeState.challenge, onSuccess, onError)
+                                if (challengeState.challenge.challengeName == ChallengeNameType.CustomChallenge.value &&
+                                    challengeState.challenge.parameters?.containsKey(KEY_NEXT_STEP) == true &&
+                                    challengeState.challenge.parameters[KEY_NEXT_STEP] ==
+                                    VALUE_NEXT_STEP_PASSWORDLESS_PROVIDE_AUTH_PARAMETERS &&
+                                    options.metadata[KEY_PASSWORDLESS_ACTION] == VALUE_PASSWORDLESS_ACTION_REQUEST
+                                ) {
+                                    // because this event is only responsible for initializing the passwordless OTP
+                                    // workflow but since Cognito needs a value for challenge answer,
+                                    // we are sending it as "<N/A>"
+                                    authStateMachine.send(
+                                        SignInChallengeEvent(
+                                            SignInChallengeEvent.EventType.VerifyChallengeAnswer(
+                                                "<N/A>",
+                                                options.metadata,
+                                                emptyList()
+                                            )
+                                        )
+                                    )
+                                }
+                                if (challengeState.challenge.challengeName == ChallengeNameType.CustomChallenge.value &&
+                                    challengeState.challenge.parameters?.containsKey(KEY_NEXT_STEP) == true &&
+                                    challengeState.challenge.parameters[KEY_NEXT_STEP] ==
+                                    VALUE_NEXT_STEP_PASSWORDLESS_PROVIDE_CHALLENGE_RESPONSE &&
+                                    challengeState.challenge.parameters.containsKey(KEY_ERROR_CODE) &&
+                                    challengeState.challenge.parameters[KEY_ERROR_CODE] ==
+                                    VALUE_NEXT_STEP_PASSWORDLESS_ERROR && options.metadata[KEY_PASSWORDLESS_ACTION]
+                                    == VALUE_PASSWORDLESS_ACTION_CONFIRM
+                                ) {
+                                    authStateMachine.cancel(token)
+                                    onError.accept(CodeMismatchException(null))
+                                } else {
+                                    authStateMachine.cancel(token)
+                                    SignInChallengeHelper.getNextStep(challengeState.challenge, onSuccess, onError)
+                                }
                             }
 
                             totpSetupState is SetupTOTPState.WaitingForAnswer -> {
@@ -672,7 +956,7 @@ internal class RealAWSCognitoAuthPlugin(
                                     onError,
                                     totpSetupState.signInTOTPSetupData
                                 )
-                                totpSetupState?.hasNewResponse = false
+                                totpSetupState.hasNewResponse = false
                             }
                         }
                     }
@@ -686,7 +970,9 @@ internal class RealAWSCognitoAuthPlugin(
                         onSuccess.accept(authSignInResult)
                         sendHubEvent(AuthChannelEventName.SIGNED_IN.toString())
                     }
-                    else -> Unit
+                    else -> {
+                        Unit
+                    }
                 }
             },
             {
