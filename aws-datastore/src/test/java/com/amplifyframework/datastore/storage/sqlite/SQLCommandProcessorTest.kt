@@ -27,9 +27,10 @@ import com.amplifyframework.testmodels.commentsblog.BlogOwner
 import com.amplifyframework.testmodels.customprimarykey.Comment
 import com.amplifyframework.util.GsonFactory
 import com.google.gson.Gson
-import java.util.Arrays
 import org.junit.After
-import org.junit.Assert
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -131,7 +132,7 @@ class SQLCommandProcessorTest {
                 results.add(gson.fromJson(jsonString, BlogOwner::class.java))
             } while (cursor.moveToNext())
         }
-        Assert.assertEquals(Arrays.asList(abigailMcGregor), results)
+        assertEquals(listOf(abigailMcGregor), results)
     }
 
     /**
@@ -158,7 +159,7 @@ class SQLCommandProcessorTest {
         // Check that the BlogOwner exists
         val predicate: QueryPredicate = BlogOwner.ID.eq(abigailMcGregor.id)
         val existsCommand = sqlCommandFactory.existsFor(blogOwnerSchema, predicate)
-        Assert.assertTrue(sqlCommandProcessor.executeExists(existsCommand))
+        assertTrue(sqlCommandProcessor.executeExists(existsCommand))
     }
 
     /**
@@ -177,7 +178,7 @@ class SQLCommandProcessorTest {
             .build()
         val predicate: QueryPredicate = BlogOwner.ID.eq(abigailMcGregor.id)
         val existsCommand = sqlCommandFactory.existsFor(blogOwnerSchema, predicate)
-        Assert.assertFalse(sqlCommandProcessor.executeExists(existsCommand))
+        assertFalse(sqlCommandProcessor.executeExists(existsCommand))
     }
 
     /**
@@ -192,15 +193,15 @@ class SQLCommandProcessorTest {
         )
         sqlCommandFactory.createIndexesFor(commentSchema)
         val sqlCommands = sqlCommandFactory.createIndexesFor(commentSchema)
-        Assert.assertEquals(1, sqlCommands.size.toLong())
+        assertEquals(1, sqlCommands.size.toLong())
         val sqlCommand = sqlCommands.iterator().next().sqlStatement()
-        Assert.assertTrue(
+        assertTrue(
             sqlCommand.contains(
                 "CREATE INDEX IF NOT EXISTS" +
                     " `undefined_title_content_likes` ON `Comment` (`title`, `content`, `likes`);"
             )
         )
-        Assert.assertFalse(sqlCommand.contains("`postCommentsId`, `content`"))
+        assertFalse(sqlCommand.contains("`postCommentsId`, `content`"))
     }
 
     /**
@@ -215,9 +216,9 @@ class SQLCommandProcessorTest {
         )
         sqlCommandFactory.createIndexesFor(commentSchema)
         val sqlCommands = sqlCommandFactory.createIndexesForForeignKeys(commentSchema)
-        Assert.assertEquals(1, sqlCommands.size.toLong())
+        assertEquals(1, sqlCommands.size.toLong())
         val sqlCommand = sqlCommands.iterator().next().sqlStatement()
-        Assert.assertTrue(
+        assertTrue(
             sqlCommand.contains(
                 "CREATE INDEX IF NOT EXISTS `Comment@@postForeignKey` " +
                     "ON `Comment` (`@@postForeignKey`);"

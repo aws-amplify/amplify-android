@@ -96,10 +96,11 @@ internal class Merger(
                         )
                         Completable.complete()
                     } else {
-                        if (isDelete) delete(model, changeTypeConsumer) else save(
-                            model,
-                            changeTypeConsumer
-                        )
+                        if (isDelete) {
+                            delete(model, changeTypeConsumer)
+                        } else  {
+                            save(model, changeTypeConsumer)
+                        }
                     }
                     firstStep.andThen(save(metadata, NoOpConsumer.create()))
                 } // Let the world know that we've done a good thing.

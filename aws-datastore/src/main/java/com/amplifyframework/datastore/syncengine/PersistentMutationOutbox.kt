@@ -129,7 +129,6 @@ internal class PersistentMutationOutbox(private val storage: LocalStorageAdapter
 
     override fun <T : Model> enqueue(incomingMutation: PendingMutation<T>): Completable {
         return Completable.defer {
-
             // If there is no existing mutation for the model, then just apply the incoming
             // mutation, and be done with this.
             val modelId = incomingMutation.mutatedItem.primaryKeyString
