@@ -36,6 +36,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Tests the [VersionRepository].
@@ -201,7 +202,7 @@ class VersionRepositoryTest {
 
     @Test
     // This test ensures the 950 chunking works
-    fun fetchModelVersionReturnsMoreThan950() = runTest {
+    fun fetchModelVersionReturnsMoreThan950() = runTest(timeout = 10.seconds) {
         val modelsWithMetadata = mutableListOf<ModelWithMetadata<BlogOwner>>()
         for (i in 0 until 1000) {
             val owner = BlogOwner.builder().name("Owner$i").build()
