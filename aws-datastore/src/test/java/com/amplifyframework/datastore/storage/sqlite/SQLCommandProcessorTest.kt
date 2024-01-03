@@ -85,9 +85,6 @@ class SQLCommandProcessorTest {
         return db
     }
 
-    /**
-     * Closes in-memory database.
-     */
     @After
     fun clear() {
         schemaRegistry.clear()
@@ -97,10 +94,8 @@ class SQLCommandProcessorTest {
     /**
      * Create and insert a BlogOwner, and then verify that a rawQuery returns a Cursor with one result, containing the
      * previously inserted BlogOwner.
-     * @throws AmplifyException on failure to create ModelSchema from class
      */
     @Test
-    @Throws(AmplifyException::class)
     fun rawQueryReturnsResults() {
         // Insert a BlogOwner
         val blogOwnerSchema = ModelSchema.fromModelClass(
@@ -137,10 +132,8 @@ class SQLCommandProcessorTest {
 
     /**
      * Create and insert a BlogOwner, and then verify that executeExists return true.
-     * @throws AmplifyException on failure to create ModelSchema from class.
      */
     @Test
-    @Throws(AmplifyException::class)
     fun executeExistsReturnsTrueWhenItemExists() {
         // Insert a BlogOwner
         val blogOwnerSchema = ModelSchema.fromModelClass(
@@ -164,10 +157,8 @@ class SQLCommandProcessorTest {
 
     /**
      * Create a BlogOwner, but don't insert it.  Then verify that executeExists returns false.
-     * @throws AmplifyException on failure to create ModelSchema from class.
      */
     @Test
-    @Throws(AmplifyException::class)
     fun executeExistsReturnsFalseWhenItemDoesntExist() {
         // Create a BlogOwner, but don't insert it
         val blogOwnerSchema = ModelSchema.fromModelClass(
@@ -186,7 +177,6 @@ class SQLCommandProcessorTest {
      * @throws AmplifyException on failure to create ModelSchema from class.
      */
     @Test
-    @Throws(AmplifyException::class)
     fun testIndexNotCreatedWhenFieldsInBelongsTo() {
         val commentSchema = ModelSchema.fromModelClass(
             Comment::class.java
@@ -206,10 +196,8 @@ class SQLCommandProcessorTest {
 
     /**
      * Verify that index for foreign key fields is included in the commands.
-     * @throws AmplifyException on failure to create ModelSchema from class.
      */
     @Test
-    @Throws(AmplifyException::class)
     fun testForeignKeyIndexCreated() {
         val commentSchema = ModelSchema.fromModelClass(
             Comment::class.java
@@ -224,5 +212,43 @@ class SQLCommandProcessorTest {
                     "ON `Comment` (`@@postForeignKey`);"
             )
         )
+    }
+
+    @Test
+    fun testBeginTransactionToDatabase() {
+        assertFalse(sqliteDatabase.inTransaction())
+        sqlCommandProcessor.beginTransaction()
+        assertTrue(sqliteDatabase.inTransaction())
+    }
+
+    @Test
+    fun testEndTransactionToDatabase() {
+        sqlCommandProcessor.beginTransaction()
+        assertTrue(sqliteDatabase.inTransaction())
+        sqlCommandProcessor.endTransaction()
+        assertFalse(sqliteDatabase.inTransaction())
+    }
+
+    /**
+     * Asserts that write in transaction is successful if setTransactionSuccessful if called.
+     */
+    @Test
+    fun testMarkSuccessfulToDatabase() {
+        // Insert a BlogOwner
+        val blogOwnerSchema = ModelSchema.fromModelClass(
+            BlogOwner::class.java
+        )
+        val owner = BlogOwner.builder()
+            .name("My Name")
+            .build()
+        sqlCommandProcessor.beginTransaction()
+        sqlCommandProcessor.execute(sqlCommandFactory.insertFor(blogOwnerSchema, owner))
+        sqlCommandProcessor.setTransactionSuccessful()
+        sqlCommandProcessor.endTransaction()
+
+        // Check that the BlogOwner exists
+        val predicate: QueryPredicate = BlogOwner.ID.eq(owner.id)
+        val existsCommand = sqlCommandFactory.existsFor(blogOwnerSchema, predicate)
+        assertTrue(sqlCommandProcessor.executeExists(existsCommand))
     }
 }

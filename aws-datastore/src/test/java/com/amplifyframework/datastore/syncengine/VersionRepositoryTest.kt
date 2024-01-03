@@ -14,39 +14,56 @@
  */
 package com.amplifyframework.datastore.syncengine
 
+import androidx.test.core.app.ApplicationProvider
+import com.amplifyframework.core.model.SchemaRegistry
 import com.amplifyframework.core.model.temporal.Temporal
+import com.amplifyframework.datastore.DataStoreConfiguration
 import com.amplifyframework.datastore.DataStoreException
 import com.amplifyframework.datastore.appsync.ModelMetadata
-import com.amplifyframework.datastore.storage.InMemoryStorageAdapter
+import com.amplifyframework.datastore.appsync.ModelWithMetadata
 import com.amplifyframework.datastore.storage.SynchronousStorageAdapter
+import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter
+import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider
 import com.amplifyframework.testmodels.commentsblog.BlogOwner
 import java.util.Locale
 import java.util.Random
 import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.test.runTest
+import org.junit.After
 import org.junit.Assert
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 
 /**
  * Tests the [VersionRepository].
  */
+@RunWith(RobolectricTestRunner::class)
 class VersionRepositoryTest {
     private lateinit var storageAdapter: SynchronousStorageAdapter
     private lateinit var versionRepository: VersionRepository
 
-    /**
-     * Sets up the test. A [VersionRepository] is tested with respect to the varying
-     * state of its dependency, the [InMemoryStorageAdapter].
-     *
-     * An [InMemoryStorageAdapter] is used as a test fake. Versions can be arranged into
-     * it, and validated against it. To facilitate that arrangement, an [SynchronousStorageAdapter]
-     * utility is used to wrap the [InMemoryStorageAdapter].
-     */
     @Before
+    @Throws(DataStoreException::class)
     fun setup() {
-        val inMemoryStorageAdapter = InMemoryStorageAdapter.create()
-        storageAdapter = SynchronousStorageAdapter.delegatingTo(inMemoryStorageAdapter)
-        versionRepository = VersionRepository(inMemoryStorageAdapter)
+        val sqliteStorageAdapter = SQLiteStorageAdapter.forModels(
+            SchemaRegistry.instance(),
+            AmplifyModelProvider.getInstance()
+        )
+        storageAdapter = SynchronousStorageAdapter.delegatingTo(sqliteStorageAdapter)
+        storageAdapter.initialize(
+            ApplicationProvider.getApplicationContext(),
+            DataStoreConfiguration.defaults()
+        )
+        versionRepository = VersionRepository(sqliteStorageAdapter)
+    }
+
+    @After
+    @Throws(DataStoreException::class)
+    fun tearDown() {
+        storageAdapter.terminate()
     }
 
     /**
@@ -157,6 +174,48 @@ class VersionRepositoryTest {
             .assertNoErrors()
             .assertComplete()
             .assertValue(expectedVersion)
+    }
+
+    @Test
+    fun fetchModelVersionsReturnsExpectedValues() = runTest {
+        val owner1 = BlogOwner.builder().name("Owner1").build()
+        val owner1Metadata = ModelMetadata(owner1.modelName + "|" + owner1.id, false, 5, null)
+        val owner1ModelWithMetadata = ModelWithMetadata(owner1, owner1Metadata)
+        val owner2 = BlogOwner.builder().name("Owner2").build()
+        val owner2Metadata = ModelMetadata(owner2.modelName + "|" + owner2.id, false, null, null)
+        val owner2ModelWithMetadata = ModelWithMetadata(owner2, owner2Metadata)
+        val owner3 = BlogOwner.builder().name("Owner3").build()
+        val owner3Metadata = ModelMetadata(owner3.modelName + "|" + owner3.id, false, 10, null)
+        storageAdapter.save(owner1Metadata)
+        storageAdapter.save(owner2Metadata)
+        storageAdapter.save(owner3Metadata)
+
+        // Purposefully omitting model 3 to ensure it does not return in result
+        val modelsWithMetadata = listOf(owner1ModelWithMetadata, owner2ModelWithMetadata)
+        val result = versionRepository.fetchModelVersions(modelsWithMetadata)
+
+        assertEquals(2, result.size)
+        assertEquals(5, result[owner1Metadata.primaryKeyString])
+        assertEquals(-1, result[owner2Metadata.primaryKeyString])
+    }
+
+    @Test
+    // This test ensures the 950 chunking works
+    fun fetchModelVersionReturnsMoreThan950() = runTest {
+        val modelsWithMetadata = mutableListOf<ModelWithMetadata<BlogOwner>>()
+        for (i in 0 until 1000) {
+            val owner = BlogOwner.builder().name("Owner$i").build()
+            val metadata = ModelMetadata(owner.modelName + "|" + owner.id, false, i, null)
+            modelsWithMetadata.add(ModelWithMetadata(owner, metadata))
+            storageAdapter.save(metadata)
+        }
+
+        val result = versionRepository.fetchModelVersions(modelsWithMetadata)
+
+        assertEquals(1000, result.size)
+        for (i in 0 until 1000) {
+            assertEquals(i, result[modelsWithMetadata[i].syncMetadata.primaryKeyString])
+        }
     }
 
     companion object {

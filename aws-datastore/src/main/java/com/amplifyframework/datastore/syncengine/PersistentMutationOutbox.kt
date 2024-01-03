@@ -24,6 +24,7 @@ import com.amplifyframework.core.model.SerializedModel
 import com.amplifyframework.core.model.query.Page
 import com.amplifyframework.core.model.query.Where
 import com.amplifyframework.core.model.query.predicate.QueryPredicate
+import com.amplifyframework.core.model.query.predicate.QueryPredicateGroup
 import com.amplifyframework.core.model.query.predicate.QueryPredicates
 import com.amplifyframework.datastore.DataStoreException
 import com.amplifyframework.datastore.events.OutboxStatusEvent
@@ -42,6 +43,9 @@ import io.reactivex.rxjava3.subjects.Subject
 import java.util.Objects
 import java.util.concurrent.Semaphore
 import java.util.concurrent.atomic.AtomicReference
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
+import kotlinx.coroutines.runBlocking
 
 /**
  * The [MutationOutbox] is a persistently-backed in-order staging ground
@@ -61,10 +65,6 @@ internal class PersistentMutationOutbox(private val storage: LocalStorageAdapter
     private var countMutations = true
     private var loadedMutation: PendingMutation<out Model>? = null
     private var numMutationsInOutbox = 0
-
-    override fun hasPendingMutation(modelId: String, modelClass: String): Boolean {
-        return getMutationForModelId(modelId, modelClass) != null
-    }
 
     @VisibleForTesting
     fun getMutationForModelId(modelId: String, modelClass: String): PendingMutation<out Model>? {
@@ -97,6 +97,50 @@ internal class PersistentMutationOutbox(private val storage: LocalStorageAdapter
             .doOnTerminate { semaphore.release() }
             .blockingAwait()
         return mutationResult.get()
+    }
+
+    override fun <T : Model> fetchPendingMutations(models: List<T>, modelClass: String): Set<String> {
+        // We chunk sql query to 950 items to prevent hitting 1k sqlite predicate limit
+        // Improvement would be to use IN, but not currently supported in our query builders
+        semaphore.acquire()
+        val pendingMutations: Set<String> = models.chunked(950).fold(mutableSetOf()) { acc, chunk ->
+            val queryOptions = Where.matches(
+                QueryPredicateGroup(
+                    QueryPredicateGroup.Type.OR,
+                    chunk.map {
+                        PersistentRecord.CONTAINED_MODEL_ID.eq(it.primaryKeyString)
+                    }
+                )
+            )
+
+            // Fetch chunk list of sqlite results
+            val chunkResult = runBlocking {
+                suspendCoroutine { continuation ->
+                    storage.query(
+                        PersistentRecord::class.java,
+                        queryOptions,
+                        {
+                            continuation.resume(it)
+                        },
+                        {
+                            LOG.debug("Failed to query PersistentRecord outbox.")
+                            continuation.resume(emptyList<PersistentRecord>().iterator())
+                        }
+                    )
+                }
+            }
+
+            // Add id to the accumulator set
+            chunkResult.forEach {
+                val pendingMutation: PendingMutation<*> = converter.fromRecord<Model>(it)
+                if (pendingMutation.modelSchema.modelClass.name == modelClass) {
+                    acc.add(it.containedModelId)
+                }
+            }
+            acc
+        }
+        semaphore.release()
+        return pendingMutations
     }
 
     private fun getMutationById(mutationId: String): PendingMutation<out Model>? {

@@ -14,6 +14,7 @@
  */
 package com.amplifyframework.datastore.syncengine
 
+import androidx.test.core.app.ApplicationProvider
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.api.graphql.GraphQLLocation
 import com.amplifyframework.api.graphql.GraphQLOperation
@@ -36,10 +37,11 @@ import com.amplifyframework.datastore.appsync.AppSync
 import com.amplifyframework.datastore.appsync.AppSyncMocking
 import com.amplifyframework.datastore.appsync.ModelMetadata
 import com.amplifyframework.datastore.appsync.ModelWithMetadata
-import com.amplifyframework.datastore.storage.InMemoryStorageAdapter
 import com.amplifyframework.datastore.storage.LocalStorageAdapter
 import com.amplifyframework.datastore.storage.SynchronousStorageAdapter
+import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter
 import com.amplifyframework.hub.HubChannel
+import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider
 import com.amplifyframework.testmodels.commentsblog.BlogOwner
 import com.amplifyframework.testutils.HubAccumulator
 import com.amplifyframework.testutils.Latch
@@ -77,8 +79,21 @@ class MutationProcessorTest {
     @Throws(AmplifyException::class)
     fun setup() {
         ShadowLog.stream = System.out
-        val localStorageAdapter: LocalStorageAdapter = InMemoryStorageAdapter.create()
+        schemaRegistry = SchemaRegistry.instance()
+        schemaRegistry.register(
+            setOf<Class<out Model>>(
+                BlogOwner::class.java
+            )
+        )
+        val localStorageAdapter: LocalStorageAdapter = SQLiteStorageAdapter.forModels(
+            schemaRegistry,
+            AmplifyModelProvider.getInstance()
+        )
         synchronousStorageAdapter = SynchronousStorageAdapter.delegatingTo(localStorageAdapter)
+        synchronousStorageAdapter.initialize(
+            ApplicationProvider.getApplicationContext(),
+            DataStoreConfiguration.defaults()
+        )
         mutationOutbox = PersistentMutationOutbox(localStorageAdapter)
         val versionRepository = VersionRepository(localStorageAdapter)
         val merger = Merger(mutationOutbox, versionRepository, localStorageAdapter)
@@ -87,12 +102,6 @@ class MutationProcessorTest {
             DataStoreConfigurationProvider::class.java
         )
         val retryHandler = RetryHandler(0, Duration.ofMinutes(1).toMillis())
-        schemaRegistry = SchemaRegistry.instance()
-        schemaRegistry.register(
-            setOf<Class<out Model>>(
-                BlogOwner::class.java
-            )
-        )
         mutationProcessor = MutationProcessor.builder()
             .merger(merger)
             .versionRepository(versionRepository)
@@ -176,8 +185,8 @@ class MutationProcessorTest {
 
         // And that it is no longer in the outbox.
         Assert.assertFalse(
-            mutationOutbox.hasPendingMutation(
-                tony.primaryKeyString,
+            hasPendingMutation(
+                tony,
                 tony.javaClass.simpleName
             )
         )
@@ -477,6 +486,11 @@ class MutationProcessorTest {
         // Wait for the retry handler to be called.
         Assert.assertTrue(retryHandlerInvocationCount.await(300, TimeUnit.SECONDS))
         mutationProcessor.stopDrainingMutationOutbox()
+    }
+
+    private fun <T : Model> hasPendingMutation(model: T, modelClass: String): Boolean {
+        val results = mutationOutbox.fetchPendingMutations(listOf(model), modelClass)
+        return results.contains(model.primaryKeyString)
     }
 
     companion object {

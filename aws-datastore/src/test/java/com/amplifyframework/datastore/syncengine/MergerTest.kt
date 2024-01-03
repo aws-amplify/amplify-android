@@ -15,21 +15,29 @@
 package com.amplifyframework.datastore.syncengine
 
 import android.database.sqlite.SQLiteConstraintException
+import androidx.test.core.app.ApplicationProvider
 import com.amplifyframework.AmplifyException
+import com.amplifyframework.core.Consumer
 import com.amplifyframework.core.model.ModelSchema
+import com.amplifyframework.core.model.SchemaRegistry
 import com.amplifyframework.core.model.query.Where
 import com.amplifyframework.core.model.query.predicate.QueryPredicates
 import com.amplifyframework.core.model.temporal.Temporal
+import com.amplifyframework.datastore.DataStoreConfiguration
 import com.amplifyframework.datastore.DataStoreException
 import com.amplifyframework.datastore.appsync.ModelMetadata
 import com.amplifyframework.datastore.appsync.ModelWithMetadata
-import com.amplifyframework.datastore.storage.InMemoryStorageAdapter
+import com.amplifyframework.datastore.storage.LocalStorageAdapter
+import com.amplifyframework.datastore.storage.StorageItemChange
 import com.amplifyframework.datastore.storage.SynchronousStorageAdapter
+import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter
+import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider
 import com.amplifyframework.testmodels.commentsblog.Blog
 import com.amplifyframework.testmodels.commentsblog.BlogOwner
 import com.amplifyframework.testutils.random.RandomString
 import java.util.concurrent.TimeUnit
 import org.junit.Assert
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -42,7 +50,7 @@ import org.robolectric.RobolectricTestRunner
  */
 @RunWith(RobolectricTestRunner::class)
 class MergerTest {
-    private lateinit var inMemoryStorageAdapter: InMemoryStorageAdapter
+    private lateinit var spiedStorageAdapter: LocalStorageAdapter
     private lateinit var storageAdapter: SynchronousStorageAdapter
     private lateinit var mutationOutbox: MutationOutbox
     private lateinit var merger: Merger
@@ -51,16 +59,24 @@ class MergerTest {
      * Sets up the test. A [Merger] is being tested. To construct one, several
      * intermediary objects are needed. A reference is held to a [MutationOutbox],
      * to arrange state. A [SynchronousStorageAdapter] is crated to facilitate
-     * arranging model data into the [InMemoryStorageAdapter] which backs the various
+     * arranging model data into the [SQLiteStorageAdapter] which backs the various
      * components.
      */
     @Before
     fun setup() {
-        inMemoryStorageAdapter = Mockito.spy(InMemoryStorageAdapter.create())
-        storageAdapter = SynchronousStorageAdapter.delegatingTo(inMemoryStorageAdapter)
-        mutationOutbox = PersistentMutationOutbox(inMemoryStorageAdapter)
-        val versionRepository = VersionRepository(inMemoryStorageAdapter)
-        merger = Merger(mutationOutbox, versionRepository, inMemoryStorageAdapter)
+        val sqliteStorageAdapter = SQLiteStorageAdapter.forModels(
+            SchemaRegistry.instance(),
+            AmplifyModelProvider.getInstance()
+        )
+        storageAdapter = SynchronousStorageAdapter.delegatingTo(sqliteStorageAdapter)
+        storageAdapter.initialize(
+            ApplicationProvider.getApplicationContext(),
+            DataStoreConfiguration.defaults()
+        )
+        spiedStorageAdapter = Mockito.spy(sqliteStorageAdapter)
+        mutationOutbox = PersistentMutationOutbox(sqliteStorageAdapter)
+        val versionRepository = VersionRepository(sqliteStorageAdapter)
+        merger = Merger(mutationOutbox, versionRepository, sqliteStorageAdapter)
     }
 
     /**
@@ -493,7 +509,7 @@ class MergerTest {
 
         // Enforce foreign key constraint on in-memory storage adapter
         Mockito.doThrow(SQLiteConstraintException::class.java)
-            .`when`(inMemoryStorageAdapter)
+            .`when`(spiedStorageAdapter)
             .save(
                 ArgumentMatchers.eq(orphanedBlog),
                 ArgumentMatchers.any(),
@@ -512,6 +528,143 @@ class MergerTest {
             Blog::class.java
         )
         Assert.assertTrue(blogsInStorage.isEmpty())
+    }
+
+    /**
+     * b1 for insert with no existing record
+     * b2 for delete with no existing record
+     * b3 for delete with existing record + pending mutation
+     * b4 for update with existing record
+     * b5 for ignored update due to higher version in existing record
+     * b6 for delete with existing record
+     */
+    @Test
+    fun testBatchedMerger() {
+        // GIVEN
+
+        // Timestamp isn't important in these tests but helpful to know for equality checks
+        val ignoredTimestamp = Temporal.Timestamp.now()
+
+        // Capture Storage Changes Returned
+        var capturedStorageItemChanges = mutableListOf<StorageItemChange.Type>()
+        val changeTypeConsumer = Consumer<StorageItemChange.Type> {
+            capturedStorageItemChanges.add(it)
+        }
+
+        // Hydrate Step for b3
+        val blog3ModelWithMetadata = ModelWithMetadata(
+            Blog.builder().name("blog3Name").id("b3").build(),
+            ModelMetadata("Blog|b3", false, 1, Temporal.Timestamp.now())
+        )
+        storageAdapter.save(blog3ModelWithMetadata.model, blog3ModelWithMetadata.syncMetadata)
+        val pendingMutation = PendingMutation.instance(
+            blog3ModelWithMetadata.model,
+            ModelSchema.fromModelClass(Blog::class.java),
+            PendingMutation.Type.CREATE,
+            QueryPredicates.all()
+        )
+        val enqueueObserver = mutationOutbox.enqueue(pendingMutation).test()
+        enqueueObserver.await(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS)
+        enqueueObserver.assertNoErrors().assertComplete()
+
+        // Hydrate Step for b4
+        val blog4ModelWithMetadata = ModelWithMetadata(
+            Blog.builder().name("blog4Name").id("b4").build(),
+            ModelMetadata("Blog|b4", false, 1, ignoredTimestamp)
+        )
+        storageAdapter.save(blog4ModelWithMetadata.model, blog4ModelWithMetadata.syncMetadata)
+
+        // Hydrate Step for b5
+        val blog5ModelWithMetadata = ModelWithMetadata(
+            Blog.builder().name("blog5Name").id("b5").build(),
+            ModelMetadata("Blog|b5", false, 10, ignoredTimestamp)
+        )
+        storageAdapter.save(blog5ModelWithMetadata.model, blog5ModelWithMetadata.syncMetadata)
+
+        // Hydrate Step for b6
+        val blog6ModelWithMetadata = ModelWithMetadata(
+            Blog.builder().name("blog6Name").id("b6").build(),
+            ModelMetadata("Blog|b6", false, 1, ignoredTimestamp)
+        )
+        storageAdapter.save(blog6ModelWithMetadata.model, blog6ModelWithMetadata.syncMetadata)
+
+        // Models to Merge
+        val blog1ModelWithMetadata = ModelWithMetadata(
+            Blog.builder().name("blog1Name").id("b1").build(),
+            ModelMetadata("Blog|b1", false, 1, ignoredTimestamp)
+        )
+        val blog2ModelWithMetadata = ModelWithMetadata(
+            Blog.builder().name("blog2Name").id("b2").build(),
+            ModelMetadata("Blog|b2", true, 1, ignoredTimestamp)
+        )
+        val blog3ToUpdate = ModelWithMetadata(
+            blog3ModelWithMetadata.model.copyOfBuilder().name("blog3NameUpdated").build(),
+            ModelMetadata("Blog|b3", true, 2, ignoredTimestamp)
+        )
+        val blog4ToUpdate = ModelWithMetadata(
+            blog4ModelWithMetadata.model.copyOfBuilder().name("blog4NameUpdated").build(),
+            ModelMetadata("Blog|b4", false, 2, ignoredTimestamp)
+        )
+        val blog5ToUpdate = ModelWithMetadata(
+            blog5ModelWithMetadata.model.copyOfBuilder().name("blog5NameUpdated").id("b5").build(),
+            ModelMetadata("Blog|b5", false, 5, ignoredTimestamp)
+        )
+        val blog6ToUpdate = ModelWithMetadata(
+            blog6ModelWithMetadata.model,
+            ModelMetadata("Blog|b6", true, 2, ignoredTimestamp)
+        )
+
+        // Expected Blog table result
+        val expectedBlogResult = listOf(
+            blog1ModelWithMetadata.model,
+            blog3ModelWithMetadata.model,
+            blog4ToUpdate.model,
+            blog5ModelWithMetadata.model
+        )
+        // Expected ModelMutation table result
+        val expectedMetadataResult = listOf(
+            blog1ModelWithMetadata.syncMetadata,
+            blog2ModelWithMetadata.syncMetadata,
+            blog3ToUpdate.syncMetadata,
+            blog4ToUpdate.syncMetadata,
+            blog5ModelWithMetadata.syncMetadata,
+            blog6ToUpdate.syncMetadata
+        )
+        // Expected Storage Item Changes
+        val expectedStorageItemChanges = listOf(
+            StorageItemChange.Type.CREATE,
+            StorageItemChange.Type.DELETE,
+            StorageItemChange.Type.UPDATE,
+            StorageItemChange.Type.DELETE
+        )
+
+        // WHEN: Merge Models
+        val observer = merger.merge(
+            listOf(
+                blog1ModelWithMetadata,
+                blog2ModelWithMetadata,
+                blog3ToUpdate,
+                blog4ToUpdate,
+                blog5ToUpdate,
+                blog6ToUpdate
+            ),
+            changeTypeConsumer
+        ).test()
+
+        Assert.assertTrue(observer.await(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS))
+        observer.assertNoErrors().assertComplete()
+
+        // THEN
+        val blogResult = storageAdapter.query(Blog::class.java)
+        val metadataResult = storageAdapter.query(ModelMetadata::class.java)
+
+        assertEquals(4, blogResult.size)
+        assertEquals(6, metadataResult.size)
+        assertEquals(4, expectedStorageItemChanges.size)
+
+        assertEquals(expectedBlogResult, blogResult.sortedBy { it.id })
+        assertEquals(expectedMetadataResult, metadataResult.sortedBy { it.primaryKeyString })
+        assertEquals(expectedStorageItemChanges, capturedStorageItemChanges)
     }
 
     companion object {

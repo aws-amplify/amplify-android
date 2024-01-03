@@ -15,6 +15,7 @@
 
 package com.amplifyframework.datastore.storage;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import androidx.annotation.NonNull;
 
@@ -351,9 +352,29 @@ public final class SynchronousStorageAdapter {
     }
 
     /**
+     * Save a model.
+     * @param operations List of operations to perform.
+     * @param <T> Type of model being saved
+     * @throws DataStoreException On any failure to save the model
+     */
+    public <T extends Model> void batchSyncOperations(@NonNull List<StorageOperation<T>> operations)
+            throws DataStoreException {
+        Await.result(
+            operationTimeoutMs,
+            (Consumer<Object> onComplete, Consumer<DataStoreException> onError) ->
+                asyncDelegate.batchSyncOperations(
+                    operations,
+                    () -> onComplete.accept(VoidResult.instance()),
+                    onError
+                )
+        );
+    }
+
+    /**
      * Invokes the clear method of the underlying adapter and
      * either completes or throws an exception.
      */
+    @SuppressLint("CheckResult")
     public void clear() {
         //noinspection ResultOfMethodCallIgnored
         Completable.create(emitter ->

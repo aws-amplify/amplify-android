@@ -14,18 +14,22 @@
  */
 package com.amplifyframework.datastore.syncengine
 
+import androidx.test.core.app.ApplicationProvider
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.core.model.Model
 import com.amplifyframework.core.model.ModelSchema
+import com.amplifyframework.core.model.SchemaRegistry
 import com.amplifyframework.core.model.SerializedModel
 import com.amplifyframework.core.model.query.Where
 import com.amplifyframework.core.model.query.predicate.QueryPredicates
+import com.amplifyframework.datastore.DataStoreConfiguration
 import com.amplifyframework.datastore.DataStoreException
-import com.amplifyframework.datastore.storage.InMemoryStorageAdapter
 import com.amplifyframework.datastore.storage.SynchronousStorageAdapter
+import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter
 import com.amplifyframework.datastore.syncengine.MutationOutbox.OutboxEvent
 import com.amplifyframework.datastore.syncengine.PendingMutation.PersistentRecord
 import com.amplifyframework.hub.HubChannel
+import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider
 import com.amplifyframework.testmodels.commentsblog.Author
 import com.amplifyframework.testmodels.commentsblog.BlogOwner
 import com.amplifyframework.testmodels.commentsblog.Post
@@ -57,9 +61,16 @@ class PersistentMutationOutboxTest {
     @Throws(AmplifyException::class)
     fun setup() {
         schema = ModelSchema.fromModelClass(BlogOwner::class.java)
-        val inMemoryStorageAdapter = InMemoryStorageAdapter.create()
-        storage = SynchronousStorageAdapter.delegatingTo(inMemoryStorageAdapter)
-        mutationOutbox = PersistentMutationOutbox(inMemoryStorageAdapter)
+        val sqliteStorageAdapter = SQLiteStorageAdapter.forModels(
+            SchemaRegistry.instance(),
+            AmplifyModelProvider.getInstance()
+        )
+        storage = SynchronousStorageAdapter.delegatingTo(sqliteStorageAdapter)
+        storage.initialize(
+            ApplicationProvider.getApplicationContext(),
+            DataStoreConfiguration.defaults()
+        )
+        mutationOutbox = PersistentMutationOutbox(sqliteStorageAdapter)
         converter = GsonPendingMutationConverter()
     }
 
@@ -130,12 +141,7 @@ class PersistentMutationOutboxTest {
             listOf(converter.toRecord(createJameson)),
             storage.query(PersistentRecord::class.java)
         )
-        Assert.assertTrue(
-            mutationOutbox.hasPendingMutation(
-                jameson.id,
-                jameson.javaClass.simpleName
-            )
-        )
+        Assert.assertTrue(hasPendingMutation(jameson.id, jameson.javaClass.simpleName))
         Assert.assertEquals(createJameson, mutationOutbox.peek())
     }
 
@@ -198,8 +204,8 @@ class PersistentMutationOutboxTest {
         loadObserver.dispose()
 
         // Assert: items are in the outbox.
-        Assert.assertTrue(mutationOutbox.hasPendingMutation(tony.id, tony.javaClass.simpleName))
-        Assert.assertTrue(mutationOutbox.hasPendingMutation(sam.id, sam.javaClass.simpleName))
+        Assert.assertTrue(hasPendingMutation(tony.id, tony.javaClass.simpleName))
+        Assert.assertTrue(hasPendingMutation(sam.id, sam.javaClass.simpleName))
 
         // Tony is first, since he is the older of the two mutations.
         Assert.assertEquals(updateTony, mutationOutbox.peek())
@@ -227,7 +233,7 @@ class PersistentMutationOutboxTest {
         testObserver.dispose()
         Assert.assertEquals(0, storage.query(PersistentRecord::class.java).size.toLong())
         Assert.assertNull(mutationOutbox.peek())
-        Assert.assertFalse(mutationOutbox.hasPendingMutation(bill.id, bill.javaClass.simpleName))
+        Assert.assertFalse(hasPendingMutation(bill.id, bill.javaClass.simpleName))
     }
 
     /**
@@ -299,7 +305,7 @@ class PersistentMutationOutboxTest {
 
     /**
      * When there is a pending mutation for a particular model ID
-     * [MutationOutbox.hasPendingMutation] must say "yes!".
+     * [hasPendingMutation] must say "yes!".
      */
     @Test
     fun hasPendingMutationReturnsTrueForExistingModelMutation() {
@@ -315,9 +321,9 @@ class PersistentMutationOutboxTest {
         val completed = mutationOutbox.enqueue(pendingMutation)
             .blockingAwait(TIMEOUT_MS, TimeUnit.MILLISECONDS)
         Assert.assertTrue(completed)
-        Assert.assertTrue(mutationOutbox.hasPendingMutation(modelId, joe.javaClass.simpleName))
+        Assert.assertTrue(hasPendingMutation(modelId, joe.javaClass.simpleName))
         Assert.assertFalse(
-            mutationOutbox.hasPendingMutation(
+            hasPendingMutation(
                 mutationId.toString(),
                 mutationId.javaClass.simpleName
             )
@@ -346,9 +352,9 @@ class PersistentMutationOutboxTest {
         val unrelatedMutation = PendingMutation.instance(
             mutationId, joe, schema, PendingMutation.Type.CREATE, QueryPredicates.all()
         )
-        Assert.assertFalse(mutationOutbox.hasPendingMutation(joeId, joe.javaClass.simpleName))
+        Assert.assertFalse(hasPendingMutation(joeId, joe.javaClass.simpleName))
         Assert.assertFalse(
-            mutationOutbox.hasPendingMutation(
+            hasPendingMutation(
                 unrelatedMutation.mutationId.toString(),
                 unrelatedMutation.javaClass.simpleName
             )
@@ -380,12 +386,7 @@ class PersistentMutationOutboxTest {
                 TIMEOUT_MS, TimeUnit.MILLISECONDS
             )
         )
-        Assert.assertTrue(
-            mutationOutbox.hasPendingMutation(
-                modelId,
-                blogOwner.javaClass.simpleName
-            )
-        )
+        Assert.assertTrue(hasPendingMutation(modelId, blogOwner.javaClass.simpleName))
 
         // Act & Assert: Enqueue and verify Author
         val author = Author.builder()
@@ -394,12 +395,7 @@ class PersistentMutationOutboxTest {
             .build()
 
         // Check hasPendingMutation returns False for Author with same Primary Key (id) as BlogOwner
-        Assert.assertFalse(
-            mutationOutbox.hasPendingMutation(
-                modelId,
-                author.javaClass.simpleName
-            )
-        )
+        Assert.assertFalse(hasPendingMutation(modelId, author.javaClass.simpleName))
         val pendingAuthorMutation = PendingMutation.instance(
             mutationId, author, ModelSchema.fromModelClass(Author::class.java),
             PendingMutation.Type.CREATE, QueryPredicates.all()
@@ -410,7 +406,7 @@ class PersistentMutationOutboxTest {
         )
 
         // Make sure Author Mutation is stored
-        Assert.assertTrue(mutationOutbox.hasPendingMutation(modelId, author.javaClass.simpleName))
+        Assert.assertTrue(hasPendingMutation(modelId, author.javaClass.simpleName))
 
         // Act & Assert: Enqueue and verify Author
         val post = Post.builder()
@@ -421,7 +417,7 @@ class PersistentMutationOutboxTest {
             .build()
 
         // Check hasPendingMutation returns False for Post with same Primary Key (id) as BlogOwner
-        Assert.assertFalse(mutationOutbox.hasPendingMutation(modelId, post.javaClass.simpleName))
+        Assert.assertFalse(hasPendingMutation(modelId, post.javaClass.simpleName))
         val pendingPostMutation = PendingMutation.instance(
             mutationId, post, ModelSchema.fromModelClass(Post::class.java),
             PendingMutation.Type.CREATE, QueryPredicates.all()
@@ -432,7 +428,7 @@ class PersistentMutationOutboxTest {
         )
 
         // Make sure Post Mutation is stored
-        Assert.assertTrue(mutationOutbox.hasPendingMutation(modelId, post.javaClass.simpleName))
+        Assert.assertTrue(hasPendingMutation(modelId, post.javaClass.simpleName))
     }
 
     /**
@@ -493,7 +489,7 @@ class PersistentMutationOutboxTest {
 
         // Additional Checks: Peek the Mutation outbox, existing mutation should be present.
         Assert.assertTrue(
-            mutationOutbox.hasPendingMutation(
+            hasPendingMutation(
                 existingBlogOwner.primaryKeyString,
                 existingBlogOwner.javaClass.simpleName
             )
@@ -555,7 +551,7 @@ class PersistentMutationOutboxTest {
 
         // Existing mutation still attainable as next mutation (right now, its the ONLY mutation in outbox)
         Assert.assertTrue(
-            mutationOutbox.hasPendingMutation(
+            hasPendingMutation(
                 modelInExistingMutation.primaryKeyString,
                 modelInExistingMutation.javaClass.simpleName
             )
@@ -620,7 +616,7 @@ class PersistentMutationOutboxTest {
 
         // Existing mutation still attainable as next mutation (right now, its the ONLY mutation in outbox)
         Assert.assertTrue(
-            mutationOutbox.hasPendingMutation(
+            hasPendingMutation(
                 modelInExistingMutation.primaryKeyString,
                 modelInExistingMutation.javaClass.simpleName
             )
@@ -680,7 +676,7 @@ class PersistentMutationOutboxTest {
 
         // Existing mutation still attainable as next mutation (right now, its the ONLY mutation in outbox)
         Assert.assertTrue(
-            mutationOutbox.hasPendingMutation(
+            hasPendingMutation(
                 modelInExistingMutation.primaryKeyString,
                 modelInExistingMutation.javaClass.simpleName
             )
@@ -742,7 +738,7 @@ class PersistentMutationOutboxTest {
 
         // Existing mutation still attainable as next mutation (right now, its the ONLY mutation in outbox)
         Assert.assertTrue(
-            mutationOutbox.hasPendingMutation(
+            hasPendingMutation(
                 modelInExistingMutation.primaryKeyString,
                 modelInExistingMutation.javaClass.simpleName
             )
@@ -1490,13 +1486,36 @@ class PersistentMutationOutboxTest {
             }
     }
 
-    @Throws(AmplifyException::class)
+    @Test
+    fun fetchPendingMutationsReturnsExpectedIds() {
+        val blogOwners = mutableListOf<BlogOwner>()
+        for (i in 0 until 975) {
+            val blogOwner = BlogOwner.builder()
+                .name("Name$i")
+                .id("ID$i")
+                .build()
+            blogOwners.add(blogOwner)
+            val creation = PendingMutation.creation(blogOwner, schema)
+            val completed = mutationOutbox.enqueue(creation).blockingAwait(TIMEOUT_MS, TimeUnit.MILLISECONDS)
+            Assert.assertTrue(completed)
+        }
+        val expectedResult = blogOwners.map { it.id }.toSet()
+
+        val result = mutationOutbox.fetchPendingMutations(blogOwners, blogOwners[0].javaClass.name)
+
+        Assert.assertEquals(975, result.size)
+        Assert.assertEquals(expectedResult, result)
+    }
+
+    private fun hasPendingMutation(modelId: String, modelClass: String): Boolean {
+        return mutationOutbox.getMutationForModelId(modelId, modelClass) != null
+    }
+
     private fun assertRecordCountForMutationId(mutationId: String, expectedCount: Int) {
         val recordsForExistingMutationId = getPendingMutationRecordFromStorage(mutationId)
         Assert.assertEquals(expectedCount.toLong(), recordsForExistingMutationId.size.toLong())
     }
 
-    @Throws(AmplifyException::class)
     private fun getPendingMutationRecordFromStorage(mutationId: String): List<PersistentRecord> {
         return storage.query(
             PersistentRecord::class.java,
@@ -1506,7 +1525,6 @@ class PersistentMutationOutboxTest {
         )
     }
 
-    @get:Throws(DataStoreException::class)
     private val allPendingMutationRecordFromStorage: MutableList<PersistentRecord>
         get() = storage.query(PersistentRecord::class.java, Where.matchesAll())
 
