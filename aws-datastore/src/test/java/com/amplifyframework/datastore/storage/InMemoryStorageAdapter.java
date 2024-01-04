@@ -15,8 +15,6 @@
 
 package com.amplifyframework.datastore.storage;
 
-import static org.junit.Assert.fail;
-
 import android.content.Context;
 import androidx.annotation.NonNull;
 
@@ -42,6 +40,8 @@ import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.subjects.PublishSubject;
 import io.reactivex.rxjava3.subjects.Subject;
 
+import static org.junit.Assert.fail;
+
 /**
  * A simple in-memory implementation of the LocalStorageAdapter
  * contract. This intended for use as a stub in test code.
@@ -65,9 +65,9 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
 
     @Override
     public void initialize(@NonNull Context context,
-                           @NonNull Consumer<List<ModelSchema>> onSuccess,
-                           @NonNull Consumer<DataStoreException> onError,
-                           @NonNull DataStoreConfiguration dataStoreConfiguration) {
+                            @NonNull Consumer<List<ModelSchema>> onSuccess,
+                            @NonNull Consumer<DataStoreException> onError,
+                            @NonNull DataStoreConfiguration dataStoreConfiguration) {
 
     }
 
@@ -88,8 +88,8 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
 
             if (!predicate.evaluate(savedItem)) {
                 onError.accept(new DataStoreException(
-                        "Conditional check failed.",
-                        "Verify that there is a saved model that matches the provided predicate."));
+                    "Conditional check failed.",
+                    "Verify that there is a saved model that matches the provided predicate."));
                 return;
             } else {
                 items.remove(index);
@@ -102,19 +102,19 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
             patchItem = SerializedModel.difference(item, savedItem, schema);
         } catch (AmplifyException schemaBuildFailure) {
             onError.accept(new DataStoreException(
-                    "Failed to build model schema.", schemaBuildFailure, "Verify your model."
+                "Failed to build model schema.", schemaBuildFailure, "Verify your model."
             ));
             return;
         }
         items.add(item);
         StorageItemChange<T> change = StorageItemChange.<T>builder()
-                .item(item)
-                .patchItem(patchItem)
-                .modelSchema(schema)
-                .type(type)
-                .predicate(predicate)
-                .initiator(initiator)
-                .build();
+            .item(item)
+            .patchItem(patchItem)
+            .modelSchema(schema)
+            .type(type)
+            .predicate(predicate)
+            .initiator(initiator)
+            .build();
         itemChangeStream.onNext(change);
         onSuccess.accept(change);
     }
@@ -179,7 +179,7 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
             patchItem = SerializedModel.create(savedItem, schema);
         } catch (AmplifyException schemaBuildFailure) {
             onError.accept(new DataStoreException(
-                    "Failed to build model schema.", schemaBuildFailure, "Verify your model."
+                "Failed to build model schema.", schemaBuildFailure, "Verify your model."
             ));
             return;
         }
@@ -190,13 +190,13 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
             return;
         }
         StorageItemChange<T> deletion = StorageItemChange.<T>builder()
-                .item((T) savedItem)
-                .patchItem(patchItem)
-                .modelSchema(schema)
-                .type(StorageItemChange.Type.DELETE)
-                .predicate(predicate)
-                .initiator(initiator)
-                .build();
+            .item((T) savedItem)
+            .patchItem(patchItem)
+            .modelSchema(schema)
+            .type(StorageItemChange.Type.DELETE)
+            .predicate(predicate)
+            .initiator(initiator)
+            .build();
         itemChangeStream.onNext(deletion);
         onSuccess.accept(deletion);
     }
@@ -245,18 +245,18 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
             @NonNull Consumer<DataStoreException> onSubscriptionError,
             @NonNull Action onSubscriptionComplete) {
         Disposable disposable = itemChangeStream.subscribe(
-                onNextItem::accept,
-                failure -> {
-                    if (failure instanceof DataStoreException) {
-                        onSubscriptionError.accept((DataStoreException) failure);
-                    } else {
-                        onSubscriptionError.accept(new DataStoreException(
-                                "Failed to observe changes to in-memory storage adapter.",
-                                failure, "Inspect the details."
-                        ));
-                    }
-                },
-                onSubscriptionComplete::call
+            onNextItem::accept,
+            failure -> {
+                if (failure instanceof DataStoreException) {
+                    onSubscriptionError.accept((DataStoreException) failure);
+                } else {
+                    onSubscriptionError.accept(new DataStoreException(
+                        "Failed to observe changes to in-memory storage adapter.",
+                        failure, "Inspect the details."
+                    ));
+                }
+            },
+            onSubscriptionComplete::call
         );
         return disposable::dispose;
     }
@@ -273,9 +273,9 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
 
     @Override
     public <T extends Model> void batchSyncOperations(
-            @NonNull List<StorageOperation<T>> storageOperations,
-            @NonNull Action onComplete,
-            @NonNull Consumer<DataStoreException> onError
+        @NonNull List<StorageOperation<T>> storageOperations,
+        @NonNull Action onComplete,
+        @NonNull Consumer<DataStoreException> onError
     ) {
         fail("Due to the complexity of this operation, Use SQLiteStorageAdapter instead");
     }
