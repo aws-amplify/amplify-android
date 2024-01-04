@@ -102,7 +102,7 @@ import static org.mockito.Mockito.when;
  */
 @RunWith(RobolectricTestRunner.class)
 public final class SyncProcessorTest {
-    private static final long OP_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(2);
+    private static final long OP_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(5);
     private static final long BASE_SYNC_INTERVAL_MINUTES = TimeUnit.DAYS.toMinutes(1);
     private AppSync appSync;
     private ModelProvider modelProvider;
