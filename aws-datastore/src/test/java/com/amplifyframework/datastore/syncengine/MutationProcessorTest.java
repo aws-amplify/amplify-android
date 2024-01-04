@@ -477,7 +477,7 @@ public final class MutationProcessorTest {
         mutationProcessor.stopDrainingMutationOutbox();
     }
 
-    private <T extends Model>Boolean hasPendingMutation(T model, String modelClass) {
+    private <T extends Model> Boolean hasPendingMutation(T model, String modelClass) {
         List<T> modelIdList = new ArrayList<>();
         modelIdList.add(model);
         Set<String> results = mutationOutbox.fetchPendingMutations(modelIdList, modelClass);

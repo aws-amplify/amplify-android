@@ -360,13 +360,13 @@ public final class SynchronousStorageAdapter {
     public <T extends Model> void batchSyncOperations(@NonNull List<StorageOperation<T>> operations)
             throws DataStoreException {
         Await.result(
-                operationTimeoutMs,
-                (Consumer<Object> onComplete, Consumer<DataStoreException> onError) ->
-                        asyncDelegate.batchSyncOperations(
-                                operations,
-                                () -> onComplete.accept(VoidResult.instance()),
-                                onError
-                        )
+            operationTimeoutMs,
+            (Consumer<Object> onComplete, Consumer<DataStoreException> onError) ->
+                asyncDelegate.batchSyncOperations(
+                    operations,
+                    () -> onComplete.accept(VoidResult.instance()),
+                    onError
+                )
         );
     }
 

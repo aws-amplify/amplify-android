@@ -548,7 +548,7 @@ class MergerTest {
         // Timestamp isn't important in these tests but helpful to know for equality checks
         val ignoredTimestamp = Temporal.Timestamp.now()
 
-        //Capture Storage Changes Returned
+        // Capture Storage Changes Returned
         var capturedStorageItemChanges = mutableListOf<StorageItemChange.Type>()
         val changeTypeConsumer = Consumer<StorageItemChange.Type> {
             capturedStorageItemChanges.add(it)
