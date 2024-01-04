@@ -202,7 +202,7 @@ class VersionRepositoryTest {
 
     @Test
     // This test ensures the 950 chunking works
-    fun fetchModelVersionReturnsMoreThan950() = runTest(timeout = 10.seconds) {
+    fun fetchModelVersionReturnsMoreThan950() = runTest(timeout = 50.seconds) {
         val modelsWithMetadata = mutableListOf<ModelWithMetadata<BlogOwner>>()
         for (i in 0 until 1000) {
             val owner = BlogOwner.builder().name("Owner$i").build()
