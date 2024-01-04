@@ -14,22 +14,18 @@
  */
 package com.amplifyframework.datastore.syncengine
 
-import androidx.test.core.app.ApplicationProvider
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.core.model.Model
 import com.amplifyframework.core.model.ModelSchema
-import com.amplifyframework.core.model.SchemaRegistry
 import com.amplifyframework.core.model.SerializedModel
 import com.amplifyframework.core.model.query.Where
 import com.amplifyframework.core.model.query.predicate.QueryPredicates
-import com.amplifyframework.datastore.DataStoreConfiguration
 import com.amplifyframework.datastore.DataStoreException
+import com.amplifyframework.datastore.storage.InMemoryStorageAdapter
 import com.amplifyframework.datastore.storage.SynchronousStorageAdapter
-import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter
 import com.amplifyframework.datastore.syncengine.MutationOutbox.OutboxEvent
 import com.amplifyframework.datastore.syncengine.PendingMutation.PersistentRecord
 import com.amplifyframework.hub.HubChannel
-import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider
 import com.amplifyframework.testmodels.commentsblog.Author
 import com.amplifyframework.testmodels.commentsblog.BlogOwner
 import com.amplifyframework.testmodels.commentsblog.Post
@@ -40,13 +36,10 @@ import java.util.concurrent.TimeUnit
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
 
 /**
  * Tests the [MutationOutbox].
  */
-@RunWith(RobolectricTestRunner::class)
 class PersistentMutationOutboxTest {
     private lateinit var schema: ModelSchema
     private lateinit var mutationOutbox: PersistentMutationOutbox
@@ -61,16 +54,9 @@ class PersistentMutationOutboxTest {
     @Throws(AmplifyException::class)
     fun setup() {
         schema = ModelSchema.fromModelClass(BlogOwner::class.java)
-        val sqliteStorageAdapter = SQLiteStorageAdapter.forModels(
-            SchemaRegistry.instance(),
-            AmplifyModelProvider.getInstance()
-        )
-        storage = SynchronousStorageAdapter.delegatingTo(sqliteStorageAdapter)
-        storage.initialize(
-            ApplicationProvider.getApplicationContext(),
-            DataStoreConfiguration.defaults()
-        )
-        mutationOutbox = PersistentMutationOutbox(sqliteStorageAdapter)
+        val inMemoryStorageAdapter = InMemoryStorageAdapter.create()
+        storage = SynchronousStorageAdapter.delegatingTo(inMemoryStorageAdapter)
+        mutationOutbox = PersistentMutationOutbox(inMemoryStorageAdapter)
         converter = GsonPendingMutationConverter()
     }
 

@@ -14,34 +14,26 @@
  */
 package com.amplifyframework.datastore.syncengine
 
-import androidx.test.core.app.ApplicationProvider
-import com.amplifyframework.core.model.SchemaRegistry
 import com.amplifyframework.core.model.temporal.Temporal
-import com.amplifyframework.datastore.DataStoreConfiguration
 import com.amplifyframework.datastore.DataStoreException
 import com.amplifyframework.datastore.appsync.ModelMetadata
 import com.amplifyframework.datastore.appsync.ModelWithMetadata
+import com.amplifyframework.datastore.storage.InMemoryStorageAdapter
 import com.amplifyframework.datastore.storage.SynchronousStorageAdapter
-import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter
-import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider
 import com.amplifyframework.testmodels.commentsblog.BlogOwner
 import java.util.Locale
 import java.util.Random
 import java.util.concurrent.TimeUnit
-import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
 
 /**
  * Tests the [VersionRepository].
  */
-@RunWith(RobolectricTestRunner::class)
 class VersionRepositoryTest {
     private lateinit var storageAdapter: SynchronousStorageAdapter
     private lateinit var versionRepository: VersionRepository
@@ -49,16 +41,9 @@ class VersionRepositoryTest {
     @Before
     @Throws(DataStoreException::class)
     fun setup() {
-        val sqliteStorageAdapter = SQLiteStorageAdapter.forModels(
-            SchemaRegistry.instance(),
-            AmplifyModelProvider.getInstance()
-        )
-        storageAdapter = SynchronousStorageAdapter.delegatingTo(sqliteStorageAdapter)
-        storageAdapter.initialize(
-            ApplicationProvider.getApplicationContext(),
-            DataStoreConfiguration.defaults()
-        )
-        versionRepository = VersionRepository(sqliteStorageAdapter)
+        val inMemoryStorageAdapter = InMemoryStorageAdapter.create()
+        storageAdapter = SynchronousStorageAdapter.delegatingTo(inMemoryStorageAdapter)
+        versionRepository = VersionRepository(inMemoryStorageAdapter)
     }
 
     @After
@@ -202,7 +187,7 @@ class VersionRepositoryTest {
 
     @Test
     // This test ensures the 950 chunking works
-    fun fetchModelVersionReturnsMoreThan950() = runTest(timeout = 50.seconds) {
+    fun fetchModelVersionReturnsMoreThan950() = runTest {
         val modelsWithMetadata = mutableListOf<ModelWithMetadata<BlogOwner>>()
         for (i in 0 until 1000) {
             val owner = BlogOwner.builder().name("Owner$i").build()
