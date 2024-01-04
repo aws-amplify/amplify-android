@@ -28,6 +28,7 @@ import com.amplifyframework.testmodels.commentsblog.BlogOwner
 import java.util.Locale
 import java.util.Random
 import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert
@@ -36,7 +37,6 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import kotlin.time.Duration.Companion.seconds
 
 /**
  * Tests the [VersionRepository].
