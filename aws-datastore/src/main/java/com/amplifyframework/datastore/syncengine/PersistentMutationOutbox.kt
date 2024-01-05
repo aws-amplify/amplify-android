@@ -99,7 +99,11 @@ internal class PersistentMutationOutbox(private val storage: LocalStorageAdapter
         return mutationResult.get()
     }
 
-    override fun <T : Model> fetchPendingMutations(models: List<T>, modelClass: String): Set<String> {
+    override fun <T : Model> fetchPendingMutations(
+        models: List<T>,
+        modelClass: String,
+        excludeInFlight: Boolean
+    ): Set<String> {
         // We chunk sql query to 950 items to prevent hitting 1k sqlite predicate limit
         // Improvement would be to use IN, but not currently supported in our query builders
         semaphore.acquire()
@@ -133,7 +137,13 @@ internal class PersistentMutationOutbox(private val storage: LocalStorageAdapter
             // Add id to the accumulator set
             chunkResult.forEach {
                 val pendingMutation: PendingMutation<*> = converter.fromRecord<Model>(it)
-                if (pendingMutation.modelSchema.modelClass.name == modelClass) {
+                /*
+                We need to make sure the model type matches since multiple models could share identical primary keys
+                Additionally, if excludeInFlight is set, we remove in flight mutations at this time.
+                 */
+                if (pendingMutation.modelSchema.modelClass.name == modelClass &&
+                    (excludeInFlight && !inFlightMutations.contains(pendingMutation.mutationId))
+                ) {
                     acc.add(it.containedModelId)
                 }
             }

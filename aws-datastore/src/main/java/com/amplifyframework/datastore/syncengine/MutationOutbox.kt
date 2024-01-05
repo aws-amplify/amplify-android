@@ -43,11 +43,12 @@ internal interface MutationOutbox {
      * @param T Model Type
      * @param models list of Models to search for p ending mutations
      * @param modelClass The fully qualified class name of the models for which you want to check
+     * @param excludeInFlight Set true to exclude in flight mutations from the returned Set
      * pending mutations. This should match the name returned by the model's
      * getClass().getName() method.
      * @return set of model ids that contained pending mutations
      */
-    fun <T : Model> fetchPendingMutations(models: List<T>, modelClass: String): Set<String>
+    fun <T : Model> fetchPendingMutations(models: List<T>, modelClass: String, excludeInFlight: Boolean): Set<String>
 
     /**
      * Write a new [PendingMutation] into the outbox.

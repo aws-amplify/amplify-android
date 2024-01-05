@@ -1487,7 +1487,7 @@ class PersistentMutationOutboxTest {
         }
         val expectedResult = blogOwners.map { it.id }.toSet()
 
-        val result = mutationOutbox.fetchPendingMutations(blogOwners, blogOwners[0].javaClass.name)
+        val result = mutationOutbox.fetchPendingMutations(blogOwners, blogOwners[0].javaClass.name, true)
 
         Assert.assertEquals(975, result.size)
         Assert.assertEquals(expectedResult, result)
