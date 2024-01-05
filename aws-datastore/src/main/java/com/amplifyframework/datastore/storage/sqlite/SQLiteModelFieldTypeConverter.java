@@ -211,22 +211,6 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
             }
 
             String columnName = column.getAliasedName(null);
-            if (javaFieldType == JavaFieldType.MODEL) {
-                int newInnerModelCount = 1;
-                String fieldTargetType = field.getTargetType();
-                if (cursorInnerModelCounts.containsKey(fieldTargetType)) {
-                    Integer currentInnerModelCount = cursorInnerModelCounts.get(fieldTargetType);
-                    newInnerModelCount += currentInnerModelCount == null ? 0 : currentInnerModelCount;
-                }
-                cursorInnerModelCounts.put(fieldTargetType, newInnerModelCount);
-            }
-            if (isInnerModel && cursorInnerModelCounts.containsKey(parentSchema.getName())) {
-                Integer modelCount = cursorInnerModelCounts.get(parentSchema.getName());
-                if (!Objects.equals(modelCount, 1)) {
-                    // More than 1 of the model the field belongs to is present in the cursor
-                    columnName += modelCount;
-                }
-            }
 
             final int columnIndex = cursor.getColumnIndexOrThrow(columnName);
             // This check is necessary, because primitive values will return 0 even when null

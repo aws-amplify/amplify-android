@@ -253,7 +253,7 @@ public class SQLCommandProcessorTest {
         QueryOptions options = Where.matches(predicate);
 
         // Query for all BlogOwners, and verify that there is one result.
-        SqlCommand queryCommand = sqlCommandFactory.queryFor(post2Schema,options);
+        SqlCommand queryCommand = sqlCommandFactory.queryFor(post2Schema, options);
         List<Post2> results = new ArrayList<>();
         try (Cursor cursor = sqlCommandProcessor.rawQuery(queryCommand)) {
             SQLiteModelFieldTypeConverter converter = new SQLiteModelFieldTypeConverter(post2Schema,
