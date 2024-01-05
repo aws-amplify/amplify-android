@@ -119,8 +119,8 @@ public class SQLCommandProcessorTest {
         Cursor cursor = null;
         try {
             cursor = sqlCommandProcessor.rawQuery(queryCommand);
-        } catch (Exception e) {
-            throw new AmplifyException("DB already closed", e, "Wait until DB is reopened");
+        } catch (Exception exc) {
+            throw new AmplifyException("DB already closed", exc, "Wait until DB is reopened");
         }
         List<BlogOwner> results = new ArrayList<>();
 
