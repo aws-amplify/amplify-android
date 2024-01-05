@@ -103,7 +103,7 @@ final class Merger {
                 .flatMapCompletable(shouldMerge -> {
                     Completable firstStep;
                     if (mutationOutbox.hasPendingMutation(model.getPrimaryKeyString(),
-                            model.getClass().getName())) {
+                            model.getModelName())) {
                         LOG.info("Mutation outbox has pending mutation for Model: " +
                              model.getModelName() + " with primary key: " + model.resolveIdentifier()
                             + ". Saving the metadata, but not model itself.");

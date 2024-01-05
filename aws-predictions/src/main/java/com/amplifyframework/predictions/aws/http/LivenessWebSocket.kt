@@ -481,9 +481,9 @@ internal class LivenessWebSocket(
         }
     }
 
-    fun destroy() {
-        // Close gracefully
-        webSocket?.close(NORMAL_SOCKET_CLOSURE_STATUS_CODE, null)
+    fun destroy(reasonCode: Int = NORMAL_SOCKET_CLOSURE_STATUS_CODE) {
+        // Close with provided reason code
+        webSocket?.close(reasonCode, null)
     }
 
     fun adjustedDate(date: Long = Date().time): Long {
