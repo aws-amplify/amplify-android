@@ -22,10 +22,16 @@ import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.SchemaRegistry;
+import com.amplifyframework.core.model.query.QueryOptions;
 import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
+import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider;
+import com.amplifyframework.testmodels.commentsblog.Blog3;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
+import com.amplifyframework.testmodels.commentsblog.BlogOwner3;
+import com.amplifyframework.testmodels.commentsblog.Post2;
+import com.amplifyframework.testmodels.commentsblog.PostStatus;
 import com.amplifyframework.testmodels.customprimarykey.Comment;
 import com.amplifyframework.util.GsonFactory;
 
@@ -41,6 +47,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -116,19 +123,19 @@ public class SQLCommandProcessorTest {
 
         // Query for all BlogOwners, and verify that there is one result.
         SqlCommand queryCommand = sqlCommandFactory.queryFor(blogOwnerSchema, Where.matchesAll());
-        Cursor cursor = sqlCommandProcessor.rawQuery(queryCommand);
         List<BlogOwner> results = new ArrayList<>();
+        try (Cursor cursor = sqlCommandProcessor.rawQuery(queryCommand)) {
+            SQLiteModelFieldTypeConverter converter = new SQLiteModelFieldTypeConverter(blogOwnerSchema,
+                    schemaRegistry,
+                    GsonFactory.instance());
 
-        SQLiteModelFieldTypeConverter converter = new SQLiteModelFieldTypeConverter(blogOwnerSchema,
-                schemaRegistry,
-                GsonFactory.instance());
-
-        if (cursor.moveToFirst()) {
-            do {
-                Map<String, Object> map = converter.buildMapForModel(cursor);
-                String jsonString = gson.toJson(map);
-                results.add(gson.fromJson(jsonString, BlogOwner.class));
-            } while (cursor.moveToNext());
+            if (cursor.moveToFirst()) {
+                do {
+                    Map<String, Object> map = converter.buildMapForModel(cursor);
+                    String jsonString = gson.toJson(map);
+                    results.add(gson.fromJson(jsonString, BlogOwner.class));
+                } while (cursor.moveToNext());
+            }
         }
         assertEquals(Arrays.asList(abigailMcGregor), results);
     }
@@ -200,5 +207,66 @@ public class SQLCommandProcessorTest {
         assertTrue(sqlCommand.contains("CREATE INDEX IF NOT EXISTS `Comment@@postForeignKey` " +
                 "ON `Comment` (`@@postForeignKey`);"));
 
+    }
+
+    /**
+     * Create and insert a BlogOwner, and then verify that a rawQuery returns a Cursor with one result, containing the
+     * previously inserted BlogOwner.
+     * @throws AmplifyException on failure to create ModelSchema from class
+     */
+    @Test
+    public void rawQueryReturnsValidJoinResults() throws AmplifyException {
+        UUID blogOwnerId = UUID.randomUUID();
+        UUID blogId = UUID.randomUUID();
+
+        // Insert a BlogOwner
+        ModelSchema blogOwner3Schema = ModelSchema.fromModelClass(BlogOwner3.class);
+        ModelSchema blog3Schema = ModelSchema.fromModelClass(Blog3.class);
+        ModelSchema post2Schema = ModelSchema.fromModelClass(Post2.class);
+
+        final BlogOwner3 blogOwner = BlogOwner3.builder()
+                .name("Owner")
+                .id(blogOwnerId.toString())
+                .createdAt(new Temporal.DateTime("2023-12-15T16:22:30.48Z"))
+                .build();
+
+        final Blog3 blog = Blog3.builder()
+                .name("Blog")
+                .id(blogId.toString())
+                .owner(blogOwner)
+                .createdAt(new Temporal.DateTime("2023-12-15T16:22:35.48Z"))
+                .build();
+
+        final Post2 post = Post2.builder()
+                .title("Test Post")
+                .status(PostStatus.ACTIVE)
+                .rating(5)
+                .blogOwner(blogOwner)
+                .blog(blog)
+                .createdAt(new Temporal.DateTime("2023-12-15T16:22:38.48Z"))
+                .build();
+        sqlCommandProcessor.execute(sqlCommandFactory.insertFor(blogOwner3Schema, blogOwner));
+        sqlCommandProcessor.execute(sqlCommandFactory.insertFor(blog3Schema, blog));
+        sqlCommandProcessor.execute(sqlCommandFactory.insertFor(post2Schema, post));
+
+        QueryPredicate predicate = Post2.BLOG_OWNER.eq(blogOwner.getId());
+        QueryOptions options = Where.matches(predicate);
+
+        // Query for all BlogOwners, and verify that there is one result.
+        SqlCommand queryCommand = sqlCommandFactory.queryFor(post2Schema,options);
+        List<Post2> results = new ArrayList<>();
+        try (Cursor cursor = sqlCommandProcessor.rawQuery(queryCommand)) {
+            SQLiteModelFieldTypeConverter converter = new SQLiteModelFieldTypeConverter(post2Schema,
+                    schemaRegistry,
+                    GsonFactory.instance());
+            if (cursor.moveToFirst()) {
+                do {
+                    Map<String, Object> map = converter.buildMapForModel(cursor);
+                    String jsonString = gson.toJson(map);
+                    results.add(gson.fromJson(jsonString, Post2.class));
+                } while (cursor.moveToNext());
+            }
+        }
+        assertEquals(Arrays.asList(post), results);
     }
 }
