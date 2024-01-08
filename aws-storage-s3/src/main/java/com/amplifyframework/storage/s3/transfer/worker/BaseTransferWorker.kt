@@ -62,6 +62,10 @@ internal abstract class BaseTransferWorker(
     workerParameters: WorkerParameters
 ) : CoroutineWorker(context, workerParameters) {
 
+    var parentStopped = false
+    internal val isStoppedOrParentStopped: Boolean
+        get() = isStopped || parentStopped
+
     internal lateinit var transferRecord: TransferRecord
     internal lateinit var outputData: Data
     private val logger =
@@ -74,9 +78,6 @@ internal abstract class BaseTransferWorker(
         internal const val PART_RECORD_ID = "PART_RECORD_ID"
         internal const val RUN_AS_FOREGROUND_TASK = "RUN_AS_FOREGROUND_TASK"
         internal const val WORKER_ID = "WORKER_ID"
-        private const val OBJECT_TAGS_DELIMITER = "&"
-        private const val OBJECT_TAG_KEY_VALUE_SEPARATOR = "="
-        private const val REQUESTER_PAYS = "requester"
         private val CANNED_ACL_MAP =
             ObjectCannedAcl.values().associateBy { it.value }
         internal const val MULTI_PART_UPLOAD_ID = "multipartUploadId"
@@ -112,7 +113,7 @@ internal abstract class BaseTransferWorker(
             }
             else -> {
                 val ex = result.exceptionOrNull()
-                if (!isStopped) {
+                if (!isStoppedOrParentStopped) {
                     logger.error("${this.javaClass.simpleName} failed with exception: ${Log.getStackTraceString(ex)}")
                 }
                 if (isRetryableError(ex)) {
@@ -151,7 +152,7 @@ internal abstract class BaseTransferWorker(
     }
 
     private fun isRetryableError(e: Throwable?): Boolean {
-        return isStopped ||
+        return isStoppedOrParentStopped ||
             !isNetworkAvailable(applicationContext) ||
             runAttemptCount < maxRetryCount ||
             e is CancellationException ||
@@ -200,7 +201,7 @@ internal abstract class BaseTransferWorker(
         return false
     }
 
-    internal suspend fun createPutObjectRequest(
+    internal fun createPutObjectRequest(
         transferRecord: TransferRecord,
         progressListener: ProgressListener?
     ): PutObjectRequest {

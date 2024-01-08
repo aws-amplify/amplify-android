@@ -43,7 +43,7 @@ internal class PartUploadTransferWorker(
     override var maxRetryCount = 3
 
     override suspend fun performWork(): Result {
-        if (isStopped) {
+        if (isStoppedOrParentStopped) {
             return Result.retry()
         }
         transferStatusUpdater.updateTransferState(transferRecord.mainUploadId, TransferState.IN_PROGRESS)

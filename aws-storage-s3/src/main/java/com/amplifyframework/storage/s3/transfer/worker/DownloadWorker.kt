@@ -104,7 +104,7 @@ internal class DownloadWorker(
                     var totalRead = 0L
                     BufferedOutputStream(fileOutputStream).use { fileOutput ->
                         val copied = 0L
-                        while (!isStopped) {
+                        while (!isStoppedOrParentStopped) {
                             val remaining = limit - copied
                             if (remaining == 0L) break
                             val readBytes =
