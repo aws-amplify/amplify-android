@@ -51,6 +51,8 @@ import java.io.File
 import java.lang.Exception
 import java.net.SocketException
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.isActive
 
 /**
  * Base worker to perform transfer file task.
@@ -61,10 +63,6 @@ internal abstract class BaseTransferWorker(
     context: Context,
     workerParameters: WorkerParameters
 ) : CoroutineWorker(context, workerParameters) {
-
-    var parentStopped = false
-    internal val isStoppedOrParentStopped: Boolean
-        get() = isStopped || parentStopped
 
     internal lateinit var transferRecord: TransferRecord
     internal lateinit var outputData: Data
@@ -109,11 +107,12 @@ internal abstract class BaseTransferWorker(
 
         return when {
             result.isSuccess -> {
+                Log.d("App", "Success: Coroutine Active ${currentCoroutineContext().isActive}")
                 result.getOrThrow()
             }
             else -> {
                 val ex = result.exceptionOrNull()
-                if (!isStoppedOrParentStopped) {
+                if (currentCoroutineContext().isActive) {
                     logger.error("${this.javaClass.simpleName} failed with exception: ${Log.getStackTraceString(ex)}")
                 }
                 if (isRetryableError(ex)) {
@@ -151,8 +150,8 @@ internal abstract class BaseTransferWorker(
         )
     }
 
-    private fun isRetryableError(e: Throwable?): Boolean {
-        return isStoppedOrParentStopped ||
+    private suspend fun isRetryableError(e: Throwable?): Boolean {
+        return !currentCoroutineContext().isActive ||
             !isNetworkAvailable(applicationContext) ||
             runAttemptCount < maxRetryCount ||
             e is CancellationException ||

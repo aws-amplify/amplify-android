@@ -87,6 +87,6 @@ internal class RouterWorker(
     override fun onStopped() {
         super.onStopped()
         logger.debug("onStopped for $id")
-        delegateWorker?.parentStopped = true
+        delegateWorker?.onStopped()
     }
 }
