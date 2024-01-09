@@ -25,9 +25,9 @@ import com.amplifyframework.storage.s3.transfer.PartUploadProgressListener
 import com.amplifyframework.storage.s3.transfer.TransferDB
 import com.amplifyframework.storage.s3.transfer.TransferStatusUpdater
 import com.amplifyframework.storage.s3.transfer.UploadProgressListenerInterceptor
+import java.io.File
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.isActive
-import java.io.File
 
 /**
  * Worker to upload a part for multipart upload
