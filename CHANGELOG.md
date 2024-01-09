@@ -1,3 +1,10 @@
+## [Release 2.14.9](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.14.9)
+
+### Miscellaneous
+- Fix CHANGELOG.md for v2.14.8 ([#2664](https://github.com/aws-amplify/amplify-android/issues/2664))
+
+[See all changes between 2.14.8 and 2.14.9](https://github.com/aws-amplify/amplify-android/compare/release_v2.14.8...release_v2.14.9)
+
 ## [Release 2.14.8](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.14.8)
 
 ### Miscellaneous
