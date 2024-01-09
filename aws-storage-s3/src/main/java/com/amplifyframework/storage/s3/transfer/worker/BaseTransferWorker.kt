@@ -107,7 +107,6 @@ internal abstract class BaseTransferWorker(
 
         return when {
             result.isSuccess -> {
-                Log.d("App", "Success: Coroutine Active ${currentCoroutineContext().isActive}")
                 result.getOrThrow()
             }
             else -> {
@@ -115,7 +114,7 @@ internal abstract class BaseTransferWorker(
                 if (currentCoroutineContext().isActive) {
                     logger.error("${this.javaClass.simpleName} failed with exception: ${Log.getStackTraceString(ex)}")
                 }
-                if (isRetryableError(ex)) {
+                if (!currentCoroutineContext().isActive && isRetryableError(ex)) {
                     Result.retry()
                 } else {
                     transferStatusUpdater.updateOnError(transferRecord.id, Exception(ex))
@@ -150,9 +149,8 @@ internal abstract class BaseTransferWorker(
         )
     }
 
-    private suspend fun isRetryableError(e: Throwable?): Boolean {
-        return !currentCoroutineContext().isActive ||
-            !isNetworkAvailable(applicationContext) ||
+    private fun isRetryableError(e: Throwable?): Boolean {
+        return !isNetworkAvailable(applicationContext) ||
             runAttemptCount < maxRetryCount ||
             e is CancellationException ||
             // SocketException is thrown when download is terminated due to network disconnection.
