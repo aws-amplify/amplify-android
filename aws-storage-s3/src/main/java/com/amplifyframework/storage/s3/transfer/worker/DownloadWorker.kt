@@ -16,7 +16,6 @@
 package com.amplifyframework.storage.s3.transfer.worker
 
 import android.content.Context
-import android.util.Log
 import androidx.work.WorkerParameters
 import aws.sdk.kotlin.services.s3.S3Client
 import aws.sdk.kotlin.services.s3.model.GetObjectRequest
