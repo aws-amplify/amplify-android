@@ -165,6 +165,7 @@ fun Project.configureAndroid() {
         // META-INF/DEPENDENCIES. Tried a couple other options to no avail.
         packagingOptions {
             resources.excludes.add("META-INF/DEPENDENCIES")
+            resources.excludes.add("META-INF/LICENSE.md")
         }
     }
 
