@@ -225,7 +225,7 @@ class ApiRequestDecoratorFactoryTest {
 
     @Test
     fun testProvidedRestContentTypeHeaderUsed() {
-        val expectedContentType =  "text/plain"
+        val expectedContentType = "text/plain"
         val credentialsProvider = object : CredentialsProvider {
             override suspend fun resolve(attributes: Attributes): Credentials {
                 return Credentials("testA", "testB")
@@ -253,7 +253,7 @@ class ApiRequestDecoratorFactoryTest {
 
     @Test
     fun testProvidedRestContentTypeIgnoreCaseHeaderUsed() {
-        val expectedContentType =  "tExT/pLaIn"
+        val expectedContentType = "tExT/pLaIn"
         val credentialsProvider = object : CredentialsProvider {
             override suspend fun resolve(attributes: Attributes): Credentials {
                 return Credentials("testA", "testB")
@@ -281,7 +281,7 @@ class ApiRequestDecoratorFactoryTest {
 
     @Test
     fun testDefaultRestContentTypeHeaderUsed() {
-        val expectedContentType =  "application/json"
+        val expectedContentType = "application/json"
         val credentialsProvider = object : CredentialsProvider {
             override suspend fun resolve(attributes: Attributes): Credentials {
                 return Credentials("testA", "testB")
