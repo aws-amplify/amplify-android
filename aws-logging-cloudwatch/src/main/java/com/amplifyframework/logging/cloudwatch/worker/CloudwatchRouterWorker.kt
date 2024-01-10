@@ -14,9 +14,9 @@
  */
 package com.amplifyframework.logging.cloudwatch.worker
 
-import android.annotation.SuppressLint
 import android.content.Context
 import androidx.concurrent.futures.CallbackToFutureAdapter
+import androidx.work.CoroutineWorker
 import androidx.work.ListenableWorker
 import androidx.work.WorkerParameters
 import com.google.common.util.concurrent.ListenableFuture
@@ -28,7 +28,7 @@ internal class CloudwatchRouterWorker(appContext: Context, private val parameter
     private val workerClassName =
         parameter.inputData.getString(WORKER_CLASS_NAME)
             ?: throw IllegalArgumentException("Worker class name is missing")
-    private var delegateWorker: ListenableWorker? = null
+    private var delegateWorker: CoroutineWorker? = null
 
     companion object {
         internal const val WORKER_CLASS_NAME = "WORKER_CLASS_NAME"
@@ -70,14 +70,8 @@ internal class CloudwatchRouterWorker(appContext: Context, private val parameter
         }
     }
 
-    @SuppressLint("RestrictedApi")
     override fun onStopped() {
         super.onStopped()
-        delegateWorker?.stop()
-    }
-
-    @SuppressLint("RestrictedApi")
-    override fun isRunInForeground(): Boolean {
-        return delegateWorker?.isRunInForeground ?: false
+        delegateWorker?.onStopped()
     }
 }
