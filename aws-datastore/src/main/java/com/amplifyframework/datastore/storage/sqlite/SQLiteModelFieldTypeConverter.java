@@ -51,6 +51,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Stack;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -70,18 +71,21 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
     private final Map<String, Integer> cursorInnerModelCounts;
     private final boolean isInnerModel;
 
+    private Stack<String> modelStack;
+
     SQLiteModelFieldTypeConverter(
             @NonNull ModelSchema parentSchema,
             @NonNull SchemaRegistry schemaRegistry,
             @NonNull Gson gson
     ) {
-        this(parentSchema, schemaRegistry, gson, new HashMap<>());
+        this(parentSchema, schemaRegistry, gson, new Stack<String>(), new HashMap<>());
     }
 
     private SQLiteModelFieldTypeConverter(
             @NonNull ModelSchema parentSchema,
             @NonNull SchemaRegistry schemaRegistry,
             @NonNull Gson gson,
+            Stack<String> modelStack,
             @NonNull Map<String, Integer> innerModelCounts
     ) {
         this.parentSchema = Objects.requireNonNull(parentSchema);
@@ -90,6 +94,7 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
         this.columns = SQLiteTable.fromSchema(parentSchema).getColumns();
         this.cursorInnerModelCounts = innerModelCounts;
         this.isInnerModel = !this.cursorInnerModelCounts.isEmpty();
+        this.modelStack = modelStack;
         if (!this.isInnerModel) {
             this.cursorInnerModelCounts.put(parentSchema.getName(), 1);
         }
@@ -209,8 +214,13 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
                 LOGGER.verbose(String.format("Column with name %s does not exist", field.getName()));
                 return null;
             }
-
-            String columnName = column.getAliasedName(null);
+            String customQualifier = "";
+            for(String modelName : this.modelStack) {
+                if(!customQualifier.isEmpty())
+                    customQualifier = customQualifier.concat("_");
+                customQualifier = customQualifier.concat(modelName);
+            }
+            String columnName = column.getAliasedName(customQualifier);
 
             final int columnIndex = cursor.getColumnIndexOrThrow(columnName);
             // This check is necessary, because primitive values will return 0 even when null
@@ -272,9 +282,12 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
         // columns IF AND ONLY IF the model is a foreign key to the inner model.
         ModelSchema innerModelSchema =
             schemaRegistry.getModelSchemaForModelClass(field.getTargetType());
+        modelStack.push(innerModelSchema.getName());
         SQLiteModelFieldTypeConverter nestedModelConverter =
-            new SQLiteModelFieldTypeConverter(innerModelSchema, schemaRegistry, gson, cursorInnerModelCounts);
-        return nestedModelConverter.buildMapForModel(cursor);
+            new SQLiteModelFieldTypeConverter(innerModelSchema, schemaRegistry, gson, modelStack, cursorInnerModelCounts);
+        Map<String, Object> mapForModel = nestedModelConverter.buildMapForModel(cursor);
+        modelStack.pop();
+        return mapForModel;
     }
 
     private Object convertCustomTypeToTarget(Cursor cursor, ModelField field, int columnIndex) throws IOException {
