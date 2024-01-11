@@ -572,13 +572,14 @@ public class SqlCommandTest {
         SqlCommand sqlCommand = sqlCommandFactory.queryFor(postSchema, options);
 
         // The expected SQL query
-        String expectedQuery = "SELECT `BlogOwner3`.`id` AS `BlogOwner3_id`, " +
+        String expectedQuery = "SELECT `Blog3_BlogOwner3`.`id` AS `Blog3_BlogOwner3_id`, `Blog3_BlogOwner3`.`createdAt` AS" +
+                " `Blog3_BlogOwner3_createdAt`, `Blog3_BlogOwner3`.`name` AS `Blog3_BlogOwner3_name`," +
+                " `Blog3_BlogOwner3`.`updatedAt` AS `Blog3_BlogOwner3_updatedAt`," +
+                " `BlogOwner3`.`id` AS `BlogOwner3_id`, " +
                 "`BlogOwner3`.`createdAt` AS `BlogOwner3_createdAt`, `BlogOwner3`.`name` " +
                 "AS `BlogOwner3_name`, `BlogOwner3`.`updatedAt` AS `BlogOwner3_updatedAt`, " +
-                "`Blog3.BlogOwner3`.`id` AS `Blog3.BlogOwner3_id`, `Blog3.BlogOwner3`.`createdAt` AS" +
-                " `Blog3.BlogOwner3_createdAt`, `Blog3.BlogOwner3`.`name` AS `Blog3.BlogOwner3_name`," +
-                " `Blog3.BlogOwner3`.`updatedAt` AS `Blog3.BlogOwner3_updatedAt`, `Blog3`.`id` " +
-                "AS `Blog3_id`, `Blog3`.`createdAt` AS `Blog3_createdAt`, `Blog3`.`name` " +
+
+                "`Blog3`.`id` AS `Blog3_id`, `Blog3`.`createdAt` AS `Blog3_createdAt`, `Blog3`.`name` " +
                 "AS `Blog3_name`, `Blog3`.`updatedAt` AS `Blog3_updatedAt`, `Blog3`.`blogOwnerID` " +
                 "AS `Blog3_blogOwnerID`, `Post2`.`id` AS `Post2_id`, `Post2`.`createdAt` AS" +
                 " `Post2_createdAt`, `Post2`.`rating` AS `Post2_rating`, `Post2`.`status` AS " +
@@ -587,7 +588,7 @@ public class SqlCommandTest {
                 "`Post2_blogOwnerID` " +
                 "FROM `Post2` " +
                 "LEFT JOIN `Blog3` AS `Blog3` ON `Post2`.`blogID` = `Blog3`.`id` " +
-                "LEFT JOIN `BlogOwner3` AS `Blog3.BlogOwner3` ON `Blog3`.`blogOwnerID` = `Blog3.BlogOwner3`.`id` " +
+                "LEFT JOIN `BlogOwner3` AS `Blog3_BlogOwner3` ON `Blog3`.`blogOwnerID` = `Blog3_BlogOwner3`.`id` " +
                 "LEFT JOIN `BlogOwner3` AS `BlogOwner3` ON `Post2`.`blogOwnerID` = `BlogOwner3`.`id`  " +
                 "WHERE (`Post2`.`blogID` = ? AND `Post2`.`blogOwnerID` = ?);";
 
@@ -662,12 +663,13 @@ public class SqlCommandTest {
         SqlCommand sqlCommand = sqlCommandFactory.queryFor(postSchema, options);
 
         // The expected SQL query
-        String expectedQuery = "SELECT `BlogOwner3`.`id` AS `BlogOwner3_id`, `BlogOwner3`.`createdAt`" +
+        String expectedQuery = "SELECT `Blog3_BlogOwner3`.`id` AS `Blog3_BlogOwner3_id`, `Blog3_BlogOwner3`.`createdAt` AS" +
+                " `Blog3_BlogOwner3_createdAt`, `Blog3_BlogOwner3`.`name` AS `Blog3_BlogOwner3_name`," +
+                " `Blog3_BlogOwner3`.`updatedAt` AS `Blog3_BlogOwner3_updatedAt`, " +
+                "`BlogOwner3`.`id` AS `BlogOwner3_id`, `BlogOwner3`.`createdAt`" +
                 " AS `BlogOwner3_createdAt`, " +
                 "`BlogOwner3`.`name` AS `BlogOwner3_name`, `BlogOwner3`.`updatedAt` AS `BlogOwner3_updatedAt`, " +
-                "`Blog3.BlogOwner3`.`id` AS `Blog3.BlogOwner3_id`, `Blog3.BlogOwner3`.`createdAt` AS" +
-                " `Blog3.BlogOwner3_createdAt`, `Blog3.BlogOwner3`.`name` AS `Blog3.BlogOwner3_name`," +
-                " `Blog3.BlogOwner3`.`updatedAt` AS `Blog3.BlogOwner3_updatedAt`, " +
+
                 "`Blog3`.`id` AS `Blog3_id`, `Blog3`.`createdAt` AS `Blog3_createdAt`, `Blog3`.`name`" +
                 " AS `Blog3_name`, " +
                 "`Blog3`.`updatedAt` AS `Blog3_updatedAt`, " +
@@ -679,7 +681,7 @@ public class SqlCommandTest {
                 " AS `Post2_blogOwnerID` " +
                 "FROM `Post2` " +
                 "LEFT JOIN `Blog3` AS `Blog3` ON `Post2`.`blogID` = `Blog3`.`id` " +
-                "LEFT JOIN `BlogOwner3` AS `Blog3.BlogOwner3` ON `Blog3`.`blogOwnerID` = `Blog3.BlogOwner3`.`id` " +
+                "LEFT JOIN `BlogOwner3` AS `Blog3_BlogOwner3` ON `Blog3`.`blogOwnerID` = `Blog3_BlogOwner3`.`id` " +
                 "LEFT JOIN `BlogOwner3` AS `BlogOwner3` ON `Post2`.`blogOwnerID` = `BlogOwner3`.`id`  " +
                 "WHERE `Post2`.`blogOwnerID` = ?;";
 
