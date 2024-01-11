@@ -526,7 +526,8 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
             }
             SQLiteTable ownedTable = SQLiteTable.fromSchema(ownedSchema);
 
-            String ownedTableAlias = parentAlias.isEmpty() ? ownedTableName : parentAlias + "." + ownedTableName;
+            // Need to use "_" as separator as SQLiteCursor's getColumnIndexOrThrow() throws IllegalStateException
+            String ownedTableAlias = parentAlias.isEmpty() ? ownedTableName : parentAlias + "_" + ownedTableName;
 
             // Check if this join is already performed
             if (joinedTables.contains(ownedTableAlias)) {
