@@ -215,9 +215,10 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
                 return null;
             }
             String customQualifier = "";
-            for(String modelName : this.modelStack) {
-                if(!customQualifier.isEmpty())
+            for (String modelName : this.modelStack) {
+                if (!customQualifier.isEmpty()) {
                     customQualifier = customQualifier.concat("_");
+                }
                 customQualifier = customQualifier.concat(modelName);
             }
             String columnName = column.getAliasedName(customQualifier);
@@ -284,7 +285,8 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
             schemaRegistry.getModelSchemaForModelClass(field.getTargetType());
         modelStack.push(innerModelSchema.getName());
         SQLiteModelFieldTypeConverter nestedModelConverter =
-            new SQLiteModelFieldTypeConverter(innerModelSchema, schemaRegistry, gson, modelStack, cursorInnerModelCounts);
+            new SQLiteModelFieldTypeConverter(innerModelSchema, schemaRegistry, gson, modelStack,
+                    cursorInnerModelCounts);
         Map<String, Object> mapForModel = nestedModelConverter.buildMapForModel(cursor);
         modelStack.pop();
         return mapForModel;

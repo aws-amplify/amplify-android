@@ -572,7 +572,8 @@ public class SqlCommandTest {
         SqlCommand sqlCommand = sqlCommandFactory.queryFor(postSchema, options);
 
         // The expected SQL query
-        String expectedQuery = "SELECT `Blog3_BlogOwner3`.`id` AS `Blog3_BlogOwner3_id`, `Blog3_BlogOwner3`.`createdAt` AS" +
+        String expectedQuery = "SELECT `Blog3_BlogOwner3`.`id` AS `Blog3_BlogOwner3_id`, " +
+                "`Blog3_BlogOwner3`.`createdAt` AS" +
                 " `Blog3_BlogOwner3_createdAt`, `Blog3_BlogOwner3`.`name` AS `Blog3_BlogOwner3_name`," +
                 " `Blog3_BlogOwner3`.`updatedAt` AS `Blog3_BlogOwner3_updatedAt`," +
                 " `BlogOwner3`.`id` AS `BlogOwner3_id`, " +
@@ -663,7 +664,8 @@ public class SqlCommandTest {
         SqlCommand sqlCommand = sqlCommandFactory.queryFor(postSchema, options);
 
         // The expected SQL query
-        String expectedQuery = "SELECT `Blog3_BlogOwner3`.`id` AS `Blog3_BlogOwner3_id`, `Blog3_BlogOwner3`.`createdAt` AS" +
+        String expectedQuery = "SELECT `Blog3_BlogOwner3`.`id` AS `Blog3_BlogOwner3_id`, " +
+                "`Blog3_BlogOwner3`.`createdAt` AS" +
                 " `Blog3_BlogOwner3_createdAt`, `Blog3_BlogOwner3`.`name` AS `Blog3_BlogOwner3_name`," +
                 " `Blog3_BlogOwner3`.`updatedAt` AS `Blog3_BlogOwner3_updatedAt`, " +
                 "`BlogOwner3`.`id` AS `BlogOwner3_id`, `BlogOwner3`.`createdAt`" +

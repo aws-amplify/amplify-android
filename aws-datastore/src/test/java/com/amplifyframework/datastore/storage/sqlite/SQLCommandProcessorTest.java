@@ -249,6 +249,33 @@ public class SQLCommandProcessorTest {
         sqlCommandProcessor.execute(sqlCommandFactory.insertFor(blog3Schema, blog));
         sqlCommandProcessor.execute(sqlCommandFactory.insertFor(post2Schema, post));
 
+        UUID blogOwner2Id = UUID.randomUUID();
+        UUID blog2Id = UUID.randomUUID();
+        final BlogOwner3 blogOwner2 = BlogOwner3.builder()
+                .name("Owner")
+                .id(blogOwner2Id.toString())
+                .createdAt(new Temporal.DateTime("2023-12-15T16:22:30.48Z"))
+                .build();
+
+//        final Blog3 blog2 = Blog3.builder()
+//                .name("Blog")
+//                .id(blog2Id.toString())
+//                .owner(blogOwner2)
+//                .createdAt(new Temporal.DateTime("2023-12-15T16:22:35.48Z"))
+//                .build();
+
+        final Post2 post2 = Post2.builder()
+                .title("Test Post")
+                .status(PostStatus.ACTIVE)
+                .rating(5)
+                .blogOwner(blogOwner2)
+//                .blog(blog2)
+                .createdAt(new Temporal.DateTime("2023-12-15T16:22:38.48Z"))
+                .build();
+        sqlCommandProcessor.execute(sqlCommandFactory.insertFor(blogOwner3Schema, blogOwner2));
+//        sqlCommandProcessor.execute(sqlCommandFactory.insertFor(blog3Schema, blog2));
+        sqlCommandProcessor.execute(sqlCommandFactory.insertFor(post2Schema, post2));
+
         QueryPredicate predicate = Post2.BLOG_OWNER.eq(blogOwner.getId());
         QueryOptions options = Where.matches(predicate);
 
@@ -267,6 +294,8 @@ public class SQLCommandProcessorTest {
                 } while (cursor.moveToNext());
             }
         }
+        assertEquals(results.size(), 1);
+        assertEquals(post.getBlogOwner().getId(), results.get(0).getBlogOwner().getId());
         assertEquals(Arrays.asList(post), results);
     }
 }
