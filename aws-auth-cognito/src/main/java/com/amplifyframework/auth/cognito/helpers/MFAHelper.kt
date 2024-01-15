@@ -24,7 +24,7 @@ internal fun getMFAType(value: String) = when (value) {
     else -> throw IllegalArgumentException("Unsupported MFA type")
 }
 
-internal fun getMFATypeOrNull(value: String) = when(value) {
+internal fun getMFATypeOrNull(value: String) = when (value) {
     "SMS_MFA" -> MFAType.SMS
     "SOFTWARE_TOKEN_MFA" -> MFAType.TOTP
     else -> null
