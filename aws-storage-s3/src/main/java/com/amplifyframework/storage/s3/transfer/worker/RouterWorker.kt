@@ -15,7 +15,6 @@
 
 package com.amplifyframework.storage.s3.transfer.worker
 
-import android.annotation.SuppressLint
 import android.content.Context
 import androidx.concurrent.futures.CallbackToFutureAdapter
 import androidx.work.ListenableWorker
@@ -29,8 +28,7 @@ import java.lang.IllegalStateException
 /**
  * Worker to route transfer WorkRequest to appropriate WorkerFactory
  */
-@SuppressLint("RestrictedApi")
-internal class RouterWorker constructor(
+internal class RouterWorker(
     appContext: Context,
     private val parameter: WorkerParameters
 ) : ListenableWorker(appContext, parameter) {
@@ -45,7 +43,7 @@ internal class RouterWorker constructor(
             ?: throw IllegalArgumentException("Worker class name is missing")
     private val workerId = parameter.inputData.getString(BaseTransferWorker.WORKER_ID)
 
-    private var delegateWorker: ListenableWorker? = null
+    private var delegateWorker: BaseTransferWorker? = null
 
     companion object {
         internal const val WORKER_CLASS_NAME = "WORKER_CLASS_NAME"
@@ -86,15 +84,9 @@ internal class RouterWorker constructor(
         }
     }
 
-    @SuppressLint("RestrictedApi")
     override fun onStopped() {
         super.onStopped()
         logger.debug("onStopped for $id")
-        delegateWorker?.stop()
-    }
-
-    @SuppressLint("RestrictedApi")
-    override fun isRunInForeground(): Boolean {
-        return delegateWorker?.isRunInForeground ?: false
+        delegateWorker?.onStopped()
     }
 }

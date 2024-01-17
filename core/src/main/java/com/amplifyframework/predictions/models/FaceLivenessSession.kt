@@ -16,14 +16,13 @@
 package com.amplifyframework.predictions.models
 
 import com.amplifyframework.annotations.InternalAmplifyApi
-import com.amplifyframework.core.Action
 
 @InternalAmplifyApi
 class FaceLivenessSession(
     val challenges: List<FaceLivenessSessionChallenge>,
     private val onVideoEvent: (VideoEvent) -> Unit,
     private val onChallengeResponseEvent: (ChallengeResponseEvent) -> Unit,
-    private val stopLivenessSession: Action
+    private val stopLivenessSession: (Int?) -> Unit
 ) {
 
     fun sendVideoEvent(videoEvent: VideoEvent) {
@@ -34,7 +33,8 @@ class FaceLivenessSession(
         onChallengeResponseEvent(challengeResponseEvent)
     }
 
-    fun stopSession() {
-        stopLivenessSession.call()
+    @JvmOverloads
+    fun stopSession(reasonCode: Int? = null) {
+        stopLivenessSession(reasonCode)
     }
 }

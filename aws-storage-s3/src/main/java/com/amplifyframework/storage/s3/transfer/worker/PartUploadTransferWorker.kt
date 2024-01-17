@@ -26,6 +26,8 @@ import com.amplifyframework.storage.s3.transfer.TransferDB
 import com.amplifyframework.storage.s3.transfer.TransferStatusUpdater
 import com.amplifyframework.storage.s3.transfer.UploadProgressListenerInterceptor
 import java.io.File
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.isActive
 
 /**
  * Worker to upload a part for multipart upload
@@ -43,7 +45,7 @@ internal class PartUploadTransferWorker(
     override var maxRetryCount = 3
 
     override suspend fun performWork(): Result {
-        if (isStopped) {
+        if (!currentCoroutineContext().isActive) {
             return Result.retry()
         }
         transferStatusUpdater.updateTransferState(transferRecord.mainUploadId, TransferState.IN_PROGRESS)

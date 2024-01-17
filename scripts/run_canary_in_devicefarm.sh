@@ -55,8 +55,8 @@ minDevice=$(aws devicefarm list-devices \
                 --filters '[
                     {"attribute":"AVAILABILITY","operator":"EQUALS","values":["HIGHLY_AVAILABLE"]},
                     {"attribute":"PLATFORM","operator":"EQUALS","values":["ANDROID"]},
-                    {"attribute":"OS_VERSION","operator":"GREATER_THAN_OR_EQUALS","values":["7"]},
-                    {"attribute":"OS_VERSION","operator":"LESS_THAN","values":["7.1"]},
+                    {"attribute":"OS_VERSION","operator":"GREATER_THAN_OR_EQUALS","values":["8"]},
+                    {"attribute":"OS_VERSION","operator":"LESS_THAN","values":["8.1"]},
                     {"attribute":"MANUFACTURER","operator":"IN","values":["Google", "Pixel", "Samsung"]}
                 ]' \
                 | jq -r '.devices[0].arn')
