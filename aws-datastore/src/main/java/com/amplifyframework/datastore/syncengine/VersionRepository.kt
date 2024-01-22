@@ -14,6 +14,7 @@
  */
 package com.amplifyframework.datastore.syncengine
 
+import androidx.annotation.VisibleForTesting
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.category.CategoryType
 import com.amplifyframework.core.model.Model
@@ -36,6 +37,9 @@ import kotlin.coroutines.suspendCoroutine
  * of the various models in the local storage.
  */
 internal class VersionRepository(private val localStorageAdapter: LocalStorageAdapter) {
+
+    @VisibleForTesting
+    internal var chunkSize = DEFAULT_CHUNK_SIZE
 
     /**
      * Find the current version of a model, that we have in the local store.
@@ -73,9 +77,9 @@ internal class VersionRepository(private val localStorageAdapter: LocalStorageAd
             ModelSchema.fromModelClass(ModelMetadata::class.java).primaryKeyName
         )
 
-        // We chunk sql query to 950 items to prevent hitting 1k sqlite predicate limit
+        // We chunk sql query to prevent hitting 1k sqlite predicate limit
         // Improvement would be to use IN, but not currently supported in our query builders
-        return modelsWithMetadata.chunked(950).fold(mutableMapOf()) { acc, chunk ->
+        return modelsWithMetadata.chunked(chunkSize).fold(mutableMapOf()) { acc, chunk ->
             val queryOptions = Where.matches(
                 QueryPredicateGroup(
                     QueryPredicateGroup.Type.OR,
@@ -154,5 +158,7 @@ internal class VersionRepository(private val localStorageAdapter: LocalStorageAd
 
     companion object {
         private val LOG = Amplify.Logging.logger(CategoryType.DATASTORE, "amplify:aws-datastore")
+        // Keep safely below 1k to prevent SQLite issues
+        private const val DEFAULT_CHUNK_SIZE = 950
     }
 }
