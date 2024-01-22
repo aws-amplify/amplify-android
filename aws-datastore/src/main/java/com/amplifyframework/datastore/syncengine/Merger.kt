@@ -86,10 +86,16 @@ internal class Merger(
             // fetch a Map of all model versions from Metadata table
             val localModelVersions = versionRepository.fetchModelVersions(modelsWithMetadata)
 
-            // fetch a Set of all pending mutation ids for type T
+            /*
+            Fetch a Set of all pending mutation ids for type T
+            We exclude in-flight mutations from the returned pending mutation. If a mutation is excluded, it is
+            likely that the subscription processor returned the item before the outbox response. We want to process
+            whichever comes first
+             */
             val pendingMutations = mutationOutbox.fetchPendingMutations(
-                modelsWithMetadata.map { it.model },
-                modelsWithMetadata.first().model.javaClass.name
+                models = modelsWithMetadata.map { it.model },
+                modelClass = modelsWithMetadata.first().model.javaClass.name,
+                excludeInFlight = true
             )
 
             // Construct a batch of operations to be executed in a single transactions
