@@ -1487,9 +1487,37 @@ class PersistentMutationOutboxTest {
         }
         val expectedResult = blogOwners.map { it.id }.toSet()
 
-        val result = mutationOutbox.fetchPendingMutations(blogOwners, blogOwners[0].javaClass.name)
+        val result = mutationOutbox.fetchPendingMutations(blogOwners, blogOwners[0].javaClass.name, true)
 
         Assert.assertEquals(975, result.size)
+        Assert.assertEquals(expectedResult, result)
+    }
+
+    @Test
+    fun fetchPendingMutationsExcludesInFlight() {
+        val b1 = BlogOwner.builder()
+            .name("Name1")
+            .id("ID1")
+            .build()
+        val p1 = PendingMutation.creation(b1, schema)
+        val completed1 = mutationOutbox.enqueue(p1)
+            .blockingAwait(TIMEOUT_MS, TimeUnit.MILLISECONDS)
+        Assert.assertTrue(completed1)
+        val markedInFlight = mutationOutbox.markInFlight(p1.mutationId).blockingAwait(1, TimeUnit.SECONDS)
+        Assert.assertTrue(markedInFlight)
+
+        val b2 = BlogOwner.builder()
+            .name("Name2")
+            .id("ID2")
+            .build()
+        val completed2 = mutationOutbox.enqueue(PendingMutation.creation(b2, schema))
+            .blockingAwait(TIMEOUT_MS, TimeUnit.MILLISECONDS)
+        Assert.assertTrue(completed2)
+        val expectedResult = setOf(b2.id)
+
+        val result = mutationOutbox.fetchPendingMutations(listOf(b1, b2), BlogOwner::class.java.name, true)
+
+        Assert.assertEquals(1, result.size)
         Assert.assertEquals(expectedResult, result)
     }
 

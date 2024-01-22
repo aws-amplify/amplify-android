@@ -489,7 +489,7 @@ class MutationProcessorTest {
     }
 
     private fun <T : Model> hasPendingMutation(model: T, modelClass: String): Boolean {
-        val results = mutationOutbox.fetchPendingMutations(listOf(model), modelClass)
+        val results = mutationOutbox.fetchPendingMutations(listOf(model), modelClass, true)
         return results.contains(model.primaryKeyString)
     }
 
