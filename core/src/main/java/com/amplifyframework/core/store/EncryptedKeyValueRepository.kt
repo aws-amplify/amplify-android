@@ -72,7 +72,7 @@ class EncryptedKeyValueRepository @VisibleForTesting constructor(
         var amplifyMasterKey = getMasterKeyOrNull(amplifyMasterKeySpec)
         if (amplifyMasterKey == null) {
             logger.warn("Unable to retrieve Amplify master key. Deleting invalid master key and creating new one")
-            deleteMasterKey(amplifyMasterKeySpec)
+            deleteAmplifyMasterKey()
             amplifyMasterKey = getMasterKeyOrThrow(amplifyMasterKeySpec)
         }
 
@@ -117,9 +117,9 @@ class EncryptedKeyValueRepository @VisibleForTesting constructor(
 
     private fun deleteSharedPreferences(fileName: String) = context.deleteSharedPreferences(fileName)
 
-    private fun deleteMasterKey(spec: KeyGenParameterSpec) = KeyStore.getInstance("AndroidKeyStore").run {
+    private fun deleteAmplifyMasterKey() = KeyStore.getInstance("AndroidKeyStore").run {
         load(null)
-        deleteEntry(spec.keystoreAlias)
+        deleteEntry(amplifyMasterKeySpec.keystoreAlias)
     }
 
     private fun getMasterKeyOrNull(spec: KeyGenParameterSpec): String? {
@@ -186,7 +186,7 @@ class EncryptedKeyValueRepository @VisibleForTesting constructor(
         }
     }
 
-    companion object {
+    internal companion object {
         private val logger = Amplify.Logging.forNamespace(EncryptedKeyValueRepository::class.simpleName!!)
 
         private fun getDefaultMasterKeySpec() = MasterKeys.AES256_GCM_SPEC
@@ -204,6 +204,6 @@ class EncryptedKeyValueRepository @VisibleForTesting constructor(
 
         // This prefix is used to identify repositories encrypted with the amplifyMasterKey instead of the
         // defaultMasterKey
-        @VisibleForTesting const val amplifyIdentifierPrefix = "__amplify__"
+        @VisibleForTesting internal const val amplifyIdentifierPrefix = "__amplify__"
     }
 }
