@@ -178,7 +178,7 @@ public final class MutationProcessorTest {
 
         // And that it is no longer in the outbox.
         assertFalse(mutationOutbox.hasPendingMutation(tony.getPrimaryKeyString(),
-                tony.getClass().getName()));
+                tony.getClass().getSimpleName()));
 
         // And that it was passed to AppSync for publication.
         verify(appSync).create(eq(tony), any(), any(), any());
