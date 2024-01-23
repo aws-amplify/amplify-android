@@ -188,6 +188,7 @@ class EncryptedKeyValueRepository @VisibleForTesting constructor(
 
     companion object {
         private val logger = Amplify.Logging.forNamespace(EncryptedKeyValueRepository::class.simpleName!!)
+
         private fun getDefaultMasterKeySpec() = MasterKeys.AES256_GCM_SPEC
 
         // We create our own KeyGenParameterSpec that is exactly like MasterKeys.AES256_GCM_SPEC except with a different
@@ -201,7 +202,8 @@ class EncryptedKeyValueRepository @VisibleForTesting constructor(
             .setKeySize(256)
             .build()
 
-        // This prefix is used to identify repositories encrypted with the amplifyMasterKey instead of the androidMasterKey
+        // This prefix is used to identify repositories encrypted with the amplifyMasterKey instead of the
+        // defaultMasterKey
         @VisibleForTesting const val amplifyIdentifierPrefix = "__amplify__"
     }
 }
