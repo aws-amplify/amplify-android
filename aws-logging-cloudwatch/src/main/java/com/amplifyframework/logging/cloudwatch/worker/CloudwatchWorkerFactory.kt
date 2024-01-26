@@ -15,7 +15,7 @@
 package com.amplifyframework.logging.cloudwatch.worker
 
 import android.content.Context
-import androidx.work.ListenableWorker
+import androidx.work.CoroutineWorker
 import androidx.work.WorkerFactory
 import androidx.work.WorkerParameters
 import com.amplifyframework.logging.cloudwatch.CloudWatchLogManager
@@ -30,7 +30,7 @@ internal class CloudwatchWorkerFactory(
         appContext: Context,
         workerClassName: String,
         workerParameters: WorkerParameters
-    ): ListenableWorker {
+    ): CoroutineWorker {
         return when (workerClassName) {
             CloudwatchLogsSyncWorker::class.java.simpleName -> {
                 CloudwatchLogsSyncWorker(

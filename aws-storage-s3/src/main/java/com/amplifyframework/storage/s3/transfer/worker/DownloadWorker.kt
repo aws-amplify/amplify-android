@@ -31,8 +31,9 @@ import com.amplifyframework.storage.s3.transfer.TransferStatusUpdater
 import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileOutputStream
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withContext
 
 /**
@@ -48,7 +49,6 @@ internal class DownloadWorker(
 
     private lateinit var downloadProgressListener: DownloadProgressListener
     private val defaultBufferSize = 8192L
-    val coroutineScope = CoroutineScope(Dispatchers.IO)
     override suspend fun performWork(): Result {
         s3.withConfig {
             enableAccelerate = transferRecord.useAccelerateEndpoint == 1
@@ -104,7 +104,7 @@ internal class DownloadWorker(
                     var totalRead = 0L
                     BufferedOutputStream(fileOutputStream).use { fileOutput ->
                         val copied = 0L
-                        while (!isStopped) {
+                        while (currentCoroutineContext().isActive) {
                             val remaining = limit - copied
                             if (remaining == 0L) break
                             val readBytes =

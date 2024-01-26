@@ -51,6 +51,8 @@ import java.io.File
 import java.lang.Exception
 import java.net.SocketException
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.isActive
 
 /**
  * Base worker to perform transfer file task.
@@ -74,9 +76,6 @@ internal abstract class BaseTransferWorker(
         internal const val PART_RECORD_ID = "PART_RECORD_ID"
         internal const val RUN_AS_FOREGROUND_TASK = "RUN_AS_FOREGROUND_TASK"
         internal const val WORKER_ID = "WORKER_ID"
-        private const val OBJECT_TAGS_DELIMITER = "&"
-        private const val OBJECT_TAG_KEY_VALUE_SEPARATOR = "="
-        private const val REQUESTER_PAYS = "requester"
         private val CANNED_ACL_MAP =
             ObjectCannedAcl.values().associateBy { it.value }
         internal const val MULTI_PART_UPLOAD_ID = "multipartUploadId"
@@ -112,10 +111,10 @@ internal abstract class BaseTransferWorker(
             }
             else -> {
                 val ex = result.exceptionOrNull()
-                if (!isStopped) {
+                if (currentCoroutineContext().isActive) {
                     logger.error("${this.javaClass.simpleName} failed with exception: ${Log.getStackTraceString(ex)}")
                 }
-                if (isRetryableError(ex)) {
+                if (!currentCoroutineContext().isActive && isRetryableError(ex)) {
                     Result.retry()
                 } else {
                     transferStatusUpdater.updateOnError(transferRecord.id, Exception(ex))
@@ -151,8 +150,7 @@ internal abstract class BaseTransferWorker(
     }
 
     private fun isRetryableError(e: Throwable?): Boolean {
-        return isStopped ||
-            !isNetworkAvailable(applicationContext) ||
+        return !isNetworkAvailable(applicationContext) ||
             runAttemptCount < maxRetryCount ||
             e is CancellationException ||
             // SocketException is thrown when download is terminated due to network disconnection.
@@ -200,7 +198,7 @@ internal abstract class BaseTransferWorker(
         return false
     }
 
-    internal suspend fun createPutObjectRequest(
+    internal fun createPutObjectRequest(
         transferRecord: TransferRecord,
         progressListener: ProgressListener?
     ): PutObjectRequest {
