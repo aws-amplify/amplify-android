@@ -1,0 +1,19 @@
+name: Notify Pull Request
+
+on:
+  pull_request:
+    types: [opened, ready_for_review, reopened]
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    if: ${{ !github.event.draft }}
+    steps:
+      - name: Run webhook curl command
+        env:
+          WEBHOOK_URL: ${{ secrets.SLACK_PR_WEBHOOK_URL }}
+          URL: ${{ github.event.pull_request.html_url }}
+          TITLE: ${{ github.event.pull_request.title }}
+          USER: ${{ github.event.pull_request.user.login }}
+        shell: bash
+        run: curl -s POST "$WEBHOOK_URL" -H "Content-Type:application/json" --data "{\"url\":\"$URL\", \"title\":\"$TITLE\", \"user\":\"$USER\"}"
