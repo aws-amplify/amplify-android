@@ -1,3 +1,65 @@
+## [Release 2.14.9](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.14.9)
+
+### Bug Fixes
+- **storage:** Remove work manager restricted API usage and upgrade lib. ([#2674](https://github.com/aws-amplify/amplify-android/issues/2674))
+
+### Miscellaneous
+- Fix CHANGELOG.md for v2.14.8 ([#2664](https://github.com/aws-amplify/amplify-android/issues/2664))
+
+[See all changes between 2.14.8 and 2.14.9](https://github.com/aws-amplify/amplify-android/compare/release_v2.14.8...release_v2.14.9)
+
+## [Release 2.14.8](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.14.8)
+
+### Miscellaneous
+- **liveness:** add close codes to websocket apis ([#2658](https://github.com/aws-amplify/amplify-android/issues/2658))
+
+[See all changes between 2.14.7 and 2.14.8](https://github.com/aws-amplify/amplify-android/compare/release_v2.14.7...release_v2.14.8)
+
+
+## [Release 2.14.7](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.14.7)
+
+### Bug Fixes
+- **datastore:** Update Model Class Check in getMutationForModelId() from using ModelSchema class name to mutatedItem modelName ([#2637](https://github.com/aws-amplify/amplify-android/issues/2637))
+
+[See all changes between 2.14.6 and 2.14.7](https://github.com/aws-amplify/amplify-android/compare/release_v2.14.6...release_v2.14.7)
+
+## [Release 2.14.6](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.14.6)
+
+### Bug Fixes
+- **auth:** Add userAttributes to confirmSignIn call ([#2640](https://github.com/aws-amplify/amplify-android/issues/2640))
+
+[See all changes between 2.14.5 and 2.14.6](https://github.com/aws-amplify/amplify-android/compare/release_v2.14.5...release_v2.14.6)
+
+## [Release 2.14.5](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.14.5)
+
+### Bug Fixes
+- **liveness:** correct websocket retry logic ([#2634](https://github.com/aws-amplify/amplify-android/issues/2634))
+
+[See all changes between 2.14.4 and 2.14.5](https://github.com/aws-amplify/amplify-android/compare/release_v2.14.4...release_v2.14.5)
+
+## [Release 2.14.4](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.14.4)
+
+### Bug Fixes
+- Re-release of 2.14.2. Do not use 2.14.3 due to regression in aws-predictions for Liveness
+
+[See all changes between 2.14.2 and 2.14.4](https://github.com/aws-amplify/amplify-android/compare/release_v2.14.2...release_v2.14.4)
+
+## [Release 2.14.2](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.14.2)
+
+### Bug Fixes
+- **auth:** Fix for when alias is used to sign in and deviceKey is stored with the entered username instead of retrieved username ([#2614](https://github.com/aws-amplify/amplify-android/issues/2614))
+- **datastore:** Add Model Class Check in getMutationById() to Prevent Cross-Model Primary Key Collisions ([#2612](https://github.com/aws-amplify/amplify-android/issues/2612))
+- **datastore:** Temporary workaround to stabilize DataStore test. ([#2618](https://github.com/aws-amplify/amplify-android/issues/2618))
+
+[See all changes between 2.14.1 and 2.14.2](https://github.com/aws-amplify/amplify-android/compare/release_v2.14.1...release_v2.14.2)
+
+## [Release 2.14.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.14.1)
+
+### Bug Fixes
+- **auth:** Fix for retry sign in when resourceNotFoundException is raised ([#2605](https://github.com/aws-amplify/amplify-android/issues/2605))
+
+[See all changes between 2.14.0 and 2.14.1](https://github.com/aws-amplify/amplify-android/compare/release_v2.14.0...release_v2.14.1)
+
 ## [Release 2.14.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.14.0)
 
 ### Features

@@ -71,7 +71,9 @@ import com.amplifyframework.auth.cognito.helpers.HostedUIHelper
 import com.amplifyframework.auth.cognito.helpers.SessionHelper
 import com.amplifyframework.auth.cognito.helpers.SignInChallengeHelper
 import com.amplifyframework.auth.cognito.helpers.getMFAType
+import com.amplifyframework.auth.cognito.helpers.getMFATypeOrNull
 import com.amplifyframework.auth.cognito.helpers.identityProviderName
+import com.amplifyframework.auth.cognito.helpers.value
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthConfirmSignInOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthConfirmSignUpOptions
@@ -785,15 +787,29 @@ internal class RealAWSCognitoAuthPlugin(
             },
             {
                 val awsCognitoConfirmSignInOptions = options as? AWSCognitoAuthConfirmSignInOptions
+                val metadata = awsCognitoConfirmSignInOptions?.metadata ?: emptyMap()
+                val userAttributes = awsCognitoConfirmSignInOptions?.userAttributes ?: emptyList()
                 when (signInState) {
                     is SignInState.ResolvingChallenge -> {
-                        val event = SignInChallengeEvent(
-                            SignInChallengeEvent.EventType.VerifyChallengeAnswer(
-                                challengeResponse,
-                                awsCognitoConfirmSignInOptions?.metadata ?: mapOf()
+                        val challengeState = signInState.challengeState
+                        if (challengeState is SignInChallengeState.WaitingForAnswer &&
+                            challengeState.challenge.challengeName == "SELECT_MFA_TYPE" &&
+                            getMFATypeOrNull(challengeResponse) == null
+                        ) {
+                            val error = InvalidParameterException(
+                                message = "Value for challengeResponse must be one of SMS_MFA or SOFTWARE_TOKEN_MFA"
                             )
-                        )
-                        authStateMachine.send(event)
+                            onError.accept(error)
+                        } else {
+                            val event = SignInChallengeEvent(
+                                SignInChallengeEvent.EventType.VerifyChallengeAnswer(
+                                    challengeResponse,
+                                    metadata,
+                                    userAttributes
+                                )
+                            )
+                            authStateMachine.send(event)
+                        }
                     }
 
                     is SignInState.ResolvingTOTPSetup -> {
