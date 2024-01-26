@@ -23,6 +23,7 @@ import com.amplifyframework.datastore.DataStoreChannelEventName
 import com.amplifyframework.datastore.DataStoreException
 import com.amplifyframework.datastore.appsync.ModelMetadata
 import com.amplifyframework.datastore.appsync.ModelWithMetadata
+import com.amplifyframework.datastore.extensions.getMetadataSQLitePrimaryKey
 import com.amplifyframework.datastore.storage.LocalStorageAdapter
 import com.amplifyframework.datastore.storage.StorageItemChange
 import com.amplifyframework.datastore.storage.StorageOperation
@@ -66,7 +67,7 @@ internal class Merger(
             }
 
             // create (key, model metadata) map for quick lookup to re-associate
-            val modelMetadataMap = modelsWithMetadata.associateBy({ it.syncMetadata.primaryKeyString }, { it })
+            val modelMetadataMap = modelsWithMetadata.associateBy { it.syncMetadata.primaryKeyString }
 
             // Consumer to announce Model merges
             val mergedConsumer = Consumer<ModelWithMetadata<T>> {
@@ -102,7 +103,7 @@ internal class Merger(
             val operations = modelsWithMetadata.mapNotNull {
                 val incomingVersion = it.syncMetadata.version ?: -1
                 val localVersion = localModelVersions.getOrDefault(
-                    "${it.model.modelName}|${it.model.primaryKeyString}",
+                    it.model.getMetadataSQLitePrimaryKey(),
                     -1
                 )
                 // if local version unknown or lower than remote (incoming) version we will create operation(s)

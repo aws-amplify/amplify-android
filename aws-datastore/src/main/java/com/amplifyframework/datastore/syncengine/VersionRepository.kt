@@ -25,6 +25,7 @@ import com.amplifyframework.core.model.query.predicate.QueryPredicateGroup
 import com.amplifyframework.datastore.DataStoreException
 import com.amplifyframework.datastore.appsync.ModelMetadata
 import com.amplifyframework.datastore.appsync.ModelWithMetadata
+import com.amplifyframework.datastore.extensions.getMetadataSQLitePrimaryKey
 import com.amplifyframework.datastore.storage.LocalStorageAdapter
 import io.reactivex.rxjava3.core.Single
 import io.reactivex.rxjava3.core.SingleEmitter
@@ -54,7 +55,7 @@ internal class VersionRepository(private val localStorageAdapter: LocalStorageAd
                 ModelMetadata::class.java,
                 Where.identifier(
                     ModelMetadata::class.java,
-                    model.modelName + "|" + model.primaryKeyString
+                    model.getMetadataSQLitePrimaryKey()
                 ),
                 { iterableResults: Iterator<ModelMetadata> ->
                     try {
@@ -102,13 +103,13 @@ internal class VersionRepository(private val localStorageAdapter: LocalStorageAd
             // Add version of each ModelMetadata item to accumulator map
             chunkResult.forEach {
                 val version = if (it.version == null) {
-                    LOG.info(
+                    LOG.warn(
                         "Metadata for item with id = ${it.primaryKeyString} had null version. " +
                             "This is likely a bug. Please report to AWS."
                     )
                     -1
                 } else if (acc.contains(it.primaryKeyString)) {
-                    LOG.info(
+                    LOG.warn(
                         "Fetched more than 1 metadata for item with id = ${it.primaryKeyString}. " +
                             "This is likely a bug. please report to AWS."
                     )
