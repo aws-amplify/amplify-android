@@ -225,7 +225,7 @@ class SQLCommandProcessorTest {
             .name("My Name")
             .build()
 
-        sqlCommandProcessor.runInTransaction(true) {
+        sqlCommandProcessor.runInTransaction {
             sqlCommandProcessor.execute(sqlCommandFactory.insertFor(blogOwnerSchema, owner))
         }
 
@@ -236,7 +236,7 @@ class SQLCommandProcessorTest {
     }
 
     @Test
-    fun testFailureWithoutAlwaysMarkSuccessfulDoesNotCommit() {
+    fun testRunInTransactionErrorDoesNotCommit() {
         // Insert a BlogOwner
         val blogOwnerSchema = ModelSchema.fromModelClass(
             BlogOwner::class.java
@@ -248,7 +248,7 @@ class SQLCommandProcessorTest {
         val expectedException = DataStoreException("expected", "expected")
         var capturedException: DataStoreException? = null
         try {
-            sqlCommandProcessor.runInTransaction(false) {
+            sqlCommandProcessor.runInTransaction {
                 sqlCommandProcessor.execute(sqlCommandFactory.insertFor(blogOwnerSchema, owner))
                 throw expectedException
             }
@@ -265,7 +265,7 @@ class SQLCommandProcessorTest {
     }
 
     @Test
-    fun testFailureWithAlwaysMarkSuccessfulCommits() {
+    fun testRunInTransactionAndSucceedOnDatastoreException() {
         // Insert a BlogOwner
         val blogOwnerSchema = ModelSchema.fromModelClass(
             BlogOwner::class.java
@@ -277,7 +277,7 @@ class SQLCommandProcessorTest {
         val expectedException = DataStoreException("expected", "expected")
         var capturedException: DataStoreException? = null
         try {
-            sqlCommandProcessor.runInTransaction(true) {
+            sqlCommandProcessor.runInTransactionAndSucceedOnDatastoreException {
                 sqlCommandProcessor.execute(sqlCommandFactory.insertFor(blogOwnerSchema, owner))
                 throw expectedException
             }

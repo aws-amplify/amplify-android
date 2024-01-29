@@ -132,37 +132,38 @@ final class SQLCommandProcessor {
     }
 
     /**
-     * Wraps a block of code in a SQLite transaction.
+     * Wraps a block of code in a sqlite transaction, ensuring that the transaction is always
+     * marked successful, even if an error is encountered. We will still throw the error, but
+     * any data saved before the error will be committed to the database.
      *
-     * @param alwaysMarkSuccessful If true, the transaction is always marked successful,
-     *                             even if an exception occurred.
-     * @param transactionBlock The block of code to run in the SQL transaction.
-     * @throws DataStoreException If an exception is caught in the transaction block, we throw the
-     *                            exception back to the caller. The transaction is still ended.
-     *                            The transaction is successful if alwaysMarkSuccessful == true.
+     * @param transactionBlock The block of code to run in the transaction.
+     * @throws DataStoreException A re-thrown error from the transaction block.
      */
-    void runInTransaction(
-            Boolean alwaysMarkSuccessful,
-            TransactionBlock transactionBlock
-    ) throws DataStoreException {
-        DataStoreException runnableException = null;
-        try {
+    void runInTransactionAndSucceedOnDatastoreException(TransactionBlock transactionBlock) throws DataStoreException {
+        runInTransaction(() -> {
             try {
-                sqliteDatabase.beginTransaction();
                 transactionBlock.run();
             } catch (DataStoreException exception) {
-                runnableException = exception;
-            } finally {
-                if (runnableException == null || alwaysMarkSuccessful) {
-                    sqliteDatabase.setTransactionSuccessful();
-                }
+                sqliteDatabase.setTransactionSuccessful();
+                throw exception;
             }
+        });
+    }
+
+
+    /**
+     * Wraps a block of code in a sqlite transaction.
+     *
+     * @param transactionBlock The block of code to run in the transaction.
+     * @throws DataStoreException An uncaught error from the transaction block.
+     */
+    void runInTransaction(TransactionBlock transactionBlock) throws DataStoreException {
+        try {
+            sqliteDatabase.beginTransaction();
+            transactionBlock.run();
+            sqliteDatabase.setTransactionSuccessful();
         } finally {
             sqliteDatabase.endTransaction();
-        }
-
-        if (runnableException != null) {
-            throw runnableException;
         }
     }
 }
