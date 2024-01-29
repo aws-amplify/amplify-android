@@ -22,6 +22,7 @@ import com.amplifyframework.core.model.ModelSchema
 import com.amplifyframework.core.model.SchemaRegistry
 import com.amplifyframework.core.model.query.Where
 import com.amplifyframework.core.model.query.predicate.QueryPredicate
+import com.amplifyframework.datastore.DataStoreException
 import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider
 import com.amplifyframework.testmodels.commentsblog.BlogOwner
 import com.amplifyframework.testmodels.customprimarykey.Comment
@@ -215,25 +216,7 @@ class SQLCommandProcessorTest {
     }
 
     @Test
-    fun testBeginTransactionToDatabase() {
-        assertFalse(sqliteDatabase.inTransaction())
-        sqlCommandProcessor.beginTransaction()
-        assertTrue(sqliteDatabase.inTransaction())
-    }
-
-    @Test
-    fun testEndTransactionToDatabase() {
-        sqlCommandProcessor.beginTransaction()
-        assertTrue(sqliteDatabase.inTransaction())
-        sqlCommandProcessor.endTransaction()
-        assertFalse(sqliteDatabase.inTransaction())
-    }
-
-    /**
-     * Asserts that write in transaction is successful if setTransactionSuccessful if called.
-     */
-    @Test
-    fun testMarkSuccessfulToDatabase() {
+    fun testRunInTransactionWritesToDatabase() {
         // Insert a BlogOwner
         val blogOwnerSchema = ModelSchema.fromModelClass(
             BlogOwner::class.java
@@ -241,12 +224,70 @@ class SQLCommandProcessorTest {
         val owner = BlogOwner.builder()
             .name("My Name")
             .build()
-        sqlCommandProcessor.beginTransaction()
-        sqlCommandProcessor.execute(sqlCommandFactory.insertFor(blogOwnerSchema, owner))
-        sqlCommandProcessor.setTransactionSuccessful()
-        sqlCommandProcessor.endTransaction()
+
+        sqlCommandProcessor.runInTransaction(true) {
+            sqlCommandProcessor.execute(sqlCommandFactory.insertFor(blogOwnerSchema, owner))
+        }
 
         // Check that the BlogOwner exists
+        val predicate: QueryPredicate = BlogOwner.ID.eq(owner.id)
+        val existsCommand = sqlCommandFactory.existsFor(blogOwnerSchema, predicate)
+        assertTrue(sqlCommandProcessor.executeExists(existsCommand))
+    }
+
+    @Test
+    fun testFailureWithoutAlwaysMarkSuccessfulDoesNotCommit() {
+        // Insert a BlogOwner
+        val blogOwnerSchema = ModelSchema.fromModelClass(
+            BlogOwner::class.java
+        )
+        val owner = BlogOwner.builder()
+            .name("My Name")
+            .build()
+
+        val expectedException = DataStoreException("expected", "expected")
+        var capturedException: DataStoreException? = null
+        try {
+            sqlCommandProcessor.runInTransaction(false) {
+                sqlCommandProcessor.execute(sqlCommandFactory.insertFor(blogOwnerSchema, owner))
+                throw expectedException
+            }
+        } catch (e: DataStoreException) {
+            capturedException = e
+        }
+
+        assertEquals(expectedException, capturedException)
+
+        // Check that the BlogOwner does not exist
+        val predicate: QueryPredicate = BlogOwner.ID.eq(owner.id)
+        val existsCommand = sqlCommandFactory.existsFor(blogOwnerSchema, predicate)
+        assertFalse(sqlCommandProcessor.executeExists(existsCommand))
+    }
+
+    @Test
+    fun testFailureWithAlwaysMarkSuccessfulCommits() {
+        // Insert a BlogOwner
+        val blogOwnerSchema = ModelSchema.fromModelClass(
+            BlogOwner::class.java
+        )
+        val owner = BlogOwner.builder()
+            .name("My Name")
+            .build()
+
+        val expectedException = DataStoreException("expected", "expected")
+        var capturedException: DataStoreException? = null
+        try {
+            sqlCommandProcessor.runInTransaction(true) {
+                sqlCommandProcessor.execute(sqlCommandFactory.insertFor(blogOwnerSchema, owner))
+                throw expectedException
+            }
+        } catch (e: DataStoreException) {
+            capturedException = e
+        }
+
+        assertEquals(expectedException, capturedException)
+
+        // Check that the BlogOwner does not exist
         val predicate: QueryPredicate = BlogOwner.ID.eq(owner.id)
         val existsCommand = sqlCommandFactory.existsFor(blogOwnerSchema, predicate)
         assertTrue(sqlCommandProcessor.executeExists(existsCommand))

@@ -131,15 +131,28 @@ final class SQLCommandProcessor {
         }
     }
 
-    void beginTransaction() {
-        sqliteDatabase.beginTransaction();
-    }
+    void runInTransaction(
+            Boolean alwaysMarkSuccessful,
+            TransactionBlock transactionBlock
+    ) throws DataStoreException {
+        DataStoreException runnableException = null;
+        try {
+            try {
+                sqliteDatabase.beginTransaction();
+                transactionBlock.run();
+            } catch (DataStoreException exception) {
+                runnableException = exception;
+            } finally {
+                if (runnableException == null || alwaysMarkSuccessful) {
+                    sqliteDatabase.setTransactionSuccessful();
+                }
+            }
+        } finally {
+            sqliteDatabase.endTransaction();
+        }
 
-    void setTransactionSuccessful() {
-        sqliteDatabase.setTransactionSuccessful();
-    }
-
-    void endTransaction() {
-        sqliteDatabase.endTransaction();
+        if (runnableException != null) {
+            throw runnableException;
+        }
     }
 }

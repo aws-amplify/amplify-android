@@ -326,8 +326,8 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             onComplete.call();
             return;
         }
-        threadPool.submit(() -> {
-            sqlCommandProcessor.beginTransaction();
+
+        TransactionBlock block = () -> {
             for (StorageOperation<T> operation : operations) {
                 StorageResult<T> result = null;
                 if (operation instanceof StorageOperation.Create) {
@@ -350,7 +350,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                             ((StorageResult.Success<T>) result).getStorageItemChange()
                     );
                 } else if (result instanceof StorageResult.Failure && operation instanceof StorageOperation.Delete) {
-                    // If delete operation failed, assume record already deleted, 
+                    // If delete operation failed, assume record already deleted,
                     // so attempt publish storage item change
                     try {
                         final ModelSchema modelSchema =
@@ -369,18 +369,14 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                     }
                 } else if (result instanceof StorageResult.Failure) {
                     DataStoreException exception = ((StorageResult.Failure<T>) result).getException();
-                    // If not a SQLiteConstraintException, we encountered an unrecoverable error
-                    // Return onError and don't proceed
                     if (!ErrorInspector.contains(exception, SQLiteConstraintException.class)) {
+                        // If not a SQLiteConstraintException, we encountered an unrecoverable error
+                        // throw the exception and don't proceed
                         LOG.warn(
                                 "Failed to sync remote model into local storage: $modelWithMetadata",
                                 exception
                         );
-                        // We still mark transaction as successful to save records that were already written
-                        sqlCommandProcessor.setTransactionSuccessful();
-                        sqlCommandProcessor.endTransaction();
-                        onError.accept(exception);
-                        return;
+                        throw exception;
                     } else {
                         // LOG constraint violation errors and proceed
                         LOG.warn(
@@ -390,9 +386,15 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                     }
                 }
             }
-            sqlCommandProcessor.setTransactionSuccessful();
-            sqlCommandProcessor.endTransaction();
-            onComplete.call();
+        };
+
+        threadPool.submit(() -> {
+            try {
+                sqlCommandProcessor.runInTransaction(true, block);
+                onComplete.call();
+            } catch (DataStoreException exception) {
+                onError.accept(exception);
+            }
         });
     }
 
