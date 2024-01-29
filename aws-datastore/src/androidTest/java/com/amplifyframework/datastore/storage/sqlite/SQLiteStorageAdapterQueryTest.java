@@ -25,9 +25,12 @@ import com.amplifyframework.datastore.StrictMode;
 import com.amplifyframework.datastore.storage.SynchronousStorageAdapter;
 import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider;
 import com.amplifyframework.testmodels.commentsblog.Blog;
+import com.amplifyframework.testmodels.commentsblog.Blog3;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
+import com.amplifyframework.testmodels.commentsblog.BlogOwner3;
 import com.amplifyframework.testmodels.commentsblog.Comment;
 import com.amplifyframework.testmodels.commentsblog.Post;
+import com.amplifyframework.testmodels.commentsblog.Post2;
 import com.amplifyframework.testmodels.commentsblog.PostStatus;
 import com.amplifyframework.testmodels.phonecall.Call;
 import com.amplifyframework.testmodels.phonecall.Person;
@@ -223,6 +226,128 @@ public final class SQLiteStorageAdapterQueryTest {
 
         final List<Call> phoneCalls = adapter.query(Call.class);
         assertTrue(phoneCalls.contains(phoneCall));
+    }
+
+    /**
+     * Test that querying the saved item with multiple paths for foreign keys to the same
+     * model correctly forms the where clause and returns expected data.
+     * @throws DataStoreException On unexpected failure manipulating items in/out of DataStore.
+     */
+    @Test
+    public void querySavedDataWithMultipleJoinPaths() throws DataStoreException {
+
+        final String blogOwnerId = "Owner001";
+        final String blogId = "B001";
+        final String postId = "Post001";
+
+        final BlogOwner3 blogOwner = BlogOwner3.builder()
+                .name("Sample Blog")
+                .id(blogOwnerId)
+                .build();
+
+        final Blog3 blog = Blog3.builder()
+                .name("Sample Blog")
+                .id(blogId)
+                .owner(blogOwner)
+                .build();
+
+        final Post2 post = Post2.builder()
+                .title("Placeholder title")
+                .status(PostStatus.ACTIVE)
+                .rating(5)
+                .id(postId)
+                .blog(blog)
+                .blogOwner(blogOwner)
+                .build();
+
+        adapter.save(blogOwner);
+        adapter.save(blog);
+        adapter.save(post);
+
+        final List<Post2> posts = adapter.query(Post2.class,
+                Where.matches(Post2.BLOG_OWNER.eq(blogOwnerId)));
+        assertTrue(posts.contains(post));
+    }
+
+    /**
+     * Test that querying the saved item with multiple paths for foreign keys to the same
+     * model with missing data for intermediate model in join path correctly forms
+     * the where clause and returns expected data.
+     * @throws DataStoreException On unexpected failure manipulating items in/out of DataStore
+     */
+    @Test
+    public void querySavedDataWithMultipleJoinWithMissingDataForIntermediateJoinPath()
+            throws DataStoreException {
+
+        final String blogOwnerAlphaId = "OwnerAlpha";
+        final String blogOwnerBetaId = "OwnerBeta";
+        final String blogOwnerGammaId = "OwnerGamma";
+
+        final String alphaPostId = "PostByAlpha";
+        final String betaPostId = "PostByBeta";
+        final String gammaPostId = "PostByGamma";
+
+        final BlogOwner3 blogOwnerAlpha = BlogOwner3.builder()
+                .name("Sample Blog")
+                .id(blogOwnerAlphaId)
+                .build();
+
+        final BlogOwner3 blogOwnerBeta = BlogOwner3.builder()
+                .name("Sample Blog")
+                .id(blogOwnerBetaId)
+                .build();
+
+        final BlogOwner3 blogOwnerGamma = BlogOwner3.builder()
+                .name("Sample Blog")
+                .id(blogOwnerGammaId)
+                .build();
+
+        final Post2 postByAlpha = Post2.builder()
+                .title("Placeholder title")
+                .status(PostStatus.ACTIVE)
+                .rating(5)
+                .id(alphaPostId)
+                .blogOwner(blogOwnerAlpha)
+                .build();
+
+        final Post2 postByBeta = Post2.builder()
+                .title("Placeholder title")
+                .status(PostStatus.ACTIVE)
+                .rating(5)
+                .id(betaPostId)
+                .blogOwner(blogOwnerBeta)
+                .build();
+
+        final Post2 postByGamma = Post2.builder()
+                .title("Placeholder title")
+                .status(PostStatus.ACTIVE)
+                .rating(5)
+                .id(gammaPostId)
+                .blogOwner(blogOwnerGamma)
+                .build();
+
+        adapter.save(blogOwnerAlpha);
+        adapter.save(blogOwnerBeta);
+        adapter.save(blogOwnerGamma);
+        adapter.save(postByAlpha);
+        adapter.save(postByBeta);
+        adapter.save(postByGamma);
+
+        List<Post2> posts = adapter.query(Post2.class,
+                Where.matches(Post2.BLOG_OWNER.eq(blogOwnerAlphaId)));
+        assertEquals(posts.size(), 1);
+        assertTrue(posts.contains(postByAlpha));
+
+        posts = adapter.query(Post2.class,
+                Where.matches(Post2.BLOG_OWNER.eq(blogOwnerBetaId)));
+        assertEquals(posts.size(), 1);
+        assertTrue(posts.contains(postByBeta));
+
+        posts = adapter.query(Post2.class,
+                Where.matches(Post2.BLOG_OWNER.eq(blogOwnerGammaId)));
+        assertEquals(posts.size(), 1);
+        assertTrue(posts.contains(postByGamma));
+
     }
 
     /**
