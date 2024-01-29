@@ -131,6 +131,16 @@ final class SQLCommandProcessor {
         }
     }
 
+    /**
+     * Wraps a block of code in a SQLite transaction.
+     *
+     * @param alwaysMarkSuccessful If true, the transaction is always marked successful,
+     *                             even if an exception occurred.
+     * @param transactionBlock The block of code to run in the SQL transaction.
+     * @throws DataStoreException If an exception is caught in the transaction block, we throw the
+     *                            exception back to the caller. The transaction is still ended.
+     *                            The transaction is successful if alwaysMarkSuccessful == true.
+     */
     void runInTransaction(
             Boolean alwaysMarkSuccessful,
             TransactionBlock transactionBlock

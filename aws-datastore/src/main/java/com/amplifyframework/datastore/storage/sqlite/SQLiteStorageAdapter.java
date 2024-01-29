@@ -390,9 +390,12 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
 
         threadPool.submit(() -> {
             try {
+                // We always want the transaction to succeed, even if an exception is thrown.
                 sqlCommandProcessor.runInTransaction(true, block);
+                // If no exception is thrown, we call onComplete Action.
                 onComplete.call();
             } catch (DataStoreException exception) {
+                // If the transaction block encountered an uncaught exception, we call onError Consumer.
                 onError.accept(exception);
             }
         });
