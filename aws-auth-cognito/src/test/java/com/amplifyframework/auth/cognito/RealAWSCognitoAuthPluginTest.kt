@@ -29,6 +29,7 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.ConfirmForgotPasswo
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ConfirmSignUpRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ConfirmSignUpResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeliveryMediumType
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.ForgetDeviceResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetUserAttributeVerificationCodeResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetUserResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ResendConfirmationCodeRequest
@@ -46,6 +47,7 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.VerifySoftwareToken
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.VerifySoftwareTokenResponseType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.VerifyUserAttributeResponse
 import com.amplifyframework.auth.AuthCodeDeliveryDetails
+import com.amplifyframework.auth.AuthDevice
 import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.AuthSession
 import com.amplifyframework.auth.AuthUserAttribute
@@ -83,6 +85,7 @@ import com.amplifyframework.logging.Logger
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
+import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.data.SignInMethod
 import com.amplifyframework.statemachine.codegen.data.SignedInData
 import com.amplifyframework.statemachine.codegen.data.UserPoolConfiguration
@@ -186,7 +189,12 @@ class RealAWSCognitoAuthPluginTest {
         coEvery { AuthHelper.getSecretHash(any(), any(), any()) } returns "dummy Hash"
 
         setupCurrentAuthState(
-            authNState = AuthenticationState.SignedIn(mockk(), mockk()),
+            authNState = AuthenticationState.SignedIn(
+                mockk {
+                    every { username } returns "username"
+                },
+                mockk()
+            ),
             authZState = AuthorizationState.SessionEstablished(credentials)
         )
     }
@@ -2091,6 +2099,62 @@ class RealAWSCognitoAuthPluginTest {
             },
             setUserMFAPreferenceRequest.captured.softwareTokenMfaSettings
         )
+    }
+
+    @Test
+    fun `forget device invokes ForgetDevice api`() {
+        val onSuccess = ActionWithLatch()
+
+        coEvery { mockCognitoIPClient.forgetDevice(any()) } answers { ForgetDeviceResponse.invoke {} }
+
+        coEvery {
+            authEnvironment.getDeviceMetadata("username")
+        } returns DeviceMetadata.Metadata(deviceKey = "test", deviceGroupKey = "group")
+
+        plugin.forgetDevice(onSuccess, mockk())
+
+        assertTrue { onSuccess.latch.await(5, TimeUnit.SECONDS) }
+        coVerify { mockCognitoIPClient.forgetDevice(match { it.deviceKey == "test" }) }
+    }
+
+    @Test
+    fun `forget device emits API error`() {
+        val onError = ConsumerWithLatch<AuthException>()
+
+        coEvery { mockCognitoIPClient.forgetDevice(any()) } throws Exception("failed")
+
+        coEvery {
+            authEnvironment.getDeviceMetadata("username")
+        } returns DeviceMetadata.Metadata(deviceKey = "test", deviceGroupKey = "group")
+
+        plugin.forgetDevice(mockk(), onError)
+
+        assertTrue { onError.latch.await(5, TimeUnit.SECONDS) }
+        assertEquals("failed", onError.captured.cause?.message)
+    }
+
+    @Test
+    fun `forget specific device invokes ForgetDevice api`() {
+        val onSuccess = ActionWithLatch()
+
+        coEvery { mockCognitoIPClient.forgetDevice(any()) } answers { ForgetDeviceResponse.invoke {} }
+
+        plugin.forgetDevice(AuthDevice.fromId("test"), onSuccess, mockk())
+
+        assertTrue { onSuccess.latch.await(5, TimeUnit.SECONDS) }
+        coVerify { mockCognitoIPClient.forgetDevice(match { it.deviceKey == "test" }) }
+    }
+
+    @Test
+    fun `forget specific device emits API error`() {
+        val onError = ConsumerWithLatch<AuthException>()
+
+        coEvery { mockCognitoIPClient.forgetDevice(any()) } throws Exception("failed")
+
+        plugin.forgetDevice(AuthDevice.fromId("test"), mockk(), onError)
+
+        assertTrue { onError.latch.await(5, TimeUnit.SECONDS) }
+        assertEquals("failed", onError.captured.cause?.message)
     }
 
     private fun setupCurrentAuthState(
