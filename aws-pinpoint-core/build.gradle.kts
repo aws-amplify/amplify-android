@@ -44,3 +44,7 @@ dependencies {
     androidTestImplementation(libs.test.androidx.runner)
     androidTestImplementation(libs.test.androidx.junit)
 }
+
+android.kotlinOptions {
+    jvmTarget = "11"
+}

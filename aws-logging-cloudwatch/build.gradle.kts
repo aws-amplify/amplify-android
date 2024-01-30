@@ -47,3 +47,7 @@ dependencies {
     testImplementation(libs.test.androidx.workmanager)
     testImplementation(project(":aws-logging-cloudwatch"))
 }
+
+android.kotlinOptions {
+    jvmTarget = "11"
+}

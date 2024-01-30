@@ -67,3 +67,7 @@ dependencies {
     androidTestImplementation(project(":aws-api"))
     androidTestImplementation(project(":testutils"))
 }
+
+android.kotlinOptions {
+    jvmTarget = "11"
+}
