@@ -1,0 +1,279 @@
+public final class com/amplifyframework/geo/maplibre/AmplifyMapLibreAdapter {
+	public static final field Companion Lcom/amplifyframework/geo/maplibre/AmplifyMapLibreAdapter$Companion;
+	public final fun initialize ()V
+	public final fun setStyle (Lcom/mapbox/mapboxsdk/maps/MapboxMap;Lcom/amplifyframework/geo/models/MapStyle;Lcom/mapbox/mapboxsdk/maps/Style$OnStyleLoaded;)V
+	public static synthetic fun setStyle$default (Lcom/amplifyframework/geo/maplibre/AmplifyMapLibreAdapter;Lcom/mapbox/mapboxsdk/maps/MapboxMap;Lcom/amplifyframework/geo/models/MapStyle;Lcom/mapbox/mapboxsdk/maps/Style$OnStyleLoaded;ILjava/lang/Object;)V
+}
+
+public final class com/amplifyframework/geo/maplibre/AmplifyMapLibreAdapter$Companion {
+}
+
+public final class com/amplifyframework/geo/maplibre/BuildConfig {
+	public static final field BUILD_TYPE Ljava/lang/String;
+	public static final field DEBUG Z
+	public static final field LIBRARY_PACKAGE_NAME Ljava/lang/String;
+	public static final field VERSION_NAME Ljava/lang/String;
+	public fun <init> ()V
+}
+
+public final class com/amplifyframework/geo/maplibre/Coordinate2D : android/os/Parcelable {
+	public static final field CREATOR Landroid/os/Parcelable$Creator;
+	public fun <init> ()V
+	public fun <init> (DD)V
+	public synthetic fun <init> (DDILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()D
+	public final fun component2 ()D
+	public final fun copy (DD)Lcom/amplifyframework/geo/maplibre/Coordinate2D;
+	public static synthetic fun copy$default (Lcom/amplifyframework/geo/maplibre/Coordinate2D;DDILjava/lang/Object;)Lcom/amplifyframework/geo/maplibre/Coordinate2D;
+	public fun describeContents ()I
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getLatitude ()D
+	public final fun getLatlng ()Lcom/mapbox/mapboxsdk/geometry/LatLng;
+	public final fun getLocation ()Landroid/location/Location;
+	public final fun getLongitude ()D
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+	public fun writeToParcel (Landroid/os/Parcel;I)V
+}
+
+public final class com/amplifyframework/geo/maplibre/Coordinate2D$Creator : android/os/Parcelable$Creator {
+	public fun <init> ()V
+	public final fun createFromParcel (Landroid/os/Parcel;)Lcom/amplifyframework/geo/maplibre/Coordinate2D;
+	public synthetic fun createFromParcel (Landroid/os/Parcel;)Ljava/lang/Object;
+	public final fun newArray (I)[Lcom/amplifyframework/geo/maplibre/Coordinate2D;
+	public synthetic fun newArray (I)[Ljava/lang/Object;
+}
+
+public final class com/amplifyframework/geo/maplibre/Coordinate2DKt {
+	public static final fun getCoordinates (Landroid/location/Location;)Lcom/amplifyframework/geo/maplibre/Coordinate2D;
+}
+
+public abstract interface class com/amplifyframework/geo/maplibre/util/AddressFormatter {
+	public abstract fun formatAddress (Lcom/amplifyframework/geo/location/models/AmazonLocationPlace;)Ljava/lang/String;
+	public abstract fun formatName (Lcom/amplifyframework/geo/location/models/AmazonLocationPlace;)Ljava/lang/String;
+}
+
+public final class com/amplifyframework/geo/maplibre/util/CoordinateUtils {
+	public static final fun parseCoordinates (Ljava/lang/String;)Lcom/amplifyframework/geo/models/Coordinates;
+	public static final fun toCoordinates (Lcom/mapbox/mapboxsdk/geometry/LatLng;)Lcom/amplifyframework/geo/models/Coordinates;
+	public static final fun toLatLng (Lcom/amplifyframework/geo/models/Coordinates;)Lcom/mapbox/mapboxsdk/geometry/LatLng;
+}
+
+public final class com/amplifyframework/geo/maplibre/util/DefaultAddressFormatter : com/amplifyframework/geo/maplibre/util/AddressFormatter {
+	public static final field INSTANCE Lcom/amplifyframework/geo/maplibre/util/DefaultAddressFormatter;
+	public fun formatAddress (Lcom/amplifyframework/geo/location/models/AmazonLocationPlace;)Ljava/lang/String;
+	public fun formatName (Lcom/amplifyframework/geo/location/models/AmazonLocationPlace;)Ljava/lang/String;
+}
+
+public final class com/amplifyframework/geo/maplibre/util/PlaceKt {
+	public static final fun getPlaceData (Lcom/mapbox/mapboxsdk/plugins/annotation/Symbol;)Lcom/amplifyframework/geo/location/models/AmazonLocationPlace;
+	public static final fun toJsonElement (Lcom/amplifyframework/geo/location/models/AmazonLocationPlace;)Lcom/google/gson/JsonElement;
+	public static final fun toPlace (Lcom/google/gson/JsonElement;)Lcom/amplifyframework/geo/location/models/AmazonLocationPlace;
+}
+
+public final class com/amplifyframework/geo/maplibre/view/AmplifyMapView : androidx/coordinatorlayout/widget/CoordinatorLayout {
+	public static final field Companion Lcom/amplifyframework/geo/maplibre/view/AmplifyMapView$Companion;
+	public fun <init> (Landroid/content/Context;)V
+	public fun <init> (Landroid/content/Context;Landroid/util/AttributeSet;)V
+	public fun <init> (Landroid/content/Context;Landroid/util/AttributeSet;I)V
+	public fun <init> (Landroid/content/Context;Landroid/util/AttributeSet;ILcom/amplifyframework/geo/maplibre/view/MapViewOptions;)V
+	public fun <init> (Landroid/content/Context;Landroid/util/AttributeSet;ILcom/amplifyframework/geo/maplibre/view/MapViewOptions;Lcom/amplifyframework/geo/GeoCategory;)V
+	public synthetic fun <init> (Landroid/content/Context;Landroid/util/AttributeSet;ILcom/amplifyframework/geo/maplibre/view/MapViewOptions;Lcom/amplifyframework/geo/GeoCategory;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getMapView ()Lcom/amplifyframework/geo/maplibre/view/MapLibreView;
+	public final fun getOnPlaceSelectListener ()Lcom/amplifyframework/geo/maplibre/view/AmplifyMapView$OnPlaceSelectListener;
+	public final fun getOverlayLayout ()Landroid/widget/RelativeLayout;
+	public final fun getPlaces ()Ljava/util/List;
+	public final fun getSearchField ()Lcom/amplifyframework/geo/maplibre/view/SearchTextField;
+	public final fun onPlaceSelect (Lkotlin/jvm/functions/Function2;)V
+	public final fun setOnPlaceSelectListener (Lcom/amplifyframework/geo/maplibre/view/AmplifyMapView$OnPlaceSelectListener;)V
+	public final fun setPlaces (Ljava/util/List;)V
+}
+
+public final class com/amplifyframework/geo/maplibre/view/AmplifyMapView$Companion {
+}
+
+public abstract interface class com/amplifyframework/geo/maplibre/view/AmplifyMapView$OnPlaceSelectListener {
+	public abstract fun onSelect (Lcom/amplifyframework/geo/location/models/AmazonLocationPlace;Lcom/mapbox/mapboxsdk/plugins/annotation/Symbol;)V
+}
+
+public final class com/amplifyframework/geo/maplibre/view/ClusteringOptions {
+	public static final field Companion Lcom/amplifyframework/geo/maplibre/view/ClusteringOptions$Companion;
+	public synthetic fun <init> (ILjava/util/Map;ILkotlin/jvm/functions/Function2;IILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public static final fun builder ()Lcom/amplifyframework/geo/maplibre/view/ClusteringOptions$Builder;
+	public static final fun defaults ()Lcom/amplifyframework/geo/maplibre/view/ClusteringOptions;
+	public final fun getClusterColor ()I
+	public final fun getClusterColorSteps ()Ljava/util/Map;
+	public final fun getClusterNumberColor ()I
+	public final fun getClusterRadius ()I
+	public final fun getMaxClusterZoomLevel ()I
+	public final fun getOnClusterClicked ()Lkotlin/jvm/functions/Function2;
+}
+
+public final class com/amplifyframework/geo/maplibre/view/ClusteringOptions$Builder {
+	public fun <init> ()V
+	public final fun build ()Lcom/amplifyframework/geo/maplibre/view/ClusteringOptions;
+	public final fun clusterColor (I)Lcom/amplifyframework/geo/maplibre/view/ClusteringOptions$Builder;
+	public final fun clusterColorSteps (Ljava/util/Map;)Lcom/amplifyframework/geo/maplibre/view/ClusteringOptions$Builder;
+	public final fun clusterNumberColor (I)Lcom/amplifyframework/geo/maplibre/view/ClusteringOptions$Builder;
+	public final fun clusterRadius (I)Lcom/amplifyframework/geo/maplibre/view/ClusteringOptions$Builder;
+	public final fun getClusterColor ()I
+	public final fun getClusterColorSteps ()Ljava/util/Map;
+	public final fun getClusterNumberColor ()I
+	public final fun getClusterRadius ()I
+	public final fun getMaxClusterZoomLevel ()I
+	public final fun getOnClusterClicked ()Lkotlin/jvm/functions/Function2;
+	public final fun maxClusterZoomLevel (I)Lcom/amplifyframework/geo/maplibre/view/ClusteringOptions$Builder;
+	public final fun onClusterClicked (Lkotlin/jvm/functions/Function2;)Lcom/amplifyframework/geo/maplibre/view/ClusteringOptions$Builder;
+}
+
+public final class com/amplifyframework/geo/maplibre/view/ClusteringOptions$Companion {
+	public final fun builder ()Lcom/amplifyframework/geo/maplibre/view/ClusteringOptions$Builder;
+	public final fun defaults ()Lcom/amplifyframework/geo/maplibre/view/ClusteringOptions;
+}
+
+public final class com/amplifyframework/geo/maplibre/view/MapLibreView : com/mapbox/mapboxsdk/maps/MapView {
+	public static final field Companion Lcom/amplifyframework/geo/maplibre/view/MapLibreView$Companion;
+	public static final field PLACE_ACTIVE_ICON_NAME Ljava/lang/String;
+	public static final field PLACE_ICON_NAME Ljava/lang/String;
+	public field symbolManager Lcom/mapbox/mapboxsdk/plugins/annotation/SymbolManager;
+	public fun <init> (Landroid/content/Context;)V
+	public fun <init> (Landroid/content/Context;Landroid/util/AttributeSet;)V
+	public fun <init> (Landroid/content/Context;Landroid/util/AttributeSet;I)V
+	public fun <init> (Landroid/content/Context;Landroid/util/AttributeSet;ILcom/mapbox/mapboxsdk/maps/MapboxMapOptions;)V
+	public fun <init> (Landroid/content/Context;Landroid/util/AttributeSet;ILcom/mapbox/mapboxsdk/maps/MapboxMapOptions;Lcom/amplifyframework/geo/GeoCategory;)V
+	public synthetic fun <init> (Landroid/content/Context;Landroid/util/AttributeSet;ILcom/mapbox/mapboxsdk/maps/MapboxMapOptions;Lcom/amplifyframework/geo/GeoCategory;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getDefaultPlaceActiveIcon ()I
+	public final fun getDefaultPlaceIcon ()I
+	public final fun getStyle (Lcom/amplifyframework/geo/maplibre/view/MapLibreView$OnStyleLoaded;)V
+	public final fun getStyle (Lkotlin/jvm/functions/Function2;)V
+	public final fun getSymbolManager ()Lcom/mapbox/mapboxsdk/plugins/annotation/SymbolManager;
+	public final fun setClusterBehavior (ZLcom/amplifyframework/geo/maplibre/view/ClusteringOptions;Lkotlin/jvm/functions/Function0;)V
+	public final fun setDefaultPlaceActiveIcon (I)V
+	public final fun setDefaultPlaceIcon (I)V
+	public final fun setStyle (Lcom/amplifyframework/geo/models/MapStyle;Lcom/mapbox/mapboxsdk/maps/Style$OnStyleLoaded;)V
+	public static synthetic fun setStyle$default (Lcom/amplifyframework/geo/maplibre/view/MapLibreView;Lcom/amplifyframework/geo/models/MapStyle;Lcom/mapbox/mapboxsdk/maps/Style$OnStyleLoaded;ILjava/lang/Object;)V
+	public final fun setSymbolManager (Lcom/mapbox/mapboxsdk/plugins/annotation/SymbolManager;)V
+}
+
+public final class com/amplifyframework/geo/maplibre/view/MapLibreView$Companion {
+}
+
+public final class com/amplifyframework/geo/maplibre/view/MapLibreView$LifecycleHandler : androidx/lifecycle/DefaultLifecycleObserver {
+	public fun <init> (Lcom/amplifyframework/geo/maplibre/view/MapLibreView;)V
+	public fun onCreate (Landroidx/lifecycle/LifecycleOwner;)V
+	public fun onDestroy (Landroidx/lifecycle/LifecycleOwner;)V
+	public fun onPause (Landroidx/lifecycle/LifecycleOwner;)V
+	public fun onResume (Landroidx/lifecycle/LifecycleOwner;)V
+	public fun onStart (Landroidx/lifecycle/LifecycleOwner;)V
+	public fun onStop (Landroidx/lifecycle/LifecycleOwner;)V
+}
+
+public abstract interface class com/amplifyframework/geo/maplibre/view/MapLibreView$OnStyleLoaded {
+	public abstract fun onLoad (Lcom/mapbox/mapboxsdk/maps/MapboxMap;Lcom/mapbox/mapboxsdk/maps/Style;)V
+}
+
+public final class com/amplifyframework/geo/maplibre/view/MapViewOptions : android/os/Parcelable {
+	public static final field CREATOR Landroid/os/Parcelable$Creator;
+	public static final field Companion Lcom/amplifyframework/geo/maplibre/view/MapViewOptions$Companion;
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Lcom/amplifyframework/geo/maplibre/Coordinate2D;DDZZZD)V
+	public synthetic fun <init> (Ljava/lang/String;Lcom/amplifyframework/geo/maplibre/Coordinate2D;DDZZZDILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun describeContents ()I
+	public final fun getAttribution ()Ljava/lang/String;
+	public final fun getCenter ()Lcom/amplifyframework/geo/maplibre/Coordinate2D;
+	public final fun getMaxZoomLevel ()D
+	public final fun getMinZoomLevel ()D
+	public final fun getShowCompassIndicator ()Z
+	public final fun getShowUserLocation ()Z
+	public final fun getShowZoomControls ()Z
+	public final fun getZoomLevel ()D
+	public final fun shouldRenderControls ()Z
+	public final fun toMapLibreOptions (Landroid/content/Context;)Lcom/mapbox/mapboxsdk/maps/MapboxMapOptions;
+	public fun writeToParcel (Landroid/os/Parcel;I)V
+}
+
+public final class com/amplifyframework/geo/maplibre/view/MapViewOptions$Companion {
+	public final fun createFromAttributes (Landroid/content/Context;Landroid/util/AttributeSet;I)Lcom/amplifyframework/geo/maplibre/view/MapViewOptions;
+	public static synthetic fun createFromAttributes$default (Lcom/amplifyframework/geo/maplibre/view/MapViewOptions$Companion;Landroid/content/Context;Landroid/util/AttributeSet;IILjava/lang/Object;)Lcom/amplifyframework/geo/maplibre/view/MapViewOptions;
+}
+
+public final class com/amplifyframework/geo/maplibre/view/MapViewOptions$Creator : android/os/Parcelable$Creator {
+	public fun <init> ()V
+	public final fun createFromParcel (Landroid/os/Parcel;)Lcom/amplifyframework/geo/maplibre/view/MapViewOptions;
+	public synthetic fun createFromParcel (Landroid/os/Parcel;)Ljava/lang/Object;
+	public final fun newArray (I)[Lcom/amplifyframework/geo/maplibre/view/MapViewOptions;
+	public synthetic fun newArray (I)[Ljava/lang/Object;
+}
+
+public final class com/amplifyframework/geo/maplibre/view/MapViewOptionsKt {
+	public static final field DEFAULT_MAX_ZOOM D
+	public static final field DEFAULT_MIN_ZOOM D
+	public static final field DEFAULT_SHOW_COMPASS_INDICATOR Z
+	public static final field DEFAULT_SHOW_USER_LOCATION Z
+	public static final field DEFAULT_SHOW_ZOOM_CONTROLS Z
+	public static final field DEFAULT_ZOOM D
+	public static final field MAX_ZOOM_BOUNDARY D
+	public static final field MIN_ZOOM_BOUNDARY D
+}
+
+public final class com/amplifyframework/geo/maplibre/view/SearchTextField : android/widget/LinearLayout {
+	public fun <init> (Landroid/content/Context;)V
+	public fun <init> (Landroid/content/Context;Landroid/util/AttributeSet;)V
+	public fun <init> (Landroid/content/Context;Landroid/util/AttributeSet;I)V
+	public synthetic fun <init> (Landroid/content/Context;Landroid/util/AttributeSet;IILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getOnSearchActionListener ()Lcom/amplifyframework/geo/maplibre/view/SearchTextField$OnSearchActionListener;
+	public final fun getOnSearchModeChangeListener ()Lcom/amplifyframework/geo/maplibre/view/SearchTextField$OnSearchModeChangeListener;
+	public final fun getOnSearchQueryChangeListener ()Lcom/amplifyframework/geo/maplibre/view/SearchTextField$OnSearchQueryChangeListener;
+	public final fun getSearchMode ()Lcom/amplifyframework/geo/maplibre/view/SearchTextField$SearchMode;
+	public final fun onSearchAction (Lkotlin/jvm/functions/Function1;)V
+	public final fun onSearchModeChange (Lkotlin/jvm/functions/Function1;)V
+	public final fun onSearchQueryChange (Lkotlin/jvm/functions/Function1;)V
+	public final fun setOnSearchActionListener (Lcom/amplifyframework/geo/maplibre/view/SearchTextField$OnSearchActionListener;)V
+	public final fun setOnSearchModeChangeListener (Lcom/amplifyframework/geo/maplibre/view/SearchTextField$OnSearchModeChangeListener;)V
+	public final fun setOnSearchQueryChangeListener (Lcom/amplifyframework/geo/maplibre/view/SearchTextField$OnSearchQueryChangeListener;)V
+	public final fun setSearchMode (Lcom/amplifyframework/geo/maplibre/view/SearchTextField$SearchMode;)V
+}
+
+public abstract interface class com/amplifyframework/geo/maplibre/view/SearchTextField$OnSearchActionListener {
+	public abstract fun handle (Ljava/lang/String;)V
+}
+
+public abstract interface class com/amplifyframework/geo/maplibre/view/SearchTextField$OnSearchModeChangeListener {
+	public abstract fun onChange (Lcom/amplifyframework/geo/maplibre/view/SearchTextField$SearchMode;)V
+}
+
+public abstract interface class com/amplifyframework/geo/maplibre/view/SearchTextField$OnSearchQueryChangeListener {
+	public abstract fun onChange (Ljava/lang/String;)V
+}
+
+public final class com/amplifyframework/geo/maplibre/view/SearchTextField$SearchMode : java/lang/Enum {
+	public static final field LIST Lcom/amplifyframework/geo/maplibre/view/SearchTextField$SearchMode;
+	public static final field MAP Lcom/amplifyframework/geo/maplibre/view/SearchTextField$SearchMode;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/amplifyframework/geo/maplibre/view/SearchTextField$SearchMode;
+	public static fun values ()[Lcom/amplifyframework/geo/maplibre/view/SearchTextField$SearchMode;
+}
+
+public final class com/amplifyframework/geo/maplibre/view/support/PlaceInfoPopupView : android/widget/RelativeLayout {
+	public fun <init> (Landroid/content/Context;)V
+	public final fun getAddressFormatter ()Lcom/amplifyframework/geo/maplibre/util/AddressFormatter;
+	public final fun getOnVisibilityChangedListener ()Lcom/amplifyframework/geo/maplibre/view/support/PlaceInfoPopupView$OnVisibilityChangedListener;
+	public final fun hide ()V
+	public fun onVisibilityAggregated (Z)V
+	public final fun onVisibilityChanged (Lkotlin/jvm/functions/Function1;)V
+	public final fun setAddressFormatter (Lcom/amplifyframework/geo/maplibre/util/AddressFormatter;)V
+	public final fun setOnVisibilityChangedListener (Lcom/amplifyframework/geo/maplibre/view/support/PlaceInfoPopupView$OnVisibilityChangedListener;)V
+	public final fun show (Lcom/amplifyframework/geo/location/models/AmazonLocationPlace;Landroid/graphics/PointF;)V
+	public final fun update (Landroid/graphics/PointF;)V
+}
+
+public abstract interface class com/amplifyframework/geo/maplibre/view/support/PlaceInfoPopupView$OnVisibilityChangedListener {
+	public abstract fun onChange (Z)V
+}
+
+public final class com/amplifyframework/geo/maplibre/view/support/ViewExtensionsKt {
+	public static final fun fadeIn (Landroid/view/View;)V
+	public static final fun fadeOut (Landroid/view/View;)V
+	public static final fun setSelectableBackground (Landroid/view/View;Landroid/content/Context;I)V
+}
+

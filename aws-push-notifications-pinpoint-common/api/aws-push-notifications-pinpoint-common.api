@@ -1,0 +1,120 @@
+public final class com/amplifyframework/pushnotifications/pinpoint/ChannelBuilder {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/pushnotifications/pinpoint/NotificationImportance;)V
+	public final fun addToConversation (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun build ()Landroidx/core/app/NotificationChannelCompat;
+	public final fun getAudioAttributes ()Landroid/media/AudioAttributes;
+	public final fun getDescription ()Ljava/lang/String;
+	public final fun getGroupId ()Ljava/lang/String;
+	public final fun getLightColor ()I
+	public final fun getLightsEnabled ()Z
+	public final fun getShowBadge ()Z
+	public final fun getSound ()Landroid/net/Uri;
+	public final fun getVibrationEnabled ()Z
+	public final fun getVibrationPattern ()[J
+	public final fun setAudioAttributes (Landroid/media/AudioAttributes;)V
+	public final fun setDescription (Ljava/lang/String;)V
+	public final fun setGroupId (Ljava/lang/String;)V
+	public final fun setLightColor (I)V
+	public final fun setLightsEnabled (Z)V
+	public final fun setShowBadge (Z)V
+	public final fun setSound (Landroid/net/Uri;)V
+	public final fun setVibrationEnabled (Z)V
+	public final fun setVibrationPattern ([J)V
+}
+
+public final class com/amplifyframework/pushnotifications/pinpoint/ChannelGroupBuilder {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun build ()Landroidx/core/app/NotificationChannelGroupCompat;
+	public final fun channel (Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/pushnotifications/pinpoint/NotificationImportance;Lkotlin/jvm/functions/Function1;)V
+	public static synthetic fun channel$default (Lcom/amplifyframework/pushnotifications/pinpoint/ChannelGroupBuilder;Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/pushnotifications/pinpoint/NotificationImportance;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
+	public final fun getDescription ()Ljava/lang/String;
+	public final fun setDescription (Ljava/lang/String;)V
+}
+
+public final class com/amplifyframework/pushnotifications/pinpoint/ChannelsCreator {
+	public fun <init> (Landroidx/core/app/NotificationManagerCompat;)V
+	public final fun channel (Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/pushnotifications/pinpoint/NotificationImportance;Lkotlin/jvm/functions/Function1;)V
+	public static synthetic fun channel$default (Lcom/amplifyframework/pushnotifications/pinpoint/ChannelsCreator;Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/pushnotifications/pinpoint/NotificationImportance;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
+	public final fun group (Ljava/lang/String;Ljava/lang/String;Lkotlin/jvm/functions/Function1;)V
+}
+
+public abstract interface annotation class com/amplifyframework/pushnotifications/pinpoint/NotificationDslMarker : java/lang/annotation/Annotation {
+}
+
+public final class com/amplifyframework/pushnotifications/pinpoint/NotificationImportance : java/lang/Enum {
+	public static final field Default Lcom/amplifyframework/pushnotifications/pinpoint/NotificationImportance;
+	public static final field High Lcom/amplifyframework/pushnotifications/pinpoint/NotificationImportance;
+	public static final field Low Lcom/amplifyframework/pushnotifications/pinpoint/NotificationImportance;
+	public static final field Max Lcom/amplifyframework/pushnotifications/pinpoint/NotificationImportance;
+	public static final field Min Lcom/amplifyframework/pushnotifications/pinpoint/NotificationImportance;
+	public static final field None Lcom/amplifyframework/pushnotifications/pinpoint/NotificationImportance;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun getIntValue ()I
+	public static fun valueOf (Ljava/lang/String;)Lcom/amplifyframework/pushnotifications/pinpoint/NotificationImportance;
+	public static fun values ()[Lcom/amplifyframework/pushnotifications/pinpoint/NotificationImportance;
+}
+
+public final class com/amplifyframework/pushnotifications/pinpoint/PinpointNotificationPayload$Companion {
+	public final fun fromNotificationPayload (Lcom/amplifyframework/notifications/pushnotifications/NotificationPayload;)Lcom/amplifyframework/pushnotifications/pinpoint/PinpointNotificationPayload;
+	public final fun isPinpointNotificationPayload (Lcom/amplifyframework/notifications/pushnotifications/NotificationPayload;)Z
+}
+
+public final class com/amplifyframework/pushnotifications/pinpoint/PushNotificationChannels {
+	public fun <init> (Landroid/content/Context;)V
+	public final fun channelExists (Ljava/lang/String;)Z
+	public final fun create (Lkotlin/jvm/functions/Function1;)Lcom/amplifyframework/pushnotifications/pinpoint/ChannelsCreator;
+	public final fun deleteChannel (Ljava/lang/String;)V
+	public final fun deleteGroup (Ljava/lang/String;)V
+	public final fun getChannels ()Ljava/util/List;
+	public final fun getGroups ()Ljava/util/List;
+	public final fun groupExists (Ljava/lang/String;)Z
+}
+
+public final class com/amplifyframework/pushnotifications/pinpoint/PushNotificationsConstants$Companion {
+}
+
+public final class com/amplifyframework/pushnotifications/pinpoint/PushNotificationsUtils {
+	public fun <init> (Landroid/content/Context;Ljava/lang/String;)V
+	public synthetic fun <init> (Landroid/content/Context;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun areNotificationsEnabled ()Z
+	public final fun isAppInForeground ()Z
+	public final fun showNotification (ILcom/amplifyframework/pushnotifications/pinpoint/PinpointNotificationPayload;Ljava/lang/Class;)V
+}
+
+public final class com/amplifyframework/pushnotifications/pinpoint/common/BuildConfig {
+	public static final field BUILD_TYPE Ljava/lang/String;
+	public static final field DEBUG Z
+	public static final field LIBRARY_PACKAGE_NAME Ljava/lang/String;
+	public static final field VERSION_NAME Ljava/lang/String;
+	public fun <init> ()V
+}
+
+public abstract interface class com/amplifyframework/pushnotifications/pinpoint/permissions/PermissionRequestResult {
+}
+
+public final class com/amplifyframework/pushnotifications/pinpoint/permissions/PermissionRequestResult$Granted : com/amplifyframework/pushnotifications/pinpoint/permissions/PermissionRequestResult {
+	public static final field INSTANCE Lcom/amplifyframework/pushnotifications/pinpoint/permissions/PermissionRequestResult$Granted;
+}
+
+public final class com/amplifyframework/pushnotifications/pinpoint/permissions/PermissionRequestResult$NotGranted : com/amplifyframework/pushnotifications/pinpoint/permissions/PermissionRequestResult {
+	public fun <init> (Z)V
+	public final fun component1 ()Z
+	public final fun copy (Z)Lcom/amplifyframework/pushnotifications/pinpoint/permissions/PermissionRequestResult$NotGranted;
+	public static synthetic fun copy$default (Lcom/amplifyframework/pushnotifications/pinpoint/permissions/PermissionRequestResult$NotGranted;ZILjava/lang/Object;)Lcom/amplifyframework/pushnotifications/pinpoint/permissions/PermissionRequestResult$NotGranted;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getShouldShowRationale ()Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/amplifyframework/pushnotifications/pinpoint/permissions/PermissionsRequestActivity : androidx/activity/ComponentActivity {
+	public fun <init> ()V
+}
+
+public final class com/amplifyframework/pushnotifications/pinpoint/permissions/PushNotificationPermission {
+	public fun <init> (Landroid/content/Context;)V
+	public final fun getHasRequiredPermission ()Z
+	public final fun openSettings ()V
+	public final fun requestPermission (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+

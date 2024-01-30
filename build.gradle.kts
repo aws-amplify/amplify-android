@@ -13,7 +13,9 @@
  * permissions and limitations under the License.
  */
 
+import app.cash.licensee.LicenseeExtension
 import com.android.build.gradle.LibraryExtension
+import kotlinx.validation.ApiValidationExtension
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 buildscript {
@@ -32,6 +34,10 @@ buildscript {
         classpath("org.jetbrains.kotlinx:kover:0.6.1")
         classpath("app.cash.licensee:licensee-gradle-plugin:1.7.0")
     }
+}
+
+plugins {
+    alias(libs.plugins.binary.compatibility.validator)
 }
 
 allprojects {
@@ -59,7 +65,7 @@ tasks.register<Delete>("clean").configure {
     delete(rootProject.buildDir)
 }
 
-val optInAnnotations = listOf(
+val internalApiAnnotations = listOf(
     "com.amplifyframework.annotations.InternalApiWarning",
     "com.amplifyframework.annotations.InternalAmplifyApi"
 )
@@ -72,7 +78,7 @@ subprojects {
     }
 
     apply(plugin = "app.cash.licensee")
-    configure<app.cash.licensee.LicenseeExtension> {
+    configure<LicenseeExtension> {
         allow("Apache-2.0")
         allow("MIT")
         allow("BSD-2-Clause")
@@ -109,7 +115,7 @@ subprojects {
 
     tasks.withType<KotlinCompile> {
         kotlinOptions {
-            optInAnnotations.forEach {
+            internalApiAnnotations.forEach {
                 freeCompilerArgs += "-opt-in=$it"
             }
         }
@@ -174,3 +180,10 @@ fun Project.configureAndroid() {
 }
 
 apply(from = rootProject.file("configuration/instrumentation-tests.gradle"))
+
+configure<ApiValidationExtension> {
+    // Interfaces marked with an internal API annotation are not part of the public API
+    nonPublicMarkers.addAll(internalApiAnnotations)
+
+    ignoredProjects.addAll(setOf("testutils", "testmodels", "annotations"))
+}
