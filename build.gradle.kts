@@ -79,16 +79,16 @@ subprojects {
         allow("CC0-1.0")
         allowUrl("https://developer.android.com/studio/terms.html")
         allowDependency("net.zetetic", "android-database-sqlcipher", "4.5.4") {
-            "BSD style License"
+            because("BSD style License")
         }
         allowDependency("org.jetbrains", "annotations", "16.0.1") {
-            "Apache-2.0, but typo in license URL fixed in newer versions"
+            because("Apache-2.0, but typo in license URL fixed in newer versions")
         }
         allowDependency("org.mockito", "mockito-core", "3.9.0") {
-            "MIT license"
+            because("MIT license")
         }
         allowDependency("junit", "junit", "4.13.2") {
-            "Test Dependency"
+            because("Test Dependency")
         }
     }
 
