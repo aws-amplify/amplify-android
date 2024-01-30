@@ -35,6 +35,7 @@ import java.util.UUID
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
@@ -60,8 +61,8 @@ class AnalyticsClientTest {
     fun setup() = runTest {
         mockkStatic("com.amplifyframework.pinpoint.core.util.SharedPreferencesUtilKt")
         every { sharedPrefs.getUniqueId() } answers { "UNIQUE_ID" }
-        coEvery { sessionClient.setAnalyticsClient(any()) } answers { }
-        coEvery { sessionClient.startSession() } answers { }
+        coEvery { sessionClient.setAnalyticsClient(any()) } returns Unit
+        coEvery { sessionClient.startSession() } returns Unit
 
         analyticsClient = AnalyticsClient(
             ApplicationProvider.getApplicationContext(),
@@ -158,5 +159,10 @@ class AnalyticsClientTest {
         val metricValue = 1.0
         analyticsClient.addGlobalMetric(metricName, metricValue)
         assertEquals(metricValue, analyticsClient.getGlobalMetrics()[metricName])
+    }
+
+    @After
+    fun tearDown() {
+        analyticsClient.disableEventSubmitter()
     }
 }
