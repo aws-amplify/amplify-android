@@ -60,7 +60,6 @@ class APICaptorFactory(
         val errorCaptor = slot<AuthException>()
         val actionCaptor = slot<Map<String, Any>>().apply {
             captured = emptyMap()
-            isCaptured = true
         }
     }
 
