@@ -40,5 +40,5 @@ dependencies {
 }
 
 afterEvaluate {
-    android.kotlinOptions.jvmTarget = JavaVersion.VERSION_1_8.toString()
+    android.kotlinOptions.jvmTarget = JavaVersion.VERSION_11.toString()
 }
