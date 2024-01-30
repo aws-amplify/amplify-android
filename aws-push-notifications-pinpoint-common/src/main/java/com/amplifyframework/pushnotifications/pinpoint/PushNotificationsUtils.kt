@@ -134,6 +134,11 @@ class PushNotificationsUtils(
                 setContentIntent(pendingIntent)
                 setPriority(NotificationCompat.PRIORITY_DEFAULT)
                 setLargeIcon(largeImageIcon)
+                setStyle(
+                    NotificationCompat.BigPictureStyle()
+                        .bigPicture(largeImageIcon)
+                        .bigLargeIcon(null)
+                )
                 setAutoCancel(true)
             }
 
