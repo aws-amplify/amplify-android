@@ -18,16 +18,15 @@ package com.amplifyframework.geo.maplibre.http
 import aws.smithy.kotlin.runtime.InternalApi
 import aws.smithy.kotlin.runtime.auth.awssigning.AwsSigningConfig
 import aws.smithy.kotlin.runtime.auth.awssigning.DefaultAwsSigner
+import aws.smithy.kotlin.runtime.collections.emptyAttributes
 import aws.smithy.kotlin.runtime.http.Headers as AwsHeaders
 import aws.smithy.kotlin.runtime.http.HttpBody
 import aws.smithy.kotlin.runtime.http.HttpMethod
 import aws.smithy.kotlin.runtime.http.request.HttpRequest
 import aws.smithy.kotlin.runtime.net.Host
-import aws.smithy.kotlin.runtime.net.QueryParameters
 import aws.smithy.kotlin.runtime.net.Scheme
-import aws.smithy.kotlin.runtime.net.Url
 import aws.smithy.kotlin.runtime.net.toUrlString
-import aws.smithy.kotlin.runtime.util.emptyAttributes
+import aws.smithy.kotlin.runtime.net.url.Url
 import com.amplifyframework.geo.location.AWSLocationGeoPlugin
 import java.io.ByteArrayOutputStream
 import java.io.IOException
@@ -79,11 +78,11 @@ internal class AWSRequestSignerInterceptor(
         val urlBuilder = HttpUrl.Builder()
             .host(request.url.host.toUrlString())
             .scheme(request.url.scheme.protocolName)
-            .encodedPath(request.url.encodedPath)
+            .encodedPath(request.url.requestRelativePath)
 
         request.url.parameters.forEach { name, parameters ->
             parameters.forEach {
-                urlBuilder.setQueryParameter(name, it)
+                urlBuilder.setQueryParameter(name.decoded, it.decoded)
             }
         }
         request.headers.forEach { name, values ->
@@ -112,17 +111,21 @@ internal class AWSRequestSignerInterceptor(
             credentials = plugin.credentialsProvider.resolve(emptyAttributes())
         }
 
-        val httpUrl = Url(
-            scheme = Scheme(url.scheme, url.port),
-            host = Host.parse(url.host),
-            port = url.port,
-            path = url.encodedPath,
-            parameters = QueryParameters.invoke {
+        val httpUrl = Url {
+            scheme = Scheme(url.scheme, url.port)
+            host = Host.parse(url.host)
+            port = url.port
+            path {
+                encoded = url.encodedPath
+            }
+            parameters {
                 url.queryParameterNames.map { name ->
-                    url.queryParameter(name)?.let { append(name, it) }
+                    url.queryParameter(name)?.let { value ->
+                        decodedParameters.add(name, value)
+                    }
                 }
             }
-        )
+        }
 
         val bodyBytes: ByteArray = getBytes(request.body)
         val body2 = HttpBody.fromBytes(bodyBytes)
