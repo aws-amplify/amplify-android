@@ -52,3 +52,7 @@ dependencies {
     androidTestImplementation(libs.test.androidx.workmanager)
     androidTestImplementation(project(":aws-storage-s3"))
 }
+
+android.kotlinOptions {
+    jvmTarget = "11"
+}
