@@ -23,15 +23,12 @@ import aws.smithy.kotlin.runtime.http.Headers as AwsHeaders
 import aws.smithy.kotlin.runtime.http.HttpBody
 import aws.smithy.kotlin.runtime.http.HttpMethod
 import aws.smithy.kotlin.runtime.http.request.HttpRequest
-import aws.smithy.kotlin.runtime.net.Host
-import aws.smithy.kotlin.runtime.net.Scheme
-import aws.smithy.kotlin.runtime.net.toUrlString
 import aws.smithy.kotlin.runtime.net.url.Url
 import com.amplifyframework.geo.location.AWSLocationGeoPlugin
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import kotlinx.coroutines.runBlocking
-import okhttp3.HttpUrl
+import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.Interceptor
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -75,22 +72,13 @@ internal class AWSRequestSignerInterceptor(
     }
 
     private fun Request.Builder.copyFrom(request: HttpRequest): Request.Builder {
-        val urlBuilder = HttpUrl.Builder()
-            .host(request.url.host.toUrlString())
-            .scheme(request.url.scheme.protocolName)
-            .encodedPath(request.url.requestRelativePath)
-
-        request.url.parameters.forEach { name, parameters ->
-            parameters.forEach {
-                urlBuilder.setQueryParameter(name.decoded, it.decoded)
-            }
-        }
+        this.url(request.url.toString().toHttpUrl())
         request.headers.forEach { name, values ->
             values.forEach {
                 this.header(name, it)
             }
         }
-        return this.url(urlBuilder.build())
+        return this
     }
 
     @OptIn(InternalApi::class)
@@ -111,22 +99,7 @@ internal class AWSRequestSignerInterceptor(
             credentials = plugin.credentialsProvider.resolve(emptyAttributes())
         }
 
-        val httpUrl = Url {
-            scheme = Scheme(url.scheme, url.port)
-            host = Host.parse(url.host)
-            port = url.port
-            path {
-                encoded = url.encodedPath
-            }
-            parameters {
-                url.queryParameterNames.map { name ->
-                    url.queryParameter(name)?.let { value ->
-                        decodedParameters.add(name, value)
-                    }
-                }
-            }
-        }
-
+        val httpUrl = Url.parse(url.toString())
         val bodyBytes: ByteArray = getBytes(request.body)
         val body2 = HttpBody.fromBytes(bodyBytes)
         val method = HttpMethod.parse(request.method)
