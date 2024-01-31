@@ -38,15 +38,17 @@ internal interface MutationOutbox {
     fun load(): Completable
 
     /**
-     * Checks to see if there is a pending mutation for a model with the given ID and Class.
+     * Returns a set of ids for the provided models that have pending mutations
      *
-     * @param modelId ID of any model in the system
-     * @param modelClass The fully qualified class name of the model for which you want to check
+     * @param T Model Type
+     * @param models list of Models to search for p ending mutations
+     * @param modelClass The fully qualified class name of the models for which you want to check
+     * @param excludeInFlight Set true to exclude in flight mutations from the returned Set
      * pending mutations. This should match the name returned by the model's
      * getClass().getName() method.
-     * @return true if there is a pending mutation for the model with the given ID and class, false if not.
+     * @return set of model ids that contained pending mutations
      */
-    fun hasPendingMutation(modelId: String, modelClass: String): Boolean
+    fun <T : Model> fetchPendingMutations(models: List<T>, modelClass: String, excludeInFlight: Boolean): Set<String>
 
     /**
      * Write a new [PendingMutation] into the outbox.

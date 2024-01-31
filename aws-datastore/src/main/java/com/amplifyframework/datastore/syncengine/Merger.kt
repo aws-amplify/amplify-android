@@ -14,28 +14,26 @@
  */
 package com.amplifyframework.datastore.syncengine
 
-import android.database.sqlite.SQLiteConstraintException
-import android.util.Log
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.core.NoOpConsumer
 import com.amplifyframework.core.category.CategoryType
 import com.amplifyframework.core.model.Model
-import com.amplifyframework.core.model.query.predicate.QueryPredicates
 import com.amplifyframework.datastore.DataStoreChannelEventName
 import com.amplifyframework.datastore.DataStoreException
+import com.amplifyframework.datastore.appsync.ModelMetadata
 import com.amplifyframework.datastore.appsync.ModelWithMetadata
+import com.amplifyframework.datastore.extensions.getMetadataSQLitePrimaryKey
 import com.amplifyframework.datastore.storage.LocalStorageAdapter
 import com.amplifyframework.datastore.storage.StorageItemChange
-import com.amplifyframework.datastore.utils.ErrorInspector
+import com.amplifyframework.datastore.storage.StorageOperation
 import com.amplifyframework.hub.HubChannel
 import com.amplifyframework.hub.HubEvent
 import io.reactivex.rxjava3.core.Completable
-import io.reactivex.rxjava3.core.CompletableEmitter
-import java.util.concurrent.atomic.AtomicReference
-import kotlin.Int
-import kotlin.Long
-import kotlin.Throwable
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
+import kotlinx.coroutines.rx3.rxCompletable
 
 /**
  * The merger is responsible for merging cloud data back into the local store.
@@ -55,82 +53,103 @@ internal class Merger(
      * @return A completable operation to merge the model
      </T> */
     fun <T : Model> merge(modelWithMetadata: ModelWithMetadata<T>): Completable {
-        return merge(modelWithMetadata, NoOpConsumer.create())
+        return merge(listOf(modelWithMetadata), NoOpConsumer.create())
     }
 
-    /**
-     * Merge an item back into the local store, using a default strategy.
-     * TODO: Change this method to return a Maybe, and remove the Consumer argument.
-     * @param modelWithMetadata A model, combined with metadata about it
-     * @param changeTypeConsumer A callback invoked when the merge method saves or deletes the model.
-     * @param <T> Type of model
-     * @return A completable operation to merge the model
-     </T> */
     fun <T : Model> merge(
-        modelWithMetadata: ModelWithMetadata<T>,
+        modelsWithMetadata: List<ModelWithMetadata<T>>,
         changeTypeConsumer: Consumer<StorageItemChange.Type>
     ): Completable {
-        val startTime = AtomicReference<Long>()
-        return Completable.defer {
-            val metadata = modelWithMetadata.syncMetadata
-            val isDelete = metadata.isDeleted() ?: false
-            val incomingVersion = metadata.version ?: -1
-            val model: T = modelWithMetadata.model
-            versionRepository.findModelVersion(model)
-                .onErrorReturnItem(-1) // If the incoming version is strictly less than the current version, it's "out of date,"
-                // so don't merge it.
-                // If the incoming version is exactly equal, it might clobber our local changes. So we
-                // *still* won't merge it. Instead, the MutationProcessor would publish the current content,
-                // and the version would get bumped up.
-                .filter { currentVersion: Int -> currentVersion == -1 || incomingVersion > currentVersion } // If we should merge, then do so now, starting with the model data.
-                .flatMapCompletable {
-                    val firstStep: Completable = if (mutationOutbox.hasPendingMutation(
-                            model.primaryKeyString,
-                            model.modelName
-                        )
-                    ) {
+        return rxCompletable {
+            // if no models to merge, return early
+            if (modelsWithMetadata.isEmpty()) {
+                return@rxCompletable
+            }
+
+            // create (key, model metadata) map for quick lookup to re-associate
+            val modelMetadataMap = modelsWithMetadata.associateBy { it.syncMetadata.primaryKeyString }
+
+            // Consumer to announce Model merges
+            val mergedConsumer = Consumer<ModelWithMetadata<T>> {
+                announceSuccessfulMerge(it)
+                LOG.debug("Remote model update was sync'd down into local storage: $it")
+            }
+            // Reusable consumer to pass into each operation, which will broadcast change type to mergedConsumer
+            val modelChangeConsumer: Consumer<StorageItemChange<T>> = Consumer { changeTypeConsumer.accept(it.type()) }
+
+            // After we receive a report of a successful metadata item process, we notify the merge consumer
+            val metadataChangeConsumer: Consumer<StorageItemChange<ModelMetadata>> = Consumer { change ->
+                modelMetadataMap[change.item().primaryKeyString]?.let {
+                    mergedConsumer.accept(it)
+                }
+            }
+
+            // fetch a Map of all model versions from Metadata table
+            val localModelVersions = versionRepository.fetchModelVersions(modelsWithMetadata)
+
+            /*
+            Fetch a Set of all pending mutation ids for type T
+            We exclude in-flight mutations from the returned pending mutation. If a mutation is excluded, it is
+            likely that the subscription processor returned the item before the outbox response. We want to process
+            whichever comes first
+             */
+            val pendingMutations = mutationOutbox.fetchPendingMutations(
+                models = modelsWithMetadata.map { it.model },
+                modelClass = modelsWithMetadata.first().model.javaClass.name,
+                excludeInFlight = true
+            )
+
+            // Construct a batch of operations to be executed in a single transactions
+            val operations = modelsWithMetadata.mapNotNull {
+                val incomingVersion = it.syncMetadata.version ?: -1
+                val localVersion = localModelVersions.getOrDefault(
+                    it.model.getMetadataSQLitePrimaryKey(),
+                    -1
+                )
+                // if local version unknown or lower than remote (incoming) version we will create operation(s)
+                if (localVersion == -1 || (incomingVersion > localVersion)) {
+                    val itemOperations = mutableListOf<StorageOperation<Model>>()
+                    if (!pendingMutations.contains(it.model.primaryKeyString)) {
+                        // If there are no pending mutations for the item,
+                        // we will create/delete depending remote model syncMetadata deleted state
+                        val modelOperation = if (it.syncMetadata.isDeleted == true) {
+                            StorageOperation.Delete(it.model, modelChangeConsumer)
+                        } else {
+                            StorageOperation.Create(it.model, modelChangeConsumer)
+                        }
+                        itemOperations.add(modelOperation)
+                    } else {
+                        // If a pending mutation existed for model, we only update the sync metadata
                         LOG.info(
                             "Mutation outbox has pending mutation for Model: " +
-                                model.modelName + " with primary key: " + model.resolveIdentifier() +
+                                it.model.modelName + " with primary key: " + it.model.resolveIdentifier() +
                                 ". Saving the metadata, but not model itself."
                         )
-                        Completable.complete()
-                    } else {
-                        if (isDelete) {
-                            delete(model, changeTypeConsumer)
-                        } else  {
-                            save(model, changeTypeConsumer)
-                        }
                     }
-                    firstStep.andThen(save(metadata, NoOpConsumer.create()))
-                } // Let the world know that we've done a good thing.
-                .doOnComplete {
-                    announceSuccessfulMerge(modelWithMetadata)
-                    LOG.debug("Remote model update was sync'd down into local storage: $modelWithMetadata")
-                } // Remote store may not always respect the foreign key constraint, so
-                // swallow any error caused by foreign key constraint violation.
-                .onErrorComplete { failure: Throwable ->
-                    if (!ErrorInspector.contains(failure, SQLiteConstraintException::class.java)) {
-                        return@onErrorComplete false
+                    // Save metadata
+                    itemOperations.apply {
+                        add(StorageOperation.Create(it.syncMetadata, metadataChangeConsumer))
                     }
-                    LOG.warn(
-                        "Sync failed: foreign key constraint violation: $modelWithMetadata",
-                        failure
-                    )
-                    true
+                } else {
+                    null
                 }
-                .doOnError { failure: Throwable ->
-                    LOG.warn(
-                        "Failed to sync remote model into local storage: $modelWithMetadata",
-                        failure
+            }.flatten() // flatten the list of a list of operations
+
+            // Execute all batched operations in single transaction
+            try {
+                suspendCoroutine { continuation ->
+                    localStorageAdapter.batchSyncOperations(
+                        operations,
+                        { continuation.resume(Unit) },
+                        { continuation.resumeWithException(it) }
                     )
                 }
-        }
-            .doOnSubscribe { startTime.set(System.currentTimeMillis()) }
-            .doOnTerminate {
-                val duration = System.currentTimeMillis() - startTime.get()
-                LOG.verbose("Merged a single item in $duration ms.")
+            } catch (e: DataStoreException) {
+                // Batch sync operation threw an unrecoverable exception.
+                // Throw to announce sync failure
+                throw e
             }
+        }
     }
 
     /**
@@ -146,53 +165,6 @@ internal class Merger(
                 modelWithMetadata
             )
         )
-    }
-
-    // Delete a model.
-    private fun <T : Model> delete(
-        model: T,
-        changeTypeConsumer: Consumer<StorageItemChange.Type>
-    ): Completable {
-        return Completable.create { emitter: CompletableEmitter ->
-            localStorageAdapter.delete(
-                model,
-                StorageItemChange.Initiator.SYNC_ENGINE,
-                QueryPredicates.all(),
-                { storageItemChange: StorageItemChange<T> ->
-                    changeTypeConsumer.accept(storageItemChange.type())
-                    emitter.onComplete()
-                },
-                { failure: DataStoreException ->
-                    LOG.verbose(
-                        "Failed to delete a model while merging. Perhaps it was already gone? " +
-                            Log.getStackTraceString(failure)
-                    )
-                    changeTypeConsumer.accept(StorageItemChange.Type.DELETE)
-                    emitter.onComplete()
-                }
-            )
-        }
-    }
-
-    // Create or update a model.
-    private fun <T : Model> save(
-        model: T,
-        changeTypeConsumer: Consumer<StorageItemChange.Type>
-    ): Completable {
-        return Completable.create { emitter: CompletableEmitter ->
-            localStorageAdapter.save(
-                model,
-                StorageItemChange.Initiator.SYNC_ENGINE,
-                QueryPredicates.all(),
-                { storageItemChange: StorageItemChange<T> ->
-                    changeTypeConsumer.accept(storageItemChange.type())
-                    emitter.onComplete()
-                },
-                { t: DataStoreException ->
-                    emitter.onError(t)
-                }
-            )
-        }
     }
 
     companion object {

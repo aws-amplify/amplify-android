@@ -22,6 +22,7 @@ import com.amplifyframework.core.model.ModelSchema
 import com.amplifyframework.core.model.SchemaRegistry
 import com.amplifyframework.core.model.query.Where
 import com.amplifyframework.core.model.query.predicate.QueryPredicate
+import com.amplifyframework.datastore.DataStoreException
 import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider
 import com.amplifyframework.testmodels.commentsblog.BlogOwner
 import com.amplifyframework.testmodels.customprimarykey.Comment
@@ -85,9 +86,6 @@ class SQLCommandProcessorTest {
         return db
     }
 
-    /**
-     * Closes in-memory database.
-     */
     @After
     fun clear() {
         schemaRegistry.clear()
@@ -97,10 +95,8 @@ class SQLCommandProcessorTest {
     /**
      * Create and insert a BlogOwner, and then verify that a rawQuery returns a Cursor with one result, containing the
      * previously inserted BlogOwner.
-     * @throws AmplifyException on failure to create ModelSchema from class
      */
     @Test
-    @Throws(AmplifyException::class)
     fun rawQueryReturnsResults() {
         // Insert a BlogOwner
         val blogOwnerSchema = ModelSchema.fromModelClass(
@@ -137,10 +133,8 @@ class SQLCommandProcessorTest {
 
     /**
      * Create and insert a BlogOwner, and then verify that executeExists return true.
-     * @throws AmplifyException on failure to create ModelSchema from class.
      */
     @Test
-    @Throws(AmplifyException::class)
     fun executeExistsReturnsTrueWhenItemExists() {
         // Insert a BlogOwner
         val blogOwnerSchema = ModelSchema.fromModelClass(
@@ -164,10 +158,8 @@ class SQLCommandProcessorTest {
 
     /**
      * Create a BlogOwner, but don't insert it.  Then verify that executeExists returns false.
-     * @throws AmplifyException on failure to create ModelSchema from class.
      */
     @Test
-    @Throws(AmplifyException::class)
     fun executeExistsReturnsFalseWhenItemDoesntExist() {
         // Create a BlogOwner, but don't insert it
         val blogOwnerSchema = ModelSchema.fromModelClass(
@@ -186,7 +178,6 @@ class SQLCommandProcessorTest {
      * @throws AmplifyException on failure to create ModelSchema from class.
      */
     @Test
-    @Throws(AmplifyException::class)
     fun testIndexNotCreatedWhenFieldsInBelongsTo() {
         val commentSchema = ModelSchema.fromModelClass(
             Comment::class.java
@@ -206,10 +197,8 @@ class SQLCommandProcessorTest {
 
     /**
      * Verify that index for foreign key fields is included in the commands.
-     * @throws AmplifyException on failure to create ModelSchema from class.
      */
     @Test
-    @Throws(AmplifyException::class)
     fun testForeignKeyIndexCreated() {
         val commentSchema = ModelSchema.fromModelClass(
             Comment::class.java
@@ -224,5 +213,83 @@ class SQLCommandProcessorTest {
                     "ON `Comment` (`@@postForeignKey`);"
             )
         )
+    }
+
+    @Test
+    fun testRunInTransactionWritesToDatabase() {
+        // Insert a BlogOwner
+        val blogOwnerSchema = ModelSchema.fromModelClass(
+            BlogOwner::class.java
+        )
+        val owner = BlogOwner.builder()
+            .name("My Name")
+            .build()
+
+        sqlCommandProcessor.runInTransaction {
+            sqlCommandProcessor.execute(sqlCommandFactory.insertFor(blogOwnerSchema, owner))
+        }
+
+        // Check that the BlogOwner exists
+        val predicate: QueryPredicate = BlogOwner.ID.eq(owner.id)
+        val existsCommand = sqlCommandFactory.existsFor(blogOwnerSchema, predicate)
+        assertTrue(sqlCommandProcessor.executeExists(existsCommand))
+    }
+
+    @Test
+    fun testRunInTransactionErrorDoesNotCommit() {
+        // Insert a BlogOwner
+        val blogOwnerSchema = ModelSchema.fromModelClass(
+            BlogOwner::class.java
+        )
+        val owner = BlogOwner.builder()
+            .name("My Name")
+            .build()
+
+        val expectedException = DataStoreException("expected", "expected")
+        var capturedException: DataStoreException? = null
+        try {
+            sqlCommandProcessor.runInTransaction {
+                sqlCommandProcessor.execute(sqlCommandFactory.insertFor(blogOwnerSchema, owner))
+                throw expectedException
+            }
+        } catch (e: DataStoreException) {
+            capturedException = e
+        }
+
+        assertEquals(expectedException, capturedException)
+
+        // Check that the BlogOwner does not exist
+        val predicate: QueryPredicate = BlogOwner.ID.eq(owner.id)
+        val existsCommand = sqlCommandFactory.existsFor(blogOwnerSchema, predicate)
+        assertFalse(sqlCommandProcessor.executeExists(existsCommand))
+    }
+
+    @Test
+    fun testRunInTransactionAndSucceedOnDatastoreException() {
+        // Insert a BlogOwner
+        val blogOwnerSchema = ModelSchema.fromModelClass(
+            BlogOwner::class.java
+        )
+        val owner = BlogOwner.builder()
+            .name("My Name")
+            .build()
+
+        val expectedException = DataStoreException("expected", "expected")
+        var capturedException: DataStoreException? = null
+        try {
+            sqlCommandProcessor.runInTransactionAndSucceedOnDatastoreException {
+                sqlCommandProcessor.execute(sqlCommandFactory.insertFor(blogOwnerSchema, owner))
+                throw expectedException
+            }
+        } catch (e: DataStoreException) {
+            capturedException = e
+        }
+
+        assertEquals(expectedException, capturedException)
+
+        // Check that the BlogOwner does not exist
+        val predicate: QueryPredicate = BlogOwner.ID.eq(owner.id)
+        val existsCommand = sqlCommandFactory.existsFor(blogOwnerSchema, predicate)
+        assertTrue(sqlCommandProcessor.executeExists(existsCommand))
     }
 }
