@@ -83,7 +83,6 @@ internal class AWSRequestSignerInterceptor(
 
         request.url.parameters.forEach { name, parameters ->
             parameters.forEach {
-                it.encoded
                 urlBuilder.setEncodedQueryParameter(name.encoded, it.encoded)
             }
         }
