@@ -78,7 +78,7 @@ internal class AWSRequestSignerInterceptor(
         val urlBuilder = HttpUrl.Builder()
             .host(request.url.host.toUrlString())
             .scheme(request.url.scheme.protocolName)
-            .encodedPath(request.url.requestRelativePath)
+            .encodedPath(request.url.path.encoded)
             .encodedFragment(request.url.fragment?.encoded)
 
         request.url.parameters.forEach { name, parameters ->
