@@ -3,7 +3,6 @@
 ### Bug Fixes
 - **api:** Use provided Content-Type to create RequestBody ([#2666](https://github.com/aws-amplify/amplify-android/issues/2666))
 - **auth:** Add MFAType.challengeResponse extension ([#2680](https://github.com/aws-amplify/amplify-android/issues/2680))
-- **core:** use returns instead of answers on coEvery ([#2653](https://github.com/aws-amplify/amplify-android/issues/2653))
 
 [See all changes between 2.14.9 and 2.14.10](https://github.com/aws-amplify/amplify-android/compare/release_v2.14.9...release_v2.14.10)
 
