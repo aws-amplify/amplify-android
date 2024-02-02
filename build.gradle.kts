@@ -164,7 +164,12 @@ fun Project.configureAndroid() {
         // dependencies (Apache's httpcore and httpclient), both of which include
         // META-INF/DEPENDENCIES. Tried a couple other options to no avail.
         packagingOptions {
-            resources.excludes.add("META-INF/DEPENDENCIES")
+            resources.excludes.addAll(
+                listOf(
+                    "META-INF/DEPENDENCIES",
+                    "META-INF/LICENSE.md"
+                )
+            )
         }
     }
 
