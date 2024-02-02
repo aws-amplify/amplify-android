@@ -167,7 +167,8 @@ fun Project.configureAndroid() {
             resources.excludes.addAll(
                 listOf(
                     "META-INF/DEPENDENCIES",
-                    "META-INF/LICENSE.md"
+                    "META-INF/LICENSE.md",
+                    "META-INF/LICENSE-notice.md"
                 )
             )
         }
