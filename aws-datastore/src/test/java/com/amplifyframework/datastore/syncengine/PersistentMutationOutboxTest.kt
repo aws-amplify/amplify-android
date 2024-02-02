@@ -33,7 +33,12 @@ import com.amplifyframework.testmodels.commentsblog.PostStatus
 import com.amplifyframework.testutils.HubAccumulator
 import com.amplifyframework.testutils.random.RandomString
 import java.util.concurrent.TimeUnit
-import org.junit.Assert
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -123,12 +128,12 @@ class PersistentMutationOutboxTest {
         queueObserver.dispose()
 
         // Assert that the storage contains the mutation
-        Assert.assertEquals(
+        assertEquals(
             listOf(converter.toRecord(createJameson)),
             storage.query(PersistentRecord::class.java)
         )
-        Assert.assertTrue(hasPendingMutation(jameson.id, jameson.javaClass.simpleName))
-        Assert.assertEquals(createJameson, mutationOutbox.peek())
+        assertTrue(hasPendingMutation(jameson.id, jameson.javaClass.simpleName))
+        assertEquals(createJameson, mutationOutbox.peek())
     }
 
     /**
@@ -156,10 +161,10 @@ class PersistentMutationOutboxTest {
         testObserver.dispose()
 
         // And nothing is in storage.
-        Assert.assertTrue(storage.query(PersistentRecord::class.java).isEmpty())
+        assertTrue(storage.query(PersistentRecord::class.java).isEmpty())
 
         // And nothing is peek()ed.
-        Assert.assertNull(mutationOutbox.peek())
+        assertNull(mutationOutbox.peek())
     }
 
     /**
@@ -190,11 +195,11 @@ class PersistentMutationOutboxTest {
         loadObserver.dispose()
 
         // Assert: items are in the outbox.
-        Assert.assertTrue(hasPendingMutation(tony.id, tony.javaClass.simpleName))
-        Assert.assertTrue(hasPendingMutation(sam.id, sam.javaClass.simpleName))
+        assertTrue(hasPendingMutation(tony.id, tony.javaClass.simpleName))
+        assertTrue(hasPendingMutation(sam.id, sam.javaClass.simpleName))
 
         // Tony is first, since he is the older of the two mutations.
-        Assert.assertEquals(updateTony, mutationOutbox.peek())
+        assertEquals(updateTony, mutationOutbox.peek())
     }
 
     /**
@@ -212,14 +217,14 @@ class PersistentMutationOutboxTest {
         val deleteBillGates = PendingMutation.deletion(bill, schema)
         storage.save(converter.toRecord(deleteBillGates))
         val completed = mutationOutbox.load().blockingAwait(TIMEOUT_MS, TimeUnit.MILLISECONDS)
-        Assert.assertTrue(completed)
+        assertTrue(completed)
         val testObserver = mutationOutbox.remove(deleteBillGates.mutationId).test()
         testObserver.await(TIMEOUT_MS, TimeUnit.MILLISECONDS)
         testObserver.assertNoErrors().assertComplete()
         testObserver.dispose()
-        Assert.assertEquals(0, storage.query(PersistentRecord::class.java).size.toLong())
-        Assert.assertNull(mutationOutbox.peek())
-        Assert.assertFalse(hasPendingMutation(bill.id, bill.javaClass.simpleName))
+        assertEquals(0, storage.query(PersistentRecord::class.java).size.toLong())
+        assertNull(mutationOutbox.peek())
+        assertFalse(hasPendingMutation(bill.id, bill.javaClass.simpleName))
     }
 
     /**
@@ -244,14 +249,14 @@ class PersistentMutationOutboxTest {
         val createSenatorBernie = PendingMutation.creation(senatorBernie, schema)
         val createCompleted = mutationOutbox.enqueue(createSenatorBernie)
             .blockingAwait(TIMEOUT_MS, TimeUnit.MILLISECONDS)
-        Assert.assertTrue(createCompleted)
+        assertTrue(createCompleted)
         val sam = BlogOwner.builder()
             .name("Sam Watson")
             .build()
         val insertSam = PendingMutation.creation(sam, schema)
         val updateCompleted = mutationOutbox.enqueue(insertSam)
             .blockingAwait(TIMEOUT_MS, TimeUnit.MILLISECONDS)
-        Assert.assertTrue(updateCompleted)
+        assertTrue(updateCompleted)
         enqueueEventObserver
             .awaitCount(2)
             .assertValues(OutboxEvent.CONTENT_AVAILABLE, OutboxEvent.CONTENT_AVAILABLE)
@@ -306,9 +311,9 @@ class PersistentMutationOutboxTest {
         )
         val completed = mutationOutbox.enqueue(pendingMutation)
             .blockingAwait(TIMEOUT_MS, TimeUnit.MILLISECONDS)
-        Assert.assertTrue(completed)
-        Assert.assertTrue(hasPendingMutation(modelId, joe.javaClass.simpleName))
-        Assert.assertFalse(
+        assertTrue(completed)
+        assertTrue(hasPendingMutation(modelId, joe.javaClass.simpleName))
+        assertFalse(
             hasPendingMutation(
                 mutationId.toString(),
                 mutationId.javaClass.simpleName
@@ -338,8 +343,8 @@ class PersistentMutationOutboxTest {
         val unrelatedMutation = PendingMutation.instance(
             mutationId, joe, schema, PendingMutation.Type.CREATE, QueryPredicates.all()
         )
-        Assert.assertFalse(hasPendingMutation(joeId, joe.javaClass.simpleName))
-        Assert.assertFalse(
+        assertFalse(hasPendingMutation(joeId, joe.javaClass.simpleName))
+        assertFalse(
             hasPendingMutation(
                 unrelatedMutation.mutationId.toString(),
                 unrelatedMutation.javaClass.simpleName
@@ -367,12 +372,12 @@ class PersistentMutationOutboxTest {
         )
 
         // Act & Assert: Enqueue and verify BlogOwner
-        Assert.assertTrue(
+        assertTrue(
             mutationOutbox.enqueue(pendingBlogOwnerMutation).blockingAwait(
                 TIMEOUT_MS, TimeUnit.MILLISECONDS
             )
         )
-        Assert.assertTrue(hasPendingMutation(modelId, blogOwner.javaClass.simpleName))
+        assertTrue(hasPendingMutation(modelId, blogOwner.javaClass.simpleName))
 
         // Act & Assert: Enqueue and verify Author
         val author = Author.builder()
@@ -381,18 +386,18 @@ class PersistentMutationOutboxTest {
             .build()
 
         // Check hasPendingMutation returns False for Author with same Primary Key (id) as BlogOwner
-        Assert.assertFalse(hasPendingMutation(modelId, author.javaClass.simpleName))
+        assertFalse(hasPendingMutation(modelId, author.javaClass.simpleName))
         val pendingAuthorMutation = PendingMutation.instance(
             mutationId, author, ModelSchema.fromModelClass(Author::class.java),
             PendingMutation.Type.CREATE, QueryPredicates.all()
         )
-        Assert.assertTrue(
+        assertTrue(
             mutationOutbox.enqueue(pendingAuthorMutation)
                 .blockingAwait(TIMEOUT_MS, TimeUnit.MILLISECONDS)
         )
 
         // Make sure Author Mutation is stored
-        Assert.assertTrue(hasPendingMutation(modelId, author.javaClass.simpleName))
+        assertTrue(hasPendingMutation(modelId, author.javaClass.simpleName))
 
         // Act & Assert: Enqueue and verify Author
         val post = Post.builder()
@@ -403,18 +408,18 @@ class PersistentMutationOutboxTest {
             .build()
 
         // Check hasPendingMutation returns False for Post with same Primary Key (id) as BlogOwner
-        Assert.assertFalse(hasPendingMutation(modelId, post.javaClass.simpleName))
+        assertFalse(hasPendingMutation(modelId, post.javaClass.simpleName))
         val pendingPostMutation = PendingMutation.instance(
             mutationId, post, ModelSchema.fromModelClass(Post::class.java),
             PendingMutation.Type.CREATE, QueryPredicates.all()
         )
-        Assert.assertTrue(
+        assertTrue(
             mutationOutbox.enqueue(pendingPostMutation)
                 .blockingAwait(TIMEOUT_MS, TimeUnit.MILLISECONDS)
         )
 
         // Make sure Post Mutation is stored
-        Assert.assertTrue(hasPendingMutation(modelId, post.javaClass.simpleName))
+        assertTrue(hasPendingMutation(modelId, post.javaClass.simpleName))
     }
 
     /**
@@ -437,7 +442,7 @@ class PersistentMutationOutboxTest {
             .build()
         val existingCreation = PendingMutation.creation(existingBlogOwner, schema)
         val existingCreationId = existingCreation.mutationId.toString()
-        Assert.assertTrue(
+        assertTrue(
             mutationOutbox.enqueue(existingCreation)
                 .blockingAwait(TIMEOUT_MS, TimeUnit.MILLISECONDS)
         )
@@ -462,11 +467,11 @@ class PersistentMutationOutboxTest {
             PersistentRecord::class.java,
             Where.identifier(PersistentRecord::class.java, existingCreationId)
         )[0]
-        Assert.assertEquals(
+        assertEquals(
             existingBlogOwner,
             converter.fromRecord<Model>(storedMutation).mutatedItem
         )
-        Assert.assertTrue(
+        assertTrue(
             storage.query(
                 PersistentRecord::class.java,
                 Where.identifier(PersistentRecord::class.java, duplicateMutationId)
@@ -474,13 +479,13 @@ class PersistentMutationOutboxTest {
         )
 
         // Additional Checks: Peek the Mutation outbox, existing mutation should be present.
-        Assert.assertTrue(
+        assertTrue(
             hasPendingMutation(
                 existingBlogOwner.primaryKeyString,
                 existingBlogOwner.javaClass.simpleName
             )
         )
-        Assert.assertEquals(existingCreation, mutationOutbox.peek())
+        assertEquals(existingCreation, mutationOutbox.peek())
     }
 
     /**
@@ -502,7 +507,7 @@ class PersistentMutationOutboxTest {
         val existingCreationId = existingCreation.mutationId.toString()
         val completed = mutationOutbox.enqueue(existingCreation)
             .blockingAwait(TIMEOUT_MS, TimeUnit.MILLISECONDS)
-        Assert.assertTrue(completed)
+        assertTrue(completed)
 
         // Act: try to create the blog owner again -- but there's already a pending creation
         val modelInIncomingMutation = modelInExistingMutation.copyOfBuilder()
@@ -524,11 +529,11 @@ class PersistentMutationOutboxTest {
                 existingCreationId
             )
         )[0]
-        Assert.assertEquals(
+        assertEquals(
             modelInExistingMutation,
             converter.fromRecord<Model>(storedMutation).mutatedItem
         )
-        Assert.assertTrue(
+        assertTrue(
             storage.query(
                 PersistentRecord::class.java,
                 Where.identifier(PersistentRecord::class.java, incomingCreationId)
@@ -536,13 +541,13 @@ class PersistentMutationOutboxTest {
         )
 
         // Existing mutation still attainable as next mutation (right now, its the ONLY mutation in outbox)
-        Assert.assertTrue(
+        assertTrue(
             hasPendingMutation(
                 modelInExistingMutation.primaryKeyString,
                 modelInExistingMutation.javaClass.simpleName
             )
         )
-        Assert.assertEquals(existingCreation, mutationOutbox.peek())
+        assertEquals(existingCreation, mutationOutbox.peek())
     }
 
     /**
@@ -564,7 +569,7 @@ class PersistentMutationOutboxTest {
         val exitingUpdateId = existingUpdate.mutationId.toString()
         val completed = mutationOutbox.enqueue(existingUpdate)
             .blockingAwait(TIMEOUT_MS, TimeUnit.MILLISECONDS)
-        Assert.assertTrue(completed)
+        assertTrue(completed)
 
         // Act: try to CREATE tony again -- but isn't he already created, if there's an update?
         val modelInIncomingMutation = modelInExistingMutation.copyOfBuilder()
@@ -586,11 +591,11 @@ class PersistentMutationOutboxTest {
                 exitingUpdateId
             )
         )[0]
-        Assert.assertEquals(
+        assertEquals(
             modelInExistingMutation,
             converter.fromRecord<Model>(storedMutation).mutatedItem
         )
-        Assert.assertTrue(
+        assertTrue(
             storage.query(
                 PersistentRecord::class.java,
                 Where.identifier(
@@ -601,13 +606,13 @@ class PersistentMutationOutboxTest {
         )
 
         // Existing mutation still attainable as next mutation (right now, its the ONLY mutation in outbox)
-        Assert.assertTrue(
+        assertTrue(
             hasPendingMutation(
                 modelInExistingMutation.primaryKeyString,
                 modelInExistingMutation.javaClass.simpleName
             )
         )
-        Assert.assertEquals(existingUpdate, mutationOutbox.peek())
+        assertEquals(existingUpdate, mutationOutbox.peek())
     }
 
     /**
@@ -630,7 +635,7 @@ class PersistentMutationOutboxTest {
         val existingDeletionId = existingDeletion.mutationId.toString()
         val completed = mutationOutbox.enqueue(existingDeletion)
             .blockingAwait(TIMEOUT_MS, TimeUnit.MILLISECONDS)
-        Assert.assertTrue(completed)
+        assertTrue(completed)
 
         // Act: try to create tony, but wait -- if we're already deleting him...
         val modelInIncomingMutation = modelInExistingMutation.copyOfBuilder()
@@ -649,11 +654,11 @@ class PersistentMutationOutboxTest {
             PersistentRecord::class.java,
             Where.identifier(PersistentRecord::class.java, existingDeletionId)
         )[0]
-        Assert.assertEquals(
+        assertEquals(
             modelInExistingMutation,
             converter.fromRecord<Model>(storedMutation).mutatedItem
         )
-        Assert.assertTrue(
+        assertTrue(
             storage.query(
                 PersistentRecord::class.java,
                 Where.identifier(PersistentRecord::class.java, incomingCreationId)
@@ -661,13 +666,13 @@ class PersistentMutationOutboxTest {
         )
 
         // Existing mutation still attainable as next mutation (right now, its the ONLY mutation in outbox)
-        Assert.assertTrue(
+        assertTrue(
             hasPendingMutation(
                 modelInExistingMutation.primaryKeyString,
                 modelInExistingMutation.javaClass.simpleName
             )
         )
-        Assert.assertEquals(existingDeletion, mutationOutbox.peek())
+        assertEquals(existingDeletion, mutationOutbox.peek())
     }
 
     /**
@@ -689,7 +694,7 @@ class PersistentMutationOutboxTest {
         val existingDeletionId = existingDeletion.mutationId.toString()
         val completed = mutationOutbox.enqueue(existingDeletion)
             .blockingAwait(TIMEOUT_MS, TimeUnit.MILLISECONDS)
-        Assert.assertTrue(completed)
+        assertTrue(completed)
 
         // Act: try to update tony, but wait ... aren't we deleting tony?
         val modelInIncomingMutation = modelInExistingMutation.copyOfBuilder()
@@ -708,11 +713,11 @@ class PersistentMutationOutboxTest {
             PersistentRecord::class.java,
             Where.identifier(PersistentRecord::class.java, existingDeletionId)
         )[0]
-        Assert.assertEquals(
+        assertEquals(
             modelInExistingMutation,
             converter.fromRecord<Model>(storedMutation).mutatedItem
         )
-        Assert.assertTrue(
+        assertTrue(
             storage.query(
                 PersistentRecord::class.java,
                 Where.identifier(
@@ -723,13 +728,13 @@ class PersistentMutationOutboxTest {
         )
 
         // Existing mutation still attainable as next mutation (right now, its the ONLY mutation in outbox)
-        Assert.assertTrue(
+        assertTrue(
             hasPendingMutation(
                 modelInExistingMutation.primaryKeyString,
                 modelInExistingMutation.javaClass.simpleName
             )
         )
-        Assert.assertEquals(existingDeletion, mutationOutbox.peek())
+        assertEquals(existingDeletion, mutationOutbox.peek())
     }
 
     /**
@@ -750,7 +755,7 @@ class PersistentMutationOutboxTest {
         val existingUpdateId = existingUpdate.mutationId.toString()
         val completed = mutationOutbox.enqueue(existingUpdate)
             .blockingAwait(TIMEOUT_MS, TimeUnit.MILLISECONDS)
-        Assert.assertTrue(completed)
+        assertTrue(completed)
 
         // Act: try to enqueue a new update mutation when there already is one
         val modelInIncomingMutation = modelInExistingMutation.copyOfBuilder()
@@ -773,7 +778,7 @@ class PersistentMutationOutboxTest {
             PersistentRecord::class.java,
             Where.identifier(PersistentRecord::class.java, existingUpdateId)
         )
-        Assert.assertEquals(1, recordsForExistingMutationId.size.toLong())
+        assertEquals(1, recordsForExistingMutationId.size.toLong())
 
         // Assert: And the new one is also there
         val recordsForIncomingMutationId = storage.query(
@@ -782,30 +787,30 @@ class PersistentMutationOutboxTest {
                 PersistentRecord::class.java, incomingUpdateId
             )
         )
-        Assert.assertEquals(1, recordsForIncomingMutationId.size.toLong())
+        assertEquals(1, recordsForIncomingMutationId.size.toLong())
 
         // The original mutation should remain as is
         val existingStoredMutation =
             converter.fromRecord<BlogOwner>(recordsForExistingMutationId[0])
         // This is the name from the second model, not the first
-        Assert.assertEquals(modelInExistingMutation.name, existingStoredMutation.mutatedItem.name)
+        assertEquals(modelInExistingMutation.name, existingStoredMutation.mutatedItem.name)
         var next = mutationOutbox.peek()
-        Assert.assertNotNull(next)
+        assertNotNull(next)
         // The first one should be the existing mutation
-        Assert.assertEquals(
+        assertEquals(
             existingUpdate,
             next
         )
         // Remove the first one from the queue
         val removeCompleted = mutationOutbox.remove(existingUpdate.mutationId)
             .blockingAwait(TIMEOUT_MS, TimeUnit.MILLISECONDS)
-        Assert.assertTrue(removeCompleted)
+        assertTrue(removeCompleted)
 
         // Get the next one
         next = mutationOutbox.peek()
-        Assert.assertNotNull(next)
+        assertNotNull(next)
         // The first one should be the existing mutation
-        Assert.assertEquals(
+        assertEquals(
             incomingUpdate,
             next
         )
@@ -851,10 +856,10 @@ class PersistentMutationOutboxTest {
         val storedMutation =
             converter.fromRecord<BlogOwner>(getPendingMutationRecordFromStorage(incomingUpdateId)[0])
         // This is the name from the second model, not the first
-        Assert.assertEquals(modelInIncomingMutation.name, storedMutation.mutatedItem.name)
+        assertEquals(modelInIncomingMutation.name, storedMutation.mutatedItem.name)
 
         // The mutation in the outbox is the incoming one.
-        Assert.assertEquals(
+        assertEquals(
             incomingUpdate,
             mutationOutbox.peek()
         )
@@ -920,16 +925,16 @@ class PersistentMutationOutboxTest {
         // Ensure the new one is in storage.
         val storedMutation = converter.fromRecord<SerializedModel>(pendingMutationsFromStorage[0])
         // This is the name from the second model, not the first
-        Assert.assertEquals(
+        assertEquals(
             initialUpdate.name,
             storedMutation.mutatedItem.serializedData["name"]
         )
         // wea got merged from existing model
-        Assert.assertEquals(
+        assertEquals(
             incomingUpdatedModel.wea,
             storedMutation.mutatedItem.serializedData["wea"]
         )
-        Assert.assertEquals(
+        assertEquals(
             PendingMutation.Type.UPDATE,
             storedMutation.mutationType
         )
@@ -995,16 +1000,16 @@ class PersistentMutationOutboxTest {
         // Ensure the new one is in storage.
         val storedMutation = converter.fromRecord<SerializedModel>(pendingMutationsFromStorage[0])
         // This is the name from the second model, not the first
-        Assert.assertEquals(
+        assertEquals(
             initialUpdate.name,
             storedMutation.mutatedItem.serializedData["name"]
         )
         // wea got merged from existing model
-        Assert.assertEquals(
+        assertEquals(
             incomingUpdatedModel.wea,
             storedMutation.mutatedItem.serializedData["wea"]
         )
-        Assert.assertEquals(
+        assertEquals(
             PendingMutation.Type.CREATE,
             storedMutation.mutationType
         )
@@ -1029,7 +1034,7 @@ class PersistentMutationOutboxTest {
         val existingCreationId = existingCreation.mutationId.toString()
         val completed = mutationOutbox.enqueue(existingCreation)
             .blockingAwait(TIMEOUT_MS, TimeUnit.MILLISECONDS)
-        Assert.assertTrue(completed)
+        assertTrue(completed)
 
         // Act: try to enqueue an update even whilst the creation is pending
         val modelInIncomingMutation = modelInExistingMutation.copyOfBuilder()
@@ -1050,7 +1055,7 @@ class PersistentMutationOutboxTest {
                 PersistentRecord::class.java, existingCreationId
             )
         )
-        Assert.assertEquals(1, recordsForExistingMutationId.size.toLong())
+        assertEquals(1, recordsForExistingMutationId.size.toLong())
 
         // And the new one is not, by ID...
         val recordsForIncomingMutationId = storage.query(
@@ -1059,17 +1064,17 @@ class PersistentMutationOutboxTest {
                 PersistentRecord::class.java, incomingUpdateId
             )
         )
-        Assert.assertEquals(0, recordsForIncomingMutationId.size.toLong())
+        assertEquals(0, recordsForIncomingMutationId.size.toLong())
 
         // However, the original mutation has been updated to include the contents of the
         // incoming mutation. This is true even whilst the mutation retains its original ID.
         val storedMutation = converter.fromRecord<BlogOwner>(recordsForExistingMutationId[0])
         // This is the name from the second model, not the first!
-        Assert.assertEquals("Tony Jr.", storedMutation.mutatedItem.name)
+        assertEquals("Tony Jr.", storedMutation.mutatedItem.name)
 
         // There is a mutation in the outbox, it has the original ID.
         // This is STILL a creation, just using the new model data.
-        Assert.assertEquals(
+        assertEquals(
             PendingMutation.instance(
                 existingCreation.mutationId,
                 modelInIncomingMutation,
@@ -1097,19 +1102,19 @@ class PersistentMutationOutboxTest {
         val existingCreationId = existingCreation.mutationId.toString()
         val completed = mutationOutbox.enqueue(existingCreation)
             .blockingAwait(TIMEOUT_MS, TimeUnit.MILLISECONDS)
-        Assert.assertTrue(completed)
+        assertTrue(completed)
         val incomingDeletion = PendingMutation.deletion(joe, schema)
         val incomingDeletionId = incomingDeletion.mutationId.toString()
         val otherEnqueueCompleted = mutationOutbox.enqueue(incomingDeletion)
             .blockingAwait(TIMEOUT_MS, TimeUnit.MILLISECONDS)
-        Assert.assertTrue(otherEnqueueCompleted)
-        Assert.assertTrue(
+        assertTrue(otherEnqueueCompleted)
+        assertTrue(
             storage.query(
                 PersistentRecord::class.java,
                 Where.identifier(PersistentRecord::class.java, existingCreationId)
             ).isEmpty()
         )
-        Assert.assertTrue(
+        assertTrue(
             storage.query(
                 PersistentRecord::class.java,
                 Where.identifier(
@@ -1120,7 +1125,7 @@ class PersistentMutationOutboxTest {
         )
 
         // There are no pending mutations.
-        Assert.assertNull(mutationOutbox.peek())
+        assertNull(mutationOutbox.peek())
     }
 
     /**
@@ -1140,12 +1145,12 @@ class PersistentMutationOutboxTest {
         val existingUpdateId = exitingUpdate.mutationId.toString()
         val completed =
             mutationOutbox.enqueue(exitingUpdate).blockingAwait(TIMEOUT_MS, TimeUnit.MILLISECONDS)
-        Assert.assertTrue(completed)
+        assertTrue(completed)
         val incomingDeletion = PendingMutation.deletion(joe, schema)
         val incomingDeletionId = incomingDeletion.mutationId.toString()
         val otherEnqueueCompleted = mutationOutbox.enqueue(incomingDeletion)
             .blockingAwait(TIMEOUT_MS, TimeUnit.MILLISECONDS)
-        Assert.assertTrue(otherEnqueueCompleted)
+        assertTrue(otherEnqueueCompleted)
 
         // The original mutation ID is preserved.
         val existingMutationRecords = storage.query(
@@ -1154,7 +1159,7 @@ class PersistentMutationOutboxTest {
                 PersistentRecord::class.java, existingUpdateId
             )
         )
-        Assert.assertEquals(1, existingMutationRecords.size.toLong())
+        assertEquals(1, existingMutationRecords.size.toLong())
 
         // The new ID was discarded ....
         val incomingMutationRecords = storage.query(
@@ -1163,11 +1168,11 @@ class PersistentMutationOutboxTest {
                 PersistentRecord::class.java, incomingDeletionId
             )
         )
-        Assert.assertEquals(0, incomingMutationRecords.size.toLong())
+        assertEquals(0, incomingMutationRecords.size.toLong())
 
         // HOWEVER,
         // The stored mutation has the original ID, but it has become a deletion, not an update
-        Assert.assertEquals(
+        assertEquals(
             PendingMutation.Type.DELETE,
             converter.fromRecord<Model>(existingMutationRecords[0]).mutationType
         )
@@ -1175,7 +1180,7 @@ class PersistentMutationOutboxTest {
         // Able to get next mutation, it has the original ID
         // The model data doesn't really matter, since it only matches on model ID, anyway.
         // Importantly, the type is NOT update, but instead has become a deletion.
-        Assert.assertEquals(
+        assertEquals(
             PendingMutation.instance(
                 exitingUpdate.mutationId,
                 joe,
@@ -1201,13 +1206,13 @@ class PersistentMutationOutboxTest {
             .build()
         val exitingDeletion = PendingMutation.deletion(sammy, schema)
         val incomingDeletion = PendingMutation.deletion(sammy, schema)
-        Assert.assertNotEquals(exitingDeletion.mutationId, incomingDeletion.mutationId)
+        assertNotEquals(exitingDeletion.mutationId, incomingDeletion.mutationId)
         val completed = mutationOutbox.enqueue(exitingDeletion)
             .blockingAwait(TIMEOUT_MS, TimeUnit.MILLISECONDS)
-        Assert.assertTrue(completed)
+        assertTrue(completed)
         val otherEnqueueCompleted = mutationOutbox.enqueue(incomingDeletion)
             .blockingAwait(TIMEOUT_MS, TimeUnit.MILLISECONDS)
-        Assert.assertTrue(otherEnqueueCompleted)
+        assertTrue(otherEnqueueCompleted)
 
         // Existing record is still there
         val existingMutationRecords = storage.query(
@@ -1217,7 +1222,7 @@ class PersistentMutationOutboxTest {
                 exitingDeletion.mutationId.toString()
             )
         )
-        Assert.assertEquals(1, existingMutationRecords.size.toLong())
+        assertEquals(1, existingMutationRecords.size.toLong())
 
         // Incoming is not present
         val incomingMutationRecords = storage.query(
@@ -1227,10 +1232,10 @@ class PersistentMutationOutboxTest {
                 incomingDeletion.mutationId.toString()
             )
         )
-        Assert.assertEquals(0, incomingMutationRecords.size.toLong())
+        assertEquals(0, incomingMutationRecords.size.toLong())
 
         // Still a deletion, as the next outbox item
-        Assert.assertEquals(exitingDeletion, mutationOutbox.peek())
+        assertEquals(exitingDeletion, mutationOutbox.peek())
     }
 
     /**
@@ -1249,7 +1254,7 @@ class PersistentMutationOutboxTest {
         val originalCreation = PendingMutation.creation(tonyWrongName, schema)
         val completed = mutationOutbox.enqueue(originalCreation)
             .blockingAwait(TIMEOUT_MS, TimeUnit.MILLISECONDS)
-        Assert.assertTrue(completed)
+        assertTrue(completed)
 
         // Update tony - we spelled his name wrong originally
         val tonySpelledRight = tonyWrongName.copyOfBuilder()
@@ -1258,7 +1263,7 @@ class PersistentMutationOutboxTest {
         val otherEnqueueCompleted =
             mutationOutbox.enqueue(PendingMutation.update(tonySpelledRight, schema))
                 .blockingAwait(TIMEOUT_MS, TimeUnit.MILLISECONDS)
-        Assert.assertTrue(otherEnqueueCompleted)
+        assertTrue(otherEnqueueCompleted)
 
         // Assert: an event for the original creation, then another for the update
         eventsObserver.awaitCount(2)
@@ -1285,7 +1290,7 @@ class PersistentMutationOutboxTest {
                 schema
             )
         ).blockingAwait(TIMEOUT_MS, TimeUnit.MILLISECONDS)
-        Assert.assertTrue(completed)
+        assertTrue(completed)
 
         // Assert: we got an event!
         eventsObserver.awaitCount(1)
@@ -1314,8 +1319,8 @@ class PersistentMutationOutboxTest {
         val secondMutation = PendingMutation.update(updatedJoe, schema)
         storage.save(updatedJoe, converter.toRecord(secondMutation))
         val completed = mutationOutbox.load().blockingAwait(TIMEOUT_MS, TimeUnit.MILLISECONDS)
-        Assert.assertTrue(completed)
-        Assert.assertEquals(
+        assertTrue(completed)
+        assertEquals(
             firstMutation,
             mutationOutbox.getMutationForModelId(originalJoe.id, originalJoe.javaClass.simpleName)
         )
@@ -1337,26 +1342,26 @@ class PersistentMutationOutboxTest {
             mutationOutbox.enqueue(creation) // Act: mark it as in-flight, after enqueue.
                 .andThen(mutationOutbox.markInFlight(creation.mutationId))
                 .blockingAwait(TIMEOUT_MS, TimeUnit.MILLISECONDS)
-        Assert.assertTrue(completed)
+        assertTrue(completed)
 
         // Now, look at what happens when we enqueue a new mutation.
         val deletion = PendingMutation.deletion(joe, schema)
         val otherEnqueueCompleted = mutationOutbox.enqueue(deletion)
             .blockingAwait(TIMEOUT_MS, TimeUnit.MILLISECONDS)
-        Assert.assertTrue(otherEnqueueCompleted)
+        assertTrue(otherEnqueueCompleted)
         var next = mutationOutbox.peek()!!
-        Assert.assertNotNull(next)
-        Assert.assertEquals(creation, next)
+        assertNotNull(next)
+        assertEquals(creation, next)
         val removeCompleted = mutationOutbox.remove(next.mutationId)
             .blockingAwait(TIMEOUT_MS, TimeUnit.MILLISECONDS)
-        Assert.assertTrue(removeCompleted)
+        assertTrue(removeCompleted)
         next = mutationOutbox.peek()!!
-        Assert.assertNotNull(next)
-        Assert.assertEquals(deletion, next)
+        assertNotNull(next)
+        assertEquals(deletion, next)
         val otherRemoveCompleted = mutationOutbox.remove(next.mutationId)
             .blockingAwait(TIMEOUT_MS, TimeUnit.MILLISECONDS)
-        Assert.assertTrue(otherRemoveCompleted)
-        Assert.assertNull(mutationOutbox.peek())
+        assertTrue(otherRemoveCompleted)
+        assertNull(mutationOutbox.peek())
     }
 
     /**
@@ -1373,10 +1378,10 @@ class PersistentMutationOutboxTest {
         val creation = PendingMutation.creation(tabby, schema)
         val enqueueCompleted = mutationOutbox.enqueue(creation)
             .blockingAwait(TIMEOUT_MS, TimeUnit.MILLISECONDS)
-        Assert.assertTrue(enqueueCompleted)
+        assertTrue(enqueueCompleted)
         val removeCompleted = mutationOutbox.remove(creation.mutationId)
             .blockingAwait(TIMEOUT_MS, TimeUnit.MILLISECONDS)
-        Assert.assertTrue(removeCompleted)
+        assertTrue(removeCompleted)
 
         // Now, if we try to make that mutation as in-flight, its an error, since its already processed.
         val observer = mutationOutbox.markInFlight(creation.mutationId).test()
@@ -1428,7 +1433,7 @@ class PersistentMutationOutboxTest {
         val creation = PendingMutation.creation(tabby, schema)
         val completed = mutationOutbox.enqueue(creation)
             .blockingAwait(TIMEOUT_MS, TimeUnit.MILLISECONDS)
-        Assert.assertTrue(completed)
+        assertTrue(completed)
         val observer = mutationOutbox.remove(creation.mutationId)
             .andThen(mutationOutbox.remove(creation.mutationId))
             .test()
@@ -1458,7 +1463,7 @@ class PersistentMutationOutboxTest {
         val creation = PendingMutation.creation(tabby, schema)
         val completed = mutationOutbox.enqueue(creation)
             .blockingAwait(TIMEOUT_MS, TimeUnit.MILLISECONDS)
-        Assert.assertTrue(completed)
+        assertTrue(completed)
         val observer = mutationOutbox.remove(creation.mutationId)
             .andThen(mutationOutbox.markInFlight(creation.mutationId)).test()
 
@@ -1483,14 +1488,14 @@ class PersistentMutationOutboxTest {
             blogOwners.add(blogOwner)
             val creation = PendingMutation.creation(blogOwner, schema)
             val completed = mutationOutbox.enqueue(creation).blockingAwait(TIMEOUT_MS, TimeUnit.MILLISECONDS)
-            Assert.assertTrue(completed)
+            assertTrue(completed)
         }
         val expectedResult = blogOwners.map { it.id }.toSet()
 
         val result = mutationOutbox.fetchPendingMutations(blogOwners, blogOwners[0].javaClass.name, true)
 
-        Assert.assertEquals(975, result.size)
-        Assert.assertEquals(expectedResult, result)
+        assertEquals(975, result.size)
+        assertEquals(expectedResult, result)
     }
 
     @Test
@@ -1502,9 +1507,9 @@ class PersistentMutationOutboxTest {
         val p1 = PendingMutation.creation(b1, schema)
         val completed1 = mutationOutbox.enqueue(p1)
             .blockingAwait(TIMEOUT_MS, TimeUnit.MILLISECONDS)
-        Assert.assertTrue(completed1)
+        assertTrue(completed1)
         val markedInFlight = mutationOutbox.markInFlight(p1.mutationId).blockingAwait(1, TimeUnit.SECONDS)
-        Assert.assertTrue(markedInFlight)
+        assertTrue(markedInFlight)
 
         val b2 = BlogOwner.builder()
             .name("Name2")
@@ -1512,13 +1517,13 @@ class PersistentMutationOutboxTest {
             .build()
         val completed2 = mutationOutbox.enqueue(PendingMutation.creation(b2, schema))
             .blockingAwait(TIMEOUT_MS, TimeUnit.MILLISECONDS)
-        Assert.assertTrue(completed2)
+        assertTrue(completed2)
         val expectedResult = setOf(b2.id)
 
         val result = mutationOutbox.fetchPendingMutations(listOf(b1, b2), BlogOwner::class.java.name, true)
 
-        Assert.assertEquals(1, result.size)
-        Assert.assertEquals(expectedResult, result)
+        assertEquals(1, result.size)
+        assertEquals(expectedResult, result)
     }
 
     private fun hasPendingMutation(modelId: String, modelClass: String): Boolean {
@@ -1527,7 +1532,7 @@ class PersistentMutationOutboxTest {
 
     private fun assertRecordCountForMutationId(mutationId: String, expectedCount: Int) {
         val recordsForExistingMutationId = getPendingMutationRecordFromStorage(mutationId)
-        Assert.assertEquals(expectedCount.toLong(), recordsForExistingMutationId.size.toLong())
+        assertEquals(expectedCount.toLong(), recordsForExistingMutationId.size.toLong())
     }
 
     private fun getPendingMutationRecordFromStorage(mutationId: String): List<PersistentRecord> {

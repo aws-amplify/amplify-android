@@ -48,7 +48,10 @@ import com.amplifyframework.testutils.Latch
 import java.time.Duration
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
-import org.junit.Assert
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
+import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -128,7 +131,7 @@ class MutationProcessorTest {
 
         // Mock up a response from AppSync and enqueue a mutation.
         AppSyncMocking.create(appSync).mockSuccessResponse(raphael)
-        Assert.assertTrue(
+        assertTrue(
             mutationOutbox.enqueue(createRaphael)
                 .blockingAwait(TIMEOUT_SECONDS, TimeUnit.SECONDS)
         )
@@ -172,7 +175,7 @@ class MutationProcessorTest {
             BlogOwner::class.java
         )
         val createTony = PendingMutation.creation(tony, schema)
-        Assert.assertTrue(
+        assertTrue(
             mutationOutbox.enqueue(createTony)
                 .blockingAwait(TIMEOUT_SECONDS, TimeUnit.SECONDS)
         )
@@ -181,10 +184,10 @@ class MutationProcessorTest {
         mutationProcessor.startDrainingMutationOutbox()
 
         // Assert: the event was published
-        Assert.assertEquals(1, accumulator.await().size.toLong())
+        assertEquals(1, accumulator.await().size.toLong())
 
         // And that it is no longer in the outbox.
-        Assert.assertFalse(
+        assertFalse(
             hasPendingMutation(
                 tony,
                 tony.javaClass.simpleName
@@ -236,7 +239,7 @@ class MutationProcessorTest {
         synchronousStorageAdapter.save(model, metadata, lastSyncMetadata)
 
         // Enqueue an update in the mutation outbox
-        Assert.assertTrue(
+        assertTrue(
             mutationOutbox
                 .enqueue(PendingMutation.update(model, schema))
                 .blockingAwait(TIMEOUT_SECONDS, TimeUnit.SECONDS)
@@ -292,7 +295,7 @@ class MutationProcessorTest {
         synchronousStorageAdapter.save(model, metadata)
 
         // Enqueue an update in the mutation outbox
-        Assert.assertTrue(
+        assertTrue(
             mutationOutbox
                 .enqueue(PendingMutation.update(model, schema))
                 .blockingAwait(TIMEOUT_SECONDS, TimeUnit.SECONDS)
@@ -341,7 +344,7 @@ class MutationProcessorTest {
             }
 
             // Enqueue a creation in the mutation outbox
-            Assert.assertTrue(
+            assertTrue(
                 mutationOutbox
                     .enqueue(PendingMutation.creation(model, schema))
                     .blockingAwait(TIMEOUT_SECONDS, TimeUnit.SECONDS)
@@ -387,7 +390,7 @@ class MutationProcessorTest {
         AppSyncMocking.create(appSync).mockResponseFailure(model, error)
 
         // Enqueue a creation in the mutation outbox
-        Assert.assertTrue(
+        assertTrue(
             mutationOutbox
                 .enqueue(PendingMutation.creation(model, schema))
                 .blockingAwait(TIMEOUT_SECONDS, TimeUnit.SECONDS)
@@ -404,12 +407,12 @@ class MutationProcessorTest {
         mutationProcessor.startDrainingMutationOutbox()
         accumulator.await()
         try {
-            Assert.assertTrue(
+            assertTrue(
                 "Error handler wasn't invoked",
                 errorHandlerInvocationsLatch.await(TIMEOUT_SECONDS, TimeUnit.SECONDS)
             )
         } catch (exception: InterruptedException) {
-            Assert.fail(exception.message)
+            fail(exception.message)
         }
     }
 
@@ -475,7 +478,7 @@ class MutationProcessorTest {
         synchronousStorageAdapter.save(model, metadata, lastSyncMetadata)
 
         // Enqueue an update in the mutation outbox
-        Assert.assertTrue(
+        assertTrue(
             mutationOutbox
                 .enqueue(PendingMutation.update(model, schema))
                 .blockingAwait(30, TimeUnit.SECONDS)
@@ -484,7 +487,7 @@ class MutationProcessorTest {
         // Start the mutation processor.
         mutationProcessor.startDrainingMutationOutbox()
         // Wait for the retry handler to be called.
-        Assert.assertTrue(retryHandlerInvocationCount.await(300, TimeUnit.SECONDS))
+        assertTrue(retryHandlerInvocationCount.await(300, TimeUnit.SECONDS))
         mutationProcessor.stopDrainingMutationOutbox()
     }
 

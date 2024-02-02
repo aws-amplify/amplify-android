@@ -27,8 +27,8 @@ import java.util.concurrent.TimeUnit
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.test.runTest
 import org.junit.After
-import org.junit.Assert
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -71,7 +71,7 @@ class VersionRepositoryTest {
 
         // Act: try to lookup the metadata. Is it going to work? Duh.
         val observer = versionRepository.findModelVersion(blogOwner).test()
-        Assert.assertTrue(observer.await(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS))
+        assertTrue(observer.await(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS))
 
         // Assert: this failed. There was no version available.
         observer.assertError { error: Throwable ->
@@ -112,7 +112,7 @@ class VersionRepositoryTest {
 
         // Act: try to get the version.
         val observer = versionRepository.findModelVersion(blogOwner).test()
-        Assert.assertTrue(observer.await(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS))
+        assertTrue(observer.await(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS))
 
         // Assert: the single emitted a DataStoreException.
         observer.assertError { error: Throwable ->
@@ -154,7 +154,7 @@ class VersionRepositoryTest {
 
         // Act! Try to obtain it via the Versioning Repository.
         val observer = versionRepository.findModelVersion(owner).test()
-        Assert.assertTrue(observer.await(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS))
+        assertTrue(observer.await(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS))
 
         // Assert: we got a version.
         observer
