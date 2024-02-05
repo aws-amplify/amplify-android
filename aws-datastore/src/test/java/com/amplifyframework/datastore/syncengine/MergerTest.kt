@@ -36,8 +36,8 @@ import com.amplifyframework.testmodels.commentsblog.Blog
 import com.amplifyframework.testmodels.commentsblog.BlogOwner
 import com.amplifyframework.testutils.random.RandomString
 import java.util.concurrent.TimeUnit
-import org.junit.Assert
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -97,7 +97,7 @@ class MergerTest {
         val originalMetadata = ModelMetadata(blogOwner.id, false, 1, Temporal.Timestamp.now())
         storageAdapter.save(blogOwner, originalMetadata)
         // Just to be sure, our arrangement worked, and that thing is in there, right? Good.
-        Assert.assertEquals(
+        assertEquals(
             listOf(blogOwner),
             storageAdapter.query(
                 BlogOwner::class.java
@@ -107,11 +107,11 @@ class MergerTest {
         // Act: merge a model deletion.
         val deletionMetadata = ModelMetadata(blogOwner.id, true, 2, Temporal.Timestamp.now())
         val observer = merger.merge(ModelWithMetadata(blogOwner, deletionMetadata)).test()
-        Assert.assertTrue(observer.await(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS))
+        assertTrue(observer.await(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS))
         observer.assertNoErrors().assertComplete()
 
         // Assert: the blog owner is no longer in the store.
-        Assert.assertEquals(0, storageAdapter.query(BlogOwner::class.java).size.toLong())
+        assertEquals(0, storageAdapter.query(BlogOwner::class.java).size.toLong())
     }
 
     /**
@@ -135,11 +135,11 @@ class MergerTest {
         // Act: try to merge a deletion that refers to an item not in the store
         val deletionMetadata = ModelMetadata(blogOwner.id, true, 1, Temporal.Timestamp.now())
         val observer = merger.merge(ModelWithMetadata(blogOwner, deletionMetadata)).test()
-        Assert.assertTrue(observer.await(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS))
+        assertTrue(observer.await(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS))
         observer.assertNoErrors().assertComplete()
 
         // Assert: there is still nothing in the store.
-        Assert.assertEquals(0, storageAdapter.query(BlogOwner::class.java).size.toLong())
+        assertEquals(0, storageAdapter.query(BlogOwner::class.java).size.toLong())
     }
 
     /**
@@ -164,17 +164,17 @@ class MergerTest {
 
         // Act: merge a creation for an item
         val observer = merger.merge(ModelWithMetadata(blogOwner, metadata)).test()
-        Assert.assertTrue(observer.await(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS))
+        assertTrue(observer.await(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS))
         observer.assertNoErrors().assertComplete()
 
         // Assert: the item & its associated metadata are now in the store.
-        Assert.assertEquals(
+        assertEquals(
             listOf(blogOwner),
             storageAdapter.query(
                 BlogOwner::class.java
             )
         )
-        Assert.assertEquals(
+        assertEquals(
             listOf(metadata),
             storageAdapter.query(
                 ModelMetadata::class.java
@@ -211,17 +211,17 @@ class MergerTest {
         val updatedMetadata =
             ModelMetadata(originalMetadata.resolveIdentifier(), false, 2, Temporal.Timestamp.now())
         val observer = merger.merge(ModelWithMetadata(updatedModel, updatedMetadata)).test()
-        Assert.assertTrue(observer.await(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS))
+        assertTrue(observer.await(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS))
         observer.assertComplete().assertNoErrors()
 
         // Assert: the *UPDATED* stuff is in the store, *only*.
-        Assert.assertEquals(
+        assertEquals(
             listOf(updatedModel),
             storageAdapter.query(
                 BlogOwner::class.java
             )
         )
-        Assert.assertEquals(
+        assertEquals(
             listOf(updatedMetadata),
             storageAdapter.query(
                 ModelMetadata::class.java
@@ -273,8 +273,8 @@ class MergerTest {
         val blogOwnersInStorage = storageAdapter.query(
             BlogOwner::class.java
         )
-        Assert.assertEquals(1, blogOwnersInStorage.size.toLong())
-        Assert.assertEquals(blogOwner, blogOwnersInStorage[0])
+        assertEquals(1, blogOwnersInStorage.size.toLong())
+        assertEquals(blogOwner, blogOwnersInStorage[0])
     }
 
     /**
@@ -320,7 +320,7 @@ class MergerTest {
         val blogOwnersInStorage = storageAdapter.query(
             BlogOwner::class.java
         )
-        Assert.assertEquals(0, blogOwnersInStorage.size.toLong())
+        assertEquals(0, blogOwnersInStorage.size.toLong())
     }
 
     /**
@@ -355,7 +355,7 @@ class MergerTest {
         mergeObserver.assertNoErrors().assertComplete()
 
         // Assert: Joey is still the same old Joey.
-        Assert.assertEquals(
+        assertEquals(
             listOf(existingModel),
             storageAdapter.query(
                 BlogOwner::class.java
@@ -363,7 +363,7 @@ class MergerTest {
         )
 
         // And his metadata is the still the same.
-        Assert.assertEquals(
+        assertEquals(
             listOf(existingMetadata),
             storageAdapter.query(
                 ModelMetadata::class.java,
@@ -412,11 +412,11 @@ class MergerTest {
         val actualBlogOwners = storageAdapter.query(
             BlogOwner::class.java
         )
-        Assert.assertEquals(1, actualBlogOwners.size.toLong())
-        Assert.assertEquals(existingModel, actualBlogOwners[0])
+        assertEquals(1, actualBlogOwners.size.toLong())
+        assertEquals(existingModel, actualBlogOwners[0])
 
         // And his metadata is the still the same.
-        Assert.assertEquals(
+        assertEquals(
             listOf(existingMetadata),
             storageAdapter.query(
                 ModelMetadata::class.java,
@@ -464,7 +464,7 @@ class MergerTest {
         mergeObserver.assertNoErrors().assertComplete()
 
         // Assert: Joey is still the same old Joey.
-        Assert.assertEquals(
+        assertEquals(
             listOf(existingModel),
             storageAdapter.query(
                 BlogOwner::class.java
@@ -472,7 +472,7 @@ class MergerTest {
         )
 
         // And his metadata is the still the same.
-        Assert.assertEquals(
+        assertEquals(
             listOf(existingMetadata),
             storageAdapter.query(
                 ModelMetadata::class.java,
@@ -520,14 +520,14 @@ class MergerTest {
 
         // Act: merge a creation for an item
         val observer = merger.merge(ModelWithMetadata(orphanedBlog, metadata)).test()
-        Assert.assertTrue(observer.await(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS))
+        assertTrue(observer.await(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS))
         observer.assertNoErrors().assertComplete()
 
         // Assert: orphaned model was not merged locally
         val blogsInStorage = storageAdapter.query(
             Blog::class.java
         )
-        Assert.assertTrue(blogsInStorage.isEmpty())
+        assertTrue(blogsInStorage.isEmpty())
     }
 
     /**
@@ -651,7 +651,7 @@ class MergerTest {
             changeTypeConsumer
         ).test()
 
-        Assert.assertTrue(observer.await(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS))
+        assertTrue(observer.await(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS))
         observer.assertNoErrors().assertComplete()
 
         // THEN
