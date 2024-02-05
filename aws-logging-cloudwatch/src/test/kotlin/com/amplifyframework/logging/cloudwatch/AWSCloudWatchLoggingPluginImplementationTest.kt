@@ -60,8 +60,8 @@ internal class AWSCloudWatchLoggingPluginImplementationTest {
             region = "REGION",
             logGroupName = "LOG_GROUP"
         )
-        every { loggingConstraintsResolver::localLoggingConstraint.set(capture(loggingConstraintsSlot)) }.answers { }
-        coEvery { cloudWatchLogManager.startSync() }.answers { }
+        every { loggingConstraintsResolver::localLoggingConstraint.set(capture(loggingConstraintsSlot)) } returns Unit
+        coEvery { cloudWatchLogManager.startSync() } returns Unit
         awsCloudWatchLoggingPluginImplementation.configure(
             awsLoggingConfig
         )
@@ -77,8 +77,8 @@ internal class AWSCloudWatchLoggingPluginImplementationTest {
             region = "REGION",
             logGroupName = "LOG_GROUP"
         )
-        every { loggingConstraintsResolver::localLoggingConstraint.set(any()) }.answers { }
-        coEvery { cloudWatchLogManager.startSync() }.answers { }
+        every { loggingConstraintsResolver::localLoggingConstraint.set(any()) } returns Unit
+        coEvery { cloudWatchLogManager.startSync() } returns Unit
         awsCloudWatchLoggingPluginImplementation.configure(
             awsLoggingConfig
         )
@@ -88,7 +88,7 @@ internal class AWSCloudWatchLoggingPluginImplementationTest {
 
     @Test
     fun `on enable`() = runTest {
-        coEvery { cloudWatchLogManager.startSync() }.answers { }
+        coEvery { cloudWatchLogManager.startSync() } returns Unit
         awsCloudWatchLoggingPluginImplementation.enable()
         assertTrue(awsCloudWatchLoggingPluginImplementation.isPluginEnabled)
         coVerify(exactly = 1) { cloudWatchLogManager.startSync() }
@@ -96,7 +96,7 @@ internal class AWSCloudWatchLoggingPluginImplementationTest {
 
     @Test
     fun `on disable`() {
-        every { cloudWatchLogManager.stopSync() }.answers { }
+        every { cloudWatchLogManager.stopSync() } returns Unit
         awsCloudWatchLoggingPluginImplementation.disable()
         assertFalse(awsCloudWatchLoggingPluginImplementation.isPluginEnabled)
         verify(exactly = 1) { cloudWatchLogManager.stopSync() }
@@ -106,8 +106,8 @@ internal class AWSCloudWatchLoggingPluginImplementationTest {
     fun `on flush logs success`() = runTest {
         val onSuccess = mockk<Action>()
         val onError = mockk<Consumer<AmplifyException>>()
-        coEvery { cloudWatchLogManager.syncLogEventsWithCloudwatch() }.answers { }
-        every { onSuccess.call() }.answers { }
+        coEvery { cloudWatchLogManager.syncLogEventsWithCloudwatch() } returns Unit
+        every { onSuccess.call() } returns Unit
         awsCloudWatchLoggingPluginImplementation.flushLogs(onSuccess, onError)
         coVerify(exactly = 1) { cloudWatchLogManager.syncLogEventsWithCloudwatch() }
         verify(exactly = 1) { onSuccess.call() }
@@ -120,7 +120,7 @@ internal class AWSCloudWatchLoggingPluginImplementationTest {
         val onError = mockk<Consumer<AmplifyException>>()
         val exception = slot<AmplifyException>()
         coEvery { cloudWatchLogManager.syncLogEventsWithCloudwatch() }.throws(IllegalStateException())
-        every { onError.accept(capture(exception)) }.answers { }
+        every { onError.accept(capture(exception)) } returns Unit
         awsCloudWatchLoggingPluginImplementation.flushLogs(onSuccess, onError)
         coVerify(exactly = 1) { cloudWatchLogManager.syncLogEventsWithCloudwatch() }
         verify(exactly = 0) { onSuccess.call() }

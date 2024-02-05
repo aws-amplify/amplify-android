@@ -51,3 +51,7 @@ dependencies {
     androidTestImplementation(libs.test.mockk.android)
     androidTestImplementation(libs.rxjava)
 }
+
+android.kotlinOptions {
+    jvmTarget = "11"
+}
