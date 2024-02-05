@@ -30,5 +30,4 @@ class MapViewTestActivity : AppCompatActivity() {
         mapView = MapLibreView(context = applicationContext, geo = geoCategory)
         setContentView(mapView)
     }
-
 }
