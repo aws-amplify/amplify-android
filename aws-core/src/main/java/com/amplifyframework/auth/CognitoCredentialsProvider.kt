@@ -18,6 +18,7 @@ package com.amplifyframework.auth
 import aws.smithy.kotlin.runtime.auth.awscredentials.Credentials
 import aws.smithy.kotlin.runtime.util.Attributes
 import com.amplifyframework.AmplifyException
+import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
 import kotlin.coroutines.resume
@@ -29,12 +30,22 @@ import kotlin.coroutines.suspendCoroutine
  */
 open class CognitoCredentialsProvider : AuthCredentialsProvider {
 
+    private val authCategory: AuthCategory
+    constructor() {
+        authCategory = Amplify.Auth
+    }
+
+    @InternalAmplifyApi
+    constructor(authCategory: AuthCategory) {
+        this.authCategory = authCategory
+    }
+
     /**
      * Request [Credentials] from the provider.
      */
     override suspend fun resolve(attributes: Attributes): Credentials {
         return suspendCoroutine { continuation ->
-            Amplify.Auth.fetchAuthSession(
+            authCategory.fetchAuthSession(
                 { authSession ->
                     authSession.toAWSAuthSession()?.awsCredentialsResult?.value?.let {
                         continuation.resume(it.toSdkCredentials())
@@ -58,7 +69,7 @@ open class CognitoCredentialsProvider : AuthCredentialsProvider {
      */
     override suspend fun getIdentityId(): String {
         return suspendCoroutine { continuation ->
-            Amplify.Auth.fetchAuthSession(
+            authCategory.fetchAuthSession(
                 { authSession ->
                     authSession.toAWSAuthSession()?.identityIdResult?.value?.let {
                         continuation.resume(it)
@@ -78,7 +89,7 @@ open class CognitoCredentialsProvider : AuthCredentialsProvider {
     }
 
     override fun getAccessToken(onResult: Consumer<String>, onFailure: Consumer<Exception>) {
-        Amplify.Auth.fetchAuthSession(
+        authCategory.fetchAuthSession(
             { session ->
                 val tokens = session.toAWSAuthSession()?.accessToken
                 tokens?.let { onResult.accept(tokens) }
