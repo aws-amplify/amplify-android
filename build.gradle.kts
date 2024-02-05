@@ -156,15 +156,21 @@ fun Project.configureAndroid() {
 
         compileOptions {
             isCoreLibraryDesugaringEnabled = true
-            sourceCompatibility = JavaVersion.VERSION_1_8
-            targetCompatibility = JavaVersion.VERSION_1_8
+            sourceCompatibility = JavaVersion.VERSION_11
+            targetCompatibility = JavaVersion.VERSION_11
         }
 
         // Needed when running integration tests. The oauth2 library uses relies on two
         // dependencies (Apache's httpcore and httpclient), both of which include
         // META-INF/DEPENDENCIES. Tried a couple other options to no avail.
         packagingOptions {
-            resources.excludes.add("META-INF/DEPENDENCIES")
+            resources.excludes.addAll(
+                listOf(
+                    "META-INF/DEPENDENCIES",
+                    "META-INF/LICENSE.md",
+                    "META-INF/LICENSE-notice.md"
+                )
+            )
         }
     }
 

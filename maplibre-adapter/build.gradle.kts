@@ -25,7 +25,7 @@ group = properties["POM_GROUP"].toString()
 
 android {
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8.toString()
+        jvmTarget = JavaVersion.VERSION_11.toString()
     }
     lint {
         disable += "GradleDependency"
