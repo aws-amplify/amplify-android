@@ -31,9 +31,7 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Responsible for compiling, binding values to, and executing SQLiteStatements.   Currently, each statement is run in
- * its own transaction.  In the future, we can extend this class to support batching  multiple commands in the same
- * transaction to improve performance.
+ * Responsible for compiling, binding values to, and executing SQLiteStatements.
  */
 final class SQLCommandProcessor {
     private static final Logger LOG = Amplify.Logging.logger(CategoryType.DATASTORE, "amplify:aws-datastore");
@@ -130,6 +128,42 @@ final class SQLCommandProcessor {
                             value.getClass().getSimpleName() + " is an unsupported type.",
                     AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION
             );
+        }
+    }
+
+    /**
+     * Wraps a block of code in a sqlite transaction, ensuring that the transaction is always
+     * marked successful, even if an error is encountered. We will still throw the error, but
+     * any data saved before the error will be committed to the database.
+     *
+     * @param transactionBlock The block of code to run in the transaction.
+     * @throws DataStoreException A re-thrown error from the transaction block.
+     */
+    void runInTransactionAndSucceedOnDatastoreException(TransactionBlock transactionBlock) throws DataStoreException {
+        runInTransaction(() -> {
+            try {
+                transactionBlock.run();
+            } catch (DataStoreException exception) {
+                sqliteDatabase.setTransactionSuccessful();
+                throw exception;
+            }
+        });
+    }
+
+
+    /**
+     * Wraps a block of code in a sqlite transaction.
+     *
+     * @param transactionBlock The block of code to run in the transaction.
+     * @throws DataStoreException An uncaught error from the transaction block.
+     */
+    void runInTransaction(TransactionBlock transactionBlock) throws DataStoreException {
+        try {
+            sqliteDatabase.beginTransaction();
+            transactionBlock.run();
+            sqliteDatabase.setTransactionSuccessful();
+        } finally {
+            sqliteDatabase.endTransaction();
         }
     }
 }

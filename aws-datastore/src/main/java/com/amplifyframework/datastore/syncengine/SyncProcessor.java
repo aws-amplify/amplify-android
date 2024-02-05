@@ -169,9 +169,7 @@ final class SyncProcessor {
                         !(ErrorInspector.contains(notification.getError(), ApiAuthException.class))
                     )
                     .dematerialize(notification -> notification)
-                    // Flatten to a stream of ModelWithMetadata objects
-                    .concatMap(Flowable::fromIterable)
-                    .concatMapCompletable(item -> merger.merge(item, metricsAccumulator::increment))
+                    .concatMapCompletable(items -> merger.merge(items, metricsAccumulator::increment))
                     .toSingle(() -> lastSyncTime.exists() ? SyncType.DELTA : SyncType.BASE);
             })
             .flatMapCompletable(syncType -> {

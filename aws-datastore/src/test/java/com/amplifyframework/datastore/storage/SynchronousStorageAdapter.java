@@ -15,15 +15,18 @@
 
 package com.amplifyframework.datastore.storage;
 
+import android.content.Context;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
+import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.query.QueryOptions;
 import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
+import com.amplifyframework.datastore.DataStoreConfiguration;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.testutils.Await;
 
@@ -44,7 +47,7 @@ import io.reactivex.rxjava3.core.Observable;
  * flow of execution.
  */
 public final class SynchronousStorageAdapter {
-    private static final long DEFAULT_OPERATION_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(2);
+    private static final long DEFAULT_OPERATION_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(3);
 
     private final long operationTimeoutMs;
     private final LocalStorageAdapter asyncDelegate;
@@ -78,6 +81,27 @@ public final class SynchronousStorageAdapter {
         @NonNull LocalStorageAdapter asyncDelegate, long operationTimeoutMs) {
         Objects.requireNonNull(asyncDelegate);
         return new SynchronousStorageAdapter(asyncDelegate, operationTimeoutMs);
+    }
+
+    /**
+     * Initialize the storage adapter.
+     * @param context App Context
+     * @param dataStoreConfiguration DataStore configuration
+     * @throws DataStoreException On any failure to initialize storage adapter
+     */
+    public void initialize(
+            @NonNull Context context,
+            @NonNull DataStoreConfiguration dataStoreConfiguration) throws DataStoreException {
+        Await.result(
+            operationTimeoutMs,
+            (Consumer<List<ModelSchema>> onResult, Consumer<DataStoreException> onError) ->
+                asyncDelegate.initialize(
+                    context,
+                    onResult,
+                    onError,
+                    dataStoreConfiguration
+                )
+        );
     }
 
     /**
@@ -240,5 +264,13 @@ public final class SynchronousStorageAdapter {
         return Observable.create(emitter ->
             asyncDelegate.observe(emitter::onNext, emitter::onError, emitter::onComplete)
         );
+    }
+
+    /**
+     * Pass terminate to delegate.
+     * @throws DataStoreException if termination fails
+     */
+    public void terminate() throws DataStoreException {
+        asyncDelegate.terminate();
     }
 }
