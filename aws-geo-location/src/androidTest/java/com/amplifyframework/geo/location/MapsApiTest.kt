@@ -94,6 +94,7 @@ class MapsApiTest {
     private fun signInWithCognito() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val (username, password) = Credentials.load(context)
+        signOutFromCognito() // this ensures a previous test failure doesn't impact current test
         auth.signIn(username, password)
     }
 
