@@ -27,7 +27,6 @@ import aws.smithy.kotlin.runtime.net.Host
 import aws.smithy.kotlin.runtime.net.Scheme
 import aws.smithy.kotlin.runtime.net.toUrlString
 import aws.smithy.kotlin.runtime.net.url.Url
-import aws.smithy.kotlin.runtime.util.emptyAttributes
 import com.amplifyframework.auth.AuthException
 import com.amplifyframework.geo.location.AWSLocationGeoPlugin
 import java.io.ByteArrayOutputStream
