@@ -274,6 +274,7 @@ public final class com/amplifyframework/datastore/storage/ItemChangeMapper {
 }
 
 public abstract interface class com/amplifyframework/datastore/storage/LocalStorageAdapter {
+	public abstract fun batchSyncOperations (Ljava/util/List;Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)V
 	public abstract fun clear (Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)V
 	public abstract fun delete (Lcom/amplifyframework/core/model/Model;Lcom/amplifyframework/datastore/storage/StorageItemChange$Initiator;Lcom/amplifyframework/core/model/query/predicate/QueryPredicate;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
 	public abstract fun delete (Ljava/lang/Class;Lcom/amplifyframework/datastore/storage/StorageItemChange$Initiator;Lcom/amplifyframework/core/model/query/predicate/QueryPredicate;Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)V
@@ -376,6 +377,7 @@ public final class com/amplifyframework/datastore/storage/sqlite/SQLiteModelFiel
 }
 
 public final class com/amplifyframework/datastore/storage/sqlite/SQLiteStorageAdapter : com/amplifyframework/datastore/storage/LocalStorageAdapter {
+	public fun batchSyncOperations (Ljava/util/List;Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)V
 	public fun clear (Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)V
 	public fun delete (Lcom/amplifyframework/core/model/Model;Lcom/amplifyframework/datastore/storage/StorageItemChange$Initiator;Lcom/amplifyframework/core/model/query/predicate/QueryPredicate;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
 	public fun delete (Ljava/lang/Class;Lcom/amplifyframework/datastore/storage/StorageItemChange$Initiator;Lcom/amplifyframework/core/model/query/predicate/QueryPredicate;Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)V
@@ -433,6 +435,10 @@ public final class com/amplifyframework/datastore/storage/sqlite/SqlKeyword : ja
 public class com/amplifyframework/datastore/storage/sqlite/SyncStatus {
 	public fun <init> (Lcom/amplifyframework/datastore/storage/sqlite/SqlQueryProcessor;Lcom/amplifyframework/datastore/DataStoreConfiguration;)V
 	public fun get (Ljava/lang/String;Lcom/amplifyframework/core/Consumer;)Z
+}
+
+public abstract interface class com/amplifyframework/datastore/storage/sqlite/TransactionBlock {
+	public abstract fun run ()V
 }
 
 public final class com/amplifyframework/datastore/storage/sqlite/TypeConverter {
