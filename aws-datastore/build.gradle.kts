@@ -30,6 +30,7 @@ dependencies {
 
     implementation(libs.androidx.appcompat)
     implementation(libs.gson)
+    implementation(libs.kotlin.coroutines.rx3)
     implementation(libs.rxjava)
     implementation(libs.uuidgen)
 
@@ -41,6 +42,7 @@ dependencies {
     testImplementation(libs.test.robolectric)
     testImplementation(libs.test.androidx.core)
     testImplementation(libs.test.mockk)
+    testImplementation(libs.test.kotlin.coroutines)
 
     androidTestImplementation(libs.test.mockito.core)
     androidTestImplementation(project(":testmodels"))
@@ -58,5 +60,5 @@ dependencies {
 }
 
 afterEvaluate {
-    android.kotlinOptions.jvmTarget = JavaVersion.VERSION_1_8.toString()
+    android.kotlinOptions.jvmTarget = JavaVersion.VERSION_11.toString()
 }

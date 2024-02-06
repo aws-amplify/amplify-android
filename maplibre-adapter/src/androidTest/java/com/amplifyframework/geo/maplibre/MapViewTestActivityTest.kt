@@ -18,10 +18,15 @@ package com.amplifyframework.geo.maplibre
 import android.graphics.Color
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.rules.ActivityScenarioRule
+import com.amplifyframework.auth.AuthCategory
+import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
+import com.amplifyframework.geo.GeoCategory
+import com.amplifyframework.geo.location.AWSLocationGeoPlugin
 import com.amplifyframework.geo.maplibre.view.ClusteringOptions
 import com.amplifyframework.geo.maplibre.view.MapLibreView
-import com.mapbox.mapboxsdk.maps.MapboxMap
-import com.mapbox.mapboxsdk.maps.Style
+import com.amplifyframework.testutils.sync.SynchronousAuth
+import com.amplifyframework.testutils.sync.SynchronousGeo
+import com.amplifyframework.testutils.sync.TestCategory
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
@@ -30,6 +35,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
@@ -38,13 +44,31 @@ class MapViewTestActivityTest {
     @get:Rule
     var rule = ActivityScenarioRule(MapViewTestActivity::class.java)
 
+    private lateinit var geoCategory: GeoCategory
+    private lateinit var geo: SynchronousGeo
+    private lateinit var auth: SynchronousAuth
+
+    /**
+     * Set up test categories to be used for testing.
+     */
+    @Before
+    fun setUpBeforeTest() {
+        val authPlugin = AWSCognitoAuthPlugin()
+        val authCategory = TestCategory.forPlugin(authPlugin) as AuthCategory
+        val geoPlugin = AWSLocationGeoPlugin(authCategory = authCategory)
+        geoCategory = TestCategory.forPlugin(geoPlugin) as GeoCategory
+        auth = SynchronousAuth.delegatingTo(authPlugin)
+        geo = SynchronousGeo.delegatingTo(geoCategory)
+    }
+
     /**
      * Tests that activity can successfully load a map instance.
      */
     @Test
     fun loadsMapSuccessfully() = runBlocking {
-        val map = suspendCoroutine<MapboxMap> { continuation ->
+        val map = suspendCoroutine { continuation ->
             rule.scenario.onActivity { activity ->
+                activity.setMapView(geoCategory)
                 activity.mapView.addOnDidFailLoadingMapListener { error ->
                     continuation.resumeWithException(RuntimeException(error))
                 }
@@ -61,7 +85,7 @@ class MapViewTestActivityTest {
      */
     @Test
     fun enablesClusteringByDefault() = runBlockingSignedIn(rule) {
-        val mapStyle = suspendCoroutine<Style> { continuation ->
+        val mapStyle = suspendCoroutine { continuation ->
             rule.scenario.onActivity { activity ->
                 activity.mapView.addOnDidFailLoadingMapListener { error ->
                     continuation.resumeWithException(RuntimeException(error))
@@ -82,7 +106,7 @@ class MapViewTestActivityTest {
     @Test
     fun clusteringCanBeEnabledWithOptions() = runBlockingSignedIn(rule) {
         val clusteringOptions = ClusteringOptions.builder().clusterColor(Color.RED).build()
-        val mapStyle = suspendCoroutine<Style> { continuation ->
+        val mapStyle = suspendCoroutine { continuation ->
             rule.scenario.onActivity { activity ->
                 activity.mapView.addOnDidFailLoadingMapListener { error ->
                     continuation.resumeWithException(RuntimeException(error))
@@ -104,7 +128,7 @@ class MapViewTestActivityTest {
      */
     @Test
     fun clusteringCanBeEnabledWithoutOptions() = runBlockingSignedIn(rule) {
-        val mapStyle = suspendCoroutine<Style> { continuation ->
+        val mapStyle = suspendCoroutine { continuation ->
             rule.scenario.onActivity { activity ->
                 activity.mapView.addOnDidFailLoadingMapListener { error ->
                     continuation.resumeWithException(RuntimeException(error))
@@ -126,7 +150,7 @@ class MapViewTestActivityTest {
      */
     @Test
     fun clusteringCanBeDisabled() = runBlockingSignedIn(rule) {
-        val mapStyle = suspendCoroutine<Style> { continuation ->
+        val mapStyle = suspendCoroutine { continuation ->
             rule.scenario.onActivity { activity ->
                 activity.mapView.addOnDidFailLoadingMapListener { error ->
                     continuation.resumeWithException(RuntimeException(error))
@@ -147,22 +171,22 @@ class MapViewTestActivityTest {
         rule: ActivityScenarioRule<MapViewTestActivity>,
         block: suspend CoroutineScope.() -> T
     ): T {
+        signInWithCognito()
         return runBlocking(Dispatchers.Main) {
             rule.scenario.onActivity {
-                signOutFromCognito() // first sign out to ensure we are in clean state
-                signInWithCognito()
+                it.setMapView(geoCategory)
             }
             block()
         }
     }
 
     private fun signInWithCognito() {
+        signOutFromCognito() // this ensures a previous test failure doesn't impact current test
         val (username, password) = Credentials.load(ApplicationProvider.getApplicationContext())
-        val result = AmplifyWrapper.auth.signIn(username, password)
-        println("SignIn complete: $result")
+        auth.signIn(username, password)
     }
 
     private fun signOutFromCognito() {
-        AmplifyWrapper.auth.signOut()
+        auth.signOut()
     }
 }

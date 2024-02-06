@@ -18,6 +18,8 @@ package com.amplifyframework.core.model.query.predicate;
 import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
+import com.amplifyframework.annotations.InternalAmplifyApi;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -37,7 +39,8 @@ public final class QueryPredicateGroup implements QueryPredicate {
      * @param predicates the operations and/or groups of operations to group together here
      * @throws IllegalArgumentException when the group does not contain any predicate element
      */
-    QueryPredicateGroup(@NonNull Type type,
+    @InternalAmplifyApi
+    public QueryPredicateGroup(@NonNull Type type,
                         @NonNull List<QueryPredicate> predicates) {
         this.type = type;
         this.predicates = new ArrayList<>(predicates);
