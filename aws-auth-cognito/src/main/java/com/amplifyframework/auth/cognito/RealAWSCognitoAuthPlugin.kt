@@ -1358,12 +1358,14 @@ internal class RealAWSCognitoAuthPlugin(
                             accessToken = tokens.value?.accessToken
                         }
                     )
-                val _devices = response?.devices
-                val authdeviceList = mutableListOf<AuthDevice>()
-                _devices?.forEach {
-                    authdeviceList.add(AuthDevice.fromId(it.deviceKey ?: ""))
-                }
-                onSuccess.accept(authdeviceList)
+
+                val devices = response?.devices?.map { device ->
+                    val id = device.deviceKey ?: ""
+                    val name = device.deviceAttributes?.find { it.name == "device_name" }?.value
+                    AuthDevice.fromId(id, name)
+                } ?: emptyList()
+
+                onSuccess.accept(devices)
             } catch (e: Exception) {
                 onError.accept(CognitoAuthExceptionConverter.lookup(e, "Fetch devices failed."))
             }
