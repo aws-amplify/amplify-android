@@ -27,6 +27,8 @@ import aws.smithy.kotlin.runtime.net.Host
 import aws.smithy.kotlin.runtime.net.Scheme
 import aws.smithy.kotlin.runtime.net.toUrlString
 import aws.smithy.kotlin.runtime.net.url.Url
+import aws.smithy.kotlin.runtime.util.emptyAttributes
+import com.amplifyframework.auth.AuthException
 import com.amplifyframework.geo.location.AWSLocationGeoPlugin
 import java.io.ByteArrayOutputStream
 import java.io.IOException
@@ -106,10 +108,15 @@ internal class AWSRequestSignerInterceptor(
         }
 
         val client = plugin.escapeHatch
+        val credentials = try {
+            plugin.credentialsProvider.resolve(emptyAttributes())
+        } catch (e: AuthException) {
+            throw SignCredentialsException()
+        }
         val signingConfig = AwsSigningConfig.invoke {
             region = client.config.region
             service = "geo"
-            credentials = plugin.credentialsProvider.resolve(emptyAttributes())
+            this.credentials = credentials
         }
 
         val httpUrl = Url {
