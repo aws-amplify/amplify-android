@@ -157,6 +157,20 @@ public interface LocalStorageAdapter {
     );
 
     /**
+     * Batches operations for a given type in a single transaction.
+     *
+     * @param <T>        The type of items being saved/deleted
+     * @param operations A list of operations that will sequentially execute
+     * @param onComplete A callback that will be invoked when the transaction batch succeeds
+     * @param onError    A callback that will be invoked when any operations fails with an error
+     *                   If an error is received, the entire transaction will be unsuccessful
+     */
+    <T extends Model> void batchSyncOperations(
+            @NonNull List<StorageOperation<T>> operations,
+            @NonNull Action onComplete,
+            @NonNull Consumer<DataStoreException> onError);
+
+    /**
      * Observe all changes to that occur to any/all objects in the storage.
      * @param onItemChange
      *        Receives a {@link StorageItemChange} notification every time
