@@ -170,7 +170,7 @@ internal class AWSS3StorageService(
                     if (key != null && lastModified != null && eTag != null) {
                         items += StorageItem(
                             S3Keys.extractAmplifyKey(key, prefix),
-                            value.size,
+                            value.size ?: 0,
                             Date.from(Instant.ofEpochMilli(lastModified.epochSeconds)),
                             eTag,
                             null
@@ -197,7 +197,7 @@ internal class AWSS3StorageService(
                 if (key != null && lastModified != null && eTag != null) {
                     StorageItem(
                         S3Keys.extractAmplifyKey(key, prefix),
-                        value.size,
+                        value.size ?: 0,
                         Date.from(Instant.ofEpochMilli(lastModified.epochSeconds)),
                         eTag,
                         null
