@@ -3,7 +3,6 @@
 ### Features
 - **datastore:** Improve Sync Performance Through SQLite Transaction Batching ([#2703](https://github.com/aws-amplify/amplify-android/issues/2703))
 
-
 ### Bug Fixes
 - **api:** Use provided Content-Type to create RequestBody ([#2666](https://github.com/aws-amplify/amplify-android/issues/2666))
 - **auth:** Add MFAType.challengeResponse extension ([#2680](https://github.com/aws-amplify/amplify-android/issues/2680))
