@@ -16,7 +16,7 @@ package com.amplifyframework.api.aws.auth
 
 import aws.smithy.kotlin.runtime.auth.awscredentials.Credentials
 import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider
-import aws.smithy.kotlin.runtime.util.Attributes
+import aws.smithy.kotlin.runtime.collections.Attributes
 import com.amplifyframework.api.ApiException
 import com.amplifyframework.api.ApiException.ApiAuthException
 import com.amplifyframework.api.aws.ApiAuthProviders
