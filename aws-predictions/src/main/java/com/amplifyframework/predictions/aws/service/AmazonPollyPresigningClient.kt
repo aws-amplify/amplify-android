@@ -18,7 +18,7 @@ import androidx.annotation.WorkerThread
 import aws.sdk.kotlin.services.polly.PollyClient
 import aws.sdk.kotlin.services.polly.model.SynthesizeSpeechRequest
 import aws.sdk.kotlin.services.polly.presigners.presignSynthesizeSpeech
-import aws.smithy.kotlin.runtime.util.emptyAttributes
+import aws.smithy.kotlin.runtime.collections.emptyAttributes
 import java.net.URL
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.runBlocking
