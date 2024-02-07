@@ -1,5 +1,9 @@
 ## [Release 2.14.10](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.14.10)
 
+### Features
+- **datastore:** Improve Sync Performance Through SQLite Transaction Batching ([#2703](https://github.com/aws-amplify/amplify-android/issues/2703))
+
+
 ### Bug Fixes
 - **api:** Use provided Content-Type to create RequestBody ([#2666](https://github.com/aws-amplify/amplify-android/issues/2666))
 - **auth:** Add MFAType.challengeResponse extension ([#2680](https://github.com/aws-amplify/amplify-android/issues/2680))
@@ -10,7 +14,7 @@
 - **datastore:** Fix test failure introduced with slower test runs from SQLite ([#2708](https://github.com/aws-amplify/amplify-android/issues/2708))
 
 ### Miscellaneous
-- feature(datastore): Improve Sync Performance Through SQLite Transaction Batching ([#2703](https://github.com/aws-amplify/amplify-android/issues/2703))
+- Update to AWS Kotlin SDK v1.x stable ([#2695](https://github.com/aws-amplify/amplify-android/pull/2695))
 
 [See all changes between 2.14.9 and 2.14.10](https://github.com/aws-amplify/amplify-android/compare/release_v2.14.9...release_v2.14.10)
 
