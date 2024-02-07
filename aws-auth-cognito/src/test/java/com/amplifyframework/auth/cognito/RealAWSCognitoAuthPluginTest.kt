@@ -29,9 +29,11 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.ConfirmForgotPasswo
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ConfirmSignUpRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ConfirmSignUpResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeliveryMediumType
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeviceType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ForgetDeviceResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetUserAttributeVerificationCodeResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetUserResponse
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.ListDevicesResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ResendConfirmationCodeRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ResendConfirmationCodeResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.SetUserMfaPreferenceRequest
@@ -65,6 +67,7 @@ import com.amplifyframework.auth.cognito.options.AWSCognitoAuthVerifyTOTPSetupOp
 import com.amplifyframework.auth.cognito.options.AuthFlowType
 import com.amplifyframework.auth.cognito.usecases.ResetPasswordUseCase
 import com.amplifyframework.auth.exceptions.InvalidStateException
+import com.amplifyframework.auth.exceptions.SignedOutException
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
 import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions
@@ -2155,6 +2158,60 @@ class RealAWSCognitoAuthPluginTest {
 
         assertTrue { onError.latch.await(5, TimeUnit.SECONDS) }
         assertEquals("failed", onError.captured.cause?.message)
+    }
+
+    @Test
+    fun `fetch devices returns device id and name`() {
+        val onSuccess = ConsumerWithLatch<List<AuthDevice>>()
+
+        coEvery { mockCognitoIPClient.listDevices(any()) } returns ListDevicesResponse.invoke {
+            devices = listOf(
+                DeviceType.invoke {
+                    deviceKey = "id1"
+                    deviceAttributes = listOf(
+                        AttributeType.invoke { name = "device_name"; value = "name1" }
+                    )
+                }
+            )
+        }
+
+        plugin.fetchDevices(onSuccess, mockk())
+
+        assertTrue { onSuccess.latch.await(5, TimeUnit.SECONDS) }
+        assertEquals("id1", onSuccess.captured.first().id)
+        assertEquals("name1", onSuccess.captured.first().name)
+    }
+
+    @Test
+    fun `fetch devices returns error if listDevices fails`() {
+        val onError = ConsumerWithLatch<AuthException>()
+        coEvery { mockCognitoIPClient.listDevices(any()) } throws Exception("bad")
+
+        plugin.fetchDevices(mockk(), onError)
+
+        assertTrue { onError.latch.await(5, TimeUnit.SECONDS) }
+    }
+
+    @Test
+    fun `fetch devices returns error if signed out`() {
+        val onError = ConsumerWithLatch<AuthException>()
+        setupCurrentAuthState(authNState = AuthenticationState.SignedOut(mockk()))
+
+        plugin.fetchDevices(mockk(), onError)
+
+        assertTrue { onError.latch.await(5, TimeUnit.SECONDS) }
+        assertEquals(SignedOutException(), onError.captured)
+    }
+
+    @Test
+    fun `fetch devices returns error if not signed in`() {
+        val onError = ConsumerWithLatch<AuthException>()
+        setupCurrentAuthState(authNState = AuthenticationState.NotConfigured())
+
+        plugin.fetchDevices(mockk(), onError)
+
+        assertTrue { onError.latch.await(5, TimeUnit.SECONDS) }
+        assertEquals(InvalidStateException(), onError.captured)
     }
 
     private fun setupCurrentAuthState(
