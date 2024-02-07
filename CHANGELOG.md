@@ -1,3 +1,19 @@
+## [Release 2.14.10](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.14.10)
+
+### Bug Fixes
+- **api:** Use provided Content-Type to create RequestBody ([#2666](https://github.com/aws-amplify/amplify-android/issues/2666))
+- **auth:** Add MFAType.challengeResponse extension ([#2680](https://github.com/aws-amplify/amplify-android/issues/2680))
+- **core:** use returns instead of answers on coEvery ([#2653](https://github.com/aws-amplify/amplify-android/issues/2653))
+- **datastore:** Fix DataStore peek exception ([#2702](https://github.com/aws-amplify/amplify-android/issues/2702))
+- **geo:** Fix Geo Plugin Auth injection ([#2704](https://github.com/aws-amplify/amplify-android/issues/2704))
+- **all:** Add fallback logic for corrupt keys to EncryptedKeyValueRepository ([#2686](https://github.com/aws-amplify/amplify-android/issues/2686))
+- **datastore:** Fix test failure introduced with slower test runs from SQLite ([#2708](https://github.com/aws-amplify/amplify-android/issues/2708))
+
+### Miscellaneous
+- feature(datastore): Improve Sync Performance Through SQLite Transaction Batching ([#2703](https://github.com/aws-amplify/amplify-android/issues/2703))
+
+[See all changes between 2.14.9 and 2.14.10](https://github.com/aws-amplify/amplify-android/compare/release_v2.14.9...release_v2.14.10)
+
 ## [Release 2.14.9](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.14.9)
 
 ### Bug Fixes
