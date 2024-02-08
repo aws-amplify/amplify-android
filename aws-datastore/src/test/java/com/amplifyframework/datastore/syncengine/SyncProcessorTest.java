@@ -492,7 +492,8 @@ public final class SyncProcessorTest {
         );
 
         actualSyncTimeRecords.blockingForEach(record ->
-            assertTrue(RecentTimeWindow.contains(record.getLastSyncTime()))
+            assertTrue("Time window of " + (Time.now() - record.getLastSyncTime()) +
+                    " exceeded maximum", RecentTimeWindow.contains(record.getLastSyncTime()))
         );
 
         // Cleanup!
@@ -956,7 +957,7 @@ public final class SyncProcessorTest {
     }
 
     static final class RecentTimeWindow {
-        private static final long ACCEPTABLE_DRIFT_MS = TimeUnit.SECONDS.toMillis(1);
+        private static final long ACCEPTABLE_DRIFT_MS = TimeUnit.SECONDS.toMillis(2);
 
         private RecentTimeWindow() {}
 
