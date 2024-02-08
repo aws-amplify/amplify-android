@@ -40,6 +40,8 @@ import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.subjects.PublishSubject;
 import io.reactivex.rxjava3.subjects.Subject;
 
+import static org.junit.Assert.fail;
+
 /**
  * A simple in-memory implementation of the LocalStorageAdapter
  * contract. This intended for use as a stub in test code.
@@ -266,7 +268,16 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
                                                @NonNull Consumer<DataStoreQuerySnapshot<T>> onQuerySnapshot,
                                                @NonNull Consumer<DataStoreException> onObservationError,
                                                @NonNull Action onObservationComplete) {
-    //TODOPM: to be implemented for tests.
+        //TODOPM: to be implemented for tests.
+    }
+
+    @Override
+    public <T extends Model> void batchSyncOperations(
+        @NonNull List<StorageOperation<T>> storageOperations,
+        @NonNull Action onComplete,
+        @NonNull Consumer<DataStoreException> onError
+    ) {
+        fail("Due to the complexity of this operation, Use SQLiteStorageAdapter instead");
     }
 
     @Override

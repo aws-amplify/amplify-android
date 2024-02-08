@@ -18,7 +18,8 @@ package com.amplifyframework.api.aws.auth;
 import com.amplifyframework.api.ApiException.ApiAuthException;
 import com.amplifyframework.api.aws.sigv4.AWS4Signer;
 
-import aws.smithy.kotlin.runtime.net.Url;
+import aws.smithy.kotlin.runtime.net.url.Url;
+import aws.smithy.kotlin.runtime.net.url.UrlEncoding;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -28,8 +29,8 @@ import java.util.Map;
 import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider;
 import aws.smithy.kotlin.runtime.http.DeferredHeaders;
 import aws.smithy.kotlin.runtime.http.Headers;
+import aws.smithy.kotlin.runtime.http.HttpBody;
 import aws.smithy.kotlin.runtime.http.HttpMethod;
-import aws.smithy.kotlin.runtime.http.content.ByteArrayContent;
 import aws.smithy.kotlin.runtime.http.request.HttpRequest;
 import aws.smithy.kotlin.runtime.http.request.HttpRequestKt;
 import okhttp3.MediaType;
@@ -68,10 +69,10 @@ public class IamRequestDecorator implements RequestDecorator {
     public final okhttp3.Request decorate(okhttp3.Request req) throws ApiAuthException {
         //set the request body
         final byte[] bodyBytes = getBytes(req.body());
-        ByteArrayContent body2 = new ByteArrayContent(bodyBytes);
+        HttpBody body2 = HttpBody.Companion.fromBytes(bodyBytes);
 
         HttpMethod method = HttpMethod.Companion.parse(req.method());
-        Url url = Url.Companion.parse(req.url().uri().toString());
+        Url url = Url.Companion.parse(req.url().uri().toString(), UrlEncoding.Companion.getAll());
         Headers headers = Headers.Companion.invoke((builder) -> {
             for (String headerName : req.headers().names()) {
                 builder.set(headerName, req.header(headerName));

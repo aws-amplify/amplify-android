@@ -15,8 +15,8 @@
 
 package com.amplifyframework.geo.maplibre
 
-import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import com.amplifyframework.geo.GeoCategory
 import com.amplifyframework.geo.maplibre.view.MapLibreView
 
 /**
@@ -24,12 +24,10 @@ import com.amplifyframework.geo.maplibre.view.MapLibreView
  */
 class MapViewTestActivity : AppCompatActivity() {
 
-    internal val mapView: MapLibreView by lazy {
-        MapLibreView(context = applicationContext, geo = AmplifyWrapper.geo)
-    }
+    lateinit var mapView: MapLibreView
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+    fun setMapView(geoCategory: GeoCategory) {
+        mapView = MapLibreView(context = applicationContext, geo = geoCategory)
         setContentView(mapView)
     }
 }
