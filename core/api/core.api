@@ -1203,8 +1203,6 @@ public final class com/amplifyframework/core/Amplify$AlreadyConfiguredException 
 }
 
 public final class com/amplifyframework/core/AmplifyConfiguration {
-	public fun <init> (Ljava/util/Map;)V
-	public fun <init> (Ljava/util/Map;Z)V
 	public static fun builder (Landroid/content/Context;)Lcom/amplifyframework/core/AmplifyConfiguration$Builder;
 	public static fun builder (Landroid/content/Context;I)Lcom/amplifyframework/core/AmplifyConfiguration$Builder;
 	public static fun builder (Lorg/json/JSONObject;)Lcom/amplifyframework/core/AmplifyConfiguration$Builder;
@@ -4373,7 +4371,6 @@ public final class com/amplifyframework/util/Time {
 public final class com/amplifyframework/util/UserAgent {
 	public static fun configure (Ljava/util/Map;)V
 	public static fun isFlutter ()Z
-	public static fun reset ()V
 	public static fun string ()Ljava/lang/String;
 	public fun toString ()Ljava/lang/String;
 }

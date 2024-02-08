@@ -636,7 +636,6 @@ public final class com/amplifyframework/datastore/syncengine/ProdSchedulerProvid
 public abstract interface class com/amplifyframework/datastore/syncengine/ReachabilityMonitor {
 	public static final field Companion Lcom/amplifyframework/datastore/syncengine/ReachabilityMonitor$Companion;
 	public abstract fun configure (Landroid/content/Context;)V
-	public abstract fun configure (Landroid/content/Context;Lcom/amplifyframework/datastore/syncengine/ConnectivityProvider;)V
 	public abstract fun getObservable ()Lio/reactivex/rxjava3/core/Observable;
 }
 

@@ -190,6 +190,7 @@ apply(from = rootProject.file("configuration/instrumentation-tests.gradle"))
 configure<ApiValidationExtension> {
     // Interfaces marked with an internal API annotation are not part of the public API
     nonPublicMarkers.addAll(internalApiAnnotations)
+    nonPublicMarkers.add("androidx.annotation.VisibleForTesting")
 
     ignoredProjects.addAll(setOf("testutils", "testmodels", "annotations"))
 }
