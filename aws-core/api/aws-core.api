@@ -63,7 +63,7 @@ public class com/amplifyframework/auth/CognitoCredentialsProvider : com/amplifyf
 	public fun <init> ()V
 	public fun getAccessToken (Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
 	public fun getIdentityId (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun resolve (Laws/smithy/kotlin/runtime/util/Attributes;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun resolve (Laws/smithy/kotlin/runtime/collections/Attributes;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
 public final class com/amplifyframework/aws/core/BuildConfig {
