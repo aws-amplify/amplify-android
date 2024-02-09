@@ -24,6 +24,7 @@ import androidx.annotation.VisibleForTesting;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.annotations.InternalApiWarning;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
@@ -85,7 +86,11 @@ import io.reactivex.rxjava3.subjects.Subject;
 
 /**
  * An implementation of {@link LocalStorageAdapter} using {@link android.database.sqlite.SQLiteDatabase}.
+ *
+ * Although this has public access, it is intended for internal use and should not be used directly by host
+ * applications. The behavior of this may change without warning.
  */
+@InternalApiWarning
 public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     private static final Logger LOG = Amplify.Logging.logger(CategoryType.DATASTORE, "amplify:aws-datastore");
     private static final long THREAD_POOL_TERMINATE_TIMEOUT = TimeUnit.SECONDS.toMillis(5);
