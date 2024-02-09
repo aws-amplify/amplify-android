@@ -46,10 +46,12 @@ import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.BeforeClass
 import org.junit.Test
+import kotlin.time.Duration.Companion.seconds
 
 class GraphQLLazyQueryInstrumentationTest {
 
     companion object {
+        val LONG_TIMEOUT = 20.seconds // Some test we pull and process 1000k records. Increase timeout for slow tests
 
         const val PARENT1_ID = "GraphQLLazyQueryInstrumentationTest-Parent"
         const val PARENT2_ID = "GraphQLLazyQueryInstrumentationTest-Parent2"
@@ -144,7 +146,7 @@ class GraphQLLazyQueryInstrumentationTest {
 //    }
 
     @Test
-    fun query_parent_no_includes() = runTest {
+    fun query_parent_no_includes() = runTest(timeout = LONG_TIMEOUT) {
         // GIVEN
         val request = ModelQuery[Parent::class.java, Parent.ParentIdentifier(PARENT1_ID)]
 
@@ -196,7 +198,7 @@ class GraphQLLazyQueryInstrumentationTest {
     }
 
     @Test
-    fun query_list_with_no_includes() = runTest {
+    fun query_list_with_no_includes() = runTest(timeout = LONG_TIMEOUT) {
 
         val request = ModelQuery.list(
             Parent::class.java,
