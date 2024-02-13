@@ -641,6 +641,9 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
 
         while (!queue.isEmpty()) {
             TableInfo currentInfo = queue.poll();
+            if (currentInfo == null) {
+                throw new IllegalStateException("TableInfo is unexpectedly null while building Joins.");
+            }
             SQLiteTable table = currentInfo.getSQLiteTable();
             String tableAlias = currentInfo.getAlias();
 
@@ -720,6 +723,9 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
         }
 
         public SQLiteTable getSQLiteTable() {
+            if (this.table == null) {
+                throw new IllegalStateException("SQLiteTable has not been initialized.");
+            }
             return table;
         }
 
