@@ -362,6 +362,20 @@ The following command will spin up a docker container locally and run through th
 
 Note that the `-c` option pulls in AWS configuration from your local environment into the docker container. That means any `AWS_*` environment variables will be set inside the container. This is useful when the build process needs to access AWS resources from an AWS account. **Be sure to check which AWS account your current credentials belong to and which permissions are granted**. Typically, the target account should be a development account.
 
+### Validate API Compatibility
+
+This project uses the [Kotlin Binary Compatibility Validator Plugin](https://github.com/Kotlin/binary-compatibility-validator) to validate our public API surface. Pull requests that include public API changes must modify the API file by running this gradle command:
+
+```bash
+./gradlew apiDump
+```
+
+You can check that your changes do not modify the public API by running this command:
+
+```bash
+./gradlew apiCheck
+```
+
 ## Reporting Bugs/Feature Requests
 
 We welcome you to use the GitHub issue tracker to report bugs or suggest

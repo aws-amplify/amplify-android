@@ -1,0 +1,76 @@
+public abstract class com/amplifyframework/auth/AWSAuthSessionBehavior : com/amplifyframework/auth/AuthSession {
+	public fun <init> (ZLcom/amplifyframework/auth/result/AuthSessionResult;Lcom/amplifyframework/auth/result/AuthSessionResult;Lcom/amplifyframework/auth/result/AuthSessionResult;Lcom/amplifyframework/auth/result/AuthSessionResult;)V
+	public abstract fun getAccessToken ()Ljava/lang/String;
+	public fun getAwsCredentialsResult ()Lcom/amplifyframework/auth/result/AuthSessionResult;
+	public fun getIdentityIdResult ()Lcom/amplifyframework/auth/result/AuthSessionResult;
+	public final fun getTokensResult ()Lcom/amplifyframework/auth/result/AuthSessionResult;
+	public fun getUserSubResult ()Lcom/amplifyframework/auth/result/AuthSessionResult;
+}
+
+public final class com/amplifyframework/auth/AWSCognitoUserPoolTokens {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lcom/amplifyframework/auth/AWSCognitoUserPoolTokens;
+	public static synthetic fun copy$default (Lcom/amplifyframework/auth/AWSCognitoUserPoolTokens;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lcom/amplifyframework/auth/AWSCognitoUserPoolTokens;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAccessToken ()Ljava/lang/String;
+	public final fun getIdToken ()Ljava/lang/String;
+	public final fun getRefreshToken ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public class com/amplifyframework/auth/AWSCredentials {
+	public static final field Factory Lcom/amplifyframework/auth/AWSCredentials$Factory;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public fun getAccessKeyId ()Ljava/lang/String;
+	public fun getSecretAccessKey ()Ljava/lang/String;
+}
+
+public final class com/amplifyframework/auth/AWSCredentials$Factory {
+	public final fun createAWSCredentials (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;)Lcom/amplifyframework/auth/AWSCredentials;
+}
+
+public abstract interface class com/amplifyframework/auth/AWSCredentialsProvider {
+	public abstract fun fetchAWSCredentials (Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
+}
+
+public final class com/amplifyframework/auth/AWSCredentialsProviderKt {
+	public static final fun convertToSdkCredentialsProvider (Lcom/amplifyframework/auth/AWSCredentialsProvider;)Laws/smithy/kotlin/runtime/auth/awscredentials/CredentialsProvider;
+}
+
+public final class com/amplifyframework/auth/AWSTemporaryCredentials : com/amplifyframework/auth/AWSCredentials {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Laws/smithy/kotlin/runtime/time/Instant;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Laws/smithy/kotlin/runtime/time/Instant;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Laws/smithy/kotlin/runtime/time/Instant;)Lcom/amplifyframework/auth/AWSTemporaryCredentials;
+	public static synthetic fun copy$default (Lcom/amplifyframework/auth/AWSTemporaryCredentials;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Laws/smithy/kotlin/runtime/time/Instant;ILjava/lang/Object;)Lcom/amplifyframework/auth/AWSTemporaryCredentials;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getAccessKeyId ()Ljava/lang/String;
+	public final fun getExpiration ()Laws/smithy/kotlin/runtime/time/Instant;
+	public final fun getExpiresAt ()Ljava/time/Instant;
+	public fun getSecretAccessKey ()Ljava/lang/String;
+	public final fun getSessionToken ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public class com/amplifyframework/auth/CognitoCredentialsProvider : com/amplifyframework/auth/AuthCredentialsProvider {
+	public fun <init> ()V
+	public fun getAccessToken (Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
+	public fun getIdentityId (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun resolve (Laws/smithy/kotlin/runtime/collections/Attributes;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class com/amplifyframework/aws/core/BuildConfig {
+	public static final field BUILD_TYPE Ljava/lang/String;
+	public static final field DEBUG Z
+	public static final field LIBRARY_PACKAGE_NAME Ljava/lang/String;
+	public static final field VERSION_NAME Ljava/lang/String;
+	public fun <init> ()V
+}
+

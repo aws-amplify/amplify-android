@@ -1,0 +1,361 @@
+public final class com/amplifyframework/predictions/aws/AWSPredictionsEscapeHatch {
+	public fun getComprehendClient ()Laws/sdk/kotlin/services/comprehend/ComprehendClient;
+	public fun getPollyClient ()Laws/sdk/kotlin/services/polly/PollyClient;
+	public fun getRekognitionClient ()Laws/sdk/kotlin/services/rekognition/RekognitionClient;
+	public fun getTextractClient ()Laws/sdk/kotlin/services/textract/TextractClient;
+	public fun getTranslateClient ()Laws/sdk/kotlin/services/translate/TranslateClient;
+}
+
+public final class com/amplifyframework/predictions/aws/AWSPredictionsPlugin : com/amplifyframework/predictions/PredictionsPlugin {
+	public fun <init> ()V
+	public fun configure (Lorg/json/JSONObject;Landroid/content/Context;)V
+	public fun convertTextToSpeech (Ljava/lang/String;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/predictions/operation/TextToSpeechOperation;
+	public fun convertTextToSpeech (Ljava/lang/String;Lcom/amplifyframework/predictions/options/TextToSpeechOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/predictions/operation/TextToSpeechOperation;
+	public fun getEscapeHatch ()Lcom/amplifyframework/predictions/aws/AWSPredictionsEscapeHatch;
+	public synthetic fun getEscapeHatch ()Ljava/lang/Object;
+	public fun getPluginKey ()Ljava/lang/String;
+	public fun getVersion ()Ljava/lang/String;
+	public fun identify (Lcom/amplifyframework/predictions/models/IdentifyAction;Landroid/graphics/Bitmap;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/predictions/operation/IdentifyOperation;
+	public fun identify (Lcom/amplifyframework/predictions/models/IdentifyAction;Landroid/graphics/Bitmap;Lcom/amplifyframework/predictions/options/IdentifyOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/predictions/operation/IdentifyOperation;
+	public fun interpret (Ljava/lang/String;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/predictions/operation/InterpretOperation;
+	public fun interpret (Ljava/lang/String;Lcom/amplifyframework/predictions/options/InterpretOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/predictions/operation/InterpretOperation;
+	public fun translateText (Ljava/lang/String;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/predictions/operation/TranslateTextOperation;
+	public fun translateText (Ljava/lang/String;Lcom/amplifyframework/predictions/models/LanguageType;Lcom/amplifyframework/predictions/models/LanguageType;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/predictions/operation/TranslateTextOperation;
+	public fun translateText (Ljava/lang/String;Lcom/amplifyframework/predictions/models/LanguageType;Lcom/amplifyframework/predictions/models/LanguageType;Lcom/amplifyframework/predictions/options/TranslateTextOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/predictions/operation/TranslateTextOperation;
+	public fun translateText (Ljava/lang/String;Lcom/amplifyframework/predictions/options/TranslateTextOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/predictions/operation/TranslateTextOperation;
+}
+
+public final class com/amplifyframework/predictions/aws/AWSPredictionsPluginConfiguration {
+	public fun getDefaultNetworkPolicy ()Lcom/amplifyframework/predictions/aws/NetworkPolicy;
+	public fun getDefaultRegion ()Ljava/lang/String;
+	public fun getIdentifyEntitiesConfiguration ()Lcom/amplifyframework/predictions/aws/configuration/IdentifyEntitiesConfiguration;
+	public fun getIdentifyLabelsConfiguration ()Lcom/amplifyframework/predictions/aws/configuration/IdentifyLabelsConfiguration;
+	public fun getIdentifyTextConfiguration ()Lcom/amplifyframework/predictions/aws/configuration/IdentifyTextConfiguration;
+	public fun getInterpretTextConfiguration ()Lcom/amplifyframework/predictions/aws/configuration/InterpretTextConfiguration;
+	public fun getSpeechGeneratorConfiguration ()Lcom/amplifyframework/predictions/aws/configuration/SpeechGeneratorConfiguration;
+	public fun getTranslateTextConfiguration ()Lcom/amplifyframework/predictions/aws/configuration/TranslateTextConfiguration;
+}
+
+public final class com/amplifyframework/predictions/aws/BuildConfig {
+	public static final field BUILD_TYPE Ljava/lang/String;
+	public static final field DEBUG Z
+	public static final field LIBRARY_PACKAGE_NAME Ljava/lang/String;
+	public static final field VERSION_NAME Ljava/lang/String;
+	public fun <init> ()V
+}
+
+public final class com/amplifyframework/predictions/aws/NetworkPolicy : java/lang/Enum {
+	public static final field AUTO Lcom/amplifyframework/predictions/aws/NetworkPolicy;
+	public static final field OFFLINE Lcom/amplifyframework/predictions/aws/NetworkPolicy;
+	public static fun fromKey (Ljava/lang/String;)Lcom/amplifyframework/predictions/aws/NetworkPolicy;
+	public fun getConfigurationKey ()Ljava/lang/String;
+	public static fun valueOf (Ljava/lang/String;)Lcom/amplifyframework/predictions/aws/NetworkPolicy;
+	public static fun values ()[Lcom/amplifyframework/predictions/aws/NetworkPolicy;
+}
+
+public final class com/amplifyframework/predictions/aws/adapter/EmotionTypeAdapter {
+	public static final field INSTANCE Lcom/amplifyframework/predictions/aws/adapter/EmotionTypeAdapter;
+	public static final fun fromRekognition (Ljava/lang/String;)Lcom/amplifyframework/predictions/models/EmotionType;
+}
+
+public final class com/amplifyframework/predictions/aws/adapter/EntityTypeAdapter {
+	public static final field INSTANCE Lcom/amplifyframework/predictions/aws/adapter/EntityTypeAdapter;
+	public static final fun fromComprehend (Ljava/lang/String;)Lcom/amplifyframework/predictions/models/EntityType;
+}
+
+public final class com/amplifyframework/predictions/aws/adapter/GenderBinaryTypeAdapter {
+	public static final field INSTANCE Lcom/amplifyframework/predictions/aws/adapter/GenderBinaryTypeAdapter;
+	public static final fun fromRekognition (Ljava/lang/String;)Lcom/amplifyframework/predictions/models/GenderBinaryType;
+}
+
+public final class com/amplifyframework/predictions/aws/adapter/LandmarkTypeAdapter {
+	public static final field INSTANCE Lcom/amplifyframework/predictions/aws/adapter/LandmarkTypeAdapter;
+	public static final fun fromRekognition (Ljava/lang/String;)Lcom/amplifyframework/predictions/models/LandmarkType;
+}
+
+public final class com/amplifyframework/predictions/aws/adapter/RekognitionResultTransformers {
+	public static fun fromBoundingBox (Laws/sdk/kotlin/services/rekognition/model/BoundingBox;)Landroid/graphics/RectF;
+	public static fun fromFaceDetail (Laws/sdk/kotlin/services/rekognition/model/FaceDetail;)Ljava/util/List;
+	public static fun fromLandmarks (Ljava/util/List;)Ljava/util/List;
+	public static fun fromPoints (Ljava/util/List;)Lcom/amplifyframework/predictions/models/Polygon;
+	public static fun fromRekognitionAgeRange (Laws/sdk/kotlin/services/rekognition/model/AgeRange;)Lcom/amplifyframework/predictions/models/AgeRange;
+	public static fun fromRekognitionPose (Laws/sdk/kotlin/services/rekognition/model/Pose;)Lcom/amplifyframework/predictions/models/Pose;
+	public static fun fromTextDetection (Laws/sdk/kotlin/services/rekognition/model/TextDetection;)Lcom/amplifyframework/predictions/models/IdentifiedText;
+}
+
+public final class com/amplifyframework/predictions/aws/adapter/SentimentTypeAdapter {
+	public static final field INSTANCE Lcom/amplifyframework/predictions/aws/adapter/SentimentTypeAdapter;
+	public static final fun fromComprehend (Ljava/lang/String;)Lcom/amplifyframework/predictions/models/SentimentType;
+}
+
+public final class com/amplifyframework/predictions/aws/adapter/SpeechTypeAdapter {
+	public static final field INSTANCE Lcom/amplifyframework/predictions/aws/adapter/SpeechTypeAdapter;
+	public static final fun fromComprehend (Ljava/lang/String;)Lcom/amplifyframework/predictions/models/SpeechType;
+}
+
+public final class com/amplifyframework/predictions/aws/adapter/TextractResultTransformers {
+	public static fun fetchIdentifiedText (Laws/sdk/kotlin/services/textract/model/Block;)Lcom/amplifyframework/predictions/models/IdentifiedText;
+	public static fun fetchKeyValue (Laws/sdk/kotlin/services/textract/model/Block;Ljava/util/Map;)Lcom/amplifyframework/predictions/models/BoundedKeyValue;
+	public static fun fetchSelection (Laws/sdk/kotlin/services/textract/model/Block;)Lcom/amplifyframework/predictions/models/Selection;
+	public static fun fetchTable (Laws/sdk/kotlin/services/textract/model/Block;Ljava/util/Map;)Lcom/amplifyframework/predictions/models/Table;
+	public static fun fromBoundingBox (Laws/sdk/kotlin/services/textract/model/BoundingBox;)Landroid/graphics/RectF;
+	public static fun fromPoints (Ljava/util/List;)Lcom/amplifyframework/predictions/models/Polygon;
+}
+
+public final class com/amplifyframework/predictions/aws/configuration/IdentifyEntitiesConfiguration {
+	public static fun fromJson (Lorg/json/JSONObject;)Lcom/amplifyframework/predictions/aws/configuration/IdentifyEntitiesConfiguration;
+	public fun getCollectionId ()Ljava/lang/String;
+	public fun getMaxEntities ()I
+	public fun getNetworkPolicy ()Lcom/amplifyframework/predictions/aws/NetworkPolicy;
+	public fun isCelebrityDetectionEnabled ()Z
+	public fun isGeneralEntityDetection ()Z
+}
+
+public final class com/amplifyframework/predictions/aws/configuration/IdentifyLabelsConfiguration {
+	public static fun fromJson (Lorg/json/JSONObject;)Lcom/amplifyframework/predictions/aws/configuration/IdentifyLabelsConfiguration;
+	public fun getNetworkPolicy ()Lcom/amplifyframework/predictions/aws/NetworkPolicy;
+	public fun getType ()Lcom/amplifyframework/predictions/models/LabelType;
+}
+
+public final class com/amplifyframework/predictions/aws/configuration/IdentifyTextConfiguration {
+	public static fun fromJson (Lorg/json/JSONObject;)Lcom/amplifyframework/predictions/aws/configuration/IdentifyTextConfiguration;
+	public fun getFormat ()Lcom/amplifyframework/predictions/models/TextFormatType;
+	public fun getNetworkPolicy ()Lcom/amplifyframework/predictions/aws/NetworkPolicy;
+}
+
+public final class com/amplifyframework/predictions/aws/configuration/InterpretTextConfiguration {
+	public static fun fromJson (Lorg/json/JSONObject;)Lcom/amplifyframework/predictions/aws/configuration/InterpretTextConfiguration;
+	public fun getNetworkPolicy ()Lcom/amplifyframework/predictions/aws/NetworkPolicy;
+	public fun getType ()Lcom/amplifyframework/predictions/aws/configuration/InterpretTextConfiguration$InterpretType;
+}
+
+public final class com/amplifyframework/predictions/aws/configuration/InterpretTextConfiguration$InterpretType : java/lang/Enum {
+	public static final field ALL Lcom/amplifyframework/predictions/aws/configuration/InterpretTextConfiguration$InterpretType;
+	public static final field ENTITIES Lcom/amplifyframework/predictions/aws/configuration/InterpretTextConfiguration$InterpretType;
+	public static final field KEY_PHRASES Lcom/amplifyframework/predictions/aws/configuration/InterpretTextConfiguration$InterpretType;
+	public static final field LANGUAGE Lcom/amplifyframework/predictions/aws/configuration/InterpretTextConfiguration$InterpretType;
+	public static final field SENTIMENT Lcom/amplifyframework/predictions/aws/configuration/InterpretTextConfiguration$InterpretType;
+	public static final field SYNTAX Lcom/amplifyframework/predictions/aws/configuration/InterpretTextConfiguration$InterpretType;
+	public static fun valueOf (Ljava/lang/String;)Lcom/amplifyframework/predictions/aws/configuration/InterpretTextConfiguration$InterpretType;
+	public static fun values ()[Lcom/amplifyframework/predictions/aws/configuration/InterpretTextConfiguration$InterpretType;
+}
+
+public final class com/amplifyframework/predictions/aws/configuration/SpeechGeneratorConfiguration {
+	public static fun fromJson (Lorg/json/JSONObject;)Lcom/amplifyframework/predictions/aws/configuration/SpeechGeneratorConfiguration;
+	public fun getLanguage ()Ljava/lang/String;
+	public fun getNetworkPolicy ()Lcom/amplifyframework/predictions/aws/NetworkPolicy;
+	public fun getVoice ()Ljava/lang/String;
+}
+
+public final class com/amplifyframework/predictions/aws/configuration/TranslateTextConfiguration {
+	public static fun fromJson (Lorg/json/JSONObject;)Lcom/amplifyframework/predictions/aws/configuration/TranslateTextConfiguration;
+	public fun getNetworkPolicy ()Lcom/amplifyframework/predictions/aws/NetworkPolicy;
+	public fun getSourceLanguage ()Lcom/amplifyframework/predictions/models/LanguageType;
+	public fun getTargetLanguage ()Lcom/amplifyframework/predictions/models/LanguageType;
+}
+
+public final class com/amplifyframework/predictions/aws/exceptions/AccessDeniedException : com/amplifyframework/predictions/PredictionsException {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Throwable;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class com/amplifyframework/predictions/aws/models/AWSVoiceType : java/lang/Enum, com/amplifyframework/predictions/models/VoiceType {
+	public static final field ARABIC_ZEINA Lcom/amplifyframework/predictions/aws/models/AWSVoiceType;
+	public static final field AUSTRALIAN_ENGLISH_NICOLE Lcom/amplifyframework/predictions/aws/models/AWSVoiceType;
+	public static final field AUSTRALIAN_ENGLISH_RUSSELL Lcom/amplifyframework/predictions/aws/models/AWSVoiceType;
+	public static final field BRAZILIAN_PORTUGUESE_CAMILA Lcom/amplifyframework/predictions/aws/models/AWSVoiceType;
+	public static final field BRAZILIAN_PORTUGUESE_RICARDO Lcom/amplifyframework/predictions/aws/models/AWSVoiceType;
+	public static final field BRAZILIAN_PORTUGUESE_VITORIA Lcom/amplifyframework/predictions/aws/models/AWSVoiceType;
+	public static final field BRITISH_ENGLISH_AMY Lcom/amplifyframework/predictions/aws/models/AWSVoiceType;
+	public static final field BRITISH_ENGLISH_BRIAN Lcom/amplifyframework/predictions/aws/models/AWSVoiceType;
+	public static final field BRITISH_ENGLISH_EMMA Lcom/amplifyframework/predictions/aws/models/AWSVoiceType;
+	public static final field CANADIAN_FRENCH_CHANTAL Lcom/amplifyframework/predictions/aws/models/AWSVoiceType;
+	public static final field DANISH_MADS Lcom/amplifyframework/predictions/aws/models/AWSVoiceType;
+	public static final field DANISH_NAJA Lcom/amplifyframework/predictions/aws/models/AWSVoiceType;
+	public static final field DUTCH_LOTTE Lcom/amplifyframework/predictions/aws/models/AWSVoiceType;
+	public static final field DUTCH_RUBEN Lcom/amplifyframework/predictions/aws/models/AWSVoiceType;
+	public static final field EUROPEAN_PORTUGUESE_CRISTIANO Lcom/amplifyframework/predictions/aws/models/AWSVoiceType;
+	public static final field EUROPEAN_PORTUGUESE_INES Lcom/amplifyframework/predictions/aws/models/AWSVoiceType;
+	public static final field EUROPEAN_SPANISH_CONCHITA Lcom/amplifyframework/predictions/aws/models/AWSVoiceType;
+	public static final field EUROPEAN_SPANISH_ENRIQUE Lcom/amplifyframework/predictions/aws/models/AWSVoiceType;
+	public static final field EUROPEAN_SPANISH_LUCIA Lcom/amplifyframework/predictions/aws/models/AWSVoiceType;
+	public static final field FRENCH_CELINE Lcom/amplifyframework/predictions/aws/models/AWSVoiceType;
+	public static final field FRENCH_LEA Lcom/amplifyframework/predictions/aws/models/AWSVoiceType;
+	public static final field FRENCH_MATHIEU Lcom/amplifyframework/predictions/aws/models/AWSVoiceType;
+	public static final field GERMAN_HANS Lcom/amplifyframework/predictions/aws/models/AWSVoiceType;
+	public static final field GERMAN_MARLENE Lcom/amplifyframework/predictions/aws/models/AWSVoiceType;
+	public static final field GERMAN_VICKI Lcom/amplifyframework/predictions/aws/models/AWSVoiceType;
+	public static final field HINDI_ADITI Lcom/amplifyframework/predictions/aws/models/AWSVoiceType;
+	public static final field ICELANDIC_DORA Lcom/amplifyframework/predictions/aws/models/AWSVoiceType;
+	public static final field ICELANDIC_KARL Lcom/amplifyframework/predictions/aws/models/AWSVoiceType;
+	public static final field INDIAN_ENGLISH_ADITI Lcom/amplifyframework/predictions/aws/models/AWSVoiceType;
+	public static final field INDIAN_ENGLISH_RAVEENA Lcom/amplifyframework/predictions/aws/models/AWSVoiceType;
+	public static final field ITALIAN_BIANCA Lcom/amplifyframework/predictions/aws/models/AWSVoiceType;
+	public static final field ITALIAN_CARLA Lcom/amplifyframework/predictions/aws/models/AWSVoiceType;
+	public static final field ITALIAN_GIORGIO Lcom/amplifyframework/predictions/aws/models/AWSVoiceType;
+	public static final field JAPANESE_MIZUKI Lcom/amplifyframework/predictions/aws/models/AWSVoiceType;
+	public static final field JAPANESE_TAKUMI Lcom/amplifyframework/predictions/aws/models/AWSVoiceType;
+	public static final field KOREAN_SEOYEON Lcom/amplifyframework/predictions/aws/models/AWSVoiceType;
+	public static final field MANDARIN_CHINESE_ZHIYU Lcom/amplifyframework/predictions/aws/models/AWSVoiceType;
+	public static final field MEXICAN_SPANISH_MIA Lcom/amplifyframework/predictions/aws/models/AWSVoiceType;
+	public static final field NORWEGIAN_LIV Lcom/amplifyframework/predictions/aws/models/AWSVoiceType;
+	public static final field POLISH_EWA Lcom/amplifyframework/predictions/aws/models/AWSVoiceType;
+	public static final field POLISH_JACEK Lcom/amplifyframework/predictions/aws/models/AWSVoiceType;
+	public static final field POLISH_JAN Lcom/amplifyframework/predictions/aws/models/AWSVoiceType;
+	public static final field POLISH_MAJA Lcom/amplifyframework/predictions/aws/models/AWSVoiceType;
+	public static final field ROMANIAN_CARMEN Lcom/amplifyframework/predictions/aws/models/AWSVoiceType;
+	public static final field RUSSIAN_MAXIM Lcom/amplifyframework/predictions/aws/models/AWSVoiceType;
+	public static final field RUSSIAN_TATYANA Lcom/amplifyframework/predictions/aws/models/AWSVoiceType;
+	public static final field SWEDISH_ASTRID Lcom/amplifyframework/predictions/aws/models/AWSVoiceType;
+	public static final field TURKISH_FILIZ Lcom/amplifyframework/predictions/aws/models/AWSVoiceType;
+	public static final field UNKNOWN Lcom/amplifyframework/predictions/aws/models/AWSVoiceType;
+	public static final field US_ENGLISH_IVY Lcom/amplifyframework/predictions/aws/models/AWSVoiceType;
+	public static final field US_ENGLISH_JOANNA Lcom/amplifyframework/predictions/aws/models/AWSVoiceType;
+	public static final field US_ENGLISH_JOEY Lcom/amplifyframework/predictions/aws/models/AWSVoiceType;
+	public static final field US_ENGLISH_JUSTIN Lcom/amplifyframework/predictions/aws/models/AWSVoiceType;
+	public static final field US_ENGLISH_KENDRA Lcom/amplifyframework/predictions/aws/models/AWSVoiceType;
+	public static final field US_ENGLISH_KIMBERLY Lcom/amplifyframework/predictions/aws/models/AWSVoiceType;
+	public static final field US_ENGLISH_MATTHEW Lcom/amplifyframework/predictions/aws/models/AWSVoiceType;
+	public static final field US_ENGLISH_SALLI Lcom/amplifyframework/predictions/aws/models/AWSVoiceType;
+	public static final field US_SPANISH_LUPE Lcom/amplifyframework/predictions/aws/models/AWSVoiceType;
+	public static final field US_SPANISH_MIGUEL Lcom/amplifyframework/predictions/aws/models/AWSVoiceType;
+	public static final field US_SPANISH_PENELOPE Lcom/amplifyframework/predictions/aws/models/AWSVoiceType;
+	public static final field WELSH_ENGLISH_GERAINT Lcom/amplifyframework/predictions/aws/models/AWSVoiceType;
+	public static final field WELSH_GWYNETH Lcom/amplifyframework/predictions/aws/models/AWSVoiceType;
+	public static fun fromName (Ljava/lang/String;)Lcom/amplifyframework/predictions/aws/models/AWSVoiceType;
+	public static fun fromVoice (Lcom/amplifyframework/predictions/models/VoiceType;)Lcom/amplifyframework/predictions/aws/models/AWSVoiceType;
+	public fun getLanguageCode ()Ljava/lang/String;
+	public fun getName ()Ljava/lang/String;
+	public static fun valueOf (Ljava/lang/String;)Lcom/amplifyframework/predictions/aws/models/AWSVoiceType;
+	public static fun values ()[Lcom/amplifyframework/predictions/aws/models/AWSVoiceType;
+}
+
+public final class com/amplifyframework/predictions/aws/models/BinaryFeatureType : java/lang/Enum {
+	public static final field BEARD Lcom/amplifyframework/predictions/aws/models/BinaryFeatureType;
+	public static final field EYES_OPEN Lcom/amplifyframework/predictions/aws/models/BinaryFeatureType;
+	public static final field EYE_GLASSES Lcom/amplifyframework/predictions/aws/models/BinaryFeatureType;
+	public static final field MOUTH_OPEN Lcom/amplifyframework/predictions/aws/models/BinaryFeatureType;
+	public static final field MUSTACHE Lcom/amplifyframework/predictions/aws/models/BinaryFeatureType;
+	public static final field SMILE Lcom/amplifyframework/predictions/aws/models/BinaryFeatureType;
+	public static final field SUNGLASSES Lcom/amplifyframework/predictions/aws/models/BinaryFeatureType;
+	public fun getAlias ()Ljava/lang/String;
+	public static fun valueOf (Ljava/lang/String;)Lcom/amplifyframework/predictions/aws/models/BinaryFeatureType;
+	public static fun values ()[Lcom/amplifyframework/predictions/aws/models/BinaryFeatureType;
+}
+
+public final class com/amplifyframework/predictions/aws/operation/AWSIdentifyOperation : com/amplifyframework/predictions/operation/IdentifyOperation {
+	public fun <init> (Lcom/amplifyframework/predictions/aws/service/AWSPredictionsService;Ljava/util/concurrent/ExecutorService;Lcom/amplifyframework/predictions/models/IdentifyAction;Lcom/amplifyframework/predictions/aws/request/AWSImageIdentifyRequest;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
+	public fun start ()V
+}
+
+public final class com/amplifyframework/predictions/aws/operation/AWSInterpretOperation : com/amplifyframework/predictions/operation/InterpretOperation {
+	public fun <init> (Lcom/amplifyframework/predictions/aws/service/AWSPredictionsService;Ljava/util/concurrent/ExecutorService;Lcom/amplifyframework/predictions/aws/request/AWSComprehendRequest;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
+	public fun start ()V
+}
+
+public final class com/amplifyframework/predictions/aws/operation/AWSTextToSpeechOperation : com/amplifyframework/predictions/operation/TextToSpeechOperation {
+	public fun <init> (Lcom/amplifyframework/predictions/aws/service/AWSPredictionsService;Ljava/util/concurrent/ExecutorService;Lcom/amplifyframework/predictions/aws/request/AWSPollyRequest;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
+	public fun start ()V
+}
+
+public final class com/amplifyframework/predictions/aws/operation/AWSTranslateTextOperation : com/amplifyframework/predictions/operation/TranslateTextOperation {
+	public fun <init> (Lcom/amplifyframework/predictions/aws/service/AWSPredictionsService;Ljava/util/concurrent/ExecutorService;Lcom/amplifyframework/predictions/aws/request/AWSTranslateRequest;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
+	public fun start ()V
+}
+
+public final class com/amplifyframework/predictions/aws/options/AWSFaceLivenessSessionOptions$Builder : com/amplifyframework/predictions/options/FaceLivenessSessionOptions$Builder {
+	public fun <init> ()V
+	public fun build ()Lcom/amplifyframework/predictions/aws/options/AWSFaceLivenessSessionOptions;
+	public synthetic fun build ()Lcom/amplifyframework/predictions/options/FaceLivenessSessionOptions;
+	public final fun credentialsProvider (Lcom/amplifyframework/auth/AWSCredentialsProvider;)Lcom/amplifyframework/predictions/aws/options/AWSFaceLivenessSessionOptions$Builder;
+	public final fun getCredentialsProvider ()Lcom/amplifyframework/auth/AWSCredentialsProvider;
+	public fun getThis ()Lcom/amplifyframework/predictions/aws/options/AWSFaceLivenessSessionOptions$Builder;
+	public synthetic fun getThis ()Lcom/amplifyframework/predictions/options/FaceLivenessSessionOptions$Builder;
+}
+
+public final class com/amplifyframework/predictions/aws/options/AWSFaceLivenessSessionOptions$Companion {
+	public final fun builder ()Lcom/amplifyframework/predictions/aws/options/AWSFaceLivenessSessionOptions$Builder;
+	public final fun defaults ()Lcom/amplifyframework/predictions/aws/options/AWSFaceLivenessSessionOptions;
+}
+
+public final class com/amplifyframework/predictions/aws/request/AWSComprehendRequest {
+	public fun <init> (Ljava/lang/String;)V
+	public fun getText ()Ljava/lang/String;
+}
+
+public final class com/amplifyframework/predictions/aws/request/AWSImageIdentifyRequest {
+	public static fun fromBitmap (Landroid/graphics/Bitmap;)Lcom/amplifyframework/predictions/aws/request/AWSImageIdentifyRequest;
+	public fun getImageData ()Ljava/nio/ByteBuffer;
+}
+
+public final class com/amplifyframework/predictions/aws/request/AWSPollyRequest {
+	public fun <init> (Ljava/lang/String;Lcom/amplifyframework/predictions/aws/models/AWSVoiceType;)V
+	public fun getText ()Ljava/lang/String;
+	public fun getVoiceType ()Lcom/amplifyframework/predictions/aws/models/AWSVoiceType;
+}
+
+public final class com/amplifyframework/predictions/aws/request/AWSTranslateRequest {
+	public fun <init> (Ljava/lang/String;Lcom/amplifyframework/predictions/models/LanguageType;Lcom/amplifyframework/predictions/models/LanguageType;)V
+	public fun getSourceLanguage ()Lcom/amplifyframework/predictions/models/LanguageType;
+	public fun getTargetLanguage ()Lcom/amplifyframework/predictions/models/LanguageType;
+	public fun getText ()Ljava/lang/String;
+}
+
+public final class com/amplifyframework/predictions/aws/service/AWSPredictionsService {
+	public fun <init> (Lcom/amplifyframework/predictions/aws/AWSPredictionsPluginConfiguration;Laws/smithy/kotlin/runtime/auth/awscredentials/CredentialsProvider;)V
+	public fun comprehend (Ljava/lang/String;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
+	public fun detectEntities (Ljava/nio/ByteBuffer;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
+	public fun detectLabels (Lcom/amplifyframework/predictions/models/IdentifyAction;Ljava/nio/ByteBuffer;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
+	public fun detectText (Lcom/amplifyframework/predictions/models/IdentifyAction;Ljava/nio/ByteBuffer;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
+	public fun getComprehendClient ()Laws/sdk/kotlin/services/comprehend/ComprehendClient;
+	public fun getPollyClient ()Laws/sdk/kotlin/services/polly/PollyClient;
+	public fun getRekognitionClient ()Laws/sdk/kotlin/services/rekognition/RekognitionClient;
+	public fun getTextractClient ()Laws/sdk/kotlin/services/textract/TextractClient;
+	public fun getTranslateClient ()Laws/sdk/kotlin/services/translate/TranslateClient;
+	public fun recognizeCelebrities (Ljava/nio/ByteBuffer;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
+	public fun synthesizeSpeech (Ljava/lang/String;Lcom/amplifyframework/predictions/aws/models/AWSVoiceType;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
+	public fun translate (Ljava/lang/String;Lcom/amplifyframework/predictions/models/LanguageType;Lcom/amplifyframework/predictions/models/LanguageType;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
+}
+
+public final class com/amplifyframework/predictions/aws/service/AmazonPollyPresigningClient : aws/sdk/kotlin/services/polly/PollyClient {
+	public fun <init> (Laws/sdk/kotlin/services/polly/PollyClient;)V
+	public fun close ()V
+	public fun deleteLexicon (Laws/sdk/kotlin/services/polly/model/DeleteLexiconRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun describeVoices (Laws/sdk/kotlin/services/polly/model/DescribeVoicesRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getConfig ()Laws/sdk/kotlin/services/polly/PollyClient$Config;
+	public synthetic fun getConfig ()Laws/smithy/kotlin/runtime/client/SdkClientConfig;
+	public fun getLexicon (Laws/sdk/kotlin/services/polly/model/GetLexiconRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun getPresignedSynthesizeSpeechUrl (Laws/sdk/kotlin/services/polly/model/SynthesizeSpeechRequest;)Ljava/net/URL;
+	public final fun getPresignedSynthesizeSpeechUrl (Laws/sdk/kotlin/services/polly/model/SynthesizeSpeechRequest;Lcom/amplifyframework/predictions/aws/service/PresignedSynthesizeSpeechUrlOptions;)Ljava/net/URL;
+	public fun getSpeechSynthesisTask (Laws/sdk/kotlin/services/polly/model/GetSpeechSynthesisTaskRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun listLexicons (Laws/sdk/kotlin/services/polly/model/ListLexiconsRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun listSpeechSynthesisTasks (Laws/sdk/kotlin/services/polly/model/ListSpeechSynthesisTasksRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun putLexicon (Laws/sdk/kotlin/services/polly/model/PutLexiconRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun startSpeechSynthesisTask (Laws/sdk/kotlin/services/polly/model/StartSpeechSynthesisTaskRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun synthesizeSpeech (Laws/sdk/kotlin/services/polly/model/SynthesizeSpeechRequest;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class com/amplifyframework/predictions/aws/service/PresignedSynthesizeSpeechUrlOptions {
+	public static final field Companion Lcom/amplifyframework/predictions/aws/service/PresignedSynthesizeSpeechUrlOptions$Companion;
+	public synthetic fun <init> (Laws/smithy/kotlin/runtime/auth/awscredentials/CredentialsProvider;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public static final fun builder ()Lcom/amplifyframework/predictions/aws/service/PresignedSynthesizeSpeechUrlOptions$Builder;
+	public static final fun defaults ()Lcom/amplifyframework/predictions/aws/service/PresignedSynthesizeSpeechUrlOptions;
+	public final fun getCredentialsProvider ()Laws/smithy/kotlin/runtime/auth/awscredentials/CredentialsProvider;
+	public final fun getExpires ()I
+}
+
+public final class com/amplifyframework/predictions/aws/service/PresignedSynthesizeSpeechUrlOptions$Builder {
+	public fun <init> ()V
+	public final fun build ()Lcom/amplifyframework/predictions/aws/service/PresignedSynthesizeSpeechUrlOptions;
+	public final fun credentialsProvider (Laws/smithy/kotlin/runtime/auth/awscredentials/CredentialsProvider;)Lcom/amplifyframework/predictions/aws/service/PresignedSynthesizeSpeechUrlOptions$Builder;
+	public final fun expires (I)Lcom/amplifyframework/predictions/aws/service/PresignedSynthesizeSpeechUrlOptions$Builder;
+	public final fun getCredentialsProvider ()Laws/smithy/kotlin/runtime/auth/awscredentials/CredentialsProvider;
+	public final fun getExpires ()I
+}
+
+public final class com/amplifyframework/predictions/aws/service/PresignedSynthesizeSpeechUrlOptions$Companion {
+	public final fun builder ()Lcom/amplifyframework/predictions/aws/service/PresignedSynthesizeSpeechUrlOptions$Builder;
+	public final fun defaults ()Lcom/amplifyframework/predictions/aws/service/PresignedSynthesizeSpeechUrlOptions;
+}
+
