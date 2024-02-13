@@ -13,7 +13,9 @@
  * permissions and limitations under the License.
  */
 
+import app.cash.licensee.LicenseeExtension
 import com.android.build.gradle.LibraryExtension
+import kotlinx.validation.ApiValidationExtension
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 buildscript {
@@ -32,6 +34,10 @@ buildscript {
         classpath("org.jetbrains.kotlinx:kover:0.6.1")
         classpath("app.cash.licensee:licensee-gradle-plugin:1.7.0")
     }
+}
+
+plugins {
+    alias(libs.plugins.binary.compatibility.validator)
 }
 
 allprojects {
@@ -59,7 +65,7 @@ tasks.register<Delete>("clean").configure {
     delete(rootProject.buildDir)
 }
 
-val optInAnnotations = listOf(
+val internalApiAnnotations = listOf(
     "com.amplifyframework.annotations.InternalApiWarning",
     "com.amplifyframework.annotations.InternalAmplifyApi"
 )
@@ -72,23 +78,23 @@ subprojects {
     }
 
     apply(plugin = "app.cash.licensee")
-    configure<app.cash.licensee.LicenseeExtension> {
+    configure<LicenseeExtension> {
         allow("Apache-2.0")
         allow("MIT")
         allow("BSD-2-Clause")
         allow("CC0-1.0")
         allowUrl("https://developer.android.com/studio/terms.html")
         allowDependency("net.zetetic", "android-database-sqlcipher", "4.5.4") {
-            "BSD style License"
+            because("BSD style License")
         }
         allowDependency("org.jetbrains", "annotations", "16.0.1") {
-            "Apache-2.0, but typo in license URL fixed in newer versions"
+            because("Apache-2.0, but typo in license URL fixed in newer versions")
         }
         allowDependency("org.mockito", "mockito-core", "3.9.0") {
-            "MIT license"
+            because("MIT license")
         }
         allowDependency("junit", "junit", "4.13.2") {
-            "Test Dependency"
+            because("Test Dependency")
         }
     }
 
@@ -109,7 +115,7 @@ subprojects {
 
     tasks.withType<KotlinCompile> {
         kotlinOptions {
-            optInAnnotations.forEach {
+            internalApiAnnotations.forEach {
                 freeCompilerArgs += "-opt-in=$it"
             }
         }
@@ -180,3 +186,11 @@ fun Project.configureAndroid() {
 }
 
 apply(from = rootProject.file("configuration/instrumentation-tests.gradle"))
+
+configure<ApiValidationExtension> {
+    // Interfaces marked with an internal API annotation are not part of the public API
+    nonPublicMarkers.addAll(internalApiAnnotations)
+    nonPublicMarkers.add("androidx.annotation.VisibleForTesting")
+
+    ignoredProjects.addAll(setOf("testutils", "testmodels", "annotations"))
+}

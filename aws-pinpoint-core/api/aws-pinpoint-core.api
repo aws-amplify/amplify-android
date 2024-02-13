@@ -1,0 +1,184 @@
+public final class com/amplifyframework/pinpoint/core/AnalyticsClient$Companion {
+}
+
+public final class com/amplifyframework/pinpoint/core/BuildConfig {
+	public static final field BUILD_TYPE Ljava/lang/String;
+	public static final field DEBUG Z
+	public static final field LIBRARY_PACKAGE_NAME Ljava/lang/String;
+	public static final field VERSION_NAME Ljava/lang/String;
+	public fun <init> ()V
+}
+
+public final class com/amplifyframework/pinpoint/core/Session$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lcom/amplifyframework/pinpoint/core/Session$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/amplifyframework/pinpoint/core/Session;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/amplifyframework/pinpoint/core/Session;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/amplifyframework/pinpoint/core/Session$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/amplifyframework/pinpoint/core/TargetingClient$Companion {
+}
+
+public final class com/amplifyframework/pinpoint/core/data/AndroidAppDetails$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lcom/amplifyframework/pinpoint/core/data/AndroidAppDetails$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/amplifyframework/pinpoint/core/data/AndroidAppDetails;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/amplifyframework/pinpoint/core/data/AndroidAppDetails;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/amplifyframework/pinpoint/core/data/AndroidAppDetails$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/amplifyframework/pinpoint/core/data/AndroidDeviceDetails$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lcom/amplifyframework/pinpoint/core/data/AndroidDeviceDetails$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/amplifyframework/pinpoint/core/data/AndroidDeviceDetails;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/amplifyframework/pinpoint/core/data/AndroidDeviceDetails;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/amplifyframework/pinpoint/core/data/AndroidDeviceDetails$Companion {
+	public final fun getCarrier (Landroid/content/Context;)Ljava/lang/String;
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/amplifyframework/pinpoint/core/database/EventTable$COLUMNINDEX : java/lang/Enum {
+	public static final field ID Lcom/amplifyframework/pinpoint/core/database/EventTable$COLUMNINDEX;
+	public static final field JSON Lcom/amplifyframework/pinpoint/core/database/EventTable$COLUMNINDEX;
+	public static final field SIZE Lcom/amplifyframework/pinpoint/core/database/EventTable$COLUMNINDEX;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun getIndex ()I
+	public static fun valueOf (Ljava/lang/String;)Lcom/amplifyframework/pinpoint/core/database/EventTable$COLUMNINDEX;
+	public static fun values ()[Lcom/amplifyframework/pinpoint/core/database/EventTable$COLUMNINDEX;
+}
+
+public final class com/amplifyframework/pinpoint/core/database/EventTable$Companion {
+	public final fun onCreate (Landroid/database/sqlite/SQLiteDatabase;I)V
+	public final fun onUpgrade (Landroid/database/sqlite/SQLiteDatabase;II)V
+}
+
+public final class com/amplifyframework/pinpoint/core/database/PinpointDatabase$Companion {
+}
+
+public final class com/amplifyframework/pinpoint/core/endpointProfile/EndpointProfile$Companion {
+}
+
+public final class com/amplifyframework/pinpoint/core/endpointProfile/EndpointProfileDemographic$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lcom/amplifyframework/pinpoint/core/endpointProfile/EndpointProfileDemographic$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/amplifyframework/pinpoint/core/endpointProfile/EndpointProfileDemographic;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/amplifyframework/pinpoint/core/endpointProfile/EndpointProfileDemographic;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/amplifyframework/pinpoint/core/endpointProfile/EndpointProfileDemographic$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/amplifyframework/pinpoint/core/endpointProfile/EndpointProfileLocation$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lcom/amplifyframework/pinpoint/core/endpointProfile/EndpointProfileLocation$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/amplifyframework/pinpoint/core/endpointProfile/EndpointProfileLocation;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/amplifyframework/pinpoint/core/endpointProfile/EndpointProfileLocation;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/amplifyframework/pinpoint/core/endpointProfile/EndpointProfileLocation$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/amplifyframework/pinpoint/core/endpointProfile/EndpointProfileUser$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lcom/amplifyframework/pinpoint/core/endpointProfile/EndpointProfileUser$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/amplifyframework/pinpoint/core/endpointProfile/EndpointProfileUser;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/amplifyframework/pinpoint/core/endpointProfile/EndpointProfileUser;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/amplifyframework/pinpoint/core/endpointProfile/EndpointProfileUser$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public abstract interface class com/amplifyframework/pinpoint/core/models/AWSPinpointUserProfileBehavior {
+	public abstract fun getUserAttributes ()Lcom/amplifyframework/analytics/AnalyticsProperties;
+}
+
+public final class com/amplifyframework/pinpoint/core/models/PinpointEvent$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lcom/amplifyframework/pinpoint/core/models/PinpointEvent$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/amplifyframework/pinpoint/core/models/PinpointEvent;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/amplifyframework/pinpoint/core/models/PinpointEvent;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/amplifyframework/pinpoint/core/models/PinpointEvent$Companion {
+	public final fun fromJsonString (Ljava/lang/String;)Lcom/amplifyframework/pinpoint/core/models/PinpointEvent;
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/amplifyframework/pinpoint/core/models/PinpointSession$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lcom/amplifyframework/pinpoint/core/models/PinpointSession$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/amplifyframework/pinpoint/core/models/PinpointSession;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/amplifyframework/pinpoint/core/models/PinpointSession;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/amplifyframework/pinpoint/core/models/PinpointSession$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/amplifyframework/pinpoint/core/models/SDKInfo$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lcom/amplifyframework/pinpoint/core/models/SDKInfo$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/amplifyframework/pinpoint/core/models/SDKInfo;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/amplifyframework/pinpoint/core/models/SDKInfo;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/amplifyframework/pinpoint/core/models/SDKInfo$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/amplifyframework/pinpoint/core/util/DateUtilKt {
+	public static final fun millisToIsoDate (J)Ljava/lang/String;
+}
+
+public final class com/amplifyframework/pinpoint/core/util/SharedPreferencesUtilKt {
+	public static final fun getUniqueId (Landroid/content/SharedPreferences;)Ljava/lang/String;
+}
+
