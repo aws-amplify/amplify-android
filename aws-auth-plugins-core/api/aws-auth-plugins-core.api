@@ -1,0 +1,88 @@
+public final class com/amplifyframework/auth/plugins/core/AWSCognitoIdentityPoolDetails {
+	public static final field Companion Lcom/amplifyframework/auth/plugins/core/AWSCognitoIdentityPoolDetails$Companion;
+	public final fun component1 ()Lcom/amplifyframework/auth/result/AuthSessionResult;
+	public final fun component2 ()Lcom/amplifyframework/auth/result/AuthSessionResult;
+	public final fun copy (Lcom/amplifyframework/auth/result/AuthSessionResult;Lcom/amplifyframework/auth/result/AuthSessionResult;)Lcom/amplifyframework/auth/plugins/core/AWSCognitoIdentityPoolDetails;
+	public static synthetic fun copy$default (Lcom/amplifyframework/auth/plugins/core/AWSCognitoIdentityPoolDetails;Lcom/amplifyframework/auth/result/AuthSessionResult;Lcom/amplifyframework/auth/result/AuthSessionResult;ILjava/lang/Object;)Lcom/amplifyframework/auth/plugins/core/AWSCognitoIdentityPoolDetails;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAwsCredentialsResult ()Lcom/amplifyframework/auth/result/AuthSessionResult;
+	public final fun getIdentityIdResult ()Lcom/amplifyframework/auth/result/AuthSessionResult;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/amplifyframework/auth/plugins/core/AWSCognitoIdentityPoolDetails$Companion {
+	public final fun configErrorResult ()Lcom/amplifyframework/auth/plugins/core/AWSCognitoIdentityPoolDetails;
+}
+
+public final class com/amplifyframework/auth/plugins/core/AWSCognitoIdentityPoolOperations {
+	public static final field Companion Lcom/amplifyframework/auth/plugins/core/AWSCognitoIdentityPoolOperations$Companion;
+	public static final field OIDC_PLUGIN_LOG_NAMESPACE Ljava/lang/String;
+	public fun <init> (Landroid/content/Context;Lcom/amplifyframework/auth/plugins/core/data/AWSCognitoIdentityPoolConfiguration;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Landroid/content/Context;Lcom/amplifyframework/auth/plugins/core/data/AWSCognitoIdentityPoolConfiguration;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun clearCredentials ()V
+	public final fun fetchAWSCognitoIdentityPoolDetails (Ljava/util/List;ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun getCognitoIdentityClient ()Laws/sdk/kotlin/services/cognitoidentity/CognitoIdentityClient;
+}
+
+public final class com/amplifyframework/auth/plugins/core/AWSCognitoIdentityPoolOperations$Companion {
+}
+
+public final class com/amplifyframework/auth/plugins/core/AuthHubEventEmitter {
+	public fun <init> ()V
+	public final fun sendHubEvent (Ljava/lang/String;)V
+}
+
+public final class com/amplifyframework/auth/plugins/core/LoginProvider {
+	public static final field Companion Lcom/amplifyframework/auth/plugins/core/LoginProvider$Companion;
+	public synthetic fun <init> (ILjava/lang/String;Ljava/lang/String;Lkotlinx/serialization/internal/SerializationConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;)Lcom/amplifyframework/auth/plugins/core/LoginProvider;
+	public static synthetic fun copy$default (Lcom/amplifyframework/auth/plugins/core/LoginProvider;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lcom/amplifyframework/auth/plugins/core/LoginProvider;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getName ()Ljava/lang/String;
+	public final fun getUserIdentifier ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+	public static final synthetic fun write$Self (Lcom/amplifyframework/auth/plugins/core/LoginProvider;Lkotlinx/serialization/encoding/CompositeEncoder;Lkotlinx/serialization/descriptors/SerialDescriptor;)V
+}
+
+public final class com/amplifyframework/auth/plugins/core/LoginProvider$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lcom/amplifyframework/auth/plugins/core/LoginProvider$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/amplifyframework/auth/plugins/core/LoginProvider;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/amplifyframework/auth/plugins/core/LoginProvider;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/amplifyframework/auth/plugins/core/LoginProvider$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/amplifyframework/auth/plugins/core/data/AWSCognitoIdentityPoolConfiguration {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;)Lcom/amplifyframework/auth/plugins/core/data/AWSCognitoIdentityPoolConfiguration;
+	public static synthetic fun copy$default (Lcom/amplifyframework/auth/plugins/core/data/AWSCognitoIdentityPoolConfiguration;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lcom/amplifyframework/auth/plugins/core/data/AWSCognitoIdentityPoolConfiguration;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getPoolId ()Ljava/lang/String;
+	public final fun getRegion ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/amplifyframework/plugins/core/BuildConfig {
+	public static final field BUILD_TYPE Ljava/lang/String;
+	public static final field DEBUG Z
+	public static final field LIBRARY_PACKAGE_NAME Ljava/lang/String;
+	public static final field VERSION_NAME Ljava/lang/String;
+	public fun <init> ()V
+}
+
