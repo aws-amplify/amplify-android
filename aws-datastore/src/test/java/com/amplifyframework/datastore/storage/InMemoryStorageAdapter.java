@@ -19,6 +19,7 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.annotations.InternalApiWarning;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.async.Cancelable;
@@ -45,7 +46,11 @@ import static org.junit.Assert.fail;
 /**
  * A simple in-memory implementation of the LocalStorageAdapter
  * contract. This intended for use as a stub in test code.
+ *
+ * Although this has public access, it is intended for internal use and should not be used directly by host
+ * applications. The behavior of this may change without warning.
  */
+@InternalApiWarning
 public final class InMemoryStorageAdapter implements LocalStorageAdapter {
     private final List<Model> items;
     private final Subject<StorageItemChange<? extends Model>> itemChangeStream;
