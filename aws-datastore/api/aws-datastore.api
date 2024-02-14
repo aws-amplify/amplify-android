@@ -273,20 +273,6 @@ public final class com/amplifyframework/datastore/storage/ItemChangeMapper {
 	public static fun map (Lcom/amplifyframework/datastore/storage/StorageItemChange;)Lcom/amplifyframework/datastore/DataStoreItemChange;
 }
 
-public abstract interface class com/amplifyframework/datastore/storage/LocalStorageAdapter {
-	public abstract fun batchSyncOperations (Ljava/util/List;Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)V
-	public abstract fun clear (Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)V
-	public abstract fun delete (Lcom/amplifyframework/core/model/Model;Lcom/amplifyframework/datastore/storage/StorageItemChange$Initiator;Lcom/amplifyframework/core/model/query/predicate/QueryPredicate;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
-	public abstract fun delete (Ljava/lang/Class;Lcom/amplifyframework/datastore/storage/StorageItemChange$Initiator;Lcom/amplifyframework/core/model/query/predicate/QueryPredicate;Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)V
-	public abstract fun initialize (Landroid/content/Context;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/datastore/DataStoreConfiguration;)V
-	public abstract fun observe (Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Action;)Lcom/amplifyframework/core/async/Cancelable;
-	public abstract fun observeQuery (Ljava/lang/Class;Lcom/amplifyframework/core/model/query/ObserveQueryOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Action;)V
-	public abstract fun query (Ljava/lang/Class;Lcom/amplifyframework/core/model/query/QueryOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
-	public abstract fun query (Ljava/lang/String;Lcom/amplifyframework/core/model/query/QueryOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
-	public abstract fun save (Lcom/amplifyframework/core/model/Model;Lcom/amplifyframework/datastore/storage/StorageItemChange$Initiator;Lcom/amplifyframework/core/model/query/predicate/QueryPredicate;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
-	public abstract fun terminate ()V
-}
-
 public final class com/amplifyframework/datastore/storage/StorageItemChange {
 	public static fun builder ()Lcom/amplifyframework/datastore/storage/StorageItemChange$Builder;
 	public fun changeId ()Ljava/util/UUID;
@@ -374,21 +360,6 @@ public final class com/amplifyframework/datastore/storage/sqlite/SQLiteModelFiel
 	public synthetic fun convertValueFromSource (Ljava/lang/Object;Lcom/amplifyframework/core/model/ModelField;)Ljava/lang/Object;
 	public fun convertValueFromTarget (Lcom/amplifyframework/core/model/Model;Lcom/amplifyframework/core/model/ModelField;)Ljava/lang/Object;
 	public synthetic fun convertValueFromTarget (Ljava/lang/Object;Lcom/amplifyframework/core/model/ModelField;)Ljava/lang/Object;
-}
-
-public final class com/amplifyframework/datastore/storage/sqlite/SQLiteStorageAdapter : com/amplifyframework/datastore/storage/LocalStorageAdapter {
-	public fun batchSyncOperations (Ljava/util/List;Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)V
-	public fun clear (Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)V
-	public fun delete (Lcom/amplifyframework/core/model/Model;Lcom/amplifyframework/datastore/storage/StorageItemChange$Initiator;Lcom/amplifyframework/core/model/query/predicate/QueryPredicate;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
-	public fun delete (Ljava/lang/Class;Lcom/amplifyframework/datastore/storage/StorageItemChange$Initiator;Lcom/amplifyframework/core/model/query/predicate/QueryPredicate;Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)V
-	public static fun forModels (Lcom/amplifyframework/core/model/SchemaRegistry;Lcom/amplifyframework/core/model/ModelProvider;)Lcom/amplifyframework/datastore/storage/sqlite/SQLiteStorageAdapter;
-	public fun initialize (Landroid/content/Context;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/datastore/DataStoreConfiguration;)V
-	public fun observe (Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Action;)Lcom/amplifyframework/core/async/Cancelable;
-	public fun observeQuery (Ljava/lang/Class;Lcom/amplifyframework/core/model/query/ObserveQueryOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Action;)V
-	public fun query (Ljava/lang/Class;Lcom/amplifyframework/core/model/query/QueryOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
-	public fun query (Ljava/lang/String;Lcom/amplifyframework/core/model/query/QueryOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
-	public fun save (Lcom/amplifyframework/core/model/Model;Lcom/amplifyframework/datastore/storage/StorageItemChange$Initiator;Lcom/amplifyframework/core/model/query/predicate/QueryPredicate;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
-	public fun terminate ()V
 }
 
 public final class com/amplifyframework/datastore/storage/sqlite/SqlKeyword : java/lang/Enum {

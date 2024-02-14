@@ -18,6 +18,7 @@ package com.amplifyframework.datastore.storage;
 import android.content.Context;
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.annotations.InternalApiWarning;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.async.Cancelable;
@@ -45,7 +46,11 @@ import java.util.List;
  *
  * Plausible implementations of the LocalStorageAdapter might use SQLite, SharedPreferences,
  * Room, Realm, Flat-file, in-memory, etc., etc.
+ *
+ * Although this has public access, it is intended for internal use and should not be used directly by host
+ * applications. The behavior of this may change without warning.
  */
+@InternalApiWarning
 public interface LocalStorageAdapter {
 
     /**
