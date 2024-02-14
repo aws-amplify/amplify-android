@@ -1,0 +1,209 @@
+public final class com/amplifyframework/logging/cloudwatch/AWSCloudWatchLoggingPlugin : com/amplifyframework/logging/LoggingPlugin {
+	public static final field Companion Lcom/amplifyframework/logging/cloudwatch/AWSCloudWatchLoggingPlugin$Companion;
+	public fun <init> ()V
+	public fun <init> (Lcom/amplifyframework/logging/cloudwatch/models/AWSCloudWatchLoggingPluginConfiguration;)V
+	public fun <init> (Lcom/amplifyframework/logging/cloudwatch/models/AWSCloudWatchLoggingPluginConfiguration;Lcom/amplifyframework/logging/cloudwatch/RemoteLoggingConstraintProvider;)V
+	public synthetic fun <init> (Lcom/amplifyframework/logging/cloudwatch/models/AWSCloudWatchLoggingPluginConfiguration;Lcom/amplifyframework/logging/cloudwatch/RemoteLoggingConstraintProvider;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun configure (Lorg/json/JSONObject;Landroid/content/Context;)V
+	public fun disable ()V
+	public fun enable ()V
+	public final fun flushLogs (Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)V
+	public fun forNamespace (Ljava/lang/String;)Lcom/amplifyframework/logging/Logger;
+	public fun getEscapeHatch ()Laws/sdk/kotlin/services/cloudwatchlogs/CloudWatchLogsClient;
+	public synthetic fun getEscapeHatch ()Ljava/lang/Object;
+	public fun getPluginKey ()Ljava/lang/String;
+	public fun getVersion ()Ljava/lang/String;
+	public fun logger (Lcom/amplifyframework/core/category/CategoryType;Ljava/lang/String;)Lcom/amplifyframework/logging/Logger;
+	public fun logger (Ljava/lang/String;)Lcom/amplifyframework/logging/Logger;
+}
+
+public final class com/amplifyframework/logging/cloudwatch/AWSCloudWatchLoggingPlugin$Companion {
+}
+
+public final class com/amplifyframework/logging/cloudwatch/BuildConfig {
+	public static final field BUILD_TYPE Ljava/lang/String;
+	public static final field DEBUG Z
+	public static final field LIBRARY_PACKAGE_NAME Ljava/lang/String;
+	public static final field VERSION_NAME Ljava/lang/String;
+	public fun <init> ()V
+}
+
+public final class com/amplifyframework/logging/cloudwatch/CloudWatchLogger : com/amplifyframework/logging/Logger {
+	public fun debug (Ljava/lang/String;)V
+	public fun error (Ljava/lang/String;)V
+	public fun error (Ljava/lang/String;Ljava/lang/Throwable;)V
+	public fun getNamespace ()Ljava/lang/String;
+	public fun getThresholdLevel ()Lcom/amplifyframework/logging/LogLevel;
+	public fun info (Ljava/lang/String;)V
+	public fun verbose (Ljava/lang/String;)V
+	public fun warn (Ljava/lang/String;)V
+	public fun warn (Ljava/lang/String;Ljava/lang/Throwable;)V
+}
+
+public final class com/amplifyframework/logging/cloudwatch/DefaultRemoteLoggingConstraintProvider : com/amplifyframework/logging/cloudwatch/RemoteLoggingConstraintProvider {
+	public fun <init> (Ljava/net/URL;Ljava/lang/String;)V
+	public fun <init> (Ljava/net/URL;Ljava/lang/String;I)V
+	public fun <init> (Ljava/net/URL;Ljava/lang/String;ILokhttp3/OkHttpClient;)V
+	public fun <init> (Ljava/net/URL;Ljava/lang/String;ILokhttp3/OkHttpClient;Laws/smithy/kotlin/runtime/auth/awscredentials/CredentialsProvider;)V
+	public fun <init> (Ljava/net/URL;Ljava/lang/String;ILokhttp3/OkHttpClient;Laws/smithy/kotlin/runtime/auth/awscredentials/CredentialsProvider;Lkotlinx/coroutines/CoroutineDispatcher;)V
+	public synthetic fun <init> (Ljava/net/URL;Ljava/lang/String;ILokhttp3/OkHttpClient;Laws/smithy/kotlin/runtime/auth/awscredentials/CredentialsProvider;Lkotlinx/coroutines/CoroutineDispatcher;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun fetchLoggingConfig (Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
+	public fun getConstraintsSyncInterval ()I
+}
+
+public abstract interface class com/amplifyframework/logging/cloudwatch/RemoteLoggingConstraintProvider {
+	public abstract fun fetchLoggingConfig (Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
+	public abstract fun getConstraintsSyncInterval ()I
+}
+
+public final class com/amplifyframework/logging/cloudwatch/models/AWSCloudWatchLoggingPluginConfiguration {
+	public static final field Companion Lcom/amplifyframework/logging/cloudwatch/models/AWSCloudWatchLoggingPluginConfiguration$Companion;
+	public synthetic fun <init> (ILjava/lang/String;Ljava/lang/String;ZIILcom/amplifyframework/logging/cloudwatch/models/DefaultRemoteConfiguration;Lcom/amplifyframework/logging/cloudwatch/models/LoggingConstraints;Lkotlinx/serialization/internal/SerializationConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Z)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;ZI)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;ZII)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;ZIILcom/amplifyframework/logging/cloudwatch/models/DefaultRemoteConfiguration;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;ZIILcom/amplifyframework/logging/cloudwatch/models/DefaultRemoteConfiguration;Lcom/amplifyframework/logging/cloudwatch/models/LoggingConstraints;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ZIILcom/amplifyframework/logging/cloudwatch/models/DefaultRemoteConfiguration;Lcom/amplifyframework/logging/cloudwatch/models/LoggingConstraints;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Z
+	public final fun component4 ()I
+	public final fun component5 ()I
+	public final fun component6 ()Lcom/amplifyframework/logging/cloudwatch/models/DefaultRemoteConfiguration;
+	public final fun component7 ()Lcom/amplifyframework/logging/cloudwatch/models/LoggingConstraints;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;ZIILcom/amplifyframework/logging/cloudwatch/models/DefaultRemoteConfiguration;Lcom/amplifyframework/logging/cloudwatch/models/LoggingConstraints;)Lcom/amplifyframework/logging/cloudwatch/models/AWSCloudWatchLoggingPluginConfiguration;
+	public static synthetic fun copy$default (Lcom/amplifyframework/logging/cloudwatch/models/AWSCloudWatchLoggingPluginConfiguration;Ljava/lang/String;Ljava/lang/String;ZIILcom/amplifyframework/logging/cloudwatch/models/DefaultRemoteConfiguration;Lcom/amplifyframework/logging/cloudwatch/models/LoggingConstraints;ILjava/lang/Object;)Lcom/amplifyframework/logging/cloudwatch/models/AWSCloudWatchLoggingPluginConfiguration;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDefaultRemoteConfiguration ()Lcom/amplifyframework/logging/cloudwatch/models/DefaultRemoteConfiguration;
+	public final fun getEnable ()Z
+	public final fun getFlushIntervalInSeconds ()I
+	public final fun getLocalStoreMaxSizeInMB ()I
+	public final fun getLogGroupName ()Ljava/lang/String;
+	public final fun getLoggingConstraints ()Lcom/amplifyframework/logging/cloudwatch/models/LoggingConstraints;
+	public final fun getRegion ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+	public static final synthetic fun write$Self (Lcom/amplifyframework/logging/cloudwatch/models/AWSCloudWatchLoggingPluginConfiguration;Lkotlinx/serialization/encoding/CompositeEncoder;Lkotlinx/serialization/descriptors/SerialDescriptor;)V
+}
+
+public final class com/amplifyframework/logging/cloudwatch/models/AWSCloudWatchLoggingPluginConfiguration$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lcom/amplifyframework/logging/cloudwatch/models/AWSCloudWatchLoggingPluginConfiguration$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/amplifyframework/logging/cloudwatch/models/AWSCloudWatchLoggingPluginConfiguration;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/amplifyframework/logging/cloudwatch/models/AWSCloudWatchLoggingPluginConfiguration;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/amplifyframework/logging/cloudwatch/models/AWSCloudWatchLoggingPluginConfiguration$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/amplifyframework/logging/cloudwatch/models/DefaultRemoteConfiguration {
+	public static final field Companion Lcom/amplifyframework/logging/cloudwatch/models/DefaultRemoteConfiguration$Companion;
+	public synthetic fun <init> (ILjava/lang/String;ILkotlinx/serialization/internal/SerializationConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;)V
+	public fun <init> (Ljava/lang/String;I)V
+	public synthetic fun <init> (Ljava/lang/String;IILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()I
+	public final fun copy (Ljava/lang/String;I)Lcom/amplifyframework/logging/cloudwatch/models/DefaultRemoteConfiguration;
+	public static synthetic fun copy$default (Lcom/amplifyframework/logging/cloudwatch/models/DefaultRemoteConfiguration;Ljava/lang/String;IILjava/lang/Object;)Lcom/amplifyframework/logging/cloudwatch/models/DefaultRemoteConfiguration;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getEndpoint ()Ljava/lang/String;
+	public final fun getRefreshIntervalInSeconds ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+	public static final synthetic fun write$Self (Lcom/amplifyframework/logging/cloudwatch/models/DefaultRemoteConfiguration;Lkotlinx/serialization/encoding/CompositeEncoder;Lkotlinx/serialization/descriptors/SerialDescriptor;)V
+}
+
+public final class com/amplifyframework/logging/cloudwatch/models/DefaultRemoteConfiguration$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lcom/amplifyframework/logging/cloudwatch/models/DefaultRemoteConfiguration$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/amplifyframework/logging/cloudwatch/models/DefaultRemoteConfiguration;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/amplifyframework/logging/cloudwatch/models/DefaultRemoteConfiguration;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/amplifyframework/logging/cloudwatch/models/DefaultRemoteConfiguration$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/amplifyframework/logging/cloudwatch/models/LoggingConstraints {
+	public static final field Companion Lcom/amplifyframework/logging/cloudwatch/models/LoggingConstraints$Companion;
+	public fun <init> ()V
+	public synthetic fun <init> (ILcom/amplifyframework/logging/LogLevel;Ljava/util/Map;Ljava/util/Map;Lkotlinx/serialization/internal/SerializationConstructorMarker;)V
+	public fun <init> (Lcom/amplifyframework/logging/LogLevel;)V
+	public fun <init> (Lcom/amplifyframework/logging/LogLevel;Ljava/util/Map;)V
+	public fun <init> (Lcom/amplifyframework/logging/LogLevel;Ljava/util/Map;Ljava/util/Map;)V
+	public synthetic fun <init> (Lcom/amplifyframework/logging/LogLevel;Ljava/util/Map;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lcom/amplifyframework/logging/LogLevel;
+	public final fun component2 ()Ljava/util/Map;
+	public final fun component3 ()Ljava/util/Map;
+	public final fun copy (Lcom/amplifyframework/logging/LogLevel;Ljava/util/Map;Ljava/util/Map;)Lcom/amplifyframework/logging/cloudwatch/models/LoggingConstraints;
+	public static synthetic fun copy$default (Lcom/amplifyframework/logging/cloudwatch/models/LoggingConstraints;Lcom/amplifyframework/logging/LogLevel;Ljava/util/Map;Ljava/util/Map;ILjava/lang/Object;)Lcom/amplifyframework/logging/cloudwatch/models/LoggingConstraints;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCategoryLogLevel ()Ljava/util/Map;
+	public final fun getDefaultLogLevel ()Lcom/amplifyframework/logging/LogLevel;
+	public final fun getUserLogLevel ()Ljava/util/Map;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+	public static final synthetic fun write$Self (Lcom/amplifyframework/logging/cloudwatch/models/LoggingConstraints;Lkotlinx/serialization/encoding/CompositeEncoder;Lkotlinx/serialization/descriptors/SerialDescriptor;)V
+}
+
+public final class com/amplifyframework/logging/cloudwatch/models/LoggingConstraints$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lcom/amplifyframework/logging/cloudwatch/models/LoggingConstraints$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/amplifyframework/logging/cloudwatch/models/LoggingConstraints;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/amplifyframework/logging/cloudwatch/models/LoggingConstraints;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/amplifyframework/logging/cloudwatch/models/LoggingConstraints$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/amplifyframework/logging/cloudwatch/models/UserLogLevel {
+	public static final field Companion Lcom/amplifyframework/logging/cloudwatch/models/UserLogLevel$Companion;
+	public fun <init> ()V
+	public synthetic fun <init> (ILcom/amplifyframework/logging/LogLevel;Ljava/util/Map;Lkotlinx/serialization/internal/SerializationConstructorMarker;)V
+	public fun <init> (Lcom/amplifyframework/logging/LogLevel;)V
+	public fun <init> (Lcom/amplifyframework/logging/LogLevel;Ljava/util/Map;)V
+	public synthetic fun <init> (Lcom/amplifyframework/logging/LogLevel;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lcom/amplifyframework/logging/LogLevel;
+	public final fun component2 ()Ljava/util/Map;
+	public final fun copy (Lcom/amplifyframework/logging/LogLevel;Ljava/util/Map;)Lcom/amplifyframework/logging/cloudwatch/models/UserLogLevel;
+	public static synthetic fun copy$default (Lcom/amplifyframework/logging/cloudwatch/models/UserLogLevel;Lcom/amplifyframework/logging/LogLevel;Ljava/util/Map;ILjava/lang/Object;)Lcom/amplifyframework/logging/cloudwatch/models/UserLogLevel;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCategoryLogLevel ()Ljava/util/Map;
+	public final fun getDefaultLogLevel ()Lcom/amplifyframework/logging/LogLevel;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+	public static final synthetic fun write$Self (Lcom/amplifyframework/logging/cloudwatch/models/UserLogLevel;Lkotlinx/serialization/encoding/CompositeEncoder;Lkotlinx/serialization/descriptors/SerialDescriptor;)V
+}
+
+public final class com/amplifyframework/logging/cloudwatch/models/UserLogLevel$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lcom/amplifyframework/logging/cloudwatch/models/UserLogLevel$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/amplifyframework/logging/cloudwatch/models/UserLogLevel;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/amplifyframework/logging/cloudwatch/models/UserLogLevel;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/amplifyframework/logging/cloudwatch/models/UserLogLevel$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+

@@ -1,0 +1,74 @@
+public final class com/amplifyframework/pushnotifications/pinpoint/AWSPinpointPushNotificationsConfiguration {
+	public static final field Companion Lcom/amplifyframework/pushnotifications/pinpoint/AWSPinpointPushNotificationsConfiguration$Companion;
+	public final fun getAppId ()Ljava/lang/String;
+	public final fun getRegion ()Ljava/lang/String;
+}
+
+public final class com/amplifyframework/pushnotifications/pinpoint/AWSPinpointPushNotificationsConfiguration$Companion {
+	public final fun fromJson (Lorg/json/JSONObject;)Lcom/amplifyframework/pushnotifications/pinpoint/AWSPinpointPushNotificationsConfiguration;
+}
+
+public final class com/amplifyframework/pushnotifications/pinpoint/AWSPinpointPushNotificationsPlugin : com/amplifyframework/notifications/pushnotifications/PushNotificationsPlugin {
+	public static final field Companion Lcom/amplifyframework/pushnotifications/pinpoint/AWSPinpointPushNotificationsPlugin$Companion;
+	public fun <init> ()V
+	public fun configure (Lorg/json/JSONObject;Landroid/content/Context;)V
+	public fun getEscapeHatch ()Laws/sdk/kotlin/services/pinpoint/PinpointClient;
+	public synthetic fun getEscapeHatch ()Ljava/lang/Object;
+	public fun getPluginKey ()Ljava/lang/String;
+	public fun getVersion ()Ljava/lang/String;
+	public fun handleNotificationReceived (Lcom/amplifyframework/notifications/pushnotifications/NotificationPayload;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
+	public fun identifyUser (Ljava/lang/String;Lcom/amplifyframework/analytics/UserProfile;Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)V
+	public fun identifyUser (Ljava/lang/String;Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)V
+	public fun recordNotificationOpened (Lcom/amplifyframework/notifications/pushnotifications/NotificationPayload;Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)V
+	public fun recordNotificationReceived (Lcom/amplifyframework/notifications/pushnotifications/NotificationPayload;Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)V
+	public fun registerDevice (Ljava/lang/String;Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)V
+	public fun shouldHandleNotification (Lcom/amplifyframework/notifications/pushnotifications/NotificationPayload;)Z
+}
+
+public final class com/amplifyframework/pushnotifications/pinpoint/AWSPinpointPushNotificationsPlugin$Companion {
+}
+
+public final class com/amplifyframework/pushnotifications/pinpoint/BuildConfig {
+	public static final field BUILD_TYPE Ljava/lang/String;
+	public static final field DEBUG Z
+	public static final field LIBRARY_PACKAGE_NAME Ljava/lang/String;
+	public static final field VERSION_NAME Ljava/lang/String;
+	public fun <init> ()V
+}
+
+public final class com/amplifyframework/pushnotifications/pinpoint/FCMPushNotificationService : com/google/firebase/messaging/FirebaseMessagingService {
+	public static final field Companion Lcom/amplifyframework/pushnotifications/pinpoint/FCMPushNotificationService$Companion;
+	public fun <init> ()V
+	public fun handleIntent (Landroid/content/Intent;)V
+	public fun onNewToken (Ljava/lang/String;)V
+}
+
+public final class com/amplifyframework/pushnotifications/pinpoint/FCMPushNotificationService$Companion {
+}
+
+public final class com/amplifyframework/pushnotifications/pinpoint/models/AWSNotificationsUserProfile : com/amplifyframework/analytics/UserProfile, com/amplifyframework/pinpoint/core/models/AWSPinpointUserProfileBehavior {
+	public static final field Companion Lcom/amplifyframework/pushnotifications/pinpoint/models/AWSNotificationsUserProfile$Companion;
+	public static final fun builder ()Lcom/amplifyframework/pushnotifications/pinpoint/models/AWSNotificationsUserProfile$Builder;
+	public final fun component1 ()Lcom/amplifyframework/pushnotifications/pinpoint/models/AWSNotificationsUserProfile$Builder;
+	public final fun copy (Lcom/amplifyframework/pushnotifications/pinpoint/models/AWSNotificationsUserProfile$Builder;)Lcom/amplifyframework/pushnotifications/pinpoint/models/AWSNotificationsUserProfile;
+	public static synthetic fun copy$default (Lcom/amplifyframework/pushnotifications/pinpoint/models/AWSNotificationsUserProfile;Lcom/amplifyframework/pushnotifications/pinpoint/models/AWSNotificationsUserProfile$Builder;ILjava/lang/Object;)Lcom/amplifyframework/pushnotifications/pinpoint/models/AWSNotificationsUserProfile;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBuilder ()Lcom/amplifyframework/pushnotifications/pinpoint/models/AWSNotificationsUserProfile$Builder;
+	public fun getUserAttributes ()Lcom/amplifyframework/analytics/AnalyticsProperties;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/amplifyframework/pushnotifications/pinpoint/models/AWSNotificationsUserProfile$Builder : com/amplifyframework/analytics/UserProfile$Builder {
+	public fun <init> ()V
+	public synthetic fun build ()Lcom/amplifyframework/analytics/UserProfile;
+	public fun build ()Lcom/amplifyframework/pushnotifications/pinpoint/models/AWSNotificationsUserProfile;
+	public final fun getUserAttributes ()Lcom/amplifyframework/analytics/AnalyticsProperties;
+	public final fun userAttributes (Lcom/amplifyframework/analytics/AnalyticsProperties;)Lcom/amplifyframework/pushnotifications/pinpoint/models/AWSNotificationsUserProfile$Builder;
+}
+
+public final class com/amplifyframework/pushnotifications/pinpoint/models/AWSNotificationsUserProfile$Companion {
+	public final fun builder ()Lcom/amplifyframework/pushnotifications/pinpoint/models/AWSNotificationsUserProfile$Builder;
+	public final fun invoke (Lkotlin/jvm/functions/Function1;)Lcom/amplifyframework/pushnotifications/pinpoint/models/AWSNotificationsUserProfile;
+}
+
