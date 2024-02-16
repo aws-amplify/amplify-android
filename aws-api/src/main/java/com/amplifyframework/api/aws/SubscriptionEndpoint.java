@@ -117,7 +117,7 @@ final class SubscriptionEndpoint {
                             onSubscriptionComplete);
     }
 
-    synchronized <T> void requestSubscription(
+    <T> void requestSubscription(
             @NonNull GraphQLRequest<T> request,
             @NonNull AuthorizationType authType,
             @NonNull Consumer<String> onSubscriptionStarted,
@@ -180,6 +180,8 @@ final class SubscriptionEndpoint {
                 .toString();
 
             socket.send(jsonMessage);
+            LOG.info("Send to ws: " + jsonMessage);
+
         } catch (JSONException | ApiException exception) {
             // If the subscriptionId was still pending, then we can call the onSubscriptionError
             if (pendingSubscriptionIds.remove(subscriptionId)) {
