@@ -641,11 +641,8 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
 
         while (!queue.isEmpty()) {
             TableInfo currentInfo = queue.poll();
-            if (currentInfo == null) {
-                throw new IllegalStateException("TableInfo is unexpectedly null while building Joins.");
-            }
             SQLiteTable table = currentInfo.getSQLiteTable();
-            String tableAlias = currentInfo.getAlias();
+            final String tableAlias = currentInfo.getAlias();
 
             final Iterator<SQLiteColumn> foreignKeyIterator = table.getForeignKeys().iterator();
             while (foreignKeyIterator.hasNext()) {
@@ -718,14 +715,11 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
         private final String alias;
 
         TableInfo(SQLiteTable table, String alias) {
-            this.table = table;
-            this.alias = alias;
+            this.table = Objects.requireNonNull(table, "Table cannot be null");
+            this.alias = Objects.requireNonNull(alias, "Alias cannot be null");
         }
 
         public SQLiteTable getSQLiteTable() {
-            if (this.table == null) {
-                throw new IllegalStateException("SQLiteTable has not been initialized.");
-            }
             return table;
         }
 
