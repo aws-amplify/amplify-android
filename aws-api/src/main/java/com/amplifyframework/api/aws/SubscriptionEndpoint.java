@@ -103,20 +103,6 @@ final class SubscriptionEndpoint {
         this.okHttpClient = okHttpClientBuilder.build();
     }
 
-    synchronized <T> void requestSubscription(
-        @NonNull GraphQLRequest<T> request,
-        @NonNull Consumer<String> onSubscriptionStarted,
-        @NonNull Consumer<GraphQLResponse<T>> onNextItem,
-        @NonNull Consumer<ApiException> onSubscriptionError,
-        @NonNull Action onSubscriptionComplete) {
-        requestSubscription(request,
-                            apiConfiguration.getAuthorizationType(),
-                            onSubscriptionStarted,
-                            onNextItem,
-                            onSubscriptionError,
-                            onSubscriptionComplete);
-    }
-
     <T> void requestSubscription(
             @NonNull GraphQLRequest<T> request,
             @NonNull AuthorizationType authType,
