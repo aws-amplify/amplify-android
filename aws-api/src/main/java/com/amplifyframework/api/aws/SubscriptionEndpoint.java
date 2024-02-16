@@ -166,7 +166,6 @@ final class SubscriptionEndpoint {
                 .toString();
 
             socket.send(jsonMessage);
-
         } catch (JSONException | ApiException exception) {
             // If the subscriptionId was still pending, then we can call the onSubscriptionError
             if (pendingSubscriptionIds.remove(subscriptionId)) {
