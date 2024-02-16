@@ -52,6 +52,7 @@ public final class SubscriptionEndpointTest {
     private SubscriptionEndpoint subscriptionEndpoint;
     private String eventId;
     private Set<String> subscriptionIdsForRelease;
+    private ApiConfiguration apiConfiguration;
 
     /**
      * Create an {@link SubscriptionEndpoint}.
@@ -68,7 +69,7 @@ public final class SubscriptionEndpointTest {
             .getJSONObject("plugins")
             .getJSONObject("awsAPIPlugin");
         AWSApiPluginConfiguration pluginConfiguration = AWSApiPluginConfigurationReader.readFrom(configJson);
-        ApiConfiguration apiConfiguration = pluginConfiguration.getApi(endpointConfigKey);
+        apiConfiguration = pluginConfiguration.getApi(endpointConfigKey);
         assertNotNull(apiConfiguration);
 
         final GraphQLResponse.Factory responseFactory = new GsonGraphQLResponseFactory();
@@ -184,6 +185,7 @@ public final class SubscriptionEndpointTest {
             executor.execute(() ->
                 subscriptionEndpoint.requestSubscription(
                     request,
+                    apiConfiguration.getAuthorizationType(),
                     onResult,
                     item -> {
                         final String message;
