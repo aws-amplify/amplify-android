@@ -410,12 +410,12 @@ public final class SQLiteStorageAdapterQueryTest {
 
     /**
      * Test that querying the saved item with multiple paths for foreign keys to the same
-     * model along with Multiple conditions and Custom Primary Key correctly forms the where clause
+     * model with Custom Primary Key correctly forms the where clause
      * and returns expected data.
-     * @throws DataStoreException On unexpected failure manipulating items in/out of DataStore.
+     * @throws AmplifyException On unexpected failure manipulating items in/out of DataStore.
      */
     @Test
-    public void querySavedDataWithMultipleJoinPathsWithMultipleConditionsAndCPK() throws DataStoreException {
+    public void querySavedDataWithCPK() throws AmplifyException {
         setupForBlogCPKModel();
         final String blogOwnerId = UUID.randomUUID().toString();
         final String blogId = UUID.randomUUID().toString();
@@ -436,30 +436,74 @@ public final class SQLiteStorageAdapterQueryTest {
                 .id(postId)
                 .title("Placeholder title")
                 .rating(5)
-                .blog(blog)
                 .blogOwner(blogOwner)
+                 .blog(blog)
                 .build();
 
         adapter.save(blogOwner);
         adapter.save(blog);
         adapter.save(post);
-        String expectedBlogOwnerCPK = "\"" + blogOwnerId + "\"#\"Sample BlogOwner\"";
+
+        // Basic CPK Query
         final List<PostCPK> posts = adapter.query(PostCPK.class,
-                Where.matches(PostCPK.BLOG_OWNER.eq(expectedBlogOwnerCPK).and(PostCPK.RATING.gt(4)
-                        .and(PostCPK.TITLE.eq("Placeholder title")))));
+                Where.identifier(PostCPK.class, new PostCPK.PostCPKIdentifier(postId, "Placeholder title")));
         assertTrue(posts.contains(post));
     }
 
+    /**
+     * Tests the retrieval of {@link PostCPK} objects through a query operation without the presence
+     * of intermediate {@link Blog} records in a complex relationship chain. The relationship chain
+     * tested here is {@link BlogOwnerCPK} -> {@link Blog} -> {@link PostCPK} and
+     * {@link BlogOwnerCPK} -> {@link PostCPK}. The test ensures that {@link PostCPK} objects
+     * associated directly with a {@link BlogOwnerCPK} can be successfully retrieved even when
+     * the {@link Blog} records, which are typically part of the path in the relationship, are not
+     * present in the database.
+     * <p>
+     * This test is important for scenarios where the data model allows for direct associations
+     * between {@link BlogOwnerCPK} and {@link PostCPK} without the necessity of linking through
+     * a {@link Blog} record, ensuring data integrity and query capabilities in partial data states.
+     *
+     * @throws AmplifyException if an error occurs during the setup or execution of the query
+     *                         operation, indicating a failure in the data layer or the query
+     *                         construction.
+     */
+    @Test
+    public void querySavedDataWithMultipleJoinPathsWithMultipleConditionsAndCPK() throws AmplifyException {
+        setupForBlogCPKModel();
+        final String blogOwnerId = UUID.randomUUID().toString();
+        final String blogId = UUID.randomUUID().toString();
+        final String postId = UUID.randomUUID().toString();
+
+        final BlogOwnerCPK blogOwner = BlogOwnerCPK.builder()
+                .id(blogOwnerId)
+                .name("Sample BlogOwner")
+                .build();
+
+        final PostCPK post = PostCPK.builder()
+                .id(postId)
+                .title("Placeholder title")
+                .rating(5)
+                .blogOwner(blogOwner)
+                .build();
+        adapter.save(blogOwner);
+        adapter.save(post);
+        String expectedBlogOwnerCPK = "\"" + blogOwnerId + "\"#\"Sample BlogOwner\"";
+        final List<PostCPK> postsByBlogOwner = adapter.query(PostCPK.class,
+                Where.identifier(PostCPK.class, new PostCPK.PostCPKIdentifier(postId, "Placeholder title"))
+                .matches(PostCPK.BLOG_OWNER.eq(expectedBlogOwnerCPK).and(PostCPK.RATING.gt(4)
+                        .and(PostCPK.TITLE.eq("Placeholder title")))));
+        assertTrue(postsByBlogOwner.contains(post));
+    }
 
     /**
      * Test that querying the saved item with multiple paths for foreign keys to the same
      * model with missing data for intermediate model in join path and Custom Primary Key
      * correctly forms the where clause and returns expected data.
-     * @throws DataStoreException On unexpected failure manipulating items in/out of DataStore
+     * @throws AmplifyException On unexpected failure manipulating items in/out of DataStore
      */
     @Test
     public void queryMultipleJoinWithMultipleRecordsWithMultipleConditionsAndCPK()
-            throws DataStoreException {
+            throws AmplifyException {
         setupForBlogCPKModel();
         final String blogOwnerAlphaId = UUID.randomUUID().toString();
         final String blogOwnerBetaId = UUID.randomUUID().toString();
@@ -517,19 +561,22 @@ public final class SQLiteStorageAdapterQueryTest {
         String expectedGammaBlogOwnerCPK = "\"" + blogOwnerGammaId + "\"#\"Gamma\"";
 
         List<PostCPK> posts = adapter.query(PostCPK.class,
-                Where.matches(PostCPK.BLOG_OWNER.eq(expectedAlphaBlogOwnerCPK).and(PostCPK.RATING.gt(4)
+                Where.identifier(PostCPK.class, new PostCPK.PostCPKIdentifier(alphaPostId, "Alpha Post"))
+                        .matches(PostCPK.BLOG_OWNER.eq(expectedAlphaBlogOwnerCPK).and(PostCPK.RATING.gt(4)
                         .and(PostCPK.TITLE.eq("Alpha Post")))));
         assertEquals(1, posts.size());
         assertTrue(posts.contains(postByAlpha));
 
         posts = adapter.query(PostCPK.class,
-                Where.matches(PostCPK.BLOG_OWNER.eq(expectedBetaBlogOwnerCPK).and(PostCPK.RATING.gt(4)
+                Where.identifier(PostCPK.class, new PostCPK.PostCPKIdentifier(betaPostId, "Beta Post"))
+                        .matches(PostCPK.BLOG_OWNER.eq(expectedBetaBlogOwnerCPK).and(PostCPK.RATING.gt(4)
                         .and(PostCPK.TITLE.eq("Beta Post")))));
         assertEquals(1, posts.size());
         assertTrue(posts.contains(postByBeta));
 
         posts = adapter.query(PostCPK.class,
-                Where.matches(PostCPK.BLOG_OWNER.eq(expectedGammaBlogOwnerCPK).and(PostCPK.RATING.gt(4)
+                Where.identifier(PostCPK.class, new PostCPK.PostCPKIdentifier(gammaPostId, "Gamma Post"))
+                        .matches(PostCPK.BLOG_OWNER.eq(expectedGammaBlogOwnerCPK).and(PostCPK.RATING.gt(4)
                         .and(PostCPK.TITLE.eq("Gamma Post")))));
         assertEquals(1, posts.size());
         assertTrue(posts.contains(postByGamma));
@@ -575,7 +622,6 @@ public final class SQLiteStorageAdapterQueryTest {
         assertEquals(comments.get(0).getPost().getBlog(), blog);
         assertEquals(comments.get(0).getPost().getBlog().getOwner(), blogOwner);
     }
-
 
     /**
      * Test querying the saved item in the SQLite database with
