@@ -150,8 +150,9 @@ final class SubscriptionProcessor {
             LOG.debug("Waiting for subscriptions to start.");
             subscriptionsStarted = latch.abortableAwait(adjustedTimeoutSeconds, TimeUnit.SECONDS);
         } catch (InterruptedException exception) {
-            LOG.warn("Subscription operations were interrupted during setup.");
-            return;
+            String errorMessage = "Subscription operations were interrupted during setup.";
+            LOG.warn(errorMessage);
+            throw new DataStoreException(errorMessage, "Retry");
         }
 
         if (subscriptionsStarted) {
