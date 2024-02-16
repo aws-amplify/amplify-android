@@ -630,9 +630,9 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
      * traversal depth limits may be advisable to ensure optimal performance and prevent excessively
      * deep traversal.
      */
-    private void buildJoinsUsingBFS(SQLiteTable rootTable, Map<String, List<SQLiteColumn>> columns,
-                                    StringBuilder joinStatement, Map<String, Integer> tableCount,
-                                    String rootTableAlias) {
+    private void buildJoinsUsingBFS(final SQLiteTable rootTable, final Map<String, List<SQLiteColumn>> columns,
+                                    StringBuilder joinStatement, final Map<String, Integer> tableCount,
+                                    final String rootTableAlias) {
         Queue<TableInfo> queue = new LinkedList<>();
         queue.add(new TableInfo(rootTable, rootTableAlias));
 
@@ -640,8 +640,8 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
         Set<String> visitedCombinations = new HashSet<>();
 
         while (!queue.isEmpty()) {
-            TableInfo currentInfo = queue.poll();
-            SQLiteTable table = currentInfo.getSQLiteTable();
+            final TableInfo currentInfo = queue.poll();
+            final SQLiteTable table = currentInfo.getSQLiteTable();
             final String tableAlias = currentInfo.getAlias();
 
             final Iterator<SQLiteColumn> foreignKeyIterator = table.getForeignKeys().iterator();
