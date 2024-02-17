@@ -133,7 +133,11 @@ class PushNotificationsUtils(
             builder.apply {
                 setContentTitle(payload.title)
                 setContentText(payload.body)
-                setSmallIcon(IconCompat.createWithBitmap(imageIcon))
+                if(imageIcon == null) {
+                    setSmallIcon(R.drawable.ic_launcher_foreground)
+                } else {
+                    setSmallIcon(IconCompat.createWithBitmap(imageIcon))
+                }
                 setContentIntent(pendingIntent)
                 setPriority(NotificationCompat.PRIORITY_DEFAULT)
                 setLargeIcon(largeImageIcon)
