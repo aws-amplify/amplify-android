@@ -25,11 +25,13 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.drawable.Icon
 import android.os.Build
 import androidx.annotation.ChecksSdkIntAtLeast
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.IconCompat
 import com.amplifyframework.pushnotifications.pinpoint.common.R
 import java.net.URL
 import kotlinx.coroutines.CoroutineScope
@@ -110,7 +112,8 @@ class PushNotificationsUtils(
         targetClass: Class<*>?
     ) {
         CoroutineScope(Dispatchers.IO).launch {
-            val largeImageIcon = payload.imageUrl?.let { downloadImage(it) }
+            val imageIcon = payload.imageUrl?.let { downloadImage(it) }
+            val largeImageIcon = payload.largeImageUrl?.let { downloadImage(it) }
             val notificationIntent = Intent(context, payload.targetClass ?: targetClass)
             notificationIntent.putExtra("amplifyNotificationPayload", payload)
             notificationIntent.putExtra("notificationId", notificationId)
@@ -130,7 +133,7 @@ class PushNotificationsUtils(
             builder.apply {
                 setContentTitle(payload.title)
                 setContentText(payload.body)
-                setSmallIcon(R.drawable.ic_launcher_foreground)
+                setSmallIcon(IconCompat.createWithBitmap(imageIcon))
                 setContentIntent(pendingIntent)
                 setPriority(NotificationCompat.PRIORITY_DEFAULT)
                 setLargeIcon(largeImageIcon)
