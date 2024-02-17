@@ -1,0 +1,655 @@
+public final class com/amplifyframework/datastore/AWSDataStorePlugin : com/amplifyframework/datastore/DataStorePlugin {
+	public fun <init> ()V
+	public fun <init> (Lcom/amplifyframework/core/model/ModelProvider;)V
+	public fun <init> (Lcom/amplifyframework/datastore/DataStoreConfiguration;)V
+	public static fun builder ()Lcom/amplifyframework/datastore/AWSDataStorePlugin$Builder;
+	public fun clear (Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)V
+	public fun configure (Lorg/json/JSONObject;Landroid/content/Context;)V
+	public fun delete (Lcom/amplifyframework/core/model/Model;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
+	public fun delete (Lcom/amplifyframework/core/model/Model;Lcom/amplifyframework/core/model/query/predicate/QueryPredicate;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
+	public fun delete (Ljava/lang/Class;Lcom/amplifyframework/core/model/query/predicate/QueryPredicate;Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)V
+	public synthetic fun getEscapeHatch ()Ljava/lang/Object;
+	public fun getEscapeHatch ()Ljava/lang/Void;
+	public fun getPluginKey ()Ljava/lang/String;
+	public fun getVersion ()Ljava/lang/String;
+	public fun initialize (Landroid/content/Context;)V
+	public fun observe (Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Action;)V
+	public fun observe (Ljava/lang/Class;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Action;)V
+	public fun observe (Ljava/lang/Class;Lcom/amplifyframework/core/model/query/predicate/QueryPredicate;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Action;)V
+	public fun observe (Ljava/lang/Class;Ljava/io/Serializable;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Action;)V
+	public fun observe (Ljava/lang/String;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Action;)V
+	public fun observeQuery (Ljava/lang/Class;Lcom/amplifyframework/core/model/query/ObserveQueryOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Action;)V
+	public fun query (Ljava/lang/Class;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
+	public fun query (Ljava/lang/Class;Lcom/amplifyframework/core/model/query/QueryOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
+	public fun query (Ljava/lang/Class;Lcom/amplifyframework/core/model/query/predicate/QueryPredicate;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
+	public fun query (Ljava/lang/String;Lcom/amplifyframework/core/model/query/QueryOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
+	public fun save (Lcom/amplifyframework/core/model/Model;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
+	public fun save (Lcom/amplifyframework/core/model/Model;Lcom/amplifyframework/core/model/query/predicate/QueryPredicate;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
+	public fun start (Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)V
+	public fun stop (Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)V
+}
+
+public final class com/amplifyframework/datastore/AWSDataStorePlugin$Builder {
+	public fun authModeStrategy (Lcom/amplifyframework/api/aws/AuthModeStrategyType;)Lcom/amplifyframework/datastore/AWSDataStorePlugin$Builder;
+	public fun build ()Lcom/amplifyframework/datastore/AWSDataStorePlugin;
+	public fun dataStoreConfiguration (Lcom/amplifyframework/datastore/DataStoreConfiguration;)Lcom/amplifyframework/datastore/AWSDataStorePlugin$Builder;
+	public fun isSyncRetryEnabled (Ljava/lang/Boolean;)Lcom/amplifyframework/datastore/AWSDataStorePlugin$Builder;
+	public fun modelProvider (Lcom/amplifyframework/core/model/ModelProvider;)Lcom/amplifyframework/datastore/AWSDataStorePlugin$Builder;
+	public fun reachabilityMonitor (Lcom/amplifyframework/datastore/syncengine/ReachabilityMonitor;)Lcom/amplifyframework/datastore/AWSDataStorePlugin$Builder;
+	public fun schemaRegistry (Lcom/amplifyframework/core/model/SchemaRegistry;)Lcom/amplifyframework/datastore/AWSDataStorePlugin$Builder;
+}
+
+public final class com/amplifyframework/datastore/AmplifyDisposables {
+	public static fun fromCancelable (Lcom/amplifyframework/core/async/Cancelable;)Lio/reactivex/rxjava3/disposables/Disposable;
+	public static fun onErrorConsumerWrapperFor (Lio/reactivex/rxjava3/core/ObservableEmitter;)Lcom/amplifyframework/core/Consumer;
+}
+
+public final class com/amplifyframework/datastore/BuildConfig {
+	public static final field BUILD_TYPE Ljava/lang/String;
+	public static final field DEBUG Z
+	public static final field LIBRARY_PACKAGE_NAME Ljava/lang/String;
+	public static final field VERSION_NAME Ljava/lang/String;
+	public fun <init> ()V
+}
+
+public final class com/amplifyframework/datastore/DataStoreConfiguration {
+	public static fun builder ()Lcom/amplifyframework/datastore/DataStoreConfiguration$Builder;
+	public static fun defaults ()Lcom/amplifyframework/datastore/DataStoreConfiguration;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getConflictHandler ()Lcom/amplifyframework/datastore/DataStoreConflictHandler;
+	public fun getDoSyncRetry ()Ljava/lang/Boolean;
+	public fun getErrorHandler ()Lcom/amplifyframework/datastore/DataStoreErrorHandler;
+	public fun getMaxTimeLapseForObserveQuery ()Ljava/lang/Long;
+	public fun getObserveQueryMaxRecords ()Ljava/lang/Integer;
+	public fun getSyncExpressions ()Ljava/util/Map;
+	public fun getSyncIntervalInMinutes ()Ljava/lang/Long;
+	public fun getSyncIntervalMs ()Ljava/lang/Long;
+	public fun getSyncMaxRecords ()Ljava/lang/Integer;
+	public fun getSyncPageSize ()Ljava/lang/Integer;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/amplifyframework/datastore/DataStoreConfiguration$Builder {
+	public fun build ()Lcom/amplifyframework/datastore/DataStoreConfiguration;
+	public fun conflictHandler (Lcom/amplifyframework/datastore/DataStoreConflictHandler;)Lcom/amplifyframework/datastore/DataStoreConfiguration$Builder;
+	public fun doSyncRetry (Z)Lcom/amplifyframework/datastore/DataStoreConfiguration$Builder;
+	public fun errorHandler (Lcom/amplifyframework/datastore/DataStoreErrorHandler;)Lcom/amplifyframework/datastore/DataStoreConfiguration$Builder;
+	public fun observeQueryMaxRecords (Ljava/lang/Integer;)Lcom/amplifyframework/datastore/DataStoreConfiguration$Builder;
+	public fun observeQueryMaxTime (J)Lcom/amplifyframework/datastore/DataStoreConfiguration$Builder;
+	public fun syncExpression (Ljava/lang/Class;Lcom/amplifyframework/datastore/DataStoreSyncExpression;)Lcom/amplifyframework/datastore/DataStoreConfiguration$Builder;
+	public fun syncExpression (Ljava/lang/String;Lcom/amplifyframework/datastore/DataStoreSyncExpression;)Lcom/amplifyframework/datastore/DataStoreConfiguration$Builder;
+	public fun syncInterval (JLjava/util/concurrent/TimeUnit;)Lcom/amplifyframework/datastore/DataStoreConfiguration$Builder;
+	public fun syncMaxRecords (Ljava/lang/Integer;)Lcom/amplifyframework/datastore/DataStoreConfiguration$Builder;
+	public fun syncPageSize (Ljava/lang/Integer;)Lcom/amplifyframework/datastore/DataStoreConfiguration$Builder;
+}
+
+public abstract interface class com/amplifyframework/datastore/DataStoreConfigurationProvider {
+	public abstract fun getConfiguration ()Lcom/amplifyframework/datastore/DataStoreConfiguration;
+}
+
+public abstract interface class com/amplifyframework/datastore/DataStoreConflictHandler {
+	public static fun alwaysApplyRemote ()Lcom/amplifyframework/datastore/DataStoreConflictHandler;
+	public static fun alwaysRetryLocal ()Lcom/amplifyframework/datastore/DataStoreConflictHandler;
+	public abstract fun onConflictDetected (Lcom/amplifyframework/datastore/DataStoreConflictHandler$ConflictData;Lcom/amplifyframework/core/Consumer;)V
+}
+
+public final class com/amplifyframework/datastore/DataStoreConflictHandler$AlwaysApplyRemoteHandler : com/amplifyframework/datastore/DataStoreConflictHandler {
+	public fun <init> ()V
+	public fun onConflictDetected (Lcom/amplifyframework/datastore/DataStoreConflictHandler$ConflictData;Lcom/amplifyframework/core/Consumer;)V
+}
+
+public final class com/amplifyframework/datastore/DataStoreConflictHandler$AlwaysRetryLocalHandler : com/amplifyframework/datastore/DataStoreConflictHandler {
+	public fun <init> ()V
+	public fun onConflictDetected (Lcom/amplifyframework/datastore/DataStoreConflictHandler$ConflictData;Lcom/amplifyframework/core/Consumer;)V
+}
+
+public final class com/amplifyframework/datastore/DataStoreConflictHandler$ConflictData {
+	public static fun create (Lcom/amplifyframework/core/model/Model;Lcom/amplifyframework/core/model/Model;)Lcom/amplifyframework/datastore/DataStoreConflictHandler$ConflictData;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getLocal ()Lcom/amplifyframework/core/model/Model;
+	public fun getRemote ()Lcom/amplifyframework/core/model/Model;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/amplifyframework/datastore/DataStoreConflictHandler$ConflictResolutionDecision {
+	public static fun applyRemote ()Lcom/amplifyframework/datastore/DataStoreConflictHandler$ConflictResolutionDecision;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getCustomModel ()Lcom/amplifyframework/core/model/Model;
+	public fun getResolutionStrategy ()Lcom/amplifyframework/datastore/DataStoreConflictHandler$ResolutionStrategy;
+	public fun hashCode ()I
+	public static fun retry (Lcom/amplifyframework/core/model/Model;)Lcom/amplifyframework/datastore/DataStoreConflictHandler$ConflictResolutionDecision;
+	public static fun retryLocal ()Lcom/amplifyframework/datastore/DataStoreConflictHandler$ConflictResolutionDecision;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/amplifyframework/datastore/DataStoreConflictHandler$ResolutionStrategy : java/lang/Enum {
+	public static final field APPLY_REMOTE Lcom/amplifyframework/datastore/DataStoreConflictHandler$ResolutionStrategy;
+	public static final field RETRY Lcom/amplifyframework/datastore/DataStoreConflictHandler$ResolutionStrategy;
+	public static final field RETRY_LOCAL Lcom/amplifyframework/datastore/DataStoreConflictHandler$ResolutionStrategy;
+	public static fun valueOf (Ljava/lang/String;)Lcom/amplifyframework/datastore/DataStoreConflictHandler$ResolutionStrategy;
+	public static fun values ()[Lcom/amplifyframework/datastore/DataStoreConflictHandler$ResolutionStrategy;
+}
+
+public abstract interface class com/amplifyframework/datastore/DataStoreErrorHandler : com/amplifyframework/core/Consumer {
+}
+
+public abstract interface class com/amplifyframework/datastore/DataStoreSyncExpression {
+	public abstract fun resolvePredicate ()Lcom/amplifyframework/core/model/query/predicate/QueryPredicate;
+}
+
+public final class com/amplifyframework/datastore/DefaultDataStoreErrorHandler : com/amplifyframework/datastore/DataStoreErrorHandler {
+	public fun accept (Lcom/amplifyframework/datastore/DataStoreException;)V
+	public synthetic fun accept (Ljava/lang/Object;)V
+	public static fun instance ()Lcom/amplifyframework/datastore/DataStoreErrorHandler;
+}
+
+public final class com/amplifyframework/datastore/appsync/AWSAppSyncScalarType : java/lang/Enum {
+	public static final field AWS_DATE Lcom/amplifyframework/datastore/appsync/AWSAppSyncScalarType;
+	public static final field AWS_DATE_TIME Lcom/amplifyframework/datastore/appsync/AWSAppSyncScalarType;
+	public static final field AWS_EMAIL Lcom/amplifyframework/datastore/appsync/AWSAppSyncScalarType;
+	public static final field AWS_IP_ADDRESS Lcom/amplifyframework/datastore/appsync/AWSAppSyncScalarType;
+	public static final field AWS_JSON Lcom/amplifyframework/datastore/appsync/AWSAppSyncScalarType;
+	public static final field AWS_PHONE Lcom/amplifyframework/datastore/appsync/AWSAppSyncScalarType;
+	public static final field AWS_TIME Lcom/amplifyframework/datastore/appsync/AWSAppSyncScalarType;
+	public static final field AWS_TIMESTAMP Lcom/amplifyframework/datastore/appsync/AWSAppSyncScalarType;
+	public static final field AWS_URL Lcom/amplifyframework/datastore/appsync/AWSAppSyncScalarType;
+	public static final field BOOLEAN Lcom/amplifyframework/datastore/appsync/AWSAppSyncScalarType;
+	public static final field FLOAT Lcom/amplifyframework/datastore/appsync/AWSAppSyncScalarType;
+	public static final field ID Lcom/amplifyframework/datastore/appsync/AWSAppSyncScalarType;
+	public static final field INT Lcom/amplifyframework/datastore/appsync/AWSAppSyncScalarType;
+	public static final field STRING Lcom/amplifyframework/datastore/appsync/AWSAppSyncScalarType;
+	public static fun fromString (Ljava/lang/String;)Lcom/amplifyframework/datastore/appsync/AWSAppSyncScalarType;
+	public fun stringValue ()Ljava/lang/String;
+	public fun toString ()Ljava/lang/String;
+	public static fun valueOf (Ljava/lang/String;)Lcom/amplifyframework/datastore/appsync/AWSAppSyncScalarType;
+	public static fun values ()[Lcom/amplifyframework/datastore/appsync/AWSAppSyncScalarType;
+}
+
+public abstract interface class com/amplifyframework/datastore/appsync/AppSync {
+	public abstract fun buildSyncRequest (Lcom/amplifyframework/core/model/ModelSchema;Ljava/lang/Long;Ljava/lang/Integer;Lcom/amplifyframework/core/model/query/predicate/QueryPredicate;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
+	public abstract fun create (Lcom/amplifyframework/core/model/Model;Lcom/amplifyframework/core/model/ModelSchema;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/core/async/Cancelable;
+	public abstract fun delete (Lcom/amplifyframework/core/model/Model;Lcom/amplifyframework/core/model/ModelSchema;Ljava/lang/Integer;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/core/async/Cancelable;
+	public abstract fun delete (Lcom/amplifyframework/core/model/Model;Lcom/amplifyframework/core/model/ModelSchema;Ljava/lang/Integer;Lcom/amplifyframework/core/model/query/predicate/QueryPredicate;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/core/async/Cancelable;
+	public abstract fun onCreate (Lcom/amplifyframework/core/model/ModelSchema;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Action;)Lcom/amplifyframework/core/async/Cancelable;
+	public abstract fun onDelete (Lcom/amplifyframework/core/model/ModelSchema;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Action;)Lcom/amplifyframework/core/async/Cancelable;
+	public abstract fun onUpdate (Lcom/amplifyframework/core/model/ModelSchema;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Action;)Lcom/amplifyframework/core/async/Cancelable;
+	public abstract fun sync (Lcom/amplifyframework/api/graphql/GraphQLRequest;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/core/async/Cancelable;
+	public abstract fun update (Lcom/amplifyframework/core/model/Model;Lcom/amplifyframework/core/model/ModelSchema;Ljava/lang/Integer;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/core/async/Cancelable;
+	public abstract fun update (Lcom/amplifyframework/core/model/Model;Lcom/amplifyframework/core/model/ModelSchema;Ljava/lang/Integer;Lcom/amplifyframework/core/model/query/predicate/QueryPredicate;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/core/async/Cancelable;
+}
+
+public final class com/amplifyframework/datastore/appsync/AppSyncClient : com/amplifyframework/datastore/appsync/AppSync {
+	public fun buildSyncRequest (Lcom/amplifyframework/core/model/ModelSchema;Ljava/lang/Long;Ljava/lang/Integer;Lcom/amplifyframework/core/model/query/predicate/QueryPredicate;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
+	public fun create (Lcom/amplifyframework/core/model/Model;Lcom/amplifyframework/core/model/ModelSchema;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/core/async/Cancelable;
+	public fun delete (Lcom/amplifyframework/core/model/Model;Lcom/amplifyframework/core/model/ModelSchema;Ljava/lang/Integer;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/core/async/Cancelable;
+	public fun delete (Lcom/amplifyframework/core/model/Model;Lcom/amplifyframework/core/model/ModelSchema;Ljava/lang/Integer;Lcom/amplifyframework/core/model/query/predicate/QueryPredicate;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/core/async/Cancelable;
+	public fun onCreate (Lcom/amplifyframework/core/model/ModelSchema;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Action;)Lcom/amplifyframework/core/async/Cancelable;
+	public fun onDelete (Lcom/amplifyframework/core/model/ModelSchema;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Action;)Lcom/amplifyframework/core/async/Cancelable;
+	public fun onUpdate (Lcom/amplifyframework/core/model/ModelSchema;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Action;)Lcom/amplifyframework/core/async/Cancelable;
+	public fun sync (Lcom/amplifyframework/api/graphql/GraphQLRequest;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/core/async/Cancelable;
+	public fun update (Lcom/amplifyframework/core/model/Model;Lcom/amplifyframework/core/model/ModelSchema;Ljava/lang/Integer;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/core/async/Cancelable;
+	public fun update (Lcom/amplifyframework/core/model/Model;Lcom/amplifyframework/core/model/ModelSchema;Ljava/lang/Integer;Lcom/amplifyframework/core/model/query/predicate/QueryPredicate;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/core/async/Cancelable;
+	public static fun via (Lcom/amplifyframework/api/graphql/GraphQLBehavior;)Lcom/amplifyframework/datastore/appsync/AppSyncClient;
+	public static fun via (Lcom/amplifyframework/api/graphql/GraphQLBehavior;Lcom/amplifyframework/api/aws/AuthModeStrategyType;)Lcom/amplifyframework/datastore/appsync/AppSyncClient;
+}
+
+public final class com/amplifyframework/datastore/appsync/AppSyncConflictUnhandledError {
+	public fun equals (Ljava/lang/Object;)Z
+	public static fun findFirst (Ljava/lang/Class;Ljava/util/List;)Lcom/amplifyframework/datastore/appsync/AppSyncConflictUnhandledError;
+	public fun getServerVersion ()Lcom/amplifyframework/datastore/appsync/ModelWithMetadata;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/amplifyframework/datastore/appsync/DataStoreGraphQLRequestOptions : com/amplifyframework/api/aws/GraphQLRequestOptions {
+	public fun <init> ()V
+	public fun leafSerializationBehavior ()Lcom/amplifyframework/api/aws/LeafSerializationBehavior;
+	public fun listField ()Ljava/lang/String;
+	public fun maxDepth ()I
+	public fun modelMetaFields ()Ljava/util/List;
+	public fun paginationFields ()Ljava/util/List;
+}
+
+public final class com/amplifyframework/datastore/model/CompoundModelProvider : com/amplifyframework/core/model/ModelProvider {
+	public fun customTypeNames ()Ljava/util/Set;
+	public fun customTypeSchemas ()Ljava/util/Map;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun modelNames ()Ljava/util/Set;
+	public fun modelSchemas ()Ljava/util/Map;
+	public fun models ()Ljava/util/Set;
+	public static fun of ([Lcom/amplifyframework/core/model/ModelProvider;)Lcom/amplifyframework/datastore/model/CompoundModelProvider;
+	public fun toString ()Ljava/lang/String;
+	public fun version ()Ljava/lang/String;
+}
+
+public abstract interface class com/amplifyframework/datastore/model/ModelFieldTypeConverter {
+	public abstract fun convertValueFromSource (Ljava/lang/Object;Lcom/amplifyframework/core/model/ModelField;)Ljava/lang/Object;
+	public abstract fun convertValueFromTarget (Ljava/lang/Object;Lcom/amplifyframework/core/model/ModelField;)Ljava/lang/Object;
+}
+
+public final class com/amplifyframework/datastore/model/ModelHelper {
+	public static fun getValue (Lcom/amplifyframework/core/model/Model;Lcom/amplifyframework/core/model/ModelField;)Ljava/lang/Object;
+}
+
+public final class com/amplifyframework/datastore/model/ModelProviderLocator {
+	public static fun locate ()Lcom/amplifyframework/core/model/ModelProvider;
+}
+
+public final class com/amplifyframework/datastore/model/SimpleModelProvider : com/amplifyframework/core/model/ModelProvider {
+	public static fun builder ()Lcom/amplifyframework/datastore/model/SimpleModelProvider$Builder;
+	public fun customTypeNames ()Ljava/util/Set;
+	public fun customTypeSchemas ()Ljava/util/Map;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public static fun instance (Ljava/lang/String;Ljava/util/Map;)Lcom/amplifyframework/datastore/model/SimpleModelProvider;
+	public static fun instance (Ljava/lang/String;Ljava/util/Map;Ljava/util/Map;)Lcom/amplifyframework/datastore/model/SimpleModelProvider;
+	public static fun instance (Ljava/lang/String;Ljava/util/Set;)Lcom/amplifyframework/datastore/model/SimpleModelProvider;
+	public static fun instance (Ljava/lang/String;[Ljava/lang/Class;)Lcom/amplifyframework/datastore/model/SimpleModelProvider;
+	public fun modelNames ()Ljava/util/Set;
+	public fun modelSchemas ()Ljava/util/Map;
+	public fun models ()Ljava/util/Set;
+	public fun toString ()Ljava/lang/String;
+	public fun version ()Ljava/lang/String;
+	public static fun withRandomVersion ([Ljava/lang/Class;)Lcom/amplifyframework/datastore/model/SimpleModelProvider;
+}
+
+public final class com/amplifyframework/datastore/model/SimpleModelProvider$Builder {
+	public fun addCustomTypeSchema (Lcom/amplifyframework/core/model/CustomTypeSchema;)Lcom/amplifyframework/datastore/model/SimpleModelProvider$Builder;
+	public fun addCustomTypeSchemas ([Lcom/amplifyframework/core/model/CustomTypeSchema;)Lcom/amplifyframework/datastore/model/SimpleModelProvider$Builder;
+	public fun addModel (Ljava/lang/Class;)Lcom/amplifyframework/datastore/model/SimpleModelProvider$Builder;
+	public final fun addModels ([Ljava/lang/Class;)Lcom/amplifyframework/datastore/model/SimpleModelProvider$Builder;
+	public fun build ()Lcom/amplifyframework/datastore/model/SimpleModelProvider;
+	public fun version (Ljava/lang/String;)Lcom/amplifyframework/datastore/model/SimpleModelProvider$Builder;
+}
+
+public final class com/amplifyframework/datastore/model/SystemModelsProviderFactory {
+	public static fun create ()Lcom/amplifyframework/core/model/ModelProvider;
+}
+
+public final class com/amplifyframework/datastore/storage/ItemChangeMapper {
+	public static fun map (Lcom/amplifyframework/datastore/storage/StorageItemChange;)Lcom/amplifyframework/datastore/DataStoreItemChange;
+}
+
+public final class com/amplifyframework/datastore/storage/StorageItemChange {
+	public static fun builder ()Lcom/amplifyframework/datastore/storage/StorageItemChange$Builder;
+	public fun changeId ()Ljava/util/UUID;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun initiator ()Lcom/amplifyframework/datastore/storage/StorageItemChange$Initiator;
+	public fun item ()Lcom/amplifyframework/core/model/Model;
+	public fun modelSchema ()Lcom/amplifyframework/core/model/ModelSchema;
+	public fun patchItem ()Lcom/amplifyframework/core/model/SerializedModel;
+	public fun predicate ()Lcom/amplifyframework/core/model/query/predicate/QueryPredicate;
+	public fun toString ()Ljava/lang/String;
+	public fun type ()Lcom/amplifyframework/datastore/storage/StorageItemChange$Type;
+}
+
+public final class com/amplifyframework/datastore/storage/StorageItemChange$Builder {
+	public fun <init> ()V
+	public fun build ()Lcom/amplifyframework/datastore/storage/StorageItemChange;
+	public fun changeId (Ljava/lang/String;)Lcom/amplifyframework/datastore/storage/StorageItemChange$Builder;
+	public fun initiator (Lcom/amplifyframework/datastore/storage/StorageItemChange$Initiator;)Lcom/amplifyframework/datastore/storage/StorageItemChange$Builder;
+	public fun item (Lcom/amplifyframework/core/model/Model;)Lcom/amplifyframework/datastore/storage/StorageItemChange$Builder;
+	public fun modelSchema (Lcom/amplifyframework/core/model/ModelSchema;)Lcom/amplifyframework/datastore/storage/StorageItemChange$Builder;
+	public fun patchItem (Lcom/amplifyframework/core/model/SerializedModel;)Lcom/amplifyframework/datastore/storage/StorageItemChange$Builder;
+	public fun predicate (Lcom/amplifyframework/core/model/query/predicate/QueryPredicate;)Lcom/amplifyframework/datastore/storage/StorageItemChange$Builder;
+	public fun randomChangeId ()Lcom/amplifyframework/datastore/storage/StorageItemChange$Builder;
+	public fun type (Lcom/amplifyframework/datastore/storage/StorageItemChange$Type;)Lcom/amplifyframework/datastore/storage/StorageItemChange$Builder;
+}
+
+public final class com/amplifyframework/datastore/storage/StorageItemChange$Initiator : java/lang/Enum {
+	public static final field DATA_STORE_API Lcom/amplifyframework/datastore/storage/StorageItemChange$Initiator;
+	public static final field SYNC_ENGINE Lcom/amplifyframework/datastore/storage/StorageItemChange$Initiator;
+	public static fun valueOf (Ljava/lang/String;)Lcom/amplifyframework/datastore/storage/StorageItemChange$Initiator;
+	public static fun values ()[Lcom/amplifyframework/datastore/storage/StorageItemChange$Initiator;
+}
+
+public final class com/amplifyframework/datastore/storage/StorageItemChange$Type : java/lang/Enum {
+	public static final field CREATE Lcom/amplifyframework/datastore/storage/StorageItemChange$Type;
+	public static final field DELETE Lcom/amplifyframework/datastore/storage/StorageItemChange$Type;
+	public static final field UPDATE Lcom/amplifyframework/datastore/storage/StorageItemChange$Type;
+	public static fun valueOf (Ljava/lang/String;)Lcom/amplifyframework/datastore/storage/StorageItemChange$Type;
+	public static fun values ()[Lcom/amplifyframework/datastore/storage/StorageItemChange$Type;
+}
+
+public final class com/amplifyframework/datastore/storage/sqlite/ModelComparator : java/util/Comparator {
+	public fun <init> (Lcom/amplifyframework/core/model/query/QuerySortBy;Ljava/lang/Class;Lcom/amplifyframework/core/Consumer;)V
+	public fun compare (Lcom/amplifyframework/core/model/Model;Lcom/amplifyframework/core/model/Model;)I
+	public synthetic fun compare (Ljava/lang/Object;Ljava/lang/Object;)I
+}
+
+public class com/amplifyframework/datastore/storage/sqlite/ModelSorter {
+	public fun <init> ()V
+	public fun sort (Lcom/amplifyframework/core/model/query/ObserveQueryOptions;Ljava/util/List;Ljava/lang/Class;Lcom/amplifyframework/core/Consumer;)V
+}
+
+public class com/amplifyframework/datastore/storage/sqlite/ObserveQueryExecutor : com/amplifyframework/core/async/Cancelable {
+	public fun <init> (Lio/reactivex/rxjava3/subjects/Subject;Lcom/amplifyframework/datastore/storage/sqlite/SqlQueryProcessor;Ljava/util/concurrent/ExecutorService;Lcom/amplifyframework/datastore/storage/sqlite/SyncStatus;Lcom/amplifyframework/datastore/storage/sqlite/ModelSorter;II)V
+	public fun <init> (Lio/reactivex/rxjava3/subjects/Subject;Lcom/amplifyframework/datastore/storage/sqlite/SqlQueryProcessor;Ljava/util/concurrent/ExecutorService;Lcom/amplifyframework/datastore/storage/sqlite/SyncStatus;Lcom/amplifyframework/datastore/storage/sqlite/ModelSorter;Lcom/amplifyframework/datastore/DataStoreConfiguration;)V
+	public fun cancel ()V
+	public fun observeQuery (Ljava/lang/Class;Lcom/amplifyframework/core/model/query/ObserveQueryOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Action;)V
+}
+
+public final class com/amplifyframework/datastore/storage/sqlite/PersistentModelVersion : com/amplifyframework/core/model/Model {
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getVersion ()Ljava/lang/String;
+	public fun hashCode ()I
+	public synthetic fun resolveIdentifier ()Ljava/io/Serializable;
+	public fun resolveIdentifier ()Ljava/lang/String;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/amplifyframework/datastore/storage/sqlite/SQLiteDataType : java/lang/Enum {
+	public static final field BLOB Lcom/amplifyframework/datastore/storage/sqlite/SQLiteDataType;
+	public static final field INTEGER Lcom/amplifyframework/datastore/storage/sqlite/SQLiteDataType;
+	public static final field NULL Lcom/amplifyframework/datastore/storage/sqlite/SQLiteDataType;
+	public static final field REAL Lcom/amplifyframework/datastore/storage/sqlite/SQLiteDataType;
+	public static final field TEXT Lcom/amplifyframework/datastore/storage/sqlite/SQLiteDataType;
+	public static fun from (Ljava/lang/String;)Lcom/amplifyframework/datastore/storage/sqlite/SQLiteDataType;
+	public fun getSqliteDataType ()Ljava/lang/String;
+	public static fun valueOf (Ljava/lang/String;)Lcom/amplifyframework/datastore/storage/sqlite/SQLiteDataType;
+	public static fun values ()[Lcom/amplifyframework/datastore/storage/sqlite/SQLiteDataType;
+}
+
+public final class com/amplifyframework/datastore/storage/sqlite/SQLiteModelFieldTypeConverter : com/amplifyframework/datastore/model/ModelFieldTypeConverter {
+	public static fun convertRawValueToTarget (Ljava/lang/Object;Lcom/amplifyframework/core/model/types/JavaFieldType;Lcom/google/gson/Gson;)Ljava/lang/Object;
+	public fun convertValueFromSource (Landroid/database/Cursor;Lcom/amplifyframework/core/model/ModelField;)Ljava/lang/Object;
+	public synthetic fun convertValueFromSource (Ljava/lang/Object;Lcom/amplifyframework/core/model/ModelField;)Ljava/lang/Object;
+	public fun convertValueFromTarget (Lcom/amplifyframework/core/model/Model;Lcom/amplifyframework/core/model/ModelField;)Ljava/lang/Object;
+	public synthetic fun convertValueFromTarget (Ljava/lang/Object;Lcom/amplifyframework/core/model/ModelField;)Ljava/lang/Object;
+}
+
+public final class com/amplifyframework/datastore/storage/sqlite/SqlKeyword : java/lang/Enum {
+	public static final field AND Lcom/amplifyframework/datastore/storage/sqlite/SqlKeyword;
+	public static final field AS Lcom/amplifyframework/datastore/storage/sqlite/SqlKeyword;
+	public static final field ASC Lcom/amplifyframework/datastore/storage/sqlite/SqlKeyword;
+	public static final field BETWEEN Lcom/amplifyframework/datastore/storage/sqlite/SqlKeyword;
+	public static final field DELIMITER Lcom/amplifyframework/datastore/storage/sqlite/SqlKeyword;
+	public static final field DESC Lcom/amplifyframework/datastore/storage/sqlite/SqlKeyword;
+	public static final field EQUAL Lcom/amplifyframework/datastore/storage/sqlite/SqlKeyword;
+	public static final field EXISTS Lcom/amplifyframework/datastore/storage/sqlite/SqlKeyword;
+	public static final field FROM Lcom/amplifyframework/datastore/storage/sqlite/SqlKeyword;
+	public static final field GREATER_OR_EQUAL Lcom/amplifyframework/datastore/storage/sqlite/SqlKeyword;
+	public static final field GREATER_THAN Lcom/amplifyframework/datastore/storage/sqlite/SqlKeyword;
+	public static final field IN Lcom/amplifyframework/datastore/storage/sqlite/SqlKeyword;
+	public static final field INNER_JOIN Lcom/amplifyframework/datastore/storage/sqlite/SqlKeyword;
+	public static final field IS_NOT_NULL Lcom/amplifyframework/datastore/storage/sqlite/SqlKeyword;
+	public static final field IS_NULL Lcom/amplifyframework/datastore/storage/sqlite/SqlKeyword;
+	public static final field JOIN Lcom/amplifyframework/datastore/storage/sqlite/SqlKeyword;
+	public static final field LEFT_JOIN Lcom/amplifyframework/datastore/storage/sqlite/SqlKeyword;
+	public static final field LESS_OR_EQUAL Lcom/amplifyframework/datastore/storage/sqlite/SqlKeyword;
+	public static final field LESS_THAN Lcom/amplifyframework/datastore/storage/sqlite/SqlKeyword;
+	public static final field LIKE Lcom/amplifyframework/datastore/storage/sqlite/SqlKeyword;
+	public static final field LIMIT Lcom/amplifyframework/datastore/storage/sqlite/SqlKeyword;
+	public static final field NOT Lcom/amplifyframework/datastore/storage/sqlite/SqlKeyword;
+	public static final field NOT_EQUAL Lcom/amplifyframework/datastore/storage/sqlite/SqlKeyword;
+	public static final field OFFSET Lcom/amplifyframework/datastore/storage/sqlite/SqlKeyword;
+	public static final field ON Lcom/amplifyframework/datastore/storage/sqlite/SqlKeyword;
+	public static final field OR Lcom/amplifyframework/datastore/storage/sqlite/SqlKeyword;
+	public static final field ORDER_BY Lcom/amplifyframework/datastore/storage/sqlite/SqlKeyword;
+	public static final field OUTER_JOIN Lcom/amplifyframework/datastore/storage/sqlite/SqlKeyword;
+	public static final field SELECT Lcom/amplifyframework/datastore/storage/sqlite/SqlKeyword;
+	public static final field SEPARATOR Lcom/amplifyframework/datastore/storage/sqlite/SqlKeyword;
+	public static final field VARIABLE Lcom/amplifyframework/datastore/storage/sqlite/SqlKeyword;
+	public static final field WHERE Lcom/amplifyframework/datastore/storage/sqlite/SqlKeyword;
+	public static fun fromQueryOperator (Lcom/amplifyframework/core/model/query/predicate/QueryOperator$Type;)Lcom/amplifyframework/datastore/storage/sqlite/SqlKeyword;
+	public static fun fromQueryPredicateGroup (Lcom/amplifyframework/core/model/query/predicate/QueryPredicateGroup$Type;)Lcom/amplifyframework/datastore/storage/sqlite/SqlKeyword;
+	public static fun fromQuerySortOrder (Lcom/amplifyframework/core/model/query/QuerySortOrder;)Lcom/amplifyframework/datastore/storage/sqlite/SqlKeyword;
+	public fun toString ()Ljava/lang/String;
+	public static fun valueOf (Ljava/lang/String;)Lcom/amplifyframework/datastore/storage/sqlite/SqlKeyword;
+	public static fun values ()[Lcom/amplifyframework/datastore/storage/sqlite/SqlKeyword;
+}
+
+public class com/amplifyframework/datastore/storage/sqlite/SyncStatus {
+	public fun <init> (Lcom/amplifyframework/datastore/storage/sqlite/SqlQueryProcessor;Lcom/amplifyframework/datastore/DataStoreConfiguration;)V
+	public fun get (Ljava/lang/String;Lcom/amplifyframework/core/Consumer;)Z
+}
+
+public abstract interface class com/amplifyframework/datastore/storage/sqlite/TransactionBlock {
+	public abstract fun run ()V
+}
+
+public final class com/amplifyframework/datastore/storage/sqlite/TypeConverter {
+	public static fun getJavaFieldTypeFromValue (Ljava/lang/Object;)Lcom/amplifyframework/core/model/types/JavaFieldType;
+	public static fun getSQLiteDataType (Lcom/amplifyframework/core/model/ModelField;)Lcom/amplifyframework/datastore/storage/sqlite/SQLiteDataType;
+}
+
+public final class com/amplifyframework/datastore/storage/sqlite/adapter/SQLPredicate {
+	public fun <init> (Lcom/amplifyframework/core/model/query/predicate/QueryPredicate;)V
+	public fun getBindings ()Ljava/util/List;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/amplifyframework/datastore/storage/sqlite/adapter/SQLiteColumn {
+	public static fun builder ()Lcom/amplifyframework/datastore/storage/sqlite/adapter/SQLiteColumn$Builder;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getAliasedName ()Ljava/lang/String;
+	public fun getColumnType ()Ljava/lang/String;
+	public fun getFieldName ()Ljava/lang/String;
+	public fun getName ()Ljava/lang/String;
+	public fun getOwnedField ()Ljava/lang/String;
+	public fun getOwnedType ()Ljava/lang/String;
+	public fun getQuotedColumnName ()Ljava/lang/String;
+	public fun getTableName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun isForeignKey ()Z
+	public fun isNonNull ()Z
+	public fun isPrimaryKey ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/amplifyframework/datastore/storage/sqlite/adapter/SQLiteColumn$Builder {
+	public fun <init> ()V
+	public fun build ()Lcom/amplifyframework/datastore/storage/sqlite/adapter/SQLiteColumn;
+	public fun dataType (Lcom/amplifyframework/datastore/storage/sqlite/SQLiteDataType;)Lcom/amplifyframework/datastore/storage/sqlite/adapter/SQLiteColumn$Builder;
+	public fun fieldName (Ljava/lang/String;)Lcom/amplifyframework/datastore/storage/sqlite/adapter/SQLiteColumn$Builder;
+	public fun isNonNull (Z)Lcom/amplifyframework/datastore/storage/sqlite/adapter/SQLiteColumn$Builder;
+	public fun name (Ljava/lang/String;)Lcom/amplifyframework/datastore/storage/sqlite/adapter/SQLiteColumn$Builder;
+	public fun ownerField (Ljava/lang/String;)Lcom/amplifyframework/datastore/storage/sqlite/adapter/SQLiteColumn$Builder;
+	public fun ownerOf (Ljava/lang/String;)Lcom/amplifyframework/datastore/storage/sqlite/adapter/SQLiteColumn$Builder;
+	public fun tableName (Ljava/lang/String;)Lcom/amplifyframework/datastore/storage/sqlite/adapter/SQLiteColumn$Builder;
+}
+
+public final class com/amplifyframework/datastore/storage/sqlite/adapter/SQLiteTable {
+	public static final field PRIMARY_KEY_FIELD_NAME Ljava/lang/String;
+	public static fun builder ()Lcom/amplifyframework/datastore/storage/sqlite/adapter/SQLiteTable$Builder;
+	public fun equals (Ljava/lang/Object;)Z
+	public static fun fromSchema (Lcom/amplifyframework/core/model/ModelSchema;)Lcom/amplifyframework/datastore/storage/sqlite/adapter/SQLiteTable;
+	public fun getColumn (Ljava/lang/String;)Lcom/amplifyframework/datastore/storage/sqlite/adapter/SQLiteColumn;
+	public fun getColumns ()Ljava/util/Map;
+	public static fun getForeignKeyColumnName (ILjava/lang/String;Lcom/amplifyframework/core/model/ModelAssociation;)Ljava/lang/String;
+	public fun getForeignKeys ()Ljava/util/List;
+	public fun getName ()Ljava/lang/String;
+	public fun getPrimaryKey ()Lcom/amplifyframework/datastore/storage/sqlite/adapter/SQLiteColumn;
+	public fun getPrimaryKeyColumnName ()Ljava/lang/String;
+	public fun getPrimaryKeyColumns ()Ljava/util/List;
+	public fun getSortedColumns ()Ljava/util/List;
+	public fun getType ()Lcom/amplifyframework/core/model/Model$Type;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/amplifyframework/datastore/storage/sqlite/adapter/SQLiteTable$Builder {
+	public fun build ()Lcom/amplifyframework/datastore/storage/sqlite/adapter/SQLiteTable;
+	public fun columns (Ljava/util/Map;)Lcom/amplifyframework/datastore/storage/sqlite/adapter/SQLiteTable$Builder;
+	public fun name (Ljava/lang/String;)Lcom/amplifyframework/datastore/storage/sqlite/adapter/SQLiteTable$Builder;
+	public fun primaryKeyColumns (Ljava/util/List;)Lcom/amplifyframework/datastore/storage/sqlite/adapter/SQLiteTable$Builder;
+	public fun type (Lcom/amplifyframework/core/model/Model$Type;)Lcom/amplifyframework/datastore/storage/sqlite/adapter/SQLiteTable$Builder;
+}
+
+public final class com/amplifyframework/datastore/storage/sqlite/migrations/AddModelNameToModelMetadataKey : com/amplifyframework/datastore/storage/sqlite/migrations/ModelMigration {
+	public fun <init> (Landroid/database/sqlite/SQLiteDatabase;Lcom/amplifyframework/core/model/ModelProvider;)V
+	public fun apply ()V
+}
+
+public abstract interface class com/amplifyframework/datastore/storage/sqlite/migrations/ModelMigration {
+	public abstract fun apply ()V
+}
+
+public class com/amplifyframework/datastore/storage/sqlite/migrations/ModelMigrations {
+	public fun <init> (Landroid/database/sqlite/SQLiteDatabase;Lcom/amplifyframework/core/model/ModelProvider;)V
+	public fun apply ()V
+}
+
+public abstract interface class com/amplifyframework/datastore/syncengine/ConnectivityProvider {
+	public abstract fun getHasActiveNetwork ()Z
+	public abstract fun registerDefaultNetworkCallback (Landroid/content/Context;Landroid/net/ConnectivityManager$NetworkCallback;)V
+}
+
+public final class com/amplifyframework/datastore/syncengine/LastSyncMetadata : com/amplifyframework/core/model/Model {
+	public static fun baseSyncedAt (Ljava/lang/String;J)Lcom/amplifyframework/datastore/syncengine/LastSyncMetadata;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getId ()Ljava/lang/String;
+	public fun getLastSyncTime ()Ljava/lang/Long;
+	public fun getLastSyncType ()Ljava/lang/String;
+	public fun hashCode ()I
+	public static fun neverSynced (Ljava/lang/String;)Lcom/amplifyframework/datastore/syncengine/LastSyncMetadata;
+	public synthetic fun resolveIdentifier ()Ljava/io/Serializable;
+	public fun resolveIdentifier ()Ljava/lang/String;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/amplifyframework/datastore/syncengine/MutationQueue {
+	public fun <init> ()V
+	public fun add (Lcom/amplifyframework/datastore/syncengine/PendingMutation;)Z
+	public fun clear ()V
+	public fun isEmpty ()Z
+	public fun peek ()Lcom/amplifyframework/datastore/syncengine/PendingMutation;
+	public fun remove (Ljava/lang/Object;)Z
+	public fun size ()I
+}
+
+public final class com/amplifyframework/datastore/syncengine/Orchestrator {
+	public fun <init> (Lcom/amplifyframework/core/model/ModelProvider;Lcom/amplifyframework/core/model/SchemaRegistry;Lcom/amplifyframework/datastore/storage/LocalStorageAdapter;Lcom/amplifyframework/datastore/appsync/AppSync;Lcom/amplifyframework/datastore/DataStoreConfigurationProvider;Landroidx/core/util/Supplier;Lcom/amplifyframework/datastore/syncengine/ReachabilityMonitor;Z)V
+	public fun start ()Lio/reactivex/rxjava3/core/Completable;
+	public fun stop ()Lio/reactivex/rxjava3/core/Completable;
+}
+
+public final class com/amplifyframework/datastore/syncengine/Orchestrator$State : java/lang/Enum {
+	public static final field LOCAL_ONLY Lcom/amplifyframework/datastore/syncengine/Orchestrator$State;
+	public static final field STOPPED Lcom/amplifyframework/datastore/syncengine/Orchestrator$State;
+	public static final field SYNC_VIA_API Lcom/amplifyframework/datastore/syncengine/Orchestrator$State;
+	public static fun valueOf (Ljava/lang/String;)Lcom/amplifyframework/datastore/syncengine/Orchestrator$State;
+	public static fun values ()[Lcom/amplifyframework/datastore/syncengine/Orchestrator$State;
+}
+
+public final class com/amplifyframework/datastore/syncengine/OutboxMutationEvent : com/amplifyframework/hub/HubEvent$Data {
+	public static fun create (Ljava/lang/String;Lcom/amplifyframework/datastore/appsync/ModelWithMetadata;)Lcom/amplifyframework/datastore/syncengine/OutboxMutationEvent;
+	public fun equals (Ljava/lang/Object;)Z
+	public static fun fromPendingMutation (Lcom/amplifyframework/datastore/syncengine/PendingMutation;)Lcom/amplifyframework/datastore/syncengine/OutboxMutationEvent;
+	public fun getElement ()Lcom/amplifyframework/datastore/syncengine/OutboxMutationEvent$OutboxMutationEventElement;
+	public fun getModelName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toHubEvent ()Lcom/amplifyframework/hub/HubEvent;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/amplifyframework/datastore/syncengine/OutboxMutationEvent$OutboxMutationEventElement {
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getLastChangedAt ()Ljava/lang/Long;
+	public fun getModel ()Lcom/amplifyframework/core/model/Model;
+	public fun getVersion ()Ljava/lang/Integer;
+	public fun hashCode ()I
+	public fun isDeleted ()Ljava/lang/Boolean;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/amplifyframework/datastore/syncengine/OutboxMutationFailedEvent : com/amplifyframework/hub/HubEvent$Data {
+	public static fun create (Lcom/amplifyframework/datastore/syncengine/PendingMutation;Ljava/util/List;)Lcom/amplifyframework/datastore/syncengine/OutboxMutationFailedEvent;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getErrorType ()Lcom/amplifyframework/datastore/syncengine/OutboxMutationFailedEvent$MutationErrorType;
+	public fun getModel ()Lcom/amplifyframework/core/model/Model;
+	public fun getModelName ()Ljava/lang/String;
+	public fun getOperation ()Lcom/amplifyframework/api/graphql/MutationType;
+	public fun hashCode ()I
+	public fun toHubEvent ()Lcom/amplifyframework/hub/HubEvent;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/amplifyframework/datastore/syncengine/OutboxMutationFailedEvent$MutationErrorType : java/lang/Enum {
+	public static final field UNAUTHORIZED Lcom/amplifyframework/datastore/syncengine/OutboxMutationFailedEvent$MutationErrorType;
+	public static final field UNKNOWN Lcom/amplifyframework/datastore/syncengine/OutboxMutationFailedEvent$MutationErrorType;
+	public static fun enumerate (Ljava/lang/String;)Lcom/amplifyframework/datastore/syncengine/OutboxMutationFailedEvent$MutationErrorType;
+	public fun getValue ()Ljava/lang/String;
+	public static fun valueOf (Ljava/lang/String;)Lcom/amplifyframework/datastore/syncengine/OutboxMutationFailedEvent$MutationErrorType;
+	public static fun values ()[Lcom/amplifyframework/datastore/syncengine/OutboxMutationFailedEvent$MutationErrorType;
+}
+
+public final class com/amplifyframework/datastore/syncengine/PendingMutation : java/lang/Comparable {
+	public fun compareTo (Lcom/amplifyframework/datastore/syncengine/PendingMutation;)I
+	public synthetic fun compareTo (Ljava/lang/Object;)I
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getMutatedItem ()Lcom/amplifyframework/core/model/Model;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/amplifyframework/datastore/syncengine/PendingMutation$PersistentRecord : com/amplifyframework/core/model/Model, java/lang/Comparable {
+	public static fun builder ()Lcom/amplifyframework/datastore/syncengine/PendingMutation$PersistentRecord$Builder;
+	public fun compareTo (Lcom/amplifyframework/datastore/syncengine/PendingMutation$PersistentRecord;)I
+	public synthetic fun compareTo (Ljava/lang/Object;)I
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public synthetic fun resolveIdentifier ()Ljava/io/Serializable;
+	public fun resolveIdentifier ()Ljava/lang/String;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/amplifyframework/datastore/syncengine/ProdSchedulerProvider : com/amplifyframework/datastore/syncengine/SchedulerProvider {
+	public fun <init> ()V
+	public fun computation ()Lio/reactivex/rxjava3/core/Scheduler;
+	public fun io ()Lio/reactivex/rxjava3/core/Scheduler;
+}
+
+public abstract interface class com/amplifyframework/datastore/syncengine/ReachabilityMonitor {
+	public static final field Companion Lcom/amplifyframework/datastore/syncengine/ReachabilityMonitor$Companion;
+	public abstract fun configure (Landroid/content/Context;)V
+	public abstract fun getObservable ()Lio/reactivex/rxjava3/core/Observable;
+}
+
+public final class com/amplifyframework/datastore/syncengine/ReachabilityMonitor$Companion {
+	public final fun create ()Lcom/amplifyframework/datastore/syncengine/ReachabilityMonitor;
+	public final fun createForTesting (Lcom/amplifyframework/datastore/syncengine/SchedulerProvider;)Lcom/amplifyframework/datastore/syncengine/ReachabilityMonitor;
+}
+
+public class com/amplifyframework/datastore/syncengine/RetryHandler {
+	public fun <init> ()V
+	public fun <init> (JJ)V
+	public fun retry (Lio/reactivex/rxjava3/core/Single;Ljava/util/List;)Lio/reactivex/rxjava3/core/Single;
+	protected fun retry (Lio/reactivex/rxjava3/core/Single;Ljava/util/List;Lio/reactivex/rxjava3/core/Scheduler;)Lio/reactivex/rxjava3/core/Single;
+}
+
+public final class com/amplifyframework/datastore/syncengine/RetryStrategy {
+	public static final field RX_INTERRUPTIBLE_WITH_BACKOFF Lcom/amplifyframework/datastore/syncengine/RetryStrategy$RxRetryStrategy;
+}
+
+public abstract interface class com/amplifyframework/datastore/syncengine/SchedulerProvider {
+	public abstract fun computation ()Lio/reactivex/rxjava3/core/Scheduler;
+	public abstract fun io ()Lio/reactivex/rxjava3/core/Scheduler;
+}
+
+public final class com/amplifyframework/datastore/syncengine/SyncType : java/lang/Enum {
+	public static final field BASE Lcom/amplifyframework/datastore/syncengine/SyncType;
+	public static final field DELTA Lcom/amplifyframework/datastore/syncengine/SyncType;
+	public static fun fromSyncTimeAndThreshold (Lcom/amplifyframework/datastore/syncengine/SyncTime;J)Lcom/amplifyframework/datastore/syncengine/SyncType;
+	public static fun valueOf (Ljava/lang/String;)Lcom/amplifyframework/datastore/syncengine/SyncType;
+	public static fun values ()[Lcom/amplifyframework/datastore/syncengine/SyncType;
+}
+
+public final class com/amplifyframework/datastore/syncengine/TimeBasedUuidTypeAdapter : com/google/gson/TypeAdapter {
+	public fun <init> ()V
+	public fun read (Lcom/google/gson/stream/JsonReader;)Lcom/amplifyframework/datastore/syncengine/TimeBasedUuid;
+	public synthetic fun read (Lcom/google/gson/stream/JsonReader;)Ljava/lang/Object;
+	public static fun register (Lcom/google/gson/GsonBuilder;)V
+	public fun write (Lcom/google/gson/stream/JsonWriter;Lcom/amplifyframework/datastore/syncengine/TimeBasedUuid;)V
+	public synthetic fun write (Lcom/google/gson/stream/JsonWriter;Ljava/lang/Object;)V
+}
+
+public final class com/amplifyframework/datastore/utils/ErrorInspector {
+	public static fun contains (Ljava/lang/Throwable;Ljava/lang/Class;)Z
+	public static fun contains (Ljava/lang/Throwable;Ljava/util/List;)Z
+}
+
