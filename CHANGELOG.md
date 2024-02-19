@@ -2,11 +2,8 @@
 
 ### Bug Fixes
 - **storage:** upload/download fewer files in storage stress test to avoid S3 throttling exception ([#2712](https://github.com/aws-amplify/amplify-android/issues/2712))
-- **datastore:** Remove unnecessary synchronized causing subscription slowness ([#2718](https://github.com/aws-amplify/amplify-android/issues/2718))
+- **datastore:** Remove unnecessary synchronized causing subscription slowness ([#2718](https://github.com/aws-amplify/amplify-android/issues/2718), [#2719](https://github.com/aws-amplify/amplify-android/issues/2719))
 - **datastore:** Switch to BFS in Join Builder for Alias, fixes - [#2488](https://github.com/aws-amplify/amplify-android/issues/2488) ([#2693](https://github.com/aws-amplify/amplify-android/issues/2693))
-
-### Miscellaneous
-- datastore(fix): Fixes previous PR which was inadvertently creating multiple websockets. ([#2719](https://github.com/aws-amplify/amplify-android/issues/2719))
 
 [See all changes between 2.14.10 and 2.14.11](https://github.com/aws-amplify/amplify-android/compare/release_v2.14.10...release_v2.14.11)
 
