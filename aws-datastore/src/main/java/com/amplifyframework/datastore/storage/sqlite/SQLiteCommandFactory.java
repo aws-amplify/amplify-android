@@ -48,9 +48,11 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Queue;
 import java.util.Set;
 
 /**
@@ -178,7 +180,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
         tableCount.put(tableName, 1);
 
         // Joins the foreign keys
-        recursivelyBuildJoins(table, columns, joinStatement, tableCount, tableName);
+        buildJoinsUsingBFS(table, columns, joinStatement, tableCount, tableName);
 
         // Convert columns to comma-separated column names
         boolean firstTable = true;
@@ -499,67 +501,6 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
         return bindings;
     }
 
-    /**
-     * Recursively build joins for multilevel nested joins.
-     *
-     */
-    private void recursivelyBuildJoins(SQLiteTable table, Map<String, List<SQLiteColumn>> columns,
-                                       StringBuilder joinStatement, Map<String, Integer> tableCount,
-                                       String tableAlias) {
-        // Joins the foreign keys
-        // LEFT JOIN if foreign key is optional, INNER JOIN otherwise.
-        final Iterator<SQLiteColumn> foreignKeyIterator = table.getForeignKeys().iterator();
-        while (foreignKeyIterator.hasNext()) {
-            final SQLiteColumn foreignKey = foreignKeyIterator.next();
-            final String ownedTableName = foreignKey.getOwnedType();
-            final ModelSchema ownedSchema = schemaRegistry.getModelSchemaForModelClass(ownedTableName);
-            final SQLiteTable ownedTable = SQLiteTable.fromSchema(ownedSchema);
-            
-            int newOwnedTableCount = 1;
-            String ownedTableAlias = ownedTableName;
-            if (tableCount.containsKey(ownedTableName)) {
-                Integer currentOwnedTableCount = tableCount.get(ownedTableName);
-                newOwnedTableCount += currentOwnedTableCount == null ? 0 : currentOwnedTableCount;
-                ownedTableAlias += newOwnedTableCount;
-            }
-            tableCount.put(ownedTableName, newOwnedTableCount);
-            columns.put(ownedTableAlias, ownedTable.getSortedColumns());
-
-            SqlKeyword joinType = foreignKey.isNonNull()
-                ? SqlKeyword.INNER_JOIN
-                : SqlKeyword.LEFT_JOIN;
-
-            joinStatement.append(joinType)
-                .append(SqlKeyword.DELIMITER)
-                .append(Wrap.inBackticks(ownedTableName))
-                .append(SqlKeyword.DELIMITER);
-            
-            if (!ownedTableName.equals(ownedTableAlias)) {
-                joinStatement.append(SqlKeyword.AS)
-                        .append(SqlKeyword.DELIMITER)
-                        .append(Wrap.inBackticks(ownedTableAlias))
-                        .append(SqlKeyword.DELIMITER);
-            }
-
-            // Reference the foreign key and primary key using the corresponding table's alias.
-            String foreignKeyName = foreignKey.getQuotedColumnName().replaceFirst(table.getName(), tableAlias);
-            String ownedTablePrimaryKeyName = ownedTable.getPrimaryKeyColumnName().replaceFirst(ownedTableName,
-                    ownedTableAlias);
-            joinStatement.append(SqlKeyword.ON)
-                .append(SqlKeyword.DELIMITER)
-                .append(foreignKeyName)
-                .append(SqlKeyword.EQUAL)
-                .append(ownedTablePrimaryKeyName);
-
-            if (foreignKeyIterator.hasNext()) {
-                joinStatement.append(SqlKeyword.DELIMITER);
-            }
-
-            // important that this comes last to maintain the order of the joins
-            recursivelyBuildJoins(ownedTable, columns, joinStatement, tableCount, ownedTableAlias);
-        }
-    }
-
     // Utility method to parse columns in CREATE TABLE
     private StringBuilder parseColumns(SQLiteTable table) {
         final StringBuilder builder = new StringBuilder();
@@ -655,5 +596,135 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
             }
         }
         return true;
+    }
+
+    /**
+     * Builds a SQL JOIN statement using Breadth-First Search (BFS) to explore table relationships.
+     * This method iteratively explores tables and their foreign keys to construct a comprehensive
+     * join statement. It handles tables with multiple foreign key references to the same table and
+     * avoids infinite loops in cyclic relationships by maintaining a set of visited combination keys.
+     *
+     * <p>Implementation Notes:</p>
+     * <ul>
+     *     <li><strong>Multiple Foreign Key References:</strong> This method can process multiple
+     *     references from a single table to another by incorporating the foreign key name into the
+     *     unique combination key. This allows the method to differentiate between different join paths
+     *     and process each unique path accordingly.</li>
+     *
+     *     <li><strong>Preventing Infinite Loops:</strong> To avoid infinite loops in the presence of
+     *     cyclic relationships, the method tracks processed joins using a combination of the current
+     *     table alias, the target table name, and the foreign key name.
+     *     This ensures that each join operation is processed only once, even in complex schemas
+     *     with potential cycles.</li>
+     * </ul>
+     *
+     * @param rootTable The starting table for join construction.
+     * @param columns A map to maintain a list of columns for each table encountered during BFS
+     *                traversal. Updated as new tables are processed.
+     * @param joinStatement The StringBuilder to append JOIN clauses to. This will be modified to
+     *                      include the generated JOIN statements.
+     * @param tableCount A map to track the occurrence count of each table, used for generating
+     *                   unique table aliases.
+     * @param rootTableAlias The alias for the root table, used in the initial JOIN statement.
+     * @implNote  In highly nested or complex cyclic schemas, additional safeguards such as
+     * traversal depth limits may be advisable to ensure optimal performance and prevent excessively
+     * deep traversal.
+     */
+    private void buildJoinsUsingBFS(final SQLiteTable rootTable, final Map<String, List<SQLiteColumn>> columns,
+                                    StringBuilder joinStatement, final Map<String, Integer> tableCount,
+                                    final String rootTableAlias) {
+        Queue<TableInfo> queue = new LinkedList<>();
+        queue.add(new TableInfo(rootTable, rootTableAlias));
+
+        // Use a Set to track visited (table, foreign key) combinations to allow multiple references.
+        Set<String> visitedCombinations = new HashSet<>();
+
+        while (!queue.isEmpty()) {
+            final TableInfo currentInfo = queue.poll();
+            final SQLiteTable table = currentInfo.getSQLiteTable();
+            final String tableAlias = currentInfo.getAlias();
+
+            final Iterator<SQLiteColumn> foreignKeyIterator = table.getForeignKeys().iterator();
+            while (foreignKeyIterator.hasNext()) {
+                final SQLiteColumn foreignKey = foreignKeyIterator.next();
+                final String ownedTableName = foreignKey.getOwnedType();
+                final String combinationKey = tableAlias + "->" + ownedTableName + ":" + foreignKey.getName();
+
+                // Skip if this table-foreignKey combination has been processed.
+                if (!visitedCombinations.add(combinationKey)) {
+                    continue;
+                }
+
+                final ModelSchema ownedSchema = schemaRegistry.getModelSchemaForModelClass(ownedTableName);
+                final SQLiteTable ownedTable = SQLiteTable.fromSchema(ownedSchema);
+
+                int newOwnedTableCount = 1;
+                String ownedTableAlias = ownedTableName;
+                if (tableCount.containsKey(ownedTableName)) {
+                    Integer currentOwnedTableCount = tableCount.get(ownedTableName);
+                    newOwnedTableCount += currentOwnedTableCount == null ? 0 : currentOwnedTableCount;
+                    ownedTableAlias += newOwnedTableCount;
+                }
+                tableCount.put(ownedTableName, newOwnedTableCount);
+                columns.put(ownedTableAlias, ownedTable.getSortedColumns());
+
+                SqlKeyword joinType = foreignKey.isNonNull()
+                        ? SqlKeyword.INNER_JOIN
+                        : SqlKeyword.LEFT_JOIN;
+
+                joinStatement.append(joinType)
+                        .append(SqlKeyword.DELIMITER)
+                        .append(Wrap.inBackticks(ownedTableName))
+                        .append(SqlKeyword.DELIMITER);
+
+                if (!ownedTableName.equals(ownedTableAlias)) {
+                    joinStatement.append(SqlKeyword.AS)
+                            .append(SqlKeyword.DELIMITER)
+                            .append(Wrap.inBackticks(ownedTableAlias))
+                            .append(SqlKeyword.DELIMITER);
+                }
+
+                String foreignKeyName = foreignKey.getQuotedColumnName().replaceFirst(table.getName(), tableAlias);
+                String ownedTablePrimaryKeyName = ownedTable.getPrimaryKeyColumnName().replaceFirst(
+                        ownedTableName, ownedTableAlias);
+                joinStatement.append(SqlKeyword.ON)
+                        .append(SqlKeyword.DELIMITER)
+                        .append(foreignKeyName)
+                        .append(SqlKeyword.EQUAL)
+                        .append(ownedTablePrimaryKeyName);
+
+                if (!queue.isEmpty() || foreignKeyIterator.hasNext()) {
+                    joinStatement.append(SqlKeyword.DELIMITER);
+                }
+                queue.add(new TableInfo(ownedTable, ownedTableAlias));
+            }
+        }
+    }
+
+    /**
+     * Represents information about a table in the context of building SQL JOIN statements.
+     * This class holds a reference to a SQLiteTable instance and its associated alias.
+     * It is primarily used in the context of BFS traversal for SQL join generation,
+     * where it is necessary to keep track of each table and its alias while processing the graph of tables.
+     *
+     * @implNote This class is a simple container used for organizing table data and its corresponding alias
+     * during the BFS traversal in the join building process. It includes basic getter methods for both fields.
+     */
+    private static class TableInfo {
+        private final SQLiteTable table;
+        private final String alias;
+
+        TableInfo(SQLiteTable table, String alias) {
+            this.table = Objects.requireNonNull(table, "Table cannot be null");
+            this.alias = Objects.requireNonNull(alias, "Alias cannot be null");
+        }
+
+        public SQLiteTable getSQLiteTable() {
+            return table;
+        }
+
+        public String getAlias() {
+            return alias;
+        }
     }
 }
