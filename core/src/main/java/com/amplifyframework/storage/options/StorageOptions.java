@@ -19,6 +19,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.amplifyframework.storage.StorageAccessLevel;
+import com.amplifyframework.storage.StoragePath;
 
 /**
  * Storage options interface requires that every
@@ -37,8 +38,10 @@ abstract class StorageOptions {
 
     /**
      * Gets the storage access level.
+     * @deprecated value will be ignored if {@link StoragePath} is used
      * @return Storage access level
      */
+    @Deprecated
     @Nullable
     public final StorageAccessLevel getAccessLevel() {
         return accessLevel;
@@ -46,8 +49,10 @@ abstract class StorageOptions {
 
     /**
      * Gets the target identity id.
+     * @deprecated value will be ignored if {@link StoragePath} is used
      * @return target identity id
      */
+    @Deprecated
     @Nullable
     public final String getTargetIdentityId() {
         return targetIdentityId;
@@ -64,9 +69,11 @@ abstract class StorageOptions {
         /**
          * Configures the storage access level to set on new
          * StorageOptions instances.
+         * @deprecated Will not be used if {@link StoragePath} is used
          * @param accessLevel Storage access level for new StorageOptions instances
          * @return Current Builder instance, for fluent method chaining
          */
+        @Deprecated
         @NonNull
         public final B accessLevel(@Nullable StorageAccessLevel accessLevel) {
             this.accessLevel = accessLevel;
@@ -76,20 +83,24 @@ abstract class StorageOptions {
         /**
          * Configures the target identity ID that will be used on newly
          * built StorageOptions.
+         * @deprecated Will not be used if {@link StoragePath} is used
          * @param targetIdentityId Target identity ID for new StorageOptions instances
          * @return Current Builder instance, for fluent method chaining
          */
+        @Deprecated
         @NonNull
         public final B targetIdentityId(@Nullable String targetIdentityId) {
             this.targetIdentityId = targetIdentityId;
             return (B) this;
         }
 
+        @Deprecated
         @Nullable
         public final StorageAccessLevel getAccessLevel() {
             return accessLevel;
         }
 
+        @Deprecated
         @Nullable
         public final String getTargetIdentityId() {
             return targetIdentityId;
