@@ -25,19 +25,56 @@ import java.util.Objects;
  */
 public final class StorageUploadFileResult extends StorageUploadResult {
 
-    private StorageUploadFileResult(String key) {
-        super(key);
+    private StorageUploadFileResult(String path, String key) {
+        super(path, key);
     }
 
     /**
      * Creates a new StorageUploadFileResult from a storage item key.
-     *
+     * @deprecated This method should not be used since path will be incorrect.
      * @param key Key for an item that was uploaded successfully
      * @return A storage upload result containing the item key
      */
+    @Deprecated
     @NonNull
     public static StorageUploadFileResult fromKey(@NonNull String key) {
-        return new StorageUploadFileResult(Objects.requireNonNull(key));
+        return new StorageUploadFileResult(
+                Objects.requireNonNull(key),
+                Objects.requireNonNull(key)
+        );
+    }
+
+    /**
+     * Creates a new StorageUploadFileResult from a storage item path.
+     * Although this has public access, it is intended for internal use and should not be used directly by host
+     * applications. The behavior of this may change without warning.
+     * * @param path Path for an item that was uploaded successfully
+     * @return A storage upload result containing the item path
+     */
+    @NonNull
+    public static StorageUploadFileResult fromPath(@NonNull String path) {
+        return new StorageUploadFileResult(
+                Objects.requireNonNull(path),
+                Objects.requireNonNull(path)
+        );
+    }
+
+    /**
+     * Creates a new StorageUploadFileResult from a storage item path.
+     * @deprecated This method is temporary to internally support older transfer methods that
+     * we will additionally add path for.
+     * Although this has public access, it is intended for internal use and should not be used directly by host
+     * applications. The behavior of this may change without warning.
+     * * @param path Path for an item that was uploaded successfully
+     * @return A storage upload result containing the item path
+     */
+    @Deprecated
+    @NonNull
+    public static StorageUploadFileResult fromPathAndKey(@NonNull String path, @NonNull String key) {
+        return new StorageUploadFileResult(
+                Objects.requireNonNull(path),
+                Objects.requireNonNull(key)
+        );
     }
 
     @Override
@@ -51,7 +88,8 @@ public final class StorageUploadFileResult extends StorageUploadResult {
 
         StorageUploadFileResult that = (StorageUploadFileResult) thatObject;
 
-        return ObjectsCompat.equals(super.getKey(), that.getKey());
+        return ObjectsCompat.equals(super.getKey(), that.getKey()) &&
+                ObjectsCompat.equals(super.getPath(), that.getPath());
     }
 
     @Override
