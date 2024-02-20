@@ -25,6 +25,7 @@ import kotlinx.coroutines.runBlocking
 /**
  * Resolves the final prefix prepended to the S3 key for a given request.
  **/
+@Deprecated("Unused for operations using StoragePath")
 interface AWSS3PluginPrefixResolver {
 
     /**
@@ -45,6 +46,7 @@ interface AWSS3PluginPrefixResolver {
 /**
  * Default prefix resolver based on the storage access level.
  **/
+@Deprecated("Unused for operations using StoragePath")
 internal class StorageAccessLevelAwarePrefixResolver(
     private val authCredentialsProvider: AuthCredentialsProvider
 ) : AWSS3PluginPrefixResolver {
