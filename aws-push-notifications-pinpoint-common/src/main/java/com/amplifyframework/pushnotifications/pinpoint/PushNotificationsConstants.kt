@@ -29,7 +29,6 @@ class PushNotificationsConstants {
         const val TITLE = "title" // title
         const val MESSAGE = "message" // message
         const val IMAGEURL = "imageUrl" // imageUrl
-        const val LARGEIMAGEURL = "largeImageUrl" // largeImageUrl
         const val JOURNEY = "journey" // journey
         const val JOURNEY_ID = "journey_id" // journey_id
         const val JOURNEY_ACTIVITY_ID = "journey_activity_id" // journey_activity_id
@@ -39,7 +38,6 @@ class PushNotificationsConstants {
         const val PINPOINT_NOTIFICATION_TITLE = "$NOTIFICATION_PREFIX$TITLE" // pinpoint.notification.title
         const val PINPOINT_NOTIFICATION_BODY = "${NOTIFICATION_PREFIX}body" // pinpoint.notification.body
         const val PINPOINT_NOTIFICATION_IMAGEURL = "$NOTIFICATION_PREFIX$IMAGEURL" // pinpoint.notification.imageUrl
-        const val PINPOINT_NOTIFICATION_LARGEIMAGEURL = "$NOTIFICATION_PREFIX$IMAGEURL" // pinpoint.notification.largeImageUrl
         // pinpoint.notification.silentPush
         const val PINPOINT_NOTIFICATION_SILENTPUSH = "${NOTIFICATION_PREFIX}silentPush"
         const val CAMPAIGN_ID = "campaign_id" // campaign_id

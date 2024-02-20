@@ -24,7 +24,6 @@ class PinpointNotificationPayload internal constructor(
     val title: String? = null,
     val body: String? = null,
     val imageUrl: String? = null,
-    val largeImageUrl: String? = null,
     val action: Map<String, String> = mapOf(),
     val silentPush: Boolean = false,
     channelId: String? = null,
@@ -46,8 +45,6 @@ class PinpointNotificationPayload internal constructor(
                 ?: data[PushNotificationsConstants.PINPOINT_NOTIFICATION_BODY]
             val imageUrl = data[PushNotificationsConstants.IMAGEURL]
                 ?: data[PushNotificationsConstants.PINPOINT_NOTIFICATION_IMAGEURL]
-            val largeImageUrl = data[PushNotificationsConstants.LARGEIMAGEURL]
-                ?: data[PushNotificationsConstants.PINPOINT_NOTIFICATION_LARGEIMAGEURL]
             val channelId = payload.channelId ?: PushNotificationsConstants.DEFAULT_NOTIFICATION_CHANNEL_ID
             val silentPush = data[PushNotificationsConstants.PINPOINT_NOTIFICATION_SILENTPUSH].equals("1")
             val action: MutableMap<String, String> = mutableMapOf()
@@ -65,7 +62,7 @@ class PinpointNotificationPayload internal constructor(
             }
 
             return PinpointNotificationPayload(
-                title, body, imageUrl, largeImageUrl,
+                title, body, imageUrl,
                 action, silentPush, channelId,
                 payload.targetClass, payload.contentProvider
             )
