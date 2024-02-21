@@ -25,13 +25,21 @@ import java.util.Objects;
  */
 public final class StorageUploadInputStreamResult extends StorageUploadResult {
 
-    private StorageUploadInputStreamResult(String path, String key) {
+    /**
+     * Creates a new StorageUploadFileResult from a storage item path.
+     * Although this has public access, it is intended for internal use and should not be used directly by host
+     * applications. The behavior of this may change without warning.
+     * @param path Path for an item that was uploaded successfully
+     * @param key Key for an item that was uploaded successfully
+     */
+    public StorageUploadInputStreamResult(String path, String key) {
         super(path, key);
     }
 
     /**
      * Creates a new StorageUploadFileResult from a storage item key.
-     * @deprecated This method should not be used since path will be incorrect.
+     * @deprecated This method should not be used and will result in an incorrect path that
+     * shows the key value instead of the full path.
      * @param key Key for an item that was uploaded successfully
      * @return A storage upload result containing the item key
      */
@@ -41,41 +49,6 @@ public final class StorageUploadInputStreamResult extends StorageUploadResult {
         return new StorageUploadInputStreamResult(
                 Objects.requireNonNull(key),
                 Objects.requireNonNull(key)
-        );
-    }
-
-    /**
-     * Creates a new StorageUploadFileResult from a storage item path.
-     * Although this has public access, it is intended for internal use and should not be used directly by host
-     * applications. The behavior of this may change without warning.
-     * @param path Path for an item that was uploaded successfully
-     * @return A storage upload result containing the item path
-     */
-    @NonNull
-    public static StorageUploadInputStreamResult fromPath(@NonNull String path) {
-        return new StorageUploadInputStreamResult(
-                Objects.requireNonNull(path),
-                Objects.requireNonNull(path)
-
-        );
-    }
-
-    /**
-     * Creates a new StorageUploadFileResult from a storage item path.
-     * @deprecated This method is temporary to internally support older transfer methods that
-     * we will additionally add path for.
-     * Although this has public access, it is intended for internal use and should not be used directly by host
-     * applications. The behavior of this may change without warning.
-     * @param path Path for an item that was uploaded successfully
-     * @return A storage upload result containing the item path
-     */
-    @Deprecated
-    @NonNull
-    public static StorageUploadInputStreamResult fromPathAndKey(@NonNull String path, @NonNull String key) {
-        return new StorageUploadInputStreamResult(
-                Objects.requireNonNull(path),
-                Objects.requireNonNull(key)
-
         );
     }
 
