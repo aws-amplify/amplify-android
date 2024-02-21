@@ -23,7 +23,9 @@ import com.amplifyframework.storage.s3.options.AWSS3StoragePagedListOptions;
 
 /**
  * Parameters to provide to S3 that describe a request to list files.
+ * @deprecated  this class is only constructed internally through deprecated transfer methods.
  */
+@Deprecated
 public final class AWSS3StorageListRequest {
     private final String path;
     @SuppressWarnings("deprecation")

@@ -25,7 +25,9 @@ import java.io.File;
 /**
  * Parameters to provide to S3 that describe a request to download a
  * file.
+ * @deprecated  this class is only constructed internally through deprecated transfer methods.
  */
+@Deprecated
 public final class AWSS3StorageDownloadFileRequest {
     private final String key;
     private final File local;

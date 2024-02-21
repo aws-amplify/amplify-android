@@ -27,7 +27,9 @@ import java.util.Map;
 /**
  * Parameters to provide to S3 that describe a request to upload.
  * @param <L> object to upload (e.g. File or InputStream)
+ * @deprecated  this class is only constructed internally through deprecated transfer methods.
  */
+@Deprecated
 public final class AWSS3StorageUploadRequest<L> {
     private final String key;
     private final L local;

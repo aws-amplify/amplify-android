@@ -22,7 +22,9 @@ import com.amplifyframework.storage.StorageAccessLevel;
 
 /**
  * Parameters to provide to S3 that describe a request to remove a file.
+ * @deprecated  this class is only constructed internally through deprecated transfer methods.
  */
+@Deprecated
 public final class AWSS3StorageRemoveRequest {
     private final String key;
     @SuppressWarnings("deprecation")
