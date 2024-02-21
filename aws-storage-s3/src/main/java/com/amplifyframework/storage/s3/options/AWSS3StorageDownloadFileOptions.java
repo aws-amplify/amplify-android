@@ -54,6 +54,7 @@ public final class AWSS3StorageDownloadFileOptions extends StorageDownloadFileOp
      *         values in the provided options
      */
     @NonNull
+    @SuppressWarnings("deprecation")
     public static Builder from(@NonNull final AWSS3StorageDownloadFileOptions options) {
         return builder()
             .accessLevel(options.getAccessLevel())
@@ -80,6 +81,7 @@ public final class AWSS3StorageDownloadFileOptions extends StorageDownloadFileOp
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
@@ -93,6 +95,7 @@ public final class AWSS3StorageDownloadFileOptions extends StorageDownloadFileOp
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     public int hashCode() {
         return ObjectsCompat.hash(
                 getAccessLevel(),
@@ -102,6 +105,7 @@ public final class AWSS3StorageDownloadFileOptions extends StorageDownloadFileOp
 
     @NonNull
     @Override
+    @SuppressWarnings("deprecation")
     public String toString() {
         return "AWSS3StorageDownloadFileOptions {" +
                 "accessLevel=" + getAccessLevel() +

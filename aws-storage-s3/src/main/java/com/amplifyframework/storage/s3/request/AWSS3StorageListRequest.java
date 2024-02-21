@@ -26,6 +26,7 @@ import com.amplifyframework.storage.s3.options.AWSS3StoragePagedListOptions;
  */
 public final class AWSS3StorageListRequest {
     private final String path;
+    @SuppressWarnings("deprecation")
     private final StorageAccessLevel accessLevel;
     private final String targetIdentityId;
     private final int pageSize;
@@ -66,6 +67,7 @@ public final class AWSS3StorageListRequest {
      * @param pageSize number of keys to be retrieved from s3
      * @param nextToken next continuation token to be passed to s3
      */
+    @SuppressWarnings("deprecation")
     public AWSS3StorageListRequest(
         @NonNull String path,
         @NonNull StorageAccessLevel accessLevel,
@@ -85,6 +87,7 @@ public final class AWSS3StorageListRequest {
      * @return Access level
      */
     @NonNull
+    @SuppressWarnings("deprecation")
     public StorageAccessLevel getAccessLevel() {
         return accessLevel;
     }

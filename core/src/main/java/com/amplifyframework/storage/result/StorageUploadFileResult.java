@@ -45,6 +45,7 @@ public final class StorageUploadFileResult extends StorageUploadResult {
      */
     @Deprecated
     @NonNull
+    @SuppressWarnings("deprecation")
     public static StorageUploadFileResult fromKey(@NonNull String key) {
         return new StorageUploadFileResult(
                 Objects.requireNonNull(key),
@@ -53,6 +54,7 @@ public final class StorageUploadFileResult extends StorageUploadResult {
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     public boolean equals(Object thatObject) {
         if (this == thatObject) {
             return true;

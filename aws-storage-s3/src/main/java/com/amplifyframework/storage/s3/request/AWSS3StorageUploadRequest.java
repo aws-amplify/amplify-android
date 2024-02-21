@@ -31,6 +31,8 @@ import java.util.Map;
 public final class AWSS3StorageUploadRequest<L> {
     private final String key;
     private final L local;
+
+    @SuppressWarnings("deprecation")
     private final StorageAccessLevel accessLevel;
     private final String targetIdentityId;
     private final String contentType;
@@ -53,6 +55,7 @@ public final class AWSS3StorageUploadRequest<L> {
      * @param metadata Metadata for the object to store
      * @param useAccelerateEndpoint flag to use acceleration endpoint.
      */
+    @SuppressWarnings("deprecation")
     public AWSS3StorageUploadRequest(
             @NonNull String key,
             @NonNull L local,
@@ -99,6 +102,7 @@ public final class AWSS3StorageUploadRequest<L> {
      * @return Access level
      */
     @NonNull
+    @SuppressWarnings("deprecation")
     public StorageAccessLevel getAccessLevel() {
         return accessLevel;
     }

@@ -29,6 +29,7 @@ import java.io.File;
 public final class AWSS3StorageDownloadFileRequest {
     private final String key;
     private final File local;
+    @SuppressWarnings("deprecation")
     private final StorageAccessLevel accessLevel;
     private final String targetIdentityId;
     private final boolean useAccelerateEndpoint;
@@ -45,6 +46,7 @@ public final class AWSS3StorageDownloadFileRequest {
      *                         If null, the operation will fetch the current identity ID.
      * @param useAccelerateEndpoint Flag to enable acceleration mode
      */
+    @SuppressWarnings("deprecation")
     public AWSS3StorageDownloadFileRequest(
             @NonNull String key,
             @NonNull File local,
@@ -64,6 +66,7 @@ public final class AWSS3StorageDownloadFileRequest {
      * @return Access level
      */
     @NonNull
+    @SuppressWarnings("deprecation")
     public StorageAccessLevel getAccessLevel() {
         return accessLevel;
     }

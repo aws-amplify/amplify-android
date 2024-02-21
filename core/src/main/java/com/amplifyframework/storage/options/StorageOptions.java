@@ -27,9 +27,11 @@ import com.amplifyframework.storage.StoragePath;
  * instance for access level and target ID.
  */
 abstract class StorageOptions {
+    @SuppressWarnings("deprecation")
     private final StorageAccessLevel accessLevel;
     private final String targetIdentityId;
 
+    @SuppressWarnings("deprecation")
     StorageOptions(StorageAccessLevel accessLevel,
                    String targetIdentityId) {
         this.accessLevel = accessLevel;
@@ -43,6 +45,7 @@ abstract class StorageOptions {
      */
     @Deprecated
     @Nullable
+    @SuppressWarnings("deprecation")
     public final StorageAccessLevel getAccessLevel() {
         return accessLevel;
     }
@@ -63,6 +66,7 @@ abstract class StorageOptions {
      */
     @SuppressWarnings({"rawtypes", "unchecked"})
     abstract static class Builder<B extends Builder, O extends StorageOptions> {
+        @SuppressWarnings("deprecation")
         private StorageAccessLevel accessLevel;
         private String targetIdentityId;
 

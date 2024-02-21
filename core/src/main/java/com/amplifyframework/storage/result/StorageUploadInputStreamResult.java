@@ -53,6 +53,7 @@ public final class StorageUploadInputStreamResult extends StorageUploadResult {
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     public boolean equals(Object thatObject) {
         if (this == thatObject) {
             return true;

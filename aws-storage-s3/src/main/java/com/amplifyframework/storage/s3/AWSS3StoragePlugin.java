@@ -107,6 +107,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
     private final AuthCredentialsProvider authCredentialsProvider;
     private final AWSS3StoragePluginConfiguration awsS3StoragePluginConfiguration;
     private AWSS3StorageService storageService;
+    @SuppressWarnings("deprecation")
     private StorageAccessLevel defaultAccessLevel;
     private int defaultUrlExpiration;
 
@@ -179,7 +180,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
     }
 
     @Override
-    @SuppressWarnings("MagicNumber") // TODO: Remove once default values are moved to configuration
+    @SuppressWarnings({"MagicNumber, deprecation"}) // TODO: Remove once default values are moved to configuration
     public void configure(
         JSONObject pluginConfiguration,
         @NonNull Context context
@@ -820,6 +821,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     public StorageListOperation<?> list(@NonNull String path,
                                         @NonNull StoragePagedListOptions options,
                                         @NonNull Consumer<StorageListResult> onSuccess,

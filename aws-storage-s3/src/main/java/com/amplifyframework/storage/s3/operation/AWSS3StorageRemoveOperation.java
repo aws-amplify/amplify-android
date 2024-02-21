@@ -70,7 +70,7 @@ public final class AWSS3StorageRemoveOperation extends StorageRemoveOperation<AW
         this.awsS3StoragePluginConfiguration = awsS3StoragePluginConfiguration;
     }
 
-    @SuppressWarnings("SyntheticAccessor")
+    @SuppressWarnings({"SyntheticAccessor, deprecation"})
     @Override
     public void start() {
         executorService.submit(() -> {
