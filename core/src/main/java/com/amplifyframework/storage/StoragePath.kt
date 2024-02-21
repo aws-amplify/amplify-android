@@ -16,4 +16,8 @@ class StoragePath (internal val ownerIdPathResolver: OwnerIdPathResolver) {
      * @param path path for operation
      */
     constructor(path: String) : this({ _ -> path })
+
+    fun resolve(ownerId: String? = null): String {
+        return ownerIdPathResolver.invoke(ownerId)
+    }
 }

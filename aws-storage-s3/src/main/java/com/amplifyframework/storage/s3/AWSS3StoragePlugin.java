@@ -54,6 +54,7 @@ import com.amplifyframework.storage.result.StorageUploadFileResult;
 import com.amplifyframework.storage.result.StorageUploadInputStreamResult;
 import com.amplifyframework.storage.s3.configuration.AWSS3StoragePluginConfiguration;
 import com.amplifyframework.storage.s3.operation.AWSS3StorageDownloadFileOperation;
+import com.amplifyframework.storage.s3.operation.AWSS3StorageDownloadFileOperationV2;
 import com.amplifyframework.storage.s3.operation.AWSS3StorageGetPresignedUrlOperation;
 import com.amplifyframework.storage.s3.operation.AWSS3StorageListOperation;
 import com.amplifyframework.storage.s3.operation.AWSS3StorageRemoveOperation;
@@ -65,6 +66,7 @@ import com.amplifyframework.storage.s3.options.AWSS3StoragePagedListOptions;
 import com.amplifyframework.storage.s3.options.AWSS3StorageUploadFileOptions;
 import com.amplifyframework.storage.s3.options.AWSS3StorageUploadInputStreamOptions;
 import com.amplifyframework.storage.s3.request.AWSS3StorageDownloadFileRequest;
+import com.amplifyframework.storage.s3.request.AWSS3StorageDownloadFileRequestV2;
 import com.amplifyframework.storage.s3.request.AWSS3StorageGetPresignedUrlRequest;
 import com.amplifyframework.storage.s3.request.AWSS3StorageListRequest;
 import com.amplifyframework.storage.s3.request.AWSS3StorageRemoveRequest;
@@ -414,8 +416,29 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
             @NonNull Consumer<StorageDownloadFileResult> onSuccess,
             @NonNull Consumer<StorageException> onError
     ) {
-        // TODO Implement
-        return null;
+        boolean useAccelerateEndpoint =
+                options instanceof AWSS3StorageDownloadFileOptions &&
+                        ((AWSS3StorageDownloadFileOptions) options).useAccelerateEndpoint();
+
+        AWSS3StorageDownloadFileRequestV2 request = new AWSS3StorageDownloadFileRequestV2(
+                path,
+                local,
+                useAccelerateEndpoint
+        );
+
+
+        AWSS3StorageDownloadFileOperationV2 operation = new AWSS3StorageDownloadFileOperationV2(
+                request,
+                storageService,
+                executorService,
+                authCredentialsProvider,
+                onProgress,
+                onSuccess,
+                onError
+        );
+        operation.start();
+
+        return operation;
     }
 
     @NonNull
