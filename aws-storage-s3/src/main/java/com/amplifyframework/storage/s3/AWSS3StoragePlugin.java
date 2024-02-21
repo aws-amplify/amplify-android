@@ -102,6 +102,8 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
     public static final String AWS_S3_STORAGE_LOG_NAMESPACE = "amplify:aws-s3-storage:%s";
     private static final String AWS_S3_STORAGE_PLUGIN_KEY = "awsS3StoragePlugin";
 
+    private static final int DEFAULT_URL_EXPIRATION_DAYS = 7;
+
     private final StorageService.Factory storageServiceFactory;
     private final ExecutorService executorService;
     private final AuthCredentialsProvider authCredentialsProvider;
@@ -180,7 +182,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
     }
 
     @Override
-    @SuppressWarnings({"MagicNumber, deprecation"}) // TODO: Remove once default values are moved to configuration
+    @SuppressWarnings("deprecation") // TODO: Remove once default values are moved to configuration
     public void configure(
         JSONObject pluginConfiguration,
         @NonNull Context context
@@ -235,7 +237,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
 
         // TODO: Integrate into config + options
         this.defaultAccessLevel = StorageAccessLevel.PUBLIC;
-        this.defaultUrlExpiration = (int) TimeUnit.DAYS.toSeconds(7);
+        this.defaultUrlExpiration = (int) TimeUnit.DAYS.toSeconds(DEFAULT_URL_EXPIRATION_DAYS);
     }
 
     @NonNull
@@ -426,7 +428,6 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
                 local,
                 useAccelerateEndpoint
         );
-
 
         AWSS3StorageDownloadFileOperationV2 operation = new AWSS3StorageDownloadFileOperationV2(
                 request,
@@ -720,6 +721,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     public void getTransfer(
         @NonNull String transferId,
         @NonNull Consumer<StorageTransferOperation<?, ? extends StorageTransferResult>> onReceived,

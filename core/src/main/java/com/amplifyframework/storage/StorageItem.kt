@@ -18,10 +18,6 @@ import java.util.Date
 
 /**
  * Used to store the data on each item in a storage.
- */
-data class StorageItem
-/**
- * Object to represent an item listing in Storage.
  * @param path The unique path of the object in storage.
  * @param key The unique identifier of the object in storage.
  * @param size Size in bytes of the object
@@ -29,7 +25,8 @@ data class StorageItem
  * @param eTag The entity tag is an MD5 hash of the object.
  * ETag reflects only changes to the contents of an object, not its metadata.
  * @param pluginResults Additional results specific to the plugin.
- */ (
+ */
+data class StorageItem(
     /**
      * Get unique path of the object in storage.
      * @return Unique path of the object in storage.
@@ -73,10 +70,11 @@ data class StorageItem
      * @param pluginResults Additional results specific to the plugin.
      */
     @Deprecated("Stop using this constructor in favor of constructor with path")
-     constructor(
-         key: String,
-         size: Long,
-         lastModified: Date,
-         eTag: String, pluginResults: Any?
-     ) : this(key, key, size, lastModified, eTag, pluginResults)
- }
+    constructor(
+        key: String,
+        size: Long,
+        lastModified: Date,
+        eTag: String,
+        pluginResults: Any?
+    ) : this(key, key, size, lastModified, eTag, pluginResults)
+}

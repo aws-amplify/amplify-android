@@ -37,6 +37,10 @@ import java.util.concurrent.ExecutorService
 /**
  * An operation to download a file from AWS S3.
  */
+@Deprecated(
+    "Class should not be public and explicitly cast two. " +
+        "Internal usages are moving to AWSS3StorageDownloadFileOperationV2"
+)
 class AWSS3StorageDownloadFileOperation @JvmOverloads internal constructor(
     transferId: String,
     private var file: File,

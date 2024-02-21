@@ -29,10 +29,10 @@ import com.amplifyframework.storage.s3.request.AWSS3StorageDownloadFileRequestV2
 import com.amplifyframework.storage.s3.service.StorageService
 import com.amplifyframework.storage.s3.transfer.TransferListener
 import com.amplifyframework.storage.s3.transfer.TransferObserver
-import kotlinx.coroutines.runBlocking
 import java.io.File
 import java.util.UUID
 import java.util.concurrent.ExecutorService
+import kotlinx.coroutines.runBlocking
 
 /**
  * An operation to download a file from AWS S3.
@@ -48,7 +48,14 @@ internal class AWSS3StorageDownloadFileOperationV2(
     onProgress: Consumer<StorageTransferProgress>? = null,
     onSuccess: Consumer<StorageDownloadFileResult>? = null,
     onError: Consumer<StorageException>? = null
-) : StorageDownloadFileOperation<AWSS3StorageDownloadFileRequestV2>(request, transferId, onProgress, onSuccess, onError) {
+) :
+    StorageDownloadFileOperation<AWSS3StorageDownloadFileRequestV2>(
+        request,
+        transferId,
+        onProgress,
+        onSuccess,
+        onError
+    ) {
 
     constructor(
         request: AWSS3StorageDownloadFileRequestV2,
@@ -106,7 +113,6 @@ internal class AWSS3StorageDownloadFileOperationV2(
                     downloadRequest.useAccelerateEndpoint
                 )
                 transferObserver?.setTransferListener(DownloadTransferListener())
-
             } catch (e: Exception) {
                 onError?.accept(
                     StorageException(
