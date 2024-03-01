@@ -21,6 +21,7 @@ import com.amplifyframework.hub.HubChannel
 import com.amplifyframework.hub.HubEvent
 import com.amplifyframework.storage.StorageChannelEventName
 import com.amplifyframework.storage.StorageException
+import com.amplifyframework.storage.StoragePath
 import com.amplifyframework.storage.TransferState
 import com.amplifyframework.storage.operation.StorageDownloadFileOperation
 import com.amplifyframework.storage.result.StorageDownloadFileResult
@@ -91,16 +92,35 @@ internal class AWSS3StorageDownloadFileOperationV2(
         executorService.submit {
 
             try {
-                val identityId = try {
-                    runBlocking {
-                        authCredentialsProvider.getIdentityId()
+
+                val path = when (val storagePath = downloadRequest.path) {
+                    is StoragePath.StringStoragePath -> {
+                        storagePath.path
                     }
-                } catch (e: Exception) {
+                    is StoragePath.IdentityIdProvidedStoragePath -> {
+                        val identityId = try {
+                            runBlocking {
+                                authCredentialsProvider.getIdentityId()
+                            }
+                        } catch (e: Exception) {
+                            onError?.accept(
+                                StorageException(
+                                    "Failed to fetch identity ID",
+                                    e,
+                                    "See included exception for more details and suggestions to fix."
+                                )
+                            )
+                            return@submit
+                        }
+                        storagePath.resolvePath(identityId)
+                    }
+                }
+
+                if (!path.startsWith("/")) {
                     onError?.accept(
                         StorageException(
-                            "Failed to fetch identity ID",
-                            e,
-                            "See included exception for more details and suggestions to fix."
+                            "Invalid path provided",
+                            "Update path to start with a /."
                         )
                     )
                     return@submit
@@ -108,7 +128,7 @@ internal class AWSS3StorageDownloadFileOperationV2(
 
                 transferObserver = storageService.downloadToFile(
                     transferId,
-                    downloadRequest.path.resolve(identityId),
+                    path,
                     downloadRequest.local,
                     downloadRequest.useAccelerateEndpoint
                 )

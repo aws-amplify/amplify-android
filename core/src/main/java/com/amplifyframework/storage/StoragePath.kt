@@ -1,25 +1,29 @@
 package com.amplifyframework.storage
 
-import androidx.annotation.WorkerThread
+
 
 /**
- * Used as Lambda function which provides ownerId to help with returning custom path
- * @return path for storage operation
+ * @param identityId lambda function returning path for operation
  */
-typealias OwnerIdPathResolver = (ownerId: String?) -> String
+typealias IdentityIdPathResolver = (identityId: String) -> String
 
-/**
- * @param ownerIdPathResolver lambda function returning path for operation
- */
-class StoragePath(private val ownerIdPathResolver: OwnerIdPathResolver) {
+sealed class StoragePath {
 
-    /**
-     * @param path path for operation
-     */
-    constructor(path: String) : this({ _ -> path })
+    data class StringStoragePath(val path: String): StoragePath()
 
-    @WorkerThread
-    fun resolve(ownerId: String? = null): String {
-        return ownerIdPathResolver.invoke(ownerId)
+    data class IdentityIdProvidedStoragePath(
+        val identityIdPathResolver: IdentityIdPathResolver
+    ): StoragePath() {
+        fun resolvePath(identityId: String): String {
+            return identityIdPathResolver.invoke(identityId)
+        }
+    }
+
+    companion object {
+        @JvmStatic
+        operator fun invoke(path: String): StoragePath = StringStoragePath(path)
+
+        @JvmStatic
+        operator fun invoke(identityIdPathResolver: IdentityIdPathResolver): StoragePath = IdentityIdProvidedStoragePath(identityIdPathResolver)
     }
 }
