@@ -65,8 +65,8 @@ guide](https://docs.amplify.aws/lib/project-setup/prereq/q/platform/android).
 
 ### Specifying Gradle Dependencies
 
-To begin, include Amplify from your `app` module's `build.gradle`
-dependencies section:
+To begin, include Amplify from your `app` module's `build.gradle` (Groovy DSL) dependencies section:
+For kotlin DSL, checkout [the migration guide](https://developer.android.com/build/migrate-to-kotlin-dsl).
 
 ```groovy
 dependencies {
@@ -82,9 +82,9 @@ dependencies {
 }
 ```
 
-### Java 8 Requirement
+### Java 11 Requirement
 
-Amplify Android _requires_ Java 8 features. Please add a `compileOptions`
+Amplify Android _requires_ Java 11 features. Please add a `compileOptions`
 block inside your app's `build.gradle`, as below:
 
 ```gradle
