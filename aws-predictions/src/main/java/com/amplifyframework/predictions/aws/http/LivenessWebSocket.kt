@@ -443,8 +443,9 @@ internal class LivenessWebSocket(
                         it.secretAccessKey,
                         Pair(":date", eventDate)
                     )
-                    val signedPayloadBytes = signedPayload.chunked(2).map { hexChar -> hexChar.toInt(16).toByte() }
-                        .toByteArray()
+                    val signedPayloadBytes = signedPayload.chunked(2).map {
+                        hexChar -> hexChar.toInt(16).toByte()
+                    }.toByteArray()
                     val encodedRequest = LivenessEventStream.encode(
                         encodedPayload.array(),
                         mapOf(
