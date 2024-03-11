@@ -321,7 +321,6 @@ public interface RxStorageCategoryBehavior {
      * The remove operation does not begin until subscription. You can cancel the remove
      * by disposing the single subscription.
      */
-    @Deprecated
     @NonNull
     Single<StorageRemoveResult> remove(
         @NonNull StoragePath path
@@ -415,7 +414,6 @@ public interface RxStorageCategoryBehavior {
      * The list operation does not begin until subscription. You can cancel the listing
      * by disposing the single subscription.
      */
-    @Deprecated
     @NonNull
     Single<StorageListResult> list(
         @NonNull StoragePath path,
