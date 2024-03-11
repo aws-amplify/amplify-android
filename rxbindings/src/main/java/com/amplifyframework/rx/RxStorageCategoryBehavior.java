@@ -19,6 +19,7 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.storage.StorageCategoryBehavior;
 import com.amplifyframework.storage.StorageException;
+import com.amplifyframework.storage.StoragePath;
 import com.amplifyframework.storage.operation.StorageTransferOperation;
 import com.amplifyframework.storage.options.StorageDownloadFileOptions;
 import com.amplifyframework.storage.options.StorageGetUrlOptions;
@@ -48,13 +49,40 @@ public interface RxStorageCategoryBehavior {
     /**
      * Retrieve the remote URL for the object from storage.
      * Provide callbacks to obtain the URL retrieval results.
-     *
+     * @deprecated Use overload with {@link StoragePath} instead
      * @param key the unique identifier for the object in storage
      * @return A Single which emits a result on success, or an {@link StorageException}
      * on failure to get the URL for the requested key
      */
+    @Deprecated
     @NonNull
     Single<StorageGetUrlResult> getUrl(String key);
+
+    /**
+     * Retrieve the remote URL for the object from storage.
+     * Provide callbacks to obtain the URL retrieval results.
+     *
+     * @param path the path of the object in storage
+     * @return A Single which emits a result on success, or an {@link StorageException}
+     * on failure to get the URL for the requested key
+     */
+    @NonNull
+    Single<StorageGetUrlResult> getUrl(StoragePath path);
+
+    /**
+     * Retrieve the remote URL for the object from storage.
+     * Set advanced options such as the access level of the object
+     * or the expiration details of the URL.
+     * Provide callbacks to obtain the URL retrieval results.
+     * @deprecated Use overload with {@link StoragePath} instead
+     * @param key the unique identifier for the object in storage
+     * @param options parameters specific to plugin behavior
+     * @return A Single which emits a result on success, or an {@link StorageException}
+     * if not able to get a url for the requested key
+     */
+    @Deprecated
+    @NonNull
+    Single<StorageGetUrlResult> getUrl(@NonNull String key, @NonNull StorageGetUrlOptions options);
 
     /**
      * Retrieve the remote URL for the object from storage.
@@ -62,22 +90,23 @@ public interface RxStorageCategoryBehavior {
      * or the expiration details of the URL.
      * Provide callbacks to obtain the URL retrieval results.
      *
-     * @param key the unique identifier for the object in storage
+     * @param path the path of the object in storage
      * @param options parameters specific to plugin behavior
      * @return A Single which emits a result on success, or an {@link StorageException}
      * if not able to get a url for the requested key
      */
     @NonNull
-    Single<StorageGetUrlResult> getUrl(@NonNull String key, @NonNull StorageGetUrlOptions options);
+    Single<StorageGetUrlResult> getUrl(@NonNull StoragePath path, @NonNull StorageGetUrlOptions options);
 
     /**
      * Download a file.
-     *
+     * @deprecated Use overload with {@link StoragePath} instead
      * @param key   Remote key of file
      * @param local Local file to which to save
      * @return An instance of {@link RxStorageBinding.RxProgressAwareSingleOperation}
      * which emits a download result or failure as a {@link Single}
      */
+    @Deprecated
     @NonNull
     RxStorageBinding.RxProgressAwareSingleOperation<StorageDownloadFileResult> downloadFile(
         @NonNull String key,
@@ -87,7 +116,42 @@ public interface RxStorageCategoryBehavior {
     /**
      * Download a file.
      *
+     * @param path the path of the object in storage
+     * @param local Local file to which to save
+     * @return An instance of {@link RxStorageBinding.RxProgressAwareSingleOperation}
+     * which emits a download result or failure as a {@link Single}
+     */
+    @NonNull
+    RxStorageBinding.RxProgressAwareSingleOperation<StorageDownloadFileResult> downloadFile(
+        @NonNull StoragePath path,
+        @NonNull File local
+    );
+
+    /**
+     * Download a file.
+     * @deprecated Use overload with {@link StoragePath} instead
      * @param key     Remote key of file
+     * @param local   Local file to which to save
+     * @param options Additional download options
+     * @return An instance of {@link RxStorageBinding.RxProgressAwareSingleOperation}
+     * which emits a download result or failure as a {@link Single}. It also
+     * provides progress information when the caller subscribes to
+     * {@link RxStorageBinding.RxProgressAwareSingleOperation#observeProgress()}.
+     * The download does not begin until subscription. You can cancel the download
+     * by disposing the single subscription.
+     */
+    @Deprecated
+    @NonNull
+    RxStorageBinding.RxProgressAwareSingleOperation<StorageDownloadFileResult> downloadFile(
+        @NonNull String key,
+        @NonNull File local,
+        @NonNull StorageDownloadFileOptions options
+    );
+
+    /**
+     * Download a file.
+     *
+     * @param path the path of the object in storage
      * @param local   Local file to which to save
      * @param options Additional download options
      * @return An instance of {@link RxStorageBinding.RxProgressAwareSingleOperation}
@@ -99,20 +163,21 @@ public interface RxStorageCategoryBehavior {
      */
     @NonNull
     RxStorageBinding.RxProgressAwareSingleOperation<StorageDownloadFileResult> downloadFile(
-        @NonNull String key,
+        @NonNull StoragePath path,
         @NonNull File local,
         @NonNull StorageDownloadFileOptions options
     );
 
     /**
      * Upload a file.
-     *
+     * @deprecated Use overload with {@link StoragePath} instead
      * @param key   Remote key of file
      * @param local Local file from which to read contents
      * @return A single which emits an upload result on success, or an error on failure.
      * The upload does not begin until subscription. You can cancel the upload
      * by disposing the single subscription.
      */
+    @Deprecated
     @NonNull
     RxStorageBinding.RxProgressAwareSingleOperation<StorageUploadFileResult> uploadFile(
         @NonNull String key,
@@ -121,7 +186,22 @@ public interface RxStorageCategoryBehavior {
 
     /**
      * Upload a file.
-     *
+
+     * @param path the path of the object in storage
+     * @param local Local file from which to read contents
+     * @return A single which emits an upload result on success, or an error on failure.
+     * The upload does not begin until subscription. You can cancel the upload
+     * by disposing the single subscription.
+     */
+    @NonNull
+    RxStorageBinding.RxProgressAwareSingleOperation<StorageUploadFileResult> uploadFile(
+        @NonNull StoragePath path,
+        @NonNull File local
+    );
+
+    /**
+     * Upload a file.
+     * @deprecated Use overload with {@link StoragePath} instead
      * @param key     Remote key of file
      * @param local   Local file from which to read contents
      * @param options Additional upload options
@@ -129,6 +209,7 @@ public interface RxStorageCategoryBehavior {
      * The upload does not begin until subscription. You can cancel the upload
      * by disposing the single subscription.
      */
+    @Deprecated
     @NonNull
     RxStorageBinding.RxProgressAwareSingleOperation<StorageUploadFileResult> uploadFile(
         @NonNull String key,
@@ -137,14 +218,31 @@ public interface RxStorageCategoryBehavior {
     );
 
     /**
+     * Upload a file.
+     * @param path the path of the object in storage
+     * @param local   Local file from which to read contents
+     * @param options Additional upload options
+     * @return A single which emits an upload result on success, or an error on failure.
+     * The upload does not begin until subscription. You can cancel the upload
+     * by disposing the single subscription.
+     */
+    @NonNull
+    RxStorageBinding.RxProgressAwareSingleOperation<StorageUploadFileResult> uploadFile(
+        @NonNull StoragePath path,
+        @NonNull File local,
+        @NonNull StorageUploadFileOptions options
+    );
+
+    /**
      * Upload an InputStream.
-     *
+     * @deprecated Use overload with {@link StoragePath} instead
      * @param key   Remote key of the file containing the InputStream content
      * @param local Local InputStream from which to read contents
      * @return A single which emits an upload result on success, or an error on failure.
      * The upload does not begin until subscription. You can cancel the upload
      * by disposing the single subscription.
      */
+    @Deprecated
     @NonNull
     RxStorageBinding.RxProgressAwareSingleOperation<StorageUploadInputStreamResult> uploadInputStream(
         @NonNull String key,
@@ -153,7 +251,22 @@ public interface RxStorageCategoryBehavior {
 
     /**
      * Upload an InputStream.
-     *
+
+     * @param path the path of the object in storage
+     * @param local Local InputStream from which to read contents
+     * @return A single which emits an upload result on success, or an error on failure.
+     * The upload does not begin until subscription. You can cancel the upload
+     * by disposing the single subscription.
+     */
+    @NonNull
+    RxStorageBinding.RxProgressAwareSingleOperation<StorageUploadInputStreamResult> uploadInputStream(
+        @NonNull StoragePath path,
+        @NonNull InputStream local
+    );
+
+    /**
+     * Upload an InputStream.
+     * @deprecated Use overload with {@link StoragePath} instead
      * @param key     Remote key of the file containing the InputStream content
      * @param local   Local InputStream from which to read contents
      * @param options Additional upload options
@@ -161,6 +274,7 @@ public interface RxStorageCategoryBehavior {
      * The upload does not begin until subscription. You can cancel the upload
      * by disposing the single subscription.
      */
+    @Deprecated
     @NonNull
     RxStorageBinding.RxProgressAwareSingleOperation<StorageUploadInputStreamResult> uploadInputStream(
         @NonNull String key,
@@ -169,13 +283,31 @@ public interface RxStorageCategoryBehavior {
     );
 
     /**
+     * Upload an InputStream.
+
+     * @param path the path of the object in storage
+     * @param local   Local InputStream from which to read contents
+     * @param options Additional upload options
+     * @return A single which emits an upload result on success, or an error on failure.
+     * The upload does not begin until subscription. You can cancel the upload
+     * by disposing the single subscription.
+     */
+    @NonNull
+    RxStorageBinding.RxProgressAwareSingleOperation<StorageUploadInputStreamResult> uploadInputStream(
+        @NonNull StoragePath path,
+        @NonNull InputStream local,
+        @NonNull StorageUploadInputStreamOptions options
+    );
+
+    /**
      * Removes a remote file.
-     *
+     * @deprecated Use overload with {@link StoragePath} instead
      * @param key Key to remote file
      * @return A single which emits a remove result on success, or an error on failure.
      * The remove operation does not begin until subscription. You can cancel the remove
      * by disposing the single subscription.
      */
+    @Deprecated
     @NonNull
     Single<StorageRemoveResult> remove(
         @NonNull String key
@@ -183,8 +315,38 @@ public interface RxStorageCategoryBehavior {
 
     /**
      * Removes a remote file.
-     *
+
+     * @param path the path of the object in storage
+     * @return A single which emits a remove result on success, or an error on failure.
+     * The remove operation does not begin until subscription. You can cancel the remove
+     * by disposing the single subscription.
+     */
+    @Deprecated
+    @NonNull
+    Single<StorageRemoveResult> remove(
+        @NonNull StoragePath path
+    );
+
+    /**
+     * Removes a remote file.
+     * @deprecated Use overload with {@link StoragePath} instead
      * @param key     Key to remote file
+     * @param options Remove options
+     * @return A single which emits a remove result on success, or an error on failure.
+     * The remove operation does not begin until subscription. You can cancel the remove
+     * by disposing the single subscription.
+     */
+    @Deprecated
+    @NonNull
+    Single<StorageRemoveResult> remove(
+        @NonNull String key,
+        @NonNull StorageRemoveOptions options
+    );
+
+    /**
+     * Removes a remote file.
+
+     * @param path the path of the object in storage
      * @param options Remove options
      * @return A single which emits a remove result on success, or an error on failure.
      * The remove operation does not begin until subscription. You can cancel the remove
@@ -192,7 +354,7 @@ public interface RxStorageCategoryBehavior {
      */
     @NonNull
     Single<StorageRemoveResult> remove(
-        @NonNull String key,
+        @NonNull StoragePath path,
         @NonNull StorageRemoveOptions options
     );
 
@@ -203,7 +365,7 @@ public interface RxStorageCategoryBehavior {
      * @return A single which emits a list result on success, or an error on failure.
      * The list operation does not begin until subscription. You can cancel the listing
      * by disposing the single subscription.
-     * @deprecated use the {@link #list(String, StoragePagedListOptions)} api instead.
+     * @deprecated use the {@link #list(StoragePath, StoragePagedListOptions)} api instead.
      */
     @NonNull
     @Deprecated
@@ -219,7 +381,7 @@ public interface RxStorageCategoryBehavior {
      * @return A single which emits a list result on success, or an error on failure.
      * The list operation does not begin until subscription. You can cancel the listing
      * by disposing the single subscription.
-     * @deprecated use the {@link #list(String, StoragePagedListOptions)} api instead.
+     * @deprecated use the {@link #list(StoragePath, StoragePagedListOptions)} api instead.
      */
     @NonNull
     @Deprecated
@@ -230,16 +392,33 @@ public interface RxStorageCategoryBehavior {
 
     /**
      * Lists remote files.
-     *
+     * @deprecated Use overload with {@link StoragePath} instead
      * @param path    Remote path where files are found
      * @param options Storate listing options
      * @return A single which emits a list result on success, or an error on failure.
      * The list operation does not begin until subscription. You can cancel the listing
      * by disposing the single subscription.
      */
+    @Deprecated
     @NonNull
     Single<StorageListResult> list(
         @NonNull String path,
+        @NonNull StoragePagedListOptions options
+    );
+
+    /**
+     * Lists remote files.
+
+     * @param path the path of the object in storage
+     * @param options Storate listing options
+     * @return A single which emits a list result on success, or an error on failure.
+     * The list operation does not begin until subscription. You can cancel the listing
+     * by disposing the single subscription.
+     */
+    @Deprecated
+    @NonNull
+    Single<StorageListResult> list(
+        @NonNull StoragePath path,
         @NonNull StoragePagedListOptions options
     );
 
