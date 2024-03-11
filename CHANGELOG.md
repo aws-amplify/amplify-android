@@ -1,3 +1,10 @@
+## [Release 2.14.12](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.14.12)
+
+### Bug Fixes
+- **Predictions:** Fix Liveness InvalidSignatureException ([#2729](https://github.com/aws-amplify/amplify-android/issues/2729))
+
+[See all changes between 2.14.11 and 2.14.12](https://github.com/aws-amplify/amplify-android/compare/release_v2.14.11...release_v2.14.12)
+
 ## [Release 2.14.11](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.14.11)
 
 ### Bug Fixes
