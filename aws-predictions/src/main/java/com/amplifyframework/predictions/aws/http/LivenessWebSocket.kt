@@ -285,7 +285,7 @@ internal class LivenessWebSocket(
     }
 
     private fun handleWebSocketError(livenessResponse: LivenessResponseStream) {
-        webSocketError = if (livenessResponse.validationException != null) {
+        val error = if (livenessResponse.validationException != null) {
             PredictionsException(
                 "An error occurred during the face liveness flow.",
                 livenessResponse.validationException,
@@ -336,12 +336,15 @@ internal class LivenessWebSocket(
                 "Please check your credentials"
             )
         } else {
-            PredictionsException(
-                "An unknown error occurred during the Liveness flow.",
-                AmplifyException.TODO_RECOVERY_SUGGESTION
-            )
+            // ignore unknown responses
+            LOG.debug("WebSocket unable to decode message from server")
+            null
         }
-        this.destroy()
+
+        if (error != null) {
+            webSocketError = error
+            this.destroy()
+        }
     }
 
     fun sendInitialFaceDetectedEvent(

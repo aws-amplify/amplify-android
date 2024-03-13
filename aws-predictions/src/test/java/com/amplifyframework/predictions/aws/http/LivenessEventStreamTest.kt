@@ -44,7 +44,10 @@ import org.junit.Test
 
 internal class LivenessEventStreamTest {
 
-    private val json = Json { encodeDefaults = true }
+    private val json = Json {
+        encodeDefaults = true
+        ignoreUnknownKeys = true
+    }
 
     @Test
     fun `test basic model with string header`() {
@@ -264,6 +267,23 @@ internal class LivenessEventStreamTest {
             ":message-type" to "event"
         )
         val expectedResponse = LivenessResponseStream(accessDeniedException = event)
+
+        val data = json.encodeToString(event)
+        val encoded = LivenessEventStream.encode(data.toByteArray(), headers)
+        val decoded = LivenessEventStream.decode(encoded.array().toByteString(), json)
+
+        assertEquals(expectedResponse, decoded)
+    }
+
+    @Test
+    fun `test decoding unknown event`() {
+        val event = InternalServerException("error")
+        val headers = mapOf(
+            ":event-type" to "Unknown",
+            ":content-type" to "application/json",
+            ":message-type" to "event"
+        )
+        val expectedResponse = LivenessResponseStream() // empty response
 
         val data = json.encodeToString(event)
         val encoded = LivenessEventStream.encode(data.toByteArray(), headers)
