@@ -82,17 +82,17 @@ dependencies {
 }
 ```
 
-### Java 11 Requirement
+### Java 8 Requirement
 
-Amplify Android _requires_ Java 11 features. Please add a `compileOptions`
+Amplify Android _requires_ Java 8 features. Please add a `compileOptions`
 block inside your app's `build.gradle`, as below:
 
 ```gradle
 android {
     compileOptions {
         coreLibraryDesugaringEnabled true
-        sourceCompatibility JavaVersion.VERSION_11
-        targetCompatibility JavaVersion.VERSION_11
+        sourceCompatibility JavaVersion.VERSION_8
+        targetCompatibility JavaVersion.VERSION_8
     }
 }
 ```
