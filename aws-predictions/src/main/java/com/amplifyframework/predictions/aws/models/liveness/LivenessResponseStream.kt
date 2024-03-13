@@ -18,18 +18,27 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-internal data class LivenessResponseStream(
-    @SerialName("ServerSessionInformationEvent") val serverSessionInformationEvent:
+internal sealed class LivenessResponseStream {
+    @Serializable
+    internal data class Event(
+        @SerialName("ServerSessionInformationEvent") val serverSessionInformationEvent:
         ServerSessionInformationEvent? = null,
-    @SerialName("DisconnectionEvent") val disconnectionEvent: DisconnectionEvent? = null,
-    @SerialName("ValidationException") val validationException: ValidationException? = null,
-    @SerialName("InternalServerException") val internalServerException: InternalServerException? = null,
-    @SerialName("ThrottlingException") val throttlingException: ThrottlingException? = null,
-    @SerialName("ServiceQuotaExceededException") val serviceQuotaExceededException:
+        @SerialName("DisconnectionEvent") val disconnectionEvent: DisconnectionEvent? = null
+    ): LivenessResponseStream()
+
+    @Serializable
+    internal data class Exception(
+        @SerialName("ValidationException") val validationException: ValidationException? = null,
+        @SerialName("InternalServerException") val internalServerException: InternalServerException? = null,
+        @SerialName("ThrottlingException") val throttlingException: ThrottlingException? = null,
+        @SerialName("ServiceQuotaExceededException") val serviceQuotaExceededException:
         ServiceQuotaExceededException? = null,
-    @SerialName("ServiceUnavailableException") val serviceUnavailableException: ServiceUnavailableException? = null,
-    @SerialName("SessionNotFoundException") val sessionNotFoundException: SessionNotFoundException? = null,
-    @SerialName("AccessDeniedException") val accessDeniedException: AccessDeniedException? = null,
-    @SerialName("InvalidSignatureException") val invalidSignatureException: InvalidSignatureException? = null,
-    @SerialName("UnrecognizedClientException") val unrecognizedClientException: UnrecognizedClientException? = null
-)
+        @SerialName("ServiceUnavailableException") val serviceUnavailableException: ServiceUnavailableException? = null,
+        @SerialName("SessionNotFoundException") val sessionNotFoundException: SessionNotFoundException? = null,
+        @SerialName("AccessDeniedException") val accessDeniedException: AccessDeniedException? = null,
+        @SerialName("InvalidSignatureException") val invalidSignatureException: InvalidSignatureException? = null,
+        @SerialName("UnrecognizedClientException") val unrecognizedClientException: UnrecognizedClientException? = null
+    ): LivenessResponseStream()
+}
+
+

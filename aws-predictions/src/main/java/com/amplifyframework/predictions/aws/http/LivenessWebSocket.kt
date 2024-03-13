@@ -143,19 +143,24 @@ internal class LivenessWebSocket(
         override fun onMessage(webSocket: WebSocket, bytes: ByteString) {
             LOG.debug("WebSocket onMessage bytes")
             try {
-                val livenessResponseStream = LivenessEventStream.decode(bytes, json)
-                livenessResponseStream?.let { livenessResponse ->
-                    if (livenessResponse.serverSessionInformationEvent != null) {
-                        onSessionInformationReceived.accept(
-                            livenessResponse.serverSessionInformationEvent.sessionInformation
-                        )
-                    } else if (livenessResponse.disconnectionEvent != null) {
-                        this@LivenessWebSocket.webSocket?.close(
-                            NORMAL_SOCKET_CLOSURE_STATUS_CODE,
-                            "Liveness flow completed."
-                        )
-                    } else {
-                        handleWebSocketError(livenessResponse)
+                when(val response = LivenessEventStream.decode(bytes, json)) {
+                    is LivenessResponseStream.Event -> {
+                        if (response.serverSessionInformationEvent != null) {
+                            onSessionInformationReceived.accept(
+                                response.serverSessionInformationEvent.sessionInformation
+                            )
+                        } else if (response.disconnectionEvent != null) {
+                            this@LivenessWebSocket.webSocket?.close(
+                                NORMAL_SOCKET_CLOSURE_STATUS_CODE,
+                                "Liveness flow completed."
+                            )
+                        }
+                    }
+                    is LivenessResponseStream.Exception -> {
+                        handleWebSocketError(response)
+                    }
+                    else -> {
+                        LOG.debug("WebSocket unable to decode message from server")
                     }
                 }
             } catch (e: Exception) {
@@ -284,8 +289,8 @@ internal class LivenessWebSocket(
         )
     }
 
-    private fun handleWebSocketError(livenessResponse: LivenessResponseStream) {
-        val error = if (livenessResponse.validationException != null) {
+    private fun handleWebSocketError(livenessResponse: LivenessResponseStream.Exception) {
+        webSocketError = if (livenessResponse.validationException != null) {
             PredictionsException(
                 "An error occurred during the face liveness flow.",
                 livenessResponse.validationException,
@@ -336,15 +341,12 @@ internal class LivenessWebSocket(
                 "Please check your credentials"
             )
         } else {
-            // ignore unknown responses
-            LOG.debug("WebSocket unable to decode message from server")
-            null
+            PredictionsException(
+                "An unknown error occurred during the Liveness flow.",
+                AmplifyException.TODO_RECOVERY_SUGGESTION
+            )
         }
-
-        if (error != null) {
-            webSocketError = error
-            this.destroy()
-        }
+        this.destroy()
     }
 
     fun sendInitialFaceDetectedEvent(

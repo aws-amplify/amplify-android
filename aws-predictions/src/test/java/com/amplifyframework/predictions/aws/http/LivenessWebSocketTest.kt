@@ -272,6 +272,28 @@ internal class LivenessWebSocketTest {
     }
 
     @Test
+    fun `unknown exception-type closes websocket`() {
+        val webSocket = mockk<WebSocket>(relaxed = true)
+        val livenessWebSocket = createLivenessWebSocket()
+        livenessWebSocket.webSocket = webSocket
+        val event = UnknownEvent()
+        val headers = mapOf(
+            ":exception-type" to "UnknownException",
+            ":content-type" to "application/json",
+            ":message-type" to "event"
+        )
+
+        val data = json.encodeToString(event)
+        val encodedByteString = LivenessEventStream.encode(data.toByteArray(), headers).array().toByteString()
+
+        livenessWebSocket.webSocketListener.onMessage(mockk(), encodedByteString)
+
+        verify(exactly = 0) { onSessionInformationReceived.accept(any()) }
+        verify(exactly = 0) { onErrorReceived.accept(any()) }
+        verify(exactly = 1) { webSocket.close(any(), any()) }
+    }
+
+    @Test
     fun `disconnect event stops websocket`() {
         val livenessWebSocket = createLivenessWebSocket()
         livenessWebSocket.webSocket = mockk()
