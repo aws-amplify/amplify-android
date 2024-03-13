@@ -1,17 +1,22 @@
 package com.amplifyframework.storage
 
-/**
- * @param identityId lambda function returning path for operation
- */
+import com.amplifyframework.annotations.InternalAmplifyApi
+
 typealias IdentityIdPathResolver = (identityId: String) -> String
 
-sealed class StoragePath {
+abstract class StoragePath {
 
-    data class StringStoragePath(val path: String) : StoragePath()
+    data class StringStoragePath(private val path: String) : StoragePath() {
+
+        @InternalAmplifyApi
+        fun resolvePath() = path
+    }
 
     data class IdentityIdProvidedStoragePath(
-        val identityIdPathResolver: IdentityIdPathResolver
+        private val identityIdPathResolver: IdentityIdPathResolver
     ) : StoragePath() {
+
+        @InternalAmplifyApi
         fun resolvePath(identityId: String): String {
             return identityIdPathResolver.invoke(identityId)
         }
@@ -19,10 +24,10 @@ sealed class StoragePath {
 
     companion object {
         @JvmStatic
-        operator fun invoke(path: String): StoragePath = StringStoragePath(path)
+        fun fromString(path: String): StoragePath = StringStoragePath(path)
 
         @JvmStatic
-        operator fun invoke(identityIdPathResolver: IdentityIdPathResolver): StoragePath =
+        fun withIdentityId(identityIdPathResolver: IdentityIdPathResolver): StoragePath =
             IdentityIdProvidedStoragePath(identityIdPathResolver)
     }
 }

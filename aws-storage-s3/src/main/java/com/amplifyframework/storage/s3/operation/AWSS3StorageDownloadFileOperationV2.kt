@@ -95,7 +95,7 @@ internal class AWSS3StorageDownloadFileOperationV2(
 
                 val path = when (val storagePath = downloadRequest.path) {
                     is StoragePath.StringStoragePath -> {
-                        storagePath.path
+                        storagePath.resolvePath()
                     }
                     is StoragePath.IdentityIdProvidedStoragePath -> {
                         val identityId = try {
@@ -113,6 +113,16 @@ internal class AWSS3StorageDownloadFileOperationV2(
                             return@submit
                         }
                         storagePath.resolvePath(identityId)
+                    }
+
+                    else -> {
+                        onError?.accept(
+                            StorageException(
+                                "Unsupported StoragePath type provided",
+                                "Use an Amplify supported StoragePath type"
+                            )
+                        )
+                        return@submit
                     }
                 }
 
