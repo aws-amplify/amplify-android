@@ -65,8 +65,8 @@ guide](https://docs.amplify.aws/lib/project-setup/prereq/q/platform/android).
 
 ### Specifying Gradle Dependencies
 
-To begin, include Amplify from your `app` module's `build.gradle`
-dependencies section:
+To begin, include Amplify from your `app` module's `build.gradle` (Groovy DSL) dependencies section:
+For kotlin DSL, checkout [the migration guide](https://developer.android.com/build/migrate-to-kotlin-dsl).
 
 ```groovy
 dependencies {
@@ -91,8 +91,8 @@ block inside your app's `build.gradle`, as below:
 android {
     compileOptions {
         coreLibraryDesugaringEnabled true
-        sourceCompatibility JavaVersion.VERSION_11
-        targetCompatibility JavaVersion.VERSION_11
+        sourceCompatibility JavaVersion.VERSION_8
+        targetCompatibility JavaVersion.VERSION_8
     }
 }
 ```
