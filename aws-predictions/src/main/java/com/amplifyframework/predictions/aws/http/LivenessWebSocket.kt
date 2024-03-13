@@ -143,7 +143,7 @@ internal class LivenessWebSocket(
         override fun onMessage(webSocket: WebSocket, bytes: ByteString) {
             LOG.debug("WebSocket onMessage bytes")
             try {
-                when(val response = LivenessEventStream.decode(bytes, json)) {
+                when (val response = LivenessEventStream.decode(bytes, json)) {
                     is LivenessResponseStream.Event -> {
                         if (response.serverSessionInformationEvent != null) {
                             onSessionInformationReceived.accept(
