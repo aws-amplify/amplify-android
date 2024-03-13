@@ -22,7 +22,6 @@ import java.nio.ByteBuffer
 import java.util.Arrays
 import java.util.Date
 import java.util.zip.CRC32
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import okio.ByteString
 import okio.ByteString.Companion.encodeUtf8
@@ -151,22 +150,20 @@ internal object LivenessEventStream {
         val payloadLength = eventData.size - payloadStartPosition - 4
         val payloadString =
             eventData.substring(payloadStartPosition, payloadStartPosition + payloadLength).utf8()
-        val jsonString = when {
+        return when {
             ":event-type" in headers.keys -> {
-                "{\"${headers[":event-type"]}\":$payloadString}"
+                val jsonString = "{\"${headers[":event-type"]}\":$payloadString}"
+                json.decodeFromString<LivenessResponseStream.Event>(jsonString)
             }
             ":exception-type" in headers.keys -> {
-                "{\"${headers[":exception-type"]}\":$payloadString}"
+                val jsonString = "{\"${headers[":exception-type"]}\":$payloadString}"
+                json.decodeFromString<LivenessResponseStream.Exception>(jsonString)
             }
             else -> {
-                ""
+                LOG.error("Error deserializing liveness response.")
+                null
             }
         }
-        if (jsonString.isEmpty()) {
-            LOG.error("Error deserializing liveness response.")
-            return null
-        }
-        return json.decodeFromString<LivenessResponseStream>(jsonString)
     }
 
     private fun ByteArray.toUInt32(): UInt {

@@ -44,7 +44,10 @@ import org.junit.Test
 
 internal class LivenessEventStreamTest {
 
-    private val json = Json { encodeDefaults = true }
+    private val json = Json {
+        encodeDefaults = true
+        ignoreUnknownKeys = true
+    }
 
     @Test
     fun `test basic model with string header`() {
@@ -128,7 +131,7 @@ internal class LivenessEventStreamTest {
             ":content-type" to "application/json",
             ":message-type" to "event"
         )
-        val expectedResponse = LivenessResponseStream(serverSessionInformationEvent = event)
+        val expectedResponse = LivenessResponseStream.Event(serverSessionInformationEvent = event)
 
         val data = json.encodeToString(event)
         val encoded = LivenessEventStream.encode(data.toByteArray(), headers)
@@ -140,11 +143,11 @@ internal class LivenessEventStreamTest {
     fun `test decoding DisconnectionEvent`() {
         val event = DisconnectionEvent(timestampMillis = System.currentTimeMillis())
         val headers = mapOf(
-            ":exception-type" to "DisconnectionEvent",
+            ":event-type" to "DisconnectionEvent",
             ":content-type" to "application/json",
             ":message-type" to "event"
         )
-        val expectedResponse = LivenessResponseStream(disconnectionEvent = event)
+        val expectedResponse = LivenessResponseStream.Event(disconnectionEvent = event)
 
         val data = json.encodeToString(event)
         val encoded = LivenessEventStream.encode(data.toByteArray(), headers)
@@ -161,7 +164,7 @@ internal class LivenessEventStreamTest {
             ":content-type" to "application/json",
             ":message-type" to "event"
         )
-        val expectedResponse = LivenessResponseStream(validationException = event)
+        val expectedResponse = LivenessResponseStream.Exception(validationException = event)
 
         val data = json.encodeToString(event)
         val encoded = LivenessEventStream.encode(data.toByteArray(), headers)
@@ -178,7 +181,7 @@ internal class LivenessEventStreamTest {
             ":content-type" to "application/json",
             ":message-type" to "event"
         )
-        val expectedResponse = LivenessResponseStream(internalServerException = event)
+        val expectedResponse = LivenessResponseStream.Exception(internalServerException = event)
 
         val data = json.encodeToString(event)
         val encoded = LivenessEventStream.encode(data.toByteArray(), headers)
@@ -195,7 +198,7 @@ internal class LivenessEventStreamTest {
             ":content-type" to "application/json",
             ":message-type" to "event"
         )
-        val expectedResponse = LivenessResponseStream(throttlingException = event)
+        val expectedResponse = LivenessResponseStream.Exception(throttlingException = event)
 
         val data = json.encodeToString(event)
         val encoded = LivenessEventStream.encode(data.toByteArray(), headers)
@@ -212,7 +215,7 @@ internal class LivenessEventStreamTest {
             ":content-type" to "application/json",
             ":message-type" to "event"
         )
-        val expectedResponse = LivenessResponseStream(serviceQuotaExceededException = event)
+        val expectedResponse = LivenessResponseStream.Exception(serviceQuotaExceededException = event)
 
         val data = json.encodeToString(event)
         val encoded = LivenessEventStream.encode(data.toByteArray(), headers)
@@ -229,7 +232,7 @@ internal class LivenessEventStreamTest {
             ":content-type" to "application/json",
             ":message-type" to "event"
         )
-        val expectedResponse = LivenessResponseStream(serviceUnavailableException = event)
+        val expectedResponse = LivenessResponseStream.Exception(serviceUnavailableException = event)
 
         val data = json.encodeToString(event)
         val encoded = LivenessEventStream.encode(data.toByteArray(), headers)
@@ -246,7 +249,7 @@ internal class LivenessEventStreamTest {
             ":content-type" to "application/json",
             ":message-type" to "event"
         )
-        val expectedResponse = LivenessResponseStream(sessionNotFoundException = event)
+        val expectedResponse = LivenessResponseStream.Exception(sessionNotFoundException = event)
 
         val data = json.encodeToString(event)
         val encoded = LivenessEventStream.encode(data.toByteArray(), headers)
@@ -263,7 +266,41 @@ internal class LivenessEventStreamTest {
             ":content-type" to "application/json",
             ":message-type" to "event"
         )
-        val expectedResponse = LivenessResponseStream(accessDeniedException = event)
+        val expectedResponse = LivenessResponseStream.Exception(accessDeniedException = event)
+
+        val data = json.encodeToString(event)
+        val encoded = LivenessEventStream.encode(data.toByteArray(), headers)
+        val decoded = LivenessEventStream.decode(encoded.array().toByteString(), json)
+
+        assertEquals(expectedResponse, decoded)
+    }
+
+    @Test
+    fun `test decoding unknown event`() {
+        val event = InternalServerException("error")
+        val headers = mapOf(
+            ":event-type" to "Unknown",
+            ":content-type" to "application/json",
+            ":message-type" to "event"
+        )
+        val expectedResponse = LivenessResponseStream.Event() // empty response
+
+        val data = json.encodeToString(event)
+        val encoded = LivenessEventStream.encode(data.toByteArray(), headers)
+        val decoded = LivenessEventStream.decode(encoded.array().toByteString(), json)
+
+        assertEquals(expectedResponse, decoded)
+    }
+
+    @Test
+    fun `test decoding unknown exception`() {
+        val event = InternalServerException("error")
+        val headers = mapOf(
+            ":exception-type" to "UnknownException",
+            ":content-type" to "application/json",
+            ":message-type" to "event"
+        )
+        val expectedResponse = LivenessResponseStream.Exception() // empty response
 
         val data = json.encodeToString(event)
         val encoded = LivenessEventStream.encode(data.toByteArray(), headers)
