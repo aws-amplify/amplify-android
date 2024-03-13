@@ -154,6 +154,8 @@ internal class LivenessWebSocket(
                                 NORMAL_SOCKET_CLOSURE_STATUS_CODE,
                                 "Liveness flow completed."
                             )
+                        } else {
+                            LOG.debug("WebSocket received unknown event-type: message from server")
                         }
                     }
                     is LivenessResponseStream.Exception -> {
