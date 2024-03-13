@@ -71,14 +71,14 @@ For kotlin DSL, checkout [the migration guide](https://developer.android.com/bui
 ```groovy
 dependencies {
     // Only specify modules that provide functionality your app will use
-    implementation 'com.amplifyframework:aws-analytics-pinpoint:2.14.11'
-    implementation 'com.amplifyframework:aws-api:2.14.11'
-    implementation 'com.amplifyframework:aws-auth-cognito:2.14.11'
-    implementation 'com.amplifyframework:aws-datastore:2.14.11'
-    implementation 'com.amplifyframework:aws-predictions:2.14.11'
-    implementation 'com.amplifyframework:aws-storage-s3:2.14.11'
-    implementation 'com.amplifyframework:aws-geo-location:2.14.11'
-    implementation 'com.amplifyframework:aws-push-notifications-pinpoint:2.14.11'
+    implementation 'com.amplifyframework:aws-analytics-pinpoint:2.14.12'
+    implementation 'com.amplifyframework:aws-api:2.14.12'
+    implementation 'com.amplifyframework:aws-auth-cognito:2.14.12'
+    implementation 'com.amplifyframework:aws-datastore:2.14.12'
+    implementation 'com.amplifyframework:aws-predictions:2.14.12'
+    implementation 'com.amplifyframework:aws-storage-s3:2.14.12'
+    implementation 'com.amplifyframework:aws-geo-location:2.14.12'
+    implementation 'com.amplifyframework:aws-push-notifications-pinpoint:2.14.12'
 }
 ```
 
