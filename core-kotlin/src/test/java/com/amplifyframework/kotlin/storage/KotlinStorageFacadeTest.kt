@@ -19,6 +19,7 @@ import com.amplifyframework.core.Consumer
 import com.amplifyframework.storage.StorageCategoryBehavior
 import com.amplifyframework.storage.StorageException
 import com.amplifyframework.storage.StorageItem
+import com.amplifyframework.storage.StoragePath
 import com.amplifyframework.storage.operation.StorageDownloadFileOperation
 import com.amplifyframework.storage.operation.StorageTransferOperation
 import com.amplifyframework.storage.operation.StorageUploadFileOperation
@@ -77,6 +78,22 @@ class KotlinStorageFacadeTest {
         }
         assertEquals(result, storage.getUrl(forRemoteKey))
     }
+
+    @Test
+    fun getUrlStoragePathSucceeds() = runBlocking {
+        val forRemotePath = StoragePath.fromString("/delete_me.png")
+        val result = StorageGetUrlResult.fromUrl(URL("https://s3.amazon.biz/file.png"))
+        every {
+            delegate.getUrl(eq(forRemotePath), any(), any(), any())
+        } answers {
+            val onResultArg = it.invocation.args[/* index of result consumer = */ 2]
+            val onResult = onResultArg as Consumer<StorageGetUrlResult>
+            onResult.accept(result)
+            mockk()
+        }
+        assertEquals(result, storage.getUrl(forRemotePath))
+    }
+
 
     /**
      * When the getUrl() delegate emits an error, it should be thrown from the coroutine API.

@@ -19,9 +19,10 @@ import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.hub.HubChannel
 import com.amplifyframework.hub.HubEvent
+import com.amplifyframework.storage.IdentityIdProvidedStoragePath
 import com.amplifyframework.storage.StorageChannelEventName
 import com.amplifyframework.storage.StorageException
-import com.amplifyframework.storage.StoragePath
+import com.amplifyframework.storage.StringStoragePath
 import com.amplifyframework.storage.TransferState
 import com.amplifyframework.storage.operation.StorageDownloadFileOperation
 import com.amplifyframework.storage.result.StorageDownloadFileResult
@@ -94,10 +95,10 @@ internal class AWSS3StorageDownloadFileOperationV2(
             try {
 
                 val path = when (val storagePath = downloadRequest.path) {
-                    is StoragePath.StringStoragePath -> {
+                    is StringStoragePath -> {
                         storagePath.resolvePath()
                     }
-                    is StoragePath.IdentityIdProvidedStoragePath -> {
+                    is IdentityIdProvidedStoragePath -> {
                         val identityId = try {
                             runBlocking {
                                 authCredentialsProvider.getIdentityId()
