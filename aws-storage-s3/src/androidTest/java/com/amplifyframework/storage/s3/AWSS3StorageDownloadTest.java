@@ -59,6 +59,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * Instrumentation test for operational work on download.
  */
+@SuppressWarnings("deprecation")
 public final class AWSS3StorageDownloadTest {
     private static final long EXTENDED_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(60);
 

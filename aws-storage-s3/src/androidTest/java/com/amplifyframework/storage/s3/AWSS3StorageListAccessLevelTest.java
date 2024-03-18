@@ -53,7 +53,7 @@ import static org.junit.Assert.assertNotNull;
  * Instrumentation test to confirm that Storage List behaves
  * correctly with regards to the provided storage access level.
  */
-
+@SuppressWarnings("deprecation")
 public final class AWSS3StorageListAccessLevelTest {
     private static final String TEST_DIR_NAME = Long.toString(System.currentTimeMillis());
     private static final long UPLOAD_SIZE = 100L;
