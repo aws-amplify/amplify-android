@@ -25,11 +25,6 @@ import org.json.JSONObject
 private const val configName = "Default"
 
 @InternalAmplifyApi
-enum class VerificationMechanism {
-    PhoneNumber, Email
-}
-
-@InternalAmplifyApi
 data class PasswordProtectionSettings(
     @IntRange(from = 6, to = 99) val length: Int,
     val requiresNumber: Boolean,
@@ -49,7 +44,7 @@ data class AuthConfiguration internal constructor(
     val authFlowType: AuthFlowType,
     val signUpAttributes: List<AuthUserAttributeKey>,
     val usernameAttributes: List<AuthUserAttributeKey>,
-    val verificationMechanisms: List<VerificationMechanism>,
+    val verificationMechanisms: List<AuthUserAttributeKey>,
     val passwordProtectionSettings: PasswordProtectionSettings?
 ) {
 
@@ -73,10 +68,7 @@ data class AuthConfiguration internal constructor(
             } ?: emptyList()
 
             val verificationMechanisms = authConfig?.optJSONArray("verificationMechanisms")?.map {
-                when (getString(it)) {
-                    "EMAIL" -> VerificationMechanism.Email
-                    else -> VerificationMechanism.PhoneNumber
-                }
+                AuthUserAttributeKey.custom(getString(it).lowercase())
             } ?: emptyList()
 
             return AuthConfiguration(
