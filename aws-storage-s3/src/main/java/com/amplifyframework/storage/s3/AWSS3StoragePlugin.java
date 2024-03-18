@@ -55,6 +55,7 @@ import com.amplifyframework.storage.result.StorageUploadFileResult;
 import com.amplifyframework.storage.result.StorageUploadInputStreamResult;
 import com.amplifyframework.storage.s3.configuration.AWSS3StoragePluginConfiguration;
 import com.amplifyframework.storage.s3.operation.AWSS3StorageDownloadFileOperation;
+import com.amplifyframework.storage.s3.operation.AWSS3StoragePathDownloadFileOperation;
 import com.amplifyframework.storage.s3.operation.AWSS3StorageGetPresignedUrlOperation;
 import com.amplifyframework.storage.s3.operation.AWSS3StorageListOperation;
 import com.amplifyframework.storage.s3.operation.AWSS3StorageRemoveOperation;
@@ -66,6 +67,7 @@ import com.amplifyframework.storage.s3.options.AWSS3StoragePagedListOptions;
 import com.amplifyframework.storage.s3.options.AWSS3StorageUploadFileOptions;
 import com.amplifyframework.storage.s3.options.AWSS3StorageUploadInputStreamOptions;
 import com.amplifyframework.storage.s3.request.AWSS3StorageDownloadFileRequest;
+import com.amplifyframework.storage.s3.request.AWSS3StoragePathDownloadFileRequest;
 import com.amplifyframework.storage.s3.request.AWSS3StorageGetPresignedUrlRequest;
 import com.amplifyframework.storage.s3.request.AWSS3StorageListRequest;
 import com.amplifyframework.storage.s3.request.AWSS3StorageRemoveRequest;
@@ -252,6 +254,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
         return BuildConfig.VERSION_NAME;
     }
 
+    @SuppressWarnings("deprecation")
     @NonNull
     @Override
     public StorageGetUrlOperation<?> getUrl(
@@ -319,6 +322,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
         return null;
     }
 
+    @SuppressWarnings("deprecation")
     @NonNull
     @Override
     public StorageDownloadFileOperation<?> downloadFile(
@@ -343,6 +347,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
         return downloadFile(path, local, options, NoOpConsumer.create(), onSuccess, onError);
     }
 
+    @SuppressWarnings("deprecation")
     @NonNull
     @Override
     public StorageDownloadFileOperation<?> downloadFile(
@@ -420,6 +425,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
         return null;
     }
 
+    @SuppressWarnings("deprecation")
     @NonNull
     @Override
     public StorageUploadFileOperation<?> uploadFile(
@@ -444,6 +450,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
         return uploadFile(path, local, options, NoOpConsumer.create(), onSuccess, onError);
     }
 
+    @SuppressWarnings("deprecation")
     @NonNull
     @Override
     public StorageUploadFileOperation<?> uploadFile(
@@ -525,6 +532,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
         return null;
     }
 
+    @SuppressWarnings("deprecation")
     @NonNull
     @Override
     public StorageUploadInputStreamOperation<?> uploadInputStream(
@@ -548,6 +556,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
         return uploadInputStream(path, local, options, NoOpConsumer.create(), onSuccess, onError);
     }
 
+    @SuppressWarnings("deprecation")
     @NonNull
     @Override
     public StorageUploadInputStreamOperation<?> uploadInputStream(
@@ -628,6 +637,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
         return null;
     }
 
+    @SuppressWarnings("deprecation")
     @NonNull
     @Override
     public StorageRemoveOperation<?> remove(
@@ -766,6 +776,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
     }
 
     @NonNull
+    @SuppressWarnings("deprecation")
     @Override
     public StorageListOperation<?> list(
         @NonNull String path,
