@@ -74,7 +74,6 @@ public final class AWSS3StorageGetPresignedUrlRequest {
      * Gets the storage key.
      * @return key
      */
-    @Deprecated
     @NonNull
     public String getKey() {
         return key;
@@ -84,7 +83,6 @@ public final class AWSS3StorageGetPresignedUrlRequest {
      * Gets the target identity id override. If null, the operation gets the default, current user's identity ID.
      * @return target identity id override
      */
-    @Deprecated
     @Nullable
     public String getTargetIdentityId() {
         return targetIdentityId;

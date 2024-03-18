@@ -86,7 +86,6 @@ public final class AWSS3StorageUploadRequest<L> {
      * @return key
      */
     @NonNull
-    @Deprecated
     public String getKey() {
         return key;
     }
@@ -105,7 +104,6 @@ public final class AWSS3StorageUploadRequest<L> {
      * @return Access level
      */
     @NonNull
-    @Deprecated
     @SuppressWarnings("deprecation")
     public StorageAccessLevel getAccessLevel() {
         return accessLevel;
@@ -115,7 +113,6 @@ public final class AWSS3StorageUploadRequest<L> {
      * Gets the target identity id override. If null, the operation gets the default, current user's identity ID.
      * @return target identity id override
      */
-    @Deprecated
     @Nullable
     public String getTargetIdentityId() {
         return targetIdentityId;
