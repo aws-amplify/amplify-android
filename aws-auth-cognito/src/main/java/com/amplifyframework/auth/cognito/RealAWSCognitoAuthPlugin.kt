@@ -173,7 +173,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 
 internal class RealAWSCognitoAuthPlugin(
-    private val configuration: AuthConfiguration,
+    val configuration: AuthConfiguration,
     private val authEnvironment: AuthEnvironment,
     private val authStateMachine: AuthStateMachine,
     private val logger: Logger

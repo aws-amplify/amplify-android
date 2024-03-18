@@ -15,9 +15,11 @@
 
 package com.amplifyframework.statemachine.codegen.data
 
+import com.amplifyframework.annotations.InternalAmplifyApi
 import org.json.JSONObject
 
-internal data class OauthConfiguration internal constructor(
+@InternalAmplifyApi
+data class OauthConfiguration internal constructor(
     val appClient: String,
     val appSecret: String?,
     val domain: String,
@@ -25,7 +27,7 @@ internal data class OauthConfiguration internal constructor(
     val signInRedirectURI: String,
     val signOutRedirectURI: String
 ) {
-    companion object {
+    internal companion object {
 
         fun fromJson(jsonObject: JSONObject?): OauthConfiguration? {
             return jsonObject?.run {

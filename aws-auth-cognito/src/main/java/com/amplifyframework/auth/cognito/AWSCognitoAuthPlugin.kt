@@ -100,9 +100,13 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
     private lateinit var pluginConfigurationJSON: JSONObject
 
     @InternalAmplifyApi
+    @Deprecated("Use getAuthConfiguration instead", replaceWith = ReplaceWith("getAuthConfiguration()"))
     fun getPluginConfiguration(): JSONObject {
         return pluginConfigurationJSON
     }
+
+    @InternalAmplifyApi
+    fun getAuthConfiguration() = realPlugin.configuration
 
     @InternalAmplifyApi
     fun addToUserAgent(type: AWSCognitoAuthMetadataType, value: String) {
