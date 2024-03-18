@@ -152,7 +152,8 @@ public final class RxStorageBindingTest {
 
     /**
      * When the delegate returns a result from the
-     * {@link StorageCategoryBehavior#getUrl(com.amplifyframework.storage.StoragePath, StorageGetUrlOptions, Consumer, Consumer)},
+     * {@link StorageCategoryBehavior#getUrl(com.amplifyframework.storage.StoragePath,
+     * StorageGetUrlOptions, Consumer, Consumer)},
      * the binding should emit the result via the single.
      * @throws MalformedURLException Not expected; it's part of the URL constructor signature, though
      */
@@ -543,14 +544,18 @@ public final class RxStorageBindingTest {
     }
 
     /**
-     * When {@link StorageCategoryBehavior#uploadInputStream(StoragePath, InputStream, Consumer, Consumer)} returns
+     * When {@link StorageCategoryBehavior#uploadInputStream(StoragePath, InputStream, Consumer,
+     * Consumer)} returns
      * a {@link StorageUploadInputStreamResult}, then the {@link Single} returned by
      * {@link RxStorageCategoryBehavior#uploadInputStream(String, InputStream)} should emit that result.
      * @throws InterruptedException Not expected.
      */
     @Test
     public void uploadInputStreamStoragePathReturnsResult() throws InterruptedException {
-        StorageUploadInputStreamResult result = new StorageUploadInputStreamResult(remoteStoragePathString, remoteStoragePathString);
+        StorageUploadInputStreamResult result = new StorageUploadInputStreamResult(
+                remoteStoragePathString,
+                remoteStoragePathString
+        );
         doAnswer(invocation -> {
             // 0 key, 1 local, 2 options, 3 onProgress, 4 onResult, 5 onError
             final int indexOfResultConsumer = 4;
@@ -594,7 +599,8 @@ public final class RxStorageBindingTest {
         StorageUploadInputStreamOperation<?> storageUploadInputStreamOperationMock =
             mock(StorageUploadInputStreamOperation.class);
         when(storageUploadInputStreamOperationMock.getTransferId()).thenReturn(transferId);
-        doAnswer(invocation -> storageUploadInputStreamOperationMock).when(delegate).uploadInputStream(eq(remoteStoragePath),
+        doAnswer(invocation -> storageUploadInputStreamOperationMock).when(delegate)
+                .uploadInputStream(eq(remoteStoragePath),
             eq(localInputStream),
             any(StorageUploadInputStreamOptions.class),
             anyConsumer(),
@@ -752,8 +758,9 @@ public final class RxStorageBindingTest {
     }
 
     /**
-     * When {@link StorageCategoryBehavior#list(StoragePath, StoragePagedListOptions, Consumer, Consumer)} emits a result,
-     * then the {@link Single} returned by list that should emit an {@link StorageListResult}.
+     * When {@link StorageCategoryBehavior#list(StoragePath, StoragePagedListOptions, Consumer,
+     * Consumer)} emits a result, then the {@link Single} returned by list that should emit an
+     * {@link StorageListResult}.
      */
     @Test
     public void listStoragePathReturnsResult() {
@@ -798,7 +805,8 @@ public final class RxStorageBindingTest {
     }
 
     /**
-     * When the {@link StorageCategoryBehavior#list(StoragePath, StoragePagedListOptions, Consumer, Consumer)} emits an error,
+     * When the {@link StorageCategoryBehavior#list(StoragePath, StoragePagedListOptions, Consumer,
+     * Consumer)} emits an error,
      * the {@link Single} returned by list that should emit a {@link StorageException}.
      */
     @Test
@@ -810,8 +818,13 @@ public final class RxStorageBindingTest {
             errorConsumer.accept(error);
             return mock(StorageListOperation.class);
         })
-                .when(delegate)
-                .list(eq(remoteStoragePath), any(StoragePagedListOptions.class), anyConsumer(), anyConsumer());
+            .when(delegate)
+            .list(
+                eq(remoteStoragePath),
+                any(StoragePagedListOptions.class),
+                anyConsumer(),
+                anyConsumer()
+            );
 
         rxStorage
                 .list(remoteStoragePath, StoragePagedListOptions.builder().build())
@@ -822,8 +835,8 @@ public final class RxStorageBindingTest {
 
     /**
      * When the {@link StorageCategoryBehavior#remove(String, Consumer, Consumer)} emits
-     * a result, the {@link Single} returned by {@link RxStorageCategoryBehavior#remove(String)} should
-     * emit a {@link StorageRemoveResult}.
+     * a result, the {@link Single} returned by {@link RxStorageCategoryBehavior#remove(String)}
+     * should emit a {@link StorageRemoveResult}.
      */
     @SuppressWarnings("deprecation")
     @Test
@@ -831,7 +844,8 @@ public final class RxStorageBindingTest {
         StorageRemoveResult result = StorageRemoveResult.fromKey(remoteKey);
         doAnswer(invocation -> {
             final int indexOfResultConsumer = 1; // 0 remoteKey, 1 onResult, 2 onError
-            Consumer<StorageRemoveResult> resultConsumer = invocation.getArgument(indexOfResultConsumer);
+            Consumer<StorageRemoveResult> resultConsumer =
+                    invocation.getArgument(indexOfResultConsumer);
             resultConsumer.accept(result);
             return mock(StorageRemoveOperation.class);
         })

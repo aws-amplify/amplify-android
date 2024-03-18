@@ -15,6 +15,7 @@
 
 package com.amplifyframework.storage.s3;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.annotation.OptIn;
@@ -94,6 +95,7 @@ import aws.sdk.kotlin.services.s3.S3Client;
  * A plugin for the storage category which uses S3 as a storage
  * repository.
  */
+@SuppressLint("UnsafeOptInUsageWarning") // opting in to Internal Amplify usages
 public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
 
     /**
