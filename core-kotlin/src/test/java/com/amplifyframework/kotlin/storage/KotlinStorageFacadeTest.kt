@@ -64,6 +64,7 @@ class KotlinStorageFacadeTest {
      * When the getUrl() delegate emits a value, it should be returned
      * via the coroutine API.
      */
+    @Suppress("deprecation")
     @Test
     fun getUrlSucceeds() = runBlocking {
         val forRemoteKey = "delete_me.png"
@@ -98,6 +99,7 @@ class KotlinStorageFacadeTest {
     /**
      * When the getUrl() delegate emits an error, it should be thrown from the coroutine API.
      */
+    @Suppress("deprecation")
     @Test(expected = StorageException::class)
     fun getUrlThrows(): Unit = runBlocking {
         val forRemoteKey = "delete_me.png"
@@ -132,6 +134,7 @@ class KotlinStorageFacadeTest {
      * When the downloadFile() delegate emits a result, it should
      * be returned from the coroutine API.
      */
+    @Suppress("deprecation")
     @Test
     fun downloadFileSucceeds(): Unit = runBlocking {
         val fromRemoteKey = "kool-pic.png"
@@ -241,6 +244,7 @@ class KotlinStorageFacadeTest {
      * When the downloadFile() API emits an error, it should be thrown from
      * the coroutine API.
      */
+    @Suppress("deprecation")
     @Test(expected = StorageException::class)
     fun downloadFileThrows(): Unit = runBlocking {
         val fromRemoteKey = "kool-pic.png"
@@ -289,6 +293,7 @@ class KotlinStorageFacadeTest {
      * When the uploadFile() delegate emits a result, it should be
      * returned via the coroutine API.
      */
+    @Suppress("deprecation")
     @Test
     fun uploadFileSucceeds() = runBlocking {
         val toRemoteKey = "kool-pic.png"
@@ -367,6 +372,7 @@ class KotlinStorageFacadeTest {
      * When the underlying uploadFile() emits an error,
      * it should be thrown from the coroutine API.
      */
+    @Suppress("deprecation")
     @Test(expected = StorageException::class)
     fun uploadFileThrows(): Unit = runBlocking {
         val toRemoteKey = "kool-pic.png"
@@ -446,6 +452,7 @@ class KotlinStorageFacadeTest {
      * When the underlying uploadInputStream() delegate emits a result,
      * it should be returned from the coroutine API.
      */
+    @Suppress("deprecation")
     @Test
     fun uploadInputStreamSucceeds() = runBlocking {
         val toRemoteKey = "kool-pic.png"
@@ -522,6 +529,7 @@ class KotlinStorageFacadeTest {
      * When the underlying uploadInputStream() emits an error,
      * it should be thrown from the coroutine API.
      */
+    @Suppress("deprecation")
     @Test(expected = StorageException::class)
     fun uploadInputStreamThrows(): Unit = runBlocking {
         val toRemoteKey = "kool-pic.png"
@@ -605,6 +613,7 @@ class KotlinStorageFacadeTest {
      * When the remove() delegate emits a result, it should be returned
      * from the coroutine API.
      */
+    @Suppress("deprecation")
     @Test
     fun removeSucceeds() = runBlocking {
         val key = "delete_me.png"
@@ -643,6 +652,7 @@ class KotlinStorageFacadeTest {
      * When the remove() delegate emits an error, it should be thrown
      * from the coroutine API.
      */
+    @Suppress("deprecation")
     @Test(expected = StorageException::class)
     fun removeThrows(): Unit = runBlocking {
         val key = "delete_me.png"
@@ -677,6 +687,7 @@ class KotlinStorageFacadeTest {
      * When the list() delegate emits a result, it should be returned through the
      * coroutine API.
      */
+    @Suppress("deprecation")
     @Test
     fun listSucceeds() = runBlocking {
         val path = "/beach/photos"
@@ -715,6 +726,7 @@ class KotlinStorageFacadeTest {
      * When the list() delegate emits an error, it should be thrown from the coroutine
      * API.
      */
+    @Suppress("deprecation")
     @Test(expected = StorageException::class)
     fun listThrows(): Unit = runBlocking {
         val path = "/beach/photos"

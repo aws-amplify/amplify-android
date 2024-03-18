@@ -18,6 +18,8 @@ package com.amplifyframework.storage.result;
 import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
+import com.amplifyframework.annotations.InternalAmplifyApi;
+
 import java.util.Objects;
 
 /**
@@ -32,6 +34,7 @@ public final class StorageUploadFileResult extends StorageUploadResult {
      * @param path Path for an item that was uploaded successfully
      * @param key Key for an item that was uploaded successfully
      */
+    @InternalAmplifyApi
     public StorageUploadFileResult(String path, String key) {
         super(path, key);
     }

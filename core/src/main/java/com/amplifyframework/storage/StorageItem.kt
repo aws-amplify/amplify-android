@@ -14,6 +14,7 @@
  */
 package com.amplifyframework.storage
 
+import com.amplifyframework.annotations.InternalAmplifyApi
 import java.util.Date
 
 /**
@@ -26,7 +27,7 @@ import java.util.Date
  * ETag reflects only changes to the contents of an object, not its metadata.
  * @param pluginResults Additional results specific to the plugin.
  */
-data class StorageItem(
+data class StorageItem @InternalAmplifyApi constructor(
     /**
      * Get unique path of the object in storage.
      * @return Unique path of the object in storage.

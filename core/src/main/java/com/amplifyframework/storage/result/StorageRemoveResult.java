@@ -18,6 +18,8 @@ package com.amplifyframework.storage.result;
 import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
+import com.amplifyframework.annotations.InternalAmplifyApi;
+
 import java.util.Objects;
 
 /**
@@ -34,6 +36,7 @@ public final class StorageRemoveResult {
      * @param path The path of the storage item that was removed
      * @param key The key of the storage item that was removed
      */
+    @InternalAmplifyApi
     public StorageRemoveResult(String path, String key) {
         this.path = path;
         this.key = key;

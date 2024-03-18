@@ -47,6 +47,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 
 interface Storage {
+    @Deprecated("Use overload with StoragePath instead.")
     @Throws(StorageException::class)
     suspend fun getUrl(
         key: String,
@@ -59,6 +60,7 @@ interface Storage {
         options: StorageGetUrlOptions = StorageGetUrlOptions.defaultInstance()
     ): StorageGetUrlResult
 
+    @Deprecated("Use overload with StoragePath instead.")
     @ExperimentalCoroutinesApi
     @FlowPreview
     fun downloadFile(
@@ -75,6 +77,7 @@ interface Storage {
         options: StorageDownloadFileOptions = StorageDownloadFileOptions.defaultInstance()
     ): InProgressStorageOperation<StorageDownloadFileResult>
 
+    @Deprecated("Use overload with StoragePath instead.")
     @ExperimentalCoroutinesApi
     @FlowPreview
     fun uploadFile(
@@ -91,6 +94,7 @@ interface Storage {
         options: StorageUploadFileOptions = StorageUploadFileOptions.defaultInstance()
     ): InProgressStorageOperation<StorageUploadFileResult>
 
+    @Deprecated("Use overload with StoragePath instead.")
     @FlowPreview
     @ExperimentalCoroutinesApi
     fun uploadInputStream(
@@ -107,6 +111,7 @@ interface Storage {
         options: StorageUploadInputStreamOptions = StorageUploadInputStreamOptions.defaultInstance()
     ): InProgressStorageOperation<StorageUploadInputStreamResult>
 
+    @Deprecated("Use overload with StoragePath instead.")
     @Throws(StorageException::class)
     suspend fun remove(
         key: String,

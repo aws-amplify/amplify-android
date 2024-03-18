@@ -77,6 +77,7 @@ abstract class StorageOptions {
          * @param accessLevel Storage access level for new StorageOptions instances
          * @return Current Builder instance, for fluent method chaining
          */
+        @SuppressWarnings("deprecation")
         @Deprecated
         @NonNull
         public final B accessLevel(@Nullable StorageAccessLevel accessLevel) {
@@ -98,6 +99,7 @@ abstract class StorageOptions {
             return (B) this;
         }
 
+        @SuppressWarnings("deprecation")
         @Deprecated
         @Nullable
         public final StorageAccessLevel getAccessLevel() {
