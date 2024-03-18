@@ -6,6 +6,6 @@ import com.amplifyframework.annotations.InternalAmplifyApi
 class StoragePathValidationException @InternalAmplifyApi constructor(
     message: String,
     recoverySuggestion: String
-): AmplifyException(message, recoverySuggestion) {
+) : AmplifyException(message, recoverySuggestion) {
     @InternalAmplifyApi companion object
 }
