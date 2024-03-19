@@ -22,7 +22,18 @@ import com.amplifyframework.auth.cognito.options.AuthFlowType
 import org.json.JSONArray
 import org.json.JSONObject
 
-private const val configName = "Default"
+@InternalAmplifyApi
+enum class UsernameAttribute {
+    Username,
+    Email,
+    PhoneNumber
+}
+
+@InternalAmplifyApi
+enum class VerificationMechanism {
+    Email,
+    PhoneNumber
+}
 
 @InternalAmplifyApi
 data class PasswordProtectionSettings(
@@ -43,8 +54,8 @@ data class AuthConfiguration internal constructor(
     val oauth: OauthConfiguration?,
     val authFlowType: AuthFlowType,
     val signUpAttributes: List<AuthUserAttributeKey>,
-    val usernameAttributes: List<AuthUserAttributeKey>,
-    val verificationMechanisms: List<AuthUserAttributeKey>,
+    val usernameAttributes: List<UsernameAttribute>,
+    val verificationMechanisms: List<VerificationMechanism>,
     val passwordProtectionSettings: PasswordProtectionSettings?
 ) {
 
@@ -64,11 +75,18 @@ data class AuthConfiguration internal constructor(
             } ?: emptyList()
 
             val usernameAttributes = authConfig?.optJSONArray("usernameAttributes")?.map {
-                AuthUserAttributeKey.custom(getString(it).lowercase())
+                when (getString(it)) {
+                    "EMAIL" -> UsernameAttribute.Email
+                    "PHONE_NUMBER" -> UsernameAttribute.PhoneNumber
+                    else -> UsernameAttribute.Username
+                }
             } ?: emptyList()
 
             val verificationMechanisms = authConfig?.optJSONArray("verificationMechanisms")?.map {
-                AuthUserAttributeKey.custom(getString(it).lowercase())
+                when (getString(it)) {
+                    "EMAIL" -> VerificationMechanism.Email
+                    else -> VerificationMechanism.PhoneNumber
+                }
             } ?: emptyList()
 
             return AuthConfiguration(
@@ -80,16 +98,8 @@ data class AuthConfiguration internal constructor(
                     ?.getJSONObject(configName)?.let {
                         IdentityPoolConfiguration.fromJson(it).build()
                     },
-                oauth = pluginJson.optJSONObject("Auth")
-                    ?.optJSONObject(configName)
-                    ?.optJSONObject("OAuth")?.let {
-                        OauthConfiguration.fromJson(it)
-                    },
-                authFlowType = getAuthenticationFlowType(
-                    pluginJson.optJSONObject("Auth")
-                        ?.optJSONObject(configName)
-                        ?.optString("authenticationFlowType")
-                ),
+                oauth = authConfig?.optJSONObject("OAuth")?.let { OauthConfiguration.fromJson(it) },
+                authFlowType = getAuthenticationFlowType(authConfig?.optString("authenticationFlowType")),
                 signUpAttributes = signUpAttributes,
                 usernameAttributes = usernameAttributes,
                 verificationMechanisms = verificationMechanisms,
@@ -97,10 +107,11 @@ data class AuthConfiguration internal constructor(
             )
         }
         private fun getAuthenticationFlowType(authType: String?): AuthFlowType {
-            return if (!authType.isNullOrEmpty() && AuthFlowType.values().any { it.name == authType })
+            return if (!authType.isNullOrEmpty() && AuthFlowType.values().any { it.name == authType }) {
                 AuthFlowType.valueOf(authType)
-            else
+            } else {
                 AuthFlowType.USER_SRP_AUTH
+            }
         }
 
         private fun getPasswordProtectionSettings(authConfig: JSONObject?): PasswordProtectionSettings? {
