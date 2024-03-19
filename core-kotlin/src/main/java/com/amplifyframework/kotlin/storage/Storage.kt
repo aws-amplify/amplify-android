@@ -124,14 +124,20 @@ interface Storage {
         options: StorageRemoveOptions = StorageRemoveOptions.defaultInstance()
     ): StorageRemoveResult
 
-    @Deprecated("use the paged list StoragePath api instead.", replaceWith = ReplaceWith("list(StoragePath, StoragePagedListOptions)"))
+    @Deprecated(
+        "use the paged list StoragePath api instead.",
+        replaceWith = ReplaceWith("list(StoragePath, StoragePagedListOptions)")
+    )
     @Throws(StorageException::class)
     suspend fun list(
         path: String,
         options: StorageListOptions = StorageListOptions.defaultInstance()
     ): StorageListResult
 
-    @Deprecated("use the paged list StoragePath api instead.", replaceWith = ReplaceWith("list(StoragePath, StoragePagedListOptions)"))
+    @Deprecated(
+        "use the paged list StoragePath api instead.",
+        replaceWith = ReplaceWith("list(StoragePath, StoragePagedListOptions)")
+    )
     @Throws(StorageException::class)
     suspend fun list(
         path: String,

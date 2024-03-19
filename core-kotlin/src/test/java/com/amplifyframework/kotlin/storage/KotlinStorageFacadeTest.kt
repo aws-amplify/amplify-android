@@ -95,7 +95,6 @@ class KotlinStorageFacadeTest {
         assertEquals(result, storage.getUrl(forRemotePath))
     }
 
-
     /**
      * When the getUrl() delegate emits an error, it should be thrown from the coroutine API.
      */
@@ -576,7 +575,6 @@ class KotlinStorageFacadeTest {
             .result()
     }
 
-
     /**
      * When the underlying uploadInputStream() kotlin operation invokes pause, resume & cancel operation then the
      * corresponding delegate apis are invoked.
@@ -646,7 +644,6 @@ class KotlinStorageFacadeTest {
         }
         assertEquals(result, storage.remove(remotePath))
     }
-
 
     /**
      * When the remove() delegate emits an error, it should be thrown
