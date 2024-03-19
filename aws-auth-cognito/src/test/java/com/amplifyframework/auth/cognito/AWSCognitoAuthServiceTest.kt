@@ -42,7 +42,11 @@ class AWSCognitoAuthServiceTest {
                 .region(expectedUserPoolRegion)
                 .build(),
             oauth = null,
-            authFlowType = AuthFlowType.USER_SRP_AUTH
+            authFlowType = AuthFlowType.USER_SRP_AUTH,
+            signUpAttributes = emptyList(),
+            usernameAttributes = emptyList(),
+            verificationMechanisms = emptyList(),
+            passwordProtectionSettings = null
         )
 
         val testObject = AWSCognitoAuthService.fromConfiguration(config)
