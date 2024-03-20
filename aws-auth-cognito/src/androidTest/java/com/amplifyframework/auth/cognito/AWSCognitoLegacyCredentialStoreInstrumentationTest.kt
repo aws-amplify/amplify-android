@@ -20,7 +20,6 @@ import androidx.test.platform.app.InstrumentationRegistry
 import com.amplifyframework.auth.cognito.data.AWSCognitoLegacyCredentialStore
 import com.amplifyframework.auth.cognito.testutils.AuthConfigurationProvider
 import com.amplifyframework.auth.cognito.testutils.CredentialStoreUtil
-import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test

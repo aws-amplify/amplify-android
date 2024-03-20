@@ -15,16 +15,18 @@
 
 package com.amplifyframework.statemachine.codegen.data
 
+import com.amplifyframework.annotations.InternalAmplifyApi
 import org.json.JSONObject
 
 /**
  * Configuration options for specifying cognito identity pool.
  */
-internal data class IdentityPoolConfiguration internal constructor(val builder: Builder) {
-    val region: String? = builder.region
-    val poolId: String? = builder.poolId
-
-    companion object {
+@InternalAmplifyApi
+data class IdentityPoolConfiguration internal constructor(
+    val region: String?,
+    val poolId: String?
+) {
+    internal companion object {
         private const val DEFAULT_REGION = "us-east-1"
 
         /**
@@ -40,7 +42,7 @@ internal data class IdentityPoolConfiguration internal constructor(val builder: 
          * Returns a builder object populated from JSON.
          * @return populated builder instance.
          */
-        internal fun fromJson(configJson: JSONObject): Builder {
+        fun fromJson(configJson: JSONObject): Builder {
             return Builder(configJson)
         }
 
@@ -50,7 +52,7 @@ internal data class IdentityPoolConfiguration internal constructor(val builder: 
     /**
      * Builder class for constructing [IdentityPoolConfiguration].
      */
-    class Builder constructor(
+    internal class Builder(
         configJson: JSONObject? = null
     ) {
         var region: String? = DEFAULT_REGION
@@ -65,7 +67,10 @@ internal data class IdentityPoolConfiguration internal constructor(val builder: 
 
         fun region(region: String) = apply { this.region = region }
         fun poolId(poolId: String) = apply { this.poolId = poolId }
-        fun build() = IdentityPoolConfiguration(this)
+        fun build() = IdentityPoolConfiguration(
+            region = region,
+            poolId = poolId
+        )
     }
 
     private enum class Config(val key: String) {

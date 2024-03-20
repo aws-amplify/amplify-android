@@ -15,7 +15,7 @@
 
 package com.amplifyframework.auth.cognito.testutils
 
-import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
+import com.amplifyframework.auth.cognito.AuthConfiguration
 import com.google.gson.Gson
 import com.google.gson.annotations.SerializedName
 import kotlinx.serialization.Serializable

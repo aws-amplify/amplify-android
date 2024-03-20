@@ -15,21 +15,24 @@
 
 package com.amplifyframework.statemachine.codegen.data
 
+import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.auth.AuthException
 import org.json.JSONObject
 
 /**
  * Configuration options for specifying cognito user pool.
  */
-internal data class UserPoolConfiguration internal constructor(val builder: Builder) {
-    val region: String? = builder.region
-    val endpoint: String? = builder.endpoint
-    val poolId: String? = builder.poolId
-    val appClient: String? = builder.appClientId
-    val appClientSecret: String? = builder.appClientSecret
-    val pinpointAppId: String? = builder.pinpointAppId
+@InternalAmplifyApi
+data class UserPoolConfiguration internal constructor(
+    val region: String?,
+    val endpoint: String?,
+    val poolId: String?,
+    val appClient: String?,
+    val appClientSecret: String?,
+    val pinpointAppId: String?
+) {
 
-    companion object {
+    internal companion object {
         private const val DEFAULT_REGION = "us-east-1"
 
         /**
@@ -45,7 +48,7 @@ internal data class UserPoolConfiguration internal constructor(val builder: Buil
          * Returns a builder object populated from JSON.
          * @return populated builder instance.
          */
-        internal fun fromJson(configJson: JSONObject): Builder {
+        fun fromJson(configJson: JSONObject): Builder {
             return Builder(configJson)
         }
 
@@ -55,7 +58,7 @@ internal data class UserPoolConfiguration internal constructor(val builder: Buil
     /**
      * Builder class for constructing [UserPoolConfiguration].
      */
-    class Builder constructor(
+    internal class Builder constructor(
         configJson: JSONObject? = null
     ) {
         var region: String? = DEFAULT_REGION
@@ -82,7 +85,14 @@ internal data class UserPoolConfiguration internal constructor(val builder: Buil
         fun appClientId(appClientId: String) = apply { this.appClientId = appClientId }
         fun appClientSecret(appClientSecret: String) = apply { this.appClientSecret = appClientSecret }
         fun pinpointAppId(pinpointAppId: String) = apply { this.pinpointAppId = pinpointAppId }
-        fun build() = UserPoolConfiguration(this)
+        fun build() = UserPoolConfiguration(
+            region = region,
+            endpoint = endpoint,
+            poolId = poolId,
+            appClient = appClientId,
+            appClientSecret = appClientSecret,
+            pinpointAppId = pinpointAppId
+        )
 
         @Throws(AuthException::class)
         private fun validateEndpoint(endpoint: String?): String? {

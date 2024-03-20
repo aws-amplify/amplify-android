@@ -22,7 +22,6 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.endpoints.CognitoIdentity
 import aws.smithy.kotlin.runtime.client.RequestInterceptorContext
 import aws.smithy.kotlin.runtime.client.endpoints.Endpoint
 import aws.smithy.kotlin.runtime.http.interceptors.HttpInterceptor
-import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 
 interface AWSCognitoAuthService {
     val cognitoIdentityProviderClient: CognitoIdentityProviderClient?

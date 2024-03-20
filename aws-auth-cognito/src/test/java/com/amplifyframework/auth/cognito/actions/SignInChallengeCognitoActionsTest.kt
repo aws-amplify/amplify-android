@@ -20,6 +20,7 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.RespondToAuthChalle
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.cognito.AWSCognitoAuthService
+import com.amplifyframework.auth.cognito.AuthConfiguration
 import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.auth.cognito.StoreClientBehavior
 import com.amplifyframework.logging.Logger
@@ -27,7 +28,6 @@ import com.amplifyframework.statemachine.EventDispatcher
 import com.amplifyframework.statemachine.StateMachineEvent
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.AuthChallenge
-import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 import com.amplifyframework.statemachine.codegen.data.CredentialType
 import com.amplifyframework.statemachine.codegen.data.UserPoolConfiguration
 import io.mockk.coEvery
