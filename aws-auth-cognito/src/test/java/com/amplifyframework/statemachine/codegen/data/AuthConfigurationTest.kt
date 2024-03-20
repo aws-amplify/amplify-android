@@ -1,6 +1,9 @@
 package com.amplifyframework.statemachine.codegen.data
 
 import com.amplifyframework.auth.AuthUserAttributeKey
+import com.amplifyframework.auth.cognito.AuthConfiguration
+import com.amplifyframework.auth.cognito.UsernameAttribute
+import com.amplifyframework.auth.cognito.VerificationMechanism
 import com.amplifyframework.auth.cognito.options.AuthFlowType
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue

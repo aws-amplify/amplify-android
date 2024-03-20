@@ -16,7 +16,6 @@
 package com.amplifyframework.auth.cognito
 
 import com.amplifyframework.auth.cognito.options.AuthFlowType
-import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 import com.amplifyframework.statemachine.codegen.data.IdentityPoolConfiguration
 import com.amplifyframework.statemachine.codegen.data.UserPoolConfiguration
 import kotlin.test.assertEquals

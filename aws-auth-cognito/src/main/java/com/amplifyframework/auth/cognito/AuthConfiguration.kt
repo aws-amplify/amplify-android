@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2024 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -13,12 +13,15 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.statemachine.codegen.data
+package com.amplifyframework.auth.cognito
 
 import androidx.annotation.IntRange
 import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.cognito.options.AuthFlowType
+import com.amplifyframework.statemachine.codegen.data.IdentityPoolConfiguration
+import com.amplifyframework.statemachine.codegen.data.OauthConfiguration
+import com.amplifyframework.statemachine.codegen.data.UserPoolConfiguration
 import org.json.JSONArray
 import org.json.JSONObject
 

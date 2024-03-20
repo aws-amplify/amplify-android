@@ -136,7 +136,6 @@ import com.amplifyframework.logging.Logger
 import com.amplifyframework.statemachine.StateChangeListenerToken
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.AuthChallenge
-import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 import com.amplifyframework.statemachine.codegen.data.FederatedToken
 import com.amplifyframework.statemachine.codegen.data.HostedUIErrorData
 import com.amplifyframework.statemachine.codegen.data.SignInData
