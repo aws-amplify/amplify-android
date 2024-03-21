@@ -19,14 +19,16 @@ import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.hub.HubChannel
 import com.amplifyframework.hub.HubEvent
+import com.amplifyframework.storage.ObjectMetadata
 import com.amplifyframework.storage.StorageChannelEventName
 import com.amplifyframework.storage.StorageException
 import com.amplifyframework.storage.TransferState
-import com.amplifyframework.storage.operation.StorageDownloadFileOperation
-import com.amplifyframework.storage.result.StorageDownloadFileResult
+import com.amplifyframework.storage.operation.StorageUploadFileOperation
 import com.amplifyframework.storage.result.StorageTransferProgress
+import com.amplifyframework.storage.result.StorageUploadFileResult
+import com.amplifyframework.storage.s3.ServerSideEncryption
 import com.amplifyframework.storage.s3.extensions.toS3ServiceKey
-import com.amplifyframework.storage.s3.request.AWSS3StoragePathDownloadFileRequest
+import com.amplifyframework.storage.s3.request.AWSS3StoragePathUploadRequest
 import com.amplifyframework.storage.s3.service.StorageService
 import com.amplifyframework.storage.s3.transfer.TransferListener
 import com.amplifyframework.storage.s3.transfer.TransferObserver
@@ -35,40 +37,33 @@ import java.util.UUID
 import java.util.concurrent.ExecutorService
 
 /**
- * An operation to download a file from AWS S3.
+ * An operation to upload a file from AWS S3.
  */
-internal class AWSS3StoragePathDownloadFileOperation(
-    private val transferId: String = UUID.randomUUID().toString(),
-    private val request: AWSS3StoragePathDownloadFileRequest?,
-    private var file: File,
+internal class AWSS3StoragePathUploadFileOperation @JvmOverloads internal constructor(
+    transferId: String,
+    request: AWSS3StoragePathUploadRequest<File>? = null,
     private val storageService: StorageService,
     private val executorService: ExecutorService,
     private val authCredentialsProvider: AuthCredentialsProvider,
     private var transferObserver: TransferObserver? = null,
     onProgress: Consumer<StorageTransferProgress>? = null,
-    onSuccess: Consumer<StorageDownloadFileResult>? = null,
+    onSuccess: Consumer<StorageUploadFileResult>? = null,
     onError: Consumer<StorageException>? = null
-) :
-    StorageDownloadFileOperation<AWSS3StoragePathDownloadFileRequest>(
-        request,
-        transferId,
-        onProgress,
-        onSuccess,
-        onError
-    ) {
+) : StorageUploadFileOperation<AWSS3StoragePathUploadRequest<File>>(request, transferId, onProgress, onSuccess, onError) {
+
+    private var serviceKey: String? = null
 
     constructor(
-        request: AWSS3StoragePathDownloadFileRequest,
+        request: AWSS3StoragePathUploadRequest<File>,
         storageService: StorageService,
         executorService: ExecutorService,
         authCredentialsProvider: AuthCredentialsProvider,
-        onProgress: Consumer<StorageTransferProgress>? = null,
-        onSuccess: Consumer<StorageDownloadFileResult>? = null,
-        onError: Consumer<StorageException>? = null
+        onProgress: Consumer<StorageTransferProgress>,
+        onSuccess: Consumer<StorageUploadFileResult>,
+        onError: Consumer<StorageException>
     ) : this(
         UUID.randomUUID().toString(),
         request,
-        request.local,
         storageService,
         executorService,
         authCredentialsProvider,
@@ -79,7 +74,7 @@ internal class AWSS3StoragePathDownloadFileOperation(
     )
 
     init {
-        transferObserver?.setTransferListener(DownloadTransferListener())
+        transferObserver?.setTransferListener(UploadTransferListener())
     }
 
     override fun start() {
@@ -87,29 +82,41 @@ internal class AWSS3StoragePathDownloadFileOperation(
         if (transferObserver != null) {
             return
         }
-        val downloadRequest = request ?: return
+        val uploadRequest = request ?: return
+
         executorService.submit {
-            downloadRequest.path.toS3ServiceKey(authCredentialsProvider)
             val serviceKey = try {
-                downloadRequest.path.toS3ServiceKey(authCredentialsProvider)
+                uploadRequest.path.toS3ServiceKey(authCredentialsProvider)
             } catch (se: StorageException) {
                 onError.accept(se)
                 return@submit
             }
 
             try {
-                transferObserver = storageService.downloadToFile(
+                val file = uploadRequest.local
+
+                // Set up the metadata
+                val objectMetadata = ObjectMetadata()
+                objectMetadata.userMetadata = uploadRequest.metadata
+                objectMetadata.metaData[ObjectMetadata.CONTENT_TYPE] = uploadRequest.contentType
+                val storageServerSideEncryption = uploadRequest.serverSideEncryption
+                if (ServerSideEncryption.NONE != storageServerSideEncryption) {
+                    objectMetadata.metaData[ObjectMetadata.SERVER_SIDE_ENCRYPTION] =
+                        storageServerSideEncryption.getName()
+                }
+                transferObserver = storageService.uploadFile(
                     transferId,
                     serviceKey,
-                    downloadRequest.local,
-                    downloadRequest.useAccelerateEndpoint
+                    file,
+                    objectMetadata,
+                    uploadRequest.useAccelerateEndpoint
                 )
-                transferObserver?.setTransferListener(DownloadTransferListener())
-            } catch (e: Exception) {
+                transferObserver?.setTransferListener(UploadTransferListener())
+            } catch (exception: Exception) {
                 onError?.accept(
                     StorageException(
-                        "Issue downloading file",
-                        e,
+                        "Issue uploading file.",
+                        exception,
                         "See included exception for more details and suggestions to fix."
                     )
                 )
@@ -126,7 +133,7 @@ internal class AWSS3StoragePathDownloadFileOperation(
                     onError?.accept(
                         StorageException(
                             "Something went wrong while attempting to pause your " +
-                                "AWS S3 Storage download file operation",
+                                "AWS S3 Storage upload file operation",
                             exception,
                             "See attached exception for more information and suggestions"
                         )
@@ -144,8 +151,8 @@ internal class AWSS3StoragePathDownloadFileOperation(
                 } catch (exception: java.lang.Exception) {
                     onError?.accept(
                         StorageException(
-                            "Something went wrong while attempting to " +
-                                "resume your AWS S3 Storage download file operation",
+                            "Something went wrong while attempting to resume your " +
+                                "AWS S3 Storage upload file operation",
                             exception,
                             "See attached exception for more information and suggestions"
                         )
@@ -164,7 +171,7 @@ internal class AWSS3StoragePathDownloadFileOperation(
                     onError?.accept(
                         StorageException(
                             "Something went wrong while attempting to cancel your " +
-                                "AWS S3 Storage download file operation",
+                                "AWS S3 Storage upload file operation",
                             exception,
                             "See attached exception for more information and suggestions"
                         )
@@ -178,23 +185,24 @@ internal class AWSS3StoragePathDownloadFileOperation(
         return transferObserver?.transferState ?: TransferState.UNKNOWN
     }
 
-    override fun setOnSuccess(onSuccess: Consumer<StorageDownloadFileResult>?) {
+    override fun setOnSuccess(onSuccess: Consumer<StorageUploadFileResult>?) {
         super.setOnSuccess(onSuccess)
-        // replay the onSuccess if transfer is already completed.
-        if (transferState == TransferState.COMPLETED) {
-            onSuccess?.accept(StorageDownloadFileResult.fromFile(file))
+        request?.let {
+            if (transferState == TransferState.COMPLETED) {
+                onSuccess?.accept(StorageUploadFileResult(serviceKey!!, serviceKey!!))
+            }
         }
     }
 
-    inner class DownloadTransferListener : TransferListener {
+    private inner class UploadTransferListener : TransferListener {
         override fun onStateChanged(id: Int, state: TransferState, key: String) {
             Amplify.Hub.publish(
                 HubChannel.STORAGE,
-                HubEvent.create(StorageChannelEventName.DOWNLOAD_STATE, state.name)
+                HubEvent.create(StorageChannelEventName.UPLOAD_STATE, state.name)
             )
             when (state) {
                 TransferState.COMPLETED -> {
-                    onSuccess?.accept(StorageDownloadFileResult.fromFile(file))
+                    onSuccess?.accept(StorageUploadFileResult.fromKey(key))
                     return
                 }
                 TransferState.FAILED -> {}
@@ -209,11 +217,11 @@ internal class AWSS3StoragePathDownloadFileOperation(
         override fun onError(id: Int, ex: java.lang.Exception) {
             Amplify.Hub.publish(
                 HubChannel.STORAGE,
-                HubEvent.create(StorageChannelEventName.DOWNLOAD_ERROR, ex)
+                HubEvent.create(StorageChannelEventName.UPLOAD_ERROR, ex)
             )
             onError?.accept(
                 StorageException(
-                    "Something went wrong with your AWS S3 Storage download file operation",
+                    "Something went wrong with your AWS S3 Storage upload file operation",
                     ex,
                     "See attached exception for more information and suggestions"
                 )
