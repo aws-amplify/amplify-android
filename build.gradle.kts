@@ -38,6 +38,7 @@ buildscript {
 
 plugins {
     alias(libs.plugins.binary.compatibility.validator)
+    alias(libs.plugins.kotlin.serialization) apply false
 }
 
 allprojects {

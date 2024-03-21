@@ -141,6 +141,7 @@ public final class com/amplifyframework/kotlin/core/Amplify$Companion {
 	public final fun addPlugin (Lcom/amplifyframework/core/plugin/Plugin;)V
 	public final fun configure (Landroid/content/Context;)V
 	public final fun configure (Lcom/amplifyframework/core/AmplifyConfiguration;Landroid/content/Context;)V
+	public final fun configure (Lcom/amplifyframework/core/configuration/AmplifyOutputs;Landroid/content/Context;)V
 	public final fun getAPI ()Lcom/amplifyframework/kotlin/api/KotlinApiFacade;
 	public final fun getAnalytics ()Lcom/amplifyframework/analytics/AnalyticsCategory;
 	public final fun getAuth ()Lcom/amplifyframework/kotlin/auth/KotlinAuthFacade;

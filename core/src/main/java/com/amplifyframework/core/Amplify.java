@@ -25,6 +25,8 @@ import com.amplifyframework.auth.AuthCategory;
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryConfiguration;
 import com.amplifyframework.core.category.CategoryType;
+import com.amplifyframework.core.configuration.AmplifyOutputs;
+import com.amplifyframework.core.configuration.AmplifyOutputsData;
 import com.amplifyframework.core.plugin.Plugin;
 import com.amplifyframework.datastore.DataStoreCategory;
 import com.amplifyframework.devmenu.DeveloperMenu;
@@ -165,6 +167,43 @@ public final class Amplify {
         }
     }
 
+    /**
+     * Configure Amplify using the outputs from the Amplify Gen2 CLI. This is the configure method to use if you are
+     * using the Amplify Gen2 experience.
+     * You must call one of the configure() methods before using any Amplify category.
+     * You must add plugins to the framework before calling configure().
+     * configure() may only be called once per application process, and there is
+     * currently no way to reconfigure Amplify once it has been called.
+     * Subsequent attempts to configure Amplify will generate an AmplifyException.
+     * @param amplifyOutputs An {@link AmplifyOutputs} instance representing the amplify_outputs data to use
+     * @param context An Android context
+     * @throws AmplifyException Indicates one of numerous possible failures to configure the Framework
+     */
+    public static void configure(
+        @NonNull AmplifyOutputs amplifyOutputs,
+        @NonNull Context context
+    ) throws AmplifyException {
+        Objects.requireNonNull(amplifyOutputs);
+        Objects.requireNonNull(context);
+
+        synchronized (CONFIGURATION_LOCK) {
+            if (CONFIGURATION_LOCK.get()) {
+                throw new AlreadyConfiguredException("Remove the duplicate call to `Amplify.configure()`.");
+            }
+
+            AmplifyOutputsData configuration = AmplifyOutputsData.deserialize(context, amplifyOutputs);
+
+            for (Category<? extends Plugin<?>> category : CATEGORIES.values()) {
+                if (category.getPlugins().size() > 0) {
+                    category.configure(configuration, context);
+                    beginInitialization(category, context);
+                }
+            }
+
+            CONFIGURATION_LOCK.set(true);
+        }
+    }
+
     private static void beginInitialization(@NonNull Category<? extends Plugin<?>> category, @NonNull Context context) {
         INITIALIZATION_POOL.execute(() -> category.initialize(context));
     }
@@ -252,4 +291,3 @@ public final class Amplify {
         }
     }
 }
-
