@@ -65,9 +65,9 @@ class AWSS3StoragePathDownloadTest {
         private const val LARGE_FILE_SIZE = 10 * 1024 * 1024L // 10 MB
         private const val SMALL_FILE_SIZE = 100L
         private val LARGE_FILE_NAME = "large-${System.currentTimeMillis()}"
-        private val LARGE_FILE_PATH = StoragePath.fromString("/public/$LARGE_FILE_NAME")
+        private val LARGE_FILE_PATH = StoragePath.fromString("public/$LARGE_FILE_NAME")
         private val SMALL_FILE_NAME = "small-${System.currentTimeMillis()}"
-        private val SMALL_FILE_PATH =  StoragePath.fromString("/public/$SMALL_FILE_NAME")
+        private val SMALL_FILE_PATH =  StoragePath.fromString("public/$SMALL_FILE_NAME")
 
         lateinit var storageCategory: StorageCategory
         lateinit var synchronousStorage: SynchronousStorage
