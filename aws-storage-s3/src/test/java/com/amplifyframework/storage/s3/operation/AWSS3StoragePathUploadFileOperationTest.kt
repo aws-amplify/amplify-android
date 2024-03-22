@@ -16,7 +16,6 @@
 package com.amplifyframework.storage.s3.operation
 
 import com.amplifyframework.auth.AuthCredentialsProvider
-import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.storage.StorageException
 import com.amplifyframework.storage.StoragePath
@@ -29,7 +28,6 @@ import com.amplifyframework.storage.s3.service.StorageService
 import com.google.common.util.concurrent.MoreExecutors
 import io.mockk.coEvery
 import io.mockk.mockk
-import io.mockk.mockkStatic
 import io.mockk.verify
 import java.io.File
 import org.junit.Before
@@ -50,7 +48,7 @@ class AWSS3StoragePathUploadFileOperationTest {
     @Test
     fun `success string storage path`() {
         // GIVEN
-        val path = StoragePath.fromString("/public/123")
+        val path = StoragePath.fromString("public/123")
         val tempFile = File.createTempFile("new", "file.tmp")
         val expectedServiceKey = "public/123"
         val request = AWSS3StoragePathUploadRequest(
@@ -92,7 +90,7 @@ class AWSS3StoragePathUploadFileOperationTest {
     fun `success identityId storage path`() {
         // GIVEN
         coEvery { authCredentialsProvider.getIdentityId() } returns "123"
-        val path = StoragePath.fromIdentityId { "/protected/${it}/picture.jpg" }
+        val path = StoragePath.fromIdentityId { "protected/${it}/picture.jpg" }
         val tempFile = File.createTempFile("new", "file.tmp")
         val expectedServiceKey = "protected/123/picture.jpg"
         val request = AWSS3StoragePathUploadRequest(
@@ -134,7 +132,7 @@ class AWSS3StoragePathUploadFileOperationTest {
     fun `invalid storage path fails with invalid path`() {
         // GIVEN
         coEvery { authCredentialsProvider.getIdentityId() } returns "123"
-        val path = StoragePath.fromIdentityId { "protected/${it}/picture.jpg" }
+        val path = StoragePath.fromIdentityId { "/protected/${it}/picture.jpg" }
         val tempFile = File.createTempFile("new", "file.tmp")
         val request = AWSS3StoragePathUploadRequest(
             path,

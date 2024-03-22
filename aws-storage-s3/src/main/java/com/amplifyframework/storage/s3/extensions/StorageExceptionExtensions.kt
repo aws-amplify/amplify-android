@@ -5,8 +5,8 @@ import com.amplifyframework.storage.StoragePathValidationException
 
 internal fun StoragePathValidationException.Companion.invalidStoragePathException() = StorageException(
     "Invalid StoragePath provided",
-    StoragePathValidationException("Invalid StoragePath provided", "Path must be NonEmpty and start with /"),
-    "Path must be NonEmpty and start with /"
+    StoragePathValidationException("Invalid StoragePath provided", "Path must not be empty or start with /"),
+    "Path must not be empty or start with /"
 )
 
 internal fun StoragePathValidationException.Companion.unsupportedStoragePathException() = StorageException(

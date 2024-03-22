@@ -33,9 +33,9 @@ internal fun StoragePath.toS3ServiceKey(authCredentialsProvider: AuthCredentials
         }
     }
 
-    if (!stringPath.startsWith("/") || stringPath.length < 2) {
+    if (stringPath.startsWith("/") || stringPath.isEmpty()) {
         throw StoragePathValidationException.invalidStoragePathException()
     }
 
-    return stringPath.substring(1)
+    return stringPath
 }

@@ -89,7 +89,6 @@ internal class AWSS3StoragePathDownloadFileOperation(
         }
         val downloadRequest = request ?: return
         executorService.submit {
-            downloadRequest.path.toS3ServiceKey(authCredentialsProvider)
             val serviceKey = try {
                 downloadRequest.path.toS3ServiceKey(authCredentialsProvider)
             } catch (se: StorageException) {
