@@ -39,16 +39,15 @@ import com.amplifyframework.testutils.FileAssert
 import com.amplifyframework.testutils.random.RandomTempFile
 import com.amplifyframework.testutils.sync.SynchronousAuth
 import com.amplifyframework.testutils.sync.SynchronousStorage
-import org.junit.After
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
-import org.junit.BeforeClass
-import org.junit.Test
 import java.io.File
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
+import org.junit.After
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
+import org.junit.BeforeClass
+import org.junit.Test
 
 /**
  * Instrumentation test for operational work on download.
@@ -67,7 +66,7 @@ class AWSS3StoragePathDownloadTest {
         private val LARGE_FILE_NAME = "large-${System.currentTimeMillis()}"
         private val LARGE_FILE_PATH = StoragePath.fromString("public/$LARGE_FILE_NAME")
         private val SMALL_FILE_NAME = "small-${System.currentTimeMillis()}"
-        private val SMALL_FILE_PATH =  StoragePath.fromString("public/$SMALL_FILE_NAME")
+        private val SMALL_FILE_PATH = StoragePath.fromString("public/$SMALL_FILE_NAME")
 
         lateinit var storageCategory: StorageCategory
         lateinit var synchronousStorage: SynchronousStorage

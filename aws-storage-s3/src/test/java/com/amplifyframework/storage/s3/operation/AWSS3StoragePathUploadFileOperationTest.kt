@@ -90,7 +90,7 @@ class AWSS3StoragePathUploadFileOperationTest {
     fun `success identityId storage path`() {
         // GIVEN
         coEvery { authCredentialsProvider.getIdentityId() } returns "123"
-        val path = StoragePath.fromIdentityId { "protected/${it}/picture.jpg" }
+        val path = StoragePath.fromIdentityId { "protected/$it/picture.jpg" }
         val tempFile = File.createTempFile("new", "file.tmp")
         val expectedServiceKey = "protected/123/picture.jpg"
         val request = AWSS3StoragePathUploadRequest(
@@ -132,7 +132,7 @@ class AWSS3StoragePathUploadFileOperationTest {
     fun `invalid storage path fails with invalid path`() {
         // GIVEN
         coEvery { authCredentialsProvider.getIdentityId() } returns "123"
-        val path = StoragePath.fromIdentityId { "/protected/${it}/picture.jpg" }
+        val path = StoragePath.fromIdentityId { "/protected/$it/picture.jpg" }
         val tempFile = File.createTempFile("new", "file.tmp")
         val request = AWSS3StoragePathUploadRequest(
             path,
@@ -153,7 +153,6 @@ class AWSS3StoragePathUploadFileOperationTest {
             onError
         )
 
-
         // WHEN
         awsS3StorageUploadFileOperation.start()
 
@@ -169,7 +168,7 @@ class AWSS3StoragePathUploadFileOperationTest {
         // GIVEN
         val expectedException = Exception("test")
         coEvery { authCredentialsProvider.getIdentityId() } throws expectedException
-        val path = StoragePath.fromIdentityId { "protected/${it}/picture.jpg" }
+        val path = StoragePath.fromIdentityId { "protected/$it/picture.jpg" }
         val tempFile = File.createTempFile("new", "file.tmp")
         val request = AWSS3StoragePathUploadRequest(
             path,

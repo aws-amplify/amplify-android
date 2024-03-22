@@ -49,7 +49,13 @@ internal class AWSS3StoragePathUploadFileOperation @JvmOverloads internal constr
     onProgress: Consumer<StorageTransferProgress>? = null,
     onSuccess: Consumer<StorageUploadFileResult>? = null,
     onError: Consumer<StorageException>? = null
-) : StorageUploadFileOperation<AWSS3StoragePathUploadRequest<File>>(request, transferId, onProgress, onSuccess, onError) {
+) : StorageUploadFileOperation<AWSS3StoragePathUploadRequest<File>>(
+    request,
+    transferId,
+    onProgress,
+    onSuccess,
+    onError
+) {
 
     private var serviceKey: String? = null
 
