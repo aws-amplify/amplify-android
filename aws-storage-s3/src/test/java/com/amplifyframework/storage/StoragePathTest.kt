@@ -16,7 +16,7 @@ class StoragePathTest {
 
     @Test
     fun `identity id storage path`() {
-        val expectedString = "/photos/123/1.jpg"
+        val expectedString = "photos/123/1.jpg"
 
         val path = StoragePath.fromIdentityId { "photos/$it/1.jpg" } as IdentityIdProvidedStoragePath
 
