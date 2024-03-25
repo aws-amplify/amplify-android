@@ -59,6 +59,7 @@ import com.amplifyframework.storage.s3.operation.AWSS3StorageGetPresignedUrlOper
 import com.amplifyframework.storage.s3.operation.AWSS3StorageListOperation;
 import com.amplifyframework.storage.s3.operation.AWSS3StoragePathDownloadFileOperation;
 import com.amplifyframework.storage.s3.operation.AWSS3StoragePathUploadFileOperation;
+import com.amplifyframework.storage.s3.operation.AWSS3StoragePathUploadInputStreamOperation;
 import com.amplifyframework.storage.s3.operation.AWSS3StorageRemoveOperation;
 import com.amplifyframework.storage.s3.operation.AWSS3StorageUploadFileOperation;
 import com.amplifyframework.storage.s3.operation.AWSS3StorageUploadInputStreamOperation;
@@ -678,8 +679,32 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
             @NonNull Consumer<StorageUploadInputStreamResult> onSuccess,
             @NonNull Consumer<StorageException> onError
     ) {
-        // TODO: Implement
-        return null;
+        boolean useAccelerateEndpoint = options instanceof AWSS3StorageUploadInputStreamOptions &&
+                ((AWSS3StorageUploadInputStreamOptions) options).useAccelerateEndpoint();
+        AWSS3StoragePathUploadRequest<InputStream> request = new AWSS3StoragePathUploadRequest<>(
+                path,
+                local,
+                options.getContentType(),
+                options instanceof AWSS3StorageUploadInputStreamOptions
+                        ? ((AWSS3StorageUploadInputStreamOptions) options).getServerSideEncryption()
+                        : ServerSideEncryption.NONE,
+                options.getMetadata(),
+                useAccelerateEndpoint
+        );
+
+        AWSS3StoragePathUploadInputStreamOperation operation =
+                new AWSS3StoragePathUploadInputStreamOperation(
+                        request,
+                        storageService,
+                        executorService,
+                        authCredentialsProvider,
+                        onProgress,
+                        onSuccess,
+                        onError
+                );
+        operation.start();
+
+        return operation;
     }
 
     @SuppressWarnings("deprecation")

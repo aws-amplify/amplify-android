@@ -23,33 +23,33 @@ import com.amplifyframework.storage.ObjectMetadata
 import com.amplifyframework.storage.StorageChannelEventName
 import com.amplifyframework.storage.StorageException
 import com.amplifyframework.storage.TransferState
-import com.amplifyframework.storage.operation.StorageUploadFileOperation
+import com.amplifyframework.storage.operation.StorageUploadInputStreamOperation
 import com.amplifyframework.storage.result.StorageTransferProgress
-import com.amplifyframework.storage.result.StorageUploadFileResult
+import com.amplifyframework.storage.result.StorageUploadInputStreamResult
 import com.amplifyframework.storage.s3.ServerSideEncryption
 import com.amplifyframework.storage.s3.extensions.toS3ServiceKey
 import com.amplifyframework.storage.s3.request.AWSS3StoragePathUploadRequest
 import com.amplifyframework.storage.s3.service.StorageService
 import com.amplifyframework.storage.s3.transfer.TransferListener
 import com.amplifyframework.storage.s3.transfer.TransferObserver
-import java.io.File
+import java.io.InputStream
 import java.util.UUID
 import java.util.concurrent.ExecutorService
 
 /**
- * An operation to upload a file from AWS S3.
+ * An operation to upload an InputStream to AWS S3.
  */
-internal class AWSS3StoragePathUploadFileOperation @JvmOverloads internal constructor(
+internal class AWSS3StoragePathUploadInputStreamOperation @JvmOverloads internal constructor(
     transferId: String,
-    request: AWSS3StoragePathUploadRequest<File>? = null,
+    request: AWSS3StoragePathUploadRequest<InputStream>? = null,
     private val storageService: StorageService,
     private val executorService: ExecutorService,
     private val authCredentialsProvider: AuthCredentialsProvider,
     private var transferObserver: TransferObserver? = null,
     onProgress: Consumer<StorageTransferProgress>? = null,
-    onSuccess: Consumer<StorageUploadFileResult>? = null,
+    onSuccess: Consumer<StorageUploadInputStreamResult>? = null,
     onError: Consumer<StorageException>? = null
-) : StorageUploadFileOperation<AWSS3StoragePathUploadRequest<File>>(
+) : StorageUploadInputStreamOperation<AWSS3StoragePathUploadRequest<InputStream>>(
     request,
     transferId,
     onProgress,
@@ -60,12 +60,12 @@ internal class AWSS3StoragePathUploadFileOperation @JvmOverloads internal constr
     private var serviceKey: String? = null
 
     constructor(
-        request: AWSS3StoragePathUploadRequest<File>,
+        request: AWSS3StoragePathUploadRequest<InputStream>,
         storageService: StorageService,
         executorService: ExecutorService,
         authCredentialsProvider: AuthCredentialsProvider,
         onProgress: Consumer<StorageTransferProgress>,
-        onSuccess: Consumer<StorageUploadFileResult>,
+        onSuccess: Consumer<StorageUploadInputStreamResult>,
         onError: Consumer<StorageException>
     ) : this(
         UUID.randomUUID().toString(),
@@ -99,21 +99,21 @@ internal class AWSS3StoragePathUploadFileOperation @JvmOverloads internal constr
             }
 
             try {
-                val file = uploadRequest.local
-
+                val inputStream = uploadRequest.local
                 // Set up the metadata
                 val objectMetadata = ObjectMetadata()
                 objectMetadata.userMetadata = uploadRequest.metadata
                 objectMetadata.metaData[ObjectMetadata.CONTENT_TYPE] = uploadRequest.contentType
-                val storageServerSideEncryption = uploadRequest.serverSideEncryption
+                val storageServerSideEncryption =
+                    uploadRequest.serverSideEncryption
                 if (ServerSideEncryption.NONE != storageServerSideEncryption) {
                     objectMetadata.metaData[ObjectMetadata.SERVER_SIDE_ENCRYPTION] =
                         storageServerSideEncryption.getName()
                 }
-                transferObserver = storageService.uploadFile(
+                transferObserver = storageService.uploadInputStream(
                     transferId,
                     serviceKey,
-                    file,
+                    inputStream,
                     objectMetadata,
                     uploadRequest.useAccelerateEndpoint
                 )
@@ -121,7 +121,7 @@ internal class AWSS3StoragePathUploadFileOperation @JvmOverloads internal constr
             } catch (exception: Exception) {
                 onError?.accept(
                     StorageException(
-                        "Issue uploading file.",
+                        "Issue uploading InputStream.",
                         exception,
                         "See included exception for more details and suggestions to fix."
                     )
@@ -139,7 +139,7 @@ internal class AWSS3StoragePathUploadFileOperation @JvmOverloads internal constr
                     onError?.accept(
                         StorageException(
                             "Something went wrong while attempting to pause your " +
-                                "AWS S3 Storage upload file operation",
+                                "AWS S3 Storage upload InputStream operation",
                             exception,
                             "See attached exception for more information and suggestions"
                         )
@@ -158,7 +158,7 @@ internal class AWSS3StoragePathUploadFileOperation @JvmOverloads internal constr
                     onError?.accept(
                         StorageException(
                             "Something went wrong while attempting to resume your " +
-                                "AWS S3 Storage upload file operation",
+                                "AWS S3 Storage upload InputStream operation",
                             exception,
                             "See attached exception for more information and suggestions"
                         )
@@ -177,7 +177,7 @@ internal class AWSS3StoragePathUploadFileOperation @JvmOverloads internal constr
                     onError?.accept(
                         StorageException(
                             "Something went wrong while attempting to cancel your " +
-                                "AWS S3 Storage upload file operation",
+                                "AWS S3 Storage upload InputStream operation",
                             exception,
                             "See attached exception for more information and suggestions"
                         )
@@ -191,11 +191,11 @@ internal class AWSS3StoragePathUploadFileOperation @JvmOverloads internal constr
         return transferObserver?.transferState ?: TransferState.UNKNOWN
     }
 
-    override fun setOnSuccess(onSuccess: Consumer<StorageUploadFileResult>?) {
+    override fun setOnSuccess(onSuccess: Consumer<StorageUploadInputStreamResult>?) {
         super.setOnSuccess(onSuccess)
         request?.let {
             if (transferState == TransferState.COMPLETED) {
-                onSuccess?.accept(StorageUploadFileResult(serviceKey!!, serviceKey!!))
+                onSuccess?.accept(StorageUploadInputStreamResult(serviceKey!!, serviceKey!!))
             }
         }
     }
@@ -208,7 +208,7 @@ internal class AWSS3StoragePathUploadFileOperation @JvmOverloads internal constr
             )
             when (state) {
                 TransferState.COMPLETED -> {
-                    onSuccess?.accept(StorageUploadFileResult(key, key))
+                    onSuccess?.accept(StorageUploadInputStreamResult.fromKey(key))
                     return
                 }
                 else -> {}
@@ -226,7 +226,7 @@ internal class AWSS3StoragePathUploadFileOperation @JvmOverloads internal constr
             )
             onError?.accept(
                 StorageException(
-                    "Something went wrong with your AWS S3 Storage upload file operation",
+                    "Something went wrong with your AWS S3 Storage upload InputStream operation",
                     ex,
                     "See attached exception for more information and suggestions"
                 )
