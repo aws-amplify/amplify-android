@@ -45,20 +45,22 @@ class AWSS3StoragePrefixResolverTest {
         fun setup() {
             try {
                 Amplify.addPlugin(AWSCognitoAuthPlugin())
-                Amplify.addPlugin(AWSS3StoragePlugin(
-                    AWSS3StoragePluginConfiguration.Builder().apply {
-                        awsS3PluginPrefixResolver = object : AWSS3PluginPrefixResolver {
-                            override fun resolvePrefix(
-                                accessLevel: StorageAccessLevel,
-                                targetIdentity: String?,
-                                onSuccess: Consumer<String>,
-                                onError: Consumer<StorageException>?
-                            ) {
-                                onSuccess.accept("custom/")
+                Amplify.addPlugin(
+                    AWSS3StoragePlugin(
+                        AWSS3StoragePluginConfiguration.Builder().apply {
+                            awsS3PluginPrefixResolver = object : AWSS3PluginPrefixResolver {
+                                override fun resolvePrefix(
+                                    accessLevel: StorageAccessLevel,
+                                    targetIdentity: String?,
+                                    onSuccess: Consumer<String>,
+                                    onError: Consumer<StorageException>?
+                                ) {
+                                    onSuccess.accept("custom/")
+                                }
                             }
-                        }
-                    }.build()
-                ))
+                        }.build()
+                    )
+                )
                 Amplify.configure(ApplicationProvider.getApplicationContext())
             } catch (error: AmplifyException) {
                 Log.e(TAG, "Could not initialize Amplify", error)
