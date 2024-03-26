@@ -71,12 +71,12 @@ class AWSS3StoragePrefixResolverTest {
         // Given
         var timesOnErrorCalled = 0
         val latch = CountDownLatch(1)
-        val file = File("${System.getProperty("java.io.tmpdir")}/${System.currentTimeMillis()}")
-        RandomAccessFile(file, "rw").apply {
-            setLength((1024 * 1024).toLong())
-            close()
+        val file = File("${System.getProperty("java.io.tmpdir")}/${System.currentTimeMillis()}").apply {
+            deleteOnExit()
         }
-        file.deleteOnExit()
+        RandomAccessFile(file, "rw").use {
+            it.setLength((1024 * 1024).toLong())
+        }
         val stream = FileInputStream(file)
         val fileKey = "ExampleKey"
 
