@@ -30,9 +30,9 @@ import io.mockk.coEvery
 import io.mockk.mockk
 import io.mockk.verify
 import java.io.File
+import java.io.InputStream
 import org.junit.Before
 import org.junit.Test
-import java.io.InputStream
 
 class AWSS3StoragePathUploadInputStreamOperationTest {
 

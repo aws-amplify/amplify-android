@@ -196,7 +196,6 @@ internal class AWSS3StoragePathDownloadFileOperation(
                     onSuccess?.accept(StorageDownloadFileResult.fromFile(file))
                     return
                 }
-                TransferState.FAILED -> {}
                 else -> {}
             }
         }
@@ -205,7 +204,7 @@ internal class AWSS3StoragePathDownloadFileOperation(
             onProgress?.accept(StorageTransferProgress(bytesCurrent, bytesTotal))
         }
 
-        override fun onError(id: Int, ex: java.lang.Exception) {
+        override fun onError(id: Int, ex: Exception) {
             Amplify.Hub.publish(
                 HubChannel.STORAGE,
                 HubEvent.create(StorageChannelEventName.DOWNLOAD_ERROR, ex)

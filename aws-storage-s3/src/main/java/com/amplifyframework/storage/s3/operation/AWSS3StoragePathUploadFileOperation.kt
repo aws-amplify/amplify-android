@@ -57,8 +57,6 @@ internal class AWSS3StoragePathUploadFileOperation @JvmOverloads internal constr
     onError
 ) {
 
-    private var serviceKey: String? = null
-
     constructor(
         request: AWSS3StoragePathUploadRequest<File>,
         storageService: StorageService,
@@ -194,8 +192,9 @@ internal class AWSS3StoragePathUploadFileOperation @JvmOverloads internal constr
     override fun setOnSuccess(onSuccess: Consumer<StorageUploadFileResult>?) {
         super.setOnSuccess(onSuccess)
         request?.let {
-            if (transferState == TransferState.COMPLETED) {
-                onSuccess?.accept(StorageUploadFileResult(serviceKey!!, serviceKey!!))
+            val serviceKey = transferObserver?.key
+            if (transferState == TransferState.COMPLETED && serviceKey != null) {
+                onSuccess?.accept(StorageUploadFileResult(serviceKey, serviceKey))
             }
         }
     }
