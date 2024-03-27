@@ -40,8 +40,8 @@ import java.util.concurrent.ExecutorService
  * An operation to upload a file from AWS S3.
  */
 @Deprecated(
-    "Class should not be public and explicitly cast to. " +
-        "Internal usages are moving to AWSS3StorageUploadFileOperationV2"
+    "Class should not be public and explicitly cast to. Cast to StorageUploadFileOperation" +
+        "Internal usages are moving to AWSS3StoragePathUploadFileOperation"
 )
 class AWSS3StorageUploadFileOperation @JvmOverloads internal constructor(
     transferId: String,
@@ -196,10 +196,9 @@ class AWSS3StorageUploadFileOperation @JvmOverloads internal constructor(
 
     override fun setOnSuccess(onSuccess: Consumer<StorageUploadFileResult>?) {
         super.setOnSuccess(onSuccess)
-        request?.let {
-            if (transferState == TransferState.COMPLETED) {
-                onSuccess?.accept(StorageUploadFileResult.fromKey(it.key))
-            }
+        val serviceKey = transferObserver?.key
+        if (transferState == TransferState.COMPLETED && serviceKey != null) {
+            onSuccess?.accept(StorageUploadFileResult(serviceKey, serviceKey))
         }
     }
 

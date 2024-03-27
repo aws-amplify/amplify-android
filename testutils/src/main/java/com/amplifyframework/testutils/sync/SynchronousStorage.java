@@ -21,6 +21,7 @@ import com.amplifyframework.core.Amplify;
 import com.amplifyframework.storage.StorageCategory;
 import com.amplifyframework.storage.StorageCategoryBehavior;
 import com.amplifyframework.storage.StorageException;
+import com.amplifyframework.storage.StoragePath;
 import com.amplifyframework.storage.options.StorageDownloadFileOptions;
 import com.amplifyframework.storage.options.StorageListOptions;
 import com.amplifyframework.storage.options.StoragePagedListOptions;
@@ -118,6 +119,47 @@ public final class SynchronousStorage {
     }
 
     /**
+     * Download a file synchronously and return the result of operation.
+     *
+     * @param path      Path of file to download
+     * @param local     File to save downloaded object to
+     * @param options   Download options
+     * @return Download operation result containing downloaded file
+     * @throws StorageException if download fails or times out
+     */
+    @NonNull
+    public StorageDownloadFileResult downloadFile(
+            @NonNull StoragePath path,
+            @NonNull File local,
+            @NonNull StorageDownloadFileOptions options
+    ) throws StorageException {
+        return downloadFile(path, local, options, STORAGE_OPERATION_TIMEOUT_MS);
+    }
+
+    /**
+     * Download a file synchronously and return the result of operation.
+     *
+     * @param path      Path of file to download
+     * @param local     File to save downloaded object to
+     * @param options   Download options
+     * @param timeoutMs Custom time-out duration in milliseconds
+     * @return Download operation result containing downloaded file
+     * @throws StorageException if download fails or times out
+     */
+    @NonNull
+    @SuppressWarnings("deprecation")
+    public StorageDownloadFileResult downloadFile(
+            @NonNull StoragePath path,
+            @NonNull File local,
+            @NonNull StorageDownloadFileOptions options,
+            long timeoutMs
+    ) throws StorageException {
+        return Await.<StorageDownloadFileResult, StorageException>result(timeoutMs, (onResult, onError) ->
+                asyncDelegate.downloadFile(path, local, options, onResult, onError)
+        );
+    }
+
+    /**
      * Upload a file synchronously and return the result of operation.
      *
      * @param key     Key to uniquely identify the file
@@ -156,6 +198,47 @@ public final class SynchronousStorage {
     ) throws StorageException {
         return Await.<StorageUploadFileResult, StorageException>result(timeoutMs, (onResult, onError) ->
                 asyncDelegate.uploadFile(key, local, options, onResult, onError)
+        );
+    }
+
+    /**
+     * Upload a file synchronously and return the result of operation.
+     *
+     * @param path      Path of file on service
+     * @param local   File to upload
+     * @param options Upload options
+     * @return Upload operation result
+     * @throws StorageException if upload fails or times out
+     */
+    @NonNull
+    @SuppressWarnings("deprecation")
+    public StorageUploadFileResult uploadFile(
+            @NonNull StoragePath path,
+            @NonNull File local,
+            @NonNull StorageUploadFileOptions options
+    ) throws StorageException {
+        return uploadFile(path, local, options, STORAGE_OPERATION_TIMEOUT_MS);
+    }
+
+    /**
+     * Upload a file synchronously and return the result of operation.
+     *
+     * @param path      Path of file on service
+     * @param local     File to upload
+     * @param options   Upload options
+     * @param timeoutMs Custom time-out duration in milliseconds
+     * @return Upload operation result
+     * @throws StorageException if upload fails or times out
+     */
+    @NonNull
+    public StorageUploadFileResult uploadFile(
+            @NonNull StoragePath path,
+            @NonNull File local,
+            @NonNull StorageUploadFileOptions options,
+            long timeoutMs
+    ) throws StorageException {
+        return Await.<StorageUploadFileResult, StorageException>result(timeoutMs, (onResult, onError) ->
+                asyncDelegate.uploadFile(path, local, options, onResult, onError)
         );
     }
 

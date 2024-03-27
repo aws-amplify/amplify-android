@@ -57,6 +57,9 @@ import com.amplifyframework.storage.s3.configuration.AWSS3StoragePluginConfigura
 import com.amplifyframework.storage.s3.operation.AWSS3StorageDownloadFileOperation;
 import com.amplifyframework.storage.s3.operation.AWSS3StorageGetPresignedUrlOperation;
 import com.amplifyframework.storage.s3.operation.AWSS3StorageListOperation;
+import com.amplifyframework.storage.s3.operation.AWSS3StoragePathDownloadFileOperation;
+import com.amplifyframework.storage.s3.operation.AWSS3StoragePathUploadFileOperation;
+import com.amplifyframework.storage.s3.operation.AWSS3StoragePathUploadInputStreamOperation;
 import com.amplifyframework.storage.s3.operation.AWSS3StorageRemoveOperation;
 import com.amplifyframework.storage.s3.operation.AWSS3StorageUploadFileOperation;
 import com.amplifyframework.storage.s3.operation.AWSS3StorageUploadInputStreamOperation;
@@ -68,6 +71,8 @@ import com.amplifyframework.storage.s3.options.AWSS3StorageUploadInputStreamOpti
 import com.amplifyframework.storage.s3.request.AWSS3StorageDownloadFileRequest;
 import com.amplifyframework.storage.s3.request.AWSS3StorageGetPresignedUrlRequest;
 import com.amplifyframework.storage.s3.request.AWSS3StorageListRequest;
+import com.amplifyframework.storage.s3.request.AWSS3StoragePathDownloadFileRequest;
+import com.amplifyframework.storage.s3.request.AWSS3StoragePathUploadRequest;
 import com.amplifyframework.storage.s3.request.AWSS3StorageRemoveRequest;
 import com.amplifyframework.storage.s3.request.AWSS3StorageUploadRequest;
 import com.amplifyframework.storage.s3.service.AWSS3StorageService;
@@ -271,7 +276,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
     ) {
         return getUrl(path, StorageGetUrlOptions.defaultInstance(), onSuccess, onError);
     }
-
+    
     @NonNull
     @Override
     @SuppressWarnings("deprecation")
@@ -419,8 +424,28 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
             @NonNull Consumer<StorageDownloadFileResult> onSuccess,
             @NonNull Consumer<StorageException> onError
     ) {
-        // TODO
-        return null;
+        boolean useAccelerateEndpoint =
+                options instanceof AWSS3StorageDownloadFileOptions &&
+                        ((AWSS3StorageDownloadFileOptions) options).useAccelerateEndpoint();
+
+        AWSS3StoragePathDownloadFileRequest request = new AWSS3StoragePathDownloadFileRequest(
+                path,
+                local,
+                useAccelerateEndpoint
+        );
+
+        AWSS3StoragePathDownloadFileOperation operation = new AWSS3StoragePathDownloadFileOperation(
+                request,
+                storageService,
+                executorService,
+                authCredentialsProvider,
+                onProgress,
+                onSuccess,
+                onError
+        );
+        operation.start();
+
+        return operation;
     }
 
     @SuppressWarnings("deprecation")
@@ -526,8 +551,31 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
             @NonNull Consumer<StorageUploadFileResult> onSuccess,
             @NonNull Consumer<StorageException> onError
     ) {
-        // TODO: Implement
-        return null;
+        boolean useAccelerateEndpoint = options instanceof AWSS3StorageUploadFileOptions &&
+                ((AWSS3StorageUploadFileOptions) options).useAccelerateEndpoint();
+        AWSS3StoragePathUploadRequest<File> request = new AWSS3StoragePathUploadRequest<>(
+                path,
+                local,
+                options.getContentType(),
+                options instanceof AWSS3StorageUploadFileOptions
+                        ? ((AWSS3StorageUploadFileOptions) options).getServerSideEncryption()
+                        : ServerSideEncryption.NONE,
+                options.getMetadata(),
+                useAccelerateEndpoint
+        );
+
+        AWSS3StoragePathUploadFileOperation operation = new AWSS3StoragePathUploadFileOperation(
+                request,
+                storageService,
+                executorService,
+                authCredentialsProvider,
+                onProgress,
+                onSuccess,
+                onError
+        );
+        operation.start();
+
+        return operation;
     }
 
     @SuppressWarnings("deprecation")
@@ -631,8 +679,32 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
             @NonNull Consumer<StorageUploadInputStreamResult> onSuccess,
             @NonNull Consumer<StorageException> onError
     ) {
-        // TODO: Implement
-        return null;
+        boolean useAccelerateEndpoint = options instanceof AWSS3StorageUploadInputStreamOptions &&
+                ((AWSS3StorageUploadInputStreamOptions) options).useAccelerateEndpoint();
+        AWSS3StoragePathUploadRequest<InputStream> request = new AWSS3StoragePathUploadRequest<>(
+                path,
+                local,
+                options.getContentType(),
+                options instanceof AWSS3StorageUploadInputStreamOptions
+                        ? ((AWSS3StorageUploadInputStreamOptions) options).getServerSideEncryption()
+                        : ServerSideEncryption.NONE,
+                options.getMetadata(),
+                useAccelerateEndpoint
+        );
+
+        AWSS3StoragePathUploadInputStreamOperation operation =
+                new AWSS3StoragePathUploadInputStreamOperation(
+                        request,
+                        storageService,
+                        executorService,
+                        authCredentialsProvider,
+                        onProgress,
+                        onSuccess,
+                        onError
+                );
+        operation.start();
+
+        return operation;
     }
 
     @SuppressWarnings("deprecation")
