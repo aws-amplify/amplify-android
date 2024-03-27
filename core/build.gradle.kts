@@ -64,6 +64,10 @@ dependencies {
     androidTestImplementation(libs.test.androidx.fragment)
 }
 
+android.kotlinOptions {
+    jvmTarget = "11"
+}
+
 afterEvaluate {
     // Disables this warning:
     // warning: listOf(classfile) MethodParameters attribute

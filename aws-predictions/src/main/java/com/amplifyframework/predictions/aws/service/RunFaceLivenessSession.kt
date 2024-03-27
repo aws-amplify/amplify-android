@@ -179,8 +179,8 @@ internal class RunFaceLivenessSession(
         }
     }
 
-    private fun stopLivenessSession() {
+    private fun stopLivenessSession(reasonCode: Int?) {
         livenessWebSocket.clientStoppedSession = true
-        livenessWebSocket.destroy()
+        reasonCode?.let { livenessWebSocket.destroy(it) } ?: livenessWebSocket.destroy()
     }
 }

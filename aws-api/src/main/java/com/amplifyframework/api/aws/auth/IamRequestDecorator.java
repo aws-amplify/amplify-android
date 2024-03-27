@@ -18,7 +18,8 @@ package com.amplifyframework.api.aws.auth;
 import com.amplifyframework.api.ApiException.ApiAuthException;
 import com.amplifyframework.api.aws.sigv4.AWS4Signer;
 
-import aws.smithy.kotlin.runtime.net.Url;
+import aws.smithy.kotlin.runtime.net.url.Url;
+import aws.smithy.kotlin.runtime.net.url.UrlEncoding;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -28,8 +29,8 @@ import java.util.Map;
 import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider;
 import aws.smithy.kotlin.runtime.http.DeferredHeaders;
 import aws.smithy.kotlin.runtime.http.Headers;
+import aws.smithy.kotlin.runtime.http.HttpBody;
 import aws.smithy.kotlin.runtime.http.HttpMethod;
-import aws.smithy.kotlin.runtime.http.content.ByteArrayContent;
 import aws.smithy.kotlin.runtime.http.request.HttpRequest;
 import aws.smithy.kotlin.runtime.http.request.HttpRequestKt;
 import okhttp3.MediaType;
@@ -40,8 +41,7 @@ import okio.Buffer;
  * Request decorator implementatioon that uses AWS SigV4 signing.
  */
 public class IamRequestDecorator implements RequestDecorator {
-    private static final String CONTENT_TYPE = "application/json";
-    private static final MediaType JSON_MEDIA_TYPE = MediaType.parse(CONTENT_TYPE);
+    private static final String DEFAULT_CONTENT_TYPE = "application/json";
     private final CredentialsProvider credentialsProvider;
     private final AWS4Signer v4Signer;
     private final String serviceName;
@@ -69,10 +69,10 @@ public class IamRequestDecorator implements RequestDecorator {
     public final okhttp3.Request decorate(okhttp3.Request req) throws ApiAuthException {
         //set the request body
         final byte[] bodyBytes = getBytes(req.body());
-        ByteArrayContent body2 = new ByteArrayContent(bodyBytes);
+        HttpBody body2 = HttpBody.Companion.fromBytes(bodyBytes);
 
         HttpMethod method = HttpMethod.Companion.parse(req.method());
-        Url url = Url.Companion.parse(req.url().uri().toString());
+        Url url = Url.Companion.parse(req.url().uri().toString(), UrlEncoding.Companion.getAll());
         Headers headers = Headers.Companion.invoke((builder) -> {
             for (String headerName : req.headers().names()) {
                 builder.set(headerName, req.header(headerName));
@@ -89,8 +89,25 @@ public class IamRequestDecorator implements RequestDecorator {
         //Copy the signed/credentialed request back into an OKHTTP Request object.
         okhttp3.Request.Builder okReqBuilder = new okhttp3.Request.Builder();
 
+        // By default, we send application/json content-type
+        String contentType = DEFAULT_CONTENT_TYPE;
+
         for (Map.Entry<String, List<String>> e : request.getHeaders().entries()) {
-            okReqBuilder.addHeader(e.getKey(), e.getValue().get(0));
+            String key = e.getKey();
+            String value = e.getValue().get(0);
+            okReqBuilder.addHeader(key, value);
+
+            // If content-type detected in headers, capture to use later
+            if ("content-type".equalsIgnoreCase(key)) {
+                contentType = value;
+            }
+        }
+
+        // Set MediaType for OkHttp request body, because it will overwrite content-type headers.
+        MediaType mediaType = MediaType.parse(contentType);
+        // If the provided content-type is not valid, reset to default MediaType
+        if (mediaType == null) {
+            mediaType = MediaType.parse(DEFAULT_CONTENT_TYPE);
         }
 
         //Set the URL and Method
@@ -99,7 +116,7 @@ public class IamRequestDecorator implements RequestDecorator {
         if (req.body() == null) {
             requestBody = null;
         } else {
-            requestBody = RequestBody.create(bodyBytes, JSON_MEDIA_TYPE);
+            requestBody = RequestBody.create(bodyBytes, mediaType);
         }
 
         okReqBuilder.method(req.method(), requestBody);

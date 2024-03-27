@@ -18,6 +18,7 @@ package com.amplifyframework.datastore.storage;
 import android.content.Context;
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.annotations.InternalApiWarning;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.async.Cancelable;
@@ -45,7 +46,11 @@ import java.util.List;
  *
  * Plausible implementations of the LocalStorageAdapter might use SQLite, SharedPreferences,
  * Room, Realm, Flat-file, in-memory, etc., etc.
+ *
+ * Although this has public access, it is intended for internal use and should not be used directly by host
+ * applications. The behavior of this may change without warning.
  */
+@InternalApiWarning
 public interface LocalStorageAdapter {
 
     /**
@@ -155,6 +160,20 @@ public interface LocalStorageAdapter {
             @NonNull Action onSuccess,
             @NonNull Consumer<DataStoreException> onError
     );
+
+    /**
+     * Batches operations for a given type in a single transaction.
+     *
+     * @param <T>        The type of items being saved/deleted
+     * @param operations A list of operations that will sequentially execute
+     * @param onComplete A callback that will be invoked when the transaction batch succeeds
+     * @param onError    A callback that will be invoked when any operations fails with an error
+     *                   If an error is received, the entire transaction will be unsuccessful
+     */
+    <T extends Model> void batchSyncOperations(
+            @NonNull List<StorageOperation<T>> operations,
+            @NonNull Action onComplete,
+            @NonNull Consumer<DataStoreException> onError);
 
     /**
      * Observe all changes to that occur to any/all objects in the storage.

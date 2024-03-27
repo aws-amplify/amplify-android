@@ -38,6 +38,7 @@ import com.amplifyframework.datastore.generated.model.ProjectPath
 import com.amplifyframework.datastore.generated.model.Team
 import com.amplifyframework.datastore.generated.model.TeamPath
 import com.amplifyframework.kotlin.core.Amplify
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -50,6 +51,7 @@ import org.junit.Test
 class GraphQLLazyQueryInstrumentationTest {
 
     companion object {
+        val LONG_TIMEOUT = 20.seconds // Some test we pull and process 1000k records. Increase timeout for slow tests
 
         const val PARENT1_ID = "GraphQLLazyQueryInstrumentationTest-Parent"
         const val PARENT2_ID = "GraphQLLazyQueryInstrumentationTest-Parent2"
@@ -144,7 +146,7 @@ class GraphQLLazyQueryInstrumentationTest {
 //    }
 
     @Test
-    fun query_parent_no_includes() = runTest {
+    fun query_parent_no_includes() = runTest(timeout = LONG_TIMEOUT) {
         // GIVEN
         val request = ModelQuery[Parent::class.java, Parent.ParentIdentifier(PARENT1_ID)]
 
@@ -196,7 +198,7 @@ class GraphQLLazyQueryInstrumentationTest {
     }
 
     @Test
-    fun query_list_with_no_includes() = runTest {
+    fun query_list_with_no_includes() = runTest(timeout = LONG_TIMEOUT) {
 
         val request = ModelQuery.list(
             Parent::class.java,

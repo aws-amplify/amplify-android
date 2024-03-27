@@ -1,0 +1,225 @@
+public final class com/amplifyframework/rx/BuildConfig {
+	public static final field BUILD_TYPE Ljava/lang/String;
+	public static final field DEBUG Z
+	public static final field LIBRARY_PACKAGE_NAME Ljava/lang/String;
+	public static final field VERSION_NAME Ljava/lang/String;
+	public fun <init> ()V
+}
+
+public final class com/amplifyframework/rx/RxAmplify {
+	public static final field API Lcom/amplifyframework/rx/RxApiCategoryBehavior;
+	public static final field Analytics Lcom/amplifyframework/analytics/AnalyticsCategory;
+	public static final field Auth Lcom/amplifyframework/rx/RxAuthCategoryBehavior;
+	public static final field DataStore Lcom/amplifyframework/rx/RxDataStoreCategoryBehavior;
+	public static final field Geo Lcom/amplifyframework/rx/RxGeoCategoryBehavior;
+	public static final field Hub Lcom/amplifyframework/rx/RxHubCategoryBehavior;
+	public static final field Logging Lcom/amplifyframework/logging/LoggingCategory;
+	public static final field Notifications Lcom/amplifyframework/rx/RxNotificationsCategoryBehavior;
+	public static final field Predictions Lcom/amplifyframework/rx/RxPredictionsCategoryBehavior;
+	public static final field Storage Lcom/amplifyframework/rx/RxStorageCategoryBehavior;
+	public static fun addPlugin (Lcom/amplifyframework/core/plugin/Plugin;)V
+	public static fun configure (Landroid/content/Context;)V
+	public static fun configure (Lcom/amplifyframework/core/AmplifyConfiguration;Landroid/content/Context;)V
+	public static fun removePlugin (Lcom/amplifyframework/core/plugin/Plugin;)V
+}
+
+public abstract interface class com/amplifyframework/rx/RxApiCategoryBehavior : com/amplifyframework/rx/RxGraphQlBehavior, com/amplifyframework/rx/RxRestBehavior {
+}
+
+public abstract interface class com/amplifyframework/rx/RxAuthCategoryBehavior {
+	public abstract fun confirmResetPassword (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lio/reactivex/rxjava3/core/Completable;
+	public abstract fun confirmResetPassword (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/auth/options/AuthConfirmResetPasswordOptions;)Lio/reactivex/rxjava3/core/Completable;
+	public abstract fun confirmSignIn (Ljava/lang/String;)Lio/reactivex/rxjava3/core/Single;
+	public abstract fun confirmSignIn (Ljava/lang/String;Lcom/amplifyframework/auth/options/AuthConfirmSignInOptions;)Lio/reactivex/rxjava3/core/Single;
+	public abstract fun confirmSignUp (Ljava/lang/String;Ljava/lang/String;)Lio/reactivex/rxjava3/core/Single;
+	public abstract fun confirmSignUp (Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/auth/options/AuthConfirmSignUpOptions;)Lio/reactivex/rxjava3/core/Single;
+	public abstract fun confirmUserAttribute (Lcom/amplifyframework/auth/AuthUserAttributeKey;Ljava/lang/String;)Lio/reactivex/rxjava3/core/Completable;
+	public abstract fun deleteUser ()Lio/reactivex/rxjava3/core/Completable;
+	public abstract fun fetchAuthSession ()Lio/reactivex/rxjava3/core/Single;
+	public abstract fun fetchAuthSession (Lcom/amplifyframework/auth/options/AuthFetchSessionOptions;)Lio/reactivex/rxjava3/core/Single;
+	public abstract fun fetchDevices ()Lio/reactivex/rxjava3/core/Single;
+	public abstract fun fetchUserAttributes ()Lio/reactivex/rxjava3/core/Single;
+	public abstract fun forgetDevice ()Lio/reactivex/rxjava3/core/Completable;
+	public abstract fun forgetDevice (Lcom/amplifyframework/auth/AuthDevice;)Lio/reactivex/rxjava3/core/Completable;
+	public abstract fun getCurrentUser ()Lio/reactivex/rxjava3/core/Single;
+	public abstract fun handleWebUISignInResponse (Landroid/content/Intent;)V
+	public abstract fun rememberDevice ()Lio/reactivex/rxjava3/core/Completable;
+	public abstract fun resendSignUpCode (Ljava/lang/String;)Lio/reactivex/rxjava3/core/Single;
+	public abstract fun resendSignUpCode (Ljava/lang/String;Lcom/amplifyframework/auth/options/AuthResendSignUpCodeOptions;)Lio/reactivex/rxjava3/core/Single;
+	public abstract fun resendUserAttributeConfirmationCode (Lcom/amplifyframework/auth/AuthUserAttributeKey;)Lio/reactivex/rxjava3/core/Single;
+	public abstract fun resendUserAttributeConfirmationCode (Lcom/amplifyframework/auth/AuthUserAttributeKey;Lcom/amplifyframework/auth/options/AuthResendUserAttributeConfirmationCodeOptions;)Lio/reactivex/rxjava3/core/Single;
+	public abstract fun resetPassword (Ljava/lang/String;)Lio/reactivex/rxjava3/core/Single;
+	public abstract fun resetPassword (Ljava/lang/String;Lcom/amplifyframework/auth/options/AuthResetPasswordOptions;)Lio/reactivex/rxjava3/core/Single;
+	public abstract fun setUpTOTP ()Lio/reactivex/rxjava3/core/Single;
+	public abstract fun signIn (Ljava/lang/String;Ljava/lang/String;)Lio/reactivex/rxjava3/core/Single;
+	public abstract fun signIn (Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/auth/options/AuthSignInOptions;)Lio/reactivex/rxjava3/core/Single;
+	public abstract fun signInWithSocialWebUI (Lcom/amplifyframework/auth/AuthProvider;Landroid/app/Activity;)Lio/reactivex/rxjava3/core/Single;
+	public abstract fun signInWithSocialWebUI (Lcom/amplifyframework/auth/AuthProvider;Landroid/app/Activity;Lcom/amplifyframework/auth/options/AuthWebUISignInOptions;)Lio/reactivex/rxjava3/core/Single;
+	public abstract fun signInWithWebUI (Landroid/app/Activity;)Lio/reactivex/rxjava3/core/Single;
+	public abstract fun signInWithWebUI (Landroid/app/Activity;Lcom/amplifyframework/auth/options/AuthWebUISignInOptions;)Lio/reactivex/rxjava3/core/Single;
+	public abstract fun signOut ()Lio/reactivex/rxjava3/core/Single;
+	public abstract fun signOut (Lcom/amplifyframework/auth/options/AuthSignOutOptions;)Lio/reactivex/rxjava3/core/Single;
+	public abstract fun signUp (Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/auth/options/AuthSignUpOptions;)Lio/reactivex/rxjava3/core/Single;
+	public abstract fun updatePassword (Ljava/lang/String;Ljava/lang/String;)Lio/reactivex/rxjava3/core/Completable;
+	public abstract fun updateUserAttribute (Lcom/amplifyframework/auth/AuthUserAttribute;)Lio/reactivex/rxjava3/core/Single;
+	public abstract fun updateUserAttribute (Lcom/amplifyframework/auth/AuthUserAttribute;Lcom/amplifyframework/auth/options/AuthUpdateUserAttributeOptions;)Lio/reactivex/rxjava3/core/Single;
+	public abstract fun updateUserAttributes (Ljava/util/List;)Lio/reactivex/rxjava3/core/Single;
+	public abstract fun updateUserAttributes (Ljava/util/List;Lcom/amplifyframework/auth/options/AuthUpdateUserAttributesOptions;)Lio/reactivex/rxjava3/core/Single;
+	public abstract fun verifyTOTPSetup (Ljava/lang/String;)Lio/reactivex/rxjava3/core/Completable;
+	public abstract fun verifyTOTPSetup (Ljava/lang/String;Lcom/amplifyframework/auth/options/AuthVerifyTOTPSetupOptions;)Lio/reactivex/rxjava3/core/Completable;
+}
+
+public abstract interface class com/amplifyframework/rx/RxDataStoreCategoryBehavior {
+	public abstract fun clear ()Lio/reactivex/rxjava3/core/Completable;
+	public abstract fun delete (Lcom/amplifyframework/core/model/Model;)Lio/reactivex/rxjava3/core/Completable;
+	public abstract fun delete (Lcom/amplifyframework/core/model/Model;Lcom/amplifyframework/core/model/query/predicate/QueryPredicate;)Lio/reactivex/rxjava3/core/Completable;
+	public abstract fun delete (Ljava/lang/Class;Lcom/amplifyframework/core/model/query/predicate/QueryPredicate;)Lio/reactivex/rxjava3/core/Completable;
+	public abstract fun observe ()Lio/reactivex/rxjava3/core/Observable;
+	public abstract fun observe (Ljava/lang/Class;)Lio/reactivex/rxjava3/core/Observable;
+	public abstract fun observe (Ljava/lang/Class;Lcom/amplifyframework/core/model/query/predicate/QueryPredicate;)Lio/reactivex/rxjava3/core/Observable;
+	public abstract fun observe (Ljava/lang/Class;Ljava/lang/String;)Lio/reactivex/rxjava3/core/Observable;
+	public abstract fun observeQuery (Ljava/lang/Class;Lcom/amplifyframework/core/model/query/ObserveQueryOptions;)Lio/reactivex/rxjava3/core/Observable;
+	public abstract fun query (Ljava/lang/Class;)Lio/reactivex/rxjava3/core/Observable;
+	public abstract fun query (Ljava/lang/Class;Lcom/amplifyframework/core/model/query/QueryOptions;)Lio/reactivex/rxjava3/core/Observable;
+	public abstract fun query (Ljava/lang/Class;Lcom/amplifyframework/core/model/query/predicate/QueryPredicate;)Lio/reactivex/rxjava3/core/Observable;
+	public abstract fun save (Lcom/amplifyframework/core/model/Model;)Lio/reactivex/rxjava3/core/Completable;
+	public abstract fun save (Lcom/amplifyframework/core/model/Model;Lcom/amplifyframework/core/model/query/predicate/QueryPredicate;)Lio/reactivex/rxjava3/core/Completable;
+	public abstract fun start ()Lio/reactivex/rxjava3/core/Completable;
+	public abstract fun stop ()Lio/reactivex/rxjava3/core/Completable;
+}
+
+public abstract interface class com/amplifyframework/rx/RxGeoCategoryBehavior {
+	public abstract fun getAvailableMaps ()Lio/reactivex/rxjava3/core/Single;
+	public abstract fun getDefaultMap ()Lio/reactivex/rxjava3/core/Single;
+	public abstract fun getMapStyleDescriptor ()Lio/reactivex/rxjava3/core/Single;
+	public abstract fun getMapStyleDescriptor (Lcom/amplifyframework/geo/options/GetMapStyleDescriptorOptions;)Lio/reactivex/rxjava3/core/Single;
+	public abstract fun searchByCoordinates (Lcom/amplifyframework/geo/models/Coordinates;)Lio/reactivex/rxjava3/core/Single;
+	public abstract fun searchByCoordinates (Lcom/amplifyframework/geo/models/Coordinates;Lcom/amplifyframework/geo/options/GeoSearchByCoordinatesOptions;)Lio/reactivex/rxjava3/core/Single;
+	public abstract fun searchByText (Ljava/lang/String;)Lio/reactivex/rxjava3/core/Single;
+	public abstract fun searchByText (Ljava/lang/String;Lcom/amplifyframework/geo/options/GeoSearchByTextOptions;)Lio/reactivex/rxjava3/core/Single;
+}
+
+public abstract interface class com/amplifyframework/rx/RxGraphQlBehavior {
+	public abstract fun mutate (Lcom/amplifyframework/api/graphql/GraphQLRequest;)Lio/reactivex/rxjava3/core/Single;
+	public abstract fun mutate (Ljava/lang/String;Lcom/amplifyframework/api/graphql/GraphQLRequest;)Lio/reactivex/rxjava3/core/Single;
+	public abstract fun query (Lcom/amplifyframework/api/graphql/GraphQLRequest;)Lio/reactivex/rxjava3/core/Single;
+	public abstract fun query (Ljava/lang/String;Lcom/amplifyframework/api/graphql/GraphQLRequest;)Lio/reactivex/rxjava3/core/Single;
+	public abstract fun subscribe (Lcom/amplifyframework/api/graphql/GraphQLRequest;)Lcom/amplifyframework/rx/RxOperations$RxSubscriptionOperation;
+	public abstract fun subscribe (Ljava/lang/String;Lcom/amplifyframework/api/graphql/GraphQLRequest;)Lcom/amplifyframework/rx/RxOperations$RxSubscriptionOperation;
+}
+
+public abstract interface class com/amplifyframework/rx/RxHubCategoryBehavior {
+	public abstract fun on (Lcom/amplifyframework/hub/HubChannel;)Lio/reactivex/rxjava3/core/Observable;
+	public abstract fun publish (Lcom/amplifyframework/hub/HubChannel;Lcom/amplifyframework/hub/HubEvent;)Lio/reactivex/rxjava3/core/Completable;
+}
+
+public abstract interface class com/amplifyframework/rx/RxNotificationsCategoryBehavior {
+	public static final field Push Lcom/amplifyframework/rx/RxPushNotificationsCategoryBehavior;
+	public abstract fun identifyUser (Ljava/lang/String;)Lio/reactivex/rxjava3/core/Completable;
+	public abstract fun identifyUser (Ljava/lang/String;Lcom/amplifyframework/analytics/UserProfile;)Lio/reactivex/rxjava3/core/Completable;
+}
+
+public final class com/amplifyframework/rx/RxOperations {
+	public fun <init> ()V
+}
+
+public final class com/amplifyframework/rx/RxOperations$RxSubscriptionOperation : com/amplifyframework/core/async/Cancelable {
+	public fun <init> (Lcom/amplifyframework/rx/RxAdapters$CancelableBehaviors$StreamEmitter;)V
+	public fun cancel ()V
+	public fun observeConnectionState ()Lio/reactivex/rxjava3/core/Observable;
+	public fun observeSubscriptionData ()Lio/reactivex/rxjava3/core/Observable;
+}
+
+public final class com/amplifyframework/rx/RxOperations$RxSubscriptionOperation$ConnectionState : java/lang/Enum {
+	public static final field CONNECTED Lcom/amplifyframework/rx/RxOperations$RxSubscriptionOperation$ConnectionState;
+	public static fun valueOf (Ljava/lang/String;)Lcom/amplifyframework/rx/RxOperations$RxSubscriptionOperation$ConnectionState;
+	public static fun values ()[Lcom/amplifyframework/rx/RxOperations$RxSubscriptionOperation$ConnectionState;
+}
+
+public final class com/amplifyframework/rx/RxOperations$RxSubscriptionOperation$ConnectionStateEvent {
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getConnectionState ()Lcom/amplifyframework/rx/RxOperations$RxSubscriptionOperation$ConnectionState;
+	public fun getSubscriptionId ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class com/amplifyframework/rx/RxPredictionsCategoryBehavior {
+	public abstract fun convertTextToSpeech (Ljava/lang/String;)Lio/reactivex/rxjava3/core/Single;
+	public abstract fun convertTextToSpeech (Ljava/lang/String;Lcom/amplifyframework/predictions/options/TextToSpeechOptions;)Lio/reactivex/rxjava3/core/Single;
+	public abstract fun identify (Lcom/amplifyframework/predictions/models/IdentifyAction;Landroid/graphics/Bitmap;)Lio/reactivex/rxjava3/core/Single;
+	public abstract fun identify (Lcom/amplifyframework/predictions/models/IdentifyAction;Landroid/graphics/Bitmap;Lcom/amplifyframework/predictions/options/IdentifyOptions;)Lio/reactivex/rxjava3/core/Single;
+	public abstract fun interpret (Ljava/lang/String;)Lio/reactivex/rxjava3/core/Single;
+	public abstract fun interpret (Ljava/lang/String;Lcom/amplifyframework/predictions/options/InterpretOptions;)Lio/reactivex/rxjava3/core/Single;
+	public abstract fun translateText (Ljava/lang/String;)Lio/reactivex/rxjava3/core/Single;
+	public abstract fun translateText (Ljava/lang/String;Lcom/amplifyframework/predictions/models/LanguageType;Lcom/amplifyframework/predictions/models/LanguageType;)Lio/reactivex/rxjava3/core/Single;
+	public abstract fun translateText (Ljava/lang/String;Lcom/amplifyframework/predictions/models/LanguageType;Lcom/amplifyframework/predictions/models/LanguageType;Lcom/amplifyframework/predictions/options/TranslateTextOptions;)Lio/reactivex/rxjava3/core/Single;
+	public abstract fun translateText (Ljava/lang/String;Lcom/amplifyframework/predictions/options/TranslateTextOptions;)Lio/reactivex/rxjava3/core/Single;
+}
+
+public abstract interface class com/amplifyframework/rx/RxPushNotificationsCategoryBehavior : com/amplifyframework/rx/RxNotificationsCategoryBehavior {
+	public abstract fun handleNotificationReceived (Lcom/amplifyframework/notifications/pushnotifications/NotificationPayload;)Lio/reactivex/rxjava3/core/Single;
+	public abstract fun recordNotificationOpened (Lcom/amplifyframework/notifications/pushnotifications/NotificationPayload;)Lio/reactivex/rxjava3/core/Completable;
+	public abstract fun recordNotificationReceived (Lcom/amplifyframework/notifications/pushnotifications/NotificationPayload;)Lio/reactivex/rxjava3/core/Completable;
+	public abstract fun registerDevice (Ljava/lang/String;)Lio/reactivex/rxjava3/core/Completable;
+	public abstract fun shouldHandleNotification (Lcom/amplifyframework/notifications/pushnotifications/NotificationPayload;)Ljava/lang/Boolean;
+}
+
+public abstract interface class com/amplifyframework/rx/RxRestBehavior {
+	public abstract fun delete (Lcom/amplifyframework/api/rest/RestOptions;)Lio/reactivex/rxjava3/core/Single;
+	public abstract fun delete (Ljava/lang/String;Lcom/amplifyframework/api/rest/RestOptions;)Lio/reactivex/rxjava3/core/Single;
+	public abstract fun get (Lcom/amplifyframework/api/rest/RestOptions;)Lio/reactivex/rxjava3/core/Single;
+	public abstract fun get (Ljava/lang/String;Lcom/amplifyframework/api/rest/RestOptions;)Lio/reactivex/rxjava3/core/Single;
+	public abstract fun head (Lcom/amplifyframework/api/rest/RestOptions;)Lio/reactivex/rxjava3/core/Single;
+	public abstract fun head (Ljava/lang/String;Lcom/amplifyframework/api/rest/RestOptions;)Lio/reactivex/rxjava3/core/Single;
+	public abstract fun patch (Lcom/amplifyframework/api/rest/RestOptions;)Lio/reactivex/rxjava3/core/Single;
+	public abstract fun patch (Ljava/lang/String;Lcom/amplifyframework/api/rest/RestOptions;)Lio/reactivex/rxjava3/core/Single;
+	public abstract fun post (Lcom/amplifyframework/api/rest/RestOptions;)Lio/reactivex/rxjava3/core/Single;
+	public abstract fun post (Ljava/lang/String;Lcom/amplifyframework/api/rest/RestOptions;)Lio/reactivex/rxjava3/core/Single;
+	public abstract fun put (Lcom/amplifyframework/api/rest/RestOptions;)Lio/reactivex/rxjava3/core/Single;
+	public abstract fun put (Ljava/lang/String;Lcom/amplifyframework/api/rest/RestOptions;)Lio/reactivex/rxjava3/core/Single;
+}
+
+public final class com/amplifyframework/rx/RxStorageBinding : com/amplifyframework/rx/RxStorageCategoryBehavior {
+	public fun downloadFile (Ljava/lang/String;Ljava/io/File;)Lcom/amplifyframework/rx/RxStorageBinding$RxProgressAwareSingleOperation;
+	public fun downloadFile (Ljava/lang/String;Ljava/io/File;Lcom/amplifyframework/storage/options/StorageDownloadFileOptions;)Lcom/amplifyframework/rx/RxStorageBinding$RxProgressAwareSingleOperation;
+	public fun getTransfer (Ljava/lang/String;)Lio/reactivex/rxjava3/core/Single;
+	public fun getUrl (Ljava/lang/String;)Lio/reactivex/rxjava3/core/Single;
+	public fun getUrl (Ljava/lang/String;Lcom/amplifyframework/storage/options/StorageGetUrlOptions;)Lio/reactivex/rxjava3/core/Single;
+	public fun list (Ljava/lang/String;)Lio/reactivex/rxjava3/core/Single;
+	public fun list (Ljava/lang/String;Lcom/amplifyframework/storage/options/StorageListOptions;)Lio/reactivex/rxjava3/core/Single;
+	public fun list (Ljava/lang/String;Lcom/amplifyframework/storage/options/StoragePagedListOptions;)Lio/reactivex/rxjava3/core/Single;
+	public fun remove (Ljava/lang/String;)Lio/reactivex/rxjava3/core/Single;
+	public fun remove (Ljava/lang/String;Lcom/amplifyframework/storage/options/StorageRemoveOptions;)Lio/reactivex/rxjava3/core/Single;
+	public fun uploadFile (Ljava/lang/String;Ljava/io/File;)Lcom/amplifyframework/rx/RxStorageBinding$RxProgressAwareSingleOperation;
+	public fun uploadFile (Ljava/lang/String;Ljava/io/File;Lcom/amplifyframework/storage/options/StorageUploadFileOptions;)Lcom/amplifyframework/rx/RxStorageBinding$RxProgressAwareSingleOperation;
+	public fun uploadInputStream (Ljava/lang/String;Ljava/io/InputStream;)Lcom/amplifyframework/rx/RxStorageBinding$RxProgressAwareSingleOperation;
+	public fun uploadInputStream (Ljava/lang/String;Ljava/io/InputStream;Lcom/amplifyframework/storage/options/StorageUploadInputStreamOptions;)Lcom/amplifyframework/rx/RxStorageBinding$RxProgressAwareSingleOperation;
+}
+
+public final class com/amplifyframework/rx/RxStorageBinding$RxProgressAwareSingleOperation : com/amplifyframework/core/async/Resumable, com/amplifyframework/rx/RxAdapters$RxSingleOperation {
+	public fun cancel ()V
+	public fun getTransferId ()Ljava/lang/String;
+	public fun observeProgress ()Lio/reactivex/rxjava3/core/Observable;
+	public fun observeResult ()Lio/reactivex/rxjava3/core/Single;
+	public fun pause ()V
+	public fun resume ()V
+}
+
+public abstract interface class com/amplifyframework/rx/RxStorageCategoryBehavior {
+	public abstract fun downloadFile (Ljava/lang/String;Ljava/io/File;)Lcom/amplifyframework/rx/RxStorageBinding$RxProgressAwareSingleOperation;
+	public abstract fun downloadFile (Ljava/lang/String;Ljava/io/File;Lcom/amplifyframework/storage/options/StorageDownloadFileOptions;)Lcom/amplifyframework/rx/RxStorageBinding$RxProgressAwareSingleOperation;
+	public abstract fun getTransfer (Ljava/lang/String;)Lio/reactivex/rxjava3/core/Single;
+	public abstract fun getUrl (Ljava/lang/String;)Lio/reactivex/rxjava3/core/Single;
+	public abstract fun getUrl (Ljava/lang/String;Lcom/amplifyframework/storage/options/StorageGetUrlOptions;)Lio/reactivex/rxjava3/core/Single;
+	public abstract fun list (Ljava/lang/String;)Lio/reactivex/rxjava3/core/Single;
+	public abstract fun list (Ljava/lang/String;Lcom/amplifyframework/storage/options/StorageListOptions;)Lio/reactivex/rxjava3/core/Single;
+	public abstract fun list (Ljava/lang/String;Lcom/amplifyframework/storage/options/StoragePagedListOptions;)Lio/reactivex/rxjava3/core/Single;
+	public abstract fun remove (Ljava/lang/String;)Lio/reactivex/rxjava3/core/Single;
+	public abstract fun remove (Ljava/lang/String;Lcom/amplifyframework/storage/options/StorageRemoveOptions;)Lio/reactivex/rxjava3/core/Single;
+	public abstract fun uploadFile (Ljava/lang/String;Ljava/io/File;)Lcom/amplifyframework/rx/RxStorageBinding$RxProgressAwareSingleOperation;
+	public abstract fun uploadFile (Ljava/lang/String;Ljava/io/File;Lcom/amplifyframework/storage/options/StorageUploadFileOptions;)Lcom/amplifyframework/rx/RxStorageBinding$RxProgressAwareSingleOperation;
+	public abstract fun uploadInputStream (Ljava/lang/String;Ljava/io/InputStream;)Lcom/amplifyframework/rx/RxStorageBinding$RxProgressAwareSingleOperation;
+	public abstract fun uploadInputStream (Ljava/lang/String;Ljava/io/InputStream;Lcom/amplifyframework/storage/options/StorageUploadInputStreamOptions;)Lcom/amplifyframework/rx/RxStorageBinding$RxProgressAwareSingleOperation;
+}
+

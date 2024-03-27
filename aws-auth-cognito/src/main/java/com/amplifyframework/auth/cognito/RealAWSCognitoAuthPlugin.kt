@@ -27,6 +27,7 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.AttributeType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChangePasswordRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeviceRememberedStatusType
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.ForgetDeviceRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetUserAttributeVerificationCodeRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetUserRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ListDevicesRequest
@@ -71,7 +72,9 @@ import com.amplifyframework.auth.cognito.helpers.HostedUIHelper
 import com.amplifyframework.auth.cognito.helpers.SessionHelper
 import com.amplifyframework.auth.cognito.helpers.SignInChallengeHelper
 import com.amplifyframework.auth.cognito.helpers.getMFAType
+import com.amplifyframework.auth.cognito.helpers.getMFATypeOrNull
 import com.amplifyframework.auth.cognito.helpers.identityProviderName
+import com.amplifyframework.auth.cognito.helpers.value
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthConfirmSignInOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthConfirmSignUpOptions
@@ -789,14 +792,25 @@ internal class RealAWSCognitoAuthPlugin(
                 val userAttributes = awsCognitoConfirmSignInOptions?.userAttributes ?: emptyList()
                 when (signInState) {
                     is SignInState.ResolvingChallenge -> {
-                        val event = SignInChallengeEvent(
-                            SignInChallengeEvent.EventType.VerifyChallengeAnswer(
-                                challengeResponse,
-                                metadata,
-                                userAttributes
+                        val challengeState = signInState.challengeState
+                        if (challengeState is SignInChallengeState.WaitingForAnswer &&
+                            challengeState.challenge.challengeName == "SELECT_MFA_TYPE" &&
+                            getMFATypeOrNull(challengeResponse) == null
+                        ) {
+                            val error = InvalidParameterException(
+                                message = "Value for challengeResponse must be one of SMS_MFA or SOFTWARE_TOKEN_MFA"
                             )
-                        )
-                        authStateMachine.send(event)
+                            onError.accept(error)
+                        } else {
+                            val event = SignInChallengeEvent(
+                                SignInChallengeEvent.EventType.VerifyChallengeAnswer(
+                                    challengeResponse,
+                                    metadata,
+                                    userAttributes
+                                )
+                            )
+                            authStateMachine.send(event)
+                        }
                     }
 
                     is SignInState.ResolvingTOTPSetup -> {
@@ -1278,16 +1292,21 @@ internal class RealAWSCognitoAuthPlugin(
         onError: Consumer<AuthException>
     ) {
         authStateMachine.getCurrentState { authState ->
-            when (val authState = authState.authNState) {
+            when (val authNState = authState.authNState) {
                 is AuthenticationState.SignedIn -> {
-                    if (device.id.isEmpty()) {
-                        GlobalScope.launch {
-                            val deviceKey = authEnvironment.getDeviceMetadata(authState.signedInData.username)
-                                ?.deviceKey
-                            updateDevice(deviceKey, DeviceRememberedStatusType.NotRemembered, onSuccess, onError)
+                    GlobalScope.launch {
+                        try {
+                            if (device.id.isEmpty()) {
+                                val deviceKey = authEnvironment.getDeviceMetadata(authNState.signedInData.username)
+                                    ?.deviceKey
+                                forgetDevice(deviceKey)
+                            } else {
+                                forgetDevice(device.id)
+                            }
+                            onSuccess.call()
+                        } catch (e: Exception) {
+                            onError.accept(CognitoAuthExceptionConverter.lookup(e, "Failed to forget device."))
                         }
-                    } else {
-                        updateDevice(device.id, DeviceRememberedStatusType.NotRemembered, onSuccess, onError)
                     }
                 }
                 is AuthenticationState.SignedOut -> {
@@ -1298,6 +1317,16 @@ internal class RealAWSCognitoAuthPlugin(
                 }
             }
         }
+    }
+
+    private suspend fun forgetDevice(alternateDeviceId: String?) {
+        val tokens = getSession().userPoolTokensResult
+        authEnvironment.cognitoAuthService.cognitoIdentityProviderClient?.forgetDevice(
+            ForgetDeviceRequest.invoke {
+                accessToken = tokens.value?.accessToken
+                deviceKey = alternateDeviceId
+            }
+        )
     }
 
     override fun fetchDevices(
@@ -1329,12 +1358,14 @@ internal class RealAWSCognitoAuthPlugin(
                             accessToken = tokens.value?.accessToken
                         }
                     )
-                val _devices = response?.devices
-                val authdeviceList = mutableListOf<AuthDevice>()
-                _devices?.forEach {
-                    authdeviceList.add(AuthDevice.fromId(it.deviceKey ?: ""))
-                }
-                onSuccess.accept(authdeviceList)
+
+                val devices = response?.devices?.map { device ->
+                    val id = device.deviceKey ?: ""
+                    val name = device.deviceAttributes?.find { it.name == "device_name" }?.value
+                    AuthDevice.fromId(id, name)
+                } ?: emptyList()
+
+                onSuccess.accept(devices)
             } catch (e: Exception) {
                 onError.accept(CognitoAuthExceptionConverter.lookup(e, "Fetch devices failed."))
             }

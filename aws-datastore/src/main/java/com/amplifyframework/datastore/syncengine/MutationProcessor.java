@@ -116,11 +116,11 @@ final class MutationProcessor {
     private Completable drainMutationOutbox() {
         PendingMutation<? extends Model> next;
         do {
-            next = mutationOutbox.peek();
-            if (next == null) {
-                return Completable.complete();
-            }
             try {
+                next = mutationOutbox.peek();
+                if (next == null) {
+                    return Completable.complete();
+                }
                 processOutboxItem(next)
                     .blockingAwait();
             } catch (RuntimeException error) {

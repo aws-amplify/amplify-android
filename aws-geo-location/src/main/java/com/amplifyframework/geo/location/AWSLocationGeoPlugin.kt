@@ -67,7 +67,7 @@ class AWSLocationGeoPlugin(
 
     @InternalApiWarning
     val credentialsProvider: CredentialsProvider by lazy {
-        CognitoCredentialsProvider()
+        CognitoCredentialsProvider(authCategory)
     }
 
     override fun getPluginKey(): String {

@@ -24,6 +24,12 @@ apply(from = rootProject.file("configuration/publishing.gradle"))
 
 group = properties["POM_GROUP"].toString()
 
+android {
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_11.toString()
+    }
+}
+
 dependencies {
     implementation(project(":core"))
     implementation(project(":aws-core"))
@@ -38,4 +44,5 @@ dependencies {
     testImplementation(libs.test.mockk)
     testImplementation(libs.test.kotlin.junit)
     testImplementation(libs.test.kotlin.coroutines)
+    testImplementation(libs.test.robolectric)
 }

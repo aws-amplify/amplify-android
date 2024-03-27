@@ -81,7 +81,7 @@ import static org.mockito.Mockito.when;
  */
 @RunWith(RobolectricTestRunner.class)
 public final class RxStorageBindingTest {
-    private static final long TIMEOUT_MS = TimeUnit.SECONDS.toMillis(5);
+    private static final long TIMEOUT_MS = TimeUnit.SECONDS.toMillis(10);
     private RxStorageCategoryBehavior rxStorage;
     private StoragePlugin<?> delegate;
     private File localFile;

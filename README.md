@@ -71,14 +71,14 @@ dependencies section:
 ```groovy
 dependencies {
     // Only specify modules that provide functionality your app will use
-    implementation 'com.amplifyframework:aws-analytics-pinpoint:2.14.7'
-    implementation 'com.amplifyframework:aws-api:2.14.7'
-    implementation 'com.amplifyframework:aws-auth-cognito:2.14.7'
-    implementation 'com.amplifyframework:aws-datastore:2.14.7'
-    implementation 'com.amplifyframework:aws-predictions:2.14.7'
-    implementation 'com.amplifyframework:aws-storage-s3:2.14.7'
-    implementation 'com.amplifyframework:aws-geo-location:2.14.7'
-    implementation 'com.amplifyframework:aws-push-notifications-pinpoint:2.14.7'
+    implementation 'com.amplifyframework:aws-analytics-pinpoint:2.14.12'
+    implementation 'com.amplifyframework:aws-api:2.14.12'
+    implementation 'com.amplifyframework:aws-auth-cognito:2.14.12'
+    implementation 'com.amplifyframework:aws-datastore:2.14.12'
+    implementation 'com.amplifyframework:aws-predictions:2.14.12'
+    implementation 'com.amplifyframework:aws-storage-s3:2.14.12'
+    implementation 'com.amplifyframework:aws-geo-location:2.14.12'
+    implementation 'com.amplifyframework:aws-push-notifications-pinpoint:2.14.12'
 }
 ```
 
@@ -91,8 +91,8 @@ block inside your app's `build.gradle`, as below:
 android {
     compileOptions {
         coreLibraryDesugaringEnabled true
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
     }
 }
 ```

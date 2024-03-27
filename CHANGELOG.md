@@ -1,3 +1,56 @@
+## [Release 2.14.12](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.14.12)
+
+### Bug Fixes
+- **Predictions:** Fix Liveness InvalidSignatureException ([#2729](https://github.com/aws-amplify/amplify-android/issues/2729))
+
+[See all changes between 2.14.11 and 2.14.12](https://github.com/aws-amplify/amplify-android/compare/release_v2.14.11...release_v2.14.12)
+
+## [Release 2.14.11](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.14.11)
+
+### Bug Fixes
+- **storage:** upload/download fewer files in storage stress test to avoid S3 throttling exception ([#2712](https://github.com/aws-amplify/amplify-android/issues/2712))
+- **datastore:** Remove unnecessary synchronized causing subscription slowness ([#2718](https://github.com/aws-amplify/amplify-android/issues/2718), [#2719](https://github.com/aws-amplify/amplify-android/issues/2719))
+- **datastore:** Switch to BFS in Join Builder for Alias, fixes - [#2488](https://github.com/aws-amplify/amplify-android/issues/2488) ([#2693](https://github.com/aws-amplify/amplify-android/issues/2693))
+
+[See all changes between 2.14.10 and 2.14.11](https://github.com/aws-amplify/amplify-android/compare/release_v2.14.10...release_v2.14.11)
+
+## [Release 2.14.10](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.14.10)
+
+### Features
+- **datastore:** Improve Sync Performance Through SQLite Transaction Batching ([#2703](https://github.com/aws-amplify/amplify-android/issues/2703))
+
+### Bug Fixes
+- **api:** Use provided Content-Type to create RequestBody ([#2666](https://github.com/aws-amplify/amplify-android/issues/2666))
+- **auth:** Add MFAType.challengeResponse extension ([#2680](https://github.com/aws-amplify/amplify-android/issues/2680))
+- **core:** use returns instead of answers on coEvery ([#2653](https://github.com/aws-amplify/amplify-android/issues/2653))
+- **datastore:** Fix DataStore peek exception ([#2702](https://github.com/aws-amplify/amplify-android/issues/2702))
+- **geo:** Fix Geo Plugin Auth injection ([#2704](https://github.com/aws-amplify/amplify-android/issues/2704))
+- **all:** Add fallback logic for corrupt keys to EncryptedKeyValueRepository ([#2686](https://github.com/aws-amplify/amplify-android/issues/2686))
+- **datastore:** Fix test failure introduced with slower test runs from SQLite ([#2708](https://github.com/aws-amplify/amplify-android/issues/2708))
+
+### Miscellaneous
+- Update to AWS Kotlin SDK v1.x stable ([#2695](https://github.com/aws-amplify/amplify-android/pull/2695))
+
+[See all changes between 2.14.9 and 2.14.10](https://github.com/aws-amplify/amplify-android/compare/release_v2.14.9...release_v2.14.10)
+
+## [Release 2.14.9](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.14.9)
+
+### Bug Fixes
+- **storage:** Remove work manager restricted API usage and upgrade lib. ([#2674](https://github.com/aws-amplify/amplify-android/issues/2674))
+
+### Miscellaneous
+- Fix CHANGELOG.md for v2.14.8 ([#2664](https://github.com/aws-amplify/amplify-android/issues/2664))
+
+[See all changes between 2.14.8 and 2.14.9](https://github.com/aws-amplify/amplify-android/compare/release_v2.14.8...release_v2.14.9)
+
+## [Release 2.14.8](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.14.8)
+
+### Miscellaneous
+- **liveness:** add close codes to websocket apis ([#2658](https://github.com/aws-amplify/amplify-android/issues/2658))
+
+[See all changes between 2.14.7 and 2.14.8](https://github.com/aws-amplify/amplify-android/compare/release_v2.14.7...release_v2.14.8)
+
+
 ## [Release 2.14.7](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.14.7)
 
 ### Bug Fixes

@@ -16,7 +16,7 @@
 package com.amplifyframework.api.aws.auth
 
 import aws.smithy.kotlin.runtime.auth.awscredentials.Credentials
-import aws.smithy.kotlin.runtime.util.Attributes
+import aws.smithy.kotlin.runtime.collections.Attributes
 import com.amplifyframework.auth.CognitoCredentialsProvider
 
 internal object DummyCredentialsProvider : CognitoCredentialsProvider() {
