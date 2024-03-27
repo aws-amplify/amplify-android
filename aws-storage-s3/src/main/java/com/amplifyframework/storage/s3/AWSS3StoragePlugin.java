@@ -282,7 +282,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
     ) {
         return getUrl(path, StorageGetUrlOptions.defaultInstance(), onSuccess, onError);
     }
-
+    
     @NonNull
     @Override
     @SuppressWarnings("deprecation")

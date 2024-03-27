@@ -41,7 +41,7 @@ import java.util.concurrent.ExecutorService
  */
 internal class AWSS3StoragePathUploadInputStreamOperation @JvmOverloads internal constructor(
     transferId: String,
-    request: AWSS3StoragePathUploadRequest<InputStream>? = null,
+    private val request: AWSS3StoragePathUploadRequest<InputStream>,
     private val storageService: StorageService,
     private val executorService: ExecutorService,
     private val authCredentialsProvider: AuthCredentialsProvider,
@@ -86,24 +86,23 @@ internal class AWSS3StoragePathUploadInputStreamOperation @JvmOverloads internal
         if (transferObserver != null) {
             return
         }
-        val uploadRequest = request ?: return
 
         executorService.submit {
             val serviceKey = try {
-                uploadRequest.path.toS3ServiceKey(authCredentialsProvider)
+                request.path.toS3ServiceKey(authCredentialsProvider)
             } catch (se: StorageException) {
                 onError.accept(se)
                 return@submit
             }
 
             try {
-                val inputStream = uploadRequest.local
+                val inputStream = request.local
                 // Set up the metadata
                 val objectMetadata = ObjectMetadata()
-                objectMetadata.userMetadata = uploadRequest.metadata
-                objectMetadata.metaData[ObjectMetadata.CONTENT_TYPE] = uploadRequest.contentType
+                objectMetadata.userMetadata = request.metadata
+                objectMetadata.metaData[ObjectMetadata.CONTENT_TYPE] = request.contentType
                 val storageServerSideEncryption =
-                    uploadRequest.serverSideEncryption
+                    request.serverSideEncryption
                 if (ServerSideEncryption.NONE != storageServerSideEncryption) {
                     objectMetadata.metaData[ObjectMetadata.SERVER_SIDE_ENCRYPTION] =
                         storageServerSideEncryption.getName()
@@ -113,7 +112,7 @@ internal class AWSS3StoragePathUploadInputStreamOperation @JvmOverloads internal
                     serviceKey,
                     inputStream,
                     objectMetadata,
-                    uploadRequest.useAccelerateEndpoint
+                    request.useAccelerateEndpoint
                 )
                 transferObserver?.setTransferListener(UploadTransferListener())
             } catch (exception: Exception) {
@@ -191,11 +190,9 @@ internal class AWSS3StoragePathUploadInputStreamOperation @JvmOverloads internal
 
     override fun setOnSuccess(onSuccess: Consumer<StorageUploadInputStreamResult>?) {
         super.setOnSuccess(onSuccess)
-        request?.let {
-            val serviceKey = transferObserver?.key
-            if (transferState == TransferState.COMPLETED && serviceKey != null) {
-                onSuccess?.accept(StorageUploadInputStreamResult(serviceKey, serviceKey))
-            }
+        val serviceKey = transferObserver?.key
+        if (transferState == TransferState.COMPLETED && serviceKey != null) {
+            onSuccess?.accept(StorageUploadInputStreamResult(serviceKey, serviceKey))
         }
     }
 

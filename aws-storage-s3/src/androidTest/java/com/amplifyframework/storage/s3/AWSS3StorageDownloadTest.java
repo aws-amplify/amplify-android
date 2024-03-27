@@ -317,7 +317,6 @@ public final class AWSS3StorageDownloadTest {
         assertTrue(resumed.await(EXTENDED_TIMEOUT_MS, TimeUnit.MILLISECONDS));
         assertTrue(completed.await(EXTENDED_TIMEOUT_MS, TimeUnit.MILLISECONDS));
         assertNull(errorContainer.get());
-
         FileAssert.assertEquals(largeFile, downloadFile);
     }
 
