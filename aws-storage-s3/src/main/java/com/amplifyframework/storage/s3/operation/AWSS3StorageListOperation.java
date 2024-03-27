@@ -32,9 +32,9 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 
 /**
- *  Internal usages are moving to AWSS3StorageListOperationV2
+ *  Internal usages are moving to AWSS3StoragePathListOperation
  *  An operation to list items from AWS S3.
- *  @deprecated Class should not be public and explicitly cast to.
+ *  @deprecated Class should not be public and explicitly cast to. Cast to StorageListOperation
  */
 @Deprecated
 public final class AWSS3StorageListOperation extends StorageListOperation<AWSS3StorageListRequest> {

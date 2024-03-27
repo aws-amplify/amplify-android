@@ -39,7 +39,7 @@ import java.util.concurrent.ExecutorService
  */
 internal class AWSS3StoragePathDownloadFileOperation(
     private val transferId: String = UUID.randomUUID().toString(),
-    private val request: AWSS3StoragePathDownloadFileRequest?,
+    private val request: AWSS3StoragePathDownloadFileRequest,
     private var file: File,
     private val storageService: StorageService,
     private val executorService: ExecutorService,
@@ -87,10 +87,9 @@ internal class AWSS3StoragePathDownloadFileOperation(
         if (transferObserver != null) {
             return
         }
-        val downloadRequest = request ?: return
         executorService.submit {
             val serviceKey = try {
-                downloadRequest.path.toS3ServiceKey(authCredentialsProvider)
+                request.path.toS3ServiceKey(authCredentialsProvider)
             } catch (se: StorageException) {
                 onError.accept(se)
                 return@submit
@@ -100,8 +99,8 @@ internal class AWSS3StoragePathDownloadFileOperation(
                 transferObserver = storageService.downloadToFile(
                     transferId,
                     serviceKey,
-                    downloadRequest.local,
-                    downloadRequest.useAccelerateEndpoint
+                    request.local,
+                    request.useAccelerateEndpoint
                 )
                 transferObserver?.setTransferListener(DownloadTransferListener())
             } catch (e: Exception) {

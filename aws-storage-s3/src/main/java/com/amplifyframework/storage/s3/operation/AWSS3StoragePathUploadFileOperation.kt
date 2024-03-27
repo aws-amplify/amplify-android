@@ -41,7 +41,7 @@ import java.util.concurrent.ExecutorService
  */
 internal class AWSS3StoragePathUploadFileOperation @JvmOverloads internal constructor(
     transferId: String,
-    request: AWSS3StoragePathUploadRequest<File>? = null,
+    request: AWSS3StoragePathUploadRequest<File>,
     private val storageService: StorageService,
     private val executorService: ExecutorService,
     private val authCredentialsProvider: AuthCredentialsProvider,
@@ -191,11 +191,9 @@ internal class AWSS3StoragePathUploadFileOperation @JvmOverloads internal constr
 
     override fun setOnSuccess(onSuccess: Consumer<StorageUploadFileResult>?) {
         super.setOnSuccess(onSuccess)
-        request?.let {
-            val serviceKey = transferObserver?.key
-            if (transferState == TransferState.COMPLETED && serviceKey != null) {
-                onSuccess?.accept(StorageUploadFileResult(serviceKey, serviceKey))
-            }
+        val serviceKey = transferObserver?.key
+        if (transferState == TransferState.COMPLETED && serviceKey != null) {
+            onSuccess?.accept(StorageUploadFileResult(serviceKey, serviceKey))
         }
     }
 
