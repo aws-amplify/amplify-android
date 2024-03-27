@@ -211,6 +211,38 @@ internal class AWSS3StorageService(
     }
 
     /**
+     * This method is used to list files when StoragePath was used.
+     * When StoragePath is used, we provide the full serviceKey for both StorageItem.key and StorageItem.path
+     */
+    fun listFiles(path: String, pageSize: Int, nextToken: String?): StorageListResult {
+        return runBlocking {
+            val result = s3Client.listObjectsV2 {
+                this.bucket = s3BucketName
+                this.prefix = path
+                this.maxKeys = pageSize
+                this.continuationToken = nextToken
+            }
+            val items = result.contents?.mapNotNull { value ->
+                val serviceKey = value.key
+                val lastModified = value.lastModified
+                val eTag = value.eTag
+                if (serviceKey != null && lastModified != null && eTag != null) {
+                    StorageItem(
+                        serviceKey, serviceKey,
+                        value.size ?: 0,
+                        Date.from(Instant.ofEpochMilli(lastModified.epochSeconds)),
+                        eTag,
+                        null
+                    )
+                } else {
+                    null
+                }
+            }
+            StorageListResult.fromItems(items, result.nextContinuationToken)
+        }
+    }
+
+    /**
      * Synchronous operation to delete a file in s3.
      * @param serviceKey Fully specified path to file to delete (including public/private/protected folder)
      */

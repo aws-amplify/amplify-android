@@ -58,6 +58,9 @@ import com.amplifyframework.storage.s3.operation.AWSS3StorageDownloadFileOperati
 import com.amplifyframework.storage.s3.operation.AWSS3StorageGetPresignedUrlOperation;
 import com.amplifyframework.storage.s3.operation.AWSS3StorageListOperation;
 import com.amplifyframework.storage.s3.operation.AWSS3StoragePathDownloadFileOperation;
+import com.amplifyframework.storage.s3.operation.AWSS3StoragePathGetPresignedUrlOperation;
+import com.amplifyframework.storage.s3.operation.AWSS3StoragePathListOperation;
+import com.amplifyframework.storage.s3.operation.AWSS3StoragePathRemoveOperation;
 import com.amplifyframework.storage.s3.operation.AWSS3StoragePathUploadFileOperation;
 import com.amplifyframework.storage.s3.operation.AWSS3StoragePathUploadInputStreamOperation;
 import com.amplifyframework.storage.s3.operation.AWSS3StorageRemoveOperation;
@@ -72,6 +75,9 @@ import com.amplifyframework.storage.s3.request.AWSS3StorageDownloadFileRequest;
 import com.amplifyframework.storage.s3.request.AWSS3StorageGetPresignedUrlRequest;
 import com.amplifyframework.storage.s3.request.AWSS3StorageListRequest;
 import com.amplifyframework.storage.s3.request.AWSS3StoragePathDownloadFileRequest;
+import com.amplifyframework.storage.s3.request.AWSS3StoragePathGetPresignedUrlRequest;
+import com.amplifyframework.storage.s3.request.AWSS3StoragePathListRequest;
+import com.amplifyframework.storage.s3.request.AWSS3StoragePathRemoveRequest;
 import com.amplifyframework.storage.s3.request.AWSS3StoragePathUploadRequest;
 import com.amplifyframework.storage.s3.request.AWSS3StorageRemoveRequest;
 import com.amplifyframework.storage.s3.request.AWSS3StorageUploadRequest;
@@ -321,8 +327,25 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
             @NonNull Consumer<StorageGetUrlResult> onSuccess,
             @NonNull Consumer<StorageException> onError
     ) {
-        // TODO: Implement
-        return null;
+        boolean useAccelerateEndpoint = options instanceof AWSS3StorageGetPresignedUrlOptions &&
+                ((AWSS3StorageGetPresignedUrlOptions) options).useAccelerateEndpoint();
+        AWSS3StoragePathGetPresignedUrlRequest request = new AWSS3StoragePathGetPresignedUrlRequest(
+                path,
+                options.getExpires() != 0 ? options.getExpires() : defaultUrlExpiration,
+                useAccelerateEndpoint
+        );
+
+        AWSS3StoragePathGetPresignedUrlOperation operation =
+                new AWSS3StoragePathGetPresignedUrlOperation(
+                        storageService,
+                        executorService,
+                        authCredentialsProvider,
+                        request,
+                        onSuccess,
+                        onError);
+        operation.start();
+
+        return operation;
     }
 
     @SuppressWarnings("deprecation")
@@ -768,8 +791,20 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
             @NonNull Consumer<StorageRemoveResult> onSuccess,
             @NonNull Consumer<StorageException> onError
     ) {
-        // TODO: Implement
-        return null;
+        AWSS3StoragePathRemoveRequest request = new AWSS3StoragePathRemoveRequest(path);
+
+        AWSS3StoragePathRemoveOperation operation =
+                new AWSS3StoragePathRemoveOperation(
+                        storageService,
+                        executorService,
+                        authCredentialsProvider,
+                        request,
+                        onSuccess,
+                        onError);
+
+        operation.start();
+
+        return operation;
     }
 
     @Override
@@ -911,8 +946,23 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
             @NonNull Consumer<StorageListResult> onSuccess,
             @NonNull Consumer<StorageException> onError
     ) {
-        // TODO: Implement
-        return null;
+        AWSS3StoragePathListRequest request = new AWSS3StoragePathListRequest(
+                path,
+                options.getPageSize(),
+                options.getNextToken());
+
+        AWSS3StoragePathListOperation operation =
+                new AWSS3StoragePathListOperation(
+                        storageService,
+                        executorService,
+                        authCredentialsProvider,
+                        request,
+                        onSuccess,
+                        onError);
+
+        operation.start();
+
+        return operation;
     }
 
     /**
