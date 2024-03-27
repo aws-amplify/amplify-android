@@ -276,18 +276,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
     ) {
         return getUrl(path, StorageGetUrlOptions.defaultInstance(), onSuccess, onError);
     }
-
-    @NonNull
-    @Override
-    @SuppressWarnings("deprecation")
-    public StorageGetUrlOperation<?> getUrl(
-            @NonNull StoragePath path,
-            @NonNull Consumer<StorageGetUrlResult> onSuccess,
-            @NonNull Consumer<StorageException> onError
-    ) {
-        return getUrl(path, StorageGetUrlOptions.defaultInstance(), onSuccess, onError);
-    }
-
+    
     @NonNull
     @Override
     @SuppressWarnings("deprecation")
@@ -376,19 +365,6 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
 
     @NonNull
     @Override
-    public StorageDownloadFileOperation<?> downloadFile(
-            @NonNull StoragePath path,
-            @NonNull File local,
-            @NonNull StorageDownloadFileOptions options,
-            @NonNull Consumer<StorageDownloadFileResult> onSuccess,
-            @NonNull Consumer<StorageException> onError
-    ) {
-        return downloadFile(path, local, options, NoOpConsumer.create(), onSuccess, onError);
-    }
-
-    @NonNull
-    @Override
-    @SuppressWarnings("deprecation")
     public StorageDownloadFileOperation<?> downloadFile(
             @NonNull StoragePath path,
             @NonNull File local,
@@ -744,17 +720,6 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
 
     @NonNull
     @Override
-    public StorageRemoveOperation<?> remove(
-            @NonNull StoragePath path,
-            @NonNull Consumer<StorageRemoveResult> onSuccess,
-            @NonNull Consumer<StorageException> onError
-    ) {
-        return remove(path, StorageRemoveOptions.defaultInstance(), onSuccess, onError);
-    }
-
-    @NonNull
-    @Override
-    @SuppressWarnings("deprecation")
     public StorageRemoveOperation<?> remove(
             @NonNull StoragePath path,
             @NonNull Consumer<StorageRemoveResult> onSuccess,
