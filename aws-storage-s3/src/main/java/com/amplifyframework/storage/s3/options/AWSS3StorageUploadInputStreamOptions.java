@@ -68,6 +68,7 @@ public final class AWSS3StorageUploadInputStreamOptions extends StorageUploadInp
      *         values in the provided options
      */
     @NonNull
+    @SuppressWarnings("deprecation")
     public static Builder from(@NonNull final AWSS3StorageUploadInputStreamOptions options) {
         return builder()
                 .accessLevel(options.getAccessLevel())
@@ -96,6 +97,7 @@ public final class AWSS3StorageUploadInputStreamOptions extends StorageUploadInp
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
@@ -112,6 +114,7 @@ public final class AWSS3StorageUploadInputStreamOptions extends StorageUploadInp
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     public int hashCode() {
         return ObjectsCompat.hash(
                 getAccessLevel(),
@@ -124,6 +127,7 @@ public final class AWSS3StorageUploadInputStreamOptions extends StorageUploadInp
 
     @NonNull
     @Override
+    @SuppressWarnings("deprecation")
     public String toString() {
         return "AWSS3StorageUploadInputStreamOptions {" +
                 "accessLevel=" + getAccessLevel() +

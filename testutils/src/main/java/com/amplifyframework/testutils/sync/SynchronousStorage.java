@@ -105,6 +105,7 @@ public final class SynchronousStorage {
      * @throws StorageException if download fails or times out
      */
     @NonNull
+    @SuppressWarnings("deprecation")
     public StorageDownloadFileResult downloadFile(
             @NonNull String key,
             @NonNull File local,
@@ -126,6 +127,7 @@ public final class SynchronousStorage {
      * @throws StorageException if upload fails or times out
      */
     @NonNull
+    @SuppressWarnings("deprecation")
     public StorageUploadFileResult uploadFile(
             @NonNull String key,
             @NonNull File local,
@@ -145,6 +147,7 @@ public final class SynchronousStorage {
      * @throws StorageException if upload fails or times out
      */
     @NonNull
+    @SuppressWarnings("deprecation")
     public StorageUploadFileResult uploadFile(
             @NonNull String key,
             @NonNull File local,
@@ -185,6 +188,7 @@ public final class SynchronousStorage {
      * @throws StorageException if upload fails or times out
      */
     @NonNull
+    @SuppressWarnings("deprecation")
     public StorageUploadInputStreamResult uploadInputStream(
             @NonNull String key,
             @NonNull InputStream local,
@@ -222,6 +226,7 @@ public final class SynchronousStorage {
      * @throws StorageException if removal fails or times out
      */
     @NonNull
+    @SuppressWarnings("deprecation")
     public StorageRemoveResult remove(
             @NonNull String key,
             @NonNull StorageRemoveOptions options,
@@ -279,6 +284,7 @@ public final class SynchronousStorage {
      * @throws StorageException if list fails or times out
      */
     @NonNull
+    @SuppressWarnings("deprecation")
     public StorageListResult list(
         @NonNull String path,
         @NonNull StoragePagedListOptions options,

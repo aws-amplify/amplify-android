@@ -181,18 +181,29 @@ public abstract interface class com/amplifyframework/rx/RxRestBehavior {
 }
 
 public final class com/amplifyframework/rx/RxStorageBinding : com/amplifyframework/rx/RxStorageCategoryBehavior {
+	public fun downloadFile (Lcom/amplifyframework/storage/StoragePath;Ljava/io/File;)Lcom/amplifyframework/rx/RxStorageBinding$RxProgressAwareSingleOperation;
+	public fun downloadFile (Lcom/amplifyframework/storage/StoragePath;Ljava/io/File;Lcom/amplifyframework/storage/options/StorageDownloadFileOptions;)Lcom/amplifyframework/rx/RxStorageBinding$RxProgressAwareSingleOperation;
 	public fun downloadFile (Ljava/lang/String;Ljava/io/File;)Lcom/amplifyframework/rx/RxStorageBinding$RxProgressAwareSingleOperation;
 	public fun downloadFile (Ljava/lang/String;Ljava/io/File;Lcom/amplifyframework/storage/options/StorageDownloadFileOptions;)Lcom/amplifyframework/rx/RxStorageBinding$RxProgressAwareSingleOperation;
 	public fun getTransfer (Ljava/lang/String;)Lio/reactivex/rxjava3/core/Single;
+	public fun getUrl (Lcom/amplifyframework/storage/StoragePath;)Lio/reactivex/rxjava3/core/Single;
+	public fun getUrl (Lcom/amplifyframework/storage/StoragePath;Lcom/amplifyframework/storage/options/StorageGetUrlOptions;)Lio/reactivex/rxjava3/core/Single;
 	public fun getUrl (Ljava/lang/String;)Lio/reactivex/rxjava3/core/Single;
 	public fun getUrl (Ljava/lang/String;Lcom/amplifyframework/storage/options/StorageGetUrlOptions;)Lio/reactivex/rxjava3/core/Single;
+	public fun list (Lcom/amplifyframework/storage/StoragePath;Lcom/amplifyframework/storage/options/StoragePagedListOptions;)Lio/reactivex/rxjava3/core/Single;
 	public fun list (Ljava/lang/String;)Lio/reactivex/rxjava3/core/Single;
 	public fun list (Ljava/lang/String;Lcom/amplifyframework/storage/options/StorageListOptions;)Lio/reactivex/rxjava3/core/Single;
 	public fun list (Ljava/lang/String;Lcom/amplifyframework/storage/options/StoragePagedListOptions;)Lio/reactivex/rxjava3/core/Single;
+	public fun remove (Lcom/amplifyframework/storage/StoragePath;)Lio/reactivex/rxjava3/core/Single;
+	public fun remove (Lcom/amplifyframework/storage/StoragePath;Lcom/amplifyframework/storage/options/StorageRemoveOptions;)Lio/reactivex/rxjava3/core/Single;
 	public fun remove (Ljava/lang/String;)Lio/reactivex/rxjava3/core/Single;
 	public fun remove (Ljava/lang/String;Lcom/amplifyframework/storage/options/StorageRemoveOptions;)Lio/reactivex/rxjava3/core/Single;
+	public fun uploadFile (Lcom/amplifyframework/storage/StoragePath;Ljava/io/File;)Lcom/amplifyframework/rx/RxStorageBinding$RxProgressAwareSingleOperation;
+	public fun uploadFile (Lcom/amplifyframework/storage/StoragePath;Ljava/io/File;Lcom/amplifyframework/storage/options/StorageUploadFileOptions;)Lcom/amplifyframework/rx/RxStorageBinding$RxProgressAwareSingleOperation;
 	public fun uploadFile (Ljava/lang/String;Ljava/io/File;)Lcom/amplifyframework/rx/RxStorageBinding$RxProgressAwareSingleOperation;
 	public fun uploadFile (Ljava/lang/String;Ljava/io/File;Lcom/amplifyframework/storage/options/StorageUploadFileOptions;)Lcom/amplifyframework/rx/RxStorageBinding$RxProgressAwareSingleOperation;
+	public fun uploadInputStream (Lcom/amplifyframework/storage/StoragePath;Ljava/io/InputStream;)Lcom/amplifyframework/rx/RxStorageBinding$RxProgressAwareSingleOperation;
+	public fun uploadInputStream (Lcom/amplifyframework/storage/StoragePath;Ljava/io/InputStream;Lcom/amplifyframework/storage/options/StorageUploadInputStreamOptions;)Lcom/amplifyframework/rx/RxStorageBinding$RxProgressAwareSingleOperation;
 	public fun uploadInputStream (Ljava/lang/String;Ljava/io/InputStream;)Lcom/amplifyframework/rx/RxStorageBinding$RxProgressAwareSingleOperation;
 	public fun uploadInputStream (Ljava/lang/String;Ljava/io/InputStream;Lcom/amplifyframework/storage/options/StorageUploadInputStreamOptions;)Lcom/amplifyframework/rx/RxStorageBinding$RxProgressAwareSingleOperation;
 }
@@ -207,18 +218,29 @@ public final class com/amplifyframework/rx/RxStorageBinding$RxProgressAwareSingl
 }
 
 public abstract interface class com/amplifyframework/rx/RxStorageCategoryBehavior {
+	public abstract fun downloadFile (Lcom/amplifyframework/storage/StoragePath;Ljava/io/File;)Lcom/amplifyframework/rx/RxStorageBinding$RxProgressAwareSingleOperation;
+	public abstract fun downloadFile (Lcom/amplifyframework/storage/StoragePath;Ljava/io/File;Lcom/amplifyframework/storage/options/StorageDownloadFileOptions;)Lcom/amplifyframework/rx/RxStorageBinding$RxProgressAwareSingleOperation;
 	public abstract fun downloadFile (Ljava/lang/String;Ljava/io/File;)Lcom/amplifyframework/rx/RxStorageBinding$RxProgressAwareSingleOperation;
 	public abstract fun downloadFile (Ljava/lang/String;Ljava/io/File;Lcom/amplifyframework/storage/options/StorageDownloadFileOptions;)Lcom/amplifyframework/rx/RxStorageBinding$RxProgressAwareSingleOperation;
 	public abstract fun getTransfer (Ljava/lang/String;)Lio/reactivex/rxjava3/core/Single;
+	public abstract fun getUrl (Lcom/amplifyframework/storage/StoragePath;)Lio/reactivex/rxjava3/core/Single;
+	public abstract fun getUrl (Lcom/amplifyframework/storage/StoragePath;Lcom/amplifyframework/storage/options/StorageGetUrlOptions;)Lio/reactivex/rxjava3/core/Single;
 	public abstract fun getUrl (Ljava/lang/String;)Lio/reactivex/rxjava3/core/Single;
 	public abstract fun getUrl (Ljava/lang/String;Lcom/amplifyframework/storage/options/StorageGetUrlOptions;)Lio/reactivex/rxjava3/core/Single;
+	public abstract fun list (Lcom/amplifyframework/storage/StoragePath;Lcom/amplifyframework/storage/options/StoragePagedListOptions;)Lio/reactivex/rxjava3/core/Single;
 	public abstract fun list (Ljava/lang/String;)Lio/reactivex/rxjava3/core/Single;
 	public abstract fun list (Ljava/lang/String;Lcom/amplifyframework/storage/options/StorageListOptions;)Lio/reactivex/rxjava3/core/Single;
 	public abstract fun list (Ljava/lang/String;Lcom/amplifyframework/storage/options/StoragePagedListOptions;)Lio/reactivex/rxjava3/core/Single;
+	public abstract fun remove (Lcom/amplifyframework/storage/StoragePath;)Lio/reactivex/rxjava3/core/Single;
+	public abstract fun remove (Lcom/amplifyframework/storage/StoragePath;Lcom/amplifyframework/storage/options/StorageRemoveOptions;)Lio/reactivex/rxjava3/core/Single;
 	public abstract fun remove (Ljava/lang/String;)Lio/reactivex/rxjava3/core/Single;
 	public abstract fun remove (Ljava/lang/String;Lcom/amplifyframework/storage/options/StorageRemoveOptions;)Lio/reactivex/rxjava3/core/Single;
+	public abstract fun uploadFile (Lcom/amplifyframework/storage/StoragePath;Ljava/io/File;)Lcom/amplifyframework/rx/RxStorageBinding$RxProgressAwareSingleOperation;
+	public abstract fun uploadFile (Lcom/amplifyframework/storage/StoragePath;Ljava/io/File;Lcom/amplifyframework/storage/options/StorageUploadFileOptions;)Lcom/amplifyframework/rx/RxStorageBinding$RxProgressAwareSingleOperation;
 	public abstract fun uploadFile (Ljava/lang/String;Ljava/io/File;)Lcom/amplifyframework/rx/RxStorageBinding$RxProgressAwareSingleOperation;
 	public abstract fun uploadFile (Ljava/lang/String;Ljava/io/File;Lcom/amplifyframework/storage/options/StorageUploadFileOptions;)Lcom/amplifyframework/rx/RxStorageBinding$RxProgressAwareSingleOperation;
+	public abstract fun uploadInputStream (Lcom/amplifyframework/storage/StoragePath;Ljava/io/InputStream;)Lcom/amplifyframework/rx/RxStorageBinding$RxProgressAwareSingleOperation;
+	public abstract fun uploadInputStream (Lcom/amplifyframework/storage/StoragePath;Ljava/io/InputStream;Lcom/amplifyframework/storage/options/StorageUploadInputStreamOptions;)Lcom/amplifyframework/rx/RxStorageBinding$RxProgressAwareSingleOperation;
 	public abstract fun uploadInputStream (Ljava/lang/String;Ljava/io/InputStream;)Lcom/amplifyframework/rx/RxStorageBinding$RxProgressAwareSingleOperation;
 	public abstract fun uploadInputStream (Ljava/lang/String;Ljava/io/InputStream;Lcom/amplifyframework/storage/options/StorageUploadInputStreamOptions;)Lcom/amplifyframework/rx/RxStorageBinding$RxProgressAwareSingleOperation;
 }

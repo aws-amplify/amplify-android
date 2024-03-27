@@ -39,6 +39,10 @@ import java.util.concurrent.ExecutorService
 /**
  * An operation to upload a file from AWS S3.
  */
+@Deprecated(
+    "Class should not be public and explicitly cast to. " +
+        "Internal usages are moving to AWSS3StorageUploadFileOperationV2"
+)
 class AWSS3StorageUploadFileOperation @JvmOverloads internal constructor(
     transferId: String,
     private val storageService: StorageService,

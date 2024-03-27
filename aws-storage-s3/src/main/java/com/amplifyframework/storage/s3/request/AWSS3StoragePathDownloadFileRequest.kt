@@ -12,29 +12,17 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
+package com.amplifyframework.storage.s3.request
 
-package com.amplifyframework.storage;
+import com.amplifyframework.storage.StoragePath
+import java.io.File
 
 /**
- * An enum of permission levels on storage operations.
- * This information should be passed in API options.
- * @deprecated Will be unused when using {@link StoragePath}
+ * Parameters to provide to S3 that describe a request to download a
+ * file.
  */
-@Deprecated
-public enum StorageAccessLevel {
-
-    /**
-     * Storage items are accessible by all users of your app.
-     */
-    PUBLIC,
-
-    /**
-     * Storage items are readable by all users, but writable only by the creating user.
-     */
-    PROTECTED,
-
-    /**
-     * Storage items are accessible for the individual user who performs the write.
-     */
-    PRIVATE
-}
+internal data class AWSS3StoragePathDownloadFileRequest(
+    val path: StoragePath,
+    val local: File,
+    val useAccelerateEndpoint: Boolean
+)

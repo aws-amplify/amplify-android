@@ -31,7 +31,10 @@ import java.util.concurrent.ExecutorService;
 
 /**
  * An operation to remove a file from AWS S3.
+ * @deprecated Class should not be public and explicitly cast to.
+ * Internal usages are moving to AWSS3StorageRemoveOperationV2
  */
+@Deprecated
 public final class AWSS3StorageRemoveOperation extends StorageRemoveOperation<AWSS3StorageRemoveRequest> {
     private final StorageService storageService;
     private final ExecutorService executorService;
@@ -70,7 +73,7 @@ public final class AWSS3StorageRemoveOperation extends StorageRemoveOperation<AW
         this.awsS3StoragePluginConfiguration = awsS3StoragePluginConfiguration;
     }
 
-    @SuppressWarnings("SyntheticAccessor")
+    @SuppressWarnings("SyntheticAccessor, deprecation")
     @Override
     public void start() {
         executorService.submit(() -> {

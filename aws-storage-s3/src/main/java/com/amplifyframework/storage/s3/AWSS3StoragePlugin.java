@@ -15,6 +15,7 @@
 
 package com.amplifyframework.storage.s3;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.annotation.OptIn;
@@ -27,6 +28,7 @@ import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.NoOpConsumer;
 import com.amplifyframework.storage.StorageAccessLevel;
 import com.amplifyframework.storage.StorageException;
+import com.amplifyframework.storage.StoragePath;
 import com.amplifyframework.storage.StoragePlugin;
 import com.amplifyframework.storage.TransferState;
 import com.amplifyframework.storage.operation.StorageDownloadFileOperation;
@@ -91,6 +93,7 @@ import aws.sdk.kotlin.services.s3.S3Client;
  * A plugin for the storage category which uses S3 as a storage
  * repository.
  */
+@SuppressLint("UnsafeOptInUsageWarning") // opting in to Internal Amplify usages
 public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
 
     /**
@@ -99,11 +102,14 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
     public static final String AWS_S3_STORAGE_LOG_NAMESPACE = "amplify:aws-s3-storage:%s";
     private static final String AWS_S3_STORAGE_PLUGIN_KEY = "awsS3StoragePlugin";
 
+    private static final int DEFAULT_URL_EXPIRATION_DAYS = 7;
+
     private final StorageService.Factory storageServiceFactory;
     private final ExecutorService executorService;
     private final AuthCredentialsProvider authCredentialsProvider;
     private final AWSS3StoragePluginConfiguration awsS3StoragePluginConfiguration;
     private AWSS3StorageService storageService;
+    @SuppressWarnings("deprecation")
     private StorageAccessLevel defaultAccessLevel;
     private int defaultUrlExpiration;
 
@@ -176,7 +182,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
     }
 
     @Override
-    @SuppressWarnings("MagicNumber") // TODO: Remove once default values are moved to configuration
+    @SuppressWarnings("deprecation")
     public void configure(
         JSONObject pluginConfiguration,
         @NonNull Context context
@@ -231,7 +237,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
 
         // TODO: Integrate into config + options
         this.defaultAccessLevel = StorageAccessLevel.PUBLIC;
-        this.defaultUrlExpiration = (int) TimeUnit.DAYS.toSeconds(7);
+        this.defaultUrlExpiration = (int) TimeUnit.DAYS.toSeconds(DEFAULT_URL_EXPIRATION_DAYS);
     }
 
     @NonNull
@@ -246,6 +252,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
         return BuildConfig.VERSION_NAME;
     }
 
+    @SuppressWarnings("deprecation")
     @NonNull
     @Override
     public StorageGetUrlOperation<?> getUrl(
@@ -257,6 +264,17 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
 
     @NonNull
     @Override
+    public StorageGetUrlOperation<?> getUrl(
+            @NonNull StoragePath path,
+            @NonNull Consumer<StorageGetUrlResult> onSuccess,
+            @NonNull Consumer<StorageException> onError
+    ) {
+        return getUrl(path, StorageGetUrlOptions.defaultInstance(), onSuccess, onError);
+    }
+
+    @NonNull
+    @Override
+    @SuppressWarnings("deprecation")
     public StorageGetUrlOperation<?> getUrl(
         @NonNull String key,
         @NonNull StorageGetUrlOptions options,
@@ -292,6 +310,19 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
 
     @NonNull
     @Override
+    public StorageGetUrlOperation<?> getUrl(
+            @NonNull StoragePath path,
+            @NonNull StorageGetUrlOptions options,
+            @NonNull Consumer<StorageGetUrlResult> onSuccess,
+            @NonNull Consumer<StorageException> onError
+    ) {
+        // TODO: Implement
+        return null;
+    }
+
+    @SuppressWarnings("deprecation")
+    @NonNull
+    @Override
     public StorageDownloadFileOperation<?> downloadFile(
         @NonNull String key,
         @NonNull File local,
@@ -302,6 +333,19 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
         return downloadFile(key, local, options, NoOpConsumer.create(), onSuccess, onError);
     }
 
+    @NonNull
+    @Override
+    public StorageDownloadFileOperation<?> downloadFile(
+            @NonNull StoragePath path,
+            @NonNull File local,
+            @NonNull Consumer<StorageDownloadFileResult> onSuccess,
+            @NonNull Consumer<StorageException> onError
+    ) {
+        StorageDownloadFileOptions options = StorageDownloadFileOptions.defaultInstance();
+        return downloadFile(path, local, options, NoOpConsumer.create(), onSuccess, onError);
+    }
+
+    @SuppressWarnings("deprecation")
     @NonNull
     @Override
     public StorageDownloadFileOperation<?> downloadFile(
@@ -316,6 +360,19 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
 
     @NonNull
     @Override
+    public StorageDownloadFileOperation<?> downloadFile(
+            @NonNull StoragePath path,
+            @NonNull File local,
+            @NonNull StorageDownloadFileOptions options,
+            @NonNull Consumer<StorageDownloadFileResult> onSuccess,
+            @NonNull Consumer<StorageException> onError
+    ) {
+        return downloadFile(path, local, options, NoOpConsumer.create(), onSuccess, onError);
+    }
+
+    @NonNull
+    @Override
+    @SuppressWarnings("deprecation")
     public StorageDownloadFileOperation<?> downloadFile(
         @NonNull String key,
         @NonNull File local,
@@ -354,6 +411,21 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
 
     @NonNull
     @Override
+    public StorageDownloadFileOperation<?> downloadFile(
+            @NonNull StoragePath path,
+            @NonNull File local,
+            @NonNull StorageDownloadFileOptions options,
+            @NonNull Consumer<StorageTransferProgress> onProgress,
+            @NonNull Consumer<StorageDownloadFileResult> onSuccess,
+            @NonNull Consumer<StorageException> onError
+    ) {
+        // TODO
+        return null;
+    }
+
+    @SuppressWarnings("deprecation")
+    @NonNull
+    @Override
     public StorageUploadFileOperation<?> uploadFile(
         @NonNull String key,
         @NonNull File local,
@@ -364,6 +436,19 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
         return uploadFile(key, local, options, NoOpConsumer.create(), onSuccess, onError);
     }
 
+    @NonNull
+    @Override
+    public StorageUploadFileOperation<?> uploadFile(
+            @NonNull StoragePath path,
+            @NonNull File local,
+            @NonNull Consumer<StorageUploadFileResult> onSuccess,
+            @NonNull Consumer<StorageException> onError
+    ) {
+        StorageUploadFileOptions options = StorageUploadFileOptions.defaultInstance();
+        return uploadFile(path, local, options, NoOpConsumer.create(), onSuccess, onError);
+    }
+
+    @SuppressWarnings("deprecation")
     @NonNull
     @Override
     public StorageUploadFileOperation<?> uploadFile(
@@ -378,6 +463,19 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
 
     @NonNull
     @Override
+    public StorageUploadFileOperation<?> uploadFile(
+            @NonNull StoragePath path,
+            @NonNull File local,
+            @NonNull StorageUploadFileOptions options,
+            @NonNull Consumer<StorageUploadFileResult> onSuccess,
+            @NonNull Consumer<StorageException> onError
+    ) {
+        return uploadFile(path, local, options, NoOpConsumer.create(), onSuccess, onError);
+    }
+
+    @NonNull
+    @Override
+    @SuppressWarnings("deprecation")
     public StorageUploadFileOperation<?> uploadFile(
         @NonNull String key,
         @NonNull File local,
@@ -420,6 +518,21 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
 
     @NonNull
     @Override
+    public StorageUploadFileOperation<?> uploadFile(
+            @NonNull StoragePath path,
+            @NonNull File local,
+            @NonNull StorageUploadFileOptions options,
+            @NonNull Consumer<StorageTransferProgress> onProgress,
+            @NonNull Consumer<StorageUploadFileResult> onSuccess,
+            @NonNull Consumer<StorageException> onError
+    ) {
+        // TODO: Implement
+        return null;
+    }
+
+    @SuppressWarnings("deprecation")
+    @NonNull
+    @Override
     public StorageUploadInputStreamOperation<?> uploadInputStream(
         @NonNull String key,
         @NonNull InputStream local,
@@ -433,6 +546,18 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
     @NonNull
     @Override
     public StorageUploadInputStreamOperation<?> uploadInputStream(
+            @NonNull StoragePath path,
+            @NonNull InputStream local,
+            @NonNull Consumer<StorageUploadInputStreamResult> onSuccess,
+            @NonNull Consumer<StorageException> onError) {
+        StorageUploadInputStreamOptions options = StorageUploadInputStreamOptions.defaultInstance();
+        return uploadInputStream(path, local, options, NoOpConsumer.create(), onSuccess, onError);
+    }
+
+    @SuppressWarnings("deprecation")
+    @NonNull
+    @Override
+    public StorageUploadInputStreamOperation<?> uploadInputStream(
         @NonNull String key,
         @NonNull InputStream local,
         @NonNull StorageUploadInputStreamOptions options,
@@ -442,8 +567,20 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
         return uploadInputStream(key, local, options, NoOpConsumer.create(), onSuccess, onError);
     }
 
+    @Override
+    public StorageUploadInputStreamOperation<?> uploadInputStream(
+            @NonNull StoragePath path,
+            @NonNull InputStream local,
+            @NonNull StorageUploadInputStreamOptions options,
+            @NonNull Consumer<StorageUploadInputStreamResult> onSuccess,
+            @NonNull Consumer<StorageException> onError
+    ) {
+        return uploadInputStream(path, local, options, NoOpConsumer.create(), onSuccess, onError);
+    }
+
     @NonNull
     @Override
+    @SuppressWarnings("deprecation")
     public StorageUploadInputStreamOperation<?> uploadInputStream(
         @NonNull String key,
         @NonNull InputStream local,
@@ -486,6 +623,21 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
 
     @NonNull
     @Override
+    public StorageUploadInputStreamOperation<?> uploadInputStream(
+            @NonNull StoragePath path,
+            @NonNull InputStream local,
+            @NonNull StorageUploadInputStreamOptions options,
+            @NonNull Consumer<StorageTransferProgress> onProgress,
+            @NonNull Consumer<StorageUploadInputStreamResult> onSuccess,
+            @NonNull Consumer<StorageException> onError
+    ) {
+        // TODO: Implement
+        return null;
+    }
+
+    @SuppressWarnings("deprecation")
+    @NonNull
+    @Override
     public StorageRemoveOperation<?> remove(
         @NonNull String key,
         @NonNull Consumer<StorageRemoveResult> onSuccess,
@@ -496,6 +648,17 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
 
     @NonNull
     @Override
+    public StorageRemoveOperation<?> remove(
+            @NonNull StoragePath path,
+            @NonNull Consumer<StorageRemoveResult> onSuccess,
+            @NonNull Consumer<StorageException> onError
+    ) {
+        return remove(path, StorageRemoveOptions.defaultInstance(), onSuccess, onError);
+    }
+
+    @NonNull
+    @Override
+    @SuppressWarnings("deprecation")
     public StorageRemoveOperation<?> remove(
         @NonNull String key,
         @NonNull StorageRemoveOptions options,
@@ -525,7 +688,20 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
         return operation;
     }
 
+    @NonNull
     @Override
+    public StorageRemoveOperation<?> remove(
+            @NonNull StoragePath path,
+            @NonNull StorageRemoveOptions options,
+            @NonNull Consumer<StorageRemoveResult> onSuccess,
+            @NonNull Consumer<StorageException> onError
+    ) {
+        // TODO: Implement
+        return null;
+    }
+
+    @Override
+    @SuppressWarnings("deprecation")
     public void getTransfer(
         @NonNull String transferId,
         @NonNull Consumer<StorageTransferOperation<?, ? extends StorageTransferResult>> onReceived,
@@ -598,8 +774,8 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
     }
 
     @NonNull
-    @Override
     @SuppressWarnings("deprecation")
+    @Override
     public StorageListOperation<?> list(
         @NonNull String path,
         @NonNull Consumer<StorageListResult> onSuccess,
@@ -627,6 +803,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     public StorageListOperation<?> list(@NonNull String path,
                                         @NonNull StoragePagedListOptions options,
                                         @NonNull Consumer<StorageListResult> onSuccess,
@@ -652,6 +829,18 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
         operation.start();
 
         return operation;
+    }
+
+    @NonNull
+    @Override
+    public StorageListOperation<?> list(
+            @NonNull StoragePath path,
+            @NonNull StoragePagedListOptions options,
+            @NonNull Consumer<StorageListResult> onSuccess,
+            @NonNull Consumer<StorageException> onError
+    ) {
+        // TODO: Implement
+        return null;
     }
 
     /**
