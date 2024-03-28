@@ -1,3 +1,10 @@
+## [Release 2.14.13](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.14.13)
+
+### Bug Fixes
+- **analytics:** Set start time before generating session ID ([#2747](https://github.com/aws-amplify/amplify-android/issues/2747))
+
+[See all changes between 2.14.12 and 2.14.13](https://github.com/aws-amplify/amplify-android/compare/release_v2.14.12...release_v2.14.13)
+
 ## [Release 2.14.12](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.14.12)
 
 ### Bug Fixes
