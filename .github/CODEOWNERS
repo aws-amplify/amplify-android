@@ -1,1 +1,4 @@
 *   @aws-amplify/amplify-android
+
+# Changes to api surface require admin approval
+*.api @aws-amplify/amplify-android-admins
