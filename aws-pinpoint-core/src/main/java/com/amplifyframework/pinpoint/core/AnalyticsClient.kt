@@ -96,7 +96,7 @@ class AnalyticsClient(
         eventTimestamp: Long = System.currentTimeMillis(),
         eventId: String = UUID.randomUUID().toString()
     ): PinpointEvent {
-        val session = sessionClient?.session ?: Session(context, uniqueId)
+        val session = sessionClient?.session ?: Session(uniqueId)
         return createEvent(
             eventType,
             session.sessionId,
