@@ -67,4 +67,3 @@ dependencies {
 android.kotlinOptions {
     jvmTarget = "11"
 }
-
