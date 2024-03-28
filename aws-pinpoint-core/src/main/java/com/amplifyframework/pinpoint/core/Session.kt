@@ -56,8 +56,8 @@ class Session {
         context: Context,
         uniqueId: String
     ) {
-        this@Session.sessionId = generateSessionId(uniqueId)
         this@Session.startTime = System.currentTimeMillis()
+        this@Session.sessionId = generateSessionId(uniqueId)
         this@Session.stopTime = null
     }
 
