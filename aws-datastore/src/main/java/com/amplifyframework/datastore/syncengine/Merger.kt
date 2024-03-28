@@ -66,8 +66,14 @@ internal class Merger(
                 return@rxCompletable
             }
 
+            // Keep the models with the highest version for each ids, abandon the rest
+            var modelsWithUniqueId = modelsWithMetadata.groupBy { modelWithMetadata -> modelWithMetadata.model.primaryKeyString }
+                .map {group ->
+                    group.value.maxBy { dupModels -> dupModels.syncMetadata.version ?: 0 }
+                }.toList()
+
             // create (key, model metadata) map for quick lookup to re-associate
-            val modelMetadataMap = modelsWithMetadata.associateBy { it.syncMetadata.primaryKeyString }
+            val modelMetadataMap = modelsWithUniqueId.associateBy { it.syncMetadata.primaryKeyString}
 
             // Consumer to announce Model merges
             val mergedConsumer = Consumer<ModelWithMetadata<T>> {

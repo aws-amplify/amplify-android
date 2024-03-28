@@ -36,6 +36,7 @@ import com.amplifyframework.testmodels.commentsblog.Blog
 import com.amplifyframework.testmodels.commentsblog.BlogOwner
 import com.amplifyframework.testutils.random.RandomString
 import java.util.concurrent.TimeUnit
+import java.util.UUID
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -665,6 +666,61 @@ class MergerTest {
         assertEquals(expectedBlogResult, blogResult.sortedBy { it.id })
         assertEquals(expectedMetadataResult, metadataResult.sortedBy { it.primaryKeyString })
         assertEquals(expectedStorageItemChanges, capturedStorageItemChanges)
+    }
+
+    /**
+     * THIS IS NOT FINAL
+     * When several models with the same identifier, but different versions with different flag for deleted,
+     * Only the model with the latest version should be considered as it represents the latest known state of the model
+     * @throws
+     * @throws
+     */
+    @Test
+    @Throws(DataStoreException::class, InterruptedException::class)
+    fun temporaryMergerTestReconcilation() {
+
+        var capturedStorageItemChanges = mutableListOf<StorageItemChange.Type>()
+        val changeTypeConsumer = Consumer<StorageItemChange.Type> {
+            capturedStorageItemChanges.add(it)
+        }
+
+        // Random UUID following RFC 4122 version 4 spec
+        val sameRandomId = UUID.randomUUID().toString()
+
+        val remotemodels = listOf(
+            ModelWithMetadata(
+                Blog.builder().name("Hideo K.").id("DS1").build(),
+                ModelMetadata(sameRandomId, false, 1, Temporal.Timestamp.now())
+            ),
+            ModelWithMetadata(
+                Blog.builder().name("Hideo K.").id("DS1").build(),
+                ModelMetadata(sameRandomId, true, 3, Temporal.Timestamp.now())
+            ),
+            ModelWithMetadata(
+                Blog.builder().name("Hideo K.").id("DS1").build(),
+                ModelMetadata(sameRandomId, true, 2, Temporal.Timestamp.now())
+            ),
+            ModelWithMetadata(
+                Blog.builder().name("Hideo K.").id("DS2").build(),
+                ModelMetadata(sameRandomId, false, 11, Temporal.Timestamp.now())
+            ),
+            ModelWithMetadata(
+                Blog.builder().name("Hideo K.").id("DS2").build(),
+                ModelMetadata(sameRandomId, true, 8, Temporal.Timestamp.now())
+            ),
+            ModelWithMetadata(
+                Blog.builder().name("Hideo K.").id("DS2").build(),
+                ModelMetadata(sameRandomId, true, 17, Temporal.Timestamp.now())
+            ),
+            ModelWithMetadata(
+                Blog.builder().name("Hideo K.").id("DS2").build(),
+                ModelMetadata(sameRandomId, false, 34, Temporal.Timestamp.now())
+            )
+        )
+
+        val observer = merger.merge(remotemodels, changeTypeConsumer).test()
+        assertTrue(observer.await(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS))
+        observer.assertNoErrors().assertComplete()
     }
 
     companion object {
