@@ -61,7 +61,6 @@ import com.amplifyframework.core.Action
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.core.category.CategoryType
-import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
@@ -100,9 +99,13 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
     private lateinit var pluginConfigurationJSON: JSONObject
 
     @InternalAmplifyApi
+    @Deprecated("Use getAuthConfiguration instead", replaceWith = ReplaceWith("getAuthConfiguration()"))
     fun getPluginConfiguration(): JSONObject {
         return pluginConfigurationJSON
     }
+
+    @InternalAmplifyApi
+    fun getAuthConfiguration() = realPlugin.configuration
 
     @InternalAmplifyApi
     fun addToUserAgent(type: AWSCognitoAuthMetadataType, value: String) {
