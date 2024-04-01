@@ -24,12 +24,12 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.VerifySoftwareToken
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.VerifySoftwareTokenResponseType
 import aws.sdk.kotlin.services.cognitoidentityprovider.verifySoftwareToken
 import com.amplifyframework.auth.cognito.AWSCognitoAuthService
+import com.amplifyframework.auth.cognito.AuthConfiguration
 import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.auth.cognito.StoreClientBehavior
 import com.amplifyframework.logging.Logger
 import com.amplifyframework.statemachine.EventDispatcher
 import com.amplifyframework.statemachine.StateMachineEvent
-import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 import com.amplifyframework.statemachine.codegen.data.SignInTOTPSetupData
 import com.amplifyframework.statemachine.codegen.events.SetupTOTPEvent
 import io.mockk.coEvery
