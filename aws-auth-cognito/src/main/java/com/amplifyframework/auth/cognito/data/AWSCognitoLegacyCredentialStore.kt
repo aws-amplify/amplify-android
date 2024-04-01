@@ -17,12 +17,12 @@ package com.amplifyframework.auth.cognito.data
 
 import android.content.Context
 import com.amplifyframework.auth.AuthProvider
+import com.amplifyframework.auth.cognito.AuthConfiguration
 import com.amplifyframework.auth.cognito.helpers.SessionHelper
 import com.amplifyframework.auth.cognito.helpers.identityProviderName
 import com.amplifyframework.core.store.KeyValueRepository
 import com.amplifyframework.statemachine.codegen.data.AWSCredentials
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
-import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 import com.amplifyframework.statemachine.codegen.data.AuthCredentialStore
 import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
 import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
@@ -184,7 +184,9 @@ internal class AWSCognitoLegacyCredentialStore(
 
         return if (accessKey == null && secretKey == null && sessionToken == null) {
             null
-        } else AWSCredentials(accessKey, secretKey, sessionToken, expiration)
+        } else {
+            AWSCredentials(accessKey, secretKey, sessionToken, expiration)
+        }
     }
 
     private fun retrieveIdentityId() = idAndCredentialsKeyValue.get(namespace(ID_KEY))
@@ -224,8 +226,11 @@ internal class AWSCognitoLegacyCredentialStore(
         val deviceGroupKey = deviceKeyValue.get(DEVICE_GROUP_KEY)
         val deviceSecretKey = deviceKeyValue.get(DEVICE_SECRET_KEY)
 
-        return if (deviceKey.isNullOrEmpty() && deviceGroupKey.isNullOrEmpty()) DeviceMetadata.Empty
-        else DeviceMetadata.Metadata(deviceKey ?: "", deviceGroupKey ?: "", deviceSecretKey)
+        return if (deviceKey.isNullOrEmpty() && deviceGroupKey.isNullOrEmpty()) {
+            DeviceMetadata.Empty
+        } else {
+            DeviceMetadata.Metadata(deviceKey ?: "", deviceGroupKey ?: "", deviceSecretKey)
+        }
     }
 
     private fun retrieveCognitoUserPoolTokens(keys: Map<String, String>): CognitoUserPoolTokens? {
