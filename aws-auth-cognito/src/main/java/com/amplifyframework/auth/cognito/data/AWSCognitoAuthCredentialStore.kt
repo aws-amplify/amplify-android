@@ -16,12 +16,11 @@
 package com.amplifyframework.auth.cognito.data
 
 import android.content.Context
+import com.amplifyframework.auth.cognito.AuthConfiguration
 import com.amplifyframework.core.store.KeyValueRepository
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
-import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 import com.amplifyframework.statemachine.codegen.data.AuthCredentialStore
 import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
@@ -29,7 +28,7 @@ internal class AWSCognitoAuthCredentialStore(
     val context: Context,
     private val authConfiguration: AuthConfiguration,
     isPersistenceEnabled: Boolean = true,
-    keyValueRepoFactory: KeyValueRepositoryFactory = KeyValueRepositoryFactory(),
+    keyValueRepoFactory: KeyValueRepositoryFactory = KeyValueRepositoryFactory()
 ) : AuthCredentialStore {
 
     companion object {
