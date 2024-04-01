@@ -47,7 +47,8 @@ open class CognitoCredentialsProvider @InternalAmplifyApi constructor(
                         AuthException(
                             "Failed to get credentials. " +
                                 "Check if you are signed in and configured identity pools correctly.",
-                            AmplifyException.TODO_RECOVERY_SUGGESTION
+                            AmplifyException.TODO_RECOVERY_SUGGESTION,
+                            authSession.toAWSAuthSession()?.awsCredentialsResult?.error
                         )
                     )
                 },
