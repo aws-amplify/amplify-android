@@ -16,10 +16,10 @@
 package com.amplifyframework.auth.cognito.data
 
 import android.content.Context
+import com.amplifyframework.auth.cognito.AuthConfiguration
 import com.amplifyframework.core.store.KeyValueRepository
 import com.amplifyframework.statemachine.codegen.data.AWSCredentials
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
-import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 import com.amplifyframework.statemachine.codegen.data.AuthCredentialStore
 import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
 import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
@@ -115,7 +115,7 @@ class AWSCognitoLegacyCredentialStoreTest {
             mockFactory.create(
                 mockContext,
                 AWSCognitoLegacyCredentialStore.AWS_KEY_VALUE_STORE_NAMESPACE_IDENTIFIER,
-                true,
+                true
             )
         ).thenReturn(mockKeyValue)
 
@@ -123,7 +123,7 @@ class AWSCognitoLegacyCredentialStoreTest {
             mockFactory.create(
                 mockContext,
                 AWSCognitoLegacyCredentialStore.APP_TOKENS_INFO_CACHE,
-                true,
+                true
             )
         ).thenReturn(mockKeyValue)
 
@@ -131,7 +131,7 @@ class AWSCognitoLegacyCredentialStoreTest {
             mockFactory.create(
                 mockContext,
                 AWSCognitoLegacyCredentialStore.AWS_MOBILE_CLIENT_PROVIDER,
-                true,
+                true
             )
         ).thenReturn(mockKeyValue)
 
