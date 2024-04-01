@@ -47,15 +47,17 @@ internal class Merger(
     private val localStorageAdapter: LocalStorageAdapter
 ) {
     /**
-     * Merge an item back into the local store, using a default strategy.
-     * @param modelWithMetadata A model, combined with metadata about it
+     * Merge a batch of items back into the local store, using a default strategy.
+     * @param modelWithMetadata Models, combined with metadata about it
      * @param <T> Type of model
      * @return A completable operation to merge the model
      </T> */
     fun <T : Model> merge(modelWithMetadata: ModelWithMetadata<T>): Completable {
         return merge(listOf(modelWithMetadata), NoOpConsumer.create())
     }
-
+    fun <T : Model> merge(modelWithMetadata: List<ModelWithMetadata<T>>): Completable {
+        return merge(modelWithMetadata, NoOpConsumer.create())
+    }
     fun <T : Model> merge(
         modelsWithMetadata: List<ModelWithMetadata<T>>,
         changeTypeConsumer: Consumer<StorageItemChange.Type>
@@ -67,13 +69,15 @@ internal class Merger(
             }
 
             // Keep the models with the highest version for each ids, abandon the rest
-            var modelsWithUniqueId = modelsWithMetadata.groupBy { modelWithMetadata -> modelWithMetadata.model.primaryKeyString }
-                .map {group ->
+            val modelsWithUniqueId = modelsWithMetadata.groupBy { modelWithMetadata ->
+                modelWithMetadata.model.primaryKeyString
+            }
+                .map { group ->
                     group.value.maxBy { dupModels -> dupModels.syncMetadata.version ?: 0 }
-                }.toList()
+                }
 
             // create (key, model metadata) map for quick lookup to re-associate
-            val modelMetadataMap = modelsWithUniqueId.associateBy { it.syncMetadata.primaryKeyString}
+            val modelMetadataMap = modelsWithUniqueId.associateBy { it.syncMetadata.primaryKeyString }
 
             // Consumer to announce Model merges
             val mergedConsumer = Consumer<ModelWithMetadata<T>> {
@@ -91,7 +95,7 @@ internal class Merger(
             }
 
             // fetch a Map of all model versions from Metadata table
-            val localModelVersions = versionRepository.fetchModelVersions(modelsWithMetadata)
+            val localModelVersions = versionRepository.fetchModelVersions(modelsWithUniqueId)
 
             /*
             Fetch a Set of all pending mutation ids for type T
@@ -100,13 +104,13 @@ internal class Merger(
             whichever comes first
              */
             val pendingMutations = mutationOutbox.fetchPendingMutations(
-                models = modelsWithMetadata.map { it.model },
-                modelClass = modelsWithMetadata.first().model.javaClass.name,
+                models = modelsWithUniqueId.map { it.model },
+                modelClass = modelsWithUniqueId.first().model.javaClass.name,
                 excludeInFlight = true
             )
 
             // Construct a batch of operations to be executed in a single transactions
-            val operations = modelsWithMetadata.mapNotNull {
+            val operations = modelsWithUniqueId.mapNotNull {
                 val incomingVersion = it.syncMetadata.version ?: -1
                 val localVersion = localModelVersions.getOrDefault(
                     it.model.getMetadataSQLitePrimaryKey(),

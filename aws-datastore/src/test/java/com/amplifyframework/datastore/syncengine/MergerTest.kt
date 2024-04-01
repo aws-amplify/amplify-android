@@ -669,58 +669,70 @@ class MergerTest {
     }
 
     /**
-     * THIS IS NOT FINAL
      * When several models with the same identifier, but different versions with different flag for deleted,
      * Only the model with the latest version should be considered as it represents the latest known state of the model
-     * @throws
+     * @throws InterruptedException If interrupted while awaiting terminal result in test observer
      * @throws
      */
     @Test
     @Throws(DataStoreException::class, InterruptedException::class)
-    fun temporaryMergerTestReconcilation() {
-
-        var capturedStorageItemChanges = mutableListOf<StorageItemChange.Type>()
-        val changeTypeConsumer = Consumer<StorageItemChange.Type> {
-            capturedStorageItemChanges.add(it)
-        }
+    fun testBatchMergerReconciliation() {
 
         // Random UUID following RFC 4122 version 4 spec
         val sameRandomId = UUID.randomUUID().toString()
 
-        val remotemodels = listOf(
-            ModelWithMetadata(
-                Blog.builder().name("Hideo K.").id("DS1").build(),
-                ModelMetadata(sameRandomId, false, 1, Temporal.Timestamp.now())
-            ),
-            ModelWithMetadata(
-                Blog.builder().name("Hideo K.").id("DS1").build(),
-                ModelMetadata(sameRandomId, true, 3, Temporal.Timestamp.now())
-            ),
-            ModelWithMetadata(
-                Blog.builder().name("Hideo K.").id("DS1").build(),
-                ModelMetadata(sameRandomId, true, 2, Temporal.Timestamp.now())
-            ),
-            ModelWithMetadata(
-                Blog.builder().name("Hideo K.").id("DS2").build(),
-                ModelMetadata(sameRandomId, false, 11, Temporal.Timestamp.now())
-            ),
-            ModelWithMetadata(
-                Blog.builder().name("Hideo K.").id("DS2").build(),
-                ModelMetadata(sameRandomId, true, 8, Temporal.Timestamp.now())
-            ),
-            ModelWithMetadata(
-                Blog.builder().name("Hideo K.").id("DS2").build(),
-                ModelMetadata(sameRandomId, true, 17, Temporal.Timestamp.now())
-            ),
-            ModelWithMetadata(
-                Blog.builder().name("Hideo K.").id("DS2").build(),
-                ModelMetadata(sameRandomId, false, 34, Temporal.Timestamp.now())
-            )
+        // Models to merge
+        val blogFirstPost1ToBeDisregarded = ModelWithMetadata(
+            Blog.builder().name("Hideo K.").id("DS1").build(),
+            ModelMetadata(sameRandomId, false, 1, Temporal.Timestamp.now())
+        )
+        val blogFirstPost2LatestVer = ModelWithMetadata(
+            Blog.builder().name("Hideo K.").id("DS1").build(),
+            ModelMetadata(sameRandomId, true, 3, Temporal.Timestamp.now())
+        )
+        val blogFirstPost3LatestVerDuplicate = ModelWithMetadata(
+            Blog.builder().name("Hideo K.").id("DS1").build(),
+            ModelMetadata(sameRandomId, false, 3, Temporal.Timestamp.now())
+        )
+        val blogFirstPost4ToBeDisregarded = ModelWithMetadata(
+            Blog.builder().name("Hideo K.").id("DS1").build(),
+            ModelMetadata(sameRandomId, false, 2, Temporal.Timestamp.now())
+        )
+        val blogSecondPost1ToSurvive = ModelWithMetadata(
+            Blog.builder().name("Hideo K.").id("DS2").build(),
+            ModelMetadata(sameRandomId, false, 11, Temporal.Timestamp.now())
         )
 
-        val observer = merger.merge(remotemodels, changeTypeConsumer).test()
+        // Input list of blog posts on remote storage
+        val remotemodels = listOf(
+            blogFirstPost1ToBeDisregarded,
+            blogFirstPost2LatestVer,
+            blogFirstPost3LatestVerDuplicate,
+            blogFirstPost4ToBeDisregarded,
+            blogSecondPost1ToSurvive
+        )
+
+        // Expected Blog table result
+        val expectedBlogResult = listOf(
+            blogSecondPost1ToSurvive.model
+        )
+
+        // Expected Metadata result
+        val expectedMetadataResult = listOf(
+            blogFirstPost2LatestVer.syncMetadata,
+            blogSecondPost1ToSurvive.syncMetadata
+        )
+
+        val observer = merger.merge(remotemodels).test()
         assertTrue(observer.await(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS))
         observer.assertNoErrors().assertComplete()
+
+        val blogResult = storageAdapter.query(Blog::class.java)
+        val metadataResult = storageAdapter.query(ModelMetadata::class.java)
+        assertEquals(1, blogResult.size)
+        assertEquals(2, metadataResult.size)
+        assertEquals(expectedMetadataResult, metadataResult)
+        assertEquals(expectedBlogResult, blogResult)
     }
 
     companion object {
