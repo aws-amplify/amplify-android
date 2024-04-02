@@ -70,7 +70,6 @@ class AWSS3StoragePathUploadTest {
         lateinit var storageCategory: StorageCategory
         lateinit var synchronousStorage: SynchronousStorage
         lateinit var synchronousAuth: SynchronousAuth
-
         internal lateinit var userOne: Credential
         internal lateinit var userTwo: Credential
 
