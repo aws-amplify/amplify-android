@@ -23,12 +23,14 @@ import com.amplifyframework.storage.StorageCategoryBehavior;
 import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.StoragePath;
 import com.amplifyframework.storage.options.StorageDownloadFileOptions;
+import com.amplifyframework.storage.options.StorageGetUrlOptions;
 import com.amplifyframework.storage.options.StorageListOptions;
 import com.amplifyframework.storage.options.StoragePagedListOptions;
 import com.amplifyframework.storage.options.StorageRemoveOptions;
 import com.amplifyframework.storage.options.StorageUploadFileOptions;
 import com.amplifyframework.storage.options.StorageUploadInputStreamOptions;
 import com.amplifyframework.storage.result.StorageDownloadFileResult;
+import com.amplifyframework.storage.result.StorageGetUrlResult;
 import com.amplifyframework.storage.result.StorageListResult;
 import com.amplifyframework.storage.result.StorageRemoveResult;
 import com.amplifyframework.storage.result.StorageUploadFileResult;
@@ -339,6 +341,23 @@ public final class SynchronousStorage {
         return remove(key, options, STORAGE_OPERATION_TIMEOUT_MS);
     }
 
+
+    /**
+     * Remove a file from S3 bucket synchronously.
+     *
+     * @param path    Path inside S3 bucket to list files from
+     * @param options Remove options
+     * @return Remove operation result containing name of the removed file
+     * @throws StorageException if removal fails or times out
+     */
+    @NonNull
+    public StorageRemoveResult remove(
+            @NonNull StoragePath path,
+            @NonNull StorageRemoveOptions options
+    ) throws StorageException {
+        return remove(path, options, STORAGE_OPERATION_TIMEOUT_MS);
+    }
+
     /**
      * Remove a file from S3 bucket synchronously.
      *
@@ -357,6 +376,44 @@ public final class SynchronousStorage {
     ) throws StorageException {
         return Await.<StorageRemoveResult, StorageException>result(timeoutMs, (onResult, onError) ->
                 asyncDelegate.remove(key, options, onResult, onError)
+        );
+    }
+
+    /**
+     * Remove a file from S3 bucket synchronously.
+     *
+     * @param path    Path inside S3 bucket to list files from
+     * @param options   Remove options
+     * @param timeoutMs Custom time-out duration in milliseconds
+     * @return Remove operation result containing name of the removed file
+     * @throws StorageException if removal fails or times out
+     */
+    @NonNull
+    public StorageRemoveResult remove(
+            @NonNull StoragePath path,
+            @NonNull StorageRemoveOptions options,
+            long timeoutMs
+    ) throws StorageException {
+        return Await.<StorageRemoveResult, StorageException>result(timeoutMs, (onResult, onError) ->
+                asyncDelegate.remove(path, options, onResult, onError)
+        );
+    }
+
+    /**
+     * Get Url for a file from S3 bucket synchronously.
+     *
+     * @param path    Path inside S3 bucket to getUrl
+     * @param options   GetUrl options
+     * @return GetUrl operation result containing name url
+     * @throws StorageException if get url fails or times out
+     */
+    @NonNull
+    public StorageGetUrlResult getUrl(
+            @NonNull StoragePath path,
+            @NonNull StorageGetUrlOptions options
+    ) throws StorageException {
+        return Await.<StorageGetUrlResult, StorageException>result(STORAGE_OPERATION_TIMEOUT_MS, (onResult, onError) ->
+                asyncDelegate.getUrl(path, options, onResult, onError)
         );
     }
 
