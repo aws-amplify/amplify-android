@@ -245,6 +245,24 @@ public final class SynchronousStorage {
     /**
      * Upload an InputStream synchronously and return the result of operation.
      *
+     * @param path    Path of file on service
+     * @param local   InputStream to upload
+     * @param options Upload options
+     * @return Upload operation result
+     * @throws StorageException if upload fails or times out
+     */
+    @NonNull
+    public StorageUploadInputStreamResult uploadInputStream(
+            @NonNull StoragePath path,
+            @NonNull InputStream local,
+            @NonNull StorageUploadInputStreamOptions options
+    ) throws StorageException {
+        return uploadInputStream(path, local, options, STORAGE_OPERATION_TIMEOUT_MS);
+    }
+
+    /**
+     * Upload an InputStream synchronously and return the result of operation.
+     *
      * @param key     Key to uniquely identify the InputStream
      * @param local   InputStream to upload
      * @param options Upload options
@@ -280,6 +298,28 @@ public final class SynchronousStorage {
     ) throws StorageException {
         return Await.<StorageUploadInputStreamResult, StorageException>result(timeoutMs, (onResult, onError) ->
                 asyncDelegate.uploadInputStream(key, local, options, onResult, onError)
+        );
+    }
+
+    /**
+     * Upload an InputStream synchronously and return the result of operation.
+     *
+     * @param path    Path of file on service
+     * @param local     InputStream to upload
+     * @param options   Upload options
+     * @param timeoutMs Custom time-out duration in milliseconds
+     * @return Upload operation result
+     * @throws StorageException if upload fails or times out
+     */
+    @NonNull
+    public StorageUploadInputStreamResult uploadInputStream(
+            @NonNull StoragePath path,
+            @NonNull InputStream local,
+            @NonNull StorageUploadInputStreamOptions options,
+            long timeoutMs
+    ) throws StorageException {
+        return Await.<StorageUploadInputStreamResult, StorageException>result(timeoutMs, (onResult, onError) ->
+                asyncDelegate.uploadInputStream(path, local, options, onResult, onError)
         );
     }
 
