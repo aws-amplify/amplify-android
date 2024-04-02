@@ -20,7 +20,6 @@ import androidx.test.platform.app.InstrumentationRegistry
 import com.amplifyframework.auth.cognito.data.AWSCognitoAuthCredentialStore
 import com.amplifyframework.auth.cognito.testutils.AuthConfigurationProvider
 import com.amplifyframework.auth.cognito.testutils.CredentialStoreUtil
-import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 import com.google.gson.Gson
 import org.json.JSONObject
 import org.junit.Before

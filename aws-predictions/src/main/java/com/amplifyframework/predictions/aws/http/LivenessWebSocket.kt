@@ -254,7 +254,7 @@ internal class LivenessWebSocket(
                     PredictionsException(
                         "Failed to start the face liveness session.",
                         error,
-                        AmplifyException.TODO_RECOVERY_SUGGESTION
+                        AmplifyException.RECOVERY_SUGGESTION_WITH_THROWABLE
                     )
                 )
             }
