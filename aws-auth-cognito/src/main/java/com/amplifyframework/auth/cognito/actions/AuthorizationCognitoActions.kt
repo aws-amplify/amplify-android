@@ -105,7 +105,7 @@ internal object AuthorizationCognitoActions : AuthorizationActions {
                     RefreshSessionEvent.EventType.RefreshUserPoolTokens(amplifyCredential.signedInData)
                 )
                 is AmplifyCredential.IdentityPool -> RefreshSessionEvent(
-                    RefreshSessionEvent.EventType.RefreshUnAuthSession(LoginsMapProvider.UnAuthLogins())
+                    RefreshSessionEvent.EventType.RefreshUnAuthSession(amplifyCredential.identityId, LoginsMapProvider.UnAuthLogins())
                 )
                 is AmplifyCredential.IdentityPoolFederated -> {
                     AuthorizationEvent(
