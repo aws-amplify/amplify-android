@@ -87,8 +87,8 @@ internal sealed class RefreshSessionState : State {
                         StateResolution(RefreshingUserPoolTokens(refreshSessionEvent.signedInData), listOf(action))
                     }
                     is RefreshSessionEvent.EventType.RefreshUnAuthSession -> {
-                        val action = fetchAuthSessionActions.refreshAuthSessionAction(refreshSessionEvent.logins)
-                        StateResolution(RefreshingUnAuthSession(FetchAuthSessionState.NotStarted()), listOf(action))
+                        val action = fetchAuthSessionActions.fetchAWSCredentialsAction(refreshSessionEvent.identityId, refreshSessionEvent.logins)
+                        StateResolution(RefreshingUnAuthSession(FetchAuthSessionState.FetchingAWSCredentials(refreshSessionEvent.identityId, refreshSessionEvent.logins)), listOf(action))
                     }
                     else -> defaultResolution
                 }
