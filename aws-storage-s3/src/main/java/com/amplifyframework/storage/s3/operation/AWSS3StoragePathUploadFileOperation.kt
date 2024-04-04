@@ -39,7 +39,7 @@ import java.util.concurrent.ExecutorService
 /**
  * An operation to upload a file from AWS S3.
  */
-internal class AWSS3StoragePathUploadFileOperation @JvmOverloads internal constructor(
+internal class AWSS3StoragePathUploadFileOperation internal constructor(
     transferId: String,
     request: AWSS3StoragePathUploadRequest<File>,
     private val storageService: StorageService,

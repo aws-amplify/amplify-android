@@ -474,4 +474,22 @@ public final class SynchronousStorage {
             asyncDelegate.list(path, options, onResult, onError)
         );
     }
+
+    /**
+     * List the files in S3 bucket synchronously.
+     *
+     * @param path      Path inside S3 bucket to list files from
+     * @param options   Paged list options
+     * @return List operation result containing list of stored objects
+     * @throws StorageException if list fails or times out
+     */
+    @NonNull
+    public StorageListResult list(
+            @NonNull StoragePath path,
+            @NonNull StoragePagedListOptions options
+    ) throws StorageException {
+        return Await.<StorageListResult, StorageException>result(STORAGE_OPERATION_TIMEOUT_MS, (onResult, onError) ->
+                asyncDelegate.list(path, options, onResult, onError)
+        );
+    }
 }
