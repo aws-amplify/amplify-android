@@ -6,18 +6,15 @@ import com.amplifyframework.storage.StorageException
 import com.amplifyframework.storage.StoragePath
 import com.amplifyframework.storage.StoragePathValidationException
 import com.amplifyframework.storage.StringStoragePath
-import kotlinx.coroutines.runBlocking
 
-internal fun StoragePath.toS3ServiceKey(authCredentialsProvider: AuthCredentialsProvider): String {
+suspend fun StoragePath.toS3ServiceKey(authCredentialsProvider: AuthCredentialsProvider): String {
     val stringPath = when (this) {
         is StringStoragePath -> {
             resolvePath()
         }
         is IdentityIdProvidedStoragePath -> {
             val identityId = try {
-                runBlocking {
-                    authCredentialsProvider.getIdentityId()
-                }
+                authCredentialsProvider.getIdentityId()
             } catch (e: Exception) {
                 throw StorageException(
                     "Failed to fetch identity ID",

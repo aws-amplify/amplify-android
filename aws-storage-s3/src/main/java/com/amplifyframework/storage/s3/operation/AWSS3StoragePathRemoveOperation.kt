@@ -22,6 +22,7 @@ import com.amplifyframework.storage.result.StorageRemoveResult
 import com.amplifyframework.storage.s3.extensions.toS3ServiceKey
 import com.amplifyframework.storage.s3.request.AWSS3StoragePathRemoveRequest
 import com.amplifyframework.storage.s3.service.StorageService
+import kotlinx.coroutines.runBlocking
 import java.util.concurrent.ExecutorService
 
 /**
@@ -38,7 +39,9 @@ internal class AWSS3StoragePathRemoveOperation(
     override fun start() {
         executorService.submit {
             val serviceKey = try {
-                request.path.toS3ServiceKey(authCredentialsProvider)
+                runBlocking {
+                    request.path.toS3ServiceKey(authCredentialsProvider)
+                }
             } catch (se: StorageException) {
                 onError.accept(se)
                 return@submit

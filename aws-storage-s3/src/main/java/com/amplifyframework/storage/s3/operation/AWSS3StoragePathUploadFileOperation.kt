@@ -32,6 +32,7 @@ import com.amplifyframework.storage.s3.request.AWSS3StoragePathUploadRequest
 import com.amplifyframework.storage.s3.service.StorageService
 import com.amplifyframework.storage.s3.transfer.TransferListener
 import com.amplifyframework.storage.s3.transfer.TransferObserver
+import kotlinx.coroutines.runBlocking
 import java.io.File
 import java.util.UUID
 import java.util.concurrent.ExecutorService
@@ -90,7 +91,9 @@ internal class AWSS3StoragePathUploadFileOperation internal constructor(
 
         executorService.submit {
             val serviceKey = try {
-                uploadRequest.path.toS3ServiceKey(authCredentialsProvider)
+                runBlocking {
+                    uploadRequest.path.toS3ServiceKey(authCredentialsProvider)
+                }
             } catch (se: StorageException) {
                 onError.accept(se)
                 return@submit
