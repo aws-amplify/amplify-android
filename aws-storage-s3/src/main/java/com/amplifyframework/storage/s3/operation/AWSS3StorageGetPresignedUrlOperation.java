@@ -32,8 +32,8 @@ import java.util.concurrent.ExecutorService;
 
 /**
  *  An operation to retrieve pre-signed object URL from AWS S3.
- *  @deprecated Class should not be public and explicitly cast to.
- *  Internal usages are moving to AWSS3StorageGetPresignedUrlOperationV2
+ *  @deprecated Class should not be public and explicitly cast to. Cast to StorageGetUrlOperation.
+ *  Internal usages are moving to AWSS3StoragePathGetPresignedUrlOperation
  */
 @Deprecated
 public final class AWSS3StorageGetPresignedUrlOperation

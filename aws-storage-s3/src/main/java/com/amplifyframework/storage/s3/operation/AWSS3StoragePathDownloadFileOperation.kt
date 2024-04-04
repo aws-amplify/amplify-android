@@ -19,17 +19,13 @@ import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.hub.HubChannel
 import com.amplifyframework.hub.HubEvent
-import com.amplifyframework.storage.IdentityIdProvidedStoragePath
 import com.amplifyframework.storage.StorageChannelEventName
 import com.amplifyframework.storage.StorageException
-import com.amplifyframework.storage.StoragePathValidationException
-import com.amplifyframework.storage.StringStoragePath
 import com.amplifyframework.storage.TransferState
 import com.amplifyframework.storage.operation.StorageDownloadFileOperation
 import com.amplifyframework.storage.result.StorageDownloadFileResult
 import com.amplifyframework.storage.result.StorageTransferProgress
-import com.amplifyframework.storage.s3.extensions.invalidStoragePathException
-import com.amplifyframework.storage.s3.extensions.unsupportedStoragePathException
+import com.amplifyframework.storage.s3.extensions.toS3ServiceKey
 import com.amplifyframework.storage.s3.request.AWSS3StoragePathDownloadFileRequest
 import com.amplifyframework.storage.s3.service.StorageService
 import com.amplifyframework.storage.s3.transfer.TransferListener
@@ -37,14 +33,13 @@ import com.amplifyframework.storage.s3.transfer.TransferObserver
 import java.io.File
 import java.util.UUID
 import java.util.concurrent.ExecutorService
-import kotlinx.coroutines.runBlocking
 
 /**
  * An operation to download a file from AWS S3.
  */
 internal class AWSS3StoragePathDownloadFileOperation(
     private val transferId: String = UUID.randomUUID().toString(),
-    private val request: AWSS3StoragePathDownloadFileRequest?,
+    private val request: AWSS3StoragePathDownloadFileRequest,
     private var file: File,
     private val storageService: StorageService,
     private val executorService: ExecutorService,
@@ -92,49 +87,20 @@ internal class AWSS3StoragePathDownloadFileOperation(
         if (transferObserver != null) {
             return
         }
-        val downloadRequest = request ?: return
         executorService.submit {
+            val serviceKey = try {
+                request.path.toS3ServiceKey(authCredentialsProvider)
+            } catch (se: StorageException) {
+                onError.accept(se)
+                return@submit
+            }
 
             try {
-
-                val path = when (val storagePath = downloadRequest.path) {
-                    is StringStoragePath -> {
-                        storagePath.resolvePath()
-                    }
-                    is IdentityIdProvidedStoragePath -> {
-                        val identityId = try {
-                            runBlocking {
-                                authCredentialsProvider.getIdentityId()
-                            }
-                        } catch (e: Exception) {
-                            onError?.accept(
-                                StorageException(
-                                    "Failed to fetch identity ID",
-                                    e,
-                                    "See included exception for more details and suggestions to fix."
-                                )
-                            )
-                            return@submit
-                        }
-                        storagePath.resolvePath(identityId)
-                    }
-
-                    else -> {
-                        onError?.accept(StoragePathValidationException.unsupportedStoragePathException())
-                        return@submit
-                    }
-                }
-
-                if (!path.startsWith("/")) {
-                    onError?.accept(StoragePathValidationException.invalidStoragePathException())
-                    return@submit
-                }
-
                 transferObserver = storageService.downloadToFile(
                     transferId,
-                    path,
-                    downloadRequest.local,
-                    downloadRequest.useAccelerateEndpoint
+                    serviceKey,
+                    request.local,
+                    request.useAccelerateEndpoint
                 )
                 transferObserver?.setTransferListener(DownloadTransferListener())
             } catch (e: Exception) {
@@ -229,7 +195,6 @@ internal class AWSS3StoragePathDownloadFileOperation(
                     onSuccess?.accept(StorageDownloadFileResult.fromFile(file))
                     return
                 }
-                TransferState.FAILED -> {}
                 else -> {}
             }
         }
@@ -238,7 +203,7 @@ internal class AWSS3StoragePathDownloadFileOperation(
             onProgress?.accept(StorageTransferProgress(bytesCurrent, bytesTotal))
         }
 
-        override fun onError(id: Int, ex: java.lang.Exception) {
+        override fun onError(id: Int, ex: Exception) {
             Amplify.Hub.publish(
                 HubChannel.STORAGE,
                 HubEvent.create(StorageChannelEventName.DOWNLOAD_ERROR, ex)

@@ -27,35 +27,29 @@ import com.amplifyframework.storage.operation.StorageUploadInputStreamOperation
 import com.amplifyframework.storage.result.StorageTransferProgress
 import com.amplifyframework.storage.result.StorageUploadInputStreamResult
 import com.amplifyframework.storage.s3.ServerSideEncryption
-import com.amplifyframework.storage.s3.configuration.AWSS3StoragePluginConfiguration
-import com.amplifyframework.storage.s3.request.AWSS3StorageUploadRequest
+import com.amplifyframework.storage.s3.extensions.toS3ServiceKey
+import com.amplifyframework.storage.s3.request.AWSS3StoragePathUploadRequest
 import com.amplifyframework.storage.s3.service.StorageService
 import com.amplifyframework.storage.s3.transfer.TransferListener
 import com.amplifyframework.storage.s3.transfer.TransferObserver
-import java.io.IOException
 import java.io.InputStream
 import java.util.UUID
 import java.util.concurrent.ExecutorService
 
 /**
- * An operation to upload an InputStream from AWS S3.
+ * An operation to upload an InputStream to AWS S3.
  */
-@Deprecated(
-    "Class should not be public and explicitly cast to. Cast to StorageUploadInputStreamOperation." +
-        "Internal usages are moving to AWSS3StoragePathUploadInputStreamOperation"
-)
-class AWSS3StorageUploadInputStreamOperation @JvmOverloads internal constructor(
+internal class AWSS3StoragePathUploadInputStreamOperation @JvmOverloads internal constructor(
     transferId: String,
+    private val request: AWSS3StoragePathUploadRequest<InputStream>,
     private val storageService: StorageService,
     private val executorService: ExecutorService,
     private val authCredentialsProvider: AuthCredentialsProvider,
-    private val awsS3StoragePluginConfiguration: AWSS3StoragePluginConfiguration,
-    request: AWSS3StorageUploadRequest<InputStream>? = null,
     private var transferObserver: TransferObserver? = null,
     onProgress: Consumer<StorageTransferProgress>? = null,
     onSuccess: Consumer<StorageUploadInputStreamResult>? = null,
     onError: Consumer<StorageException>? = null
-) : StorageUploadInputStreamOperation<AWSS3StorageUploadRequest<InputStream>>(
+) : StorageUploadInputStreamOperation<AWSS3StoragePathUploadRequest<InputStream>>(
     request,
     transferId,
     onProgress,
@@ -64,21 +58,19 @@ class AWSS3StorageUploadInputStreamOperation @JvmOverloads internal constructor(
 ) {
 
     constructor(
+        request: AWSS3StoragePathUploadRequest<InputStream>,
         storageService: StorageService,
         executorService: ExecutorService,
         authCredentialsProvider: AuthCredentialsProvider,
-        awsS3StoragePluginConfiguration: AWSS3StoragePluginConfiguration,
-        request: AWSS3StorageUploadRequest<InputStream>,
         onProgress: Consumer<StorageTransferProgress>,
         onSuccess: Consumer<StorageUploadInputStreamResult>,
         onError: Consumer<StorageException>
     ) : this(
         UUID.randomUUID().toString(),
+        request,
         storageService,
         executorService,
         authCredentialsProvider,
-        awsS3StoragePluginConfiguration,
-        request,
         null,
         onProgress,
         onSuccess,
@@ -95,49 +87,44 @@ class AWSS3StorageUploadInputStreamOperation @JvmOverloads internal constructor(
             return
         }
 
-        val uploadRequest = request ?: return
-        executorService.submit(
-            Runnable {
-                awsS3StoragePluginConfiguration.getAWSS3PluginPrefixResolver(authCredentialsProvider).resolvePrefix(
-                    uploadRequest.accessLevel,
-                    uploadRequest.targetIdentityId,
-                    Consumer { prefix: String ->
-                        try {
-                            val serviceKey = prefix + uploadRequest.key
-                            // Grab the inputStream to upload...
-                            val inputStream = uploadRequest.local
-                            // Set up the metadata
-                            val objectMetadata = ObjectMetadata()
-                            objectMetadata.userMetadata = uploadRequest.metadata
-                            objectMetadata.metaData[ObjectMetadata.CONTENT_TYPE] = uploadRequest.contentType
-                            val storageServerSideEncryption =
-                                uploadRequest.serverSideEncryption
-                            if (ServerSideEncryption.NONE != storageServerSideEncryption) {
-                                objectMetadata.metaData[ObjectMetadata.SERVER_SIDE_ENCRYPTION] =
-                                    storageServerSideEncryption.getName()
-                            }
-                            transferObserver = storageService.uploadInputStream(
-                                transferId,
-                                serviceKey,
-                                inputStream,
-                                objectMetadata,
-                                uploadRequest.useAccelerateEndpoint()
-                            )
-                            transferObserver?.setTransferListener(UploadTransferListener())
-                        } catch (ioException: IOException) {
-                            onError?.accept(
-                                StorageException(
-                                    "Issue uploading inputStream.",
-                                    ioException,
-                                    "See included exception for more details and suggestions to fix."
-                                )
-                            )
-                        }
-                    },
-                    onError
+        executorService.submit {
+            val serviceKey = try {
+                request.path.toS3ServiceKey(authCredentialsProvider)
+            } catch (se: StorageException) {
+                onError.accept(se)
+                return@submit
+            }
+
+            try {
+                val inputStream = request.local
+                // Set up the metadata
+                val objectMetadata = ObjectMetadata()
+                objectMetadata.userMetadata = request.metadata
+                objectMetadata.metaData[ObjectMetadata.CONTENT_TYPE] = request.contentType
+                val storageServerSideEncryption =
+                    request.serverSideEncryption
+                if (ServerSideEncryption.NONE != storageServerSideEncryption) {
+                    objectMetadata.metaData[ObjectMetadata.SERVER_SIDE_ENCRYPTION] =
+                        storageServerSideEncryption.getName()
+                }
+                transferObserver = storageService.uploadInputStream(
+                    transferId,
+                    serviceKey,
+                    inputStream,
+                    objectMetadata,
+                    request.useAccelerateEndpoint
+                )
+                transferObserver?.setTransferListener(UploadTransferListener())
+            } catch (exception: Exception) {
+                onError?.accept(
+                    StorageException(
+                        "Issue uploading InputStream.",
+                        exception,
+                        "See included exception for more details and suggestions to fix."
+                    )
                 )
             }
-        )
+        }
     }
 
     override fun pause() {
@@ -148,8 +135,8 @@ class AWSS3StorageUploadInputStreamOperation @JvmOverloads internal constructor(
                 } catch (exception: java.lang.Exception) {
                     onError?.accept(
                         StorageException(
-                            "Something went wrong while attempting to pause your AWS S3 Storage " +
-                                "upload input stream operation",
+                            "Something went wrong while attempting to pause your " +
+                                "AWS S3 Storage upload InputStream operation",
                             exception,
                             "See attached exception for more information and suggestions"
                         )
@@ -167,8 +154,8 @@ class AWSS3StorageUploadInputStreamOperation @JvmOverloads internal constructor(
                 } catch (exception: java.lang.Exception) {
                     onError?.accept(
                         StorageException(
-                            "Something went wrong while attempting to resume your AWS S3 Storage " +
-                                "upload input stream operation",
+                            "Something went wrong while attempting to resume your " +
+                                "AWS S3 Storage upload InputStream operation",
                             exception,
                             "See attached exception for more information and suggestions"
                         )
@@ -186,8 +173,8 @@ class AWSS3StorageUploadInputStreamOperation @JvmOverloads internal constructor(
                 } catch (exception: java.lang.Exception) {
                     onError?.accept(
                         StorageException(
-                            "Something went wrong while attempting to cancel your AWS S3 Storage " +
-                                "upload input stream operation",
+                            "Something went wrong while attempting to cancel your " +
+                                "AWS S3 Storage upload InputStream operation",
                             exception,
                             "See attached exception for more information and suggestions"
                         )
@@ -210,42 +197,33 @@ class AWSS3StorageUploadInputStreamOperation @JvmOverloads internal constructor(
     }
 
     private inner class UploadTransferListener : TransferListener {
-        override fun onStateChanged(transferId: Int, state: TransferState, key: String) {
+        override fun onStateChanged(id: Int, state: TransferState, key: String) {
             Amplify.Hub.publish(
                 HubChannel.STORAGE,
                 HubEvent.create(StorageChannelEventName.UPLOAD_STATE, state.name)
             )
             when (state) {
                 TransferState.COMPLETED -> {
-                    onSuccess?.accept(StorageUploadInputStreamResult.fromKey(key))
-                    return
-                }
-                TransferState.FAILED -> {
-                    onError?.accept(
-                        StorageException(
-                            "Storage upload operation was interrupted.",
-                            "Please verify that you have a stable internet connection."
-                        )
-                    )
+                    onSuccess?.accept(StorageUploadInputStreamResult(key, key))
                     return
                 }
                 else -> {}
             }
         }
 
-        override fun onProgressChanged(transferId: Int, bytesCurrent: Long, bytesTotal: Long) {
+        override fun onProgressChanged(id: Int, bytesCurrent: Long, bytesTotal: Long) {
             onProgress?.accept(StorageTransferProgress(bytesCurrent, bytesTotal))
         }
 
-        override fun onError(transferId: Int, exception: Exception) {
+        override fun onError(id: Int, ex: Exception) {
             Amplify.Hub.publish(
                 HubChannel.STORAGE,
-                HubEvent.create(StorageChannelEventName.UPLOAD_ERROR, exception)
+                HubEvent.create(StorageChannelEventName.UPLOAD_ERROR, ex)
             )
             onError?.accept(
                 StorageException(
-                    "Something went wrong with your AWS S3 Storage upload input stream operation",
-                    exception,
+                    "Something went wrong with your AWS S3 Storage upload InputStream operation",
+                    ex,
                     "See attached exception for more information and suggestions"
                 )
             )

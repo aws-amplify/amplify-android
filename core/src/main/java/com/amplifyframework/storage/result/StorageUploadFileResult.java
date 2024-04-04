@@ -35,7 +35,7 @@ public final class StorageUploadFileResult extends StorageUploadResult {
      * @param key Key for an item that was uploaded successfully
      */
     @InternalAmplifyApi
-    public StorageUploadFileResult(String path, String key) {
+    public StorageUploadFileResult(@NonNull String path, @NonNull String key) {
         super(path, key);
     }
 

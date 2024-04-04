@@ -82,7 +82,7 @@ class KotlinStorageFacadeTest {
 
     @Test
     fun getUrlStoragePathSucceeds() = runBlocking {
-        val forRemotePath = StoragePath.fromString("/delete_me.png")
+        val forRemotePath = StoragePath.fromString("delete_me.png")
         val result = StorageGetUrlResult.fromUrl(URL("https://s3.amazon.biz/file.png"))
         every {
             delegate.getUrl(eq(forRemotePath), any(), any(), any())
@@ -116,7 +116,7 @@ class KotlinStorageFacadeTest {
 
     @Test(expected = StorageException::class)
     fun getUrlStoragePathThrows(): Unit = runBlocking {
-        val forRemotePath = StoragePath.fromString("/delete_me.png")
+        val forRemotePath = StoragePath.fromString("delete_me.png")
         val error = StorageException("uh", "oh")
         every {
             delegate.getUrl(eq(forRemotePath), any(), any(), any())
@@ -172,7 +172,7 @@ class KotlinStorageFacadeTest {
 
     @Test
     fun downloadFileStoragePathSucceeds(): Unit = runBlocking {
-        val fromRemotePath = StoragePath.fromString("/kool-pic.png")
+        val fromRemotePath = StoragePath.fromString("kool-pic.png")
         val toLocalFile = File("/local/path/kool-pic.png")
         val transferId = UUID.randomUUID().toString()
         val progressEvents = (0L until 101 step 50)
@@ -212,7 +212,7 @@ class KotlinStorageFacadeTest {
      */
     @Test
     fun performActionsOnDownloadFile(): Unit = runBlocking {
-        val fromRemotePath = StoragePath.fromString("/kool-pic.png")
+        val fromRemotePath = StoragePath.fromString("kool-pic.png")
         val toLocalFile = File("/local/path/kool-pic.png")
         val transferId = UUID.randomUUID().toString()
 
@@ -268,7 +268,7 @@ class KotlinStorageFacadeTest {
 
     @Test(expected = StorageException::class)
     fun downloadFileStoragePathThrows(): Unit = runBlocking {
-        val remotePath = StoragePath.fromString("/kool-pic.png")
+        val remotePath = StoragePath.fromString("kool-pic.png")
         val toLocalFile = File("/local/path/kool-pic.png")
         val error = StorageException("uh", "oh")
         val transferId = UUID.randomUUID().toString()
@@ -396,7 +396,7 @@ class KotlinStorageFacadeTest {
 
     @Test(expected = StorageException::class)
     fun uploadFileStoragePathThrows(): Unit = runBlocking {
-        val remotePath = StoragePath.fromString("/kool-pic.png")
+        val remotePath = StoragePath.fromString("kool-pic.png")
         val fromLocalFile = File("/local/path/kool-pic.png")
         val error = StorageException("uh", "oh")
         val transferId = UUID.randomUUID().toString()
@@ -422,7 +422,7 @@ class KotlinStorageFacadeTest {
      */
     @Test
     fun performActionOnUploadFileSucceeds() = runBlocking {
-        val remotePath = StoragePath.fromString("/kool-pic.png")
+        val remotePath = StoragePath.fromString("kool-pic.png")
         val fromLocalFile = File("/local/path/kool-pic.png")
         val transferId = UUID.randomUUID().toString()
         val cancelable = mockk<StorageUploadFileOperation<*>>()
@@ -554,7 +554,7 @@ class KotlinStorageFacadeTest {
 
     @Test(expected = StorageException::class)
     fun uploadInputStreamStoragePathThrows(): Unit = runBlocking {
-        val remotePath = StoragePath.fromString("/kool-pic.png")
+        val remotePath = StoragePath.fromString("kool-pic.png")
         val fromStream = mockk<InputStream>()
         val error = StorageException("uh", "oh")
         val transferId = UUID.randomUUID().toString()
@@ -581,7 +581,7 @@ class KotlinStorageFacadeTest {
      */
     @Test
     fun performActionOnUploadInputStream() = runBlocking {
-        val remotePath = StoragePath.fromString("/kool-pic.png")
+        val remotePath = StoragePath.fromString("kool-pic.png")
         val fromStream = mockk<InputStream>()
         val transferId = UUID.randomUUID().toString()
         val cancelable = mockk<StorageUploadInputStreamOperation<*>>()
@@ -667,7 +667,7 @@ class KotlinStorageFacadeTest {
 
     @Test(expected = StorageException::class)
     fun removeStoragePathThrows(): Unit = runBlocking {
-        val path = StoragePath.fromString("/delete_me.png")
+        val path = StoragePath.fromString("delete_me.png")
         val error = StorageException("uh", "oh")
         every {
             delegate.remove(eq(path), any(), any(), any())
@@ -704,7 +704,7 @@ class KotlinStorageFacadeTest {
 
     @Test
     fun listStoragePathSucceeds() = runBlocking {
-        val path = StoragePath.fromString("/beach/photos")
+        val path = StoragePath.fromString("beach/photos")
         val item = StorageItem("/me_at_beach.png", "/me_at_beach.png", 100L, Date(), "eTag", "props")
         val result = StorageListResult.fromItems(listOf(item), null)
         every {
@@ -741,7 +741,7 @@ class KotlinStorageFacadeTest {
 
     @Test(expected = StorageException::class)
     fun listStoragePathThrows(): Unit = runBlocking {
-        val path = StoragePath.fromString("/beach/photos")
+        val path = StoragePath.fromString("beach/photos")
         val error = StorageException("uh", "oh")
         every {
             delegate.list(eq(path), any<StoragePagedListOptions>(), any(), any())
