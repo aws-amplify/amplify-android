@@ -1,3 +1,13 @@
+## [Release 2.15.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.15.0)
+
+### Features
+- **auth:** Expose AuthConfiguration directly ([#2740](https://github.com/aws-amplify/amplify-android/issues/2740))
+
+### Miscellaneous
+- fix(auth) Add underlying cause to fetchAuthSession error ([#2750](https://github.com/aws-amplify/amplify-android/issues/2750))
+
+[See all changes between 2.14.13 and 2.15.0](https://github.com/aws-amplify/amplify-android/compare/release_v2.14.13...release_v2.15.0)
+
 ## [Release 2.14.13](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.14.13)
 
 ### Bug Fixes
