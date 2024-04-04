@@ -21,7 +21,7 @@ import com.amplifyframework.storage.StoragePath
 import com.amplifyframework.storage.StoragePathValidationException
 import com.amplifyframework.storage.StringStoragePath
 
-suspend fun StoragePath.toS3ServiceKey(authCredentialsProvider: AuthCredentialsProvider): String {
+internal suspend fun StoragePath.toS3ServiceKey(authCredentialsProvider: AuthCredentialsProvider): String {
     val stringPath = when (this) {
         is StringStoragePath -> {
             resolvePath()

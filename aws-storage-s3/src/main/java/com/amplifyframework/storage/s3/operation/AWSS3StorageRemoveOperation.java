@@ -16,7 +16,9 @@
 package com.amplifyframework.storage.s3.operation;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.OptIn;
 
+import com.amplifyframework.annotations.InternalAmplifyApi;
 import com.amplifyframework.auth.AuthCredentialsProvider;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.storage.StorageException;
@@ -73,6 +75,7 @@ public final class AWSS3StorageRemoveOperation extends StorageRemoveOperation<AW
         this.awsS3StoragePluginConfiguration = awsS3StoragePluginConfiguration;
     }
 
+    @OptIn(markerClass = InternalAmplifyApi.class)
     @SuppressWarnings("SyntheticAccessor, deprecation")
     @Override
     public void start() {
@@ -84,7 +87,7 @@ public final class AWSS3StorageRemoveOperation extends StorageRemoveOperation<AW
                         try {
                             String serviceKey = prefix.concat(getRequest().getKey());
                             storageService.deleteObject(serviceKey);
-                            onSuccess.accept(StorageRemoveResult.fromKey(getRequest().getKey()));
+                            onSuccess.accept(new StorageRemoveResult(serviceKey, getRequest().getKey()));
                         } catch (Exception exception) {
                             onError.accept(new StorageException(
                                     "Something went wrong with your AWS S3 Storage remove operation",

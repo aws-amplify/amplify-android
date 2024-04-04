@@ -434,7 +434,8 @@ public final class StorageComponentTest {
     public void testListObject() throws StorageException {
         final String path = RandomString.string();
         final StorageItem item = new StorageItem(
-                RandomString.string(),
+                path,
+                path,
                 0L,
                 new Date(),
                 RandomString.string(),

@@ -19,7 +19,6 @@ import androidx.test.core.app.ApplicationProvider
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
 import com.amplifyframework.storage.StorageCategory
 import com.amplifyframework.storage.StorageException
-import com.amplifyframework.storage.StoragePath
 import com.amplifyframework.storage.options.StorageDownloadFileOptions
 import com.amplifyframework.storage.options.StorageRemoveOptions
 import com.amplifyframework.storage.options.StorageUploadFileOptions
@@ -35,17 +34,15 @@ import org.junit.BeforeClass
 import org.junit.Test
 
 /**
- * Instrumentation test for operational work on remove with StoragePath.
+ * Instrumentation test for operational work on remove.
  */
-class AWSS3StoragePathRemoveTest {
+class AWSS3StorageRemoveTest {
     // Create a file to download to
     private val downloadFile: File = RandomTempFile()
 
     private companion object {
         const val SMALL_FILE_SIZE = 100L
         val SMALL_FILE_NAME = "small-${System.currentTimeMillis()}"
-        val SMALL_FILE_STRING_PATH = "public/$SMALL_FILE_NAME"
-        val SMALL_FILE_PATH = StoragePath.fromString(SMALL_FILE_STRING_PATH)
 
         lateinit var storageCategory: StorageCategory
         lateinit var synchronousStorage: SynchronousStorage
@@ -68,21 +65,21 @@ class AWSS3StoragePathRemoveTest {
 
             // Upload small test file
             smallFile = RandomTempFile(SMALL_FILE_NAME, SMALL_FILE_SIZE)
-            synchronousStorage.uploadFile(SMALL_FILE_PATH, smallFile, StorageUploadFileOptions.defaultInstance())
+            synchronousStorage.uploadFile(SMALL_FILE_NAME, smallFile, StorageUploadFileOptions.defaultInstance())
         }
     }
 
     @Test
     fun testRemove() {
-        val result = synchronousStorage.remove(SMALL_FILE_PATH, StorageRemoveOptions.defaultInstance())
+        val result = synchronousStorage.remove(SMALL_FILE_NAME, StorageRemoveOptions.defaultInstance())
 
-        assertEquals(SMALL_FILE_STRING_PATH, result.path)
-        assertEquals(SMALL_FILE_STRING_PATH, result.key)
+        assertEquals("public/$SMALL_FILE_NAME", result.path)
+        assertEquals(SMALL_FILE_NAME, result.key)
 
         // download will fail if file no longer exists
         assertThrows(StorageException::class.java) {
             synchronousStorage.downloadFile(
-                SMALL_FILE_PATH,
+                SMALL_FILE_NAME,
                 downloadFile,
                 StorageDownloadFileOptions.defaultInstance()
             )

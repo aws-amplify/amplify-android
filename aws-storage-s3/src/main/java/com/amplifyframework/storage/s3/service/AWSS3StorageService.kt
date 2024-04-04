@@ -164,12 +164,13 @@ internal class AWSS3StorageService(
             }
             result.collect {
                 it.contents?.forEach { value ->
-                    val key = value.key
+                    val serviceKey = value.key
                     val lastModified = value.lastModified
                     val eTag = value.eTag
-                    if (key != null && lastModified != null && eTag != null) {
+                    if (serviceKey != null && lastModified != null && eTag != null) {
                         items += StorageItem(
-                            S3Keys.extractAmplifyKey(key, prefix),
+                            serviceKey,
+                            S3Keys.extractAmplifyKey(serviceKey, prefix),
                             value.size ?: 0,
                             Date.from(Instant.ofEpochMilli(lastModified.epochSeconds)),
                             eTag,
@@ -191,12 +192,13 @@ internal class AWSS3StorageService(
                 this.continuationToken = nextToken
             }
             val items = result.contents?.mapNotNull { value ->
-                val key = value.key
+                val serviceKey = value.key
                 val lastModified = value.lastModified
                 val eTag = value.eTag
-                if (key != null && lastModified != null && eTag != null) {
+                if (serviceKey != null && lastModified != null && eTag != null) {
                     StorageItem(
-                        S3Keys.extractAmplifyKey(key, prefix),
+                        serviceKey,
+                        S3Keys.extractAmplifyKey(serviceKey, prefix),
                         value.size ?: 0,
                         Date.from(Instant.ofEpochMilli(lastModified.epochSeconds)),
                         eTag,
@@ -228,7 +230,8 @@ internal class AWSS3StorageService(
                 val eTag = value.eTag
                 if (serviceKey != null && lastModified != null && eTag != null) {
                     StorageItem(
-                        serviceKey, serviceKey,
+                        serviceKey,
+                        serviceKey,
                         value.size ?: 0,
                         Date.from(Instant.ofEpochMilli(lastModified.epochSeconds)),
                         eTag,
