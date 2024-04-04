@@ -19,6 +19,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
 
+import com.amplifyframework.annotations.InternalAmplifyApi;
+
 import java.util.Objects;
 
 /**
@@ -29,7 +31,13 @@ public class AmplifyException extends Exception {
      * All Amplify Exceptions should have a recovery suggestion. This string can be used as a filler until one is
      * defined but should ultimately be replaced.
      */
-    public static final String TODO_RECOVERY_SUGGESTION = "Sorry, we don't have a suggested fix for this error yet.";
+    public static final String TODO_RECOVERY_SUGGESTION = "Sorry, we don’t have a recovery suggestion for this error.";
+
+    /**
+     * This string is intended for internal use only.
+     */
+    @InternalAmplifyApi
+    public static final String RECOVERY_SUGGESTION_WITH_THROWABLE = "See the attached exception for more details";
 
     /**
      * A common recovery suggestion for errors that are unexpected and could be originated from a bug.

@@ -23,7 +23,7 @@ class SessionClient(
     private val context: Context,
     val targetingClient: TargetingClient,
     private val uniqueId: String,
-    var analyticsClient: AnalyticsClient? = null,
+    var analyticsClient: AnalyticsClient? = null
 ) {
 
     var session: Session? = null
@@ -66,7 +66,7 @@ class SessionClient(
 
     private fun executeStart() {
         targetingClient.updateEndpointProfile()
-        val newSession = Session(context, uniqueId)
+        val newSession = Session(uniqueId)
         session = newSession
         analyticsClient?.let {
             val pinpointEvent = it.createEvent(
