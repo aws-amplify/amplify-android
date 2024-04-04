@@ -32,10 +32,10 @@ import com.amplifyframework.storage.s3.request.AWSS3StoragePathUploadRequest
 import com.amplifyframework.storage.s3.service.StorageService
 import com.amplifyframework.storage.s3.transfer.TransferListener
 import com.amplifyframework.storage.s3.transfer.TransferObserver
-import kotlinx.coroutines.runBlocking
 import java.io.InputStream
 import java.util.UUID
 import java.util.concurrent.ExecutorService
+import kotlinx.coroutines.runBlocking
 
 /**
  * An operation to upload an InputStream to AWS S3.

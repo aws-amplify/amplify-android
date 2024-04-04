@@ -22,8 +22,8 @@ import com.amplifyframework.storage.result.StorageListResult
 import com.amplifyframework.storage.s3.extensions.toS3ServiceKey
 import com.amplifyframework.storage.s3.request.AWSS3StoragePathListRequest
 import com.amplifyframework.storage.s3.service.AWSS3StorageService
-import kotlinx.coroutines.runBlocking
 import java.util.concurrent.ExecutorService
+import kotlinx.coroutines.runBlocking
 
 /**
  * An operation to list items from AWS S3.

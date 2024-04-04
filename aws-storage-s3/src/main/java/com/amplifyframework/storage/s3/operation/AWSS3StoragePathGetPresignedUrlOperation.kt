@@ -22,8 +22,8 @@ import com.amplifyframework.storage.result.StorageGetUrlResult
 import com.amplifyframework.storage.s3.extensions.toS3ServiceKey
 import com.amplifyframework.storage.s3.request.AWSS3StoragePathGetPresignedUrlRequest
 import com.amplifyframework.storage.s3.service.StorageService
-import kotlinx.coroutines.runBlocking
 import java.util.concurrent.ExecutorService
+import kotlinx.coroutines.runBlocking
 
 /**
  * An operation to retrieve pre-signed object URL from AWS S3.
