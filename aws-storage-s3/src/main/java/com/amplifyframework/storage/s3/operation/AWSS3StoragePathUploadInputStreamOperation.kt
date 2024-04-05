@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2024 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -35,11 +35,12 @@ import com.amplifyframework.storage.s3.transfer.TransferObserver
 import java.io.InputStream
 import java.util.UUID
 import java.util.concurrent.ExecutorService
+import kotlinx.coroutines.runBlocking
 
 /**
  * An operation to upload an InputStream to AWS S3.
  */
-internal class AWSS3StoragePathUploadInputStreamOperation @JvmOverloads internal constructor(
+internal class AWSS3StoragePathUploadInputStreamOperation internal constructor(
     transferId: String,
     private val request: AWSS3StoragePathUploadRequest<InputStream>,
     private val storageService: StorageService,
@@ -89,7 +90,9 @@ internal class AWSS3StoragePathUploadInputStreamOperation @JvmOverloads internal
 
         executorService.submit {
             val serviceKey = try {
-                request.path.toS3ServiceKey(authCredentialsProvider)
+                runBlocking {
+                    request.path.toS3ServiceKey(authCredentialsProvider)
+                }
             } catch (se: StorageException) {
                 onError.accept(se)
                 return@submit

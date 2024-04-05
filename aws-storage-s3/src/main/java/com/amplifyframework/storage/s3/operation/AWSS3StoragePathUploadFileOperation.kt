@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2024 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -35,11 +35,12 @@ import com.amplifyframework.storage.s3.transfer.TransferObserver
 import java.io.File
 import java.util.UUID
 import java.util.concurrent.ExecutorService
+import kotlinx.coroutines.runBlocking
 
 /**
  * An operation to upload a file from AWS S3.
  */
-internal class AWSS3StoragePathUploadFileOperation @JvmOverloads internal constructor(
+internal class AWSS3StoragePathUploadFileOperation internal constructor(
     transferId: String,
     request: AWSS3StoragePathUploadRequest<File>,
     private val storageService: StorageService,
@@ -90,7 +91,9 @@ internal class AWSS3StoragePathUploadFileOperation @JvmOverloads internal constr
 
         executorService.submit {
             val serviceKey = try {
-                uploadRequest.path.toS3ServiceKey(authCredentialsProvider)
+                runBlocking {
+                    uploadRequest.path.toS3ServiceKey(authCredentialsProvider)
+                }
             } catch (se: StorageException) {
                 onError.accept(se)
                 return@submit

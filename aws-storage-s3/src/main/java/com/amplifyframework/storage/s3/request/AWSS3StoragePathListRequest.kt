@@ -12,17 +12,15 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package com.amplifyframework.storage
+package com.amplifyframework.storage.s3.request
 
-import com.amplifyframework.AmplifyException
-import com.amplifyframework.annotations.InternalAmplifyApi
+import com.amplifyframework.storage.StoragePath
 
 /**
- * Exception thrown when the StoragePath is not valid.
+ * Parameters to provide to S3 that describe a request to list files.
  */
-class StoragePathValidationException @InternalAmplifyApi constructor(
-    message: String,
-    recoverySuggestion: String
-) : AmplifyException(message, recoverySuggestion) {
-    @InternalAmplifyApi companion object
-}
+internal data class AWSS3StoragePathListRequest(
+    val path: StoragePath,
+    val pageSize: Int,
+    val nextToken: String?
+)

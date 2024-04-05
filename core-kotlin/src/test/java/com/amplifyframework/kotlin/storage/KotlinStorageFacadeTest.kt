@@ -688,7 +688,7 @@ class KotlinStorageFacadeTest {
     @Test
     fun listSucceeds() = runBlocking {
         val path = "/beach/photos"
-        val item = StorageItem("me_at_beach.png", 100L, Date(), "eTag", "props")
+        val item = StorageItem("/beach/photos/me_at_beach.png", "me_at_beach.png", 100L, Date(), "eTag", "props")
         val result = StorageListResult.fromItems(listOf(item), null)
         every {
             delegate.list(eq(path), any<StoragePagedListOptions>(), any(), any())

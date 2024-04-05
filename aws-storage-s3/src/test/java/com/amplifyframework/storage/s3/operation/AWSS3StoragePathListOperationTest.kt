@@ -20,29 +20,32 @@ import com.amplifyframework.core.Consumer
 import com.amplifyframework.storage.StorageException
 import com.amplifyframework.storage.StoragePath
 import com.amplifyframework.storage.StoragePathValidationException
-import com.amplifyframework.storage.s3.ServerSideEncryption
 import com.amplifyframework.storage.s3.extensions.invalidStoragePathException
 import com.amplifyframework.storage.s3.extensions.unsupportedStoragePathException
-import com.amplifyframework.storage.s3.request.AWSS3StoragePathUploadRequest
-import com.amplifyframework.storage.s3.service.StorageService
+import com.amplifyframework.storage.s3.request.AWSS3StoragePathListRequest
+import com.amplifyframework.storage.s3.service.AWSS3StorageService
 import com.google.common.util.concurrent.MoreExecutors
 import io.mockk.coEvery
 import io.mockk.mockk
 import io.mockk.verify
-import java.io.File
-import java.io.InputStream
 import org.junit.Before
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 
-class AWSS3StoragePathUploadInputStreamOperationTest {
+@RunWith(RobolectricTestRunner::class)
+class AWSS3StoragePathListOperationTest {
 
-    private lateinit var awsS3StorageUploadInputStreamOperation: AWSS3StoragePathUploadInputStreamOperation
-    private lateinit var storageService: StorageService
+    private lateinit var listOperation: AWSS3StoragePathListOperation
+    private lateinit var storageService: AWSS3StorageService
     private lateinit var authCredentialsProvider: AuthCredentialsProvider
+
+    private val expectedPageSize = 10
+    private val expectedNextToken = "next"
 
     @Before
     fun setup() {
-        storageService = mockk<StorageService>(relaxed = true)
+        storageService = mockk<AWSS3StorageService>(relaxed = true)
         authCredentialsProvider = mockk()
     }
 
@@ -50,39 +53,32 @@ class AWSS3StoragePathUploadInputStreamOperationTest {
     fun `success string storage path`() {
         // GIVEN
         val path = StoragePath.fromString("public/123")
-        val inputStream = File.createTempFile("new", "file.tmp").inputStream()
         val expectedServiceKey = "public/123"
-        val request = AWSS3StoragePathUploadRequest<InputStream>(
+        val request = AWSS3StoragePathListRequest(
             path,
-            inputStream,
-            "/image",
-            ServerSideEncryption.NONE,
-            emptyMap(),
-            false
+            expectedPageSize,
+            expectedNextToken
         )
         val onError = mockk<Consumer<StorageException>>(relaxed = true)
-        awsS3StorageUploadInputStreamOperation = AWSS3StoragePathUploadInputStreamOperation(
-            request = request,
+        listOperation = AWSS3StoragePathListOperation(
             storageService = storageService,
             executorService = MoreExecutors.newDirectExecutorService(),
             authCredentialsProvider = authCredentialsProvider,
-            {},
+            request = request,
             {},
             onError
         )
 
         // WHEN
-        awsS3StorageUploadInputStreamOperation.start()
+        listOperation.start()
 
         // THEN
         verify(exactly = 0) { onError.accept(any()) }
         verify {
-            storageService.uploadInputStream(
-                awsS3StorageUploadInputStreamOperation.transferId,
+            storageService.listFiles(
                 expectedServiceKey,
-                inputStream,
-                any(),
-                false
+                expectedPageSize,
+                expectedNextToken
             )
         }
     }
@@ -92,39 +88,32 @@ class AWSS3StoragePathUploadInputStreamOperationTest {
         // GIVEN
         coEvery { authCredentialsProvider.getIdentityId() } returns "123"
         val path = StoragePath.fromIdentityId { "protected/$it/picture.jpg" }
-        val inputStream = File.createTempFile("new", "file.tmp").inputStream()
         val expectedServiceKey = "protected/123/picture.jpg"
-        val request = AWSS3StoragePathUploadRequest<InputStream>(
+        val request = AWSS3StoragePathListRequest(
             path,
-            inputStream,
-            "/image",
-            ServerSideEncryption.NONE,
-            emptyMap(),
-            false
+            expectedPageSize,
+            expectedNextToken
         )
         val onError = mockk<Consumer<StorageException>>(relaxed = true)
-        awsS3StorageUploadInputStreamOperation = AWSS3StoragePathUploadInputStreamOperation(
+        listOperation = AWSS3StoragePathListOperation(
             request = request,
             storageService = storageService,
             executorService = MoreExecutors.newDirectExecutorService(),
             authCredentialsProvider = authCredentialsProvider,
-            {},
-            {},
-            onError
+            onSuccess = {},
+            onError = onError
         )
 
         // WHEN
-        awsS3StorageUploadInputStreamOperation.start()
+        listOperation.start()
 
         // THEN
         verify(exactly = 0) { onError.accept(any()) }
         verify {
-            storageService.uploadInputStream(
-                awsS3StorageUploadInputStreamOperation.transferId,
+            storageService.listFiles(
                 expectedServiceKey,
-                inputStream,
-                any(),
-                false
+                expectedPageSize,
+                expectedNextToken
             )
         }
     }
@@ -134,33 +123,28 @@ class AWSS3StoragePathUploadInputStreamOperationTest {
         // GIVEN
         coEvery { authCredentialsProvider.getIdentityId() } returns "123"
         val path = StoragePath.fromIdentityId { "/protected/$it/picture.jpg" }
-        val inputStream = File.createTempFile("new", "file.tmp").inputStream()
-        val request = AWSS3StoragePathUploadRequest<InputStream>(
+        val request = AWSS3StoragePathListRequest(
             path,
-            inputStream,
-            "/image",
-            ServerSideEncryption.NONE,
-            emptyMap(),
-            false
+            expectedPageSize,
+            expectedNextToken
         )
         val onError = mockk<Consumer<StorageException>>(relaxed = true)
-        awsS3StorageUploadInputStreamOperation = AWSS3StoragePathUploadInputStreamOperation(
+        listOperation = AWSS3StoragePathListOperation(
             request = request,
             storageService = storageService,
             executorService = MoreExecutors.newDirectExecutorService(),
             authCredentialsProvider = authCredentialsProvider,
-            {},
-            {},
-            onError
+            onSuccess = {},
+            onError = onError
         )
 
         // WHEN
-        awsS3StorageUploadInputStreamOperation.start()
+        listOperation.start()
 
         // THEN
         verify { onError.accept(StoragePathValidationException.invalidStoragePathException()) }
         verify(exactly = 0) {
-            storageService.uploadInputStream(any(), any(), any(), any(), any())
+            storageService.listFiles(any(), any(), any())
         }
     }
 
@@ -170,28 +154,23 @@ class AWSS3StoragePathUploadInputStreamOperationTest {
         val expectedException = Exception("test")
         coEvery { authCredentialsProvider.getIdentityId() } throws expectedException
         val path = StoragePath.fromIdentityId { "protected/$it/picture.jpg" }
-        val inputStream = File.createTempFile("new", "file.tmp").inputStream()
-        val request = AWSS3StoragePathUploadRequest<InputStream>(
+        val request = AWSS3StoragePathListRequest(
             path,
-            inputStream,
-            "/image",
-            ServerSideEncryption.NONE,
-            emptyMap(),
-            false
+            expectedPageSize,
+            expectedNextToken
         )
         val onError = mockk<Consumer<StorageException>>(relaxed = true)
-        awsS3StorageUploadInputStreamOperation = AWSS3StoragePathUploadInputStreamOperation(
+        listOperation = AWSS3StoragePathListOperation(
             request = request,
             storageService = storageService,
             executorService = MoreExecutors.newDirectExecutorService(),
             authCredentialsProvider = authCredentialsProvider,
-            {},
-            {},
-            onError
+            onSuccess = {},
+            onError = onError
         )
 
         // WHEN
-        awsS3StorageUploadInputStreamOperation.start()
+        listOperation.start()
 
         // THEN
         verify {
@@ -204,7 +183,7 @@ class AWSS3StoragePathUploadInputStreamOperationTest {
             )
         }
         verify(exactly = 0) {
-            storageService.uploadInputStream(any(), any(), any(), any(), any())
+            storageService.listFiles(any(), any(), any())
         }
     }
 
@@ -212,33 +191,28 @@ class AWSS3StoragePathUploadInputStreamOperationTest {
     fun `invalid storage path fails with unsupported storage path type`() {
         // GIVEN
         val path = UnsupportedStoragePath()
-        val inputStream = File.createTempFile("new", "file.tmp").inputStream()
-        val request = AWSS3StoragePathUploadRequest<InputStream>(
+        val request = AWSS3StoragePathListRequest(
             path,
-            inputStream,
-            "/image",
-            ServerSideEncryption.NONE,
-            emptyMap(),
-            false
+            expectedPageSize,
+            expectedNextToken
         )
         val onError = mockk<Consumer<StorageException>>(relaxed = true)
-        awsS3StorageUploadInputStreamOperation = AWSS3StoragePathUploadInputStreamOperation(
+        listOperation = AWSS3StoragePathListOperation(
             request = request,
             storageService = storageService,
             executorService = MoreExecutors.newDirectExecutorService(),
             authCredentialsProvider = authCredentialsProvider,
-            {},
-            {},
-            onError
+            onSuccess = {},
+            onError = onError
         )
 
         // WHEN
-        awsS3StorageUploadInputStreamOperation.start()
+        listOperation.start()
 
         // THEN
         verify { onError.accept(StoragePathValidationException.unsupportedStoragePathException()) }
         verify(exactly = 0) {
-            storageService.uploadInputStream(any(), any(), any(), any(), any())
+            storageService.listFiles(any(), any(), any())
         }
     }
 
